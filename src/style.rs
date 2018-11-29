@@ -143,8 +143,8 @@ impl Dimension {
   pub(crate) fn resolve(&self, parent_size: f32, auto_size: f32) -> f32 {
     match self {
       Dimension::Points(points) => *points,
-      Dimension::Percent(percent) => percent * parent_size,
-      Dimension::Auto => auto_size,
+      Dimension::Percent(percent) if parent_size.is_finite() => percent * parent_size,
+      _ => auto_size,
     }
   }
 }
