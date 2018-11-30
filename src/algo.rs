@@ -437,7 +437,7 @@ fn compute_internal(node: &style::Node, main: SizeConstraint, cross: SizeConstra
 
       if total_violation > 0.0 {
         for child in &mut unfrozen {
-          child.frozen = child.violation > 0.0;
+          child.frozen = child.violation < 0.0;
         }
       } else if total_violation < 0.0 {
         for child in &mut unfrozen {
