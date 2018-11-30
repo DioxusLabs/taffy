@@ -1,3 +1,6 @@
 /target
+/scripts/gentest/target
+
 **/*.rs.bk
 Cargo.lock
+.DS_Store

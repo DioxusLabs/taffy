@@ -18,14 +18,12 @@ mod tests {
             width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
 
-            children: vec![
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Percent(0.5),
+            children: vec![stretch::style::Node {
+                width: stretch::style::Dimension::Percent(0.5),
 
-                    ..Default::default()
-                },
-            ],
-          
+                ..Default::default()
+            }],
+
             ..Default::default()
         });
 
@@ -51,7 +49,7 @@ mod tests {
                     ..Default::default()
                 },
             ],
-          
+
             ..Default::default()
         });
 
@@ -85,7 +83,7 @@ mod tests {
                     ..Default::default()
                 },
             ],
-          
+
             ..Default::default()
         });
 
@@ -120,7 +118,7 @@ mod tests {
                     ..Default::default()
                 },
             ],
-          
+
             ..Default::default()
         });
 
@@ -157,7 +155,7 @@ mod tests {
                     ..Default::default()
                 },
             ],
-          
+
             ..Default::default()
         });
 
@@ -196,7 +194,7 @@ mod tests {
                     ..Default::default()
                 },
             ],
-          
+
             ..Default::default()
         });
 
@@ -235,7 +233,7 @@ mod tests {
                     ..Default::default()
                 },
             ],
-          
+
             ..Default::default()
         });
 
@@ -271,7 +269,7 @@ mod tests {
                     ..Default::default()
                 },
             ],
-          
+
             ..Default::default()
         });
 
@@ -307,7 +305,7 @@ mod tests {
                     ..Default::default()
                 },
             ],
-          
+
             ..Default::default()
         });
 
@@ -343,7 +341,7 @@ mod tests {
                     ..Default::default()
                 },
             ],
-          
+
             ..Default::default()
         });
 
@@ -379,7 +377,7 @@ mod tests {
                     ..Default::default()
                 },
             ],
-          
+
             ..Default::default()
         });
 
@@ -415,7 +413,7 @@ mod tests {
                     ..Default::default()
                 },
             ],
-          
+
             ..Default::default()
         });
 
@@ -452,7 +450,7 @@ mod tests {
                     ..Default::default()
                 },
             ],
-          
+
             ..Default::default()
         });
 
@@ -486,7 +484,7 @@ mod tests {
                     ..Default::default()
                 },
             ],
-          
+
             ..Default::default()
         });
 
@@ -541,7 +539,7 @@ mod tests {
                     ..Default::default()
                 },
             ],
-          
+
             ..Default::default()
         });
 
@@ -607,7 +605,7 @@ mod tests {
                     ..Default::default()
                 },
             ],
-          
+
             ..Default::default()
         });
 

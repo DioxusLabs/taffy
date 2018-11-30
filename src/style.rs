@@ -1,396 +1,418 @@
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum AlignItems {
-  FlexStart,
-  FlexEnd,
-  Center,
-  Baseline,
-  Stretch,
+    FlexStart,
+    FlexEnd,
+    Center,
+    Baseline,
+    Stretch,
 }
 
 impl Default for AlignItems {
-  fn default() -> AlignItems { AlignItems::Stretch }
+    fn default() -> AlignItems {
+        AlignItems::Stretch
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum AlignSelf {
-  Auto,
-  FlexStart,
-  FlexEnd,
-  Center,
-  Baseline,
-  Stretch,
+    Auto,
+    FlexStart,
+    FlexEnd,
+    Center,
+    Baseline,
+    Stretch,
 }
 
 impl Default for AlignSelf {
-  fn default() -> AlignSelf { AlignSelf::Auto }
+    fn default() -> AlignSelf {
+        AlignSelf::Auto
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum AlignContent {
-  FlexStart,
-  FlexEnd,
-  Center,
-  Stretch,
-  SpaceBetween,
-  SpaceAround,
+    FlexStart,
+    FlexEnd,
+    Center,
+    Stretch,
+    SpaceBetween,
+    SpaceAround,
 }
 
 impl Default for AlignContent {
-  fn default() -> AlignContent { AlignContent::Stretch }
+    fn default() -> AlignContent {
+        AlignContent::Stretch
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Direction {
-  Inherit,
-  LTR,
-  RTL,
+    Inherit,
+    LTR,
+    RTL,
 }
 
 impl Default for Direction {
-  fn default() -> Direction { Direction::Inherit }
+    fn default() -> Direction {
+        Direction::Inherit
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Display {
-  Flex,
-  None,
+    Flex,
+    None,
 }
 
 impl Default for Display {
-  fn default() -> Display { Display::Flex }
+    fn default() -> Display {
+        Display::Flex
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum FlexDirection {
-  Row,
-  Column,
-  RowReverse,
-  ColumnReverse,
+    Row,
+    Column,
+    RowReverse,
+    ColumnReverse,
 }
 
 impl Default for FlexDirection {
-  fn default() -> FlexDirection { FlexDirection::Row }
+    fn default() -> FlexDirection {
+        FlexDirection::Row
+    }
 }
 
 impl FlexDirection {
-  pub(crate) fn is_row(self) -> bool {
-    self == FlexDirection::Row || self == FlexDirection::RowReverse
-  }
+    pub(crate) fn is_row(self) -> bool {
+        self == FlexDirection::Row || self == FlexDirection::RowReverse
+    }
 
-  pub(crate) fn is_column(self) -> bool {
-    self == FlexDirection::Column || self == FlexDirection::ColumnReverse
-  }
+    pub(crate) fn is_column(self) -> bool {
+        self == FlexDirection::Column || self == FlexDirection::ColumnReverse
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum JustifyContent {
-  FlexStart,
-  Center,
-  FlexEnd,
-  SpaceBetween,
-  SpaceAround,
-  SpaceEvenly,
+    FlexStart,
+    FlexEnd,
+    Center,
+    SpaceBetween,
+    SpaceAround,
+    SpaceEvenly,
 }
 
 impl Default for JustifyContent {
-  fn default() -> JustifyContent { JustifyContent::FlexStart }
+    fn default() -> JustifyContent {
+        JustifyContent::FlexStart
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Overflow {
-  Visible,
-  Hidden,
-  Scroll,
+    Visible,
+    Hidden,
+    Scroll,
 }
 
 impl Default for Overflow {
-  fn default() -> Overflow { Overflow::Visible }
+    fn default() -> Overflow {
+        Overflow::Visible
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Position {
-  Relative,
-  Absolute,
+    Relative,
+    Absolute,
 }
 
 impl Default for Position {
-  fn default() -> Position { Position::Relative }
+    fn default() -> Position {
+        Position::Relative
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Wrap {
-  NoWrap,
-  Wrap,
-  WrapReverse,
+    NoWrap,
+    Wrap,
+    WrapReverse,
 }
 
 impl Default for Wrap {
-  fn default() -> Wrap { Wrap::NoWrap }
+    fn default() -> Wrap {
+        Wrap::NoWrap
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Dimension {
-  Auto,
-  Points(f32),
-  Percent(f32),
+    Auto,
+    Points(f32),
+    Percent(f32),
 }
 
 impl Default for Dimension {
-  fn default() -> Dimension { Dimension::Auto }
+    fn default() -> Dimension {
+        Dimension::Auto
+    }
 }
 
 impl Dimension {
-  pub(crate) fn resolve(&self, parent_size: f32, auto_size: f32) -> f32 {
-    match self {
-      Dimension::Points(points) => *points,
-      Dimension::Percent(percent) if parent_size.is_finite() => percent * parent_size,
-      _ => auto_size,
+    pub(crate) fn resolve(&self, parent_size: f32, auto_size: f32) -> f32 {
+        match self {
+            Dimension::Points(points) => *points,
+            Dimension::Percent(percent) if parent_size.is_finite() => percent * parent_size,
+            _ => auto_size,
+        }
     }
-  }
 }
 
 #[derive(Debug)]
 pub struct Edges {
-  pub start: Dimension,
-  pub end: Dimension,
-  pub top: Dimension,
-  pub bottom: Dimension,
+    pub start: Dimension,
+    pub end: Dimension,
+    pub top: Dimension,
+    pub bottom: Dimension,
 }
 
 impl Default for Edges {
-  fn default() -> Edges {
-    Edges {
-      start: Dimension::Points(0.0),
-      end: Dimension::Points(0.0),
-      top: Dimension::Points(0.0),
-      bottom: Dimension::Points(0.0),
+    fn default() -> Edges {
+        Edges {
+            start: Dimension::Points(0.0),
+            end: Dimension::Points(0.0),
+            top: Dimension::Points(0.0),
+            bottom: Dimension::Points(0.0),
+        }
     }
-  }
 }
 
 #[derive(Debug)]
 pub struct Node {
-  pub position: Position,
-  pub direction: Direction,
-  pub flex_direction: FlexDirection,
-  
-  pub wrap: Wrap,
-  pub overflow: Overflow,
+    pub position: Position,
+    pub direction: Direction,
+    pub flex_direction: FlexDirection,
 
-  pub align_items: AlignItems,
-  pub align_self: AlignSelf,
-  pub align_content: AlignContent,
-  
-  pub justify_content: JustifyContent,
+    pub wrap: Wrap,
+    pub overflow: Overflow,
 
-  pub margin: Edges,
-  pub padding: Edges,
-  pub border: Edges,
+    pub align_items: AlignItems,
+    pub align_self: AlignSelf,
+    pub align_content: AlignContent,
 
-  pub flex_grow: f32,
-  pub flex_shrink: f32,
-  pub flex_basis: Dimension,
+    pub justify_content: JustifyContent,
 
-  pub left: Dimension,
-  pub right: Dimension,
-  pub top: Dimension,
-  pub bottom: Dimension,
+    pub margin: Edges,
+    pub padding: Edges,
+    pub border: Edges,
 
-  pub width: Dimension,
-  pub min_width: Dimension,
-  pub max_width: Dimension,
+    pub flex_grow: f32,
+    pub flex_shrink: f32,
+    pub flex_basis: Dimension,
 
-  pub height: Dimension,
-  pub min_height: Dimension,
-  pub max_height: Dimension,
+    pub start: Dimension,
+    pub end: Dimension,
+    pub top: Dimension,
+    pub bottom: Dimension,
 
-  pub aspect_ratio: Option<f32>,
+    pub width: Dimension,
+    pub min_width: Dimension,
+    pub max_width: Dimension,
 
-  pub children: Vec<Node>,
+    pub height: Dimension,
+    pub min_height: Dimension,
+    pub max_height: Dimension,
+
+    pub aspect_ratio: Option<f32>,
+
+    pub children: Vec<Node>,
 }
 
 impl Default for Node {
-  fn default() -> Node {
-    Node {
-      position: Default::default(),
-      direction: Default::default(),
-      flex_direction: Default::default(),
+    fn default() -> Node {
+        Node {
+            position: Default::default(),
+            direction: Default::default(),
+            flex_direction: Default::default(),
 
-      wrap: Default::default(),
-      overflow: Default::default(),
+            wrap: Default::default(),
+            overflow: Default::default(),
 
-      align_items: Default::default(),
-      align_self: Default::default(),
-      align_content: Default::default(),
+            align_items: Default::default(),
+            align_self: Default::default(),
+            align_content: Default::default(),
 
-      justify_content: Default::default(),
+            justify_content: Default::default(),
 
-      margin: Default::default(),
-      padding: Default::default(),
-      border: Default::default(),
+            margin: Default::default(),
+            padding: Default::default(),
+            border: Default::default(),
 
-      flex_grow: 0.0,
-      flex_shrink: 1.0,
-      flex_basis: Default::default(),
+            flex_grow: 0.0,
+            flex_shrink: 1.0,
+            flex_basis: Default::default(),
 
-      left: Default::default(),
-      right: Default::default(),
-      top: Default::default(),
-      bottom: Default::default(),
+            start: Default::default(),
+            end: Default::default(),
+            top: Default::default(),
+            bottom: Default::default(),
 
-      width: Default::default(),
-      min_width: Default::default(),
-      max_width: Default::default(),
+            width: Default::default(),
+            min_width: Default::default(),
+            max_width: Default::default(),
 
-      height: Default::default(),
-      min_height: Default::default(),
-      max_height: Default::default(),
+            height: Default::default(),
+            min_height: Default::default(),
+            max_height: Default::default(),
 
-      aspect_ratio: Default::default(),
+            aspect_ratio: Default::default(),
 
-      children: vec![],
+            children: vec![],
+        }
     }
-  }
 }
 
 impl Node {
-  pub(crate) fn main_size(&self) -> Dimension {
-    match self.flex_direction {
-      FlexDirection::Row | FlexDirection::RowReverse => self.width,
-      FlexDirection::Column | FlexDirection::ColumnReverse => self.height,
+    pub(crate) fn main_size(&self) -> Dimension {
+        match self.flex_direction {
+            FlexDirection::Row | FlexDirection::RowReverse => self.width,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.height,
+        }
     }
-  }
 
-  pub(crate) fn min_main_size(&self) -> Dimension {
-    match self.flex_direction {
-      FlexDirection::Row | FlexDirection::RowReverse => self.min_width,
-      FlexDirection::Column | FlexDirection::ColumnReverse => self.min_height,
+    pub(crate) fn min_main_size(&self) -> Dimension {
+        match self.flex_direction {
+            FlexDirection::Row | FlexDirection::RowReverse => self.min_width,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.min_height,
+        }
     }
-  }
 
-  pub(crate) fn max_main_size(&self) -> Dimension {
-    match self.flex_direction {
-      FlexDirection::Row | FlexDirection::RowReverse => self.max_width,
-      FlexDirection::Column | FlexDirection::ColumnReverse => self.max_height,
+    pub(crate) fn max_main_size(&self) -> Dimension {
+        match self.flex_direction {
+            FlexDirection::Row | FlexDirection::RowReverse => self.max_width,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.max_height,
+        }
     }
-  }
 
-  pub(crate) fn main_margin_start(&self) -> Dimension {
-    match self.flex_direction {
-      FlexDirection::Row | FlexDirection::RowReverse => self.margin.start,
-      FlexDirection::Column | FlexDirection::ColumnReverse => self.margin.top,
+    pub(crate) fn main_margin_start(&self) -> Dimension {
+        match self.flex_direction {
+            FlexDirection::Row | FlexDirection::RowReverse => self.margin.start,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.margin.top,
+        }
     }
-  }
 
-  pub(crate) fn main_margin_end(&self) -> Dimension {
-    match self.flex_direction {
-      FlexDirection::Row | FlexDirection::RowReverse => self.margin.end,
-      FlexDirection::Column | FlexDirection::ColumnReverse => self.margin.bottom,
+    pub(crate) fn main_margin_end(&self) -> Dimension {
+        match self.flex_direction {
+            FlexDirection::Row | FlexDirection::RowReverse => self.margin.end,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.margin.bottom,
+        }
     }
-  }
 
-  pub(crate) fn main_padding_start(&self) -> Dimension {
-    match self.flex_direction {
-      FlexDirection::Row | FlexDirection::RowReverse => self.padding.start,
-      FlexDirection::Column | FlexDirection::ColumnReverse => self.padding.top,
+    pub(crate) fn main_padding_start(&self) -> Dimension {
+        match self.flex_direction {
+            FlexDirection::Row | FlexDirection::RowReverse => self.padding.start,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.padding.top,
+        }
     }
-  }
 
-  pub(crate) fn main_padding_end(&self) -> Dimension {
-    match self.flex_direction {
-      FlexDirection::Row | FlexDirection::RowReverse => self.padding.end,
-      FlexDirection::Column | FlexDirection::ColumnReverse => self.padding.bottom,
+    pub(crate) fn main_padding_end(&self) -> Dimension {
+        match self.flex_direction {
+            FlexDirection::Row | FlexDirection::RowReverse => self.padding.end,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.padding.bottom,
+        }
     }
-  }
 
-  pub(crate) fn main_border_start(&self) -> Dimension {
-    match self.flex_direction {
-      FlexDirection::Row | FlexDirection::RowReverse => self.border.start,
-      FlexDirection::Column | FlexDirection::ColumnReverse => self.border.top,
+    pub(crate) fn main_border_start(&self) -> Dimension {
+        match self.flex_direction {
+            FlexDirection::Row | FlexDirection::RowReverse => self.border.start,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.border.top,
+        }
     }
-  }
 
-  pub(crate) fn main_border_end(&self) -> Dimension {
-    match self.flex_direction {
-      FlexDirection::Row | FlexDirection::RowReverse => self.border.end,
-      FlexDirection::Column | FlexDirection::ColumnReverse => self.border.bottom,
+    pub(crate) fn main_border_end(&self) -> Dimension {
+        match self.flex_direction {
+            FlexDirection::Row | FlexDirection::RowReverse => self.border.end,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.border.bottom,
+        }
     }
-  }
 
-  pub(crate) fn cross_size(&self) -> Dimension {
-    match self.flex_direction {
-      FlexDirection::Row | FlexDirection::RowReverse => self.height,
-      FlexDirection::Column | FlexDirection::ColumnReverse => self.width,
+    pub(crate) fn cross_size(&self) -> Dimension {
+        match self.flex_direction {
+            FlexDirection::Row | FlexDirection::RowReverse => self.height,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.width,
+        }
     }
-  }
 
-  pub(crate) fn min_cross_size(&self) -> Dimension {
-    match self.flex_direction {
-      FlexDirection::Row | FlexDirection::RowReverse => self.min_height,
-      FlexDirection::Column | FlexDirection::ColumnReverse => self.min_width,
+    pub(crate) fn min_cross_size(&self) -> Dimension {
+        match self.flex_direction {
+            FlexDirection::Row | FlexDirection::RowReverse => self.min_height,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.min_width,
+        }
     }
-  }
 
-  pub(crate) fn max_cross_size(&self) -> Dimension {
-    match self.flex_direction {
-      FlexDirection::Row | FlexDirection::RowReverse => self.max_height,
-      FlexDirection::Column | FlexDirection::ColumnReverse => self.max_width,
+    pub(crate) fn max_cross_size(&self) -> Dimension {
+        match self.flex_direction {
+            FlexDirection::Row | FlexDirection::RowReverse => self.max_height,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.max_width,
+        }
     }
-  }
 
-  pub(crate) fn cross_margin_start(&self) -> Dimension {
-    match self.flex_direction {
-      FlexDirection::Row | FlexDirection::RowReverse => self.margin.top,
-      FlexDirection::Column | FlexDirection::ColumnReverse => self.margin.start,
+    pub(crate) fn cross_margin_start(&self) -> Dimension {
+        match self.flex_direction {
+            FlexDirection::Row | FlexDirection::RowReverse => self.margin.top,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.margin.start,
+        }
     }
-  }
 
-  pub(crate) fn cross_margin_end(&self) -> Dimension {
-    match self.flex_direction {
-      FlexDirection::Row | FlexDirection::RowReverse => self.margin.bottom,
-      FlexDirection::Column | FlexDirection::ColumnReverse => self.margin.end,
+    pub(crate) fn cross_margin_end(&self) -> Dimension {
+        match self.flex_direction {
+            FlexDirection::Row | FlexDirection::RowReverse => self.margin.bottom,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.margin.end,
+        }
     }
-  }
 
-  pub(crate) fn cross_padding_start(&self) -> Dimension {
-    match self.flex_direction {
-      FlexDirection::Row | FlexDirection::RowReverse => self.padding.top,
-      FlexDirection::Column | FlexDirection::ColumnReverse => self.padding.start,
+    pub(crate) fn cross_padding_start(&self) -> Dimension {
+        match self.flex_direction {
+            FlexDirection::Row | FlexDirection::RowReverse => self.padding.top,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.padding.start,
+        }
     }
-  }
 
-  pub(crate) fn cross_padding_end(&self) -> Dimension {
-    match self.flex_direction {
-      FlexDirection::Row | FlexDirection::RowReverse => self.padding.bottom,
-      FlexDirection::Column | FlexDirection::ColumnReverse => self.padding.end,
+    pub(crate) fn cross_padding_end(&self) -> Dimension {
+        match self.flex_direction {
+            FlexDirection::Row | FlexDirection::RowReverse => self.padding.bottom,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.padding.end,
+        }
     }
-  }
 
-  pub(crate) fn cross_border_start(&self) -> Dimension {
-    match self.flex_direction {
-      FlexDirection::Row | FlexDirection::RowReverse => self.border.top,
-      FlexDirection::Column | FlexDirection::ColumnReverse => self.border.start,
+    pub(crate) fn cross_border_start(&self) -> Dimension {
+        match self.flex_direction {
+            FlexDirection::Row | FlexDirection::RowReverse => self.border.top,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.border.start,
+        }
     }
-  }
 
-  pub(crate) fn cross_border_end(&self) -> Dimension {
-    match self.flex_direction {
-      FlexDirection::Row | FlexDirection::RowReverse => self.border.bottom,
-      FlexDirection::Column | FlexDirection::ColumnReverse => self.border.end,
+    pub(crate) fn cross_border_end(&self) -> Dimension {
+        match self.flex_direction {
+            FlexDirection::Row | FlexDirection::RowReverse => self.border.bottom,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.border.end,
+        }
     }
-  }
 
-  pub(crate) fn align_self(&self, parent: &Node) -> AlignSelf {
-    if self.align_self == AlignSelf::Auto {
-      match parent.align_items {
-        AlignItems::FlexStart => AlignSelf::FlexStart,
-        AlignItems::FlexEnd => AlignSelf::FlexEnd,
-        AlignItems::Center => AlignSelf::Center,
-        AlignItems::Baseline => AlignSelf::Baseline,
-        AlignItems::Stretch => AlignSelf::Stretch,
-      }
-    } else {
-      self.align_self
+    pub(crate) fn align_self(&self, parent: &Node) -> AlignSelf {
+        if self.align_self == AlignSelf::Auto {
+            match parent.align_items {
+                AlignItems::FlexStart => AlignSelf::FlexStart,
+                AlignItems::FlexEnd => AlignSelf::FlexEnd,
+                AlignItems::Center => AlignSelf::Center,
+                AlignItems::Baseline => AlignSelf::Baseline,
+                AlignItems::Stretch => AlignSelf::Stretch,
+            }
+        } else {
+            self.align_self
+        }
     }
-  }
 }
