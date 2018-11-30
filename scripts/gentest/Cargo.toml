@@ -1,0 +1,8 @@
+[package]
+name = "gentest"
+version = "0.1.0"
+authors = ["Emil Sjölander <emil@visly.app>"]
+
+[dependencies]
+selenium-rs = "0.1.0"
+json = "0.11.13"
