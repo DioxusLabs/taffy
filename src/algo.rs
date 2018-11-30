@@ -864,13 +864,21 @@ fn compute_internal(
                 SizeConstraint::exactly(child.target_cross_size),
             );
 
-            let offset_main = { total_offset_main + child.offset_main + child.main_margin_start };
+            let offset_main = {
+                total_offset_main
+                    + child.offset_main
+                    + child.main_margin_start
+                    + (child.node.main_start().resolve(container_main_size, 0.0)
+                        - child.node.main_end().resolve(container_main_size, 0.0))
+            };
 
             let offset_cross = {
                 total_offset_cross
                     + child.offset_cross
                     + line.offset_cross
                     + child.cross_margin_start
+                    + (child.node.cross_start().resolve(container_main_size, 0.0)
+                        - child.node.cross_end().resolve(container_main_size, 0.0))
             };
 
             children.push(layout::Node {

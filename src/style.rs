@@ -402,6 +402,34 @@ impl Node {
         }
     }
 
+    pub(crate) fn main_start(&self) -> Dimension {
+        match self.flex_direction {
+            FlexDirection::Row | FlexDirection::RowReverse => self.start,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.top,
+        }
+    }
+
+    pub(crate) fn main_end(&self) -> Dimension {
+        match self.flex_direction {
+            FlexDirection::Row | FlexDirection::RowReverse => self.end,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.bottom,
+        }
+    }
+
+    pub(crate) fn cross_start(&self) -> Dimension {
+        match self.flex_direction {
+            FlexDirection::Row | FlexDirection::RowReverse => self.top,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.start,
+        }
+    }
+
+    pub(crate) fn cross_end(&self) -> Dimension {
+        match self.flex_direction {
+            FlexDirection::Row | FlexDirection::RowReverse => self.bottom,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.end,
+        }
+    }
+
     pub(crate) fn align_self(&self, parent: &Node) -> AlignSelf {
         if self.align_self == AlignSelf::Auto {
             match parent.align_items {
