@@ -145,21 +145,21 @@ fn compute_internal(node: &style::Node, main: SizeConstraint, cross: SizeConstra
     main.max 
         - node.main_margin_start().resolve(main.max, 0.0) 
         - node.main_margin_end().resolve(main.max, 0.0) 
-        - node.main_padding_start().resolve(main.max, 0.0) 
-        - node.main_padding_end().resolve(main.max, 0.0) 
-        - node.main_border_start().resolve(main.max, 0.0)
-        - node.main_border_end().resolve(main.max, 0.0)
-  });
+  }) 
+  - node.main_padding_start().resolve(main.max, 0.0) 
+  - node.main_padding_end().resolve(main.max, 0.0) 
+  - node.main_border_start().resolve(main.max, 0.0)
+  - node.main_border_end().resolve(main.max, 0.0);
 
   let avaliable_cross = node.cross_size().resolve(cross.max, {
     cross.max 
         - node.cross_margin_start().resolve(cross.max, 0.0) 
         - node.cross_margin_end().resolve(cross.max, 0.0) 
-        - node.cross_padding_start().resolve(cross.max, 0.0) 
-        - node.cross_padding_end().resolve(cross.max, 0.0) 
-        - node.cross_border_start().resolve(cross.max, 0.0)
-        - node.cross_border_end().resolve(cross.max, 0.0)
-  });
+  })
+  - node.cross_padding_start().resolve(cross.max, 0.0) 
+  - node.cross_padding_end().resolve(cross.max, 0.0) 
+  - node.cross_border_start().resolve(cross.max, 0.0)
+  - node.cross_border_end().resolve(cross.max, 0.0);
   
   // 3. Determine the flex base size and hypothetical main size of each item:
   for child in &mut flex_items {
@@ -262,13 +262,14 @@ fn compute_internal(node: &style::Node, main: SizeConstraint, cross: SizeConstra
 
       for child in flex_items {
         line_length += child.hypothetical_outer_main_size;
-        line.items.push(child);
-        
-        if line_length > avaliable_main {
-          line_length = 0.0;
+
+        if line_length > avaliable_main && line.items.len() > 0 {
+          line_length = child.hypothetical_outer_main_size;
           lines.push(line);
           line = FlexLine { items: vec![], cross_size: 0.0, offset_cross: 0.0 };
         }
+
+        line.items.push(child);
       }
 
       lines.push(line);
@@ -635,8 +636,8 @@ fn compute_internal(node: &style::Node, main: SizeConstraint, cross: SizeConstra
         let mut is_first = true;
 
         for child in &mut line.items {
-          child.main_margin_start = 0.0;
-          child.main_margin_end = 0.0;
+          child.main_margin_start = child.node.main_margin_start().resolve(container_main_size, 0.0);
+          child.main_margin_end = child.node.main_margin_end().resolve(container_main_size, 0.0);
 
           child.offset_main = match node.justify_content {
             style::JustifyContent::FlexStart => 0.0,
@@ -727,9 +728,16 @@ fn compute_internal(node: &style::Node, main: SizeConstraint, cross: SizeConstra
   }
 
   let mut children: Vec<layout::Node> = vec![];
-  for line in &mut flex_lines {
-    let mut sibling_offset = 0.0;
 
+  let mut total_offset_cross =
+      node.cross_padding_start().resolve(container_cross_size, 0.0) + 
+      node.cross_border_start().resolve(container_cross_size, 0.0);
+
+  for line in &mut flex_lines {
+    let mut total_offset_main =
+        node.main_padding_start().resolve(container_main_size, 0.0) + 
+        node.main_border_start().resolve(container_main_size, 0.0);
+        
     for child in &mut line.items {
       let result = compute_internal(
         child.node, 
@@ -737,19 +745,16 @@ fn compute_internal(node: &style::Node, main: SizeConstraint, cross: SizeConstra
         SizeConstraint::exactly(child.target_cross_size));
 
       let offset_main = {
+        total_offset_main +
         child.offset_main +
-        child.main_margin_start + 
-        sibling_offset + 
-        node.main_padding_start().resolve(container_main_size, 0.0) + 
-        node.main_border_start().resolve(container_main_size, 0.0)
+        child.main_margin_start
       };
 
       let offset_cross = {
+        total_offset_cross +
         child.offset_cross + 
-        line.offset_cross + 
-        child.cross_margin_start +
-        node.cross_padding_start().resolve(container_cross_size, 0.0) +
-        node.cross_border_start().resolve(container_cross_size, 0.0)
+        line.offset_cross +
+        child.cross_margin_start
       };
 
       children.push(layout::Node {
@@ -760,8 +765,10 @@ fn compute_internal(node: &style::Node, main: SizeConstraint, cross: SizeConstra
         children: result.children,
       });
 
-      sibling_offset += offset_main + result.size.main + child.main_margin_end;
+      total_offset_main = offset_main + result.size.main + child.main_margin_end;
     }
+
+    total_offset_cross += line.offset_cross + line.cross_size;
   }
 
   ComputeResult {
