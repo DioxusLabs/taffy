@@ -15,3 +15,31 @@ div, span, img {
 body > * {
   position: absolute;
 }
+
+div {
+  background-color: #222;
+}
+
+div > div {
+  background-color: #444;
+}
+
+div > div > div {
+  background-color: #666;
+}
+
+div > div > div > div {
+  background-color: #888;
+}
+
+div > div > div > div > div {
+  background-color: #aaa;
+}
+
+div > div > div > div > div > div {
+  background-color: #ccc;
+}
+
+div > div > div > div > div > div > div {
+  background-color: #eee;
+}
