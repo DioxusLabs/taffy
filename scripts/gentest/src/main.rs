@@ -43,11 +43,13 @@ fn main() {
     let fixtures = fs::read_dir(fixtures_root).unwrap();
     for fixture in fixtures {
         let fixture_path = fixture.unwrap().path();
-        let name = fixture_path.file_stem().unwrap().to_str().unwrap();
+        if fixture_path.is_file() {
+            let name = fixture_path.file_stem().unwrap().to_str().unwrap();
 
-        driver.navigate(&format!("file://{}", fixture_path.display()));
-        let root_element = driver.query_element(Selector::CSS, "#test-root").unwrap();
-        src.push_str(&format!("{}\n", generate_test(&name, root_element)));
+            driver.navigate(&format!("file://{}", fixture_path.display()));
+            let root_element = driver.query_element(Selector::CSS, "#test-root").unwrap();
+            src.push_str(&format!("{}\n", generate_test(&name, root_element)));
+        }
     }
     
     src.push_str("}\n");
@@ -107,7 +109,7 @@ fn generate_node(node: &json::JsonValue) -> String {
     let style = &node["style"];
 
     match style["position"] {
-        json::JsonValue::String(ref value) => {
+        json::JsonValue::Short(ref value) => {
             match value.as_ref() {
                 "absolute" => src.push_str("position: stretch::style::Position::Absolute,\n"),
                 _ => (),
@@ -117,7 +119,7 @@ fn generate_node(node: &json::JsonValue) -> String {
     };
 
     match style["direction"] {
-        json::JsonValue::String(ref value) => {
+        json::JsonValue::Short(ref value) => {
             match value.as_ref() {
                 "rtl" => src.push_str("direction: stretch::style::Direction::RTL,\n"),
                 "ltr" => src.push_str("direction: stretch::style::Direction::LTR,\n"),
@@ -128,7 +130,7 @@ fn generate_node(node: &json::JsonValue) -> String {
     };
 
     match style["flexDirection"] {
-        json::JsonValue::String(ref value) => {
+        json::JsonValue::Short(ref value) => {
             match value.as_ref() {
                 "row-reverse" => src.push_str("flex_direction: stretch::style::FlexDirection::RowReverse,\n"),
                 "column" => src.push_str("flex_direction: stretch::style::FlexDirection::Column,\n"),
@@ -140,7 +142,7 @@ fn generate_node(node: &json::JsonValue) -> String {
     };
 
     match style["wrap"] {
-        json::JsonValue::String(ref value) => {
+        json::JsonValue::Short(ref value) => {
             match value.as_ref() {
                 "wrap" => src.push_str("wrap: stretch::style::Wrap::Wrap,\n"),
                 "wrap-reverse" => src.push_str("wrap: stretch::style::Wrap::WrapReverse,\n"),
@@ -151,7 +153,7 @@ fn generate_node(node: &json::JsonValue) -> String {
     };
 
     match style["overflow"] {
-        json::JsonValue::String(ref value) => {
+        json::JsonValue::Short(ref value) => {
             match value.as_ref() {
                 "hidden" => src.push_str("overflow: stretch::style::Overflow::Hidden,\n"),
                 "scroll" => src.push_str("overflow: stretch::style::Overflow::Scroll,\n"),
@@ -162,7 +164,7 @@ fn generate_node(node: &json::JsonValue) -> String {
     };
 
     match style["alignItems"] {
-        json::JsonValue::String(ref value) => {
+        json::JsonValue::Short(ref value) => {
             match value.as_ref() {
                 "flex-start" => src.push_str("align_items: stretch::style::AlignItems::FlexStart,\n"),
                 "flex-end" => src.push_str("align_items: stretch::style::AlignItems::FlexEnd,\n"),
@@ -175,7 +177,7 @@ fn generate_node(node: &json::JsonValue) -> String {
     };
 
     match style["alignSelf"] {
-        json::JsonValue::String(ref value) => {
+        json::JsonValue::Short(ref value) => {
             match value.as_ref() {
                 "flex-start" => src.push_str("align_self: stretch::style::AlignSelf::FlexStart,\n"),
                 "flex-end" => src.push_str("align_self: stretch::style::AlignSelf::FlexEnd,\n"),
@@ -189,7 +191,7 @@ fn generate_node(node: &json::JsonValue) -> String {
     };
 
     match style["alignContent"] {
-        json::JsonValue::String(ref value) => {
+        json::JsonValue::Short(ref value) => {
             match value.as_ref() {
                 "flex-start" => src.push_str("align_content: stretch::style::AlignContent::FlexStart,\n"),
                 "flex-end" => src.push_str("align_content: stretch::style::AlignContent::FlexEnd,\n"),
@@ -203,7 +205,7 @@ fn generate_node(node: &json::JsonValue) -> String {
     };
 
     match style["justifyContent"] {
-        json::JsonValue::String(ref value) => {
+        json::JsonValue::Short(ref value) => {
             match value.as_ref() {
                 "flex-end" => src.push_str("justify_content: stretch::style::JustifyContent::FlexEnd,\n"),
                 "center" => src.push_str("justify_content: stretch::style::JustifyContent::Center,\n"),
@@ -217,12 +219,18 @@ fn generate_node(node: &json::JsonValue) -> String {
     };
 
     match style["flexGrow"] {
-        json::JsonValue::Number(value) => src.push_str(&format!("flex_grow: {:.1},\n", value)),
+        json::JsonValue::Number(value) => {
+            let value: f32 = value.into();
+            src.push_str(&format!("flex_grow: {:.1},\n", value))
+        },
         _ => (),
     };
 
     match style["flexShrink"] {
-        json::JsonValue::Number(value) => src.push_str(&format!("flex_shrink: {:.1},\n", value)),
+        json::JsonValue::Number(value) => {
+            let value: f32 = value.into();
+            src.push_str(&format!("flex_shrink: {:.1},\n", value))
+        },
         _ => (),
     };
 
@@ -298,11 +306,13 @@ fn generate_node(node: &json::JsonValue) -> String {
 
     match node["children"] {
         json::JsonValue::Array(ref value) => {
-            src.push_str("children: vec![\n");
-            value.iter().for_each(|child| {
-                src.push_str(&format!("{},\n", generate_node(child)));
-            });
-            src.push_str("],\n");
+            if value.len() > 0 {
+                src.push_str("children: vec![\n");
+                value.iter().for_each(|child| {
+                    src.push_str(&format!("{},\n", generate_node(child)));
+                });
+                src.push_str("],\n");
+            }
         },
         _ => (),
     };
@@ -316,10 +326,17 @@ fn generate_dimension(dimen: &json::object::Object) -> String {
     let unit = dimen.get("unit").unwrap();
     let value = || dimen.get("value").unwrap().as_f32().unwrap();
 
-    if unit == "auto" { format!("stretch::style::Dimension::Auto") }
-    else if unit == "points" { format!("stretch::style::Dimension::Points({:.1})", value()) }
-    else if unit == "percent" { format!("stretch::style::Dimension::Percent({:.1})", value()) }
-    else { panic!() }
+    match unit {
+        json::JsonValue::Short(ref unit) => {
+            match unit.as_ref() {
+                "auto" => format!("stretch::style::Dimension::Auto"),
+                "points" => format!("stretch::style::Dimension::Points({:.1})", value()),
+                "percent" => format!("stretch::style::Dimension::Percent({:.1})", value()),
+                _ => panic!(),
+            }
+        },
+        _ => panic!(),
+    }
 }
 
 fn generate_edges(dimen: &json::object::Object) -> String {
