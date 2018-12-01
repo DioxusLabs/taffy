@@ -105,10 +105,10 @@ function describeElement(e) {
       }),
 
       border: parseEdges({
-        start: e.style.borderLeft,
-        end: e.style.borderRight,
-        top: e.style.borderTop,
-        bottom: e.style.borderBottom,
+        start: e.style.borderLeftWidth,
+        end: e.style.borderRightWidth,
+        top: e.style.borderTopWidth,
+        bottom: e.style.borderBottomWidth,
       }),
 
       start: parseDimension(e.style.left),
@@ -120,8 +120,8 @@ function describeElement(e) {
     layout: {
       width: e.offsetWidth,
       height: e.offsetHeight,
-      x: e.offsetLeft,
-      y: e.offsetTop,
+      x: e.offsetLeft + e.parentNode.clientLeft,
+      y: e.offsetTop + e.parentNode.clientTop,
     },
 
     children: Array.from(e.children).map(c => describeElement(c)),
