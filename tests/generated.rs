@@ -7,18 +7,9 @@ mod generated {
             width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -507,11 +498,7 @@ mod generated {
                 children: vec![stretch::style::Node {
                     flex_grow: 1.0,
                     flex_shrink: 1.0,
-                    children: vec![stretch::style::Node {
-                        flex_grow: 1.0,
-                        flex_shrink: 1.0,
-                        ..Default::default()
-                    }],
+                    children: vec![stretch::style::Node { flex_grow: 1.0, flex_shrink: 1.0, ..Default::default() }],
                     ..Default::default()
                 }],
                 ..Default::default()
@@ -568,14 +555,8 @@ mod generated {
             width: stretch::style::Dimension::Points(150.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(50.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(50.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { width: stretch::style::Dimension::Points(50.0), ..Default::default() },
+                stretch::style::Node { width: stretch::style::Dimension::Points(50.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -603,18 +584,9 @@ mod generated {
             width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -757,18 +729,9 @@ mod generated {
             width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -895,14 +858,8 @@ mod generated {
             width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    flex_basis: stretch::style::Dimension::Points(100.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    flex_basis: stretch::style::Dimension::Points(50.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { flex_basis: stretch::style::Dimension::Points(100.0), ..Default::default() },
+                stretch::style::Node { flex_basis: stretch::style::Dimension::Points(50.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -1071,18 +1028,9 @@ mod generated {
             width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -1126,10 +1074,7 @@ mod generated {
                         flex_basis: stretch::style::Dimension::Points(200.0),
                         ..Default::default()
                     },
-                    stretch::style::Node {
-                        height: stretch::style::Dimension::Points(100.0),
-                        ..Default::default()
-                    },
+                    stretch::style::Node { height: stretch::style::Dimension::Points(100.0), ..Default::default() },
                 ],
                 ..Default::default()
             }],
@@ -1162,9 +1107,7 @@ mod generated {
         let layout = stretch::compute(&stretch::style::Node {
             width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
-            children: vec![stretch::style::Node {
-                ..Default::default()
-            }],
+            children: vec![stretch::style::Node { ..Default::default() }],
             ..Default::default()
         });
 
@@ -1185,14 +1128,8 @@ mod generated {
             min_width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    flex_grow: 1.0,
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(50.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { flex_grow: 1.0, ..Default::default() },
+                stretch::style::Node { width: stretch::style::Dimension::Points(50.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -1274,15 +1211,8 @@ mod generated {
             min_height: stretch::style::Dimension::Points(100.0),
             max_height: stretch::style::Dimension::Points(500.0),
             children: vec![
-                stretch::style::Node {
-                    flex_grow: 1.0,
-                    flex_shrink: 1.0,
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(50.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { flex_grow: 1.0, flex_shrink: 1.0, ..Default::default() },
+                stretch::style::Node { height: stretch::style::Dimension::Points(50.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -1343,10 +1273,7 @@ mod generated {
                     min_height: stretch::style::Dimension::Points(60.0),
                     ..Default::default()
                 },
-                stretch::style::Node {
-                    flex_grow: 1.0,
-                    ..Default::default()
-                },
+                stretch::style::Node { flex_grow: 1.0, ..Default::default() },
             ],
             ..Default::default()
         });
@@ -1374,18 +1301,9 @@ mod generated {
             width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -1446,10 +1364,7 @@ mod generated {
                 width: stretch::style::Dimension::Points(100.0),
                 max_width: stretch::style::Dimension::Points(100.0),
                 height: stretch::style::Dimension::Points(100.0),
-                margin: stretch::style::Edges {
-                    start: stretch::style::Dimension::Points(20.0),
-                    ..Default::default()
-                },
+                margin: stretch::style::Edges { start: stretch::style::Dimension::Points(20.0), ..Default::default() },
                 ..Default::default()
             }],
             ..Default::default()
@@ -1505,10 +1420,7 @@ mod generated {
             height: stretch::style::Dimension::Points(100.0),
             children: vec![stretch::style::Node {
                 width: stretch::style::Dimension::Points(10.0),
-                margin: stretch::style::Edges {
-                    end: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
+                margin: stretch::style::Edges { end: stretch::style::Dimension::Points(10.0), ..Default::default() },
                 ..Default::default()
             }],
             ..Default::default()
@@ -1535,11 +1447,7 @@ mod generated {
                 children: vec![stretch::style::Node {
                     flex_grow: 1.0,
                     flex_shrink: 1.0,
-                    children: vec![stretch::style::Node {
-                        flex_grow: 1.0,
-                        flex_shrink: 1.0,
-                        ..Default::default()
-                    }],
+                    children: vec![stretch::style::Node { flex_grow: 1.0, flex_shrink: 1.0, ..Default::default() }],
                     ..Default::default()
                 }],
                 ..Default::default()
@@ -1769,14 +1677,8 @@ mod generated {
             width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    flex_basis: stretch::style::Dimension::Points(100.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    flex_basis: stretch::style::Dimension::Points(50.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { flex_basis: stretch::style::Dimension::Points(100.0), ..Default::default() },
+                stretch::style::Node { flex_basis: stretch::style::Dimension::Points(50.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -1829,10 +1731,7 @@ mod generated {
         let layout = stretch::compute(&stretch::style::Node {
             justify_content: stretch::style::JustifyContent::Center,
             min_width: stretch::style::Dimension::Points(50.0),
-            margin: stretch::style::Edges {
-                start: stretch::style::Dimension::Points(100.0),
-                ..Default::default()
-            },
+            margin: stretch::style::Edges { start: stretch::style::Dimension::Points(100.0), ..Default::default() },
             children: vec![stretch::style::Node {
                 width: stretch::style::Dimension::Points(20.0),
                 height: stretch::style::Dimension::Points(20.0),
@@ -2168,14 +2067,8 @@ mod generated {
             flex_direction: stretch::style::FlexDirection::Column,
             min_height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    flex_grow: 1.0,
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(50.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { flex_grow: 1.0, ..Default::default() },
+                stretch::style::Node { height: stretch::style::Dimension::Points(50.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -2239,10 +2132,7 @@ mod generated {
                 stretch::style::Node {
                     width: stretch::style::Dimension::Points(50.0),
                     height: stretch::style::Dimension::Points(50.0),
-                    margin: stretch::style::Edges {
-                        start: stretch::style::Dimension::Auto,
-                        ..Default::default()
-                    },
+                    margin: stretch::style::Edges { start: stretch::style::Dimension::Auto, ..Default::default() },
                     ..Default::default()
                 },
                 stretch::style::Node {
@@ -2346,10 +2236,7 @@ mod generated {
                     flex_basis: stretch::style::Dimension::Points(50.0),
                     ..Default::default()
                 },
-                stretch::style::Node {
-                    flex_grow: 1.0,
-                    ..Default::default()
-                },
+                stretch::style::Node { flex_grow: 1.0, ..Default::default() },
             ],
             ..Default::default()
         });
@@ -2403,18 +2290,9 @@ mod generated {
             width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -2569,10 +2447,7 @@ mod generated {
                     flex_grow: 1.0,
                     flex_shrink: 1.0,
                     flex_basis: stretch::style::Dimension::Percent(0.0),
-                    margin: stretch::style::Edges {
-                        start: stretch::style::Dimension::Auto,
-                        ..Default::default()
-                    },
+                    margin: stretch::style::Edges { start: stretch::style::Dimension::Auto, ..Default::default() },
                     ..Default::default()
                 },
                 stretch::style::Node {
@@ -2836,18 +2711,9 @@ mod generated {
             width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -2882,10 +2748,7 @@ mod generated {
             height: stretch::style::Dimension::Points(100.0),
             children: vec![stretch::style::Node {
                 height: stretch::style::Dimension::Points(10.0),
-                margin: stretch::style::Edges {
-                    bottom: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
+                margin: stretch::style::Edges { bottom: stretch::style::Dimension::Points(10.0), ..Default::default() },
                 ..Default::default()
             }],
             ..Default::default()
@@ -2911,10 +2774,7 @@ mod generated {
                 width: stretch::style::Dimension::Points(100.0),
                 height: stretch::style::Dimension::Points(100.0),
                 max_height: stretch::style::Dimension::Points(100.0),
-                margin: stretch::style::Edges {
-                    top: stretch::style::Dimension::Points(20.0),
-                    ..Default::default()
-                },
+                margin: stretch::style::Edges { top: stretch::style::Dimension::Points(20.0), ..Default::default() },
                 ..Default::default()
             }],
             ..Default::default()
@@ -3056,18 +2916,9 @@ mod generated {
             width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -3168,19 +3019,13 @@ mod generated {
                 stretch::style::Node {
                     width: stretch::style::Dimension::Points(50.0),
                     height: stretch::style::Dimension::Points(50.0),
-                    margin: stretch::style::Edges {
-                        top: stretch::style::Dimension::Auto,
-                        ..Default::default()
-                    },
+                    margin: stretch::style::Edges { top: stretch::style::Dimension::Auto, ..Default::default() },
                     ..Default::default()
                 },
                 stretch::style::Node {
                     width: stretch::style::Dimension::Points(50.0),
                     height: stretch::style::Dimension::Points(50.0),
-                    margin: stretch::style::Edges {
-                        top: stretch::style::Dimension::Auto,
-                        ..Default::default()
-                    },
+                    margin: stretch::style::Edges { top: stretch::style::Dimension::Auto, ..Default::default() },
                     ..Default::default()
                 },
                 stretch::style::Node {
@@ -3400,10 +3245,7 @@ mod generated {
                     },
                     ..Default::default()
                 },
-                stretch::style::Node {
-                    flex_grow: 1.0,
-                    ..Default::default()
-                },
+                stretch::style::Node { flex_grow: 1.0, ..Default::default() },
             ],
             ..Default::default()
         });
@@ -3499,10 +3341,7 @@ mod generated {
             children: vec![stretch::style::Node {
                 width: stretch::style::Dimension::Points(10.0),
                 height: stretch::style::Dimension::Points(10.0),
-                margin: stretch::style::Edges {
-                    top: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
+                margin: stretch::style::Edges { top: stretch::style::Dimension::Points(10.0), ..Default::default() },
                 ..Default::default()
             }],
             ..Default::default()
@@ -3526,18 +3365,9 @@ mod generated {
             width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -3570,18 +3400,9 @@ mod generated {
             width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -3971,18 +3792,9 @@ mod generated {
             width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -4083,10 +3895,7 @@ mod generated {
                 stretch::style::Node {
                     width: stretch::style::Dimension::Points(50.0),
                     height: stretch::style::Dimension::Points(50.0),
-                    margin: stretch::style::Edges {
-                        top: stretch::style::Dimension::Auto,
-                        ..Default::default()
-                    },
+                    margin: stretch::style::Edges { top: stretch::style::Dimension::Auto, ..Default::default() },
                     ..Default::default()
                 },
                 stretch::style::Node {
@@ -4128,10 +3937,7 @@ mod generated {
                         flex_basis: stretch::style::Dimension::Points(100.0),
                         ..Default::default()
                     },
-                    stretch::style::Node {
-                        width: stretch::style::Dimension::Points(50.0),
-                        ..Default::default()
-                    },
+                    stretch::style::Node { width: stretch::style::Dimension::Points(50.0), ..Default::default() },
                 ],
                 ..Default::default()
             }],
@@ -4220,10 +4026,7 @@ mod generated {
             children: vec![stretch::style::Node {
                 width: stretch::style::Dimension::Points(72.0),
                 height: stretch::style::Dimension::Points(72.0),
-                margin: stretch::style::Edges {
-                    start: stretch::style::Dimension::Auto,
-                    ..Default::default()
-                },
+                margin: stretch::style::Edges { start: stretch::style::Dimension::Auto, ..Default::default() },
                 ..Default::default()
             }],
             ..Default::default()
@@ -4579,10 +4382,7 @@ mod generated {
             align_items: stretch::style::AlignItems::Center,
             width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
-            margin: stretch::style::Edges {
-                top: stretch::style::Dimension::Points(20.0),
-                ..Default::default()
-            },
+            margin: stretch::style::Edges { top: stretch::style::Dimension::Points(20.0), ..Default::default() },
             children: vec![stretch::style::Node {
                 justify_content: stretch::style::JustifyContent::Center,
                 flex_grow: 0.0,
@@ -4633,10 +4433,7 @@ mod generated {
                 stretch::style::Node {
                     width: stretch::style::Dimension::Points(50.0),
                     height: stretch::style::Dimension::Points(50.0),
-                    margin: stretch::style::Edges {
-                        end: stretch::style::Dimension::Auto,
-                        ..Default::default()
-                    },
+                    margin: stretch::style::Edges { end: stretch::style::Dimension::Auto, ..Default::default() },
                     ..Default::default()
                 },
                 stretch::style::Node {
@@ -4764,10 +4561,7 @@ mod generated {
                     },
                     ..Default::default()
                 },
-                stretch::style::Node {
-                    flex_grow: 1.0,
-                    ..Default::default()
-                },
+                stretch::style::Node { flex_grow: 1.0, ..Default::default() },
             ],
             ..Default::default()
         });
@@ -4793,18 +4587,9 @@ mod generated {
         let layout = stretch::compute(&stretch::style::Node {
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -4891,18 +4676,9 @@ mod generated {
             flex_direction: stretch::style::FlexDirection::Column,
             width: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -5033,10 +4809,7 @@ mod generated {
                     min_width: stretch::style::Dimension::Points(60.0),
                     ..Default::default()
                 },
-                stretch::style::Node {
-                    flex_grow: 1.0,
-                    ..Default::default()
-                },
+                stretch::style::Node { flex_grow: 1.0, ..Default::default() },
             ],
             ..Default::default()
         });
@@ -5329,10 +5102,7 @@ mod generated {
             justify_content: stretch::style::JustifyContent::Center,
             width: stretch::style::Dimension::Points(100.0),
             max_width: stretch::style::Dimension::Points(80.0),
-            margin: stretch::style::Edges {
-                start: stretch::style::Dimension::Points(100.0),
-                ..Default::default()
-            },
+            margin: stretch::style::Edges { start: stretch::style::Dimension::Points(100.0), ..Default::default() },
             children: vec![stretch::style::Node {
                 width: stretch::style::Dimension::Points(20.0),
                 height: stretch::style::Dimension::Points(20.0),
@@ -5359,10 +5129,7 @@ mod generated {
             height: stretch::style::Dimension::Points(100.0),
             children: vec![stretch::style::Node {
                 width: stretch::style::Dimension::Points(10.0),
-                margin: stretch::style::Edges {
-                    start: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
+                margin: stretch::style::Edges { start: stretch::style::Dimension::Points(10.0), ..Default::default() },
                 ..Default::default()
             }],
             ..Default::default()
@@ -5510,10 +5277,7 @@ mod generated {
             width: stretch::style::Dimension::Points(350.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(100.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { width: stretch::style::Dimension::Points(100.0), ..Default::default() },
                 stretch::style::Node {
                     flex_direction: stretch::style::FlexDirection::Column,
                     flex_grow: 1.0,
@@ -5523,10 +5287,7 @@ mod generated {
                     }],
                     ..Default::default()
                 },
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(100.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { width: stretch::style::Dimension::Points(100.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -5593,10 +5354,7 @@ mod generated {
             height: stretch::style::Dimension::Points(100.0),
             children: vec![stretch::style::Node {
                 height: stretch::style::Dimension::Points(10.0),
-                margin: stretch::style::Edges {
-                    top: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
+                margin: stretch::style::Edges { top: stretch::style::Dimension::Points(10.0), ..Default::default() },
                 ..Default::default()
             }],
             ..Default::default()
@@ -5821,10 +5579,7 @@ mod generated {
             justify_content: stretch::style::JustifyContent::Center,
             height: stretch::style::Dimension::Points(100.0),
             max_height: stretch::style::Dimension::Points(80.0),
-            margin: stretch::style::Edges {
-                top: stretch::style::Dimension::Points(100.0),
-                ..Default::default()
-            },
+            margin: stretch::style::Edges { top: stretch::style::Dimension::Points(100.0), ..Default::default() },
             children: vec![stretch::style::Node {
                 width: stretch::style::Dimension::Points(20.0),
                 height: stretch::style::Dimension::Points(20.0),
@@ -5856,10 +5611,7 @@ mod generated {
                     flex_basis: stretch::style::Dimension::Points(50.0),
                     ..Default::default()
                 },
-                stretch::style::Node {
-                    flex_grow: 1.0,
-                    ..Default::default()
-                },
+                stretch::style::Node { flex_grow: 1.0, ..Default::default() },
             ],
             ..Default::default()
         });
@@ -5996,18 +5748,9 @@ mod generated {
             width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -6045,10 +5788,7 @@ mod generated {
                     flex_basis: stretch::style::Dimension::Points(100.0),
                     ..Default::default()
                 },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(50.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { height: stretch::style::Dimension::Points(50.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -6077,18 +5817,9 @@ mod generated {
             width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -6190,10 +5921,7 @@ mod generated {
                 stretch::style::Node {
                     width: stretch::style::Dimension::Points(50.0),
                     height: stretch::style::Dimension::Points(50.0),
-                    margin: stretch::style::Edges {
-                        bottom: stretch::style::Dimension::Auto,
-                        ..Default::default()
-                    },
+                    margin: stretch::style::Edges { bottom: stretch::style::Dimension::Auto, ..Default::default() },
                     ..Default::default()
                 },
                 stretch::style::Node {
@@ -6227,11 +5955,7 @@ mod generated {
             width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![stretch::style::Node {
-                children: vec![stretch::style::Node {
-                    flex_grow: 1.0,
-                    flex_shrink: 1.0,
-                    ..Default::default()
-                }],
+                children: vec![stretch::style::Node { flex_grow: 1.0, flex_shrink: 1.0, ..Default::default() }],
                 ..Default::default()
             }],
             ..Default::default()
@@ -6353,19 +6077,13 @@ mod generated {
                 stretch::style::Node {
                     width: stretch::style::Dimension::Points(50.0),
                     height: stretch::style::Dimension::Points(50.0),
-                    margin: stretch::style::Edges {
-                        end: stretch::style::Dimension::Auto,
-                        ..Default::default()
-                    },
+                    margin: stretch::style::Edges { end: stretch::style::Dimension::Auto, ..Default::default() },
                     ..Default::default()
                 },
                 stretch::style::Node {
                     width: stretch::style::Dimension::Points(50.0),
                     height: stretch::style::Dimension::Points(50.0),
-                    margin: stretch::style::Edges {
-                        end: stretch::style::Dimension::Auto,
-                        ..Default::default()
-                    },
+                    margin: stretch::style::Edges { end: stretch::style::Dimension::Auto, ..Default::default() },
                     ..Default::default()
                 },
                 stretch::style::Node {
@@ -6571,18 +6289,9 @@ mod generated {
             width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { width: stretch::style::Dimension::Points(10.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -6823,16 +6532,8 @@ mod generated {
                     flex_basis: stretch::style::Dimension::Points(40.0),
                     ..Default::default()
                 },
-                stretch::style::Node {
-                    flex_grow: 0.2,
-                    flex_shrink: 0.0,
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    flex_grow: 0.4,
-                    flex_shrink: 0.0,
-                    ..Default::default()
-                },
+                stretch::style::Node { flex_grow: 0.2, flex_shrink: 0.0, ..Default::default() },
+                stretch::style::Node { flex_grow: 0.4, flex_shrink: 0.0, ..Default::default() },
             ],
             ..Default::default()
         });
@@ -6863,14 +6564,8 @@ mod generated {
         let layout = stretch::compute(&stretch::style::Node {
             min_height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    flex_grow: 1.0,
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(50.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { flex_grow: 1.0, ..Default::default() },
+                stretch::style::Node { height: stretch::style::Dimension::Points(50.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -6938,18 +6633,9 @@ mod generated {
             width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -6981,18 +6667,9 @@ mod generated {
             width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    flex_grow: 1.0,
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    flex_grow: 1.0,
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    flex_grow: 1.0,
-                    ..Default::default()
-                },
+                stretch::style::Node { flex_grow: 1.0, ..Default::default() },
+                stretch::style::Node { flex_grow: 1.0, ..Default::default() },
+                stretch::style::Node { flex_grow: 1.0, ..Default::default() },
             ],
             ..Default::default()
         });
@@ -7187,14 +6864,8 @@ mod generated {
                     flex_basis: stretch::style::Dimension::Points(100.0),
                     ..Default::default()
                 },
-                stretch::style::Node {
-                    flex_basis: stretch::style::Dimension::Points(25.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    flex_basis: stretch::style::Dimension::Points(25.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { flex_basis: stretch::style::Dimension::Points(25.0), ..Default::default() },
+                stretch::style::Node { flex_basis: stretch::style::Dimension::Points(25.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -7301,26 +6972,11 @@ mod generated {
             width: stretch::style::Dimension::Points(113.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    flex_grow: 1.0,
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    flex_grow: 1.0,
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    flex_grow: 1.0,
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    flex_grow: 1.0,
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    flex_grow: 1.0,
-                    ..Default::default()
-                },
+                stretch::style::Node { flex_grow: 1.0, ..Default::default() },
+                stretch::style::Node { flex_grow: 1.0, ..Default::default() },
+                stretch::style::Node { flex_grow: 1.0, ..Default::default() },
+                stretch::style::Node { flex_grow: 1.0, ..Default::default() },
+                stretch::style::Node { flex_grow: 1.0, ..Default::default() },
             ],
             ..Default::default()
         });
@@ -7456,10 +7112,7 @@ mod generated {
                         flex_basis: stretch::style::Dimension::Points(200.0),
                         ..Default::default()
                     },
-                    stretch::style::Node {
-                        height: stretch::style::Dimension::Points(100.0),
-                        ..Default::default()
-                    },
+                    stretch::style::Node { height: stretch::style::Dimension::Points(100.0), ..Default::default() },
                 ],
                 ..Default::default()
             }],
@@ -7569,14 +7222,8 @@ mod generated {
                 height: stretch::style::Dimension::Points(50.0),
                 start: stretch::style::Dimension::Percent(0.5),
                 children: vec![
-                    stretch::style::Node {
-                        width: stretch::style::Dimension::Percent(1.0),
-                        ..Default::default()
-                    },
-                    stretch::style::Node {
-                        width: stretch::style::Dimension::Percent(1.0),
-                        ..Default::default()
-                    },
+                    stretch::style::Node { width: stretch::style::Dimension::Percent(1.0), ..Default::default() },
+                    stretch::style::Node { width: stretch::style::Dimension::Percent(1.0), ..Default::default() },
                 ],
                 ..Default::default()
             }],
@@ -7617,10 +7264,7 @@ mod generated {
                     flex_basis: stretch::style::Dimension::Points(200.0),
                     ..Default::default()
                 },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(100.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { height: stretch::style::Dimension::Points(100.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -7649,18 +7293,9 @@ mod generated {
             width: stretch::style::Dimension::Points(100.0),
             height: stretch::style::Dimension::Points(100.0),
             children: vec![
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    height: stretch::style::Dimension::Points(10.0),
-                    ..Default::default()
-                },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
+                stretch::style::Node { height: stretch::style::Dimension::Points(10.0), ..Default::default() },
             ],
             ..Default::default()
         });
@@ -7779,10 +7414,7 @@ mod generated {
                     flex_grow: 1.0,
                     flex_shrink: 1.0,
                     flex_basis: stretch::style::Dimension::Percent(0.0),
-                    margin: stretch::style::Edges {
-                        top: stretch::style::Dimension::Auto,
-                        ..Default::default()
-                    },
+                    margin: stretch::style::Edges { top: stretch::style::Dimension::Auto, ..Default::default() },
                     ..Default::default()
                 },
                 stretch::style::Node {
@@ -7816,10 +7448,7 @@ mod generated {
             flex_direction: stretch::style::FlexDirection::Column,
             justify_content: stretch::style::JustifyContent::Center,
             min_height: stretch::style::Dimension::Points(50.0),
-            margin: stretch::style::Edges {
-                top: stretch::style::Dimension::Points(100.0),
-                ..Default::default()
-            },
+            margin: stretch::style::Edges { top: stretch::style::Dimension::Points(100.0), ..Default::default() },
             children: vec![stretch::style::Node {
                 width: stretch::style::Dimension::Points(20.0),
                 height: stretch::style::Dimension::Points(20.0),
@@ -7849,11 +7478,7 @@ mod generated {
                 children: vec![stretch::style::Node {
                     flex_grow: 1.0,
                     flex_shrink: 1.0,
-                    children: vec![stretch::style::Node {
-                        flex_grow: 1.0,
-                        flex_shrink: 1.0,
-                        ..Default::default()
-                    }],
+                    children: vec![stretch::style::Node { flex_grow: 1.0, flex_shrink: 1.0, ..Default::default() }],
                     ..Default::default()
                 }],
                 ..Default::default()
