@@ -196,6 +196,9 @@ fn compute_internal(
     let mut flex_items: Vec<FlexItem> = node
         .children
         .iter()
+        .filter(|child| {
+            child.position != style::Position::Absolute
+        })
         .map(|child| FlexItem {
             node: child,
 
@@ -885,8 +888,9 @@ fn compute_internal(
         is_first = false;
     }
 
-    let mut children: Vec<layout::Node> = vec![];
+    // Do a final layout pass and gather the resulting layouts
 
+    let mut children: Vec<layout::Node> = vec![];
     let mut total_offset_cross = padding_cross_start + border_cross_start;
 
     for line in &mut flex_lines {
@@ -936,6 +940,75 @@ fn compute_internal(
         }
 
         total_offset_cross += line.offset_cross + line.cross_size;
+    }
+
+    // Before returning we perform absolute layout on all absolutely positioned children
+
+    let absolute_children: Vec<&style::Node> = node
+        .children
+        .iter()
+        .filter(|child| {
+            child.position == style::Position::Absolute
+        }).collect();
+
+    for child in absolute_children {
+        let start_main = child.main_start(node.flex_direction).resolve(container_main_size, f32::NAN);
+        let end_main = child.main_end(node.flex_direction).resolve(container_main_size, f32::NAN);
+        let start_cross = child.cross_start(node.flex_direction).resolve(container_cross_size, f32::NAN);
+        let end_cross = child.cross_end(node.flex_direction).resolve(container_cross_size, f32::NAN);
+
+        let main = if start_main.is_finite() && end_main.is_finite() {
+            end_main - start_main
+        } else {
+            f32::NAN
+        };
+
+        let cross = if start_cross.is_finite() && end_cross.is_finite() {
+            end_cross - start_cross
+        } else {
+            f32::NAN
+        };
+
+        let result = compute_internal(
+            child,
+            if node.flex_direction.is_row() { SizeConstraint::exactly(main) } else { SizeConstraint::exactly(cross) },
+            if node.flex_direction.is_column() { SizeConstraint::exactly(main) } else { SizeConstraint::exactly(cross) },
+        );
+
+        let offset_main = if start_main.is_finite() {
+            start_main
+        } else if end_main.is_finite() {
+            container_main_size - end_main - result.size.main(node.flex_direction)
+        } else {
+            match node.justify_content {
+                style::JustifyContent::SpaceBetween | style::JustifyContent::FlexStart => 0.0,
+                style::JustifyContent::FlexEnd => container_main_size - result.size.main(node.flex_direction),
+                style::JustifyContent::SpaceEvenly | style::JustifyContent::SpaceAround | style::JustifyContent::Center => container_main_size / 2.0 - result.size.main(node.flex_direction) / 2.0,
+            }
+        };
+
+        let offset_cross = if start_cross.is_finite() {
+            start_cross
+        } else if end_cross.is_finite() {
+            container_cross_size - end_cross - result.size.cross(node.flex_direction)
+        } else {
+            match child.align_self(node) {
+                style::AlignSelf::Auto => 0.0, // Should never happen
+                style::AlignSelf::FlexStart => 0.0,
+                style::AlignSelf::FlexEnd => container_cross_size - result.size.cross(node.flex_direction),
+                style::AlignSelf::Center => container_cross_size / 2.0 - result.size.cross(node.flex_direction) / 2.0,
+                style::AlignSelf::Baseline => free_space / 2.0, // Treat as center for now until we have baseline support
+                style::AlignSelf::Stretch => 0.0,
+            }
+        };
+
+        children.push(layout::Node {
+            width: result.size.width,
+            height: result.size.height,
+            x: if node.flex_direction.is_row() { offset_main } else { offset_cross },
+            y: if node.flex_direction.is_column() { offset_main } else { offset_cross },
+            children: result.children,
+        });
     }
 
     ComputeResult {
