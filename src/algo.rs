@@ -112,12 +112,35 @@ pub fn compute(root: &style::Node) -> layout::Node {
         SizeConstraint::undefined(),
     );
 
-    layout::Node {
+    round_layout(&layout::Node {
         width: result.size.width,
         height: result.size.height,
         x: 0.0,
         y: 0.0,
         children: result.children,
+    }, 0.0, 0.0)
+}
+
+fn round_layout(layout: &layout::Node, abs_x: f32, abs_y: f32) -> layout::Node {
+    let abs_x = abs_x + layout.x;
+    let abs_y = abs_y + layout.y;
+
+    let rounded_x = layout.x.round();
+    let rounded_y = layout.y.round();
+
+    let rounded_width = (abs_x + layout.width).round() - abs_x.round();
+    let rounded_height = (abs_y + layout.height).round() - abs_y.round();
+
+    let rounded_children = layout.children.iter().map(|child| {
+        round_layout(child, abs_x, abs_y)
+    }).collect();
+
+    layout::Node {
+        width: rounded_width,
+        height: rounded_height,
+        x: rounded_x,
+        y: rounded_y,
+        children: rounded_children,
     }
 }
 
