@@ -33,35 +33,23 @@ struct SizeConstraint {
 
 impl SizeConstraint {
     fn exactly(size: f32) -> SizeConstraint {
-        SizeConstraint {
-            min: size,
-            max: size,
-        }
+        SizeConstraint { min: size, max: size }
     }
 
     fn undefined() -> SizeConstraint {
-        SizeConstraint {
-            min: f32::NAN,
-            max: f32::NAN,
-        }
+        SizeConstraint { min: f32::NAN, max: f32::NAN }
     }
 
     fn at_least(size: f32) -> SizeConstraint {
-        SizeConstraint {
-            min: size,
-            max: f32::NAN,
-        }
+        SizeConstraint { min: size, max: f32::NAN }
     }
 
     fn at_most(size: f32) -> SizeConstraint {
-        SizeConstraint {
-            min: f32::NAN,
-            max: size,
-        }
+        SizeConstraint { min: f32::NAN, max: size }
     }
 
     fn between(min: f32, max: f32) -> SizeConstraint {
-        SizeConstraint { min: min, max: max }
+        SizeConstraint { min, max }
     }
 }
 
@@ -106,19 +94,19 @@ struct FlexLine<'a> {
 }
 
 pub fn compute(root: &style::Node) -> layout::Node {
-    let result = compute_internal(
-        root,
-        SizeConstraint::undefined(),
-        SizeConstraint::undefined(),
-    );
+    let result = compute_internal(root, SizeConstraint::undefined(), SizeConstraint::undefined());
 
-    round_layout(&layout::Node {
-        width: result.size.width,
-        height: result.size.height,
-        x: 0.0,
-        y: 0.0,
-        children: result.children,
-    }, 0.0, 0.0)
+    round_layout(
+        &layout::Node {
+            width: result.size.width,
+            height: result.size.height,
+            x: 0.0,
+            y: 0.0,
+            children: result.children,
+        },
+        0.0,
+        0.0,
+    )
 }
 
 fn round_layout(layout: &layout::Node, abs_x: f32, abs_y: f32) -> layout::Node {
@@ -131,9 +119,7 @@ fn round_layout(layout: &layout::Node, abs_x: f32, abs_y: f32) -> layout::Node {
     let rounded_width = (abs_x + layout.width).round() - abs_x.round();
     let rounded_height = (abs_y + layout.height).round() - abs_y.round();
 
-    let rounded_children = layout.children.iter().map(|child| {
-        round_layout(child, abs_x, abs_y)
-    }).collect();
+    let rounded_children = layout.children.iter().map(|child| round_layout(child, abs_x, abs_y)).collect();
 
     layout::Node {
         width: rounded_width,
@@ -159,73 +145,49 @@ fn compute_internal(
     };
 
     let (intrinsic_main_size, intrinsic_cross_size) = (
-        node.main_size(node.flex_direction)
-            .resolve(main_constraint.max, f32::NAN),
-        node.cross_size(node.flex_direction)
-            .resolve(cross_constraint.max, f32::NAN),
+        node.main_size(node.flex_direction).resolve(main_constraint.max, f32::NAN),
+        node.cross_size(node.flex_direction).resolve(cross_constraint.max, f32::NAN),
     );
 
     let (margin_main_start, margin_cross_start) = (
-        node.main_margin_start(node.flex_direction)
-            .resolve(main_constraint.max, 0.0),
-        node.cross_margin_start(node.flex_direction)
-            .resolve(main_constraint.max, 0.0),
+        node.main_margin_start(node.flex_direction).resolve(main_constraint.max, 0.0),
+        node.cross_margin_start(node.flex_direction).resolve(main_constraint.max, 0.0),
     );
 
     let (margin_main_end, margin_cross_end) = (
-        node.main_margin_end(node.flex_direction)
-            .resolve(main_constraint.max, 0.0),
-        node.cross_margin_end(node.flex_direction)
-            .resolve(main_constraint.max, 0.0),
+        node.main_margin_end(node.flex_direction).resolve(main_constraint.max, 0.0),
+        node.cross_margin_end(node.flex_direction).resolve(main_constraint.max, 0.0),
     );
 
-    let (margin_main, margin_cross) = (
-        margin_main_start + margin_main_end,
-        margin_cross_start + margin_cross_end,
-    );
+    let (margin_main, margin_cross) = (margin_main_start + margin_main_end, margin_cross_start + margin_cross_end);
 
     let (padding_main_start, padding_cross_start) = (
-        node.main_padding_start(node.flex_direction)
-            .resolve(main_constraint.max, 0.0),
-        node.cross_padding_start(node.flex_direction)
-            .resolve(main_constraint.max, 0.0),
+        node.main_padding_start(node.flex_direction).resolve(main_constraint.max, 0.0),
+        node.cross_padding_start(node.flex_direction).resolve(main_constraint.max, 0.0),
     );
 
     let (padding_main_end, padding_cross_end) = (
-        node.main_padding_end(node.flex_direction)
-            .resolve(main_constraint.max, 0.0),
-        node.cross_padding_end(node.flex_direction)
-            .resolve(main_constraint.max, 0.0),
+        node.main_padding_end(node.flex_direction).resolve(main_constraint.max, 0.0),
+        node.cross_padding_end(node.flex_direction).resolve(main_constraint.max, 0.0),
     );
 
-    let (padding_main, padding_cross) = (
-        padding_main_start + padding_main_end,
-        padding_cross_start + padding_cross_end,
-    );
+    let (padding_main, padding_cross) =
+        (padding_main_start + padding_main_end, padding_cross_start + padding_cross_end);
 
     let (border_main_start, border_cross_start) = (
-        node.main_border_start(node.flex_direction)
-            .resolve(main_constraint.max, 0.0),
-        node.cross_border_start(node.flex_direction)
-            .resolve(main_constraint.max, 0.0),
+        node.main_border_start(node.flex_direction).resolve(main_constraint.max, 0.0),
+        node.cross_border_start(node.flex_direction).resolve(main_constraint.max, 0.0),
     );
 
     let (border_main_end, border_cross_end) = (
-        node.main_border_end(node.flex_direction)
-            .resolve(main_constraint.max, 0.0),
-        node.cross_border_end(node.flex_direction)
-            .resolve(main_constraint.max, 0.0),
+        node.main_border_end(node.flex_direction).resolve(main_constraint.max, 0.0),
+        node.cross_border_end(node.flex_direction).resolve(main_constraint.max, 0.0),
     );
 
-    let (border_main, border_cross) = (
-        border_main_start + border_main_end,
-        border_cross_start + border_cross_end,
-    );
+    let (border_main, border_cross) = (border_main_start + border_main_end, border_cross_start + border_cross_end);
 
-    let (inner_intrinsic_main_size, inner_intrinsic_cross_size) = (
-        intrinsic_main_size - padding_main - border_main,
-        intrinsic_cross_size - padding_cross - border_cross,
-    );
+    let (inner_intrinsic_main_size, inner_intrinsic_cross_size) =
+        (intrinsic_main_size - padding_main - border_main, intrinsic_cross_size - padding_cross - border_cross);
 
     // 9.2. Line Length Determination
 
@@ -266,17 +228,15 @@ fn compute_internal(
     //    margin, border, and padding from the space available to the flex container
     //    in that dimension and use that value. This might result in an infinite value.
 
-    let avaliable_main = node
-        .main_size(node.flex_direction)
-        .resolve(main_constraint.max, main_constraint.max - margin_main)
-        - padding_main
-        - border_main;
+    let avaliable_main =
+        node.main_size(node.flex_direction).resolve(main_constraint.max, main_constraint.max - margin_main)
+            - padding_main
+            - border_main;
 
-    let avaliable_cross = node
-        .cross_size(node.flex_direction)
-        .resolve(cross_constraint.max, cross_constraint.max - margin_cross)
-        - padding_cross
-        - border_cross;
+    let avaliable_cross =
+        node.cross_size(node.flex_direction).resolve(cross_constraint.max, cross_constraint.max - margin_cross)
+            - padding_cross
+            - border_cross;
 
     // 3. Determine the flex base size and hypothetical main size of each item:
     for child in &mut flex_items {
@@ -294,10 +254,7 @@ fn compute_internal(
         //    cross size and the flex item’s intrinsic aspect ratio.
 
         if let Some(ratio) = child.node.aspect_ratio {
-            let cross_size = child
-                .node
-                .cross_size(node.flex_direction)
-                .resolve(avaliable_cross, f32::NAN);
+            let cross_size = child.node.cross_size(node.flex_direction).resolve(avaliable_cross, f32::NAN);
 
             if intrinsic_cross_size.is_finite() && child.node.flex_basis == style::Dimension::Auto {
                 child.flex_basis = ratio * cross_size;
@@ -314,16 +271,8 @@ fn compute_internal(
         if main_constraint.min.is_finite() || main_constraint.max.is_finite() {
             let size = compute_internal(
                 child.node,
-                if node.flex_direction.is_row() {
-                    main_constraint
-                } else {
-                    SizeConstraint::undefined()
-                },
-                if node.flex_direction.is_column() {
-                    main_constraint
-                } else {
-                    SizeConstraint::undefined()
-                },
+                if node.flex_direction.is_row() { main_constraint } else { SizeConstraint::undefined() },
+                if node.flex_direction.is_column() { main_constraint } else { SizeConstraint::undefined() },
             ).size;
             child.flex_basis = size.main(node.flex_direction);
             continue;
@@ -336,11 +285,7 @@ fn compute_internal(
         //    is the item’s max-content main size.
 
         if avaliable_main.is_nan() {
-            let size = compute_internal(
-                child.node,
-                SizeConstraint::undefined(),
-                SizeConstraint::undefined(),
-            ).size;
+            let size = compute_internal(child.node, SizeConstraint::undefined(), SizeConstraint::undefined()).size;
             child.flex_basis = size.main(node.flex_direction);
             continue;
         }
@@ -372,48 +317,21 @@ fn compute_internal(
     // used min and max main sizes (and flooring the content box size at zero).
 
     for child in &mut flex_items {
-        let padding_start = child
-            .node
-            .main_padding_start(node.flex_direction)
-            .resolve(avaliable_main, 0.0);
-        let padding_end = child
-            .node
-            .main_padding_end(node.flex_direction)
-            .resolve(avaliable_main, 0.0);
-        let border_start = child
-            .node
-            .main_border_start(node.flex_direction)
-            .resolve(avaliable_main, 0.0);
-        let border_end = child
-            .node
-            .main_border_end(node.flex_direction)
-            .resolve(avaliable_main, 0.0);
-        child.inner_flex_basis =
-            child.flex_basis - (padding_start + padding_end + border_start + border_end);
+        let padding_start = child.node.main_padding_start(node.flex_direction).resolve(avaliable_main, 0.0);
+        let padding_end = child.node.main_padding_end(node.flex_direction).resolve(avaliable_main, 0.0);
+        let border_start = child.node.main_border_start(node.flex_direction).resolve(avaliable_main, 0.0);
+        let border_end = child.node.main_border_end(node.flex_direction).resolve(avaliable_main, 0.0);
+        child.inner_flex_basis = child.flex_basis - (padding_start + padding_end + border_start + border_end);
 
         child.hypothetical_inner_main_size = child
             .flex_basis
-            .max(
-                child
-                    .node
-                    .min_main_size(node.flex_direction)
-                    .resolve(avaliable_main, f32::MIN),
-            ).min(
-                child
-                    .node
-                    .max_main_size(node.flex_direction)
-                    .resolve(avaliable_main, f32::MAX),
-            ).max(0.0);
+            .max(child.node.min_main_size(node.flex_direction).resolve(avaliable_main, f32::MIN))
+            .min(child.node.max_main_size(node.flex_direction).resolve(avaliable_main, f32::MAX))
+            .max(0.0);
 
         child.hypothetical_outer_main_size = child.hypothetical_inner_main_size
-            + child
-                .node
-                .main_margin_start(node.flex_direction)
-                .resolve(avaliable_main, 0.0)
-            + child
-                .node
-                .main_margin_end(node.flex_direction)
-                .resolve(avaliable_main, 0.0);
+            + child.node.main_margin_start(node.flex_direction).resolve(avaliable_main, 0.0)
+            + child.node.main_margin_end(node.flex_direction).resolve(avaliable_main, 0.0);
     }
 
     // 9.3. Main Size Determination
@@ -438,17 +356,9 @@ fn compute_internal(
         let mut line_length = 0.0;
 
         if node.wrap == style::Wrap::NoWrap {
-            lines.push(FlexLine {
-                items: flex_items,
-                cross_size: 0.0,
-                offset_cross: 0.0,
-            });
+            lines.push(FlexLine { items: flex_items, cross_size: 0.0, offset_cross: 0.0 });
         } else {
-            let mut line = FlexLine {
-                items: vec![],
-                cross_size: 0.0,
-                offset_cross: 0.0,
-            };
+            let mut line = FlexLine { items: vec![], cross_size: 0.0, offset_cross: 0.0 };
 
             for child in flex_items {
                 line_length += child.hypothetical_outer_main_size;
@@ -456,11 +366,7 @@ fn compute_internal(
                 if line_length > avaliable_main && line.items.len() > 0 {
                     line_length = child.hypothetical_outer_main_size;
                     lines.push(line);
-                    line = FlexLine {
-                        items: vec![],
-                        cross_size: 0.0,
-                        offset_cross: 0.0,
-                    };
+                    line = FlexLine { items: vec![], cross_size: 0.0, offset_cross: 0.0 };
                 }
 
                 line.items.push(child);
@@ -483,11 +389,7 @@ fn compute_internal(
         //    use the flex grow factor for the rest of this algorithm; otherwise, use the
         //    flex shrink factor.
 
-        let used_flex_factor: f32 = line
-            .items
-            .iter()
-            .map(|child| child.hypothetical_outer_main_size)
-            .sum();
+        let used_flex_factor: f32 = line.items.iter().map(|child| child.hypothetical_outer_main_size).sum();
         let growing = used_flex_factor < avaliable_main;
         let shrinking = !growing;
 
@@ -517,19 +419,9 @@ fn compute_internal(
             .items
             .iter()
             .map(|child| {
-                child
-                    .node
-                    .main_margin_start(node.flex_direction)
-                    .resolve(avaliable_main, 0.0)
-                    + child
-                        .node
-                        .main_margin_end(node.flex_direction)
-                        .resolve(avaliable_main, 0.0)
-                    + if child.frozen {
-                        child.target_main_size
-                    } else {
-                        child.flex_basis
-                    }
+                child.node.main_margin_start(node.flex_direction).resolve(avaliable_main, 0.0)
+                    + child.node.main_margin_end(node.flex_direction).resolve(avaliable_main, 0.0)
+                    + if child.frozen { child.target_main_size } else { child.flex_basis }
             }).sum();
 
         let initial_free_space = avaliable_main - used_space;
@@ -563,19 +455,9 @@ fn compute_internal(
 
             let used_space: f32 = Iterator::chain(frozen.iter(), unfrozen.iter())
                 .map(|child| {
-                    child
-                        .node
-                        .main_margin_start(node.flex_direction)
-                        .resolve(avaliable_main, 0.0)
-                        + child
-                            .node
-                            .main_margin_end(node.flex_direction)
-                            .resolve(avaliable_main, 0.0)
-                        + if child.frozen {
-                            child.target_main_size
-                        } else {
-                            child.flex_basis
-                        }
+                    child.node.main_margin_start(node.flex_direction).resolve(avaliable_main, 0.0)
+                        + child.node.main_margin_end(node.flex_direction).resolve(avaliable_main, 0.0)
+                        + if child.frozen { child.target_main_size } else { child.flex_basis }
                 }).sum();
 
             let sum_flex_grow: f32 = unfrozen.iter().map(|item| item.node.flex_grow).sum();
@@ -610,19 +492,16 @@ fn compute_internal(
 
             if free_space > 0.0 && growing && sum_flex_grow > 0.0 {
                 for child in &mut unfrozen {
-                    child.target_main_size =
-                        child.flex_basis + free_space * (child.node.flex_grow / sum_flex_grow);
+                    child.target_main_size = child.flex_basis + free_space * (child.node.flex_grow / sum_flex_grow);
                 }
             } else if free_space < 0.0 && shrinking && sum_flex_shrink > 0.0 {
-                let sum_scaled_shrink_factor: f32 = unfrozen
-                    .iter()
-                    .map(|child| child.inner_flex_basis * child.node.flex_shrink)
-                    .sum();
+                let sum_scaled_shrink_factor: f32 =
+                    unfrozen.iter().map(|child| child.inner_flex_basis * child.node.flex_shrink).sum();
 
                 for child in &mut unfrozen {
                     let scaled_shrink_factor = child.inner_flex_basis * child.node.flex_shrink;
-                    child.target_main_size = child.flex_basis
-                        + free_space * (scaled_shrink_factor / sum_scaled_shrink_factor);
+                    child.target_main_size =
+                        child.flex_basis + free_space * (scaled_shrink_factor / sum_scaled_shrink_factor);
 
                     println!("child.flex_basis: {}, scaled_shrink_factor: {}, sum_scaled_shrink_factor: {}, child.inner_flex_basis: {}", child.flex_basis, scaled_shrink_factor, sum_scaled_shrink_factor, child.inner_flex_basis);
                 }
@@ -635,15 +514,8 @@ fn compute_internal(
 
             let mut total_violation = 0.0;
             for child in &mut unfrozen {
-                let max = child
-                    .node
-                    .max_main_size(node.flex_direction)
-                    .resolve(avaliable_main, f32::MAX);
-                let min = child
-                    .node
-                    .min_main_size(node.flex_direction)
-                    .resolve(avaliable_main, f32::MIN)
-                    .max(0.0);
+                let max = child.node.max_main_size(node.flex_direction).resolve(avaliable_main, f32::MAX);
+                let min = child.node.min_main_size(node.flex_direction).resolve(avaliable_main, f32::MIN).max(0.0);
 
                 let clamped = if child.target_main_size > max {
                     max
@@ -687,25 +559,17 @@ fn compute_internal(
 
     // Not part of the spec from what i can see but seems correct
     let container_main_size = if intrinsic_main_size.is_finite() {
-        intrinsic_main_size
-            .min(main_constraint.max)
-            .max(main_constraint.min)
+        intrinsic_main_size.min(main_constraint.max).max(main_constraint.min)
     } else {
         let mut longest_line = f32::MIN;
 
         for line in &flex_lines {
             let length: f32 = line.items.iter().map(|item| item.target_main_size).sum();
 
-            longest_line = if length > longest_line {
-                length
-            } else {
-                longest_line
-            };
+            longest_line = if length > longest_line { length } else { longest_line };
         }
 
-        (longest_line + padding_main + border_main)
-            .min(main_constraint.max)
-            .max(main_constraint.min)
+        (longest_line + padding_main + border_main).min(main_constraint.max).max(main_constraint.min)
     };
 
     // 9.4. Cross Size Determination
@@ -731,27 +595,13 @@ fn compute_internal(
 
             child.hypothetical_inner_cross_size = size
                 .cross(node.flex_direction)
-                .max(
-                    child
-                        .node
-                        .min_cross_size(node.flex_direction)
-                        .resolve(avaliable_cross, f32::MIN),
-                ).min(
-                    child
-                        .node
-                        .max_cross_size(node.flex_direction)
-                        .resolve(avaliable_cross, f32::MAX),
-                ).max(0.0);
+                .max(child.node.min_cross_size(node.flex_direction).resolve(avaliable_cross, f32::MIN))
+                .min(child.node.max_cross_size(node.flex_direction).resolve(avaliable_cross, f32::MAX))
+                .max(0.0);
 
             child.hypothetical_outer_cross_size = child.hypothetical_inner_cross_size
-                + child
-                    .node
-                    .cross_margin_start(node.flex_direction)
-                    .resolve(avaliable_cross, 0.0)
-                + child
-                    .node
-                    .cross_margin_end(node.flex_direction)
-                    .resolve(avaliable_cross, 0.0);
+                + child.node.cross_margin_start(node.flex_direction).resolve(avaliable_cross, 0.0)
+                + child.node.cross_margin_end(node.flex_direction).resolve(avaliable_cross, 0.0);
         }
     }
 
@@ -774,18 +624,13 @@ fn compute_internal(
     //    of min/max-width/height applied more generally, this behavior would fall out automatically.
 
     if flex_lines.len() == 1 && intrinsic_cross_size.is_finite() {
-        flex_lines[0].cross_size = inner_intrinsic_cross_size
-            .min(cross_constraint.max)
-            .max(cross_constraint.min);
+        flex_lines[0].cross_size = inner_intrinsic_cross_size.min(cross_constraint.max).max(cross_constraint.min);
     } else {
         for line in &mut flex_lines {
             // TODO handle baseline (1)
 
-            line.cross_size = line
-                .items
-                .iter()
-                .map(|child| child.hypothetical_outer_cross_size)
-                .fold(0.0, |acc, x| acc.max(x));
+            line.cross_size =
+                line.items.iter().map(|child| child.hypothetical_outer_cross_size).fold(0.0, |acc, x| acc.max(x));
         }
     }
 
@@ -846,17 +691,8 @@ fn compute_internal(
             {
                 child.target_cross_size = line
                     .cross_size
-                    .min(
-                        child
-                            .node
-                            .max_cross_size(node.flex_direction)
-                            .resolve(avaliable_cross, f32::MAX),
-                    ).max(
-                        child
-                            .node
-                            .min_cross_size(node.flex_direction)
-                            .resolve(avaliable_cross, f32::MIN),
-                    );
+                    .min(child.node.max_cross_size(node.flex_direction).resolve(avaliable_cross, f32::MAX))
+                    .max(child.node.min_cross_size(node.flex_direction).resolve(avaliable_cross, f32::MIN));
             } else {
                 child.target_cross_size = child.hypothetical_inner_cross_size;
             }
@@ -920,14 +756,10 @@ fn compute_internal(
                 let mut is_first = true;
 
                 for child in &mut line.items {
-                    child.main_margin_start = child
-                        .node
-                        .main_margin_start(node.flex_direction)
-                        .resolve(container_main_size, 0.0);
-                    child.main_margin_end = child
-                        .node
-                        .main_margin_end(node.flex_direction)
-                        .resolve(container_main_size, 0.0);
+                    child.main_margin_start =
+                        child.node.main_margin_start(node.flex_direction).resolve(container_main_size, 0.0);
+                    child.main_margin_end =
+                        child.node.main_margin_end(node.flex_direction).resolve(container_main_size, 0.0);
 
                     child.offset_main = match node.justify_content {
                         style::JustifyContent::FlexStart => 0.0,
@@ -980,22 +812,15 @@ fn compute_internal(
                 {
                     child.cross_margin_start = free_space / 2.0;
                     child.cross_margin_end = free_space / 2.0;
-                } else if child.node.cross_margin_start(node.flex_direction)
-                    == style::Dimension::Auto
-                {
+                } else if child.node.cross_margin_start(node.flex_direction) == style::Dimension::Auto {
                     child.cross_margin_start = free_space;
-                } else if child.node.cross_margin_end(node.flex_direction) == style::Dimension::Auto
-                {
+                } else if child.node.cross_margin_end(node.flex_direction) == style::Dimension::Auto {
                     child.cross_margin_end = free_space;
                 } else {
-                    child.cross_margin_start = child
-                        .node
-                        .cross_margin_start(node.flex_direction)
-                        .resolve(line.cross_size, 0.0);
-                    child.cross_margin_end = child
-                        .node
-                        .cross_margin_end(node.flex_direction)
-                        .resolve(line.cross_size, 0.0);
+                    child.cross_margin_start =
+                        child.node.cross_margin_start(node.flex_direction).resolve(line.cross_size, 0.0);
+                    child.cross_margin_end =
+                        child.node.cross_margin_end(node.flex_direction).resolve(line.cross_size, 0.0);
 
                     // 14. Align all flex items along the cross-axis per align-self, if neither of the item’s
                     //     cross-axis margins are auto.
@@ -1021,13 +846,9 @@ fn compute_internal(
 
     let total_cross_size: f32 = flex_lines.iter().map(|line| line.cross_size).sum();
     let container_cross_size = if intrinsic_cross_size.is_finite() {
-        intrinsic_cross_size
-            .min(cross_constraint.max)
-            .max(cross_constraint.min)
+        intrinsic_cross_size.min(cross_constraint.max).max(cross_constraint.min)
     } else {
-        (total_cross_size + padding_cross + border_cross)
-            .min(cross_constraint.max)
-            .max(cross_constraint.min)
+        (total_cross_size + padding_cross + border_cross).min(cross_constraint.max).max(cross_constraint.min)
     };
 
     // 16. Align all flex lines per align-content.
@@ -1090,14 +911,8 @@ fn compute_internal(
                 total_offset_main
                     + child.offset_main
                     + child.main_margin_start
-                    + (child
-                        .node
-                        .main_start(node.flex_direction)
-                        .resolve(container_main_size, 0.0)
-                        - child
-                            .node
-                            .main_end(node.flex_direction)
-                            .resolve(container_main_size, 0.0))
+                    + (child.node.main_start(node.flex_direction).resolve(container_main_size, 0.0)
+                        - child.node.main_end(node.flex_direction).resolve(container_main_size, 0.0))
             };
 
             let offset_cross = {
@@ -1105,34 +920,19 @@ fn compute_internal(
                     + child.offset_cross
                     + line.offset_cross
                     + child.cross_margin_start
-                    + (child
-                        .node
-                        .cross_start(node.flex_direction)
-                        .resolve(container_main_size, 0.0)
-                        - child
-                            .node
-                            .cross_end(node.flex_direction)
-                            .resolve(container_main_size, 0.0))
+                    + (child.node.cross_start(node.flex_direction).resolve(container_main_size, 0.0)
+                        - child.node.cross_end(node.flex_direction).resolve(container_main_size, 0.0))
             };
 
             children.push(layout::Node {
                 width: result.size.width,
                 height: result.size.height,
-                x: if node.flex_direction.is_row() {
-                    offset_main
-                } else {
-                    offset_cross
-                },
-                y: if node.flex_direction.is_column() {
-                    offset_main
-                } else {
-                    offset_cross
-                },
+                x: if node.flex_direction.is_row() { offset_main } else { offset_cross },
+                y: if node.flex_direction.is_column() { offset_main } else { offset_cross },
                 children: result.children,
             });
 
-            total_offset_main =
-                offset_main + result.size.main(node.flex_direction) + child.main_margin_end;
+            total_offset_main = offset_main + result.size.main(node.flex_direction) + child.main_margin_end;
         }
 
         total_offset_cross += line.offset_cross + line.cross_size;
@@ -1140,17 +940,9 @@ fn compute_internal(
 
     ComputeResult {
         size: FlexSize {
-            width: if node.flex_direction.is_row() {
-                container_main_size
-            } else {
-                container_cross_size
-            },
-            height: if node.flex_direction.is_column() {
-                container_main_size
-            } else {
-                container_cross_size
-            },
+            width: if node.flex_direction.is_row() { container_main_size } else { container_cross_size },
+            height: if node.flex_direction.is_column() { container_main_size } else { container_cross_size },
         },
-        children: children,
+        children,
     }
 }

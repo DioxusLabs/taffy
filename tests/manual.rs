@@ -38,16 +38,8 @@ mod tests {
             height: stretch::style::Dimension::Points(100.0),
 
             children: vec![
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Percent(0.5),
-
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Percent(0.5),
-
-                    ..Default::default()
-                },
+                stretch::style::Node { width: stretch::style::Dimension::Percent(0.5), ..Default::default() },
+                stretch::style::Node { width: stretch::style::Dimension::Percent(0.5), ..Default::default() },
             ],
 
             ..Default::default()
@@ -77,11 +69,7 @@ mod tests {
 
                     ..Default::default()
                 },
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(20.0),
-
-                    ..Default::default()
-                },
+                stretch::style::Node { width: stretch::style::Dimension::Points(20.0), ..Default::default() },
             ],
 
             ..Default::default()
@@ -140,11 +128,7 @@ mod tests {
             height: stretch::style::Dimension::Points(100.0),
 
             children: vec![
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(50.0),
-
-                    ..Default::default()
-                },
+                stretch::style::Node { width: stretch::style::Dimension::Points(50.0), ..Default::default() },
                 stretch::style::Node {
                     width: stretch::style::Dimension::Points(20.0),
                     margin: stretch::style::Edges {
@@ -183,16 +167,8 @@ mod tests {
             },
 
             children: vec![
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(40.0),
-
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(40.0),
-
-                    ..Default::default()
-                },
+                stretch::style::Node { width: stretch::style::Dimension::Points(40.0), ..Default::default() },
+                stretch::style::Node { width: stretch::style::Dimension::Points(40.0), ..Default::default() },
             ],
 
             ..Default::default()
@@ -222,16 +198,8 @@ mod tests {
             },
 
             children: vec![
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(40.0),
-
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    width: stretch::style::Dimension::Points(40.0),
-
-                    ..Default::default()
-                },
+                stretch::style::Node { width: stretch::style::Dimension::Points(40.0), ..Default::default() },
+                stretch::style::Node { width: stretch::style::Dimension::Points(40.0), ..Default::default() },
             ],
 
             ..Default::default()
