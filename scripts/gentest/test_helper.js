@@ -69,7 +69,7 @@ function describeElement(e) {
       direction: parseEnum(e.style.direction),
       flexDirection: parseEnum(e.style.flexDirection),
 
-      wrap: parseEnum(e.style.wrap),
+      flexWrap: parseEnum(e.style.flexWrap),
       overflow: parseEnum(e.style.overflow),
 
       alignItems: parseEnum(e.style.alignItems),

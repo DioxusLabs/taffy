@@ -136,15 +136,15 @@ impl Default for Position {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
-pub enum Wrap {
+pub enum FlexWrap {
     NoWrap,
     Wrap,
     WrapReverse,
 }
 
-impl Default for Wrap {
-    fn default() -> Wrap {
-        Wrap::NoWrap
+impl Default for FlexWrap {
+    fn default() -> FlexWrap {
+        FlexWrap::NoWrap
     }
 }
 
@@ -196,7 +196,7 @@ pub struct Node {
     pub direction: Direction,
     pub flex_direction: FlexDirection,
 
-    pub wrap: Wrap,
+    pub flexWrap: FlexWrap,
     pub overflow: Overflow,
 
     pub align_items: AlignItems,
@@ -238,7 +238,7 @@ impl Default for Node {
             direction: Default::default(),
             flex_direction: Default::default(),
 
-            wrap: Default::default(),
+            flexWrap: Default::default(),
             overflow: Default::default(),
 
             align_items: Default::default(),
