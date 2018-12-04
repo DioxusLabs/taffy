@@ -605,9 +605,9 @@ fn compute_internal(
             let child_cross = child
                 .node
                 .cross_size(node.flex_direction)
-                .resolve(percent_calc_base, f32::NAN)
-                .min(child.node.max_cross_size(node.flex_direction).resolve(percent_calc_base, f32::NAN))
-                .max(child.node.min_cross_size(node.flex_direction).resolve(percent_calc_base, f32::NAN));
+                .resolve(percent_calc_base_child, f32::NAN)
+                .min(child.node.max_cross_size(node.flex_direction).resolve(percent_calc_base_child, f32::NAN))
+                .max(child.node.min_cross_size(node.flex_direction).resolve(percent_calc_base_child, f32::NAN));
 
             let size = compute_internal(
                 child.node,
