@@ -990,12 +990,15 @@ fn compute_internal(
     for child in absolute_children {
         let start_main = child.main_start(node.flex_direction).resolve(container_main_size, f32::NAN);
         let end_main = child.main_end(node.flex_direction).resolve(container_main_size, f32::NAN);
+        let main = if start_main.is_finite() && end_main.is_finite() {
+            container_main_size - start_main - end_main
+        } else { f32::NAN };
+
         let start_cross = child.cross_start(node.flex_direction).resolve(container_cross_size, f32::NAN);
         let end_cross = child.cross_end(node.flex_direction).resolve(container_cross_size, f32::NAN);
-
-        let main = if start_main.is_finite() && end_main.is_finite() { end_main - start_main } else { f32::NAN };
-
-        let cross = if start_cross.is_finite() && end_cross.is_finite() { end_cross - start_cross } else { f32::NAN };
+        let cross = if start_cross.is_finite() && end_cross.is_finite() { 
+            container_cross_size - start_cross - end_cross
+         } else { f32::NAN };
 
         let result = compute_internal(
             child,
