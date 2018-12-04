@@ -189,7 +189,7 @@ fn compute_internal(
     let (inner_intrinsic_main_size, inner_intrinsic_cross_size) =
         (intrinsic_main_size - padding_main - border_main, intrinsic_cross_size - padding_cross - border_cross);
 
-    let wrap_reverse = node.flexWrap == style::FlexWrap::WrapReverse;
+    let wrap_reverse = node.flex_wrap == style::FlexWrap::WrapReverse;
 
     // 9.2. Line Length Determination
 
@@ -358,7 +358,7 @@ fn compute_internal(
         let mut lines: Vec<FlexLine> = vec![];
         let mut line_length = 0.0;
 
-        if node.flexWrap == style::FlexWrap::NoWrap {
+        if node.flex_wrap == style::FlexWrap::NoWrap {
             lines.push(FlexLine { items: flex_items, cross_size: 0.0, offset_cross: 0.0 });
         } else {
             let mut line = FlexLine { items: vec![], cross_size: 0.0, offset_cross: 0.0 };
@@ -992,13 +992,17 @@ fn compute_internal(
         let end_main = child.main_end(node.flex_direction).resolve(container_main_size, f32::NAN);
         let main = if start_main.is_finite() && end_main.is_finite() {
             container_main_size - start_main - end_main
-        } else { f32::NAN };
+        } else {
+            f32::NAN
+        };
 
         let start_cross = child.cross_start(node.flex_direction).resolve(container_cross_size, f32::NAN);
         let end_cross = child.cross_end(node.flex_direction).resolve(container_cross_size, f32::NAN);
-        let cross = if start_cross.is_finite() && end_cross.is_finite() { 
+        let cross = if start_cross.is_finite() && end_cross.is_finite() {
             container_cross_size - start_cross - end_cross
-         } else { f32::NAN };
+        } else {
+            f32::NAN
+        };
 
         let result = compute_internal(
             child,

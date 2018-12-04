@@ -196,7 +196,7 @@ pub struct Node {
     pub direction: Direction,
     pub flex_direction: FlexDirection,
 
-    pub flexWrap: FlexWrap,
+    pub flex_wrap: FlexWrap,
     pub overflow: Overflow,
 
     pub align_items: AlignItems,
@@ -238,7 +238,7 @@ impl Default for Node {
             direction: Default::default(),
             flex_direction: Default::default(),
 
-            flexWrap: Default::default(),
+            flex_wrap: Default::default(),
             overflow: Default::default(),
 
             align_items: Default::default(),
