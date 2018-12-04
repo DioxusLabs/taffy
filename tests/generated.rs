@@ -334,7 +334,7 @@ mod generated {
     fn wrapped_column_max_height_flex() {
         let layout = stretch::compute(&stretch::style::Node {
             flex_direction: stretch::style::FlexDirection::Column,
-            flexWrap: stretch::style::FlexWrap::Wrap,
+            flex_wrap: stretch::style::FlexWrap::Wrap,
             align_items: stretch::style::AlignItems::Center,
             align_content: stretch::style::AlignContent::Center,
             justify_content: stretch::style::JustifyContent::Center,
@@ -557,7 +557,7 @@ mod generated {
     #[test]
     fn flex_wrap_align_stretch_fits_one_row() {
         let layout = stretch::compute(&stretch::style::Node {
-            flexWrap: stretch::style::FlexWrap::Wrap,
+            flex_wrap: stretch::style::FlexWrap::Wrap,
             width: stretch::style::Dimension::Points(150.0000),
             height: stretch::style::Dimension::Points(100.0000),
             children: vec![
@@ -806,7 +806,7 @@ mod generated {
     #[test]
     fn absolute_layout_in_wrap_reverse_row_container_flex_end() {
         let layout = stretch::compute(&stretch::style::Node {
-            flexWrap: stretch::style::FlexWrap::WrapReverse,
+            flex_wrap: stretch::style::FlexWrap::WrapReverse,
             width: stretch::style::Dimension::Points(100.0000),
             height: stretch::style::Dimension::Points(100.0000),
             children: vec![stretch::style::Node {
@@ -939,7 +939,7 @@ mod generated {
     fn wrap_reverse_column_fixed_size() {
         let layout = stretch::compute(&stretch::style::Node {
             flex_direction: stretch::style::FlexDirection::Column,
-            flexWrap: stretch::style::FlexWrap::WrapReverse,
+            flex_wrap: stretch::style::FlexWrap::WrapReverse,
             align_items: stretch::style::AlignItems::Center,
             width: stretch::style::Dimension::Points(200.0000),
             height: stretch::style::Dimension::Points(100.0000),
@@ -1341,7 +1341,7 @@ mod generated {
     fn absolute_layout_in_wrap_reverse_column_container() {
         let layout = stretch::compute(&stretch::style::Node {
             flex_direction: stretch::style::FlexDirection::Column,
-            flexWrap: stretch::style::FlexWrap::WrapReverse,
+            flex_wrap: stretch::style::FlexWrap::WrapReverse,
             width: stretch::style::Dimension::Points(100.0000),
             height: stretch::style::Dimension::Points(100.0000),
             children: vec![stretch::style::Node {
@@ -1427,7 +1427,7 @@ mod generated {
     #[test]
     fn wrap_reverse_row() {
         let layout = stretch::compute(&stretch::style::Node {
-            flexWrap: stretch::style::FlexWrap::WrapReverse,
+            flex_wrap: stretch::style::FlexWrap::WrapReverse,
             width: stretch::style::Dimension::Points(100.0000),
             children: vec![
                 stretch::style::Node {
@@ -1549,6 +1549,63 @@ mod generated {
     }
 
     #[test]
+    fn flex_basis_smaller_then_content_with_flex_grow_large_size() {
+        let layout = stretch::compute(&stretch::style::Node {
+            width: stretch::style::Dimension::Points(100.0000),
+            children: vec![
+                stretch::style::Node {
+                    flex_direction: stretch::style::FlexDirection::Column,
+                    flex_grow: 1.0000,
+                    flex_basis: stretch::style::Dimension::Points(0.0000),
+                    children: vec![stretch::style::Node {
+                        width: stretch::style::Dimension::Points(70.0000),
+                        height: stretch::style::Dimension::Points(100.0000),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+                stretch::style::Node {
+                    flex_direction: stretch::style::FlexDirection::Column,
+                    flex_grow: 1.0000,
+                    flex_basis: stretch::style::Dimension::Points(0.0000),
+                    children: vec![stretch::style::Node {
+                        width: stretch::style::Dimension::Points(20.0000),
+                        height: stretch::style::Dimension::Points(100.0000),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+            ],
+            ..Default::default()
+        });
+
+        assert_eq!(layout.width, 100.0000);
+        assert_eq!(layout.height, 100.0000);
+        assert_eq!(layout.x, 0.0000);
+        assert_eq!(layout.y, 0.0000);
+
+        assert_eq!(layout.children[0].width, 70.0000);
+        assert_eq!(layout.children[0].height, 100.0000);
+        assert_eq!(layout.children[0].x, 0.0000);
+        assert_eq!(layout.children[0].y, 0.0000);
+
+        assert_eq!(layout.children[0].children[0].width, 70.0000);
+        assert_eq!(layout.children[0].children[0].height, 100.0000);
+        assert_eq!(layout.children[0].children[0].x, 0.0000);
+        assert_eq!(layout.children[0].children[0].y, 0.0000);
+
+        assert_eq!(layout.children[1].width, 30.0000);
+        assert_eq!(layout.children[1].height, 100.0000);
+        assert_eq!(layout.children[1].x, 70.0000);
+        assert_eq!(layout.children[1].y, 0.0000);
+
+        assert_eq!(layout.children[1].children[0].width, 20.0000);
+        assert_eq!(layout.children[1].children[0].height, 100.0000);
+        assert_eq!(layout.children[1].children[0].x, 0.0000);
+        assert_eq!(layout.children[1].children[0].y, 0.0000);
+    }
+
+    #[test]
     fn align_items_stretch() {
         let layout = stretch::compute(&stretch::style::Node {
             width: stretch::style::Dimension::Points(100.0000),
@@ -1641,7 +1698,7 @@ mod generated {
             width: stretch::style::Dimension::Points(500.0000),
             height: stretch::style::Dimension::Points(500.0000),
             children: vec![stretch::style::Node {
-                flexWrap: stretch::style::FlexWrap::Wrap,
+                flex_wrap: stretch::style::FlexWrap::Wrap,
                 width: stretch::style::Dimension::Points(85.0000),
                 children: vec![
                     stretch::style::Node {
@@ -1797,6 +1854,62 @@ mod generated {
         assert_eq!(layout.children[0].height, 60.0000);
         assert_eq!(layout.children[0].x, 20.0000);
         assert_eq!(layout.children[0].y, 0.0000);
+    }
+
+    #[test]
+    fn flex_basis_smaller_then_content_with_flex_grow_unconstraint_size() {
+        let layout = stretch::compute(&stretch::style::Node {
+            children: vec![
+                stretch::style::Node {
+                    flex_direction: stretch::style::FlexDirection::Column,
+                    flex_grow: 1.0000,
+                    flex_basis: stretch::style::Dimension::Points(0.0000),
+                    children: vec![stretch::style::Node {
+                        width: stretch::style::Dimension::Points(70.0000),
+                        height: stretch::style::Dimension::Points(100.0000),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+                stretch::style::Node {
+                    flex_direction: stretch::style::FlexDirection::Column,
+                    flex_grow: 1.0000,
+                    flex_basis: stretch::style::Dimension::Points(0.0000),
+                    children: vec![stretch::style::Node {
+                        width: stretch::style::Dimension::Points(20.0000),
+                        height: stretch::style::Dimension::Points(100.0000),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+            ],
+            ..Default::default()
+        });
+
+        assert_eq!(layout.width, 90.0000);
+        assert_eq!(layout.height, 100.0000);
+        assert_eq!(layout.x, 0.0000);
+        assert_eq!(layout.y, 0.0000);
+
+        assert_eq!(layout.children[0].width, 70.0000);
+        assert_eq!(layout.children[0].height, 100.0000);
+        assert_eq!(layout.children[0].x, 0.0000);
+        assert_eq!(layout.children[0].y, 0.0000);
+
+        assert_eq!(layout.children[0].children[0].width, 70.0000);
+        assert_eq!(layout.children[0].children[0].height, 100.0000);
+        assert_eq!(layout.children[0].children[0].x, 0.0000);
+        assert_eq!(layout.children[0].children[0].y, 0.0000);
+
+        assert_eq!(layout.children[1].width, 20.0000);
+        assert_eq!(layout.children[1].height, 100.0000);
+        assert_eq!(layout.children[1].x, 70.0000);
+        assert_eq!(layout.children[1].y, 0.0000);
+
+        assert_eq!(layout.children[1].children[0].width, 20.0000);
+        assert_eq!(layout.children[1].children[0].height, 100.0000);
+        assert_eq!(layout.children[1].children[0].x, 0.0000);
+        assert_eq!(layout.children[1].children[0].y, 0.0000);
     }
 
     #[test]
@@ -2334,7 +2447,7 @@ mod generated {
     fn absolute_layout_in_wrap_reverse_column_container_flex_end() {
         let layout = stretch::compute(&stretch::style::Node {
             flex_direction: stretch::style::FlexDirection::Column,
-            flexWrap: stretch::style::FlexWrap::WrapReverse,
+            flex_wrap: stretch::style::FlexWrap::WrapReverse,
             width: stretch::style::Dimension::Points(100.0000),
             height: stretch::style::Dimension::Points(100.0000),
             children: vec![stretch::style::Node {
@@ -2420,6 +2533,40 @@ mod generated {
         assert_eq!(layout.children[0].height, 72.0000);
         assert_eq!(layout.children[0].x, 0.0000);
         assert_eq!(layout.children[0].y, 0.0000);
+    }
+
+    #[test]
+    fn flex_basis_larger_than_content_column() {
+        let layout = stretch::compute(&stretch::style::Node {
+            flex_direction: stretch::style::FlexDirection::Column,
+            height: stretch::style::Dimension::Points(100.0000),
+            children: vec![stretch::style::Node {
+                flex_direction: stretch::style::FlexDirection::Column,
+                flex_basis: stretch::style::Dimension::Points(50.0000),
+                children: vec![stretch::style::Node {
+                    width: stretch::style::Dimension::Points(100.0000),
+                    height: stretch::style::Dimension::Points(10.0000),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            }],
+            ..Default::default()
+        });
+
+        assert_eq!(layout.width, 100.0000);
+        assert_eq!(layout.height, 100.0000);
+        assert_eq!(layout.x, 0.0000);
+        assert_eq!(layout.y, 0.0000);
+
+        assert_eq!(layout.children[0].width, 100.0000);
+        assert_eq!(layout.children[0].height, 50.0000);
+        assert_eq!(layout.children[0].x, 0.0000);
+        assert_eq!(layout.children[0].y, 0.0000);
+
+        assert_eq!(layout.children[0].children[0].width, 100.0000);
+        assert_eq!(layout.children[0].children[0].height, 10.0000);
+        assert_eq!(layout.children[0].children[0].x, 0.0000);
+        assert_eq!(layout.children[0].children[0].y, 0.0000);
     }
 
     #[test]
@@ -2550,6 +2697,63 @@ mod generated {
     }
 
     #[test]
+    fn flex_basis_smaller_then_content_with_flex_grow_small_size() {
+        let layout = stretch::compute(&stretch::style::Node {
+            width: stretch::style::Dimension::Points(10.0000),
+            children: vec![
+                stretch::style::Node {
+                    flex_direction: stretch::style::FlexDirection::Column,
+                    flex_grow: 1.0000,
+                    flex_basis: stretch::style::Dimension::Points(0.0000),
+                    children: vec![stretch::style::Node {
+                        width: stretch::style::Dimension::Points(70.0000),
+                        height: stretch::style::Dimension::Points(100.0000),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+                stretch::style::Node {
+                    flex_direction: stretch::style::FlexDirection::Column,
+                    flex_grow: 1.0000,
+                    flex_basis: stretch::style::Dimension::Points(0.0000),
+                    children: vec![stretch::style::Node {
+                        width: stretch::style::Dimension::Points(20.0000),
+                        height: stretch::style::Dimension::Points(100.0000),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+            ],
+            ..Default::default()
+        });
+
+        assert_eq!(layout.width, 10.0000);
+        assert_eq!(layout.height, 100.0000);
+        assert_eq!(layout.x, 0.0000);
+        assert_eq!(layout.y, 0.0000);
+
+        assert_eq!(layout.children[0].width, 70.0000);
+        assert_eq!(layout.children[0].height, 100.0000);
+        assert_eq!(layout.children[0].x, 0.0000);
+        assert_eq!(layout.children[0].y, 0.0000);
+
+        assert_eq!(layout.children[0].children[0].width, 70.0000);
+        assert_eq!(layout.children[0].children[0].height, 100.0000);
+        assert_eq!(layout.children[0].children[0].x, 0.0000);
+        assert_eq!(layout.children[0].children[0].y, 0.0000);
+
+        assert_eq!(layout.children[1].width, 20.0000);
+        assert_eq!(layout.children[1].height, 100.0000);
+        assert_eq!(layout.children[1].x, 70.0000);
+        assert_eq!(layout.children[1].y, 0.0000);
+
+        assert_eq!(layout.children[1].children[0].width, 20.0000);
+        assert_eq!(layout.children[1].children[0].height, 100.0000);
+        assert_eq!(layout.children[1].children[0].x, 0.0000);
+        assert_eq!(layout.children[1].children[0].y, 0.0000);
+    }
+
+    #[test]
     fn percentage_flex_basis_cross_max_width() {
         let layout = stretch::compute(&stretch::style::Node {
             flex_direction: stretch::style::FlexDirection::Column,
@@ -2621,6 +2825,63 @@ mod generated {
         assert_eq!(layout.children[0].children[0].height, 72.0000);
         assert_eq!(layout.children[0].children[0].x, 0.0000);
         assert_eq!(layout.children[0].children[0].y, 0.0000);
+    }
+
+    #[test]
+    fn width_smaller_then_content_with_flex_grow_very_large_size() {
+        let layout = stretch::compute(&stretch::style::Node {
+            width: stretch::style::Dimension::Points(200.0000),
+            children: vec![
+                stretch::style::Node {
+                    flex_direction: stretch::style::FlexDirection::Column,
+                    flex_grow: 1.0000,
+                    width: stretch::style::Dimension::Points(0.0000),
+                    children: vec![stretch::style::Node {
+                        width: stretch::style::Dimension::Points(70.0000),
+                        height: stretch::style::Dimension::Points(100.0000),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+                stretch::style::Node {
+                    flex_direction: stretch::style::FlexDirection::Column,
+                    flex_grow: 1.0000,
+                    width: stretch::style::Dimension::Points(0.0000),
+                    children: vec![stretch::style::Node {
+                        width: stretch::style::Dimension::Points(20.0000),
+                        height: stretch::style::Dimension::Points(100.0000),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+            ],
+            ..Default::default()
+        });
+
+        assert_eq!(layout.width, 200.0000);
+        assert_eq!(layout.height, 100.0000);
+        assert_eq!(layout.x, 0.0000);
+        assert_eq!(layout.y, 0.0000);
+
+        assert_eq!(layout.children[0].width, 100.0000);
+        assert_eq!(layout.children[0].height, 100.0000);
+        assert_eq!(layout.children[0].x, 0.0000);
+        assert_eq!(layout.children[0].y, 0.0000);
+
+        assert_eq!(layout.children[0].children[0].width, 70.0000);
+        assert_eq!(layout.children[0].children[0].height, 100.0000);
+        assert_eq!(layout.children[0].children[0].x, 0.0000);
+        assert_eq!(layout.children[0].children[0].y, 0.0000);
+
+        assert_eq!(layout.children[1].width, 100.0000);
+        assert_eq!(layout.children[1].height, 100.0000);
+        assert_eq!(layout.children[1].x, 100.0000);
+        assert_eq!(layout.children[1].y, 0.0000);
+
+        assert_eq!(layout.children[1].children[0].width, 20.0000);
+        assert_eq!(layout.children[1].children[0].height, 100.0000);
+        assert_eq!(layout.children[1].children[0].x, 0.0000);
+        assert_eq!(layout.children[1].children[0].y, 0.0000);
     }
 
     #[test]
@@ -2869,6 +3130,30 @@ mod generated {
     }
 
     #[test]
+    fn flex_basis_smaller_than_main_dimen_row() {
+        let layout = stretch::compute(&stretch::style::Node {
+            width: stretch::style::Dimension::Points(100.0000),
+            children: vec![stretch::style::Node {
+                flex_basis: stretch::style::Dimension::Points(10.0000),
+                width: stretch::style::Dimension::Points(50.0000),
+                height: stretch::style::Dimension::Points(50.0000),
+                ..Default::default()
+            }],
+            ..Default::default()
+        });
+
+        assert_eq!(layout.width, 100.0000);
+        assert_eq!(layout.height, 50.0000);
+        assert_eq!(layout.x, 0.0000);
+        assert_eq!(layout.y, 0.0000);
+
+        assert_eq!(layout.children[0].width, 10.0000);
+        assert_eq!(layout.children[0].height, 50.0000);
+        assert_eq!(layout.children[0].x, 0.0000);
+        assert_eq!(layout.children[0].y, 0.0000);
+    }
+
+    #[test]
     fn percentage_flex_basis_cross_min_height() {
         let layout = stretch::compute(&stretch::style::Node {
             flex_direction: stretch::style::FlexDirection::Column,
@@ -2947,7 +3232,7 @@ mod generated {
             width: stretch::style::Dimension::Points(200.0000),
             height: stretch::style::Dimension::Points(200.0000),
             children: vec![stretch::style::Node {
-                flexWrap: stretch::style::FlexWrap::Wrap,
+                flex_wrap: stretch::style::FlexWrap::Wrap,
                 children: vec![
                     stretch::style::Node {
                         width: stretch::style::Dimension::Points(150.0000),
@@ -3156,7 +3441,7 @@ mod generated {
             flex_direction: stretch::style::FlexDirection::Column,
             children: vec![
                 stretch::style::Node {
-                    flexWrap: stretch::style::FlexWrap::Wrap,
+                    flex_wrap: stretch::style::FlexWrap::Wrap,
                     align_items: stretch::style::AlignItems::FlexStart,
                     children: vec![stretch::style::Node {
                         flex_direction: stretch::style::FlexDirection::Column,
@@ -3212,7 +3497,7 @@ mod generated {
             width: stretch::style::Dimension::Points(500.0000),
             height: stretch::style::Dimension::Points(500.0000),
             children: vec![stretch::style::Node {
-                flexWrap: stretch::style::FlexWrap::Wrap,
+                flex_wrap: stretch::style::FlexWrap::Wrap,
                 width: stretch::style::Dimension::Points(70.0000),
                 children: vec![
                     stretch::style::Node {
@@ -3349,7 +3634,7 @@ mod generated {
     #[test]
     fn wrap_reverse_row_align_content_space_around() {
         let layout = stretch::compute(&stretch::style::Node {
-            flexWrap: stretch::style::FlexWrap::WrapReverse,
+            flex_wrap: stretch::style::FlexWrap::WrapReverse,
             align_content: stretch::style::AlignContent::SpaceAround,
             width: stretch::style::Dimension::Points(100.0000),
             children: vec![
@@ -3417,7 +3702,7 @@ mod generated {
     fn wrap_reverse_column() {
         let layout = stretch::compute(&stretch::style::Node {
             flex_direction: stretch::style::FlexDirection::Column,
-            flexWrap: stretch::style::FlexWrap::WrapReverse,
+            flex_wrap: stretch::style::FlexWrap::WrapReverse,
             height: stretch::style::Dimension::Points(100.0000),
             children: vec![
                 stretch::style::Node {
@@ -3687,7 +3972,7 @@ mod generated {
                     ..Default::default()
                 },
                 stretch::style::Node {
-                    flexWrap: stretch::style::FlexWrap::Wrap,
+                    flex_wrap: stretch::style::FlexWrap::Wrap,
                     width: stretch::style::Dimension::Points(50.0000),
                     children: vec![
                         stretch::style::Node {
@@ -3782,7 +4067,7 @@ mod generated {
     #[test]
     fn wrap_reverse_row_single_line_different_size() {
         let layout = stretch::compute(&stretch::style::Node {
-            flexWrap: stretch::style::FlexWrap::WrapReverse,
+            flex_wrap: stretch::style::FlexWrap::WrapReverse,
             align_content: stretch::style::AlignContent::FlexStart,
             width: stretch::style::Dimension::Points(300.0000),
             children: vec![
@@ -3895,6 +4180,62 @@ mod generated {
     }
 
     #[test]
+    fn width_smaller_then_content_with_flex_grow_unconstraint_size() {
+        let layout = stretch::compute(&stretch::style::Node {
+            children: vec![
+                stretch::style::Node {
+                    flex_direction: stretch::style::FlexDirection::Column,
+                    flex_grow: 1.0000,
+                    width: stretch::style::Dimension::Points(0.0000),
+                    children: vec![stretch::style::Node {
+                        width: stretch::style::Dimension::Points(70.0000),
+                        height: stretch::style::Dimension::Points(100.0000),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+                stretch::style::Node {
+                    flex_direction: stretch::style::FlexDirection::Column,
+                    flex_grow: 1.0000,
+                    width: stretch::style::Dimension::Points(0.0000),
+                    children: vec![stretch::style::Node {
+                        width: stretch::style::Dimension::Points(20.0000),
+                        height: stretch::style::Dimension::Points(100.0000),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+            ],
+            ..Default::default()
+        });
+
+        assert_eq!(layout.width, 0.0000);
+        assert_eq!(layout.height, 100.0000);
+        assert_eq!(layout.x, 0.0000);
+        assert_eq!(layout.y, 0.0000);
+
+        assert_eq!(layout.children[0].width, 0.0000);
+        assert_eq!(layout.children[0].height, 100.0000);
+        assert_eq!(layout.children[0].x, 0.0000);
+        assert_eq!(layout.children[0].y, 0.0000);
+
+        assert_eq!(layout.children[0].children[0].width, 70.0000);
+        assert_eq!(layout.children[0].children[0].height, 100.0000);
+        assert_eq!(layout.children[0].children[0].x, 0.0000);
+        assert_eq!(layout.children[0].children[0].y, 0.0000);
+
+        assert_eq!(layout.children[1].width, 0.0000);
+        assert_eq!(layout.children[1].height, 100.0000);
+        assert_eq!(layout.children[1].x, 0.0000);
+        assert_eq!(layout.children[1].y, 0.0000);
+
+        assert_eq!(layout.children[1].children[0].width, 20.0000);
+        assert_eq!(layout.children[1].children[0].height, 100.0000);
+        assert_eq!(layout.children[1].children[0].x, 0.0000);
+        assert_eq!(layout.children[1].children[0].y, 0.0000);
+    }
+
+    #[test]
     fn padding_flex_child() {
         let layout = stretch::compute(&stretch::style::Node {
             width: stretch::style::Dimension::Points(100.0000),
@@ -3963,7 +4304,7 @@ mod generated {
     #[test]
     fn wrap_reverse_row_align_content_stretch() {
         let layout = stretch::compute(&stretch::style::Node {
-            flexWrap: stretch::style::FlexWrap::WrapReverse,
+            flex_wrap: stretch::style::FlexWrap::WrapReverse,
             width: stretch::style::Dimension::Points(100.0000),
             children: vec![
                 stretch::style::Node {
@@ -4192,7 +4533,7 @@ mod generated {
             width: stretch::style::Dimension::Points(200.0000),
             height: stretch::style::Dimension::Points(200.0000),
             children: vec![stretch::style::Node {
-                flexWrap: stretch::style::FlexWrap::Wrap,
+                flex_wrap: stretch::style::FlexWrap::Wrap,
                 children: vec![
                     stretch::style::Node {
                         width: stretch::style::Dimension::Points(150.0000),
@@ -4301,7 +4642,7 @@ mod generated {
     #[test]
     fn wrap_row_align_items_flex_end() {
         let layout = stretch::compute(&stretch::style::Node {
-            flexWrap: stretch::style::FlexWrap::Wrap,
+            flex_wrap: stretch::style::FlexWrap::Wrap,
             align_items: stretch::style::AlignItems::FlexEnd,
             width: stretch::style::Dimension::Points(100.0000),
             children: vec![
@@ -4481,7 +4822,7 @@ mod generated {
             width: stretch::style::Dimension::Points(200.0000),
             height: stretch::style::Dimension::Points(200.0000),
             children: vec![stretch::style::Node {
-                flexWrap: stretch::style::FlexWrap::Wrap,
+                flex_wrap: stretch::style::FlexWrap::Wrap,
                 children: vec![
                     stretch::style::Node {
                         width: stretch::style::Dimension::Points(150.0000),
@@ -4608,7 +4949,7 @@ mod generated {
     #[test]
     fn wrap_reverse_row_align_content_center() {
         let layout = stretch::compute(&stretch::style::Node {
-            flexWrap: stretch::style::FlexWrap::WrapReverse,
+            flex_wrap: stretch::style::FlexWrap::WrapReverse,
             align_content: stretch::style::AlignContent::Center,
             width: stretch::style::Dimension::Points(100.0000),
             children: vec![
@@ -4850,9 +5191,89 @@ mod generated {
     }
 
     #[test]
+    fn flex_basis_unconstraint_column() {
+        let layout = stretch::compute(&stretch::style::Node {
+            flex_direction: stretch::style::FlexDirection::Column,
+            children: vec![stretch::style::Node {
+                flex_basis: stretch::style::Dimension::Points(50.0000),
+                width: stretch::style::Dimension::Points(100.0000),
+                ..Default::default()
+            }],
+            ..Default::default()
+        });
+
+        assert_eq!(layout.width, 100.0000);
+        assert_eq!(layout.height, 50.0000);
+        assert_eq!(layout.x, 0.0000);
+        assert_eq!(layout.y, 0.0000);
+
+        assert_eq!(layout.children[0].width, 100.0000);
+        assert_eq!(layout.children[0].height, 50.0000);
+        assert_eq!(layout.children[0].x, 0.0000);
+        assert_eq!(layout.children[0].y, 0.0000);
+    }
+
+    #[test]
+    fn width_smaller_then_content_with_flex_grow_small_size() {
+        let layout = stretch::compute(&stretch::style::Node {
+            width: stretch::style::Dimension::Points(10.0000),
+            children: vec![
+                stretch::style::Node {
+                    flex_direction: stretch::style::FlexDirection::Column,
+                    flex_grow: 1.0000,
+                    width: stretch::style::Dimension::Points(0.0000),
+                    children: vec![stretch::style::Node {
+                        width: stretch::style::Dimension::Points(70.0000),
+                        height: stretch::style::Dimension::Points(100.0000),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+                stretch::style::Node {
+                    flex_direction: stretch::style::FlexDirection::Column,
+                    flex_grow: 1.0000,
+                    width: stretch::style::Dimension::Points(0.0000),
+                    children: vec![stretch::style::Node {
+                        width: stretch::style::Dimension::Points(20.0000),
+                        height: stretch::style::Dimension::Points(100.0000),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+            ],
+            ..Default::default()
+        });
+
+        assert_eq!(layout.width, 10.0000);
+        assert_eq!(layout.height, 100.0000);
+        assert_eq!(layout.x, 0.0000);
+        assert_eq!(layout.y, 0.0000);
+
+        assert_eq!(layout.children[0].width, 5.0000);
+        assert_eq!(layout.children[0].height, 100.0000);
+        assert_eq!(layout.children[0].x, 0.0000);
+        assert_eq!(layout.children[0].y, 0.0000);
+
+        assert_eq!(layout.children[0].children[0].width, 70.0000);
+        assert_eq!(layout.children[0].children[0].height, 100.0000);
+        assert_eq!(layout.children[0].children[0].x, 0.0000);
+        assert_eq!(layout.children[0].children[0].y, 0.0000);
+
+        assert_eq!(layout.children[1].width, 5.0000);
+        assert_eq!(layout.children[1].height, 100.0000);
+        assert_eq!(layout.children[1].x, 5.0000);
+        assert_eq!(layout.children[1].y, 0.0000);
+
+        assert_eq!(layout.children[1].children[0].width, 20.0000);
+        assert_eq!(layout.children[1].children[0].height, 100.0000);
+        assert_eq!(layout.children[1].children[0].x, 0.0000);
+        assert_eq!(layout.children[1].children[0].y, 0.0000);
+    }
+
+    #[test]
     fn absolute_layout_in_wrap_reverse_row_container() {
         let layout = stretch::compute(&stretch::style::Node {
-            flexWrap: stretch::style::FlexWrap::WrapReverse,
+            flex_wrap: stretch::style::FlexWrap::WrapReverse,
             width: stretch::style::Dimension::Points(100.0000),
             height: stretch::style::Dimension::Points(100.0000),
             children: vec![stretch::style::Node {
@@ -4873,6 +5294,70 @@ mod generated {
         assert_eq!(layout.children[0].height, 20.0000);
         assert_eq!(layout.children[0].x, 0.0000);
         assert_eq!(layout.children[0].y, 80.0000);
+    }
+
+    #[test]
+    fn flex_basis_and_main_dimen_set_when_flexing() {
+        let layout = stretch::compute(&stretch::style::Node {
+            width: stretch::style::Dimension::Points(100.0000),
+            children: vec![
+                stretch::style::Node {
+                    flex_grow: 1.0000,
+                    flex_basis: stretch::style::Dimension::Points(10.0000),
+                    width: stretch::style::Dimension::Points(50.0000),
+                    height: stretch::style::Dimension::Points(50.0000),
+                    ..Default::default()
+                },
+                stretch::style::Node {
+                    flex_grow: 1.0000,
+                    flex_basis: stretch::style::Dimension::Points(10.0000),
+                    width: stretch::style::Dimension::Points(0.0000),
+                    height: stretch::style::Dimension::Points(50.0000),
+                    ..Default::default()
+                },
+            ],
+            ..Default::default()
+        });
+
+        assert_eq!(layout.width, 100.0000);
+        assert_eq!(layout.height, 50.0000);
+        assert_eq!(layout.x, 0.0000);
+        assert_eq!(layout.y, 0.0000);
+
+        assert_eq!(layout.children[0].width, 50.0000);
+        assert_eq!(layout.children[0].height, 50.0000);
+        assert_eq!(layout.children[0].x, 0.0000);
+        assert_eq!(layout.children[0].y, 0.0000);
+
+        assert_eq!(layout.children[1].width, 50.0000);
+        assert_eq!(layout.children[1].height, 50.0000);
+        assert_eq!(layout.children[1].x, 50.0000);
+        assert_eq!(layout.children[1].y, 0.0000);
+    }
+
+    #[test]
+    fn flex_basis_smaller_than_main_dimen_column() {
+        let layout = stretch::compute(&stretch::style::Node {
+            flex_direction: stretch::style::FlexDirection::Column,
+            height: stretch::style::Dimension::Points(100.0000),
+            children: vec![stretch::style::Node {
+                flex_basis: stretch::style::Dimension::Points(10.0000),
+                width: stretch::style::Dimension::Points(50.0000),
+                height: stretch::style::Dimension::Points(50.0000),
+                ..Default::default()
+            }],
+            ..Default::default()
+        });
+
+        assert_eq!(layout.width, 50.0000);
+        assert_eq!(layout.height, 100.0000);
+        assert_eq!(layout.x, 0.0000);
+        assert_eq!(layout.y, 0.0000);
+
+        assert_eq!(layout.children[0].width, 50.0000);
+        assert_eq!(layout.children[0].height, 10.0000);
+        assert_eq!(layout.children[0].x, 0.0000);
+        assert_eq!(layout.children[0].y, 0.0000);
     }
 
     #[test]
@@ -5046,7 +5531,7 @@ mod generated {
     fn wrapped_column_max_height() {
         let layout = stretch::compute(&stretch::style::Node {
             flex_direction: stretch::style::FlexDirection::Column,
-            flexWrap: stretch::style::FlexWrap::Wrap,
+            flex_wrap: stretch::style::FlexWrap::Wrap,
             align_items: stretch::style::AlignItems::Center,
             align_content: stretch::style::AlignContent::Center,
             justify_content: stretch::style::JustifyContent::Center,
@@ -5104,7 +5589,7 @@ mod generated {
     #[test]
     fn wrap_row() {
         let layout = stretch::compute(&stretch::style::Node {
-            flexWrap: stretch::style::FlexWrap::Wrap,
+            flex_wrap: stretch::style::FlexWrap::Wrap,
             width: stretch::style::Dimension::Points(100.0000),
             children: vec![
                 stretch::style::Node {
@@ -5423,6 +5908,63 @@ mod generated {
     }
 
     #[test]
+    fn flex_basis_smaller_then_content_with_flex_grow_very_large_size() {
+        let layout = stretch::compute(&stretch::style::Node {
+            width: stretch::style::Dimension::Points(200.0000),
+            children: vec![
+                stretch::style::Node {
+                    flex_direction: stretch::style::FlexDirection::Column,
+                    flex_grow: 1.0000,
+                    flex_basis: stretch::style::Dimension::Points(0.0000),
+                    children: vec![stretch::style::Node {
+                        width: stretch::style::Dimension::Points(70.0000),
+                        height: stretch::style::Dimension::Points(100.0000),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+                stretch::style::Node {
+                    flex_direction: stretch::style::FlexDirection::Column,
+                    flex_grow: 1.0000,
+                    flex_basis: stretch::style::Dimension::Points(0.0000),
+                    children: vec![stretch::style::Node {
+                        width: stretch::style::Dimension::Points(20.0000),
+                        height: stretch::style::Dimension::Points(100.0000),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+            ],
+            ..Default::default()
+        });
+
+        assert_eq!(layout.width, 200.0000);
+        assert_eq!(layout.height, 100.0000);
+        assert_eq!(layout.x, 0.0000);
+        assert_eq!(layout.y, 0.0000);
+
+        assert_eq!(layout.children[0].width, 100.0000);
+        assert_eq!(layout.children[0].height, 100.0000);
+        assert_eq!(layout.children[0].x, 0.0000);
+        assert_eq!(layout.children[0].y, 0.0000);
+
+        assert_eq!(layout.children[0].children[0].width, 70.0000);
+        assert_eq!(layout.children[0].children[0].height, 100.0000);
+        assert_eq!(layout.children[0].children[0].x, 0.0000);
+        assert_eq!(layout.children[0].children[0].y, 0.0000);
+
+        assert_eq!(layout.children[1].width, 100.0000);
+        assert_eq!(layout.children[1].height, 100.0000);
+        assert_eq!(layout.children[1].x, 100.0000);
+        assert_eq!(layout.children[1].y, 0.0000);
+
+        assert_eq!(layout.children[1].children[0].width, 20.0000);
+        assert_eq!(layout.children[1].children[0].height, 100.0000);
+        assert_eq!(layout.children[1].children[0].x, 0.0000);
+        assert_eq!(layout.children[1].children[0].y, 0.0000);
+    }
+
+    #[test]
     fn percent_within_flex_grow() {
         let layout = stretch::compute(&stretch::style::Node {
             width: stretch::style::Dimension::Points(350.0000),
@@ -5633,7 +6175,7 @@ mod generated {
     #[test]
     fn flex_wrap_children_with_min_main_overriding_flex_basis() {
         let layout = stretch::compute(&stretch::style::Node {
-            flexWrap: stretch::style::FlexWrap::Wrap,
+            flex_wrap: stretch::style::FlexWrap::Wrap,
             width: stretch::style::Dimension::Points(100.0000),
             children: vec![
                 stretch::style::Node {
@@ -5671,7 +6213,7 @@ mod generated {
     #[test]
     fn wrap_row_align_items_center() {
         let layout = stretch::compute(&stretch::style::Node {
-            flexWrap: stretch::style::FlexWrap::Wrap,
+            flex_wrap: stretch::style::FlexWrap::Wrap,
             align_items: stretch::style::AlignItems::Center,
             width: stretch::style::Dimension::Points(100.0000),
             children: vec![
@@ -5841,7 +6383,7 @@ mod generated {
     fn wrap_column() {
         let layout = stretch::compute(&stretch::style::Node {
             flex_direction: stretch::style::FlexDirection::Column,
-            flexWrap: stretch::style::FlexWrap::Wrap,
+            flex_wrap: stretch::style::FlexWrap::Wrap,
             height: stretch::style::Dimension::Points(100.0000),
             children: vec![
                 stretch::style::Node {
@@ -5997,6 +6539,39 @@ mod generated {
         assert_eq!(layout.children[2].height, 10.0000);
         assert_eq!(layout.children[2].x, 0.0000);
         assert_eq!(layout.children[2].y, 78.0000);
+    }
+
+    #[test]
+    fn flex_basis_larger_than_content_row() {
+        let layout = stretch::compute(&stretch::style::Node {
+            width: stretch::style::Dimension::Points(100.0000),
+            children: vec![stretch::style::Node {
+                flex_direction: stretch::style::FlexDirection::Column,
+                flex_basis: stretch::style::Dimension::Points(50.0000),
+                children: vec![stretch::style::Node {
+                    width: stretch::style::Dimension::Points(10.0000),
+                    height: stretch::style::Dimension::Points(100.0000),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            }],
+            ..Default::default()
+        });
+
+        assert_eq!(layout.width, 100.0000);
+        assert_eq!(layout.height, 100.0000);
+        assert_eq!(layout.x, 0.0000);
+        assert_eq!(layout.y, 0.0000);
+
+        assert_eq!(layout.children[0].width, 50.0000);
+        assert_eq!(layout.children[0].height, 100.0000);
+        assert_eq!(layout.children[0].x, 0.0000);
+        assert_eq!(layout.children[0].y, 0.0000);
+
+        assert_eq!(layout.children[0].children[0].width, 10.0000);
+        assert_eq!(layout.children[0].children[0].height, 100.0000);
+        assert_eq!(layout.children[0].children[0].x, 0.0000);
+        assert_eq!(layout.children[0].children[0].y, 0.0000);
     }
 
     #[test]
@@ -6594,6 +7169,63 @@ mod generated {
     }
 
     #[test]
+    fn flex_basis_slightly_smaller_then_content_with_flex_grow_large_size() {
+        let layout = stretch::compute(&stretch::style::Node {
+            width: stretch::style::Dimension::Points(100.0000),
+            children: vec![
+                stretch::style::Node {
+                    flex_direction: stretch::style::FlexDirection::Column,
+                    flex_grow: 1.0000,
+                    flex_basis: stretch::style::Dimension::Points(60.0000),
+                    children: vec![stretch::style::Node {
+                        width: stretch::style::Dimension::Points(70.0000),
+                        height: stretch::style::Dimension::Points(100.0000),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+                stretch::style::Node {
+                    flex_direction: stretch::style::FlexDirection::Column,
+                    flex_grow: 1.0000,
+                    flex_basis: stretch::style::Dimension::Points(0.0000),
+                    children: vec![stretch::style::Node {
+                        width: stretch::style::Dimension::Points(20.0000),
+                        height: stretch::style::Dimension::Points(100.0000),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+            ],
+            ..Default::default()
+        });
+
+        assert_eq!(layout.width, 100.0000);
+        assert_eq!(layout.height, 100.0000);
+        assert_eq!(layout.x, 0.0000);
+        assert_eq!(layout.y, 0.0000);
+
+        assert_eq!(layout.children[0].width, 80.0000);
+        assert_eq!(layout.children[0].height, 100.0000);
+        assert_eq!(layout.children[0].x, 0.0000);
+        assert_eq!(layout.children[0].y, 0.0000);
+
+        assert_eq!(layout.children[0].children[0].width, 70.0000);
+        assert_eq!(layout.children[0].children[0].height, 100.0000);
+        assert_eq!(layout.children[0].children[0].x, 0.0000);
+        assert_eq!(layout.children[0].children[0].y, 0.0000);
+
+        assert_eq!(layout.children[1].width, 20.0000);
+        assert_eq!(layout.children[1].height, 100.0000);
+        assert_eq!(layout.children[1].x, 80.0000);
+        assert_eq!(layout.children[1].y, 0.0000);
+
+        assert_eq!(layout.children[1].children[0].width, 20.0000);
+        assert_eq!(layout.children[1].children[0].height, 100.0000);
+        assert_eq!(layout.children[1].children[0].x, 0.0000);
+        assert_eq!(layout.children[1].children[0].y, 0.0000);
+    }
+
+    #[test]
     fn percentage_flex_basis_cross_min_width() {
         let layout = stretch::compute(&stretch::style::Node {
             flex_direction: stretch::style::FlexDirection::Column,
@@ -6852,7 +7484,7 @@ mod generated {
     #[test]
     fn wrap_reverse_row_align_content_flex_start() {
         let layout = stretch::compute(&stretch::style::Node {
-            flexWrap: stretch::style::FlexWrap::WrapReverse,
+            flex_wrap: stretch::style::FlexWrap::WrapReverse,
             align_content: stretch::style::AlignContent::FlexStart,
             width: stretch::style::Dimension::Points(100.0000),
             children: vec![
@@ -6954,6 +7586,28 @@ mod generated {
         assert_eq!(layout.children[1].height, 100.0000);
         assert_eq!(layout.children[1].x, 250.0000);
         assert_eq!(layout.children[1].y, 0.0000);
+    }
+
+    #[test]
+    fn flex_basis_unconstraint_row() {
+        let layout = stretch::compute(&stretch::style::Node {
+            children: vec![stretch::style::Node {
+                flex_basis: stretch::style::Dimension::Points(50.0000),
+                height: stretch::style::Dimension::Points(100.0000),
+                ..Default::default()
+            }],
+            ..Default::default()
+        });
+
+        assert_eq!(layout.width, 0.0000);
+        assert_eq!(layout.height, 100.0000);
+        assert_eq!(layout.x, 0.0000);
+        assert_eq!(layout.y, 0.0000);
+
+        assert_eq!(layout.children[0].width, 0.0000);
+        assert_eq!(layout.children[0].height, 100.0000);
+        assert_eq!(layout.children[0].x, 0.0000);
+        assert_eq!(layout.children[0].y, 0.0000);
     }
 
     #[test]
@@ -7194,6 +7848,97 @@ mod generated {
     }
 
     #[test]
+    fn width_smaller_then_content_with_flex_grow_large_size() {
+        let layout = stretch::compute(&stretch::style::Node {
+            width: stretch::style::Dimension::Points(100.0000),
+            children: vec![
+                stretch::style::Node {
+                    flex_direction: stretch::style::FlexDirection::Column,
+                    flex_grow: 1.0000,
+                    width: stretch::style::Dimension::Points(0.0000),
+                    children: vec![stretch::style::Node {
+                        width: stretch::style::Dimension::Points(70.0000),
+                        height: stretch::style::Dimension::Points(100.0000),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+                stretch::style::Node {
+                    flex_direction: stretch::style::FlexDirection::Column,
+                    flex_grow: 1.0000,
+                    width: stretch::style::Dimension::Points(0.0000),
+                    children: vec![stretch::style::Node {
+                        width: stretch::style::Dimension::Points(20.0000),
+                        height: stretch::style::Dimension::Points(100.0000),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                },
+            ],
+            ..Default::default()
+        });
+
+        assert_eq!(layout.width, 100.0000);
+        assert_eq!(layout.height, 100.0000);
+        assert_eq!(layout.x, 0.0000);
+        assert_eq!(layout.y, 0.0000);
+
+        assert_eq!(layout.children[0].width, 50.0000);
+        assert_eq!(layout.children[0].height, 100.0000);
+        assert_eq!(layout.children[0].x, 0.0000);
+        assert_eq!(layout.children[0].y, 0.0000);
+
+        assert_eq!(layout.children[0].children[0].width, 70.0000);
+        assert_eq!(layout.children[0].children[0].height, 100.0000);
+        assert_eq!(layout.children[0].children[0].x, 0.0000);
+        assert_eq!(layout.children[0].children[0].y, 0.0000);
+
+        assert_eq!(layout.children[1].width, 50.0000);
+        assert_eq!(layout.children[1].height, 100.0000);
+        assert_eq!(layout.children[1].x, 50.0000);
+        assert_eq!(layout.children[1].y, 0.0000);
+
+        assert_eq!(layout.children[1].children[0].width, 20.0000);
+        assert_eq!(layout.children[1].children[0].height, 100.0000);
+        assert_eq!(layout.children[1].children[0].x, 0.0000);
+        assert_eq!(layout.children[1].children[0].y, 0.0000);
+    }
+
+    #[test]
+    fn flex_basis_smaller_than_content_column() {
+        let layout = stretch::compute(&stretch::style::Node {
+            flex_direction: stretch::style::FlexDirection::Column,
+            height: stretch::style::Dimension::Points(100.0000),
+            children: vec![stretch::style::Node {
+                flex_direction: stretch::style::FlexDirection::Column,
+                flex_basis: stretch::style::Dimension::Points(50.0000),
+                children: vec![stretch::style::Node {
+                    width: stretch::style::Dimension::Points(100.0000),
+                    height: stretch::style::Dimension::Points(100.0000),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            }],
+            ..Default::default()
+        });
+
+        assert_eq!(layout.width, 100.0000);
+        assert_eq!(layout.height, 100.0000);
+        assert_eq!(layout.x, 0.0000);
+        assert_eq!(layout.y, 0.0000);
+
+        assert_eq!(layout.children[0].width, 100.0000);
+        assert_eq!(layout.children[0].height, 50.0000);
+        assert_eq!(layout.children[0].x, 0.0000);
+        assert_eq!(layout.children[0].y, 0.0000);
+
+        assert_eq!(layout.children[0].children[0].width, 100.0000);
+        assert_eq!(layout.children[0].children[0].height, 50.0000);
+        assert_eq!(layout.children[0].children[0].x, 0.0000);
+        assert_eq!(layout.children[0].children[0].y, 0.0000);
+    }
+
+    #[test]
     fn percentage_width_height_undefined_parent_size() {
         let layout = stretch::compute(&stretch::style::Node {
             flex_direction: stretch::style::FlexDirection::Column,
@@ -7366,6 +8111,48 @@ mod generated {
     }
 
     #[test]
+    fn flex_grow_flex_basis_percent_min_max() {
+        let layout = stretch::compute(&stretch::style::Node {
+            width: stretch::style::Dimension::Points(120.0000),
+            children: vec![
+                stretch::style::Node {
+                    flex_grow: 1.0000,
+                    flex_shrink: 0.0000,
+                    flex_basis: stretch::style::Dimension::Points(0.0000),
+                    min_width: stretch::style::Dimension::Points(60.0000),
+                    height: stretch::style::Dimension::Points(20.0000),
+                    ..Default::default()
+                },
+                stretch::style::Node {
+                    flex_grow: 1.0000,
+                    flex_shrink: 0.0000,
+                    flex_basis: stretch::style::Dimension::Percent(0.5000),
+                    width: stretch::style::Dimension::Points(20.0000),
+                    max_width: stretch::style::Dimension::Points(20.0000),
+                    height: stretch::style::Dimension::Points(20.0000),
+                    ..Default::default()
+                },
+            ],
+            ..Default::default()
+        });
+
+        assert_eq!(layout.width, 120.0000);
+        assert_eq!(layout.height, 20.0000);
+        assert_eq!(layout.x, 0.0000);
+        assert_eq!(layout.y, 0.0000);
+
+        assert_eq!(layout.children[0].width, 100.0000);
+        assert_eq!(layout.children[0].height, 20.0000);
+        assert_eq!(layout.children[0].x, 0.0000);
+        assert_eq!(layout.children[0].y, 0.0000);
+
+        assert_eq!(layout.children[1].width, 20.0000);
+        assert_eq!(layout.children[1].height, 20.0000);
+        assert_eq!(layout.children[1].x, 100.0000);
+        assert_eq!(layout.children[1].y, 0.0000);
+    }
+
+    #[test]
     fn percent_absolute_position() {
         let layout = stretch::compute(&stretch::style::Node {
             flex_direction: stretch::style::FlexDirection::Column,
@@ -7506,6 +8293,39 @@ mod generated {
 
         assert_eq!(layout.children[0].children[0].width, 200.0000);
         assert_eq!(layout.children[0].children[0].height, 20.0000);
+        assert_eq!(layout.children[0].children[0].x, 0.0000);
+        assert_eq!(layout.children[0].children[0].y, 0.0000);
+    }
+
+    #[test]
+    fn flex_basis_smaller_than_content_row() {
+        let layout = stretch::compute(&stretch::style::Node {
+            width: stretch::style::Dimension::Points(100.0000),
+            children: vec![stretch::style::Node {
+                flex_direction: stretch::style::FlexDirection::Column,
+                flex_basis: stretch::style::Dimension::Points(50.0000),
+                children: vec![stretch::style::Node {
+                    width: stretch::style::Dimension::Points(100.0000),
+                    height: stretch::style::Dimension::Points(100.0000),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            }],
+            ..Default::default()
+        });
+
+        assert_eq!(layout.width, 100.0000);
+        assert_eq!(layout.height, 100.0000);
+        assert_eq!(layout.x, 0.0000);
+        assert_eq!(layout.y, 0.0000);
+
+        assert_eq!(layout.children[0].width, 100.0000);
+        assert_eq!(layout.children[0].height, 100.0000);
+        assert_eq!(layout.children[0].x, 0.0000);
+        assert_eq!(layout.children[0].y, 0.0000);
+
+        assert_eq!(layout.children[0].children[0].width, 100.0000);
+        assert_eq!(layout.children[0].children[0].height, 100.0000);
         assert_eq!(layout.children[0].children[0].x, 0.0000);
         assert_eq!(layout.children[0].children[0].y, 0.0000);
     }

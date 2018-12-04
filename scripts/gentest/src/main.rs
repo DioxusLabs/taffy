@@ -144,8 +144,8 @@ fn generate_node(node: &json::JsonValue) -> String {
     match style["flexWrap"] {
         json::JsonValue::Short(ref value) => {
             match value.as_ref() {
-                "wrap" => src.push_str("flexWrap: stretch::style::FlexWrap::Wrap,\n"),
-                "wrap-reverse" => src.push_str("flexWrap: stretch::style::FlexWrap::WrapReverse,\n"),
+                "wrap" => src.push_str("flex_wrap: stretch::style::FlexWrap::Wrap,\n"),
+                "wrap-reverse" => src.push_str("flex_wrap: stretch::style::FlexWrap::WrapReverse,\n"),
                 _ => (),
             };
         },
