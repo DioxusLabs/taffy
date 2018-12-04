@@ -1021,11 +1021,13 @@ fn compute_internal(
 
         let result = compute_internal(
             child,
-            child.width
+            child
+                .width
                 .resolve(f32::NAN, f32::NAN)
                 .min(child.max_width.resolve(f32::NAN, f32::NAN))
                 .max(child.min_width.resolve(f32::NAN, f32::NAN)),
-            child.height
+            child
+                .height
                 .resolve(f32::NAN, f32::NAN)
                 .min(child.max_height.resolve(f32::NAN, f32::NAN))
                 .max(child.min_height.resolve(f32::NAN, f32::NAN)),
