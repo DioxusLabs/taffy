@@ -189,6 +189,8 @@ fn compute_internal(
     let (inner_intrinsic_main_size, inner_intrinsic_cross_size) =
         (intrinsic_main_size - padding_main - border_main, intrinsic_cross_size - padding_cross - border_cross);
 
+    let wrap_reverse = node.flexWrap == style::FlexWrap::WrapReverse;
+
     // 9.2. Line Length Determination
 
     // 1. Generate anonymous flex items as described in §4 Flex Items.
@@ -802,7 +804,7 @@ fn compute_internal(
     //     - Otherwise, if the block-start or inline-start margin (whichever is in the cross axis)
     //       is auto, set it to zero. Set the opposite margin so that the outer cross size of the
     //       item equals the cross size of its flex line.
-
+    
     for line in &mut flex_lines {
         for child in &mut line.items {
             if child.target_cross_size < line.cross_size {
@@ -828,11 +830,11 @@ fn compute_internal(
 
                     child.offset_cross = match child.node.align_self(node) {
                         style::AlignSelf::Auto => 0.0, // Should never happen
-                        style::AlignSelf::FlexStart => 0.0,
-                        style::AlignSelf::FlexEnd => free_space,
+                        style::AlignSelf::FlexStart => if wrap_reverse { free_space } else { 0.0 },
+                        style::AlignSelf::FlexEnd => if wrap_reverse { 0.0 } else { free_space },
                         style::AlignSelf::Center => free_space / 2.0,
                         style::AlignSelf::Baseline => free_space / 2.0, // Treat as center for now until we have baseline support
-                        style::AlignSelf::Stretch => 0.0,
+                        style::AlignSelf::Stretch => if wrap_reverse { free_space } else { 0.0 },
                     };
                 }
             }
@@ -860,8 +862,12 @@ fn compute_internal(
 
     let align_line = |line: &mut FlexLine| {
         line.offset_cross = match node.align_content {
-            style::AlignContent::FlexStart => 0.0,
-            style::AlignContent::FlexEnd => if is_first {
+            style::AlignContent::FlexStart => if is_first && wrap_reverse {
+                free_space
+            } else {
+                0.0
+            },
+            style::AlignContent::FlexEnd => if is_first && !wrap_reverse {
                 free_space
             } else {
                 0.0
@@ -886,7 +892,7 @@ fn compute_internal(
         is_first = false;
     };
 
-    if node.flexWrap == style::FlexWrap::WrapReverse {
+    if wrap_reverse {
         flex_lines.iter_mut().rev().for_each(align_line);
     } else {
         flex_lines.iter_mut().for_each(align_line);
@@ -950,14 +956,14 @@ fn compute_internal(
                 lines.push(children);
             };
 
-            if node.flexWrap == style::FlexWrap::WrapReverse {
+            if wrap_reverse {
                 flex_lines.iter_mut().rev().for_each(layout_line);
             } else {
                 flex_lines.iter_mut().for_each(layout_line);
             }
         }
 
-        if node.flexWrap == style::FlexWrap::WrapReverse {
+        if wrap_reverse {
             lines.into_iter().rev().flat_map(|x| x).collect()
         } else {
             lines.into_iter().flat_map(|x| x).collect()
