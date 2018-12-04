@@ -1011,18 +1011,20 @@ fn compute_internal(
             }
         };
 
+        let free_space = container_cross_size - result.size.cross(node.flex_direction);
+
         let offset_cross = if start_cross.is_finite() {
             start_cross
         } else if end_cross.is_finite() {
-            container_cross_size - end_cross - result.size.cross(node.flex_direction)
+            free_space - end_cross
         } else {
             match child.align_self(node) {
                 style::AlignSelf::Auto => 0.0, // Should never happen
-                style::AlignSelf::FlexStart => 0.0,
-                style::AlignSelf::FlexEnd => container_cross_size - result.size.cross(node.flex_direction),
-                style::AlignSelf::Center => container_cross_size / 2.0 - result.size.cross(node.flex_direction) / 2.0,
+                style::AlignSelf::FlexStart => if wrap_reverse { free_space } else { 0.0 },
+                style::AlignSelf::FlexEnd => if wrap_reverse { 0.0 } else { free_space },
+                style::AlignSelf::Center => free_space / 2.0,
                 style::AlignSelf::Baseline => free_space / 2.0, // Treat as center for now until we have baseline support
-                style::AlignSelf::Stretch => 0.0,
+                style::AlignSelf::Stretch => if wrap_reverse { free_space } else { 0.0 },
             }
         };
 
