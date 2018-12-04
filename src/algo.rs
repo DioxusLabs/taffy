@@ -527,8 +527,6 @@ fn compute_internal(
                     let scaled_shrink_factor = child.inner_flex_basis * child.node.flex_shrink;
                     child.target_main_size =
                         child.flex_basis + free_space * (scaled_shrink_factor / sum_scaled_shrink_factor);
-
-                    println!("child.flex_basis: {}, scaled_shrink_factor: {}, sum_scaled_shrink_factor: {}, child.inner_flex_basis: {}", child.flex_basis, scaled_shrink_factor, sum_scaled_shrink_factor, child.inner_flex_basis);
                 }
             }
 
