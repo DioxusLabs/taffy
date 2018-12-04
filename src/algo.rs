@@ -1021,10 +1021,16 @@ fn compute_internal(
 
         let result = compute_internal(
             child,
+            child.width
+                .resolve(f32::NAN, f32::NAN)
+                .min(child.max_width.resolve(f32::NAN, f32::NAN))
+                .max(child.min_width.resolve(f32::NAN, f32::NAN)),
+            child.height
+                .resolve(f32::NAN, f32::NAN)
+                .min(child.max_height.resolve(f32::NAN, f32::NAN))
+                .max(child.min_height.resolve(f32::NAN, f32::NAN)),
             if node.flex_direction.is_row() { main } else { cross },
             if node.flex_direction.is_row() { cross } else { main },
-            if node.flex_direction.is_row() { container_main_size } else { container_cross_size },
-            if node.flex_direction.is_row() { container_cross_size } else { container_main_size },
             percent_calc_base_child,
         );
 
