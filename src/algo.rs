@@ -804,7 +804,7 @@ fn compute_internal(
     //     - Otherwise, if the block-start or inline-start margin (whichever is in the cross axis)
     //       is auto, set it to zero. Set the opposite margin so that the outer cross size of the
     //       item equals the cross size of its flex line.
-    
+
     for line in &mut flex_lines {
         for child in &mut line.items {
             if child.target_cross_size < line.cross_size {
@@ -830,11 +830,23 @@ fn compute_internal(
 
                     child.offset_cross = match child.node.align_self(node) {
                         style::AlignSelf::Auto => 0.0, // Should never happen
-                        style::AlignSelf::FlexStart => if wrap_reverse { free_space } else { 0.0 },
-                        style::AlignSelf::FlexEnd => if wrap_reverse { 0.0 } else { free_space },
+                        style::AlignSelf::FlexStart => if wrap_reverse {
+                            free_space
+                        } else {
+                            0.0
+                        },
+                        style::AlignSelf::FlexEnd => if wrap_reverse {
+                            0.0
+                        } else {
+                            free_space
+                        },
                         style::AlignSelf::Center => free_space / 2.0,
                         style::AlignSelf::Baseline => free_space / 2.0, // Treat as center for now until we have baseline support
-                        style::AlignSelf::Stretch => if wrap_reverse { free_space } else { 0.0 },
+                        style::AlignSelf::Stretch => if wrap_reverse {
+                            free_space
+                        } else {
+                            0.0
+                        },
                     };
                 }
             }
@@ -1020,11 +1032,23 @@ fn compute_internal(
         } else {
             match child.align_self(node) {
                 style::AlignSelf::Auto => 0.0, // Should never happen
-                style::AlignSelf::FlexStart => if wrap_reverse { free_space } else { 0.0 },
-                style::AlignSelf::FlexEnd => if wrap_reverse { 0.0 } else { free_space },
+                style::AlignSelf::FlexStart => if wrap_reverse {
+                    free_space
+                } else {
+                    0.0
+                },
+                style::AlignSelf::FlexEnd => if wrap_reverse {
+                    0.0
+                } else {
+                    free_space
+                },
                 style::AlignSelf::Center => free_space / 2.0,
                 style::AlignSelf::Baseline => free_space / 2.0, // Treat as center for now until we have baseline support
-                style::AlignSelf::Stretch => if wrap_reverse { free_space } else { 0.0 },
+                style::AlignSelf::Stretch => if wrap_reverse {
+                    free_space
+                } else {
+                    0.0
+                },
             }
         };
 

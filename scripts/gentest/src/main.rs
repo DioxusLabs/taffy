@@ -85,10 +85,10 @@ fn generate_assertions(prefix: String, node: &json::JsonValue) -> String {
     let layout = &node["layout"];
     let mut src = String::new();
 
-    src.push_str(&format!("assert_eq!({}.width, {:.1});\n", prefix, layout["width"].as_f32().unwrap()));
-    src.push_str(&format!("assert_eq!({}.height, {:.1});\n", prefix, layout["height"].as_f32().unwrap()));
-    src.push_str(&format!("assert_eq!({}.x, {:.1});\n", prefix, layout["x"].as_f32().unwrap()));
-    src.push_str(&format!("assert_eq!({}.y, {:.1});\n\n", prefix, layout["y"].as_f32().unwrap()));
+    src.push_str(&format!("assert_eq!({}.width, {:.4});\n", prefix, layout["width"].as_f32().unwrap()));
+    src.push_str(&format!("assert_eq!({}.height, {:.4});\n", prefix, layout["height"].as_f32().unwrap()));
+    src.push_str(&format!("assert_eq!({}.x, {:.4});\n", prefix, layout["x"].as_f32().unwrap()));
+    src.push_str(&format!("assert_eq!({}.y, {:.4});\n\n", prefix, layout["y"].as_f32().unwrap()));
 
     match node["children"] {
         json::JsonValue::Array(ref value) => {
@@ -221,7 +221,7 @@ fn generate_node(node: &json::JsonValue) -> String {
     match style["flexGrow"] {
         json::JsonValue::Number(value) => {
             let value: f32 = value.into();
-            src.push_str(&format!("flex_grow: {:.1},\n", value))
+            src.push_str(&format!("flex_grow: {:.4},\n", value))
         },
         _ => (),
     };
@@ -229,7 +229,7 @@ fn generate_node(node: &json::JsonValue) -> String {
     match style["flexShrink"] {
         json::JsonValue::Number(value) => {
             let value: f32 = value.into();
-            src.push_str(&format!("flex_shrink: {:.1},\n", value))
+            src.push_str(&format!("flex_shrink: {:.4},\n", value))
         },
         _ => (),
     };
@@ -330,8 +330,8 @@ fn generate_dimension(dimen: &json::object::Object) -> String {
         json::JsonValue::Short(ref unit) => {
             match unit.as_ref() {
                 "auto" => format!("stretch::style::Dimension::Auto"),
-                "points" => format!("stretch::style::Dimension::Points({:.1})", value()),
-                "percent" => format!("stretch::style::Dimension::Percent({:.1})", value()),
+                "points" => format!("stretch::style::Dimension::Points({:.4})", value()),
+                "percent" => format!("stretch::style::Dimension::Percent({:.4})", value()),
                 _ => panic!(),
             }
         },
