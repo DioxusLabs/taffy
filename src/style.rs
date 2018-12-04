@@ -162,10 +162,10 @@ impl Default for Dimension {
 }
 
 impl Dimension {
-    pub(crate) fn resolve(&self, parent_size: f32, auto_size: f32) -> f32 {
+    pub(crate) fn resolve(&self, parent_width: f32, auto_size: f32) -> f32 {
         match self {
             Dimension::Points(points) => *points,
-            Dimension::Percent(percent) if parent_size.is_finite() => percent * parent_size,
+            Dimension::Percent(percent) if parent_width.is_finite() => percent * parent_width,
             _ => auto_size,
         }
     }
