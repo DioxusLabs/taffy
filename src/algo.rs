@@ -733,7 +733,9 @@ fn compute_internal(
                 && child.node.cross_margin_end(node.flex_direction) != style::Dimension::Auto
                 && child.node.cross_size(node.flex_direction) == style::Dimension::Auto
             {
-                line.cross_size
+                (line.cross_size
+                    - child.node.cross_margin_start(node.flex_direction).resolve(percent_calc_base_child, 0.0)
+                    - child.node.cross_margin_end(node.flex_direction).resolve(percent_calc_base_child, 0.0))
                     .max(child.node.min_cross_size(node.flex_direction).resolve(percent_calc_base_child, f32::MIN))
                     .min(child.node.max_cross_size(node.flex_direction).resolve(percent_calc_base_child, f32::MAX))
             } else {
