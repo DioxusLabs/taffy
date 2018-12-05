@@ -132,9 +132,9 @@ fn compute_internal(
     parent_inner_width: f32,
     parent_inner_height: f32,
 
-    // This will always be the parent width but we want to make
-    // it explicit what this parameter should be used for. It
-    // should only be used for calculated percentage values.
+    // This will always be the parent width except for the case when
+    // the child is in an absolute context. This value should only
+    // be used for calculated percentage values.
     percent_calc_base: f32,
 ) -> ComputeResult {
     // Define some general constants we will need for the remainder
@@ -995,22 +995,33 @@ fn compute_internal(
         }
     };
 
+    let container_width = if node.flex_direction.is_row() { container_main_size } else { container_cross_size };
+    let container_height = if node.flex_direction.is_column() { container_main_size } else { container_cross_size };
+
     // Before returning we perform absolute layout on all absolutely positioned children
 
     let absolute_children: Vec<&style::Node> =
         node.children.iter().filter(|child| child.position == style::Position::Absolute).collect();
 
     for child in absolute_children {
-        let start_main = child.main_start(node.flex_direction).resolve(percent_calc_base_child, f32::NAN);
-        let end_main = child.main_end(node.flex_direction).resolve(percent_calc_base_child, f32::NAN);
+        let start_main = child.main_start(node.flex_direction).resolve(container_main_size, f32::NAN)
+            + child.main_margin_start(node.flex_direction).resolve(container_main_size, f32::NAN);
+        
+        let end_main = child.main_end(node.flex_direction).resolve(container_main_size, f32::NAN)
+            + child.main_margin_end(node.flex_direction).resolve(container_main_size, f32::NAN);
+
         let main = if start_main.is_finite() && end_main.is_finite() {
             container_main_size - start_main - end_main
         } else {
             f32::NAN
         };
 
-        let start_cross = child.cross_start(node.flex_direction).resolve(percent_calc_base_child, f32::NAN);
-        let end_cross = child.cross_end(node.flex_direction).resolve(percent_calc_base_child, f32::NAN);
+        let start_cross = child.cross_start(node.flex_direction).resolve(container_cross_size, f32::NAN)
+            + child.cross_margin_start(node.flex_direction).resolve(container_cross_size, f32::NAN);
+
+        let end_cross = child.cross_end(node.flex_direction).resolve(container_cross_size, f32::NAN)
+            + child.cross_margin_end(node.flex_direction).resolve(container_cross_size, f32::NAN);
+
         let cross = if start_cross.is_finite() && end_cross.is_finite() {
             container_cross_size - start_cross - end_cross
         } else {
@@ -1021,60 +1032,59 @@ fn compute_internal(
             child,
             child
                 .width
-                .resolve(percent_calc_base_child, f32::NAN)
-                .min(child.max_width.resolve(percent_calc_base_child, f32::NAN))
-                .max(child.min_width.resolve(percent_calc_base_child, f32::NAN)),
+                .resolve(container_width, f32::NAN)
+                .min(child.max_width.resolve(container_width, f32::NAN))
+                .max(child.min_width.resolve(container_width, f32::NAN)),
             child
                 .height
-                .resolve(percent_calc_base_child, f32::NAN)
-                .min(child.max_height.resolve(percent_calc_base_child, f32::NAN))
-                .max(child.min_height.resolve(percent_calc_base_child, f32::NAN)),
+                .resolve(container_height, f32::NAN)
+                .min(child.max_height.resolve(container_height, f32::NAN))
+                .max(child.min_height.resolve(container_height, f32::NAN)),
             if node.flex_direction.is_row() { main } else { cross },
             if node.flex_direction.is_row() { cross } else { main },
-            percent_calc_base_child,
+            container_main_size,
         );
 
+        let free_cross_space = container_cross_size - result.size.cross(node.flex_direction);
+        let free_main_space = container_main_size - result.size.main(node.flex_direction);
+
         let offset_main = if start_main.is_finite() {
-            start_main
+            start_main + border_main_start
         } else if end_main.is_finite() {
-            container_main_size - end_main - result.size.main(node.flex_direction)
+            free_main_space - end_main - border_main_end
         } else {
             match node.justify_content {
-                style::JustifyContent::SpaceBetween | style::JustifyContent::FlexStart => 0.0,
-                style::JustifyContent::FlexEnd => container_main_size - result.size.main(node.flex_direction),
+                style::JustifyContent::SpaceBetween | style::JustifyContent::FlexStart => padding_main_start + border_main_start,
+                style::JustifyContent::FlexEnd => free_main_space - end_main - padding_main_end - border_main_end,
                 style::JustifyContent::SpaceEvenly
                 | style::JustifyContent::SpaceAround
-                | style::JustifyContent::Center => {
-                    container_main_size / 2.0 - result.size.main(node.flex_direction) / 2.0
-                }
+                | style::JustifyContent::Center => free_main_space / 2.0,
             }
         };
 
-        let free_space = container_cross_size - result.size.cross(node.flex_direction);
-
         let offset_cross = if start_cross.is_finite() {
-            start_cross
+            start_cross + border_cross_start
         } else if end_cross.is_finite() {
-            free_space - end_cross
+            free_cross_space - end_cross - border_cross_end
         } else {
             match child.align_self(node) {
                 style::AlignSelf::Auto => 0.0, // Should never happen
                 style::AlignSelf::FlexStart => if wrap_reverse {
-                    free_space
+                    free_cross_space - padding_cross_end - border_cross_end
                 } else {
-                    0.0
+                    padding_cross_start + border_cross_start
                 },
                 style::AlignSelf::FlexEnd => if wrap_reverse {
-                    0.0
+                    padding_cross_start + border_cross_start
                 } else {
-                    free_space
+                    free_cross_space - padding_cross_end - border_cross_end
                 },
-                style::AlignSelf::Center => free_space / 2.0,
-                style::AlignSelf::Baseline => free_space / 2.0, // Treat as center for now until we have baseline support
+                style::AlignSelf::Center => free_cross_space / 2.0,
+                style::AlignSelf::Baseline => free_cross_space / 2.0, // Treat as center for now until we have baseline support
                 style::AlignSelf::Stretch => if wrap_reverse {
-                    free_space
+                    free_cross_space - padding_cross_end - border_cross_end
                 } else {
-                    0.0
+                    padding_cross_start + border_cross_start
                 },
             }
         };
@@ -1089,10 +1099,7 @@ fn compute_internal(
     }
 
     ComputeResult {
-        size: FlexSize {
-            width: if node.flex_direction.is_row() { container_main_size } else { container_cross_size },
-            height: if node.flex_direction.is_column() { container_main_size } else { container_cross_size },
-        },
+        size: FlexSize { width: container_width, height: container_height },
         children,
     }
 }
