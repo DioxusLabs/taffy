@@ -1070,7 +1070,7 @@ fn compute_internal(
                 style::JustifyContent::SpaceBetween | style::JustifyContent::FlexStart => {
                     padding_main_start + border_main_start
                 }
-                style::JustifyContent::FlexEnd => free_main_space - end_main - padding_main_end - border_main_end,
+                style::JustifyContent::FlexEnd => free_main_space - padding_main_end - border_main_end,
                 style::JustifyContent::SpaceEvenly
                 | style::JustifyContent::SpaceAround
                 | style::JustifyContent::Center => free_main_space / 2.0,
