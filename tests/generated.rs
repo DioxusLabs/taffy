@@ -888,6 +888,32 @@ mod generated {
     }
 
     #[test]
+    fn justify_content_column_min_height_and_margin_top() {
+        let layout = stretch::compute(&stretch::style::Node {
+            flex_direction: stretch::style::FlexDirection::Column,
+            justify_content: stretch::style::JustifyContent::Center,
+            min_height: stretch::style::Dimension::Points(50.0000),
+            children: vec![stretch::style::Node {
+                width: stretch::style::Dimension::Points(20.0000),
+                height: stretch::style::Dimension::Points(20.0000),
+                margin: stretch::style::Edges { top: stretch::style::Dimension::Points(10.0000), ..Default::default() },
+                ..Default::default()
+            }],
+            ..Default::default()
+        });
+
+        assert_eq!(layout.width, 20.0000);
+        assert_eq!(layout.height, 50.0000);
+        assert_eq!(layout.x, 0.0000);
+        assert_eq!(layout.y, 0.0000);
+
+        assert_eq!(layout.children[0].width, 20.0000);
+        assert_eq!(layout.children[0].height, 20.0000);
+        assert_eq!(layout.children[0].x, 0.0000);
+        assert_eq!(layout.children[0].y, 20.0000);
+    }
+
+    #[test]
     fn justify_content_overflow_min_max() {
         let layout = stretch::compute(&stretch::style::Node {
             flex_direction: stretch::style::FlexDirection::Column,
@@ -896,16 +922,19 @@ mod generated {
             max_height: stretch::style::Dimension::Points(110.0000),
             children: vec![
                 stretch::style::Node {
+                    flex_shrink: 0.0000,
                     width: stretch::style::Dimension::Points(50.0000),
                     height: stretch::style::Dimension::Points(50.0000),
                     ..Default::default()
                 },
                 stretch::style::Node {
+                    flex_shrink: 0.0000,
                     width: stretch::style::Dimension::Points(50.0000),
                     height: stretch::style::Dimension::Points(50.0000),
                     ..Default::default()
                 },
                 stretch::style::Node {
+                    flex_shrink: 0.0000,
                     width: stretch::style::Dimension::Points(50.0000),
                     height: stretch::style::Dimension::Points(50.0000),
                     ..Default::default()
@@ -920,19 +949,19 @@ mod generated {
         assert_eq!(layout.y, 0.0000);
 
         assert_eq!(layout.children[0].width, 50.0000);
-        assert_eq!(layout.children[0].height, 37.0000);
+        assert_eq!(layout.children[0].height, 50.0000);
         assert_eq!(layout.children[0].x, 0.0000);
-        assert_eq!(layout.children[0].y, 0.0000);
+        assert_eq!(layout.children[0].y, -20.0000);
 
         assert_eq!(layout.children[1].width, 50.0000);
-        assert_eq!(layout.children[1].height, 36.0000);
+        assert_eq!(layout.children[1].height, 50.0000);
         assert_eq!(layout.children[1].x, 0.0000);
-        assert_eq!(layout.children[1].y, 37.0000);
+        assert_eq!(layout.children[1].y, 30.0000);
 
         assert_eq!(layout.children[2].width, 50.0000);
-        assert_eq!(layout.children[2].height, 37.0000);
+        assert_eq!(layout.children[2].height, 50.0000);
         assert_eq!(layout.children[2].x, 0.0000);
-        assert_eq!(layout.children[2].y, 73.0000);
+        assert_eq!(layout.children[2].y, 80.0000);
     }
 
     #[test]
@@ -1917,10 +1946,13 @@ mod generated {
         let layout = stretch::compute(&stretch::style::Node {
             justify_content: stretch::style::JustifyContent::Center,
             min_width: stretch::style::Dimension::Points(50.0000),
-            margin: stretch::style::Edges { start: stretch::style::Dimension::Points(100.0000), ..Default::default() },
             children: vec![stretch::style::Node {
                 width: stretch::style::Dimension::Points(20.0000),
                 height: stretch::style::Dimension::Points(20.0000),
+                margin: stretch::style::Edges {
+                    start: stretch::style::Dimension::Points(10.0000),
+                    ..Default::default()
+                },
                 ..Default::default()
             }],
             ..Default::default()
@@ -1928,12 +1960,12 @@ mod generated {
 
         assert_eq!(layout.width, 50.0000);
         assert_eq!(layout.height, 20.0000);
-        assert_eq!(layout.x, 100.0000);
+        assert_eq!(layout.x, 0.0000);
         assert_eq!(layout.y, 0.0000);
 
         assert_eq!(layout.children[0].width, 20.0000);
         assert_eq!(layout.children[0].height, 20.0000);
-        assert_eq!(layout.children[0].x, 15.0000);
+        assert_eq!(layout.children[0].x, 20.0000);
         assert_eq!(layout.children[0].y, 0.0000);
     }
 
@@ -5736,10 +5768,13 @@ mod generated {
             justify_content: stretch::style::JustifyContent::Center,
             width: stretch::style::Dimension::Points(100.0000),
             max_width: stretch::style::Dimension::Points(80.0000),
-            margin: stretch::style::Edges { start: stretch::style::Dimension::Points(100.0000), ..Default::default() },
             children: vec![stretch::style::Node {
                 width: stretch::style::Dimension::Points(20.0000),
                 height: stretch::style::Dimension::Points(20.0000),
+                margin: stretch::style::Edges {
+                    start: stretch::style::Dimension::Points(100.0000),
+                    ..Default::default()
+                },
                 ..Default::default()
             }],
             ..Default::default()
@@ -5747,12 +5782,12 @@ mod generated {
 
         assert_eq!(layout.width, 80.0000);
         assert_eq!(layout.height, 20.0000);
-        assert_eq!(layout.x, 100.0000);
+        assert_eq!(layout.x, 0.0000);
         assert_eq!(layout.y, 0.0000);
 
-        assert_eq!(layout.children[0].width, 20.0000);
+        assert_eq!(layout.children[0].width, 0.0000);
         assert_eq!(layout.children[0].height, 20.0000);
-        assert_eq!(layout.children[0].x, 30.0000);
+        assert_eq!(layout.children[0].x, 90.0000);
         assert_eq!(layout.children[0].y, 0.0000);
     }
 
@@ -6275,10 +6310,13 @@ mod generated {
             justify_content: stretch::style::JustifyContent::Center,
             height: stretch::style::Dimension::Points(100.0000),
             max_height: stretch::style::Dimension::Points(80.0000),
-            margin: stretch::style::Edges { top: stretch::style::Dimension::Points(100.0000), ..Default::default() },
             children: vec![stretch::style::Node {
                 width: stretch::style::Dimension::Points(20.0000),
                 height: stretch::style::Dimension::Points(20.0000),
+                margin: stretch::style::Edges {
+                    top: stretch::style::Dimension::Points(100.0000),
+                    ..Default::default()
+                },
                 ..Default::default()
             }],
             ..Default::default()
@@ -6287,12 +6325,12 @@ mod generated {
         assert_eq!(layout.width, 20.0000);
         assert_eq!(layout.height, 80.0000);
         assert_eq!(layout.x, 0.0000);
-        assert_eq!(layout.y, 100.0000);
+        assert_eq!(layout.y, 0.0000);
 
         assert_eq!(layout.children[0].width, 20.0000);
-        assert_eq!(layout.children[0].height, 20.0000);
+        assert_eq!(layout.children[0].height, 0.0000);
         assert_eq!(layout.children[0].x, 0.0000);
-        assert_eq!(layout.children[0].y, 30.0000);
+        assert_eq!(layout.children[0].y, 90.0000);
     }
 
     #[test]
@@ -8420,32 +8458,6 @@ mod generated {
     }
 
     #[test]
-    fn justify_content_column_min_height_and_margin() {
-        let layout = stretch::compute(&stretch::style::Node {
-            flex_direction: stretch::style::FlexDirection::Column,
-            justify_content: stretch::style::JustifyContent::Center,
-            min_height: stretch::style::Dimension::Points(50.0000),
-            children: vec![stretch::style::Node {
-                width: stretch::style::Dimension::Points(20.0000),
-                height: stretch::style::Dimension::Points(20.0000),
-                margin: stretch::style::Edges { top: stretch::style::Dimension::Points(10.0000), ..Default::default() },
-                ..Default::default()
-            }],
-            ..Default::default()
-        });
-
-        assert_eq!(layout.width, 20.0000);
-        assert_eq!(layout.height, 50.0000);
-        assert_eq!(layout.x, 0.0000);
-        assert_eq!(layout.y, 0.0000);
-
-        assert_eq!(layout.children[0].width, 20.0000);
-        assert_eq!(layout.children[0].height, 20.0000);
-        assert_eq!(layout.children[0].x, 0.0000);
-        assert_eq!(layout.children[0].y, 20.0000);
-    }
-
-    #[test]
     fn align_flex_start_with_shrinking_children() {
         let layout = stretch::compute(&stretch::style::Node {
             width: stretch::style::Dimension::Points(500.0000),
@@ -8486,6 +8498,35 @@ mod generated {
         assert_eq!(layout.children[0].children[0].children[0].height, 0.0000);
         assert_eq!(layout.children[0].children[0].children[0].x, 0.0000);
         assert_eq!(layout.children[0].children[0].children[0].y, 0.0000);
+    }
+
+    #[test]
+    fn justify_content_column_min_height_and_margin_bottom() {
+        let layout = stretch::compute(&stretch::style::Node {
+            flex_direction: stretch::style::FlexDirection::Column,
+            justify_content: stretch::style::JustifyContent::Center,
+            min_height: stretch::style::Dimension::Points(50.0000),
+            children: vec![stretch::style::Node {
+                width: stretch::style::Dimension::Points(20.0000),
+                height: stretch::style::Dimension::Points(20.0000),
+                margin: stretch::style::Edges {
+                    bottom: stretch::style::Dimension::Points(10.0000),
+                    ..Default::default()
+                },
+                ..Default::default()
+            }],
+            ..Default::default()
+        });
+
+        assert_eq!(layout.width, 20.0000);
+        assert_eq!(layout.height, 50.0000);
+        assert_eq!(layout.x, 0.0000);
+        assert_eq!(layout.y, 0.0000);
+
+        assert_eq!(layout.children[0].width, 20.0000);
+        assert_eq!(layout.children[0].height, 20.0000);
+        assert_eq!(layout.children[0].x, 0.0000);
+        assert_eq!(layout.children[0].y, 10.0000);
     }
 
 }

@@ -34,6 +34,7 @@ struct FlexItem<'a> {
     hypothetical_inner_main_size: f32,
     hypothetical_outer_main_size: f32,
     target_main_size: f32,
+    outer_target_main_size: f32,
     violation: f32,
     frozen: bool,
 
@@ -209,6 +210,7 @@ fn compute_internal(
             hypothetical_inner_main_size: 0.0,
             hypothetical_outer_main_size: 0.0,
             target_main_size: 0.0,
+            outer_target_main_size: 0.0,
             violation: 0.0,
             frozen: false,
 
@@ -428,6 +430,9 @@ fn compute_internal(
 
         for child in line.items.iter_mut() {
             child.target_main_size = child.hypothetical_inner_main_size;
+            child.outer_target_main_size = child.target_main_size
+                + child.node.main_margin_start(node.flex_direction).resolve(percent_calc_base_child, 0.0)
+                + child.node.main_margin_end(node.flex_direction).resolve(percent_calc_base_child, 0.0);
 
             if (child.node.flex_grow == 0.0 && child.node.flex_shrink == 0.0)
                 || (growing && child.flex_basis > child.hypothetical_inner_main_size)
@@ -553,6 +558,9 @@ fn compute_internal(
                 child.violation = clamped - child.target_main_size;
                 total_violation += child.violation;
                 child.target_main_size = clamped;
+                child.outer_target_main_size = child.target_main_size
+                    + child.node.main_margin_start(node.flex_direction).resolve(percent_calc_base_child, 0.0)
+                    + child.node.main_margin_end(node.flex_direction).resolve(percent_calc_base_child, 0.0);
             }
 
             // e. Freeze over-flexed items. The total violation is the sum of the adjustments
@@ -589,12 +597,14 @@ fn compute_internal(
         let mut longest_line = f32::MIN;
 
         for line in &flex_lines {
-            let length: f32 = line.items.iter().map(|item| item.target_main_size).sum();
+            let length: f32 = line.items.iter().map(|item| item.outer_target_main_size).sum();
             longest_line = if length > longest_line { length } else { longest_line };
         }
 
         (longest_line + padding_main + border_main)
     };
+
+    let inner_container_main_size = container_main_size - padding_main - border_main;
 
     // 9.4. Cross Size Determination
 
@@ -725,15 +735,15 @@ fn compute_internal(
             }
 
             if is_stretch {
-                // TODO use result somehow
-                compute_internal(
+                let size = compute_internal(
                     child.node,
                     if node.flex_direction.is_row() { child.target_main_size } else { child.target_cross_size },
                     if node.flex_direction.is_row() { child.target_cross_size } else { child.target_main_size },
                     if node.flex_direction.is_row() { container_main_size } else { available_cross },
                     if node.flex_direction.is_row() { available_cross } else { container_main_size },
                     percent_calc_base_child,
-                );
+                ).size;
+                child.target_cross_size = size.cross(node.flex_direction);
             }
         }
     }
@@ -747,8 +757,16 @@ fn compute_internal(
     //     2. Align the items along the main-axis per justify-content.
 
     for line in &mut flex_lines {
-        let used_space: f32 = line.items.iter().map(|child| child.target_main_size).sum();
-        let free_space = available_main - used_space;
+        let used_space: f32 = line.items.iter().map(|child| child.outer_target_main_size).sum();
+        let free_space = inner_container_main_size - used_space;
+
+        // TODO does not make a ton of sense to have this here but we want to have this somewhere.
+        for child in &mut line.items {
+            child.main_margin_start =
+                child.node.main_margin_start(node.flex_direction).resolve(percent_calc_base_child, 0.0);
+            child.main_margin_end =
+                child.node.main_margin_end(node.flex_direction).resolve(percent_calc_base_child, 0.0);
+        }
 
         if free_space > 0.0 {
             let mut num_auto_margins = 0;
@@ -778,11 +796,6 @@ fn compute_internal(
                 let mut is_first = true;
 
                 for child in &mut line.items {
-                    child.main_margin_start =
-                        child.node.main_margin_start(node.flex_direction).resolve(percent_calc_base_child, 0.0);
-                    child.main_margin_end =
-                        child.node.main_margin_end(node.flex_direction).resolve(percent_calc_base_child, 0.0);
-
                     child.offset_main = match node.justify_content {
                         style::JustifyContent::FlexStart => 0.0,
                         style::JustifyContent::Center => if is_first {
@@ -826,6 +839,12 @@ fn compute_internal(
 
     for line in &mut flex_lines {
         for child in &mut line.items {
+            // TODO probably move this somewhere else, as with main margin resolution. Only auto margins should be resolved here.
+            child.cross_margin_start =
+                child.node.cross_margin_start(node.flex_direction).resolve(percent_calc_base_child, 0.0);
+            child.cross_margin_end =
+                child.node.cross_margin_end(node.flex_direction).resolve(percent_calc_base_child, 0.0);
+
             if child.target_cross_size < line.cross_size {
                 let free_space = line.cross_size - child.target_cross_size;
 
@@ -839,11 +858,6 @@ fn compute_internal(
                 } else if child.node.cross_margin_end(node.flex_direction) == style::Dimension::Auto {
                     child.cross_margin_end = free_space;
                 } else {
-                    child.cross_margin_start =
-                        child.node.cross_margin_start(node.flex_direction).resolve(percent_calc_base_child, 0.0);
-                    child.cross_margin_end =
-                        child.node.cross_margin_end(node.flex_direction).resolve(percent_calc_base_child, 0.0);
-
                     // 14. Align all flex items along the cross-axis per align-self, if neither of the item’s
                     //     cross-axis margins are auto.
 
@@ -881,10 +895,11 @@ fn compute_internal(
     let total_cross_size: f32 = flex_lines.iter().map(|line| line.cross_size).sum();
     let container_cross_size =
         if node_cross.is_finite() { node_cross } else { (total_cross_size + padding_cross + border_cross) };
+    let inner_container_cross_size = container_cross_size - padding_cross - border_cross;
 
     // 16. Align all flex lines per align-content.
 
-    let free_space = container_cross_size - total_cross_size;
+    let free_space = inner_container_cross_size - total_cross_size;
     let num_lines = flex_lines.len();
     let mut is_first = true;
 
