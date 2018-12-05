@@ -4,3 +4,10 @@ version = "0.1.0"
 authors = ["Emil Sjölander <emil@visly.app>"]
 
 [dependencies]
+
+[dev-dependencies]
+criterion = "0.2"
+
+[[bench]]
+name = "generated"
+harness = false
