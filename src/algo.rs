@@ -603,7 +603,12 @@ fn compute_internal(
             longest_line = if length > longest_line { length } else { longest_line };
         }
 
-        (longest_line + padding_main + border_main)
+        let size = longest_line + padding_main + border_main;
+        if available_main.is_finite() && flex_lines.len() > 1 && size < available_main {
+            available_main
+        } else {
+            size
+        }
     };
 
     let inner_container_main_size = container_main_size - padding_main - border_main;
@@ -723,30 +728,17 @@ fn compute_internal(
         for child in &mut line.items {
             let is_stretch = child.node.align_self(node) == style::AlignSelf::Stretch;
 
-            if is_stretch
+            child.target_cross_size = if is_stretch
                 && child.node.cross_margin_start(node.flex_direction) != style::Dimension::Auto
                 && child.node.cross_margin_end(node.flex_direction) != style::Dimension::Auto
                 && child.node.cross_size(node.flex_direction) == style::Dimension::Auto
             {
-                child.target_cross_size = line
-                    .cross_size
+                line.cross_size
                     .max(child.node.min_cross_size(node.flex_direction).resolve(percent_calc_base_child, f32::MIN))
-                    .min(child.node.max_cross_size(node.flex_direction).resolve(percent_calc_base_child, f32::MAX));
+                    .min(child.node.max_cross_size(node.flex_direction).resolve(percent_calc_base_child, f32::MAX))
             } else {
-                child.target_cross_size = child.hypothetical_inner_cross_size;
-            }
-
-            if is_stretch {
-                let size = compute_internal(
-                    child.node,
-                    if node.flex_direction.is_row() { child.target_main_size } else { child.target_cross_size },
-                    if node.flex_direction.is_row() { child.target_cross_size } else { child.target_main_size },
-                    if node.flex_direction.is_row() { container_main_size } else { available_cross },
-                    if node.flex_direction.is_row() { available_cross } else { container_main_size },
-                    percent_calc_base_child,
-                ).size;
-                child.target_cross_size = size.cross(node.flex_direction);
-            }
+                child.hypothetical_inner_cross_size
+            };
 
             child.outer_target_cross_size = child.target_cross_size
                 + child.node.cross_margin_start(node.flex_direction).resolve(percent_calc_base_child, 0.0)
