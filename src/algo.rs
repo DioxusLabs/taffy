@@ -1019,36 +1019,34 @@ fn compute_internal(
     for child in absolute_children {
         let start =
             child.start.resolve(container_width, f32::NAN) + child.margin.start.resolve(container_width, f32::NAN);
-
         let end = child.end.resolve(container_width, f32::NAN) + child.margin.end.resolve(container_width, f32::NAN);
-
         let top = child.top.resolve(container_height, f32::NAN) + child.margin.top.resolve(container_height, f32::NAN);
-
         let bottom =
             child.bottom.resolve(container_height, f32::NAN) + child.margin.bottom.resolve(container_height, f32::NAN);
 
         let (start_main, end_main) = if node.flex_direction.is_row() { (start, end) } else { (top, bottom) };
-
         let (start_cross, end_cross) = if node.flex_direction.is_row() { (top, bottom) } else { (start, end) };
 
-        let width = if start.is_finite() && end.is_finite() {
-            container_width - start - end
-        } else {
-            child
-                .width
+        let child_width = child.width
                 .resolve(container_width, f32::NAN)
                 .max(child.min_width.resolve(container_width, f32::NAN))
-                .min(child.max_width.resolve(container_width, f32::NAN))
-        };
+                .min(child.max_width.resolve(container_width, f32::NAN));
 
-        let height = if top.is_finite() && bottom.is_finite() {
-            container_height - top - bottom
-        } else {
-            child
-                .height
+        let child_height = child.height
                 .resolve(container_height, f32::NAN)
                 .max(child.min_height.resolve(container_height, f32::NAN))
-                .min(child.max_height.resolve(container_height, f32::NAN))
+                .min(child.max_height.resolve(container_height, f32::NAN));
+
+        let width = if child_width.is_finite() {
+            child_width
+        } else {
+            container_width - start - end
+        };
+
+        let height = if child_height.is_finite() {
+            child_height
+        } else {
+            container_height - top - bottom
         };
 
         let result = compute_internal(
