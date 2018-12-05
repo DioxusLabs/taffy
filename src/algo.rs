@@ -42,6 +42,7 @@ struct FlexItem<'a> {
     hypothetical_inner_cross_size: f32,
     hypothetical_outer_cross_size: f32,
     target_cross_size: f32,
+    outer_target_cross_size: f32,
 
     main_margin_start: f32,
     main_margin_end: f32,
@@ -217,6 +218,7 @@ fn compute_internal(
             hypothetical_inner_cross_size: 0.0,
             hypothetical_outer_cross_size: 0.0,
             target_cross_size: 0.0,
+            outer_target_cross_size: 0.0,
 
             main_margin_start: 0.0,
             main_margin_end: 0.0,
@@ -745,6 +747,10 @@ fn compute_internal(
                 ).size;
                 child.target_cross_size = size.cross(node.flex_direction);
             }
+
+            child.outer_target_cross_size = child.target_cross_size
+                + child.node.cross_margin_start(node.flex_direction).resolve(percent_calc_base_child, 0.0)
+                + child.node.cross_margin_end(node.flex_direction).resolve(percent_calc_base_child, 0.0);
         }
     }
 
@@ -845,8 +851,8 @@ fn compute_internal(
             child.cross_margin_end =
                 child.node.cross_margin_end(node.flex_direction).resolve(percent_calc_base_child, 0.0);
 
-            if child.target_cross_size < line.cross_size {
-                let free_space = line.cross_size - child.target_cross_size;
+            if child.outer_target_cross_size < line.cross_size {
+                let free_space = line.cross_size - child.outer_target_cross_size;
 
                 if child.node.cross_margin_start(node.flex_direction) == style::Dimension::Auto
                     && child.node.cross_margin_end(node.flex_direction) == style::Dimension::Auto
