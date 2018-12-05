@@ -186,6 +186,9 @@ fn compute_internal(
 
     let (border_main, border_cross) = (border_main_start + border_main_end, border_cross_start + border_cross_end);
 
+    let (node_inner_main, node_inner_cross) =
+        (node_main - border_main - padding_main, node_cross - border_cross - padding_cross);
+
     let wrap_reverse = node.flex_wrap == style::FlexWrap::WrapReverse;
 
     let percent_calc_base_child = node.width.resolve(percent_calc_base, f32::NAN);
@@ -413,7 +416,7 @@ fn compute_internal(
         //    flex shrink factor.
 
         let used_flex_factor: f32 = line.items.iter().map(|child| child.hypothetical_outer_main_size).sum();
-        let growing = used_flex_factor < available_main;
+        let growing = used_flex_factor < node_inner_main;
         let shrinking = !growing;
 
         // 2. Size inflexible items. Freeze, setting its target main size to its hypothetical main size
@@ -447,7 +450,7 @@ fn compute_internal(
                     + if child.frozen { child.target_main_size } else { child.flex_basis }
             }).sum();
 
-        let initial_free_space = available_main - used_space;
+        let initial_free_space = node_inner_main - used_space;
 
         // 4. Loop
 
@@ -487,11 +490,11 @@ fn compute_internal(
             let sum_flex_shrink: f32 = unfrozen.iter().map(|item| item.node.flex_shrink).sum();
 
             let free_space = if growing && sum_flex_grow < 1.0 {
-                (initial_free_space * sum_flex_grow).min(available_main - used_space)
+                (initial_free_space * sum_flex_grow).min(node_inner_main - used_space)
             } else if shrinking && sum_flex_shrink < 1.0 {
-                (initial_free_space * sum_flex_shrink).max(available_main - used_space)
+                (initial_free_space * sum_flex_shrink).max(node_inner_main - used_space)
             } else {
-                available_main - used_space
+                node_inner_main - used_space
             };
 
             // c. Distribute free space proportional to the flex factors.
@@ -590,7 +593,7 @@ fn compute_internal(
             longest_line = if length > longest_line { length } else { longest_line };
         }
 
-        (longest_line + padding_main + border_main).min(available_main).max(0.0)
+        (longest_line + padding_main + border_main)
     };
 
     // 9.4. Cross Size Determination
@@ -876,11 +879,8 @@ fn compute_internal(
     //       min and max cross sizes of the flex container.
 
     let total_cross_size: f32 = flex_lines.iter().map(|line| line.cross_size).sum();
-    let container_cross_size = if node_cross.is_finite() {
-        node_cross
-    } else {
-        (total_cross_size + padding_cross + border_cross).min(available_cross).max(0.0)
-    };
+    let container_cross_size =
+        if node_cross.is_finite() { node_cross } else { (total_cross_size + padding_cross + border_cross) };
 
     // 16. Align all flex lines per align-content.
 
@@ -1002,29 +1002,19 @@ fn compute_internal(
         node.children.iter().filter(|child| child.position == style::Position::Absolute).collect();
 
     for child in absolute_children {
-        let start = child.start.resolve(container_width, f32::NAN)
-            + child.margin.start.resolve(container_width, f32::NAN);
-        
-        let end = child.end.resolve(container_width, f32::NAN)
-            + child.margin.end.resolve(container_width, f32::NAN);
+        let start =
+            child.start.resolve(container_width, f32::NAN) + child.margin.start.resolve(container_width, f32::NAN);
 
-        let top = child.top.resolve(container_height, f32::NAN)
-            + child.margin.top.resolve(container_height, f32::NAN);
+        let end = child.end.resolve(container_width, f32::NAN) + child.margin.end.resolve(container_width, f32::NAN);
 
-        let bottom = child.bottom.resolve(container_height, f32::NAN)
-            + child.margin.bottom.resolve(container_height, f32::NAN);
+        let top = child.top.resolve(container_height, f32::NAN) + child.margin.top.resolve(container_height, f32::NAN);
 
-        let (start_main, end_main) = if node.flex_direction.is_row() {
-            (start, end)
-        } else {
-            (top, bottom)
-        };
+        let bottom =
+            child.bottom.resolve(container_height, f32::NAN) + child.margin.bottom.resolve(container_height, f32::NAN);
 
-        let (start_cross, end_cross) = if node.flex_direction.is_row() {
-            (top, bottom)
-        } else {
-            (start, end)
-        };
+        let (start_main, end_main) = if node.flex_direction.is_row() { (start, end) } else { (top, bottom) };
+
+        let (start_cross, end_cross) = if node.flex_direction.is_row() { (top, bottom) } else { (start, end) };
 
         let width = if start.is_finite() && end.is_finite() {
             container_width - start - end
@@ -1064,7 +1054,9 @@ fn compute_internal(
             free_main_space - end_main - border_main_end
         } else {
             match node.justify_content {
-                style::JustifyContent::SpaceBetween | style::JustifyContent::FlexStart => padding_main_start + border_main_start,
+                style::JustifyContent::SpaceBetween | style::JustifyContent::FlexStart => {
+                    padding_main_start + border_main_start
+                }
                 style::JustifyContent::FlexEnd => free_main_space - end_main - padding_main_end - border_main_end,
                 style::JustifyContent::SpaceEvenly
                 | style::JustifyContent::SpaceAround
@@ -1108,8 +1100,5 @@ fn compute_internal(
         });
     }
 
-    ComputeResult {
-        size: FlexSize { width: container_width, height: container_height },
-        children,
-    }
+    ComputeResult { size: FlexSize { width: container_width, height: container_height }, children }
 }
