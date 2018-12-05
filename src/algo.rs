@@ -193,7 +193,7 @@ fn compute_internal(
 
     let wrap_reverse = node.flex_wrap == style::FlexWrap::WrapReverse;
 
-    let percent_calc_base_child = node.width.resolve(percent_calc_base, f32::NAN);
+    let percent_calc_base_child = node_width;
 
     // 9.2. Line Length Determination
 
@@ -942,6 +942,11 @@ fn compute_internal(
     }
 
     // Do a final layout pass and gather the resulting layouts
+    let percent_calc_base_child = if node.flex_direction.is_row() {
+        container_main_size
+    } else {
+        container_cross_size
+    };
 
     let mut children: Vec<layout::Node> = {
         let mut lines: Vec<Vec<layout::Node>> = vec![];
@@ -961,6 +966,7 @@ fn compute_internal(
                         if node.flex_direction.is_row() { container_cross_size } else { container_main_size },
                         percent_calc_base_child,
                     );
+
 
                     let offset_main = {
                         total_offset_main
