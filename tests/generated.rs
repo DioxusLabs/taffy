@@ -8425,10 +8425,10 @@ mod generated {
             flex_direction: stretch::style::FlexDirection::Column,
             justify_content: stretch::style::JustifyContent::Center,
             min_height: stretch::style::Dimension::Points(50.0000),
-            margin: stretch::style::Edges { top: stretch::style::Dimension::Points(100.0000), ..Default::default() },
             children: vec![stretch::style::Node {
                 width: stretch::style::Dimension::Points(20.0000),
                 height: stretch::style::Dimension::Points(20.0000),
+                margin: stretch::style::Edges { top: stretch::style::Dimension::Points(10.0000), ..Default::default() },
                 ..Default::default()
             }],
             ..Default::default()
@@ -8437,12 +8437,12 @@ mod generated {
         assert_eq!(layout.width, 20.0000);
         assert_eq!(layout.height, 50.0000);
         assert_eq!(layout.x, 0.0000);
-        assert_eq!(layout.y, 100.0000);
+        assert_eq!(layout.y, 0.0000);
 
         assert_eq!(layout.children[0].width, 20.0000);
         assert_eq!(layout.children[0].height, 20.0000);
         assert_eq!(layout.children[0].x, 0.0000);
-        assert_eq!(layout.children[0].y, 15.0000);
+        assert_eq!(layout.children[0].y, 20.0000);
     }
 
     #[test]
