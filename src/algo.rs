@@ -1002,44 +1002,56 @@ fn compute_internal(
         node.children.iter().filter(|child| child.position == style::Position::Absolute).collect();
 
     for child in absolute_children {
-        let start_main = child.main_start(node.flex_direction).resolve(container_main_size, f32::NAN)
-            + child.main_margin_start(node.flex_direction).resolve(container_main_size, f32::NAN);
+        let start = child.start.resolve(container_width, f32::NAN)
+            + child.margin.start.resolve(container_width, f32::NAN);
         
-        let end_main = child.main_end(node.flex_direction).resolve(container_main_size, f32::NAN)
-            + child.main_margin_end(node.flex_direction).resolve(container_main_size, f32::NAN);
+        let end = child.end.resolve(container_width, f32::NAN)
+            + child.margin.end.resolve(container_width, f32::NAN);
 
-        let main = if start_main.is_finite() && end_main.is_finite() {
-            container_main_size - start_main - end_main
+        let top = child.top.resolve(container_height, f32::NAN)
+            + child.margin.top.resolve(container_height, f32::NAN);
+
+        let bottom = child.bottom.resolve(container_height, f32::NAN)
+            + child.margin.bottom.resolve(container_height, f32::NAN);
+
+        let (start_main, end_main) = if node.flex_direction.is_row() {
+            (start, end)
         } else {
-            f32::NAN
+            (top, bottom)
         };
 
-        let start_cross = child.cross_start(node.flex_direction).resolve(container_cross_size, f32::NAN)
-            + child.cross_margin_start(node.flex_direction).resolve(container_cross_size, f32::NAN);
-
-        let end_cross = child.cross_end(node.flex_direction).resolve(container_cross_size, f32::NAN)
-            + child.cross_margin_end(node.flex_direction).resolve(container_cross_size, f32::NAN);
-
-        let cross = if start_cross.is_finite() && end_cross.is_finite() {
-            container_cross_size - start_cross - end_cross
+        let (start_cross, end_cross) = if node.flex_direction.is_row() {
+            (top, bottom)
         } else {
-            f32::NAN
+            (start, end)
         };
 
-        let result = compute_internal(
-            child,
+        let width = if start.is_finite() && end.is_finite() {
+            container_width - start - end
+        } else {
             child
                 .width
                 .resolve(container_width, f32::NAN)
                 .max(child.min_width.resolve(container_width, f32::NAN))
-                .min(child.max_width.resolve(container_width, f32::NAN)),
+                .min(child.max_width.resolve(container_width, f32::NAN))
+        };
+
+        let height = if top.is_finite() && bottom.is_finite() {
+            container_height - top - bottom
+        } else {
             child
                 .height
                 .resolve(container_height, f32::NAN)
                 .max(child.min_height.resolve(container_height, f32::NAN))
-                .min(child.max_height.resolve(container_height, f32::NAN)),
-            if node.flex_direction.is_row() { main } else { cross },
-            if node.flex_direction.is_row() { cross } else { main },
+                .min(child.max_height.resolve(container_height, f32::NAN))
+        };
+
+        let result = compute_internal(
+            child,
+            width,
+            height,
+            if node.flex_direction.is_row() { container_main_size } else { container_cross_size },
+            if node.flex_direction.is_row() { container_cross_size } else { container_main_size },
             container_main_size,
         );
 
