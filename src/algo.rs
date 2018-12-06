@@ -828,61 +828,59 @@ fn compute_internal(
                 child.node.main_margin_end(node.flex_direction).resolve(percent_calc_base_child, 0.0);
         }
 
-        if free_space > 0.0 {
-            let mut num_auto_margins = 0;
+        let mut num_auto_margins = 0;
+
+        for child in &mut line.items {
+            if child.node.main_margin_start(node.flex_direction) == style::Dimension::Auto {
+                num_auto_margins += 1;
+            }
+            if child.node.main_margin_end(node.flex_direction) == style::Dimension::Auto {
+                num_auto_margins += 1;
+            }
+        }
+
+        if free_space > 0.0 && num_auto_margins > 0 {
+            let margin = free_space / num_auto_margins as f32;
 
             for child in &mut line.items {
                 if child.node.main_margin_start(node.flex_direction) == style::Dimension::Auto {
-                    num_auto_margins += 1;
+                    child.main_margin_start = margin;
                 }
                 if child.node.main_margin_end(node.flex_direction) == style::Dimension::Auto {
-                    num_auto_margins += 1;
+                    child.main_margin_end = margin;
                 }
             }
+        } else {
+            let num_items = line.items.len();
+            let mut is_first = true;
 
-            if num_auto_margins > 0 {
-                let margin = free_space / num_auto_margins as f32;
+            for child in &mut line.items {
+                child.offset_main = match node.justify_content {
+                    style::JustifyContent::FlexStart => 0.0,
+                    style::JustifyContent::Center => if is_first {
+                        free_space / 2.0
+                    } else {
+                        0.0
+                    },
+                    style::JustifyContent::FlexEnd => if is_first {
+                        free_space
+                    } else {
+                        0.0
+                    },
+                    style::JustifyContent::SpaceBetween => if is_first {
+                        0.0
+                    } else {
+                        free_space / (num_items - 1) as f32
+                    },
+                    style::JustifyContent::SpaceAround => if is_first {
+                        (free_space / num_items as f32) / 2.0
+                    } else {
+                        free_space / num_items as f32
+                    },
+                    style::JustifyContent::SpaceEvenly => free_space / (num_items + 1) as f32,
+                };
 
-                for child in &mut line.items {
-                    if child.node.main_margin_start(node.flex_direction) == style::Dimension::Auto {
-                        child.main_margin_start = margin;
-                    }
-                    if child.node.main_margin_end(node.flex_direction) == style::Dimension::Auto {
-                        child.main_margin_end = margin;
-                    }
-                }
-            } else {
-                let num_items = line.items.len();
-                let mut is_first = true;
-
-                for child in &mut line.items {
-                    child.offset_main = match node.justify_content {
-                        style::JustifyContent::FlexStart => 0.0,
-                        style::JustifyContent::Center => if is_first {
-                            free_space / 2.0
-                        } else {
-                            0.0
-                        },
-                        style::JustifyContent::FlexEnd => if is_first {
-                            free_space
-                        } else {
-                            0.0
-                        },
-                        style::JustifyContent::SpaceBetween => if is_first {
-                            0.0
-                        } else {
-                            free_space / (num_items - 1) as f32
-                        },
-                        style::JustifyContent::SpaceAround => if is_first {
-                            (free_space / num_items as f32) / 2.0
-                        } else {
-                            free_space / num_items as f32
-                        },
-                        style::JustifyContent::SpaceEvenly => free_space / (num_items + 1) as f32,
-                    };
-
-                    is_first = false;
-                }
+                is_first = false;
             }
         }
     }
@@ -910,57 +908,55 @@ fn compute_internal(
             child.cross_margin_end =
                 child.node.cross_margin_end(node.flex_direction).resolve(percent_calc_base_child, 0.0);
 
-            if child.outer_target_cross_size < line.cross_size {
-                let free_space = line.cross_size - child.outer_target_cross_size;
+            let free_space = line.cross_size - child.outer_target_cross_size;
+            
+            if child.node.cross_margin_start(node.flex_direction) == style::Dimension::Auto
+                && child.node.cross_margin_end(node.flex_direction) == style::Dimension::Auto
+            {
+                child.cross_margin_start = free_space / 2.0;
+                child.cross_margin_end = free_space / 2.0;
+            } else if child.node.cross_margin_start(node.flex_direction) == style::Dimension::Auto {
+                child.cross_margin_start = free_space;
+            } else if child.node.cross_margin_end(node.flex_direction) == style::Dimension::Auto {
+                child.cross_margin_end = free_space;
+            } else {
+                // 14. Align all flex items along the cross-axis per align-self, if neither of the item’s
+                //     cross-axis margins are auto.
 
-                if child.node.cross_margin_start(node.flex_direction) == style::Dimension::Auto
-                    && child.node.cross_margin_end(node.flex_direction) == style::Dimension::Auto
-                {
-                    child.cross_margin_start = free_space / 2.0;
-                    child.cross_margin_end = free_space / 2.0;
-                } else if child.node.cross_margin_start(node.flex_direction) == style::Dimension::Auto {
-                    child.cross_margin_start = free_space;
-                } else if child.node.cross_margin_end(node.flex_direction) == style::Dimension::Auto {
-                    child.cross_margin_end = free_space;
-                } else {
-                    // 14. Align all flex items along the cross-axis per align-self, if neither of the item’s
-                    //     cross-axis margins are auto.
-
-                    child.offset_cross = match child.node.align_self(node) {
-                        style::AlignSelf::Auto => 0.0, // Should never happen
-                        style::AlignSelf::FlexStart => if wrap_reverse {
-                            free_space
+                child.offset_cross = match child.node.align_self(node) {
+                    style::AlignSelf::Auto => 0.0, // Should never happen
+                    style::AlignSelf::FlexStart => if wrap_reverse {
+                        free_space
+                    } else {
+                        0.0
+                    },
+                    style::AlignSelf::FlexEnd => if wrap_reverse {
+                        0.0
+                    } else {
+                        free_space
+                    },
+                    style::AlignSelf::Center => free_space / 2.0,
+                    style::AlignSelf::Baseline => {
+                        if node.flex_direction.is_row() {
+                            // TODO need more sophisticated baseline support,
+                            // especially for basline aligning text.
+                            baseline - child.target_cross_size
                         } else {
-                            0.0
-                        },
-                        style::AlignSelf::FlexEnd => if wrap_reverse {
-                            0.0
-                        } else {
-                            free_space
-                        },
-                        style::AlignSelf::Center => free_space / 2.0,
-                        style::AlignSelf::Baseline => {
-                            if node.flex_direction.is_row() {
-                                // TODO need more sophisticated baseline support,
-                                // especially for basline aligning text.
-                                baseline - child.target_cross_size
+                            // basline alignment only makes sense if the direction is row
+                            // we treat it as flex-start alignment in columns.
+                            if wrap_reverse {
+                                free_space
                             } else {
-                                // basline alignment only makes sense if the direction is row
-                                // we treat it as flex-start alignment in columns.
-                                if wrap_reverse {
-                                    free_space
-                                } else {
-                                    0.0
-                                }
+                                0.0
                             }
                         }
-                        style::AlignSelf::Stretch => if wrap_reverse {
-                            free_space
-                        } else {
-                            0.0
-                        },
-                    };
-                }
+                    }
+                    style::AlignSelf::Stretch => if wrap_reverse {
+                        free_space
+                    } else {
+                        0.0
+                    },
+                };
             }
         }
     }
