@@ -81,10 +81,14 @@ pub fn compute(root: &style::Node) -> layout::Node {
 
     let result = compute_internal(
         root,
-        first_pass.size.width
+        first_pass
+            .size
+            .width
             .max(root.min_width.resolve(f32::NAN, f32::NAN))
             .min(root.max_width.resolve(f32::NAN, f32::NAN)),
-        first_pass.size.height
+        first_pass
+            .size
+            .height
             .max(root.min_height.resolve(f32::NAN, f32::NAN))
             .min(root.max_height.resolve(f32::NAN, f32::NAN)),
         f32::NAN,
