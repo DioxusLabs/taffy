@@ -431,6 +431,8 @@ fn compute_internal(
         //      smaller than its hypothetical main size
 
         for child in line.items.iter_mut() {
+            // TODO this should really only be set inside the if-statement below but
+            // that casues the target_main_size to never be set for some items
             child.target_main_size = child.hypothetical_inner_main_size;
             child.outer_target_main_size = child.target_main_size
                 + child.node.main_margin_start(node.flex_direction).resolve(percent_calc_base_child, 0.0)
@@ -523,18 +525,20 @@ fn compute_internal(
             //    - Otherwise
             //        Do Nothing
 
-            if free_space > 0.0 && growing && sum_flex_grow > 0.0 {
-                for child in &mut unfrozen {
-                    child.target_main_size = child.flex_basis + free_space * (child.node.flex_grow / sum_flex_grow);
-                }
-            } else if free_space < 0.0 && shrinking && sum_flex_shrink > 0.0 {
-                let sum_scaled_shrink_factor: f32 =
-                    unfrozen.iter().map(|child| child.inner_flex_basis * child.node.flex_shrink).sum();
+            if free_space.is_normal() {
+                if growing && sum_flex_grow > 0.0 {
+                    for child in &mut unfrozen {
+                        child.target_main_size = child.flex_basis + free_space * (child.node.flex_grow / sum_flex_grow);
+                    }
+                } else if shrinking && sum_flex_shrink > 0.0 {
+                    let sum_scaled_shrink_factor: f32 =
+                        unfrozen.iter().map(|child| child.inner_flex_basis * child.node.flex_shrink).sum();
 
-                for child in &mut unfrozen {
-                    let scaled_shrink_factor = child.inner_flex_basis * child.node.flex_shrink;
-                    child.target_main_size =
-                        child.flex_basis + free_space * (scaled_shrink_factor / sum_scaled_shrink_factor);
+                    for child in &mut unfrozen {
+                        let scaled_shrink_factor = child.inner_flex_basis * child.node.flex_shrink;
+                        child.target_main_size =
+                            child.flex_basis + free_space * (scaled_shrink_factor / sum_scaled_shrink_factor);
+                    }
                 }
             }
 
@@ -574,17 +578,17 @@ fn compute_internal(
             //    - Negative
             //        Freeze all the items with max violations.
 
-            if total_violation > 0.0 {
+            if !total_violation.is_normal() {
+                for child in &mut unfrozen {
+                    child.frozen = true;
+                }
+            } else if total_violation > 0.0 {
                 for child in &mut unfrozen {
                     child.frozen = child.violation > 0.0;
                 }
             } else if total_violation < 0.0 {
                 for child in &mut unfrozen {
                     child.frozen = child.violation < 0.0;
-                }
-            } else {
-                for child in &mut unfrozen {
-                    child.frozen = true;
                 }
             }
 
@@ -942,11 +946,7 @@ fn compute_internal(
     }
 
     // Do a final layout pass and gather the resulting layouts
-    let percent_calc_base_child = if node.flex_direction.is_row() {
-        container_main_size
-    } else {
-        container_cross_size
-    };
+    let percent_calc_base_child = if node.flex_direction.is_row() { container_main_size } else { container_cross_size };
 
     let mut children: Vec<layout::Node> = {
         let mut lines: Vec<Vec<layout::Node>> = vec![];
@@ -966,7 +966,6 @@ fn compute_internal(
                         if node.flex_direction.is_row() { container_cross_size } else { container_main_size },
                         percent_calc_base_child,
                     );
-
 
                     let offset_main = {
                         total_offset_main
@@ -1033,27 +1032,21 @@ fn compute_internal(
         let (start_main, end_main) = if node.flex_direction.is_row() { (start, end) } else { (top, bottom) };
         let (start_cross, end_cross) = if node.flex_direction.is_row() { (top, bottom) } else { (start, end) };
 
-        let child_width = child.width
-                .resolve(container_width, f32::NAN)
-                .max(child.min_width.resolve(container_width, f32::NAN))
-                .min(child.max_width.resolve(container_width, f32::NAN));
+        let child_width = child
+            .width
+            .resolve(container_width, f32::NAN)
+            .max(child.min_width.resolve(container_width, f32::NAN))
+            .min(child.max_width.resolve(container_width, f32::NAN));
 
-        let child_height = child.height
-                .resolve(container_height, f32::NAN)
-                .max(child.min_height.resolve(container_height, f32::NAN))
-                .min(child.max_height.resolve(container_height, f32::NAN));
+        let child_height = child
+            .height
+            .resolve(container_height, f32::NAN)
+            .max(child.min_height.resolve(container_height, f32::NAN))
+            .min(child.max_height.resolve(container_height, f32::NAN));
 
-        let width = if child_width.is_finite() {
-            child_width
-        } else {
-            container_width - start - end
-        };
+        let width = if child_width.is_finite() { child_width } else { container_width - start - end };
 
-        let height = if child_height.is_finite() {
-            child_height
-        } else {
-            container_height - top - bottom
-        };
+        let height = if child_height.is_finite() { child_height } else { container_height - top - bottom };
 
         let result = compute_internal(
             child,
