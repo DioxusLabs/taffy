@@ -631,7 +631,7 @@ fn compute_internal(
 
                 let max_main = child.node.max_main_size(node.flex_direction).resolve(percent_calc_base_child, f32::MAX);
 
-                let clamped = child.target_main_size.min(max_main).max(min_main);
+                let clamped = child.target_main_size.min(max_main).max(min_main).max(0.0);
                 child.violation = clamped - child.target_main_size;
                 total_violation += child.violation;
                 child.target_main_size = clamped;
