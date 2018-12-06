@@ -68,14 +68,23 @@ struct FlexLine<'a> {
 }
 
 pub fn compute(root: &style::Node) -> layout::Node {
+    // TODO - Don't do two passes here just to handle min/max.
+    // Probably want to pass min/max down as top level paramerer instead.
+    let first_pass = compute_internal(
+        root,
+        root.width.resolve(f32::NAN, f32::NAN),
+        root.height.resolve(f32::NAN, f32::NAN),
+        f32::NAN,
+        f32::NAN,
+        f32::NAN,
+    );
+
     let result = compute_internal(
         root,
-        root.width
-            .resolve(f32::NAN, f32::NAN)
+        first_pass.size.width
             .max(root.min_width.resolve(f32::NAN, f32::NAN))
             .min(root.max_width.resolve(f32::NAN, f32::NAN)),
-        root.height
-            .resolve(f32::NAN, f32::NAN)
+        first_pass.size.height
             .max(root.min_height.resolve(f32::NAN, f32::NAN))
             .min(root.max_height.resolve(f32::NAN, f32::NAN)),
         f32::NAN,
