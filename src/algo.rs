@@ -368,7 +368,8 @@ fn compute_internal(
                 percent_calc_base_child,
             ).size
             .width
-            .min(child.node.width.resolve(percent_calc_base_child, f32::MAX))
+            .min(child.node.width.resolve(percent_calc_base_child, f32::NAN))
+            .max(child.node.min_width.resolve(percent_calc_base_child, f32::MIN))
         } else {
             child.node.min_main_size(node.flex_direction).resolve(percent_calc_base_child, f32::MIN)
         };
