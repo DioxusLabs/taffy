@@ -609,7 +609,8 @@ fn compute_internal(
                         percent_calc_base_child,
                     ).size
                     .width
-                    .min(child.node.width.resolve(percent_calc_base_child, f32::MAX))
+                    .min(child.node.width.resolve(percent_calc_base_child, f32::NAN))
+                    .max(child.node.min_width.resolve(percent_calc_base_child, f32::MIN))
                 } else {
                     child.node.min_main_size(node.flex_direction).resolve(percent_calc_base_child, f32::MIN)
                 };
@@ -909,7 +910,7 @@ fn compute_internal(
                 child.node.cross_margin_end(node.flex_direction).resolve(percent_calc_base_child, 0.0);
 
             let free_space = line.cross_size - child.outer_target_cross_size;
-            
+
             if child.node.cross_margin_start(node.flex_direction) == style::Dimension::Auto
                 && child.node.cross_margin_end(node.flex_direction) == style::Dimension::Auto
             {
