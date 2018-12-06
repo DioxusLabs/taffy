@@ -5723,6 +5723,38 @@ mod generated {
     }
 
     #[test]
+    fn percentage_size_of_flex_basis() {
+        let layout = stretch::compute(&stretch::style::Node {
+            width: stretch::style::Dimension::Points(100.0000),
+            children: vec![stretch::style::Node {
+                flex_basis: stretch::style::Dimension::Points(50.0000),
+                children: vec![stretch::style::Node {
+                    width: stretch::style::Dimension::Percent(1.0000),
+                    height: stretch::style::Dimension::Points(100.0000),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            }],
+            ..Default::default()
+        });
+
+        assert_eq!(layout.width, 100.0000);
+        assert_eq!(layout.height, 100.0000);
+        assert_eq!(layout.x, 0.0000);
+        assert_eq!(layout.y, 0.0000);
+
+        assert_eq!(layout.children[0].width, 50.0000);
+        assert_eq!(layout.children[0].height, 100.0000);
+        assert_eq!(layout.children[0].x, 0.0000);
+        assert_eq!(layout.children[0].y, 0.0000);
+
+        assert_eq!(layout.children[0].children[0].width, 50.0000);
+        assert_eq!(layout.children[0].children[0].height, 100.0000);
+        assert_eq!(layout.children[0].children[0].x, 0.0000);
+        assert_eq!(layout.children[0].children[0].y, 0.0000);
+    }
+
+    #[test]
     fn align_items_flex_end_child_with_margin_bigger_than_parent() {
         let layout = stretch::compute(&stretch::style::Node {
             align_items: stretch::style::AlignItems::Center,
