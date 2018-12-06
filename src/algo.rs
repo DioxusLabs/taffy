@@ -898,6 +898,12 @@ fn compute_internal(
     //       item equals the cross size of its flex line.
 
     for line in &mut flex_lines {
+        // TODO this is super basic and has to be fixed to support a lot more such as custom baselines
+        // as well as nested children.
+        let baseline: f32 = line.items.iter().map(|child| {
+            child.hypothetical_outer_cross_size
+        }).fold(0.0, |acc, x| acc.max(x));
+
         for child in &mut line.items {
             // TODO probably move this somewhere else, as with main margin resolution. Only auto margins should be resolved here.
             child.cross_margin_start =
@@ -934,7 +940,17 @@ fn compute_internal(
                             free_space
                         },
                         style::AlignSelf::Center => free_space / 2.0,
-                        style::AlignSelf::Baseline => free_space / 2.0, // Treat as center for now until we have baseline support
+                        style::AlignSelf::Baseline => {
+                            if node.flex_direction.is_row() {
+                                // TODO need more sophisticated baseline support,
+                                // especially for basline aligning text.
+                                baseline - child.target_cross_size
+                            } else {
+                                // basline alignment only makes sense if the direction is row
+                                // we treat it as flex-start alignment in columns.
+                                if wrap_reverse { free_space } else { 0.0 }
+                            }
+                        },
                         style::AlignSelf::Stretch => if wrap_reverse {
                             free_space
                         } else {
