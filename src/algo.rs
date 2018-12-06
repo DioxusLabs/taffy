@@ -247,6 +247,7 @@ fn compute_internal(
         base - padding_cross - border_cross
     };
 
+    // TODO - this does not follow spec. See commented out code below
     // 3. Determine the flex base size and hypothetical main size of each item:
     for child in &mut flex_items {
         // A. If the item has a definite used flex basis, that’s the flex base size.
@@ -255,7 +256,7 @@ fn compute_internal(
         if flex_basis.is_finite() {
             child.flex_basis = flex_basis;
             continue;
-        }
+        };
 
         // B. If the flex item has an intrinsic aspect ratio,
         //    a used flex basis of content, and a definite cross size,
@@ -292,28 +293,28 @@ fn compute_internal(
         //    for a box in an orthogonal flow [CSS3-WRITING-MODES]. The flex base size
         //    is the item’s max-content main size.
 
-        if available_main.is_nan() {
-            let size = compute_internal(
-                child.node,
-                child
-                    .node
-                    .width
-                    .resolve(percent_calc_base_child, f32::NAN)
-                    .max(child.node.min_width.resolve(percent_calc_base_child, f32::NAN))
-                    .min(child.node.max_width.resolve(percent_calc_base_child, f32::NAN)),
-                child
-                    .node
-                    .height
-                    .resolve(percent_calc_base_child, f32::NAN)
-                    .max(child.node.min_height.resolve(percent_calc_base_child, f32::NAN))
-                    .min(child.node.max_height.resolve(percent_calc_base_child, f32::NAN)),
-                if node.flex_direction.is_row() { available_main } else { available_cross },
-                if node.flex_direction.is_row() { available_cross } else { available_main },
-                percent_calc_base_child,
-            ).size;
-            child.flex_basis = size.main(node.flex_direction);
-            continue;
-        }
+        // if available_main.is_nan() {
+        //     let size = compute_internal(
+        //         child.node,
+        //         child
+        //             .node
+        //             .width
+        //             .resolve(percent_calc_base_child, f32::NAN)
+        //             .max(child.node.min_width.resolve(percent_calc_base_child, f32::NAN))
+        //             .min(child.node.max_width.resolve(percent_calc_base_child, f32::NAN)),
+        //         child
+        //             .node
+        //             .height
+        //             .resolve(percent_calc_base_child, f32::NAN)
+        //             .max(child.node.min_height.resolve(percent_calc_base_child, f32::NAN))
+        //             .min(child.node.max_height.resolve(percent_calc_base_child, f32::NAN)),
+        //         if node.flex_direction.is_row() { available_main } else { available_cross },
+        //         if node.flex_direction.is_row() { available_cross } else { available_main },
+        //         percent_calc_base_child,
+        //     ).size;
+        //     child.flex_basis = size.main(node.flex_direction);
+        //     continue;
+        // }
 
         // E. Otherwise, size the item into the available space using its used flex basis
         //    in place of its main size, treating a value of content as max-content.
@@ -353,9 +354,28 @@ fn compute_internal(
         let border_end = child.node.main_border_end(node.flex_direction).resolve(percent_calc_base_child, 0.0);
         child.inner_flex_basis = child.flex_basis - (padding_start + padding_end + border_start + border_end);
 
+        // TODO - not really spec abiding but needs to be done somewhere. probably somewhere else though.
+        // The following logic was developed not from the spec but by trail and error looking into how
+        // webkit handled various scenarios. Can probably be solved better by passing in
+        // min-content max-content constraints fromt the top
+        let min_main = if node.flex_direction.is_row() {
+            compute_internal(
+                child.node,
+                f32::NAN,
+                f32::NAN,
+                if node.flex_direction.is_row() { available_main } else { available_cross },
+                if node.flex_direction.is_row() { available_cross } else { available_main },
+                percent_calc_base_child,
+            ).size
+            .width
+            .min(child.node.width.resolve(percent_calc_base_child, f32::MAX))
+        } else {
+            child.node.min_main_size(node.flex_direction).resolve(percent_calc_base_child, f32::MIN)
+        };
+
         child.hypothetical_inner_main_size = child
             .flex_basis
-            .max(child.node.min_main_size(node.flex_direction).resolve(percent_calc_base_child, f32::MIN))
+            .max(min_main)
             .min(child.node.max_main_size(node.flex_direction).resolve(percent_calc_base_child, f32::MAX))
             .max(0.0);
 
@@ -431,9 +451,35 @@ fn compute_internal(
         //      smaller than its hypothetical main size
 
         for child in line.items.iter_mut() {
+            // TODO - This is not found by reading the spec. Maybe this can be done in some other place
+            // instead. This was found by trail and error fixing tests to align with webkit output.
+            if node_inner_main.is_nan() && node.flex_direction.is_row() {
+                child.target_main_size = compute_internal(
+                    child.node,
+                    child
+                        .node
+                        .width
+                        .resolve(percent_calc_base_child, f32::NAN)
+                        .max(child.node.min_width.resolve(percent_calc_base_child, f32::NAN))
+                        .min(child.node.max_width.resolve(percent_calc_base_child, f32::NAN)),
+                    child
+                        .node
+                        .height
+                        .resolve(percent_calc_base_child, f32::NAN)
+                        .max(child.node.min_height.resolve(percent_calc_base_child, f32::NAN))
+                        .min(child.node.max_height.resolve(percent_calc_base_child, f32::NAN)),
+                    if node.flex_direction.is_row() { available_main } else { available_cross },
+                    if node.flex_direction.is_row() { available_cross } else { available_main },
+                    percent_calc_base_child,
+                ).size
+                .main(node.flex_direction);
+            } else {
+                child.target_main_size = child.hypothetical_inner_main_size;
+            }
+
             // TODO this should really only be set inside the if-statement below but
             // that casues the target_main_size to never be set for some items
-            child.target_main_size = child.hypothetical_inner_main_size;
+
             child.outer_target_main_size = child.target_main_size
                 + child.node.main_margin_start(node.flex_direction).resolve(percent_calc_base_child, 0.0)
                 + child.node.main_margin_end(node.flex_direction).resolve(percent_calc_base_child, 0.0);
@@ -549,18 +595,28 @@ fn compute_internal(
 
             let mut total_violation = 0.0;
             for child in &mut unfrozen {
-                let max = child.node.max_main_size(node.flex_direction).resolve(percent_calc_base_child, f32::MAX);
-                let min =
-                    child.node.min_main_size(node.flex_direction).resolve(percent_calc_base_child, f32::MIN).max(0.0);
-
-                let clamped = if child.target_main_size > max {
-                    max
-                } else if child.target_main_size < min {
-                    min
+                // TODO - not really spec abiding but needs to be done somewhere. probably somewhere else though.
+                // The following logic was developed not from the spec but by trail and error looking into how
+                // webkit handled various scenarios. Can probably be solved better by passing in
+                // min-content max-content constraints fromt the top
+                let min_main = if node.flex_direction.is_row() {
+                    compute_internal(
+                        child.node,
+                        f32::NAN,
+                        f32::NAN,
+                        if node.flex_direction.is_row() { available_main } else { available_cross },
+                        if node.flex_direction.is_row() { available_cross } else { available_main },
+                        percent_calc_base_child,
+                    ).size
+                    .width
+                    .min(child.node.width.resolve(percent_calc_base_child, f32::MAX))
                 } else {
-                    child.target_main_size
+                    child.node.min_main_size(node.flex_direction).resolve(percent_calc_base_child, f32::MIN)
                 };
 
+                let max_main = child.node.max_main_size(node.flex_direction).resolve(percent_calc_base_child, f32::MAX);
+
+                let clamped = child.target_main_size.min(max_main).max(min_main);
                 child.violation = clamped - child.target_main_size;
                 total_violation += child.violation;
                 child.target_main_size = clamped;
