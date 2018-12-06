@@ -2829,13 +2829,13 @@ mod generated {
         let layout = stretch::compute(&stretch::style::Node {
             align_items: stretch::style::AlignItems::Center,
             justify_content: stretch::style::JustifyContent::Center,
-            width: stretch::style::Dimension::Points(52.0000),
-            height: stretch::style::Dimension::Points(52.0000),
+            width: stretch::style::Dimension::Points(50.0000),
+            height: stretch::style::Dimension::Points(50.0000),
             children: vec![stretch::style::Node {
                 align_items: stretch::style::AlignItems::FlexEnd,
                 children: vec![stretch::style::Node {
-                    width: stretch::style::Dimension::Points(72.0000),
-                    height: stretch::style::Dimension::Points(72.0000),
+                    width: stretch::style::Dimension::Points(70.0000),
+                    height: stretch::style::Dimension::Points(70.0000),
                     ..Default::default()
                 }],
                 ..Default::default()
@@ -2843,18 +2843,18 @@ mod generated {
             ..Default::default()
         });
 
-        assert_eq!(layout.width, 52.0000);
-        assert_eq!(layout.height, 52.0000);
+        assert_eq!(layout.width, 50.0000);
+        assert_eq!(layout.height, 50.0000);
         assert_eq!(layout.x, 0.0000);
         assert_eq!(layout.y, 0.0000);
 
-        assert_eq!(layout.children[0].width, 72.0000);
-        assert_eq!(layout.children[0].height, 72.0000);
+        assert_eq!(layout.children[0].width, 70.0000);
+        assert_eq!(layout.children[0].height, 70.0000);
         assert_eq!(layout.children[0].x, -10.0000);
         assert_eq!(layout.children[0].y, -10.0000);
 
-        assert_eq!(layout.children[0].children[0].width, 72.0000);
-        assert_eq!(layout.children[0].children[0].height, 72.0000);
+        assert_eq!(layout.children[0].children[0].width, 70.0000);
+        assert_eq!(layout.children[0].children[0].height, 70.0000);
         assert_eq!(layout.children[0].children[0].x, 0.0000);
         assert_eq!(layout.children[0].children[0].y, 0.0000);
     }
@@ -3344,13 +3344,13 @@ mod generated {
         let layout = stretch::compute(&stretch::style::Node {
             align_items: stretch::style::AlignItems::Center,
             justify_content: stretch::style::JustifyContent::Center,
-            width: stretch::style::Dimension::Points(52.0000),
-            height: stretch::style::Dimension::Points(52.0000),
+            width: stretch::style::Dimension::Points(50.0000),
+            height: stretch::style::Dimension::Points(50.0000),
             children: vec![stretch::style::Node {
                 align_items: stretch::style::AlignItems::Center,
                 children: vec![stretch::style::Node {
-                    width: stretch::style::Dimension::Points(52.0000),
-                    height: stretch::style::Dimension::Points(52.0000),
+                    width: stretch::style::Dimension::Points(50.0000),
+                    height: stretch::style::Dimension::Points(50.0000),
                     margin: stretch::style::Edges {
                         start: stretch::style::Dimension::Points(10.0000),
                         end: stretch::style::Dimension::Points(10.0000),
@@ -3363,18 +3363,18 @@ mod generated {
             ..Default::default()
         });
 
-        assert_eq!(layout.width, 52.0000);
-        assert_eq!(layout.height, 52.0000);
+        assert_eq!(layout.width, 50.0000);
+        assert_eq!(layout.height, 50.0000);
         assert_eq!(layout.x, 0.0000);
         assert_eq!(layout.y, 0.0000);
 
-        assert_eq!(layout.children[0].width, 72.0000);
-        assert_eq!(layout.children[0].height, 52.0000);
+        assert_eq!(layout.children[0].width, 70.0000);
+        assert_eq!(layout.children[0].height, 50.0000);
         assert_eq!(layout.children[0].x, -10.0000);
         assert_eq!(layout.children[0].y, 0.0000);
 
-        assert_eq!(layout.children[0].children[0].width, 52.0000);
-        assert_eq!(layout.children[0].children[0].height, 52.0000);
+        assert_eq!(layout.children[0].children[0].width, 50.0000);
+        assert_eq!(layout.children[0].children[0].height, 50.0000);
         assert_eq!(layout.children[0].children[0].x, 10.0000);
         assert_eq!(layout.children[0].children[0].y, 0.0000);
     }
@@ -3889,13 +3889,13 @@ mod generated {
         let layout = stretch::compute(&stretch::style::Node {
             align_items: stretch::style::AlignItems::Center,
             justify_content: stretch::style::JustifyContent::Center,
-            width: stretch::style::Dimension::Points(52.0000),
-            height: stretch::style::Dimension::Points(52.0000),
+            width: stretch::style::Dimension::Points(50.0000),
+            height: stretch::style::Dimension::Points(50.0000),
             children: vec![stretch::style::Node {
                 align_items: stretch::style::AlignItems::Center,
                 children: vec![stretch::style::Node {
-                    width: stretch::style::Dimension::Points(72.0000),
-                    height: stretch::style::Dimension::Points(72.0000),
+                    width: stretch::style::Dimension::Points(70.0000),
+                    height: stretch::style::Dimension::Points(70.0000),
                     ..Default::default()
                 }],
                 ..Default::default()
@@ -3903,18 +3903,18 @@ mod generated {
             ..Default::default()
         });
 
-        assert_eq!(layout.width, 52.0000);
-        assert_eq!(layout.height, 52.0000);
+        assert_eq!(layout.width, 50.0000);
+        assert_eq!(layout.height, 50.0000);
         assert_eq!(layout.x, 0.0000);
         assert_eq!(layout.y, 0.0000);
 
-        assert_eq!(layout.children[0].width, 72.0000);
-        assert_eq!(layout.children[0].height, 72.0000);
+        assert_eq!(layout.children[0].width, 70.0000);
+        assert_eq!(layout.children[0].height, 70.0000);
         assert_eq!(layout.children[0].x, -10.0000);
         assert_eq!(layout.children[0].y, -10.0000);
 
-        assert_eq!(layout.children[0].children[0].width, 72.0000);
-        assert_eq!(layout.children[0].children[0].height, 72.0000);
+        assert_eq!(layout.children[0].children[0].width, 70.0000);
+        assert_eq!(layout.children[0].children[0].height, 70.0000);
         assert_eq!(layout.children[0].children[0].x, 0.0000);
         assert_eq!(layout.children[0].children[0].y, 0.0000);
     }
@@ -5759,13 +5759,13 @@ mod generated {
         let layout = stretch::compute(&stretch::style::Node {
             align_items: stretch::style::AlignItems::Center,
             justify_content: stretch::style::JustifyContent::Center,
-            width: stretch::style::Dimension::Points(52.0000),
-            height: stretch::style::Dimension::Points(52.0000),
+            width: stretch::style::Dimension::Points(50.0000),
+            height: stretch::style::Dimension::Points(50.0000),
             children: vec![stretch::style::Node {
                 align_items: stretch::style::AlignItems::FlexEnd,
                 children: vec![stretch::style::Node {
-                    width: stretch::style::Dimension::Points(52.0000),
-                    height: stretch::style::Dimension::Points(52.0000),
+                    width: stretch::style::Dimension::Points(50.0000),
+                    height: stretch::style::Dimension::Points(50.0000),
                     margin: stretch::style::Edges {
                         start: stretch::style::Dimension::Points(10.0000),
                         end: stretch::style::Dimension::Points(10.0000),
@@ -5778,18 +5778,18 @@ mod generated {
             ..Default::default()
         });
 
-        assert_eq!(layout.width, 52.0000);
-        assert_eq!(layout.height, 52.0000);
+        assert_eq!(layout.width, 50.0000);
+        assert_eq!(layout.height, 50.0000);
         assert_eq!(layout.x, 0.0000);
         assert_eq!(layout.y, 0.0000);
 
-        assert_eq!(layout.children[0].width, 72.0000);
-        assert_eq!(layout.children[0].height, 52.0000);
+        assert_eq!(layout.children[0].width, 70.0000);
+        assert_eq!(layout.children[0].height, 50.0000);
         assert_eq!(layout.children[0].x, -10.0000);
         assert_eq!(layout.children[0].y, 0.0000);
 
-        assert_eq!(layout.children[0].children[0].width, 52.0000);
-        assert_eq!(layout.children[0].children[0].height, 52.0000);
+        assert_eq!(layout.children[0].children[0].width, 50.0000);
+        assert_eq!(layout.children[0].children[0].height, 50.0000);
         assert_eq!(layout.children[0].children[0].x, 10.0000);
         assert_eq!(layout.children[0].children[0].y, 0.0000);
     }
