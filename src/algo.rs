@@ -868,16 +868,21 @@ fn compute_internal(
         } else {
             let num_items = line.items.len();
             let mut is_first = true;
+            let layout_reverse = node.flex_direction.is_reverse();
 
-            for child in &mut line.items {
+            let justify_item = |child: &mut FlexItem| {
                 child.offset_main = match node.justify_content {
-                    style::JustifyContent::FlexStart => 0.0,
+                    style::JustifyContent::FlexStart => if layout_reverse && is_first {
+                        free_space
+                    } else {
+                        0.0
+                    },
                     style::JustifyContent::Center => if is_first {
                         free_space / 2.0
                     } else {
                         0.0
                     },
-                    style::JustifyContent::FlexEnd => if is_first {
+                    style::JustifyContent::FlexEnd => if is_first && !layout_reverse {
                         free_space
                     } else {
                         0.0
@@ -896,6 +901,12 @@ fn compute_internal(
                 };
 
                 is_first = false;
+            };
+
+            if layout_reverse {
+                line.items.iter_mut().rev().for_each(justify_item);
+            } else {
+                line.items.iter_mut().for_each(justify_item);
             }
         }
     }
@@ -1042,46 +1053,60 @@ fn compute_internal(
             let layout_line = |line: &mut FlexLine| {
                 let mut children: Vec<layout::Node> = vec![];
                 let mut total_offset_main = padding_main_start + border_main_start;
+                let line_offset_cross = line.offset_cross;
 
-                for child in &mut line.items {
-                    let result = compute_internal(
-                        child.node,
-                        if node.flex_direction.is_row() { child.target_main_size } else { child.target_cross_size },
-                        if node.flex_direction.is_row() { child.target_cross_size } else { child.target_main_size },
-                        if node.flex_direction.is_row() { container_main_size } else { container_cross_size },
-                        if node.flex_direction.is_row() { container_cross_size } else { container_main_size },
-                        percent_calc_base_child,
-                    );
+                {
+                    let layout_item = |child: &mut FlexItem| {
+                        let result = compute_internal(
+                            child.node,
+                            if node.flex_direction.is_row() { child.target_main_size } else { child.target_cross_size },
+                            if node.flex_direction.is_row() { child.target_cross_size } else { child.target_main_size },
+                            if node.flex_direction.is_row() { container_main_size } else { container_cross_size },
+                            if node.flex_direction.is_row() { container_cross_size } else { container_main_size },
+                            percent_calc_base_child,
+                        );
 
-                    let offset_main = {
-                        total_offset_main
-                            + child.offset_main
-                            + child.main_margin_start
-                            + (child.node.main_start(node.flex_direction).resolve(percent_calc_base_child, 0.0)
-                                - child.node.main_end(node.flex_direction).resolve(percent_calc_base_child, 0.0))
+                        let offset_main = {
+                            total_offset_main
+                                + child.offset_main
+                                + child.main_margin_start
+                                + (child.node.main_start(node.flex_direction).resolve(percent_calc_base_child, 0.0)
+                                    - child.node.main_end(node.flex_direction).resolve(percent_calc_base_child, 0.0))
+                        };
+
+                        let offset_cross = {
+                            total_offset_cross
+                                + child.offset_cross
+                                + line_offset_cross
+                                + child.cross_margin_start
+                                + (child.node.cross_start(node.flex_direction).resolve(percent_calc_base_child, 0.0)
+                                    - child.node.cross_end(node.flex_direction).resolve(percent_calc_base_child, 0.0))
+                        };
+
+                        children.push(layout::Node {
+                            width: result.size.width,
+                            height: result.size.height,
+                            x: if node.flex_direction.is_row() { offset_main } else { offset_cross },
+                            y: if node.flex_direction.is_column() { offset_main } else { offset_cross },
+                            children: result.children,
+                        });
+
+                        total_offset_main = offset_main + result.size.main(node.flex_direction) + child.main_margin_end;
                     };
 
-                    let offset_cross = {
-                        total_offset_cross
-                            + child.offset_cross
-                            + line.offset_cross
-                            + child.cross_margin_start
-                            + (child.node.cross_start(node.flex_direction).resolve(percent_calc_base_child, 0.0)
-                                - child.node.cross_end(node.flex_direction).resolve(percent_calc_base_child, 0.0))
-                    };
-
-                    children.push(layout::Node {
-                        width: result.size.width,
-                        height: result.size.height,
-                        x: if node.flex_direction.is_row() { offset_main } else { offset_cross },
-                        y: if node.flex_direction.is_column() { offset_main } else { offset_cross },
-                        children: result.children,
-                    });
-
-                    total_offset_main = offset_main + result.size.main(node.flex_direction) + child.main_margin_end;
+                    if node.flex_direction.is_reverse() {
+                        line.items.iter_mut().rev().for_each(layout_item);
+                    } else {
+                        line.items.iter_mut().for_each(layout_item);
+                    }
                 }
 
-                total_offset_cross += line.offset_cross + line.cross_size;
+                total_offset_cross += line_offset_cross + line.cross_size;
+
+                if node.flex_direction.is_reverse() {
+                    children.reverse();
+                }
+                
                 lines.push(children);
             };
 
