@@ -92,6 +92,10 @@ impl FlexDirection {
     pub(crate) fn is_column(self) -> bool {
         self == FlexDirection::Column || self == FlexDirection::ColumnReverse
     }
+
+    pub(crate) fn is_reverse(self) -> bool {
+        self == FlexDirection::RowReverse || self == FlexDirection::ColumnReverse
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
