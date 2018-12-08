@@ -1,8 +1,4 @@
-#[macro_use]
-extern crate criterion;
-extern crate stretch;
-
-use criterion::Criterion;
+use criterion::{criterion_group, criterion_main, Criterion};
 
 fn stretch_benchmarks(c: &mut Criterion) {
     c.bench_function("layout", |b| {
