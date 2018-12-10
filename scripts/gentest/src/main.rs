@@ -1,6 +1,3 @@
-extern crate json;
-
-extern crate selenium_rs;
 use selenium_rs::element::Element;
 use selenium_rs::webdriver::{Browser, Selector, WebDriver};
 
@@ -8,6 +5,8 @@ use std::process::Command;
 use std::path::Path;
 use std::fs;
 use std::{thread, time};
+
+use json;
 
 fn main() {
     // std::env::current_exe should be <path/to/repo>/scripts/gentest/target/debug/gentest

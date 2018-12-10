@@ -1,7 +1,7 @@
 use std::f32;
 
-use layout;
-use style;
+use crate::layout;
+use crate::style;
 
 #[derive(Debug, Copy, Clone)]
 struct FlexSize {
@@ -229,7 +229,7 @@ fn compute_internal(
 
     let (border_main, border_cross) = (border_main_start + border_main_end, border_cross_start + border_cross_end);
 
-    let (node_inner_main, node_inner_cross) =
+    let (node_inner_main, _node_inner_cross) =
         (node_main - border_main - padding_main, node_cross - border_cross - padding_cross);
 
     let wrap_reverse = node.flex_wrap == style::FlexWrap::WrapReverse;

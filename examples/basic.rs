@@ -1,5 +1,3 @@
-extern crate stretch;
-
 fn main() {
     let node = stretch::style::Node {
         width: stretch::style::Dimension::Points(100.0),
