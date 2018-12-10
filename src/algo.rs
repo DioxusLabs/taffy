@@ -1128,7 +1128,10 @@ fn compute_internal(
                             children: result.children,
                         });
 
-                        total_offset_main = offset_main + result.size.main(node.flex_direction) + child.main_margin_end;
+                        total_offset_main += child.offset_main
+                            + child.main_margin_start
+                            + result.size.main(node.flex_direction)
+                            + child.main_margin_end;
                     };
 
                     if node.flex_direction.is_reverse() {
