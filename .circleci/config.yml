@@ -12,6 +12,7 @@ jobs:
           key: target-cache
 
       - run: rustc --version; cargo --version; rustup --version
+      - run: rustup component add rustfmt
       - run: cargo fmt -- --write-mode=diff
       - run: cargo test
       - run: cargo bench
@@ -19,4 +20,5 @@ jobs:
       - save_cache:
           key: target-cache
           paths:
-            - target
+            - ~/.cargo
+            - ./target
