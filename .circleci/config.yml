@@ -1,0 +1,21 @@
+version: 2
+
+jobs:
+  test:
+    docker:
+      - image: rust:1
+    steps:
+      - checkout
+
+      - restore_cache:
+          key: target-cache
+
+      - run: rustc --version; cargo --version; rustup --version
+      - run: cargo fmt -- --write-mode=diff
+      - run: cargo test
+      - run: cargo bench
+
+      - save_cache:
+          key: target-cache
+          paths:
+            - target
