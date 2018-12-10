@@ -4364,6 +4364,38 @@ mod generated {
     }
 
     #[test]
+    fn percentage_size_based_on_parent_inner_size() {
+        let layout = stretch::compute(&stretch::style::Node {
+            flex_direction: stretch::style::FlexDirection::Column,
+            width: stretch::style::Dimension::Points(200.0000),
+            height: stretch::style::Dimension::Points(200.0000),
+            padding: stretch::style::Edges {
+                start: stretch::style::Dimension::Points(20.0000),
+                end: stretch::style::Dimension::Points(20.0000),
+                top: stretch::style::Dimension::Points(20.0000),
+                bottom: stretch::style::Dimension::Points(20.0000),
+                ..Default::default()
+            },
+            children: vec![stretch::style::Node {
+                width: stretch::style::Dimension::Percent(0.5000),
+                height: stretch::style::Dimension::Percent(0.5000),
+                ..Default::default()
+            }],
+            ..Default::default()
+        });
+
+        assert_eq!(layout.width, 200.0000);
+        assert_eq!(layout.height, 200.0000);
+        assert_eq!(layout.x, 0.0000);
+        assert_eq!(layout.y, 0.0000);
+
+        assert_eq!(layout.children[0].width, 80.0000);
+        assert_eq!(layout.children[0].height, 80.0000);
+        assert_eq!(layout.children[0].x, 20.0000);
+        assert_eq!(layout.children[0].y, 20.0000);
+    }
+
+    #[test]
     fn wrap_reverse_row_align_content_stretch() {
         let layout = stretch::compute(&stretch::style::Node {
             flex_wrap: stretch::style::FlexWrap::WrapReverse,
