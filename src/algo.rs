@@ -229,7 +229,7 @@ fn compute_internal(
 
     let (border_main, border_cross) = (border_main_start + border_main_end, border_cross_start + border_cross_end);
 
-    let (node_inner_main, _node_inner_cross) =
+    let (node_inner_main, node_inner_cross) =
         (node_main - border_main - padding_main, node_cross - border_cross - padding_cross);
 
     let wrap_reverse = node.flex_wrap == style::FlexWrap::WrapReverse;
@@ -270,7 +270,8 @@ fn compute_internal(
 
             offset_main: 0.0,
             offset_cross: 0.0,
-        }).collect();
+        })
+        .collect();
 
     // 2. Determine the available main and cross space for the flex items.
     //    For each dimension, if that dimension of the flex container’s content box
@@ -385,7 +386,8 @@ fn compute_internal(
             if node.flex_direction.is_row() { available_main } else { available_cross },
             if node.flex_direction.is_row() { available_cross } else { available_main },
             percent_calc_base_child,
-        ).size;
+        )
+        .size;
 
         child.flex_basis = size
             .main(node.flex_direction)
@@ -415,7 +417,8 @@ fn compute_internal(
                 if node.flex_direction.is_row() { available_main } else { available_cross },
                 if node.flex_direction.is_row() { available_cross } else { available_main },
                 percent_calc_base_child,
-            ).size
+            )
+            .size
             .width
             .min(child.node.width.resolve(percent_calc_base_child, f32::NAN))
             .max(child.node.min_width.resolve(percent_calc_base_child, f32::NAN))
@@ -521,7 +524,8 @@ fn compute_internal(
                     if node.flex_direction.is_row() { available_main } else { available_cross },
                     if node.flex_direction.is_row() { available_cross } else { available_main },
                     percent_calc_base_child,
-                ).size
+                )
+                .size
                 .main(node.flex_direction)
                 .max(child.node.min_main_size(node.flex_direction).resolve(percent_calc_base_child, f32::NAN))
                 .min(child.node.max_main_size(node.flex_direction).resolve(percent_calc_base_child, f32::NAN));
@@ -555,7 +559,8 @@ fn compute_internal(
                 child.node.main_margin_start(node.flex_direction).resolve(percent_calc_base_child, 0.0)
                     + child.node.main_margin_end(node.flex_direction).resolve(percent_calc_base_child, 0.0)
                     + if child.frozen { child.target_main_size } else { child.flex_basis }
-            }).sum();
+            })
+            .sum();
 
         let initial_free_space = node_inner_main - used_space;
 
@@ -591,7 +596,8 @@ fn compute_internal(
                     child.node.main_margin_start(node.flex_direction).resolve(percent_calc_base_child, 0.0)
                         + child.node.main_margin_end(node.flex_direction).resolve(percent_calc_base_child, 0.0)
                         + if child.frozen { child.target_main_size } else { child.flex_basis }
-                }).sum();
+                })
+                .sum();
 
             let sum_flex_grow: f32 = unfrozen.iter().map(|item| item.node.flex_grow).sum();
             let sum_flex_shrink: f32 = unfrozen.iter().map(|item| item.node.flex_shrink).sum();
@@ -661,7 +667,8 @@ fn compute_internal(
                         if node.flex_direction.is_row() { available_main } else { available_cross },
                         if node.flex_direction.is_row() { available_cross } else { available_main },
                         percent_calc_base_child,
-                    ).size
+                    )
+                    .size
                     .width
                     .min(child.node.width.resolve(percent_calc_base_child, f32::NAN))
                     .max(child.node.min_width.resolve(percent_calc_base_child, f32::NAN))
@@ -750,7 +757,8 @@ fn compute_internal(
                 if node.flex_direction.is_row() { container_main_size } else { available_cross },
                 if node.flex_direction.is_row() { available_cross } else { container_main_size },
                 percent_calc_base_child,
-            ).size;
+            )
+            .size;
 
             child.hypothetical_inner_cross_size = size
                 .cross(node.flex_direction)
@@ -833,7 +841,8 @@ fn compute_internal(
                     } else {
                         child.hypothetical_outer_cross_size
                     }
-                }).fold(0.0, |acc, x| acc.max(x));
+                })
+                .fold(0.0, |acc, x| acc.max(x));
         }
     }
 
@@ -896,8 +905,8 @@ fn compute_internal(
                 (line.cross_size
                     - child.node.cross_margin_start(node.flex_direction).resolve(percent_calc_base_child, 0.0)
                     - child.node.cross_margin_end(node.flex_direction).resolve(percent_calc_base_child, 0.0))
-                    .safe_max(child.node.min_cross_size(node.flex_direction).resolve(percent_calc_base_child, f32::NAN))
-                    .safe_min(child.node.max_cross_size(node.flex_direction).resolve(percent_calc_base_child, f32::NAN))
+                .safe_max(child.node.min_cross_size(node.flex_direction).resolve(percent_calc_base_child, f32::NAN))
+                .safe_min(child.node.max_cross_size(node.flex_direction).resolve(percent_calc_base_child, f32::NAN))
             } else {
                 child.hypothetical_inner_cross_size
             };
@@ -957,31 +966,41 @@ fn compute_internal(
 
             let justify_item = |child: &mut FlexItem| {
                 child.offset_main = match node.justify_content {
-                    style::JustifyContent::FlexStart => if layout_reverse && is_first {
-                        free_space
-                    } else {
-                        0.0
-                    },
-                    style::JustifyContent::Center => if is_first {
-                        free_space / 2.0
-                    } else {
-                        0.0
-                    },
-                    style::JustifyContent::FlexEnd => if is_first && !layout_reverse {
-                        free_space
-                    } else {
-                        0.0
-                    },
-                    style::JustifyContent::SpaceBetween => if is_first {
-                        0.0
-                    } else {
-                        free_space / (num_items - 1) as f32
-                    },
-                    style::JustifyContent::SpaceAround => if is_first {
-                        (free_space / num_items as f32) / 2.0
-                    } else {
-                        free_space / num_items as f32
-                    },
+                    style::JustifyContent::FlexStart => {
+                        if layout_reverse && is_first {
+                            free_space
+                        } else {
+                            0.0
+                        }
+                    }
+                    style::JustifyContent::Center => {
+                        if is_first {
+                            free_space / 2.0
+                        } else {
+                            0.0
+                        }
+                    }
+                    style::JustifyContent::FlexEnd => {
+                        if is_first && !layout_reverse {
+                            free_space
+                        } else {
+                            0.0
+                        }
+                    }
+                    style::JustifyContent::SpaceBetween => {
+                        if is_first {
+                            0.0
+                        } else {
+                            free_space / (num_items - 1) as f32
+                        }
+                    }
+                    style::JustifyContent::SpaceAround => {
+                        if is_first {
+                            (free_space / num_items as f32) / 2.0
+                        } else {
+                            free_space / num_items as f32
+                        }
+                    }
                     style::JustifyContent::SpaceEvenly => free_space / (num_items + 1) as f32,
                 };
 
@@ -1033,16 +1052,20 @@ fn compute_internal(
 
                 child.offset_cross = match child.node.align_self(node) {
                     style::AlignSelf::Auto => 0.0, // Should never happen
-                    style::AlignSelf::FlexStart => if wrap_reverse {
-                        free_space
-                    } else {
-                        0.0
-                    },
-                    style::AlignSelf::FlexEnd => if wrap_reverse {
-                        0.0
-                    } else {
-                        free_space
-                    },
+                    style::AlignSelf::FlexStart => {
+                        if wrap_reverse {
+                            free_space
+                        } else {
+                            0.0
+                        }
+                    }
+                    style::AlignSelf::FlexEnd => {
+                        if wrap_reverse {
+                            0.0
+                        } else {
+                            free_space
+                        }
+                    }
                     style::AlignSelf::Center => free_space / 2.0,
                     style::AlignSelf::Baseline => {
                         if node.flex_direction.is_row() {
@@ -1057,11 +1080,13 @@ fn compute_internal(
                             }
                         }
                     }
-                    style::AlignSelf::Stretch => if wrap_reverse {
-                        free_space
-                    } else {
-                        0.0
-                    },
+                    style::AlignSelf::Stretch => {
+                        if wrap_reverse {
+                            free_space
+                        } else {
+                            0.0
+                        }
+                    }
                 };
             }
         }
@@ -1086,32 +1111,42 @@ fn compute_internal(
 
     let align_line = |line: &mut FlexLine| {
         line.offset_cross = match node.align_content {
-            style::AlignContent::FlexStart => if is_first && wrap_reverse {
-                free_space
-            } else {
-                0.0
-            },
-            style::AlignContent::FlexEnd => if is_first && !wrap_reverse {
-                free_space
-            } else {
-                0.0
-            },
-            style::AlignContent::Center => if is_first {
-                free_space / 2.0
-            } else {
-                0.0
-            },
+            style::AlignContent::FlexStart => {
+                if is_first && wrap_reverse {
+                    free_space
+                } else {
+                    0.0
+                }
+            }
+            style::AlignContent::FlexEnd => {
+                if is_first && !wrap_reverse {
+                    free_space
+                } else {
+                    0.0
+                }
+            }
+            style::AlignContent::Center => {
+                if is_first {
+                    free_space / 2.0
+                } else {
+                    0.0
+                }
+            }
             style::AlignContent::Stretch => 0.0,
-            style::AlignContent::SpaceBetween => if is_first {
-                0.0
-            } else {
-                free_space / (num_lines - 1) as f32
-            },
-            style::AlignContent::SpaceAround => if is_first {
-                (free_space / num_lines as f32) / 2.0
-            } else {
-                free_space / num_lines as f32
-            },
+            style::AlignContent::SpaceBetween => {
+                if is_first {
+                    0.0
+                } else {
+                    free_space / (num_lines - 1) as f32
+                }
+            }
+            style::AlignContent::SpaceAround => {
+                if is_first {
+                    (free_space / num_lines as f32) / 2.0
+                } else {
+                    free_space / num_lines as f32
+                }
+            }
         };
         is_first = false;
     };
@@ -1251,16 +1286,18 @@ fn compute_internal(
             container_main_size,
         );
 
-        let free_main_space = container_main_size - result
-            .size
-            .main(node.flex_direction)
-            .max(child.min_main_size(node.flex_direction).resolve(percent_calc_base_child, f32::NAN))
-            .min(child.max_main_size(node.flex_direction).resolve(percent_calc_base_child, f32::NAN));
-        let free_cross_space = container_cross_size - result
-            .size
-            .cross(node.flex_direction)
-            .max(child.min_cross_size(node.flex_direction).resolve(percent_calc_base_child, f32::NAN))
-            .min(child.max_cross_size(node.flex_direction).resolve(percent_calc_base_child, f32::NAN));
+        let free_main_space = container_main_size
+            - result
+                .size
+                .main(node.flex_direction)
+                .max(child.min_main_size(node.flex_direction).resolve(percent_calc_base_child, f32::NAN))
+                .min(child.max_main_size(node.flex_direction).resolve(percent_calc_base_child, f32::NAN));
+        let free_cross_space = container_cross_size
+            - result
+                .size
+                .cross(node.flex_direction)
+                .max(child.min_cross_size(node.flex_direction).resolve(percent_calc_base_child, f32::NAN))
+                .min(child.max_cross_size(node.flex_direction).resolve(percent_calc_base_child, f32::NAN));
 
         let offset_main = if start_main.is_finite() {
             start_main + border_main_start
@@ -1285,23 +1322,29 @@ fn compute_internal(
         } else {
             match child.align_self(node) {
                 style::AlignSelf::Auto => 0.0, // Should never happen
-                style::AlignSelf::FlexStart => if wrap_reverse {
-                    free_cross_space - padding_cross_end - border_cross_end
-                } else {
-                    padding_cross_start + border_cross_start
-                },
-                style::AlignSelf::FlexEnd => if wrap_reverse {
-                    padding_cross_start + border_cross_start
-                } else {
-                    free_cross_space - padding_cross_end - border_cross_end
-                },
+                style::AlignSelf::FlexStart => {
+                    if wrap_reverse {
+                        free_cross_space - padding_cross_end - border_cross_end
+                    } else {
+                        padding_cross_start + border_cross_start
+                    }
+                }
+                style::AlignSelf::FlexEnd => {
+                    if wrap_reverse {
+                        padding_cross_start + border_cross_start
+                    } else {
+                        free_cross_space - padding_cross_end - border_cross_end
+                    }
+                }
                 style::AlignSelf::Center => free_cross_space / 2.0,
                 style::AlignSelf::Baseline => free_cross_space / 2.0, // Treat as center for now until we have baseline support
-                style::AlignSelf::Stretch => if wrap_reverse {
-                    free_cross_space - padding_cross_end - border_cross_end
-                } else {
-                    padding_cross_start + border_cross_start
-                },
+                style::AlignSelf::Stretch => {
+                    if wrap_reverse {
+                        free_cross_space - padding_cross_end - border_cross_end
+                    } else {
+                        padding_cross_start + border_cross_start
+                    }
+                }
             }
         };
 
