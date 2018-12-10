@@ -13,7 +13,7 @@ jobs:
 
       - run: rustc --version; cargo --version; rustup --version
       - run: rustup component add rustfmt
-      - run: cargo fmt -- --write-mode=diff
+      - run: cargo fmt -- --check
       - run: cargo test
       - run: cargo bench
 
