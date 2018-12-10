@@ -74,6 +74,8 @@ struct FlexItem<'a> {
     cross_margin_start: f32,
     cross_margin_end: f32,
 
+    baseline: f32,
+
     // temporary values for holding offset in the main / cross direction.
     // offset is the relative position from the item's natural flow position based on
     // relative position values, alignment, and justification. Does not unclude margin/padding/border.
@@ -263,6 +265,8 @@ fn compute_internal(
             main_margin_end: 0.0,
             cross_margin_start: 0.0,
             cross_margin_end: 0.0,
+
+            baseline: 0.0,
 
             offset_main: 0.0,
             offset_cross: 0.0,
@@ -760,19 +764,40 @@ fn compute_internal(
         }
     }
 
+    // TODO - probably should move this somewhere else as it doesn't make a ton of sense here but we need it below 
+    // TODO - This is expensive and should only be done if we really require a baseline. aka, make it lazy
+
+    fn calc_baseline(layout: &layout::Node) -> f32 {
+        if layout.children.len() > 0 {
+            calc_baseline(&layout.children[0])         
+        } else {
+            layout.height
+        }
+    };
+
+    for line in &mut flex_lines {
+        for child in &mut line.items {
+            let result = compute_internal(
+                child.node,
+                if node.flex_direction.is_row() { child.target_main_size } else { child.hypothetical_inner_cross_size },
+                if node.flex_direction.is_row() { child.hypothetical_inner_cross_size } else { child.target_main_size },
+                if node.flex_direction.is_row() { container_main_size } else { node_cross },
+                if node.flex_direction.is_row() { node_cross } else { container_main_size },
+                percent_calc_base_child,
+            );
+            child.baseline = calc_baseline(&layout::Node {
+                width: result.size.width,
+                height: result.size.height,
+                x: 0.0,
+                y: 0.0,
+                children: result.children,
+            });
+        }
+    }
+
     // 8. Calculate the cross size of each flex line.
     //    If the flex container is single-line and has a definite cross size, the cross size
     //    of the flex line is the flex container’s inner cross size. Otherwise, for each flex line:
-    //
-    //    1. Collect all the flex items whose inline-axis is parallel to the main-axis, whose
-    //       align-self is baseline, and whose cross-axis margins are both non-auto. Find the
-    //       largest of the distances between each item’s baseline and its hypothetical outer
-    //       cross-start edge, and the largest of the distances between each item’s baseline
-    //       and its hypothetical outer cross-end edge, and sum these two values.
-    //    2. Among all the items not collected by the previous step, find the largest
-    //       outer hypothetical cross size.
-    //    3. The used cross-size of the flex line is the largest of the numbers found in the
-    //       previous two steps and zero.
     //
     //    If the flex container is single-line, then clamp the line’s cross-size to be within
     //    the container’s computed min and max cross sizes. Note that if CSS 2.1’s definition
@@ -782,10 +807,30 @@ fn compute_internal(
         flex_lines[0].cross_size = node_cross - padding_cross - border_cross;
     } else {
         for line in &mut flex_lines {
-            // TODO handle baseline (1)
+            //    1. Collect all the flex items whose inline-axis is parallel to the main-axis, whose
+            //       align-self is baseline, and whose cross-axis margins are both non-auto. Find the
+            //       largest of the distances between each item’s baseline and its hypothetical outer
+            //       cross-start edge, and the largest of the distances between each item’s baseline
+            //       and its hypothetical outer cross-end edge, and sum these two values.
 
-            line.cross_size =
-                line.items.iter().map(|child| child.hypothetical_outer_cross_size).fold(0.0, |acc, x| acc.max(x));
+            //    2. Among all the items not collected by the previous step, find the largest
+            //       outer hypothetical cross size.
+            
+            //    3. The used cross-size of the flex line is the largest of the numbers found in the
+            //       previous two steps and zero.
+
+            let max_baseline: f32 = line.items.iter().map(|child| child.baseline).fold(0.0, |acc, x| acc.max(x));
+            line.cross_size = line.items.iter().map(|child| {
+                if child.node.align_self(node) == style::AlignSelf::Baseline
+                    && child.node.cross_margin_start(node.flex_direction) != style::Dimension::Auto
+                    && child.node.cross_margin_end(node.flex_direction) != style::Dimension::Auto
+                    && child.node.cross_size(node.flex_direction) == style::Dimension::Auto
+                {
+                    max_baseline - child.baseline + child.hypothetical_outer_cross_size
+                } else {
+                    child.hypothetical_outer_cross_size
+                }
+            }).fold(0.0, |acc, x| acc.max(x));
         }
     }
 
@@ -959,10 +1004,7 @@ fn compute_internal(
     //       item equals the cross size of its flex line.
 
     for line in &mut flex_lines {
-        // TODO this is super basic and has to be fixed to support a lot more such as custom baselines
-        // as well as nested children.
-        let baseline: f32 =
-            line.items.iter().map(|child| child.hypothetical_outer_cross_size).fold(0.0, |acc, x| acc.max(x));
+        let max_baseline: f32 = line.items.iter_mut().map(|child| child.baseline).fold(0.0, |acc, x| acc.max(x));
 
         for child in &mut line.items {
             // TODO probably move this somewhere else, as with main margin resolution. Only auto margins should be resolved here.
@@ -1001,9 +1043,7 @@ fn compute_internal(
                     style::AlignSelf::Center => free_space / 2.0,
                     style::AlignSelf::Baseline => {
                         if node.flex_direction.is_row() {
-                            // TODO need more sophisticated baseline support,
-                            // especially for basline aligning text.
-                            baseline - child.target_cross_size
+                            max_baseline - child.baseline
                         } else {
                             // basline alignment only makes sense if the direction is row
                             // we treat it as flex-start alignment in columns.
