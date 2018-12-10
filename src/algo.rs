@@ -764,12 +764,12 @@ fn compute_internal(
         }
     }
 
-    // TODO - probably should move this somewhere else as it doesn't make a ton of sense here but we need it below 
+    // TODO - probably should move this somewhere else as it doesn't make a ton of sense here but we need it below
     // TODO - This is expensive and should only be done if we really require a baseline. aka, make it lazy
 
     fn calc_baseline(layout: &layout::Node) -> f32 {
         if layout.children.len() > 0 {
-            calc_baseline(&layout.children[0])         
+            calc_baseline(&layout.children[0])
         } else {
             layout.height
         }
@@ -815,22 +815,25 @@ fn compute_internal(
 
             //    2. Among all the items not collected by the previous step, find the largest
             //       outer hypothetical cross size.
-            
+
             //    3. The used cross-size of the flex line is the largest of the numbers found in the
             //       previous two steps and zero.
 
             let max_baseline: f32 = line.items.iter().map(|child| child.baseline).fold(0.0, |acc, x| acc.max(x));
-            line.cross_size = line.items.iter().map(|child| {
-                if child.node.align_self(node) == style::AlignSelf::Baseline
-                    && child.node.cross_margin_start(node.flex_direction) != style::Dimension::Auto
-                    && child.node.cross_margin_end(node.flex_direction) != style::Dimension::Auto
-                    && child.node.cross_size(node.flex_direction) == style::Dimension::Auto
-                {
-                    max_baseline - child.baseline + child.hypothetical_outer_cross_size
-                } else {
-                    child.hypothetical_outer_cross_size
-                }
-            }).fold(0.0, |acc, x| acc.max(x));
+            line.cross_size = line
+                .items
+                .iter()
+                .map(|child| {
+                    if child.node.align_self(node) == style::AlignSelf::Baseline
+                        && child.node.cross_margin_start(node.flex_direction) != style::Dimension::Auto
+                        && child.node.cross_margin_end(node.flex_direction) != style::Dimension::Auto
+                        && child.node.cross_size(node.flex_direction) == style::Dimension::Auto
+                    {
+                        max_baseline - child.baseline + child.hypothetical_outer_cross_size
+                    } else {
+                        child.hypothetical_outer_cross_size
+                    }
+                }).fold(0.0, |acc, x| acc.max(x));
         }
     }
 
