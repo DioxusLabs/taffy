@@ -81,8 +81,8 @@ pub fn compute(root: &style::Node) -> layout::Node {
         root,
         root.width.resolve(Undefined).unwrap_or(f32::NAN),
         root.height.resolve(Undefined).unwrap_or(f32::NAN),
-        f32::NAN,
-        f32::NAN,
+        Undefined,
+        Undefined,
         Undefined,
     );
 
@@ -100,8 +100,8 @@ pub fn compute(root: &style::Node) -> layout::Node {
             .maybe_max(root.min_height.resolve(Undefined))
             .maybe_min(root.max_height.resolve(Undefined))
             .unwrap_or(f32::NAN),
-        f32::NAN,
-        f32::NAN,
+        Undefined,
+        Undefined,
         Undefined,
     );
 
@@ -153,8 +153,8 @@ fn compute_internal(
     // the inner node_width / node_height of the parent and should
     // not be exceeded by this node unless node_width / node_height
     // parameters say otherwise.
-    parent_inner_width: f32,
-    parent_inner_height: f32,
+    parent_inner_width: Number,
+    parent_inner_height: Number,
 
     // This will always be the parent width except for the case when
     // the child is in an absolute context. This value should only
@@ -264,12 +264,12 @@ fn compute_internal(
     //    in that dimension and use that value. This might result in an infinite value.
 
     let available_main = {
-        let base = if node_main.is_finite() { node_main } else { parent_inner_main - margin_main };
+        let base = if node_main.is_finite() { Defined(node_main) } else { parent_inner_main - margin_main };
         base - padding_main - border_main
     };
 
     let available_cross = {
-        let base = if node_cross.is_finite() { node_cross } else { parent_inner_cross - margin_cross };
+        let base = if node_cross.is_finite() { Defined(node_cross) } else { parent_inner_cross - margin_cross };
         base - padding_cross - border_cross
     };
 
@@ -455,10 +455,12 @@ fn compute_internal(
             for child in flex_items {
                 line_length += child.hypothetical_outer_main_size;
 
-                if line_length > available_main && line.items.len() > 0 {
-                    line_length = child.hypothetical_outer_main_size;
-                    lines.push(line);
-                    line = FlexLine { items: vec![], cross_size: 0.0, offset_cross: 0.0 };
+                if let Defined(main) = available_main {
+                    if line_length > main && line.items.len() > 0 {
+                        line_length = child.hypothetical_outer_main_size;
+                        lines.push(line);
+                        line = FlexLine { items: vec![], cross_size: 0.0, offset_cross: 0.0 };
+                    }
                 }
 
                 line.items.push(child);
@@ -724,10 +726,9 @@ fn compute_internal(
 
         let size = longest_line + padding_main + border_main;
 
-        if available_main.is_finite() && flex_lines.len() > 1 && size < available_main {
-            available_main
-        } else {
-            size
+        match available_main {
+            Defined(val) if flex_lines.len() > 1 && size < val => val,
+            _ => size,
         }
     };
 
@@ -752,8 +753,8 @@ fn compute_internal(
                 child.node,
                 if node.flex_direction.is_row() { child.target_main_size } else { child_cross },
                 if node.flex_direction.is_row() { child_cross } else { child.target_main_size },
-                if node.flex_direction.is_row() { container_main_size } else { available_cross },
-                if node.flex_direction.is_row() { available_cross } else { container_main_size },
+                if node.flex_direction.is_row() { Number::from_f32(container_main_size) } else { available_cross },
+                if node.flex_direction.is_row() { available_cross } else { Number::from_f32(container_main_size) },
                 percent_calc_base_child,
             )
             .size;
@@ -787,8 +788,16 @@ fn compute_internal(
                 child.node,
                 if node.flex_direction.is_row() { child.target_main_size } else { child.hypothetical_inner_cross_size },
                 if node.flex_direction.is_row() { child.hypothetical_inner_cross_size } else { child.target_main_size },
-                if node.flex_direction.is_row() { container_main_size } else { node_cross },
-                if node.flex_direction.is_row() { node_cross } else { container_main_size },
+                if node.flex_direction.is_row() {
+                    Number::from_f32(container_main_size)
+                } else {
+                    Number::from_f32(node_cross)
+                },
+                if node.flex_direction.is_row() {
+                    Number::from_f32(node_cross)
+                } else {
+                    Number::from_f32(container_main_size)
+                },
                 percent_calc_base_child,
             );
             child.baseline = calc_baseline(&layout::Node {
@@ -1180,8 +1189,16 @@ fn compute_internal(
                             child.node,
                             if node.flex_direction.is_row() { child.target_main_size } else { child.target_cross_size },
                             if node.flex_direction.is_row() { child.target_cross_size } else { child.target_main_size },
-                            if node.flex_direction.is_row() { container_main_size } else { container_cross_size },
-                            if node.flex_direction.is_row() { container_cross_size } else { container_main_size },
+                            if node.flex_direction.is_row() {
+                                Number::from_f32(container_main_size)
+                            } else {
+                                Number::from_f32(container_main_size)
+                            },
+                            if node.flex_direction.is_row() {
+                                Number::from_f32(container_main_size)
+                            } else {
+                                Number::from_f32(container_main_size)
+                            },
                             percent_calc_base_child,
                         );
 
@@ -1308,8 +1325,16 @@ fn compute_internal(
             child,
             width,
             height,
-            if node.flex_direction.is_row() { container_main_size } else { container_cross_size },
-            if node.flex_direction.is_row() { container_cross_size } else { container_main_size },
+            if node.flex_direction.is_row() {
+                Number::from_f32(container_main_size)
+            } else {
+                Number::from_f32(container_cross_size)
+            },
+            if node.flex_direction.is_row() {
+                Number::from_f32(container_cross_size)
+            } else {
+                Number::from_f32(container_main_size)
+            },
             width_percent_calc,
         );
 
