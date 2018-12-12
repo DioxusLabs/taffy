@@ -33,6 +33,37 @@ impl FlexSize {
 struct FlexItem<'a> {
     node: &'a style::Node,
 
+    width: Number,
+    min_width: Number,
+    max_width: Number,
+
+    height: Number,
+    min_height: Number,
+    max_height: Number,
+
+    main: Number,
+    min_main: Number,
+    max_main: Number,
+
+    cross: Number,
+    min_cross: Number,
+    max_cross: Number,
+
+    margin_main_start: f32,
+    margin_main_end: f32,
+    margin_cross_start: f32,
+    margin_cross_end: f32,
+
+    padding_main_start: f32,
+    padding_main_end: f32,
+    padding_cross_start: f32,
+    padding_cross_end: f32,
+
+    border_main_start: f32,
+    border_main_end: f32,
+    border_cross_start: f32,
+    border_cross_end: f32,
+
     // temporary values for main size determination
     flex_basis: f32,
     inner_flex_basis: f32,
@@ -48,11 +79,6 @@ struct FlexItem<'a> {
     hypothetical_outer_cross_size: f32,
     target_cross_size: f32,
     outer_target_cross_size: f32,
-
-    main_margin_start: f32,
-    main_margin_end: f32,
-    cross_margin_start: f32,
-    cross_margin_end: f32,
 
     baseline: f32,
 
@@ -229,6 +255,76 @@ fn compute_internal(
         .map(|child| FlexItem {
             node: child,
 
+            width: child.width.resolve(percent_calc_base_child),
+            min_width: child.min_width.resolve(percent_calc_base_child),
+            max_width: child.max_width.resolve(percent_calc_base_child),
+
+            height: child.height.resolve(percent_calc_base_child),
+            min_height: child.min_height.resolve(percent_calc_base_child),
+            max_height: child.max_height.resolve(percent_calc_base_child),
+
+            main: child.main_size(node.flex_direction).resolve(percent_calc_base_child),
+            min_main: child.min_main_size(node.flex_direction).resolve(percent_calc_base_child),
+            max_main: child.max_main_size(node.flex_direction).resolve(percent_calc_base_child),
+
+            cross: child.cross_size(node.flex_direction).resolve(percent_calc_base_child),
+            min_cross: child.min_cross_size(node.flex_direction).resolve(percent_calc_base_child),
+            max_cross: child.max_cross_size(node.flex_direction).resolve(percent_calc_base_child),
+
+            margin_main_start: child
+                .main_margin_start(node.flex_direction)
+                .resolve(percent_calc_base_child)
+                .unwrap_or(0.0),
+
+            margin_main_end: child.main_margin_end(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0),
+
+            margin_cross_start: child
+                .cross_margin_start(node.flex_direction)
+                .resolve(percent_calc_base_child)
+                .unwrap_or(0.0),
+
+            margin_cross_end: child
+                .cross_margin_end(node.flex_direction)
+                .resolve(percent_calc_base_child)
+                .unwrap_or(0.0),
+
+            padding_main_start: child
+                .main_padding_start(node.flex_direction)
+                .resolve(percent_calc_base_child)
+                .unwrap_or(0.0),
+
+            padding_main_end: child
+                .main_padding_end(node.flex_direction)
+                .resolve(percent_calc_base_child)
+                .unwrap_or(0.0),
+
+            padding_cross_start: child
+                .cross_padding_start(node.flex_direction)
+                .resolve(percent_calc_base_child)
+                .unwrap_or(0.0),
+
+            padding_cross_end: child
+                .cross_padding_end(node.flex_direction)
+                .resolve(percent_calc_base_child)
+                .unwrap_or(0.0),
+
+            border_main_start: child
+                .main_border_start(node.flex_direction)
+                .resolve(percent_calc_base_child)
+                .unwrap_or(0.0),
+
+            border_main_end: child.main_border_end(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0),
+
+            border_cross_start: child
+                .cross_border_start(node.flex_direction)
+                .resolve(percent_calc_base_child)
+                .unwrap_or(0.0),
+
+            border_cross_end: child
+                .cross_border_end(node.flex_direction)
+                .resolve(percent_calc_base_child)
+                .unwrap_or(0.0),
+
             flex_basis: 0.0,
             inner_flex_basis: 0.0,
             hypothetical_inner_main_size: 0.0,
@@ -242,11 +338,6 @@ fn compute_internal(
             hypothetical_outer_cross_size: 0.0,
             target_cross_size: 0.0,
             outer_target_cross_size: 0.0,
-
-            main_margin_start: 0.0,
-            main_margin_end: 0.0,
-            cross_margin_start: 0.0,
-            cross_margin_end: 0.0,
 
             baseline: 0.0,
 
@@ -325,22 +416,22 @@ fn compute_internal(
         //             .node
         //             .width
         //             .resolve(percent_calc_base_child).unwrap_or(f32::NAN)
-        //             .safe_max(child.node.min_width.resolve(percent_calc_base_child).unwrap_or(f32::NAN))
-        //             .safe_min(child.node.max_width.resolve(percent_calc_base_child).unwrap_or(f32::NAN)),
+        //             .safe_max(child.min_width.unwrap_or(f32::NAN))
+        //             .safe_min(child.max_width.unwrap_or(f32::NAN)),
         //         child
         //             .node
         //             .height
         //             .resolve(percent_calc_base_child).unwrap_or(f32::NAN)
-        //             .safe_max(child.node.min_height.resolve(percent_calc_base_child).unwrap_or(f32::NAN))
-        //             .safe_min(child.node.max_height.resolve(percent_calc_base_child).unwrap_or(f32::NAN)),
+        //             .safe_max(child.min_height.unwrap_or(f32::NAN))
+        //             .safe_min(child.max_height.unwrap_or(f32::NAN)),
         //         if node.flex_direction.is_row() { available_main } else { available_cross },
         //         if node.flex_direction.is_row() { available_cross } else { available_main },
         //         percent_calc_base_child,
         //     ).size;
 
         //     child.flex_basis = size.main(node.flex_direction)
-        //             .max(child.node.min_main_size(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(f32::NAN))
-        //             .min(child.node.max_main_size(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(f32::NAN));
+        //             .max(child.min_main.unwrap_or(f32::NAN))
+        //             .min(child.max_main.unwrap_or(f32::NAN));
         //     continue;
         // }
 
@@ -353,43 +444,23 @@ fn compute_internal(
 
         let size = compute_internal(
             child.node,
-            child
-                .node
-                .width
-                .resolve(percent_calc_base_child)
-                .maybe_max(child.node.min_width.resolve(percent_calc_base_child))
-                .maybe_min(child.node.max_width.resolve(percent_calc_base_child)),
-            child
-                .node
-                .height
-                .resolve(percent_calc_base_child)
-                .maybe_max(child.node.min_height.resolve(percent_calc_base_child))
-                .maybe_min(child.node.max_height.resolve(percent_calc_base_child)),
+            child.node.width.resolve(percent_calc_base_child).maybe_max(child.min_width).maybe_min(child.max_width),
+            child.node.height.resolve(percent_calc_base_child).maybe_max(child.min_height).maybe_min(child.max_height),
             if node.flex_direction.is_row() { available_main } else { available_cross },
             if node.flex_direction.is_row() { available_cross } else { available_main },
             percent_calc_base_child,
         )
         .size;
 
-        child.flex_basis = size
-            .main(node.flex_direction)
-            .maybe_max(child.node.min_main_size(node.flex_direction).resolve(percent_calc_base_child))
-            .maybe_min(child.node.max_main_size(node.flex_direction).resolve(percent_calc_base_child));
+        child.flex_basis = size.main(node.flex_direction).maybe_max(child.min_main).maybe_min(child.max_main);
     }
 
     // The hypothetical main size is the item’s flex base size clamped according to its
     // used min and max main sizes (and flooring the content box size at zero).
 
     for child in &mut flex_items {
-        let padding_start =
-            child.node.main_padding_start(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0);
-        let padding_end =
-            child.node.main_padding_end(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0);
-        let border_start =
-            child.node.main_border_start(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0);
-        let border_end =
-            child.node.main_border_end(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0);
-        child.inner_flex_basis = child.flex_basis - (padding_start + padding_end + border_start + border_end);
+        child.inner_flex_basis = child.flex_basis
+            - (child.padding_main_start + child.padding_main_end + child.border_main_start + child.border_main_end);
 
         // TODO - not really spec abiding but needs to be done somewhere. probably somewhere else though.
         // The following logic was developed not from the spec but by trail and error looking into how
@@ -406,21 +477,17 @@ fn compute_internal(
             )
             .size
             .width
-            .maybe_min(child.node.width.resolve(percent_calc_base_child))
-            .maybe_max(child.node.min_width.resolve(percent_calc_base_child))
+            .maybe_min(child.width)
+            .maybe_max(child.min_width)
             .to_number()
         } else {
-            child.node.min_main_size(node.flex_direction).resolve(percent_calc_base_child)
+            child.min_main
         };
 
-        child.hypothetical_inner_main_size = child
-            .flex_basis
-            .maybe_max(min_main)
-            .maybe_min(child.node.max_main_size(node.flex_direction).resolve(percent_calc_base_child));
+        child.hypothetical_inner_main_size = child.flex_basis.maybe_max(min_main).maybe_min(child.max_main);
 
-        child.hypothetical_outer_main_size = child.hypothetical_inner_main_size
-            + child.node.main_margin_start(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0)
-            + child.node.main_margin_end(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0);
+        child.hypothetical_outer_main_size =
+            child.hypothetical_inner_main_size + child.margin_main_start + child.margin_main_end;
     }
 
     // 9.3. Main Size Determination
@@ -501,22 +568,22 @@ fn compute_internal(
                         .node
                         .width
                         .resolve(percent_calc_base_child)
-                        .maybe_max(child.node.min_width.resolve(percent_calc_base_child))
-                        .maybe_min(child.node.max_width.resolve(percent_calc_base_child)),
+                        .maybe_max(child.min_width)
+                        .maybe_min(child.max_width),
                     child
                         .node
                         .height
                         .resolve(percent_calc_base_child)
-                        .maybe_max(child.node.min_height.resolve(percent_calc_base_child))
-                        .maybe_min(child.node.max_height.resolve(percent_calc_base_child)),
+                        .maybe_max(child.min_height)
+                        .maybe_min(child.max_height),
                     if node.flex_direction.is_row() { available_main } else { available_cross },
                     if node.flex_direction.is_row() { available_cross } else { available_main },
                     percent_calc_base_child,
                 )
                 .size
                 .main(node.flex_direction)
-                .maybe_max(child.node.min_main_size(node.flex_direction).resolve(percent_calc_base_child))
-                .maybe_min(child.node.max_main_size(node.flex_direction).resolve(percent_calc_base_child));
+                .maybe_max(child.min_main)
+                .maybe_min(child.max_main);
             } else {
                 child.target_main_size = child.hypothetical_inner_main_size;
             }
@@ -524,9 +591,7 @@ fn compute_internal(
             // TODO this should really only be set inside the if-statement below but
             // that casues the target_main_size to never be set for some items
 
-            child.outer_target_main_size = child.target_main_size
-                + child.node.main_margin_start(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0)
-                + child.node.main_margin_end(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0);
+            child.outer_target_main_size = child.target_main_size + child.margin_main_start + child.margin_main_end;
 
             if (child.node.flex_grow == 0.0 && child.node.flex_shrink == 0.0)
                 || (growing && child.flex_basis > child.hypothetical_inner_main_size)
@@ -544,8 +609,8 @@ fn compute_internal(
             .items
             .iter()
             .map(|child| {
-                child.node.main_margin_start(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0)
-                    + child.node.main_margin_end(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0)
+                child.margin_main_start
+                    + child.margin_main_end
                     + if child.frozen { child.target_main_size } else { child.flex_basis }
             })
             .sum();
@@ -581,7 +646,7 @@ fn compute_internal(
 
             let used_space: f32 = Iterator::chain(frozen.iter(), unfrozen.iter())
                 .map(|child| {
-                    child.node.main_margin_start(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0)
+                    child.margin_main_start
                         + child
                             .node
                             .main_margin_end(node.flex_direction)
@@ -662,22 +727,20 @@ fn compute_internal(
                     )
                     .size
                     .width
-                    .maybe_min(child.node.width.resolve(percent_calc_base_child))
-                    .maybe_max(child.node.min_width.resolve(percent_calc_base_child))
+                    .maybe_min(child.width)
+                    .maybe_max(child.min_width)
                     .to_number()
                 } else {
-                    child.node.min_main_size(node.flex_direction).resolve(percent_calc_base_child)
+                    child.min_main
                 };
 
-                let max_main = child.node.max_main_size(node.flex_direction).resolve(percent_calc_base_child);
+                let max_main = child.max_main;
 
                 let clamped = child.target_main_size.maybe_min(max_main).maybe_max(min_main).max(0.0);
                 child.violation = clamped - child.target_main_size;
                 total_violation += child.violation;
                 child.target_main_size = clamped;
-                child.outer_target_main_size = child.target_main_size
-                    + child.node.main_margin_start(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0)
-                    + child.node.main_margin_end(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0);
+                child.outer_target_main_size = child.target_main_size + child.margin_main_start + child.margin_main_end;
             }
 
             // e. Freeze over-flexed items. The total violation is the sum of the adjustments
@@ -739,8 +802,8 @@ fn compute_internal(
                 .node
                 .cross_size(node.flex_direction)
                 .resolve(percent_calc_base_child)
-                .maybe_max(child.node.min_cross_size(node.flex_direction).resolve(percent_calc_base_child))
-                .maybe_min(child.node.max_cross_size(node.flex_direction).resolve(percent_calc_base_child));
+                .maybe_max(child.min_cross)
+                .maybe_min(child.max_cross);
 
             let size = compute_internal(
                 child.node,
@@ -752,14 +815,11 @@ fn compute_internal(
             )
             .size;
 
-            child.hypothetical_inner_cross_size = size
-                .cross(node.flex_direction)
-                .maybe_max(child.node.min_cross_size(node.flex_direction).resolve(percent_calc_base_child))
-                .maybe_min(child.node.max_cross_size(node.flex_direction).resolve(percent_calc_base_child));
+            child.hypothetical_inner_cross_size =
+                size.cross(node.flex_direction).maybe_max(child.min_cross).maybe_min(child.max_cross);
 
-            child.hypothetical_outer_cross_size = child.hypothetical_inner_cross_size
-                + child.node.cross_margin_start(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0)
-                + child.node.cross_margin_end(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0);
+            child.hypothetical_outer_cross_size =
+                child.hypothetical_inner_cross_size + child.margin_cross_start + child.margin_cross_end;
         }
     }
 
@@ -907,16 +967,14 @@ fn compute_internal(
                         .cross_margin_start(node.flex_direction)
                         .resolve(percent_calc_base_child)
                         .unwrap_or(0.0)
-                    - child.node.cross_margin_end(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0))
-                .maybe_max(child.node.min_cross_size(node.flex_direction).resolve(percent_calc_base_child))
-                .maybe_min(child.node.max_cross_size(node.flex_direction).resolve(percent_calc_base_child))
+                    - child.margin_cross_end)
+                    .maybe_max(child.min_cross)
+                    .maybe_min(child.max_cross)
             } else {
                 child.hypothetical_inner_cross_size
             };
 
-            child.outer_target_cross_size = child.target_cross_size
-                + child.node.cross_margin_start(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0)
-                + child.node.cross_margin_end(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0);
+            child.outer_target_cross_size = child.target_cross_size + child.margin_cross_start + child.margin_cross_end;
         }
     }
 
@@ -931,15 +989,6 @@ fn compute_internal(
     for line in &mut flex_lines {
         let used_space: f32 = line.items.iter().map(|child| child.outer_target_main_size).sum();
         let free_space = inner_container_main_size - used_space;
-
-        // TODO does not make a ton of sense to have this here but we want to have this somewhere.
-        for child in &mut line.items {
-            child.main_margin_start =
-                child.node.main_margin_start(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0);
-            child.main_margin_end =
-                child.node.main_margin_end(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0);
-        }
-
         let mut num_auto_margins = 0;
 
         for child in &mut line.items {
@@ -956,10 +1005,10 @@ fn compute_internal(
 
             for child in &mut line.items {
                 if child.node.main_margin_start(node.flex_direction) == style::Dimension::Auto {
-                    child.main_margin_start = margin;
+                    child.margin_main_start = margin;
                 }
                 if child.node.main_margin_end(node.flex_direction) == style::Dimension::Auto {
-                    child.main_margin_end = margin;
+                    child.margin_main_end = margin;
                 }
             }
         } else {
@@ -1032,23 +1081,17 @@ fn compute_internal(
         let max_baseline: f32 = line.items.iter_mut().map(|child| child.baseline).fold(0.0, |acc, x| acc.max(x));
 
         for child in &mut line.items {
-            // TODO probably move this somewhere else, as with main margin resolution. Only auto margins should be resolved here.
-            child.cross_margin_start =
-                child.node.cross_margin_start(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0);
-            child.cross_margin_end =
-                child.node.cross_margin_end(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0);
-
             let free_space = line.cross_size - child.outer_target_cross_size;
 
             if child.node.cross_margin_start(node.flex_direction) == style::Dimension::Auto
                 && child.node.cross_margin_end(node.flex_direction) == style::Dimension::Auto
             {
-                child.cross_margin_start = free_space / 2.0;
-                child.cross_margin_end = free_space / 2.0;
+                child.margin_cross_start = free_space / 2.0;
+                child.margin_cross_end = free_space / 2.0;
             } else if child.node.cross_margin_start(node.flex_direction) == style::Dimension::Auto {
-                child.cross_margin_start = free_space;
+                child.margin_cross_start = free_space;
             } else if child.node.cross_margin_end(node.flex_direction) == style::Dimension::Auto {
-                child.cross_margin_end = free_space;
+                child.margin_cross_end = free_space;
             } else {
                 // 14. Align all flex items along the cross-axis per align-self, if neither of the item’s
                 //     cross-axis margins are auto.
@@ -1164,9 +1207,6 @@ fn compute_internal(
     }
 
     // Do a final layout pass and gather the resulting layouts
-    let percent_calc_base_child =
-        if node.flex_direction.is_row() { container_main_size.to_number() } else { container_cross_size.to_number() };
-
     let mut children: Vec<layout::Node> = {
         let mut lines: Vec<Vec<layout::Node>> = vec![];
         let mut total_offset_cross = padding_cross_start + border_cross_start;
@@ -1207,7 +1247,7 @@ fn compute_internal(
                         let offset_main = {
                             total_offset_main
                                 + child.offset_main
-                                + child.main_margin_start
+                                + child.margin_main_start
                                 + (child
                                     .node
                                     .main_start(node.flex_direction)
@@ -1224,7 +1264,7 @@ fn compute_internal(
                             total_offset_cross
                                 + child.offset_cross
                                 + line_offset_cross
-                                + child.cross_margin_start
+                                + child.margin_cross_start
                                 + (child
                                     .node
                                     .cross_start(node.flex_direction)
@@ -1246,9 +1286,9 @@ fn compute_internal(
                         });
 
                         total_offset_main += child.offset_main
-                            + child.main_margin_start
+                            + child.margin_main_start
                             + result.size.main(node.flex_direction)
-                            + child.main_margin_end;
+                            + child.margin_main_end;
                     };
 
                     if node.flex_direction.is_reverse() {
