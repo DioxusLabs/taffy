@@ -6,6 +6,10 @@ pub enum Number {
     Undefined,
 }
 
+pub trait ToNumber {
+    fn to_number(self) -> Number;
+}
+
 impl Default for Number {
     fn default() -> Number {
         Number::Undefined
@@ -43,12 +47,12 @@ impl Number {
     }
 }
 
-pub trait MinMax<T> {
-    fn maybe_min(self, rhs: T) -> Number;
-    fn maybe_max(self, rhs: T) -> Number;
+pub trait MinMax<In, Out> {
+    fn maybe_min(self, rhs: In) -> Out;
+    fn maybe_max(self, rhs: In) -> Out;
 }
 
-impl MinMax<Number> for Number {
+impl MinMax<Number, Number> for Number {
     fn maybe_min(self, rhs: Number) -> Number {
         match self {
             Number::Defined(val) => match rhs {
@@ -70,7 +74,7 @@ impl MinMax<Number> for Number {
     }
 }
 
-impl MinMax<f32> for Number {
+impl MinMax<f32, Number> for Number {
     fn maybe_min(self, rhs: f32) -> Number {
         match self {
             Number::Defined(val) => Number::Defined(val.min(rhs)),
@@ -86,19 +90,25 @@ impl MinMax<f32> for Number {
     }
 }
 
-impl MinMax<Number> for f32 {
-    fn maybe_min(self, rhs: Number) -> Number {
+impl MinMax<Number, f32> for f32 {
+    fn maybe_min(self, rhs: Number) -> f32 {
         match rhs {
-            Number::Defined(val) => Number::Defined(self.min(val)),
-            Number::Undefined => Number::Defined(self),
+            Number::Defined(val) => self.min(val),
+            Number::Undefined => self,
         }
     }
 
-    fn maybe_max(self, rhs: Number) -> Number {
+    fn maybe_max(self, rhs: Number) -> f32 {
         match rhs {
-            Number::Defined(val) => Number::Defined(self.max(val)),
-            Number::Undefined => Number::Defined(self),
+            Number::Defined(val) => self.max(val),
+            Number::Undefined => self,
         }
+    }
+}
+
+impl ToNumber for f32 {
+    fn to_number(self) -> Number {
+        Number::Defined(self)
     }
 }
 

@@ -6,6 +6,7 @@ use crate::style;
 use crate::number::MinMax;
 use crate::number::Number;
 use crate::number::Number::*;
+use crate::number::ToNumber;
 
 #[derive(Debug, Copy, Clone)]
 struct FlexSize {
@@ -88,12 +89,18 @@ pub fn compute(root: &style::Node) -> layout::Node {
 
     let result = compute_internal(
         root,
-        first_pass.size.width.maybe_max(root.min_width.resolve(Undefined)).maybe_min(root.max_width.resolve(Undefined)),
+        first_pass
+            .size
+            .width
+            .maybe_max(root.min_width.resolve(Undefined))
+            .maybe_min(root.max_width.resolve(Undefined))
+            .to_number(),
         first_pass
             .size
             .height
             .maybe_max(root.min_height.resolve(Undefined))
-            .maybe_min(root.max_height.resolve(Undefined)),
+            .maybe_min(root.max_height.resolve(Undefined))
+            .to_number(),
         Undefined,
         Undefined,
         Undefined,
@@ -367,8 +374,7 @@ fn compute_internal(
         child.flex_basis = size
             .main(node.flex_direction)
             .maybe_max(child.node.min_main_size(node.flex_direction).resolve(percent_calc_base_child))
-            .maybe_min(child.node.max_main_size(node.flex_direction).resolve(percent_calc_base_child))
-            .unwrap_or(f32::NAN);
+            .maybe_min(child.node.max_main_size(node.flex_direction).resolve(percent_calc_base_child));
     }
 
     // The hypothetical main size is the item’s flex base size clamped according to its
@@ -402,6 +408,7 @@ fn compute_internal(
             .width
             .maybe_min(child.node.width.resolve(percent_calc_base_child))
             .maybe_max(child.node.min_width.resolve(percent_calc_base_child))
+            .to_number()
         } else {
             child.node.min_main_size(node.flex_direction).resolve(percent_calc_base_child)
         };
@@ -409,8 +416,7 @@ fn compute_internal(
         child.hypothetical_inner_main_size = child
             .flex_basis
             .maybe_max(min_main)
-            .maybe_min(child.node.max_main_size(node.flex_direction).resolve(percent_calc_base_child))
-            .unwrap_or(0.0);
+            .maybe_min(child.node.max_main_size(node.flex_direction).resolve(percent_calc_base_child));
 
         child.hypothetical_outer_main_size = child.hypothetical_inner_main_size
             + child.node.main_margin_start(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0)
@@ -510,8 +516,7 @@ fn compute_internal(
                 .size
                 .main(node.flex_direction)
                 .maybe_max(child.node.min_main_size(node.flex_direction).resolve(percent_calc_base_child))
-                .maybe_min(child.node.max_main_size(node.flex_direction).resolve(percent_calc_base_child))
-                .unwrap_or(f32::NAN);
+                .maybe_min(child.node.max_main_size(node.flex_direction).resolve(percent_calc_base_child));
             } else {
                 child.target_main_size = child.hypothetical_inner_main_size;
             }
@@ -594,9 +599,8 @@ fn compute_internal(
             } else if shrinking && sum_flex_shrink < 1.0 {
                 (initial_free_space * sum_flex_shrink).maybe_max(node_inner_main - used_space)
             } else {
-                node_inner_main - used_space
-            }
-            .unwrap_or(0.0);
+                (node_inner_main - used_space).unwrap_or(0.0)
+            };
 
             // c. Distribute free space proportional to the flex factors.
             //    - If the remaining free space is zero
@@ -660,14 +664,14 @@ fn compute_internal(
                     .width
                     .maybe_min(child.node.width.resolve(percent_calc_base_child))
                     .maybe_max(child.node.min_width.resolve(percent_calc_base_child))
+                    .to_number()
                 } else {
                     child.node.min_main_size(node.flex_direction).resolve(percent_calc_base_child)
                 };
 
                 let max_main = child.node.max_main_size(node.flex_direction).resolve(percent_calc_base_child);
 
-                let clamped =
-                    child.target_main_size.maybe_min(max_main).maybe_max(min_main).maybe_max(0.0).unwrap_or(0.0);
+                let clamped = child.target_main_size.maybe_min(max_main).maybe_max(min_main).max(0.0);
                 child.violation = clamped - child.target_main_size;
                 total_violation += child.violation;
                 child.target_main_size = clamped;
@@ -751,8 +755,7 @@ fn compute_internal(
             child.hypothetical_inner_cross_size = size
                 .cross(node.flex_direction)
                 .maybe_max(child.node.min_cross_size(node.flex_direction).resolve(percent_calc_base_child))
-                .maybe_min(child.node.max_cross_size(node.flex_direction).resolve(percent_calc_base_child))
-                .unwrap_or(0.0);
+                .maybe_min(child.node.max_cross_size(node.flex_direction).resolve(percent_calc_base_child));
 
             child.hypothetical_outer_cross_size = child.hypothetical_inner_cross_size
                 + child.node.cross_margin_start(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0)
@@ -907,7 +910,6 @@ fn compute_internal(
                     - child.node.cross_margin_end(node.flex_direction).resolve(percent_calc_base_child).unwrap_or(0.0))
                 .maybe_max(child.node.min_cross_size(node.flex_direction).resolve(percent_calc_base_child))
                 .maybe_min(child.node.max_cross_size(node.flex_direction).resolve(percent_calc_base_child))
-                .unwrap_or(f32::NAN)
             } else {
                 child.hypothetical_inner_cross_size
             };
@@ -1342,15 +1344,13 @@ fn compute_internal(
                 .size
                 .main(node.flex_direction)
                 .maybe_max(child.min_main_size(node.flex_direction).resolve(percent_calc_base_child))
-                .maybe_min(child.max_main_size(node.flex_direction).resolve(percent_calc_base_child))
-                .unwrap_or(f32::NAN);
+                .maybe_min(child.max_main_size(node.flex_direction).resolve(percent_calc_base_child));
         let free_cross_space = container_cross_size
             - result
                 .size
                 .cross(node.flex_direction)
                 .maybe_max(child.min_cross_size(node.flex_direction).resolve(percent_calc_base_child))
-                .maybe_min(child.max_cross_size(node.flex_direction).resolve(percent_calc_base_child))
-                .unwrap_or(f32::NAN);
+                .maybe_min(child.max_cross_size(node.flex_direction).resolve(percent_calc_base_child));
 
         let offset_main = if start_main.is_finite() {
             start_main + border_main_start
