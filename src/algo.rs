@@ -949,10 +949,11 @@ fn compute_internal(
             });
         } else {
             let num_items = line.items.len();
-            let mut is_first = true;
             let layout_reverse = node.flex_direction.is_reverse();
 
-            let justify_item = |child: &mut FlexItem| {
+            let justify_item = |(i, child): (usize, &mut FlexItem)| {
+                let is_first = i == 0;
+
                 child.offset_main = match node.justify_content {
                     style::JustifyContent::FlexStart => {
                         if layout_reverse && is_first {
@@ -991,14 +992,12 @@ fn compute_internal(
                     }
                     style::JustifyContent::SpaceEvenly => free_space / (num_items + 1) as f32,
                 };
-
-                is_first = false;
             };
 
             if layout_reverse {
-                line.items.iter_mut().rev().for_each(justify_item);
+                line.items.iter_mut().rev().enumerate().for_each(justify_item);
             } else {
-                line.items.iter_mut().for_each(justify_item);
+                line.items.iter_mut().enumerate().for_each(justify_item);
             }
         }
     });
@@ -1093,9 +1092,10 @@ fn compute_internal(
 
     let free_space = inner_container_cross_size - total_cross_size;
     let num_lines = flex_lines.len();
-    let mut is_first = true;
 
-    let align_line = |line: &mut FlexLine| {
+    let align_line = |(i, line): (usize, &mut FlexLine)| {
+        let is_first = i == 0;
+
         line.offset_cross = match node.align_content {
             style::AlignContent::FlexStart => {
                 if is_first && is_wrap_reverse {
@@ -1134,13 +1134,12 @@ fn compute_internal(
                 }
             }
         };
-        is_first = false;
     };
 
     if is_wrap_reverse {
-        flex_lines.iter_mut().rev().for_each(align_line);
+        flex_lines.iter_mut().rev().enumerate().for_each(align_line);
     } else {
-        flex_lines.iter_mut().for_each(align_line);
+        flex_lines.iter_mut().enumerate().for_each(align_line);
     }
 
     // Do a final layout pass and gather the resulting layouts
