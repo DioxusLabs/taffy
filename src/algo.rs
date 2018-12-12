@@ -744,10 +744,10 @@ fn compute_internal(
 
             let size = compute_internal(
                 child.node,
-                if node.flex_direction.is_row() { Number::from_f32(child.target_main_size) } else { child_cross },
-                if node.flex_direction.is_row() { child_cross } else { Number::from_f32(child.target_main_size) },
-                if node.flex_direction.is_row() { Number::from_f32(container_main_size) } else { available_cross },
-                if node.flex_direction.is_row() { available_cross } else { Number::from_f32(container_main_size) },
+                if node.flex_direction.is_row() { child.target_main_size.to_number() } else { child_cross },
+                if node.flex_direction.is_row() { child_cross } else { child.target_main_size.to_number() },
+                if node.flex_direction.is_row() { container_main_size.to_number() } else { available_cross },
+                if node.flex_direction.is_row() { available_cross } else { container_main_size.to_number() },
                 percent_calc_base_child,
             )
             .size;
@@ -778,18 +778,18 @@ fn compute_internal(
         for child in &mut line.items {
             let result = compute_internal(
                 child.node,
-                Number::from_f32(if node.flex_direction.is_row() {
-                    child.target_main_size
+                if node.flex_direction.is_row() {
+                    child.target_main_size.to_number()
                 } else {
-                    child.hypothetical_inner_cross_size
-                }),
-                Number::from_f32(if node.flex_direction.is_row() {
-                    child.hypothetical_inner_cross_size
+                    child.hypothetical_inner_cross_size.to_number()
+                },
+                if node.flex_direction.is_row() {
+                    child.hypothetical_inner_cross_size.to_number()
                 } else {
-                    child.target_main_size
-                }),
-                if node.flex_direction.is_row() { Number::from_f32(container_main_size) } else { node_cross },
-                if node.flex_direction.is_row() { node_cross } else { Number::from_f32(container_main_size) },
+                    child.target_main_size.to_number()
+                },
+                if node.flex_direction.is_row() { container_main_size.to_number() } else { node_cross },
+                if node.flex_direction.is_row() { node_cross } else { container_main_size.to_number() },
                 percent_calc_base_child,
             );
             child.baseline = calc_baseline(&layout::Node {
@@ -1165,7 +1165,7 @@ fn compute_internal(
 
     // Do a final layout pass and gather the resulting layouts
     let percent_calc_base_child =
-        Number::from_f32(if node.flex_direction.is_row() { container_main_size } else { container_cross_size });
+        if node.flex_direction.is_row() { container_main_size.to_number() } else { container_cross_size.to_number() };
 
     let mut children: Vec<layout::Node> = {
         let mut lines: Vec<Vec<layout::Node>> = vec![];
@@ -1181,25 +1181,25 @@ fn compute_internal(
                     let layout_item = |child: &mut FlexItem| {
                         let result = compute_internal(
                             child.node,
-                            Number::from_f32(if node.flex_direction.is_row() {
-                                child.target_main_size
-                            } else {
-                                child.target_cross_size
-                            }),
-                            Number::from_f32(if node.flex_direction.is_row() {
-                                child.target_cross_size
-                            } else {
-                                child.target_main_size
-                            }),
                             if node.flex_direction.is_row() {
-                                Number::from_f32(container_main_size)
+                                child.target_main_size.to_number()
                             } else {
-                                Number::from_f32(container_cross_size)
+                                child.target_cross_size.to_number()
                             },
                             if node.flex_direction.is_row() {
-                                Number::from_f32(container_cross_size)
+                                child.target_cross_size.to_number()
                             } else {
-                                Number::from_f32(container_main_size)
+                                child.target_main_size.to_number()
+                            },
+                            if node.flex_direction.is_row() {
+                                container_main_size.to_number()
+                            } else {
+                                container_cross_size.to_number()
+                            },
+                            if node.flex_direction.is_row() {
+                                container_cross_size.to_number()
+                            } else {
+                                container_main_size.to_number()
                             },
                             percent_calc_base_child,
                         );
@@ -1290,8 +1290,8 @@ fn compute_internal(
         node.children.iter().filter(|child| child.position == style::Position::Absolute).collect();
 
     for child in absolute_children {
-        let container_width = Number::from_f32(container_width);
-        let container_height = Number::from_f32(container_height);
+        let container_width = container_width.to_number();
+        let container_height = container_height.to_number();
 
         let start = child.start.resolve(container_width) + child.margin.start.resolve(container_width);
         let end = child.end.resolve(container_width) + child.margin.end.resolve(container_width);
@@ -1321,14 +1321,14 @@ fn compute_internal(
             width,
             height,
             if node.flex_direction.is_row() {
-                Number::from_f32(container_main_size)
+                container_main_size.to_number()
             } else {
-                Number::from_f32(container_cross_size)
+                container_cross_size.to_number()
             },
             if node.flex_direction.is_row() {
-                Number::from_f32(container_cross_size)
+                container_cross_size.to_number()
             } else {
-                Number::from_f32(container_main_size)
+                container_main_size.to_number()
             },
             container_width,
         );
