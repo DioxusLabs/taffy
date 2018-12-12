@@ -10,27 +10,35 @@ pub trait ToNumber {
     fn to_number(self) -> Number;
 }
 
+pub trait OrElse<T> {
+    fn or_else(self, other: T) -> T;
+}
+
 impl Default for Number {
     fn default() -> Number {
         Number::Undefined
     }
 }
 
-impl Number {
-    pub fn unwrap_or(self, default: f32) -> f32 {
+impl OrElse<f32> for Number {
+    fn or_else(self, other: f32) -> f32 {
         match self {
             Number::Defined(val) => val,
-            Number::Undefined => default,
+            Number::Undefined => other,
         }
     }
+}
 
-    pub fn or(self, default: Number) -> Number {
+impl OrElse<Number> for Number {
+    fn or_else(self, other: Number) -> Number {
         match self {
             Number::Defined(_) => self,
-            Number::Undefined => default,
+            Number::Undefined => other,
         }
     }
+}
 
+impl Number {
     pub fn is_defined(self) -> bool {
         match self {
             Number::Defined(_) => true,
