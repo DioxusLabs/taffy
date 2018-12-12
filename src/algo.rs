@@ -132,38 +132,27 @@ pub fn compute(root: &style::Node) -> layout::Node {
         Undefined,
     );
 
-    round_layout(
-        &layout::Node {
-            width: result.size.width,
-            height: result.size.height,
-            x: 0.0,
-            y: 0.0,
-            children: result.children,
-        },
-        0.0,
-        0.0,
-    )
+    let mut layout = layout::Node {
+        width: result.size.width,
+        height: result.size.height,
+        x: 0.0,
+        y: 0.0,
+        children: result.children,
+    };
+
+    round_layout(&mut layout, 0.0, 0.0);
+    layout
 }
 
-fn round_layout(layout: &layout::Node, abs_x: f32, abs_y: f32) -> layout::Node {
+fn round_layout(layout: &mut layout::Node, abs_x: f32, abs_y: f32) {
     let abs_x = abs_x + layout.x;
     let abs_y = abs_y + layout.y;
 
-    let rounded_x = layout.x.round();
-    let rounded_y = layout.y.round();
-
-    let rounded_width = (abs_x + layout.width).round() - abs_x.round();
-    let rounded_height = (abs_y + layout.height).round() - abs_y.round();
-
-    let rounded_children = layout.children.iter().map(|child| round_layout(child, abs_x, abs_y)).collect();
-
-    layout::Node {
-        width: rounded_width,
-        height: rounded_height,
-        x: rounded_x,
-        y: rounded_y,
-        children: rounded_children,
-    }
+    layout.x = layout.x.round();
+    layout.y = layout.y.round();
+    layout.width = (abs_x + layout.width).round() - abs_x.round();
+    layout.height = (abs_y + layout.height).round() - abs_y.round();
+    layout.children.iter_mut().for_each(|child| round_layout(child, abs_x, abs_y));
 }
 
 fn compute_internal(
