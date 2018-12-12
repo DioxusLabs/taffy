@@ -345,15 +345,8 @@ fn compute_internal(
     //    margin, border, and padding from the space available to the flex container
     //    in that dimension and use that value. This might result in an infinite value.
 
-    let available_main = {
-        let base = if node_main.is_defined() { node_main } else { parent_inner_main - margin_main };
-        base - padding_main - border_main
-    };
-
-    let available_cross = {
-        let base = if node_cross.is_defined() { node_cross } else { parent_inner_cross - margin_cross };
-        base - padding_cross - border_cross
-    };
+    let available_main = node_main.or(parent_inner_main - margin_main) - padding_main - border_main;
+    let available_cross = node_cross.or(parent_inner_cross - margin_cross) - padding_cross - border_cross;
 
     // TODO - this does not follow spec. See commented out code below
     // 3. Determine the flex base size and hypothetical main size of each item:
@@ -718,9 +711,7 @@ fn compute_internal(
     });
 
     // Not part of the spec from what i can see but seems correct
-    let container_main_size = if node_main.is_defined() {
-        node_main.unwrap_or(0.0)
-    } else {
+    let container_main_size = node_main.unwrap_or({
         let longest_line = flex_lines.iter().fold(f32::MIN, |acc, line| {
             let length: f32 = line.items.iter().map(|item| item.outer_target_main_size).sum();
             if length > acc {
@@ -735,7 +726,7 @@ fn compute_internal(
             Defined(val) if flex_lines.len() > 1 && size < val => val,
             _ => size,
         }
-    };
+    });
 
     let inner_container_main_size = container_main_size - padding_main - border_main;
 
@@ -1081,11 +1072,7 @@ fn compute_internal(
     //       min and max cross sizes of the flex container.
 
     let total_cross_size: f32 = flex_lines.iter().map(|line| line.cross_size).sum();
-    let container_cross_size = if node_cross.is_defined() {
-        node_cross.unwrap_or(0.0)
-    } else {
-        (total_cross_size + padding_cross + border_cross)
-    };
+    let container_cross_size = node_cross.unwrap_or(total_cross_size + padding_cross + border_cross);
     let inner_container_cross_size = container_cross_size - padding_cross - border_cross;
 
     // 16. Align all flex lines per align-content.
@@ -1259,8 +1246,8 @@ fn compute_internal(
                 .maybe_max(child.min_height.resolve(container_height))
                 .maybe_min(child.max_height.resolve(container_height));
 
-            let width = if child_width.is_defined() { child_width } else { container_width - start - end };
-            let height = if child_height.is_defined() { child_height } else { container_height - top - bottom };
+            let width = child_width.or(container_width - start - end);
+            let height = child_height.or(container_height - top - bottom);
 
             let result = compute_internal(
                 child,
