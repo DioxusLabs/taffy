@@ -79,8 +79,8 @@ pub fn compute(root: &style::Node) -> layout::Node {
     // Probably want to pass min/max down as top level paramerer instead.
     let first_pass = compute_internal(
         root,
-        root.width.resolve(Undefined).unwrap_or(f32::NAN),
-        root.height.resolve(Undefined).unwrap_or(f32::NAN),
+        root.width.resolve(Undefined),
+        root.height.resolve(Undefined),
         Undefined,
         Undefined,
         Undefined,
@@ -88,18 +88,12 @@ pub fn compute(root: &style::Node) -> layout::Node {
 
     let result = compute_internal(
         root,
-        first_pass
-            .size
-            .width
-            .maybe_max(root.min_width.resolve(Undefined))
-            .maybe_min(root.max_width.resolve(Undefined))
-            .unwrap_or(f32::NAN),
+        first_pass.size.width.maybe_max(root.min_width.resolve(Undefined)).maybe_min(root.max_width.resolve(Undefined)),
         first_pass
             .size
             .height
             .maybe_max(root.min_height.resolve(Undefined))
-            .maybe_min(root.max_height.resolve(Undefined))
-            .unwrap_or(f32::NAN),
+            .maybe_min(root.max_height.resolve(Undefined)),
         Undefined,
         Undefined,
         Undefined,
@@ -146,8 +140,8 @@ fn compute_internal(
     // the node should be layed out at exactly this size.
     // If None the node should at most be the size of
     // available_width / available_height if present.
-    node_width: f32,
-    node_height: f32,
+    node_width: Number,
+    node_height: Number,
 
     // This available width and height. This is the
     // the inner node_width / node_height of the parent and should
@@ -215,8 +209,7 @@ fn compute_internal(
 
     let wrap_reverse = node.flex_wrap == style::FlexWrap::WrapReverse;
 
-    let percent_calc_base_child =
-        Number::from_f32(if node.flex_direction.is_row() { node_inner_main } else { node_inner_cross });
+    let percent_calc_base_child = if node.flex_direction.is_row() { node_inner_main } else { node_inner_cross };
 
     // 9.2. Line Length Determination
 
@@ -264,12 +257,12 @@ fn compute_internal(
     //    in that dimension and use that value. This might result in an infinite value.
 
     let available_main = {
-        let base = if node_main.is_finite() { Defined(node_main) } else { parent_inner_main - margin_main };
+        let base = if node_main.is_defined() { node_main } else { parent_inner_main - margin_main };
         base - padding_main - border_main
     };
 
     let available_cross = {
-        let base = if node_cross.is_finite() { Defined(node_cross) } else { parent_inner_cross - margin_cross };
+        let base = if node_cross.is_defined() { node_cross } else { parent_inner_cross - margin_cross };
         base - padding_cross - border_cross
     };
 
@@ -290,8 +283,8 @@ fn compute_internal(
         //    cross size and the flex item’s intrinsic aspect ratio.
 
         if let Defined(ratio) = child.node.aspect_ratio {
-            if node_cross.is_finite() && child.node.flex_basis == style::Dimension::Auto {
-                child.flex_basis = ratio * node_cross;
+            if node_cross.is_defined() && child.node.flex_basis == style::Dimension::Auto {
+                child.flex_basis = (node_cross * ratio).unwrap_or(0.0);
                 continue;
             }
         }
@@ -358,15 +351,13 @@ fn compute_internal(
                 .width
                 .resolve(percent_calc_base_child)
                 .maybe_max(child.node.min_width.resolve(percent_calc_base_child))
-                .maybe_min(child.node.max_width.resolve(percent_calc_base_child))
-                .unwrap_or(f32::NAN),
+                .maybe_min(child.node.max_width.resolve(percent_calc_base_child)),
             child
                 .node
                 .height
                 .resolve(percent_calc_base_child)
                 .maybe_max(child.node.min_height.resolve(percent_calc_base_child))
-                .maybe_min(child.node.max_height.resolve(percent_calc_base_child))
-                .unwrap_or(f32::NAN),
+                .maybe_min(child.node.max_height.resolve(percent_calc_base_child)),
             if node.flex_direction.is_row() { available_main } else { available_cross },
             if node.flex_direction.is_row() { available_cross } else { available_main },
             percent_calc_base_child,
@@ -401,8 +392,8 @@ fn compute_internal(
         let min_main = if node.flex_direction.is_row() {
             compute_internal(
                 child.node,
-                f32::NAN,
-                f32::NAN,
+                Undefined,
+                Undefined,
                 if node.flex_direction.is_row() { available_main } else { available_cross },
                 if node.flex_direction.is_row() { available_cross } else { available_main },
                 percent_calc_base_child,
@@ -484,7 +475,7 @@ fn compute_internal(
         //    flex shrink factor.
 
         let used_flex_factor: f32 = line.items.iter().map(|child| child.hypothetical_outer_main_size).sum();
-        let growing = used_flex_factor < node_inner_main;
+        let growing = used_flex_factor < node_inner_main.unwrap_or(0.0);
         let shrinking = !growing;
 
         // 2. Size inflexible items. Freeze, setting its target main size to its hypothetical main size
@@ -497,7 +488,7 @@ fn compute_internal(
         for child in line.items.iter_mut() {
             // TODO - This is not found by reading the spec. Maybe this can be done in some other place
             // instead. This was found by trail and error fixing tests to align with webkit output.
-            if node_inner_main.is_nan() && node.flex_direction.is_row() {
+            if node_inner_main.is_undefined() && node.flex_direction.is_row() {
                 child.target_main_size = compute_internal(
                     child.node,
                     child
@@ -505,15 +496,13 @@ fn compute_internal(
                         .width
                         .resolve(percent_calc_base_child)
                         .maybe_max(child.node.min_width.resolve(percent_calc_base_child))
-                        .maybe_min(child.node.max_width.resolve(percent_calc_base_child))
-                        .unwrap_or(f32::NAN),
+                        .maybe_min(child.node.max_width.resolve(percent_calc_base_child)),
                     child
                         .node
                         .height
                         .resolve(percent_calc_base_child)
                         .maybe_max(child.node.min_height.resolve(percent_calc_base_child))
-                        .maybe_min(child.node.max_height.resolve(percent_calc_base_child))
-                        .unwrap_or(f32::NAN),
+                        .maybe_min(child.node.max_height.resolve(percent_calc_base_child)),
                     if node.flex_direction.is_row() { available_main } else { available_cross },
                     if node.flex_direction.is_row() { available_cross } else { available_main },
                     percent_calc_base_child,
@@ -556,7 +545,7 @@ fn compute_internal(
             })
             .sum();
 
-        let initial_free_space = node_inner_main - used_space;
+        let initial_free_space = (node_inner_main - used_space).unwrap_or(0.0);
 
         // 4. Loop
 
@@ -601,12 +590,13 @@ fn compute_internal(
             let sum_flex_shrink: f32 = unfrozen.iter().map(|item| item.node.flex_shrink).sum();
 
             let free_space = if growing && sum_flex_grow < 1.0 {
-                (initial_free_space * sum_flex_grow).min(node_inner_main - used_space)
+                (initial_free_space * sum_flex_grow).maybe_min(node_inner_main - used_space)
             } else if shrinking && sum_flex_shrink < 1.0 {
-                (initial_free_space * sum_flex_shrink).max(node_inner_main - used_space)
+                (initial_free_space * sum_flex_shrink).maybe_max(node_inner_main - used_space)
             } else {
                 node_inner_main - used_space
-            };
+            }
+            .unwrap_or(0.0);
 
             // c. Distribute free space proportional to the flex factors.
             //    - If the remaining free space is zero
@@ -660,8 +650,8 @@ fn compute_internal(
                 let min_main = if node.flex_direction.is_row() {
                     compute_internal(
                         child.node,
-                        f32::NAN,
-                        f32::NAN,
+                        Undefined,
+                        Undefined,
                         if node.flex_direction.is_row() { available_main } else { available_cross },
                         if node.flex_direction.is_row() { available_cross } else { available_main },
                         percent_calc_base_child,
@@ -714,8 +704,8 @@ fn compute_internal(
     }
 
     // Not part of the spec from what i can see but seems correct
-    let container_main_size = if node_main.is_finite() {
-        node_main
+    let container_main_size = if node_main.is_defined() {
+        node_main.unwrap_or(0.0)
     } else {
         let mut longest_line = f32::MIN;
 
@@ -746,13 +736,12 @@ fn compute_internal(
                 .cross_size(node.flex_direction)
                 .resolve(percent_calc_base_child)
                 .maybe_max(child.node.min_cross_size(node.flex_direction).resolve(percent_calc_base_child))
-                .maybe_min(child.node.max_cross_size(node.flex_direction).resolve(percent_calc_base_child))
-                .unwrap_or(f32::NAN);
+                .maybe_min(child.node.max_cross_size(node.flex_direction).resolve(percent_calc_base_child));
 
             let size = compute_internal(
                 child.node,
-                if node.flex_direction.is_row() { child.target_main_size } else { child_cross },
-                if node.flex_direction.is_row() { child_cross } else { child.target_main_size },
+                if node.flex_direction.is_row() { Number::from_f32(child.target_main_size) } else { child_cross },
+                if node.flex_direction.is_row() { child_cross } else { Number::from_f32(child.target_main_size) },
                 if node.flex_direction.is_row() { Number::from_f32(container_main_size) } else { available_cross },
                 if node.flex_direction.is_row() { available_cross } else { Number::from_f32(container_main_size) },
                 percent_calc_base_child,
@@ -786,18 +775,18 @@ fn compute_internal(
         for child in &mut line.items {
             let result = compute_internal(
                 child.node,
-                if node.flex_direction.is_row() { child.target_main_size } else { child.hypothetical_inner_cross_size },
-                if node.flex_direction.is_row() { child.hypothetical_inner_cross_size } else { child.target_main_size },
-                if node.flex_direction.is_row() {
-                    Number::from_f32(container_main_size)
+                Number::from_f32(if node.flex_direction.is_row() {
+                    child.target_main_size
                 } else {
-                    Number::from_f32(node_cross)
-                },
-                if node.flex_direction.is_row() {
-                    Number::from_f32(node_cross)
+                    child.hypothetical_inner_cross_size
+                }),
+                Number::from_f32(if node.flex_direction.is_row() {
+                    child.hypothetical_inner_cross_size
                 } else {
-                    Number::from_f32(container_main_size)
-                },
+                    child.target_main_size
+                }),
+                if node.flex_direction.is_row() { Number::from_f32(container_main_size) } else { node_cross },
+                if node.flex_direction.is_row() { node_cross } else { Number::from_f32(container_main_size) },
                 percent_calc_base_child,
             );
             child.baseline = calc_baseline(&layout::Node {
@@ -818,8 +807,8 @@ fn compute_internal(
     //    the container’s computed min and max cross sizes. Note that if CSS 2.1’s definition
     //    of min/max-width/height applied more generally, this behavior would fall out automatically.
 
-    if flex_lines.len() == 1 && node_cross.is_finite() {
-        flex_lines[0].cross_size = node_cross - padding_cross - border_cross;
+    if flex_lines.len() == 1 && node_cross.is_defined() {
+        flex_lines[0].cross_size = (node_cross - padding_cross - border_cross).unwrap_or(0.0);
     } else {
         for line in &mut flex_lines {
             //    1. Collect all the flex items whose inline-axis is parallel to the main-axis, whose
@@ -859,9 +848,9 @@ fn compute_internal(
     //    by equal amounts such that the sum of their cross sizes exactly equals the
     //    flex container’s inner cross size.
 
-    if node.align_content == style::AlignContent::Stretch && node_cross.is_finite() {
+    if node.align_content == style::AlignContent::Stretch && node_cross.is_defined() {
         let total_cross: f32 = flex_lines.iter().map(|line| line.cross_size).sum();
-        let inner_cross = node_cross - padding_cross - border_cross;
+        let inner_cross = (node_cross - padding_cross - border_cross).unwrap_or(0.0);
 
         if total_cross < inner_cross {
             let remaining = inner_cross - total_cross;
@@ -1111,8 +1100,11 @@ fn compute_internal(
     //       min and max cross sizes of the flex container.
 
     let total_cross_size: f32 = flex_lines.iter().map(|line| line.cross_size).sum();
-    let container_cross_size =
-        if node_cross.is_finite() { node_cross } else { (total_cross_size + padding_cross + border_cross) };
+    let container_cross_size = if node_cross.is_defined() {
+        node_cross.unwrap_or(0.0)
+    } else {
+        (total_cross_size + padding_cross + border_cross)
+    };
     let inner_container_cross_size = container_cross_size - padding_cross - border_cross;
 
     // 16. Align all flex lines per align-content.
@@ -1187,8 +1179,16 @@ fn compute_internal(
                     let layout_item = |child: &mut FlexItem| {
                         let result = compute_internal(
                             child.node,
-                            if node.flex_direction.is_row() { child.target_main_size } else { child.target_cross_size },
-                            if node.flex_direction.is_row() { child.target_cross_size } else { child.target_main_size },
+                            Number::from_f32(if node.flex_direction.is_row() {
+                                child.target_main_size
+                            } else {
+                                child.target_cross_size
+                            }),
+                            Number::from_f32(if node.flex_direction.is_row() {
+                                child.target_cross_size
+                            } else {
+                                child.target_main_size
+                            }),
                             if node.flex_direction.is_row() {
                                 Number::from_f32(container_main_size)
                             } else {
@@ -1307,19 +1307,18 @@ fn compute_internal(
             .width
             .resolve(width_percent_calc)
             .maybe_max(child.min_width.resolve(width_percent_calc))
-            .maybe_min(child.max_width.resolve(width_percent_calc))
-            .unwrap_or(f32::NAN);
+            .maybe_min(child.max_width.resolve(width_percent_calc));
 
         let child_height = child
             .height
             .resolve(height_percent_calc)
             .maybe_max(child.min_height.resolve(height_percent_calc))
-            .maybe_min(child.max_height.resolve(height_percent_calc))
-            .unwrap_or(f32::NAN);
+            .maybe_min(child.max_height.resolve(height_percent_calc));
 
-        let width = if child_width.is_finite() { child_width } else { container_width - start - end };
-
-        let height = if child_height.is_finite() { child_height } else { container_height - top - bottom };
+        let width =
+            if child_width.is_defined() { child_width } else { Number::from_f32(container_width - start - end) };
+        let height =
+            if child_height.is_defined() { child_height } else { Number::from_f32(container_height - top - bottom) };
 
         let result = compute_internal(
             child,
