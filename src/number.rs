@@ -24,6 +24,13 @@ impl Number {
         }
     }
 
+    pub fn or(self, default: Number) -> Number {
+        match self {
+            Number::Defined(_) => self,
+            Number::Undefined => default,
+        }
+    }
+
     pub fn is_defined(self) -> bool {
         match self {
             Number::Defined(_) => true,
