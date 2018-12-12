@@ -682,19 +682,11 @@ fn compute_internal(
             //    - Negative
             //        Freeze all the items with max violations.
 
-            if !total_violation.is_normal() {
-                for child in &mut unfrozen {
-                    child.frozen = true;
-                }
-            } else if total_violation > 0.0 {
-                for child in &mut unfrozen {
-                    child.frozen = child.violation > 0.0;
-                }
-            } else if total_violation < 0.0 {
-                for child in &mut unfrozen {
-                    child.frozen = child.violation < 0.0;
-                }
-            }
+            unfrozen.iter_mut().for_each(|child| match total_violation {
+                v if v > 0.0 => child.frozen = child.violation > 0.0,
+                v if v < 0.0 => child.frozen = child.violation < 0.0,
+                _ => child.frozen = true,
+            })
 
             // f. Return to the start of this loop.
         }
