@@ -669,7 +669,7 @@ fn compute_internal(
                 child.violation = clamped - child.target_main_size;
                 child.target_main_size = clamped;
                 child.outer_target_main_size = child.target_main_size + child.margin_main_start + child.margin_main_end;
-                
+
                 acc + child.violation
             });
 
@@ -704,11 +704,7 @@ fn compute_internal(
     let container_main_size = node_main.or_else({
         let longest_line = flex_lines.iter().fold(f32::MIN, |acc, line| {
             let length: f32 = line.items.iter().map(|item| item.outer_target_main_size).sum();
-            if length > acc {
-                length
-            } else {
-                acc
-            }
+            acc.max(length)
         });
 
         let size = longest_line + padding_main + border_main;
@@ -729,7 +725,7 @@ fn compute_internal(
         line.items.iter_mut().for_each(|child| {
             let child_cross = child.cross.maybe_max(child.min_cross).maybe_min(child.max_cross);
 
-            let size = compute_internal(
+            child.hypothetical_inner_cross_size = compute_internal(
                 child.node,
                 if is_row { child.target_main_size.to_number() } else { child_cross },
                 if is_row { child_cross } else { child.target_main_size.to_number() },
@@ -737,10 +733,10 @@ fn compute_internal(
                 if is_row { available_cross } else { container_main_size.to_number() },
                 percent_calc_base_child,
             )
-            .size;
-
-            child.hypothetical_inner_cross_size =
-                size.cross(node.flex_direction).maybe_max(child.min_cross).maybe_min(child.max_cross);
+            .size
+            .cross(node.flex_direction)
+            .maybe_max(child.min_cross)
+            .maybe_min(child.max_cross);
 
             child.hypothetical_outer_cross_size =
                 child.hypothetical_inner_cross_size + child.margin_cross_start + child.margin_cross_end;
