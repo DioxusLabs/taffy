@@ -1,3 +1,5 @@
+use crate::number::Number;
+
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum AlignItems {
     FlexStart,
@@ -166,11 +168,11 @@ impl Default for Dimension {
 }
 
 impl Dimension {
-    pub(crate) fn resolve(&self, parent_width: f32, auto_size: f32) -> f32 {
+    pub(crate) fn resolve(&self, parent_width: Number) -> Number {
         match self {
-            Dimension::Points(points) => *points,
-            Dimension::Percent(percent) if parent_width.is_finite() => percent * parent_width,
-            _ => auto_size,
+            Dimension::Points(points) => Number::Defined(*points),
+            Dimension::Percent(percent) => parent_width * *percent,
+            _ => Number::Undefined,
         }
     }
 }
@@ -230,7 +232,7 @@ pub struct Node {
     pub min_height: Dimension,
     pub max_height: Dimension,
 
-    pub aspect_ratio: Option<f32>,
+    pub aspect_ratio: Number,
 
     pub children: Vec<Node>,
 }
