@@ -1192,10 +1192,10 @@ fn compute_internal(
                             if node.flex_direction.is_row() {
                                 Number::from_f32(container_main_size)
                             } else {
-                                Number::from_f32(container_main_size)
+                                Number::from_f32(container_cross_size)
                             },
                             if node.flex_direction.is_row() {
-                                Number::from_f32(container_main_size)
+                                Number::from_f32(container_cross_size)
                             } else {
                                 Number::from_f32(container_main_size)
                             },
