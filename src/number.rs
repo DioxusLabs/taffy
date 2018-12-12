@@ -37,14 +37,6 @@ impl Number {
             Number::Undefined => true,
         }
     }
-
-    pub fn from_f32(from: f32) -> Number {
-        if from.is_nan() {
-            Number::Undefined
-        } else {
-            Number::Defined(from)
-        }
-    }
 }
 
 pub trait MinMax<In, Out> {
