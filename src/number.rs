@@ -27,6 +27,13 @@ impl Number {
         }
     }
 
+    pub fn is_undefined(self) -> bool {
+        match self {
+            Number::Defined(_) => false,
+            Number::Undefined => true,
+        }
+    }
+
     pub fn from_f32(from: f32) -> Number {
         if from.is_nan() {
             Number::Undefined
