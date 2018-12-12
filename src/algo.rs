@@ -30,6 +30,12 @@ impl FlexSize {
     }
 }
 
+#[derive(Debug)]
+struct ComputeResult {
+    size: FlexSize,
+    children: Vec<layout::Node>,
+}
+
 struct FlexItem<'a> {
     node: &'a style::Node,
 
@@ -92,12 +98,6 @@ struct FlexItem<'a> {
     // relative position values, alignment, and justification. Does not unclude margin/padding/border.
     offset_main: f32,
     offset_cross: f32,
-}
-
-#[derive(Debug)]
-struct ComputeResult {
-    size: FlexSize,
-    children: Vec<layout::Node>,
 }
 
 struct FlexLine<'a> {
@@ -384,16 +384,7 @@ fn compute_internal(
         //    size the item under that constraint. The flex base size is the item’s
         //    resulting main size.
 
-        // if main_constraint.min.is_finite() || main_constraint.max.is_finite() {
-        //     let size = compute_internal(
-        //         child.node,
-        //         if is_row { main_constraint } else { SizeConstraint::undefined() },
-        //         if is_column { main_constraint } else { SizeConstraint::undefined() },
-        //         percent_calc_base_child,
-        //     ).size;
-        //     child.flex_basis = size.main(node.flex_direction);
-        //     continue;
-        // }
+        // TODO - Probably need to cover this case in future
 
         // D. Otherwise, if the used flex basis is content or depends on its
         //    available space, the available main size is infinite, and the flex item’s
@@ -401,30 +392,7 @@ fn compute_internal(
         //    for a box in an orthogonal flow [CSS3-WRITING-MODES]. The flex base size
         //    is the item’s max-content main size.
 
-        // if available_main.is_nan() {
-        //     child.node,
-        //         child
-        //             .node
-        //             .width
-        //             .resolve(percent_calc_base_child).unwrap_or(f32::NAN)
-        //             .safe_max(child.min_width.unwrap_or(f32::NAN))
-        //             .safe_min(child.max_width.unwrap_or(f32::NAN)),
-        //         child
-        //             .node
-        //             .height
-        //             .resolve(percent_calc_base_child).unwrap_or(f32::NAN)
-        //             .safe_max(child.min_height.unwrap_or(f32::NAN))
-        //             .safe_min(child.max_height.unwrap_or(f32::NAN)),
-        //         if is_row { available_main } else { available_cross },
-        //         if is_row { available_cross } else { available_main },
-        //         percent_calc_base_child,
-        //     ).size;
-
-        //     child.flex_basis = size.main(node.flex_direction)
-        //             .max(child.min_main.unwrap_or(f32::NAN))
-        //             .min(child.max_main.unwrap_or(f32::NAN));
-        //     continue;
-        // }
+        // TODO - Probably need to cover this case in future
 
         // E. Otherwise, size the item into the available space using its used flex basis
         //    in place of its main size, treating a value of content as max-content.
@@ -433,7 +401,7 @@ fn compute_internal(
         //    is auto and not definite, in this calculation use fit-content as the
         //    flex item’s cross size. The flex base size is the item’s resulting main size.
 
-        let size = compute_internal(
+        child.flex_basis = compute_internal(
             child.node,
             child.width.maybe_max(child.min_width).maybe_min(child.max_width),
             child.height.maybe_max(child.min_height).maybe_min(child.max_height),
@@ -441,9 +409,10 @@ fn compute_internal(
             if is_row { available_cross } else { available_main },
             percent_calc_base_child,
         )
-        .size;
-
-        child.flex_basis = size.main(node.flex_direction).maybe_max(child.min_main).maybe_min(child.max_main);
+        .size
+        .main(node.flex_direction)
+        .maybe_max(child.min_main)
+        .maybe_min(child.max_main);
     });
 
     // The hypothetical main size is the item’s flex base size clamped according to its
@@ -665,19 +634,19 @@ fn compute_internal(
 
             if free_space.is_normal() {
                 if growing && sum_flex_grow > 0.0 {
-                    for child in &mut unfrozen {
+                    unfrozen.iter_mut().for_each(|child| {
                         child.target_main_size = child.flex_basis + free_space * (child.node.flex_grow / sum_flex_grow);
-                    }
+                    });
                 } else if shrinking && sum_flex_shrink > 0.0 {
                     let sum_scaled_shrink_factor: f32 =
                         unfrozen.iter().map(|child| child.inner_flex_basis * child.node.flex_shrink).sum();
 
                     if sum_scaled_shrink_factor > 0.0 {
-                        for child in &mut unfrozen {
+                        unfrozen.iter_mut().for_each(|child| {
                             let scaled_shrink_factor = child.inner_flex_basis * child.node.flex_shrink;
                             child.target_main_size =
                                 child.flex_basis + free_space * (scaled_shrink_factor / sum_scaled_shrink_factor);
-                        }
+                        });
                     }
                 }
             }
@@ -892,10 +861,7 @@ fn compute_internal(
         if total_cross < inner_cross {
             let remaining = inner_cross - total_cross;
             let addition = remaining / flex_lines.len() as f32;
-
-            for line in &mut flex_lines {
-                line.cross_size += addition;
-            }
+            flex_lines.iter_mut().for_each(|line| line.cross_size += addition);
         }
     }
 
@@ -1207,20 +1173,16 @@ fn compute_internal(
                             percent_calc_base_child,
                         );
 
-                        let offset_main = {
-                            total_offset_main
-                                + child.offset_main
-                                + child.margin_main_start
-                                + (child.main_start.unwrap_or(0.0) - child.main_end.unwrap_or(0.0))
-                        };
+                        let offset_main = total_offset_main
+                            + child.offset_main
+                            + child.margin_main_start
+                            + (child.main_start.unwrap_or(0.0) - child.main_end.unwrap_or(0.0));
 
-                        let offset_cross = {
-                            total_offset_cross
-                                + child.offset_cross
-                                + line_offset_cross
-                                + child.margin_cross_start
-                                + (child.cross_start.unwrap_or(0.0) - child.cross_end.unwrap_or(0.0))
-                        };
+                        let offset_cross = total_offset_cross
+                            + child.offset_cross
+                            + line_offset_cross
+                            + child.margin_cross_start
+                            + (child.cross_start.unwrap_or(0.0) - child.cross_end.unwrap_or(0.0));
 
                         children.push(layout::Node {
                             width: result.size.width,
