@@ -641,9 +641,7 @@ fn compute_internal(
             //    item’s target main size was made smaller by this, it’s a max violation.
             //    If the item’s target main size was made larger by this, it’s a min violation.
 
-            let mut total_violation = 0.0;
-
-            unfrozen.iter_mut().for_each(|child| {
+            let total_violation = unfrozen.iter_mut().fold(0.0, |acc, child| {
                 // TODO - not really spec abiding but needs to be done somewhere. probably somewhere else though.
                 // The following logic was developed not from the spec but by trail and error looking into how
                 // webkit handled various scenarios. Can probably be solved better by passing in
@@ -667,12 +665,12 @@ fn compute_internal(
                 };
 
                 let max_main = child.max_main;
-
                 let clamped = child.target_main_size.maybe_min(max_main).maybe_max(min_main).max(0.0);
                 child.violation = clamped - child.target_main_size;
-                total_violation += child.violation;
                 child.target_main_size = clamped;
                 child.outer_target_main_size = child.target_main_size + child.margin_main_start + child.margin_main_end;
+                
+                acc + child.violation
             });
 
             // e. Freeze over-flexed items. The total violation is the sum of the adjustments
