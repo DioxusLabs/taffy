@@ -1309,6 +1309,8 @@ fn compute_internal(
         })
         .collect();
 
+    // TODO - This adds all the absolute children to the end of the list instead of adding them in
+    // the child order they were defined. This has to be fixed.
     children.append(&mut absolute_children);
 
     ComputeResult { size: FlexSize { width: container_width, height: container_height }, children }
