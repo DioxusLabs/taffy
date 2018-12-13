@@ -9,6 +9,10 @@ edition = "2018"
 [dev-dependencies]
 criterion = "0.2"
 
+[profile.release]
+lto = true
+panic = 'abort'
+
 [[bench]]
 name = "generated"
 harness = false
