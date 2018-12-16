@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use std::f32;
 
 use crate::layout;
@@ -16,14 +18,14 @@ struct FlexSize {
 }
 
 impl FlexSize {
-    fn main(&self, direction: style::FlexDirection) -> f32 {
+    fn main(self, direction: style::FlexDirection) -> f32 {
         match direction {
             style::FlexDirection::Row | style::FlexDirection::RowReverse => self.width,
             style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.height,
         }
     }
 
-    fn cross(&self, direction: style::FlexDirection) -> f32 {
+    fn cross(self, direction: style::FlexDirection) -> f32 {
         match direction {
             style::FlexDirection::Row | style::FlexDirection::RowReverse => self.height,
             style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.width,
@@ -465,7 +467,7 @@ fn compute_internal(
                 line_length += child.hypothetical_outer_main_size;
 
                 if let Defined(main) = available_main {
-                    if line_length > main && line.items.len() > 0 {
+                    if line_length > main && !line.items.is_empty() {
                         line_length = child.hypothetical_outer_main_size;
                         lines.push(line);
                         line = FlexLine { items: vec![], cross_size: 0.0, offset_cross: 0.0 };
@@ -569,7 +571,7 @@ fn compute_internal(
                 }
             });
 
-            if unfrozen.len() == 0 {
+            if unfrozen.is_empty() {
                 break;
             }
 
@@ -739,10 +741,10 @@ fn compute_internal(
     // TODO - This is expensive and should only be done if we really require a baseline. aka, make it lazy
 
     fn calc_baseline(layout: &layout::Node) -> f32 {
-        if layout.children.len() > 0 {
-            calc_baseline(&layout.children[0])
-        } else {
+        if layout.children.is_empty() {
             layout.height
+        } else {
+            calc_baseline(&layout.children[0])
         }
     };
 

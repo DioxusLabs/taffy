@@ -168,10 +168,10 @@ impl Default for Dimension {
 }
 
 impl Dimension {
-    pub(crate) fn resolve(&self, parent_width: Number) -> Number {
+    pub(crate) fn resolve(self, parent_width: Number) -> Number {
         match self {
-            Dimension::Points(points) => Number::Defined(*points),
-            Dimension::Percent(percent) => parent_width * *percent,
+            Dimension::Points(points) => Number::Defined(points),
+            Dimension::Percent(percent) => parent_width * percent,
             _ => Number::Undefined,
         }
     }
