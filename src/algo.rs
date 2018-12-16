@@ -1109,6 +1109,9 @@ fn compute_internal(
         flex_lines.iter_mut().enumerate().for_each(align_line);
     }
 
+    let container_width = if is_row { container_main_size } else { container_cross_size };
+    let container_height = if is_column { container_main_size } else { container_cross_size };
+
     // Do a final layout pass and gather the resulting layouts
     let mut children: Vec<layout::Node> = {
         let mut lines: Vec<Vec<layout::Node>> = vec![];
@@ -1134,8 +1137,8 @@ fn compute_internal(
                             } else {
                                 child.target_main_size.to_number()
                             },
-                            if is_row { container_main_size.to_number() } else { container_cross_size.to_number() },
-                            if is_row { container_cross_size.to_number() } else { container_main_size.to_number() },
+                            container_width.to_number(),
+                            container_height.to_number(),
                             percent_calc_base_child,
                         );
 
@@ -1194,9 +1197,6 @@ fn compute_internal(
         }
     };
 
-    let container_width = if is_row { container_main_size } else { container_cross_size };
-    let container_height = if is_column { container_main_size } else { container_cross_size };
-
     // Before returning we perform absolute layout on all absolutely positioned children
     let mut absolute_children: Vec<layout::Node> = node
         .children
@@ -1229,14 +1229,7 @@ fn compute_internal(
             let width = child_width.or_else(container_width - start - end);
             let height = child_height.or_else(container_height - top - bottom);
 
-            let result = compute_internal(
-                child,
-                width,
-                height,
-                if is_row { container_main_size.to_number() } else { container_cross_size.to_number() },
-                if is_row { container_cross_size.to_number() } else { container_main_size.to_number() },
-                container_width,
-            );
+            let result = compute_internal(child, width, height, container_width, container_height, container_width);
 
             let free_main_space = container_main_size
                 - result
