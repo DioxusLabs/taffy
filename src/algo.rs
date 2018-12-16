@@ -5,11 +5,8 @@ use std::f32;
 use crate::layout;
 use crate::style;
 
-use crate::number::MinMax;
-use crate::number::Number;
 use crate::number::Number::*;
-use crate::number::OrElse;
-use crate::number::ToNumber;
+use crate::number::*;
 
 #[derive(Debug, Copy, Clone)]
 struct FlexSize {
