@@ -5,12 +5,16 @@ fn stretch_benchmarks(c: &mut Criterion) {
         b.iter(|| {
             stretch::compute(&stretch::style::Node {
                 align_items: stretch::style::AlignItems::Center,
-                width: stretch::style::Dimension::Points(100.0000),
-                height: stretch::style::Dimension::Points(100.0000),
+                size: stretch::geometry::Size {
+                    width: stretch::style::Dimension::Points(100.0000),
+                    height: stretch::style::Dimension::Points(100.0000),
+                },
 
                 children: vec![stretch::style::Node {
-                    width: stretch::style::Dimension::Points(10.0000),
-                    height: stretch::style::Dimension::Points(10.0000),
+                    size: stretch::geometry::Size {
+                        width: stretch::style::Dimension::Points(10.0000),
+                        height: stretch::style::Dimension::Points(10.0000),
+                    },
                     ..Default::default()
                 }],
 

@@ -62,10 +62,24 @@ function parseEdges(edges) {
   };
 }
 
+function parseSize(size) {
+  var width = parseDimension(size.width);
+  var height = parseDimension(size.height);
+  
+  if (width === undefined && height === undefined) {
+    return undefined;
+  }
+
+  return {
+    width: width,
+    height: height,
+  };
+}
+
 function describeElement(e) {
   return {
     style: {
-      position: parseEnum(e.style.position),
+      position_type: parseEnum(e.style.position),
       direction: parseEnum(e.style.direction),
       flexDirection: parseEnum(e.style.flexDirection),
 
@@ -82,13 +96,9 @@ function describeElement(e) {
       flexShrink: parseNumber(e.style.flexShrink),
       flexBasis: parseDimension(e.style.flexBasis),
 
-      width: parseDimension(e.style.width),
-      minWidth: parseDimension(e.style.minWidth),
-      maxWidth: parseDimension(e.style.maxWidth),
-
-      height: parseDimension(e.style.height),
-      minHeight: parseDimension(e.style.minHeight),
-      maxHeight: parseDimension(e.style.maxHeight),
+      size: parseSize({width: e.style.width, height: e.style.height}),
+      min_size: parseSize({width: e.style.minWidth, height: e.style.minHeight}),
+      max_size: parseSize({width: e.style.maxWidth, height: e.style.maxHeight}),
 
       margin: parseEdges({
         start: e.style.marginLeft,
@@ -111,10 +121,12 @@ function describeElement(e) {
         bottom: e.style.borderBottomWidth,
       }),
 
-      start: parseDimension(e.style.left),
-      end: parseDimension(e.style.right),
-      top: parseDimension(e.style.top),
-      bottom: parseDimension(e.style.bottom),
+      position: parseEdges({
+        start: e.style.left,
+        end: e.style.right,
+        top: e.style.top,
+        bottom: e.style.bottom,
+      }),
     },
 
     layout: {

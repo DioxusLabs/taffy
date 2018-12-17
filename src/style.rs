@@ -1,4 +1,4 @@
-use crate::geometry::Rect;
+use crate::geometry::{Rect, Size};
 use crate::number::Number;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -157,6 +157,7 @@ impl Default for FlexWrap {
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Dimension {
+    Undefined,
     Auto,
     Points(f32),
     Percent(f32),
@@ -164,7 +165,7 @@ pub enum Dimension {
 
 impl Default for Dimension {
     fn default() -> Dimension {
-        Dimension::Auto
+        Dimension::Undefined
     }
 }
 
@@ -180,12 +181,13 @@ impl Dimension {
 
 impl Default for Rect<Dimension> {
     fn default() -> Rect<Dimension> {
-        Rect {
-            start: Dimension::Points(0.0),
-            end: Dimension::Points(0.0),
-            top: Dimension::Points(0.0),
-            bottom: Dimension::Points(0.0),
-        }
+        Rect { start: Default::default(), end: Default::default(), top: Default::default(), bottom: Default::default() }
+    }
+}
+
+impl Default for Size<Dimension> {
+    fn default() -> Size<Dimension> {
+        Size { width: Dimension::Auto, height: Dimension::Auto }
     }
 }
 
@@ -213,13 +215,9 @@ pub struct Node {
     pub flex_shrink: f32,
     pub flex_basis: Dimension,
 
-    pub width: Dimension,
-    pub min_width: Dimension,
-    pub max_width: Dimension,
-
-    pub height: Dimension,
-    pub min_height: Dimension,
-    pub max_height: Dimension,
+    pub size: Size<Dimension>,
+    pub min_size: Size<Dimension>,
+    pub max_size: Size<Dimension>,
 
     pub aspect_ratio: Number,
 
@@ -249,15 +247,11 @@ impl Default for Node {
 
             flex_grow: 0.0,
             flex_shrink: 1.0,
-            flex_basis: Default::default(),
+            flex_basis: Dimension::Auto,
 
-            width: Default::default(),
-            min_width: Default::default(),
-            max_width: Default::default(),
-
-            height: Default::default(),
-            min_height: Default::default(),
-            max_height: Default::default(),
+            size: Default::default(),
+            min_size: Default::default(),
+            max_size: Default::default(),
 
             aspect_ratio: Default::default(),
 
@@ -269,15 +263,15 @@ impl Default for Node {
 impl Node {
     pub(crate) fn min_main_size(&self, direction: FlexDirection) -> Dimension {
         match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.min_width,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.min_height,
+            FlexDirection::Row | FlexDirection::RowReverse => self.min_size.width,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.min_size.height,
         }
     }
 
     pub(crate) fn max_main_size(&self, direction: FlexDirection) -> Dimension {
         match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.max_width,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.max_height,
+            FlexDirection::Row | FlexDirection::RowReverse => self.max_size.width,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.max_size.height,
         }
     }
 
@@ -297,22 +291,22 @@ impl Node {
 
     pub(crate) fn cross_size(&self, direction: FlexDirection) -> Dimension {
         match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.height,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.width,
+            FlexDirection::Row | FlexDirection::RowReverse => self.size.height,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.size.width,
         }
     }
 
     pub(crate) fn min_cross_size(&self, direction: FlexDirection) -> Dimension {
         match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.min_height,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.min_width,
+            FlexDirection::Row | FlexDirection::RowReverse => self.min_size.height,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.min_size.width,
         }
     }
 
     pub(crate) fn max_cross_size(&self, direction: FlexDirection) -> Dimension {
         match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.max_height,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.max_width,
+            FlexDirection::Row | FlexDirection::RowReverse => self.max_size.height,
+            FlexDirection::Column | FlexDirection::ColumnReverse => self.max_size.width,
         }
     }
 

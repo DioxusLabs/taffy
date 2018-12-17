@@ -62,7 +62,7 @@ pub fn compute(root: &style::Node) -> layout::Node {
     // Probably want to pass min/max down as top level paramerer instead.
     let first_pass = compute_internal(
         root,
-        Size { width: root.width.resolve(Undefined), height: root.height.resolve(Undefined) },
+        Size { width: root.size.width.resolve(Undefined), height: root.size.height.resolve(Undefined) },
         Size { width: Undefined, height: Undefined },
         Undefined,
     );
@@ -73,14 +73,14 @@ pub fn compute(root: &style::Node) -> layout::Node {
             width: first_pass
                 .size
                 .width
-                .maybe_max(root.min_width.resolve(Undefined))
-                .maybe_min(root.max_width.resolve(Undefined))
+                .maybe_max(root.min_size.width.resolve(Undefined))
+                .maybe_min(root.max_size.width.resolve(Undefined))
                 .to_number(),
             height: first_pass
                 .size
                 .height
-                .maybe_max(root.min_height.resolve(Undefined))
-                .maybe_min(root.max_height.resolve(Undefined))
+                .maybe_max(root.min_size.height.resolve(Undefined))
+                .maybe_min(root.max_size.height.resolve(Undefined))
                 .to_number(),
         },
         Size { width: Undefined, height: Undefined },
@@ -178,18 +178,18 @@ fn compute_internal(
             node: child,
 
             size: Size {
-                width: child.width.resolve(percent_calc_base_child),
-                height: child.height.resolve(percent_calc_base_child),
+                width: child.size.width.resolve(percent_calc_base_child),
+                height: child.size.height.resolve(percent_calc_base_child),
             },
 
             min_size: Size {
-                width: child.min_width.resolve(percent_calc_base_child),
-                height: child.min_height.resolve(percent_calc_base_child),
+                width: child.min_size.width.resolve(percent_calc_base_child),
+                height: child.min_size.height.resolve(percent_calc_base_child),
             },
 
             max_size: Size {
-                width: child.max_width.resolve(percent_calc_base_child),
-                height: child.max_height.resolve(percent_calc_base_child),
+                width: child.max_size.width.resolve(percent_calc_base_child),
+                height: child.max_size.height.resolve(percent_calc_base_child),
             },
 
             position: Rect {
@@ -1152,16 +1152,18 @@ fn compute_internal(
             let (start_cross, end_cross) = if is_row { (top, bottom) } else { (start, end) };
 
             let child_width = child
+                .size
                 .width
                 .resolve(container_width)
-                .maybe_max(child.min_width.resolve(container_width))
-                .maybe_min(child.max_width.resolve(container_width));
+                .maybe_max(child.min_size.width.resolve(container_width))
+                .maybe_min(child.max_size.width.resolve(container_width));
 
             let child_height = child
+                .size
                 .height
                 .resolve(container_height)
-                .maybe_max(child.min_height.resolve(container_height))
-                .maybe_min(child.max_height.resolve(container_height));
+                .maybe_max(child.min_size.height.resolve(container_height))
+                .maybe_min(child.max_size.height.resolve(container_height));
 
             let width = child_width.or_else(container_width - start - end);
             let height = child_height.or_else(container_height - top - bottom);
