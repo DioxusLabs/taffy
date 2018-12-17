@@ -55,6 +55,7 @@ Constributions are very welcome. Though we ask that you open an issue or pull re
 - [ ] Alternate layout systems
 - [ ] Web compatibility tests
 - [ ] RTL support
+- [ ] Incremental layout support
 - [ ] Android platform bindings
 - [ ] iOS platform bindings
 - [ ] JavaScript platform bindings
