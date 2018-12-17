@@ -84,10 +84,10 @@ fn generate_assertions(prefix: String, node: &json::JsonValue) -> String {
     let layout = &node["layout"];
     let mut src = String::new();
 
-    src.push_str(&format!("assert_eq!({}.width, {:.4});\n", prefix, layout["width"].as_f32().unwrap()));
-    src.push_str(&format!("assert_eq!({}.height, {:.4});\n", prefix, layout["height"].as_f32().unwrap()));
-    src.push_str(&format!("assert_eq!({}.x, {:.4});\n", prefix, layout["x"].as_f32().unwrap()));
-    src.push_str(&format!("assert_eq!({}.y, {:.4});\n\n", prefix, layout["y"].as_f32().unwrap()));
+    src.push_str(&format!("assert_eq!({}.size.width, {:.4});\n", prefix, layout["width"].as_f32().unwrap()));
+    src.push_str(&format!("assert_eq!({}.size.height, {:.4});\n", prefix, layout["height"].as_f32().unwrap()));
+    src.push_str(&format!("assert_eq!({}.location.x, {:.4});\n", prefix, layout["x"].as_f32().unwrap()));
+    src.push_str(&format!("assert_eq!({}.location.y, {:.4});\n\n", prefix, layout["y"].as_f32().unwrap()));
 
     match node["children"] {
         json::JsonValue::Array(ref value) => {
@@ -107,10 +107,10 @@ fn generate_node(node: &json::JsonValue) -> String {
 
     let style = &node["style"];
 
-    match style["position"] {
+    match style["position_type"] {
         json::JsonValue::Short(ref value) => {
             match value.as_ref() {
-                "absolute" => src.push_str("position: stretch::style::Position::Absolute,\n"),
+                "absolute" => src.push_str("position_type: stretch::style::PositionType::Absolute,\n"),
                 _ => (),
             };
         },
@@ -238,33 +238,18 @@ fn generate_node(node: &json::JsonValue) -> String {
         _ => (),
     };
 
-    match style["width"] {
-        json::JsonValue::Object(ref value) => src.push_str(&format!("width: {},\n", generate_dimension(value))),
+    match style["size"] {
+        json::JsonValue::Object(ref value) => src.push_str(&format!("size: {},\n", generate_size(value))),
         _ => (),
     };
 
-    match style["minWidth"] {
-        json::JsonValue::Object(ref value) => src.push_str(&format!("min_width: {},\n", generate_dimension(value))),
+    match style["min_size"] {
+        json::JsonValue::Object(ref value) => src.push_str(&format!("min_size: {},\n", generate_size(value))),
         _ => (),
     };
 
-    match style["maxWidth"] {
-        json::JsonValue::Object(ref value) => src.push_str(&format!("max_width: {},\n", generate_dimension(value))),
-        _ => (),
-    };
-
-    match style["height"] {
-        json::JsonValue::Object(ref value) => src.push_str(&format!("height: {},\n", generate_dimension(value))),
-        _ => (),
-    };
-
-    match style["minHeight"] {
-        json::JsonValue::Object(ref value) => src.push_str(&format!("min_height: {},\n", generate_dimension(value))),
-        _ => (),
-    };
-
-    match style["maxHeight"] {
-        json::JsonValue::Object(ref value) => src.push_str(&format!("max_height: {},\n", generate_dimension(value))),
+    match style["max_size"] {
+        json::JsonValue::Object(ref value) => src.push_str(&format!("max_size: {},\n", generate_size(value))),
         _ => (),
     };
 
@@ -278,28 +263,13 @@ fn generate_node(node: &json::JsonValue) -> String {
         _ => (),
     };
 
+    match style["position"] {
+        json::JsonValue::Object(ref value) => src.push_str(&format!("position: {},\n", generate_edges(value))),
+        _ => (),
+    };
+
     match style["border"] {
         json::JsonValue::Object(ref value) => src.push_str(&format!("border: {},\n", generate_edges(value))),
-        _ => (),
-    };
-
-    match style["start"] {
-        json::JsonValue::Object(ref value) => src.push_str(&format!("start: {},\n", generate_dimension(value))),
-        _ => (),
-    };
-
-    match style["end"] {
-        json::JsonValue::Object(ref value) => src.push_str(&format!("end: {},\n", generate_dimension(value))),
-        _ => (),
-    };
-
-    match style["top"] {
-        json::JsonValue::Object(ref value) => src.push_str(&format!("top: {},\n", generate_dimension(value))),
-        _ => (),
-    };
-
-    match style["bottom"] {
-        json::JsonValue::Object(ref value) => src.push_str(&format!("bottom: {},\n", generate_dimension(value))),
         _ => (),
     };
 
@@ -314,6 +284,31 @@ fn generate_node(node: &json::JsonValue) -> String {
             }
         },
         _ => (),
+    };
+
+    src.push_str("..Default::default()\n");
+    src.push_str("}\n");
+    src
+}
+
+fn generate_size(size: &json::object::Object) -> String {
+    let mut src = String::new();
+    src.push_str("stretch::geometry::Size {\n");
+
+    match size.get("width") {
+        Some(value) => match value {
+            json::JsonValue::Object(ref value) => src.push_str(&format!("width: {},\n", generate_dimension(value))),
+            _ => (),
+        },
+        None => (),
+    };
+
+    match size.get("height") {
+        Some(value) => match value {
+            json::JsonValue::Object(ref value) => src.push_str(&format!("height: {},\n", generate_dimension(value))),
+            _ => (),
+        },
+        None => (),
     };
 
     src.push_str("..Default::default()\n");
@@ -340,7 +335,7 @@ fn generate_dimension(dimen: &json::object::Object) -> String {
 
 fn generate_edges(dimen: &json::object::Object) -> String {
     let mut src = String::new();
-    src.push_str("stretch::style::Edges {\n");
+    src.push_str("stretch::geometry::Rect {\n");
 
     match dimen.get("start") {
         Some(value) => match value {
