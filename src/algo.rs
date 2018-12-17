@@ -205,6 +205,24 @@ fn compute_internal(
 
     // 1. Generate anonymous flex items as described in §4 Flex Items.
 
+    // 2. Determine the available main and cross space for the flex items.
+    //    For each dimension, if that dimension of the flex container’s content box
+    //    is a definite size, use that; if that dimension of the flex container is
+    //    being sized under a min or max-content constraint, the available space in
+    //    that dimension is that constraint; otherwise, subtract the flex container’s
+    //    margin, border, and padding from the space available to the flex container
+    //    in that dimension and use that value. This might result in an infinite value.
+
+    let available_space = {
+        let available_main = node_main.or_else(parent_inner_main - margin_main) - padding_main - border_main;
+        let available_cross = node_cross.or_else(parent_inner_cross - margin_cross) - padding_cross - border_cross;
+
+        FlexSize {
+            width: if is_row { available_main } else { available_cross },
+            height: if is_row { available_cross } else { available_main },
+        }
+    };
+
     let mut flex_items: Vec<FlexItem> = node
         .children
         .iter()
@@ -298,17 +316,6 @@ fn compute_internal(
         })
         .collect();
 
-    // 2. Determine the available main and cross space for the flex items.
-    //    For each dimension, if that dimension of the flex container’s content box
-    //    is a definite size, use that; if that dimension of the flex container is
-    //    being sized under a min or max-content constraint, the available space in
-    //    that dimension is that constraint; otherwise, subtract the flex container’s
-    //    margin, border, and padding from the space available to the flex container
-    //    in that dimension and use that value. This might result in an infinite value.
-
-    let available_main = node_main.or_else(parent_inner_main - margin_main) - padding_main - border_main;
-    let available_cross = node_cross.or_else(parent_inner_cross - margin_cross) - padding_cross - border_cross;
-
     // TODO - this does not follow spec. See commented out code below
     // 3. Determine the flex base size and hypothetical main size of each item:
     flex_items.iter_mut().for_each(|child| {
@@ -361,10 +368,7 @@ fn compute_internal(
                 width: child.size.width.maybe_max(child.min_size.width).maybe_min(child.max_size.width),
                 height: child.size.height.maybe_max(child.min_size.height).maybe_min(child.max_size.height),
             },
-            FlexSize {
-                width: if is_row { available_main } else { available_cross },
-                height: if is_row { available_cross } else { available_main },
-            },
+            available_space,
             percent_calc_base_child,
         )
         .size
@@ -388,10 +392,7 @@ fn compute_internal(
             compute_internal(
                 child.node,
                 FlexSize { width: Undefined, height: Undefined },
-                FlexSize {
-                    width: if is_row { available_main } else { available_cross },
-                    height: if is_row { available_cross } else { available_main },
-                },
+                available_space,
                 percent_calc_base_child,
             )
             .size
@@ -439,7 +440,7 @@ fn compute_internal(
             for child in flex_items {
                 line_length += child.hypothetical_outer_main_size;
 
-                if let Defined(main) = available_main {
+                if let Defined(main) = available_space.main(node.flex_direction) {
                     if line_length > main && !line.items.is_empty() {
                         line_length = child.hypothetical_outer_main_size;
                         lines.push(line);
@@ -488,10 +489,7 @@ fn compute_internal(
                         width: child.size.width.maybe_max(child.min_size.width).maybe_min(child.max_size.width),
                         height: child.size.height.maybe_max(child.min_size.height).maybe_min(child.max_size.height),
                     },
-                    FlexSize {
-                        width: if is_row { available_main } else { available_cross },
-                        height: if is_row { available_cross } else { available_main },
-                    },
+                    available_space,
                     percent_calc_base_child,
                 )
                 .size
@@ -629,10 +627,7 @@ fn compute_internal(
                     compute_internal(
                         child.node,
                         FlexSize { width: Undefined, height: Undefined },
-                        FlexSize {
-                            width: if is_row { available_main } else { available_cross },
-                            height: if is_row { available_cross } else { available_main },
-                        },
+                        available_space,
                         percent_calc_base_child,
                     )
                     .size
@@ -680,7 +675,7 @@ fn compute_internal(
         });
 
         let size = longest_line + padding_main + border_main;
-        match available_main {
+        match available_space.main(node.flex_direction) {
             Defined(val) if flex_lines.len() > 1 && size < val => val,
             _ => size,
         }
@@ -708,8 +703,8 @@ fn compute_internal(
                     height: if is_row { child_cross } else { child.target_main_size.to_number() },
                 },
                 FlexSize {
-                    width: if is_row { container_main_size.to_number() } else { available_cross },
-                    height: if is_row { available_cross } else { container_main_size.to_number() },
+                    width: if is_row { container_main_size.to_number() } else { available_space.width },
+                    height: if is_row { available_space.height } else { container_main_size.to_number() },
                 },
                 percent_calc_base_child,
             )
