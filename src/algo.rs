@@ -152,6 +152,8 @@ fn compute_internal(
     };
 
     let percent_calc_base_child = node_inner_size.width;
+    let mut container_size = Size { width: 0.0, height: 0.0 };
+    let mut inner_container_size = Size { width: 0.0, height: 0.0 };
 
     // 9.2. Line Length Determination
 
@@ -593,20 +595,23 @@ fn compute_internal(
     });
 
     // Not part of the spec from what i can see but seems correct
-    let container_main_size = node_size.main(dir).or_else({
-        let longest_line = flex_lines.iter().fold(f32::MIN, |acc, line| {
-            let length: f32 = line.items.iter().map(|item| item.outer_target_size.main(dir)).sum();
-            acc.max(length)
-        });
+    container_size.set_main(
+        dir,
+        node_size.main(dir).or_else({
+            let longest_line = flex_lines.iter().fold(f32::MIN, |acc, line| {
+                let length: f32 = line.items.iter().map(|item| item.outer_target_size.main(dir)).sum();
+                acc.max(length)
+            });
 
-        let size = longest_line + padding_border.main(dir);
-        match available_space.main(dir) {
-            Defined(val) if flex_lines.len() > 1 && size < val => val,
-            _ => size,
-        }
-    });
+            let size = longest_line + padding_border.main(dir);
+            match available_space.main(dir) {
+                Defined(val) if flex_lines.len() > 1 && size < val => val,
+                _ => size,
+            }
+        }),
+    );
 
-    let inner_container_main_size = container_main_size - padding_border.main(dir);
+    inner_container_size.set_main(dir, container_size.main(dir) - padding_border.main(dir));
 
     // 9.4. Cross Size Determination
 
@@ -627,8 +632,8 @@ fn compute_internal(
                         height: if is_row { child_cross } else { child.target_size.height.to_number() },
                     },
                     Size {
-                        width: if is_row { container_main_size.to_number() } else { available_space.width },
-                        height: if is_row { available_space.height } else { container_main_size.to_number() },
+                        width: if is_row { container_size.main(dir).to_number() } else { available_space.width },
+                        height: if is_row { available_space.height } else { container_size.main(dir).to_number() },
                     },
                     percent_calc_base_child,
                 )
@@ -672,8 +677,8 @@ fn compute_internal(
                     },
                 },
                 Size {
-                    width: if is_row { container_main_size.to_number() } else { node_size.width },
-                    height: if is_row { node_size.height } else { container_main_size.to_number() },
+                    width: if is_row { container_size.main(dir).to_number() } else { node_size.width },
+                    height: if is_row { node_size.height } else { container_size.main(dir).to_number() },
                 },
                 percent_calc_base_child,
             );
@@ -805,7 +810,7 @@ fn compute_internal(
 
     flex_lines.iter_mut().for_each(|line| {
         let used_space: f32 = line.items.iter().map(|child| child.outer_target_size.main(dir)).sum();
-        let free_space = inner_container_main_size - used_space;
+        let free_space = inner_container_size.main(dir) - used_space;
         let mut num_auto_margins = 0;
 
         line.items.iter_mut().for_each(|child| {
@@ -983,12 +988,13 @@ fn compute_internal(
     //       min and max cross sizes of the flex container.
 
     let total_cross_size: f32 = flex_lines.iter().map(|line| line.cross_size).sum();
-    let container_cross_size = node_size.cross(dir).or_else(total_cross_size + padding_border.cross(dir));
-    let inner_container_cross_size = container_cross_size - padding_border.cross(dir);
+
+    container_size.set_cross(dir, node_size.cross(dir).or_else(total_cross_size + padding_border.cross(dir)));
+    inner_container_size.set_cross(dir, container_size.cross(dir) - padding_border.cross(dir));
 
     // 16. Align all flex lines per align-content.
 
-    let free_space = inner_container_cross_size - total_cross_size;
+    let free_space = inner_container_size.cross(dir) - total_cross_size;
     let num_lines = flex_lines.len();
 
     let align_line = |(i, line): (usize, &mut FlexLine)| {
@@ -1040,9 +1046,6 @@ fn compute_internal(
         flex_lines.iter_mut().enumerate().for_each(align_line);
     }
 
-    let container_width = if is_row { container_main_size } else { container_cross_size };
-    let container_height = if is_column { container_main_size } else { container_cross_size };
-
     // Do a final layout pass and gather the resulting layouts
     let mut children: Vec<layout::Node> = {
         let mut lines: Vec<Vec<layout::Node>> = vec![];
@@ -1057,7 +1060,7 @@ fn compute_internal(
                 let result = compute_internal(
                     child.node,
                     Size { width: child.target_size.width.to_number(), height: child.target_size.height.to_number() },
-                    Size { width: container_width.to_number(), height: container_height.to_number() },
+                    Size { width: container_size.width.to_number(), height: container_size.height.to_number() },
                     percent_calc_base_child,
                 );
 
@@ -1118,8 +1121,8 @@ fn compute_internal(
         .iter()
         .filter(|child| child.position_type == PositionType::Absolute)
         .map(|child| {
-            let container_width = container_width.to_number();
-            let container_height = container_height.to_number();
+            let container_width = container_size.width.to_number();
+            let container_height = container_size.height.to_number();
 
             let start = child.position.start.resolve(container_width) + child.margin.start.resolve(container_width);
             let end = child.position.end.resolve(container_width) + child.margin.end.resolve(container_width);
@@ -1154,14 +1157,14 @@ fn compute_internal(
                 container_width,
             );
 
-            let free_main_space = container_main_size
+            let free_main_space = container_size.main(dir)
                 - result
                     .size
                     .main(dir)
                     .maybe_max(child.min_main_size(dir).resolve(percent_calc_base_child))
                     .maybe_min(child.max_main_size(dir).resolve(percent_calc_base_child));
 
-            let free_cross_space = container_cross_size
+            let free_cross_space = container_size.cross(dir)
                 - result
                     .size
                     .cross(dir)
@@ -1230,5 +1233,5 @@ fn compute_internal(
     // the child order they were defined. This has to be fixed.
     children.append(&mut absolute_children);
 
-    ComputeResult { size: Size { width: container_width, height: container_height }, children }
+    ComputeResult { size: container_size, children }
 }
