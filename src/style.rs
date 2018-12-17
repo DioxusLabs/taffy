@@ -282,13 +282,6 @@ impl Default for Node {
 }
 
 impl Node {
-    pub(crate) fn main_size(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.width,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.height,
-        }
-    }
-
     pub(crate) fn min_main_size(&self, direction: FlexDirection) -> Dimension {
         match direction {
             FlexDirection::Row | FlexDirection::RowReverse => self.min_width,
@@ -314,34 +307,6 @@ impl Node {
         match direction {
             FlexDirection::Row | FlexDirection::RowReverse => self.margin.end,
             FlexDirection::Column | FlexDirection::ColumnReverse => self.margin.bottom,
-        }
-    }
-
-    pub(crate) fn main_padding_start(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.padding.start,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.padding.top,
-        }
-    }
-
-    pub(crate) fn main_padding_end(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.padding.end,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.padding.bottom,
-        }
-    }
-
-    pub(crate) fn main_border_start(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.border.start,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.border.top,
-        }
-    }
-
-    pub(crate) fn main_border_end(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.border.end,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.border.bottom,
         }
     }
 
@@ -377,62 +342,6 @@ impl Node {
         match direction {
             FlexDirection::Row | FlexDirection::RowReverse => self.margin.bottom,
             FlexDirection::Column | FlexDirection::ColumnReverse => self.margin.end,
-        }
-    }
-
-    pub(crate) fn cross_padding_start(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.padding.top,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.padding.start,
-        }
-    }
-
-    pub(crate) fn cross_padding_end(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.padding.bottom,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.padding.end,
-        }
-    }
-
-    pub(crate) fn cross_border_start(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.border.top,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.border.start,
-        }
-    }
-
-    pub(crate) fn cross_border_end(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.border.bottom,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.border.end,
-        }
-    }
-
-    pub(crate) fn main_start(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.start,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.top,
-        }
-    }
-
-    pub(crate) fn main_end(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.end,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.bottom,
-        }
-    }
-
-    pub(crate) fn cross_start(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.top,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.start,
-        }
-    }
-
-    pub(crate) fn cross_end(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.bottom,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.end,
         }
     }
 
