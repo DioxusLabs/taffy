@@ -1,3 +1,4 @@
+pub mod geometry;
 pub mod layout;
 pub mod number;
 pub mod style;
