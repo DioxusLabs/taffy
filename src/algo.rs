@@ -1082,22 +1082,21 @@ fn compute_internal(
             let (start_main, end_main) = if is_row { (start, end) } else { (top, bottom) };
             let (start_cross, end_cross) = if is_row { (top, bottom) } else { (start, end) };
 
-            let child_width = child
+            let width = child
                 .size
                 .width
                 .resolve(container_width)
                 .maybe_max(child.min_size.width.resolve(container_width))
-                .maybe_min(child.max_size.width.resolve(container_width));
+                .maybe_min(child.max_size.width.resolve(container_width))
+                .or_else(container_width - start - end);
 
-            let child_height = child
+            let height = child
                 .size
                 .height
                 .resolve(container_height)
                 .maybe_max(child.min_size.height.resolve(container_height))
-                .maybe_min(child.max_size.height.resolve(container_height));
-
-            let width = child_width.or_else(container_width - start - end);
-            let height = child_height.or_else(container_height - top - bottom);
+                .maybe_min(child.max_size.height.resolve(container_height))
+                .or_else(container_height - top - bottom);
 
             let result = compute_internal(
                 child,
