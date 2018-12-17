@@ -36,6 +36,60 @@ struct ComputeResult {
     children: Vec<layout::Node>,
 }
 
+struct Rect<T> {
+    start: T,
+    end: T,
+    top: T,
+    bottom: T,
+}
+
+impl<T> Rect<T>
+where
+    T: std::ops::Add<Output = T> + Copy + Clone,
+{
+    fn main(&self, direction: style::FlexDirection) -> T {
+        match direction {
+            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.start + self.end,
+            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.top + self.bottom,
+        }
+    }
+
+    fn cross(&self, direction: style::FlexDirection) -> T {
+        match direction {
+            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.top + self.bottom,
+            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.start + self.end,
+        }
+    }
+
+    fn main_start(&self, direction: style::FlexDirection) -> T {
+        match direction {
+            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.start,
+            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.top,
+        }
+    }
+
+    fn main_end(&self, direction: style::FlexDirection) -> T {
+        match direction {
+            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.end,
+            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.bottom,
+        }
+    }
+
+    fn cross_start(&self, direction: style::FlexDirection) -> T {
+        match direction {
+            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.top,
+            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.start,
+        }
+    }
+
+    fn cross_end(&self, direction: style::FlexDirection) -> T {
+        match direction {
+            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.bottom,
+            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.end,
+        }
+    }
+}
+
 struct FlexItem<'a> {
     node: &'a style::Node,
 
@@ -43,25 +97,10 @@ struct FlexItem<'a> {
     min_size: FlexSize<Number>,
     max_size: FlexSize<Number>,
 
-    main_start: Number,
-    main_end: Number,
-    cross_start: Number,
-    cross_end: Number,
-
-    margin_main_start: f32,
-    margin_main_end: f32,
-    margin_cross_start: f32,
-    margin_cross_end: f32,
-
-    padding_main_start: f32,
-    padding_main_end: f32,
-    padding_cross_start: f32,
-    padding_cross_end: f32,
-
-    border_main_start: f32,
-    border_main_end: f32,
-    border_cross_start: f32,
-    border_cross_end: f32,
+    position: Rect<Number>,
+    margin: Rect<f32>,
+    padding: Rect<f32>,
+    border: Rect<f32>,
 
     // temporary values for main size determination
     flex_basis: f32,
@@ -160,39 +199,40 @@ fn compute_internal(
     let is_column = node.flex_direction.is_column();
     let is_wrap_reverse = node.flex_wrap == style::FlexWrap::WrapReverse;
 
-    let (margin_main_start, margin_cross_start, margin_main_end, margin_cross_end) = (
-        node.main_margin_start(node.flex_direction).resolve(percent_calc_base).or_else(0.0),
-        node.cross_margin_start(node.flex_direction).resolve(percent_calc_base).or_else(0.0),
-        node.main_margin_end(node.flex_direction).resolve(percent_calc_base).or_else(0.0),
-        node.cross_margin_end(node.flex_direction).resolve(percent_calc_base).or_else(0.0),
-    );
+    let margin = Rect {
+        start: node.margin.start.resolve(percent_calc_base).or_else(0.0),
+        end: node.margin.end.resolve(percent_calc_base).or_else(0.0),
+        top: node.margin.top.resolve(percent_calc_base).or_else(0.0),
+        bottom: node.margin.bottom.resolve(percent_calc_base).or_else(0.0),
+    };
 
-    let margin_main = margin_main_start + margin_main_end;
-    let margin_cross = margin_cross_start + margin_cross_end;
+    let padding = Rect {
+        start: node.padding.start.resolve(percent_calc_base).or_else(0.0),
+        end: node.padding.end.resolve(percent_calc_base).or_else(0.0),
+        top: node.padding.top.resolve(percent_calc_base).or_else(0.0),
+        bottom: node.padding.bottom.resolve(percent_calc_base).or_else(0.0),
+    };
 
-    let (padding_main_start, padding_cross_start, padding_main_end, padding_cross_end) = (
-        node.main_padding_start(node.flex_direction).resolve(percent_calc_base).or_else(0.0),
-        node.cross_padding_start(node.flex_direction).resolve(percent_calc_base).or_else(0.0),
-        node.main_padding_end(node.flex_direction).resolve(percent_calc_base).or_else(0.0),
-        node.cross_padding_end(node.flex_direction).resolve(percent_calc_base).or_else(0.0),
-    );
-
-    let padding_main = padding_main_start + padding_main_end;
-    let padding_cross = padding_cross_start + padding_cross_end;
-
-    let (border_main_start, border_cross_start, border_main_end, border_cross_end) = (
-        node.main_border_start(node.flex_direction).resolve(percent_calc_base).or_else(0.0),
-        node.cross_border_start(node.flex_direction).resolve(percent_calc_base).or_else(0.0),
-        node.main_border_end(node.flex_direction).resolve(percent_calc_base).or_else(0.0),
-        node.cross_border_end(node.flex_direction).resolve(percent_calc_base).or_else(0.0),
-    );
-
-    let border_main = border_main_start + border_main_end;
-    let border_cross = border_cross_start + border_cross_end;
+    let border = Rect {
+        start: node.border.start.resolve(percent_calc_base).or_else(0.0),
+        end: node.border.end.resolve(percent_calc_base).or_else(0.0),
+        top: node.border.top.resolve(percent_calc_base).or_else(0.0),
+        bottom: node.border.bottom.resolve(percent_calc_base).or_else(0.0),
+    };
 
     let node_inner_size = FlexSize {
-        width: node_size.width - if is_row { border_main + padding_main } else { border_cross + padding_cross },
-        height: node_size.height - if is_row { border_cross + padding_cross } else { border_main + padding_main },
+        width: node_size.width
+            - if is_row {
+                border.main(node.flex_direction) + padding.main(node.flex_direction)
+            } else {
+                border.cross(node.flex_direction) + padding.cross(node.flex_direction)
+            },
+        height: node_size.height
+            - if is_row {
+                border.cross(node.flex_direction) + padding.cross(node.flex_direction)
+            } else {
+                border.main(node.flex_direction) + padding.main(node.flex_direction)
+            },
     };
 
     let percent_calc_base_child = node_inner_size.width;
@@ -210,14 +250,16 @@ fn compute_internal(
     //    in that dimension and use that value. This might result in an infinite value.
 
     let available_space = {
-        let available_main =
-            node_size.main(node.flex_direction).or_else(parent_size.main(node.flex_direction) - margin_main)
-                - padding_main
-                - border_main;
-        let available_cross =
-            node_size.cross(node.flex_direction).or_else(parent_size.cross(node.flex_direction) - margin_cross)
-                - padding_cross
-                - border_cross;
+        let available_main = node_size
+            .main(node.flex_direction)
+            .or_else(parent_size.main(node.flex_direction) - margin.main(node.flex_direction))
+            - padding.main(node.flex_direction)
+            - border.main(node.flex_direction);
+        let available_cross = node_size
+            .cross(node.flex_direction)
+            .or_else(parent_size.cross(node.flex_direction) - margin.cross(node.flex_direction))
+            - padding.cross(node.flex_direction)
+            - border.cross(node.flex_direction);
 
         FlexSize {
             width: if is_row { available_main } else { available_cross },
@@ -247,55 +289,33 @@ fn compute_internal(
                 height: child.max_height.resolve(percent_calc_base_child),
             },
 
-            main_start: child.main_start(node.flex_direction).resolve(percent_calc_base_child),
-            main_end: child.main_end(node.flex_direction).resolve(percent_calc_base_child),
-            cross_start: child.cross_start(node.flex_direction).resolve(percent_calc_base_child),
-            cross_end: child.cross_end(node.flex_direction).resolve(percent_calc_base_child),
+            position: Rect {
+                start: child.start.resolve(percent_calc_base_child),
+                end: child.end.resolve(percent_calc_base_child),
+                top: child.top.resolve(percent_calc_base_child),
+                bottom: child.bottom.resolve(percent_calc_base_child),
+            },
 
-            margin_main_start: child
-                .main_margin_start(node.flex_direction)
-                .resolve(percent_calc_base_child)
-                .or_else(0.0),
+            margin: Rect {
+                start: child.margin.start.resolve(percent_calc_base_child).or_else(0.0),
+                end: child.margin.end.resolve(percent_calc_base_child).or_else(0.0),
+                top: child.margin.top.resolve(percent_calc_base_child).or_else(0.0),
+                bottom: child.margin.bottom.resolve(percent_calc_base_child).or_else(0.0),
+            },
 
-            margin_main_end: child.main_margin_end(node.flex_direction).resolve(percent_calc_base_child).or_else(0.0),
+            padding: Rect {
+                start: child.padding.start.resolve(percent_calc_base_child).or_else(0.0),
+                end: child.padding.end.resolve(percent_calc_base_child).or_else(0.0),
+                top: child.padding.top.resolve(percent_calc_base_child).or_else(0.0),
+                bottom: child.padding.bottom.resolve(percent_calc_base_child).or_else(0.0),
+            },
 
-            margin_cross_start: child
-                .cross_margin_start(node.flex_direction)
-                .resolve(percent_calc_base_child)
-                .or_else(0.0),
-
-            margin_cross_end: child.cross_margin_end(node.flex_direction).resolve(percent_calc_base_child).or_else(0.0),
-
-            padding_main_start: child
-                .main_padding_start(node.flex_direction)
-                .resolve(percent_calc_base_child)
-                .or_else(0.0),
-
-            padding_main_end: child.main_padding_end(node.flex_direction).resolve(percent_calc_base_child).or_else(0.0),
-
-            padding_cross_start: child
-                .cross_padding_start(node.flex_direction)
-                .resolve(percent_calc_base_child)
-                .or_else(0.0),
-
-            padding_cross_end: child
-                .cross_padding_end(node.flex_direction)
-                .resolve(percent_calc_base_child)
-                .or_else(0.0),
-
-            border_main_start: child
-                .main_border_start(node.flex_direction)
-                .resolve(percent_calc_base_child)
-                .or_else(0.0),
-
-            border_main_end: child.main_border_end(node.flex_direction).resolve(percent_calc_base_child).or_else(0.0),
-
-            border_cross_start: child
-                .cross_border_start(node.flex_direction)
-                .resolve(percent_calc_base_child)
-                .or_else(0.0),
-
-            border_cross_end: child.cross_border_end(node.flex_direction).resolve(percent_calc_base_child).or_else(0.0),
+            border: Rect {
+                start: child.border.start.resolve(percent_calc_base_child).or_else(0.0),
+                end: child.border.end.resolve(percent_calc_base_child).or_else(0.0),
+                top: child.border.top.resolve(percent_calc_base_child).or_else(0.0),
+                bottom: child.border.bottom.resolve(percent_calc_base_child).or_else(0.0),
+            },
 
             flex_basis: 0.0,
             inner_flex_basis: 0.0,
@@ -386,7 +406,10 @@ fn compute_internal(
 
     flex_items.iter_mut().for_each(|child| {
         child.inner_flex_basis = child.flex_basis
-            - (child.padding_main_start + child.padding_main_end + child.border_main_start + child.border_main_end);
+            - (child.padding.main_start(node.flex_direction)
+                + child.padding.main_end(node.flex_direction)
+                + child.border.main_start(node.flex_direction)
+                + child.border.main_end(node.flex_direction));
 
         // TODO - not really spec abiding but needs to be done somewhere. probably somewhere else though.
         // The following logic was developed not from the spec but by trail and error looking into how
@@ -411,8 +434,9 @@ fn compute_internal(
         child.hypothetical_inner_main_size =
             child.flex_basis.maybe_max(min_main).maybe_min(child.max_size.main(node.flex_direction));
 
-        child.hypothetical_outer_main_size =
-            child.hypothetical_inner_main_size + child.margin_main_start + child.margin_main_end;
+        child.hypothetical_outer_main_size = child.hypothetical_inner_main_size
+            + child.margin.main_start(node.flex_direction)
+            + child.margin.main_end(node.flex_direction);
     });
 
     // 9.3. Main Size Determination
@@ -507,7 +531,9 @@ fn compute_internal(
             // TODO this should really only be set inside the if-statement below but
             // that casues the target_main_size to never be set for some items
 
-            child.outer_target_main_size = child.target_main_size + child.margin_main_start + child.margin_main_end;
+            child.outer_target_main_size = child.target_main_size
+                + child.margin.main_start(node.flex_direction)
+                + child.margin.main_end(node.flex_direction);
 
             if (child.node.flex_grow == 0.0 && child.node.flex_shrink == 0.0)
                 || (growing && child.flex_basis > child.hypothetical_inner_main_size)
@@ -525,8 +551,8 @@ fn compute_internal(
             .items
             .iter()
             .map(|child| {
-                child.margin_main_start
-                    + child.margin_main_end
+                child.margin.main_start(node.flex_direction)
+                    + child.margin.main_end(node.flex_direction)
                     + if child.frozen { child.target_main_size } else { child.flex_basis }
             })
             .sum();
@@ -562,8 +588,8 @@ fn compute_internal(
 
             let used_space: f32 = Iterator::chain(frozen.iter(), unfrozen.iter())
                 .map(|child| {
-                    child.margin_main_start
-                        + child.margin_main_end
+                    child.margin.main_start(node.flex_direction)
+                        + child.margin.main_end(node.flex_direction)
                         + if child.frozen { child.target_main_size } else { child.flex_basis }
                 })
                 .sum();
@@ -647,7 +673,9 @@ fn compute_internal(
                 let clamped = child.target_main_size.maybe_min(max_main).maybe_max(min_main).max(0.0);
                 child.violation = clamped - child.target_main_size;
                 child.target_main_size = clamped;
-                child.outer_target_main_size = child.target_main_size + child.margin_main_start + child.margin_main_end;
+                child.outer_target_main_size = child.target_main_size
+                    + child.margin.main_start(node.flex_direction)
+                    + child.margin.main_end(node.flex_direction);
 
                 acc + child.violation
             });
@@ -678,14 +706,15 @@ fn compute_internal(
             acc.max(length)
         });
 
-        let size = longest_line + padding_main + border_main;
+        let size = longest_line + padding.main(node.flex_direction) + border.main(node.flex_direction);
         match available_space.main(node.flex_direction) {
             Defined(val) if flex_lines.len() > 1 && size < val => val,
             _ => size,
         }
     });
 
-    let inner_container_main_size = container_main_size - padding_main - border_main;
+    let inner_container_main_size =
+        container_main_size - padding.main(node.flex_direction) - border.main(node.flex_direction);
 
     // 9.4. Cross Size Determination
 
@@ -717,8 +746,9 @@ fn compute_internal(
             .maybe_max(child.min_size.cross(node.flex_direction))
             .maybe_min(child.max_size.cross(node.flex_direction));
 
-            child.hypothetical_outer_cross_size =
-                child.hypothetical_inner_cross_size + child.margin_cross_start + child.margin_cross_end;
+            child.hypothetical_outer_cross_size = child.hypothetical_inner_cross_size
+                + child.margin.cross_start(node.flex_direction)
+                + child.margin.cross_end(node.flex_direction);
         });
     });
 
@@ -774,7 +804,10 @@ fn compute_internal(
     //    of min/max-width/height applied more generally, this behavior would fall out automatically.
 
     if flex_lines.len() == 1 && node_size.cross(node.flex_direction).is_defined() {
-        flex_lines[0].cross_size = (node_size.cross(node.flex_direction) - padding_cross - border_cross).or_else(0.0);
+        flex_lines[0].cross_size = (node_size.cross(node.flex_direction)
+            - padding.cross(node.flex_direction)
+            - border.cross(node.flex_direction))
+        .or_else(0.0);
     } else {
         flex_lines.iter_mut().for_each(|line| {
             //    1. Collect all the flex items whose inline-axis is parallel to the main-axis, whose
@@ -816,7 +849,10 @@ fn compute_internal(
 
     if node.align_content == style::AlignContent::Stretch && node_size.cross(node.flex_direction).is_defined() {
         let total_cross: f32 = flex_lines.iter().map(|line| line.cross_size).sum();
-        let inner_cross = (node_size.cross(node.flex_direction) - padding_cross - border_cross).or_else(0.0);
+        let inner_cross = (node_size.cross(node.flex_direction)
+            - padding.cross(node.flex_direction)
+            - border.cross(node.flex_direction))
+        .or_else(0.0);
 
         if total_cross < inner_cross {
             let remaining = inner_cross - total_cross;
@@ -863,14 +899,18 @@ fn compute_internal(
                 && child.node.cross_margin_end(node.flex_direction) != style::Dimension::Auto
                 && child.node.cross_size(node.flex_direction) == style::Dimension::Auto
             {
-                (line_cross_size - child.margin_cross_start - child.margin_cross_end)
-                    .maybe_max(child.min_size.cross(node.flex_direction))
-                    .maybe_min(child.max_size.cross(node.flex_direction))
+                (line_cross_size
+                    - child.margin.cross_start(node.flex_direction)
+                    - child.margin.cross_end(node.flex_direction))
+                .maybe_max(child.min_size.cross(node.flex_direction))
+                .maybe_min(child.max_size.cross(node.flex_direction))
             } else {
                 child.hypothetical_inner_cross_size
             };
 
-            child.outer_target_cross_size = child.target_cross_size + child.margin_cross_start + child.margin_cross_end;
+            child.outer_target_cross_size = child.target_cross_size
+                + child.margin.cross_start(node.flex_direction)
+                + child.margin.cross_end(node.flex_direction);
         });
     });
 
@@ -901,10 +941,18 @@ fn compute_internal(
 
             line.items.iter_mut().for_each(|child| {
                 if child.node.main_margin_start(node.flex_direction) == style::Dimension::Auto {
-                    child.margin_main_start = margin;
+                    if is_row {
+                        child.margin.start = margin;
+                    } else {
+                        child.margin.top = margin;
+                    }
                 }
                 if child.node.main_margin_end(node.flex_direction) == style::Dimension::Auto {
-                    child.margin_main_end = margin;
+                    if is_row {
+                        child.margin.end = margin;
+                    } else {
+                        child.margin.bottom = margin;
+                    }
                 }
             });
         } else {
@@ -982,12 +1030,25 @@ fn compute_internal(
             if child.node.cross_margin_start(node.flex_direction) == style::Dimension::Auto
                 && child.node.cross_margin_end(node.flex_direction) == style::Dimension::Auto
             {
-                child.margin_cross_start = free_space / 2.0;
-                child.margin_cross_end = free_space / 2.0;
+                if is_row {
+                    child.margin.top = free_space / 2.0;
+                    child.margin.bottom = free_space / 2.0;
+                } else {
+                    child.margin.start = free_space / 2.0;
+                    child.margin.end = free_space / 2.0;
+                }
             } else if child.node.cross_margin_start(node.flex_direction) == style::Dimension::Auto {
-                child.margin_cross_start = free_space;
+                if is_row {
+                    child.margin.top = free_space;
+                } else {
+                    child.margin.start = free_space;
+                }
             } else if child.node.cross_margin_end(node.flex_direction) == style::Dimension::Auto {
-                child.margin_cross_end = free_space;
+                if is_row {
+                    child.margin.bottom = free_space;
+                } else {
+                    child.margin.end = free_space;
+                }
             } else {
                 // 14. Align all flex items along the cross-axis per align-self, if neither of the item’s
                 //     cross-axis margins are auto.
@@ -1041,9 +1102,11 @@ fn compute_internal(
     //       min and max cross sizes of the flex container.
 
     let total_cross_size: f32 = flex_lines.iter().map(|line| line.cross_size).sum();
-    let container_cross_size =
-        node_size.cross(node.flex_direction).or_else(total_cross_size + padding_cross + border_cross);
-    let inner_container_cross_size = container_cross_size - padding_cross - border_cross;
+    let container_cross_size = node_size
+        .cross(node.flex_direction)
+        .or_else(total_cross_size + padding.cross(node.flex_direction) + border.cross(node.flex_direction));
+    let inner_container_cross_size =
+        container_cross_size - padding.cross(node.flex_direction) - border.cross(node.flex_direction);
 
     // 16. Align all flex lines per align-content.
 
@@ -1105,12 +1168,13 @@ fn compute_internal(
     // Do a final layout pass and gather the resulting layouts
     let mut children: Vec<layout::Node> = {
         let mut lines: Vec<Vec<layout::Node>> = vec![];
-        let mut total_offset_cross = padding_cross_start + border_cross_start;
+        let mut total_offset_cross = padding.cross_start(node.flex_direction) + border.cross_start(node.flex_direction);
 
         {
             let layout_line = |line: &mut FlexLine| {
                 let mut children: Vec<layout::Node> = vec![];
-                let mut total_offset_main = padding_main_start + border_main_start;
+                let mut total_offset_main =
+                    padding.main_start(node.flex_direction) + border.main_start(node.flex_direction);
                 let line_offset_cross = line.offset_cross;
 
                 {
@@ -1135,14 +1199,16 @@ fn compute_internal(
 
                         let offset_main = total_offset_main
                             + child.offset_main
-                            + child.margin_main_start
-                            + (child.main_start.or_else(0.0) - child.main_end.or_else(0.0));
+                            + child.margin.main_start(node.flex_direction)
+                            + (child.position.main_start(node.flex_direction).or_else(0.0)
+                                - child.position.main_end(node.flex_direction).or_else(0.0));
 
                         let offset_cross = total_offset_cross
                             + child.offset_cross
                             + line_offset_cross
-                            + child.margin_cross_start
-                            + (child.cross_start.or_else(0.0) - child.cross_end.or_else(0.0));
+                            + child.margin.cross_start(node.flex_direction)
+                            + (child.position.cross_start(node.flex_direction).or_else(0.0)
+                                - child.position.cross_end(node.flex_direction).or_else(0.0));
 
                         children.push(layout::Node {
                             width: result.size.width,
@@ -1153,9 +1219,9 @@ fn compute_internal(
                         });
 
                         total_offset_main += child.offset_main
-                            + child.margin_main_start
+                            + child.margin.main_start(node.flex_direction)
                             + result.size.main(node.flex_direction)
-                            + child.margin_main_end;
+                            + child.margin.main_end(node.flex_direction);
                     };
 
                     if node.flex_direction.is_reverse() {
@@ -1242,15 +1308,17 @@ fn compute_internal(
                     .maybe_min(child.max_cross_size(node.flex_direction).resolve(percent_calc_base_child));
 
             let offset_main = if start_main.is_defined() {
-                start_main.or_else(0.0) + border_main_start
+                start_main.or_else(0.0) + border.main_start(node.flex_direction)
             } else if end_main.is_defined() {
-                free_main_space - end_main.or_else(0.0) - border_main_end
+                free_main_space - end_main.or_else(0.0) - border.main_end(node.flex_direction)
             } else {
                 match node.justify_content {
                     style::JustifyContent::SpaceBetween | style::JustifyContent::FlexStart => {
-                        padding_main_start + border_main_start
+                        padding.main_start(node.flex_direction) + border.main_start(node.flex_direction)
                     }
-                    style::JustifyContent::FlexEnd => free_main_space - padding_main_end - border_main_end,
+                    style::JustifyContent::FlexEnd => {
+                        free_main_space - padding.main_end(node.flex_direction) - border.main_end(node.flex_direction)
+                    }
                     style::JustifyContent::SpaceEvenly
                     | style::JustifyContent::SpaceAround
                     | style::JustifyContent::Center => free_main_space / 2.0,
@@ -1258,33 +1326,39 @@ fn compute_internal(
             };
 
             let offset_cross = if start_cross.is_defined() {
-                start_cross.or_else(0.0) + border_cross_start
+                start_cross.or_else(0.0) + border.cross_start(node.flex_direction)
             } else if end_cross.is_defined() {
-                free_cross_space - end_cross.or_else(0.0) - border_cross_end
+                free_cross_space - end_cross.or_else(0.0) - border.cross_end(node.flex_direction)
             } else {
                 match child.align_self(node) {
                     style::AlignSelf::Auto => 0.0, // Should never happen
                     style::AlignSelf::FlexStart => {
                         if is_wrap_reverse {
-                            free_cross_space - padding_cross_end - border_cross_end
+                            free_cross_space
+                                - padding.cross_end(node.flex_direction)
+                                - border.cross_end(node.flex_direction)
                         } else {
-                            padding_cross_start + border_cross_start
+                            padding.cross_start(node.flex_direction) + border.cross_start(node.flex_direction)
                         }
                     }
                     style::AlignSelf::FlexEnd => {
                         if is_wrap_reverse {
-                            padding_cross_start + border_cross_start
+                            padding.cross_start(node.flex_direction) + border.cross_start(node.flex_direction)
                         } else {
-                            free_cross_space - padding_cross_end - border_cross_end
+                            free_cross_space
+                                - padding.cross_end(node.flex_direction)
+                                - border.cross_end(node.flex_direction)
                         }
                     }
                     style::AlignSelf::Center => free_cross_space / 2.0,
                     style::AlignSelf::Baseline => free_cross_space / 2.0, // Treat as center for now until we have baseline support
                     style::AlignSelf::Stretch => {
                         if is_wrap_reverse {
-                            free_cross_space - padding_cross_end - border_cross_end
+                            free_cross_space
+                                - padding.cross_end(node.flex_direction)
+                                - border.cross_end(node.flex_direction)
                         } else {
-                            padding_cross_start + border_cross_start
+                            padding.cross_start(node.flex_direction) + border.cross_start(node.flex_direction)
                         }
                     }
                 }
