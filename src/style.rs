@@ -1,3 +1,4 @@
+use crate::geometry::Rect;
 use crate::number::Number;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -177,17 +178,9 @@ impl Dimension {
     }
 }
 
-#[derive(Debug)]
-pub struct Edges {
-    pub start: Dimension,
-    pub end: Dimension,
-    pub top: Dimension,
-    pub bottom: Dimension,
-}
-
-impl Default for Edges {
-    fn default() -> Edges {
-        Edges {
+impl Default for Rect<Dimension> {
+    fn default() -> Rect<Dimension> {
+        Rect {
             start: Dimension::Points(0.0),
             end: Dimension::Points(0.0),
             top: Dimension::Points(0.0),
@@ -211,9 +204,9 @@ pub struct Node {
 
     pub justify_content: JustifyContent,
 
-    pub margin: Edges,
-    pub padding: Edges,
-    pub border: Edges,
+    pub margin: Rect<Dimension>,
+    pub padding: Rect<Dimension>,
+    pub border: Rect<Dimension>,
 
     pub flex_grow: f32,
     pub flex_shrink: f32,

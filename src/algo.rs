@@ -6,102 +6,20 @@ use crate::style;
 use crate::number::Number::*;
 use crate::number::*;
 
-#[derive(Debug, Copy, Clone)]
-struct FlexSize<T> {
-    width: T,
-    height: T,
-}
-
-impl<T> FlexSize<T> {
-    fn main(self, direction: style::FlexDirection) -> T {
-        match direction {
-            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.width,
-            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.height,
-        }
-    }
-
-    fn cross(self, direction: style::FlexDirection) -> T {
-        match direction {
-            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.height,
-            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.width,
-        }
-    }
-}
+use crate::geometry::{Point, Rect, Size};
 
 #[derive(Debug)]
 struct ComputeResult {
-    size: FlexSize<f32>,
+    size: Size<f32>,
     children: Vec<layout::Node>,
-}
-
-struct Rect<T> {
-    start: T,
-    end: T,
-    top: T,
-    bottom: T,
-}
-
-impl<T> Rect<T>
-where
-    T: std::ops::Add<Output = T> + Copy + Clone,
-{
-    fn horizontal(&self) -> T {
-        self.start + self.end
-    }
-
-    fn vertical(&self) -> T {
-        self.top + self.bottom
-    }
-
-    fn main(&self, direction: style::FlexDirection) -> T {
-        match direction {
-            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.start + self.end,
-            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.top + self.bottom,
-        }
-    }
-
-    fn cross(&self, direction: style::FlexDirection) -> T {
-        match direction {
-            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.top + self.bottom,
-            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.start + self.end,
-        }
-    }
-
-    fn main_start(&self, direction: style::FlexDirection) -> T {
-        match direction {
-            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.start,
-            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.top,
-        }
-    }
-
-    fn main_end(&self, direction: style::FlexDirection) -> T {
-        match direction {
-            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.end,
-            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.bottom,
-        }
-    }
-
-    fn cross_start(&self, direction: style::FlexDirection) -> T {
-        match direction {
-            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.top,
-            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.start,
-        }
-    }
-
-    fn cross_end(&self, direction: style::FlexDirection) -> T {
-        match direction {
-            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.bottom,
-            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.end,
-        }
-    }
 }
 
 struct FlexItem<'a> {
     node: &'a style::Node,
 
-    size: FlexSize<Number>,
-    min_size: FlexSize<Number>,
-    max_size: FlexSize<Number>,
+    size: Size<Number>,
+    min_size: Size<Number>,
+    max_size: Size<Number>,
 
     position: Rect<Number>,
     margin: Rect<f32>,
@@ -144,14 +62,14 @@ pub fn compute(root: &style::Node) -> layout::Node {
     // Probably want to pass min/max down as top level paramerer instead.
     let first_pass = compute_internal(
         root,
-        FlexSize { width: root.width.resolve(Undefined), height: root.height.resolve(Undefined) },
-        FlexSize { width: Undefined, height: Undefined },
+        Size { width: root.width.resolve(Undefined), height: root.height.resolve(Undefined) },
+        Size { width: Undefined, height: Undefined },
         Undefined,
     );
 
     let result = compute_internal(
         root,
-        FlexSize {
+        Size {
             width: first_pass
                 .size
                 .width
@@ -165,15 +83,13 @@ pub fn compute(root: &style::Node) -> layout::Node {
                 .maybe_min(root.max_height.resolve(Undefined))
                 .to_number(),
         },
-        FlexSize { width: Undefined, height: Undefined },
+        Size { width: Undefined, height: Undefined },
         Undefined,
     );
 
     let mut layout = layout::Node {
-        width: result.size.width,
-        height: result.size.height,
-        x: 0.0,
-        y: 0.0,
+        size: Size { width: result.size.width, height: result.size.height },
+        location: Point { x: 0.0, y: 0.0 },
         children: result.children,
     };
 
@@ -182,20 +98,20 @@ pub fn compute(root: &style::Node) -> layout::Node {
 }
 
 fn round_layout(layout: &mut layout::Node, abs_x: f32, abs_y: f32) {
-    let abs_x = abs_x + layout.x;
-    let abs_y = abs_y + layout.y;
+    let abs_x = abs_x + layout.location.x;
+    let abs_y = abs_y + layout.location.y;
 
-    layout.x = layout.x.round();
-    layout.y = layout.y.round();
-    layout.width = (abs_x + layout.width).round() - abs_x.round();
-    layout.height = (abs_y + layout.height).round() - abs_y.round();
+    layout.location.x = layout.location.x.round();
+    layout.location.y = layout.location.y.round();
+    layout.size.width = (abs_x + layout.size.width).round() - abs_x.round();
+    layout.size.height = (abs_y + layout.size.height).round() - abs_y.round();
     layout.children.iter_mut().for_each(|child| round_layout(child, abs_x, abs_y));
 }
 
 fn compute_internal(
     node: &style::Node,
-    node_size: FlexSize<Number>,
-    parent_size: FlexSize<Number>,
+    node_size: Size<Number>,
+    parent_size: Size<Number>,
     percent_calc_base: Number,
 ) -> ComputeResult {
     // Define some general constants we will need for the remainder
@@ -226,7 +142,7 @@ fn compute_internal(
         bottom: node.border.bottom.resolve(percent_calc_base).or_else(0.0),
     };
 
-    let node_inner_size = FlexSize {
+    let node_inner_size = Size {
         width: node_size.width - border.horizontal() - padding.horizontal(),
         height: node_size.height - border.vertical() - padding.vertical(),
     };
@@ -245,7 +161,7 @@ fn compute_internal(
     //    margin, border, and padding from the space available to the flex container
     //    in that dimension and use that value. This might result in an infinite value.
 
-    let available_space = FlexSize {
+    let available_space = Size {
         width: node_size.width.or_else(parent_size.width - margin.horizontal())
             - padding.horizontal()
             - border.horizontal(),
@@ -261,17 +177,17 @@ fn compute_internal(
         .map(|child| FlexItem {
             node: child,
 
-            size: FlexSize {
+            size: Size {
                 width: child.width.resolve(percent_calc_base_child),
                 height: child.height.resolve(percent_calc_base_child),
             },
 
-            min_size: FlexSize {
+            min_size: Size {
                 width: child.min_width.resolve(percent_calc_base_child),
                 height: child.min_height.resolve(percent_calc_base_child),
             },
 
-            max_size: FlexSize {
+            max_size: Size {
                 width: child.max_width.resolve(percent_calc_base_child),
                 height: child.max_height.resolve(percent_calc_base_child),
             },
@@ -375,7 +291,7 @@ fn compute_internal(
 
         child.flex_basis = compute_internal(
             child.node,
-            FlexSize {
+            Size {
                 width: child.size.width.maybe_max(child.min_size.width).maybe_min(child.max_size.width),
                 height: child.size.height.maybe_max(child.min_size.height).maybe_min(child.max_size.height),
             },
@@ -402,7 +318,7 @@ fn compute_internal(
         let min_main = if is_row {
             compute_internal(
                 child.node,
-                FlexSize { width: Undefined, height: Undefined },
+                Size { width: Undefined, height: Undefined },
                 available_space,
                 percent_calc_base_child,
             )
@@ -496,7 +412,7 @@ fn compute_internal(
             if node_inner_size.main(node.flex_direction).is_undefined() && is_row {
                 child.target_main_size = compute_internal(
                     child.node,
-                    FlexSize {
+                    Size {
                         width: child.size.width.maybe_max(child.min_size.width).maybe_min(child.max_size.width),
                         height: child.size.height.maybe_max(child.min_size.height).maybe_min(child.max_size.height),
                     },
@@ -635,7 +551,7 @@ fn compute_internal(
                 let min_main = if is_row {
                     compute_internal(
                         child.node,
-                        FlexSize { width: Undefined, height: Undefined },
+                        Size { width: Undefined, height: Undefined },
                         available_space,
                         percent_calc_base_child,
                     )
@@ -708,11 +624,11 @@ fn compute_internal(
 
             child.hypothetical_inner_cross_size = compute_internal(
                 child.node,
-                FlexSize {
+                Size {
                     width: if is_row { child.target_main_size.to_number() } else { child_cross },
                     height: if is_row { child_cross } else { child.target_main_size.to_number() },
                 },
-                FlexSize {
+                Size {
                     width: if is_row { container_main_size.to_number() } else { available_space.width },
                     height: if is_row { available_space.height } else { container_main_size.to_number() },
                 },
@@ -733,7 +649,7 @@ fn compute_internal(
 
     fn calc_baseline(layout: &layout::Node) -> f32 {
         if layout.children.is_empty() {
-            layout.height
+            layout.size.height
         } else {
             calc_baseline(&layout.children[0])
         }
@@ -743,7 +659,7 @@ fn compute_internal(
         line.items.iter_mut().for_each(|child| {
             let result = compute_internal(
                 child.node,
-                FlexSize {
+                Size {
                     width: if is_row {
                         child.target_main_size.to_number()
                     } else {
@@ -755,17 +671,15 @@ fn compute_internal(
                         child.target_main_size.to_number()
                     },
                 },
-                FlexSize {
+                Size {
                     width: if is_row { container_main_size.to_number() } else { node_size.cross(node.flex_direction) },
                     height: if is_row { node_size.cross(node.flex_direction) } else { container_main_size.to_number() },
                 },
                 percent_calc_base_child,
             );
             child.baseline = calc_baseline(&layout::Node {
-                width: result.size.width,
-                height: result.size.height,
-                x: 0.0,
-                y: 0.0,
+                size: Size { width: result.size.width, height: result.size.height },
+                location: Point { x: 0.0, y: 0.0 },
                 children: result.children,
             });
         });
@@ -1149,7 +1063,7 @@ fn compute_internal(
             let layout_item = |child: &mut FlexItem| {
                 let result = compute_internal(
                     child.node,
-                    FlexSize {
+                    Size {
                         width: if is_row {
                             child.target_main_size.to_number()
                         } else {
@@ -1161,7 +1075,7 @@ fn compute_internal(
                             child.target_main_size.to_number()
                         },
                     },
-                    FlexSize { width: container_width.to_number(), height: container_height.to_number() },
+                    Size { width: container_width.to_number(), height: container_height.to_number() },
                     percent_calc_base_child,
                 );
 
@@ -1179,10 +1093,11 @@ fn compute_internal(
                         - child.position.cross_end(node.flex_direction).or_else(0.0));
 
                 children.push(layout::Node {
-                    width: result.size.width,
-                    height: result.size.height,
-                    x: if is_row { offset_main } else { offset_cross },
-                    y: if is_column { offset_main } else { offset_cross },
+                    size: Size { width: result.size.width, height: result.size.height },
+                    location: Point {
+                        x: if is_row { offset_main } else { offset_cross },
+                        y: if is_column { offset_main } else { offset_cross },
+                    },
                     children: result.children,
                 });
 
@@ -1252,8 +1167,8 @@ fn compute_internal(
 
             let result = compute_internal(
                 child,
-                FlexSize { width, height },
-                FlexSize { width: container_width, height: container_height },
+                Size { width, height },
+                Size { width: container_width, height: container_height },
                 container_width,
             );
 
@@ -1329,10 +1244,11 @@ fn compute_internal(
             };
 
             layout::Node {
-                width: result.size.width,
-                height: result.size.height,
-                x: if is_row { offset_main } else { offset_cross },
-                y: if is_column { offset_main } else { offset_cross },
+                size: Size { width: result.size.width, height: result.size.height },
+                location: Point {
+                    x: if is_row { offset_main } else { offset_cross },
+                    y: if is_column { offset_main } else { offset_cross },
+                },
                 children: result.children,
             }
         })
@@ -1342,5 +1258,5 @@ fn compute_internal(
     // the child order they were defined. This has to be fixed.
     children.append(&mut absolute_children);
 
-    ComputeResult { size: FlexSize { width: container_width, height: container_height }, children }
+    ComputeResult { size: Size { width: container_width, height: container_height }, children }
 }
