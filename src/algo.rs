@@ -9,20 +9,20 @@ use crate::number::Number::*;
 use crate::number::*;
 
 #[derive(Debug, Copy, Clone)]
-struct FlexSize {
-    width: f32,
-    height: f32,
+struct FlexSize<T> {
+    width: T,
+    height: T,
 }
 
-impl FlexSize {
-    fn main(self, direction: style::FlexDirection) -> f32 {
+impl<T> FlexSize<T> {
+    fn main(self, direction: style::FlexDirection) -> T {
         match direction {
             style::FlexDirection::Row | style::FlexDirection::RowReverse => self.width,
             style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.height,
         }
     }
 
-    fn cross(self, direction: style::FlexDirection) -> f32 {
+    fn cross(self, direction: style::FlexDirection) -> T {
         match direction {
             style::FlexDirection::Row | style::FlexDirection::RowReverse => self.height,
             style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.width,
@@ -32,7 +32,7 @@ impl FlexSize {
 
 #[derive(Debug)]
 struct ComputeResult {
-    size: FlexSize,
+    size: FlexSize<f32>,
     children: Vec<layout::Node>,
 }
 
@@ -111,29 +111,28 @@ pub fn compute(root: &style::Node) -> layout::Node {
     // Probably want to pass min/max down as top level paramerer instead.
     let first_pass = compute_internal(
         root,
-        root.width.resolve(Undefined),
-        root.height.resolve(Undefined),
-        Undefined,
-        Undefined,
+        FlexSize { width: root.width.resolve(Undefined), height: root.height.resolve(Undefined) },
+        FlexSize { width: Undefined, height: Undefined },
         Undefined,
     );
 
     let result = compute_internal(
         root,
-        first_pass
-            .size
-            .width
-            .maybe_max(root.min_width.resolve(Undefined))
-            .maybe_min(root.max_width.resolve(Undefined))
-            .to_number(),
-        first_pass
-            .size
-            .height
-            .maybe_max(root.min_height.resolve(Undefined))
-            .maybe_min(root.max_height.resolve(Undefined))
-            .to_number(),
-        Undefined,
-        Undefined,
+        FlexSize {
+            width: first_pass
+                .size
+                .width
+                .maybe_max(root.min_width.resolve(Undefined))
+                .maybe_min(root.max_width.resolve(Undefined))
+                .to_number(),
+            height: first_pass
+                .size
+                .height
+                .maybe_max(root.min_height.resolve(Undefined))
+                .maybe_min(root.max_height.resolve(Undefined))
+                .to_number(),
+        },
+        FlexSize { width: Undefined, height: Undefined },
         Undefined,
     );
 
@@ -162,24 +161,8 @@ fn round_layout(layout: &mut layout::Node, abs_x: f32, abs_y: f32) {
 
 fn compute_internal(
     node: &style::Node,
-
-    // The width and the height of this node, if Some
-    // the node should be layed out at exactly this size.
-    // If None the node should at most be the size of
-    // available_width / available_height if present.
-    node_width: Number,
-    node_height: Number,
-
-    // This available width and height. This is the
-    // the inner node_width / node_height of the parent and should
-    // not be exceeded by this node unless node_width / node_height
-    // parameters say otherwise.
-    parent_inner_width: Number,
-    parent_inner_height: Number,
-
-    // This will always be the parent width except for the case when
-    // the child is in an absolute context. This value should only
-    // be used for calculated percentage values.
+    node_size: FlexSize<Number>,
+    parent_size: FlexSize<Number>,
     percent_calc_base: Number,
 ) -> ComputeResult {
     // Define some general constants we will need for the remainder
@@ -188,9 +171,6 @@ fn compute_internal(
     let is_row = node.flex_direction.is_row();
     let is_column = node.flex_direction.is_column();
     let is_wrap_reverse = node.flex_wrap == style::FlexWrap::WrapReverse;
-
-    let parent_inner_main = if is_row { parent_inner_width } else { parent_inner_height };
-    let parent_inner_cross = if is_row { parent_inner_height } else { parent_inner_width };
 
     let (margin_main_start, margin_cross_start, margin_main_end, margin_cross_end) = (
         node.main_margin_start(node.flex_direction).resolve(percent_calc_base).or_else(0.0),
@@ -222,8 +202,11 @@ fn compute_internal(
     let border_main = border_main_start + border_main_end;
     let border_cross = border_cross_start + border_cross_end;
 
-    let node_main = if is_row { node_width } else { node_height };
-    let node_cross = if is_row { node_height } else { node_width };
+    let parent_inner_main = parent_size.main(node.flex_direction);
+    let parent_inner_cross = parent_size.cross(node.flex_direction);
+
+    let node_main = node_size.main(node.flex_direction);
+    let node_cross = node_size.cross(node.flex_direction);
 
     let node_inner_main = node_main - border_main - padding_main;
     let node_inner_cross = node_cross - border_cross - padding_cross;
@@ -387,10 +370,14 @@ fn compute_internal(
 
         child.flex_basis = compute_internal(
             child.node,
-            child.width.maybe_max(child.min_width).maybe_min(child.max_width),
-            child.height.maybe_max(child.min_height).maybe_min(child.max_height),
-            if is_row { available_main } else { available_cross },
-            if is_row { available_cross } else { available_main },
+            FlexSize {
+                width: child.width.maybe_max(child.min_width).maybe_min(child.max_width),
+                height: child.height.maybe_max(child.min_height).maybe_min(child.max_height),
+            },
+            FlexSize {
+                width: if is_row { available_main } else { available_cross },
+                height: if is_row { available_cross } else { available_main },
+            },
             percent_calc_base_child,
         )
         .size
@@ -413,10 +400,11 @@ fn compute_internal(
         let min_main = if is_row {
             compute_internal(
                 child.node,
-                Undefined,
-                Undefined,
-                if is_row { available_main } else { available_cross },
-                if is_row { available_cross } else { available_main },
+                FlexSize { width: Undefined, height: Undefined },
+                FlexSize {
+                    width: if is_row { available_main } else { available_cross },
+                    height: if is_row { available_cross } else { available_main },
+                },
                 percent_calc_base_child,
             )
             .size
@@ -508,10 +496,14 @@ fn compute_internal(
             if node_inner_main.is_undefined() && is_row {
                 child.target_main_size = compute_internal(
                     child.node,
-                    child.width.maybe_max(child.min_width).maybe_min(child.max_width),
-                    child.height.maybe_max(child.min_height).maybe_min(child.max_height),
-                    if is_row { available_main } else { available_cross },
-                    if is_row { available_cross } else { available_main },
+                    FlexSize {
+                        width: child.width.maybe_max(child.min_width).maybe_min(child.max_width),
+                        height: child.height.maybe_max(child.min_height).maybe_min(child.max_height),
+                    },
+                    FlexSize {
+                        width: if is_row { available_main } else { available_cross },
+                        height: if is_row { available_cross } else { available_main },
+                    },
                     percent_calc_base_child,
                 )
                 .size
@@ -648,10 +640,11 @@ fn compute_internal(
                 let min_main = if is_row {
                     compute_internal(
                         child.node,
-                        Undefined,
-                        Undefined,
-                        if is_row { available_main } else { available_cross },
-                        if is_row { available_cross } else { available_main },
+                        FlexSize { width: Undefined, height: Undefined },
+                        FlexSize {
+                            width: if is_row { available_main } else { available_cross },
+                            height: if is_row { available_cross } else { available_main },
+                        },
                         percent_calc_base_child,
                     )
                     .size
@@ -718,10 +711,14 @@ fn compute_internal(
 
             child.hypothetical_inner_cross_size = compute_internal(
                 child.node,
-                if is_row { child.target_main_size.to_number() } else { child_cross },
-                if is_row { child_cross } else { child.target_main_size.to_number() },
-                if is_row { container_main_size.to_number() } else { available_cross },
-                if is_row { available_cross } else { container_main_size.to_number() },
+                FlexSize {
+                    width: if is_row { child.target_main_size.to_number() } else { child_cross },
+                    height: if is_row { child_cross } else { child.target_main_size.to_number() },
+                },
+                FlexSize {
+                    width: if is_row { container_main_size.to_number() } else { available_cross },
+                    height: if is_row { available_cross } else { container_main_size.to_number() },
+                },
                 percent_calc_base_child,
             )
             .size
@@ -749,18 +746,22 @@ fn compute_internal(
         line.items.iter_mut().for_each(|child| {
             let result = compute_internal(
                 child.node,
-                if is_row {
-                    child.target_main_size.to_number()
-                } else {
-                    child.hypothetical_inner_cross_size.to_number()
+                FlexSize {
+                    width: if is_row {
+                        child.target_main_size.to_number()
+                    } else {
+                        child.hypothetical_inner_cross_size.to_number()
+                    },
+                    height: if is_row {
+                        child.hypothetical_inner_cross_size.to_number()
+                    } else {
+                        child.target_main_size.to_number()
+                    },
                 },
-                if is_row {
-                    child.hypothetical_inner_cross_size.to_number()
-                } else {
-                    child.target_main_size.to_number()
+                FlexSize {
+                    width: if is_row { container_main_size.to_number() } else { node_cross },
+                    height: if is_row { node_cross } else { container_main_size.to_number() },
                 },
-                if is_row { container_main_size.to_number() } else { node_cross },
-                if is_row { node_cross } else { container_main_size.to_number() },
                 percent_calc_base_child,
             );
             child.baseline = calc_baseline(&layout::Node {
@@ -1124,18 +1125,19 @@ fn compute_internal(
                     let layout_item = |child: &mut FlexItem| {
                         let result = compute_internal(
                             child.node,
-                            if is_row {
-                                child.target_main_size.to_number()
-                            } else {
-                                child.target_cross_size.to_number()
+                            FlexSize {
+                                width: if is_row {
+                                    child.target_main_size.to_number()
+                                } else {
+                                    child.target_cross_size.to_number()
+                                },
+                                height: if is_row {
+                                    child.target_cross_size.to_number()
+                                } else {
+                                    child.target_main_size.to_number()
+                                },
                             },
-                            if is_row {
-                                child.target_cross_size.to_number()
-                            } else {
-                                child.target_main_size.to_number()
-                            },
-                            container_width.to_number(),
-                            container_height.to_number(),
+                            FlexSize { width: container_width.to_number(), height: container_height.to_number() },
                             percent_calc_base_child,
                         );
 
@@ -1226,7 +1228,12 @@ fn compute_internal(
             let width = child_width.or_else(container_width - start - end);
             let height = child_height.or_else(container_height - top - bottom);
 
-            let result = compute_internal(child, width, height, container_width, container_height, container_width);
+            let result = compute_internal(
+                child,
+                FlexSize { width, height },
+                FlexSize { width: container_width, height: container_height },
+                container_width,
+            );
 
             let free_main_space = container_main_size
                 - result
