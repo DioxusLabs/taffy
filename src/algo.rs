@@ -395,7 +395,7 @@ fn compute_internal(
 
     flex_items.iter_mut().for_each(|child| {
         child.inner_flex_basis =
-            child.flex_basis - (child.padding.main(node.flex_direction) + child.border.main(node.flex_direction));
+            child.flex_basis - child.padding.main(node.flex_direction) - child.border.main(node.flex_direction);
 
         // TODO - not really spec abiding but needs to be done somewhere. probably somewhere else though.
         // The following logic was developed not from the spec but by trail and error looking into how
