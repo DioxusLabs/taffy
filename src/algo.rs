@@ -870,9 +870,7 @@ fn compute_internal(
         let line_cross_size = line.cross_size;
 
         line.items.iter_mut().for_each(|child| {
-            let is_stretch = child.node.align_self(node) == style::AlignSelf::Stretch;
-
-            child.target_cross_size = if is_stretch
+            child.target_cross_size = if child.node.align_self(node) == style::AlignSelf::Stretch
                 && child.node.cross_margin_start(node.flex_direction) != style::Dimension::Auto
                 && child.node.cross_margin_end(node.flex_direction) != style::Dimension::Auto
                 && child.node.cross_size(node.flex_direction) == style::Dimension::Auto
