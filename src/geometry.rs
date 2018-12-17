@@ -121,9 +121,3 @@ pub struct Point<T> {
     pub x: T,
     pub y: T,
 }
-
-impl<T> Point<T> {
-    pub(crate) fn map<R>(self, f: &(Fn(T) -> R)) -> Point<R> {
-        Point { x: f(self.x), y: f(self.y) }
-    }
-}
