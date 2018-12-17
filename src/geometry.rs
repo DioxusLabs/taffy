@@ -11,7 +11,10 @@ pub struct Rect<T> {
 }
 
 impl<T> Rect<T> {
-    pub(crate) fn map<R>(self, f: &(Fn(T) -> R)) -> Rect<R> {
+    pub(crate) fn map<R, F>(self, f: F) -> Rect<R>
+    where
+        F: Fn(T) -> R,
+    {
         Rect { start: f(self.start), end: f(self.end), top: f(self.top), bottom: f(self.bottom) }
     }
 }
@@ -83,7 +86,10 @@ pub struct Size<T> {
 }
 
 impl<T> Size<T> {
-    pub(crate) fn map<R>(self, f: &(Fn(T) -> R)) -> Size<R> {
+    pub(crate) fn map<R, F>(self, f: F) -> Size<R>
+    where
+        F: Fn(T) -> R,
+    {
         Size { width: f(self.width), height: f(self.height) }
     }
 
