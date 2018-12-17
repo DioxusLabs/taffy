@@ -1,7 +1,9 @@
 use std::f32;
 
 use crate::layout;
+
 use crate::style;
+use crate::style::{AlignContent, AlignSelf, Dimension, FlexWrap, JustifyContent, PositionType};
 
 use crate::number::Number::*;
 use crate::number::*;
@@ -119,7 +121,7 @@ fn compute_internal(
 
     let is_row = node.flex_direction.is_row();
     let is_column = node.flex_direction.is_column();
-    let is_wrap_reverse = node.flex_wrap == style::FlexWrap::WrapReverse;
+    let is_wrap_reverse = node.flex_wrap == FlexWrap::WrapReverse;
 
     let margin = Rect {
         start: node.margin.start.resolve(percent_calc_base).or_else(0.0),
@@ -173,7 +175,7 @@ fn compute_internal(
     let mut flex_items: Vec<FlexItem> = node
         .children
         .iter()
-        .filter(|child| child.position_type != style::PositionType::Absolute)
+        .filter(|child| child.position_type != PositionType::Absolute)
         .map(|child| FlexItem {
             node: child,
 
@@ -259,7 +261,7 @@ fn compute_internal(
 
         if let Defined(ratio) = child.node.aspect_ratio {
             if let Defined(cross) = node_size.cross(node.flex_direction) {
-                if child.node.flex_basis == style::Dimension::Auto {
+                if child.node.flex_basis == Dimension::Auto {
                     child.flex_basis = cross * ratio;
                     return;
                 }
@@ -359,7 +361,7 @@ fn compute_internal(
         let mut lines: Vec<FlexLine> = vec![];
         let mut line_length = 0.0;
 
-        if node.flex_wrap == style::FlexWrap::NoWrap {
+        if node.flex_wrap == FlexWrap::NoWrap {
             lines.push(FlexLine { items: flex_items, cross_size: 0.0, offset_cross: 0.0 });
         } else {
             let mut line = FlexLine { items: vec![], cross_size: 0.0, offset_cross: 0.0 };
@@ -678,7 +680,7 @@ fn compute_internal(
                 percent_calc_base_child,
             );
             child.baseline = calc_baseline(&layout::Node {
-                size: Size { width: result.size.width, height: result.size.height },
+                size: result.size,
                 location: Point { x: 0.0, y: 0.0 },
                 children: result.children,
             });
@@ -717,10 +719,10 @@ fn compute_internal(
                 .items
                 .iter()
                 .map(|child| {
-                    if child.node.align_self(node) == style::AlignSelf::Baseline
-                        && child.node.cross_margin_start(node.flex_direction) != style::Dimension::Auto
-                        && child.node.cross_margin_end(node.flex_direction) != style::Dimension::Auto
-                        && child.node.cross_size(node.flex_direction) == style::Dimension::Auto
+                    if child.node.align_self(node) == AlignSelf::Baseline
+                        && child.node.cross_margin_start(node.flex_direction) != Dimension::Auto
+                        && child.node.cross_margin_end(node.flex_direction) != Dimension::Auto
+                        && child.node.cross_size(node.flex_direction) == Dimension::Auto
                     {
                         max_baseline - child.baseline + child.hypothetical_outer_cross_size
                     } else {
@@ -737,7 +739,7 @@ fn compute_internal(
     //    by equal amounts such that the sum of their cross sizes exactly equals the
     //    flex container’s inner cross size.
 
-    if node.align_content == style::AlignContent::Stretch && node_size.cross(node.flex_direction).is_defined() {
+    if node.align_content == AlignContent::Stretch && node_size.cross(node.flex_direction).is_defined() {
         let total_cross: f32 = flex_lines.iter().map(|line| line.cross_size).sum();
         let inner_cross = (node_size.cross(node.flex_direction)
             - padding.cross(node.flex_direction)
@@ -782,10 +784,10 @@ fn compute_internal(
         let line_cross_size = line.cross_size;
 
         line.items.iter_mut().for_each(|child| {
-            child.target_cross_size = if child.node.align_self(node) == style::AlignSelf::Stretch
-                && child.node.cross_margin_start(node.flex_direction) != style::Dimension::Auto
-                && child.node.cross_margin_end(node.flex_direction) != style::Dimension::Auto
-                && child.node.cross_size(node.flex_direction) == style::Dimension::Auto
+            child.target_cross_size = if child.node.align_self(node) == AlignSelf::Stretch
+                && child.node.cross_margin_start(node.flex_direction) != Dimension::Auto
+                && child.node.cross_margin_end(node.flex_direction) != Dimension::Auto
+                && child.node.cross_size(node.flex_direction) == Dimension::Auto
             {
                 (line_cross_size - child.margin.cross(node.flex_direction))
                     .maybe_max(child.min_size.cross(node.flex_direction))
@@ -812,10 +814,10 @@ fn compute_internal(
         let mut num_auto_margins = 0;
 
         line.items.iter_mut().for_each(|child| {
-            if child.node.main_margin_start(node.flex_direction) == style::Dimension::Auto {
+            if child.node.main_margin_start(node.flex_direction) == Dimension::Auto {
                 num_auto_margins += 1;
             }
-            if child.node.main_margin_end(node.flex_direction) == style::Dimension::Auto {
+            if child.node.main_margin_end(node.flex_direction) == Dimension::Auto {
                 num_auto_margins += 1;
             }
         });
@@ -824,14 +826,14 @@ fn compute_internal(
             let margin = free_space / num_auto_margins as f32;
 
             line.items.iter_mut().for_each(|child| {
-                if child.node.main_margin_start(node.flex_direction) == style::Dimension::Auto {
+                if child.node.main_margin_start(node.flex_direction) == Dimension::Auto {
                     if is_row {
                         child.margin.start = margin;
                     } else {
                         child.margin.top = margin;
                     }
                 }
-                if child.node.main_margin_end(node.flex_direction) == style::Dimension::Auto {
+                if child.node.main_margin_end(node.flex_direction) == Dimension::Auto {
                     if is_row {
                         child.margin.end = margin;
                     } else {
@@ -847,42 +849,42 @@ fn compute_internal(
                 let is_first = i == 0;
 
                 child.offset_main = match node.justify_content {
-                    style::JustifyContent::FlexStart => {
+                    JustifyContent::FlexStart => {
                         if layout_reverse && is_first {
                             free_space
                         } else {
                             0.0
                         }
                     }
-                    style::JustifyContent::Center => {
+                    JustifyContent::Center => {
                         if is_first {
                             free_space / 2.0
                         } else {
                             0.0
                         }
                     }
-                    style::JustifyContent::FlexEnd => {
+                    JustifyContent::FlexEnd => {
                         if is_first && !layout_reverse {
                             free_space
                         } else {
                             0.0
                         }
                     }
-                    style::JustifyContent::SpaceBetween => {
+                    JustifyContent::SpaceBetween => {
                         if is_first {
                             0.0
                         } else {
                             free_space / (num_items - 1) as f32
                         }
                     }
-                    style::JustifyContent::SpaceAround => {
+                    JustifyContent::SpaceAround => {
                         if is_first {
                             (free_space / num_items as f32) / 2.0
                         } else {
                             free_space / num_items as f32
                         }
                     }
-                    style::JustifyContent::SpaceEvenly => free_space / (num_items + 1) as f32,
+                    JustifyContent::SpaceEvenly => free_space / (num_items + 1) as f32,
                 };
             };
 
@@ -911,8 +913,8 @@ fn compute_internal(
         line.items.iter_mut().for_each(|child| {
             let free_space = line_cross_size - child.outer_target_cross_size;
 
-            if child.node.cross_margin_start(node.flex_direction) == style::Dimension::Auto
-                && child.node.cross_margin_end(node.flex_direction) == style::Dimension::Auto
+            if child.node.cross_margin_start(node.flex_direction) == Dimension::Auto
+                && child.node.cross_margin_end(node.flex_direction) == Dimension::Auto
             {
                 if is_row {
                     child.margin.top = free_space / 2.0;
@@ -921,13 +923,13 @@ fn compute_internal(
                     child.margin.start = free_space / 2.0;
                     child.margin.end = free_space / 2.0;
                 }
-            } else if child.node.cross_margin_start(node.flex_direction) == style::Dimension::Auto {
+            } else if child.node.cross_margin_start(node.flex_direction) == Dimension::Auto {
                 if is_row {
                     child.margin.top = free_space;
                 } else {
                     child.margin.start = free_space;
                 }
-            } else if child.node.cross_margin_end(node.flex_direction) == style::Dimension::Auto {
+            } else if child.node.cross_margin_end(node.flex_direction) == Dimension::Auto {
                 if is_row {
                     child.margin.bottom = free_space;
                 } else {
@@ -938,23 +940,23 @@ fn compute_internal(
                 //     cross-axis margins are auto.
 
                 child.offset_cross = match child.node.align_self(node) {
-                    style::AlignSelf::Auto => 0.0, // Should never happen
-                    style::AlignSelf::FlexStart => {
+                    AlignSelf::Auto => 0.0, // Should never happen
+                    AlignSelf::FlexStart => {
                         if is_wrap_reverse {
                             free_space
                         } else {
                             0.0
                         }
                     }
-                    style::AlignSelf::FlexEnd => {
+                    AlignSelf::FlexEnd => {
                         if is_wrap_reverse {
                             0.0
                         } else {
                             free_space
                         }
                     }
-                    style::AlignSelf::Center => free_space / 2.0,
-                    style::AlignSelf::Baseline => {
+                    AlignSelf::Center => free_space / 2.0,
+                    AlignSelf::Baseline => {
                         if is_row {
                             max_baseline - child.baseline
                         } else {
@@ -967,7 +969,7 @@ fn compute_internal(
                             }
                         }
                     }
-                    style::AlignSelf::Stretch => {
+                    AlignSelf::Stretch => {
                         if is_wrap_reverse {
                             free_space
                         } else {
@@ -1001,36 +1003,36 @@ fn compute_internal(
         let is_first = i == 0;
 
         line.offset_cross = match node.align_content {
-            style::AlignContent::FlexStart => {
+            AlignContent::FlexStart => {
                 if is_first && is_wrap_reverse {
                     free_space
                 } else {
                     0.0
                 }
             }
-            style::AlignContent::FlexEnd => {
+            AlignContent::FlexEnd => {
                 if is_first && !is_wrap_reverse {
                     free_space
                 } else {
                     0.0
                 }
             }
-            style::AlignContent::Center => {
+            AlignContent::Center => {
                 if is_first {
                     free_space / 2.0
                 } else {
                     0.0
                 }
             }
-            style::AlignContent::Stretch => 0.0,
-            style::AlignContent::SpaceBetween => {
+            AlignContent::Stretch => 0.0,
+            AlignContent::SpaceBetween => {
                 if is_first {
                     0.0
                 } else {
                     free_space / (num_lines - 1) as f32
                 }
             }
-            style::AlignContent::SpaceAround => {
+            AlignContent::SpaceAround => {
                 if is_first {
                     (free_space / num_lines as f32) / 2.0
                 } else {
@@ -1137,7 +1139,7 @@ fn compute_internal(
     let mut absolute_children: Vec<layout::Node> = node
         .children
         .iter()
-        .filter(|child| child.position_type == style::PositionType::Absolute)
+        .filter(|child| child.position_type == PositionType::Absolute)
         .map(|child| {
             let container_width = container_width.to_number();
             let container_height = container_height.to_number();
@@ -1195,15 +1197,15 @@ fn compute_internal(
                 free_main_space - end_main.or_else(0.0) - border.main_end(node.flex_direction)
             } else {
                 match node.justify_content {
-                    style::JustifyContent::SpaceBetween | style::JustifyContent::FlexStart => {
+                    JustifyContent::SpaceBetween | JustifyContent::FlexStart => {
                         padding.main_start(node.flex_direction) + border.main_start(node.flex_direction)
                     }
-                    style::JustifyContent::FlexEnd => {
+                    JustifyContent::FlexEnd => {
                         free_main_space - padding.main_end(node.flex_direction) - border.main_end(node.flex_direction)
                     }
-                    style::JustifyContent::SpaceEvenly
-                    | style::JustifyContent::SpaceAround
-                    | style::JustifyContent::Center => free_main_space / 2.0,
+                    JustifyContent::SpaceEvenly | JustifyContent::SpaceAround | JustifyContent::Center => {
+                        free_main_space / 2.0
+                    }
                 }
             };
 
@@ -1213,8 +1215,8 @@ fn compute_internal(
                 free_cross_space - end_cross.or_else(0.0) - border.cross_end(node.flex_direction)
             } else {
                 match child.align_self(node) {
-                    style::AlignSelf::Auto => 0.0, // Should never happen
-                    style::AlignSelf::FlexStart => {
+                    AlignSelf::Auto => 0.0, // Should never happen
+                    AlignSelf::FlexStart => {
                         if is_wrap_reverse {
                             free_cross_space
                                 - padding.cross_end(node.flex_direction)
@@ -1223,7 +1225,7 @@ fn compute_internal(
                             padding.cross_start(node.flex_direction) + border.cross_start(node.flex_direction)
                         }
                     }
-                    style::AlignSelf::FlexEnd => {
+                    AlignSelf::FlexEnd => {
                         if is_wrap_reverse {
                             padding.cross_start(node.flex_direction) + border.cross_start(node.flex_direction)
                         } else {
@@ -1232,9 +1234,9 @@ fn compute_internal(
                                 - border.cross_end(node.flex_direction)
                         }
                     }
-                    style::AlignSelf::Center => free_cross_space / 2.0,
-                    style::AlignSelf::Baseline => free_cross_space / 2.0, // Treat as center for now until we have baseline support
-                    style::AlignSelf::Stretch => {
+                    AlignSelf::Center => free_cross_space / 2.0,
+                    AlignSelf::Baseline => free_cross_space / 2.0, // Treat as center for now until we have baseline support
+                    AlignSelf::Stretch => {
                         if is_wrap_reverse {
                             free_cross_space
                                 - padding.cross_end(node.flex_direction)
