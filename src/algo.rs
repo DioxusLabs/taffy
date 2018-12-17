@@ -39,21 +39,9 @@ struct ComputeResult {
 struct FlexItem<'a> {
     node: &'a style::Node,
 
-    width: Number,
-    min_width: Number,
-    max_width: Number,
-
-    height: Number,
-    min_height: Number,
-    max_height: Number,
-
-    main: Number,
-    min_main: Number,
-    max_main: Number,
-
-    cross: Number,
-    min_cross: Number,
-    max_cross: Number,
+    size: FlexSize<Number>,
+    min_size: FlexSize<Number>,
+    max_size: FlexSize<Number>,
 
     main_start: Number,
     main_end: Number,
@@ -224,21 +212,20 @@ fn compute_internal(
         .map(|child| FlexItem {
             node: child,
 
-            width: child.width.resolve(percent_calc_base_child),
-            min_width: child.min_width.resolve(percent_calc_base_child),
-            max_width: child.max_width.resolve(percent_calc_base_child),
+            size: FlexSize {
+                width: child.width.resolve(percent_calc_base_child),
+                height: child.height.resolve(percent_calc_base_child),
+            },
 
-            height: child.height.resolve(percent_calc_base_child),
-            min_height: child.min_height.resolve(percent_calc_base_child),
-            max_height: child.max_height.resolve(percent_calc_base_child),
+            min_size: FlexSize {
+                width: child.min_width.resolve(percent_calc_base_child),
+                height: child.min_height.resolve(percent_calc_base_child),
+            },
 
-            main: child.main_size(node.flex_direction).resolve(percent_calc_base_child),
-            min_main: child.min_main_size(node.flex_direction).resolve(percent_calc_base_child),
-            max_main: child.max_main_size(node.flex_direction).resolve(percent_calc_base_child),
-
-            cross: child.cross_size(node.flex_direction).resolve(percent_calc_base_child),
-            min_cross: child.min_cross_size(node.flex_direction).resolve(percent_calc_base_child),
-            max_cross: child.max_cross_size(node.flex_direction).resolve(percent_calc_base_child),
+            max_size: FlexSize {
+                width: child.max_width.resolve(percent_calc_base_child),
+                height: child.max_height.resolve(percent_calc_base_child),
+            },
 
             main_start: child.main_start(node.flex_direction).resolve(percent_calc_base_child),
             main_end: child.main_end(node.flex_direction).resolve(percent_calc_base_child),
@@ -371,8 +358,8 @@ fn compute_internal(
         child.flex_basis = compute_internal(
             child.node,
             FlexSize {
-                width: child.width.maybe_max(child.min_width).maybe_min(child.max_width),
-                height: child.height.maybe_max(child.min_height).maybe_min(child.max_height),
+                width: child.size.width.maybe_max(child.min_size.width).maybe_min(child.max_size.width),
+                height: child.size.height.maybe_max(child.min_size.height).maybe_min(child.max_size.height),
             },
             FlexSize {
                 width: if is_row { available_main } else { available_cross },
@@ -382,8 +369,8 @@ fn compute_internal(
         )
         .size
         .main(node.flex_direction)
-        .maybe_max(child.min_main)
-        .maybe_min(child.max_main);
+        .maybe_max(child.min_size.main(node.flex_direction))
+        .maybe_min(child.max_size.main(node.flex_direction));
     });
 
     // The hypothetical main size is the item’s flex base size clamped according to its
@@ -409,14 +396,15 @@ fn compute_internal(
             )
             .size
             .width
-            .maybe_min(child.width)
-            .maybe_max(child.min_width)
+            .maybe_max(child.min_size.width)
+            .maybe_min(child.size.width)
             .to_number()
         } else {
-            child.min_main
+            child.min_size.main(node.flex_direction)
         };
 
-        child.hypothetical_inner_main_size = child.flex_basis.maybe_max(min_main).maybe_min(child.max_main);
+        child.hypothetical_inner_main_size =
+            child.flex_basis.maybe_max(min_main).maybe_min(child.max_size.main(node.flex_direction));
 
         child.hypothetical_outer_main_size =
             child.hypothetical_inner_main_size + child.margin_main_start + child.margin_main_end;
@@ -497,8 +485,8 @@ fn compute_internal(
                 child.target_main_size = compute_internal(
                     child.node,
                     FlexSize {
-                        width: child.width.maybe_max(child.min_width).maybe_min(child.max_width),
-                        height: child.height.maybe_max(child.min_height).maybe_min(child.max_height),
+                        width: child.size.width.maybe_max(child.min_size.width).maybe_min(child.max_size.width),
+                        height: child.size.height.maybe_max(child.min_size.height).maybe_min(child.max_size.height),
                     },
                     FlexSize {
                         width: if is_row { available_main } else { available_cross },
@@ -508,8 +496,8 @@ fn compute_internal(
                 )
                 .size
                 .main(node.flex_direction)
-                .maybe_max(child.min_main)
-                .maybe_min(child.max_main);
+                .maybe_max(child.min_size.main(node.flex_direction))
+                .maybe_min(child.max_size.main(node.flex_direction));
             } else {
                 child.target_main_size = child.hypothetical_inner_main_size;
             }
@@ -649,14 +637,14 @@ fn compute_internal(
                     )
                     .size
                     .width
-                    .maybe_min(child.width)
-                    .maybe_max(child.min_width)
+                    .maybe_min(child.size.width)
+                    .maybe_max(child.min_size.width)
                     .to_number()
                 } else {
-                    child.min_main
+                    child.min_size.main(node.flex_direction)
                 };
 
-                let max_main = child.max_main;
+                let max_main = child.max_size.main(node.flex_direction);
                 let clamped = child.target_main_size.maybe_min(max_main).maybe_max(min_main).max(0.0);
                 child.violation = clamped - child.target_main_size;
                 child.target_main_size = clamped;
@@ -707,7 +695,11 @@ fn compute_internal(
 
     flex_lines.iter_mut().for_each(|line| {
         line.items.iter_mut().for_each(|child| {
-            let child_cross = child.cross.maybe_max(child.min_cross).maybe_min(child.max_cross);
+            let child_cross = child
+                .size
+                .cross(node.flex_direction)
+                .maybe_max(child.min_size.cross(node.flex_direction))
+                .maybe_min(child.max_size.cross(node.flex_direction));
 
             child.hypothetical_inner_cross_size = compute_internal(
                 child.node,
@@ -723,8 +715,8 @@ fn compute_internal(
             )
             .size
             .cross(node.flex_direction)
-            .maybe_max(child.min_cross)
-            .maybe_min(child.max_cross);
+            .maybe_max(child.min_size.cross(node.flex_direction))
+            .maybe_min(child.max_size.cross(node.flex_direction));
 
             child.hypothetical_outer_cross_size =
                 child.hypothetical_inner_cross_size + child.margin_cross_start + child.margin_cross_end;
@@ -873,8 +865,8 @@ fn compute_internal(
                 && child.node.cross_size(node.flex_direction) == style::Dimension::Auto
             {
                 (line_cross_size - child.margin_cross_start - child.margin_cross_end)
-                    .maybe_max(child.min_cross)
-                    .maybe_min(child.max_cross)
+                    .maybe_max(child.min_size.cross(node.flex_direction))
+                    .maybe_min(child.max_size.cross(node.flex_direction))
             } else {
                 child.hypothetical_inner_cross_size
             };
