@@ -118,26 +118,9 @@ fn compute_internal(
     let is_column = dir.is_column();
     let is_wrap_reverse = node.flex_wrap == FlexWrap::WrapReverse;
 
-    let margin = Rect {
-        start: node.margin.start.resolve(percent_calc_base).or_else(0.0),
-        end: node.margin.end.resolve(percent_calc_base).or_else(0.0),
-        top: node.margin.top.resolve(percent_calc_base).or_else(0.0),
-        bottom: node.margin.bottom.resolve(percent_calc_base).or_else(0.0),
-    };
-
-    let padding = Rect {
-        start: node.padding.start.resolve(percent_calc_base).or_else(0.0),
-        end: node.padding.end.resolve(percent_calc_base).or_else(0.0),
-        top: node.padding.top.resolve(percent_calc_base).or_else(0.0),
-        bottom: node.padding.bottom.resolve(percent_calc_base).or_else(0.0),
-    };
-
-    let border = Rect {
-        start: node.border.start.resolve(percent_calc_base).or_else(0.0),
-        end: node.border.end.resolve(percent_calc_base).or_else(0.0),
-        top: node.border.top.resolve(percent_calc_base).or_else(0.0),
-        bottom: node.border.bottom.resolve(percent_calc_base).or_else(0.0),
-    };
+    let margin = node.margin.map(&|n| n.resolve(percent_calc_base).or_else(0.0));
+    let padding = node.padding.map(&|n| n.resolve(percent_calc_base).or_else(0.0));
+    let border = node.border.map(&|n| n.resolve(percent_calc_base).or_else(0.0));
 
     let padding_border = Rect {
         start: padding.start + border.start,
@@ -179,48 +162,14 @@ fn compute_internal(
         .map(|child| FlexItem {
             node: child,
 
-            size: Size {
-                width: child.size.width.resolve(percent_calc_base_child),
-                height: child.size.height.resolve(percent_calc_base_child),
-            },
+            size: child.size.map(&|s| s.resolve(percent_calc_base_child)),
+            min_size: child.min_size.map(&|s| s.resolve(percent_calc_base_child)),
+            max_size: child.max_size.map(&|s| s.resolve(percent_calc_base_child)),
 
-            min_size: Size {
-                width: child.min_size.width.resolve(percent_calc_base_child),
-                height: child.min_size.height.resolve(percent_calc_base_child),
-            },
-
-            max_size: Size {
-                width: child.max_size.width.resolve(percent_calc_base_child),
-                height: child.max_size.height.resolve(percent_calc_base_child),
-            },
-
-            position: Rect {
-                start: child.position.start.resolve(percent_calc_base_child),
-                end: child.position.end.resolve(percent_calc_base_child),
-                top: child.position.top.resolve(percent_calc_base_child),
-                bottom: child.position.bottom.resolve(percent_calc_base_child),
-            },
-
-            margin: Rect {
-                start: child.margin.start.resolve(percent_calc_base_child).or_else(0.0),
-                end: child.margin.end.resolve(percent_calc_base_child).or_else(0.0),
-                top: child.margin.top.resolve(percent_calc_base_child).or_else(0.0),
-                bottom: child.margin.bottom.resolve(percent_calc_base_child).or_else(0.0),
-            },
-
-            padding: Rect {
-                start: child.padding.start.resolve(percent_calc_base_child).or_else(0.0),
-                end: child.padding.end.resolve(percent_calc_base_child).or_else(0.0),
-                top: child.padding.top.resolve(percent_calc_base_child).or_else(0.0),
-                bottom: child.padding.bottom.resolve(percent_calc_base_child).or_else(0.0),
-            },
-
-            border: Rect {
-                start: child.border.start.resolve(percent_calc_base_child).or_else(0.0),
-                end: child.border.end.resolve(percent_calc_base_child).or_else(0.0),
-                top: child.border.top.resolve(percent_calc_base_child).or_else(0.0),
-                bottom: child.border.bottom.resolve(percent_calc_base_child).or_else(0.0),
-            },
+            position: child.position.map(&|p| p.resolve(percent_calc_base_child)),
+            margin: child.margin.map(&|m| m.resolve(percent_calc_base_child).or_else(0.0)),
+            padding: child.padding.map(&|p| p.resolve(percent_calc_base_child).or_else(0.0)),
+            border: child.border.map(&|b| b.resolve(percent_calc_base_child).or_else(0.0)),
 
             flex_basis: 0.0,
             inner_flex_basis: 0.0,

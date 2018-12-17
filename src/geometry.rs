@@ -10,6 +10,12 @@ pub struct Rect<T> {
     pub bottom: T,
 }
 
+impl<T> Rect<T> {
+    pub(crate) fn map<R>(self, f: &(Fn(T) -> R)) -> Rect<R> {
+        Rect { start: f(self.start), end: f(self.end), top: f(self.top), bottom: f(self.bottom) }
+    }
+}
+
 impl<T> Rect<T>
 where
     T: Add<Output = T> + Copy + Clone,
@@ -77,6 +83,10 @@ pub struct Size<T> {
 }
 
 impl<T> Size<T> {
+    pub(crate) fn map<R>(self, f: &(Fn(T) -> R)) -> Size<R> {
+        Size { width: f(self.width), height: f(self.height) }
+    }
+
     pub(crate) fn set_main(&mut self, direction: style::FlexDirection, value: T) {
         match direction {
             style::FlexDirection::Row | style::FlexDirection::RowReverse => self.width = value,
@@ -110,4 +120,10 @@ impl<T> Size<T> {
 pub struct Point<T> {
     pub x: T,
     pub y: T,
+}
+
+impl<T> Point<T> {
+    pub(crate) fn map<R>(self, f: &(Fn(T) -> R)) -> Point<R> {
+        Point { x: f(self.x), y: f(self.y) }
+    }
 }
