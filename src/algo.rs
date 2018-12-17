@@ -190,16 +190,12 @@ fn compute_internal(
     let border_main = border_main_start + border_main_end;
     let border_cross = border_cross_start + border_cross_end;
 
-    let parent_inner_main = parent_size.main(node.flex_direction);
-    let parent_inner_cross = parent_size.cross(node.flex_direction);
+    let node_inner_size = FlexSize {
+        width: node_size.width - if is_row { border_main + padding_main } else { border_cross + padding_cross },
+        height: node_size.height - if is_row { border_cross + padding_cross } else { border_main + padding_main },
+    };
 
-    let node_main = node_size.main(node.flex_direction);
-    let node_cross = node_size.cross(node.flex_direction);
-
-    let node_inner_main = node_main - border_main - padding_main;
-    let node_inner_cross = node_cross - border_cross - padding_cross;
-
-    let percent_calc_base_child = if is_row { node_inner_main } else { node_inner_cross };
+    let percent_calc_base_child = node_inner_size.width;
 
     // 9.2. Line Length Determination
 
@@ -214,8 +210,14 @@ fn compute_internal(
     //    in that dimension and use that value. This might result in an infinite value.
 
     let available_space = {
-        let available_main = node_main.or_else(parent_inner_main - margin_main) - padding_main - border_main;
-        let available_cross = node_cross.or_else(parent_inner_cross - margin_cross) - padding_cross - border_cross;
+        let available_main =
+            node_size.main(node.flex_direction).or_else(parent_size.main(node.flex_direction) - margin_main)
+                - padding_main
+                - border_main;
+        let available_cross =
+            node_size.cross(node.flex_direction).or_else(parent_size.cross(node.flex_direction) - margin_cross)
+                - padding_cross
+                - border_cross;
 
         FlexSize {
             width: if is_row { available_main } else { available_cross },
@@ -333,8 +335,8 @@ fn compute_internal(
         //    cross size and the flex item’s intrinsic aspect ratio.
 
         if let Defined(ratio) = child.node.aspect_ratio {
-            if node_cross.is_defined() && child.node.flex_basis == style::Dimension::Auto {
-                child.flex_basis = (node_cross * ratio).or_else(0.0);
+            if node_size.cross(node.flex_direction).is_defined() && child.node.flex_basis == style::Dimension::Auto {
+                child.flex_basis = (node_size.cross(node.flex_direction) * ratio).or_else(0.0);
                 return;
             }
         }
@@ -469,7 +471,7 @@ fn compute_internal(
         //    flex shrink factor.
 
         let used_flex_factor: f32 = line.items.iter().map(|child| child.hypothetical_outer_main_size).sum();
-        let growing = used_flex_factor < node_inner_main.or_else(0.0);
+        let growing = used_flex_factor < node_inner_size.main(node.flex_direction).or_else(0.0);
         let shrinking = !growing;
 
         // 2. Size inflexible items. Freeze, setting its target main size to its hypothetical main size
@@ -482,7 +484,7 @@ fn compute_internal(
         line.items.iter_mut().for_each(|child| {
             // TODO - This is not found by reading the spec. Maybe this can be done in some other place
             // instead. This was found by trail and error fixing tests to align with webkit output.
-            if node_inner_main.is_undefined() && is_row {
+            if node_inner_size.main(node.flex_direction).is_undefined() && is_row {
                 child.target_main_size = compute_internal(
                     child.node,
                     FlexSize {
@@ -527,7 +529,7 @@ fn compute_internal(
             })
             .sum();
 
-        let initial_free_space = (node_inner_main - used_space).or_else(0.0);
+        let initial_free_space = (node_inner_size.main(node.flex_direction) - used_space).or_else(0.0);
 
         // 4. Loop
 
@@ -568,11 +570,11 @@ fn compute_internal(
             let sum_flex_shrink: f32 = unfrozen.iter().map(|item| item.node.flex_shrink).sum();
 
             let free_space = if growing && sum_flex_grow < 1.0 {
-                (initial_free_space * sum_flex_grow).maybe_min(node_inner_main - used_space)
+                (initial_free_space * sum_flex_grow).maybe_min(node_inner_size.main(node.flex_direction) - used_space)
             } else if shrinking && sum_flex_shrink < 1.0 {
-                (initial_free_space * sum_flex_shrink).maybe_max(node_inner_main - used_space)
+                (initial_free_space * sum_flex_shrink).maybe_max(node_inner_size.main(node.flex_direction) - used_space)
             } else {
-                (node_inner_main - used_space).or_else(0.0)
+                (node_inner_size.main(node.flex_direction) - used_space).or_else(0.0)
             };
 
             // c. Distribute free space proportional to the flex factors.
@@ -668,7 +670,7 @@ fn compute_internal(
     });
 
     // Not part of the spec from what i can see but seems correct
-    let container_main_size = node_main.or_else({
+    let container_main_size = node_size.main(node.flex_direction).or_else({
         let longest_line = flex_lines.iter().fold(f32::MIN, |acc, line| {
             let length: f32 = line.items.iter().map(|item| item.outer_target_main_size).sum();
             acc.max(length)
@@ -746,8 +748,8 @@ fn compute_internal(
                     },
                 },
                 FlexSize {
-                    width: if is_row { container_main_size.to_number() } else { node_cross },
-                    height: if is_row { node_cross } else { container_main_size.to_number() },
+                    width: if is_row { container_main_size.to_number() } else { node_size.cross(node.flex_direction) },
+                    height: if is_row { node_size.cross(node.flex_direction) } else { container_main_size.to_number() },
                 },
                 percent_calc_base_child,
             );
@@ -769,8 +771,8 @@ fn compute_internal(
     //    the container’s computed min and max cross sizes. Note that if CSS 2.1’s definition
     //    of min/max-width/height applied more generally, this behavior would fall out automatically.
 
-    if flex_lines.len() == 1 && node_cross.is_defined() {
-        flex_lines[0].cross_size = (node_cross - padding_cross - border_cross).or_else(0.0);
+    if flex_lines.len() == 1 && node_size.cross(node.flex_direction).is_defined() {
+        flex_lines[0].cross_size = (node_size.cross(node.flex_direction) - padding_cross - border_cross).or_else(0.0);
     } else {
         flex_lines.iter_mut().for_each(|line| {
             //    1. Collect all the flex items whose inline-axis is parallel to the main-axis, whose
@@ -810,9 +812,9 @@ fn compute_internal(
     //    by equal amounts such that the sum of their cross sizes exactly equals the
     //    flex container’s inner cross size.
 
-    if node.align_content == style::AlignContent::Stretch && node_cross.is_defined() {
+    if node.align_content == style::AlignContent::Stretch && node_size.cross(node.flex_direction).is_defined() {
         let total_cross: f32 = flex_lines.iter().map(|line| line.cross_size).sum();
-        let inner_cross = (node_cross - padding_cross - border_cross).or_else(0.0);
+        let inner_cross = (node_size.cross(node.flex_direction) - padding_cross - border_cross).or_else(0.0);
 
         if total_cross < inner_cross {
             let remaining = inner_cross - total_cross;
@@ -1037,7 +1039,8 @@ fn compute_internal(
     //       min and max cross sizes of the flex container.
 
     let total_cross_size: f32 = flex_lines.iter().map(|line| line.cross_size).sum();
-    let container_cross_size = node_cross.or_else(total_cross_size + padding_cross + border_cross);
+    let container_cross_size =
+        node_size.cross(node.flex_direction).or_else(total_cross_size + padding_cross + border_cross);
     let inner_container_cross_size = container_cross_size - padding_cross - border_cross;
 
     // 16. Align all flex lines per align-content.
