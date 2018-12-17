@@ -623,8 +623,8 @@ fn compute_internal(
                 compute_internal(
                     child.node,
                     Size {
-                        width: if is_row { child.target_size.main(dir).to_number() } else { child_cross },
-                        height: if is_row { child_cross } else { child.target_size.main(dir).to_number() },
+                        width: if is_row { child.target_size.width.to_number() } else { child_cross },
+                        height: if is_row { child_cross } else { child.target_size.height.to_number() },
                     },
                     Size {
                         width: if is_row { container_main_size.to_number() } else { available_space.width },
@@ -672,8 +672,8 @@ fn compute_internal(
                     },
                 },
                 Size {
-                    width: if is_row { container_main_size.to_number() } else { node_size.cross(dir) },
-                    height: if is_row { node_size.cross(dir) } else { container_main_size.to_number() },
+                    width: if is_row { container_main_size.to_number() } else { node_size.width },
+                    height: if is_row { node_size.height } else { container_main_size.to_number() },
                 },
                 percent_calc_base_child,
             );
@@ -1056,18 +1056,7 @@ fn compute_internal(
             let layout_item = |child: &mut FlexItem| {
                 let result = compute_internal(
                     child.node,
-                    Size {
-                        width: if is_row {
-                            child.target_size.main(dir).to_number()
-                        } else {
-                            child.target_size.cross(dir).to_number()
-                        },
-                        height: if is_row {
-                            child.target_size.cross(dir).to_number()
-                        } else {
-                            child.target_size.main(dir).to_number()
-                        },
-                    },
+                    Size { width: child.target_size.width.to_number(), height: child.target_size.height.to_number() },
                     Size { width: container_width.to_number(), height: container_height.to_number() },
                     percent_calc_base_child,
                 );
@@ -1084,7 +1073,7 @@ fn compute_internal(
                     + (child.position.cross_start(dir).or_else(0.0) - child.position.cross_end(dir).or_else(0.0));
 
                 children.push(layout::Node {
-                    size: Size { width: result.size.width, height: result.size.height },
+                    size: result.size,
                     location: Point {
                         x: if is_row { offset_main } else { offset_cross },
                         y: if is_column { offset_main } else { offset_cross },
@@ -1227,7 +1216,7 @@ fn compute_internal(
             };
 
             layout::Node {
-                size: Size { width: result.size.width, height: result.size.height },
+                size: result.size,
                 location: Point {
                     x: if is_row { offset_main } else { offset_cross },
                     y: if is_column { offset_main } else { offset_cross },
