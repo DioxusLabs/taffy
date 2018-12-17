@@ -77,6 +77,20 @@ pub struct Size<T> {
 }
 
 impl<T> Size<T> {
+    pub(crate) fn set_main(&mut self, direction: style::FlexDirection, value: T) {
+        match direction {
+            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.width = value,
+            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.height = value,
+        }
+    }
+
+    pub(crate) fn set_cross(&mut self, direction: style::FlexDirection, value: T) {
+        match direction {
+            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.height = value,
+            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.width = value,
+        }
+    }
+
     pub(crate) fn main(self, direction: style::FlexDirection) -> T {
         match direction {
             style::FlexDirection::Row | style::FlexDirection::RowReverse => self.width,
