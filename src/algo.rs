@@ -615,19 +615,19 @@ fn compute_internal(
                 child.node,
                 Size {
                     width: if is_row {
-                        child.target_size.main(dir).to_number()
+                        child.target_size.width.to_number()
                     } else {
-                        child.hypothetical_inner_size.cross(dir).to_number()
+                        child.hypothetical_inner_size.width.to_number()
                     },
                     height: if is_row {
-                        child.hypothetical_inner_size.cross(dir).to_number()
+                        child.hypothetical_inner_size.height.to_number()
                     } else {
-                        child.target_size.main(dir).to_number()
+                        child.target_size.height.to_number()
                     },
                 },
                 Size {
-                    width: if is_row { container_size.main(dir).to_number() } else { node_size.width },
-                    height: if is_row { node_size.height } else { container_size.main(dir).to_number() },
+                    width: if is_row { container_size.width.to_number() } else { node_size.width },
+                    height: if is_row { node_size.height } else { container_size.height.to_number() },
                 },
                 percent_calc_base_child,
             );
