@@ -937,7 +937,6 @@ fn compute_internal(
     //       min and max cross sizes of the flex container.
 
     let total_cross_size: f32 = flex_lines.iter().map(|line| line.cross_size).sum();
-
     container_size.set_cross(dir, node_size.cross(dir).or_else(total_cross_size + padding_border.cross(dir)));
     inner_container_size.set_cross(dir, container_size.cross(dir) - padding_border.cross(dir));
 
@@ -1008,8 +1007,8 @@ fn compute_internal(
             let layout_item = |child: &mut FlexItem| {
                 let result = compute_internal(
                     child.node,
-                    Size { width: child.target_size.width.to_number(), height: child.target_size.height.to_number() },
-                    Size { width: container_size.width.to_number(), height: container_size.height.to_number() },
+                    child.target_size.map(&|s| s.to_number()),
+                    container_size.map(&|s| s.to_number()),
                     percent_calc_base_child,
                 );
 
