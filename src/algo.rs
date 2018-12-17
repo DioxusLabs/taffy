@@ -335,9 +335,11 @@ fn compute_internal(
         //    cross size and the flex item’s intrinsic aspect ratio.
 
         if let Defined(ratio) = child.node.aspect_ratio {
-            if node_size.cross(node.flex_direction).is_defined() && child.node.flex_basis == style::Dimension::Auto {
-                child.flex_basis = (node_size.cross(node.flex_direction) * ratio).or_else(0.0);
-                return;
+            if let Defined(cross) = node_size.cross(node.flex_direction) {
+                if child.node.flex_basis == style::Dimension::Auto {
+                    child.flex_basis = cross * ratio;
+                    return;
+                }
             }
         }
 
