@@ -173,7 +173,7 @@ fn compute_internal(
     let mut flex_items: Vec<FlexItem> = node
         .children
         .iter()
-        .filter(|child| child.position != style::Position::Absolute)
+        .filter(|child| child.position_type != style::PositionType::Absolute)
         .map(|child| FlexItem {
             node: child,
 
@@ -193,10 +193,10 @@ fn compute_internal(
             },
 
             position: Rect {
-                start: child.start.resolve(percent_calc_base_child),
-                end: child.end.resolve(percent_calc_base_child),
-                top: child.top.resolve(percent_calc_base_child),
-                bottom: child.bottom.resolve(percent_calc_base_child),
+                start: child.position.start.resolve(percent_calc_base_child),
+                end: child.position.end.resolve(percent_calc_base_child),
+                top: child.position.top.resolve(percent_calc_base_child),
+                bottom: child.position.bottom.resolve(percent_calc_base_child),
             },
 
             margin: Rect {
@@ -1137,15 +1137,16 @@ fn compute_internal(
     let mut absolute_children: Vec<layout::Node> = node
         .children
         .iter()
-        .filter(|child| child.position == style::Position::Absolute)
+        .filter(|child| child.position_type == style::PositionType::Absolute)
         .map(|child| {
             let container_width = container_width.to_number();
             let container_height = container_height.to_number();
 
-            let start = child.start.resolve(container_width) + child.margin.start.resolve(container_width);
-            let end = child.end.resolve(container_width) + child.margin.end.resolve(container_width);
-            let top = child.top.resolve(container_height) + child.margin.top.resolve(container_height);
-            let bottom = child.bottom.resolve(container_height) + child.margin.bottom.resolve(container_height);
+            let start = child.position.start.resolve(container_width) + child.margin.start.resolve(container_width);
+            let end = child.position.end.resolve(container_width) + child.margin.end.resolve(container_width);
+            let top = child.position.top.resolve(container_height) + child.margin.top.resolve(container_height);
+            let bottom =
+                child.position.bottom.resolve(container_height) + child.margin.bottom.resolve(container_height);
 
             let (start_main, end_main) = if is_row { (start, end) } else { (top, bottom) };
             let (start_cross, end_cross) = if is_row { (top, bottom) } else { (start, end) };
