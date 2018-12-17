@@ -118,9 +118,9 @@ fn compute_internal(
     let is_column = dir.is_column();
     let is_wrap_reverse = node.flex_wrap == FlexWrap::WrapReverse;
 
-    let margin = node.margin.map(&|n| n.resolve(percent_calc_base).or_else(0.0));
-    let padding = node.padding.map(&|n| n.resolve(percent_calc_base).or_else(0.0));
-    let border = node.border.map(&|n| n.resolve(percent_calc_base).or_else(0.0));
+    let margin = node.margin.map(|n| n.resolve(percent_calc_base).or_else(0.0));
+    let padding = node.padding.map(|n| n.resolve(percent_calc_base).or_else(0.0));
+    let border = node.border.map(|n| n.resolve(percent_calc_base).or_else(0.0));
 
     let padding_border = Rect {
         start: padding.start + border.start,
@@ -162,14 +162,14 @@ fn compute_internal(
         .map(|child| FlexItem {
             node: child,
 
-            size: child.size.map(&|s| s.resolve(percent_calc_base_child)),
-            min_size: child.min_size.map(&|s| s.resolve(percent_calc_base_child)),
-            max_size: child.max_size.map(&|s| s.resolve(percent_calc_base_child)),
+            size: child.size.map(|s| s.resolve(percent_calc_base_child)),
+            min_size: child.min_size.map(|s| s.resolve(percent_calc_base_child)),
+            max_size: child.max_size.map(|s| s.resolve(percent_calc_base_child)),
 
-            position: child.position.map(&|p| p.resolve(percent_calc_base_child)),
-            margin: child.margin.map(&|m| m.resolve(percent_calc_base_child).or_else(0.0)),
-            padding: child.padding.map(&|p| p.resolve(percent_calc_base_child).or_else(0.0)),
-            border: child.border.map(&|b| b.resolve(percent_calc_base_child).or_else(0.0)),
+            position: child.position.map(|p| p.resolve(percent_calc_base_child)),
+            margin: child.margin.map(|m| m.resolve(percent_calc_base_child).or_else(0.0)),
+            padding: child.padding.map(|p| p.resolve(percent_calc_base_child).or_else(0.0)),
+            border: child.border.map(|b| b.resolve(percent_calc_base_child).or_else(0.0)),
 
             flex_basis: 0.0,
             inner_flex_basis: 0.0,
@@ -1007,8 +1007,8 @@ fn compute_internal(
             let layout_item = |child: &mut FlexItem| {
                 let result = compute_internal(
                     child.node,
-                    child.target_size.map(&|s| s.to_number()),
-                    container_size.map(&|s| s.to_number()),
+                    child.target_size.map(|s| s.to_number()),
+                    container_size.map(|s| s.to_number()),
                     percent_calc_base_child,
                 );
 
