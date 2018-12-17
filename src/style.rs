@@ -131,14 +131,14 @@ impl Default for Overflow {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
-pub enum Position {
+pub enum PositionType {
     Relative,
     Absolute,
 }
 
-impl Default for Position {
-    fn default() -> Position {
-        Position::Relative
+impl Default for PositionType {
+    fn default() -> PositionType {
+        PositionType::Relative
     }
 }
 
@@ -191,7 +191,7 @@ impl Default for Rect<Dimension> {
 
 #[derive(Debug)]
 pub struct Node {
-    pub position: Position,
+    pub position_type: PositionType,
     pub direction: Direction,
     pub flex_direction: FlexDirection,
 
@@ -204,6 +204,7 @@ pub struct Node {
 
     pub justify_content: JustifyContent,
 
+    pub position: Rect<Dimension>,
     pub margin: Rect<Dimension>,
     pub padding: Rect<Dimension>,
     pub border: Rect<Dimension>,
@@ -211,11 +212,6 @@ pub struct Node {
     pub flex_grow: f32,
     pub flex_shrink: f32,
     pub flex_basis: Dimension,
-
-    pub start: Dimension,
-    pub end: Dimension,
-    pub top: Dimension,
-    pub bottom: Dimension,
 
     pub width: Dimension,
     pub min_width: Dimension,
@@ -233,7 +229,7 @@ pub struct Node {
 impl Default for Node {
     fn default() -> Node {
         Node {
-            position: Default::default(),
+            position_type: Default::default(),
             direction: Default::default(),
             flex_direction: Default::default(),
 
@@ -246,6 +242,7 @@ impl Default for Node {
 
             justify_content: Default::default(),
 
+            position: Default::default(),
             margin: Default::default(),
             padding: Default::default(),
             border: Default::default(),
@@ -253,11 +250,6 @@ impl Default for Node {
             flex_grow: 0.0,
             flex_shrink: 1.0,
             flex_basis: Default::default(),
-
-            start: Default::default(),
-            end: Default::default(),
-            top: Default::default(),
-            bottom: Default::default(),
 
             width: Default::default(),
             min_width: Default::default(),
