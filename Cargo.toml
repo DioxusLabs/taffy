@@ -5,6 +5,7 @@ authors = ["Emil Sjölander <emil@visly.app>"]
 edition = "2018"
 
 [dependencies]
+ref_eq = "1.0.0"
 
 [dev-dependencies]
 criterion = "0.2"

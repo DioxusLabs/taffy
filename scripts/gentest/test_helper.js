@@ -79,6 +79,8 @@ function parseSize(size) {
 function describeElement(e) {
   return {
     style: {
+      display: parseEnum(e.style.display),
+
       position_type: parseEnum(e.style.position),
       direction: parseEnum(e.style.direction),
       flexDirection: parseEnum(e.style.flexDirection),

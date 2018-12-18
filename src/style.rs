@@ -193,6 +193,8 @@ impl Default for Size<Dimension> {
 
 #[derive(Debug)]
 pub struct Node {
+    pub display: Display,
+
     pub position_type: PositionType,
     pub direction: Direction,
     pub flex_direction: FlexDirection,
@@ -227,6 +229,8 @@ pub struct Node {
 impl Default for Node {
     fn default() -> Node {
         Node {
+            display: Default::default(),
+
             position_type: Default::default(),
             direction: Default::default(),
             flex_direction: Default::default(),

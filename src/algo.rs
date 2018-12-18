@@ -1,9 +1,10 @@
+use ref_eq::ref_eq;
 use std::f32;
 
 use crate::layout;
 
 use crate::style;
-use crate::style::{AlignContent, AlignSelf, Dimension, FlexWrap, JustifyContent, PositionType};
+use crate::style::{AlignContent, AlignSelf, Dimension, Display, FlexWrap, JustifyContent, PositionType};
 
 use crate::number::Number::*;
 use crate::number::*;
@@ -84,6 +85,7 @@ pub fn compute(root: &style::Node) -> layout::Node {
     );
 
     let mut layout = layout::Node {
+        order: 0,
         size: Size { width: result.size.width, height: result.size.height },
         location: Point { x: 0.0, y: 0.0 },
         children: result.children,
@@ -159,6 +161,7 @@ fn compute_internal(
         .children
         .iter()
         .filter(|child| child.position_type != PositionType::Absolute)
+        .filter(|child| child.display != Display::None)
         .map(|child| FlexItem {
             node: child,
 
@@ -632,6 +635,7 @@ fn compute_internal(
                 percent_calc_base_child,
             );
             child.baseline = calc_baseline(&layout::Node {
+                order: node.children.iter().position(|n| ref_eq(n, child.node)).unwrap() as u32,
                 size: result.size,
                 location: Point { x: 0.0, y: 0.0 },
                 children: result.children,
@@ -1024,6 +1028,7 @@ fn compute_internal(
                     + (child.position.cross_start(dir).or_else(0.0) - child.position.cross_end(dir).or_else(0.0));
 
                 children.push(layout::Node {
+                    order: node.children.iter().position(|n| ref_eq(n, child.node)).unwrap() as u32,
                     size: result.size,
                     location: Point {
                         x: if is_row { offset_main } else { offset_cross },
@@ -1166,6 +1171,7 @@ fn compute_internal(
             };
 
             layout::Node {
+                order: node.children.iter().position(|n| ref_eq(n, child)).unwrap() as u32,
                 size: result.size,
                 location: Point {
                     x: if is_row { offset_main } else { offset_cross },
@@ -1176,9 +1182,26 @@ fn compute_internal(
         })
         .collect();
 
-    // TODO - This adds all the absolute children to the end of the list instead of adding them in
-    // the child order they were defined. This has to be fixed.
     children.append(&mut absolute_children);
 
+    fn hidden_layout(parent: &style::Node, node: &style::Node) -> layout::Node {
+        layout::Node {
+            order: parent.children.iter().position(|n| ref_eq(n, node)).unwrap() as u32,
+            size: Size { width: 0.0, height: 0.0 },
+            location: Point { x: 0.0, y: 0.0 },
+            children: node.children.iter().map(|child| hidden_layout(node, child)).collect(),
+        }
+    }
+
+    let mut hidden_children: Vec<layout::Node> = node
+        .children
+        .iter()
+        .filter(|child| child.display == Display::None)
+        .map(|child| hidden_layout(node, child))
+        .collect();
+
+    children.append(&mut hidden_children);
+
+    children.sort_by(|c1, c2| c1.order.cmp(&c2.order));
     ComputeResult { size: container_size, children }
 }
