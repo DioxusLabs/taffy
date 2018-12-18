@@ -107,6 +107,16 @@ fn generate_node(node: &json::JsonValue) -> String {
 
     let style = &node["style"];
 
+    match style["display"] {
+        json::JsonValue::Short(ref value) => {
+            match value.as_ref() {
+                "none" => src.push_str("display: stretch::style::Display::None,\n"),
+                _ => (),
+            };
+        },
+        _ => (),
+    };
+
     match style["position_type"] {
         json::JsonValue::Short(ref value) => {
             match value.as_ref() {
