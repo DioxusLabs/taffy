@@ -512,7 +512,7 @@ fn compute_internal(
                 // TODO - not really spec abiding but needs to be done somewhere. probably somewhere else though.
                 // The following logic was developed not from the spec but by trail and error looking into how
                 // webkit handled various scenarios. Can probably be solved better by passing in
-                // min-content max-content constraints fromt the top. Need to figure out correct thing to do here as 
+                // min-content max-content constraints fromt the top. Need to figure out correct thing to do here as
                 // just piling on more conditionals.
                 let min_main = if is_row && child.node.measure.is_none() {
                     compute_internal(
