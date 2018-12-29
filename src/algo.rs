@@ -4,7 +4,7 @@ use std::f32;
 use crate::layout;
 
 use crate::style;
-use crate::style::{AlignContent, AlignSelf, Dimension, Display, FlexWrap, JustifyContent, PositionType};
+use crate::style::*;
 
 use crate::number::Number::*;
 use crate::number::*;
@@ -18,7 +18,7 @@ struct ComputeResult {
 }
 
 struct FlexItem<'a> {
-    node: &'a style::Node,
+    node: &'a style::Node<'a>,
 
     size: Size<Number>,
     min_size: Size<Number>,
@@ -112,6 +112,17 @@ fn compute_internal(
     parent_size: Size<Number>,
     percent_calc_base: Number,
 ) -> ComputeResult {
+    // If this is a leaf node we can skip a lot of this function in some cases
+    if node.children.is_empty() {
+        if node_size.width.is_defined() && node_size.height.is_defined() {
+            return ComputeResult { size: node_size.map(|s| s.or_else(0.0)), children: vec![] };
+        }
+
+        if let Some(measure) = node.measure {
+            return ComputeResult { size: measure(node_size), children: vec![] };
+        }
+    }
+
     // Define some general constants we will need for the remainder
     // of the algorithm.
 
@@ -501,8 +512,9 @@ fn compute_internal(
                 // TODO - not really spec abiding but needs to be done somewhere. probably somewhere else though.
                 // The following logic was developed not from the spec but by trail and error looking into how
                 // webkit handled various scenarios. Can probably be solved better by passing in
-                // min-content max-content constraints fromt the top
-                let min_main = if is_row {
+                // min-content max-content constraints fromt the top. Need to figure out correct thing to do here as 
+                // just piling on more conditionals.
+                let min_main = if is_row && child.node.measure.is_none() {
                     compute_internal(
                         child.node,
                         Size { width: Undefined, height: Undefined },
