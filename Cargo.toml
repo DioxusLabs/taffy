@@ -3,6 +3,18 @@ name = "stretch"
 version = "0.1.0"
 authors = ["Emil Sjölander <emil@visly.app>"]
 edition = "2018"
+include = ["src/**/*", "Cargo.toml"]
+description = "High performance & cross-platform Flexbox implementation"
+repository = "https://github.com/vislyhq/stretch"
+readme = "README.md"
+keywords = ["ios", "android", "cross-platform", "layout", "flexbox"]
+categories = ["gui"]
+license = "MIT"
+license-file = "LICENCE"
+
+[badges]
+circle-ci = { repository = "vislyhq/stretch", branch = "master" }
+maintenance = { status = "experimental" }
 
 [dependencies]
 ref_eq = "1.0.0"
