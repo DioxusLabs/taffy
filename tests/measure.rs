@@ -143,10 +143,7 @@ mod measure {
     #[test]
     fn remeasure_child_after_growing() {
         let layout = stretch::compute(&stretch::style::Node {
-            size: stretch::geometry::Size {
-                width: stretch::style::Dimension::Points(100.0), 
-                ..Default::default()
-            },
+            size: stretch::geometry::Size { width: stretch::style::Dimension::Points(100.0), ..Default::default() },
             align_items: stretch::style::AlignItems::FlexStart,
             children: vec![
                 stretch::style::Node {
@@ -176,10 +173,7 @@ mod measure {
     #[test]
     fn remeasure_child_after_shrinking() {
         let layout = stretch::compute(&stretch::style::Node {
-            size: stretch::geometry::Size {
-                width: stretch::style::Dimension::Points(100.0), 
-                ..Default::default()
-            },
+            size: stretch::geometry::Size { width: stretch::style::Dimension::Points(100.0), ..Default::default() },
             align_items: stretch::style::AlignItems::FlexStart,
             children: vec![
                 stretch::style::Node {
