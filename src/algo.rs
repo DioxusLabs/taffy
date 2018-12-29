@@ -1092,7 +1092,11 @@ fn compute_internal(
                 .resolve(container_width)
                 .maybe_max(child.min_size.width.resolve(container_width))
                 .maybe_min(child.max_size.width.resolve(container_width))
-                .or_else(container_width - start - end);
+                .or_else(if start.is_defined() && end.is_defined() {
+                    container_width - start - end
+                } else {
+                    Undefined
+                });
 
             let height = child
                 .size
@@ -1100,7 +1104,11 @@ fn compute_internal(
                 .resolve(container_height)
                 .maybe_max(child.min_size.height.resolve(container_height))
                 .maybe_min(child.max_size.height.resolve(container_height))
-                .or_else(container_height - top - bottom);
+                .or_else(if top.is_defined() && bottom.is_defined() {
+                    container_height - top - bottom
+                } else {
+                    Undefined
+                });
 
             let result = compute_internal(
                 child,
