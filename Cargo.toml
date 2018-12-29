@@ -10,7 +10,7 @@ readme = "README.md"
 keywords = ["ios", "android", "cross-platform", "layout", "flexbox"]
 categories = ["gui"]
 license = "MIT"
-license-file = "LICENCE"
+license-file = "LICENSE"
 
 [badges]
 circle-ci = { repository = "vislyhq/stretch", branch = "master" }
