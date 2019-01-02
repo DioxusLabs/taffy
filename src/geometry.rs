@@ -2,7 +2,7 @@ use std::ops::Add;
 
 use crate::style;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Rect<T> {
     pub start: T,
     pub end: T,
@@ -79,7 +79,7 @@ where
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Size<T> {
     pub width: T,
     pub height: T,
@@ -122,7 +122,7 @@ impl<T> Size<T> {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Point<T> {
     pub x: T,
     pub y: T,
