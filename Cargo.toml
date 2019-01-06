@@ -1,6 +1,6 @@
 [package]
 name = "stretch"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Emil Sjölander <emil@visly.app>"]
 edition = "2018"
 include = ["src/**/*", "Cargo.toml"]
