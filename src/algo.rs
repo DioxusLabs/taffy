@@ -18,7 +18,7 @@ struct ComputeResult {
 }
 
 struct FlexItem<'a> {
-    node: &'a style::Node<'a>,
+    node: &'a style::Node,
 
     size: Size<Number>,
     min_size: Size<Number>,
@@ -118,7 +118,7 @@ fn compute_internal(
             return ComputeResult { size: node_size.map(|s| s.or_else(0.0)), children: vec![] };
         }
 
-        if let Some(measure) = node.measure {
+        if let Some(ref measure) = node.measure {
             return ComputeResult { size: measure(node_size), children: vec![] };
         }
     }
