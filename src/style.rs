@@ -191,7 +191,7 @@ impl Default for Size<Dimension> {
     }
 }
 
-pub struct Node<'a> {
+pub struct Node {
     pub display: Display,
 
     pub position_type: PositionType,
@@ -221,13 +221,13 @@ pub struct Node<'a> {
     pub max_size: Size<Dimension>,
 
     pub aspect_ratio: Number,
-    pub measure: Option<&'a Fn(Size<Number>) -> Size<f32>>,
+    pub measure: Option<Box<Fn(Size<Number>) -> Size<f32>>>,
 
-    pub children: Vec<Node<'a>>,
+    pub children: Vec<Node>,
 }
 
-impl<'a> Default for Node<'a> {
-    fn default() -> Node<'a> {
+impl Default for Node {
+    fn default() -> Node {
         Node {
             display: Default::default(),
 
@@ -265,7 +265,7 @@ impl<'a> Default for Node<'a> {
     }
 }
 
-impl<'a> Node<'a> {
+impl Node {
     pub(crate) fn min_main_size(&self, direction: FlexDirection) -> Dimension {
         match direction {
             FlexDirection::Row | FlexDirection::RowReverse => self.min_size.width,

@@ -5,10 +5,10 @@ mod measure {
     #[test]
     fn measure_root() {
         let layout = stretch::compute(&stretch::style::Node {
-            measure: Some(&|constraint| stretch::geometry::Size {
+            measure: Some(Box::new(|constraint| stretch::geometry::Size {
                 width: constraint.width.or_else(100.0),
                 height: constraint.height.or_else(100.0),
-            }),
+            })),
             ..Default::default()
         });
 
@@ -20,10 +20,10 @@ mod measure {
     fn measure_child() {
         let layout = stretch::compute(&stretch::style::Node {
             children: vec![stretch::style::Node {
-                measure: Some(&|constraint| stretch::geometry::Size {
+                measure: Some(Box::new(|constraint| stretch::geometry::Size {
                     width: constraint.width.or_else(100.0),
                     height: constraint.height.or_else(100.0),
-                }),
+                })),
                 ..Default::default()
             }],
             ..Default::default()
@@ -41,10 +41,10 @@ mod measure {
         let layout = stretch::compute(&stretch::style::Node {
             size: stretch::geometry::Size { width: stretch::style::Dimension::Points(50.0), ..Default::default() },
             children: vec![stretch::style::Node {
-                measure: Some(&|constraint| stretch::geometry::Size {
+                measure: Some(Box::new(|constraint| stretch::geometry::Size {
                     width: constraint.width.or_else(100.0),
                     height: constraint.height.or_else(100.0),
-                }),
+                })),
                 ..Default::default()
             }],
             ..Default::default()
@@ -68,10 +68,10 @@ mod measure {
                 bottom: stretch::style::Dimension::Points(10.0),
             },
             children: vec![stretch::style::Node {
-                measure: Some(&|constraint| stretch::geometry::Size {
+                measure: Some(Box::new(|constraint| stretch::geometry::Size {
                     width: constraint.width.or_else(100.0),
                     height: constraint.height.or_else(100.0),
-                }),
+                })),
                 ..Default::default()
             }],
             ..Default::default()
@@ -97,10 +97,10 @@ mod measure {
                     ..Default::default()
                 },
                 stretch::style::Node {
-                    measure: Some(&|constraint| stretch::geometry::Size {
+                    measure: Some(Box::new(|constraint| stretch::geometry::Size {
                         width: constraint.width.or_else(10.0),
                         height: constraint.height.or_else(50.0),
-                    }),
+                    })),
                     flex_grow: 1.0,
                     ..Default::default()
                 },
@@ -126,10 +126,10 @@ mod measure {
                     ..Default::default()
                 },
                 stretch::style::Node {
-                    measure: Some(&|constraint| stretch::geometry::Size {
+                    measure: Some(Box::new(|constraint| stretch::geometry::Size {
                         width: constraint.width.or_else(100.0),
                         height: constraint.height.or_else(50.0),
-                    }),
+                    })),
                     ..Default::default()
                 },
             ],
@@ -154,11 +154,11 @@ mod measure {
                     ..Default::default()
                 },
                 stretch::style::Node {
-                    measure: Some(&|constraint| {
+                    measure: Some(Box::new(|constraint| {
                         let width = constraint.width.or_else(10.0);
                         let height = constraint.height.or_else(width * 2.0);
                         stretch::geometry::Size { width, height }
-                    }),
+                    })),
                     flex_grow: 1.0,
                     ..Default::default()
                 },
@@ -185,11 +185,11 @@ mod measure {
                     ..Default::default()
                 },
                 stretch::style::Node {
-                    measure: Some(&|constraint| {
+                    measure: Some(Box::new(|constraint| {
                         let width = constraint.width.or_else(100.0);
                         let height = constraint.height.or_else(width * 2.0);
                         stretch::geometry::Size { width, height }
-                    }),
+                    })),
                     ..Default::default()
                 },
             ],
@@ -205,10 +205,10 @@ mod measure {
         let layout = stretch::compute(&stretch::style::Node {
             children: vec![stretch::style::Node {
                 size: stretch::geometry::Size { width: stretch::style::Dimension::Points(50.0), ..Default::default() },
-                measure: Some(&|constraint| stretch::geometry::Size {
+                measure: Some(Box::new(|constraint| stretch::geometry::Size {
                     width: constraint.width.or_else(100.0),
                     height: constraint.height.or_else(100.0),
-                }),
+                })),
                 ..Default::default()
             }],
             ..Default::default()
@@ -223,10 +223,10 @@ mod measure {
         let layout = stretch::compute(&stretch::style::Node {
             children: vec![stretch::style::Node {
                 size: stretch::geometry::Size { height: stretch::style::Dimension::Points(50.0), ..Default::default() },
-                measure: Some(&|constraint| stretch::geometry::Size {
+                measure: Some(Box::new(|constraint| stretch::geometry::Size {
                     width: constraint.width.or_else(100.0),
                     height: constraint.height.or_else(100.0),
-                }),
+                })),
                 ..Default::default()
             }],
             ..Default::default()
@@ -252,10 +252,10 @@ mod measure {
                 stretch::style::Node {
                     flex_basis: stretch::style::Dimension::Points(50.0),
                     flex_grow: 1.0,
-                    measure: Some(&|constraint| stretch::geometry::Size {
+                    measure: Some(Box::new(|constraint| stretch::geometry::Size {
                         width: constraint.width.or_else(100.0),
                         height: constraint.height.or_else(100.0),
-                    }),
+                    })),
                     ..Default::default()
                 },
             ],
@@ -276,10 +276,10 @@ mod measure {
                 height: stretch::style::Dimension::Points(100.0),
             },
             children: vec![stretch::style::Node {
-                measure: Some(&|constraint| stretch::geometry::Size {
+                measure: Some(Box::new(|constraint| stretch::geometry::Size {
                     width: constraint.width.or_else(50.0),
                     height: constraint.height.or_else(50.0),
-                }),
+                })),
                 ..Default::default()
             }],
             ..Default::default()
@@ -298,10 +298,10 @@ mod measure {
             },
             children: vec![stretch::style::Node {
                 position_type: stretch::style::PositionType::Absolute,
-                measure: Some(&|constraint| stretch::geometry::Size {
+                measure: Some(Box::new(|constraint| stretch::geometry::Size {
                     width: constraint.width.or_else(50.0),
                     height: constraint.height.or_else(50.0),
-                }),
+                })),
                 ..Default::default()
             }],
             ..Default::default()
