@@ -54,14 +54,14 @@ struct FlexLine<'a> {
     offset_cross: f32,
 }
 
-pub fn compute(root: &style::Node) -> layout::Node {
+pub fn compute(root: &style::Node, size: Size<Number>) -> layout::Node {
     // TODO - Don't do two passes here just to handle min/max.
     // Probably want to pass min/max down as top level paramerer instead.
     let first_pass = compute_internal(
         root,
-        Size { width: root.size.width.resolve(Undefined), height: root.size.height.resolve(Undefined) },
-        Size { width: Undefined, height: Undefined },
-        Undefined,
+        Size { width: root.size.width.resolve(size.width), height: root.size.height.resolve(size.width) },
+        size,
+        size.width,
     );
 
     let result = compute_internal(
@@ -70,18 +70,18 @@ pub fn compute(root: &style::Node) -> layout::Node {
             width: first_pass
                 .size
                 .width
-                .maybe_max(root.min_size.width.resolve(Undefined))
-                .maybe_min(root.max_size.width.resolve(Undefined))
+                .maybe_max(root.min_size.width.resolve(size.width))
+                .maybe_min(root.max_size.width.resolve(size.width))
                 .to_number(),
             height: first_pass
                 .size
                 .height
-                .maybe_max(root.min_size.height.resolve(Undefined))
-                .maybe_min(root.max_size.height.resolve(Undefined))
+                .maybe_max(root.min_size.height.resolve(size.width))
+                .maybe_min(root.max_size.height.resolve(size.width))
                 .to_number(),
         },
-        Size { width: Undefined, height: Undefined },
-        Undefined,
+        size,
+        size.width,
     );
 
     let mut layout = layout::Node {

@@ -73,7 +73,7 @@ fn generate_test(name: &str, root: Element) -> String {
     
     src.push_str("let layout = stretch::compute(\n");
     src.push_str(&format!("&{}", &generate_node(&description)));
-    src.push_str(");\n\n");
+    src.push_str(", stretch::geometry::Size::undefined());\n\n");
 
     src.push_str(&generate_assertions("layout".to_string(), &description));
     src.push_str("}\n");

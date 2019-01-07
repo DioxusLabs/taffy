@@ -9,7 +9,6 @@ repository = "https://github.com/vislyhq/stretch"
 readme = "README.md"
 keywords = ["ios", "android", "cross-platform", "layout", "flexbox"]
 categories = ["gui"]
-license = "MIT"
 license-file = "LICENSE"
 
 [badges]

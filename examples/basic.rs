@@ -1,15 +1,18 @@
-fn main() {
-    let node = stretch::style::Node {
-        size: stretch::geometry::Size {
-            width: stretch::style::Dimension::Points(100.0),
-            height: stretch::style::Dimension::Points(100.0),
-        },
-        justify_content: stretch::style::JustifyContent::Center,
+use stretch::geometry::Size;
+use stretch::style::*;
 
-        children: vec![stretch::style::Node {
-            size: stretch::geometry::Size {
-                width: stretch::style::Dimension::Percent(0.5),
-                height: stretch::style::Dimension::Auto,
+fn main() {
+    let node = Node {
+        size: Size {
+            width: Dimension::Points(100.0),
+            height: Dimension::Points(100.0),
+        },
+        justify_content: JustifyContent::Center,
+
+        children: vec![Node {
+            size: Size {
+                width: Dimension::Percent(0.5),
+                height: Dimension::Auto,
             },
             ..Default::default()
         }],
@@ -17,7 +20,7 @@ fn main() {
         ..Default::default()
     };
 
-    let layout = stretch::compute(&node);
+    let layout = stretch::compute(&node, Size::undefined());
 
     println!("{:#?}", layout);
 }
