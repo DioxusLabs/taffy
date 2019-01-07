@@ -88,10 +88,7 @@ pub struct Size<T> {
 
 impl Size<()> {
     pub fn undefined() -> Size<Number> {
-        Size {
-            width: Number::Undefined,
-            height: Number::Undefined,
-        }
+        Size { width: Number::Undefined, height: Number::Undefined }
     }
 }
 
