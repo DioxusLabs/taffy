@@ -1,5 +1,6 @@
 use std::ops::Add;
 
+use crate::number::Number;
 use crate::style;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -83,6 +84,15 @@ where
 pub struct Size<T> {
     pub width: T,
     pub height: T,
+}
+
+impl Size<()> {
+    pub fn undefined() -> Size<Number> {
+        Size {
+            width: Number::Undefined,
+            height: Number::Undefined,
+        }
+    }
 }
 
 impl<T> Size<T> {
