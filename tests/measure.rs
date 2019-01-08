@@ -225,6 +225,31 @@ mod measure {
     }
 
     #[test]
+    fn remeasure_child_after_stretching() {
+        let layout = stretch::compute(
+            &stretch::style::Node {
+                size: stretch::geometry::Size {
+                    width: stretch::style::Dimension::Points(100.0),
+                    height: stretch::style::Dimension::Points(100.0),
+                },
+                children: vec![stretch::style::Node {
+                    measure: Some(Box::new(|constraint| {
+                        let height = constraint.height.or_else(50.0);
+                        let width = constraint.width.or_else(height);
+                        stretch::geometry::Size { width, height }
+                    })),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            },
+            stretch::geometry::Size::undefined(),
+        );
+
+        assert_eq!(layout.children[0].size.width, 100.0);
+        assert_eq!(layout.children[0].size.height, 100.0);
+    }
+
+    #[test]
     fn width_overrides_measure() {
         let layout = stretch::compute(
             &stretch::style::Node {
@@ -354,5 +379,27 @@ mod measure {
 
         assert_eq!(layout.children[0].size.width, 50.0);
         assert_eq!(layout.children[0].size.height, 50.0);
+    }
+
+    #[test]
+    fn ignore_invalid_measure() {
+        let layout = stretch::compute(
+            &stretch::style::Node {
+                size: stretch::geometry::Size {
+                    width: stretch::style::Dimension::Points(100.0),
+                    height: stretch::style::Dimension::Points(100.0),
+                },
+                children: vec![stretch::style::Node {
+                    flex_grow: 1.0,
+                    measure: Some(Box::new(|_| stretch::geometry::Size { width: 200.0, height: 200.0 })),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            },
+            stretch::geometry::Size::undefined(),
+        );
+
+        assert_eq!(layout.children[0].size.width, 100.0);
+        assert_eq!(layout.children[0].size.height, 100.0);
     }
 }
