@@ -59,7 +59,7 @@ pub fn compute(root: &style::Node, size: Size<Number>) -> layout::Node {
     // Probably want to pass min/max down as top level paramerer instead.
     let first_pass = compute_internal(
         root,
-        Size { width: root.size.width.resolve(size.width), height: root.size.height.resolve(size.width) },
+        Size { width: root.size.width.resolve(size.width), height: root.size.height.resolve(size.height) },
         size,
         size.width,
     );
@@ -76,8 +76,8 @@ pub fn compute(root: &style::Node, size: Size<Number>) -> layout::Node {
             height: first_pass
                 .size
                 .height
-                .maybe_max(root.min_size.height.resolve(size.width))
-                .maybe_min(root.max_size.height.resolve(size.width))
+                .maybe_max(root.min_size.height.resolve(size.height))
+                .maybe_min(root.max_size.height.resolve(size.height))
                 .to_number(),
         },
         size,
@@ -118,8 +118,30 @@ fn compute_internal(
             return ComputeResult { size: node_size.map(|s| s.or_else(0.0)), children: vec![] };
         }
 
+        // Measure function can be extremely expensive to call so cache calls to it
         if let Some(ref measure) = node.measure {
-            return ComputeResult { size: measure(node_size), children: vec![] };
+            let mut cache_list = node.measure_cache.get();
+            for cache in &cache_list.caches {
+                if let Some(cache) = cache {
+                    let width_compatible =
+                        if let Number::Defined(width) = node_size.width { width == cache.result.width } else { true };
+
+                    let height_compatible = if let Number::Defined(height) = node_size.height {
+                        height == cache.result.height
+                    } else {
+                        true
+                    };
+
+                    if cache.constraint == node_size || (width_compatible && height_compatible) {
+                        return ComputeResult { size: cache.result, children: vec![] };
+                    }
+                }
+            }
+
+            let size = measure(node_size);
+            cache_list.add(MeasureCache { constraint: node_size, result: size });
+            node.measure_cache.set(cache_list);
+            return ComputeResult { size, children: vec![] };
         }
     }
 

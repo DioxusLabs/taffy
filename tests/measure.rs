@@ -402,4 +402,32 @@ mod measure {
         assert_eq!(layout.children[0].size.width, 100.0);
         assert_eq!(layout.children[0].size.height, 100.0);
     }
+
+    #[test]
+    fn only_measure_once() {
+        let mut num_measure = 0;
+        let num_measure_ptr = &mut num_measure as *mut i32;
+
+        stretch::compute(
+            &stretch::style::Node {
+                children: vec![stretch::style::Node {
+                    children: vec![stretch::style::Node {
+                        measure: Some(Box::new(move |constraint| {
+                            unsafe { (*num_measure_ptr) += 1 };
+                            stretch::geometry::Size {
+                                width: constraint.width.or_else(50.0),
+                                height: constraint.height.or_else(50.0),
+                            }
+                        })),
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                }],
+                ..Default::default()
+            },
+            stretch::geometry::Size::undefined(),
+        );
+
+        assert_eq!(num_measure, 1);
+    }
 }
