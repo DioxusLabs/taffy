@@ -191,6 +191,31 @@ impl Default for Size<Dimension> {
     }
 }
 
+type MeasureFunc = Box<Fn(Size<Number>) -> Size<f32>>;
+
+#[derive(Copy, Clone)]
+pub struct MeasureCache {
+    pub constraint: Size<Number>,
+    pub result: Size<f32>,
+}
+
+#[derive(Copy, Clone)]
+pub struct MeasureCacheList {
+    pub caches: [Option<MeasureCache>; 5],
+    pub index: usize,
+}
+
+impl MeasureCacheList {
+    pub fn empty() -> MeasureCacheList {
+        MeasureCacheList { caches: [None, None, None, None, None], index: 0 }
+    }
+
+    pub fn add(&mut self, cache: MeasureCache) {
+        self.caches[self.index] = Some(cache);
+        self.index = (self.index + 1) % 6;
+    }
+}
+
 pub struct Node {
     pub display: Display,
 
@@ -221,9 +246,11 @@ pub struct Node {
     pub max_size: Size<Dimension>,
 
     pub aspect_ratio: Number,
-    pub measure: Option<Box<Fn(Size<Number>) -> Size<f32>>>,
+    pub measure: Option<MeasureFunc>,
 
     pub children: Vec<Node>,
+
+    pub measure_cache: std::cell::Cell<MeasureCacheList>,
 }
 
 impl Default for Node {
@@ -261,6 +288,8 @@ impl Default for Node {
             measure: None,
 
             children: vec![],
+
+            measure_cache: std::cell::Cell::new(MeasureCacheList::empty()),
         }
     }
 }
