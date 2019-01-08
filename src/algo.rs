@@ -250,11 +250,27 @@ fn compute_internal(
         //    is auto and not definite, in this calculation use fit-content as the
         //    flex item’s cross size. The flex base size is the item’s resulting main size.
 
+        let width: Number = if !child.size.width.is_defined()
+            && child.node.align_self(node) == style::AlignSelf::Stretch
+            && is_column
+        {
+            available_space.width
+        } else {
+            child.size.width
+        };
+
+        let height: Number =
+            if !child.size.height.is_defined() && child.node.align_self(node) == style::AlignSelf::Stretch && is_row {
+                available_space.height
+            } else {
+                child.size.height
+            };
+
         child.flex_basis = compute_internal(
             child.node,
             Size {
-                width: child.size.width.maybe_max(child.min_size.width).maybe_min(child.max_size.width),
-                height: child.size.height.maybe_max(child.min_size.height).maybe_min(child.max_size.height),
+                width: width.maybe_max(child.min_size.width).maybe_min(child.max_size.width),
+                height: height.maybe_max(child.min_size.height).maybe_min(child.max_size.height),
             },
             available_space,
             percent_calc_base_child,
