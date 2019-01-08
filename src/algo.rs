@@ -59,7 +59,7 @@ pub fn compute(root: &style::Node, size: Size<Number>) -> layout::Node {
     // Probably want to pass min/max down as top level paramerer instead.
     let first_pass = compute_internal(
         root,
-        Size { width: root.size.width.resolve(size.width), height: root.size.height.resolve(size.width) },
+        Size { width: root.size.width.resolve(size.width), height: root.size.height.resolve(size.height) },
         size,
         size.width,
     );
@@ -76,8 +76,8 @@ pub fn compute(root: &style::Node, size: Size<Number>) -> layout::Node {
             height: first_pass
                 .size
                 .height
-                .maybe_max(root.min_size.height.resolve(size.width))
-                .maybe_min(root.max_size.height.resolve(size.width))
+                .maybe_max(root.min_size.height.resolve(size.height))
+                .maybe_min(root.max_size.height.resolve(size.height))
                 .to_number(),
         },
         size,

@@ -191,6 +191,8 @@ impl Default for Size<Dimension> {
     }
 }
 
+type MeasureFunc = Box<Fn(Size<Number>) -> Size<f32>>;
+
 pub struct Node {
     pub display: Display,
 
@@ -221,7 +223,7 @@ pub struct Node {
     pub max_size: Size<Dimension>,
 
     pub aspect_ratio: Number,
-    pub measure: Option<Box<Fn(Size<Number>) -> Size<f32>>>,
+    pub measure: Option<MeasureFunc>,
 
     pub children: Vec<Node>,
 }

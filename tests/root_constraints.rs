@@ -12,11 +12,11 @@ mod root_constraints {
                 },
                 ..Default::default()
             },
-            stretch::geometry::Size { width: Number::Defined(100.0), height: Number::Defined(100.0) },
+            stretch::geometry::Size { width: Number::Defined(100.0), height: Number::Defined(200.0) },
         );
 
         assert_eq!(layout.size.width, 100.0);
-        assert_eq!(layout.size.height, 100.0);
+        assert_eq!(layout.size.height, 200.0);
     }
 
     #[test]
