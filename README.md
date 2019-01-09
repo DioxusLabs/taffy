@@ -50,7 +50,8 @@ Constributions are very welcome. Though we ask that you open an issue or pull re
 
 - Binary size reduction
 - Runtime performance
-- Benchmark tests
+- Generate benchmarks from html files like we do with unit tests
+- Add Benchmark tests
 - Ensure build / test environment works well on non macOS platforms
 - Alternate layout systems
 - Web compatibility tests
