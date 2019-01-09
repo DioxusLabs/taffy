@@ -199,23 +199,6 @@ pub struct MeasureCache {
     pub result: Size<f32>,
 }
 
-#[derive(Copy, Clone)]
-pub struct MeasureCacheList {
-    pub caches: [Option<MeasureCache>; 5],
-    pub index: usize,
-}
-
-impl MeasureCacheList {
-    pub fn empty() -> MeasureCacheList {
-        MeasureCacheList { caches: [None, None, None, None, None], index: 0 }
-    }
-
-    pub fn add(&mut self, cache: MeasureCache) {
-        self.caches[self.index] = Some(cache);
-        self.index = (self.index + 1) % 6;
-    }
-}
-
 pub struct Node {
     pub display: Display,
 
@@ -250,7 +233,7 @@ pub struct Node {
 
     pub children: Vec<Node>,
 
-    pub measure_cache: std::cell::Cell<MeasureCacheList>,
+    pub measure_cache: std::cell::Cell<Option<MeasureCache>>,
 }
 
 impl Default for Node {
@@ -289,7 +272,7 @@ impl Default for Node {
 
             children: vec![],
 
-            measure_cache: std::cell::Cell::new(MeasureCacheList::empty()),
+            measure_cache: std::cell::Cell::new(None),
         }
     }
 }
