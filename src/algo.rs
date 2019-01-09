@@ -123,11 +123,15 @@ fn compute_internal(
             if let Some(cache) = node.measure_cache.get() {
                 let width_compatible = if let Number::Defined(width) = node_size.width {
                     (width - cache.result.width).abs() < f32::EPSILON
-                } else { true };
+                } else {
+                    cache.constraint.width.is_undefined()
+                };
 
                 let height_compatible = if let Number::Defined(height) = node_size.height {
                     (height - cache.result.height).abs() < f32::EPSILON
-                } else { true };
+                } else {
+                    cache.constraint.height.is_undefined()
+                };
 
                 if cache.constraint == node_size || (width_compatible && height_compatible) {
                     return ComputeResult { size: cache.result, children: vec![] };
