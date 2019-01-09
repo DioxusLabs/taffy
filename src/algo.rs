@@ -118,8 +118,29 @@ fn compute_internal(
             return ComputeResult { size: node_size.map(|s| s.or_else(0.0)), children: vec![] };
         }
 
+        // Measure function can be extremely expensive to call so cache calls to it
         if let Some(ref measure) = node.measure {
-            return ComputeResult { size: measure(node_size), children: vec![] };
+            if let Some(cache) = node.measure_cache.get() {
+                let width_compatible = if let Number::Defined(width) = node_size.width {
+                    (width - cache.result.width).abs() < f32::EPSILON
+                } else {
+                    cache.constraint.width.is_undefined()
+                };
+
+                let height_compatible = if let Number::Defined(height) = node_size.height {
+                    (height - cache.result.height).abs() < f32::EPSILON
+                } else {
+                    cache.constraint.height.is_undefined()
+                };
+
+                if cache.constraint == node_size || (width_compatible && height_compatible) {
+                    return ComputeResult { size: cache.result, children: vec![] };
+                }
+            }
+
+            let size = measure(node_size);
+            node.measure_cache.set(Some(MeasureCache { constraint: node_size, result: size }));
+            return ComputeResult { size, children: vec![] };
         }
     }
 

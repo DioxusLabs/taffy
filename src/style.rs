@@ -193,6 +193,12 @@ impl Default for Size<Dimension> {
 
 type MeasureFunc = Box<Fn(Size<Number>) -> Size<f32>>;
 
+#[derive(Copy, Clone)]
+pub struct MeasureCache {
+    pub constraint: Size<Number>,
+    pub result: Size<f32>,
+}
+
 pub struct Node {
     pub display: Display,
 
@@ -226,6 +232,8 @@ pub struct Node {
     pub measure: Option<MeasureFunc>,
 
     pub children: Vec<Node>,
+
+    pub measure_cache: std::cell::Cell<Option<MeasureCache>>,
 }
 
 impl Default for Node {
@@ -263,6 +271,8 @@ impl Default for Node {
             measure: None,
 
             children: vec![],
+
+            measure_cache: std::cell::Cell::new(None),
         }
     }
 }
