@@ -1,3 +1,4 @@
+use crate::algo;
 use crate::geometry::{Rect, Size};
 use crate::number::Number;
 
@@ -193,10 +194,14 @@ impl Default for Size<Dimension> {
 
 type MeasureFunc = Box<Fn(Size<Number>) -> Size<f32>>;
 
-#[derive(Copy, Clone)]
-pub struct MeasureCache {
-    pub constraint: Size<Number>,
-    pub result: Size<f32>,
+#[derive(Debug, Clone)]
+pub struct LayoutCache {
+    pub node_size: Size<Number>,
+    pub parent_size: Size<Number>,
+    pub percent_calc_base: Number,
+    pub perform_layout: bool,
+
+    pub result: algo::ComputeResult,
 }
 
 pub struct Node {
@@ -233,7 +238,7 @@ pub struct Node {
 
     pub children: Vec<Node>,
 
-    pub measure_cache: std::cell::Cell<Option<MeasureCache>>,
+    pub layout_cache: std::cell::RefCell<Option<LayoutCache>>,
 }
 
 impl Default for Node {
@@ -272,7 +277,7 @@ impl Default for Node {
 
             children: vec![],
 
-            measure_cache: std::cell::Cell::new(None),
+            layout_cache: std::cell::RefCell::new(None),
         }
     }
 }

@@ -11,10 +11,10 @@ use crate::number::*;
 
 use crate::geometry::{Point, Rect, Size};
 
-#[derive(Debug)]
-struct ComputeResult {
-    size: Size<f32>,
-    children: Vec<layout::Node>,
+#[derive(Debug, Clone)]
+pub struct ComputeResult {
+    pub size: Size<f32>,
+    pub children: Vec<layout::Node>,
 }
 
 struct FlexItem<'a> {
@@ -115,35 +115,54 @@ fn compute_internal(
     percent_calc_base: Number,
     perform_layout: bool,
 ) -> ComputeResult {
+    // First we check if we have a result for the given input
+    {
+        let layout_cache = node.layout_cache.borrow();
+        if layout_cache.is_some() {
+            let cache = layout_cache.as_ref().unwrap();
+            if cache.perform_layout || !perform_layout {
+                let width_compatible = if let Number::Defined(width) = node_size.width {
+                    (width - cache.result.size.width).abs() < f32::EPSILON
+                } else {
+                    cache.node_size.width.is_undefined()
+                };
+
+                let height_compatible = if let Number::Defined(height) = node_size.height {
+                    (height - cache.result.size.height).abs() < f32::EPSILON
+                } else {
+                    cache.node_size.height.is_undefined()
+                };
+
+                if width_compatible && height_compatible {
+                    return cache.result.clone();
+                }
+
+                if cache.node_size == node_size
+                    && cache.parent_size == parent_size
+                    && cache.percent_calc_base == percent_calc_base
+                {
+                    return cache.result.clone();
+                }
+            }
+        }
+    }
+
     // If this is a leaf node we can skip a lot of this function in some cases
     if node.children.is_empty() {
         if node_size.width.is_defined() && node_size.height.is_defined() {
             return ComputeResult { size: node_size.map(|s| s.or_else(0.0)), children: vec![] };
         }
 
-        // Measure function can be extremely expensive to call so cache calls to it
         if let Some(ref measure) = node.measure {
-            if let Some(cache) = node.measure_cache.get() {
-                let width_compatible = if let Number::Defined(width) = node_size.width {
-                    (width - cache.result.width).abs() < f32::EPSILON
-                } else {
-                    cache.constraint.width.is_undefined()
-                };
-
-                let height_compatible = if let Number::Defined(height) = node_size.height {
-                    (height - cache.result.height).abs() < f32::EPSILON
-                } else {
-                    cache.constraint.height.is_undefined()
-                };
-
-                if cache.constraint == node_size || (width_compatible && height_compatible) {
-                    return ComputeResult { size: cache.result, children: vec![] };
-                }
-            }
-
-            let size = measure(node_size);
-            node.measure_cache.set(Some(MeasureCache { constraint: node_size, result: size }));
-            return ComputeResult { size, children: vec![] };
+            let result = ComputeResult { size: measure(node_size), children: vec![] };
+            node.layout_cache.replace(Some(LayoutCache {
+                node_size,
+                parent_size,
+                percent_calc_base,
+                perform_layout,
+                result: result.clone(),
+            }));
+            return result;
         }
     }
 
@@ -1005,7 +1024,15 @@ fn compute_internal(
     // We have the container size. If our caller does not care about performing
     // layout we are done now.
     if !perform_layout {
-        return ComputeResult { size: container_size, children: vec![] };
+        let result = ComputeResult { size: container_size, children: vec![] };
+        node.layout_cache.replace(Some(LayoutCache {
+            node_size,
+            parent_size,
+            percent_calc_base,
+            perform_layout,
+            result: result.clone(),
+        }));
+        return result;
     }
 
     // 16. Align all flex lines per align-content.
@@ -1277,5 +1304,14 @@ fn compute_internal(
     children.append(&mut hidden_children);
 
     children.sort_by(|c1, c2| c1.order.cmp(&c2.order));
-    ComputeResult { size: container_size, children }
+
+    let result = ComputeResult { size: container_size, children };
+    node.layout_cache.replace(Some(LayoutCache {
+        node_size,
+        parent_size,
+        percent_calc_base,
+        perform_layout,
+        result: result.clone(),
+    }));
+    result
 }

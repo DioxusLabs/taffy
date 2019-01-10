@@ -1,6 +1,6 @@
 use crate::geometry::{Point, Size};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Node {
     pub(crate) order: u32,
     pub size: Size<f32>,
