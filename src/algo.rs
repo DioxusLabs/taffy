@@ -62,6 +62,7 @@ pub fn compute(root: &style::Node, size: Size<Number>) -> layout::Node {
         Size { width: root.size.width.resolve(size.width), height: root.size.height.resolve(size.height) },
         size,
         size.width,
+        false,
     );
 
     let result = compute_internal(
@@ -82,6 +83,7 @@ pub fn compute(root: &style::Node, size: Size<Number>) -> layout::Node {
         },
         size,
         size.width,
+        true,
     );
 
     let mut layout = layout::Node {
@@ -111,6 +113,7 @@ fn compute_internal(
     node_size: Size<Number>,
     parent_size: Size<Number>,
     percent_calc_base: Number,
+    perform_layout: bool,
 ) -> ComputeResult {
     // If this is a leaf node we can skip a lot of this function in some cases
     if node.children.is_empty() {
@@ -295,6 +298,7 @@ fn compute_internal(
             },
             available_space,
             percent_calc_base_child,
+            false,
         )
         .size
         .main(dir)
@@ -318,6 +322,7 @@ fn compute_internal(
                 Size { width: Undefined, height: Undefined },
                 available_space,
                 percent_calc_base_child,
+                false,
             )
             .size
             .width
@@ -417,6 +422,7 @@ fn compute_internal(
                         },
                         available_space,
                         percent_calc_base_child,
+                        false,
                     )
                     .size
                     .main(dir)
@@ -557,6 +563,7 @@ fn compute_internal(
                         Size { width: Undefined, height: Undefined },
                         available_space,
                         percent_calc_base_child,
+                        false,
                     )
                     .size
                     .width
@@ -637,6 +644,7 @@ fn compute_internal(
                         height: if is_row { available_space.height } else { container_size.main(dir).to_number() },
                     },
                     percent_calc_base_child,
+                    false,
                 )
                 .size
                 .cross(dir)
@@ -682,6 +690,7 @@ fn compute_internal(
                     height: if is_row { node_size.height } else { container_size.height.to_number() },
                 },
                 percent_calc_base_child,
+                true,
             );
             child.baseline = calc_baseline(&layout::Node {
                 order: node.children.iter().position(|n| ref_eq(n, child.node)).unwrap() as u32,
@@ -993,6 +1002,12 @@ fn compute_internal(
     container_size.set_cross(dir, node_size.cross(dir).or_else(total_cross_size + padding_border.cross(dir)));
     inner_container_size.set_cross(dir, container_size.cross(dir) - padding_border.cross(dir));
 
+    // We have the container size. If our caller does not care about performing
+    // layout we are done now.
+    if !perform_layout {
+        return ComputeResult { size: container_size, children: vec![] };
+    }
+
     // 16. Align all flex lines per align-content.
 
     let free_space = inner_container_size.cross(dir) - total_cross_size;
@@ -1063,6 +1078,7 @@ fn compute_internal(
                     child.target_size.map(|s| s.to_number()),
                     container_size.map(|s| s.to_number()),
                     percent_calc_base_child,
+                    true,
                 );
 
                 let offset_main = total_offset_main
@@ -1164,6 +1180,7 @@ fn compute_internal(
                 Size { width, height },
                 Size { width: container_width, height: container_height },
                 container_width,
+                true,
             );
 
             let free_main_space = container_size.main(dir)
