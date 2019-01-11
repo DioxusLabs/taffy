@@ -178,6 +178,14 @@ impl Dimension {
             _ => Number::Undefined,
         }
     }
+
+    pub(crate) fn is_defined(self) -> bool {
+        match self {
+            Dimension::Points(_) => true,
+            Dimension::Percent(_) => true,
+            _ => false,
+        }
+    }
 }
 
 impl Default for Rect<Dimension> {
