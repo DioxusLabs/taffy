@@ -55,36 +55,49 @@ struct FlexLine<'a> {
 }
 
 pub fn compute(root: &style::Node, size: Size<Number>) -> layout::Node {
-    // TODO - Don't do two passes here just to handle min/max.
-    // Probably want to pass min/max down as top level paramerer instead.
-    let first_pass = compute_internal(
-        root,
-        Size { width: root.size.width.resolve(size.width), height: root.size.height.resolve(size.height) },
-        size,
-        size.width,
-        false,
-    );
+    let has_root_min_max = root.min_size.width.is_defined()
+        || root.min_size.height.is_defined()
+        || root.max_size.width.is_defined()
+        || root.max_size.height.is_defined();
 
-    let result = compute_internal(
-        root,
-        Size {
-            width: first_pass
-                .size
-                .width
-                .maybe_max(root.min_size.width.resolve(size.width))
-                .maybe_min(root.max_size.width.resolve(size.width))
-                .to_number(),
-            height: first_pass
-                .size
-                .height
-                .maybe_max(root.min_size.height.resolve(size.height))
-                .maybe_min(root.max_size.height.resolve(size.height))
-                .to_number(),
-        },
-        size,
-        size.width,
-        true,
-    );
+    let result = if has_root_min_max {
+        let first_pass = compute_internal(
+            root,
+            Size { width: root.size.width.resolve(size.width), height: root.size.height.resolve(size.height) },
+            size,
+            size.width,
+            false,
+        );
+
+        compute_internal(
+            root,
+            Size {
+                width: first_pass
+                    .size
+                    .width
+                    .maybe_max(root.min_size.width.resolve(size.width))
+                    .maybe_min(root.max_size.width.resolve(size.width))
+                    .to_number(),
+                height: first_pass
+                    .size
+                    .height
+                    .maybe_max(root.min_size.height.resolve(size.height))
+                    .maybe_min(root.max_size.height.resolve(size.height))
+                    .to_number(),
+            },
+            size,
+            size.width,
+            true,
+        )
+    } else {
+        compute_internal(
+            root,
+            Size { width: root.size.width.resolve(size.width), height: root.size.height.resolve(size.height) },
+            size,
+            size.width,
+            true,
+        )
+    };
 
     let mut layout = layout::Node {
         order: 0,
