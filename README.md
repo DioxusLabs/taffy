@@ -1,5 +1,6 @@
 # Stretch
 [![CircleCI](https://circleci.com/gh/vislyhq/stretch.svg?style=svg)](https://circleci.com/gh/vislyhq/stretch)
+[![Cargo](https://img.shields.io/crates/v/stretch.svg)](https://crates.io/crates/stretch)
 
 Highly experimental implementation of Flexbox written in [Rust](https://www.rust-lang.org). The goal of stretch is to provide a solid foundation for layout across all platforms with a specific focus on mobile. Long term we want stretch to not only support flexbox but also many other layout algorithms. Stretch is not yet used in production as it is still missing some core functionality but we have been very pleased with the development progress to date and hope to deploy it in production systems very soon.
 
@@ -65,7 +66,7 @@ Constributions are very welcome. Though we ask that you open an issue or pull re
 - JavaScript platform bindings
 
 ## Relationship to Yoga
-[Yoga](https://www.yogalayout.com) is a cross-platform implementation of Flebox written in C. Yoga is a fantastic project but has some fundamental issues which we hope to resolve. Compared to Yoga we aim to have a stronger adherence to web standards, a flexible architecture supporting multiple layout algorithms, and performance improvements including multi-threaded layout. In addition to this we aim to use a safer language with a more modern codebase.
+[Yoga](https://www.yogalayout.com) is a cross-platform implementation of Flebox written in C. Yoga is a fantastic project but has some fundamental issues which we hope to resolve. Compared to Yoga we aim to have a stronger adherence to web standards, a flexible architecture eventually supporting multiple layout algorithms, and future performance improvements including multi-threaded layout. In addition to this we aim to use a safer language with a more modern codebase.
 
 # LICENCE
 ```
