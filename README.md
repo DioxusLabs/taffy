@@ -66,7 +66,7 @@ Constributions are very welcome. Though we ask that you open an issue or pull re
 - JavaScript platform bindings
 
 ## Relationship to Yoga
-[Yoga](https://www.yogalayout.com) is a cross-platform implementation of Flebox written in C. Yoga is a fantastic project but has some fundamental issues which we hope to resolve. Compared to Yoga we aim to have a stronger adherence to web standards, a flexible architecture eventually supporting multiple layout algorithms, and future performance improvements including multi-threaded layout. In addition to this we aim to use a safer language with a more modern codebase.
+[Yoga](https://www.yogalayout.com) is a cross-platform implementation of Flexbox written in C. Yoga is a fantastic project but has some fundamental issues which we hope to resolve. Compared to Yoga we aim to have a stronger adherence to web standards, a flexible architecture eventually supporting multiple layout algorithms, and future performance improvements including multi-threaded layout. In addition to this we aim to use a safer language with a more modern codebase.
 
 # LICENCE
 ```
