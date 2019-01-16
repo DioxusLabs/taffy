@@ -1,7 +1,12 @@
-use ref_eq::ref_eq;
-use std::f32;
+#[cfg(not(feature = "std"))]
+use alloc::{vec, vec::Vec};
+#[cfg(not(feature = "std"))]
+use libm::F32Ext;
+
+use core::f32;
 
 use crate::layout;
+use crate::ref_eq::ref_eq;
 
 use crate::style;
 use crate::style::*;
