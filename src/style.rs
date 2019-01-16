@@ -1,3 +1,8 @@
+#[cfg(not(feature = "std"))]
+use alloc::boxed::Box;
+#[cfg(not(feature = "std"))]
+use alloc::{vec, vec::Vec};
+
 use crate::algo;
 use crate::geometry::{Rect, Size};
 use crate::number::Number;
@@ -246,7 +251,7 @@ pub struct Node {
 
     pub children: Vec<Node>,
 
-    pub layout_cache: std::cell::RefCell<Option<LayoutCache>>,
+    pub layout_cache: core::cell::RefCell<Option<LayoutCache>>,
 }
 
 impl Default for Node {
@@ -285,7 +290,7 @@ impl Default for Node {
 
             children: vec![],
 
-            layout_cache: std::cell::RefCell::new(None),
+            layout_cache: core::cell::RefCell::new(None),
         }
     }
 }
