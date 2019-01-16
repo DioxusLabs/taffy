@@ -1,4 +1,4 @@
-use std::ops;
+use core::ops;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum Number {

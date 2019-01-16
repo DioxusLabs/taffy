@@ -1,3 +1,6 @@
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+
 use crate::geometry::{Point, Size};
 
 #[derive(Debug, Clone)]
