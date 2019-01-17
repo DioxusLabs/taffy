@@ -47,7 +47,7 @@ brew cask install chromedriver
 [Selenium](https://www.seleniumhq.org) is bundled in the repo so no need to download it. However you must ensure to have java installed first. Once you have everything install you can re-generate all tests by running `cargo run --manifest-path scripts/gentest/Cargo.toml`. To add a new test case add another HTML file to `/test_fixtures` following the current tests these as a template for new tests.
 
 ## Contributing
-Constributions are very welcome. Though we ask that you open an issue or pull request early in the process (before writing code) so we can discuss solutions and additions before you start spending time on implementing them. There are some specific areas where we would be extra happy to recieve contributions in.
+Contributions are very welcome. Though we ask that you open an issue or pull request early in the process (before writing code) so we can discuss solutions and additions before you start spending time on implementing them. There are some specific areas where we would be extra happy to receive contributions in.
 
 - Binary size reduction
 - Runtime performance
@@ -59,7 +59,7 @@ Constributions are very welcome. Though we ask that you open an issue or pull re
 - RTL support
 - Incremental layout support
 
-**NOTICE** The library's API is currently very experimental so we won't be accepting any contributions which put a dependency on a stable API such as platform bindings. Once stabalized we would love contributions to the core repo for platform bindings such as.
+**NOTICE** The library's API is currently very experimental so we won't be accepting any contributions which put a dependency on a stable API such as platform bindings. Once stabilized we would love contributions to the core repo for platform bindings such as.
 
 - Android platform bindings
 - iOS platform bindings
