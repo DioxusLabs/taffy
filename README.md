@@ -2,7 +2,7 @@
 [![CircleCI](https://circleci.com/gh/vislyhq/stretch.svg?style=svg)](https://circleci.com/gh/vislyhq/stretch)
 [![Cargo](https://img.shields.io/crates/v/stretch.svg)](https://crates.io/crates/stretch)
 
-Highly experimental implementation of Flexbox written in [Rust](https://www.rust-lang.org). The goal of stretch is to provide a solid foundation for layout across all platforms with a specific focus on mobile. Long term we want stretch to not only support flexbox but also many other layout algorithms. Stretch is not yet used in production as it is still missing some core functionality but we have been very pleased with the development progress to date and hope to deploy it in production systems very soon.
+Highly experimental implementation of Flexbox written in [Rust](https://www.rust-lang.org). The goal of stretch is to provide a solid foundation for layout across all platforms with a specific focus on mobile. Long term we want stretch to not only support flexbox but also many other layout algorithms. Stretch is not yet used in production as it is still missing some core functionality, but we have been very pleased with the development progress to date and hope to deploy it in production systems very soon.
 
 ## Goals
 Before using or contributing to stretch it is good to be aware of the core goals of the project. These are goals we are working towards, not necessarily features we currently support.
@@ -44,7 +44,7 @@ brew tap homebrew/cask
 brew cask install chromedriver
 ```
 
-[Selenium](https://www.seleniumhq.org) is bundled in the repo so no need to download it. However you must ensure to have java installed first. Once you have everything install you can re-generate all tests by running `cargo run --manifest-path scripts/gentest/Cargo.toml`. To add a new test case add another HTML file to `/test_fixtures` following the current tests these as a template for new tests.
+[Selenium](https://www.seleniumhq.org) is bundled in the repo so no need to download it. However you must ensure to have java installed first. Once you have everything installed you can re-generate all tests by running `cargo run --manifest-path scripts/gentest/Cargo.toml`. To add a new test case add another HTML file to `/test_fixtures` following the current tests as a template for new tests.
 
 ## Contributing
 Contributions are very welcome. Though we ask that you open an issue or pull request early in the process (before writing code) so we can discuss solutions and additions before you start spending time on implementing them. There are some specific areas where we would be extra happy to receive contributions in.
