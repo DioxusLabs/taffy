@@ -355,17 +355,12 @@ fn compute_internal(
         // webkit handled various scenarios. Can probably be solved better by passing in
         // min-content max-content constraints fromt the top
         let min_main = if is_row {
-            compute_internal(
-                child.node,
-                Size { width: Undefined, height: Undefined },
-                available_space,
-                false,
-            )
-            .size
-            .width
-            .maybe_max(child.min_size.width)
-            .maybe_min(child.size.width)
-            .to_number()
+            compute_internal(child.node, Size { width: Undefined, height: Undefined }, available_space, false)
+                .size
+                .width
+                .maybe_max(child.min_size.width)
+                .maybe_min(child.size.width)
+                .to_number()
         } else {
             child.min_size.main(dir)
         };
@@ -594,17 +589,12 @@ fn compute_internal(
                 // min-content max-content constraints fromt the top. Need to figure out correct thing to do here as
                 // just piling on more conditionals.
                 let min_main = if is_row && child.node.measure.is_none() {
-                    compute_internal(
-                        child.node,
-                        Size { width: Undefined, height: Undefined },
-                        available_space,
-                        false,
-                    )
-                    .size
-                    .width
-                    .maybe_min(child.size.width)
-                    .maybe_max(child.min_size.width)
-                    .to_number()
+                    compute_internal(child.node, Size { width: Undefined, height: Undefined }, available_space, false)
+                        .size
+                        .width
+                        .maybe_min(child.size.width)
+                        .maybe_max(child.min_size.width)
+                        .to_number()
                 } else {
                     child.min_size.main(dir)
                 };
@@ -1039,12 +1029,7 @@ fn compute_internal(
     // layout we are done now.
     if !perform_layout {
         let result = ComputeResult { size: container_size, children: vec![] };
-        node.layout_cache.replace(Some(LayoutCache {
-            node_size,
-            parent_size,
-            perform_layout,
-            result: result.clone(),
-        }));
+        node.layout_cache.replace(Some(LayoutCache { node_size, parent_size, perform_layout, result: result.clone() }));
         return result;
     }
 
@@ -1317,11 +1302,6 @@ fn compute_internal(
     children.sort_by(|c1, c2| c1.order.cmp(&c2.order));
 
     let result = ComputeResult { size: container_size, children };
-    node.layout_cache.replace(Some(LayoutCache {
-        node_size,
-        parent_size,
-        perform_layout,
-        result: result.clone(),
-    }));
+    node.layout_cache.replace(Some(LayoutCache { node_size, parent_size, perform_layout, result: result.clone() }));
     result
 }
