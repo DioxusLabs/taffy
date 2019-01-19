@@ -211,7 +211,6 @@ type MeasureFunc = Box<Fn(Size<Number>) -> Size<f32>>;
 pub struct LayoutCache {
     pub node_size: Size<Number>,
     pub parent_size: Size<Number>,
-    pub percent_calc_base: Number,
     pub perform_layout: bool,
 
     pub result: algo::ComputeResult,
