@@ -48,7 +48,7 @@ struct FlexItem<'a> {
 
     // temporary values for holding offset in the main / cross direction.
     // offset is the relative position from the item's natural flow position based on
-    // relative position values, alignment, and justification. Does not unclude margin/padding/border.
+    // relative position values, alignment, and justification. Does not include margin/padding/border.
     offset_main: f32,
     offset_cross: f32,
 }
@@ -136,8 +136,7 @@ fn compute_internal(
     // First we check if we have a result for the given input
     {
         let layout_cache = node.layout_cache.borrow();
-        if layout_cache.is_some() {
-            let cache = layout_cache.as_ref().unwrap();
+        if let Some(cache) = layout_cache.as_ref() {
             if cache.perform_layout || !perform_layout {
                 let width_compatible = if let Number::Defined(width) = node_size.width {
                     (width - cache.result.size.width).abs() < f32::EPSILON
@@ -352,7 +351,7 @@ fn compute_internal(
         // TODO - not really spec abiding but needs to be done somewhere. probably somewhere else though.
         // The following logic was developed not from the spec but by trail and error looking into how
         // webkit handled various scenarios. Can probably be solved better by passing in
-        // min-content max-content constraints fromt the top
+        // min-content max-content constraints from the top
         let min_main = if is_row {
             compute_internal(
                 child.node,
@@ -471,7 +470,7 @@ fn compute_internal(
             }
 
             // TODO this should really only be set inside the if-statement below but
-            // that casues the target_main_size to never be set for some items
+            // that causes the target_main_size to never be set for some items
 
             child.outer_target_size.set_main(dir, child.target_size.main(dir) + child.margin.main(dir));
 
@@ -592,7 +591,7 @@ fn compute_internal(
                 // TODO - not really spec abiding but needs to be done somewhere. probably somewhere else though.
                 // The following logic was developed not from the spec but by trail and error looking into how
                 // webkit handled various scenarios. Can probably be solved better by passing in
-                // min-content max-content constraints fromt the top. Need to figure out correct thing to do here as
+                // min-content max-content constraints from the top. Need to figure out correct thing to do here as
                 // just piling on more conditionals.
                 let min_main = if is_row && child.node.measure.is_none() {
                     compute_internal(
@@ -1008,7 +1007,7 @@ fn compute_internal(
                         if is_row {
                             max_baseline - child.baseline
                         } else {
-                            // basline alignment only makes sense if the direction is row
+                            // baseline alignment only makes sense if the direction is row
                             // we treat it as flex-start alignment in columns.
                             if is_wrap_reverse {
                                 free_space
@@ -1182,8 +1181,9 @@ fn compute_internal(
     let mut absolute_children: Vec<layout::Node> = node
         .children
         .iter()
-        .filter(|child| child.position_type == PositionType::Absolute)
-        .map(|child| {
+        .enumerate()
+        .filter(|(_, child)| child.position_type == PositionType::Absolute)
+        .map(|(order, child)| {
             let container_width = container_size.width.to_number();
             let container_height = container_size.height.to_number();
 
@@ -1290,7 +1290,7 @@ fn compute_internal(
             };
 
             layout::Node {
-                order: node.children.iter().position(|n| ref_eq(n, child)).unwrap() as u32,
+                order: order as u32,
                 size: result.size,
                 location: Point {
                     x: if is_row { offset_main } else { offset_cross },
@@ -1303,20 +1303,26 @@ fn compute_internal(
 
     children.append(&mut absolute_children);
 
-    fn hidden_layout(parent: &style::Node, node: &style::Node) -> layout::Node {
+    fn hidden_layout(node: &style::Node, order: u32) -> layout::Node {
         layout::Node {
-            order: parent.children.iter().position(|n| ref_eq(n, node)).unwrap() as u32,
+            order,
             size: Size { width: 0.0, height: 0.0 },
             location: Point { x: 0.0, y: 0.0 },
-            children: node.children.iter().map(|child| hidden_layout(node, child)).collect(),
+            children: node
+                .children
+                .iter()
+                .enumerate()
+                .map(|(order, child)| hidden_layout(child, order as _))
+                .collect(),
         }
     }
 
     let mut hidden_children: Vec<layout::Node> = node
         .children
         .iter()
-        .filter(|child| child.display == Display::None)
-        .map(|child| hidden_layout(node, child))
+        .enumerate()
+        .filter(|(_, child)| child.display == Display::None)
+        .map(|(order, child)| hidden_layout(child, order as _))
         .collect();
 
     children.append(&mut hidden_children);
