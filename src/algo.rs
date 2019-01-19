@@ -70,7 +70,6 @@ pub fn compute(root: &style::Node, size: Size<Number>) -> layout::Node {
             root,
             Size { width: root.size.width.resolve(size.width), height: root.size.height.resolve(size.height) },
             size,
-            size.width,
             false,
         );
 
@@ -91,7 +90,6 @@ pub fn compute(root: &style::Node, size: Size<Number>) -> layout::Node {
                     .to_number(),
             },
             size,
-            size.width,
             true,
         )
     } else {
@@ -99,7 +97,6 @@ pub fn compute(root: &style::Node, size: Size<Number>) -> layout::Node {
             root,
             Size { width: root.size.width.resolve(size.width), height: root.size.height.resolve(size.height) },
             size,
-            size.width,
             true,
         )
     };
@@ -130,7 +127,6 @@ fn compute_internal(
     node: &style::Node,
     node_size: Size<Number>,
     parent_size: Size<Number>,
-    percent_calc_base: Number,
     perform_layout: bool,
 ) -> ComputeResult {
     // First we check if we have a result for the given input
@@ -155,10 +151,7 @@ fn compute_internal(
                     return cache.result.clone();
                 }
 
-                if cache.node_size == node_size
-                    && cache.parent_size == parent_size
-                    && cache.percent_calc_base == percent_calc_base
-                {
+                if cache.node_size == node_size && cache.parent_size == parent_size {
                     return cache.result.clone();
                 }
             }
@@ -176,7 +169,6 @@ fn compute_internal(
             node.layout_cache.replace(Some(LayoutCache {
                 node_size,
                 parent_size,
-                percent_calc_base,
                 perform_layout,
                 result: result.clone(),
             }));
@@ -192,9 +184,9 @@ fn compute_internal(
     let is_column = dir.is_column();
     let is_wrap_reverse = node.flex_wrap == FlexWrap::WrapReverse;
 
-    let margin = node.margin.map(|n| n.resolve(percent_calc_base).or_else(0.0));
-    let padding = node.padding.map(|n| n.resolve(percent_calc_base).or_else(0.0));
-    let border = node.border.map(|n| n.resolve(percent_calc_base).or_else(0.0));
+    let margin = node.margin.map(|n| n.resolve(parent_size.width).or_else(0.0));
+    let padding = node.padding.map(|n| n.resolve(parent_size.width).or_else(0.0));
+    let border = node.border.map(|n| n.resolve(parent_size.width).or_else(0.0));
 
     let padding_border = Rect {
         start: padding.start + border.start,
@@ -208,7 +200,6 @@ fn compute_internal(
         height: node_size.height - padding_border.vertical(),
     };
 
-    let percent_calc_base_child = node_inner_size.width;
     let mut container_size = Size { width: 0.0, height: 0.0 };
     let mut inner_container_size = Size { width: 0.0, height: 0.0 };
 
@@ -237,14 +228,25 @@ fn compute_internal(
         .map(|child| FlexItem {
             node: child,
 
-            size: child.size.map(|s| s.resolve(percent_calc_base_child)),
-            min_size: child.min_size.map(|s| s.resolve(percent_calc_base_child)),
-            max_size: child.max_size.map(|s| s.resolve(percent_calc_base_child)),
+            size: Size {
+                width: child.size.width.resolve(node_inner_size.width),
+                height: child.size.height.resolve(node_inner_size.height),
+            },
 
-            position: child.position.map(|p| p.resolve(percent_calc_base_child)),
-            margin: child.margin.map(|m| m.resolve(percent_calc_base_child).or_else(0.0)),
-            padding: child.padding.map(|p| p.resolve(percent_calc_base_child).or_else(0.0)),
-            border: child.border.map(|b| b.resolve(percent_calc_base_child).or_else(0.0)),
+            min_size: Size {
+                width: child.min_size.width.resolve(node_inner_size.width),
+                height: child.min_size.height.resolve(node_inner_size.height),
+            },
+
+            max_size: Size {
+                width: child.max_size.width.resolve(node_inner_size.width),
+                height: child.max_size.height.resolve(node_inner_size.height),
+            },
+
+            position: child.position.map(|p| p.resolve(node_inner_size.width)),
+            margin: child.margin.map(|m| m.resolve(node_inner_size.width).or_else(0.0)),
+            padding: child.padding.map(|p| p.resolve(node_inner_size.width).or_else(0.0)),
+            border: child.border.map(|b| b.resolve(node_inner_size.width).or_else(0.0)),
 
             flex_basis: 0.0,
             inner_flex_basis: 0.0,
@@ -268,7 +270,7 @@ fn compute_internal(
     flex_items.iter_mut().for_each(|child| {
         // A. If the item has a definite used flex basis, that’s the flex base size.
 
-        let flex_basis = child.node.flex_basis.resolve(percent_calc_base_child);
+        let flex_basis = child.node.flex_basis.resolve(node_inner_size.main(dir));
         if flex_basis.is_defined() {
             child.flex_basis = flex_basis.or_else(0.0);
             return;
@@ -334,7 +336,6 @@ fn compute_internal(
                 height: height.maybe_max(child.min_size.height).maybe_min(child.max_size.height),
             },
             available_space,
-            percent_calc_base_child,
             false,
         )
         .size
@@ -358,7 +359,6 @@ fn compute_internal(
                 child.node,
                 Size { width: Undefined, height: Undefined },
                 available_space,
-                percent_calc_base_child,
                 false,
             )
             .size
@@ -458,7 +458,6 @@ fn compute_internal(
                             height: child.size.height.maybe_max(child.min_size.height).maybe_min(child.max_size.height),
                         },
                         available_space,
-                        percent_calc_base_child,
                         false,
                     )
                     .size
@@ -599,7 +598,6 @@ fn compute_internal(
                         child.node,
                         Size { width: Undefined, height: Undefined },
                         available_space,
-                        percent_calc_base_child,
                         false,
                     )
                     .size
@@ -680,7 +678,6 @@ fn compute_internal(
                         width: if is_row { container_size.main(dir).to_number() } else { available_space.width },
                         height: if is_row { available_space.height } else { container_size.main(dir).to_number() },
                     },
-                    percent_calc_base_child,
                     false,
                 )
                 .size
@@ -726,7 +723,6 @@ fn compute_internal(
                     width: if is_row { container_size.width.to_number() } else { node_size.width },
                     height: if is_row { node_size.height } else { container_size.height.to_number() },
                 },
-                percent_calc_base_child,
                 true,
             );
             child.baseline = calc_baseline(&layout::Node {
@@ -1046,7 +1042,6 @@ fn compute_internal(
         node.layout_cache.replace(Some(LayoutCache {
             node_size,
             parent_size,
-            percent_calc_base,
             perform_layout,
             result: result.clone(),
         }));
@@ -1122,7 +1117,6 @@ fn compute_internal(
                     child.node,
                     child.target_size.map(|s| s.to_number()),
                     container_size.map(|s| s.to_number()),
-                    percent_calc_base_child,
                     true,
                 );
 
@@ -1224,7 +1218,6 @@ fn compute_internal(
                 child,
                 Size { width, height },
                 Size { width: container_width, height: container_height },
-                container_width,
                 true,
             );
 
@@ -1232,15 +1225,15 @@ fn compute_internal(
                 - result
                     .size
                     .main(dir)
-                    .maybe_max(child.min_main_size(dir).resolve(percent_calc_base_child))
-                    .maybe_min(child.max_main_size(dir).resolve(percent_calc_base_child));
+                    .maybe_max(child.min_main_size(dir).resolve(node_inner_size.main(dir)))
+                    .maybe_min(child.max_main_size(dir).resolve(node_inner_size.main(dir)));
 
             let free_cross_space = container_size.cross(dir)
                 - result
                     .size
                     .cross(dir)
-                    .maybe_max(child.min_cross_size(dir).resolve(percent_calc_base_child))
-                    .maybe_min(child.max_cross_size(dir).resolve(percent_calc_base_child));
+                    .maybe_max(child.min_cross_size(dir).resolve(node_inner_size.cross(dir)))
+                    .maybe_min(child.max_cross_size(dir).resolve(node_inner_size.cross(dir)));
 
             let offset_main = if start_main.is_defined() {
                 start_main.or_else(0.0) + border.main_start(dir)
@@ -1327,7 +1320,6 @@ fn compute_internal(
     node.layout_cache.replace(Some(LayoutCache {
         node_size,
         parent_size,
-        percent_calc_base,
         perform_layout,
         result: result.clone(),
     }));
