@@ -1286,12 +1286,7 @@ fn compute_internal(
             order,
             size: Size { width: 0.0, height: 0.0 },
             location: Point { x: 0.0, y: 0.0 },
-            children: node
-                .children
-                .iter()
-                .enumerate()
-                .map(|(order, child)| hidden_layout(child, order as _))
-                .collect(),
+            children: node.children.iter().enumerate().map(|(order, child)| hidden_layout(child, order as _)).collect(),
         }
     }
 
