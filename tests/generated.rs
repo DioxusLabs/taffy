@@ -3072,7 +3072,7 @@ mod generated {
             &stretch::style::Node {
                 size: stretch::geometry::Size {
                     width: stretch::style::Dimension::Points(200.0000),
-                    height: stretch::style::Dimension::Points(200.0000),
+                    height: stretch::style::Dimension::Points(400.0000),
                     ..Default::default()
                 },
                 children: vec![
@@ -3101,17 +3101,17 @@ mod generated {
         );
 
         assert_eq!(layout.size.width, 200.0000);
-        assert_eq!(layout.size.height, 200.0000);
+        assert_eq!(layout.size.height, 400.0000);
         assert_eq!(layout.location.x, 0.0000);
         assert_eq!(layout.location.y, 0.0000);
 
         assert_eq!(layout.children[0].size.width, 120.0000);
-        assert_eq!(layout.children[0].size.height, 200.0000);
+        assert_eq!(layout.children[0].size.height, 400.0000);
         assert_eq!(layout.children[0].location.x, 0.0000);
         assert_eq!(layout.children[0].location.y, 0.0000);
 
         assert_eq!(layout.children[1].size.width, 40.0000);
-        assert_eq!(layout.children[1].size.height, 200.0000);
+        assert_eq!(layout.children[1].size.height, 400.0000);
         assert_eq!(layout.children[1].location.x, 120.0000);
         assert_eq!(layout.children[1].location.y, 0.0000);
     }
@@ -3428,7 +3428,7 @@ mod generated {
                 flex_direction: stretch::style::FlexDirection::Column,
                 size: stretch::geometry::Size {
                     width: stretch::style::Dimension::Points(200.0000),
-                    height: stretch::style::Dimension::Points(200.0000),
+                    height: stretch::style::Dimension::Points(400.0000),
                     ..Default::default()
                 },
                 children: vec![
@@ -3449,19 +3449,19 @@ mod generated {
         );
 
         assert_eq!(layout.size.width, 200.0000);
-        assert_eq!(layout.size.height, 200.0000);
+        assert_eq!(layout.size.height, 400.0000);
         assert_eq!(layout.location.x, 0.0000);
         assert_eq!(layout.location.y, 0.0000);
 
         assert_eq!(layout.children[0].size.width, 200.0000);
-        assert_eq!(layout.children[0].size.height, 125.0000);
+        assert_eq!(layout.children[0].size.height, 250.0000);
         assert_eq!(layout.children[0].location.x, 0.0000);
         assert_eq!(layout.children[0].location.y, 0.0000);
 
         assert_eq!(layout.children[1].size.width, 200.0000);
-        assert_eq!(layout.children[1].size.height, 75.0000);
+        assert_eq!(layout.children[1].size.height, 150.0000);
         assert_eq!(layout.children[1].location.x, 0.0000);
-        assert_eq!(layout.children[1].location.y, 125.0000);
+        assert_eq!(layout.children[1].location.y, 250.0000);
     }
 
     #[test]
@@ -3958,7 +3958,7 @@ mod generated {
                 flex_direction: stretch::style::FlexDirection::Column,
                 size: stretch::geometry::Size {
                     width: stretch::style::Dimension::Points(200.0000),
-                    height: stretch::style::Dimension::Points(200.0000),
+                    height: stretch::style::Dimension::Points(400.0000),
                     ..Default::default()
                 },
                 children: vec![
@@ -3987,19 +3987,19 @@ mod generated {
         );
 
         assert_eq!(layout.size.width, 200.0000);
-        assert_eq!(layout.size.height, 200.0000);
+        assert_eq!(layout.size.height, 400.0000);
         assert_eq!(layout.location.x, 0.0000);
         assert_eq!(layout.location.y, 0.0000);
 
         assert_eq!(layout.children[0].size.width, 120.0000);
-        assert_eq!(layout.children[0].size.height, 50.0000);
+        assert_eq!(layout.children[0].size.height, 100.0000);
         assert_eq!(layout.children[0].location.x, 0.0000);
         assert_eq!(layout.children[0].location.y, 0.0000);
 
         assert_eq!(layout.children[1].size.width, 40.0000);
-        assert_eq!(layout.children[1].size.height, 150.0000);
+        assert_eq!(layout.children[1].size.height, 300.0000);
         assert_eq!(layout.children[1].location.x, 0.0000);
-        assert_eq!(layout.children[1].location.y, 50.0000);
+        assert_eq!(layout.children[1].location.y, 100.0000);
     }
 
     #[test]
@@ -4499,7 +4499,7 @@ mod generated {
                 flex_direction: stretch::style::FlexDirection::Column,
                 size: stretch::geometry::Size {
                     width: stretch::style::Dimension::Points(200.0000),
-                    height: stretch::style::Dimension::Points(200.0000),
+                    height: stretch::style::Dimension::Points(400.0000),
                     ..Default::default()
                 },
                 children: vec![
@@ -4526,19 +4526,19 @@ mod generated {
         );
 
         assert_eq!(layout.size.width, 200.0000);
-        assert_eq!(layout.size.height, 200.0000);
+        assert_eq!(layout.size.height, 400.0000);
         assert_eq!(layout.location.x, 0.0000);
         assert_eq!(layout.location.y, 0.0000);
 
         assert_eq!(layout.children[0].size.width, 200.0000);
-        assert_eq!(layout.children[0].size.height, 140.0000);
+        assert_eq!(layout.children[0].size.height, 280.0000);
         assert_eq!(layout.children[0].location.x, 0.0000);
         assert_eq!(layout.children[0].location.y, 0.0000);
 
         assert_eq!(layout.children[1].size.width, 200.0000);
-        assert_eq!(layout.children[1].size.height, 60.0000);
+        assert_eq!(layout.children[1].size.height, 120.0000);
         assert_eq!(layout.children[1].location.x, 0.0000);
-        assert_eq!(layout.children[1].location.y, 140.0000);
+        assert_eq!(layout.children[1].location.y, 280.0000);
     }
 
     #[test]
@@ -4761,7 +4761,7 @@ mod generated {
             &stretch::style::Node {
                 size: stretch::geometry::Size {
                     width: stretch::style::Dimension::Points(200.0000),
-                    height: stretch::style::Dimension::Points(200.0000),
+                    height: stretch::style::Dimension::Points(400.0000),
                     ..Default::default()
                 },
                 children: vec![stretch::style::Node {
@@ -4778,12 +4778,12 @@ mod generated {
         );
 
         assert_eq!(layout.size.width, 200.0000);
-        assert_eq!(layout.size.height, 200.0000);
+        assert_eq!(layout.size.height, 400.0000);
         assert_eq!(layout.location.x, 0.0000);
         assert_eq!(layout.location.y, 0.0000);
 
         assert_eq!(layout.children[0].size.width, 60.0000);
-        assert_eq!(layout.children[0].size.height, 60.0000);
+        assert_eq!(layout.children[0].size.height, 120.0000);
         assert_eq!(layout.children[0].location.x, 0.0000);
         assert_eq!(layout.children[0].location.y, 0.0000);
     }
@@ -6044,7 +6044,7 @@ mod generated {
                 flex_direction: stretch::style::FlexDirection::Column,
                 size: stretch::geometry::Size {
                     width: stretch::style::Dimension::Points(200.0000),
-                    height: stretch::style::Dimension::Points(200.0000),
+                    height: stretch::style::Dimension::Points(400.0000),
                     ..Default::default()
                 },
                 padding: stretch::geometry::Rect {
@@ -6068,12 +6068,12 @@ mod generated {
         );
 
         assert_eq!(layout.size.width, 200.0000);
-        assert_eq!(layout.size.height, 200.0000);
+        assert_eq!(layout.size.height, 400.0000);
         assert_eq!(layout.location.x, 0.0000);
         assert_eq!(layout.location.y, 0.0000);
 
         assert_eq!(layout.children[0].size.width, 80.0000);
-        assert_eq!(layout.children[0].size.height, 80.0000);
+        assert_eq!(layout.children[0].size.height, 180.0000);
         assert_eq!(layout.children[0].location.x, 20.0000);
         assert_eq!(layout.children[0].location.y, 20.0000);
     }
@@ -8472,7 +8472,7 @@ mod generated {
             &stretch::style::Node {
                 size: stretch::geometry::Size {
                     width: stretch::style::Dimension::Points(200.0000),
-                    height: stretch::style::Dimension::Points(200.0000),
+                    height: stretch::style::Dimension::Points(400.0000),
                     ..Default::default()
                 },
                 children: vec![
@@ -8501,17 +8501,17 @@ mod generated {
         );
 
         assert_eq!(layout.size.width, 200.0000);
-        assert_eq!(layout.size.height, 200.0000);
+        assert_eq!(layout.size.height, 400.0000);
         assert_eq!(layout.location.x, 0.0000);
         assert_eq!(layout.location.y, 0.0000);
 
         assert_eq!(layout.children[0].size.width, 52.0000);
-        assert_eq!(layout.children[0].size.height, 120.0000);
+        assert_eq!(layout.children[0].size.height, 240.0000);
         assert_eq!(layout.children[0].location.x, 0.0000);
         assert_eq!(layout.children[0].location.y, 0.0000);
 
         assert_eq!(layout.children[1].size.width, 148.0000);
-        assert_eq!(layout.children[1].size.height, 40.0000);
+        assert_eq!(layout.children[1].size.height, 80.0000);
         assert_eq!(layout.children[1].location.x, 52.0000);
         assert_eq!(layout.children[1].location.y, 0.0000);
     }
@@ -9270,7 +9270,7 @@ mod generated {
             &stretch::style::Node {
                 size: stretch::geometry::Size {
                     width: stretch::style::Dimension::Points(200.0000),
-                    height: stretch::style::Dimension::Points(200.0000),
+                    height: stretch::style::Dimension::Points(400.0000),
                     ..Default::default()
                 },
                 children: vec![
@@ -9299,17 +9299,17 @@ mod generated {
         );
 
         assert_eq!(layout.size.width, 200.0000);
-        assert_eq!(layout.size.height, 200.0000);
+        assert_eq!(layout.size.height, 400.0000);
         assert_eq!(layout.location.x, 0.0000);
         assert_eq!(layout.location.y, 0.0000);
 
         assert_eq!(layout.children[0].size.width, 120.0000);
-        assert_eq!(layout.children[0].size.height, 200.0000);
+        assert_eq!(layout.children[0].size.height, 400.0000);
         assert_eq!(layout.children[0].location.x, 0.0000);
         assert_eq!(layout.children[0].location.y, 0.0000);
 
         assert_eq!(layout.children[1].size.width, 80.0000);
-        assert_eq!(layout.children[1].size.height, 200.0000);
+        assert_eq!(layout.children[1].size.height, 400.0000);
         assert_eq!(layout.children[1].location.x, 120.0000);
         assert_eq!(layout.children[1].location.y, 0.0000);
     }
@@ -10099,7 +10099,7 @@ mod generated {
                 flex_direction: stretch::style::FlexDirection::Column,
                 size: stretch::geometry::Size {
                     width: stretch::style::Dimension::Points(200.0000),
-                    height: stretch::style::Dimension::Points(200.0000),
+                    height: stretch::style::Dimension::Points(400.0000),
                     ..Default::default()
                 },
                 children: vec![
@@ -10128,19 +10128,19 @@ mod generated {
         );
 
         assert_eq!(layout.size.width, 200.0000);
-        assert_eq!(layout.size.height, 200.0000);
+        assert_eq!(layout.size.height, 400.0000);
         assert_eq!(layout.location.x, 0.0000);
         assert_eq!(layout.location.y, 0.0000);
 
         assert_eq!(layout.children[0].size.width, 200.0000);
-        assert_eq!(layout.children[0].size.height, 50.0000);
+        assert_eq!(layout.children[0].size.height, 100.0000);
         assert_eq!(layout.children[0].location.x, 0.0000);
         assert_eq!(layout.children[0].location.y, 0.0000);
 
         assert_eq!(layout.children[1].size.width, 200.0000);
-        assert_eq!(layout.children[1].size.height, 150.0000);
+        assert_eq!(layout.children[1].size.height, 300.0000);
         assert_eq!(layout.children[1].location.x, 0.0000);
-        assert_eq!(layout.children[1].location.y, 50.0000);
+        assert_eq!(layout.children[1].location.y, 100.0000);
     }
 
     #[test]
@@ -10288,7 +10288,7 @@ mod generated {
                 flex_direction: stretch::style::FlexDirection::Column,
                 size: stretch::geometry::Size {
                     width: stretch::style::Dimension::Points(200.0000),
-                    height: stretch::style::Dimension::Points(200.0000),
+                    height: stretch::style::Dimension::Points(400.0000),
                     ..Default::default()
                 },
                 children: vec![
@@ -10317,19 +10317,19 @@ mod generated {
         );
 
         assert_eq!(layout.size.width, 200.0000);
-        assert_eq!(layout.size.height, 200.0000);
+        assert_eq!(layout.size.height, 400.0000);
         assert_eq!(layout.location.x, 0.0000);
         assert_eq!(layout.location.y, 0.0000);
 
         assert_eq!(layout.children[0].size.width, 200.0000);
-        assert_eq!(layout.children[0].size.height, 120.0000);
+        assert_eq!(layout.children[0].size.height, 240.0000);
         assert_eq!(layout.children[0].location.x, 0.0000);
         assert_eq!(layout.children[0].location.y, 0.0000);
 
         assert_eq!(layout.children[1].size.width, 200.0000);
-        assert_eq!(layout.children[1].size.height, 40.0000);
+        assert_eq!(layout.children[1].size.height, 80.0000);
         assert_eq!(layout.children[1].location.x, 0.0000);
-        assert_eq!(layout.children[1].location.y, 120.0000);
+        assert_eq!(layout.children[1].location.y, 240.0000);
     }
 
     #[test]
