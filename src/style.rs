@@ -3,6 +3,8 @@ use alloc::boxed::Box;
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
 
+use simple_error::SimpleError;
+
 use crate::algo;
 use crate::geometry::{Rect, Size};
 use crate::number::Number;
@@ -205,7 +207,7 @@ impl Default for Size<Dimension> {
     }
 }
 
-type MeasureFunc = Box<Fn(Size<Number>) -> Size<f32>>;
+type MeasureFunc = Box<Fn(Size<Number>) -> Result<Size<f32>, SimpleError>>;
 
 #[derive(Debug, Clone)]
 pub struct LayoutCache {

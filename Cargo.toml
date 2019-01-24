@@ -17,6 +17,7 @@ maintenance = { status = "experimental" }
 
 [dependencies]
 libm = "0.1.2"
+simple-error = "0.1"
 
 [features]
 default = ["std"]
