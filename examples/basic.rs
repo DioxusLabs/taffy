@@ -14,7 +14,7 @@ fn main() {
         ..Default::default()
     };
 
-    let layout = stretch::compute(&node, Size::undefined());
+    let layout = stretch::compute(&node, Size::undefined()).unwrap();
 
     println!("{:#?}", layout);
 }

@@ -36,7 +36,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -80,7 +81,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -115,7 +117,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 110.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -164,7 +167,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -217,7 +221,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -275,7 +280,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 113.0000);
@@ -322,7 +328,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -380,7 +387,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 113.0000);
@@ -425,7 +433,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -498,7 +507,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 700.0000);
         assert_eq!(layout.size.height, 500.0000);
@@ -561,7 +571,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -599,7 +610,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 0.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -636,7 +648,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -674,7 +687,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 500.0000);
         assert_eq!(layout.size.height, 500.0000);
@@ -715,7 +729,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 0.0000);
@@ -757,7 +772,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 150.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -811,7 +827,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -875,7 +892,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 110.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -951,7 +969,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -997,7 +1016,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 110.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -1033,7 +1053,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -1086,7 +1107,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -1143,7 +1165,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 120.0000);
         assert_eq!(layout.size.height, 50.0000);
@@ -1184,7 +1207,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -1219,7 +1243,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -1254,7 +1279,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -1297,7 +1323,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 20.0000);
         assert_eq!(layout.size.height, 50.0000);
@@ -1356,7 +1383,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 50.0000);
         assert_eq!(layout.size.height, 110.0000);
@@ -1436,7 +1464,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -1493,7 +1522,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -1542,7 +1572,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -1612,7 +1643,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 300.0000);
@@ -1648,7 +1680,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -1686,7 +1719,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -1732,7 +1766,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 20.0000);
         assert_eq!(layout.size.height, 80.0000);
@@ -1773,7 +1808,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -1806,7 +1842,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -1849,7 +1886,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -1894,7 +1932,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 110.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -1931,7 +1970,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -1985,7 +2025,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -2031,7 +2072,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -2072,7 +2114,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 250.0000);
         assert_eq!(layout.size.height, 250.0000);
@@ -2101,7 +2144,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -2141,7 +2185,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -2200,7 +2245,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 60.0000);
@@ -2252,7 +2298,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -2309,7 +2356,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -2363,7 +2411,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 500.0000);
         assert_eq!(layout.size.height, 500.0000);
@@ -2427,7 +2476,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -2474,7 +2524,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -2514,7 +2565,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -2558,7 +2610,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -2622,7 +2675,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 500.0000);
         assert_eq!(layout.size.height, 500.0000);
@@ -2689,7 +2743,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 500.0000);
         assert_eq!(layout.size.height, 500.0000);
@@ -2730,7 +2785,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -2777,7 +2833,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -2827,7 +2884,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 90.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -2879,7 +2937,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 50.0000);
         assert_eq!(layout.size.height, 20.0000);
@@ -2913,7 +2972,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -2951,7 +3011,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 400.0000);
         assert_eq!(layout.size.height, 400.0000);
@@ -2990,7 +3051,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -3043,7 +3105,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 114.0000);
@@ -3098,7 +3161,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 400.0000);
@@ -3152,7 +3216,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -3261,7 +3326,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -3311,7 +3377,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 0.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -3350,7 +3417,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -3403,7 +3471,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -3446,7 +3515,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 400.0000);
@@ -3491,7 +3561,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -3524,7 +3595,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -3566,7 +3638,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -3614,7 +3687,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -3663,7 +3737,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 52.0000);
         assert_eq!(layout.size.height, 52.0000);
@@ -3701,7 +3776,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -3745,7 +3821,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 52.0000);
         assert_eq!(layout.size.height, 52.0000);
@@ -3803,7 +3880,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -3864,7 +3942,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -3923,7 +4002,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 10.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -3984,7 +4064,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 400.0000);
@@ -4028,7 +4109,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 50.0000);
         assert_eq!(layout.size.height, 50.0000);
@@ -4093,7 +4175,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -4143,7 +4226,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 30.0000);
         assert_eq!(layout.size.height, 30.0000);
@@ -4254,7 +4338,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -4308,7 +4393,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 52.0000);
         assert_eq!(layout.size.height, 52.0000);
@@ -4357,7 +4443,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -4405,7 +4492,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -4446,7 +4534,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 250.0000);
         assert_eq!(layout.size.height, 250.0000);
@@ -4479,7 +4568,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 50.0000);
@@ -4523,7 +4613,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 400.0000);
@@ -4569,7 +4660,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -4623,7 +4715,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -4683,7 +4776,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -4737,7 +4831,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 50.0000);
         assert_eq!(layout.size.height, 50.0000);
@@ -4775,7 +4870,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 400.0000);
@@ -4830,7 +4926,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -4868,7 +4965,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 0.0000);
@@ -4915,7 +5013,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -4994,7 +5093,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 500.0000);
         assert_eq!(layout.size.height, 500.0000);
@@ -5058,7 +5158,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -5099,7 +5200,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -5172,7 +5274,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 80.0000);
@@ -5253,7 +5356,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -5306,7 +5410,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -5355,7 +5460,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -5414,7 +5520,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -5463,7 +5570,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 50.0000);
         assert_eq!(layout.size.height, 50.0000);
@@ -5503,7 +5611,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -5556,7 +5665,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 87.0000);
         assert_eq!(layout.size.height, 113.0000);
@@ -5643,7 +5753,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 80.0000);
@@ -5703,7 +5814,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 110.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -5771,7 +5883,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 300.0000);
         assert_eq!(layout.size.height, 50.0000);
@@ -5844,7 +5957,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 113.0000);
@@ -5910,7 +6024,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 0.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -5965,7 +6080,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -6014,7 +6130,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -6065,7 +6182,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 400.0000);
@@ -6132,7 +6250,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 80.0000);
@@ -6197,7 +6316,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -6252,7 +6372,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -6298,7 +6419,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 110.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -6332,7 +6454,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -6367,7 +6490,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 52.0000);
         assert_eq!(layout.size.height, 52.0000);
@@ -6416,7 +6540,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -6457,7 +6582,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 0.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -6501,7 +6627,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -6571,7 +6698,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 60.0000);
@@ -6621,7 +6749,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 30.0000);
         assert_eq!(layout.size.height, 30.0000);
@@ -6670,7 +6799,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -6727,7 +6857,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -6786,7 +6917,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -6841,7 +6973,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -6896,7 +7029,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -6969,7 +7103,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 80.0000);
@@ -7016,7 +7151,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 20.0000);
         assert_eq!(layout.size.height, 20.0000);
@@ -7048,7 +7184,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -7100,7 +7237,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 30.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -7138,7 +7276,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 0.0000);
@@ -7181,7 +7320,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -7234,7 +7374,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 30.0000);
@@ -7273,7 +7414,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 50.0000);
@@ -7333,7 +7475,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 10.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -7383,7 +7526,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -7429,7 +7573,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 50.0000);
@@ -7468,7 +7613,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 50.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -7514,7 +7660,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -7555,7 +7702,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -7591,7 +7739,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -7624,7 +7773,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 0.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -7658,7 +7808,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -7692,7 +7843,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -7759,7 +7911,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 700.0000);
         assert_eq!(layout.size.height, 500.0000);
@@ -7828,7 +7981,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 60.0000);
@@ -7879,7 +8033,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -7908,7 +8063,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 0.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -7944,7 +8100,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -7993,7 +8150,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 50.0000);
         assert_eq!(layout.size.height, 50.0000);
@@ -8039,7 +8197,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 80.0000);
         assert_eq!(layout.size.height, 20.0000);
@@ -8075,7 +8234,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -8103,7 +8263,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -8185,7 +8346,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 87.0000);
         assert_eq!(layout.size.height, 113.0000);
@@ -8245,7 +8407,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -8299,7 +8462,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -8367,7 +8531,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 350.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -8416,7 +8581,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -8453,7 +8619,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -8498,7 +8665,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 400.0000);
@@ -8552,7 +8720,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -8591,7 +8760,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -8642,7 +8812,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -8707,7 +8878,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 60.0000);
@@ -8766,7 +8938,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -8805,7 +8978,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -8850,7 +9024,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 110.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -8883,7 +9058,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -8920,7 +9096,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -8986,7 +9163,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -9051,7 +9229,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -9104,7 +9283,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -9159,7 +9339,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -9206,7 +9387,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -9251,7 +9433,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 110.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -9296,7 +9479,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 400.0000);
@@ -9349,7 +9533,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -9387,7 +9572,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -9438,7 +9624,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -9496,7 +9683,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 75.0000);
         assert_eq!(layout.size.height, 50.0000);
@@ -9560,7 +9748,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -9620,7 +9809,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 1080.0000);
         assert_eq!(layout.size.height, 1584.0000);
@@ -9661,7 +9851,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -9706,7 +9897,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 110.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -9748,7 +9940,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -9790,7 +9983,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -9839,7 +10033,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -9902,7 +10097,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -9965,7 +10161,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 113.0000);
@@ -10010,7 +10207,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 110.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -10064,7 +10262,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -10125,7 +10324,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 400.0000);
@@ -10179,7 +10379,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -10219,7 +10420,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 500.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -10263,7 +10465,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 0.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -10314,7 +10517,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 400.0000);
@@ -10369,7 +10573,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -10409,7 +10614,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -10456,7 +10662,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -10529,7 +10736,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 80.0000);
@@ -10596,7 +10804,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 500.0000);
         assert_eq!(layout.size.height, 500.0000);
@@ -10629,7 +10838,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 0.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -10663,7 +10873,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -10702,7 +10913,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -10742,7 +10954,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 101.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -10792,7 +11005,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -10826,7 +11040,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -10853,7 +11068,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 20.0000);
         assert_eq!(layout.size.height, 20.0000);
@@ -10880,7 +11096,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 113.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -10938,7 +11155,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -10998,7 +11216,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -11046,7 +11265,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -11089,7 +11309,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -11123,7 +11344,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 0.0000);
         assert_eq!(layout.size.height, 0.0000);
@@ -11164,7 +11386,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -11222,7 +11445,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 500.0000);
@@ -11263,7 +11487,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 0.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -11313,7 +11538,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -11368,7 +11594,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 1000.0000);
         assert_eq!(layout.size.height, 1584.0000);
@@ -11433,7 +11660,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 120.0000);
         assert_eq!(layout.size.height, 20.0000);
@@ -11493,7 +11721,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 60.0000);
         assert_eq!(layout.size.height, 50.0000);
@@ -11550,7 +11779,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 300.0000);
@@ -11605,7 +11835,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -11656,7 +11887,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -11698,7 +11930,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 100.0000);
@@ -11734,7 +11967,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0000);
         assert_eq!(layout.size.height, 0.0000);
@@ -11772,7 +12006,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 500.0000);
         assert_eq!(layout.size.height, 500.0000);
@@ -11815,7 +12050,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0000);
         assert_eq!(layout.size.height, 200.0000);
@@ -11859,7 +12095,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 500.0000);
         assert_eq!(layout.size.height, 500.0000);
@@ -11907,7 +12144,8 @@ mod generated {
                 ..Default::default()
             },
             stretch::geometry::Size::undefined(),
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 20.0000);
         assert_eq!(layout.size.height, 50.0000);

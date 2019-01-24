@@ -99,6 +99,7 @@ fn stretch_benchmarks(c: &mut Criterion) {
                 },
                 stretch::geometry::Size::undefined(),
             )
+            .unwrap()
         })
     });
 }

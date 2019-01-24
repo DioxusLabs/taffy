@@ -13,7 +13,8 @@ mod root_constraints {
                 ..Default::default()
             },
             stretch::geometry::Size { width: Number::Defined(100.0), height: Number::Defined(200.0) },
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 100.0);
         assert_eq!(layout.size.height, 200.0);
@@ -24,7 +25,8 @@ mod root_constraints {
         let layout = stretch::compute(
             &stretch::style::Node { ..Default::default() },
             stretch::geometry::Size { width: Number::Defined(100.0), height: Number::Defined(100.0) },
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 0.0);
         assert_eq!(layout.size.height, 0.0);
@@ -41,7 +43,8 @@ mod root_constraints {
                 ..Default::default()
             },
             stretch::geometry::Size { width: Number::Defined(100.0), height: Number::Defined(100.0) },
-        );
+        )
+        .unwrap();
 
         assert_eq!(layout.size.width, 200.0);
         assert_eq!(layout.size.height, 200.0);
