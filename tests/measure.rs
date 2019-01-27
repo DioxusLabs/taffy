@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod measure {
-    use simple_error::SimpleError;
     use stretch::number::OrElse;
 
     #[test]
@@ -480,7 +479,7 @@ mod measure {
                 },
                 children: vec![stretch::style::Node {
                     flex_grow: 1.0,
-                    measure: Some(Box::new(|_| Err(SimpleError::new("")))),
+                    measure: Some(Box::new(|_| Err(Box::new("")))),
                     ..Default::default()
                 }],
                 ..Default::default()

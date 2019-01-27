@@ -6,6 +6,7 @@ extern crate alloc;
 pub mod geometry;
 pub mod layout;
 pub mod number;
+pub mod result;
 pub mod style;
 
 mod algo;

@@ -3,8 +3,6 @@ use alloc::{vec, vec::Vec};
 #[cfg(not(feature = "std"))]
 use libm::F32Ext;
 
-use simple_error::SimpleError;
-
 use core::f32;
 
 use crate::layout;
@@ -15,6 +13,8 @@ use crate::style::*;
 
 use crate::number::Number::*;
 use crate::number::*;
+
+use crate::result::Result;
 
 use crate::geometry::{Point, Rect, Size};
 
@@ -61,7 +61,7 @@ struct FlexLine<'a> {
     offset_cross: f32,
 }
 
-pub fn compute(root: &style::Node, size: Size<Number>) -> Result<layout::Node, SimpleError> {
+pub fn compute(root: &style::Node, size: Size<Number>) -> Result<layout::Node> {
     let has_root_min_max = root.min_size.width.is_defined()
         || root.min_size.height.is_defined()
         || root.max_size.width.is_defined()
@@ -130,7 +130,7 @@ fn compute_internal(
     node_size: Size<Number>,
     parent_size: Size<Number>,
     perform_layout: bool,
-) -> Result<ComputeResult, SimpleError> {
+) -> Result<ComputeResult> {
     // First we check if we have a result for the given input
     {
         let layout_cache = node.layout_cache.borrow();
@@ -268,7 +268,7 @@ fn compute_internal(
 
     // TODO - this does not follow spec. See commented out code below
     // 3. Determine the flex base size and hypothetical main size of each item:
-    flex_items.iter_mut().try_for_each(|child| -> Result<(), SimpleError> {
+    flex_items.iter_mut().try_for_each(|child| -> Result<()> {
         // A. If the item has a definite used flex basis, that’s the flex base size.
 
         let flex_basis = child.node.flex_basis.resolve(node_inner_size.main(dir));
@@ -350,7 +350,7 @@ fn compute_internal(
     // The hypothetical main size is the item’s flex base size clamped according to its
     // used min and max main sizes (and flooring the content box size at zero).
 
-    flex_items.iter_mut().try_for_each(|child| -> Result<(), SimpleError> {
+    flex_items.iter_mut().try_for_each(|child| -> Result<()> {
         child.inner_flex_basis = child.flex_basis - child.padding.main(dir) - child.border.main(dir);
 
         // TODO - not really spec abiding but needs to be done somewhere. probably somewhere else though.
@@ -428,7 +428,7 @@ fn compute_internal(
     //
     // 9.7. Resolving Flexible Lengths
 
-    flex_lines.iter_mut().try_for_each(|line| -> Result<(), SimpleError> {
+    flex_lines.iter_mut().try_for_each(|line| -> Result<()> {
         // 1. Determine the used flex factor. Sum the outer hypothetical main sizes of all
         //    items on the line. If the sum is less than the flex container’s inner main size,
         //    use the flex grow factor for the rest of this algorithm; otherwise, use the
@@ -445,7 +445,7 @@ fn compute_internal(
         //    - If using the flex shrink factor: any item that has a flex base size
         //      smaller than its hypothetical main size
 
-        line.items.iter_mut().try_for_each(|child| -> Result<(), SimpleError> {
+        line.items.iter_mut().try_for_each(|child| -> Result<()> {
             // TODO - This is not found by reading the spec. Maybe this can be done in some other place
             // instead. This was found by trail and error fixing tests to align with webkit output.
             if node_inner_size.main(dir).is_undefined() && is_row {
@@ -589,7 +589,7 @@ fn compute_internal(
             //    item’s target main size was made smaller by this, it’s a max violation.
             //    If the item’s target main size was made larger by this, it’s a min violation.
 
-            let total_violation = unfrozen.iter_mut().try_fold(0.0, |acc, child| -> Result<f32, SimpleError> {
+            let total_violation = unfrozen.iter_mut().try_fold(0.0, |acc, child| -> Result<f32> {
                 // TODO - not really spec abiding but needs to be done somewhere. probably somewhere else though.
                 // The following logic was developed not from the spec but by trail and error looking into how
                 // webkit handled various scenarios. Can probably be solved better by passing in
@@ -661,7 +661,7 @@ fn compute_internal(
     //    used main size and the available space, treating auto as fit-content.
 
     flex_lines.iter_mut().try_for_each(|line| {
-        line.items.iter_mut().try_for_each(|child| -> Result<(), SimpleError> {
+        line.items.iter_mut().try_for_each(|child| -> Result<()> {
             let child_cross =
                 child.size.cross(dir).maybe_max(child.min_size.cross(dir)).maybe_min(child.max_size.cross(dir));
 
@@ -705,7 +705,7 @@ fn compute_internal(
     };
 
     flex_lines.iter_mut().try_for_each(|line| {
-        line.items.iter_mut().try_for_each(|child| -> Result<(), SimpleError> {
+        line.items.iter_mut().try_for_each(|child| -> Result<()> {
             let result = compute_internal(
                 child.node,
                 Size {
@@ -1106,12 +1106,12 @@ fn compute_internal(
         let mut lines: Vec<Vec<layout::Node>> = vec![];
         let mut total_offset_cross = padding_border.cross_start(dir);
 
-        let layout_line = |line: &mut FlexLine| -> Result<(), SimpleError> {
+        let layout_line = |line: &mut FlexLine| -> Result<()> {
             let mut children: Vec<layout::Node> = vec![];
             let mut total_offset_main = padding_border.main_start(dir);
             let line_offset_cross = line.offset_cross;
 
-            let layout_item = |child: &mut FlexItem| -> Result<(), SimpleError> {
+            let layout_item = |child: &mut FlexItem| -> Result<()> {
                 let result = compute_internal(
                     child.node,
                     child.target_size.map(|s| s.to_number()),
@@ -1176,7 +1176,7 @@ fn compute_internal(
     };
 
     // Before returning we perform absolute layout on all absolutely positioned children
-    let absolute_children: Vec<Result<layout::Node, SimpleError>> = node
+    let absolute_children: Vec<Result<layout::Node>> = node
         .children
         .iter()
         .enumerate()
