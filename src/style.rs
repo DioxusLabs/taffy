@@ -3,11 +3,10 @@ use alloc::boxed::Box;
 #[cfg(not(feature = "std"))]
 use alloc::{vec, vec::Vec};
 
-use simple_error::SimpleError;
-
 use crate::algo;
 use crate::geometry::{Rect, Size};
 use crate::number::Number;
+use crate::result::Result;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum AlignItems {
@@ -207,7 +206,7 @@ impl Default for Size<Dimension> {
     }
 }
 
-type MeasureFunc = Box<Fn(Size<Number>) -> Result<Size<f32>, SimpleError>>;
+type MeasureFunc = Box<Fn(Size<Number>) -> Result<Size<f32>>>;
 
 #[derive(Debug, Clone)]
 pub struct LayoutCache {
