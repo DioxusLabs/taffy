@@ -1,3 +1,3 @@
-use core::fmt::Debug;
+use core::any::Any;
 
-pub type Result<T> = core::result::Result<T, Box<Debug>>;
+pub type Result<T> = core::result::Result<T, Box<Any>>;
