@@ -5,16 +5,16 @@ fn align_items_flex_end_child_without_margin_bigger_than_parent() {
             align_items: stretch::style::AlignItems::Center,
             justify_content: stretch::style::JustifyContent::Center,
             size: stretch::geometry::Size {
-                width: stretch::style::Dimension::Points(50.0000),
-                height: stretch::style::Dimension::Points(50.0000),
+                width: stretch::style::Dimension::Points(50f32),
+                height: stretch::style::Dimension::Points(50f32),
                 ..Default::default()
             },
             children: vec![stretch::style::Node {
                 align_items: stretch::style::AlignItems::FlexEnd,
                 children: vec![stretch::style::Node {
                     size: stretch::geometry::Size {
-                        width: stretch::style::Dimension::Points(70.0000),
-                        height: stretch::style::Dimension::Points(70.0000),
+                        width: stretch::style::Dimension::Points(70f32),
+                        height: stretch::style::Dimension::Points(70f32),
                         ..Default::default()
                     },
                     ..Default::default()
@@ -26,19 +26,16 @@ fn align_items_flex_end_child_without_margin_bigger_than_parent() {
         stretch::geometry::Size::undefined(),
     )
     .unwrap();
-
-    assert_eq!(layout.size.width, 50.0000);
-    assert_eq!(layout.size.height, 50.0000);
-    assert_eq!(layout.location.x, 0.0000);
-    assert_eq!(layout.location.y, 0.0000);
-
-    assert_eq!(layout.children[0].size.width, 70.0000);
-    assert_eq!(layout.children[0].size.height, 70.0000);
-    assert_eq!(layout.children[0].location.x, -10.0000);
-    assert_eq!(layout.children[0].location.y, -10.0000);
-
-    assert_eq!(layout.children[0].children[0].size.width, 70.0000);
-    assert_eq!(layout.children[0].children[0].size.height, 70.0000);
-    assert_eq!(layout.children[0].children[0].location.x, 0.0000);
-    assert_eq!(layout.children[0].children[0].location.y, 0.0000);
+    assert_eq!(layout.size.width, 50f32);
+    assert_eq!(layout.size.height, 50f32);
+    assert_eq!(layout.location.x, 0f32);
+    assert_eq!(layout.location.y, 0f32);
+    assert_eq!(layout.children[0usize].size.width, 70f32);
+    assert_eq!(layout.children[0usize].size.height, 70f32);
+    assert_eq!(layout.children[0usize].location.x, -10f32);
+    assert_eq!(layout.children[0usize].location.y, -10f32);
+    assert_eq!(layout.children[0usize].children[0usize].size.width, 70f32);
+    assert_eq!(layout.children[0usize].children[0usize].size.height, 70f32);
+    assert_eq!(layout.children[0usize].children[0usize].location.x, 0f32);
+    assert_eq!(layout.children[0usize].children[0usize].location.y, 0f32);
 }

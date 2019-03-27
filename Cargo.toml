@@ -32,3 +32,6 @@ panic = 'abort'
 [[bench]]
 name = "generated"
 harness = false
+
+[workspace]
+members = [ "scripts/gentest" ]

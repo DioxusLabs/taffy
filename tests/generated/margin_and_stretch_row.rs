@@ -3,15 +3,15 @@ fn margin_and_stretch_row() {
     let layout = stretch::compute(
         &stretch::style::Node {
             size: stretch::geometry::Size {
-                width: stretch::style::Dimension::Points(100.0000),
-                height: stretch::style::Dimension::Points(100.0000),
+                width: stretch::style::Dimension::Points(100f32),
+                height: stretch::style::Dimension::Points(100f32),
                 ..Default::default()
             },
             children: vec![stretch::style::Node {
-                flex_grow: 1.0000,
+                flex_grow: 1f32,
                 margin: stretch::geometry::Rect {
-                    top: stretch::style::Dimension::Points(10.0000),
-                    bottom: stretch::style::Dimension::Points(10.0000),
+                    top: stretch::style::Dimension::Points(10f32),
+                    bottom: stretch::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -21,14 +21,12 @@ fn margin_and_stretch_row() {
         stretch::geometry::Size::undefined(),
     )
     .unwrap();
-
-    assert_eq!(layout.size.width, 100.0000);
-    assert_eq!(layout.size.height, 100.0000);
-    assert_eq!(layout.location.x, 0.0000);
-    assert_eq!(layout.location.y, 0.0000);
-
-    assert_eq!(layout.children[0].size.width, 100.0000);
-    assert_eq!(layout.children[0].size.height, 80.0000);
-    assert_eq!(layout.children[0].location.x, 0.0000);
-    assert_eq!(layout.children[0].location.y, 10.0000);
+    assert_eq!(layout.size.width, 100f32);
+    assert_eq!(layout.size.height, 100f32);
+    assert_eq!(layout.location.x, 0f32);
+    assert_eq!(layout.location.y, 0f32);
+    assert_eq!(layout.children[0usize].size.width, 100f32);
+    assert_eq!(layout.children[0usize].size.height, 80f32);
+    assert_eq!(layout.children[0usize].location.x, 0f32);
+    assert_eq!(layout.children[0usize].location.y, 10f32);
 }

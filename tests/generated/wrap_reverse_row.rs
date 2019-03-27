@@ -3,36 +3,36 @@ fn wrap_reverse_row() {
     let layout = stretch::compute(
         &stretch::style::Node {
             flex_wrap: stretch::style::FlexWrap::WrapReverse,
-            size: stretch::geometry::Size { width: stretch::style::Dimension::Points(100.0000), ..Default::default() },
+            size: stretch::geometry::Size { width: stretch::style::Dimension::Points(100f32), ..Default::default() },
             children: vec![
                 stretch::style::Node {
                     size: stretch::geometry::Size {
-                        width: stretch::style::Dimension::Points(31.0000),
-                        height: stretch::style::Dimension::Points(30.0000),
+                        width: stretch::style::Dimension::Points(31f32),
+                        height: stretch::style::Dimension::Points(30f32),
                         ..Default::default()
                     },
                     ..Default::default()
                 },
                 stretch::style::Node {
                     size: stretch::geometry::Size {
-                        width: stretch::style::Dimension::Points(32.0000),
-                        height: stretch::style::Dimension::Points(30.0000),
+                        width: stretch::style::Dimension::Points(32f32),
+                        height: stretch::style::Dimension::Points(30f32),
                         ..Default::default()
                     },
                     ..Default::default()
                 },
                 stretch::style::Node {
                     size: stretch::geometry::Size {
-                        width: stretch::style::Dimension::Points(33.0000),
-                        height: stretch::style::Dimension::Points(30.0000),
+                        width: stretch::style::Dimension::Points(33f32),
+                        height: stretch::style::Dimension::Points(30f32),
                         ..Default::default()
                     },
                     ..Default::default()
                 },
                 stretch::style::Node {
                     size: stretch::geometry::Size {
-                        width: stretch::style::Dimension::Points(34.0000),
-                        height: stretch::style::Dimension::Points(30.0000),
+                        width: stretch::style::Dimension::Points(34f32),
+                        height: stretch::style::Dimension::Points(30f32),
                         ..Default::default()
                     },
                     ..Default::default()
@@ -43,29 +43,24 @@ fn wrap_reverse_row() {
         stretch::geometry::Size::undefined(),
     )
     .unwrap();
-
-    assert_eq!(layout.size.width, 100.0000);
-    assert_eq!(layout.size.height, 60.0000);
-    assert_eq!(layout.location.x, 0.0000);
-    assert_eq!(layout.location.y, 0.0000);
-
-    assert_eq!(layout.children[0].size.width, 31.0000);
-    assert_eq!(layout.children[0].size.height, 30.0000);
-    assert_eq!(layout.children[0].location.x, 0.0000);
-    assert_eq!(layout.children[0].location.y, 30.0000);
-
-    assert_eq!(layout.children[1].size.width, 32.0000);
-    assert_eq!(layout.children[1].size.height, 30.0000);
-    assert_eq!(layout.children[1].location.x, 31.0000);
-    assert_eq!(layout.children[1].location.y, 30.0000);
-
-    assert_eq!(layout.children[2].size.width, 33.0000);
-    assert_eq!(layout.children[2].size.height, 30.0000);
-    assert_eq!(layout.children[2].location.x, 63.0000);
-    assert_eq!(layout.children[2].location.y, 30.0000);
-
-    assert_eq!(layout.children[3].size.width, 34.0000);
-    assert_eq!(layout.children[3].size.height, 30.0000);
-    assert_eq!(layout.children[3].location.x, 0.0000);
-    assert_eq!(layout.children[3].location.y, 0.0000);
+    assert_eq!(layout.size.width, 100f32);
+    assert_eq!(layout.size.height, 60f32);
+    assert_eq!(layout.location.x, 0f32);
+    assert_eq!(layout.location.y, 0f32);
+    assert_eq!(layout.children[0usize].size.width, 31f32);
+    assert_eq!(layout.children[0usize].size.height, 30f32);
+    assert_eq!(layout.children[0usize].location.x, 0f32);
+    assert_eq!(layout.children[0usize].location.y, 30f32);
+    assert_eq!(layout.children[1usize].size.width, 32f32);
+    assert_eq!(layout.children[1usize].size.height, 30f32);
+    assert_eq!(layout.children[1usize].location.x, 31f32);
+    assert_eq!(layout.children[1usize].location.y, 30f32);
+    assert_eq!(layout.children[2usize].size.width, 33f32);
+    assert_eq!(layout.children[2usize].size.height, 30f32);
+    assert_eq!(layout.children[2usize].location.x, 63f32);
+    assert_eq!(layout.children[2usize].location.y, 30f32);
+    assert_eq!(layout.children[3usize].size.width, 34f32);
+    assert_eq!(layout.children[3usize].size.height, 30f32);
+    assert_eq!(layout.children[3usize].location.x, 0f32);
+    assert_eq!(layout.children[3usize].location.y, 0f32);
 }
