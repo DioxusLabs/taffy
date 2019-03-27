@@ -3,24 +3,24 @@ fn percent_within_flex_grow() {
     let layout = stretch::compute(
         &stretch::style::Node {
             size: stretch::geometry::Size {
-                width: stretch::style::Dimension::Points(350.0000),
-                height: stretch::style::Dimension::Points(100.0000),
+                width: stretch::style::Dimension::Points(350f32),
+                height: stretch::style::Dimension::Points(100f32),
                 ..Default::default()
             },
             children: vec![
                 stretch::style::Node {
                     size: stretch::geometry::Size {
-                        width: stretch::style::Dimension::Points(100.0000),
+                        width: stretch::style::Dimension::Points(100f32),
                         ..Default::default()
                     },
                     ..Default::default()
                 },
                 stretch::style::Node {
                     flex_direction: stretch::style::FlexDirection::Column,
-                    flex_grow: 1.0000,
+                    flex_grow: 1f32,
                     children: vec![stretch::style::Node {
                         size: stretch::geometry::Size {
-                            width: stretch::style::Dimension::Percent(1.0000),
+                            width: stretch::style::Dimension::Percent(1f32),
                             ..Default::default()
                         },
                         ..Default::default()
@@ -29,7 +29,7 @@ fn percent_within_flex_grow() {
                 },
                 stretch::style::Node {
                     size: stretch::geometry::Size {
-                        width: stretch::style::Dimension::Points(100.0000),
+                        width: stretch::style::Dimension::Points(100f32),
                         ..Default::default()
                     },
                     ..Default::default()
@@ -40,29 +40,24 @@ fn percent_within_flex_grow() {
         stretch::geometry::Size::undefined(),
     )
     .unwrap();
-
-    assert_eq!(layout.size.width, 350.0000);
-    assert_eq!(layout.size.height, 100.0000);
-    assert_eq!(layout.location.x, 0.0000);
-    assert_eq!(layout.location.y, 0.0000);
-
-    assert_eq!(layout.children[0].size.width, 100.0000);
-    assert_eq!(layout.children[0].size.height, 100.0000);
-    assert_eq!(layout.children[0].location.x, 0.0000);
-    assert_eq!(layout.children[0].location.y, 0.0000);
-
-    assert_eq!(layout.children[1].size.width, 150.0000);
-    assert_eq!(layout.children[1].size.height, 100.0000);
-    assert_eq!(layout.children[1].location.x, 100.0000);
-    assert_eq!(layout.children[1].location.y, 0.0000);
-
-    assert_eq!(layout.children[1].children[0].size.width, 150.0000);
-    assert_eq!(layout.children[1].children[0].size.height, 0.0000);
-    assert_eq!(layout.children[1].children[0].location.x, 0.0000);
-    assert_eq!(layout.children[1].children[0].location.y, 0.0000);
-
-    assert_eq!(layout.children[2].size.width, 100.0000);
-    assert_eq!(layout.children[2].size.height, 100.0000);
-    assert_eq!(layout.children[2].location.x, 250.0000);
-    assert_eq!(layout.children[2].location.y, 0.0000);
+    assert_eq!(layout.size.width, 350f32);
+    assert_eq!(layout.size.height, 100f32);
+    assert_eq!(layout.location.x, 0f32);
+    assert_eq!(layout.location.y, 0f32);
+    assert_eq!(layout.children[0usize].size.width, 100f32);
+    assert_eq!(layout.children[0usize].size.height, 100f32);
+    assert_eq!(layout.children[0usize].location.x, 0f32);
+    assert_eq!(layout.children[0usize].location.y, 0f32);
+    assert_eq!(layout.children[1usize].size.width, 150f32);
+    assert_eq!(layout.children[1usize].size.height, 100f32);
+    assert_eq!(layout.children[1usize].location.x, 100f32);
+    assert_eq!(layout.children[1usize].location.y, 0f32);
+    assert_eq!(layout.children[1usize].children[0usize].size.width, 150f32);
+    assert_eq!(layout.children[1usize].children[0usize].size.height, 0f32);
+    assert_eq!(layout.children[1usize].children[0usize].location.x, 0f32);
+    assert_eq!(layout.children[1usize].children[0usize].location.y, 0f32);
+    assert_eq!(layout.children[2usize].size.width, 100f32);
+    assert_eq!(layout.children[2usize].size.height, 100f32);
+    assert_eq!(layout.children[2usize].location.x, 250f32);
+    assert_eq!(layout.children[2usize].location.y, 0f32);
 }
