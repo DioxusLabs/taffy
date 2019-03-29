@@ -11318,12 +11318,12 @@ mod generated {
         assert_eq!(layout.location.y, 0.0000);
 
         assert_eq!(layout.children[0].size.width, 100.0000);
-        assert_eq!(layout.children[0].size.height, 50.0000);
+        assert_eq!(layout.children[0].size.height, 100.0000);
         assert_eq!(layout.children[0].location.x, 0.0000);
         assert_eq!(layout.children[0].location.y, 0.0000);
 
         assert_eq!(layout.children[0].children[0].size.width, 100.0000);
-        assert_eq!(layout.children[0].children[0].size.height, 50.0000);
+        assert_eq!(layout.children[0].children[0].size.height, 100.0000);
         assert_eq!(layout.children[0].children[0].location.x, 0.0000);
         assert_eq!(layout.children[0].children[0].location.y, 0.0000);
     }
