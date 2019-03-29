@@ -357,12 +357,13 @@ fn compute_internal(
         // The following logic was developed not from the spec but by trail and error looking into how
         // webkit handled various scenarios. Can probably be solved better by passing in
         // min-content max-content constraints from the top
-        let min_main = compute_internal(child.node, Size { width: Undefined, height: Undefined }, available_space, false)?
-            .size
-            .main(dir)
-            .maybe_max(child.min_size.main(dir))
-            .maybe_min(child.size.main(dir))
-            .to_number();
+        let min_main =
+            compute_internal(child.node, Size { width: Undefined, height: Undefined }, available_space, false)?
+                .size
+                .main(dir)
+                .maybe_max(child.min_size.main(dir))
+                .maybe_min(child.size.main(dir))
+                .to_number();
 
         child
             .hypothetical_inner_size
