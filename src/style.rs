@@ -1,12 +1,8 @@
 #[cfg(not(feature = "std"))]
 use alloc::boxed::Box;
-#[cfg(not(feature = "std"))]
-use alloc::{vec, vec::Vec};
 
-use crate::algo;
 use crate::geometry::{Rect, Size};
 use crate::number::Number;
-use crate::result::Result;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum AlignItems {
@@ -206,96 +202,60 @@ impl Default for Size<Dimension> {
     }
 }
 
-type MeasureFunc = Box<Fn(Size<Number>) -> Result<Size<f32>>>;
-
-#[derive(Debug, Clone)]
-pub struct LayoutCache {
-    pub node_size: Size<Number>,
-    pub parent_size: Size<Number>,
-    pub perform_layout: bool,
-
-    pub result: algo::ComputeResult,
-}
-
-pub struct Node {
+#[derive(Debug)]
+pub struct Style {
     pub display: Display,
-
     pub position_type: PositionType,
     pub direction: Direction,
     pub flex_direction: FlexDirection,
-
     pub flex_wrap: FlexWrap,
     pub overflow: Overflow,
-
     pub align_items: AlignItems,
     pub align_self: AlignSelf,
     pub align_content: AlignContent,
-
     pub justify_content: JustifyContent,
-
     pub position: Rect<Dimension>,
     pub margin: Rect<Dimension>,
     pub padding: Rect<Dimension>,
     pub border: Rect<Dimension>,
-
     pub flex_grow: f32,
     pub flex_shrink: f32,
     pub flex_basis: Dimension,
-
     pub size: Size<Dimension>,
     pub min_size: Size<Dimension>,
     pub max_size: Size<Dimension>,
-
     pub aspect_ratio: Number,
-    pub measure: Option<MeasureFunc>,
-
-    pub children: Vec<Node>,
-
-    pub layout_cache: core::cell::RefCell<Option<LayoutCache>>,
 }
 
-impl Default for Node {
-    fn default() -> Node {
-        Node {
+impl Default for Style {
+    fn default() -> Style {
+        Style {
             display: Default::default(),
-
             position_type: Default::default(),
             direction: Default::default(),
             flex_direction: Default::default(),
-
             flex_wrap: Default::default(),
             overflow: Default::default(),
-
             align_items: Default::default(),
             align_self: Default::default(),
             align_content: Default::default(),
-
             justify_content: Default::default(),
-
             position: Default::default(),
             margin: Default::default(),
             padding: Default::default(),
             border: Default::default(),
-
             flex_grow: 0.0,
             flex_shrink: 1.0,
             flex_basis: Dimension::Auto,
-
             size: Default::default(),
             min_size: Default::default(),
             max_size: Default::default(),
-
             aspect_ratio: Default::default(),
-            measure: None,
-
-            children: vec![],
-
-            layout_cache: core::cell::RefCell::new(None),
         }
     }
 }
 
-impl Node {
+impl Style {
     pub(crate) fn min_main_size(&self, direction: FlexDirection) -> Dimension {
         match direction {
             FlexDirection::Row | FlexDirection::RowReverse => self.min_size.width,
@@ -359,7 +319,7 @@ impl Node {
         }
     }
 
-    pub(crate) fn align_self(&self, parent: &Node) -> AlignSelf {
+    pub(crate) fn align_self(&self, parent: &Style) -> AlignSelf {
         if self.align_self == AlignSelf::Auto {
             match parent.align_items {
                 AlignItems::FlexStart => AlignSelf::FlexStart,
