@@ -4,11 +4,10 @@
 extern crate alloc;
 
 pub mod geometry;
-pub mod layout;
-pub mod number;
 pub mod result;
+pub mod number;
 pub mod style;
+pub mod node;
 
 mod algo;
 mod ref_eq;
-pub use crate::algo::compute;
