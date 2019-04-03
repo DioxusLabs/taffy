@@ -5,13 +5,13 @@ use libm::F32Ext;
 
 use core::f32;
 
-use std::rc::Rc;
 use std::cell::RefCell;
+use std::rc::Rc;
 
 use crate::node::InternalNode;
-use crate::style::*;
 use crate::result;
 use crate::result::Result;
+use crate::style::*;
 
 use crate::ref_eq::ref_eq;
 
@@ -72,7 +72,10 @@ pub(crate) fn compute(root: &InternalNode, size: Size<Number>) -> Result<result:
     let result = if has_root_min_max {
         let first_pass = compute_internal(
             root,
-            Size { width: root.style.size.width.resolve(size.width), height: root.style.size.height.resolve(size.height) },
+            Size {
+                width: root.style.size.width.resolve(size.width),
+                height: root.style.size.height.resolve(size.height),
+            },
             size,
             false,
         )?;
@@ -99,7 +102,10 @@ pub(crate) fn compute(root: &InternalNode, size: Size<Number>) -> Result<result:
     } else {
         compute_internal(
             root,
-            Size { width: root.style.size.width.resolve(size.width), height: root.style.size.height.resolve(size.height) },
+            Size {
+                width: root.style.size.width.resolve(size.width),
+                height: root.style.size.height.resolve(size.height),
+            },
             size,
             true,
         )?
@@ -325,12 +331,14 @@ fn compute_internal(
             child.size.width
         };
 
-        let height: Number =
-            if !child.size.height.is_defined() && child.node.borrow().style.align_self(&node.style) == AlignSelf::Stretch && is_row {
-                available_space.height
-            } else {
-                child.size.height
-            };
+        let height: Number = if !child.size.height.is_defined()
+            && child.node.borrow().style.align_self(&node.style) == AlignSelf::Stretch
+            && is_row
+        {
+            available_space.height
+        } else {
+            child.size.height
+        };
 
         child.flex_basis = compute_internal(
             &child.node.borrow(),
@@ -359,13 +367,17 @@ fn compute_internal(
         // The following logic was developed not from the spec but by trail and error looking into how
         // webkit handled various scenarios. Can probably be solved better by passing in
         // min-content max-content constraints from the top
-        let min_main =
-            compute_internal(&child.node.borrow(), Size { width: Undefined, height: Undefined }, available_space, false)?
-                .size
-                .main(dir)
-                .maybe_max(child.min_size.main(dir))
-                .maybe_min(child.size.main(dir))
-                .to_number();
+        let min_main = compute_internal(
+            &child.node.borrow(),
+            Size { width: Undefined, height: Undefined },
+            available_space,
+            false,
+        )?
+        .size
+        .main(dir)
+        .maybe_max(child.min_size.main(dir))
+        .maybe_min(child.size.main(dir))
+        .to_number();
 
         child
             .hypothetical_inner_size
@@ -563,13 +575,16 @@ fn compute_internal(
             if free_space.is_normal() {
                 if growing && sum_flex_grow > 0.0 {
                     unfrozen.iter_mut().for_each(|child| {
-                        child
-                            .target_size
-                            .set_main(dir, child.flex_basis + free_space * (child.node.borrow().style.flex_grow / sum_flex_grow));
+                        child.target_size.set_main(
+                            dir,
+                            child.flex_basis + free_space * (child.node.borrow().style.flex_grow / sum_flex_grow),
+                        );
                     });
                 } else if shrinking && sum_flex_shrink > 0.0 {
-                    let sum_scaled_shrink_factor: f32 =
-                        unfrozen.iter().map(|child| child.inner_flex_basis * child.node.borrow().style.flex_shrink).sum();
+                    let sum_scaled_shrink_factor: f32 = unfrozen
+                        .iter()
+                        .map(|child| child.inner_flex_basis * child.node.borrow().style.flex_shrink)
+                        .sum();
 
                     if sum_scaled_shrink_factor > 0.0 {
                         unfrozen.iter_mut().for_each(|child| {
@@ -595,12 +610,17 @@ fn compute_internal(
                 // min-content max-content constraints from the top. Need to figure out correct thing to do here as
                 // just piling on more conditionals.
                 let min_main = if is_row && child.node.borrow().measure.is_none() {
-                    compute_internal(&child.node.borrow(), Size { width: Undefined, height: Undefined }, available_space, false)?
-                        .size
-                        .width
-                        .maybe_min(child.size.width)
-                        .maybe_max(child.min_size.width)
-                        .to_number()
+                    compute_internal(
+                        &child.node.borrow(),
+                        Size { width: Undefined, height: Undefined },
+                        available_space,
+                        false,
+                    )?
+                    .size
+                    .width
+                    .maybe_min(child.size.width)
+                    .maybe_max(child.min_size.width)
+                    .to_number()
                 } else {
                     child.min_size.main(dir)
                 };
@@ -1042,7 +1062,12 @@ fn compute_internal(
     // layout we are done now.
     if !perform_layout {
         let result = ComputeResult { size: container_size, children: vec![] };
-        node.layout_cache.replace(Some(result::Cache { node_size, parent_size, perform_layout, result: result.clone() }));
+        node.layout_cache.replace(Some(result::Cache {
+            node_size,
+            parent_size,
+            perform_layout,
+            result: result.clone(),
+        }));
         return Ok(result);
     }
 
@@ -1184,16 +1209,21 @@ fn compute_internal(
             let container_width = container_size.width.to_number();
             let container_height = container_size.height.to_number();
 
-            let start = child.borrow().style.position.start.resolve(container_width) + child.borrow().style.margin.start.resolve(container_width);
-            let end = child.borrow().style.position.end.resolve(container_width) + child.borrow().style.margin.end.resolve(container_width);
-            let top = child.borrow().style.position.top.resolve(container_height) + child.borrow().style.margin.top.resolve(container_height);
-            let bottom =
-                child.borrow().style.position.bottom.resolve(container_height) + child.borrow().style.margin.bottom.resolve(container_height);
+            let start = child.borrow().style.position.start.resolve(container_width)
+                + child.borrow().style.margin.start.resolve(container_width);
+            let end = child.borrow().style.position.end.resolve(container_width)
+                + child.borrow().style.margin.end.resolve(container_width);
+            let top = child.borrow().style.position.top.resolve(container_height)
+                + child.borrow().style.margin.top.resolve(container_height);
+            let bottom = child.borrow().style.position.bottom.resolve(container_height)
+                + child.borrow().style.margin.bottom.resolve(container_height);
 
             let (start_main, end_main) = if is_row { (start, end) } else { (top, bottom) };
             let (start_cross, end_cross) = if is_row { (top, bottom) } else { (start, end) };
 
-            let width = child.borrow().style
+            let width = child
+                .borrow()
+                .style
                 .size
                 .width
                 .resolve(container_width)
@@ -1205,7 +1235,9 @@ fn compute_internal(
                     Undefined
                 });
 
-            let height = child.borrow().style
+            let height = child
+                .borrow()
+                .style
                 .size
                 .height
                 .resolve(container_height)
@@ -1306,7 +1338,12 @@ fn compute_internal(
             order,
             size: Size { width: 0.0, height: 0.0 },
             location: Point { x: 0.0, y: 0.0 },
-            children: node.children.iter().enumerate().map(|(order, child)| hidden_layout(&child.borrow(), order as _)).collect(),
+            children: node
+                .children
+                .iter()
+                .enumerate()
+                .map(|(order, child)| hidden_layout(&child.borrow(), order as _))
+                .collect(),
         }
     }
 
