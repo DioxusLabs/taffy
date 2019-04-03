@@ -44,7 +44,9 @@ brew tap homebrew/cask
 brew cask install chromedriver
 ```
 
-[Selenium](https://www.seleniumhq.org) is bundled in the repo so no need to download it. However you must ensure to have java installed first. Once you have everything installed you can re-generate all tests by running `cargo run --manifest-path scripts/gentest/Cargo.toml`. To add a new test case add another HTML file to `/test_fixtures` following the current tests as a template for new tests.
+Once you have chromedriver installed and available in `PATH` you can re-generate all tests by running `cargo run --package gentest`.
+
+To add a new test case add another HTML file to `/test_fixtures` following the current tests as a template for new tests.
 
 ## Contributing
 Contributions are very welcome. Though we ask that you open an issue or pull request early in the process (before writing code) so we can discuss solutions and additions before you start spending time on implementing them. There are some specific areas where we would be extra happy to receive contributions in.

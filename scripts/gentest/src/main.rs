@@ -1,385 +1,460 @@
-use selenium_rs::element::Element;
-use selenium_rs::webdriver::{Browser, Selector, WebDriver};
-
-use std::process::Command;
-use std::path::Path;
 use std::fs;
-use std::{thread, time};
+use std::path::{Path, PathBuf};
+use std::process::Command;
 
+use failure::*;
+use fantoccini::{Client, Locator};
+use futures::{future::Future, stream::Stream, sync::oneshot::channel};
 use json;
+use log::*;
+use proc_macro2::{Span, TokenStream};
+use quote::quote;
+use syn::Ident;
 
 fn main() {
-    // std::env::current_exe should be <path/to/repo>/scripts/gentest/target/debug/gentest
-    // move up five times to get to repo root
-    let root_dir = std::env::current_exe().unwrap();
-    let repo_root = root_dir.parent()
-        .and_then(Path::parent)
-        .and_then(Path::parent)
-        .and_then(Path::parent)
-        .and_then(Path::parent)
-        .unwrap();
+    env_logger::init();
+    // this requires being run by cargo, which is iffy
+    let root_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
+    let repo_root = root_dir.parent().and_then(Path::parent).unwrap();
 
     let fixtures_root = repo_root.join("test_fixtures");
-
-    let mut selenium = Command::new("java")
-        .arg("-jar")
-        .arg("selenium.jar")
-        .current_dir(&format!("{}/scripts/gentest", repo_root.display()))
-        .spawn()
-        .expect("failed to execute selenium, most likely missing java");
-
-    // Wait for a bit until selenium is up and running...
-    let ten_millis = time::Duration::from_millis(2000);
-    thread::sleep(ten_millis);
-
-    let mut driver = WebDriver::new(Browser::Chrome);
-    driver.start_session();
-
-    let mut src = String::new();
-    src.push_str("#[cfg(test)]\n");
-    src.push_str("mod generated {\n");
-
     let fixtures = fs::read_dir(fixtures_root).unwrap();
-    for fixture in fixtures {
-        let fixture_path = fixture.unwrap().path();
-        if fixture_path.is_file() {
-            let name = fixture_path.file_stem().unwrap().to_str().unwrap();
 
-            driver.navigate(&format!("file://{}", fixture_path.display()));
-            let root_element = driver.query_element(Selector::CSS, "#test-root").unwrap();
-            src.push_str(&format!("{}\n", generate_test(&name, root_element)));
+    info!("reading test fixtures from disk");
+    let mut fixtures: Vec<_> = fixtures
+        .into_iter()
+        .filter_map(|a| a.ok())
+        .filter(|f| f.path().is_file() && f.path().extension().map(|p| p == "html").unwrap_or(false))
+        .map(|f| {
+            let fixture_path = f.path().to_path_buf();
+            let name = fixture_path.file_stem().unwrap().to_str().unwrap().to_string();
+            (name, fixture_path)
+        })
+        .collect();
+    fixtures.sort_unstable_by_key(|f| f.0.clone());
+
+    info!("starting webdriver instance");
+    let webdriver_url = "http://localhost:4444";
+    let mut webdriver_handle = Command::new("chromedriver").arg("--port=4444").spawn().unwrap();
+
+    // this is silly, but it works
+    std::thread::sleep(std::time::Duration::from_secs(1));
+
+    let mut caps = serde_json::map::Map::new();
+    let chrome_opts = serde_json::json!({ "args": ["--headless", "--disable-gpu"] });
+    caps.insert("goog:chromeOptions".to_string(), chrome_opts.clone());
+
+    use indicatif::ProgressBar;
+    let pb = ProgressBar::new(fixtures.len() as u64);
+    let (test_descs_sink, mut test_descs) = channel();
+
+    info!("spawning webdriver client and collecting test descriptions");
+    tokio::run(
+        Client::with_capabilities(webdriver_url, caps.clone())
+            .map_err(|e| Error::from(e))
+            .and_then(move |client| {
+                futures::stream::iter_ok(pb.wrap_iter(fixtures.into_iter()))
+                    .and_then(move |(name, fixture_path)| {
+                        pb.set_message(&name);
+                        test_root_element(client.clone(), name, fixture_path)
+                    })
+                    .collect()
+                    .map(move |descs| {
+                        info!("finished collecting descriptions, sending them back to main");
+                        let _ = test_descs_sink.send(descs);
+                    })
+            })
+            .map_err(|e| {
+                error!("top-level error encountered: {:?}", e);
+            }),
+    );
+
+    info!("killing webdriver instance...");
+    webdriver_handle.kill().unwrap();
+
+    info!("collecting test descriptions from async runtime...");
+    let test_descs = loop {
+        if let Ok(Some(descs)) = test_descs.try_recv() {
+            break descs;
         }
-    }
-    
-    src.push_str("}\n");
-    fs::write(repo_root.join("tests").join("generated.rs"), src);
-
-    Command::new("cargo")
-        .arg("fmt")
-        .current_dir(repo_root)
-        .status();
-
-    driver.delete_session();
-    selenium.kill();
-}
-
-fn generate_test(name: &str, root: Element) -> String {
-    let description_string = root.get_property("__stretch_description__").unwrap();
-    let description = json::parse(&description_string).unwrap();
-
-    let mut src = String::new();
-    src.push_str("#[test]\n");
-    src.push_str(&format!("fn {}() {{\n", name));
-    
-    src.push_str("let layout = stretch::compute(\n");
-    src.push_str(&format!("&{}", &generate_node(&description)));
-    src.push_str(", stretch::geometry::Size::undefined()).unwrap();\n\n");
-
-    src.push_str(&generate_assertions("layout".to_string(), &description));
-    src.push_str("}\n");
-    src
-}
-
-fn generate_assertions(prefix: String, node: &json::JsonValue) -> String {
-    let layout = &node["layout"];
-    let mut src = String::new();
-
-    src.push_str(&format!("assert_eq!({}.size.width, {:.4});\n", prefix, layout["width"].as_f32().unwrap()));
-    src.push_str(&format!("assert_eq!({}.size.height, {:.4});\n", prefix, layout["height"].as_f32().unwrap()));
-    src.push_str(&format!("assert_eq!({}.location.x, {:.4});\n", prefix, layout["x"].as_f32().unwrap()));
-    src.push_str(&format!("assert_eq!({}.location.y, {:.4});\n\n", prefix, layout["y"].as_f32().unwrap()));
-
-    match node["children"] {
-        json::JsonValue::Array(ref value) => {
-            for i in 0..value.len() {
-                let child = &value[i];
-                src.push_str(&generate_assertions(format!("{}.children[{}]", prefix, i), child));
-            }
-        },
-        _ => (),
     };
-    src
+
+    info!("generating test sources and concatenating...");
+
+    let test_descs: Vec<_> = test_descs
+        .into_iter()
+        .map(|(name, description)| {
+            debug!("generating test contents for {}", &name);
+            (name.clone(), generate_test(name, description))
+        })
+        .collect();
+
+    let test_mods = test_descs
+        .iter()
+        .map(|(name, _)| {
+            let name = Ident::new(name, Span::call_site());
+            quote!(mod #name;)
+        })
+        .fold(quote!(), |a, b| quote!(#a #b));
+
+    for (name, test_body) in test_descs {
+        let mut test_filename = repo_root.join("tests").join("generated").join(&name);
+        test_filename.set_extension("rs");
+        debug!("writing {} to disk...", &name);
+        fs::write(test_filename, test_body.to_string()).unwrap();
+    }
+
+    info!("writing generated test file to disk...");
+    fs::write(repo_root.join("tests").join("generated").join("mod.rs"), test_mods.to_string()).unwrap();
+    info!("formatting the source directory");
+    Command::new("cargo").arg("fmt").current_dir(repo_root).status().unwrap();
 }
 
-fn generate_node(node: &json::JsonValue) -> String {
-    let mut src = String::new();
-    src.push_str("stretch::style::Node {\n");
+fn test_root_element(
+    client: Client,
+    name: String,
+    fixture_path: impl AsRef<Path>,
+) -> impl Future<Item = (String, json::JsonValue), Error = Error> {
+    let fixture_path = fixture_path.as_ref();
 
+    let url = format!("file://{}", fixture_path.display());
+    let nav_client = client.clone();
+    let mut locate_client = client.clone();
+
+    nav_client
+        .goto(&url)
+        .map_err(|e| e.context("navigating to file"))
+        .and_then(move |_| {
+            locate_client.find(Locator::Css("#test-root")).map_err(|e| e.context("finding #test-root")).and_then(
+                |mut root| {
+                    root.attr("__stretch_description__")
+                        .map_err(|e| e.context("retrieving stretch description from test root"))
+                        .and_then(|description_string| {
+                            json::parse(&description_string.unwrap())
+                                .map(|d| (name, d))
+                                .context("parsing test description")
+                        })
+                },
+            )
+        })
+        .map_err(|c| c.into())
+}
+
+fn generate_test(name: impl AsRef<str>, description: json::JsonValue) -> TokenStream {
+    let ignorelist = &["flex_basis_smaller_than_content_column"];
+
+    let name = name.as_ref();
+    let maybe_ignore = if ignorelist.contains(&name) { quote!(#[ignore]) } else { quote!() };
+    let name = Ident::new(name, Span::call_site());
+    let node_description = generate_node(&description);
+    let assertions = generate_assertions(quote!(layout), &description);
+
+    quote!(
+        #[test]
+        #maybe_ignore
+        fn #name() {
+            let layout = stretch::compute(&#node_description, stretch::geometry::Size::undefined()).unwrap();
+            #assertions
+        }
+    )
+}
+
+fn generate_assertions(prefix: TokenStream, node: &json::JsonValue) -> TokenStream {
+    let layout = &node["layout"];
+
+    let read_f32 = |s: &str| layout[s].as_f32().unwrap();
+    let width = read_f32("width");
+    let height = read_f32("height");
+    let x = read_f32("x");
+    let y = read_f32("y");
+
+    let children = {
+        let mut c = Vec::new();
+        match node["children"] {
+            json::JsonValue::Array(ref value) => {
+                for i in 0..value.len() {
+                    let child = &value[i];
+                    c.push(generate_assertions(quote!(#prefix.children[#i]), child));
+                }
+            }
+            _ => (),
+        };
+        c.into_iter().fold(quote!(), |a, b| quote!(#a #b))
+    };
+
+    quote!(
+        assert_eq!(#prefix.size.width, #width);
+        assert_eq!(#prefix.size.height, #height);
+        assert_eq!(#prefix.location.x, #x);
+        assert_eq!(#prefix.location.y, #y);
+
+        #children
+    )
+}
+
+fn generate_node(node: &json::JsonValue) -> TokenStream {
     let style = &node["style"];
 
-    match style["display"] {
-        json::JsonValue::Short(ref value) => {
-            match value.as_ref() {
-                "none" => src.push_str("display: stretch::style::Display::None,\n"),
-                _ => (),
-            };
+    let display = match style["display"] {
+        json::JsonValue::Short(ref value) => match value.as_ref() {
+            "none" => quote!(display: stretch::style::Display::None,),
+            _ => quote!(),
         },
-        _ => (),
+        _ => quote!(),
     };
 
-    match style["position_type"] {
-        json::JsonValue::Short(ref value) => {
-            match value.as_ref() {
-                "absolute" => src.push_str("position_type: stretch::style::PositionType::Absolute,\n"),
-                _ => (),
-            };
+    let position_type = match style["position_type"] {
+        json::JsonValue::Short(ref value) => match value.as_ref() {
+            "absolute" => quote!(position_type: stretch::style::PositionType::Absolute,),
+            _ => quote!(),
         },
-        _ => (),
+        _ => quote!(),
     };
 
-    match style["direction"] {
-        json::JsonValue::Short(ref value) => {
-            match value.as_ref() {
-                "rtl" => src.push_str("direction: stretch::style::Direction::RTL,\n"),
-                "ltr" => src.push_str("direction: stretch::style::Direction::LTR,\n"),
-                _ => (),
-            };
+    let direction = match style["direction"] {
+        json::JsonValue::Short(ref value) => match value.as_ref() {
+            "rtl" => quote!(direction: stretch::style::Direction::RTL,),
+            "ltr" => quote!(direction: stretch::style::Direction::LTR,),
+            _ => quote!(),
         },
-        _ => (),
+        _ => quote!(),
     };
 
-    match style["flexDirection"] {
-        json::JsonValue::Short(ref value) => {
-            match value.as_ref() {
-                "row-reverse" => src.push_str("flex_direction: stretch::style::FlexDirection::RowReverse,\n"),
-                "column" => src.push_str("flex_direction: stretch::style::FlexDirection::Column,\n"),
-                "column-reverse" => src.push_str("flex_direction: stretch::style::FlexDirection::ColumnReverse,\n"),
-                _ => (),
-            };
+    let flex_direction = match style["flexDirection"] {
+        json::JsonValue::Short(ref value) => match value.as_ref() {
+            "row-reverse" => quote!(flex_direction: stretch::style::FlexDirection::RowReverse,),
+            "column" => quote!(flex_direction: stretch::style::FlexDirection::Column,),
+            "column-reverse" => quote!(flex_direction: stretch::style::FlexDirection::ColumnReverse,),
+            _ => quote!(),
         },
-        _ => (),
+        _ => quote!(),
     };
 
-    match style["flexWrap"] {
-        json::JsonValue::Short(ref value) => {
-            match value.as_ref() {
-                "wrap" => src.push_str("flex_wrap: stretch::style::FlexWrap::Wrap,\n"),
-                "wrap-reverse" => src.push_str("flex_wrap: stretch::style::FlexWrap::WrapReverse,\n"),
-                _ => (),
-            };
+    let flex_wrap = match style["flexWrap"] {
+        json::JsonValue::Short(ref value) => match value.as_ref() {
+            "wrap" => quote!(flex_wrap: stretch::style::FlexWrap::Wrap,),
+            "wrap-reverse" => quote!(flex_wrap: stretch::style::FlexWrap::WrapReverse,),
+            _ => quote!(),
         },
-        _ => (),
+        _ => quote!(),
     };
 
-    match style["overflow"] {
-        json::JsonValue::Short(ref value) => {
-            match value.as_ref() {
-                "hidden" => src.push_str("overflow: stretch::style::Overflow::Hidden,\n"),
-                "scroll" => src.push_str("overflow: stretch::style::Overflow::Scroll,\n"),
-                _ => (),
-            };
+    let overflow = match style["overflow"] {
+        json::JsonValue::Short(ref value) => match value.as_ref() {
+            "hidden" => quote!(overflow: stretch::style::Overflow::Hidden,),
+            "scroll" => quote!(overflow: stretch::style::Overflow::Scroll,),
+            _ => quote!(),
         },
-        _ => (),
+        _ => quote!(),
     };
 
-    match style["alignItems"] {
-        json::JsonValue::Short(ref value) => {
-            match value.as_ref() {
-                "flex-start" => src.push_str("align_items: stretch::style::AlignItems::FlexStart,\n"),
-                "flex-end" => src.push_str("align_items: stretch::style::AlignItems::FlexEnd,\n"),
-                "center" => src.push_str("align_items: stretch::style::AlignItems::Center,\n"),
-                "baseline" => src.push_str("align_items: stretch::style::AlignItems::Baseline,\n"),
-                _ => (),
-            };
+    let align_items = match style["alignItems"] {
+        json::JsonValue::Short(ref value) => match value.as_ref() {
+            "flex-start" => quote!(align_items: stretch::style::AlignItems::FlexStart,),
+            "flex-end" => quote!(align_items: stretch::style::AlignItems::FlexEnd,),
+            "center" => quote!(align_items: stretch::style::AlignItems::Center,),
+            "baseline" => quote!(align_items: stretch::style::AlignItems::Baseline,),
+            _ => quote!(),
         },
-        _ => (),
+        _ => quote!(),
     };
 
-    match style["alignSelf"] {
-        json::JsonValue::Short(ref value) => {
-            match value.as_ref() {
-                "flex-start" => src.push_str("align_self: stretch::style::AlignSelf::FlexStart,\n"),
-                "flex-end" => src.push_str("align_self: stretch::style::AlignSelf::FlexEnd,\n"),
-                "center" => src.push_str("align_self: stretch::style::AlignSelf::Center,\n"),
-                "baseline" => src.push_str("align_self: stretch::style::AlignSelf::Baseline,\n"),
-                "stretch" => src.push_str("align_self: stretch::style::AlignSelf::Stretch,\n"),
-                _ => (),
-            };
+    let align_self = match style["alignSelf"] {
+        json::JsonValue::Short(ref value) => match value.as_ref() {
+            "flex-start" => quote!(align_self: stretch::style::AlignSelf::FlexStart,),
+            "flex-end" => quote!(align_self: stretch::style::AlignSelf::FlexEnd,),
+            "center" => quote!(align_self: stretch::style::AlignSelf::Center,),
+            "baseline" => quote!(align_self: stretch::style::AlignSelf::Baseline,),
+            "stretch" => quote!(align_self: stretch::style::AlignSelf::Stretch,),
+            _ => quote!(),
         },
-        _ => (),
+        _ => quote!(),
     };
 
-    match style["alignContent"] {
-        json::JsonValue::Short(ref value) => {
-            match value.as_ref() {
-                "flex-start" => src.push_str("align_content: stretch::style::AlignContent::FlexStart,\n"),
-                "flex-end" => src.push_str("align_content: stretch::style::AlignContent::FlexEnd,\n"),
-                "center" => src.push_str("align_content: stretch::style::AlignContent::Center,\n"),
-                "space-between" => src.push_str("align_content: stretch::style::AlignContent::SpaceBetween,\n"),
-                "space-around" => src.push_str("align_content: stretch::style::AlignContent::SpaceAround,\n"),
-                _ => (),
-            };
+    let align_content = match style["alignContent"] {
+        json::JsonValue::Short(ref value) => match value.as_ref() {
+            "flex-start" => quote!(align_content: stretch::style::AlignContent::FlexStart,),
+            "flex-end" => quote!(align_content: stretch::style::AlignContent::FlexEnd,),
+            "center" => quote!(align_content: stretch::style::AlignContent::Center,),
+            "space-between" => quote!(align_content: stretch::style::AlignContent::SpaceBetween,),
+            "space-around" => quote!(align_content: stretch::style::AlignContent::SpaceAround,),
+            _ => quote!(),
         },
-        _ => (),
+        _ => quote!(),
     };
 
-    match style["justifyContent"] {
-        json::JsonValue::Short(ref value) => {
-            match value.as_ref() {
-                "flex-end" => src.push_str("justify_content: stretch::style::JustifyContent::FlexEnd,\n"),
-                "center" => src.push_str("justify_content: stretch::style::JustifyContent::Center,\n"),
-                "space-between" => src.push_str("justify_content: stretch::style::JustifyContent::SpaceBetween,\n"),
-                "space-around" => src.push_str("justify_content: stretch::style::JustifyContent::SpaceAround,\n"),
-                "space-evenly" => src.push_str("justify_content: stretch::style::JustifyContent::SpaceEvenly,\n"),
-                _ => (),
-            };
+    let justify_content = match style["justifyContent"] {
+        json::JsonValue::Short(ref value) => match value.as_ref() {
+            "flex-end" => quote!(justify_content: stretch::style::JustifyContent::FlexEnd,),
+            "center" => quote!(justify_content: stretch::style::JustifyContent::Center,),
+            "space-between" => quote!(justify_content: stretch::style::JustifyContent::SpaceBetween,),
+            "space-around" => quote!(justify_content: stretch::style::JustifyContent::SpaceAround,),
+            "space-evenly" => quote!(justify_content: stretch::style::JustifyContent::SpaceEvenly,),
+            _ => quote!(),
         },
-        _ => (),
+        _ => quote!(),
     };
 
-    match style["flexGrow"] {
+    let flex_grow = match style["flexGrow"] {
         json::JsonValue::Number(value) => {
             let value: f32 = value.into();
-            src.push_str(&format!("flex_grow: {:.4},\n", value))
-        },
-        _ => (),
+            quote!(flex_grow: #value,)
+        }
+        _ => quote!(),
     };
 
-    match style["flexShrink"] {
+    let flex_shrink = match style["flexShrink"] {
         json::JsonValue::Number(value) => {
             let value: f32 = value.into();
-            src.push_str(&format!("flex_shrink: {:.4},\n", value))
-        },
-        _ => (),
+            quote!(flex_shrink: #value,)
+        }
+        _ => quote!(),
     };
 
-    match style["flexBasis"] {
-        json::JsonValue::Object(ref value) => src.push_str(&format!("flex_basis: {},\n", generate_dimension(value))),
-        _ => (),
+    let flex_basis = match style["flexBasis"] {
+        json::JsonValue::Object(ref value) => {
+            let value = generate_dimension(value);
+            quote!(flex_basis: #value,)
+        }
+        _ => quote!(),
     };
 
-    match style["size"] {
-        json::JsonValue::Object(ref value) => src.push_str(&format!("size: {},\n", generate_size(value))),
-        _ => (),
+    let size = match style["size"] {
+        json::JsonValue::Object(ref value) => {
+            let size = generate_size(value);
+            quote!(size: #size,)
+        }
+        _ => quote!(),
     };
 
-    match style["min_size"] {
-        json::JsonValue::Object(ref value) => src.push_str(&format!("min_size: {},\n", generate_size(value))),
-        _ => (),
+    let min_size = match style["min_size"] {
+        json::JsonValue::Object(ref value) => {
+            let min_size = generate_size(value);
+            quote!(min_size: #min_size,)
+        }
+        _ => quote!(),
     };
 
-    match style["max_size"] {
-        json::JsonValue::Object(ref value) => src.push_str(&format!("max_size: {},\n", generate_size(value))),
-        _ => (),
+    let max_size = match style["max_size"] {
+        json::JsonValue::Object(ref value) => {
+            let max_size = generate_size(value);
+            quote!(max_size: #max_size,)
+        }
+        _ => quote!(),
     };
 
-    match style["margin"] {
-        json::JsonValue::Object(ref value) => src.push_str(&format!("margin: {},\n", generate_edges(value))),
-        _ => (),
-    };
+    macro_rules! edges_quoted {
+        ($style:ident, $val:ident) => {
+            let $val = match $style[stringify!($val)] {
+                json::JsonValue::Object(ref value) => {
+                    let edges = generate_edges(value);
+                    quote!($val: #edges,)
+                },
+                _ => quote!(),
+            };
+        };
+    }
 
-    match style["padding"] {
-        json::JsonValue::Object(ref value) => src.push_str(&format!("padding: {},\n", generate_edges(value))),
-        _ => (),
-    };
+    edges_quoted!(style, margin);
+    edges_quoted!(style, padding);
+    edges_quoted!(style, position);
+    edges_quoted!(style, border);
 
-    match style["position"] {
-        json::JsonValue::Object(ref value) => src.push_str(&format!("position: {},\n", generate_edges(value))),
-        _ => (),
-    };
-
-    match style["border"] {
-        json::JsonValue::Object(ref value) => src.push_str(&format!("border: {},\n", generate_edges(value))),
-        _ => (),
-    };
-
-    match node["children"] {
+    let children = match node["children"] {
         json::JsonValue::Array(ref value) => {
             if value.len() > 0 {
-                src.push_str("children: vec![\n");
-                value.iter().for_each(|child| {
-                    src.push_str(&format!("{},\n", generate_node(child)));
+                let body = value.iter().fold(quote!(), |prev, child| {
+                    let child = generate_node(child);
+                    quote!(#prev #child,)
                 });
-                src.push_str("],\n");
+                quote!(children: vec![ #body ],)
+            } else {
+                quote!()
             }
-        },
-        _ => (),
+        }
+        _ => quote!(),
     };
 
-    src.push_str("..Default::default()\n");
-    src.push_str("}\n");
-    src
+    quote!(stretch::style::Node {
+        #display
+        #direction
+        #position_type
+        #flex_direction
+        #flex_wrap
+        #overflow
+        #align_items
+        #align_self
+        #align_content
+        #justify_content
+        #flex_grow
+        #flex_shrink
+        #flex_basis
+        #size
+        #min_size
+        #max_size
+
+        #children
+
+        #margin
+        #padding
+        #position
+        #border
+        ..Default::default()
+    })
 }
 
-fn generate_size(size: &json::object::Object) -> String {
-    let mut src = String::new();
-    src.push_str("stretch::geometry::Size {\n");
-
-    match size.get("width") {
-        Some(value) => match value {
-            json::JsonValue::Object(ref value) => src.push_str(&format!("width: {},\n", generate_dimension(value))),
-            _ => (),
-        },
-        None => (),
+macro_rules! dim_quoted {
+    ($obj:ident, $dim_name:ident) => {
+        let $dim_name = match $obj.get(stringify!($dim_name)) {
+            Some(json::JsonValue::Object(ref value)) => {
+                let dim = generate_dimension(value);
+                quote!($dim_name: #dim,)
+            }
+            _ => quote!(),
+        };
     };
-
-    match size.get("height") {
-        Some(value) => match value {
-            json::JsonValue::Object(ref value) => src.push_str(&format!("height: {},\n", generate_dimension(value))),
-            _ => (),
-        },
-        None => (),
-    };
-
-    src.push_str("..Default::default()\n");
-    src.push_str("}\n");
-    src
 }
 
-fn generate_dimension(dimen: &json::object::Object) -> String {
+fn generate_size(size: &json::object::Object) -> TokenStream {
+    dim_quoted!(size, width);
+    dim_quoted!(size, height);
+    quote!(
+        stretch::geometry::Size {
+            #width #height
+            ..Default::default()
+        }
+    )
+}
+
+fn generate_dimension(dimen: &json::object::Object) -> TokenStream {
     let unit = dimen.get("unit").unwrap();
     let value = || dimen.get("value").unwrap().as_f32().unwrap();
 
     match unit {
-        json::JsonValue::Short(ref unit) => {
-            match unit.as_ref() {
-                "auto" => format!("stretch::style::Dimension::Auto"),
-                "points" => format!("stretch::style::Dimension::Points({:.4})", value()),
-                "percent" => format!("stretch::style::Dimension::Percent({:.4})", value()),
-                _ => panic!(),
+        json::JsonValue::Short(ref unit) => match unit.as_ref() {
+            "auto" => quote!(stretch::style::Dimension::Auto),
+            "points" => {
+                let value = value();
+                quote!(stretch::style::Dimension::Points(#value))
             }
+            "percent" => {
+                let value = value();
+                quote!(stretch::style::Dimension::Percent(#value))
+            }
+            _ => unreachable!(),
         },
-        _ => panic!(),
+        _ => unreachable!(),
     }
 }
 
-fn generate_edges(dimen: &json::object::Object) -> String {
-    let mut src = String::new();
-    src.push_str("stretch::geometry::Rect {\n");
+fn generate_edges(dimen: &json::object::Object) -> TokenStream {
+    dim_quoted!(dimen, start);
+    dim_quoted!(dimen, end);
+    dim_quoted!(dimen, top);
+    dim_quoted!(dimen, bottom);
 
-    match dimen.get("start") {
-        Some(value) => match value {
-            json::JsonValue::Object(ref value) => src.push_str(&format!("start: {},\n", generate_dimension(value))),
-            _ => (),
-        },
-        None => (),
-    };
-
-    match dimen.get("end") {
-        Some(value) => match value {
-            json::JsonValue::Object(ref value) => src.push_str(&format!("end: {},\n", generate_dimension(value))),
-            _ => (),
-        },
-        None => (),
-    };
-
-    match dimen.get("top") {
-        Some(value) => match value {
-            json::JsonValue::Object(ref value) => src.push_str(&format!("top: {},\n", generate_dimension(value))),
-            _ => (),
-        },
-        None => (),
-    };
-
-    match dimen.get("bottom") {
-        Some(value) => match value {
-            json::JsonValue::Object(ref value) => src.push_str(&format!("bottom: {},\n", generate_dimension(value))),
-            _ => (),
-        },
-        None => (),
-    };
-
-    src.push_str("..Default::default()\n");
-    src.push_str("}\n");
-    src
+    quote!(stretch::geometry::Rect {
+        #start #end #top #bottom
+        ..Default::default()
+    })
 }
