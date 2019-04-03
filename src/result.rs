@@ -3,9 +3,9 @@ use alloc::vec::Vec;
 
 use core::any::Any;
 
+use crate::algo::ComputeResult;
 use crate::geometry::{Point, Size};
 use crate::number::Number;
-use crate::algo::ComputeResult;
 
 pub type Result<T> = core::result::Result<T, Box<Any>>;
 
