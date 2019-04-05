@@ -53,21 +53,77 @@ impl Node {
     pub fn add_child(&mut self, child: &Node) {
         child.0.borrow_mut().parents.push(Rc::downgrade(&self.0));
         self.0.borrow_mut().children.push(Rc::clone(&child.0));
+        self.mark_dirty();
     }
 
-    // pub fn children(&self) -> Vec<Node> {}
+    pub fn set_children(&mut self, children: Vec<&Node>) {
+        for child in &self.0.borrow().children {
+            let position =
+                child.borrow().parents.iter().position(|x| Rc::ptr_eq(&x.upgrade().unwrap(), &self.0)).unwrap();
+            child.borrow_mut().parents.remove(position);
+        }
 
-    // pub fn mark_dirty(&mut self) {}
+        self.0.borrow_mut().children = vec![];
 
-    // pub fn set_style(&mut self, Style) {}
+        for child in children {
+            self.add_child(child);
+        }
+    }
 
-    // pub fn set_children(&mut self, Vec<Node>) {}
+    pub fn remove_child(&mut self, child: &Node) -> Node {
+        self.remove_child_at_index({
+            let parent = self.0.borrow();
+            parent.children.iter().position(|x| Rc::ptr_eq(&x, &child.0)).unwrap()
+        })
+    }
 
-    // pub fn add_child(&mut self, Node) {}
+    pub fn remove_child_at_index(&mut self, index: usize) -> Node {
+        let child = {
+            let mut parent = self.0.borrow_mut();
+            let child = parent.children.remove(index);
+            let position =
+                child.borrow().parents.iter().position(|x| Rc::ptr_eq(&x.upgrade().unwrap(), &self.0)).unwrap();
+            child.borrow_mut().parents.remove(position);
+            child
+        };
 
-    // pub fn remove_child(&mut self, Node) -> Node {}
+        self.mark_dirty();
+        Node(child)
+    }
 
-    // pub fn replace_child(&mut self, Node, u32) -> Node {}
+    pub fn replace_child(&mut self, child: &Node, index: usize) -> Node {
+        child.0.borrow_mut().parents.push(Rc::downgrade(&self.0));
+        let old_child = std::mem::replace(&mut self.0.borrow_mut().children[index], Rc::clone(&child.0));
+
+        let position =
+            old_child.borrow().parents.iter().position(|x| Rc::ptr_eq(&x.upgrade().unwrap(), &self.0)).unwrap();
+        old_child.borrow_mut().parents.remove(position);
+
+        self.mark_dirty();
+
+        Node(old_child)
+    }
+
+    pub fn children(&self) -> Vec<Node> {
+        let node = self.0.borrow_mut();
+        node.children.iter().map(|child| Node(Rc::clone(child))).collect()
+    }
+
+    pub fn set_style(&mut self, style: Style) {
+        self.0.borrow_mut().style = style;
+        self.mark_dirty();
+    }
+
+    pub fn mark_dirty(&mut self) {
+        let node = self.0.borrow_mut();
+        node.layout_cache.replace(None);
+
+        for parent in &node.parents {
+            if let Some(parent) = parent.upgrade() {
+                Node(parent).mark_dirty();
+            }
+        }
+    }
 
     pub fn compute_layout(&self, size: Size<Number>) -> Result<Layout> {
         algo::compute(&self.0.borrow(), size)
