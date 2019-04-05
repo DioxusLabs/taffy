@@ -137,6 +137,8 @@ fn compute_internal(
     parent_size: Size<Number>,
     perform_layout: bool,
 ) -> Result<ComputeResult> {
+    node.is_dirty = false;
+
     // First we check if we have a result for the given input
     {
         if let Some(cache) = &node.layout_cache {
@@ -161,19 +163,6 @@ fn compute_internal(
                     return Ok(cache.result.clone());
                 }
             }
-        }
-    }
-
-    // If this is a leaf node we can skip a lot of this function in some cases
-    if node.children.is_empty() {
-        if node_size.width.is_defined() && node_size.height.is_defined() {
-            return Ok(ComputeResult { size: node_size.map(|s| s.or_else(0.0)), children: vec![] });
-        }
-
-        if let Some(ref measure) = node.measure {
-            let result = ComputeResult { size: measure(node_size)?, children: vec![] };
-            node.layout_cache = Some(result::Cache { node_size, parent_size, perform_layout, result: result.clone() });
-            return Ok(result);
         }
     }
 
@@ -203,6 +192,27 @@ fn compute_internal(
 
     let mut container_size = Size { width: 0.0, height: 0.0 };
     let mut inner_container_size = Size { width: 0.0, height: 0.0 };
+
+    // If this is a leaf node we can skip a lot of this function in some cases
+    if node.children.is_empty() {
+        if node_size.width.is_defined() && node_size.height.is_defined() {
+            return Ok(ComputeResult { size: node_size.map(|s| s.or_else(0.0)), children: vec![] });
+        }
+
+        if let Some(ref measure) = node.measure {
+            let result = ComputeResult { size: measure(node_size)?, children: vec![] };
+            node.layout_cache = Some(result::Cache { node_size, parent_size, perform_layout, result: result.clone() });
+            return Ok(result);
+        }
+
+        return Ok(ComputeResult {
+            size: Size {
+                width: node_size.width.or_else(0.0) + padding_border.horizontal(),
+                height: node_size.height.or_else(0.0) + padding_border.vertical(),
+            },
+            children: vec![],
+        });
+    }
 
     // 9.2. Line Length Determination
 

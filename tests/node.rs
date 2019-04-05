@@ -103,24 +103,24 @@ mod node {
     #[test]
     fn mark_dirty() {
         let mut child1 = Node::new(Style::default(), vec![]);
-        let mut child2 = Node::new(Style::default(), vec![]);
+        let child2 = Node::new(Style::default(), vec![]);
         let mut node = Node::new(Style::default(), vec![&child1, &child2]);
 
         node.compute_layout(stretch::geometry::Size::undefined()).unwrap();
 
-        assert_eq!(child1.is_dirty(), false);
-        assert_eq!(child2.is_dirty(), false);
-        assert_eq!(node.is_dirty(), false);
+        assert_eq!(child1.dirty(), false);
+        assert_eq!(child2.dirty(), false);
+        assert_eq!(node.dirty(), false);
 
         node.mark_dirty();
-        assert_eq!(child1.is_dirty(), false);
-        assert_eq!(child2.is_dirty(), false);
-        assert_eq!(node.is_dirty(), true);
+        assert_eq!(child1.dirty(), false);
+        assert_eq!(child2.dirty(), false);
+        assert_eq!(node.dirty(), true);
 
         node.compute_layout(stretch::geometry::Size::undefined()).unwrap();
         child1.mark_dirty();
-        assert_eq!(child1.is_dirty(), true);
-        assert_eq!(child2.is_dirty(), false);
-        assert_eq!(node.is_dirty(), true);
+        assert_eq!(child1.dirty(), true);
+        assert_eq!(child2.dirty(), false);
+        assert_eq!(node.dirty(), true);
     }
 }

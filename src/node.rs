@@ -20,6 +20,7 @@ pub(crate) struct InternalNode {
     pub(crate) children: Vec<Rc<RefCell<InternalNode>>>,
     pub(crate) measure: Option<MeasureFunc>,
     pub(crate) layout_cache: Option<Cache>,
+    pub(crate) is_dirty: bool,
 }
 
 pub struct Node(Rc<RefCell<InternalNode>>);
@@ -32,6 +33,7 @@ impl Node {
             children: Vec::with_capacity(0),
             measure,
             layout_cache: None,
+            is_dirty: true,
         })))
     }
 
@@ -42,6 +44,7 @@ impl Node {
             children: Vec::with_capacity(children.len()),
             measure: None,
             layout_cache: None,
+            is_dirty: true,
         })));
 
         for child in children {
@@ -126,6 +129,7 @@ impl Node {
     pub fn mark_dirty(&mut self) {
         let mut node = self.0.borrow_mut();
         node.layout_cache = None;
+        node.is_dirty = true;
 
         for parent in &node.parents {
             if let Some(parent) = parent.upgrade() {
@@ -134,12 +138,8 @@ impl Node {
         }
     }
 
-    pub fn is_dirty(&mut self) -> bool {
-        if let Some(_) = self.0.borrow().layout_cache {
-            false
-        } else {
-            true
-        }
+    pub fn dirty(&self) -> bool {
+        self.0.borrow().is_dirty
     }
 
     pub fn compute_layout(&self, size: Size<Number>) -> Result<Layout> {
