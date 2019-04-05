@@ -202,7 +202,7 @@ impl Default for Size<Dimension> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 pub struct Style {
     pub display: Display,
     pub position_type: PositionType,
