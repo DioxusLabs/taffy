@@ -2,6 +2,7 @@
 use alloc::{vec, vec::Vec};
 
 use std::cell::RefCell;
+use std::fmt;
 use std::rc::Rc;
 use std::rc::Weak;
 
@@ -91,7 +92,7 @@ impl Node {
         Node(child)
     }
 
-    pub fn replace_child(&mut self, child: &Node, index: usize) -> Node {
+    pub fn replace_child_at_index(&mut self, index: usize, child: &Node) -> Node {
         child.0.borrow_mut().parents.push(Rc::downgrade(&self.0));
         let old_child = std::mem::replace(&mut self.0.borrow_mut().children[index], Rc::clone(&child.0));
 
@@ -114,6 +115,10 @@ impl Node {
         self.mark_dirty();
     }
 
+    pub fn style(&self) -> Style {
+        self.0.borrow().style
+    }
+
     pub fn mark_dirty(&mut self) {
         let node = self.0.borrow_mut();
         node.layout_cache.replace(None);
@@ -125,7 +130,33 @@ impl Node {
         }
     }
 
+    pub fn is_dirty(&mut self) -> bool {
+        let node = self.0.borrow();
+        let layout_cache = node.layout_cache.borrow();
+        if let Some(_) = layout_cache.as_ref() {
+            false
+        } else {
+            true
+        }
+    }
+
     pub fn compute_layout(&self, size: Size<Number>) -> Result<Layout> {
         algo::compute(&self.0.borrow(), size)
     }
 }
+
+impl fmt::Debug for Node {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let style = &self.0.borrow().style;
+        let children: Vec<_> = self.0.borrow().children.iter().map(|c| Node(Rc::clone(c))).collect();
+        write!(f, "Node {{ style: {:?}, children: {:?} }}", style, children)
+    }
+}
+
+impl PartialEq for Node {
+    fn eq(&self, other: &Node) -> bool {
+        Rc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+impl Eq for Node {}
