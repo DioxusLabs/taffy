@@ -1,15 +1,7 @@
 #[test]
 fn size_defined_by_child_with_padding() {
-    let layout = stretch::compute(
-        &stretch::style::Node {
-            children: vec![stretch::style::Node {
-                size: stretch::geometry::Size {
-                    width: stretch::style::Dimension::Points(10f32),
-                    height: stretch::style::Dimension::Points(10f32),
-                    ..Default::default()
-                },
-                ..Default::default()
-            }],
+    let layout = stretch::node::Node::new(
+        stretch::style::Style {
             padding: stretch::geometry::Rect {
                 start: stretch::style::Dimension::Points(10f32),
                 end: stretch::style::Dimension::Points(10f32),
@@ -19,8 +11,19 @@ fn size_defined_by_child_with_padding() {
             },
             ..Default::default()
         },
-        stretch::geometry::Size::undefined(),
+        vec![&stretch::node::Node::new(
+            stretch::style::Style {
+                size: stretch::geometry::Size {
+                    width: stretch::style::Dimension::Points(10f32),
+                    height: stretch::style::Dimension::Points(10f32),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            vec![],
+        )],
     )
+    .compute_layout(stretch::geometry::Size::undefined())
     .unwrap();
     assert_eq!(layout.size.width, 30f32);
     assert_eq!(layout.size.height, 30f32);

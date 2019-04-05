@@ -1,10 +1,13 @@
 #[test]
 fn justify_content_row_min_width_and_margin() {
-    let layout = stretch::compute(
-        &stretch::style::Node {
+    let layout = stretch::node::Node::new(
+        stretch::style::Style {
             justify_content: stretch::style::JustifyContent::Center,
             min_size: stretch::geometry::Size { width: stretch::style::Dimension::Points(50f32), ..Default::default() },
-            children: vec![stretch::style::Node {
+            ..Default::default()
+        },
+        vec![&stretch::node::Node::new(
+            stretch::style::Style {
                 size: stretch::geometry::Size {
                     width: stretch::style::Dimension::Points(20f32),
                     height: stretch::style::Dimension::Points(20f32),
@@ -15,11 +18,11 @@ fn justify_content_row_min_width_and_margin() {
                     ..Default::default()
                 },
                 ..Default::default()
-            }],
-            ..Default::default()
-        },
-        stretch::geometry::Size::undefined(),
+            },
+            vec![],
+        )],
     )
+    .compute_layout(stretch::geometry::Size::undefined())
     .unwrap();
     assert_eq!(layout.size.width, 50f32);
     assert_eq!(layout.size.height, 20f32);

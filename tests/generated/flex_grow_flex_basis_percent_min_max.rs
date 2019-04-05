@@ -1,10 +1,13 @@
 #[test]
 fn flex_grow_flex_basis_percent_min_max() {
-    let layout = stretch::compute(
-        &stretch::style::Node {
+    let layout = stretch::node::Node::new(
+        stretch::style::Style {
             size: stretch::geometry::Size { width: stretch::style::Dimension::Points(120f32), ..Default::default() },
-            children: vec![
-                stretch::style::Node {
+            ..Default::default()
+        },
+        vec![
+            &stretch::node::Node::new(
+                stretch::style::Style {
                     flex_grow: 1f32,
                     flex_shrink: 0f32,
                     flex_basis: stretch::style::Dimension::Points(0f32),
@@ -18,7 +21,10 @@ fn flex_grow_flex_basis_percent_min_max() {
                     },
                     ..Default::default()
                 },
-                stretch::style::Node {
+                vec![],
+            ),
+            &stretch::node::Node::new(
+                stretch::style::Style {
                     flex_grow: 1f32,
                     flex_shrink: 0f32,
                     flex_basis: stretch::style::Dimension::Percent(0.5f32),
@@ -33,11 +39,11 @@ fn flex_grow_flex_basis_percent_min_max() {
                     },
                     ..Default::default()
                 },
-            ],
-            ..Default::default()
-        },
-        stretch::geometry::Size::undefined(),
+                vec![],
+            ),
+        ],
     )
+    .compute_layout(stretch::geometry::Size::undefined())
     .unwrap();
     assert_eq!(layout.size.width, 120f32);
     assert_eq!(layout.size.height, 20f32);

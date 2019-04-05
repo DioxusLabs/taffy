@@ -1,13 +1,16 @@
 #[test]
 fn margin_should_not_be_part_of_max_width() {
-    let layout = stretch::compute(
-        &stretch::style::Node {
+    let layout = stretch::node::Node::new(
+        stretch::style::Style {
             size: stretch::geometry::Size {
                 width: stretch::style::Dimension::Points(250f32),
                 height: stretch::style::Dimension::Points(250f32),
                 ..Default::default()
             },
-            children: vec![stretch::style::Node {
+            ..Default::default()
+        },
+        vec![&stretch::node::Node::new(
+            stretch::style::Style {
                 size: stretch::geometry::Size {
                     width: stretch::style::Dimension::Points(100f32),
                     height: stretch::style::Dimension::Points(100f32),
@@ -22,11 +25,11 @@ fn margin_should_not_be_part_of_max_width() {
                     ..Default::default()
                 },
                 ..Default::default()
-            }],
-            ..Default::default()
-        },
-        stretch::geometry::Size::undefined(),
+            },
+            vec![],
+        )],
     )
+    .compute_layout(stretch::geometry::Size::undefined())
     .unwrap();
     assert_eq!(layout.size.width, 250f32);
     assert_eq!(layout.size.height, 250f32);

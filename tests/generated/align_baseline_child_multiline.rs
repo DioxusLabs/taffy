@@ -1,11 +1,14 @@
 #[test]
 fn align_baseline_child_multiline() {
-    let layout = stretch::compute(
-        &stretch::style::Node {
+    let layout = stretch::node::Node::new(
+        stretch::style::Style {
             align_items: stretch::style::AlignItems::Baseline,
             size: stretch::geometry::Size { width: stretch::style::Dimension::Points(100f32), ..Default::default() },
-            children: vec![
-                stretch::style::Node {
+            ..Default::default()
+        },
+        vec![
+            &stretch::node::Node::new(
+                stretch::style::Style {
                     size: stretch::geometry::Size {
                         width: stretch::style::Dimension::Points(50f32),
                         height: stretch::style::Dimension::Points(60f32),
@@ -13,53 +16,67 @@ fn align_baseline_child_multiline() {
                     },
                     ..Default::default()
                 },
-                stretch::style::Node {
+                vec![],
+            ),
+            &stretch::node::Node::new(
+                stretch::style::Style {
                     flex_wrap: stretch::style::FlexWrap::Wrap,
                     size: stretch::geometry::Size {
                         width: stretch::style::Dimension::Points(50f32),
                         ..Default::default()
                     },
-                    children: vec![
-                        stretch::style::Node {
-                            size: stretch::geometry::Size {
-                                width: stretch::style::Dimension::Points(25f32),
-                                height: stretch::style::Dimension::Points(20f32),
-                                ..Default::default()
-                            },
-                            ..Default::default()
-                        },
-                        stretch::style::Node {
-                            size: stretch::geometry::Size {
-                                width: stretch::style::Dimension::Points(25f32),
-                                height: stretch::style::Dimension::Points(10f32),
-                                ..Default::default()
-                            },
-                            ..Default::default()
-                        },
-                        stretch::style::Node {
-                            size: stretch::geometry::Size {
-                                width: stretch::style::Dimension::Points(25f32),
-                                height: stretch::style::Dimension::Points(20f32),
-                                ..Default::default()
-                            },
-                            ..Default::default()
-                        },
-                        stretch::style::Node {
-                            size: stretch::geometry::Size {
-                                width: stretch::style::Dimension::Points(25f32),
-                                height: stretch::style::Dimension::Points(10f32),
-                                ..Default::default()
-                            },
-                            ..Default::default()
-                        },
-                    ],
                     ..Default::default()
                 },
-            ],
-            ..Default::default()
-        },
-        stretch::geometry::Size::undefined(),
+                vec![
+                    &stretch::node::Node::new(
+                        stretch::style::Style {
+                            size: stretch::geometry::Size {
+                                width: stretch::style::Dimension::Points(25f32),
+                                height: stretch::style::Dimension::Points(20f32),
+                                ..Default::default()
+                            },
+                            ..Default::default()
+                        },
+                        vec![],
+                    ),
+                    &stretch::node::Node::new(
+                        stretch::style::Style {
+                            size: stretch::geometry::Size {
+                                width: stretch::style::Dimension::Points(25f32),
+                                height: stretch::style::Dimension::Points(10f32),
+                                ..Default::default()
+                            },
+                            ..Default::default()
+                        },
+                        vec![],
+                    ),
+                    &stretch::node::Node::new(
+                        stretch::style::Style {
+                            size: stretch::geometry::Size {
+                                width: stretch::style::Dimension::Points(25f32),
+                                height: stretch::style::Dimension::Points(20f32),
+                                ..Default::default()
+                            },
+                            ..Default::default()
+                        },
+                        vec![],
+                    ),
+                    &stretch::node::Node::new(
+                        stretch::style::Style {
+                            size: stretch::geometry::Size {
+                                width: stretch::style::Dimension::Points(25f32),
+                                height: stretch::style::Dimension::Points(10f32),
+                                ..Default::default()
+                            },
+                            ..Default::default()
+                        },
+                        vec![],
+                    ),
+                ],
+            ),
+        ],
     )
+    .compute_layout(stretch::geometry::Size::undefined())
     .unwrap();
     assert_eq!(layout.size.width, 100f32);
     assert_eq!(layout.size.height, 80f32);
