@@ -266,6 +266,10 @@ fn compute_internal(
         })
         .collect();
 
+    let has_baseline_child = flex_items.iter().fold(false, |result, child| {
+        result || child.node.borrow().style.align_self(&node.style) == AlignSelf::Baseline
+    });
+
     // TODO - this does not follow spec. See commented out code below
     // 3. Determine the flex base size and hypothetical main size of each item:
     flex_items.iter_mut().try_for_each(|child| -> Result<()> {
@@ -715,39 +719,41 @@ fn compute_internal(
         }
     };
 
-    flex_lines.iter_mut().try_for_each(|line| {
-        line.items.iter_mut().try_for_each(|child| -> Result<()> {
-            let result = compute_internal(
-                &mut child.node.borrow_mut(),
-                Size {
-                    width: if is_row {
-                        child.target_size.width.to_number()
-                    } else {
-                        child.hypothetical_inner_size.width.to_number()
+    if has_baseline_child {
+        flex_lines.iter_mut().try_for_each(|line| {
+            line.items.iter_mut().try_for_each(|child| -> Result<()> {
+                let result = compute_internal(
+                    &mut child.node.borrow_mut(),
+                    Size {
+                        width: if is_row {
+                            child.target_size.width.to_number()
+                        } else {
+                            child.hypothetical_inner_size.width.to_number()
+                        },
+                        height: if is_row {
+                            child.hypothetical_inner_size.height.to_number()
+                        } else {
+                            child.target_size.height.to_number()
+                        },
                     },
-                    height: if is_row {
-                        child.hypothetical_inner_size.height.to_number()
-                    } else {
-                        child.target_size.height.to_number()
+                    Size {
+                        width: if is_row { container_size.width.to_number() } else { node_size.width },
+                        height: if is_row { node_size.height } else { container_size.height.to_number() },
                     },
-                },
-                Size {
-                    width: if is_row { container_size.width.to_number() } else { node_size.width },
-                    height: if is_row { node_size.height } else { container_size.height.to_number() },
-                },
-                true,
-            )?;
+                    true,
+                )?;
 
-            child.baseline = calc_baseline(&result::Layout {
-                order: node.children.iter().position(|n| Rc::ptr_eq(n, child.node)).unwrap() as u32,
-                size: result.size,
-                location: Point { x: 0.0, y: 0.0 },
-                children: result.children,
-            });
+                child.baseline = calc_baseline(&result::Layout {
+                    order: node.children.iter().position(|n| Rc::ptr_eq(n, child.node)).unwrap() as u32,
+                    size: result.size,
+                    location: Point { x: 0.0, y: 0.0 },
+                    children: result.children,
+                });
 
-            Ok(())
-        })
-    })?;
+                Ok(())
+            })
+        })?;
+    }
 
     // 8. Calculate the cross size of each flex line.
     //    If the flex container is single-line and has a definite cross size, the cross size
