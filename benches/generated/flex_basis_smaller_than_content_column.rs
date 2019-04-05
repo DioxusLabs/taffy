@@ -1,6 +1,5 @@
-#[test]
-fn flex_basis_smaller_than_content_column() {
-    let layout = stretch::compute(
+pub fn compute() -> stretch::layout::Node {
+    stretch::compute(
         &stretch::style::Node {
             flex_direction: stretch::style::FlexDirection::Column,
             size: stretch::geometry::Size { height: stretch::style::Dimension::Points(100f32), ..Default::default() },
@@ -21,17 +20,5 @@ fn flex_basis_smaller_than_content_column() {
         },
         stretch::geometry::Size::undefined(),
     )
-    .unwrap();
-    assert_eq!(layout.size.width, 100f32);
-    assert_eq!(layout.size.height, 100f32);
-    assert_eq!(layout.location.x, 0f32);
-    assert_eq!(layout.location.y, 0f32);
-    assert_eq!(layout.children[0usize].size.width, 100f32);
-    assert_eq!(layout.children[0usize].size.height, 100f32);
-    assert_eq!(layout.children[0usize].location.x, 0f32);
-    assert_eq!(layout.children[0usize].location.y, 0f32);
-    assert_eq!(layout.children[0usize].children[0usize].size.width, 100f32);
-    assert_eq!(layout.children[0usize].children[0usize].size.height, 100f32);
-    assert_eq!(layout.children[0usize].children[0usize].location.x, 0f32);
-    assert_eq!(layout.children[0usize].children[0usize].location.y, 0f32);
+    .unwrap()
 }
