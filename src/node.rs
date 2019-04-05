@@ -28,24 +28,25 @@ impl Node {
     pub fn new_leaf(style: Style, measure: Option<MeasureFunc>) -> Node {
         Node(Rc::new(RefCell::new(InternalNode {
             style,
-            parents: vec![],
-            children: vec![],
+            parents: Vec::with_capacity(1),
+            children: Vec::with_capacity(0),
             measure,
             layout_cache: RefCell::new(None),
         })))
     }
 
     pub fn new(style: Style, children: Vec<&Node>) -> Node {
-        let mut parent = Node(Rc::new(RefCell::new(InternalNode {
+        let parent = Node(Rc::new(RefCell::new(InternalNode {
             style,
-            parents: vec![],
-            children: vec![],
+            parents: Vec::with_capacity(1),
+            children: Vec::with_capacity(children.len()),
             measure: None,
             layout_cache: RefCell::new(None),
         })));
 
         for child in children {
-            parent.add_child(child);
+            child.0.borrow_mut().parents.push(Rc::downgrade(&parent.0));
+            parent.0.borrow_mut().children.push(Rc::clone(&child.0));
         }
 
         parent
@@ -64,11 +65,14 @@ impl Node {
             child.borrow_mut().parents.remove(position);
         }
 
-        self.0.borrow_mut().children = vec![];
+        self.0.borrow_mut().children = Vec::with_capacity(children.len());
 
         for child in children {
-            self.add_child(child);
+            child.0.borrow_mut().parents.push(Rc::downgrade(&self.0));
+            self.0.borrow_mut().children.push(Rc::clone(&child.0));
         }
+
+        self.mark_dirty();
     }
 
     pub fn remove_child(&mut self, child: &Node) -> Node {
