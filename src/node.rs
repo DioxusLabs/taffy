@@ -24,6 +24,16 @@ pub(crate) struct InternalNode {
 pub struct Node(Rc<RefCell<InternalNode>>);
 
 impl Node {
+    pub fn new_leaf(style: Style, measure: Option<MeasureFunc>) -> Node {
+        Node(Rc::new(RefCell::new(InternalNode {
+            style,
+            parents: vec![],
+            children: vec![],
+            measure,
+            layout_cache: RefCell::new(None),
+        })))
+    }
+
     pub fn new(style: Style, children: Vec<&Node>) -> Node {
         let mut parent = Node(Rc::new(RefCell::new(InternalNode {
             style,

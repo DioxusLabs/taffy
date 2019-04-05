@@ -1,7 +1,7 @@
 #[test]
 fn justify_content_overflow_min_max() {
-    let layout = stretch::compute(
-        &stretch::style::Node {
+    let layout = stretch::node::Node::new(
+        stretch::style::Style {
             flex_direction: stretch::style::FlexDirection::Column,
             justify_content: stretch::style::JustifyContent::Center,
             min_size: stretch::geometry::Size {
@@ -12,39 +12,48 @@ fn justify_content_overflow_min_max() {
                 height: stretch::style::Dimension::Points(110f32),
                 ..Default::default()
             },
-            children: vec![
-                stretch::style::Node {
-                    flex_shrink: 0f32,
-                    size: stretch::geometry::Size {
-                        width: stretch::style::Dimension::Points(50f32),
-                        height: stretch::style::Dimension::Points(50f32),
-                        ..Default::default()
-                    },
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    flex_shrink: 0f32,
-                    size: stretch::geometry::Size {
-                        width: stretch::style::Dimension::Points(50f32),
-                        height: stretch::style::Dimension::Points(50f32),
-                        ..Default::default()
-                    },
-                    ..Default::default()
-                },
-                stretch::style::Node {
-                    flex_shrink: 0f32,
-                    size: stretch::geometry::Size {
-                        width: stretch::style::Dimension::Points(50f32),
-                        height: stretch::style::Dimension::Points(50f32),
-                        ..Default::default()
-                    },
-                    ..Default::default()
-                },
-            ],
             ..Default::default()
         },
-        stretch::geometry::Size::undefined(),
+        vec![
+            &stretch::node::Node::new(
+                stretch::style::Style {
+                    flex_shrink: 0f32,
+                    size: stretch::geometry::Size {
+                        width: stretch::style::Dimension::Points(50f32),
+                        height: stretch::style::Dimension::Points(50f32),
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+                vec![],
+            ),
+            &stretch::node::Node::new(
+                stretch::style::Style {
+                    flex_shrink: 0f32,
+                    size: stretch::geometry::Size {
+                        width: stretch::style::Dimension::Points(50f32),
+                        height: stretch::style::Dimension::Points(50f32),
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+                vec![],
+            ),
+            &stretch::node::Node::new(
+                stretch::style::Style {
+                    flex_shrink: 0f32,
+                    size: stretch::geometry::Size {
+                        width: stretch::style::Dimension::Points(50f32),
+                        height: stretch::style::Dimension::Points(50f32),
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                },
+                vec![],
+            ),
+        ],
     )
+    .compute_layout(stretch::geometry::Size::undefined())
     .unwrap();
     assert_eq!(layout.size.width, 50f32);
     assert_eq!(layout.size.height, 110f32);

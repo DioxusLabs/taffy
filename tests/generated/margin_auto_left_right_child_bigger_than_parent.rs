@@ -1,14 +1,17 @@
 #[test]
 fn margin_auto_left_right_child_bigger_than_parent() {
-    let layout = stretch::compute(
-        &stretch::style::Node {
+    let layout = stretch::node::Node::new(
+        stretch::style::Style {
             justify_content: stretch::style::JustifyContent::Center,
             size: stretch::geometry::Size {
                 width: stretch::style::Dimension::Points(52f32),
                 height: stretch::style::Dimension::Points(52f32),
                 ..Default::default()
             },
-            children: vec![stretch::style::Node {
+            ..Default::default()
+        },
+        vec![&stretch::node::Node::new(
+            stretch::style::Style {
                 size: stretch::geometry::Size {
                     width: stretch::style::Dimension::Points(72f32),
                     height: stretch::style::Dimension::Points(72f32),
@@ -20,11 +23,11 @@ fn margin_auto_left_right_child_bigger_than_parent() {
                     ..Default::default()
                 },
                 ..Default::default()
-            }],
-            ..Default::default()
-        },
-        stretch::geometry::Size::undefined(),
+            },
+            vec![],
+        )],
     )
+    .compute_layout(stretch::geometry::Size::undefined())
     .unwrap();
     assert_eq!(layout.size.width, 52f32);
     assert_eq!(layout.size.height, 52f32);

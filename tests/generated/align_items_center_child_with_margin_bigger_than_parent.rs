@@ -1,7 +1,7 @@
 #[test]
 fn align_items_center_child_with_margin_bigger_than_parent() {
-    let layout = stretch::compute(
-        &stretch::style::Node {
+    let layout = stretch::node::Node::new(
+        stretch::style::Style {
             align_items: stretch::style::AlignItems::Center,
             justify_content: stretch::style::JustifyContent::Center,
             size: stretch::geometry::Size {
@@ -9,9 +9,12 @@ fn align_items_center_child_with_margin_bigger_than_parent() {
                 height: stretch::style::Dimension::Points(50f32),
                 ..Default::default()
             },
-            children: vec![stretch::style::Node {
-                align_items: stretch::style::AlignItems::Center,
-                children: vec![stretch::style::Node {
+            ..Default::default()
+        },
+        vec![&stretch::node::Node::new(
+            stretch::style::Style { align_items: stretch::style::AlignItems::Center, ..Default::default() },
+            vec![&stretch::node::Node::new(
+                stretch::style::Style {
                     size: stretch::geometry::Size {
                         width: stretch::style::Dimension::Points(50f32),
                         height: stretch::style::Dimension::Points(50f32),
@@ -23,13 +26,12 @@ fn align_items_center_child_with_margin_bigger_than_parent() {
                         ..Default::default()
                     },
                     ..Default::default()
-                }],
-                ..Default::default()
-            }],
-            ..Default::default()
-        },
-        stretch::geometry::Size::undefined(),
+                },
+                vec![],
+            )],
+        )],
     )
+    .compute_layout(stretch::geometry::Size::undefined())
     .unwrap();
     assert_eq!(layout.size.width, 50f32);
     assert_eq!(layout.size.height, 50f32);
