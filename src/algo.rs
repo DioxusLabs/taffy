@@ -63,7 +63,7 @@ struct FlexLine<'a> {
     offset_cross: f32,
 }
 
-pub(crate) fn compute(root: &InternalNode, size: Size<Number>) -> Result<result::Layout> {
+pub(crate) fn compute(root: &mut InternalNode, size: Size<Number>) -> Result<result::Layout> {
     let has_root_min_max = root.style.min_size.width.is_defined()
         || root.style.min_size.height.is_defined()
         || root.style.max_size.width.is_defined()
@@ -134,15 +134,14 @@ fn round_layout(layout: &mut result::Layout, abs_x: f32, abs_y: f32) {
 }
 
 fn compute_internal(
-    node: &InternalNode,
+    node: &mut InternalNode,
     node_size: Size<Number>,
     parent_size: Size<Number>,
     perform_layout: bool,
 ) -> Result<ComputeResult> {
     // First we check if we have a result for the given input
     {
-        let layout_cache = node.layout_cache.borrow();
-        if let Some(cache) = layout_cache.as_ref() {
+        if let Some(cache) = &node.layout_cache {
             if cache.perform_layout || !perform_layout {
                 let width_compatible = if let Number::Defined(width) = node_size.width {
                     (width - cache.result.size.width).abs() < f32::EPSILON
@@ -175,12 +174,7 @@ fn compute_internal(
 
         if let Some(ref measure) = node.measure {
             let result = ComputeResult { size: measure(node_size)?, children: vec![] };
-            node.layout_cache.replace(Some(result::Cache {
-                node_size,
-                parent_size,
-                perform_layout,
-                result: result.clone(),
-            }));
+            node.layout_cache = Some(result::Cache { node_size, parent_size, perform_layout, result: result.clone() });
             return Ok(result);
         }
     }
@@ -341,7 +335,7 @@ fn compute_internal(
         };
 
         child.flex_basis = compute_internal(
-            &child.node.borrow(),
+            &mut child.node.borrow_mut(),
             Size {
                 width: width.maybe_max(child.min_size.width).maybe_min(child.max_size.width),
                 height: height.maybe_max(child.min_size.height).maybe_min(child.max_size.height),
@@ -368,7 +362,7 @@ fn compute_internal(
         // webkit handled various scenarios. Can probably be solved better by passing in
         // min-content max-content constraints from the top
         let min_main = compute_internal(
-            &child.node.borrow(),
+            &mut child.node.borrow_mut(),
             Size { width: Undefined, height: Undefined },
             available_space,
             false,
@@ -463,7 +457,7 @@ fn compute_internal(
                 child.target_size.set_main(
                     dir,
                     compute_internal(
-                        &child.node.borrow(),
+                        &mut child.node.borrow_mut(),
                         Size {
                             width: child.size.width.maybe_max(child.min_size.width).maybe_min(child.max_size.width),
                             height: child.size.height.maybe_max(child.min_size.height).maybe_min(child.max_size.height),
@@ -611,7 +605,7 @@ fn compute_internal(
                 // just piling on more conditionals.
                 let min_main = if is_row && child.node.borrow().measure.is_none() {
                     compute_internal(
-                        &child.node.borrow(),
+                        &mut child.node.borrow_mut(),
                         Size { width: Undefined, height: Undefined },
                         available_space,
                         false,
@@ -687,7 +681,7 @@ fn compute_internal(
             child.hypothetical_inner_size.set_cross(
                 dir,
                 compute_internal(
-                    &child.node.borrow(),
+                    &mut child.node.borrow_mut(),
                     Size {
                         width: if is_row { child.target_size.width.to_number() } else { child_cross },
                         height: if is_row { child_cross } else { child.target_size.height.to_number() },
@@ -726,7 +720,7 @@ fn compute_internal(
     flex_lines.iter_mut().try_for_each(|line| {
         line.items.iter_mut().try_for_each(|child| -> Result<()> {
             let result = compute_internal(
-                &child.node.borrow(),
+                &mut child.node.borrow_mut(),
                 Size {
                     width: if is_row {
                         child.target_size.width.to_number()
@@ -1062,12 +1056,7 @@ fn compute_internal(
     // layout we are done now.
     if !perform_layout {
         let result = ComputeResult { size: container_size, children: vec![] };
-        node.layout_cache.replace(Some(result::Cache {
-            node_size,
-            parent_size,
-            perform_layout,
-            result: result.clone(),
-        }));
+        node.layout_cache = Some(result::Cache { node_size, parent_size, perform_layout, result: result.clone() });
         return Ok(result);
     }
 
@@ -1137,7 +1126,7 @@ fn compute_internal(
 
             let layout_item = |child: &mut FlexItem| -> Result<()> {
                 let result = compute_internal(
-                    &child.node.borrow(),
+                    &mut child.node.borrow_mut(),
                     child.target_size.map(|s| s.to_number()),
                     container_size.map(|s| s.to_number()),
                     true,
@@ -1250,7 +1239,7 @@ fn compute_internal(
                 });
 
             let result = compute_internal(
-                &child.borrow(),
+                &mut child.borrow_mut(),
                 Size { width, height },
                 Size { width: container_width, height: container_height },
                 true,
@@ -1360,6 +1349,6 @@ fn compute_internal(
     children.sort_by(|c1, c2| c1.order.cmp(&c2.order));
 
     let result = ComputeResult { size: container_size, children };
-    node.layout_cache.replace(Some(result::Cache { node_size, parent_size, perform_layout, result: result.clone() }));
+    node.layout_cache = Some(result::Cache { node_size, parent_size, perform_layout, result: result.clone() });
     Ok(result)
 }
