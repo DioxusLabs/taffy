@@ -10,4 +10,3 @@ pub mod result;
 pub mod style;
 
 mod algo;
-mod ref_eq;

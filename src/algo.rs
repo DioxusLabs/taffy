@@ -13,8 +13,6 @@ use crate::result;
 use crate::result::Result;
 use crate::style::*;
 
-use crate::ref_eq::ref_eq;
-
 use crate::number::Number::*;
 use crate::number::*;
 
@@ -741,7 +739,7 @@ fn compute_internal(
             )?;
 
             child.baseline = calc_baseline(&result::Layout {
-                order: node.children.iter().position(|n| ref_eq(n, child.node)).unwrap() as u32,
+                order: node.children.iter().position(|n| Rc::ptr_eq(n, child.node)).unwrap() as u32,
                 size: result.size,
                 location: Point { x: 0.0, y: 0.0 },
                 children: result.children,
@@ -1144,7 +1142,7 @@ fn compute_internal(
                     + (child.position.cross_start(dir).or_else(0.0) - child.position.cross_end(dir).or_else(0.0));
 
                 children.push(result::Layout {
-                    order: node.children.iter().position(|n| ref_eq(n, child.node)).unwrap() as u32,
+                    order: node.children.iter().position(|n| Rc::ptr_eq(n, child.node)).unwrap() as u32,
                     size: result.size,
                     location: Point {
                         x: if is_row { offset_main } else { offset_cross },
@@ -1345,7 +1343,6 @@ fn compute_internal(
         .collect();
 
     children.append(&mut hidden_children);
-
     children.sort_by(|c1, c2| c1.order.cmp(&c2.order));
 
     let result = ComputeResult { size: container_size, children };
