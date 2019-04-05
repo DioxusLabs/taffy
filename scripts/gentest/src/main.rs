@@ -81,11 +81,27 @@ fn main() {
 
     info!("generating test sources and concatenating...");
 
+    let bench_descs: Vec<_> = test_descs
+        .iter()
+        .map(|(name, description)| {
+            debug!("generating bench contents for {}", &name);
+            (name.clone(), generate_bench(description))
+        })
+        .collect();
+
     let test_descs: Vec<_> = test_descs
-        .into_iter()
+        .iter()
         .map(|(name, description)| {
             debug!("generating test contents for {}", &name);
             (name.clone(), generate_test(name, description))
+        })
+        .collect();
+
+    let benchmarks: Vec<_> = test_descs
+        .iter()
+        .map(|(name, _)| {
+            let bench_mod = Ident::new(name, Span::call_site());
+            quote!(#bench_mod::compute())
         })
         .collect();
 
@@ -97,6 +113,13 @@ fn main() {
         })
         .fold(quote!(), |a, b| quote!(#a #b));
 
+    for (name, bench_body) in bench_descs {
+        let mut bench_filename = repo_root.join("benches").join("generated").join(&name);
+        bench_filename.set_extension("rs");
+        debug!("writing {} to disk...", &name);
+        fs::write(bench_filename, bench_body.to_string()).unwrap();
+    }
+
     for (name, test_body) in test_descs {
         let mut test_filename = repo_root.join("tests").join("generated").join(&name);
         test_filename.set_extension("rs");
@@ -104,8 +127,25 @@ fn main() {
         fs::write(test_filename, test_body.to_string()).unwrap();
     }
 
+    let bench_mods = quote!(
+        use criterion::{criterion_group, criterion_main, Criterion};
+
+        #test_mods
+
+        fn benchmark(c: &mut Criterion) {
+            c.bench_function("generated benchmarks", |b| {
+                b.iter(|| { #(#benchmarks;)* })
+            });
+        }
+
+        criterion_group!(benches, benchmark);
+        criterion_main!(benches);
+    );
+
     info!("writing generated test file to disk...");
+    fs::write(repo_root.join("benches").join("generated").join("mod.rs"), bench_mods.to_string()).unwrap();
     fs::write(repo_root.join("tests").join("generated").join("mod.rs"), test_mods.to_string()).unwrap();
+
     info!("formatting the source directory");
     Command::new("cargo").arg("fmt").current_dir(repo_root).status().unwrap();
 }
@@ -140,18 +180,24 @@ fn test_root_element(
         .map_err(|c| c.into())
 }
 
-fn generate_test(name: impl AsRef<str>, description: json::JsonValue) -> TokenStream {
-    let ignorelist = &["flex_basis_smaller_than_content_column"];
+fn generate_bench(description: &json::JsonValue) -> TokenStream {
+    let node_description = generate_node(&description);
 
+    quote!(
+        pub fn compute() -> stretch::layout::Node {
+            stretch::compute(&#node_description, stretch::geometry::Size::undefined()).unwrap()
+        }
+    )
+}
+
+fn generate_test(name: impl AsRef<str>, description: &json::JsonValue) -> TokenStream {
     let name = name.as_ref();
-    let maybe_ignore = if ignorelist.contains(&name) { quote!(#[ignore]) } else { quote!() };
     let name = Ident::new(name, Span::call_site());
     let node_description = generate_node(&description);
     let assertions = generate_assertions(quote!(layout), &description);
 
     quote!(
         #[test]
-        #maybe_ignore
         fn #name() {
             let layout = stretch::compute(&#node_description, stretch::geometry::Size::undefined()).unwrap();
             #assertions
