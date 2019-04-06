@@ -140,28 +140,26 @@ fn compute_internal(
     node.is_dirty = false;
 
     // First we check if we have a result for the given input
-    {
-        if let Some(cache) = &node.layout_cache {
-            if cache.perform_layout || !perform_layout {
-                let width_compatible = if let Number::Defined(width) = node_size.width {
-                    (width - cache.result.size.width).abs() < f32::EPSILON
-                } else {
-                    cache.node_size.width.is_undefined()
-                };
+    if let Some(cache) = &node.layout_cache {
+        if cache.perform_layout || !perform_layout {
+            let width_compatible = if let Number::Defined(width) = node_size.width {
+                (width - cache.result.size.width).abs() < f32::EPSILON
+            } else {
+                cache.node_size.width.is_undefined()
+            };
 
-                let height_compatible = if let Number::Defined(height) = node_size.height {
-                    (height - cache.result.size.height).abs() < f32::EPSILON
-                } else {
-                    cache.node_size.height.is_undefined()
-                };
+            let height_compatible = if let Number::Defined(height) = node_size.height {
+                (height - cache.result.size.height).abs() < f32::EPSILON
+            } else {
+                cache.node_size.height.is_undefined()
+            };
 
-                if width_compatible && height_compatible {
-                    return Ok(cache.result.clone());
-                }
+            if width_compatible && height_compatible {
+                return Ok(cache.result.clone());
+            }
 
-                if cache.node_size == node_size && cache.parent_size == parent_size {
-                    return Ok(cache.result.clone());
-                }
+            if cache.node_size == node_size && cache.parent_size == parent_size {
+                return Ok(cache.result.clone());
             }
         }
     }
