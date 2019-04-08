@@ -53,19 +53,11 @@ Contributions are very welcome. Though we ask that you open an issue or pull req
 
 - Binary size reduction
 - Runtime performance
-- Generate benchmarks from html files like we do with unit tests
-- Add Benchmark tests
 - Ensure build / test environment works well on non macOS platforms
-- Alternate layout systems
+- Alternate layout systems (grid layout perhaps?)
 - Web compatibility tests
 - RTL support
-- Incremental layout support
-
-**NOTICE** The library's API is currently very experimental so we won't be accepting any contributions which put a dependency on a stable API such as platform bindings. Once stabilized we would love contributions to the core repo for platform bindings such as.
-
-- Android platform bindings
-- iOS platform bindings
-- JavaScript platform bindings
+- Platform bindings
 
 ## Relationship to Yoga
 [Yoga](https://www.yogalayout.com) is a cross-platform implementation of Flexbox written in C. Yoga is a fantastic project but has some fundamental issues which we hope to resolve. Compared to Yoga we aim to have a stronger adherence to web standards, a flexible architecture eventually supporting multiple layout algorithms, and future performance improvements including multi-threaded layout. In addition to this we aim to use a safer language with a more modern codebase.
