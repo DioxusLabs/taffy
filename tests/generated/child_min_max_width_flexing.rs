@@ -1,14 +1,17 @@
 #[test]
 fn child_min_max_width_flexing() {
-    let layout = stretch::compute(
-        &stretch::style::Node {
+    let layout = stretch::node::Node::new(
+        stretch::style::Style {
             size: stretch::geometry::Size {
                 width: stretch::style::Dimension::Points(120f32),
                 height: stretch::style::Dimension::Points(50f32),
                 ..Default::default()
             },
-            children: vec![
-                stretch::style::Node {
+            ..Default::default()
+        },
+        vec![
+            &stretch::node::Node::new(
+                stretch::style::Style {
                     flex_grow: 1f32,
                     flex_shrink: 0f32,
                     flex_basis: stretch::style::Dimension::Points(0f32),
@@ -18,7 +21,10 @@ fn child_min_max_width_flexing() {
                     },
                     ..Default::default()
                 },
-                stretch::style::Node {
+                vec![],
+            ),
+            &stretch::node::Node::new(
+                stretch::style::Style {
                     flex_grow: 1f32,
                     flex_shrink: 0f32,
                     flex_basis: stretch::style::Dimension::Percent(0.5f32),
@@ -28,11 +34,11 @@ fn child_min_max_width_flexing() {
                     },
                     ..Default::default()
                 },
-            ],
-            ..Default::default()
-        },
-        stretch::geometry::Size::undefined(),
+                vec![],
+            ),
+        ],
     )
+    .compute_layout(stretch::geometry::Size::undefined())
     .unwrap();
     assert_eq!(layout.size.width, 120f32);
     assert_eq!(layout.size.height, 50f32);

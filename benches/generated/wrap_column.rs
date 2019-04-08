@@ -1,6 +1,6 @@
-pub fn compute() -> stretch::layout::Node {
-    stretch::compute(
-        &stretch::style::Node {
+pub fn compute() -> stretch::result::Layout {
+    stretch::node::Node::new(
+        stretch::style::Style {
             flex_direction: stretch::style::FlexDirection::Column,
             flex_wrap: stretch::style::FlexWrap::Wrap,
             size: stretch::geometry::Size {
@@ -8,8 +8,11 @@ pub fn compute() -> stretch::layout::Node {
                 height: stretch::style::Dimension::Points(100f32),
                 ..Default::default()
             },
-            children: vec![
-                stretch::style::Node {
+            ..Default::default()
+        },
+        vec![
+            &stretch::node::Node::new(
+                stretch::style::Style {
                     size: stretch::geometry::Size {
                         width: stretch::style::Dimension::Points(30f32),
                         height: stretch::style::Dimension::Points(31f32),
@@ -17,7 +20,10 @@ pub fn compute() -> stretch::layout::Node {
                     },
                     ..Default::default()
                 },
-                stretch::style::Node {
+                vec![],
+            ),
+            &stretch::node::Node::new(
+                stretch::style::Style {
                     size: stretch::geometry::Size {
                         width: stretch::style::Dimension::Points(30f32),
                         height: stretch::style::Dimension::Points(32f32),
@@ -25,7 +31,10 @@ pub fn compute() -> stretch::layout::Node {
                     },
                     ..Default::default()
                 },
-                stretch::style::Node {
+                vec![],
+            ),
+            &stretch::node::Node::new(
+                stretch::style::Style {
                     size: stretch::geometry::Size {
                         width: stretch::style::Dimension::Points(30f32),
                         height: stretch::style::Dimension::Points(33f32),
@@ -33,7 +42,10 @@ pub fn compute() -> stretch::layout::Node {
                     },
                     ..Default::default()
                 },
-                stretch::style::Node {
+                vec![],
+            ),
+            &stretch::node::Node::new(
+                stretch::style::Style {
                     size: stretch::geometry::Size {
                         width: stretch::style::Dimension::Points(30f32),
                         height: stretch::style::Dimension::Points(34f32),
@@ -41,10 +53,10 @@ pub fn compute() -> stretch::layout::Node {
                     },
                     ..Default::default()
                 },
-            ],
-            ..Default::default()
-        },
-        stretch::geometry::Size::undefined(),
+                vec![],
+            ),
+        ],
     )
+    .compute_layout(stretch::geometry::Size::undefined())
     .unwrap()
 }

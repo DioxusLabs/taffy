@@ -1,7 +1,7 @@
 #[test]
 fn wrapped_column_max_height_flex() {
-    let layout = stretch::compute(
-        &stretch::style::Node {
+    let layout = stretch::node::Node::new(
+        stretch::style::Style {
             flex_direction: stretch::style::FlexDirection::Column,
             flex_wrap: stretch::style::FlexWrap::Wrap,
             align_items: stretch::style::AlignItems::Center,
@@ -12,8 +12,11 @@ fn wrapped_column_max_height_flex() {
                 height: stretch::style::Dimension::Points(500f32),
                 ..Default::default()
             },
-            children: vec![
-                stretch::style::Node {
+            ..Default::default()
+        },
+        vec![
+            &stretch::node::Node::new(
+                stretch::style::Style {
                     flex_grow: 1f32,
                     flex_shrink: 1f32,
                     flex_basis: stretch::style::Dimension::Percent(0f32),
@@ -28,7 +31,10 @@ fn wrapped_column_max_height_flex() {
                     },
                     ..Default::default()
                 },
-                stretch::style::Node {
+                vec![],
+            ),
+            &stretch::node::Node::new(
+                stretch::style::Style {
                     flex_grow: 1f32,
                     flex_shrink: 1f32,
                     flex_basis: stretch::style::Dimension::Percent(0f32),
@@ -46,7 +52,10 @@ fn wrapped_column_max_height_flex() {
                     },
                     ..Default::default()
                 },
-                stretch::style::Node {
+                vec![],
+            ),
+            &stretch::node::Node::new(
+                stretch::style::Style {
                     size: stretch::geometry::Size {
                         width: stretch::style::Dimension::Points(100f32),
                         height: stretch::style::Dimension::Points(100f32),
@@ -54,11 +63,11 @@ fn wrapped_column_max_height_flex() {
                     },
                     ..Default::default()
                 },
-            ],
-            ..Default::default()
-        },
-        stretch::geometry::Size::undefined(),
+                vec![],
+            ),
+        ],
     )
+    .compute_layout(stretch::geometry::Size::undefined())
     .unwrap();
     assert_eq!(layout.size.width, 700f32);
     assert_eq!(layout.size.height, 500f32);

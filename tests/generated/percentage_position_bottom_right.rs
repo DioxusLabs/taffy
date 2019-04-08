@@ -1,13 +1,16 @@
 #[test]
 fn percentage_position_bottom_right() {
-    let layout = stretch::compute(
-        &stretch::style::Node {
+    let layout = stretch::node::Node::new(
+        stretch::style::Style {
             size: stretch::geometry::Size {
                 width: stretch::style::Dimension::Points(500f32),
                 height: stretch::style::Dimension::Points(500f32),
                 ..Default::default()
             },
-            children: vec![stretch::style::Node {
+            ..Default::default()
+        },
+        vec![&stretch::node::Node::new(
+            stretch::style::Style {
                 size: stretch::geometry::Size {
                     width: stretch::style::Dimension::Percent(0.55f32),
                     height: stretch::style::Dimension::Percent(0.15f32),
@@ -19,11 +22,11 @@ fn percentage_position_bottom_right() {
                     ..Default::default()
                 },
                 ..Default::default()
-            }],
-            ..Default::default()
-        },
-        stretch::geometry::Size::undefined(),
+            },
+            vec![],
+        )],
     )
+    .compute_layout(stretch::geometry::Size::undefined())
     .unwrap();
     assert_eq!(layout.size.width, 500f32);
     assert_eq!(layout.size.height, 500f32);

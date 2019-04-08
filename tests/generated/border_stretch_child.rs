@@ -1,16 +1,12 @@
 #[test]
 fn border_stretch_child() {
-    let layout = stretch::compute(
-        &stretch::style::Node {
+    let layout = stretch::node::Node::new(
+        stretch::style::Style {
             size: stretch::geometry::Size {
                 width: stretch::style::Dimension::Points(100f32),
                 height: stretch::style::Dimension::Points(100f32),
                 ..Default::default()
             },
-            children: vec![stretch::style::Node {
-                size: stretch::geometry::Size { width: stretch::style::Dimension::Points(10f32), ..Default::default() },
-                ..Default::default()
-            }],
             border: stretch::geometry::Rect {
                 start: stretch::style::Dimension::Points(10f32),
                 end: stretch::style::Dimension::Points(10f32),
@@ -20,8 +16,15 @@ fn border_stretch_child() {
             },
             ..Default::default()
         },
-        stretch::geometry::Size::undefined(),
+        vec![&stretch::node::Node::new(
+            stretch::style::Style {
+                size: stretch::geometry::Size { width: stretch::style::Dimension::Points(10f32), ..Default::default() },
+                ..Default::default()
+            },
+            vec![],
+        )],
     )
+    .compute_layout(stretch::geometry::Size::undefined())
     .unwrap();
     assert_eq!(layout.size.width, 100f32);
     assert_eq!(layout.size.height, 100f32);

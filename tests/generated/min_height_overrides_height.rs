@@ -1,8 +1,9 @@
 #[test]
 fn min_height_overrides_height() {
-    let layout = stretch::compute(
-        &stretch::style::Node {
-            children: vec![stretch::style::Node {
+    let layout = stretch::node::Node::new(
+        stretch::style::Style { ..Default::default() },
+        vec![&stretch::node::Node::new(
+            stretch::style::Style {
                 size: stretch::geometry::Size {
                     height: stretch::style::Dimension::Points(50f32),
                     ..Default::default()
@@ -12,11 +13,11 @@ fn min_height_overrides_height() {
                     ..Default::default()
                 },
                 ..Default::default()
-            }],
-            ..Default::default()
-        },
-        stretch::geometry::Size::undefined(),
+            },
+            vec![],
+        )],
     )
+    .compute_layout(stretch::geometry::Size::undefined())
     .unwrap();
     assert_eq!(layout.size.width, 0f32);
     assert_eq!(layout.size.height, 100f32);
