@@ -1,32 +1,37 @@
 #[test]
 fn nested_overflowing_child_in_constraint_parent() {
-    let layout = stretch::compute(
-        &stretch::style::Node {
+    let layout = stretch::node::Node::new(
+        stretch::style::Style {
             size: stretch::geometry::Size {
                 width: stretch::style::Dimension::Points(100f32),
                 height: stretch::style::Dimension::Points(100f32),
                 ..Default::default()
             },
-            children: vec![stretch::style::Node {
+            ..Default::default()
+        },
+        vec![&stretch::node::Node::new(
+            stretch::style::Style {
                 size: stretch::geometry::Size {
                     width: stretch::style::Dimension::Points(100f32),
                     height: stretch::style::Dimension::Points(100f32),
                     ..Default::default()
                 },
-                children: vec![stretch::style::Node {
+                ..Default::default()
+            },
+            vec![&stretch::node::Node::new(
+                stretch::style::Style {
                     size: stretch::geometry::Size {
                         width: stretch::style::Dimension::Points(200f32),
                         height: stretch::style::Dimension::Points(200f32),
                         ..Default::default()
                     },
                     ..Default::default()
-                }],
-                ..Default::default()
-            }],
-            ..Default::default()
-        },
-        stretch::geometry::Size::undefined(),
+                },
+                vec![],
+            )],
+        )],
     )
+    .compute_layout(stretch::geometry::Size::undefined())
     .unwrap();
     assert_eq!(layout.size.width, 100f32);
     assert_eq!(layout.size.height, 100f32);

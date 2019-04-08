@@ -1,6 +1,6 @@
-pub fn compute() -> stretch::layout::Node {
-    stretch::compute(
-        &stretch::style::Node {
+pub fn compute() -> stretch::result::Layout {
+    stretch::node::Node::new(
+        stretch::style::Style {
             border: stretch::geometry::Rect {
                 start: stretch::style::Dimension::Points(10f32),
                 end: stretch::style::Dimension::Points(10f32),
@@ -10,7 +10,8 @@ pub fn compute() -> stretch::layout::Node {
             },
             ..Default::default()
         },
-        stretch::geometry::Size::undefined(),
+        vec![],
     )
+    .compute_layout(stretch::geometry::Size::undefined())
     .unwrap()
 }

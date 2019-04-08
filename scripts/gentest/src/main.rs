@@ -184,8 +184,8 @@ fn generate_bench(description: &json::JsonValue) -> TokenStream {
     let node_description = generate_node(&description);
 
     quote!(
-        pub fn compute() -> stretch::layout::Node {
-            stretch::compute(&#node_description, stretch::geometry::Size::undefined()).unwrap()
+        pub fn compute() -> stretch::result::Layout {
+            #node_description.compute_layout(stretch::geometry::Size::undefined()).unwrap()
         }
     )
 }
@@ -199,7 +199,7 @@ fn generate_test(name: impl AsRef<str>, description: &json::JsonValue) -> TokenS
     quote!(
         #[test]
         fn #name() {
-            let layout = stretch::compute(&#node_description, stretch::geometry::Size::undefined()).unwrap();
+            let layout = #node_description.compute_layout(stretch::geometry::Size::undefined()).unwrap();
             #assertions
         }
     )
@@ -411,42 +411,42 @@ fn generate_node(node: &json::JsonValue) -> TokenStream {
             if value.len() > 0 {
                 let body = value.iter().fold(quote!(), |prev, child| {
                     let child = generate_node(child);
-                    quote!(#prev #child,)
+                    quote!(#prev &#child,)
                 });
-                quote!(children: vec![ #body ],)
+                quote!(vec![ #body ],)
             } else {
-                quote!()
+                quote!(vec![])
             }
         }
         _ => quote!(),
     };
 
-    quote!(stretch::style::Node {
-        #display
-        #direction
-        #position_type
-        #flex_direction
-        #flex_wrap
-        #overflow
-        #align_items
-        #align_self
-        #align_content
-        #justify_content
-        #flex_grow
-        #flex_shrink
-        #flex_basis
-        #size
-        #min_size
-        #max_size
-
+    quote!(stretch::node::Node::new(
+        stretch::style::Style {
+            #display
+            #direction
+            #position_type
+            #flex_direction
+            #flex_wrap
+            #overflow
+            #align_items
+            #align_self
+            #align_content
+            #justify_content
+            #flex_grow
+            #flex_shrink
+            #flex_basis
+            #size
+            #min_size
+            #max_size
+            #margin
+            #padding
+            #position
+            #border
+            ..Default::default()
+        },
         #children
-
-        #margin
-        #padding
-        #position
-        #border
-        ..Default::default()
-    })
+    ))
 }
 
 macro_rules! dim_quoted {

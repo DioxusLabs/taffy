@@ -1,14 +1,17 @@
 #[test]
 fn flex_shrink_flex_grow_child_flex_shrink_other_child() {
-    let layout = stretch::compute(
-        &stretch::style::Node {
+    let layout = stretch::node::Node::new(
+        stretch::style::Style {
             size: stretch::geometry::Size {
                 width: stretch::style::Dimension::Points(500f32),
                 height: stretch::style::Dimension::Points(500f32),
                 ..Default::default()
             },
-            children: vec![
-                stretch::style::Node {
+            ..Default::default()
+        },
+        vec![
+            &stretch::node::Node::new(
+                stretch::style::Style {
                     flex_grow: 0f32,
                     flex_shrink: 1f32,
                     size: stretch::geometry::Size {
@@ -18,7 +21,10 @@ fn flex_shrink_flex_grow_child_flex_shrink_other_child() {
                     },
                     ..Default::default()
                 },
-                stretch::style::Node {
+                vec![],
+            ),
+            &stretch::node::Node::new(
+                stretch::style::Style {
                     flex_grow: 1f32,
                     flex_shrink: 1f32,
                     size: stretch::geometry::Size {
@@ -28,11 +34,11 @@ fn flex_shrink_flex_grow_child_flex_shrink_other_child() {
                     },
                     ..Default::default()
                 },
-            ],
-            ..Default::default()
-        },
-        stretch::geometry::Size::undefined(),
+                vec![],
+            ),
+        ],
     )
+    .compute_layout(stretch::geometry::Size::undefined())
     .unwrap();
     assert_eq!(layout.size.width, 500f32);
     assert_eq!(layout.size.height, 500f32);
