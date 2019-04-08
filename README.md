@@ -2,7 +2,7 @@
 [![CircleCI](https://circleci.com/gh/vislyhq/stretch.svg?style=svg)](https://circleci.com/gh/vislyhq/stretch)
 [![Cargo](https://img.shields.io/crates/v/stretch.svg)](https://crates.io/crates/stretch)
 
-Highly experimental implementation of Flexbox written in [Rust](https://www.rust-lang.org). The goal of stretch is to provide a solid foundation for layout across all platforms with a specific focus on mobile. Long term we want stretch to not only support flexbox but also many other layout algorithms. Stretch is not yet used in production as it is still missing some core functionality, but we have been very pleased with the development progress to date and hope to deploy it in production systems very soon.
+Stretch is an implemnetation of Flexbox written in [Rust](https://www.rust-lang.org). The goal of stretch is to provide a solid foundation for layout across all platforms with a specific focus on mobile. Long term we want stretch to not only support flexbox but also many other layout algorithms such as grid layout. Stretch was made for and powers https://visly.app.
 
 ## Goals
 Before using or contributing to stretch it is good to be aware of the core goals of the project. These are goals we are working towards, not necessarily features we currently support.
@@ -53,19 +53,11 @@ Contributions are very welcome. Though we ask that you open an issue or pull req
 
 - Binary size reduction
 - Runtime performance
-- Generate benchmarks from html files like we do with unit tests
-- Add Benchmark tests
 - Ensure build / test environment works well on non macOS platforms
-- Alternate layout systems
+- Alternate layout systems (grid layout perhaps?)
 - Web compatibility tests
 - RTL support
-- Incremental layout support
-
-**NOTICE** The library's API is currently very experimental so we won't be accepting any contributions which put a dependency on a stable API such as platform bindings. Once stabilized we would love contributions to the core repo for platform bindings such as.
-
-- Android platform bindings
-- iOS platform bindings
-- JavaScript platform bindings
+- Platform bindings
 
 ## Relationship to Yoga
 [Yoga](https://www.yogalayout.com) is a cross-platform implementation of Flexbox written in C. Yoga is a fantastic project but has some fundamental issues which we hope to resolve. Compared to Yoga we aim to have a stronger adherence to web standards, a flexible architecture eventually supporting multiple layout algorithms, and future performance improvements including multi-threaded layout. In addition to this we aim to use a safer language with a more modern codebase.
