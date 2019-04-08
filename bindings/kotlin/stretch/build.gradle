@@ -1,0 +1,73 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-android'
+
+android {
+    compileSdkVersion 28
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 28
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    sourceSets {
+        main {
+            jni.srcDirs = []
+            jniLibs.srcDir 'src/main/libs'
+        }
+    }
+}
+
+def rustBasePath = "src/main/rust"
+def cargoOutputDir = "${rustBasePath}/target"
+def archTriplets = ['arm64-v8a': 'aarch64-linux-android',
+                    'armeabi-v7a': 'armv7-linux-androideabi',
+                    'x86': 'i686-linux-android']
+
+archTriplets.each { arch, target ->
+    // Build with cargo
+    tasks.create(name: "cargo-build-${arch}", type: Exec, description: "Building core for ${arch}") {
+        workingDir rustBasePath
+        commandLine 'cargo', 'build', "--target=${target}", '--release'
+    }
+
+    // Copy build libs into this app's libs directory
+    tasks.create(name: "rust-sync-${arch}", type: Copy, dependsOn: "cargo-build-${arch}", description: "Copy rust libs for (${arch}) to jniLibs") {
+        from "${cargoOutputDir}/${target}/release"
+        include "*.so"
+        into "src/main/libs/${arch}"
+    }
+
+    // Hook up tasks to execute before building java
+    tasks.withType(JavaCompile) {
+        compileTask -> compileTask.dependsOn "rust-sync-${arch}"
+    }
+    preBuild.dependsOn "rust-sync-${arch}"
+
+    // Hook up clean tasks
+    tasks.create(name: "clean-${arch}", type: Delete, description: "Deleting built libs for ${arch}") {
+        delete fileTree("${cargoOutputDir}/${target}/release") {
+            include '*.so'
+        }
+    }
+
+    clean.dependsOn "clean-${arch}"
+}
+repositories {
+    mavenCentral()
+}
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+}
