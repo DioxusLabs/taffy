@@ -18,10 +18,10 @@ data class Layout(
             val childCount = args[offset++].toInt()
             val children = ArrayList<Layout>(childCount)
 
-            for (i in 0..childCount) {
+            for (i in 0 until childCount) {
                 val child = Layout.fromFloatArray(args, offset)
                 offset = child.first
-                children[i] = child.second
+                children.add(child.second)
             }
 
             return Pair(offset, Layout(x, y, width, height, children))

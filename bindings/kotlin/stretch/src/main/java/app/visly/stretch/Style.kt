@@ -1,13 +1,5 @@
 package app.visly.stretch
 
-internal fun Enum<*>.toFloatArray(): FloatArray {
-    return floatArrayOf(ordinal.toFloat())
-}
-
-internal fun Float?.toFloatArray(): FloatArray {
-    return if (this == null) floatArrayOf(0f, 0f) else floatArrayOf(1f, this)
-}
-
 enum class AlignItems {
     FlexStart,
     FlexEnd,
@@ -84,58 +76,36 @@ sealed class Dimension {
     object Undefined : Dimension()
     object Auto : Dimension()
 
-
-    internal fun toFloatArray(): FloatArray {
-        val type = when (this) {
-            is Dimension.Points -> 0f
-            is Dimension.Percent -> 1f
-            is Dimension.Undefined -> 2f
-            is Dimension.Auto -> 3f
+    internal val type: Int
+        get() = when (this) {
+            is Points -> 0
+            is Percent -> 1
+            is Undefined -> 2
+            is Auto -> 3
         }
 
-        val value = when (this) {
-            is Dimension.Points -> this.points
-            is Dimension.Percent -> this.percentage
-            is Dimension.Undefined -> 0f
-            is Dimension.Auto -> 0f
+    internal val value: Float
+        get() = when (this) {
+            is Points -> this.points
+            is Percent -> this.percentage
+            is Undefined -> 0f
+            is Auto -> 0f
         }
-
-        return floatArrayOf(type, value)
-    }
 }
+
+data class FloatSize(
+    val width: Float,
+    val height: Float)
 
 data class Size<T>(
     val width: T,
     val height: T)
-
-internal fun Size<Dimension>.toFloatArray(): FloatArray {
-    return flatten(
-        width.toFloatArray(),
-        height.toFloatArray()
-    )
-}
-
-internal fun Size<Float?>.toFloatArray2(): FloatArray {
-    return flatten(
-        width.toFloatArray(),
-        height.toFloatArray()
-    )
-}
 
 data class Rect<T>(
     val start: T,
     val end: T,
     val top: T,
     val bottom: T)
-
-internal fun Rect<Dimension>.toFloatArray(): FloatArray {
-    return flatten(
-        start.toFloatArray(),
-        end.toFloatArray(),
-        top.toFloatArray(),
-        bottom.toFloatArray()
-    )
-}
 
 data class Style(
     val display: Display = Display.Flex,
@@ -160,46 +130,163 @@ data class Style(
     val maxSize: Size<Dimension> = Size(Dimension.Auto, Dimension.Auto),
     val aspectRatio: Float? = null) {
 
-    internal fun toFloatArray(): FloatArray {
-        return flatten(
-            display.toFloatArray(),
-            positionType.toFloatArray(),
-            direction.toFloatArray(),
-            flexDirection.toFloatArray(),
-            flexWrap.toFloatArray(),
-            overflow.toFloatArray(),
-            alignItems.toFloatArray(),
-            alignSelf.toFloatArray(),
-            alignContent.toFloatArray(),
-            justifyContent.toFloatArray(),
+    companion object {
+        init {
+            System.loadLibrary("stretch")
+        }
+    }
 
-            position.toFloatArray(),
-            margin.toFloatArray(),
-            padding.toFloatArray(),
-            border.toFloatArray(),
+    internal val rustptr: Long
 
-            floatArrayOf(flexGrow, flexShrink),
-            flexBasis.toFloatArray(),
-            size.toFloatArray(),
-            minSize.toFloatArray(),
-            maxSize.toFloatArray(),
-            aspectRatio.toFloatArray()
+    init {
+        rustptr = nConstruct(
+            display.ordinal,
+            positionType.ordinal,
+            direction.ordinal,
+            flexDirection.ordinal,
+            flexWrap.ordinal,
+            overflow.ordinal,
+            alignItems.ordinal,
+            alignSelf.ordinal,
+            alignContent.ordinal,
+            justifyContent.ordinal,
+
+            position.start.type,
+            position.start.value,
+            position.end.type,
+            position.end.value,
+            position.top.type,
+            position.top.value,
+            position.bottom.type,
+            position.bottom.value,
+
+            margin.start.type,
+            margin.start.value,
+            margin.end.type,
+            margin.end.value,
+            margin.top.type,
+            margin.top.value,
+            margin.bottom.type,
+            margin.bottom.value,
+
+            padding.start.type,
+            padding.start.value,
+            padding.end.type,
+            padding.end.value,
+            padding.top.type,
+            padding.top.value,
+            padding.bottom.type,
+            padding.bottom.value,
+
+            border.start.type,
+            border.start.value,
+            border.end.type,
+            border.end.value,
+            border.top.type,
+            border.top.value,
+            border.bottom.type,
+            border.bottom.value,
+
+            flexGrow,
+            flexShrink,
+
+            flexBasis.type,
+            flexBasis.value,
+
+            size.width.type,
+            size.width.value,
+            size.height.type,
+            size.height.value,
+
+            minSize.width.type,
+            minSize.width.value,
+            minSize.height.type,
+            minSize.height.value,
+
+            maxSize.width.type,
+            maxSize.width.value,
+            maxSize.height.type,
+            maxSize.height.value,
+
+            aspectRatio ?: Float.NaN
         )
     }
-}
 
-
-internal fun flatten(vararg args: FloatArray): FloatArray {
-    var len = 0
-
-    for (a in args) {
-        len += a.size
+    protected fun finalize() {
+        nFree(rustptr)
     }
 
-    var result = FloatArray(len)
-    for (a in args) {
-        result += a
-    }
+    private external fun nFree(ptr: Long)
 
-    return result
+    private external fun nConstruct(
+        display: Int,
+        positionType: Int,
+        direction: Int,
+        flexDirection: Int,
+        flexWrap: Int,
+        overflow: Int,
+        alignItems: Int,
+        alignSelf: Int,
+        alignContent: Int,
+        justifyContent: Int,
+
+        positionStartType: Int,
+        positionStartValue: Float,
+        positionEndType: Int,
+        positionEndValue: Float,
+        positionTopType: Int,
+        positionTopValue: Float,
+        positionBottomType: Int,
+        positionBottomValue: Float,
+
+        marginStartType: Int,
+        marginStartValue: Float,
+        marginEndType: Int,
+        marginEndValue: Float,
+        marginTopType: Int,
+        marginTopValue: Float,
+        marginBottomType: Int,
+        marginBottomValue: Float,
+
+        paddingStartType: Int,
+        paddingStartValue: Float,
+        paddingEndType: Int,
+        paddingEndValue: Float,
+        paddingTopType: Int,
+        paddingTopValue: Float,
+        paddingBottomType: Int,
+        paddingBottomValue: Float,
+
+        borderStartType: Int,
+        borderStartValue: Float,
+        borderEndType: Int,
+        borderEndValue: Float,
+        borderTopType: Int,
+        borderTopValue: Float,
+        borderBottomType: Int,
+        borderBottomValue: Float,
+
+        flexGrow: Float,
+        flexShrink: Float,
+
+        flexBasisType: Int,
+        flexBasisValue: Float,
+
+        widthType: Int,
+        widthValue: Float,
+        heightType: Int,
+        heightValue: Float,
+
+        minWidthType: Int,
+        minWidthValue: Float,
+        minHeightType: Int,
+        minHeightValue: Float,
+
+        maxWidthType: Int,
+        maxWidthValue: Float,
+        maxHeightType: Int,
+        maxHeightValue: Float,
+
+        aspectRatio: Float
+    ): Long
 }

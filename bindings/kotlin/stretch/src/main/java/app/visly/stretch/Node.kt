@@ -1,6 +1,14 @@
 package app.visly.stretch
 
-typealias MeasureFunc = (Size<Float?>) -> Size<Float>
+private class MeasureFunc(val measure: (Size<Float?>) -> Size<Float>) {
+    fun measure(width: Float, height: Float): FloatArray {
+        val result = measure(Size(
+            if (width.isNaN()) null else width,
+            if (height.isNaN()) null else height
+        ))
+        return floatArrayOf(result.width, result.height)
+    }
+}
 
 class Node {
     companion object {
@@ -9,20 +17,24 @@ class Node {
         }
     }
 
-    internal val ptr: Long
+    internal val rustptr: Long
     private var style: Style
     private var children: MutableList<Node>
 
-    constructor(style: Style, measure: MeasureFunc) {
-        this.ptr = nConstructLeaf(style.toFloatArray(), measure)
+    constructor(style: Style, measure: (Size<Float?>) -> Size<Float>) {
+        this.rustptr = nConstructLeaf(style.rustptr, MeasureFunc(measure))
         this.style = style
         this.children = mutableListOf()
     }
 
     constructor(style: Style, children: List<Node>) {
-        this.ptr = nConstruct(style.toFloatArray(), LongArray(children.size) { children[it].ptr })
+        this.rustptr = nConstruct(style.rustptr, LongArray(children.size) { children[it].rustptr })
         this.style = style
         this.children = children.toMutableList()
+    }
+
+    protected fun finalize() {
+        nFree(rustptr)
     }
 
     fun getChildren(): List<Node> {
@@ -30,28 +42,28 @@ class Node {
     }
 
     fun setChildren(children: List<Node>) {
-        nSetChildren(ptr, LongArray(children.size) { children[it].ptr })
+        nSetChildren(rustptr, LongArray(children.size) { children[it].rustptr })
         this.children = children.toMutableList()
     }
 
     fun addChild(child: Node) {
-        nAddChild(ptr, child.ptr)
+        nAddChild(rustptr, child.rustptr)
         children.add(child)
     }
 
     fun replaceChildAtIndex(index: Int, child: Node): Node {
-        nReplaceChildAtIndex(ptr, index, child.ptr)
+        nReplaceChildAtIndex(rustptr, index, child.rustptr)
         return children.set(index, child)
     }
 
     fun removeChild(child: Node): Node {
-        nRemoveChild(ptr, child.ptr)
+        nRemoveChild(rustptr, child.rustptr)
         children.remove(child)
         return child
     }
 
     fun removeChildAtIndex(index: Int): Node {
-        nRemoveChildAtIndex(ptr, index)
+        nRemoveChildAtIndex(rustptr, index)
         return children.removeAt(index)
     }
 
@@ -60,32 +72,38 @@ class Node {
     }
 
     fun setStyle(style: Style) {
-        nSetStyle(ptr, style.toFloatArray())
+        nSetStyle(rustptr, style.rustptr)
         this.style = style
     }
 
     fun markDirty() {
-        nMarkDirty(ptr)
+        nMarkDirty(rustptr)
     }
 
     fun isDirty(): Boolean {
-        return nIsDirty(ptr)
+        return nIsDirty(rustptr)
+    }
+
+    fun childCount(): Int {
+        return nChildCount(rustptr)
     }
 
     fun computeLayout(size: Size<Float?>): Layout {
-        val result = Layout.fromFloatArray(nComputeLayput(ptr, size.toFloatArray2()), 0)
+        val result = Layout.fromFloatArray(nComputeLayout(rustptr, size.width ?: Float.NaN, size.height ?: Float.NaN), 0)
         return result.second
     }
 
-    external fun nConstruct(style: FloatArray, children: LongArray): Long
-    external fun nConstructLeaf(style: FloatArray, measure: MeasureFunc): Long
-    external fun nSetChildren(ptr: Long, children: LongArray)
-    external fun nAddChild(ptr: Long, child: Long)
-    external fun nReplaceChildAtIndex(ptr: Long, index: Int, child: Long): Long
-    external fun nRemoveChild(ptr: Long, child: Long): Long
-    external fun nRemoveChildAtIndex(ptr: Long, index: Int): Long
-    external fun nSetStyle(ptr: Long, args: FloatArray): Boolean
-    external fun nIsDirty(ptr: Long): Boolean
-    external fun nMarkDirty(ptr: Long)
-    external fun nComputeLayput(ptr: Long, args: FloatArray): FloatArray
+    private external fun nFree(ptr: Long)
+    private external fun nChildCount(ptr: Long): Int
+    private external fun nConstruct(style: Long, children: LongArray): Long
+    private external fun nConstructLeaf(style: Long, measure: MeasureFunc): Long
+    private external fun nSetChildren(ptr: Long, children: LongArray)
+    private external fun nAddChild(ptr: Long, child: Long)
+    private external fun nReplaceChildAtIndex(ptr: Long, index: Int, child: Long): Long
+    private external fun nRemoveChild(ptr: Long, child: Long): Long
+    private external fun nRemoveChildAtIndex(ptr: Long, index: Int): Long
+    private external fun nSetStyle(ptr: Long, args: Long): Boolean
+    private external fun nIsDirty(ptr: Long): Boolean
+    private external fun nMarkDirty(ptr: Long)
+    private external fun nComputeLayout(ptr: Long, width: Float, height: Float): FloatArray
 }
