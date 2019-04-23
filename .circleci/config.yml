@@ -46,6 +46,10 @@ jobs:
           paths:
             - bindings/kotlin/.gradle
           key: jars-{{ checksum "bindings/kotlin/build.gradle" }}-{{ checksum  "bindings/kotlin/stretch/build.gradle" }}
+
+      - run: 
+          name: List sdk images
+          command: sdkmanager --list --include_obsolete --verbose
       
       - run:
           name: Setup emulator
