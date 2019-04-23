@@ -1,0 +1,16 @@
+[package]
+name = "android-stretch"
+version = "0.1.0"
+authors = ["Emil Sjölander <emil@visly.app>"]
+edition = "2018"
+
+[dependencies]
+jni = { version = "0.10.2", default-features = false }
+stretch = "0.2.2"
+
+[lib]
+name = "stretch"
+crate-type = ["cdylib"]
+
+[workspace]
+members = []

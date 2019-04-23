@@ -6,12 +6,12 @@ mod measure {
     fn measure_root() {
         let layout = stretch::node::Node::new_leaf(
             stretch::style::Style { ..Default::default() },
-            Some(Box::new(|constraint| {
+            Box::new(|constraint| {
                 Ok(stretch::geometry::Size {
                     width: constraint.width.or_else(100.0),
                     height: constraint.height.or_else(100.0),
                 })
-            })),
+            }),
         )
         .compute_layout(stretch::geometry::Size::undefined())
         .unwrap();
@@ -26,12 +26,12 @@ mod measure {
             stretch::style::Style { ..Default::default() },
             vec![&stretch::node::Node::new_leaf(
                 stretch::style::Style { ..Default::default() },
-                Some(Box::new(|constraint| {
+                Box::new(|constraint| {
                     Ok(stretch::geometry::Size {
                         width: constraint.width.or_else(100.0),
                         height: constraint.height.or_else(100.0),
                     })
-                })),
+                }),
             )],
         )
         .compute_layout(stretch::geometry::Size::undefined())
@@ -53,12 +53,12 @@ mod measure {
             },
             vec![&stretch::node::Node::new_leaf(
                 stretch::style::Style { ..Default::default() },
-                Some(Box::new(|constraint| {
+                Box::new(|constraint| {
                     Ok(stretch::geometry::Size {
                         width: constraint.width.or_else(100.0),
                         height: constraint.height.or_else(100.0),
                     })
-                })),
+                }),
             )],
         )
         .compute_layout(stretch::geometry::Size::undefined())
@@ -86,12 +86,12 @@ mod measure {
             },
             vec![&stretch::node::Node::new_leaf(
                 stretch::style::Style { ..Default::default() },
-                Some(Box::new(|constraint| {
+                Box::new(|constraint| {
                     Ok(stretch::geometry::Size {
                         width: constraint.width.or_else(100.0),
                         height: constraint.height.or_else(100.0),
                     })
-                })),
+                }),
             )],
         )
         .compute_layout(stretch::geometry::Size::undefined())
@@ -124,12 +124,12 @@ mod measure {
                 ),
                 &stretch::node::Node::new_leaf(
                     stretch::style::Style { flex_grow: 1.0, ..Default::default() },
-                    Some(Box::new(|constraint| {
+                    Box::new(|constraint| {
                         Ok(stretch::geometry::Size {
                             width: constraint.width.or_else(10.0),
                             height: constraint.height.or_else(50.0),
                         })
-                    })),
+                    }),
                 ),
             ],
         )
@@ -161,12 +161,12 @@ mod measure {
                 ),
                 &stretch::node::Node::new_leaf(
                     stretch::style::Style { ..Default::default() },
-                    Some(Box::new(|constraint| {
+                    Box::new(|constraint| {
                         Ok(stretch::geometry::Size {
                             width: constraint.width.or_else(100.0),
                             height: constraint.height.or_else(50.0),
                         })
-                    })),
+                    }),
                 ),
             ],
         )
@@ -198,11 +198,11 @@ mod measure {
                 ),
                 &stretch::node::Node::new_leaf(
                     stretch::style::Style { flex_grow: 1.0, ..Default::default() },
-                    Some(Box::new(|constraint| {
+                    Box::new(|constraint| {
                         let width = constraint.width.or_else(10.0);
                         let height = constraint.height.or_else(width * 2.0);
                         Ok(stretch::geometry::Size { width, height })
-                    })),
+                    }),
                 ),
             ],
         )
@@ -235,11 +235,11 @@ mod measure {
                 ),
                 &stretch::node::Node::new_leaf(
                     stretch::style::Style { ..Default::default() },
-                    Some(Box::new(|constraint| {
+                    Box::new(|constraint| {
                         let width = constraint.width.or_else(100.0);
                         let height = constraint.height.or_else(width * 2.0);
                         Ok(stretch::geometry::Size { width, height })
-                    })),
+                    }),
                 ),
             ],
         )
@@ -262,11 +262,11 @@ mod measure {
             },
             vec![&stretch::node::Node::new_leaf(
                 stretch::style::Style { ..Default::default() },
-                Some(Box::new(|constraint| {
+                Box::new(|constraint| {
                     let height = constraint.height.or_else(50.0);
                     let width = constraint.width.or_else(height);
                     Ok(stretch::geometry::Size { width, height })
-                })),
+                }),
             )],
         )
         .compute_layout(stretch::geometry::Size::undefined())
@@ -288,12 +288,12 @@ mod measure {
                     },
                     ..Default::default()
                 },
-                Some(Box::new(|constraint| {
+                Box::new(|constraint| {
                     Ok(stretch::geometry::Size {
                         width: constraint.width.or_else(100.0),
                         height: constraint.height.or_else(100.0),
                     })
-                })),
+                }),
             )],
         )
         .compute_layout(stretch::geometry::Size::undefined())
@@ -315,12 +315,12 @@ mod measure {
                     },
                     ..Default::default()
                 },
-                Some(Box::new(|constraint| {
+                Box::new(|constraint| {
                     Ok(stretch::geometry::Size {
                         width: constraint.width.or_else(100.0),
                         height: constraint.height.or_else(100.0),
                     })
-                })),
+                }),
             )],
         )
         .compute_layout(stretch::geometry::Size::undefined())
@@ -355,12 +355,12 @@ mod measure {
                         flex_grow: 1.0,
                         ..Default::default()
                     },
-                    Some(Box::new(|constraint| {
+                    Box::new(|constraint| {
                         Ok(stretch::geometry::Size {
                             width: constraint.width.or_else(100.0),
                             height: constraint.height.or_else(100.0),
                         })
-                    })),
+                    }),
                 ),
             ],
         )
@@ -385,12 +385,12 @@ mod measure {
             },
             vec![&stretch::node::Node::new_leaf(
                 stretch::style::Style { ..Default::default() },
-                Some(Box::new(|constraint| {
+                Box::new(|constraint| {
                     Ok(stretch::geometry::Size {
                         width: constraint.width.or_else(50.0),
                         height: constraint.height.or_else(50.0),
                     })
-                })),
+                }),
             )],
         )
         .compute_layout(stretch::geometry::Size::undefined())
@@ -412,12 +412,12 @@ mod measure {
             },
             vec![&stretch::node::Node::new_leaf(
                 stretch::style::Style { position_type: stretch::style::PositionType::Absolute, ..Default::default() },
-                Some(Box::new(|constraint| {
+                Box::new(|constraint| {
                     Ok(stretch::geometry::Size {
                         width: constraint.width.or_else(50.0),
                         height: constraint.height.or_else(50.0),
                     })
-                })),
+                }),
             )],
         )
         .compute_layout(stretch::geometry::Size::undefined())
@@ -439,7 +439,7 @@ mod measure {
             },
             vec![&stretch::node::Node::new_leaf(
                 stretch::style::Style { flex_grow: 1.0, ..Default::default() },
-                Some(Box::new(|_| Ok(stretch::geometry::Size { width: 200.0, height: 200.0 }))),
+                Box::new(|_| Ok(stretch::geometry::Size { width: 200.0, height: 200.0 })),
             )],
         )
         .compute_layout(stretch::geometry::Size::undefined())
@@ -460,13 +460,13 @@ mod measure {
                 stretch::style::Style { ..Default::default() },
                 vec![&stretch::node::Node::new_leaf(
                     stretch::style::Style { ..Default::default() },
-                    Some(Box::new(move |constraint| {
+                    Box::new(move |constraint| {
                         unsafe { (*num_measure_ptr) += 1 };
                         Ok(stretch::geometry::Size {
                             width: constraint.width.or_else(50.0),
                             height: constraint.height.or_else(50.0),
                         })
-                    })),
+                    }),
                 )],
             )],
         )
@@ -488,7 +488,7 @@ mod measure {
             },
             vec![&stretch::node::Node::new_leaf(
                 stretch::style::Style { flex_grow: 1.0, ..Default::default() },
-                Some(Box::new(|_| Err(Box::new("")))),
+                Box::new(|_| Err(Box::new(""))),
             )],
         )
         .compute_layout(stretch::geometry::Size::undefined());

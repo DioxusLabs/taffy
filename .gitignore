@@ -1,5 +1,6 @@
 /target
 /scripts/gentest/target
+/bindings/kotlin/stretch/src/main/rust/target
 
 **/*.rs.bk
 Cargo.lock
