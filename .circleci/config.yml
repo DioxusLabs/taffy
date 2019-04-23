@@ -37,7 +37,7 @@ jobs:
       - restore_cache:
           key: jars-{{ checksum "build.gradle" }}-{{ checksum  "stretch/build.gradle" }}
       - run: yes | sdkmanager --update || true
-      - run: cd android && ./gradlew androidDependencies --no-daemon --max-workers 2
+      - run: cd bindings/kotlin && ./gradlew androidDependencies --no-daemon --max-workers 2
       - save_cache:
           paths:
             - ~/.gradle
@@ -59,7 +59,7 @@ jobs:
             adb shell input keyevent 82
       - run:
           name: Run tests
-          command: ./gradlew connectedAndroidTest
+          command: cd bindings/kotlin && ./gradlew connectedAndroidTest
       - store_artifacts:
           path: stretch/build/reports
           destination: reports
