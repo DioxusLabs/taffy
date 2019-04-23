@@ -1,6 +1,8 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-android'
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
 
 android {
     compileSdkVersion 28
@@ -28,10 +30,6 @@ android {
             jniLibs.srcDir 'src/main/libs'
         }
     }
-}
-
-repositories {
-    mavenCentral()
 }
 
 dependencies {
@@ -78,4 +76,112 @@ archTriplets.each { arch, target ->
     }
 
     clean.dependsOn "clean-${arch}"
+}
+
+ext {
+    bintrayRepo = 'maven'
+    bintrayName = 'stretch-kotlin-bindings'
+
+    publishedGroupId = 'app.visly.stretch'
+    libraryName = bintrayName
+    artifact = 'stretch'
+
+    libraryDescription = 'Kotlin bindings for stretch layout engine'
+
+    siteUrl = 'https://visly.app/stretch'
+    gitUrl = 'https://github.com/vislyhq/stretch.git'
+
+    libraryVersion = '0.2.2'
+
+    developerId = 'visly'
+    developerName = 'Visly'
+    developerEmail = 'emil@visly.app'
+
+    licenseName = 'MIT'
+    licenseUrl = 'https://github.com/vislyhq/stretch/blob/master/LICENSE'
+    allLicenses = ["MIT"]
+}
+
+group = publishedGroupId
+version = libraryVersion
+
+install {
+    repositories.mavenInstaller {
+        pom.project {
+            packaging 'aar'
+            groupId publishedGroupId
+            artifactId artifact
+            name libraryName
+            description libraryDescription
+            url siteUrl
+
+            licenses {
+                license {
+                    name licenseName
+                    url licenseUrl
+                }
+            }
+            developers {
+                developer {
+                    id developerId
+                    name developerName
+                    email developerEmail
+                }
+            }
+            scm {
+                connection gitUrl
+                developerConnection gitUrl
+                url siteUrl
+            }
+        }
+    }
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from android.sourceSets.main.java.srcDirs
+}
+
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+
+Properties properties = new Properties()
+if (project.rootProject.file("local.properties").exists()) {
+    properties.load(project.rootProject.file('local.properties').newDataInputStream())
+}
+
+bintray {
+    user = properties.getProperty("bintray.user")
+    key = properties.getProperty("bintray.apikey")
+
+    configurations = ['archives']
+
+    pkg {
+        repo = bintrayRepo
+        name = bintrayName
+        userOrg = developerId
+        desc = libraryDescription
+        websiteUrl = siteUrl
+        vcsUrl = gitUrl
+        licenses = allLicenses
+        dryRun = false
+        publish = true
+        override = false
+        publicDownloadNumbers = true
+        version {
+            desc = libraryDescription
+        }
+    }
 }
