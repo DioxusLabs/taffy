@@ -50,6 +50,9 @@ jobs:
       - run:
           name: Setup emulator
           command: sdkmanager "system-images;android-24;default;armeabi-v7a" && echo "no" | avdmanager create avd -n test -k "system-images;android-24;default;armeabi-v7a"
+
+      - run: mv $ANDROID_HOME/emulator/lib6/libGLESv2_emulation.so $ANDROID_HOME/emulator/lib6/libGLESv2.so
+      - run: mv $ANDROID_HOME/emulator/lib6/libEGL_emulation.so $ANDROID_HOME/emulator/lib6/libEGL.so
       
       - run:
           name: Launch emulator
