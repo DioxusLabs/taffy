@@ -29,36 +29,39 @@ jobs:
     docker:
       - image: circleci/android:api-28
     
-    environment:
-      _JAVA_OPTIONS: "-Xmx3200m -XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:ParallelGCThreads=2 -XX:ConcGCThreads=2 -XX:ParallelGCThreads=2 -Djava.util.concurrent.ForkJoinPool.common.parallelism=2"
-
     steps:
       - checkout
       
+      - restore_cache:
+          key: jars-{{ checksum "bindings/kotlin/build.gradle" }}-{{ checksum  "bindings/kotlin/stretch/build.gradle" }}
+      
       - run: curl https://sh.rustup.rs -sSf | sh -s -- -y
-      
       - run: yes | sdkmanager --update || true
-
-      - run:
-          name: Setup emulator
-          command: sdkmanager "system-images;android-16;default;armeabi-v7a" && echo "no" | avdmanager create avd -n test -k "system-images;android-16;default;armeabi-v7a"
-
-      - run:
-          name: Launch emulator
-          command: export LD_LIBRARY_PATH=${ANDROID_HOME}/emulator/lib64:${ANDROID_HOME}/emulator/lib64/qt/lib && emulator64-arm -avd test -noaudio -no-boot-anim -no-window -gpu off
-      
       - run: cd bindings/kotlin && ./gradlew androidDependencies --no-daemon --max-workers 2
       
+      - save_cache:
+          paths:
+            - bindings/kotlin/.gradle
+          key: jars-{{ checksum "bindings/kotlin/build.gradle" }}-{{ checksum  "bindings/kotlin/stretch/build.gradle" }}
+
+      - run: cd bindings/kotlin && ./gradlew :stretch:assembleAndroidTest
+
       - run:
-          name: Run tests
-          command: cd bindings/kotlin && ./gradlew connectedAndroidTest
+          name: Store Google Service Account
+          command: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
+
+      - run:
+          name: Authorize gcloud and set config defaults
+          command: |
+            sudo gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
+            sudo gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
       
-      - store_artifacts:
-          path: bindings/kotlin/stretch/build/test-results
-          destination: reports
-      
-      - store_test_results:
-          path: bindings/kotlin/stretch/build/test-results
+      - run:
+          name: Test with Firebase Test Lab
+          command: >
+            sudo gcloud firebase test android run \ 
+              --test bindings/kotlin/stretch/build/outputs/apk/androidTest/debug/stretch-debug-androidTest.apk \ 
+              --results-bucket cloud-test-${GOOGLE_PROJECT_ID}
 
 workflows:
   version: 2
