@@ -25,47 +25,8 @@ jobs:
             - ~/.cargo
             - ./target
 
-  android:
-    docker:
-      - image: circleci/android:api-28
-    
-    steps:
-      - checkout
-      
-      - restore_cache:
-          key: jars-{{ checksum "bindings/kotlin/build.gradle" }}-{{ checksum  "bindings/kotlin/stretch/build.gradle" }}
-      
-      - run: curl https://sh.rustup.rs -sSf | sh -s -- -y
-      - run: yes | sdkmanager --update || true
-      - run: cd bindings/kotlin && ./gradlew androidDependencies --no-daemon --max-workers 2
-      
-      - save_cache:
-          paths:
-            - bindings/kotlin/.gradle
-          key: jars-{{ checksum "bindings/kotlin/build.gradle" }}-{{ checksum  "bindings/kotlin/stretch/build.gradle" }}
-
-      - run: cd bindings/kotlin && ./gradlew :stretch:assembleAndroidTest
-
-      - run:
-          name: Store Google Service Account
-          command: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
-
-      - run:
-          name: Authorize gcloud and set config defaults
-          command: |
-            sudo gcloud auth activate-service-account --key-file=${HOME}/gcloud-service-key.json
-            sudo gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
-      
-      - run:
-          name: Test with Firebase Test Lab
-          command: >
-            sudo gcloud firebase test android run \ 
-              --test bindings/kotlin/stretch/build/outputs/apk/androidTest/debug/stretch-debug-androidTest.apk \ 
-              --results-bucket cloud-test-${GOOGLE_PROJECT_ID}
-
 workflows:
   version: 2
   test_all:
     jobs:
-      - android
       - core
