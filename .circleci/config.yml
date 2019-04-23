@@ -51,12 +51,9 @@ jobs:
           name: Setup emulator
           command: sdkmanager "system-images;android-24;default;armeabi-v7a" && echo "no" | avdmanager create avd -n test -k "system-images;android-24;default;armeabi-v7a"
 
-      - run: mv $ANDROID_HOME/emulator/lib6/libGLESv2_emulation.so $ANDROID_HOME/emulator/lib6/libGLESv2.so
-      - run: mv $ANDROID_HOME/emulator/lib6/libEGL_emulation.so $ANDROID_HOME/emulator/lib6/libEGL.so
-      
       - run:
           name: Launch emulator
-          command: export LD_LIBRARY_PATH=${ANDROID_HOME}/emulator/lib64:${ANDROID_HOME}/emulator/lib64/qt/lib && emulator64-arm -avd test -noaudio -no-boot-anim -no-window -accel on
+          command: export LD_LIBRARY_PATH=${ANDROID_HOME}/emulator/lib64:${ANDROID_HOME}/emulator/lib64/qt/lib && emulator64-arm -avd test -noaudio -no-boot-anim -no-window -gpu off
       
       - run:
           name: Run tests
