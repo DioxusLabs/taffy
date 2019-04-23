@@ -1,13 +1,14 @@
 package app.visly.stretch
 import androidx.annotation.Keep
+import java.lang.ref.WeakReference
 
 interface MeasureFunc {
     fun measure(constraints: Size<Float?>): Size<Float>
 }
 
-private class MeasureFuncImpl(val measureFunc: MeasureFunc) {
+private class MeasureFuncImpl(val measureFunc: WeakReference<MeasureFunc>) {
     @Keep fun measure(width: Float, height: Float): FloatArray {
-        val result = measureFunc.measure(Size(
+        val result = measureFunc.get()!!.measure(Size(
             if (width.isNaN()) null else width,
             if (height.isNaN()) null else height
         ))
@@ -25,11 +26,13 @@ class Node {
     private val rustptr: Long
     private var style: Style
     private var children: MutableList<Node>
+    private var measure: MeasureFunc? = null
 
     constructor(style: Style, measure: MeasureFunc) {
-        this.rustptr = nConstructLeaf(style.rustptr, MeasureFuncImpl(measure))
+        this.rustptr = nConstructLeaf(style.rustptr, MeasureFuncImpl(WeakReference(measure)))
         this.style = style
         this.children = mutableListOf()
+        this.measure = measure
     }
 
     constructor(style: Style, children: List<Node>) {
@@ -43,7 +46,8 @@ class Node {
     }
 
     fun setMeasure(measure: MeasureFunc) {
-        nSetMeasure(rustptr, MeasureFuncImpl(measure))
+        nSetMeasure(rustptr, MeasureFuncImpl(WeakReference(measure)))
+        this.measure = measure
     }
 
     fun getChildren(): List<Node> {
