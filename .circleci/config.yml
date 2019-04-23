@@ -35,17 +35,9 @@ jobs:
     steps:
       - checkout
       
-      - restore_cache:
-          key: jars-{{ checksum "bindings/kotlin/build.gradle" }}-{{ checksum  "bindings/kotlin/stretch/build.gradle" }}
-      
       - run: curl https://sh.rustup.rs -sSf | sh -s -- -y
-      - run: yes | sdkmanager --update || true
-      - run: cd bindings/kotlin && ./gradlew androidDependencies --no-daemon --max-workers 2
       
-      - save_cache:
-          paths:
-            - bindings/kotlin/.gradle
-          key: jars-{{ checksum "bindings/kotlin/build.gradle" }}-{{ checksum  "bindings/kotlin/stretch/build.gradle" }}
+      - run: yes | sdkmanager --update || true
 
       - run:
           name: Setup emulator
@@ -54,6 +46,8 @@ jobs:
       - run:
           name: Launch emulator
           command: export LD_LIBRARY_PATH=${ANDROID_HOME}/emulator/lib64:${ANDROID_HOME}/emulator/lib64/qt/lib && emulator64-arm -avd test -noaudio -no-boot-anim -no-window -gpu off
+      
+      - run: cd bindings/kotlin && ./gradlew androidDependencies --no-daemon --max-workers 2
       
       - run:
           name: Run tests
