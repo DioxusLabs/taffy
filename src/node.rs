@@ -26,12 +26,12 @@ pub(crate) struct InternalNode {
 pub struct Node(Rc<RefCell<InternalNode>>);
 
 impl Node {
-    pub fn new_leaf(style: Style, measure: Option<MeasureFunc>) -> Node {
+    pub fn new_leaf(style: Style, measure: MeasureFunc) -> Node {
         Node(Rc::new(RefCell::new(InternalNode {
             style,
             parents: Vec::with_capacity(1),
             children: Vec::with_capacity(0),
-            measure,
+            measure: Some(measure),
             layout_cache: None,
             is_dirty: true,
         })))
@@ -53,6 +53,11 @@ impl Node {
         }
 
         parent
+    }
+
+    pub fn set_measure(&mut self, measure: Option<MeasureFunc>) {
+        self.0.borrow_mut().measure = measure;
+        self.mark_dirty();
     }
 
     pub fn add_child(&mut self, child: &Node) {
@@ -115,6 +120,11 @@ impl Node {
     pub fn children(&self) -> Vec<Node> {
         let node = self.0.borrow_mut();
         node.children.iter().map(|child| Node(Rc::clone(child))).collect()
+    }
+
+    pub fn child_count(&self) -> usize {
+        let node = self.0.borrow_mut();
+        node.children.len()
     }
 
     pub fn set_style(&mut self, style: Style) {

@@ -1,5 +1,6 @@
 #[cfg(test)]
 mod node {
+    use stretch::geometry::*;
     use stretch::node::Node;
     use stretch::style::*;
 
@@ -9,21 +10,30 @@ mod node {
         let child2 = Node::new(Style::default(), vec![]);
         let node = Node::new(Style::default(), vec![&child1, &child2]);
 
-        assert_eq!(node.children().len(), 2);
+        assert_eq!(node.child_count(), 2);
         assert_eq!(node.children()[0], child1);
         assert_eq!(node.children()[1], child2);
     }
 
     #[test]
+    fn set_measure() {
+        let mut node = Node::new_leaf(Style::default(), Box::new(|_| Ok(Size { width: 200.0, height: 200.0 })));
+        assert_eq!(node.compute_layout(Size::undefined()).unwrap().size.width, 200.0);
+
+        node.set_measure(Some(Box::new(|_| Ok(Size { width: 100.0, height: 100.0 }))));
+        assert_eq!(node.compute_layout(Size::undefined()).unwrap().size.width, 100.0);
+    }
+
+    #[test]
     fn add_child() {
         let mut node = Node::new(Style::default(), vec![]);
-        assert_eq!(node.children().len(), 0);
+        assert_eq!(node.child_count(), 0);
 
         node.add_child(&Node::new(Style::default(), vec![]));
-        assert_eq!(node.children().len(), 1);
+        assert_eq!(node.child_count(), 1);
 
         node.add_child(&Node::new(Style::default(), vec![]));
-        assert_eq!(node.children().len(), 2);
+        assert_eq!(node.child_count(), 2);
     }
 
     #[test]
@@ -32,14 +42,14 @@ mod node {
         let child2 = Node::new(Style::default(), vec![]);
 
         let mut node = Node::new(Style::default(), vec![&child1, &child2]);
-        assert_eq!(node.children().len(), 2);
+        assert_eq!(node.child_count(), 2);
 
         node.remove_child(&child1);
-        assert_eq!(node.children().len(), 1);
+        assert_eq!(node.child_count(), 1);
         assert_eq!(node.children()[0], child2);
 
         node.remove_child(&child2);
-        assert_eq!(node.children().len(), 0);
+        assert_eq!(node.child_count(), 0);
     }
 
     #[test]
@@ -48,14 +58,14 @@ mod node {
         let child2 = Node::new(Style::default(), vec![]);
 
         let mut node = Node::new(Style::default(), vec![&child1, &child2]);
-        assert_eq!(node.children().len(), 2);
+        assert_eq!(node.child_count(), 2);
 
         node.remove_child_at_index(0);
-        assert_eq!(node.children().len(), 1);
+        assert_eq!(node.child_count(), 1);
         assert_eq!(node.children()[0], child2);
 
         node.remove_child_at_index(0);
-        assert_eq!(node.children().len(), 0);
+        assert_eq!(node.child_count(), 0);
     }
 
     #[test]
@@ -64,11 +74,11 @@ mod node {
         let child2 = Node::new(Style::default(), vec![]);
 
         let mut node = Node::new(Style::default(), vec![&child1]);
-        assert_eq!(node.children().len(), 1);
+        assert_eq!(node.child_count(), 1);
         assert_eq!(node.children()[0], child1);
 
         node.replace_child_at_index(0, &child2);
-        assert_eq!(node.children().len(), 1);
+        assert_eq!(node.child_count(), 1);
         assert_eq!(node.children()[0], child2);
     }
 
@@ -78,7 +88,7 @@ mod node {
         let child2 = Node::new(Style::default(), vec![]);
         let mut node = Node::new(Style::default(), vec![&child1, &child2]);
 
-        assert_eq!(node.children().len(), 2);
+        assert_eq!(node.child_count(), 2);
         assert_eq!(node.children()[0], child1);
         assert_eq!(node.children()[1], child2);
 
@@ -86,7 +96,7 @@ mod node {
         let child4 = Node::new(Style::default(), vec![]);
         node.set_children(vec![&child3, &child4]);
 
-        assert_eq!(node.children().len(), 2);
+        assert_eq!(node.child_count(), 2);
         assert_eq!(node.children()[0], child3);
         assert_eq!(node.children()[1], child4);
     }
