@@ -38,7 +38,7 @@ jobs:
       - restore_cache:
           key: jars-{{ checksum "bindings/kotlin/build.gradle" }}-{{ checksum  "bindings/kotlin/stretch/build.gradle" }}
       
-      - run: curl https://sh.rustup.rs -sSf | sh
+      - run: echo 1 | curl https://sh.rustup.rs -sSf | sh
       - run: yes | sdkmanager --update || true
       - run: cd bindings/kotlin && ./gradlew androidDependencies --no-daemon --max-workers 2
       
