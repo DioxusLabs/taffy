@@ -274,7 +274,7 @@ pub unsafe extern "C" fn Java_app_visly_stretch_Node_nConstructLeaf(
 ) -> jlong {
     let measure = env.new_global_ref(measure).unwrap();
     let style: Box<Style> = Box::from_raw(style as *mut Style);
-    let node = Node::new_leaf(*Box::leak(style), Some(Box::new(move |constraint| {
+    let node = Node::new_leaf(*Box::leak(style), Box::new(move |constraint| {
         let result = env.call_method(
             measure.as_obj(),
             "measure",
@@ -291,7 +291,7 @@ pub unsafe extern "C" fn Java_app_visly_stretch_Node_nConstructLeaf(
             }
             Err(err) => Err(Box::new(err)),
         }
-    })));
+    }));
     Box::into_raw(Box::new(node)) as jlong
 }
 
@@ -305,13 +305,33 @@ pub unsafe extern "C" fn Java_app_visly_stretch_Node_nFree(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_app_visly_stretch_Node_nChildCount(
-    _: JNIEnv,
+pub unsafe extern "C" fn Java_app_visly_stretch_Node_nSetMeasure(
+    env: JNIEnv<'static>,
     _: JObject,
     node: jlong,
-) -> jint {
+    measure: JObject,
+) {
+    let measure = env.new_global_ref(measure).unwrap();
     let node: Box<Node> = Box::from_raw(node as *mut Node);
-    Box::leak(node).children().len() as i32
+
+    Box::leak(node).set_measure(Some(Box::new(move |constraint| {
+         let result = env.call_method(
+             measure.as_obj(),
+             "measure",
+             "(FF)[F",
+             &[JValue::from(constraint.width.or_else(f32::NAN)), JValue::from(constraint.height.or_else(f32::NAN))],
+         );
+
+         match result {
+             Ok(result) => {
+                 let size = result.l().unwrap().into_inner() as jfloatArray;
+                 let mut buff: [f32; 2] = [0.0, 0.0];
+                 env.get_float_array_region(size, 0, &mut buff).unwrap();
+                 Ok(Size { width: buff[0], height: buff[1] })
+             }
+             Err(err) => Err(Box::new(err)),
+         }
+     })));
 }
 
 #[no_mangle]

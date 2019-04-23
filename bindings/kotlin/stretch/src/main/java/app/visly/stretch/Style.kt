@@ -93,10 +93,6 @@ sealed class Dimension {
         }
 }
 
-data class FloatSize(
-    val width: Float,
-    val height: Float)
-
 data class Size<T>(
     val width: T,
     val height: T)
@@ -132,7 +128,7 @@ data class Style(
 
     companion object {
         init {
-            System.loadLibrary("stretch")
+            Stretch.init()
         }
     }
 
@@ -289,4 +285,160 @@ data class Style(
 
         aspectRatio: Float
     ): Long
+
+    // This class exists for use with Java which does not have support for named / default arguments as in kotlin.
+    class Builder {
+        private var display: Display = Display.Flex
+        private var positionType: PositionType = PositionType.Relative
+        private var direction: Direction = Direction.Inherit
+        private var flexDirection: FlexDirection = FlexDirection.Row
+        private var flexWrap: FlexWrap = FlexWrap.NoWrap
+        private var overflow: Overflow = Overflow.Hidden
+        private var alignItems: AlignItems = AlignItems.Stretch
+        private var alignSelf: AlignSelf = AlignSelf.Auto
+        private var alignContent: AlignContent = AlignContent.FlexStart
+        private var justifyContent: JustifyContent = JustifyContent.FlexStart
+        private var position: Rect<Dimension> = Rect(Dimension.Undefined, Dimension.Undefined, Dimension.Undefined, Dimension.Undefined)
+        private var margin: Rect<Dimension> = Rect(Dimension.Undefined, Dimension.Undefined, Dimension.Undefined, Dimension.Undefined)
+        private var padding: Rect<Dimension> = Rect(Dimension.Undefined, Dimension.Undefined, Dimension.Undefined, Dimension.Undefined)
+        private var border: Rect<Dimension> = Rect(Dimension.Undefined, Dimension.Undefined, Dimension.Undefined, Dimension.Undefined)
+        private var flexGrow: Float = 0f
+        private var flexShrink: Float = 1f
+        private var flexBasis: Dimension = Dimension.Auto
+        private var size: Size<Dimension> = Size(Dimension.Auto, Dimension.Auto)
+        private var minSize: Size<Dimension> = Size(Dimension.Auto, Dimension.Auto)
+        private var maxSize: Size<Dimension> = Size(Dimension.Auto, Dimension.Auto)
+        private var aspectRatio: Float? = null
+
+        fun build(): Style {
+            return Style(
+                display,
+                positionType,
+                direction,
+                flexDirection,
+                flexWrap,
+                overflow,
+                alignItems,
+                alignSelf,
+                alignContent,
+                justifyContent,
+                position,
+                margin,
+                padding,
+                border,
+                flexGrow,
+                flexShrink,
+                flexBasis,
+                size,
+                minSize,
+                maxSize,
+                aspectRatio
+            )
+        }
+
+        fun display(display: Display): Builder {
+            this.display = display
+            return this
+        }
+
+        fun positionType(positionType: PositionType): Builder {
+            this.positionType = positionType
+            return this
+        }
+
+        fun direction(direction: Direction): Builder {
+            this.direction = direction
+            return this
+        }
+
+        fun flexDirection(flexDirection: FlexDirection): Builder {
+            this.flexDirection = flexDirection
+            return this
+        }
+
+        fun flexWrap(flexWrap: FlexWrap): Builder {
+            this.flexWrap = flexWrap
+            return this
+        }
+
+        fun overflow(overflow: Overflow): Builder {
+            this.overflow = overflow
+            return this
+        }
+
+        fun alignItems(alignItems: AlignItems): Builder {
+            this.alignItems = alignItems
+            return this
+        }
+
+        fun alignSelf(alignSelf: AlignSelf): Builder {
+            this.alignSelf = alignSelf
+            return this
+        }
+
+        fun alignContent(alignContent: AlignContent): Builder {
+            this.alignContent = alignContent
+            return this
+        }
+
+        fun justifyContent(justifyContent: JustifyContent): Builder {
+            this.justifyContent = justifyContent
+            return this
+        }
+
+        fun position(position: Rect<Dimension>): Builder {
+            this.position = position
+            return this
+        }
+
+        fun margin(margin: Rect<Dimension>): Builder {
+            this.margin = margin
+            return this
+        }
+
+        fun padding(padding: Rect<Dimension>): Builder {
+            this.padding = padding
+            return this
+        }
+
+        fun border(border: Rect<Dimension>): Builder {
+            this.border = border
+            return this
+        }
+
+        fun flexGrow(flexGrow: Float): Builder {
+            this.flexGrow = flexGrow
+            return this
+        }
+
+        fun flexShrink(flexShrink: Float): Builder {
+            this.flexShrink = flexShrink
+            return this
+        }
+
+        fun flexBasis(flexBasis: Dimension): Builder {
+            this.flexBasis = flexBasis
+            return this
+        }
+
+        fun size(size: Size<Dimension>): Builder {
+            this.size = size
+            return this
+        }
+
+        fun minSize(minSize: Size<Dimension>): Builder {
+            this.minSize = minSize
+            return this
+        }
+
+        fun maxSize(maxSize: Size<Dimension>): Builder {
+            this.maxSize = maxSize
+            return this
+        }
+
+        fun aspectRatio(aspectRatio: Float?): Builder {
+            this.aspectRatio = aspectRatio
+            return this
+        }
+    }
 }

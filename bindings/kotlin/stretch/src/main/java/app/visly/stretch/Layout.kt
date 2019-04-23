@@ -8,7 +8,7 @@ data class Layout(
     val children: List<Layout>) {
 
     companion object {
-        fun fromFloatArray(args: FloatArray, offset: Int): Pair<Int, Layout> {
+        internal fun fromFloatArray(args: FloatArray, offset: Int): Pair<Int, Layout> {
             var offset = offset
 
             val x = args[offset++]

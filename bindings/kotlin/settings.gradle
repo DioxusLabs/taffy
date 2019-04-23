@@ -1,1 +1,1 @@
-include ':sample', ':stretch'
+include ':stretch'

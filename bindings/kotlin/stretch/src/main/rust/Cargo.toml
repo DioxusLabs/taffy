@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 jni = { version = "0.10.2", default-features = false }
-stretch = "0.2.1"
+stretch = "0.2.2"
 
 [lib]
 name = "stretch"

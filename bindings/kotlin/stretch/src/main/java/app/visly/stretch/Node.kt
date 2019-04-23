@@ -1,8 +1,13 @@
 package app.visly.stretch
+import androidx.annotation.Keep
 
-private class MeasureFunc(val measure: (Size<Float?>) -> Size<Float>) {
-    fun measure(width: Float, height: Float): FloatArray {
-        val result = measure(Size(
+interface MeasureFunc {
+    fun measure(constraints: Size<Float?>): Size<Float>
+}
+
+private class MeasureFuncImpl(val measureFunc: MeasureFunc) {
+    @Keep fun measure(width: Float, height: Float): FloatArray {
+        val result = measureFunc.measure(Size(
             if (width.isNaN()) null else width,
             if (height.isNaN()) null else height
         ))
@@ -13,16 +18,16 @@ private class MeasureFunc(val measure: (Size<Float?>) -> Size<Float>) {
 class Node {
     companion object {
         init {
-            System.loadLibrary("stretch")
+            Stretch.init()
         }
     }
 
-    internal val rustptr: Long
+    private val rustptr: Long
     private var style: Style
     private var children: MutableList<Node>
 
-    constructor(style: Style, measure: (Size<Float?>) -> Size<Float>) {
-        this.rustptr = nConstructLeaf(style.rustptr, MeasureFunc(measure))
+    constructor(style: Style, measure: MeasureFunc) {
+        this.rustptr = nConstructLeaf(style.rustptr, MeasureFuncImpl(measure))
         this.style = style
         this.children = mutableListOf()
     }
@@ -35,6 +40,10 @@ class Node {
 
     protected fun finalize() {
         nFree(rustptr)
+    }
+
+    fun setMeasure(measure: MeasureFunc) {
+        nSetMeasure(rustptr, MeasureFuncImpl(measure))
     }
 
     fun getChildren(): List<Node> {
@@ -84,8 +93,8 @@ class Node {
         return nIsDirty(rustptr)
     }
 
-    fun childCount(): Int {
-        return nChildCount(rustptr)
+    fun getChildCount(): Int {
+        return children.size
     }
 
     fun computeLayout(size: Size<Float?>): Layout {
@@ -93,10 +102,10 @@ class Node {
         return result.second
     }
 
-    private external fun nFree(ptr: Long)
-    private external fun nChildCount(ptr: Long): Int
     private external fun nConstruct(style: Long, children: LongArray): Long
-    private external fun nConstructLeaf(style: Long, measure: MeasureFunc): Long
+    private external fun nConstructLeaf(style: Long, measure: MeasureFuncImpl): Long
+    private external fun nFree(ptr: Long)
+    private external fun nSetMeasure(ptr: Long, measure: MeasureFuncImpl)
     private external fun nSetChildren(ptr: Long, children: LongArray)
     private external fun nAddChild(ptr: Long, child: Long)
     private external fun nReplaceChildAtIndex(ptr: Long, index: Int, child: Long): Long
