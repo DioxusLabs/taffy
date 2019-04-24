@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
   s.social_media_url = 'https://twitter.com/vislyhq'
 
   s.swift_version = '4.2'
-  s.ios.deployment_target  = '10.0'
+  s.ios.deployment_target  = '9.3'
   s.source_files = 'bindings/swift/StretchKit/Classes/**/*'
   s.xcconfig = { "ENABLE_BITCODE" => "NO" }
 
