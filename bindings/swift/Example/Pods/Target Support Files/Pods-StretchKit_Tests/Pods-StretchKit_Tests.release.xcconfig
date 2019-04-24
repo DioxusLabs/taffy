@@ -4,7 +4,8 @@ FRAMEWORK_SEARCH_PATHS = $(inherited) "$(PLATFORM_DIR)/Developer/Library/Framewo
 GCC_PREPROCESSOR_DEFINITIONS = $(inherited) COCOAPODS=1
 HEADER_SEARCH_PATHS = $(inherited) "${PODS_CONFIGURATION_BUILD_DIR}/Nimble/Nimble.framework/Headers" "${PODS_CONFIGURATION_BUILD_DIR}/Quick/Quick.framework/Headers" "${PODS_CONFIGURATION_BUILD_DIR}/StretchKit/StretchKit.framework/Headers" ${PODS_ROOT}/StretchCore/Headers
 LD_RUNPATH_SEARCH_PATHS = $(inherited) '@executable_path/Frameworks' '@loader_path/Frameworks'
-OTHER_LDFLAGS = $(inherited) -framework "Nimble" -framework "Quick" -framework "StretchKit" -framework "XCTest" -weak_framework "XCTest"
+LIBRARY_SEARCH_PATHS = $(inherited) "${PODS_ROOT}/../../StretchKit/Libraries"
+OTHER_LDFLAGS = $(inherited) -ObjC -framework "Nimble" -framework "Quick" -framework "StretchKit" -framework "XCTest" -weak_framework "XCTest"
 OTHER_SWIFT_FLAGS = $(inherited) -D COCOAPODS
 PODS_BUILD_DIR = ${BUILD_DIR}
 PODS_CONFIGURATION_BUILD_DIR = ${PODS_BUILD_DIR}/$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)

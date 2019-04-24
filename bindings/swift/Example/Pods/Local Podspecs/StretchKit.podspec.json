@@ -18,7 +18,7 @@
   "social_media_url": "https://twitter.com/vislyhq",
   "swift_versions": "4.2",
   "platforms": {
-    "ios": "10.0"
+    "ios": "9.3"
   },
   "source_files": "bindings/swift/StretchKit/Classes/**/*",
   "xcconfig": {

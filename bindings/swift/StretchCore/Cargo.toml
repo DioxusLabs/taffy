@@ -1,0 +1,15 @@
+[package]
+name = "ios-stretch"
+version = "0.1.0"
+authors = ["Emil Sjölander <emil@visly.app>"]
+edition = "2018"
+
+[dependencies]
+stretch = "0.2.2"
+
+[lib]
+name = "stretch"
+crate-type = ["staticlib"]
+
+[workspace]
+members = []

@@ -10,6 +10,7 @@
 #endif
 #endif
 
+#import "libstretch.h"
 
 FOUNDATION_EXPORT double StretchKitVersionNumber;
 FOUNDATION_EXPORT const unsigned char StretchKitVersionString[];
