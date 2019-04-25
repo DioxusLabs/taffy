@@ -7,7 +7,7 @@ class NodeSpec: QuickSpec {
         it("will create node") {
             let child = Node(style: Style(), children: [])
             let node = Node(style: Style(), children: [child])
-            expect(node.getChildCount()) == 1
+            expect(node.children.count) == 1
         }
         
         it("will create leaf") {
@@ -15,76 +15,76 @@ class NodeSpec: QuickSpec {
                 return Size(width: 100.0, height: 100.0)
             }
             
-            let layout = node.computeLayout(size: Size(width: nil, height: nil))
+            let layout = node.computeLayout(thatFits: Size(width: nil, height: nil))
             expect(layout.width) == 100.0
             expect(layout.height) == 100.0
         }
         
         it("will set measure") {
             let node = Node(style: Style(), children: [])
-            node.setMeasure { constraint in
+            node.measure = { constraint in
                 return Size(width: 100.0, height: 100.0)
             }
-            
-            let layout = node.computeLayout(size: Size(width: nil, height: nil))
+
+            let layout = node.computeLayout(thatFits: Size(width: nil, height: nil))
             expect(layout.width) == 100.0
             expect(layout.height) == 100.0
         }
-        
+
         it("will add child") {
             let node = Node(style: Style(), children: [])
             let child = Node(style: Style(), children: [])
-            node.addChild(child: child)
-            expect(node.getChildCount()) == 1
+            node.addChild(child)
+            expect(node.children.count) == 1
         }
-        
+
         it("will remove child") {
             let child = Node(style: Style(), children: [])
             let node = Node(style: Style(), children: [child])
-            node.removeChild(child: child)
-            expect(node.getChildCount()) == 0
+            node.removeChild(child)
+            expect(node.children.count) == 0
         }
-        
+
         it("will remove child at index") {
             let child = Node(style: Style(), children: [])
             let node = Node(style: Style(), children: [child])
-            node.removeChildAtIndex(index: 0)
-            expect(node.getChildCount()) == 0
+            node.removeChild(at: 0)
+            expect(node.children.count) == 0
         }
-        
+
         it("will replace child at index") {
             let child1 = Node(style: Style(size: Size(width: .points(100.0), height: .points(100.0))), children: [])
             let child2 = Node(style: Style(size: Size(width: .points(200.0), height: .points(200.0))), children: [])
             let node = Node(style: Style(), children: [child1])
-            node.replaceChildAtIndex(index: 0, child: child2)
-            
-            let layout = node.computeLayout(size: Size(width: nil, height: nil))
+            node.replaceChild(child2, at: 0)
+
+            let layout = node.computeLayout(thatFits: Size(width: nil, height: nil))
             expect(layout.width) == 200.0
             expect(layout.height) == 200.0
         }
-        
+
         it("will set style") {
             let node = Node(style: Style(size: Size(width: .points(100.0), height: .points(100.0))), children: [])
-            node.setStyle(style: Style(size: Size(width: .points(200.0), height: .points(200.0))))
-            
-            let layout = node.computeLayout(size: Size(width: nil, height: nil))
+            node.style = Style(size: Size(width: .points(200.0), height: .points(200.0)))
+
+            let layout = node.computeLayout(thatFits: Size(width: nil, height: nil))
             expect(layout.width) == 200.0
             expect(layout.height) == 200.0
         }
-        
+
         it("will set children") {
             let node = Node(style: Style(), children: [])
             let child = Node(style: Style(), children: [])
-            node.setChildren(children: [child])
-            expect(node.getChildCount()) == 1
+            node.children = [child]
+            expect(node.children.count) == 1
         }
-        
+
         it("will mark node dirty") {
             let node = Node(style: Style(), children: [])
-            let _ = node.computeLayout(size: Size(width: nil, height: nil))
-            expect(node.isDirty()) == false
+            let _ = node.computeLayout(thatFits: Size(width: nil, height: nil))
+            expect(node.dirty) == false
             node.markDirty()
-            expect(node.isDirty()) == true
+            expect(node.dirty) == true
         }
     }
 }

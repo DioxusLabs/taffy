@@ -223,4 +223,8 @@ public class Style {
             StretchStyleSize(width: maxSize.width.intoStretchValue(), height: maxSize.height.intoStretchValue()),
             aspectRatio ?? Float.nan)
     }
+    
+    deinit {
+        stretch_style_free(rustptr)
+    }
 }

@@ -15,92 +15,94 @@ public typealias MeasureFunc = (Size<Float?>) -> Size<Float>
 
 public class Node {
     private let rustptr: UnsafeMutableRawPointer
-    private var style: Style
-    private var children: Array<Node> = []
-    internal var measure: MeasureFunc? = nil
+    private var _children: Array<Node> = []
+    private var _measure: MeasureFunc? = nil
+    
+    public var style: Style {
+        willSet(style) {
+            stretch_node_set_style(rustptr, style.rustptr)
+        }
+    }
+    
+    public var children: Array<Node> {
+        get {
+            return self._children
+        }
+        set {
+            let num_children = _children.count
+            for i in 0..<num_children {
+                removeChild(at: num_children - 1 - i)
+            }
+            
+            for child in newValue {
+                addChild(child)
+            }
+        }
+    }
+    
+    public var measure: MeasureFunc? {
+        get {
+            return self._measure
+        }
+        set {
+            self._measure = newValue
+            stretch_node_set_measure(rustptr, Unmanaged.passRetained(self).toOpaque(), node_measure)
+        }
+    }
     
     public init(style: Style, measure: @escaping MeasureFunc) {
         self.rustptr = stretch_node_create(style.rustptr)
         self.style = style
-        setMeasure(measure: measure)
+        self.measure = measure
     }
     
     public init(style: Style, children: Array<Node>) {
         self.rustptr = stretch_node_create(style.rustptr)
         self.style = style
-        setChildren(children: children)
+        self.children = children
     }
     
-    public func setMeasure(measure: @escaping MeasureFunc) {
-        stretch_node_set_measure(rustptr, Unmanaged.passRetained(self).toOpaque(), node_measure)
-        self.measure = measure;
+    deinit {
+        stretch_node_free(rustptr)
     }
     
-    public func getChildren() -> Array<Node> {
-        return self.children
-    }
-    
-    public func setChildren(children: Array<Node>) {
-        let num_children = self.children.count
-        for i in 0..<num_children {
-            removeChildAtIndex(index: num_children - 1 - i)
-        }
-        
-        for child in children {
-            addChild(child: child)
-        }
-    }
-    
-    public func addChild(child: Node) {
+    public func addChild(_ child: Node) {
         stretch_node_add_child(rustptr, child.rustptr)
-        children.append(child)
+        _children.append(child)
     }
     
     @discardableResult
-    public func replaceChildAtIndex(index: Int, child: Node) -> Node {
+    public func replaceChild(_ child: Node, at index: Int) -> Node {
         stretch_node_replace_child_at_index(rustptr, UInt(index), child.rustptr)
-        let oldChild = children[index]
-        children[index] = child
+        let oldChild = _children[index]
+        _children[index] = child
         return oldChild
     }
     
     @discardableResult
-    public func removeChild(child: Node) -> Node {
+    public func removeChild(_ child: Node) -> Node {
         stretch_node_remove_child(rustptr, child.rustptr)
-        children.removeAll { (node) -> Bool in
+        _children.removeAll { (node) -> Bool in
             return node === child
         }
         return child
     }
     
     @discardableResult
-    public func removeChildAtIndex(index: Int) -> Node {
+    public func removeChild(at index: Int) -> Node {
         stretch_node_remove_child_at_index(rustptr, UInt(index))
-        return children.remove(at: index)
-    }
-    
-    public func getStyle() -> Style {
-        return self.style
-    }
-    
-    public func setStyle(style: Style) {
-        stretch_node_set_style(rustptr, style.rustptr)
-        self.style = style
+        return _children.remove(at: index)
     }
     
     public func markDirty() {
         stretch_node_mark_dirty(rustptr)
     }
     
-    public func isDirty() -> Bool {
+    public var dirty: Bool {
         return stretch_node_dirty(rustptr)
     }
     
-    public func getChildCount() -> Int {
-        return self.children.count
-    }
-    
-    public func computeLayout(size: Size<Float?>) -> Layout {
+    public func computeLayout(thatFits size: Size<Float?>) -> Layout {
         let layoutPtr = stretch_node_compute_layout(
             rustptr, size.width ?? Float.nan,
             size.height ?? Float.nan,
