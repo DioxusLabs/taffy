@@ -24,9 +24,18 @@ jobs:
           paths:
             - ~/.cargo
             - ./target
+  ios:
+    macos:
+      xcode: "10.0.0"
+
+    steps:
+      - checkout
+      - run: cd bindings/swift && xcodebuild test -workspace Example/StretchKit.xcworkspace -scheme StretchKit -destination 'platform=iOS Simulator,name=iPhone XR,OS=12.0'
+
 
 workflows:
   version: 2
   test_all:
     jobs:
       - core
+      - ios
