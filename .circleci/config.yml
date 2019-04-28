@@ -3,7 +3,7 @@ version: 2
 jobs:
   core:
     docker:
-      - image: circleci/rust:1.34
+      - image: rust:1
 
     steps:
       - checkout
@@ -35,7 +35,7 @@ jobs:
 
   js:
     docker:
-      - image: circleci/rust:1.34-node-browsers
+      - image: circleci/rust:1-node-browsers
 
     steps:
       - checkout
@@ -54,7 +54,7 @@ jobs:
       - save_cache:
           key: js-target-cache
           paths:
-            - ~/bindings/js/.cargo
+            - ~/.cargo
             - ./bindings/js/target
 
 workflows:
