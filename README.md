@@ -1,6 +1,9 @@
 # Stretch
 [![CircleCI](https://circleci.com/gh/vislyhq/stretch.svg?style=svg)](https://circleci.com/gh/vislyhq/stretch)
 [![Cargo](https://img.shields.io/crates/v/stretch.svg)](https://crates.io/crates/stretch)
+[![npm](https://img.shields.io/npm/v/stretch-layout.svg)](https://www.npmjs.com/package/stretch-layout)
+[![cocoapods](https://img.shields.io/cocoapods/v/StretchKit.svg)](https://cocoapods.org/pods/StretchKit)
+[![bintray](https://api.bintray.com/packages/visly/maven/stretch-kotlin-bindings/images/download.svg)](https://bintray.com/visly/maven/stretch-kotlin-bindings)
 
 Stretch is an implemnetation of Flexbox written in [Rust](https://www.rust-lang.org). The goal of stretch is to provide a solid foundation for layout across all platforms with a specific focus on mobile. Long term we want stretch to not only support flexbox but also many other layout algorithms such as grid layout. Stretch was made for and powers https://visly.app.
 
