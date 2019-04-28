@@ -81,7 +81,7 @@ dependencies {
 // MainActivity.kt
 
 val node = Node(
-  Style(size = Size(Dimension.Points(100f), Dimension.Points(100f))), 
+  Style(size = Size(Dimension.Points(100f), Dimension.Points(100f)), justifyContent = JustifyContent.Center), 
   listOf(
     Node(Style(size = Size(Dimension.Percent(0.5f), Dimension.Percent(0.5f))), listOf())
   ))
