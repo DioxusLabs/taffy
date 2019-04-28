@@ -24,6 +24,7 @@ jobs:
           paths:
             - ~/.cargo
             - ./target
+
   ios:
     macos:
       xcode: "10.0.0"
@@ -32,6 +33,29 @@ jobs:
       - checkout
       - run: cd bindings/swift && xcodebuild test -workspace Example/StretchKit.xcworkspace -scheme StretchKit -destination 'platform=iOS Simulator,name=iPhone XR,OS=12.0'
 
+  js:
+    docker:
+      - image: circleci/rust:1-node-browsers
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          key: js-target-cache
+
+      - run: rustc --version; cargo --version; rustup --version
+      - run: rustup component add rustfmt
+      - run: rustup component add clippy
+      - run: cargo install wasm-pack
+      - run: cd bindings/js && cargo fmt -- --check
+      - run: cd bindings/js && wasm-pack test --node
+      - run: cd bindings/js && cargo clippy
+
+      - save_cache:
+          key: js-target-cache
+          paths:
+            - ~/.cargo
+            - ./bindings/js/target
 
 workflows:
   version: 2
@@ -39,3 +63,5 @@ workflows:
     jobs:
       - core
       - ios
+      - js
+
