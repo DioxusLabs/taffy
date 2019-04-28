@@ -1,5 +1,5 @@
 [package]
-name = "stretch-js"
+name = "stretch-layout"
 version = "0.2.2"
 authors = ["Visly Inc. <emil@visly.app>"]
 edition = "2018"

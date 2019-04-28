@@ -3,7 +3,7 @@
 extern crate wasm_bindgen_test;
 use js_sys::Function;
 use js_sys::Reflect;
-use stretch_js::*;
+use stretch_layout::*;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_test::*;
 
