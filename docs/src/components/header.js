@@ -20,7 +20,7 @@ export default function Header() {
       <a href="https://www.medium.com/visly" className="nav">
         Blog
       </a>
-      <Link to="/docs" className="nav">
+      <Link to="/docs/rust" className="nav">
         Docs
       </Link>
     </header>

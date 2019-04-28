@@ -4,8 +4,11 @@
   "version": "1.0.0",
   "author": "Visly Inc. <emil@visly.app>",
   "dependencies": {
+    "@mdx-js/mdx": "^1.0.0-rc.4",
+    "@mdx-js/react": "^1.0.0-rc.5",
     "gatsby": "^2.3.32",
     "gatsby-image": "^2.0.40",
+    "gatsby-mdx": "^0.6.2",
     "gatsby-plugin-manifest": "^2.0.29",
     "gatsby-plugin-offline": "^2.0.25",
     "gatsby-plugin-react-helmet": "^3.0.12",

@@ -161,3 +161,29 @@ textarea {
 .spacer {
   flex: 1;
 }
+
+.section-inner {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: stretch;
+  max-width: 1300px;
+  padding: 75px 100px 75px 100px;
+  margin: 0px auto;
+}
+
+.section-inner > h2 {
+  margin-bottom: 50px;
+}
+
+@media (max-width: 850px) {
+  section .section-inner {
+    padding: 8.8% 10% 8.8% 10%;
+    flex-direction: column;
+  }
+
+  .section-inner h2 {
+    margin-top: 8%;
+    margin-bottom: 5%;
+  }
+}

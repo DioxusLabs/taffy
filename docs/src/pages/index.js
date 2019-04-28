@@ -161,7 +161,7 @@ const IndexPage = () => (
             </div>
 
             <div className="button-group">
-                <Link to="/docs" className="secondary">
+                <Link to="/docs/rust" className="secondary">
                     Documentation
                 </Link>
                 <a href="https://github.com/vislyhq/stretch" className="primary">
