@@ -1,0 +1,35 @@
+.doc-pills {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+}
+
+.doc-pill {
+  margin-right: 10px;
+  margin-bottom: 10px;
+  padding: 8px 25px;
+  background-color: white;
+  border-radius: 8px;
+  color: var(--color-dark);
+  border: 1px solid var(--color-dark);
+}
+
+.doc-pill.active:hover {
+  opacity: 1;
+}
+
+.doc-pill.active {
+  background-color: var(--color-dark);
+  border: 1px solid var(--color-dark);
+  color: white;
+}
+
+section.mdx-content .section-inner {
+  padding: 0px 100px 75px 100px;
+}
+
+@media (max-width: 850px) {  
+  section.mdx-content > .section-inner {
+    padding: 0px 10% 8.8% 10%;
+  }
+}

@@ -1,16 +1,7 @@
 
-.section-inner {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  align-items: center;
-  max-width: 1300px;
-  padding: 75px 100px 75px 100px;
-  margin: 0px auto;
-}
 
-.section-inner > h2 {
-  margin-bottom: 50px;
+section.hero-content > * {
+  align-items: center;
 }
 
 .hero-content .title-letters {
@@ -145,17 +136,12 @@ section.featured-projects {
   background-color: var(--color-light);
 }
 
-section.featured-projects > .section-inner {
-  align-items: stretch;
-}
-
 section.blog-posts {
   background-color: white;
   background-color: var(--color-light);
 }
 
 section.blog-posts > .section-inner {
-  align-items: stretch;
   padding: 0px 100px 75px 100px;
 }
 
@@ -165,7 +151,6 @@ section.cross-platform {
 }
 
 section.cross-platform > .section-inner {
-  align-items: stretch;
   padding: 75px 100px 35px 100px;
 }
 
@@ -220,13 +205,7 @@ section.cross-platform .section-inner > h2 {
   border-bottom: 1px solid var(--color-medium);
 }
 
-
-@media (max-width: 850px) {
-  section .section-inner {
-    padding: 8.8% 10% 8.8% 10%;
-    flex-direction: column;
-  }
-  
+@media (max-width: 850px) {  
   section.blog-posts > .section-inner {
     padding: 0px 10% 8.8% 10%;
   }
@@ -264,11 +243,6 @@ section.cross-platform .section-inner > h2 {
   
   .card-collection:last-child {
     margin-bottom: 0px;
-  }
-
-  .section-inner h2 {
-    margin-top: 8%;
-    margin-bottom: 5%;
   }
 
   .button-group {
