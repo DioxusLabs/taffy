@@ -2,9 +2,9 @@
 
 mod utils;
 
-use wasm_bindgen::prelude::*;
-use js_sys::Reflect;
 use js_sys::Function;
+use js_sys::Reflect;
+use wasm_bindgen::prelude::*;
 
 #[cfg(feature = "wee_alloc")]
 #[global_allocator]
@@ -345,7 +345,7 @@ impl From<i32> for FlexWrap {
 pub struct Layout {
     #[wasm_bindgen(readonly)]
     pub width: f32,
-    
+
     #[wasm_bindgen(readonly)]
     pub height: f32,
 
@@ -370,7 +370,7 @@ impl Layout {
             x: layout.location.x,
             y: layout.location.y,
             childCount: layout.children.len(),
-            children: layout.children.into_iter().map(|l| Layout::new(l)).collect(),
+            children: layout.children.into_iter().map(Layout::new).collect(),
         }
     }
 
@@ -391,14 +391,9 @@ pub struct Node {
 
 #[wasm_bindgen]
 impl Node {
-
     #[wasm_bindgen(constructor)]
     pub fn new(style: &JsValue) -> Node {
-        Node {
-            node: stretch::node::Node::new(parse_style(&style), vec![]),
-            style: style.clone(),
-            childCount: 0,
-        }
+        Node { node: stretch::node::Node::new(parse_style(&style), vec![]), style: style.clone(), childCount: 0 }
     }
 
     #[wasm_bindgen(js_name = setMeasure)]
@@ -423,7 +418,7 @@ impl Node {
                 let height = get_f32(&result, "height");
 
                 if width.is_some() && height.is_some() {
-                    return Ok(stretch::geometry::Size {width: width.unwrap(), height: height.unwrap()});
+                    return Ok(stretch::geometry::Size { width: width.unwrap(), height: height.unwrap() });
                 }
             }
 
@@ -436,18 +431,18 @@ impl Node {
         self.node.add_child(&child.node);
         self.childCount += 1;
     }
-    
+
     #[wasm_bindgen(js_name = removeChild)]
     pub fn remove_child(&mut self, child: &Node) {
         self.node.remove_child(&child.node);
         self.childCount -= 1;
     }
-    
+
     #[wasm_bindgen(js_name = replaceChildAtIndex)]
     pub fn replace_child_at_index(&mut self, index: usize, child: &Node) {
         self.node.replace_child_at_index(index, &child.node);
     }
-    
+
     #[wasm_bindgen(js_name = removeChildAtIndex)]
     pub fn remove_child_at_index(&mut self, index: usize) {
         self.node.remove_child_at_index(index);
@@ -478,34 +473,36 @@ impl Node {
     #[wasm_bindgen(js_name = computeLayout)]
     pub fn compute_layout(&self, size: &JsValue) -> Layout {
         Layout::new(
-            self.node.compute_layout(stretch::geometry::Size {
-                width: if let Some(val) = get_f32(size, "width") {
-                    stretch::number::Number::Defined(val)
-                } else {
-                    stretch::number::Number::Undefined
-                },
-                height: if let Some(val) = get_f32(size, "height") {
-                    stretch::number::Number::Defined(val)
-                } else {
-                    stretch::number::Number::Undefined
-                }
-            }).unwrap()
+            self.node
+                .compute_layout(stretch::geometry::Size {
+                    width: if let Some(val) = get_f32(size, "width") {
+                        stretch::number::Number::Defined(val)
+                    } else {
+                        stretch::number::Number::Undefined
+                    },
+                    height: if let Some(val) = get_f32(size, "height") {
+                        stretch::number::Number::Defined(val)
+                    } else {
+                        stretch::number::Number::Undefined
+                    },
+                })
+                .unwrap(),
         )
     }
 }
 
 fn parse_style(style: &JsValue) -> stretch::style::Style {
     stretch::style::Style {
-        display: get_i32(style, "display").map(|i| Display::from(i).into()).unwrap_or(Default::default()),
-        position_type: get_i32(style, "positionType").map(|i| PositionType::from(i).into()).unwrap_or(Default::default()),
-        direction: get_i32(style, "direction").map(|i| Direction::from(i).into()).unwrap_or(Default::default()),
-        flex_direction: get_i32(style, "flexDirection").map(|i| FlexDirection::from(i).into()).unwrap_or(Default::default()),
-        flex_wrap: get_i32(style, "flexWrap").map(|i| FlexWrap::from(i).into()).unwrap_or(Default::default()),
-        overflow: get_i32(style, "overflow").map(|i| Overflow::from(i).into()).unwrap_or(Default::default()),
-        align_items: get_i32(style, "alignItems").map(|i| AlignItems::from(i).into()).unwrap_or(Default::default()),
-        align_self: get_i32(style, "alignSelf").map(|i| AlignSelf::from(i).into()).unwrap_or(Default::default()),
-        align_content: get_i32(style, "alignContent").map(|i| AlignContent::from(i).into()).unwrap_or(Default::default()),
-        justify_content: get_i32(style, "justifyContent").map(|i| JustifyContent::from(i).into()).unwrap_or(Default::default()),
+        display: get_i32(style, "display").map(|i| Display::from(i).into()).unwrap_or_default(),
+        position_type: get_i32(style, "positionType").map(|i| PositionType::from(i).into()).unwrap_or_default(),
+        direction: get_i32(style, "direction").map(|i| Direction::from(i).into()).unwrap_or_default(),
+        flex_direction: get_i32(style, "flexDirection").map(|i| FlexDirection::from(i).into()).unwrap_or_default(),
+        flex_wrap: get_i32(style, "flexWrap").map(|i| FlexWrap::from(i).into()).unwrap_or_default(),
+        overflow: get_i32(style, "overflow").map(|i| Overflow::from(i).into()).unwrap_or_default(),
+        align_items: get_i32(style, "alignItems").map(|i| AlignItems::from(i).into()).unwrap_or_default(),
+        align_self: get_i32(style, "alignSelf").map(|i| AlignSelf::from(i).into()).unwrap_or_default(),
+        align_content: get_i32(style, "alignContent").map(|i| AlignContent::from(i).into()).unwrap_or_default(),
+        justify_content: get_i32(style, "justifyContent").map(|i| JustifyContent::from(i).into()).unwrap_or_default(),
 
         position: stretch::geometry::Rect {
             start: get_dimension(style, "start"),
@@ -539,10 +536,7 @@ fn parse_style(style: &JsValue) -> stretch::style::Style {
         flex_shrink: get_f32(style, "flexShrink").unwrap_or(1.0),
         flex_basis: get_dimension(style, "flexBasis"),
 
-        size: stretch::geometry::Size {
-            width: get_dimension(style, "width"),
-            height: get_dimension(style, "height"),
-        },
+        size: stretch::geometry::Size { width: get_dimension(style, "width"), height: get_dimension(style, "height") },
 
         min_size: stretch::geometry::Size {
             width: get_dimension(style, "minWidth"),
@@ -554,9 +548,9 @@ fn parse_style(style: &JsValue) -> stretch::style::Style {
             height: get_dimension(style, "maxHeight"),
         },
 
-        aspect_ratio: get_f32(style, "aspectRatio").map(|f| stretch::number::Number::Defined(f)).unwrap_or(stretch::number::Number::Undefined),
-
-        ..Default::default()
+        aspect_ratio: get_f32(style, "aspectRatio")
+            .map(stretch::number::Number::Defined)
+            .unwrap_or(stretch::number::Number::Undefined),
     }
 }
 
@@ -573,9 +567,9 @@ fn get_dimension(obj: &JsValue, key: &str) -> stretch::style::Dimension {
                 if let Ok(number) = string.parse::<f32>() {
                     return stretch::style::Dimension::Points(number);
                 }
-                if string.chars().last().unwrap() == '%' {
+                if string.ends_with('%') {
                     let len = string.len();
-                    if let Ok(number) = string[..len-1].parse::<f32>() {
+                    if let Ok(number) = string[..len - 1].parse::<f32>() {
                         return stretch::style::Dimension::Points(number);
                     }
                 }
@@ -588,7 +582,7 @@ fn get_dimension(obj: &JsValue, key: &str) -> stretch::style::Dimension {
 fn get_i32(obj: &JsValue, key: &str) -> Option<i32> {
     if has_key(obj, key) {
         if let Ok(val) = Reflect::get(obj, &key.into()) {
-            return val.as_f64().map(|v| v as i32)
+            return val.as_f64().map(|v| v as i32);
         }
     }
     None
@@ -597,7 +591,7 @@ fn get_i32(obj: &JsValue, key: &str) -> Option<i32> {
 fn get_f32(obj: &JsValue, key: &str) -> Option<f32> {
     if has_key(obj, key) {
         if let Ok(val) = Reflect::get(obj, &key.into()) {
-            return val.as_f64().map(|v| v as f32)
+            return val.as_f64().map(|v| v as f32);
         }
     }
     None
@@ -610,4 +604,3 @@ fn has_key(obj: &JsValue, key: &str) -> bool {
         false
     }
 }
-

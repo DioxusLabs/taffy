@@ -1,11 +1,11 @@
 #![cfg(target_arch = "wasm32")]
 
 extern crate wasm_bindgen_test;
-use wasm_bindgen::prelude::*;
-use js_sys::Reflect;
 use js_sys::Function;
-use wasm_bindgen_test::*;
+use js_sys::Reflect;
 use stretch_js::*;
+use wasm_bindgen::prelude::*;
+use wasm_bindgen_test::*;
 
 wasm_bindgen_test_configure!(run_in_browser);
 
@@ -16,9 +16,11 @@ fn js_value(js: &str) -> JsValue {
 #[wasm_bindgen_test]
 fn set_measure() {
     let mut node = Node::new(&js_value("{}"));
-    node.set_measure(&js_value("function (w, h) {
+    node.set_measure(&js_value(
+        "function (w, h) {
         return {width: 100, height: 100};
-    }"));
+    }",
+    ));
 
     let layout = node.compute_layout(&JsValue::UNDEFINED);
     assert_eq!(layout.width, 100.0);
@@ -31,7 +33,7 @@ fn add_child() {
     let child = Node::new(&js_value("{}"));
 
     node.add_child(&child);
-    
+
     assert_eq!(node.childCount, 1);
 }
 
