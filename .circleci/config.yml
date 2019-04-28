@@ -41,22 +41,21 @@ jobs:
       - checkout
 
       - restore_cache:
-          key: target-cache
+          key: js-target-cache
 
       - run: rustc --version; cargo --version; rustup --version
       - run: rustup component add rustfmt
       - run: rustup component add clippy
       - run: cargo install wasm-pack
-      - run: cargo fmt -- --check
-      - run: wasm-pack test --node
-      - run: cargo clippy
-      - run: cargo bench
+      - run: cd bindings/js && cargo fmt -- --check
+      - run: cd bindings/js && wasm-pack test --node
+      - run: cd bindings/js && cargo clippy
 
       - save_cache:
-          key: target-cache
+          key: js-target-cache
           paths:
-            - ~/.cargo
-            - ./target
+            - ~/bindings/js/.cargo
+            - ./bindings/js/target
 
 workflows:
   version: 2
