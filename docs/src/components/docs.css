@@ -92,7 +92,7 @@ section.mdx-content p a {
   content: '`';
 }
 
-.code-block {
+.mdx-content .code-block {
   display: flex;
   flex-direction: column;
   background-color: rgb(41, 44, 51);
@@ -103,7 +103,7 @@ section.mdx-content p a {
   margin-bottom: 50px;
 }
 
-.code-block .code-wrapper {
+.mdx-content .code-block .code-wrapper {
   display: flex;
   flex-direction: column;
   background-color: rgb(41, 44, 51);
@@ -114,13 +114,13 @@ section.mdx-content p a {
   padding: 10px;
 }
 
-.code-block pre {
+.mdx-content .code-block pre {
   margin: 0px;
   border-radius: 0px;
   font-size: 14px;
 }
 
-.code-block > code {
+.mdx-content .code-block > code {
   background-color: rgb(41, 44, 51);
   padding: 10px;
   padding-left: 18px;
