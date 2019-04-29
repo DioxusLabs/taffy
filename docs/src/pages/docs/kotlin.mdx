@@ -402,7 +402,7 @@ enum class PositionType {
 The `FlexWrap` property controls what happens when children overflow the size of the container along the main axis. By default children are forced into a single line (which can shrink components).
 
 - `Wrap` enables wrapping of children if they overflow the main axis of the container.
-- 'NoWrap' disables wrapping of children, children will instead shrink to fit the main axis or overflow depending on their `flexShrink` setting.
+- `NoWrap` disables wrapping of children, children will instead shrink to fit the main axis or overflow depending on their `flexShrink` setting.
 - `WrapReverse` enables wrapping of children if they overflow the main axis of the container. Unlike `Wrap`, lines are laid out in reverse order.
 
 Optional, if left undefined `NoWrap` is the default value.
@@ -459,7 +459,7 @@ Flex grow describes how any space within a container should be distributed among
 
 Optional, if left undefined `0.0` is the default value.
 
-<Code lang="kotlin">{`flexGrow: f32`}</Code>
+<Code lang="kotlin">{`flexGrow: Float`}</Code>
 
 ----
 
@@ -467,7 +467,7 @@ Flex shrink describes how to shrink children along the main axis in the case tha
 
 Optional, if left undefined `1.0` is the default value.
 
-<Code lang="kotlin">{`flexShrink: f32`}</Code>
+<Code lang="kotlin">{`flexShrink: Float`}</Code>
 
 ----
 
