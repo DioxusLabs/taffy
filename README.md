@@ -87,7 +87,7 @@ val node = Node(
   ))
 
 val layout = node.computeLayout(Size(null, null))
-Log.d(TAG, "width: ${width}, height: ${height}")
+Log.d(TAG, "width: ${layout.width}, height: ${layout.height}")
 ```
 
 ### iOS
