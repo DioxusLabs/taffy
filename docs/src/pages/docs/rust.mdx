@@ -389,6 +389,105 @@ enum FlexWrap {
 }
 `}</Code>
 
+----
+
+When `PositionType` is set to `PositionType::Relative` the `position` property specifies the offset the node should have from its default position. In the case position is set to `PositionType::Absolute` this property indicates the distance this node's edge should be from the container's corresponding edge.
+
+All position properties are optional and `Dimension::Undefined` by default.
+
+<Code lang="rust">{`position: Rect<Dimension>`}</Code>
+
+----
+
+Margin effects the spacing around the outside of the node it is applied to. A node with margin will offset itself from the bounds of its parent but also offset the location of any siblings. If  margin is set to auto then the margin is equal to the remaining space in that axis divided between all other auto margin values in that axis.
+
+As apposed to layout engines Stretch does not support setting left/right margin but instead uses start/end to ensure equal support for right-to-left as well as left-to-right locales. In left-to-right locales start corrosponds to left and end to right, the opposite is true in right-to-left locales.
+
+All margin properties are optional and `Dimension::Undefined` by default, resulting in no margin.
+
+<Code lang="rust">{`margin: Rect<Dimension>`}</Code>
+
+----
+
+Padding affects the size of the node it is applied to. Padding will not add to the total size of a node if it has an explicit size set, instead it will inset the content. For auto-sized nodes padding will increase the size of the node as well as offset the location of any children.
+
+As apposed to layout engines Stretch does not support setting left/right padding but instead uses start/end to ensure equal support for right-to-left as well as left-to-right locales. In left-to-right locales start corrosponds to left and end to right, the opposite is true in right-to-left locales.
+
+All padding properties are optional and `Dimension::Undefined` by default, resulting in no padding.
+
+<Code lang="rust">{`padding: Rect<Dimension>`}</Code>
+
+----
+
+Border affects the size of the node it is applied to. Border will not add to the total size of a node if it has an explicit size set, instead it will inset the content. For auto-sized nodes border will increase the size of the node as well as offset the location of any children.
+
+As apposed to layout engines Stretch does not support setting left/right border but instead uses start/end to ensure equal support for right-to-left as well as left-to-right locales. In left-to-right locales start corrosponds to left and end to right, the opposite is true in right-to-left locales.
+
+All border properties are optional and `Dimension::Undefined` by default, resulting in no border.
+
+<Code lang="rust">{`border: Rect<Dimension>`}</Code>
+
+----
+
+Flex grow describes how any space within a container should be distributed among its children along the main axis. After laying out its children, a container will distribute any remaining space according to the flex grow values specified by its children. Flex grow accepts any floating point value >= 0. A container will distribute any remaining space among its children weighted by the child’s flex grow value. If `flex_grow` is set to 0 the node will not grow.
+
+Optional, if left undefined `0.0` is the default value.
+
+<Code lang="rust">{`flex_grow: f32`}</Code>
+
+----
+
+Flex shrink describes how to shrink children along the main axis in the case that the total size of the children overflow the size of the container on the main axis. flex shrink is very similar to flex grow and can be thought of in the same way if any overflowing size is considered to be negative remaining space. These two properties also work well together by allowing children to grow and shrink as needed. Flex shrink accepts any floating point value >= 0. A container will shrink its children weighted by the child’s flex shrink value. If `flex_shrink` is set to 0 the node will not shrink.
+
+Optional, if left undefined `1.0` is the default value.
+
+<Code lang="rust">{`flex_shrink: f32`}</Code>
+
+----
+
+Flex basis is an axis-independent way of providing the default size of an item along the main axis. Setting the flex basis of a child is similar to setting the width of that child if its parent is a container with `FlexDirection::Row` or setting the height of a child if its parent is a container with `FlexDirection::Column`. The flex basis of an item is the default size of that item, the size of the item before any flex grow and flex shrink calculations are performed.
+
+Optional, similar to width and height the default value is undefined which means that the flex basis is determined by the size of the node's content.
+
+<Code lang="rust">{`flex_basis: Dimension`}</Code>
+
+----
+
+The size property specifies the size of the node’s content area. Size can be specified in pixels, points, or a percentage of the parent size. If set to `Dimension::Undefined` or `Dimension::Auto` the size is calculated based on the node’s content. What is meant by content is based on the kind of node, for example the size of a text node is the size of the text being displayed while the size of a flexbox node is the total size of its children.
+
+Optional, `Size::undefined()` by default.
+
+<Code lang="rust">{`size: Size<Dimension>`}</Code>
+
+----
+
+The maximum size of a node, this property takes priority over all other properties. If left undefined the node has no maximum size.
+
+Optional, `Size::undefined()` by default.
+
+<Code lang="rust">{`min_size: Size<Dimension>`}</Code>
+
+----
+
+The minimum size of a node, this property takes priority over all other properties. If left undefined the node has no minimum size.
+
+Optional, `Size::undefined()` by default.
+
+<Code lang="rust">{`max_size: Size<Dimension>`}</Code>
+
+----
+
+Configures the aspect ratio of a node, very useful for media content.
+
+- Accepts any floating point value > 0.
+- Defined as the ratio between the width and the height of a node e.g. if a node has an aspect ratio of 2 then its width is twice the size of its height.
+- Respects the min and max dimensions of an item.
+- Has higher priority than flex grow
+- If aspect ratio, width, and height are set then the cross axis dimension is overridden.
+
+Optional, if left undefined no aspect ratio is enforced.
+
+<Code lang="rust">{`aspect_ratio: Number`}</Code>
 
 # Layout
 `Layout` nodes are returned from a layout calculation and mimic the structure of the computed `Node` tree.
