@@ -6,15 +6,22 @@ import Layout from "../components/layout"
 import SEO from "../components/seo"
 import './docs.css'
 
+import SyntaxHighlighter from 'react-syntax-highlighter';
+import { atomOneDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+
 export default ({children, location}) => (
   <MDXProvider>
     <Layout>
         <SEO title="Stretch" keywords={[`rust`, `android`, `ios`, `web`, `flexbox`]} />
-        <section>
+        <section className="docs-header">
           <div className="section-inner">
-            <h2>Documentation</h2>
+            <h1>Documentation</h1>
             <p>
               Stretch is available for Rust, Kotlin, Swift, and JavaScript. We will be adding more language bindings over time.
+              For general help on using flexbox we suggest 
+              reading <a href="https://css-tricks.com/snippets/css/a-guide-to-flexbox/">css-tricks.com/snippets/css/a-guide-to-flexbox</a> and 
+              playing around with <a href="https://flexboxfroggy.com">flexboxfroggy.com</a>. Or you can always read the spec itself
+              at <a href="https://www.w3.org/TR/css-flexbox-1/">www.w3.org/TR/css-flexbox-1</a>
             </p>
             <div className="doc-pills">
               <Link to="/docs/rust" className={`doc-pill ${location.pathname.endsWith("rust") ? "active" : ""}`}>Rust</Link>
@@ -26,9 +33,22 @@ export default ({children, location}) => (
         </section>
         <section className="mdx-content">
           <div className="section-inner">
-            {children}
+            <div>
+              {children}
+            </div>
           </div>
         </section>
       </Layout>
   </MDXProvider>
 );
+
+export function Code({file, lang, children}) {
+  return (
+      <div className="code-block">
+          { file && <code>{file}</code> }
+          <div className="code-wrapper">
+            <SyntaxHighlighter language={lang} style={atomOneDark}>{children.trim()}</SyntaxHighlighter>
+          </div>
+      </div>
+  );
+}

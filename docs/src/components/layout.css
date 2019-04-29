@@ -182,7 +182,7 @@ textarea {
     flex-direction: column;
   }
 
-  .section-inner h2 {
+  .section-inner > h2 {
     margin-top: 8%;
     margin-bottom: 5%;
   }

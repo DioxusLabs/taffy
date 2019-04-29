@@ -26,6 +26,108 @@
 
 section.mdx-content .section-inner {
   padding: 0px 100px 75px 100px;
+  max-width: 1000px;
+}
+
+section.docs-header .section-inner {
+  max-width: 1000px;
+}
+
+section.mdx-content .section-inner {
+  padding: 0px 100px 75px 100px;
+  max-width: 1000px;
+}
+
+section.docs-header p a {
+  color: var(--color-accent)
+}
+
+section.mdx-content p a {
+  color: var(--color-accent)
+}
+
+.mdx-content hr {
+  border: 0;
+  height: 1px;
+  background: #ccc;
+  margin-bottom: 40px;
+}
+
+.docs-header p {
+  line-height: 180%;
+}
+
+.mdx-content p {
+  line-height: 180%;
+}
+
+.mdx-content p + ul {
+  margin-top: -10px;
+}
+
+.mdx-content li {
+  list-style: none;
+  line-height: 180%;
+}
+
+.mdx-content li + li {
+  margin-top: 10px;
+}
+
+.mdx-content li:before {
+  content: '-';
+  margin-left: -20px;
+  margin-right: 10px;
+}
+
+.mdx-content li code, .mdx-content p code {
+  color: var(--color-accent);
+}
+
+.mdx-content li code::before, .mdx-content p code::before {
+  content: '`';
+}
+
+.mdx-content li code::after, .mdx-content p code::after {
+  content: '`';
+}
+
+.code-block {
+  display: flex;
+  flex-direction: column;
+  background-color: rgb(41, 44, 51);
+  color: var(--color-dark);
+  box-shadow: 0 0 6px 0 var(--color-shadow);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 50px;
+}
+
+.code-block .code-wrapper {
+  display: flex;
+  flex-direction: column;
+  background-color: rgb(41, 44, 51);
+  color: var(--color-dark);
+  box-shadow: 0 0 6px 0 var(--color-shadow);
+  border-radius: 10px;
+  overflow: hidden;
+  padding: 10px;
+}
+
+.code-block pre {
+  margin: 0px;
+  border-radius: 0px;
+  font-size: 14px;
+}
+
+.code-block > code {
+  background-color: rgb(41, 44, 51);
+  padding: 10px;
+  padding-left: 18px;
+  font-size: 14px;
+  font-weight: bold;
+  border-bottom: 1px solid #666;
+  color: white;
 }
 
 @media (max-width: 850px) {  
