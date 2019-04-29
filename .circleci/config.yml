@@ -68,9 +68,8 @@ jobs:
           name: Restore Yarn Package Cache
           key: yarn-packages-{{ checksum "docs/yarn.lock" }}
 
-      - run: yarn global add gatsby-cli
       - run: cd docs && yarn install
-      - run: cd docs && gatsby build
+      - run: cd docs && ./node_modules/.bin/gatsby build
 
       - save_cache:
           name: Save Yarn Package Cache
