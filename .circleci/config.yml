@@ -60,22 +60,22 @@ jobs:
   docs:
     docker:
       - image: circleci/node:9.11.2
-    
+   
     steps:
       - checkout
 
-    - restore_cache:
-        name: Restore Yarn Package Cache
-        key: yarn-packages-{{ checksum "docs/yarn.lock" }}
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          key: yarn-packages-{{ checksum "docs/yarn.lock" }}
 
-    - run: cd docs && yarn install
-    - run: cd docs && gatsby build
+      - run: cd docs && yarn install
+      - run: cd docs && gatsby build
 
-    - save_cache:
-        name: Save Yarn Package Cache
-        key: yarn-packages-{{ checksum "docs/yarn.lock" }}
-        paths:
-          - ~/.cache/yarn
+      - save_cache:
+          name: Save Yarn Package Cache
+          key: yarn-packages-{{ checksum "docs/yarn.lock" }}
+          paths:
+            - ~/.cache/yarn
 
 workflows:
   version: 2
