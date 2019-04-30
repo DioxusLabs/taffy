@@ -157,7 +157,7 @@ cd stretch
 cargo test
 ```
 
-If you have made any changes to the API you should also udpate and run tests for all the platform bindings located in `/bindings/*`.
+If you have made any changes to the API you should also update and run tests for all the platform bindings located in `/bindings/*`.
 
 ### Testing
 Stretch is tested by validating that layouts written in stretch perform the same as in Chrome. This is done by rendering an equivalent layout in HTML and then generating a Rust test case which asserts that the resulting layout is the same when run through stretch.
