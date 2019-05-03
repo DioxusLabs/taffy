@@ -2,9 +2,7 @@
 use alloc::{vec, vec::Vec};
 
 use std::collections::HashMap;
-use std::fmt;
 
-use crate::algo;
 use crate::geometry::Size;
 use crate::number::Number;
 use crate::result::{Cache, Layout, Result};
@@ -13,7 +11,7 @@ use crate::style::*;
 type MeasureFunc = Box<Fn(Size<Number>) -> Result<Size<f32>>>;
 
 pub type NodeId = usize;
-type Storage<T> = HashMap<NodeId, T>;
+pub(crate) type Storage<T> = HashMap<NodeId, T>;
 
 struct Allocator {
     new_id: NodeId,
@@ -215,9 +213,7 @@ impl Stretch {
         unimplemented!()
     }
 
-    pub fn compute_layout(&self, size: Size<Number>) -> Result<Layout> {
-        // algo::compute(&mut self.0.borrow_mut(), size)
-
-        unimplemented!()
+    pub fn compute_layout(&mut self, node: NodeId, size: Size<Number>) -> Result<()> {
+        self.compute(node, size)
     }
 }
