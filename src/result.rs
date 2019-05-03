@@ -9,12 +9,17 @@ use crate::number::Number;
 
 pub type Result<T> = core::result::Result<T, Box<Any>>;
 
-#[derive(Debug, Clone)]
+#[derive(Copy, Debug, Clone)]
 pub struct Layout {
     pub(crate) order: u32,
     pub size: Size<f32>,
     pub location: Point<f32>,
-    pub children: Vec<Layout>,
+}
+
+impl Layout {
+    pub(crate) fn new() -> Self {
+        Layout { order: 0, size: Size { width: 0.0, height: 0.0 }, location: Point { x: 0.0, y: 0.0 } }
+    }
 }
 
 #[derive(Debug, Clone)]
