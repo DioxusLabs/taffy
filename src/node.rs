@@ -73,23 +73,21 @@ impl Stretch {
     }
 
     pub fn new_node(&mut self, style: Style, children: Vec<NodeId>) -> NodeId {
-        // let parent = Node(Rc::new(RefCell::new(InternalNode {
-        //     style,
-        //     parents: Vec::with_capacity(1),
-        //     children: Vec::with_capacity(children.len()),
-        //     measure: None,
-        //     layout_cache: None,
-        //     is_dirty: true,
-        // })));
+        let node = self.nodes.allocate();
 
-        // for child in children {
-        //     child.0.borrow_mut().parents.push(Rc::downgrade(&parent.0));
-        //     parent.0.borrow_mut().children.push(Rc::clone(&child.0));
-        // }
+        for child in &children {
+            self.parents.get_mut(&child).unwrap().push(node);
+        }
 
-        // parent
+        self.style.insert(node, style);
+        self.parents.insert(node, Vec::with_capacity(1));
+        self.children.insert(node, children);
+        self.measure.insert(node, None);
+        self.layout.insert(node, Layout::new());
+        self.layout_cache.insert(node, None);
+        self.is_dirty.insert(node, true);
 
-        unimplemented!()
+        node
     }
 
     pub fn set_measure(&mut self, node: NodeId, measure: Option<MeasureFunc>) {
@@ -191,6 +189,10 @@ impl Stretch {
         // self.0.borrow().style
 
         unimplemented!()
+    }
+
+    pub fn layout(&self, node: NodeId) -> &Layout {
+        &self.layout[&node]
     }
 
     pub fn mark_dirty(&mut self, node: NodeId) {

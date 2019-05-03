@@ -1,6 +1,18 @@
 #[test]
 fn padding_center_child() {
-    let layout = stretch::node::Node::new(
+    let mut stretch = stretch::Stretch::new();
+    let node0 = stretch.new_node(
+        stretch::style::Style {
+            size: stretch::geometry::Size {
+                width: stretch::style::Dimension::Points(10f32),
+                height: stretch::style::Dimension::Points(10f32),
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+        vec![],
+    );
+    let node = stretch.new_node(
         stretch::style::Style {
             align_items: stretch::style::AlignItems::Center,
             justify_content: stretch::style::JustifyContent::Center,
@@ -18,26 +30,15 @@ fn padding_center_child() {
             },
             ..Default::default()
         },
-        vec![&stretch::node::Node::new(
-            stretch::style::Style {
-                size: stretch::geometry::Size {
-                    width: stretch::style::Dimension::Points(10f32),
-                    height: stretch::style::Dimension::Points(10f32),
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-            vec![],
-        )],
-    )
-    .compute_layout(stretch::geometry::Size::undefined())
-    .unwrap();
-    assert_eq!(layout.size.width, 100f32);
-    assert_eq!(layout.size.height, 100f32);
-    assert_eq!(layout.location.x, 0f32);
-    assert_eq!(layout.location.y, 0f32);
-    assert_eq!(layout.children[0usize].size.width, 10f32);
-    assert_eq!(layout.children[0usize].size.height, 10f32);
-    assert_eq!(layout.children[0usize].location.x, 40f32);
-    assert_eq!(layout.children[0usize].location.y, 40f32);
+        vec![node0],
+    );
+    stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
+    assert_eq!(stretch.layout(node).size.width, 100f32);
+    assert_eq!(stretch.layout(node).size.height, 100f32);
+    assert_eq!(stretch.layout(node).location.x, 0f32);
+    assert_eq!(stretch.layout(node).location.y, 0f32);
+    assert_eq!(stretch.layout(node0).size.width, 10f32);
+    assert_eq!(stretch.layout(node0).size.height, 10f32);
+    assert_eq!(stretch.layout(node0).location.x, 40f32);
+    assert_eq!(stretch.layout(node0).location.y, 40f32);
 }

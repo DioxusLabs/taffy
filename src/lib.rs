@@ -10,3 +10,5 @@ pub mod result;
 pub mod style;
 
 mod algo;
+
+pub use crate::node::Stretch;
