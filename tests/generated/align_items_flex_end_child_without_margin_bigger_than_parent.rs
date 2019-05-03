@@ -1,6 +1,22 @@
 #[test]
 fn align_items_flex_end_child_without_margin_bigger_than_parent() {
-    let layout = stretch::node::Node::new(
+    let mut stretch = stretch::Stretch::new();
+    let node00 = stretch.new_node(
+        stretch::style::Style {
+            size: stretch::geometry::Size {
+                width: stretch::style::Dimension::Points(70f32),
+                height: stretch::style::Dimension::Points(70f32),
+                ..Default::default()
+            },
+            ..Default::default()
+        },
+        vec![],
+    );
+    let node0 = stretch.new_node(
+        stretch::style::Style { align_items: stretch::style::AlignItems::FlexEnd, ..Default::default() },
+        vec![node00],
+    );
+    let node = stretch.new_node(
         stretch::style::Style {
             align_items: stretch::style::AlignItems::Center,
             justify_content: stretch::style::JustifyContent::Center,
@@ -11,33 +27,19 @@ fn align_items_flex_end_child_without_margin_bigger_than_parent() {
             },
             ..Default::default()
         },
-        vec![&stretch::node::Node::new(
-            stretch::style::Style { align_items: stretch::style::AlignItems::FlexEnd, ..Default::default() },
-            vec![&stretch::node::Node::new(
-                stretch::style::Style {
-                    size: stretch::geometry::Size {
-                        width: stretch::style::Dimension::Points(70f32),
-                        height: stretch::style::Dimension::Points(70f32),
-                        ..Default::default()
-                    },
-                    ..Default::default()
-                },
-                vec![],
-            )],
-        )],
-    )
-    .compute_layout(stretch::geometry::Size::undefined())
-    .unwrap();
-    assert_eq!(layout.size.width, 50f32);
-    assert_eq!(layout.size.height, 50f32);
-    assert_eq!(layout.location.x, 0f32);
-    assert_eq!(layout.location.y, 0f32);
-    assert_eq!(layout.children[0usize].size.width, 70f32);
-    assert_eq!(layout.children[0usize].size.height, 70f32);
-    assert_eq!(layout.children[0usize].location.x, -10f32);
-    assert_eq!(layout.children[0usize].location.y, -10f32);
-    assert_eq!(layout.children[0usize].children[0usize].size.width, 70f32);
-    assert_eq!(layout.children[0usize].children[0usize].size.height, 70f32);
-    assert_eq!(layout.children[0usize].children[0usize].location.x, 0f32);
-    assert_eq!(layout.children[0usize].children[0usize].location.y, 0f32);
+        vec![node0],
+    );
+    stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
+    assert_eq!(stretch.layout(node).size.width, 50f32);
+    assert_eq!(stretch.layout(node).size.height, 50f32);
+    assert_eq!(stretch.layout(node).location.x, 0f32);
+    assert_eq!(stretch.layout(node).location.y, 0f32);
+    assert_eq!(stretch.layout(node0).size.width, 70f32);
+    assert_eq!(stretch.layout(node0).size.height, 70f32);
+    assert_eq!(stretch.layout(node0).location.x, -10f32);
+    assert_eq!(stretch.layout(node0).location.y, -10f32);
+    assert_eq!(stretch.layout(node00).size.width, 70f32);
+    assert_eq!(stretch.layout(node00).size.height, 70f32);
+    assert_eq!(stretch.layout(node00).location.x, 0f32);
+    assert_eq!(stretch.layout(node00).location.y, 0f32);
 }

@@ -1,6 +1,7 @@
 #[test]
 fn max_width_overrides_width_on_root() {
-    let layout = stretch::node::Node::new(
+    let mut stretch = stretch::Stretch::new();
+    let node = stretch.new_node(
         stretch::style::Style {
             size: stretch::geometry::Size { width: stretch::style::Dimension::Points(200f32), ..Default::default() },
             max_size: stretch::geometry::Size {
@@ -10,11 +11,10 @@ fn max_width_overrides_width_on_root() {
             ..Default::default()
         },
         vec![],
-    )
-    .compute_layout(stretch::geometry::Size::undefined())
-    .unwrap();
-    assert_eq!(layout.size.width, 100f32);
-    assert_eq!(layout.size.height, 0f32);
-    assert_eq!(layout.location.x, 0f32);
-    assert_eq!(layout.location.y, 0f32);
+    );
+    stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
+    assert_eq!(stretch.layout(node).size.width, 100f32);
+    assert_eq!(stretch.layout(node).size.height, 0f32);
+    assert_eq!(stretch.layout(node).location.x, 0f32);
+    assert_eq!(stretch.layout(node).location.y, 0f32);
 }

@@ -1,6 +1,7 @@
 #[test]
 fn border_no_child() {
-    let layout = stretch::node::Node::new(
+    let mut stretch = stretch::Stretch::new();
+    let node = stretch.new_node(
         stretch::style::Style {
             border: stretch::geometry::Rect {
                 start: stretch::style::Dimension::Points(10f32),
@@ -12,11 +13,10 @@ fn border_no_child() {
             ..Default::default()
         },
         vec![],
-    )
-    .compute_layout(stretch::geometry::Size::undefined())
-    .unwrap();
-    assert_eq!(layout.size.width, 20f32);
-    assert_eq!(layout.size.height, 20f32);
-    assert_eq!(layout.location.x, 0f32);
-    assert_eq!(layout.location.y, 0f32);
+    );
+    stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
+    assert_eq!(stretch.layout(node).size.width, 20f32);
+    assert_eq!(stretch.layout(node).size.height, 20f32);
+    assert_eq!(stretch.layout(node).location.x, 0f32);
+    assert_eq!(stretch.layout(node).location.y, 0f32);
 }
