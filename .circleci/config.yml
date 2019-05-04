@@ -29,13 +29,17 @@ jobs:
     macos:
       xcode: "10.0.0"
 
+    working_directory: ~/bindings/swift
+
     steps:
       - checkout
-      - run: cd bindings/swift && xcodebuild test -workspace Example/StretchKit.xcworkspace -scheme StretchKit -destination 'platform=iOS Simulator,name=iPhone XR,OS=12.0'
+      - run: xcodebuild test -workspace Example/StretchKit.xcworkspace -scheme StretchKit -destination 'platform=iOS Simulator,name=iPhone XR,OS=12.0'
 
   js:
     docker:
       - image: circleci/rust:1-node-browsers
+
+    working_directory: ~/bindings/js
 
     steps:
       - checkout
@@ -47,19 +51,46 @@ jobs:
       - run: rustup component add rustfmt
       - run: rustup component add clippy
       - run: cargo install wasm-pack
-      - run: cd bindings/js && cargo fmt -- --check
-      - run: cd bindings/js && wasm-pack test --node
-      - run: cd bindings/js && cargo clippy
+      - run: cargo fmt -- --check
+      - run: wasm-pack test --node
+      - run: cargo clippy
 
       - save_cache:
           key: js-target-cache
           paths:
             - ~/.cargo
-            - ./bindings/js/target
+            - ./target
+
+  android:
+    docker:
+      - image: rust:1
+
+    working_directory: ~/bindings/kotlin/stretch/src/main/rust
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          key: target-cache
+
+      - run: rustc --version; cargo --version; rustup --version
+      - run: rustup component add rustfmt
+      - run: rustup component add clippy
+      - run: cargo fmt -- --check
+      - run: cargo test
+      - run: cargo clippy
+
+      - save_cache:
+          key: target-cache
+          paths:
+            - ~/.cargo
+            - ./target
   
   docs:
     docker:
       - image: circleci/node:9.11.2
+
+    working_directory: ~/docs
    
     steps:
       - checkout
@@ -68,8 +99,8 @@ jobs:
           name: Restore Yarn Package Cache
           key: yarn-packages-{{ checksum "docs/yarn.lock" }}
 
-      - run: cd docs && yarn install
-      - run: cd docs && ./node_modules/.bin/gatsby build
+      - run: yarn install
+      - run: ./node_modules/.bin/gatsby build
 
       - save_cache:
           name: Save Yarn Package Cache
@@ -84,5 +115,6 @@ workflows:
       - core
       - ios
       - js
+      - android
       - docs
 
