@@ -10,12 +10,14 @@ use crate::style::*;
 
 type MeasureFunc = Box<Fn(Size<Number>) -> Result<Size<f32>>>;
 
-pub type NodeId = usize;
-pub(crate) type Storage<T> = HashMap<NodeId, T>;
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+pub struct Node(usize);
+
+pub(crate) type Storage<T> = HashMap<Node, T>;
 
 struct Allocator {
-    new_id: NodeId,
-    free_ids: Vec<NodeId>,
+    new_id: usize,
+    free_ids: Vec<usize>,
 }
 
 impl Allocator {
@@ -23,13 +25,13 @@ impl Allocator {
         Allocator { new_id: 0, free_ids: Vec::new() }
     }
 
-    pub fn allocate(&mut self) -> NodeId {
+    pub fn allocate(&mut self) -> Node {
         match self.free_ids.pop() {
-            Some(id) => id,
+            Some(id) => Node(id),
             None => {
                 let id = self.new_id;
                 self.new_id += 1;
-                id
+                Node(id)
             }
         }
     }
@@ -38,8 +40,8 @@ impl Allocator {
 pub struct Stretch {
     nodes: Allocator,
     pub(crate) style: Storage<Style>,
-    pub(crate) parents: Storage<Vec<NodeId>>,
-    pub(crate) children: Storage<Vec<NodeId>>,
+    pub(crate) parents: Storage<Vec<Node>>,
+    pub(crate) children: Storage<Vec<Node>>,
     pub(crate) measure: Storage<Option<MeasureFunc>>,
     pub(crate) layout: Storage<Layout>,
     pub(crate) layout_cache: Storage<Option<Cache>>,
@@ -60,7 +62,7 @@ impl Stretch {
         }
     }
 
-    pub fn new_leaf(&mut self, style: Style, measure: MeasureFunc) -> NodeId {
+    pub fn new_leaf(&mut self, style: Style, measure: MeasureFunc) -> Node {
         // Node(Rc::new(RefCell::new(InternalNode {
         //     style,
         //     parents: Vec::with_capacity(1),
@@ -72,7 +74,7 @@ impl Stretch {
         unimplemented!()
     }
 
-    pub fn new_node(&mut self, style: Style, children: Vec<NodeId>) -> NodeId {
+    pub fn new_node(&mut self, style: Style, children: Vec<Node>) -> Node {
         let node = self.nodes.allocate();
 
         for child in &children {
@@ -90,14 +92,14 @@ impl Stretch {
         node
     }
 
-    pub fn set_measure(&mut self, node: NodeId, measure: Option<MeasureFunc>) {
+    pub fn set_measure(&mut self, node: Node, measure: Option<MeasureFunc>) {
         // self.0.borrow_mut().measure = measure;
         // self.mark_dirty();
 
         unimplemented!()
     }
 
-    pub fn add_child(&mut self, node: NodeId, child: NodeId) {
+    pub fn add_child(&mut self, node: Node, child: Node) {
         // child.0.borrow_mut().parents.push(Rc::downgrade(&self.0));
         // self.0.borrow_mut().children.push(Rc::clone(&child.0));
         // self.mark_dirty();
@@ -105,7 +107,7 @@ impl Stretch {
         unimplemented!()
     }
 
-    pub fn set_children(&mut self, node: NodeId, children: Vec<NodeId>) {
+    pub fn set_children(&mut self, node: Node, children: Vec<Node>) {
         // for child in &self.0.borrow().children {
         //     let position =
         //         child.borrow().parents.iter().position(|x| Rc::ptr_eq(&x.upgrade().unwrap(), &self.0)).unwrap();
@@ -124,7 +126,7 @@ impl Stretch {
         unimplemented!()
     }
 
-    pub fn remove_child(&mut self, node: NodeId, child: NodeId) -> NodeId {
+    pub fn remove_child(&mut self, node: Node, child: Node) -> Node {
         // self.remove_child_at_index({
         //     let parent = self.0.borrow();
         //     parent.children.iter().position(|x| Rc::ptr_eq(&x, &child.0)).unwrap()
@@ -133,7 +135,7 @@ impl Stretch {
         unimplemented!()
     }
 
-    pub fn remove_child_at_index(&mut self, node: NodeId, index: usize) -> NodeId {
+    pub fn remove_child_at_index(&mut self, node: Node, index: usize) -> Node {
         // let child = {
         //     let mut parent = self.0.borrow_mut();
         //     let child = parent.children.remove(index);
@@ -149,7 +151,7 @@ impl Stretch {
         unimplemented!()
     }
 
-    pub fn replace_child_at_index(&mut self, node: NodeId, index: usize, child: NodeId) -> NodeId {
+    pub fn replace_child_at_index(&mut self, node: Node, index: usize, child: Node) -> Node {
         // child.0.borrow_mut().parents.push(Rc::downgrade(&self.0));
         // let old_child = std::mem::replace(&mut self.0.borrow_mut().children[index], Rc::clone(&child.0));
 
@@ -164,38 +166,38 @@ impl Stretch {
         unimplemented!()
     }
 
-    pub fn children(&self, node: NodeId) -> Vec<NodeId> {
+    pub fn children(&self, node: Node) -> Vec<Node> {
         // let node = self.0.borrow_mut();
         // node.children.iter().map(|child| Node(Rc::clone(child))).collect()
 
         unimplemented!()
     }
 
-    pub fn child_count(&self, node: NodeId) -> usize {
+    pub fn child_count(&self, node: Node) -> usize {
         // let node = self.0.borrow_mut();
         // node.children.len()
 
         unimplemented!()
     }
 
-    pub fn set_style(&mut self, node: NodeId, style: Style) {
+    pub fn set_style(&mut self, node: Node, style: Style) {
         // self.0.borrow_mut().style = style;
         // self.mark_dirty();
 
         unimplemented!()
     }
 
-    pub fn style(&self, node: NodeId) -> Style {
+    pub fn style(&self, node: Node) -> Style {
         // self.0.borrow().style
 
         unimplemented!()
     }
 
-    pub fn layout(&self, node: NodeId) -> &Layout {
+    pub fn layout(&self, node: Node) -> &Layout {
         &self.layout[&node]
     }
 
-    pub fn mark_dirty(&mut self, node: NodeId) {
+    pub fn mark_dirty(&mut self, node: Node) {
         // let mut node = self.0.borrow_mut();
         // node.layout_cache = None;
         // node.is_dirty = true;
@@ -209,13 +211,13 @@ impl Stretch {
         unimplemented!()
     }
 
-    pub fn dirty(&self, node: NodeId) -> bool {
+    pub fn dirty(&self, node: Node) -> bool {
         // self.0.borrow().is_dirty
 
         unimplemented!()
     }
 
-    pub fn compute_layout(&mut self, node: NodeId, size: Size<Number>) -> Result<()> {
+    pub fn compute_layout(&mut self, node: Node, size: Size<Number>) -> Result<()> {
         self.compute(node, size)
     }
 }

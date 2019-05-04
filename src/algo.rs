@@ -5,7 +5,7 @@ use libm::F32Ext;
 
 use core::f32;
 
-use crate::node::{NodeId, Storage, Stretch};
+use crate::node::{Node, Storage, Stretch};
 use crate::result;
 use crate::result::Result;
 use crate::style::*;
@@ -21,7 +21,7 @@ pub struct ComputeResult {
 }
 
 struct FlexItem {
-    node: NodeId,
+    node: Node,
 
     size: Size<Number>,
     min_size: Size<Number>,
@@ -58,7 +58,7 @@ struct FlexLine {
 }
 
 impl Stretch {
-    pub(crate) fn compute(&mut self, root: NodeId, size: Size<Number>) -> Result<()> {
+    pub(crate) fn compute(&mut self, root: Node, size: Size<Number>) -> Result<()> {
         let style = self.style[&root];
         let has_root_min_max = style.min_size.width.is_defined()
             || style.min_size.height.is_defined()
@@ -113,8 +113,8 @@ impl Stretch {
 
     fn round_layout(
         layouts: &mut Storage<result::Layout>,
-        children: &Storage<Vec<NodeId>>,
-        root: NodeId,
+        children: &Storage<Vec<Node>>,
+        root: Node,
         abs_x: f32,
         abs_y: f32,
     ) {
@@ -133,7 +133,7 @@ impl Stretch {
 
     fn compute_internal(
         &mut self,
-        node: NodeId,
+        node: Node,
         node_size: Size<Number>,
         parent_size: Size<Number>,
         perform_layout: bool,
@@ -730,7 +730,7 @@ impl Stretch {
         // TODO - probably should move this somewhere else as it doesn't make a ton of sense here but we need it below
         // TODO - This is expensive and should only be done if we really require a baseline. aka, make it lazy
 
-        fn calc_baseline(db: &Stretch, node: NodeId, layout: &result::Layout) -> f32 {
+        fn calc_baseline(db: &Stretch, node: Node, layout: &result::Layout) -> f32 {
             if db.children[&node].is_empty() {
                 layout.size.height
             } else {
@@ -1345,12 +1345,7 @@ impl Stretch {
             }
         }
 
-        fn hidden_layout(
-            layout: &mut Storage<result::Layout>,
-            children: &Storage<Vec<NodeId>>,
-            node: NodeId,
-            order: u32,
-        ) {
+        fn hidden_layout(layout: &mut Storage<result::Layout>, children: &Storage<Vec<Node>>, node: Node, order: u32) {
             *layout.get_mut(&node).unwrap() =
                 result::Layout { order, size: Size { width: 0.0, height: 0.0 }, location: Point { x: 0.0, y: 0.0 } };
 
