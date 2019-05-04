@@ -29,17 +29,16 @@ jobs:
     macos:
       xcode: "10.0.0"
 
-    working_directory: ~/bindings/swift
-
     steps:
       - checkout
-      - run: xcodebuild test -workspace Example/StretchKit.xcworkspace -scheme StretchKit -destination 'platform=iOS Simulator,name=iPhone XR,OS=12.0'
+
+      - run: 
+          command: xcodebuild test -workspace Example/StretchKit.xcworkspace -scheme StretchKit -destination 'platform=iOS Simulator,name=iPhone XR,OS=12.0'
+          working_directory: bindings/swift
 
   js:
     docker:
       - image: circleci/rust:1-node-browsers
-
-    working_directory: ~/bindings/js
 
     steps:
       - checkout
@@ -51,9 +50,15 @@ jobs:
       - run: rustup component add rustfmt
       - run: rustup component add clippy
       - run: cargo install wasm-pack
-      - run: cargo fmt -- --check
-      - run: wasm-pack test --node
-      - run: cargo clippy
+      - run: 
+          command: cargo fmt -- --check
+          working_directory: bindings/js
+      - run: 
+          command: wasm-pack test --node
+          working_directory: bindings/js
+      - run: 
+          command: cargo clippy
+          working_directory: bindings/js
 
       - save_cache:
           key: js-target-cache
@@ -65,8 +70,6 @@ jobs:
     docker:
       - image: rust:1
 
-    working_directory: ~/bindings/kotlin/stretch/src/main/rust
-
     steps:
       - checkout
 
@@ -76,9 +79,15 @@ jobs:
       - run: rustc --version; cargo --version; rustup --version
       - run: rustup component add rustfmt
       - run: rustup component add clippy
-      - run: cargo fmt -- --check
-      - run: cargo test
-      - run: cargo clippy
+      - run: 
+          command: cargo fmt -- --check
+          working_directory: bindings/kotlin/stretch/src/main/rust
+      - run: 
+          command: cargo test
+          working_directory: bindings/kotlin/stretch/src/main/rust
+      - run: 
+          command: cargo clippy
+          working_directory: bindings/kotlin/stretch/src/main/rust
 
       - save_cache:
           key: target-cache
@@ -90,8 +99,6 @@ jobs:
     docker:
       - image: circleci/node:9.11.2
 
-    working_directory: ~/docs
-   
     steps:
       - checkout
 
@@ -99,8 +106,12 @@ jobs:
           name: Restore Yarn Package Cache
           key: yarn-packages-{{ checksum "docs/yarn.lock" }}
 
-      - run: yarn install
-      - run: ./node_modules/.bin/gatsby build
+      - run: 
+          command: yarn install
+          working_directory: docs
+      - run: 
+          command: ./node_modules/.bin/gatsby build
+          working_directory: docs
 
       - save_cache:
           name: Save Yarn Package Cache
