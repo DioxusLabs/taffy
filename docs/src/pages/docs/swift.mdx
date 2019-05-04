@@ -58,7 +58,7 @@ class ViewController: UIViewController {
 }
 `}</Code>
 
-Nodes can be be mutated and stretch will automatically recompute only the subtrees which have changed. This is incredibly powerfull if you have a large node tree, perhaps representing the UI of an app, and only need to change the height of a single element.
+Nodes can be be mutated and stretch will automatically recompute only the subtrees which have changed. This is incredibly powerful if you have a large node tree, perhaps representing the UI of an app, and only need to change the height of a single element.
 
 <Code lang="swift" file="ViewController.swift">{`
 import UIKit
@@ -146,7 +146,7 @@ Marks the node as dirty and propagates this up the node tree. This function is c
 
 ----
 
-Returns wether of not this node is marked as dirty and will need to be recalculated during the next layout pass.
+Returns whether of not this node is marked as dirty and will need to be recalculated during the next layout pass.
 
 <Code lang="swift">{`var dirty: Bool`}</Code>
 
@@ -240,7 +240,7 @@ enum AlignSelf: Int {
 - `center` aligns wrapped lines in the center of the container's cross axis.
 - `stretch` stretches wrapped lines to match the height of the container's cross axis.
 - `spaceBetween` evenly spaces wrapped lines across the container's main axis, distributing remaining space between the lines.
-- `spaceAround` evenly spaces wrapped lines across the container's main axis, distributing remaining space around the lines. Compared to space between using space around will result in space being distributed to the begining of the first lines and end of the last line.
+- `spaceAround` evenly spaces wrapped lines across the container's main axis, distributing remaining space around the lines. Compared to space between using space around will result in space being distributed to the beginning of the first lines and end of the last line.
 
 Optional, if left undefined `stretch` is the default value.
 
@@ -257,7 +257,7 @@ enum AlignContent: Int {
 
 ----
 
-The `Direction` property specifies wether the component should be laid out in `ltr` or `rtl` writing mode.
+The `Direction` property specifies whether the component should be laid out in `ltr` or `rtl` writing mode.
 
 Optional, `inherit` by default (root node will implicitly default to `ltr`).
 
@@ -271,7 +271,7 @@ enum Direction: Int {
 
 ----
 
-The `Display` property specifies wether the component should be laid out as `flex` or not at all. If `none` is specified then the node will have a resulting size of zero. In the future this enum will be expanded to include more display options such as `grid`.
+The `Display` property specifies whether the component should be laid out as `flex` or not at all. If `none` is specified then the node will have a resulting size of zero. In the future this enum will be expanded to include more display options such as `grid`.
 
 Optional, `flex` by default.
 
@@ -284,7 +284,7 @@ enum Display: Int {
 
 ----
 
-`FlexDirection` controls the direction in which children of a node are laid out. This is also referred to as the main axis. The main axis is the direction in which children are laid out. The cross axis the the axis perpendicular to the main axis, or the axis which wrapping lines are laid out in.
+`FlexDirection` controls the direction in which children of a node are laid out. This is also referred to as the main axis. The main axis is the direction in which children are laid out. The cross axis the axis perpendicular to the main axis, or the axis which wrapping lines are laid out in.
 
 - `row` aligns children from left to right. If wrapping is enabled then the next line will start under the first item on the left of the container.
 - `column` aligns children from top to bottom. If wrapping is enabled then the next line will start to the left first item on the top of the container.
@@ -342,7 +342,7 @@ enum Overflow: Int {
 
 ----
 
-The `PositionType` property specifies wether the component should be laid out relative to its sibling or absolutely positioned within its parent.
+The `PositionType` property specifies whether the component should be laid out relative to its sibling or absolutely positioned within its parent.
 
 Optional, `relative` by default.
 
@@ -383,7 +383,7 @@ All position properties are optional and `Dimension.undefined` by default.
 
 Margin effects the spacing around the outside of the node it is applied to. A node with margin will offset itself from the bounds of its parent but also offset the location of any siblings. If  margin is set to auto then the margin is equal to the remaining space in that axis divided between all other auto margin values in that axis.
 
-As apposed to layout engines Stretch does not support setting left/right margin but instead uses start/end to ensure equal support for right-to-left as well as left-to-right locales. In left-to-right locales start corrosponds to left and end to right, the opposite is true in right-to-left locales.
+As apposed to layout engines Stretch does not support setting left/right margin but instead uses start/end to ensure equal support for right-to-left as well as left-to-right locales. In left-to-right locales start corresponds to left and end to right, the opposite is true in right-to-left locales.
 
 All margin properties are optional and `Dimension.undefined` by default, resulting in no margin.
 
@@ -393,7 +393,7 @@ All margin properties are optional and `Dimension.undefined` by default, resulti
 
 Padding affects the size of the node it is applied to. Padding will not add to the total size of a node if it has an explicit size set, instead it will inset the content. For auto-sized nodes padding will increase the size of the node as well as offset the location of any children.
 
-As apposed to layout engines Stretch does not support setting left/right padding but instead uses start/end to ensure equal support for right-to-left as well as left-to-right locales. In left-to-right locales start corrosponds to left and end to right, the opposite is true in right-to-left locales.
+As apposed to layout engines Stretch does not support setting left/right padding but instead uses start/end to ensure equal support for right-to-left as well as left-to-right locales. In left-to-right locales start corresponds to left and end to right, the opposite is true in right-to-left locales.
 
 All padding properties are optional and `Dimension.undefined` by default, resulting in no padding.
 
@@ -403,7 +403,7 @@ All padding properties are optional and `Dimension.undefined` by default, result
 
 Border affects the size of the node it is applied to. Border will not add to the total size of a node if it has an explicit size set, instead it will inset the content. For auto-sized nodes border will increase the size of the node as well as offset the location of any children.
 
-As apposed to layout engines Stretch does not support setting left/right border but instead uses start/end to ensure equal support for right-to-left as well as left-to-right locales. In left-to-right locales start corrosponds to left and end to right, the opposite is true in right-to-left locales.
+As apposed to layout engines Stretch does not support setting left/right border but instead uses start/end to ensure equal support for right-to-left as well as left-to-right locales. In left-to-right locales start corresponds to left and end to right, the opposite is true in right-to-left locales.
 
 All border properties are optional and `Dimension.undefined` by default, resulting in no border.
 
