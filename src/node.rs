@@ -2,43 +2,33 @@
 use alloc::{vec, vec::Vec};
 
 use std::collections::HashMap;
+use std::ops::Drop;
+use std::sync::Mutex;
 
 use crate::geometry::Size;
+use crate::id;
 use crate::number::Number;
 use crate::result::{Cache, Layout, Result};
 use crate::style::*;
 
 type MeasureFunc = Box<Fn(Size<Number>) -> Result<Size<f32>>>;
 
+lazy_static! {
+    /// Global stretch instance id allocator.
+    static ref INSTANCE_ALLOCATOR: Mutex<id::Allocator> = Mutex::new(id::Allocator::new());
+}
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-pub struct Node(usize);
+pub struct Node {
+    instance: id::Id,
+    local: id::Id,
+}
 
 pub(crate) type Storage<T> = HashMap<Node, T>;
 
-struct Allocator {
-    new_id: usize,
-    free_ids: Vec<usize>,
-}
-
-impl Allocator {
-    pub fn new() -> Self {
-        Allocator { new_id: 0, free_ids: Vec::new() }
-    }
-
-    pub fn allocate(&mut self) -> Node {
-        match self.free_ids.pop() {
-            Some(id) => Node(id),
-            None => {
-                let id = self.new_id;
-                self.new_id += 1;
-                Node(id)
-            }
-        }
-    }
-}
-
 pub struct Stretch {
-    nodes: Allocator,
+    id: id::Id,
+    nodes: id::Allocator,
     pub(crate) style: Storage<Style>,
     pub(crate) parents: Storage<Vec<Node>>,
     pub(crate) children: Storage<Vec<Node>>,
@@ -51,7 +41,8 @@ pub struct Stretch {
 impl Stretch {
     pub fn new() -> Self {
         Stretch {
-            nodes: Allocator::new(),
+            id: INSTANCE_ALLOCATOR.lock().unwrap().allocate(),
+            nodes: id::Allocator::new(),
             style: Storage::new(),
             parents: Storage::new(),
             children: Storage::new(),
@@ -62,20 +53,27 @@ impl Stretch {
         }
     }
 
+    fn allocate_node(&mut self) -> Node {
+        let local = self.nodes.allocate();
+        Node { instance: self.id, local }
+    }
+
     pub fn new_leaf(&mut self, style: Style, measure: MeasureFunc) -> Node {
-        // Node(Rc::new(RefCell::new(InternalNode {
-        //     style,
-        //     parents: Vec::with_capacity(1),
-        //     children: Vec::with_capacity(0),
-        //     measure: Some(measure),
-        //     layout_cache: None,
-        //     is_dirty: true,
-        // })))
-        unimplemented!()
+        let node = self.allocate_node();
+
+        self.style.insert(node, style);
+        self.parents.insert(node, Vec::with_capacity(1));
+        self.children.insert(node, Vec::with_capacity(0));
+        self.measure.insert(node, Some(measure));
+        self.layout.insert(node, Layout::new());
+        self.layout_cache.insert(node, None);
+        self.is_dirty.insert(node, true);
+
+        node
     }
 
     pub fn new_node(&mut self, style: Style, children: Vec<Node>) -> Node {
-        let node = self.nodes.allocate();
+        let node = self.allocate_node();
 
         for child in &children {
             self.parents.get_mut(&child).unwrap().push(node);
@@ -93,10 +91,8 @@ impl Stretch {
     }
 
     pub fn set_measure(&mut self, node: Node, measure: Option<MeasureFunc>) {
-        // self.0.borrow_mut().measure = measure;
-        // self.mark_dirty();
-
-        unimplemented!()
+        *self.measure[&node].unwrap() = measure;
+        self.mark_dirty(node);
     }
 
     pub fn add_child(&mut self, node: Node, child: Node) {
@@ -167,17 +163,11 @@ impl Stretch {
     }
 
     pub fn children(&self, node: Node) -> Vec<Node> {
-        // let node = self.0.borrow_mut();
-        // node.children.iter().map(|child| Node(Rc::clone(child))).collect()
-
-        unimplemented!()
+        self.children[&node].clone()
     }
 
     pub fn child_count(&self, node: Node) -> usize {
-        // let node = self.0.borrow_mut();
-        // node.children.len()
-
-        unimplemented!()
+        self.children[&node].len()
     }
 
     pub fn set_style(&mut self, node: Node, style: Style) {
@@ -187,10 +177,8 @@ impl Stretch {
         unimplemented!()
     }
 
-    pub fn style(&self, node: Node) -> Style {
-        // self.0.borrow().style
-
-        unimplemented!()
+    pub fn style(&self, node: Node) -> &Style {
+        &self.style[&node]
     }
 
     pub fn layout(&self, node: Node) -> &Layout {
@@ -212,12 +200,16 @@ impl Stretch {
     }
 
     pub fn dirty(&self, node: Node) -> bool {
-        // self.0.borrow().is_dirty
-
-        unimplemented!()
+        self.is_dirty[&node]
     }
 
     pub fn compute_layout(&mut self, node: Node, size: Size<Number>) -> Result<()> {
         self.compute(node, size)
+    }
+}
+
+impl Drop for Stretch {
+    fn drop(&mut self) {
+        INSTANCE_ALLOCATOR.lock().unwrap().free(&[self.id]);
     }
 }
