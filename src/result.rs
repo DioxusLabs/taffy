@@ -1,13 +1,9 @@
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 
-use core::any::Any;
-
 use crate::algo::ComputeResult;
 use crate::geometry::{Point, Size};
 use crate::number::Number;
-
-pub type Result<T> = core::result::Result<T, Box<Any>>;
 
 #[derive(Copy, Debug, Clone)]
 pub struct Layout {
