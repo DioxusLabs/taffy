@@ -3,11 +3,11 @@ use alloc::{vec, vec::Vec};
 #[cfg(not(feature = "std"))]
 use libm::F32Ext;
 
+use core::any::Any;
 use core::f32;
 
 use crate::node::{Node, Storage, Stretch};
 use crate::result;
-use crate::result::Result;
 use crate::style::*;
 
 use crate::number::Number::*;
@@ -58,7 +58,7 @@ struct FlexLine {
 }
 
 impl Stretch {
-    pub(crate) fn compute(&mut self, root: Node, size: Size<Number>) -> Result<()> {
+    pub(crate) fn compute(&mut self, root: Node, size: Size<Number>) -> Result<(), Box<Any>> {
         let style = self.style[&root];
         let has_root_min_max = style.min_size.width.is_defined()
             || style.min_size.height.is_defined()
@@ -101,7 +101,7 @@ impl Stretch {
             )?
         };
 
-        *self.layout.get_mut(&root).unwrap() = result::Layout {
+        *self.layout.get_mut(root).unwrap() = result::Layout {
             order: 0,
             size: Size { width: result.size.width, height: result.size.height },
             location: Point { x: 0.0, y: 0.0 },
@@ -118,7 +118,7 @@ impl Stretch {
         abs_x: f32,
         abs_y: f32,
     ) {
-        let layout = layouts.get_mut(&root).unwrap();
+        let layout = layouts.get_mut(root).unwrap();
         let abs_x = abs_x + layout.location.x;
         let abs_y = abs_y + layout.location.y;
 
@@ -137,8 +137,8 @@ impl Stretch {
         node_size: Size<Number>,
         parent_size: Size<Number>,
         perform_layout: bool,
-    ) -> Result<ComputeResult> {
-        *self.is_dirty.get_mut(&node).unwrap() = false;
+    ) -> Result<ComputeResult, Box<Any>> {
+        *self.is_dirty.get_mut(node).unwrap() = false;
 
         // First we check if we have a result for the given input
         if let Some(cache) = &self.layout_cache[&node] {
@@ -200,7 +200,7 @@ impl Stretch {
 
             if let Some(ref measure) = self.measure[&node] {
                 let result = ComputeResult { size: measure(node_size)? };
-                *self.layout_cache.get_mut(&node).unwrap() =
+                *self.layout_cache.get_mut(node).unwrap() =
                     Some(result::Cache { node_size, parent_size, perform_layout, result: result.clone() });
                 return Ok(result);
             }
@@ -281,7 +281,7 @@ impl Stretch {
 
         // TODO - this does not follow spec. See commented out code below
         // 3. Determine the flex base size and hypothetical main size of each item:
-        flex_items.iter_mut().try_for_each(|child| -> Result<()> {
+        flex_items.iter_mut().try_for_each(|child| -> Result<(), Box<Any>> {
             let child_style = self.style[&child.node];
 
             // A. If the item has a definite used flex basis, that’s the flex base size.
@@ -368,7 +368,7 @@ impl Stretch {
         // The hypothetical main size is the item’s flex base size clamped according to its
         // used min and max main sizes (and flooring the content box size at zero).
 
-        flex_items.iter_mut().try_for_each(|child| -> Result<()> {
+        flex_items.iter_mut().try_for_each(|child| -> Result<(), Box<Any>> {
             child.inner_flex_basis = child.flex_basis - child.padding.main(dir) - child.border.main(dir);
 
             // TODO - not really spec abiding but needs to be done somewhere. probably somewhere else though.
@@ -445,7 +445,7 @@ impl Stretch {
         //
         // 9.7. Resolving Flexible Lengths
 
-        flex_lines.iter_mut().try_for_each(|line| -> Result<()> {
+        flex_lines.iter_mut().try_for_each(|line| -> Result<(), Box<Any>> {
             // 1. Determine the used flex factor. Sum the outer hypothetical main sizes of all
             //    items on the line. If the sum is less than the flex container’s inner main size,
             //    use the flex grow factor for the rest of this algorithm; otherwise, use the
@@ -462,7 +462,7 @@ impl Stretch {
             //    - If using the flex shrink factor: any item that has a flex base size
             //      smaller than its hypothetical main size
 
-            line.items.iter_mut().try_for_each(|child| -> Result<()> {
+            line.items.iter_mut().try_for_each(|child| -> Result<(), Box<Any>> {
                 // TODO - This is not found by reading the spec. Maybe this can be done in some other place
                 // instead. This was found by trail and error fixing tests to align with webkit output.
                 if node_inner_size.main(dir).is_undefined() && is_row {
@@ -618,7 +618,7 @@ impl Stretch {
                 //    item’s target main size was made smaller by this, it’s a max violation.
                 //    If the item’s target main size was made larger by this, it’s a min violation.
 
-                let total_violation = unfrozen.iter_mut().try_fold(0.0, |acc, child| -> Result<f32> {
+                let total_violation = unfrozen.iter_mut().try_fold(0.0, |acc, child| -> Result<f32, Box<Any>> {
                     // TODO - not really spec abiding but needs to be done somewhere. probably somewhere else though.
                     // The following logic was developed not from the spec but by trail and error looking into how
                     // webkit handled various scenarios. Can probably be solved better by passing in
@@ -695,7 +695,7 @@ impl Stretch {
         //    used main size and the available space, treating auto as fit-content.
 
         flex_lines.iter_mut().try_for_each(|line| {
-            line.items.iter_mut().try_for_each(|child| -> Result<()> {
+            line.items.iter_mut().try_for_each(|child| -> Result<(), Box<Any>> {
                 let child_cross =
                     child.size.cross(dir).maybe_max(child.min_size.cross(dir)).maybe_min(child.max_size.cross(dir));
 
@@ -741,7 +741,7 @@ impl Stretch {
 
         if has_baseline_child {
             flex_lines.iter_mut().try_for_each(|line| {
-                line.items.iter_mut().try_for_each(|child| -> Result<()> {
+                line.items.iter_mut().try_for_each(|child| -> Result<(), Box<Any>> {
                     let result = self.compute_internal(
                         child.node,
                         Size {
@@ -1088,7 +1088,7 @@ impl Stretch {
         // layout we are done now.
         if !perform_layout {
             let result = ComputeResult { size: container_size };
-            *self.layout_cache.get_mut(&node).unwrap() =
+            *self.layout_cache.get_mut(node).unwrap() =
                 Some(result::Cache { node_size, parent_size, perform_layout, result: result.clone() });
             return Ok(result);
         }
@@ -1152,12 +1152,12 @@ impl Stretch {
             let mut lines: Vec<Vec<result::Layout>> = vec![];
             let mut total_offset_cross = padding_border.cross_start(dir);
 
-            let layout_line = |line: &mut FlexLine| -> Result<()> {
+            let layout_line = |line: &mut FlexLine| -> Result<(), Box<Any>> {
                 let mut children: Vec<result::Layout> = vec![];
                 let mut total_offset_main = padding_border.main_start(dir);
                 let line_offset_cross = line.offset_cross;
 
-                let layout_item = |child: &mut FlexItem| -> Result<()> {
+                let layout_item = |child: &mut FlexItem| -> Result<(), Box<Any>> {
                     let result = self.compute_internal(
                         child.node,
                         child.target_size.map(|s| s.to_number()),
@@ -1176,7 +1176,7 @@ impl Stretch {
                         + child.margin.cross_start(dir)
                         + (child.position.cross_start(dir).or_else(0.0) - child.position.cross_end(dir).or_else(0.0));
 
-                    *self.layout.get_mut(&child.node).unwrap() = result::Layout {
+                    *self.layout.get_mut(child.node).unwrap() = result::Layout {
                         order: self.children[&node].iter().position(|n| *n == child.node).unwrap() as u32,
                         size: result.size,
                         location: Point {
@@ -1334,7 +1334,7 @@ impl Stretch {
                     }
                 };
 
-                *self.layout.get_mut(&child).unwrap() = result::Layout {
+                *self.layout.get_mut(child).unwrap() = result::Layout {
                     order: order as u32,
                     size: result.size,
                     location: Point {
@@ -1346,7 +1346,7 @@ impl Stretch {
         }
 
         fn hidden_layout(layout: &mut Storage<result::Layout>, children: &Storage<Vec<Node>>, node: Node, order: u32) {
-            *layout.get_mut(&node).unwrap() =
+            *layout.get_mut(node).unwrap() =
                 result::Layout { order, size: Size { width: 0.0, height: 0.0 }, location: Point { x: 0.0, y: 0.0 } };
 
             for (order, child) in children[&node].iter().enumerate() {
@@ -1361,7 +1361,7 @@ impl Stretch {
         }
 
         let result = ComputeResult { size: container_size };
-        *self.layout_cache.get_mut(&node).unwrap() =
+        *self.layout_cache.get_mut(node).unwrap() =
             Some(result::Cache { node_size, parent_size, perform_layout, result: result.clone() });
         Ok(result)
     }
