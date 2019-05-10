@@ -131,71 +131,53 @@ impl Stretch {
         Ok(())
     }
 
-    pub fn add_child(&mut self, node: Node, child: Node) {
-        // child.0.borrow_mut().parents.push(Rc::downgrade(&self.0));
-        // self.0.borrow_mut().children.push(Rc::clone(&child.0));
-        // self.mark_dirty();
-
-        unimplemented!()
+    pub fn add_child(&mut self, node: Node, child: Node) -> Result<(), Error> {
+        self.parents.get_mut(child)?.push(node);
+        self.children.get_mut(node)?.push(child);
+        self.mark_dirty(node)
     }
 
-    pub fn set_children(&mut self, node: Node, children: Vec<Node>) {
-        // for child in &self.0.borrow().children {
-        //     let position =
-        //         child.borrow().parents.iter().position(|x| Rc::ptr_eq(&x.upgrade().unwrap(), &self.0)).unwrap();
-        //     child.borrow_mut().parents.remove(position);
-        // }
+    pub fn set_children(&mut self, node: Node, children: Vec<Node>) -> Result<(), Error> {
+        // Remove node as parent from all its current children.
+        for child in self.children.get(node)? {
+            self.parents.get_mut(*child)?.retain(|p| *p != node);
+        }
 
-        // self.0.borrow_mut().children = Vec::with_capacity(children.len());
+        *self.children.get_mut(node)? = Vec::with_capacity(children.len());
 
-        // for child in children {
-        //     child.0.borrow_mut().parents.push(Rc::downgrade(&self.0));
-        //     self.0.borrow_mut().children.push(Rc::clone(&child.0));
-        // }
+        // Build up relation node <-> child
+        for child in children {
+            self.parents.get_mut(child)?.push(node);
+            self.children.get_mut(node)?.push(child);
+        }
 
-        // self.mark_dirty();
-
-        unimplemented!()
+        self.mark_dirty(node)
     }
 
-    pub fn remove_child(&mut self, node: Node, child: Node) -> Node {
-        // self.remove_child_at_index({
-        //     let parent = self.0.borrow();
-        //     parent.children.iter().position(|x| Rc::ptr_eq(&x, &child.0)).unwrap()
-        // })
-
-        unimplemented!()
+    pub fn remove_child(&mut self, node: Node, child: Node) -> Result<Node, Error> {
+        match self.children(node)?.iter().position(|n| *n == child) {
+            Some(index) => self.remove_child_at_index(node, index),
+            None => Err(Error::InvalidNode(child)),
+        }
     }
 
-    pub fn remove_child_at_index(&mut self, node: Node, index: usize) -> Node {
-        // let child = {
-        //     let mut parent = self.0.borrow_mut();
-        //     let child = parent.children.remove(index);
-        //     let position =
-        //         child.borrow().parents.iter().position(|x| Rc::ptr_eq(&x.upgrade().unwrap(), &self.0)).unwrap();
-        //     child.borrow_mut().parents.remove(position);
-        //     child
-        // };
+    pub fn remove_child_at_index(&mut self, node: Node, index: usize) -> Result<Node, Error> {
+        let child = self.children.get_mut(node)?.remove(index);
+        self.parents.get_mut(child)?.retain(|p| *p != node);
 
-        // self.mark_dirty();
-        // Node(child)
+        self.mark_dirty(node)?;
 
-        unimplemented!()
+        Ok(child)
     }
 
-    pub fn replace_child_at_index(&mut self, node: Node, index: usize, child: Node) -> Node {
-        // child.0.borrow_mut().parents.push(Rc::downgrade(&self.0));
-        // let old_child = std::mem::replace(&mut self.0.borrow_mut().children[index], Rc::clone(&child.0));
+    pub fn replace_child_at_index(&mut self, node: Node, index: usize, child: Node) -> Result<Node, Error> {
+        self.parents.get_mut(child)?.push(node);
+        let old_child = std::mem::replace(&mut self.children.get_mut(node)?[index], child);
+        self.parents.get_mut(old_child)?.retain(|p| *p != node);
 
-        // let position =
-        //     old_child.borrow().parents.iter().position(|x| Rc::ptr_eq(&x.upgrade().unwrap(), &self.0)).unwrap();
-        // old_child.borrow_mut().parents.remove(position);
+        self.mark_dirty(node)?;
 
-        // self.mark_dirty();
-
-        // Node(old_child)
-
-        unimplemented!()
+        Ok(old_child)
     }
 
     pub fn children(&self, node: Node) -> Result<Vec<Node>, Error> {
@@ -206,11 +188,9 @@ impl Stretch {
         self.children.get(node).map(Vec::len)
     }
 
-    pub fn set_style(&mut self, node: Node, style: Style) {
-        // self.0.borrow_mut().style = style;
-        // self.mark_dirty();
-
-        unimplemented!()
+    pub fn set_style(&mut self, node: Node, style: Style) -> Result<(), Error> {
+        *self.style.get_mut(node)? = style;
+        self.mark_dirty(node)
     }
 
     pub fn style(&self, node: Node) -> Result<&Style, Error> {
@@ -222,17 +202,23 @@ impl Stretch {
     }
 
     pub fn mark_dirty(&mut self, node: Node) -> Result<(), Error> {
-        // let mut node = self.0.borrow_mut();
-        // node.layout_cache = None;
-        // node.is_dirty = true;
+        fn mark_dirty_impl(
+            node: Node,
+            layout_cache: &mut Storage<Option<Cache>>,
+            is_dirty: &mut Storage<bool>,
+            parents: &Storage<Vec<Node>>,
+        ) -> Result<(), Error> {
+            *layout_cache.get_mut(node)? = None;
+            *is_dirty.get_mut(node)? = true;
 
-        // for parent in &node.parents {
-        //     if let Some(parent) = parent.upgrade() {
-        //         Node(parent).mark_dirty();
-        //     }
-        // }
+            for parent in parents.get(node)? {
+                mark_dirty_impl(*parent, layout_cache, is_dirty, parents)?;
+            }
 
-        unimplemented!()
+            Ok(())
+        }
+
+        mark_dirty_impl(node, &mut self.layout_cache, &mut self.is_dirty, &self.parents)
     }
 
     pub fn dirty(&self, node: Node) -> Result<bool, Error> {
