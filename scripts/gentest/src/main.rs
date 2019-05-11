@@ -184,8 +184,9 @@ fn generate_bench(description: &json::JsonValue) -> TokenStream {
     let node_description = generate_node("node", &description);
 
     quote!(
-        pub fn compute() -> stretch::result::Layout {
+        pub fn compute() {
             let mut stretch = stretch::Stretch::new();
+            #node_description
             stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
         }
     )
