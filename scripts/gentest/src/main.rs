@@ -234,10 +234,10 @@ fn generate_assertions(ident: &str, node: &json::JsonValue) -> TokenStream {
     let ident = Ident::new(ident, Span::call_site());
 
     quote!(
-        assert_eq!(stretch.layout(#ident).size.width, #width);
-        assert_eq!(stretch.layout(#ident).size.height, #height);
-        assert_eq!(stretch.layout(#ident).location.x, #x);
-        assert_eq!(stretch.layout(#ident).location.y, #y);
+        assert_eq!(stretch.layout(#ident).unwrap().size.width, #width);
+        assert_eq!(stretch.layout(#ident).unwrap().size.height, #height);
+        assert_eq!(stretch.layout(#ident).unwrap().location.x, #x);
+        assert_eq!(stretch.layout(#ident).unwrap().location.y, #y);
 
         #children
     )
@@ -461,7 +461,7 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
             ..Default::default()
         },
         #children
-    );)
+    ).unwrap();)
 }
 
 macro_rules! dim_quoted {
