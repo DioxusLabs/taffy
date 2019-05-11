@@ -1,93 +1,109 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 
 fn build_deep_hierarchy(stretch: &mut stretch::node::Stretch) -> stretch::node::Node {
-    let node111 = stretch.new_node(
-        stretch::style::Style {
-            size: stretch::geometry::Size {
-                width: stretch::style::Dimension::Points(10.0),
-                height: stretch::style::Dimension::Points(10.0),
+    let node111 = stretch
+        .new_node(
+            stretch::style::Style {
+                size: stretch::geometry::Size {
+                    width: stretch::style::Dimension::Points(10.0),
+                    height: stretch::style::Dimension::Points(10.0),
+                },
+                ..Default::default()
             },
-            ..Default::default()
-        },
-        vec![],
-    ).unwrap();
-    let node112 = stretch.new_node(
-        stretch::style::Style {
-            size: stretch::geometry::Size {
-                width: stretch::style::Dimension::Points(10.0),
-                height: stretch::style::Dimension::Points(10.0),
+            vec![],
+        )
+        .unwrap();
+    let node112 = stretch
+        .new_node(
+            stretch::style::Style {
+                size: stretch::geometry::Size {
+                    width: stretch::style::Dimension::Points(10.0),
+                    height: stretch::style::Dimension::Points(10.0),
+                },
+                ..Default::default()
             },
-            ..Default::default()
-        },
-        vec![],
-    ).unwrap();
+            vec![],
+        )
+        .unwrap();
 
-    let node121 = stretch.new_node(
-        stretch::style::Style {
-            size: stretch::geometry::Size {
-                width: stretch::style::Dimension::Points(10.0),
-                height: stretch::style::Dimension::Points(10.0),
+    let node121 = stretch
+        .new_node(
+            stretch::style::Style {
+                size: stretch::geometry::Size {
+                    width: stretch::style::Dimension::Points(10.0),
+                    height: stretch::style::Dimension::Points(10.0),
+                },
+                ..Default::default()
             },
-            ..Default::default()
-        },
-        vec![],
-    ).unwrap();
-    let node122 = stretch.new_node(
-        stretch::style::Style {
-            size: stretch::geometry::Size {
-                width: stretch::style::Dimension::Points(10.0),
-                height: stretch::style::Dimension::Points(10.0),
+            vec![],
+        )
+        .unwrap();
+    let node122 = stretch
+        .new_node(
+            stretch::style::Style {
+                size: stretch::geometry::Size {
+                    width: stretch::style::Dimension::Points(10.0),
+                    height: stretch::style::Dimension::Points(10.0),
+                },
+                ..Default::default()
             },
-            ..Default::default()
-        },
-        vec![],
-    ).unwrap();
+            vec![],
+        )
+        .unwrap();
 
     let node11 = stretch.new_node(stretch::style::Style { ..Default::default() }, vec![node111, node112]).unwrap();
     let node12 = stretch.new_node(stretch::style::Style { ..Default::default() }, vec![node121, node122]).unwrap();
     let node1 = stretch.new_node(stretch::style::Style { ..Default::default() }, vec![node11, node12]).unwrap();
 
-    let node211 = stretch.new_node(
-        stretch::style::Style {
-            size: stretch::geometry::Size {
-                width: stretch::style::Dimension::Points(10.0),
-                height: stretch::style::Dimension::Points(10.0),
+    let node211 = stretch
+        .new_node(
+            stretch::style::Style {
+                size: stretch::geometry::Size {
+                    width: stretch::style::Dimension::Points(10.0),
+                    height: stretch::style::Dimension::Points(10.0),
+                },
+                ..Default::default()
             },
-            ..Default::default()
-        },
-        vec![],
-    ).unwrap();
-    let node212 = stretch.new_node(
-        stretch::style::Style {
-            size: stretch::geometry::Size {
-                width: stretch::style::Dimension::Points(10.0),
-                height: stretch::style::Dimension::Points(10.0),
+            vec![],
+        )
+        .unwrap();
+    let node212 = stretch
+        .new_node(
+            stretch::style::Style {
+                size: stretch::geometry::Size {
+                    width: stretch::style::Dimension::Points(10.0),
+                    height: stretch::style::Dimension::Points(10.0),
+                },
+                ..Default::default()
             },
-            ..Default::default()
-        },
-        vec![],
-    ).unwrap();
+            vec![],
+        )
+        .unwrap();
 
-    let node221 = stretch.new_node(
-        stretch::style::Style {
-            size: stretch::geometry::Size {
-                width: stretch::style::Dimension::Points(10.0),
-                height: stretch::style::Dimension::Points(10.0),
+    let node221 = stretch
+        .new_node(
+            stretch::style::Style {
+                size: stretch::geometry::Size {
+                    width: stretch::style::Dimension::Points(10.0),
+                    height: stretch::style::Dimension::Points(10.0),
+                },
+                ..Default::default()
             },
-            ..Default::default()
-        },
-        vec![],
-    ).unwrap();
-    let node222 = stretch.new_node(
-        stretch::style::Style {
-            size: stretch::geometry::Size {
-                width: stretch::style::Dimension::Points(10.0),
-                height: stretch::style::Dimension::Points(10.0),
+            vec![],
+        )
+        .unwrap();
+    let node222 = stretch
+        .new_node(
+            stretch::style::Style {
+                size: stretch::geometry::Size {
+                    width: stretch::style::Dimension::Points(10.0),
+                    height: stretch::style::Dimension::Points(10.0),
+                },
+                ..Default::default()
             },
-            ..Default::default()
-        },
-        vec![],
-    ).unwrap();
+            vec![],
+        )
+        .unwrap();
 
     let node21 = stretch.new_node(stretch::style::Style { ..Default::default() }, vec![node211, node212]).unwrap();
     let node22 = stretch.new_node(stretch::style::Style { ..Default::default() }, vec![node221, node222]).unwrap();
