@@ -8,7 +8,7 @@ use std::ops::Drop;
 use std::sync::Mutex;
 
 use crate::geometry::Size;
-use crate::id;
+use crate::id::{self, NodeId};
 use crate::number::Number;
 use crate::result::{Cache, Layout};
 use crate::style::*;
@@ -27,64 +27,28 @@ pub struct Node {
     local: id::Id,
 }
 
-pub(crate) struct Storage<T>(HashMap<Node, T>);
-
-impl<T> Storage<T> {
-    pub fn new() -> Self {
-        Storage(HashMap::new())
-    }
-
-    pub fn get(&self, node: Node) -> Result<&T, Error> {
-        match self.0.get(&node) {
-            Some(v) => Ok(v),
-            None => Err(Error::InvalidNode(node)),
-        }
-    }
-
-    pub fn get_mut(&mut self, node: Node) -> Result<&mut T, Error> {
-        match self.0.get_mut(&node) {
-            Some(v) => Ok(v),
-            None => Err(Error::InvalidNode(node)),
-        }
-    }
-
-    pub fn insert(&mut self, node: Node, value: T) -> Option<T> {
-        self.0.insert(node, value)
-    }
-}
-
-impl<T> std::ops::Index<&Node> for Storage<T> {
-    type Output = T;
-
-    fn index(&self, idx: &Node) -> &T {
-        &(self.0)[idx]
-    }
-}
-
 pub struct Stretch {
     id: id::Id,
     nodes: id::Allocator,
-    pub(crate) style: Storage<Style>,
-    pub(crate) parents: Storage<Vec<Node>>,
-    pub(crate) children: Storage<Vec<Node>>,
-    pub(crate) measure: Storage<Option<MeasureFunc>>,
-    pub(crate) layout: Storage<Layout>,
-    pub(crate) layout_cache: Storage<Option<Cache>>,
-    pub(crate) is_dirty: Storage<bool>,
+    nodes_to_ids: HashMap<Node, NodeId>,
+    ids_to_nodes: HashMap<NodeId, Node>,
+    forest: Forest,
 }
 
 impl Stretch {
+    const DEFAULT_CAPACITY: usize = 16;
+
     pub fn new() -> Self {
+        Self::with_capacity(Self::DEFAULT_CAPACITY)
+    }
+
+    pub fn with_capacity(capacity: usize) -> Self {
         Stretch {
             id: INSTANCE_ALLOCATOR.lock().unwrap().allocate(),
             nodes: id::Allocator::new(),
-            style: Storage::new(),
-            parents: Storage::new(),
-            children: Storage::new(),
-            measure: Storage::new(),
-            layout: Storage::new(),
-            layout_cache: Storage::new(),
-            is_dirty: Storage::new(),
+            nodes_to_ids: HashMap::with_capacity(capacity),
+            ids_to_nodes: HashMap::with_capacity(capacity),
+            forest: Forest::with_capacity(capacity),
         }
     }
 
@@ -93,148 +57,233 @@ impl Stretch {
         Node { instance: self.id, local }
     }
 
+    fn add_node(&mut self, node: Node, id: NodeId) {
+        self.nodes_to_ids.insert(node, id);
+        self.ids_to_nodes.insert(id, node);
+    }
+
+    // Find node in the forest.
+    fn find_node(&self, node: Node) -> Result<NodeId, Error> {
+        match self.nodes_to_ids.get(&node) {
+            Some(id) => Ok(*id),
+            None => Err(Error::InvalidNode(node)),
+        }
+    }
+
     pub fn new_leaf(&mut self, style: Style, measure: MeasureFunc) -> Node {
         let node = self.allocate_node();
-
-        self.style.insert(node, style);
-        self.parents.insert(node, Vec::with_capacity(1));
-        self.children.insert(node, Vec::with_capacity(0));
-        self.measure.insert(node, Some(measure));
-        self.layout.insert(node, Layout::new());
-        self.layout_cache.insert(node, None);
-        self.is_dirty.insert(node, true);
-
+        let id = self.forest.new_leaf(style, measure);
+        self.add_node(node, id);
         node
     }
 
     pub fn new_node(&mut self, style: Style, children: Vec<Node>) -> Result<Node, Error> {
         let node = self.allocate_node();
-
-        for child in &children {
-            self.parents.get_mut(*child)?.push(node);
-        }
-
-        self.style.insert(node, style);
-        self.parents.insert(node, Vec::with_capacity(1));
-        self.children.insert(node, children);
-        self.measure.insert(node, None);
-        self.layout.insert(node, Layout::new());
-        self.layout_cache.insert(node, None);
-        self.is_dirty.insert(node, true);
-
+        let children = children.iter().map(|child| self.find_node(*child)).collect::<Result<Vec<_>, Error>>()?;
+        let id = self.forest.new_node(style, children);
+        self.add_node(node, id);
         Ok(node)
     }
 
     pub fn set_measure(&mut self, node: Node, measure: Option<MeasureFunc>) -> Result<(), Error> {
-        *self.measure.get_mut(node)? = measure;
-        self.mark_dirty(node)?;
+        let id = self.find_node(node)?;
+        self.forest.nodes[id].measure = measure;
+        self.forest.mark_dirty(id);
         Ok(())
     }
 
     pub fn add_child(&mut self, node: Node, child: Node) -> Result<(), Error> {
-        self.parents.get_mut(child)?.push(node);
-        self.children.get_mut(node)?.push(child);
-        self.mark_dirty(node)
+        let node_id = self.find_node(node)?;
+        let child_id = self.find_node(child)?;
+
+        self.forest.add_child(node_id, child_id);
+        Ok(())
     }
 
     pub fn set_children(&mut self, node: Node, children: Vec<Node>) -> Result<(), Error> {
-        // Remove node as parent from all its current children.
-        for child in self.children.get(node)? {
-            self.parents.get_mut(*child)?.retain(|p| *p != node);
-        }
+        let node_id = self.find_node(node)?;
+        let children_id = children.iter().map(|child| self.find_node(*child)).collect::<Result<Vec<_>, _>>()?;
 
-        *self.children.get_mut(node)? = Vec::with_capacity(children.len());
+        // Remove node as parent from all its current children.
+        for child in &self.forest.children[node_id] {
+            self.forest.parents[*child].retain(|p| *p != node_id);
+        }
 
         // Build up relation node <-> child
-        for child in children {
-            self.parents.get_mut(child)?.push(node);
-            self.children.get_mut(node)?.push(child);
+        for child in &children_id {
+            self.forest.parents[*child].push(node_id);
         }
+        self.forest.children[node_id] = children_id;
 
-        self.mark_dirty(node)
+        self.forest.mark_dirty(node_id);
+        Ok(())
     }
 
     pub fn remove_child(&mut self, node: Node, child: Node) -> Result<Node, Error> {
-        match self.children(node)?.iter().position(|n| *n == child) {
-            Some(index) => self.remove_child_at_index(node, index),
-            None => Err(Error::InvalidNode(child)),
-        }
+        let node_id = self.find_node(node)?;
+        let child_id = self.find_node(child)?;
+
+        let prev_id = unsafe { self.forest.remove_child(node_id, child_id) };
+        Ok(self.ids_to_nodes[&prev_id])
     }
 
     pub fn remove_child_at_index(&mut self, node: Node, index: usize) -> Result<Node, Error> {
-        let child = self.children.get_mut(node)?.remove(index);
-        self.parents.get_mut(child)?.retain(|p| *p != node);
+        let node_id = self.find_node(node)?;
+        // TODO: index check
 
-        self.mark_dirty(node)?;
-
-        Ok(child)
+        let prev_id = self.forest.remove_child_at_index(node_id, index);
+        Ok(self.ids_to_nodes[&prev_id])
     }
 
     pub fn replace_child_at_index(&mut self, node: Node, index: usize, child: Node) -> Result<Node, Error> {
-        self.parents.get_mut(child)?.push(node);
-        let old_child = std::mem::replace(&mut self.children.get_mut(node)?[index], child);
-        self.parents.get_mut(old_child)?.retain(|p| *p != node);
+        let node_id = self.find_node(node)?;
+        let child_id = self.find_node(child)?;
+        // TODO: index check
 
-        self.mark_dirty(node)?;
+        self.forest.parents[child_id].push(node_id);
+        let old_child = std::mem::replace(&mut self.forest.children[node_id][index], child_id);
+        self.forest.parents[old_child].retain(|p| *p != node_id);
 
-        Ok(old_child)
+        self.forest.mark_dirty(node_id);
+
+        Ok(self.ids_to_nodes[&old_child])
     }
 
     pub fn children(&self, node: Node) -> Result<Vec<Node>, Error> {
-        self.children.get(node).map(Clone::clone)
+        let id = self.find_node(node)?;
+        Ok(self.forest.children[id].iter().map(|child| self.ids_to_nodes[child]).collect())
     }
 
     pub fn child_count(&self, node: Node) -> Result<usize, Error> {
-        self.children.get(node).map(Vec::len)
+        let id = self.find_node(node)?;
+        Ok(self.forest.children[id].len())
     }
 
     pub fn set_style(&mut self, node: Node, style: Style) -> Result<(), Error> {
-        *self.style.get_mut(node)? = style;
-        self.mark_dirty(node)
+        let id = self.find_node(node)?;
+        self.forest.nodes[id].style = style;
+        self.forest.mark_dirty(id);
+        Ok(())
     }
 
     pub fn style(&self, node: Node) -> Result<&Style, Error> {
-        self.style.get(node)
+        let id = self.find_node(node)?;
+        Ok(&self.forest.nodes[id].style)
     }
 
     pub fn layout(&self, node: Node) -> Result<&Layout, Error> {
-        self.layout.get(node)
+        let id = self.find_node(node)?;
+        Ok(&self.forest.nodes[id].layout)
     }
 
     pub fn mark_dirty(&mut self, node: Node) -> Result<(), Error> {
-        fn mark_dirty_impl(
-            node: Node,
-            layout_cache: &mut Storage<Option<Cache>>,
-            is_dirty: &mut Storage<bool>,
-            parents: &Storage<Vec<Node>>,
-        ) -> Result<(), Error> {
-            *layout_cache.get_mut(node)? = None;
-            *is_dirty.get_mut(node)? = true;
-
-            for parent in parents.get(node)? {
-                mark_dirty_impl(*parent, layout_cache, is_dirty, parents)?;
-            }
-
-            Ok(())
-        }
-
-        mark_dirty_impl(node, &mut self.layout_cache, &mut self.is_dirty, &self.parents)
+        let id = self.find_node(node)?;
+        self.forest.mark_dirty(id);
+        Ok(())
     }
 
     pub fn dirty(&self, node: Node) -> Result<bool, Error> {
-        self.is_dirty.get(node).map(|v| *v)
+        let id = self.find_node(node)?;
+        Ok(self.forest.nodes[id].is_dirty)
     }
 
     pub fn compute_layout(&mut self, node: Node, size: Size<Number>) -> Result<(), Error> {
-        match self.layout.get(node) {
-            Ok(_) => self.compute(node, size).map_err(|err| Error::Measure(err)),
-            _ => Err(Error::InvalidNode(node)),
-        }
+        let id = self.find_node(node)?;
+        self.forest.compute(id, size).map_err(|err| Error::Measure(err))
     }
 }
 
 impl Drop for Stretch {
     fn drop(&mut self) {
         INSTANCE_ALLOCATOR.lock().unwrap().free(&[self.id]);
+    }
+}
+
+pub(crate) struct NodeData {
+    pub(crate) style: Style,
+    pub(crate) measure: Option<MeasureFunc>,
+    pub(crate) layout: Layout,
+    pub(crate) layout_cache: Option<Cache>,
+    pub(crate) is_dirty: bool,
+}
+
+impl NodeData {
+    fn new_leaf(style: Style, measure: MeasureFunc) -> Self {
+        NodeData { style, measure: Some(measure), layout_cache: None, layout: Layout::new(), is_dirty: true }
+    }
+
+    fn new(style: Style) -> Self {
+        NodeData { style, measure: None, layout_cache: None, layout: Layout::new(), is_dirty: true }
+    }
+}
+
+pub(crate) struct Forest {
+    pub(crate) nodes: Vec<NodeData>,
+    pub(crate) children: Vec<Vec<id::NodeId>>,
+    pub(crate) parents: Vec<Vec<id::NodeId>>,
+}
+
+impl Forest {
+    pub fn with_capacity(capacity: usize) -> Self {
+        Forest {
+            nodes: Vec::with_capacity(capacity),
+            children: Vec::with_capacity(capacity),
+            parents: Vec::with_capacity(capacity),
+        }
+    }
+
+    pub fn new_leaf(&mut self, style: Style, measure: MeasureFunc) -> NodeId {
+        let id = self.nodes.len();
+        self.nodes.push(NodeData::new_leaf(style, measure));
+        self.children.push(Vec::with_capacity(0));
+        self.parents.push(Vec::with_capacity(1));
+        id
+    }
+
+    pub fn new_node(&mut self, style: Style, children: Vec<NodeId>) -> NodeId {
+        let id = self.nodes.len();
+        for child in &children {
+            self.parents[*child].push(id);
+        }
+        self.nodes.push(NodeData::new(style));
+        self.children.push(children);
+        self.parents.push(Vec::with_capacity(1));
+        id
+    }
+
+    pub fn add_child(&mut self, node: NodeId, child: NodeId) {
+        self.parents[child].push(node);
+        self.children[node].push(child);
+        self.mark_dirty(node)
+    }
+
+    pub unsafe fn remove_child(&mut self, node: NodeId, child: NodeId) -> NodeId {
+        let index = self.children[node].iter().position(|n| *n == child).unwrap();
+        self.remove_child_at_index(node, index)
+    }
+
+    pub fn remove_child_at_index(&mut self, node: NodeId, index: usize) -> NodeId {
+        let child = self.children[node].remove(index);
+        self.parents[child].retain(|p| *p != node);
+        self.mark_dirty(node);
+        child
+    }
+
+    pub fn mark_dirty(&mut self, node: NodeId) {
+        fn mark_dirty_impl(nodes: &mut Vec<NodeData>, parents: &Vec<Vec<NodeId>>, node_id: NodeId) {
+            let node = &mut nodes[node_id];
+            node.layout_cache = None;
+            node.is_dirty = true;
+
+            for parent in &parents[node_id] {
+                mark_dirty_impl(nodes, parents, *parent);
+            }
+        }
+
+        mark_dirty_impl(&mut self.nodes, &self.parents, node);
+    }
+
+    pub fn compute_layout(&mut self, node: NodeId, size: Size<Number>) -> Result<(), Error> {
+        self.compute(node, size).map_err(|err| Error::Measure(err))
     }
 }

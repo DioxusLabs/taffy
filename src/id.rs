@@ -2,6 +2,9 @@
 //!
 //!
 
+/// Internal node id.
+pub(crate) type NodeId = usize;
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub(crate) struct Id {
     id: u32,
