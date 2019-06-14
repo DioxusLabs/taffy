@@ -13,6 +13,7 @@ pub mod result;
 pub mod style;
 
 mod algo;
+mod forest;
 mod id;
 
 pub use crate::node::Stretch;
