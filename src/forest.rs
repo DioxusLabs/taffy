@@ -68,6 +68,75 @@ impl Forest {
         self.mark_dirty(node)
     }
 
+    pub fn clear(&mut self) {
+        self.nodes.clear();
+        self.children.clear();
+        self.parents.clear();
+    }
+
+    /// Removes a node and swaps with the last node.
+    pub fn swap_remove(&mut self, node: NodeId) -> Option<NodeId> {
+        self.nodes.swap_remove(node);
+
+        // Now the last element is swapped in at index `node`.
+        if self.nodes.is_empty() {
+            self.children.clear();
+            self.parents.clear();
+            return None;
+        }
+
+        // Remove old node as parent from all its chilren.
+        for child in &self.children[node] {
+            let parents_child = &mut self.parents[*child];
+            let mut pos = 0;
+            while pos < parents_child.len() {
+                if parents_child[pos] == node {
+                    parents_child.swap_remove(pos);
+                } else {
+                    pos += 1;
+                }
+            }
+        }
+
+        // Remove old node as child from all its parents.
+        for parent in &self.parents[node] {
+            let childrens_parent = &mut self.children[*parent];
+            let mut pos = 0;
+            while pos < childrens_parent.len() {
+                if childrens_parent[pos] == node {
+                    childrens_parent.swap_remove(pos);
+                } else {
+                    pos += 1;
+                }
+            }
+        }
+
+        let last = self.nodes.len();
+
+        // Update ids for every child of the swapped in node.
+        for child in &self.children[last] {
+            for parent in &mut self.parents[*child] {
+                if *parent == last {
+                    *parent = node;
+                }
+            }
+        }
+
+        // Update ids for every parent of the swapped in node.
+        for parent in &self.parents[last] {
+            for child in &mut self.children[*parent] {
+                if *child == last {
+                    *child = node;
+                }
+            }
+        }
+
+        self.children.swap_remove(node);
+        self.parents.swap_remove(node);
+
+        Some(last)
+    }
+
     pub unsafe fn remove_child(&mut self, node: NodeId, child: NodeId) -> NodeId {
         let index = self.children[node].iter().position(|n| *n == child).unwrap();
         self.remove_child_at_index(node, index)

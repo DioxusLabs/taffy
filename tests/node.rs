@@ -96,6 +96,32 @@ mod node {
     }
 
     #[test]
+    fn removesaaa() {
+        let mut stretch = Stretch::new();
+
+        let style2 = Style {
+            flex_direction: FlexDirection::Column,
+            ..Style::default()
+        };
+
+        // Build a linear tree layout: <0> <- <1> <- <2>
+        let node2 = stretch.new_node(style2, vec![]).unwrap();
+        let node1 = stretch.new_node(Style::default(), vec![node2]).unwrap();
+        let node0 = stretch.new_node(Style::default(), vec![node1]).unwrap();
+
+        assert_eq!(stretch.children(node0).unwrap(), vec![node1]);
+
+        // Disconnect the tree: <0> <2>
+        stretch.remove(node1);
+
+        assert!(stretch.style(node1).is_err());
+
+        assert!(stretch.children(node0).unwrap().is_empty());
+        assert!(stretch.children(node2).unwrap().is_empty());
+        assert_eq!(stretch.style(node2).unwrap().flex_direction, style2.flex_direction);
+    }
+
+    #[test]
     fn set_children() {
         let mut stretch = Stretch::new();
 
