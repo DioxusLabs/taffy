@@ -6,8 +6,8 @@ use libm::F32Ext;
 use core::any::Any;
 use core::f32;
 
+use crate::forest::{Forest, NodeData};
 use crate::id::NodeId;
-use crate::node::{Forest, NodeData};
 use crate::result;
 use crate::style::*;
 
