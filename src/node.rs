@@ -71,13 +71,6 @@ impl Stretch {
         }
     }
 
-    /// Removes all nodes.
-    ///
-    /// All associated nodes will be invalid.
-    pub fn clear(&mut self) {
-        unimplemented!()
-    }
-
     pub fn new_leaf(&mut self, style: Style, measure: MeasureFunc) -> Node {
         let node = self.allocate_node();
         let id = self.forest.new_leaf(style, measure);
@@ -91,6 +84,31 @@ impl Stretch {
         let id = self.forest.new_node(style, children);
         self.add_node(node, id);
         Ok(node)
+    }
+
+    /// Removes all nodes.
+    ///
+    /// All associated nodes will be invalid.
+    pub fn clear(&mut self) {
+        for node in self.nodes_to_ids.keys() {
+            self.nodes.free(&[node.local]);
+        }
+        self.nodes_to_ids.clear();
+        self.ids_to_nodes.clear();
+        self.forest.clear();
+    }
+
+    /// Remove nodes.
+    pub fn remove(&mut self, node: Node) {
+        let id = if let Ok(id) = self.find_node(node) { id } else { return };
+
+        self.nodes_to_ids.remove(&node);
+        self.ids_to_nodes.remove(&id);
+
+        if let Some(new_id) = self.forest.swap_remove(id) {
+            let new = self.ids_to_nodes.remove(&new_id).unwrap();
+            self.nodes_to_ids.insert(new, id);
+        }
     }
 
     pub fn set_measure(&mut self, node: Node, measure: Option<MeasureFunc>) -> Result<(), Error> {
