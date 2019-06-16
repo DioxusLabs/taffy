@@ -39,7 +39,7 @@ mod node {
         assert_eq!(stretch.child_count(node).unwrap(), 1);
 
         let child2 = stretch.new_node(Style::default(), vec![]).unwrap();
-        stretch.add_child(node, child2);
+        stretch.add_child(node, child2).unwrap();
         assert_eq!(stretch.child_count(node).unwrap(), 2);
     }
 
@@ -53,11 +53,11 @@ mod node {
         let node = stretch.new_node(Style::default(), vec![child1, child2]).unwrap();
         assert_eq!(stretch.child_count(node).unwrap(), 2);
 
-        stretch.remove_child(node, child1);
+        stretch.remove_child(node, child1).unwrap();
         assert_eq!(stretch.child_count(node).unwrap(), 1);
         assert_eq!(stretch.children(node).unwrap()[0], child2);
 
-        stretch.remove_child(node, child2);
+        stretch.remove_child(node, child2).unwrap();
         assert_eq!(stretch.child_count(node).unwrap(), 0);
     }
 
@@ -96,13 +96,10 @@ mod node {
     }
 
     #[test]
-    fn removesaaa() {
+    fn remove() {
         let mut stretch = Stretch::new();
 
-        let style2 = Style {
-            flex_direction: FlexDirection::Column,
-            ..Style::default()
-        };
+        let style2 = Style { flex_direction: FlexDirection::Column, ..Style::default() };
 
         // Build a linear tree layout: <0> <- <1> <- <2>
         let node2 = stretch.new_node(style2, vec![]).unwrap();
@@ -135,7 +132,7 @@ mod node {
 
         let child3 = stretch.new_node(Style::default(), vec![]).unwrap();
         let child4 = stretch.new_node(Style::default(), vec![]).unwrap();
-        stretch.set_children(node, vec![child3, child4]);
+        stretch.set_children(node, vec![child3, child4]).unwrap();
 
         assert_eq!(stretch.child_count(node).unwrap(), 2);
         assert_eq!(stretch.children(node).unwrap()[0], child3);
@@ -167,13 +164,13 @@ mod node {
         assert_eq!(stretch.dirty(child2).unwrap(), false);
         assert_eq!(stretch.dirty(node).unwrap(), false);
 
-        stretch.mark_dirty(node);
+        stretch.mark_dirty(node).unwrap();
         assert_eq!(stretch.dirty(child1).unwrap(), false);
         assert_eq!(stretch.dirty(child2).unwrap(), false);
         assert_eq!(stretch.dirty(node).unwrap(), true);
 
         stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
-        stretch.mark_dirty(child1);
+        stretch.mark_dirty(child1).unwrap();
         assert_eq!(stretch.dirty(child1).unwrap(), true);
         assert_eq!(stretch.dirty(child2).unwrap(), false);
         assert_eq!(stretch.dirty(node).unwrap(), true);

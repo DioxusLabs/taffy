@@ -1,5 +1,4 @@
 use stretch::geometry::Size;
-use stretch::node::Node;
 use stretch::style::*;
 
 fn main() -> Result<(), stretch::Error> {
