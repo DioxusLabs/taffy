@@ -19,7 +19,7 @@ mod node {
     #[test]
     fn set_measure() {
         let mut stretch = Stretch::new();
-        let node = stretch.new_leaf(Style::default(), Box::new(|_| Ok(Size { width: 200.0, height: 200.0 })));
+        let node = stretch.new_leaf(Style::default(), Box::new(|_| Ok(Size { width: 200.0, height: 200.0 }))).unwrap();
         stretch.compute_layout(node, Size::undefined()).unwrap();
         assert_eq!(stretch.layout(node).unwrap().size.width, 200.0);
 
@@ -174,5 +174,17 @@ mod node {
         assert_eq!(stretch.dirty(child1).unwrap(), true);
         assert_eq!(stretch.dirty(child2).unwrap(), false);
         assert_eq!(stretch.dirty(node).unwrap(), true);
+    }
+
+    #[test]
+    fn remove_last_node() {
+        let mut stretch = Stretch::new();
+
+        let parent = stretch.new_node(Style::default(), vec![]).unwrap();
+        let child = stretch.new_node(Style::default(), vec![]).unwrap();
+        stretch.add_child(parent, child).unwrap();
+
+        stretch.remove(child);
+        stretch.remove(parent);
     }
 }

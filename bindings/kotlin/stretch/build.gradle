@@ -91,7 +91,7 @@ ext {
     siteUrl = 'https://visly.app/stretch'
     gitUrl = 'https://github.com/vislyhq/stretch.git'
 
-    libraryVersion = '0.2.2'
+    libraryVersion = '0.3.2'
 
     developerId = 'visly'
     developerName = 'Visly'

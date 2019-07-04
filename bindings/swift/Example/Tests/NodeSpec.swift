@@ -14,12 +14,12 @@ class NodeSpec: QuickSpec {
             let node = Node(style: Style()) { constraint in
                 return Size(width: 100.0, height: 100.0)
             }
-            
+
             let layout = node.computeLayout(thatFits: Size(width: nil, height: nil))
             expect(layout.width) == 100.0
             expect(layout.height) == 100.0
         }
-        
+
         it("will set measure") {
             let node = Node(style: Style(), children: [])
             node.measure = { constraint in

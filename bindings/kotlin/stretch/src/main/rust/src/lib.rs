@@ -1,14 +1,13 @@
 #![cfg(target_os = "android")]
 #![allow(non_snake_case)]
 
-use jni::objects::{JObject, JValue};
+use jni::objects::{JClass, JObject, JValue};
 use jni::sys::{jboolean, jfloat, jfloatArray, jint, jlong, jlongArray};
 use jni::JNIEnv;
 use std::f32;
 use stretch::geometry::*;
 use stretch::node::*;
 use stretch::number::*;
-use stretch::result::Layout;
 use stretch::style::*;
 
 fn dimension(t: jint, v: jfloat) -> Dimension {
@@ -19,6 +18,12 @@ fn dimension(t: jint, v: jfloat) -> Dimension {
         3 => Dimension::Auto,
         _ => panic!(),
     }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Java_app_visly_stretch_Stretch_nInit(_: JNIEnv, _: JClass) -> jlong {
+    let stretch = Stretch::new();
+    Box::into_raw(Box::new(stretch)) as jlong
 }
 
 #[no_mangle]
@@ -230,13 +235,14 @@ pub unsafe extern "C" fn Java_app_visly_stretch_Style_nConstruct(
 
 #[no_mangle]
 pub unsafe extern "C" fn Java_app_visly_stretch_Style_nFree(_: JNIEnv, _: JObject, style: jlong) {
-    let _style: Box<Style> = Box::from_raw(style as *mut Style);
+    let _style = Box::from_raw(style as *mut Style);
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn Java_app_visly_stretch_Node_nConstruct(
     env: JNIEnv,
     _: JObject,
+    stretch: jlong,
     style: jlong,
     children: jlongArray,
 ) -> jlong {
@@ -244,10 +250,14 @@ pub unsafe extern "C" fn Java_app_visly_stretch_Node_nConstruct(
     let mut buff = vec![0; num_children as usize];
     env.get_long_array_region(children, 0, &mut buff).unwrap();
 
-    let children = buff.into_iter().map(|ptr| &*Box::leak(Box::from_raw(ptr as *mut Node))).collect();
+    let children = buff.into_iter().map(|ptr| *Box::leak(Box::from_raw(ptr as *mut Node))).collect();
 
-    let style: Box<Style> = Box::from_raw(style as *mut Style);
-    let node = Node::new(*Box::leak(style), children);
+    let mut stretch = Box::from_raw(stretch as *mut Stretch);
+    let style = Box::from_raw(style as *mut Style);
+    let node = stretch.new_node(*style, children).unwrap();
+
+    Box::leak(stretch);
+    Box::leak(style);
 
     Box::into_raw(Box::new(node)) as jlong
 }
@@ -256,96 +266,152 @@ pub unsafe extern "C" fn Java_app_visly_stretch_Node_nConstruct(
 pub unsafe extern "C" fn Java_app_visly_stretch_Node_nConstructLeaf(
     env: JNIEnv<'static>,
     _: JObject,
+    stretch: jlong,
     style: jlong,
     measure: JObject,
 ) -> jlong {
     let measure = env.new_global_ref(measure).unwrap();
-    let style: Box<Style> = Box::from_raw(style as *mut Style);
-    let node = Node::new_leaf(
-        *Box::leak(style),
-        Box::new(move |constraint| {
-            let result = env.call_method(
-                measure.as_obj(),
-                "measure",
-                "(FF)[F",
-                &[JValue::from(constraint.width.or_else(f32::NAN)), JValue::from(constraint.height.or_else(f32::NAN))],
-            );
+    let mut stretch = Box::from_raw(stretch as *mut Stretch);
+    let style = Box::from_raw(style as *mut Style);
 
-            match result {
-                Ok(result) => {
-                    let size = result.l().unwrap().into_inner() as jfloatArray;
-                    let mut buff: [f32; 2] = [0.0, 0.0];
-                    env.get_float_array_region(size, 0, &mut buff).unwrap();
-                    Ok(Size { width: buff[0], height: buff[1] })
+    let node = stretch
+        .new_leaf(
+            *style,
+            Box::new(move |constraint| {
+                let result = env.call_method(
+                    measure.as_obj(),
+                    "measure",
+                    "(FF)[F",
+                    &[
+                        JValue::from(constraint.width.or_else(f32::NAN)),
+                        JValue::from(constraint.height.or_else(f32::NAN)),
+                    ],
+                );
+
+                match result {
+                    Ok(result) => {
+                        let size = result.l().unwrap().into_inner() as jfloatArray;
+                        let mut buff: [f32; 2] = [0.0, 0.0];
+                        env.get_float_array_region(size, 0, &mut buff).unwrap();
+                        Ok(Size { width: buff[0], height: buff[1] })
+                    }
+                    Err(err) => Err(Box::new(err)),
                 }
-                Err(err) => Err(Box::new(err)),
-            }
-        }),
-    );
+            }),
+        )
+        .unwrap();
+
+    Box::leak(stretch);
+    Box::leak(style);
+
     Box::into_raw(Box::new(node)) as jlong
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_app_visly_stretch_Node_nFree(_: JNIEnv, _: JObject, node: jlong) {
-    let _node: Box<Node> = Box::from_raw(node as *mut Node);
+pub unsafe extern "C" fn Java_app_visly_stretch_Node_nFree(_: JNIEnv, _: JObject, stretch: jlong, node: jlong) {
+    let mut stretch = Box::from_raw(stretch as *mut Stretch);
+    let node = Box::from_raw(node as *mut Node);
+
+    stretch.remove(*node);
+
+    Box::leak(stretch);
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn Java_app_visly_stretch_Node_nSetMeasure(
     env: JNIEnv<'static>,
     _: JObject,
+    stretch: jlong,
     node: jlong,
     measure: JObject,
 ) {
     let measure = env.new_global_ref(measure).unwrap();
-    let node: Box<Node> = Box::from_raw(node as *mut Node);
+    let mut stretch = Box::from_raw(stretch as *mut Stretch);
+    let node = Box::from_raw(node as *mut Node);
 
-    Box::leak(node).set_measure(Some(Box::new(move |constraint| {
-        let result = env.call_method(
-            measure.as_obj(),
-            "measure",
-            "(FF)[F",
-            &[JValue::from(constraint.width.or_else(f32::NAN)), JValue::from(constraint.height.or_else(f32::NAN))],
-        );
+    stretch
+        .set_measure(
+            *node,
+            Some(Box::new(move |constraint| {
+                let result = env.call_method(
+                    measure.as_obj(),
+                    "measure",
+                    "(FF)[F",
+                    &[
+                        JValue::from(constraint.width.or_else(f32::NAN)),
+                        JValue::from(constraint.height.or_else(f32::NAN)),
+                    ],
+                );
 
-        match result {
-            Ok(result) => {
-                let size = result.l().unwrap().into_inner() as jfloatArray;
-                let mut buff: [f32; 2] = [0.0, 0.0];
-                env.get_float_array_region(size, 0, &mut buff).unwrap();
-                Ok(Size { width: buff[0], height: buff[1] })
-            }
-            Err(err) => Err(Box::new(err)),
-        }
-    })));
+                match result {
+                    Ok(result) => {
+                        let size = result.l().unwrap().into_inner() as jfloatArray;
+                        let mut buff: [f32; 2] = [0.0, 0.0];
+                        env.get_float_array_region(size, 0, &mut buff).unwrap();
+                        Ok(Size { width: buff[0], height: buff[1] })
+                    }
+                    Err(err) => Err(Box::new(err)),
+                }
+            })),
+        )
+        .unwrap();
+
+    Box::leak(node);
+    Box::leak(stretch);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_app_visly_stretch_Node_nSetStyle(_: JNIEnv, _: JObject, node: jlong, style: jlong) {
-    let style: Box<Style> = Box::from_raw(style as *mut Style);
-    let mut node: Box<Node> = Box::from_raw(node as *mut Node);
-    node.set_style(*style);
+pub unsafe extern "C" fn Java_app_visly_stretch_Node_nSetStyle(
+    _: JNIEnv,
+    _: JObject,
+    stretch: jlong,
+    node: jlong,
+    style: jlong,
+) {
+    let style = Box::from_raw(style as *mut Style);
+    let mut stretch = Box::from_raw(stretch as *mut Stretch);
+    let node = Box::from_raw(node as *mut Node);
+
+    stretch.set_style(*node, *style).unwrap();
 
     Box::leak(style);
     Box::leak(node);
+    Box::leak(stretch);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_app_visly_stretch_Node_nIsDirty(_: JNIEnv, _: JObject, node: jlong) -> jboolean {
-    let node: Box<Node> = Box::from_raw(node as *mut Node);
-    Box::leak(node).dirty() as jboolean
+pub unsafe extern "C" fn Java_app_visly_stretch_Node_nIsDirty(
+    _: JNIEnv,
+    _: JObject,
+    stretch: jlong,
+    node: jlong,
+) -> jboolean {
+    let stretch = Box::from_raw(stretch as *mut Stretch);
+    let node = Box::from_raw(node as *mut Node);
+
+    let dirty = stretch.dirty(*node).unwrap() as jboolean;
+
+    Box::leak(node);
+    Box::leak(stretch);
+
+    dirty
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_app_visly_stretch_Node_nMarkDirty(_: JNIEnv, _: JObject, node: jlong) {
-    let node: Box<Node> = Box::from_raw(node as *mut Node);
-    Box::leak(node).mark_dirty();
+pub unsafe extern "C" fn Java_app_visly_stretch_Node_nMarkDirty(_: JNIEnv, _: JObject, stretch: jlong, node: jlong) {
+    let mut stretch = Box::from_raw(stretch as *mut Stretch);
+    let node = Box::from_raw(node as *mut Node);
+    stretch.mark_dirty(*node).unwrap();
+
+    Box::leak(node);
+    Box::leak(stretch);
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn Java_app_visly_stretch_Node_nSetChildren(
     env: JNIEnv,
     _: JObject,
+    stretch: jlong,
     node: jlong,
     children: jlongArray,
 ) {
@@ -353,91 +419,135 @@ pub unsafe extern "C" fn Java_app_visly_stretch_Node_nSetChildren(
     let mut buff = vec![0; num_children as usize];
     env.get_long_array_region(children, 0, &mut buff).unwrap();
 
-    let children = buff.into_iter().map(|ptr| &*Box::leak(Box::from_raw(ptr as *mut Node))).collect();
+    let children = buff.into_iter().map(|ptr| *Box::leak(Box::from_raw(ptr as *mut Node))).collect();
 
-    let node: Box<Node> = Box::from_raw(node as *mut Node);
-    Box::leak(node).set_children(children);
+    let mut stretch = Box::from_raw(stretch as *mut Stretch);
+    let node = Box::from_raw(node as *mut Node);
+    stretch.set_children(*node, children).unwrap();
+
+    Box::leak(node);
+    Box::leak(stretch);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_app_visly_stretch_Node_nAddChild(_: JNIEnv, _: JObject, node: jlong, child: jlong) {
-    let mut node: Box<Node> = Box::from_raw(node as *mut Node);
-    let child: Box<Node> = Box::from_raw(child as *mut Node);
-    node.add_child(&*child);
+pub unsafe extern "C" fn Java_app_visly_stretch_Node_nAddChild(
+    _: JNIEnv,
+    _: JObject,
+    stretch: jlong,
+    node: jlong,
+    child: jlong,
+) {
+    let mut stretch = Box::from_raw(stretch as *mut Stretch);
+    let node = Box::from_raw(node as *mut Node);
+    let child = Box::from_raw(child as *mut Node);
+
+    stretch.add_child(*node, *child).unwrap();
 
     Box::leak(node);
     Box::leak(child);
+    Box::leak(stretch);
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn Java_app_visly_stretch_Node_nReplaceChildAtIndex(
     _: JNIEnv,
     _: JObject,
+    stretch: jlong,
     node: jlong,
     index: jint,
     child: jlong,
 ) {
-    let mut node: Box<Node> = Box::from_raw(node as *mut Node);
-    let child: Box<Node> = Box::from_raw(child as *mut Node);
-    node.replace_child_at_index(index as usize, &*child);
+    let mut stretch = Box::from_raw(stretch as *mut Stretch);
+    let node = Box::from_raw(node as *mut Node);
+    let child = Box::from_raw(child as *mut Node);
+
+    stretch.replace_child_at_index(*node, index as usize, *child).unwrap();
 
     Box::leak(node);
     Box::leak(child);
+    Box::leak(stretch);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_app_visly_stretch_Node_nRemoveChild(_: JNIEnv, _: JObject, node: jlong, child: jlong) {
-    let mut node: Box<Node> = Box::from_raw(node as *mut Node);
-    let child: Box<Node> = Box::from_raw(child as *mut Node);
-    node.remove_child(&*child);
+pub unsafe extern "C" fn Java_app_visly_stretch_Node_nRemoveChild(
+    _: JNIEnv,
+    _: JObject,
+    stretch: jlong,
+    node: jlong,
+    child: jlong,
+) {
+    let mut stretch = Box::from_raw(stretch as *mut Stretch);
+    let node = Box::from_raw(node as *mut Node);
+    let child = Box::from_raw(child as *mut Node);
+
+    stretch.remove_child(*node, *child).unwrap();
 
     Box::leak(node);
     Box::leak(child);
+    Box::leak(stretch);
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn Java_app_visly_stretch_Node_nRemoveChildAtIndex(
     _: JNIEnv,
     _: JObject,
+    stretch: jlong,
     node: jlong,
     index: jint,
 ) {
-    let node: Box<Node> = Box::from_raw(node as *mut Node);
-    Box::leak(node).remove_child_at_index(index as usize);
+    let mut stretch = Box::from_raw(stretch as *mut Stretch);
+    let node = Box::from_raw(node as *mut Node);
+
+    stretch.remove_child_at_index(*node, index as usize).unwrap();
+
+    Box::leak(node);
+    Box::leak(stretch);
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn Java_app_visly_stretch_Node_nComputeLayout(
     env: JNIEnv,
     _: JObject,
+    stretch: jlong,
     node: jlong,
     width: jfloat,
     height: jfloat,
 ) -> jfloatArray {
-    let node: Box<Node> = Box::from_raw(node as *mut Node);
-    let layout = Box::leak(node)
-        .compute_layout(Size {
-            width: if f32::is_nan(width) { Number::Undefined } else { Number::Defined(width) },
-            height: if f32::is_nan(height) { Number::Undefined } else { Number::Defined(height) },
-        })
+    let mut stretch = Box::from_raw(stretch as *mut Stretch);
+    let node = Box::from_raw(node as *mut Node);
+
+    stretch
+        .compute_layout(
+            *node,
+            Size {
+                width: if f32::is_nan(width) { Number::Undefined } else { Number::Defined(width) },
+                height: if f32::is_nan(height) { Number::Undefined } else { Number::Defined(height) },
+            },
+        )
         .unwrap();
 
     let mut output = vec![];
-    copy_output(&layout, &mut output);
+    copy_output(&stretch, *node, &mut output);
+
+    Box::leak(node);
+    Box::leak(stretch);
 
     let result = env.new_float_array(output.len() as i32).unwrap();
     env.set_float_array_region(result, 0, &output).unwrap();
     result
 }
 
-fn copy_output(layout: &Layout, output: &mut Vec<f32>) {
+fn copy_output(stretch: &Stretch, node: Node, output: &mut Vec<f32>) {
+    let layout = stretch.layout(node).unwrap();
+    let children = stretch.children(node).unwrap();
+
     output.push(layout.location.x);
     output.push(layout.location.y);
     output.push(layout.size.width);
     output.push(layout.size.height);
-    output.push(layout.children.len() as f32);
+    output.push(children.len() as f32);
 
-    for child in &layout.children {
-        copy_output(child, output);
+    for child in &children {
+        copy_output(stretch, *child, output);
     }
 }

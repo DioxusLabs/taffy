@@ -2,6 +2,9 @@
 
 mod utils;
 
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use js_sys::Function;
 use js_sys::Reflect;
 use wasm_bindgen::prelude::*;
@@ -363,14 +366,18 @@ pub struct Layout {
 
 #[wasm_bindgen]
 impl Layout {
-    fn new(layout: stretch::result::Layout) -> Layout {
+    fn new(allocator: &Allocator, node: stretch::node::Node) -> Layout {
+        let stretch = allocator.stretch.borrow();
+        let layout = stretch.layout(node).unwrap();
+        let children = stretch.children(node).unwrap();
+
         Layout {
             width: layout.size.width,
             height: layout.size.height,
             x: layout.location.x,
             y: layout.location.y,
-            childCount: layout.children.len(),
-            children: layout.children.into_iter().map(Layout::new).collect(),
+            childCount: children.len(),
+            children: children.into_iter().map(|child| Layout::new(allocator, child)).collect(),
         }
     }
 
@@ -381,7 +388,22 @@ impl Layout {
 }
 
 #[wasm_bindgen]
+#[derive(Clone)]
+pub struct Allocator {
+    stretch: Rc<RefCell<stretch::node::Stretch>>,
+}
+
+#[wasm_bindgen]
+impl Allocator {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Allocator {
+        Allocator { stretch: Rc::new(RefCell::new(stretch::node::Stretch::new())) }
+    }
+}
+
+#[wasm_bindgen]
 pub struct Node {
+    allocator: Allocator,
     node: stretch::node::Node,
     style: JsValue,
 
@@ -392,60 +414,72 @@ pub struct Node {
 #[wasm_bindgen]
 impl Node {
     #[wasm_bindgen(constructor)]
-    pub fn new(style: &JsValue) -> Node {
-        Node { node: stretch::node::Node::new(parse_style(&style), vec![]), style: style.clone(), childCount: 0 }
+    pub fn new(allocator: &Allocator, style: &JsValue) -> Node {
+        Node {
+            allocator: allocator.clone(),
+            node: allocator.stretch.borrow_mut().new_node(parse_style(&style), vec![]).unwrap(),
+            style: style.clone(),
+            childCount: 0,
+        }
     }
 
     #[wasm_bindgen(js_name = setMeasure)]
     pub fn set_measure(&mut self, measure: &JsValue) {
         let measure = Function::from(measure.clone());
 
-        self.node.set_measure(Some(Box::new(move |constraints| {
-            let widthConstraint = if let stretch::number::Number::Defined(val) = constraints.width {
-                val.into()
-            } else {
-                JsValue::UNDEFINED
-            };
+        self.allocator
+            .stretch
+            .borrow_mut()
+            .set_measure(
+                self.node,
+                Some(Box::new(move |constraints| {
+                    let widthConstraint = if let stretch::number::Number::Defined(val) = constraints.width {
+                        val.into()
+                    } else {
+                        JsValue::UNDEFINED
+                    };
 
-            let heightConstaint = if let stretch::number::Number::Defined(val) = constraints.height {
-                val.into()
-            } else {
-                JsValue::UNDEFINED
-            };
+                    let heightConstaint = if let stretch::number::Number::Defined(val) = constraints.height {
+                        val.into()
+                    } else {
+                        JsValue::UNDEFINED
+                    };
 
-            if let Ok(result) = measure.call2(&JsValue::UNDEFINED, &widthConstraint, &heightConstaint) {
-                let width = get_f32(&result, "width");
-                let height = get_f32(&result, "height");
+                    if let Ok(result) = measure.call2(&JsValue::UNDEFINED, &widthConstraint, &heightConstaint) {
+                        let width = get_f32(&result, "width");
+                        let height = get_f32(&result, "height");
 
-                if width.is_some() && height.is_some() {
-                    return Ok(stretch::geometry::Size { width: width.unwrap(), height: height.unwrap() });
-                }
-            }
+                        if width.is_some() && height.is_some() {
+                            return Ok(stretch::geometry::Size { width: width.unwrap(), height: height.unwrap() });
+                        }
+                    }
 
-            Err(Box::new("Failed in javascript"))
-        })));
+                    Err(Box::new("Failed in javascript"))
+                })),
+            )
+            .unwrap();
     }
 
     #[wasm_bindgen(js_name = addChild)]
     pub fn add_child(&mut self, child: &Node) {
-        self.node.add_child(&child.node);
+        self.allocator.stretch.borrow_mut().add_child(self.node, child.node).unwrap();
         self.childCount += 1;
     }
 
     #[wasm_bindgen(js_name = removeChild)]
     pub fn remove_child(&mut self, child: &Node) {
-        self.node.remove_child(&child.node);
+        self.allocator.stretch.borrow_mut().remove_child(self.node, child.node).unwrap();
         self.childCount -= 1;
     }
 
     #[wasm_bindgen(js_name = replaceChildAtIndex)]
     pub fn replace_child_at_index(&mut self, index: usize, child: &Node) {
-        self.node.replace_child_at_index(index, &child.node);
+        self.allocator.stretch.borrow_mut().replace_child_at_index(self.node, index, child.node).unwrap();
     }
 
     #[wasm_bindgen(js_name = removeChildAtIndex)]
     pub fn remove_child_at_index(&mut self, index: usize) {
-        self.node.remove_child_at_index(index);
+        self.allocator.stretch.borrow_mut().remove_child_at_index(self.node, index).unwrap();
         self.childCount -= 1;
     }
 
@@ -456,25 +490,28 @@ impl Node {
 
     #[wasm_bindgen(js_name = setStyle)]
     pub fn set_style(&mut self, style: &JsValue) {
-        self.node.set_style(parse_style(style));
+        self.allocator.stretch.borrow_mut().set_style(self.node, parse_style(style)).unwrap();
         self.style = style.clone();
     }
 
     #[wasm_bindgen(js_name = markDirty)]
     pub fn mark_dirty(&mut self) {
-        self.node.mark_dirty()
+        self.allocator.stretch.borrow_mut().mark_dirty(self.node).unwrap()
     }
 
     #[wasm_bindgen(js_name = isDirty)]
     pub fn is_dirty(&self) -> bool {
-        self.node.dirty()
+        self.allocator.stretch.borrow().dirty(self.node).unwrap()
     }
 
     #[wasm_bindgen(js_name = computeLayout)]
-    pub fn compute_layout(&self, size: &JsValue) -> Layout {
-        Layout::new(
-            self.node
-                .compute_layout(stretch::geometry::Size {
+    pub fn compute_layout(&mut self, size: &JsValue) -> Layout {
+        self.allocator
+            .stretch
+            .borrow_mut()
+            .compute_layout(
+                self.node,
+                stretch::geometry::Size {
                     width: if let Some(val) = get_f32(size, "width") {
                         stretch::number::Number::Defined(val)
                     } else {
@@ -485,9 +522,10 @@ impl Node {
                     } else {
                         stretch::number::Number::Undefined
                     },
-                })
-                .unwrap(),
-        )
+                },
+            )
+            .unwrap();
+        Layout::new(&self.allocator, self.node)
     }
 }
 
