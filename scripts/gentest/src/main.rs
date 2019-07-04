@@ -181,11 +181,13 @@ fn test_root_element(
 }
 
 fn generate_bench(description: &json::JsonValue) -> TokenStream {
-    let node_description = generate_node(&description);
+    let node_description = generate_node("node", &description);
 
     quote!(
-        pub fn compute() -> stretch::result::Layout {
-            #node_description.compute_layout(stretch::geometry::Size::undefined()).unwrap()
+        pub fn compute() {
+            let mut stretch = stretch::Stretch::new();
+            #node_description
+            stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
         }
     )
 }
@@ -193,19 +195,21 @@ fn generate_bench(description: &json::JsonValue) -> TokenStream {
 fn generate_test(name: impl AsRef<str>, description: &json::JsonValue) -> TokenStream {
     let name = name.as_ref();
     let name = Ident::new(name, Span::call_site());
-    let node_description = generate_node(&description);
-    let assertions = generate_assertions(quote!(layout), &description);
+    let node_description = generate_node("node", &description);
+    let assertions = generate_assertions("node", &description);
 
     quote!(
         #[test]
         fn #name() {
-            let layout = #node_description.compute_layout(stretch::geometry::Size::undefined()).unwrap();
+            let mut stretch = stretch::Stretch::new();
+            #node_description
+            stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
             #assertions
         }
     )
 }
 
-fn generate_assertions(prefix: TokenStream, node: &json::JsonValue) -> TokenStream {
+fn generate_assertions(ident: &str, node: &json::JsonValue) -> TokenStream {
     let layout = &node["layout"];
 
     let read_f32 = |s: &str| layout[s].as_f32().unwrap();
@@ -220,7 +224,7 @@ fn generate_assertions(prefix: TokenStream, node: &json::JsonValue) -> TokenStre
             json::JsonValue::Array(ref value) => {
                 for i in 0..value.len() {
                     let child = &value[i];
-                    c.push(generate_assertions(quote!(#prefix.children[#i]), child));
+                    c.push(generate_assertions(&format!("{}{}", ident, i), child));
                 }
             }
             _ => (),
@@ -228,17 +232,19 @@ fn generate_assertions(prefix: TokenStream, node: &json::JsonValue) -> TokenStre
         c.into_iter().fold(quote!(), |a, b| quote!(#a #b))
     };
 
+    let ident = Ident::new(ident, Span::call_site());
+
     quote!(
-        assert_eq!(#prefix.size.width, #width);
-        assert_eq!(#prefix.size.height, #height);
-        assert_eq!(#prefix.location.x, #x);
-        assert_eq!(#prefix.location.y, #y);
+        assert_eq!(stretch.layout(#ident).unwrap().size.width, #width);
+        assert_eq!(stretch.layout(#ident).unwrap().size.height, #height);
+        assert_eq!(stretch.layout(#ident).unwrap().location.x, #x);
+        assert_eq!(stretch.layout(#ident).unwrap().location.y, #y);
 
         #children
     )
 }
 
-fn generate_node(node: &json::JsonValue) -> TokenStream {
+fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
     let style = &node["style"];
 
     let display = match style["display"] {
@@ -406,22 +412,32 @@ fn generate_node(node: &json::JsonValue) -> TokenStream {
     edges_quoted!(style, position);
     edges_quoted!(style, border);
 
-    let children = match node["children"] {
+    let (children_body, children) = match node["children"] {
         json::JsonValue::Array(ref value) => {
             if value.len() > 0 {
-                let body = value.iter().fold(quote!(), |prev, child| {
-                    let child = generate_node(child);
-                    quote!(#prev &#child,)
-                });
-                quote!(vec![ #body ],)
+                let body = value
+                    .iter()
+                    .enumerate()
+                    .map(|(i, child)| generate_node(&format!("{}{}", ident, i), child))
+                    .collect();
+                let idents = value
+                    .iter()
+                    .enumerate()
+                    .map(|(i, _)| Ident::new(&format!("{}{}", ident, i), Span::call_site()))
+                    .collect::<Vec<_>>();
+                (body, quote!(vec![#(#idents),*]))
             } else {
-                quote!(vec![])
+                (quote!(), quote!(vec![]))
             }
         }
-        _ => quote!(),
+        _ => (quote!(), quote!()),
     };
 
-    quote!(stretch::node::Node::new(
+    let ident = Ident::new(&format!("{}", ident), Span::call_site());
+
+    quote!(
+        #children_body
+        let #ident = stretch.new_node(
         stretch::style::Style {
             #display
             #direction
@@ -446,7 +462,7 @@ fn generate_node(node: &json::JsonValue) -> TokenStream {
             ..Default::default()
         },
         #children
-    ))
+    ).unwrap();)
 }
 
 macro_rules! dim_quoted {
