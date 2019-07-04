@@ -6,25 +6,27 @@ Let's start by create a new project with `cargo new hello_stretch --bin`. Before
 
 <Code lang="toml" file="Cargo.toml">{`
 [dependencies]
-stretch = "0.2.2"
+stretch = "0.3.2"
 `}</Code>
 
 We are ready to use Stretch! Open up `hello_stretch/src/main.rs` and replace its contents with the following. Once finished you should be able to run `cargo run` to see the results of this basic layout calculation.
 
 <Code lang="rust" file="main.rs">{`
-use stretch::{style::*, node::Node, geometry::Size};
+use stretch::{style::*, node::{Node, Stretch}, geometry::Size};
  
 fn main() {
-  let node = Node::new(Style {
+  let stretch = Stretch::new();
+
+  let node = stretch.new_node(Style {
       size: Size { 
           width: Dimension::Points(100.0), 
           height: Dimension::Points(100.0),
       },
       ..Default::default()
-  }, vec![]);
+  }, vec![]).unwrap();
  
-  let layout = node.compute_layout(Size::undefined());
-  dbg!(layout);
+  stretch.compute_layout(node, Size::undefined()).unwrap();
+  dbg!(stretch.layout(node).unwrap());
 }
 `}</Code>
 
@@ -32,147 +34,157 @@ fn main() {
 `Node`s are the core building blocks of a stretch layout tree. A node needs a `Style` which describes the `flexbox` properties for the node. By adding nodes as children to a parent node we create a tree which we can perform layout on. The result of a layout computation is a tree of `Layout` nodes. This tree matches the structure of the `Node` tree but contains the computed layout of each node.
 
 <Code lang="rust" file="main.rs">{`
-use stretch::{style::*, node::Node, geometry::Size};
+use stretch::{style::*, node::{Node, Stretch}, geometry::Size};
  
 fn main() {
-  let node = Node::new(Style { ..Default::default() }, vec![
-    Node::new(Style {
+  let stretch = Stretch::new();
+
+  let node = stretch.new_node(Style { ..Default::default() }, vec![
+    stretch.new_node(Style {
       size: Size { 
           width: Dimension::Points(100.0), 
           height: Dimension::Points(100.0),
       },
       ..Default::default()
-    })
-  ]);
- 
-  let layout = node.compute_layout(Size::undefined()).unwrap();
+    }).unwrap()
+  ]).unwrap();
+  
+  stretch.compute_layout(node, Size::undefined()).unwrap();
+  let layout = stretch.layout(node).unwrap();
   
   layout.width; // 100.0
   layout.height; // 100.0
-  layout.children.len(); // 1
 }
 `}</Code>
 
 Nodes can be be mutated and stretch will automatically recompute only the subtrees which have changed. This is incredibly powerful if you have a large node tree, perhaps representing the UI of an app, and only need to change the height of a single element.
 
 <Code lang="rust" file="main.rs">{`
-use stretch::{style::*, node::Node, geometry::Size};
+use stretch::{style::*, node::{Node, Stretch}, geometry::Size};
  
 fn main() {
-  let mut node = Node::new(Style { ..Default::default() }, vec![
-    Node::new(Style {
+  let stretch = Stretch::new();
+
+  let mut node = stretch.new_node(Style { ..Default::default() }, vec![
+    stretch.new_node(Style {
       size: Size { 
           width: Dimension::Points(100.0), 
           height: Dimension::Points(100.0),
       },
       ..Default::default()
-    })
-  ]);
+    }).unwrap()
+  ]).unwrap();
   
-  node.compute_layout(Size::undefined());
+  stretch.compute_layout(node, Size::undefined()).unwrap();
   
   // Mutate node
-  node.set_style(Style {
+  stretch.set_style(node, Style {
     size: Size { 
         width: Dimension::Points(100.0), 
         height: Dimension::Points(100.0),
     },
     ..Default::default()
-  });
+  }).unwrap();
  
   // This call will return partially cached results
-  node.compute_layout(Size::undefined());
+  stretch.compute_layout(node, Size::undefined()).unwrap();
 }
 `}</Code>
 
-# Node
+# Stretch
 Create a new node with children (or an empty list). Children can be removed or added later on as well.
 
-<Code lang="rust">{`Node::new(style: Style, children: Vec<&Node>) -> Node`}</Code>
+<Code lang="rust">{`Stretch::new_node(style: Style, children: Vec<&Node>) -> Result<Node, Error>`}</Code>
 
 ----
 
 Create a new leaf node. This is a node without children which knows how to measure its own intrinsic size. Examples of common leaf nodes are images and text.
 
-<Code lang="rust">{`Node::new_leaf(style: Style, measure: MeasureFunc) -> Node`}</Code>
+<Code lang="rust">{`Stretch::new_leaf(style: Style, measure: MeasureFunc) -> Result<Node, Error>`}</Code>
 
 ----
 
 Set the measure function on a node. This function will be called on leaf nodes to resolve the instrinsic size of the node given a set of constraints.
 
-<Code lang="rust">{`Node::set_measure(&mut self, measure: Option<MeasureFunc>)`}</Code>
+<Code lang="rust">{`Stretch::set_measure(&mut self, node: Node, measure: Option<MeasureFunc>) -> Result<(), Error>`}</Code>
 
 ----
 
 Adds a child to an existing node.
 
-<Code lang="rust">{`Node::add_child(&mut self, child: &Node)`}</Code>
+<Code lang="rust">{`Stretch::add_child(&mut self, node: Node, child: Node) -> Result<(), Error>`}</Code>
 
 ----
 
 Replaces the children of an existing node.
 
-<Code lang="rust">{`Node::set_children(&mut self, children: Vec<&Node>)`}</Code>
+<Code lang="rust">{`Stretch::set_children(&mut self, node: Node, children: Vec<Node>) -> Result<(), Error>`}</Code>
 
 ----
 
 Removes a previously added child from an existing node.
 
-<Code lang="rust">{`Node::remove_child(&mut self, child: &Node) -> Node`}</Code>
+<Code lang="rust">{`Stretch::remove_child(&mut self, node: Node, child: Node) -> Result<Node, Error>`}</Code>
 
 ----
 
 Removes the child at the given index of an existing node.
 
-<Code lang="rust">{`Node::remove_child_at_index(&mut self, index: usize) -> Node`}</Code>
+<Code lang="rust">{`Stretch::remove_child_at_index(&mut self, node: Node, index: usize) -> Result<Node, Error>`}</Code>
 
 ----
 
 Replaces the child at the given index of an existing node with the given new child.
 
-<Code lang="rust">{`Node::replace_child_at_index(&mut self, index: usize, child: &Node) -> Node`}</Code>
+<Code lang="rust">{`Stretch::replace_child_at_index(&mut self, node: Node, index: usize, child: Node) -> Result<Node, Error>`}</Code>
 
 ----
 
 Returns the list of children owned by this node.
 
-<Code lang="rust">{`Node::children(&self) -> Vec<Node>`}</Code>
+<Code lang="rust">{`Stretch::children(&self, node: Node) -> Result<Vec<Node>, Error>`}</Code>
 
 ----
 
 Returns the number of children associated with this node.
 
-<Code lang="rust">{`Node::child_count(&self) -> usize`}</Code>
+<Code lang="rust">{`Stretch::child_count(&self, node: Node) -> Result<usize, Error>`}</Code>
 
 ----
 
 Updates the style of an existing node.
 
-<Code lang="rust">{`Node::set_style(&mut self, style: Style)`}</Code>
+<Code lang="rust">{`Stretch::set_style(&mut self, node: Node, style: Style) -> Result<(), Error>`}</Code>
 
 ----
 
 Returns the current style of a node.
 
-<Code lang="rust">{`Node::style(&self) -> Style`}</Code>
+<Code lang="rust">{`Stretch::style(&self, node: Node) -> Result<&Style, Error>`}</Code>
 
 ----
 
 Marks the node as dirty and propagates this up the node tree. This function is called internally for any mutating function. The only time you have to ensure to call it manually is if some application state has changed which will effect the intrinsic size of a leaf node. For example if the text of a text node has changed. 
 
-<Code lang="rust">{`Node::mark_dirty(&mut self)`}</Code>
+<Code lang="rust">{`Stretch::mark_dirty(&mut self, node: Node) -> Result<(), Error>`}</Code>
 
 ----
 
 Returns whether of not this node is marked as dirty and will need to be recalculated during the next layout pass.
 
-<Code lang="rust">{`Node::dirty(&self) -> bool`}</Code>
+<Code lang="rust">{`Stretch::dirty(&self, node: Node) -> Result<bool, Error>`}</Code>
 
 ----
 
-Computes the layout of a node tree given a size. The size passed in is used to compute percentage sizes on the root node. If you don't need to do this then it is fine to pass `Size::undefined()` however you will typically pass in the size of the viewport which will host this computed layout. The resulting tree of `Layout` nodes mimics the structure of the computed `Node` tree and includes position and size information. `Number` is defined in `stretch::number::Number` and is an abstraction which closely mimics `Option<f32>`.
+Computes the layout of a node tree given a size. The size passed in is used to compute percentage sizes on the root node. If you don't need to do this then it is fine to pass `Size::undefined()` however you will typically pass in the size of the viewport which will host this computed layout. To retries the resulting layout of a node in the tree pass the node to `Stretch::layout()`.
 
-<Code lang="rust">{`Node::compute_layout(&self, size: Size<Number>) -> Result<Layout>`}</Code>
+<Code lang="rust">{`Stretch::compute_layout(&mut self, node: Node, size: Size<Number>) -> Result<(), Error>`}</Code>
+
+----
+
+Returns the layout for the given node. Only call after `Stretch::compute_layout()`.
+
+<Code lang="rust">{`Stretch::layout(&self, node: Node) -> Result<&Layout, Error>`}</Code>
 
 # Style
 The `Style` struct contains all the properties associated with flexbox as well as some properties which we found useful outside of flexbox. For example `position_type` can be set to `PositionType::Absolute` which puts the node into a absolute layout context instead of a flexbox context. `aspect_ratio` is another property not part of the flexbox specification which when set ensures the node matches a certain aspect ratio.
@@ -490,13 +502,12 @@ Optional, if left undefined no aspect ratio is enforced.
 <Code lang="rust">{`aspect_ratio: Number`}</Code>
 
 # Layout
-`Layout` nodes are returned from a layout calculation and mimic the structure of the computed `Node` tree.
+`Layout` nodes are created from a layout calculation and contain the layout output of the corresponding node.
 
 <Code lang="rust">{`
 struct Layout {
     pub size: Size<f32>,
     pub location: Point<f32>,
-    pub children: Vec<Layout>,
 }
 `}</Code>
 

@@ -32,32 +32,36 @@ Stretch is built in Rust but comes with bindings to multiple languages and platf
 # Cargo.toml
 
 [dependencies]
-stretch = "0.2.2"
+stretch = "0.3.2"
 ```
 
 ```rust
 // main.rs
 
+use stretch::geometry::Size;
 use stretch::style::*;
-use stretch::node::*;
-use stretch::result::*;
 
-fn main() {
-  let node = Node::new(
-      Style {
-          size: Size { width: Dimension::Points(100.0), height: Dimension::Points(100.0) },
-          justify_content: JustifyContent::Center,
-          ..Default::default()
-      },
-      vec![&Node::new(
-          Style { size: Size { width: Dimension::Percent(0.5), height: Dimension::Auto }, ..Default::default() },
-          vec![],
-      )],
-  );
+fn main() -> Result<(), stretch::Error> {
+    let mut stretch = stretch::node::Stretch::new();
+    
+    let child = stretch.new_node(
+        Style { size: Size { width: Dimension::Percent(0.5), height: Dimension::Auto }, ..Default::default() },
+        vec![],
+    )?;
 
-  let layout = node.compute_layout(Size::undefined()).unwrap();
-  dbg!(layout);
+    let node = stretch.new_node(
+        Style {
+            size: Size { width: Dimension::Points(100.0), height: Dimension::Points(100.0) },
+            justify_content: JustifyContent::Center,
+            ..Default::default()
+        },
+        vec![child],
+    )?;
+
+    stretch.compute_layout(node, Size::undefined())?;
+    dbg!(stretch.layout(node)?);
 }
+
 ```
 
 ### Android
@@ -73,7 +77,7 @@ android {
 }
 
 dependencies {
-    implementation 'app.visly.stretch:stretch:0.2.2'
+    implementation 'app.visly.stretch:stretch:0.3.2'
 }
 ```
 
@@ -94,7 +98,7 @@ Log.d(TAG, "width: ${layout.width}, height: ${layout.height}")
 ```ruby
 # Podfile
 
-pod 'StretchKit', '~> 0.2.2'
+pod 'StretchKit', '~> 0.3.2'
 ```
 
 ```swift
@@ -118,10 +122,11 @@ print("width: \(layout.width), height: \(layout.height)")
 ```javascript
 // index.js
 
-import { Node, JustifyContent } from 'stretch-layout';
+import { Allocator, Node, JustifyContent } from 'stretch-layout';
 
-const node = new Node({width: 100, height: 100, justifyContent: JustifyContent.Center});
-node.addChild(new Node({width: '50%', height: '50%'}));
+const allocator = new Allocator();
+const node = new Node(allocator, {width: 100, height: 100, justifyContent: JustifyContent.Center});
+node.addChild(new Node(allocator, {width: '50%', height: '50%'}));
 const layout = node.computeLayout();
 
 console.log(layout.width, layout.height);
