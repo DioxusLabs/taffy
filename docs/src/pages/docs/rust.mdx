@@ -16,7 +16,7 @@ use stretch::{style::*, node::{Node, Stretch}, geometry::Size};
  
 fn main() {
   let stretch = Stretch::new();
-
+  
   let node = stretch.new_node(Style {
       size: Size { 
           width: Dimension::Points(100.0), 
@@ -38,7 +38,7 @@ use stretch::{style::*, node::{Node, Stretch}, geometry::Size};
  
 fn main() {
   let stretch = Stretch::new();
-
+  
   let node = stretch.new_node(Style { ..Default::default() }, vec![
     stretch.new_node(Style {
       size: Size { 
@@ -64,7 +64,7 @@ use stretch::{style::*, node::{Node, Stretch}, geometry::Size};
  
 fn main() {
   let stretch = Stretch::new();
-
+  
   let mut node = stretch.new_node(Style { ..Default::default() }, vec![
     stretch.new_node(Style {
       size: Size { 
