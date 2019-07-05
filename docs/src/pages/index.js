@@ -26,23 +26,26 @@ const Code = ({file, lang, children}) => {
 }
 
 const rustSnippet = `
-use stretch::{style::*, node::Node, geometry::Size};
+use stretch::{style::*, node::{Node, Stretch}, geometry::Size};
 
-let node = Node::new(Style {
+let stretch = Stretch::new();
+
+let node = stretch.new_node(Style {
     size: Size { 
         width: Dimension::Points(100.0), 
         height: Dimension::Points(100.0),
     },
     ..Default::default()
-}, vec![]);
+}, vec![]).unwrap();
 
-let layout = node.compute_layout(Size::undefined());
+stretch.compute_layout(node, Size::undefined());
 `.trim();
 
 const jsSnippet = `
-import { Node } from 'stretch-layout';
+import { Allocator, Node } from 'stretch-layout';
 
-const node = new Node({
+const allocator = new Allocator();
+const node = new Node(allocator, {
     width: 100, 
     height: 100, 
 });
