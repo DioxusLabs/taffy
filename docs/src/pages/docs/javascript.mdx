@@ -13,9 +13,10 @@ npm install --save stretch-layout
 We are ready to use Stretch! Open up `index.js` and replace its contents with the following. Once finished you should be able to run it with `npm run start` to see the results of this basic layout calculation in the logs.
 
 <Code lang="typescript" file="index.js">{`
-import { Node } from 'stretch-layout';
+import { Allocator, Node } from 'stretch-layout';
  
-const node = new Node({width: 100, height: 100});
+const allocator = new Allocator();
+const node = new Node(allocator, {width: 100, height: 100});
 const layout = node.computeLayout();
  
 console.log(layout.width, layout.height);
@@ -27,10 +28,11 @@ To integrate Stretch into an existing app you will need to use a bundler such as
 `Node`s are the core building blocks of a stretch layout tree. A node needs a `Style` which describes the `flexbox` properties for the node. By adding nodes as children to a parent node we create a tree which we can perform layout on. The result of a layout computation is a tree of `Layout` nodes. This tree matches the structure of the `Node` tree but contains the computed layout of each node.
 
 <Code lang="typescript" file="index.js">{`
-import { Node } from 'stretch-layout';
+import { Allocator, Node } from 'stretch-layout';
   
-const node = new Node();
-node.addChild(new Node({width: 100, height: 100}));
+const allocator = new Allocator();
+const node = new Node(allocator);
+node.addChild(new Node(allocator,{width: 100, height: 100}));
 const layout = node.computeLayout();
   
 layout.width; // 100.0
@@ -41,10 +43,11 @@ layout.childCount; // 1
 Nodes can be be mutated and stretch will automatically recompute only the subtrees which have changed. This is incredibly powerful if you have a large node tree, perhaps representing the UI of an app, and only need to change the height of a single element.
 
 <Code lang="typescript" file="index.js">{`
-import { Node } from 'stretch-layout';
+import { Allocator, Node } from 'stretch-layout';
   
-const node = new Node();
-node.addChild(new Node({width: 100, height: 100}));
+const allocator = new Allocator();
+const node = new Node(allocator);
+node.addChild(new Node(allocator, {width: 100, height: 100}));
  
 node.computeLayout();
   
@@ -55,10 +58,15 @@ node.setStyle({width: 100, height: 100})
 node.computeLayout();
 `}</Code>
 
+# Allocator
+All stretch nodes are allocated within an allocator. All nodes in a tree should share the same allocator but can also be used across trees. Usually apps create a single Allocator.
+
+<Code lang="typescript">{`constructor()`}</Code>
+
 # Node
 Create a new node with a given style. Style may be undefined to create a node with default styles however this is not very useful.
 
-<Code lang="typescript">{`constructor(style: Style)`}</Code>
+<Code lang="typescript">{`constructor(allocator: Allocator, style: Style)`}</Code>
 
 ----
 

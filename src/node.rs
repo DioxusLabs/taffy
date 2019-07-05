@@ -71,11 +71,11 @@ impl Stretch {
         }
     }
 
-    pub fn new_leaf(&mut self, style: Style, measure: MeasureFunc) -> Node {
+    pub fn new_leaf(&mut self, style: Style, measure: MeasureFunc) -> Result<Node, Error> {
         let node = self.allocate_node();
         let id = self.forest.new_leaf(style, measure);
         self.add_node(node, id);
-        node
+        Ok(node)
     }
 
     pub fn new_node(&mut self, style: Style, children: Vec<Node>) -> Result<Node, Error> {
