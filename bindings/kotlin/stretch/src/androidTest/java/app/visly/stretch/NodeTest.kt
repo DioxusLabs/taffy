@@ -7,6 +7,19 @@ import org.junit.Test
 class NodeTest {
 
     @Test
+    fun testing() {
+        val node1 = Node(Style(), listOf())
+        val node2 = Node(Style(), listOf())
+        val node3 = Node(Style(), listOf())
+        val node4 = Node(Style(), listOf())
+
+        assertThat(node1.isDirty(), `is`(true))
+        assertThat(node2.isDirty(), `is`(true))
+        assertThat(node3.isDirty(), `is`(true))
+        assertThat(node4.isDirty(), `is`(true))
+    }
+
+    @Test
     fun createNode() {
         val child = Node(Style(), listOf())
         val node = Node(Style(), listOf(child))

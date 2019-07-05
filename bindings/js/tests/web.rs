@@ -15,7 +15,8 @@ fn js_value(js: &str) -> JsValue {
 
 #[wasm_bindgen_test]
 fn set_measure() {
-    let mut node = Node::new(&js_value("{}"));
+    let allocator = Allocator::new();
+    let mut node = Node::new(&allocator, &js_value("{}"));
     node.set_measure(&js_value(
         "function (w, h) {
         return {width: 100, height: 100};
@@ -29,8 +30,9 @@ fn set_measure() {
 
 #[wasm_bindgen_test]
 fn add_child() {
-    let mut node = Node::new(&js_value("{}"));
-    let child = Node::new(&js_value("{}"));
+    let allocator = Allocator::new();
+    let mut node = Node::new(&allocator, &js_value("{}"));
+    let child = Node::new(&allocator, &js_value("{}"));
 
     node.add_child(&child);
 
@@ -39,8 +41,9 @@ fn add_child() {
 
 #[wasm_bindgen_test]
 fn remove_child() {
-    let mut node = Node::new(&js_value("{}"));
-    let child = Node::new(&js_value("{}"));
+    let allocator = Allocator::new();
+    let mut node = Node::new(&allocator, &js_value("{}"));
+    let child = Node::new(&allocator, &js_value("{}"));
 
     node.add_child(&child);
     node.remove_child(&child);
@@ -50,8 +53,9 @@ fn remove_child() {
 
 #[wasm_bindgen_test]
 fn remove_child_at_index() {
-    let mut node = Node::new(&js_value("{}"));
-    let child = Node::new(&js_value("{}"));
+    let allocator = Allocator::new();
+    let mut node = Node::new(&allocator, &js_value("{}"));
+    let child = Node::new(&allocator, &js_value("{}"));
 
     node.add_child(&child);
     node.remove_child_at_index(0);
@@ -61,9 +65,10 @@ fn remove_child_at_index() {
 
 #[wasm_bindgen_test]
 fn replace_child_at_index() {
-    let mut node = Node::new(&js_value("{}"));
-    let child1 = Node::new(&js_value("{width: 100, height: 100}"));
-    let child2 = Node::new(&js_value("{width: 200, height: 200}"));
+    let allocator = Allocator::new();
+    let mut node = Node::new(&allocator, &js_value("{}"));
+    let child1 = Node::new(&allocator, &js_value("{width: 100, height: 100}"));
+    let child2 = Node::new(&allocator, &js_value("{width: 200, height: 200}"));
 
     node.add_child(&child1);
     node.replace_child_at_index(0, &child2);
@@ -75,7 +80,8 @@ fn replace_child_at_index() {
 
 #[wasm_bindgen_test]
 fn set_style() {
-    let mut node = Node::new(&js_value("{}"));
+    let allocator = Allocator::new();
+    let mut node = Node::new(&allocator, &js_value("{}"));
     node.set_style(&js_value("{width: 200, height: 200}"));
     let style = node.get_style();
 
@@ -85,7 +91,8 @@ fn set_style() {
 
 #[wasm_bindgen_test]
 fn mark_dirty() {
-    let mut node = Node::new(&js_value("{}"));
+    let allocator = Allocator::new();
+    let mut node = Node::new(&allocator, &js_value("{}"));
     node.compute_layout(&JsValue::UNDEFINED);
 
     assert_eq!(node.is_dirty(), false);

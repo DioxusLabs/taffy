@@ -24,32 +24,38 @@ typedef struct {
   StretchStyleDimension height;
 } StretchStyleSize;
 
-void stretch_node_add_child(void *node, void *child);
+void stretch_free(void *stretch);
 
-void *stretch_node_compute_layout(void *node,
+void *stretch_init(void);
+
+void stretch_node_add_child(void *stretch, void *node, void *child);
+
+void *stretch_node_compute_layout(void *stretch,
+                                  void *node,
                                   float width,
                                   float height,
                                   void *(*create_layout)(const float*));
 
-void *stretch_node_create(void *style);
+void *stretch_node_create(void *stretch, void *style);
 
-bool stretch_node_dirty(void *node);
+bool stretch_node_dirty(void *stretch, void *node);
 
-void stretch_node_free(void *node);
+void stretch_node_free(void *stretch, void *node);
 
-void stretch_node_mark_dirty(void *node);
+void stretch_node_mark_dirty(void *stretch, void *node);
 
-void stretch_node_remove_child(void *node, void *child);
+void stretch_node_remove_child(void *stretch, void *node, void *child);
 
-void stretch_node_remove_child_at_index(void *node, uintptr_t index);
+void stretch_node_remove_child_at_index(void *stretch, void *node, uintptr_t index);
 
-void stretch_node_replace_child_at_index(void *node, uintptr_t index, void *child);
+void stretch_node_replace_child_at_index(void *stretch, void *node, uintptr_t index, void *child);
 
-void stretch_node_set_measure(void *node,
+void stretch_node_set_measure(void *stretch,
+                              void *node,
                               void *swift_ptr,
                               StretchSize (*measure)(const void*, float, float));
 
-void stretch_node_set_style(void *node, void *style);
+void stretch_node_set_style(void *stretch, void *node, void *style);
 
 void *stretch_style_create(int32_t display,
                            int32_t position_type,

@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'StretchKit'
-  s.version          = '0.2.2'
+  s.version          = '0.3.2'
   s.summary          = 'Swift bindings for the Stretch layout engine.'
   s.description      = "A high performance & cross-platform layout engine."
   s.homepage         = 'https://visly.app/stretch'

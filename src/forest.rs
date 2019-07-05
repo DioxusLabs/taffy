@@ -113,28 +113,34 @@ impl Forest {
 
         let last = self.nodes.len();
 
-        // Update ids for every child of the swapped in node.
-        for child in &self.children[last] {
-            for parent in &mut self.parents[*child] {
-                if *parent == last {
-                    *parent = node;
+        return if last != node {
+            // Update ids for every child of the swapped in node.
+            for child in &self.children[last] {
+                for parent in &mut self.parents[*child] {
+                    if *parent == last {
+                        *parent = node;
+                    }
                 }
             }
-        }
 
-        // Update ids for every parent of the swapped in node.
-        for parent in &self.parents[last] {
-            for child in &mut self.children[*parent] {
-                if *child == last {
-                    *child = node;
+            // Update ids for every parent of the swapped in node.
+            for parent in &self.parents[last] {
+                for child in &mut self.children[*parent] {
+                    if *child == last {
+                        *child = node;
+                    }
                 }
             }
-        }
 
-        self.children.swap_remove(node);
-        self.parents.swap_remove(node);
+            self.children.swap_remove(node);
+            self.parents.swap_remove(node);
 
-        Some(last)
+            Some(last)
+        } else {
+            self.children.swap_remove(node);
+            self.parents.swap_remove(node);
+            None
+        };
     }
 
     pub unsafe fn remove_child(&mut self, node: NodeId, child: NodeId) -> NodeId {

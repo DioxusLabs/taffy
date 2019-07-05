@@ -1,9 +1,9 @@
 PODS:
   - Nimble (8.0.1)
   - Quick (2.1.0)
-  - StretchKit (0.2.2):
-    - StretchKit/StretchCore (= 0.2.2)
-  - StretchKit/StretchCore (0.2.2)
+  - StretchKit (0.3.2):
+    - StretchKit/StretchCore (= 0.3.2)
+  - StretchKit/StretchCore (0.3.2)
 
 DEPENDENCIES:
   - Nimble (~> 8.0.1)
