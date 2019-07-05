@@ -26,7 +26,7 @@ const Code = ({file, lang, children}) => {
 }
 
 const rustSnippet = `
-use stretch::{style::*, node::{Node, Stretch}, geometry::Size};
+use stretch::{style::*, node::*, geometry::Size};
 
 let stretch = Stretch::new();
 
