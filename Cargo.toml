@@ -19,6 +19,11 @@ maintenance = { status = "experimental" }
 libm = "0.1.2"
 lazy_static = "1.3"
 
+[dependencies.serde]
+version = "1.0.99"
+features = ["serde_derive"]
+optional = true
+
 [features]
 default = ["std"]
 std = []
