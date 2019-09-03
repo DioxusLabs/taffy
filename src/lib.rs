@@ -6,6 +6,10 @@ extern crate alloc;
 #[macro_use]
 extern crate lazy_static;
 
+#[cfg_attr(feature = "serde", macro_use)]
+#[cfg(feature = "serde")]
+extern crate serde;
+
 pub mod geometry;
 pub mod node;
 pub mod number;

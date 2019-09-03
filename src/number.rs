@@ -1,6 +1,8 @@
 use core::ops;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "kebab-case"))]
 pub enum Number {
     Defined(f32),
     Undefined,
