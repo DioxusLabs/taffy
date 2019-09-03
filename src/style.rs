@@ -5,6 +5,8 @@ use crate::geometry::{Rect, Size};
 use crate::number::Number;
 
 #[derive(Copy, Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "kebab-case"))]
 pub enum AlignItems {
     FlexStart,
     FlexEnd,
@@ -20,6 +22,8 @@ impl Default for AlignItems {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "kebab-case"))]
 pub enum AlignSelf {
     Auto,
     FlexStart,
@@ -36,6 +40,8 @@ impl Default for AlignSelf {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "kebab-case"))]
 pub enum AlignContent {
     FlexStart,
     FlexEnd,
@@ -52,9 +58,13 @@ impl Default for AlignContent {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "kebab-case"))]
 pub enum Direction {
     Inherit,
+    #[cfg_attr(feature = "serde", serde(rename = "ltr"))]
     LTR,
+    #[cfg_attr(feature = "serde", serde(rename = "rtl"))]
     RTL,
 }
 
@@ -65,8 +75,12 @@ impl Default for Direction {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "kebab-case"))]
 pub enum Display {
+    #[cfg_attr(feature = "serde", serde(rename = "flex"))]
     Flex,
+    #[cfg_attr(feature = "serde", serde(rename = "none"))]
     None,
 }
 
@@ -77,6 +91,8 @@ impl Default for Display {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "kebab-case"))]
 pub enum FlexDirection {
     Row,
     Column,
@@ -105,6 +121,8 @@ impl FlexDirection {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "kebab-case"))]
 pub enum JustifyContent {
     FlexStart,
     FlexEnd,
@@ -121,6 +139,8 @@ impl Default for JustifyContent {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "kebab-case"))]
 pub enum Overflow {
     Visible,
     Hidden,
@@ -134,6 +154,8 @@ impl Default for Overflow {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "kebab-case"))]
 pub enum PositionType {
     Relative,
     Absolute,
@@ -146,6 +168,8 @@ impl Default for PositionType {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "kebab-case"))]
 pub enum FlexWrap {
     NoWrap,
     Wrap,
@@ -159,6 +183,8 @@ impl Default for FlexWrap {
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "kebab-case"))]
 pub enum Dimension {
     Undefined,
     Auto,
@@ -203,6 +229,9 @@ impl Default for Size<Dimension> {
 }
 
 #[derive(Copy, Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(default))]
+#[cfg_attr(feature = "serde", serde(rename_all = "kebab-case"))]
 pub struct Style {
     pub display: Display,
     pub position_type: PositionType,

@@ -4,6 +4,9 @@ use crate::number::Number;
 use crate::style;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(default))]
+#[cfg_attr(feature = "serde", serde(rename_all = "kebab-case"))]
 pub struct Rect<T> {
     pub start: T,
     pub end: T,
@@ -81,6 +84,9 @@ where
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(default))]
+#[cfg_attr(feature = "serde", serde(rename_all = "kebab-case"))]
 pub struct Size<T> {
     pub width: T,
     pub height: T,
