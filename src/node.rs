@@ -108,6 +108,7 @@ impl Stretch {
         if let Some(new_id) = self.forest.swap_remove(id) {
             let new = self.ids_to_nodes.remove(&new_id).unwrap();
             self.nodes_to_ids.insert(new, id);
+            self.ids_to_nodes.insert(id, new);
         }
     }
 
