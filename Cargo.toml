@@ -27,6 +27,8 @@ optional = true
 [features]
 default = ["std"]
 std = []
+serde_camel_case = ["serde"]
+serde_kebab_case = ["serde"]
 
 [dev-dependencies]
 criterion = "0.2"
