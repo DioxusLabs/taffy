@@ -2,6 +2,9 @@
 //!
 //! Backing datastructure for `Stretch` structs.
 
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+
 use crate::geometry::Size;
 use crate::id::NodeId;
 use crate::node::MeasureFunc;
