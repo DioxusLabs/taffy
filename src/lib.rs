@@ -1,7 +1,9 @@
 #![cfg_attr(not(feature = "std"), no_std)]
-#![cfg_attr(not(feature = "std"), feature(alloc))]
 #[cfg(not(feature = "std"))]
 extern crate alloc;
+
+#[cfg(not(feature = "std"))]
+use alloc::boxed::Box;
 
 #[macro_use]
 extern crate lazy_static;
@@ -27,9 +29,10 @@ use core::any::Any;
 #[derive(Debug)]
 pub enum Error {
     InvalidNode(node::Node),
-    Measure(Box<Any>),
+    Measure(Box<dyn Any>),
 }
 
+#[cfg(feature = "std")]
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match *self {
@@ -39,6 +42,7 @@ impl std::fmt::Display for Error {
     }
 }
 
+#[cfg(feature = "std")]
 impl std::error::Error for Error {
     fn description(&self) -> &str {
         match *self {

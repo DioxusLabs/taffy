@@ -1,6 +1,3 @@
-#[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
-
 use crate::algo::ComputeResult;
 use crate::geometry::{Point, Size};
 use crate::number::Number;
