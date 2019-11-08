@@ -135,7 +135,7 @@ fn stretch_benchmarks(c: &mut Criterion) {
         let root = build_deep_hierarchy(&mut stretch);
 
         b.iter(|| {
-            stretch.mark_dirty(root);
+            stretch.mark_dirty(root).unwrap();
             stretch.compute_layout(root, stretch::geometry::Size::undefined()).unwrap()
         })
     });
