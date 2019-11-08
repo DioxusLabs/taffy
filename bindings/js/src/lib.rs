@@ -608,7 +608,7 @@ fn get_dimension(obj: &JsValue, key: &str) -> stretch::style::Dimension {
                 if string.ends_with('%') {
                     let len = string.len();
                     if let Ok(number) = string[..len - 1].parse::<f32>() {
-                        return stretch::style::Dimension::Points(number);
+                        return stretch::style::Dimension::Percent(number / 100.0);
                     }
                 }
             }

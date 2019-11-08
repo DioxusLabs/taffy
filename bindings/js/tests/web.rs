@@ -90,6 +90,19 @@ fn set_style() {
 }
 
 #[wasm_bindgen_test]
+fn set_percent_dimension() {
+    let allocator = Allocator::new();
+    let mut node = Node::new(&allocator, &js_value("{}"));
+    node.set_style(&js_value("{width: 200, height: 200}"));
+    let child = Node::new(&allocator, &js_value("{width: '100%', height: '100%'}"));
+    node.add_child(&child);
+    let layout = node.compute_layout(&JsValue::UNDEFINED);
+
+    assert_eq!(layout.child(0).width, 200.0);
+    assert_eq!(layout.child(0).height, 200.0);
+}
+
+#[wasm_bindgen_test]
 fn mark_dirty() {
     let allocator = Allocator::new();
     let mut node = Node::new(&allocator, &js_value("{}"));
