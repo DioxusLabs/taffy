@@ -1,11 +1,12 @@
 #[cfg(not(feature = "std"))]
-use alloc::{vec, vec::Vec};
+use alloc::{boxed::Box, vec::Vec};
+#[cfg(not(feature = "std"))]
+use hashbrown::HashMap;
+#[cfg(feature = "std")]
+use std::collections::HashMap;
 
 use core::any::Any;
-
-use std::collections::HashMap;
-use std::ops::Drop;
-use std::sync::Mutex;
+use core::ops::Drop;
 
 use crate::forest::Forest;
 use crate::geometry::Size;
@@ -15,11 +16,11 @@ use crate::result::Layout;
 use crate::style::*;
 use crate::Error;
 
-pub type MeasureFunc = Box<Fn(Size<Number>) -> Result<Size<f32>, Box<Any>>>;
+pub type MeasureFunc = Box<dyn Fn(Size<Number>) -> Result<Size<f32>, Box<dyn Any>>>;
 
 lazy_static! {
     /// Global stretch instance id allocator.
-    static ref INSTANCE_ALLOCATOR: Mutex<id::Allocator> = Mutex::new(id::Allocator::new());
+    static ref INSTANCE_ALLOCATOR: id::Allocator = id::Allocator::new();
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -45,7 +46,7 @@ impl Stretch {
 
     pub fn with_capacity(capacity: usize) -> Self {
         Stretch {
-            id: INSTANCE_ALLOCATOR.lock().unwrap().allocate(),
+            id: INSTANCE_ALLOCATOR.allocate(),
             nodes: id::Allocator::new(),
             nodes_to_ids: HashMap::with_capacity(capacity),
             ids_to_nodes: HashMap::with_capacity(capacity),
@@ -167,7 +168,7 @@ impl Stretch {
         // TODO: index check
 
         self.forest.parents[child_id].push(node_id);
-        let old_child = std::mem::replace(&mut self.forest.children[node_id][index], child_id);
+        let old_child = core::mem::replace(&mut self.forest.children[node_id][index], child_id);
         self.forest.parents[old_child].retain(|p| *p != node_id);
 
         self.forest.mark_dirty(node_id);
@@ -221,6 +222,6 @@ impl Stretch {
 
 impl Drop for Stretch {
     fn drop(&mut self) {
-        INSTANCE_ALLOCATOR.lock().unwrap().free(&[self.id]);
+        INSTANCE_ALLOCATOR.free(&[self.id]);
     }
 }

@@ -1,6 +1,3 @@
-#[cfg(not(feature = "std"))]
-use alloc::boxed::Box;
-
 use crate::geometry::{Rect, Size};
 use crate::number::Number;
 
