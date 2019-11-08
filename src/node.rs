@@ -37,11 +37,15 @@ pub struct Stretch {
     forest: Forest,
 }
 
-impl Stretch {
-    const DEFAULT_CAPACITY: usize = 16;
+impl Default for Stretch {
+    fn default() -> Self {
+        Stretch::with_capacity(16)
+    }
+}
 
+impl Stretch {
     pub fn new() -> Self {
-        Self::with_capacity(Self::DEFAULT_CAPACITY)
+        Default::default()
     }
 
     pub fn with_capacity(capacity: usize) -> Self {
