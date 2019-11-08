@@ -116,7 +116,7 @@ impl Forest {
 
         let last = self.nodes.len();
 
-        return if last != node {
+        if last != node {
             // Update ids for every child of the swapped in node.
             for child in &self.children[last] {
                 for parent in &mut self.parents[*child] {
@@ -143,7 +143,7 @@ impl Forest {
             self.children.swap_remove(node);
             self.parents.swap_remove(node);
             None
-        };
+        }
     }
 
     pub unsafe fn remove_child(&mut self, node: NodeId, child: NodeId) -> NodeId {
@@ -159,7 +159,7 @@ impl Forest {
     }
 
     pub fn mark_dirty(&mut self, node: NodeId) {
-        fn mark_dirty_impl(nodes: &mut Vec<NodeData>, parents: &Vec<Vec<NodeId>>, node_id: NodeId) {
+        fn mark_dirty_impl(nodes: &mut Vec<NodeData>, parents: &[Vec<NodeId>], node_id: NodeId) {
             let node = &mut nodes[node_id];
             node.layout_cache = None;
             node.is_dirty = true;

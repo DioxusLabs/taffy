@@ -110,7 +110,7 @@ impl Forest {
         Ok(())
     }
 
-    fn round_layout(nodes: &mut Vec<NodeData>, children: &Vec<Vec<NodeId>>, root: NodeId, abs_x: f32, abs_y: f32) {
+    fn round_layout(nodes: &mut Vec<NodeData>, children: &[Vec<NodeId>], root: NodeId, abs_x: f32, abs_y: f32) {
         let layout = &mut nodes[root].layout;
         let abs_x = abs_x + layout.location.x;
         let abs_y = abs_y + layout.location.y;
@@ -124,6 +124,7 @@ impl Forest {
         }
     }
 
+    #[allow(clippy::cognitive_complexity)]
     fn compute_internal(
         &mut self,
         node: NodeId,
@@ -268,9 +269,9 @@ impl Forest {
             })
             .collect();
 
-        let has_baseline_child = flex_items.iter().fold(false, |result, child| {
-            result || self.nodes[child.node].style.align_self(&self.nodes[node].style) == AlignSelf::Baseline
-        });
+        let has_baseline_child = flex_items
+            .iter()
+            .any(|child| self.nodes[child.node].style.align_self(&self.nodes[node].style) == AlignSelf::Baseline);
 
         // TODO - this does not follow spec. See commented out code below
         // 3. Determine the flex base size and hypothetical main size of each item:
@@ -1340,7 +1341,7 @@ impl Forest {
             }
         }
 
-        fn hidden_layout(nodes: &mut Vec<NodeData>, children: &Vec<Vec<NodeId>>, node: NodeId, order: u32) {
+        fn hidden_layout(nodes: &mut Vec<NodeData>, children: &[Vec<NodeId>], node: NodeId, order: u32) {
             nodes[node].layout =
                 result::Layout { order, size: Size { width: 0.0, height: 0.0 }, location: Point { x: 0.0, y: 0.0 } };
 
