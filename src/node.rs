@@ -186,6 +186,11 @@ impl Stretch {
         Ok(self.forest.children[id].iter().map(|child| self.ids_to_nodes[child]).collect())
     }
 
+    pub fn child_at_index(&self, node: Node, index: usize) -> Result<Node, Error> {
+        let id = self.find_node(node)?;
+        Ok(self.ids_to_nodes[&self.forest.children[id][index]])
+    }
+
     pub fn child_count(&self, node: Node) -> Result<usize, Error> {
         let id = self.find_node(node)?;
         Ok(self.forest.children[id].len())
