@@ -5,7 +5,7 @@ fn main() -> Result<(), stretch::Error> {
     let mut stretch = stretch::node::Stretch::new();
     let child = stretch.new_node(
         Style { size: Size { width: Dimension::Percent(0.5), height: Dimension::Auto }, ..Default::default() },
-        vec![],
+        &[],
     )?;
     let node = stretch.new_node(
         Style {
@@ -13,7 +13,7 @@ fn main() -> Result<(), stretch::Error> {
             justify_content: JustifyContent::Center,
             ..Default::default()
         },
-        vec![child],
+        &[child],
     )?;
 
     stretch.compute_layout(node, Size::undefined())?;
