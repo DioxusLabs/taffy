@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod node {
     use stretch::geometry::*;
-    use stretch::node::Stretch;
+    use stretch::node::{MeasureFunc, Stretch};
     use stretch::style::*;
 
     #[test]
@@ -19,11 +19,12 @@ mod node {
     #[test]
     fn set_measure() {
         let mut stretch = Stretch::new();
-        let node = stretch.new_leaf(Style::default(), |_| Size { width: 200.0, height: 200.0 }).unwrap();
+        let node =
+            stretch.new_leaf(Style::default(), MeasureFunc::Raw(|_| Size { width: 200.0, height: 200.0 })).unwrap();
         stretch.compute_layout(node, Size::undefined()).unwrap();
         assert_eq!(stretch.layout(node).unwrap().size.width, 200.0);
 
-        stretch.set_measure(node, Some(|_| Size { width: 100.0, height: 100.0 })).unwrap();
+        stretch.set_measure(node, Some(MeasureFunc::Raw(|_| Size { width: 100.0, height: 100.0 }))).unwrap();
         stretch.compute_layout(node, Size::undefined()).unwrap();
         assert_eq!(stretch.layout(node).unwrap().size.width, 100.0);
     }

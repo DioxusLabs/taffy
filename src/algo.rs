@@ -2,6 +2,7 @@ use core::f32;
 
 use crate::forest::{Forest, NodeData};
 use crate::id::NodeId;
+use crate::node::MeasureFunc;
 use crate::result;
 use crate::style::*;
 use crate::sys;
@@ -195,7 +196,11 @@ impl Forest {
             }
 
             if let Some(ref measure) = self.nodes[node].measure {
-                let result = ComputeResult { size: measure(node_size) };
+                let result = match measure {
+                    MeasureFunc::Raw(measure) => ComputeResult { size: measure(node_size) },
+                    #[cfg(any(feature = "std", feature = "alloc"))]
+                    MeasureFunc::Boxed(measure) => ComputeResult { size: measure(node_size) },
+                };
                 self.nodes[node].layout_cache =
                     Some(result::Cache { node_size, parent_size, perform_layout, result: result.clone() });
                 return result;

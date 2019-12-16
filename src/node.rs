@@ -9,7 +9,11 @@ use crate::style::*;
 use crate::sys;
 use crate::Error;
 
-pub type MeasureFunc = fn(Size<Number>) -> Size<f32>;
+pub enum MeasureFunc {
+    Raw(fn(Size<Number>) -> Size<f32>),
+    #[cfg(any(feature = "std", feature = "alloc"))]
+    Boxed(sys::Box<dyn Fn(Size<Number>) -> Size<f32>>),
+}
 
 lazy_static! {
     /// Global stretch instance id allocator.

@@ -101,7 +101,7 @@ impl Size<()> {
 }
 
 impl<T> Size<T> {
-    pub(crate) fn map<R, F>(self, f: F) -> Size<R>
+    pub fn map<R, F>(self, f: F) -> Size<R>
     where
         F: Fn(T) -> R,
     {

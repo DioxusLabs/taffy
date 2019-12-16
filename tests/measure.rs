@@ -1,15 +1,19 @@
 #[cfg(test)]
 mod measure {
+    use stretch::node::MeasureFunc;
     use stretch::number::OrElse;
 
     #[test]
     fn measure_root() {
         let mut stretch = stretch::node::Stretch::new();
         let node = stretch
-            .new_leaf(stretch::style::Style { ..Default::default() }, |constraint| stretch::geometry::Size {
-                width: constraint.width.or_else(100.0),
-                height: constraint.height.or_else(100.0),
-            })
+            .new_leaf(
+                stretch::style::Style { ..Default::default() },
+                MeasureFunc::Raw(|constraint| stretch::geometry::Size {
+                    width: constraint.width.or_else(100.0),
+                    height: constraint.height.or_else(100.0),
+                }),
+            )
             .unwrap();
 
         stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
@@ -23,10 +27,13 @@ mod measure {
         let mut stretch = stretch::node::Stretch::new();
 
         let child = stretch
-            .new_leaf(stretch::style::Style { ..Default::default() }, |constraint| stretch::geometry::Size {
-                width: constraint.width.or_else(100.0),
-                height: constraint.height.or_else(100.0),
-            })
+            .new_leaf(
+                stretch::style::Style { ..Default::default() },
+                MeasureFunc::Raw(|constraint| stretch::geometry::Size {
+                    width: constraint.width.or_else(100.0),
+                    height: constraint.height.or_else(100.0),
+                }),
+            )
             .unwrap();
 
         let node = stretch.new_node(stretch::style::Style { ..Default::default() }, &[child]).unwrap();
@@ -43,10 +50,13 @@ mod measure {
     fn measure_child_constraint() {
         let mut stretch = stretch::node::Stretch::new();
         let child = stretch
-            .new_leaf(stretch::style::Style { ..Default::default() }, |constraint| stretch::geometry::Size {
-                width: constraint.width.or_else(100.0),
-                height: constraint.height.or_else(100.0),
-            })
+            .new_leaf(
+                stretch::style::Style { ..Default::default() },
+                MeasureFunc::Raw(|constraint| stretch::geometry::Size {
+                    width: constraint.width.or_else(100.0),
+                    height: constraint.height.or_else(100.0),
+                }),
+            )
             .unwrap();
 
         let node = stretch
@@ -75,10 +85,13 @@ mod measure {
     fn measure_child_constraint_padding_parent() {
         let mut stretch = stretch::node::Stretch::new();
         let child = stretch
-            .new_leaf(stretch::style::Style { ..Default::default() }, |constraint| stretch::geometry::Size {
-                width: constraint.width.or_else(100.0),
-                height: constraint.height.or_else(100.0),
-            })
+            .new_leaf(
+                stretch::style::Style { ..Default::default() },
+                MeasureFunc::Raw(|constraint| stretch::geometry::Size {
+                    width: constraint.width.or_else(100.0),
+                    height: constraint.height.or_else(100.0),
+                }),
+            )
             .unwrap();
 
         let node = stretch
@@ -125,12 +138,13 @@ mod measure {
             .unwrap();
 
         let child1 = stretch
-            .new_leaf(stretch::style::Style { flex_grow: 1.0, ..Default::default() }, |constraint| {
-                stretch::geometry::Size {
+            .new_leaf(
+                stretch::style::Style { flex_grow: 1.0, ..Default::default() },
+                MeasureFunc::Raw(|constraint| stretch::geometry::Size {
                     width: constraint.width.or_else(10.0),
                     height: constraint.height.or_else(50.0),
-                }
-            })
+                }),
+            )
             .unwrap();
 
         let node = stretch
@@ -170,10 +184,13 @@ mod measure {
             .unwrap();
 
         let child1 = stretch
-            .new_leaf(stretch::style::Style { ..Default::default() }, |constraint| stretch::geometry::Size {
-                width: constraint.width.or_else(100.0),
-                height: constraint.height.or_else(50.0),
-            })
+            .new_leaf(
+                stretch::style::Style { ..Default::default() },
+                MeasureFunc::Raw(|constraint| stretch::geometry::Size {
+                    width: constraint.width.or_else(100.0),
+                    height: constraint.height.or_else(50.0),
+                }),
+            )
             .unwrap();
 
         let node = stretch
@@ -212,11 +229,14 @@ mod measure {
             .unwrap();
 
         let child1 = stretch
-            .new_leaf(stretch::style::Style { flex_grow: 1.0, ..Default::default() }, |constraint| {
-                let width = constraint.width.or_else(10.0);
-                let height = constraint.height.or_else(width * 2.0);
-                stretch::geometry::Size { width, height }
-            })
+            .new_leaf(
+                stretch::style::Style { flex_grow: 1.0, ..Default::default() },
+                MeasureFunc::Raw(|constraint| {
+                    let width = constraint.width.or_else(10.0);
+                    let height = constraint.height.or_else(width * 2.0);
+                    stretch::geometry::Size { width, height }
+                }),
+            )
             .unwrap();
 
         let node = stretch
@@ -258,11 +278,14 @@ mod measure {
             .unwrap();
 
         let child1 = stretch
-            .new_leaf(stretch::style::Style { ..Default::default() }, |constraint| {
-                let width = constraint.width.or_else(100.0);
-                let height = constraint.height.or_else(width * 2.0);
-                stretch::geometry::Size { width, height }
-            })
+            .new_leaf(
+                stretch::style::Style { ..Default::default() },
+                MeasureFunc::Raw(|constraint| {
+                    let width = constraint.width.or_else(100.0);
+                    let height = constraint.height.or_else(width * 2.0);
+                    stretch::geometry::Size { width, height }
+                }),
+            )
             .unwrap();
 
         let node = stretch
@@ -290,11 +313,14 @@ mod measure {
         let mut stretch = stretch::node::Stretch::new();
 
         let child = stretch
-            .new_leaf(stretch::style::Style { ..Default::default() }, |constraint| {
-                let height = constraint.height.or_else(50.0);
-                let width = constraint.width.or_else(height);
-                stretch::geometry::Size { width, height }
-            })
+            .new_leaf(
+                stretch::style::Style { ..Default::default() },
+                MeasureFunc::Raw(|constraint| {
+                    let height = constraint.height.or_else(50.0);
+                    let width = constraint.width.or_else(height);
+                    stretch::geometry::Size { width, height }
+                }),
+            )
             .unwrap();
 
         let node = stretch
@@ -328,10 +354,10 @@ mod measure {
                     },
                     ..Default::default()
                 },
-                |constraint| stretch::geometry::Size {
+                MeasureFunc::Raw(|constraint| stretch::geometry::Size {
                     width: constraint.width.or_else(100.0),
                     height: constraint.height.or_else(100.0),
-                },
+                }),
             )
             .unwrap();
 
@@ -354,10 +380,10 @@ mod measure {
                     },
                     ..Default::default()
                 },
-                |constraint| stretch::geometry::Size {
+                MeasureFunc::Raw(|constraint| stretch::geometry::Size {
                     width: constraint.width.or_else(100.0),
                     height: constraint.height.or_else(100.0),
-                },
+                }),
             )
             .unwrap();
 
@@ -389,10 +415,10 @@ mod measure {
                     flex_grow: 1.0,
                     ..Default::default()
                 },
-                |constraint| stretch::geometry::Size {
+                MeasureFunc::Raw(|constraint| stretch::geometry::Size {
                     width: constraint.width.or_else(100.0),
                     height: constraint.height.or_else(100.0),
-                },
+                }),
             )
             .unwrap();
 
@@ -421,10 +447,13 @@ mod measure {
     fn stretch_overrides_measure() {
         let mut stretch = stretch::node::Stretch::new();
         let child = stretch
-            .new_leaf(stretch::style::Style { ..Default::default() }, |constraint| stretch::geometry::Size {
-                width: constraint.width.or_else(50.0),
-                height: constraint.height.or_else(50.0),
-            })
+            .new_leaf(
+                stretch::style::Style { ..Default::default() },
+                MeasureFunc::Raw(|constraint| stretch::geometry::Size {
+                    width: constraint.width.or_else(50.0),
+                    height: constraint.height.or_else(50.0),
+                }),
+            )
             .unwrap();
 
         let node = stretch
@@ -452,10 +481,10 @@ mod measure {
         let child = stretch
             .new_leaf(
                 stretch::style::Style { position_type: stretch::style::PositionType::Absolute, ..Default::default() },
-                |constraint| stretch::geometry::Size {
+                MeasureFunc::Raw(|constraint| stretch::geometry::Size {
                     width: constraint.width.or_else(50.0),
                     height: constraint.height.or_else(50.0),
-                },
+                }),
             )
             .unwrap();
 
@@ -482,10 +511,10 @@ mod measure {
     fn ignore_invalid_measure() {
         let mut stretch = stretch::node::Stretch::new();
         let child = stretch
-            .new_leaf(stretch::style::Style { flex_grow: 1.0, ..Default::default() }, |_| stretch::geometry::Size {
-                width: 200.0,
-                height: 200.0,
-            })
+            .new_leaf(
+                stretch::style::Style { flex_grow: 1.0, ..Default::default() },
+                MeasureFunc::Raw(|_| stretch::geometry::Size { width: 200.0, height: 200.0 }),
+            )
             .unwrap();
 
         let node = stretch
@@ -515,13 +544,16 @@ mod measure {
         static NUM_MEASURES: atomic::AtomicU32 = atomic::AtomicU32::new(0);
 
         let grandchild = stretch
-            .new_leaf(stretch::style::Style { ..Default::default() }, |constraint| {
-                NUM_MEASURES.fetch_add(1, atomic::Ordering::Relaxed);
-                stretch::geometry::Size {
-                    width: constraint.width.or_else(50.0),
-                    height: constraint.height.or_else(50.0),
-                }
-            })
+            .new_leaf(
+                stretch::style::Style { ..Default::default() },
+                MeasureFunc::Raw(|constraint| {
+                    NUM_MEASURES.fetch_add(1, atomic::Ordering::Relaxed);
+                    stretch::geometry::Size {
+                        width: constraint.width.or_else(50.0),
+                        height: constraint.height.or_else(50.0),
+                    }
+                }),
+            )
             .unwrap();
 
         let child = stretch.new_node(stretch::style::Style { ..Default::default() }, &[grandchild]).unwrap();
