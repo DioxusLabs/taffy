@@ -21,7 +21,6 @@ hash32 = "0.1.1"
 hash32-derive = "0.1.0"
 heapless = "0.5.1"
 lazy_static = "1.4"
-spin = "0.5.2"
 typenum = "1.11.2"
 
 [dependencies.hashbrown]
