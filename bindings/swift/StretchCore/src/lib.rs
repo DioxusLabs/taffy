@@ -214,7 +214,7 @@ pub unsafe extern "C" fn stretch_free(stretch: *mut c_void) {
 pub unsafe extern "C" fn stretch_node_create(stretch: *mut c_void, style: *mut c_void) -> *mut c_void {
     let mut stretch = Box::from_raw(stretch as *mut Stretch);
     let style = Box::from_raw(style as *mut Style);
-    let node = stretch.new_node(*style, vec![]).unwrap();
+    let node = stretch.new_node(*style, &[]).unwrap();
 
     Box::leak(style);
     Box::leak(stretch);
@@ -245,10 +245,10 @@ pub unsafe extern "C" fn stretch_node_set_measure(
     stretch
         .set_measure(
             *node,
-            Some(Box::new(move |constraint| {
+            Some(stretch::node::MeasureFunc::Boxed(Box::new(move |constraint| {
                 let size = measure(swift_ptr, constraint.width.or_else(f32::NAN), constraint.height.or_else(f32::NAN));
-                Ok(Size { width: size.width, height: size.height })
-            })),
+                Size { width: size.width, height: size.height }
+            }))),
         )
         .unwrap();
 

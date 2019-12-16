@@ -5,7 +5,7 @@ authors = ["Emil Sjölander <emil@visly.app>"]
 edition = "2018"
 
 [dependencies]
-stretch = "0.3.2"
+stretch = { version = "0.3.2", path = "../../.." }
 
 [lib]
 name = "stretch"
