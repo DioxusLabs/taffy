@@ -10,7 +10,7 @@ pub fn compute() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node10 = stretch
@@ -23,7 +23,7 @@ pub fn compute() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node11 = stretch
@@ -36,7 +36,7 @@ pub fn compute() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node12 = stretch
@@ -49,7 +49,7 @@ pub fn compute() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node13 = stretch
@@ -62,7 +62,7 @@ pub fn compute() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node1 = stretch
@@ -72,7 +72,7 @@ pub fn compute() {
                 size: stretch::geometry::Size { width: stretch::style::Dimension::Points(50f32), ..Default::default() },
                 ..Default::default()
             },
-            vec![node10, node11, node12, node13],
+            &[node10, node11, node12, node13],
         )
         .unwrap();
     let node = stretch
@@ -85,7 +85,7 @@ pub fn compute() {
                 },
                 ..Default::default()
             },
-            vec![node0, node1],
+            &[node0, node1],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

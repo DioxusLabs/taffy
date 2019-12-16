@@ -11,7 +11,7 @@ pub fn compute() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node1 = stretch
@@ -25,7 +25,7 @@ pub fn compute() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -38,7 +38,7 @@ pub fn compute() {
                 },
                 ..Default::default()
             },
-            vec![node0, node1],
+            &[node0, node1],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
