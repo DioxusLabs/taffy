@@ -1,5 +1,6 @@
 #[cfg(feature = "std")]
 mod std {
+    pub type Box<A> = ::std::boxed::Box<A>;
     pub type Map<K, V> = ::std::collections::HashMap<K, V>;
     pub type Vec<A> = ::std::vec::Vec<A>;
     pub type ChildrenVec<A> = ::std::vec::Vec<A>;
@@ -19,6 +20,7 @@ mod std {
 
 #[cfg(feature = "alloc")]
 mod alloc {
+    pub type Box<A> = ::alloc::boxed::Box<A>;
     pub type Map<K, V> = ::hashbrown::HashMap<K, V>;
     pub type Vec<A> = ::alloc::vec::Vec<A>;
     pub type ChildrenVec<A> = ::alloc::vec::Vec<A>;
