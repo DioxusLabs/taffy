@@ -14,7 +14,7 @@ mod root_constraints {
                     },
                     ..Default::default()
                 },
-                vec![],
+                &[],
             )
             .unwrap();
 
@@ -33,7 +33,7 @@ mod root_constraints {
     #[test]
     fn root_with_no_size() {
         let mut stretch = stretch::node::Stretch::new();
-        let node = stretch.new_node(stretch::style::Style { ..Default::default() }, vec![]).unwrap();
+        let node = stretch.new_node(stretch::style::Style { ..Default::default() }, &[]).unwrap();
 
         stretch
             .compute_layout(
@@ -59,7 +59,7 @@ mod root_constraints {
                     },
                     ..Default::default()
                 },
-                vec![],
+                &[],
             )
             .unwrap();
 

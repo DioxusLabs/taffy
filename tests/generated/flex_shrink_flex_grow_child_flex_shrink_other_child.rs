@@ -13,7 +13,7 @@ fn flex_shrink_flex_grow_child_flex_shrink_other_child() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node1 = stretch
@@ -28,7 +28,7 @@ fn flex_shrink_flex_grow_child_flex_shrink_other_child() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -41,7 +41,7 @@ fn flex_shrink_flex_grow_child_flex_shrink_other_child() {
                 },
                 ..Default::default()
             },
-            vec![node0, node1],
+            &[node0, node1],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

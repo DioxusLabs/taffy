@@ -11,7 +11,7 @@ fn wrap_reverse_column() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node1 = stretch
@@ -24,7 +24,7 @@ fn wrap_reverse_column() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node2 = stretch
@@ -37,7 +37,7 @@ fn wrap_reverse_column() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node3 = stretch
@@ -50,7 +50,7 @@ fn wrap_reverse_column() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -65,7 +65,7 @@ fn wrap_reverse_column() {
                 },
                 ..Default::default()
             },
-            vec![node0, node1, node2, node3],
+            &[node0, node1, node2, node3],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

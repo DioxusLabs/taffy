@@ -15,7 +15,7 @@ fn flex_shrink_by_outer_margin_with_max_size() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -32,7 +32,7 @@ fn flex_shrink_by_outer_margin_with_max_size() {
                 },
                 ..Default::default()
             },
-            vec![node0],
+            &[node0],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

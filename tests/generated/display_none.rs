@@ -1,11 +1,11 @@
 #[test]
 fn display_none() {
     let mut stretch = stretch::Stretch::new();
-    let node0 = stretch.new_node(stretch::style::Style { flex_grow: 1f32, ..Default::default() }, vec![]).unwrap();
+    let node0 = stretch.new_node(stretch::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
     let node1 = stretch
         .new_node(
             stretch::style::Style { display: stretch::style::Display::None, flex_grow: 1f32, ..Default::default() },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -18,7 +18,7 @@ fn display_none() {
                 },
                 ..Default::default()
             },
-            vec![node0, node1],
+            &[node0, node1],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

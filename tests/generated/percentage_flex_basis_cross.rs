@@ -8,7 +8,7 @@ fn percentage_flex_basis_cross() {
                 flex_basis: stretch::style::Dimension::Percent(0.5f32),
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node1 = stretch
@@ -18,7 +18,7 @@ fn percentage_flex_basis_cross() {
                 flex_basis: stretch::style::Dimension::Percent(0.25f32),
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -32,7 +32,7 @@ fn percentage_flex_basis_cross() {
                 },
                 ..Default::default()
             },
-            vec![node0, node1],
+            &[node0, node1],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

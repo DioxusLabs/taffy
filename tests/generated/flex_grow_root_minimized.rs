@@ -8,7 +8,7 @@ fn flex_grow_root_minimized() {
                 flex_basis: stretch::style::Dimension::Points(200f32),
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node01 = stretch
@@ -20,7 +20,7 @@ fn flex_grow_root_minimized() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node0 = stretch
@@ -38,7 +38,7 @@ fn flex_grow_root_minimized() {
                 },
                 ..Default::default()
             },
-            vec![node00, node01],
+            &[node00, node01],
         )
         .unwrap();
     let node = stretch
@@ -59,7 +59,7 @@ fn flex_grow_root_minimized() {
                 },
                 ..Default::default()
             },
-            vec![node0],
+            &[node0],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

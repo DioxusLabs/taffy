@@ -2,15 +2,15 @@
 fn align_flex_start_with_shrinking_children() {
     let mut stretch = stretch::Stretch::new();
     let node000 = stretch
-        .new_node(stretch::style::Style { flex_grow: 1f32, flex_shrink: 1f32, ..Default::default() }, vec![])
+        .new_node(stretch::style::Style { flex_grow: 1f32, flex_shrink: 1f32, ..Default::default() }, &[])
         .unwrap();
     let node00 = stretch
-        .new_node(stretch::style::Style { flex_grow: 1f32, flex_shrink: 1f32, ..Default::default() }, vec![node000])
+        .new_node(stretch::style::Style { flex_grow: 1f32, flex_shrink: 1f32, ..Default::default() }, &[node000])
         .unwrap();
     let node0 = stretch
         .new_node(
             stretch::style::Style { align_items: stretch::style::AlignItems::FlexStart, ..Default::default() },
-            vec![node00],
+            &[node00],
         )
         .unwrap();
     let node = stretch
@@ -23,7 +23,7 @@ fn align_flex_start_with_shrinking_children() {
                 },
                 ..Default::default()
             },
-            vec![node0],
+            &[node0],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

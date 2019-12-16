@@ -7,7 +7,7 @@ fn percent_absolute_position() {
                 size: stretch::geometry::Size { width: stretch::style::Dimension::Percent(1f32), ..Default::default() },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node01 = stretch
@@ -16,7 +16,7 @@ fn percent_absolute_position() {
                 size: stretch::geometry::Size { width: stretch::style::Dimension::Percent(1f32), ..Default::default() },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node0 = stretch
@@ -34,7 +34,7 @@ fn percent_absolute_position() {
                 },
                 ..Default::default()
             },
-            vec![node00, node01],
+            &[node00, node01],
         )
         .unwrap();
     let node = stretch
@@ -48,7 +48,7 @@ fn percent_absolute_position() {
                 },
                 ..Default::default()
             },
-            vec![node0],
+            &[node0],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

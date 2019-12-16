@@ -11,7 +11,7 @@ fn nested_overflowing_child_in_constraint_parent() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node0 = stretch
@@ -24,7 +24,7 @@ fn nested_overflowing_child_in_constraint_parent() {
                 },
                 ..Default::default()
             },
-            vec![node00],
+            &[node00],
         )
         .unwrap();
     let node = stretch
@@ -37,7 +37,7 @@ fn nested_overflowing_child_in_constraint_parent() {
                 },
                 ..Default::default()
             },
-            vec![node0],
+            &[node0],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

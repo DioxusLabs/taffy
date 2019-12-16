@@ -10,7 +10,7 @@ fn percent_within_flex_grow() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node10 = stretch
@@ -19,7 +19,7 @@ fn percent_within_flex_grow() {
                 size: stretch::geometry::Size { width: stretch::style::Dimension::Percent(1f32), ..Default::default() },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node1 = stretch
@@ -29,7 +29,7 @@ fn percent_within_flex_grow() {
                 flex_grow: 1f32,
                 ..Default::default()
             },
-            vec![node10],
+            &[node10],
         )
         .unwrap();
     let node2 = stretch
@@ -41,7 +41,7 @@ fn percent_within_flex_grow() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -54,7 +54,7 @@ fn percent_within_flex_grow() {
                 },
                 ..Default::default()
             },
-            vec![node0, node1, node2],
+            &[node0, node1, node2],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

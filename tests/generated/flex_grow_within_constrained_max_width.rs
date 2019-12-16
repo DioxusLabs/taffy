@@ -11,7 +11,7 @@ fn flex_grow_within_constrained_max_width() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node0 = stretch
@@ -23,7 +23,7 @@ fn flex_grow_within_constrained_max_width() {
                 },
                 ..Default::default()
             },
-            vec![node00],
+            &[node00],
         )
         .unwrap();
     let node = stretch
@@ -37,7 +37,7 @@ fn flex_grow_within_constrained_max_width() {
                 },
                 ..Default::default()
             },
-            vec![node0],
+            &[node0],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
