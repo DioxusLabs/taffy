@@ -13,7 +13,7 @@ fn absolute_layout_align_items_center_on_child_only() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -26,7 +26,7 @@ fn absolute_layout_align_items_center_on_child_only() {
                 },
                 ..Default::default()
             },
-            vec![node0],
+            &[node0],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

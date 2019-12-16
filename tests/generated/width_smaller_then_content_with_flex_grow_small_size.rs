@@ -11,7 +11,7 @@ fn width_smaller_then_content_with_flex_grow_small_size() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node0 = stretch
@@ -22,7 +22,7 @@ fn width_smaller_then_content_with_flex_grow_small_size() {
                 size: stretch::geometry::Size { width: stretch::style::Dimension::Points(0f32), ..Default::default() },
                 ..Default::default()
             },
-            vec![node00],
+            &[node00],
         )
         .unwrap();
     let node10 = stretch
@@ -35,7 +35,7 @@ fn width_smaller_then_content_with_flex_grow_small_size() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node1 = stretch
@@ -46,7 +46,7 @@ fn width_smaller_then_content_with_flex_grow_small_size() {
                 size: stretch::geometry::Size { width: stretch::style::Dimension::Points(0f32), ..Default::default() },
                 ..Default::default()
             },
-            vec![node10],
+            &[node10],
         )
         .unwrap();
     let node = stretch
@@ -55,7 +55,7 @@ fn width_smaller_then_content_with_flex_grow_small_size() {
                 size: stretch::geometry::Size { width: stretch::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
             },
-            vec![node0, node1],
+            &[node0, node1],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

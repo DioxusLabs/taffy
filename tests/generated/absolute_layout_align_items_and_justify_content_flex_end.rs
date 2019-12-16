@@ -12,7 +12,7 @@ fn absolute_layout_align_items_and_justify_content_flex_end() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -27,7 +27,7 @@ fn absolute_layout_align_items_and_justify_content_flex_end() {
                 },
                 ..Default::default()
             },
-            vec![node0],
+            &[node0],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

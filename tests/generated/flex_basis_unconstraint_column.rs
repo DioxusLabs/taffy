@@ -11,13 +11,13 @@ fn flex_basis_unconstraint_column() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
         .new_node(
             stretch::style::Style { flex_direction: stretch::style::FlexDirection::Column, ..Default::default() },
-            vec![node0],
+            &[node0],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

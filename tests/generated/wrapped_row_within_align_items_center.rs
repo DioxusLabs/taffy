@@ -11,7 +11,7 @@ fn wrapped_row_within_align_items_center() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node01 = stretch
@@ -24,13 +24,13 @@ fn wrapped_row_within_align_items_center() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node0 = stretch
         .new_node(
             stretch::style::Style { flex_wrap: stretch::style::FlexWrap::Wrap, ..Default::default() },
-            vec![node00, node01],
+            &[node00, node01],
         )
         .unwrap();
     let node = stretch
@@ -45,7 +45,7 @@ fn wrapped_row_within_align_items_center() {
                 },
                 ..Default::default()
             },
-            vec![node0],
+            &[node0],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

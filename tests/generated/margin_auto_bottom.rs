@@ -12,7 +12,7 @@ fn margin_auto_bottom() {
                 margin: stretch::geometry::Rect { bottom: stretch::style::Dimension::Auto, ..Default::default() },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node1 = stretch
@@ -25,7 +25,7 @@ fn margin_auto_bottom() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -39,7 +39,7 @@ fn margin_auto_bottom() {
                 },
                 ..Default::default()
             },
-            vec![node0, node1],
+            &[node0, node1],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

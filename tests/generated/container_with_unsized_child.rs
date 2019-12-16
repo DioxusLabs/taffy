@@ -1,7 +1,7 @@
 #[test]
 fn container_with_unsized_child() {
     let mut stretch = stretch::Stretch::new();
-    let node0 = stretch.new_node(stretch::style::Style { ..Default::default() }, vec![]).unwrap();
+    let node0 = stretch.new_node(stretch::style::Style { ..Default::default() }, &[]).unwrap();
     let node = stretch
         .new_node(
             stretch::style::Style {
@@ -12,7 +12,7 @@ fn container_with_unsized_child() {
                 },
                 ..Default::default()
             },
-            vec![node0],
+            &[node0],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

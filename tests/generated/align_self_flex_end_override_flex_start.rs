@@ -12,7 +12,7 @@ fn align_self_flex_end_override_flex_start() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -26,7 +26,7 @@ fn align_self_flex_end_override_flex_start() {
                 },
                 ..Default::default()
             },
-            vec![node0],
+            &[node0],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

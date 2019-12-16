@@ -4,7 +4,7 @@ fn absolute_layout_no_size() {
     let node0 = stretch
         .new_node(
             stretch::style::Style { position_type: stretch::style::PositionType::Absolute, ..Default::default() },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -17,7 +17,7 @@ fn absolute_layout_no_size() {
                 },
                 ..Default::default()
             },
-            vec![node0],
+            &[node0],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

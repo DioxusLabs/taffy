@@ -12,7 +12,7 @@ fn align_items_center_with_child_margin() {
                 margin: stretch::geometry::Rect { top: stretch::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -26,7 +26,7 @@ fn align_items_center_with_child_margin() {
                 },
                 ..Default::default()
             },
-            vec![node0],
+            &[node0],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
