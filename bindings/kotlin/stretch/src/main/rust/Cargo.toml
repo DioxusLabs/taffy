@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 jni = { version = "0.14.0", default-features = false }
-stretch = "0.3.2"
+stretch = { version = "0.3.2", path = "../../../../../.." }
 
 [lib]
 name = "stretch"

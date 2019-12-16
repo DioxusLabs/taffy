@@ -250,11 +250,11 @@ pub unsafe extern "C" fn Java_app_visly_stretch_Node_nConstruct(
     let mut buff = vec![0; num_children as usize];
     env.get_long_array_region(children, 0, &mut buff).unwrap();
 
-    let children = buff.into_iter().map(|ptr| *Box::leak(Box::from_raw(ptr as *mut Node))).collect();
+    let children = buff.into_iter().map(|ptr| *Box::leak(Box::from_raw(ptr as *mut Node))).collect::<Vec<_>>();
 
     let mut stretch = Box::from_raw(stretch as *mut Stretch);
     let style = Box::from_raw(style as *mut Style);
-    let node = stretch.new_node(*style, children).unwrap();
+    let node = stretch.new_node(*style, &children).unwrap();
 
     Box::leak(stretch);
     Box::leak(style);
@@ -277,7 +277,7 @@ pub unsafe extern "C" fn Java_app_visly_stretch_Node_nConstructLeaf(
     let node = stretch
         .new_leaf(
             *style,
-            Box::new(move |constraint| {
+            stretch::node::MeasureFunc::Boxed(Box::new(move |constraint| {
                 let result = env.call_method(
                     measure.as_obj(),
                     "measure",
@@ -293,11 +293,11 @@ pub unsafe extern "C" fn Java_app_visly_stretch_Node_nConstructLeaf(
                         let size = result.l().unwrap().into_inner() as jfloatArray;
                         let mut buff: [f32; 2] = [0.0, 0.0];
                         env.get_float_array_region(size, 0, &mut buff).unwrap();
-                        Ok(Size { width: buff[0], height: buff[1] })
+                        Size { width: buff[0], height: buff[1] }
                     }
-                    Err(err) => Err(Box::new(err)),
+                    Err(_) => constraint.map(|v| v.or_else(0.0)),
                 }
-            }),
+            })),
         )
         .unwrap();
 
@@ -332,7 +332,7 @@ pub unsafe extern "C" fn Java_app_visly_stretch_Node_nSetMeasure(
     stretch
         .set_measure(
             *node,
-            Some(Box::new(move |constraint| {
+            Some(stretch::node::MeasureFunc::Boxed(Box::new(move |constraint| {
                 let result = env.call_method(
                     measure.as_obj(),
                     "measure",
@@ -348,11 +348,11 @@ pub unsafe extern "C" fn Java_app_visly_stretch_Node_nSetMeasure(
                         let size = result.l().unwrap().into_inner() as jfloatArray;
                         let mut buff: [f32; 2] = [0.0, 0.0];
                         env.get_float_array_region(size, 0, &mut buff).unwrap();
-                        Ok(Size { width: buff[0], height: buff[1] })
+                        Size { width: buff[0], height: buff[1] }
                     }
-                    Err(err) => Err(Box::new(err)),
+                    Err(_) => constraint.map(|v| v.or_else(0.0)),
                 }
-            })),
+            }))),
         )
         .unwrap();
 
@@ -419,11 +419,11 @@ pub unsafe extern "C" fn Java_app_visly_stretch_Node_nSetChildren(
     let mut buff = vec![0; num_children as usize];
     env.get_long_array_region(children, 0, &mut buff).unwrap();
 
-    let children = buff.into_iter().map(|ptr| *Box::leak(Box::from_raw(ptr as *mut Node))).collect();
+    let children = buff.into_iter().map(|ptr| *Box::leak(Box::from_raw(ptr as *mut Node))).collect::<Vec<_>>();
 
     let mut stretch = Box::from_raw(stretch as *mut Stretch);
     let node = Box::from_raw(node as *mut Node);
-    stretch.set_children(*node, children).unwrap();
+    stretch.set_children(*node, &children).unwrap();
 
     Box::leak(node);
     Box::leak(stretch);
