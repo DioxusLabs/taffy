@@ -15,7 +15,7 @@ pub(crate) struct Allocator {
 }
 
 impl Allocator {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Allocator { new_id: atomic::AtomicU64::new(0) }
     }
 
