@@ -3,9 +3,6 @@
 #[cfg(all(not(feature = "std"), feature = "alloc"))]
 extern crate alloc;
 
-#[macro_use]
-extern crate lazy_static;
-
 #[cfg_attr(feature = "serde", macro_use)]
 #[cfg(feature = "serde")]
 extern crate serde;

@@ -15,10 +15,8 @@ pub enum MeasureFunc {
     Boxed(sys::Box<dyn Fn(Size<Number>) -> Size<f32>>),
 }
 
-lazy_static! {
-    /// Global stretch instance id allocator.
-    static ref INSTANCE_ALLOCATOR: id::Allocator = id::Allocator::new();
-}
+/// Global stretch instance id allocator.
+static INSTANCE_ALLOCATOR: id::Allocator = id::Allocator::new();
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(not(any(feature = "std", feature = "alloc")), derive(hash32_derive::Hash32))]
