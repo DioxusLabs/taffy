@@ -16,7 +16,7 @@ circle-ci = { repository = "vislyhq/stretch", branch = "master" }
 maintenance = { status = "experimental" }
 
 [dependencies]
-arrayvec = "0.5.1"
+arrayvec = { version = "0.5.1", default-features = false }
 hash32 = "0.1.1"
 hash32-derive = "0.1.0"
 heapless = "0.5.1"
