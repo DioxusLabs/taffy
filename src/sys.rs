@@ -16,6 +16,16 @@ mod std {
     pub fn new_vec_with_capacity<A>(capacity: usize) -> Vec<A> {
         Vec::with_capacity(capacity)
     }
+
+    #[inline]
+    pub fn round(value: f32) -> f32 {
+        value.round()
+    }
+
+    #[inline]
+    pub fn abs(value: f32) -> f32 {
+        value.abs()
+    }
 }
 
 #[cfg(feature = "alloc")]
@@ -32,6 +42,16 @@ mod alloc {
 
     pub fn new_vec_with_capacity<A>(capacity: usize) -> Vec<A> {
         Vec::with_capacity(capacity)
+    }
+
+    #[inline]
+    pub fn round(value: f32) -> f32 {
+        num_traits::float::FloatCore::round(value)
+    }
+
+    #[inline]
+    pub fn abs(value: f32) -> f32 {
+        num_traits::float::FloatCore::abs(value)
     }
 }
 
@@ -60,6 +80,16 @@ mod core {
         A: ::arrayvec::Array<Item = T>,
     {
         ::arrayvec::ArrayVec::new()
+    }
+
+    #[inline]
+    pub fn round(value: f32) -> f32 {
+        num_traits::float::FloatCore::round(value)
+    }
+
+    #[inline]
+    pub fn abs(value: f32) -> f32 {
+        num_traits::float::FloatCore::abs(value)
     }
 }
 

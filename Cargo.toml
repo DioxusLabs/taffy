@@ -20,6 +20,7 @@ arrayvec = { version = "0.5.1", default-features = false }
 hash32 = "0.1.1"
 hash32-derive = "0.1.0"
 heapless = "0.5.1"
+num-traits = { version = "0.2.10", default-features = false }
 typenum = "1.11.2"
 
 [dependencies.hashbrown]
@@ -34,7 +35,7 @@ optional = true
 [features]
 default = ["std"]
 alloc = ["hashbrown"]
-std = []
+std = ["num-traits/std"]
 serde_camel_case = ["serde"]
 serde_kebab_case = ["serde"]
 
