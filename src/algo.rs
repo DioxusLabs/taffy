@@ -118,10 +118,10 @@ impl Forest {
         let abs_x = abs_x + layout.location.x;
         let abs_y = abs_y + layout.location.y;
 
-        layout.location.x = layout.location.x.round();
-        layout.location.y = layout.location.y.round();
-        layout.size.width = (abs_x + layout.size.width).round() - abs_x.round();
-        layout.size.height = (abs_y + layout.size.height).round() - abs_y.round();
+        layout.location.x = sys::round(layout.location.x);
+        layout.location.y = sys::round(layout.location.y);
+        layout.size.width = sys::round(abs_x + layout.size.width) - sys::round(abs_x);
+        layout.size.height = sys::round(abs_y + layout.size.height) - sys::round(abs_y);
         for child in &children[root] {
             Self::round_layout(nodes, children, *child, abs_x, abs_y);
         }
@@ -141,13 +141,13 @@ impl Forest {
         if let Some(ref cache) = self.nodes[node].layout_cache {
             if cache.perform_layout || !perform_layout {
                 let width_compatible = if let Number::Defined(width) = node_size.width {
-                    (width - cache.result.size.width).abs() < f32::EPSILON
+                    sys::abs(width - cache.result.size.width) < f32::EPSILON
                 } else {
                     cache.node_size.width.is_undefined()
                 };
 
                 let height_compatible = if let Number::Defined(height) = node_size.height {
-                    (height - cache.result.size.height).abs() < f32::EPSILON
+                    sys::abs(height - cache.result.size.height) < f32::EPSILON
                 } else {
                     cache.node_size.height.is_undefined()
                 };
