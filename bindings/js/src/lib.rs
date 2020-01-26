@@ -574,7 +574,10 @@ fn parse_style(style: &JsValue) -> stretch::style::Style {
         flex_shrink: get_f32(style, "flexShrink").unwrap_or(1.0),
         flex_basis: get_dimension(style, "flexBasis"),
 
-        size: stretch::geometry::Size { width: get_size_dimension(style, "width"), height: get_size_dimension(style, "height") },
+        size: stretch::geometry::Size {
+            width: get_size_dimension(style, "width"),
+            height: get_size_dimension(style, "height"),
+        },
 
         min_size: stretch::geometry::Size {
             width: get_size_dimension(style, "minWidth"),
@@ -594,9 +597,9 @@ fn parse_style(style: &JsValue) -> stretch::style::Style {
 
 fn get_size_dimension(obj: &JsValue, key: &str) -> stretch::style::Dimension {
     let dimension = get_dimension(obj, key);
-    match  dimension {
+    match dimension {
         stretch::style::Dimension::Undefined => stretch::style::Dimension::Auto,
-        _ => dimension
+        _ => dimension,
     }
 }
 
