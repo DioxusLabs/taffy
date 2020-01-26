@@ -112,3 +112,15 @@ fn mark_dirty() {
     node.mark_dirty();
     assert_eq!(node.is_dirty(), true);
 }
+
+#[wasm_bindgen_test]
+fn stretch_sizing() {
+    let allocator = Allocator::new();
+    let mut node = Node::new(&allocator, &js_value("{}"));
+    node.set_style(&js_value("{width: 100, height: 100}"));
+    let child = Node::new(&allocator, &js_value("{width: 15}"));
+    node.add_child(&child);
+    let layout = node.compute_layout(&JsValue::UNDEFINED);
+    assert_eq!(layout.child(0).width, 15.0);
+    assert_eq!(layout.child(0).height, 100.0);
+}
