@@ -208,7 +208,7 @@ data class Style(
         )
     }
 
-    protected fun finalize() {
+    fun free() {
         nFree(rustptr)
     }
 
