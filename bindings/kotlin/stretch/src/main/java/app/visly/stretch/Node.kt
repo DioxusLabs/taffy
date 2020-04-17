@@ -41,8 +41,18 @@ class Node {
         this.children = children.toMutableList()
     }
 
-    protected fun finalize() {
+    fun free() {
+        style.free()
         nFree(Stretch.ptr, rustptr)
+    }
+
+    fun freeNodes() {
+        children.forEach {
+            if (it.getChildCount() > 0) {
+                it.freeNodes()
+            }
+        }
+        free()
     }
 
     fun setMeasure(measure: MeasureFunc) {
