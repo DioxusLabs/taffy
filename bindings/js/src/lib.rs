@@ -576,21 +576,32 @@ fn parse_style(style: &JsValue) -> stretch::style::Style {
         flex_shrink: get_f32(style, "flexShrink").unwrap_or(1.0),
         flex_basis: get_dimension(style, "flexBasis"),
 
-        size: stretch::geometry::Size { width: get_dimension(style, "width"), height: get_dimension(style, "height") },
+        size: stretch::geometry::Size {
+            width: get_size_dimension(style, "width"),
+            height: get_size_dimension(style, "height"),
+        },
 
         min_size: stretch::geometry::Size {
-            width: get_dimension(style, "minWidth"),
-            height: get_dimension(style, "minHeight"),
+            width: get_size_dimension(style, "minWidth"),
+            height: get_size_dimension(style, "minHeight"),
         },
 
         max_size: stretch::geometry::Size {
-            width: get_dimension(style, "maxWidth"),
-            height: get_dimension(style, "maxHeight"),
+            width: get_size_dimension(style, "maxWidth"),
+            height: get_size_dimension(style, "maxHeight"),
         },
 
         aspect_ratio: get_f32(style, "aspectRatio")
             .map(stretch::number::Number::Defined)
             .unwrap_or(stretch::number::Number::Undefined),
+    }
+}
+
+fn get_size_dimension(obj: &JsValue, key: &str) -> stretch::style::Dimension {
+    let dimension = get_dimension(obj, key);
+    match dimension {
+        stretch::style::Dimension::Undefined => stretch::style::Dimension::Auto,
+        _ => dimension,
     }
 }
 
