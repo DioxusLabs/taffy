@@ -12,7 +12,7 @@ pub fn compute() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

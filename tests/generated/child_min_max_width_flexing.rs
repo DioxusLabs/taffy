@@ -13,7 +13,7 @@ fn child_min_max_width_flexing() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node1 = stretch
@@ -28,7 +28,7 @@ fn child_min_max_width_flexing() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -41,7 +41,7 @@ fn child_min_max_width_flexing() {
                 },
                 ..Default::default()
             },
-            vec![node0, node1],
+            &[node0, node1],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

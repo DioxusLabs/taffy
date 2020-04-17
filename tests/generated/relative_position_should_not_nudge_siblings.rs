@@ -14,7 +14,7 @@ fn relative_position_should_not_nudge_siblings() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node1 = stretch
@@ -30,7 +30,7 @@ fn relative_position_should_not_nudge_siblings() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -44,7 +44,7 @@ fn relative_position_should_not_nudge_siblings() {
                 },
                 ..Default::default()
             },
-            vec![node0, node1],
+            &[node0, node1],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

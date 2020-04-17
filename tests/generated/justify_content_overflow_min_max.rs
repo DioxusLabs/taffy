@@ -12,7 +12,7 @@ fn justify_content_overflow_min_max() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node1 = stretch
@@ -26,7 +26,7 @@ fn justify_content_overflow_min_max() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node2 = stretch
@@ -40,7 +40,7 @@ fn justify_content_overflow_min_max() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -58,7 +58,7 @@ fn justify_content_overflow_min_max() {
                 },
                 ..Default::default()
             },
-            vec![node0, node1, node2],
+            &[node0, node1, node2],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

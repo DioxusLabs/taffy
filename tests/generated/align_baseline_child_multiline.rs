@@ -11,7 +11,7 @@ fn align_baseline_child_multiline() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node10 = stretch
@@ -24,7 +24,7 @@ fn align_baseline_child_multiline() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node11 = stretch
@@ -37,7 +37,7 @@ fn align_baseline_child_multiline() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node12 = stretch
@@ -50,7 +50,7 @@ fn align_baseline_child_multiline() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node13 = stretch
@@ -63,7 +63,7 @@ fn align_baseline_child_multiline() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node1 = stretch
@@ -73,7 +73,7 @@ fn align_baseline_child_multiline() {
                 size: stretch::geometry::Size { width: stretch::style::Dimension::Points(50f32), ..Default::default() },
                 ..Default::default()
             },
-            vec![node10, node11, node12, node13],
+            &[node10, node11, node12, node13],
         )
         .unwrap();
     let node = stretch
@@ -86,7 +86,7 @@ fn align_baseline_child_multiline() {
                 },
                 ..Default::default()
             },
-            vec![node0, node1],
+            &[node0, node1],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

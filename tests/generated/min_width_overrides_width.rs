@@ -11,10 +11,10 @@ fn min_width_overrides_width() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
-    let node = stretch.new_node(stretch::style::Style { ..Default::default() }, vec![node0]).unwrap();
+    let node = stretch.new_node(stretch::style::Style { ..Default::default() }, &[node0]).unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
     assert_eq!(stretch.layout(node).unwrap().size.width, 100f32);
     assert_eq!(stretch.layout(node).unwrap().size.height, 0f32);

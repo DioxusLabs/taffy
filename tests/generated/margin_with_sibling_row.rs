@@ -8,10 +8,10 @@ fn margin_with_sibling_row() {
                 margin: stretch::geometry::Rect { end: stretch::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
-    let node1 = stretch.new_node(stretch::style::Style { flex_grow: 1f32, ..Default::default() }, vec![]).unwrap();
+    let node1 = stretch.new_node(stretch::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
     let node = stretch
         .new_node(
             stretch::style::Style {
@@ -22,7 +22,7 @@ fn margin_with_sibling_row() {
                 },
                 ..Default::default()
             },
-            vec![node0, node1],
+            &[node0, node1],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

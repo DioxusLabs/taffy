@@ -8,7 +8,7 @@ fn margin_right() {
                 margin: stretch::geometry::Rect { end: stretch::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -22,7 +22,7 @@ fn margin_right() {
                 },
                 ..Default::default()
             },
-            vec![node0],
+            &[node0],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

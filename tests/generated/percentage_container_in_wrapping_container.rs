@@ -11,7 +11,7 @@ fn percentage_container_in_wrapping_container() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node001 = stretch
@@ -24,7 +24,7 @@ fn percentage_container_in_wrapping_container() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node00 = stretch
@@ -34,13 +34,13 @@ fn percentage_container_in_wrapping_container() {
                 size: stretch::geometry::Size { width: stretch::style::Dimension::Percent(1f32), ..Default::default() },
                 ..Default::default()
             },
-            vec![node000, node001],
+            &[node000, node001],
         )
         .unwrap();
     let node0 = stretch
         .new_node(
             stretch::style::Style { flex_direction: stretch::style::FlexDirection::Column, ..Default::default() },
-            vec![node00],
+            &[node00],
         )
         .unwrap();
     let node = stretch
@@ -56,7 +56,7 @@ fn percentage_container_in_wrapping_container() {
                 },
                 ..Default::default()
             },
-            vec![node0],
+            &[node0],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

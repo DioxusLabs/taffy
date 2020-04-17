@@ -7,10 +7,10 @@ pub fn compute() {
                 flex_basis: stretch::style::Dimension::Points(50f32),
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
-    let node1 = stretch.new_node(stretch::style::Style { flex_grow: 1f32, ..Default::default() }, vec![]).unwrap();
+    let node1 = stretch.new_node(stretch::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
     let node = stretch
         .new_node(
             stretch::style::Style {
@@ -22,7 +22,7 @@ pub fn compute() {
                 },
                 ..Default::default()
             },
-            vec![node0, node1],
+            &[node0, node1],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

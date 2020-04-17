@@ -10,9 +10,9 @@ pub fn compute() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
-    let node = stretch.new_node(stretch::style::Style { ..Default::default() }, vec![node0]).unwrap();
+    let node = stretch.new_node(stretch::style::Style { ..Default::default() }, &[node0]).unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
 }

@@ -10,7 +10,7 @@ fn margin_auto_left_stretching_child() {
                 margin: stretch::geometry::Rect { start: stretch::style::Dimension::Auto, ..Default::default() },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node1 = stretch
@@ -23,7 +23,7 @@ fn margin_auto_left_stretching_child() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -37,7 +37,7 @@ fn margin_auto_left_stretching_child() {
                 },
                 ..Default::default()
             },
-            vec![node0, node1],
+            &[node0, node1],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

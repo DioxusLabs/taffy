@@ -15,7 +15,7 @@ fn flex_wrap_children_with_min_main_overriding_flex_basis() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node1 = stretch
@@ -32,7 +32,7 @@ fn flex_wrap_children_with_min_main_overriding_flex_basis() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -45,7 +45,7 @@ fn flex_wrap_children_with_min_main_overriding_flex_basis() {
                 },
                 ..Default::default()
             },
-            vec![node0, node1],
+            &[node0, node1],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
