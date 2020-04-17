@@ -16,13 +16,13 @@ fn align_items_center_child_with_margin_bigger_than_parent() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node0 = stretch
         .new_node(
             stretch::style::Style { align_items: stretch::style::AlignItems::Center, ..Default::default() },
-            vec![node00],
+            &[node00],
         )
         .unwrap();
     let node = stretch
@@ -37,7 +37,7 @@ fn align_items_center_child_with_margin_bigger_than_parent() {
                 },
                 ..Default::default()
             },
-            vec![node0],
+            &[node0],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

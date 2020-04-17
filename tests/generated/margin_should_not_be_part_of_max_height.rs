@@ -16,7 +16,7 @@ fn margin_should_not_be_part_of_max_height() {
                 margin: stretch::geometry::Rect { top: stretch::style::Dimension::Points(20f32), ..Default::default() },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -29,7 +29,7 @@ fn margin_should_not_be_part_of_max_height() {
                 },
                 ..Default::default()
             },
-            vec![node0],
+            &[node0],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

@@ -9,7 +9,7 @@ fn display_none_with_child() {
                 flex_basis: stretch::style::Dimension::Percent(0f32),
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node10 = stretch
@@ -21,7 +21,7 @@ fn display_none_with_child() {
                 size: stretch::geometry::Size { width: stretch::style::Dimension::Points(20f32), ..Default::default() },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node1 = stretch
@@ -34,7 +34,7 @@ fn display_none_with_child() {
                 flex_basis: stretch::style::Dimension::Percent(0f32),
                 ..Default::default()
             },
-            vec![node10],
+            &[node10],
         )
         .unwrap();
     let node2 = stretch
@@ -45,7 +45,7 @@ fn display_none_with_child() {
                 flex_basis: stretch::style::Dimension::Percent(0f32),
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -58,7 +58,7 @@ fn display_none_with_child() {
                 },
                 ..Default::default()
             },
-            vec![node0, node1, node2],
+            &[node0, node1, node2],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

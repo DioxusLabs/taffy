@@ -10,7 +10,7 @@ fn build_deep_hierarchy(stretch: &mut stretch::node::Stretch) -> stretch::node::
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node112 = stretch
@@ -22,7 +22,7 @@ fn build_deep_hierarchy(stretch: &mut stretch::node::Stretch) -> stretch::node::
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
 
@@ -35,7 +35,7 @@ fn build_deep_hierarchy(stretch: &mut stretch::node::Stretch) -> stretch::node::
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node122 = stretch
@@ -47,13 +47,13 @@ fn build_deep_hierarchy(stretch: &mut stretch::node::Stretch) -> stretch::node::
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
 
-    let node11 = stretch.new_node(stretch::style::Style { ..Default::default() }, vec![node111, node112]).unwrap();
-    let node12 = stretch.new_node(stretch::style::Style { ..Default::default() }, vec![node121, node122]).unwrap();
-    let node1 = stretch.new_node(stretch::style::Style { ..Default::default() }, vec![node11, node12]).unwrap();
+    let node11 = stretch.new_node(stretch::style::Style { ..Default::default() }, &[node111, node112]).unwrap();
+    let node12 = stretch.new_node(stretch::style::Style { ..Default::default() }, &[node121, node122]).unwrap();
+    let node1 = stretch.new_node(stretch::style::Style { ..Default::default() }, &[node11, node12]).unwrap();
 
     let node211 = stretch
         .new_node(
@@ -64,7 +64,7 @@ fn build_deep_hierarchy(stretch: &mut stretch::node::Stretch) -> stretch::node::
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node212 = stretch
@@ -76,7 +76,7 @@ fn build_deep_hierarchy(stretch: &mut stretch::node::Stretch) -> stretch::node::
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
 
@@ -89,7 +89,7 @@ fn build_deep_hierarchy(stretch: &mut stretch::node::Stretch) -> stretch::node::
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node222 = stretch
@@ -101,15 +101,15 @@ fn build_deep_hierarchy(stretch: &mut stretch::node::Stretch) -> stretch::node::
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
 
-    let node21 = stretch.new_node(stretch::style::Style { ..Default::default() }, vec![node211, node212]).unwrap();
-    let node22 = stretch.new_node(stretch::style::Style { ..Default::default() }, vec![node221, node222]).unwrap();
+    let node21 = stretch.new_node(stretch::style::Style { ..Default::default() }, &[node211, node212]).unwrap();
+    let node22 = stretch.new_node(stretch::style::Style { ..Default::default() }, &[node221, node222]).unwrap();
 
-    let node2 = stretch.new_node(stretch::style::Style { ..Default::default() }, vec![node21, node22]).unwrap();
-    let node0 = stretch.new_node(stretch::style::Style { ..Default::default() }, vec![node1, node2]).unwrap();
+    let node2 = stretch.new_node(stretch::style::Style { ..Default::default() }, &[node21, node22]).unwrap();
+    let node0 = stretch.new_node(stretch::style::Style { ..Default::default() }, &[node1, node2]).unwrap();
 
     node0
 }

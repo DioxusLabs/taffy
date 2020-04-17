@@ -11,7 +11,7 @@ fn justify_content_min_width_with_padding_child_width_greater_than_parent() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node00 = stretch
@@ -29,10 +29,10 @@ fn justify_content_min_width_with_padding_child_width_greater_than_parent() {
                 },
                 ..Default::default()
             },
-            vec![node000],
+            &[node000],
         )
         .unwrap();
-    let node0 = stretch.new_node(stretch::style::Style { ..Default::default() }, vec![node00]).unwrap();
+    let node0 = stretch.new_node(stretch::style::Style { ..Default::default() }, &[node00]).unwrap();
     let node = stretch
         .new_node(
             stretch::style::Style {
@@ -44,7 +44,7 @@ fn justify_content_min_width_with_padding_child_width_greater_than_parent() {
                 },
                 ..Default::default()
             },
-            vec![node0],
+            &[node0],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

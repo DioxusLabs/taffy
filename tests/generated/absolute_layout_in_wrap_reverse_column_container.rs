@@ -12,7 +12,7 @@ fn absolute_layout_in_wrap_reverse_column_container() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -27,7 +27,7 @@ fn absolute_layout_in_wrap_reverse_column_container() {
                 },
                 ..Default::default()
             },
-            vec![node0],
+            &[node0],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

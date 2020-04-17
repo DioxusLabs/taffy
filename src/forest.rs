@@ -1,17 +1,13 @@
 //! Forest - ECS like datastructure for storing node trees.
 //!
 //! Backing datastructure for `Stretch` structs.
-
-#[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
-
 use crate::geometry::Size;
 use crate::id::NodeId;
 use crate::node::MeasureFunc;
 use crate::number::Number;
 use crate::result::{Cache, Layout};
 use crate::style::Style;
-use crate::Error;
+use crate::sys;
 
 pub(crate) struct NodeData {
     pub(crate) style: Style,
@@ -32,36 +28,36 @@ impl NodeData {
 }
 
 pub(crate) struct Forest {
-    pub(crate) nodes: Vec<NodeData>,
-    pub(crate) children: Vec<Vec<NodeId>>,
-    pub(crate) parents: Vec<Vec<NodeId>>,
+    pub(crate) nodes: sys::Vec<NodeData>,
+    pub(crate) children: sys::Vec<sys::ChildrenVec<NodeId>>,
+    pub(crate) parents: sys::Vec<sys::ParentsVec<NodeId>>,
 }
 
 impl Forest {
     pub fn with_capacity(capacity: usize) -> Self {
         Forest {
-            nodes: Vec::with_capacity(capacity),
-            children: Vec::with_capacity(capacity),
-            parents: Vec::with_capacity(capacity),
+            nodes: sys::new_vec_with_capacity(capacity),
+            children: sys::new_vec_with_capacity(capacity),
+            parents: sys::new_vec_with_capacity(capacity),
         }
     }
 
     pub fn new_leaf(&mut self, style: Style, measure: MeasureFunc) -> NodeId {
         let id = self.nodes.len();
         self.nodes.push(NodeData::new_leaf(style, measure));
-        self.children.push(Vec::with_capacity(0));
-        self.parents.push(Vec::with_capacity(1));
+        self.children.push(sys::new_vec_with_capacity(0));
+        self.parents.push(sys::new_vec_with_capacity(1));
         id
     }
 
-    pub fn new_node(&mut self, style: Style, children: Vec<NodeId>) -> NodeId {
+    pub fn new_node(&mut self, style: Style, children: sys::ChildrenVec<NodeId>) -> NodeId {
         let id = self.nodes.len();
         for child in &children {
             self.parents[*child].push(id);
         }
         self.nodes.push(NodeData::new(style));
         self.children.push(children);
-        self.parents.push(Vec::with_capacity(1));
+        self.parents.push(sys::new_vec_with_capacity(1));
         id
     }
 
@@ -159,7 +155,7 @@ impl Forest {
     }
 
     pub fn mark_dirty(&mut self, node: NodeId) {
-        fn mark_dirty_impl(nodes: &mut Vec<NodeData>, parents: &[Vec<NodeId>], node_id: NodeId) {
+        fn mark_dirty_impl(nodes: &mut sys::Vec<NodeData>, parents: &[sys::ParentsVec<NodeId>], node_id: NodeId) {
             let node = &mut nodes[node_id];
             node.layout_cache = None;
             node.is_dirty = true;
@@ -172,7 +168,7 @@ impl Forest {
         mark_dirty_impl(&mut self.nodes, &self.parents, node);
     }
 
-    pub fn compute_layout(&mut self, node: NodeId, size: Size<Number>) -> Result<(), Error> {
-        self.compute(node, size).map_err(|err| Error::Measure(err))
+    pub fn compute_layout(&mut self, node: NodeId, size: Size<Number>) {
+        self.compute(node, size)
     }
 }

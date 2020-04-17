@@ -15,7 +15,7 @@ fn justify_content_row_min_width_and_margin() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -28,7 +28,7 @@ fn justify_content_row_min_width_and_margin() {
                 },
                 ..Default::default()
             },
-            vec![node0],
+            &[node0],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

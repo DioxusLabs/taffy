@@ -7,7 +7,7 @@ fn border_stretch_child() {
                 size: stretch::geometry::Size { width: stretch::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -27,7 +27,7 @@ fn border_stretch_child() {
                 },
                 ..Default::default()
             },
-            vec![node0],
+            &[node0],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

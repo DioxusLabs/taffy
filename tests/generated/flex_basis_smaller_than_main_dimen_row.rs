@@ -12,7 +12,7 @@ fn flex_basis_smaller_than_main_dimen_row() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
     let node = stretch
@@ -24,7 +24,7 @@ fn flex_basis_smaller_than_main_dimen_row() {
                 },
                 ..Default::default()
             },
-            vec![node0],
+            &[node0],
         )
         .unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();

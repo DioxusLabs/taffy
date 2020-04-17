@@ -11,11 +11,11 @@ fn size_defined_by_grand_child() {
                 },
                 ..Default::default()
             },
-            vec![],
+            &[],
         )
         .unwrap();
-    let node0 = stretch.new_node(stretch::style::Style { ..Default::default() }, vec![node00]).unwrap();
-    let node = stretch.new_node(stretch::style::Style { ..Default::default() }, vec![node0]).unwrap();
+    let node0 = stretch.new_node(stretch::style::Style { ..Default::default() }, &[node00]).unwrap();
+    let node = stretch.new_node(stretch::style::Style { ..Default::default() }, &[node0]).unwrap();
     stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
     assert_eq!(stretch.layout(node).unwrap().size.width, 100f32);
     assert_eq!(stretch.layout(node).unwrap().size.height, 100f32);
