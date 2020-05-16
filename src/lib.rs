@@ -10,9 +10,9 @@ extern crate serde;
 pub mod geometry;
 pub mod node;
 pub mod number;
+pub mod prelude;
 pub mod result;
 pub mod style;
-pub mod prelude;
 
 mod algo;
 mod forest;
