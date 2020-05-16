@@ -37,16 +37,18 @@ where
     }
 
     pub(crate) fn main(&self, direction: style::FlexDirection) -> T {
-        match direction {
-            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.start + self.end,
-            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.top + self.bottom,
+        if direction.is_row() {
+            self.horizontal()
+        } else {
+            self.vertical()
         }
     }
 
     pub(crate) fn cross(&self, direction: style::FlexDirection) -> T {
-        match direction {
-            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.top + self.bottom,
-            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.start + self.end,
+        if direction.is_row() {
+            self.vertical()
+        } else {
+            self.horizontal()
         }
     }
 }
@@ -56,30 +58,34 @@ where
     T: Copy + Clone,
 {
     pub(crate) fn main_start(&self, direction: style::FlexDirection) -> T {
-        match direction {
-            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.start,
-            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.top,
+        if direction.is_row() {
+            self.start
+        } else {
+            self.top
         }
     }
 
     pub(crate) fn main_end(&self, direction: style::FlexDirection) -> T {
-        match direction {
-            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.end,
-            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.bottom,
+        if direction.is_row() {
+            self.end
+        } else {
+            self.bottom
         }
     }
 
     pub(crate) fn cross_start(&self, direction: style::FlexDirection) -> T {
-        match direction {
-            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.top,
-            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.start,
+        if direction.is_row() {
+            self.top
+        } else {
+            self.start
         }
     }
 
     pub(crate) fn cross_end(&self, direction: style::FlexDirection) -> T {
-        match direction {
-            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.bottom,
-            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.end,
+        if direction.is_row() {
+            self.bottom
+        } else {
+            self.end
         }
     }
 }
@@ -109,30 +115,34 @@ impl<T> Size<T> {
     }
 
     pub(crate) fn set_main(&mut self, direction: style::FlexDirection, value: T) {
-        match direction {
-            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.width = value,
-            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.height = value,
+        if direction.is_row() {
+            self.width = value
+        } else {
+            self.height = value
         }
     }
 
     pub(crate) fn set_cross(&mut self, direction: style::FlexDirection, value: T) {
-        match direction {
-            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.height = value,
-            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.width = value,
+        if direction.is_row() {
+            self.height = value
+        } else {
+            self.width = value
         }
     }
 
     pub(crate) fn main(self, direction: style::FlexDirection) -> T {
-        match direction {
-            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.width,
-            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.height,
+        if direction.is_row() {
+            self.width
+        } else {
+            self.height
         }
     }
 
     pub(crate) fn cross(self, direction: style::FlexDirection) -> T {
-        match direction {
-            style::FlexDirection::Row | style::FlexDirection::RowReverse => self.height,
-            style::FlexDirection::Column | style::FlexDirection::ColumnReverse => self.width,
+        if direction.is_row() {
+            self.height
+        } else {
+            self.width
         }
     }
 }
