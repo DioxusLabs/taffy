@@ -353,7 +353,7 @@ impl Forest {
             // webkit handled various scenarios. Can probably be solved better by passing in
             // min-content max-content constraints from the top
             let min_main = self
-                .compute_internal(child.node, Size { width: Undefined, height: Undefined }, available_space, false)
+                .compute_internal(child.node, Size::undefined(), available_space, false)
                 .size
                 .main(dir)
                 .maybe_max(child.min_size.main(dir))
@@ -600,7 +600,7 @@ impl Forest {
                     let min_main = if is_row && self.nodes[child.node].measure.is_none() {
                         self.compute_internal(
                             child.node,
-                            Size { width: Undefined, height: Undefined },
+                            Size::undefined(),
                             available_space,
                             false,
                         )
