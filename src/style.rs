@@ -110,16 +110,29 @@ impl Default for FlexDirection {
 }
 
 impl FlexDirection {
+
+    #[inline]
     pub(crate) fn is_row(self) -> bool {
-        self == FlexDirection::Row || self == FlexDirection::RowReverse
+        match self {
+            Self::Row | Self::RowReverse => true,
+            _ => false,
+        }
     }
 
+    #[inline]
     pub(crate) fn is_column(self) -> bool {
-        self == FlexDirection::Column || self == FlexDirection::ColumnReverse
+        match self {
+            Self::Column | Self::ColumnReverse => true,
+            _ => false,
+        }
     }
 
+    #[inline]
     pub(crate) fn is_reverse(self) -> bool {
-        self == FlexDirection::RowReverse || self == FlexDirection::ColumnReverse
+        match self {
+            Self::RowReverse | Self::ColumnReverse => true,
+            _ => false,
+        }
     }
 }
 
@@ -295,65 +308,74 @@ impl Default for Style {
 
 impl Style {
     pub(crate) fn min_main_size(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.min_size.width,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.min_size.height,
+        if direction.is_row() {
+            self.min_size.width
+        } else {
+            self.min_size.height
         }
     }
 
     pub(crate) fn max_main_size(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.max_size.width,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.max_size.height,
+        if direction.is_row() {
+            self.max_size.width
+        } else {
+            self.max_size.height
         }
     }
 
     pub(crate) fn main_margin_start(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.margin.start,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.margin.top,
+        if direction.is_row() {
+            self.margin.start
+        } else {
+            self.margin.top
         }
     }
 
     pub(crate) fn main_margin_end(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.margin.end,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.margin.bottom,
+        if direction.is_row() {
+            self.margin.end
+        } else {
+            self.margin.bottom
         }
     }
 
     pub(crate) fn cross_size(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.size.height,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.size.width,
+        if direction.is_row() {
+            self.size.height
+        } else {
+            self.size.width
         }
     }
 
     pub(crate) fn min_cross_size(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.min_size.height,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.min_size.width,
+        if direction.is_row() {
+            self.min_size.height
+        } else {
+            self.min_size.width
         }
     }
 
     pub(crate) fn max_cross_size(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.max_size.height,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.max_size.width,
+        if direction.is_row() {
+            self.max_size.height
+        } else {
+            self.max_size.width
         }
     }
 
     pub(crate) fn cross_margin_start(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.margin.top,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.margin.start,
+        if direction.is_row() {
+            self.margin.top
+        } else {
+            self.margin.start
         }
     }
 
     pub(crate) fn cross_margin_end(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.margin.bottom,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.margin.end,
+        if direction.is_row() {
+            self.margin.bottom
+        } else {
+            self.margin.end
         }
     }
 
