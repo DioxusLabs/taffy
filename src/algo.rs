@@ -88,11 +88,7 @@ impl Forest {
             self.compute_internal(root, style.size.resolve(size), size, true)
         };
 
-        self.nodes[root].layout = result::Layout {
-            order: 0,
-            size: result.size,
-            location: Point::zero(),
-        };
+        self.nodes[root].layout = result::Layout { order: 0, size: result.size, location: Point::zero() };
 
         Self::round_layout(&mut self.nodes, &self.children, root, 0.0, 0.0);
     }
