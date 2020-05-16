@@ -18,8 +18,8 @@ pub trait OrElse<T> {
 }
 
 impl Default for Number {
-    fn default() -> Number {
-        Number::Undefined
+    fn default() -> Self {
+        Self::Undefined
     }
 }
 
@@ -32,8 +32,8 @@ impl OrElse<f32> for Number {
     }
 }
 
-impl OrElse<Number> for Number {
-    fn or_else(self, other: Number) -> Number {
+impl OrElse<Self> for Number {
+    fn or_else(self, other: Self) -> Self {
         match self {
             Number::Defined(_) => self,
             Number::Undefined => other,
@@ -62,8 +62,8 @@ pub trait MinMax<In, Out> {
     fn maybe_max(self, rhs: In) -> Out;
 }
 
-impl MinMax<Number, Number> for Number {
-    fn maybe_min(self, rhs: Number) -> Number {
+impl MinMax<Self, Self> for Number {
+    fn maybe_min(self, rhs: Self) -> Self {
         match self {
             Number::Defined(val) => match rhs {
                 Number::Defined(other) => Number::Defined(val.min(other)),
@@ -73,7 +73,7 @@ impl MinMax<Number, Number> for Number {
         }
     }
 
-    fn maybe_max(self, rhs: Number) -> Number {
+    fn maybe_max(self, rhs: Self) -> Self {
         match self {
             Number::Defined(val) => match rhs {
                 Number::Defined(other) => Number::Defined(val.max(other)),
@@ -125,7 +125,7 @@ impl ToNumber for f32 {
 impl ops::Add<f32> for Number {
     type Output = Number;
 
-    fn add(self, rhs: f32) -> Number {
+    fn add(self, rhs: f32) -> Self {
         match self {
             Number::Defined(val) => Number::Defined(val + rhs),
             Number::Undefined => Number::Undefined,
@@ -136,7 +136,7 @@ impl ops::Add<f32> for Number {
 impl ops::Add<Number> for Number {
     type Output = Number;
 
-    fn add(self, rhs: Number) -> Number {
+    fn add(self, rhs: Self) -> Self {
         match self {
             Number::Defined(val) => match rhs {
                 Number::Defined(other) => Number::Defined(val + other),
@@ -150,7 +150,7 @@ impl ops::Add<Number> for Number {
 impl ops::Sub<f32> for Number {
     type Output = Number;
 
-    fn sub(self, rhs: f32) -> Number {
+    fn sub(self, rhs: f32) -> Self {
         match self {
             Number::Defined(val) => Number::Defined(val - rhs),
             Number::Undefined => Number::Undefined,
@@ -161,7 +161,7 @@ impl ops::Sub<f32> for Number {
 impl ops::Sub<Number> for Number {
     type Output = Number;
 
-    fn sub(self, rhs: Number) -> Number {
+    fn sub(self, rhs: Self) -> Self {
         match self {
             Number::Defined(val) => match rhs {
                 Number::Defined(other) => Number::Defined(val - other),
@@ -175,7 +175,7 @@ impl ops::Sub<Number> for Number {
 impl ops::Mul<f32> for Number {
     type Output = Number;
 
-    fn mul(self, rhs: f32) -> Number {
+    fn mul(self, rhs: f32) -> Self {
         match self {
             Number::Defined(val) => Number::Defined(val * rhs),
             Number::Undefined => Number::Undefined,
@@ -186,7 +186,7 @@ impl ops::Mul<f32> for Number {
 impl ops::Mul<Number> for Number {
     type Output = Number;
 
-    fn mul(self, rhs: Number) -> Number {
+    fn mul(self, rhs: Self) -> Self {
         match self {
             Number::Defined(val) => match rhs {
                 Number::Defined(other) => Number::Defined(val * other),
@@ -200,7 +200,7 @@ impl ops::Mul<Number> for Number {
 impl ops::Div<f32> for Number {
     type Output = Number;
 
-    fn div(self, rhs: f32) -> Number {
+    fn div(self, rhs: f32) -> Self {
         match self {
             Number::Defined(val) => Number::Defined(val / rhs),
             Number::Undefined => Number::Undefined,
@@ -211,7 +211,7 @@ impl ops::Div<f32> for Number {
 impl ops::Div<Number> for Number {
     type Output = Number;
 
-    fn div(self, rhs: Number) -> Number {
+    fn div(self, rhs: Self) -> Self {
         match self {
             Number::Defined(val) => match rhs {
                 Number::Defined(other) => Number::Defined(val / other),

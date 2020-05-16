@@ -12,6 +12,7 @@ pub mod node;
 pub mod number;
 pub mod result;
 pub mod style;
+pub mod prelude;
 
 mod algo;
 mod forest;
