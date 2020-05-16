@@ -9,10 +9,6 @@ pub enum Number {
     Undefined,
 }
 
-pub trait ToNumber {
-    fn to_number(self) -> Number;
-}
-
 pub trait OrElse<T> {
     fn or_else(self, other: T) -> T;
 }
@@ -81,14 +77,14 @@ impl MinMax<Self, Self> for Number {
 }
 
 impl MinMax<f32, Number> for Number {
-    fn maybe_min(self, rhs: f32) -> Number {
+    fn maybe_min(self, rhs: f32) -> Self {
         match self {
             Number::Defined(val) => Number::Defined(val.min(rhs)),
             Number::Undefined => Number::Undefined,
         }
     }
 
-    fn maybe_max(self, rhs: f32) -> Number {
+    fn maybe_max(self, rhs: f32) -> Self {
         match self {
             Number::Defined(val) => Number::Defined(val.max(rhs)),
             Number::Undefined => Number::Undefined,
@@ -112,9 +108,9 @@ impl MinMax<Number, f32> for f32 {
     }
 }
 
-impl ToNumber for f32 {
-    fn to_number(self) -> Number {
-        Number::Defined(self)
+impl From<f32> for Number {
+    fn from(v: f32) -> Self {
+        Self::Defined(v)
     }
 }
 

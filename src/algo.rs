@@ -73,13 +73,13 @@ impl Forest {
                         .width
                         .maybe_max(style.min_size.width.resolve(size.width))
                         .maybe_min(style.max_size.width.resolve(size.width))
-                        .to_number(),
+                        .into(),
                     height: first_pass
                         .size
                         .height
                         .maybe_max(style.min_size.height.resolve(size.height))
                         .maybe_min(style.max_size.height.resolve(size.height))
-                        .to_number(),
+                        .into(),
                 },
                 size,
                 true,
@@ -358,7 +358,7 @@ impl Forest {
                 .main(dir)
                 .maybe_max(child.min_size.main(dir))
                 .maybe_min(child.size.main(dir))
-                .to_number();
+                .into();
 
             child
                 .hypothetical_inner_size
@@ -608,7 +608,7 @@ impl Forest {
                         .width
                         .maybe_min(child.size.width)
                         .maybe_max(child.min_size.width)
-                        .to_number()
+                        .into()
                     } else {
                         child.min_size.main(dir)
                     };
@@ -677,12 +677,12 @@ impl Forest {
                     self.compute_internal(
                         child.node,
                         Size {
-                            width: if is_row { child.target_size.width.to_number() } else { child_cross },
-                            height: if is_row { child_cross } else { child.target_size.height.to_number() },
+                            width: if is_row { child.target_size.width.into() } else { child_cross },
+                            height: if is_row { child_cross } else { child.target_size.height.into() },
                         },
                         Size {
-                            width: if is_row { container_size.main(dir).to_number() } else { available_space.width },
-                            height: if is_row { available_space.height } else { container_size.main(dir).to_number() },
+                            width: if is_row { container_size.main(dir).into() } else { available_space.width },
+                            height: if is_row { available_space.height } else { container_size.main(dir).into() },
                         },
                         false,
                     )
@@ -717,19 +717,19 @@ impl Forest {
                         child.node,
                         Size {
                             width: if is_row {
-                                child.target_size.width.to_number()
+                                child.target_size.width.into()
                             } else {
-                                child.hypothetical_inner_size.width.to_number()
+                                child.hypothetical_inner_size.width.into()
                             },
                             height: if is_row {
-                                child.hypothetical_inner_size.height.to_number()
+                                child.hypothetical_inner_size.height.into()
                             } else {
-                                child.target_size.height.to_number()
+                                child.target_size.height.into()
                             },
                         },
                         Size {
-                            width: if is_row { container_size.width.to_number() } else { node_size.width },
-                            height: if is_row { node_size.height } else { container_size.height.to_number() },
+                            width: if is_row { container_size.width.into() } else { node_size.width },
+                            height: if is_row { node_size.height } else { container_size.height.into() },
                         },
                         true,
                     );
@@ -1127,8 +1127,8 @@ impl Forest {
                 let layout_item = |child: &mut FlexItem| {
                     let result = self.compute_internal(
                         child.node,
-                        child.target_size.map(|s| s.to_number()),
-                        container_size.map(|s| s.to_number()),
+                        child.target_size.map(|s| s.into()),
+                        container_size.map(|s| s.into()),
                         true,
                     );
 
@@ -1182,8 +1182,8 @@ impl Forest {
                 .collect::<sys::Vec<_>>();
 
             for (order, child) in candidates {
-                let container_width = container_size.width.to_number();
-                let container_height = container_size.height.to_number();
+                let container_width = container_size.width.into();
+                let container_height = container_size.height.into();
 
                 let child_style = self.nodes[child].style;
 
