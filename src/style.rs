@@ -110,7 +110,6 @@ impl Default for FlexDirection {
 }
 
 impl FlexDirection {
-
     #[inline]
     pub(crate) fn is_row(self) -> bool {
         match self {
