@@ -598,17 +598,12 @@ impl Forest {
                     // min-content max-content constraints from the top. Need to figure out correct thing to do here as
                     // just piling on more conditionals.
                     let min_main = if is_row && self.nodes[child.node].measure.is_none() {
-                        self.compute_internal(
-                            child.node,
-                            Size::undefined(),
-                            available_space,
-                            false,
-                        )
-                        .size
-                        .width
-                        .maybe_min(child.size.width)
-                        .maybe_max(child.min_size.width)
-                        .into()
+                        self.compute_internal(child.node, Size::undefined(), available_space, false)
+                            .size
+                            .width
+                            .maybe_min(child.size.width)
+                            .maybe_max(child.min_size.width)
+                            .into()
                     } else {
                         child.min_size.main(dir)
                     };
