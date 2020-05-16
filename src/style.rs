@@ -14,8 +14,8 @@ pub enum AlignItems {
 }
 
 impl Default for AlignItems {
-    fn default() -> AlignItems {
-        AlignItems::Stretch
+    fn default() -> Self {
+        Self::Stretch
     }
 }
 
@@ -33,8 +33,8 @@ pub enum AlignSelf {
 }
 
 impl Default for AlignSelf {
-    fn default() -> AlignSelf {
-        AlignSelf::Auto
+    fn default() -> Self {
+        Self::Auto
     }
 }
 
@@ -52,8 +52,8 @@ pub enum AlignContent {
 }
 
 impl Default for AlignContent {
-    fn default() -> AlignContent {
-        AlignContent::Stretch
+    fn default() -> Self {
+        Self::Stretch
     }
 }
 
@@ -70,8 +70,8 @@ pub enum Direction {
 }
 
 impl Default for Direction {
-    fn default() -> Direction {
-        Direction::Inherit
+    fn default() -> Self {
+        Self::Inherit
     }
 }
 
@@ -87,8 +87,8 @@ pub enum Display {
 }
 
 impl Default for Display {
-    fn default() -> Display {
-        Display::Flex
+    fn default() -> Self {
+        Self::Flex
     }
 }
 
@@ -104,8 +104,8 @@ pub enum FlexDirection {
 }
 
 impl Default for FlexDirection {
-    fn default() -> FlexDirection {
-        FlexDirection::Row
+    fn default() -> Self {
+        Self::Row
     }
 }
 
@@ -137,8 +137,8 @@ pub enum JustifyContent {
 }
 
 impl Default for JustifyContent {
-    fn default() -> JustifyContent {
-        JustifyContent::FlexStart
+    fn default() -> Self {
+        Self::FlexStart
     }
 }
 
@@ -153,8 +153,8 @@ pub enum Overflow {
 }
 
 impl Default for Overflow {
-    fn default() -> Overflow {
-        Overflow::Visible
+    fn default() -> Self {
+        Self::Visible
     }
 }
 
@@ -168,8 +168,8 @@ pub enum PositionType {
 }
 
 impl Default for PositionType {
-    fn default() -> PositionType {
-        PositionType::Relative
+    fn default() -> Self {
+        Self::Relative
     }
 }
 
@@ -184,8 +184,8 @@ pub enum FlexWrap {
 }
 
 impl Default for FlexWrap {
-    fn default() -> FlexWrap {
-        FlexWrap::NoWrap
+    fn default() -> Self {
+        Self::NoWrap
     }
 }
 
@@ -201,16 +201,16 @@ pub enum Dimension {
 }
 
 impl Default for Dimension {
-    fn default() -> Dimension {
-        Dimension::Undefined
+    fn default() -> Self {
+        Self::Undefined
     }
 }
 
 impl Dimension {
-    pub(crate) fn resolve(self, parent_width: Number) -> Number {
+    pub(crate) fn resolve(self, parent_dim: Number) -> Number {
         match self {
             Dimension::Points(points) => Number::Defined(points),
-            Dimension::Percent(percent) => parent_width * percent,
+            Dimension::Percent(percent) => parent_dim * percent,
             _ => Number::Undefined,
         }
     }
@@ -225,14 +225,14 @@ impl Dimension {
 }
 
 impl Default for Rect<Dimension> {
-    fn default() -> Rect<Dimension> {
-        Rect { start: Default::default(), end: Default::default(), top: Default::default(), bottom: Default::default() }
+    fn default() -> Self {
+        Self { start: Default::default(), end: Default::default(), top: Default::default(), bottom: Default::default() }
     }
 }
 
 impl Default for Size<Dimension> {
-    fn default() -> Size<Dimension> {
-        Size { width: Dimension::Auto, height: Dimension::Auto }
+    fn default() -> Self {
+        Self { width: Dimension::Auto, height: Dimension::Auto }
     }
 }
 
@@ -266,8 +266,8 @@ pub struct Style {
 }
 
 impl Default for Style {
-    fn default() -> Style {
-        Style {
+    fn default() -> Self {
+        Self {
             display: Default::default(),
             position_type: Default::default(),
             direction: Default::default(),
