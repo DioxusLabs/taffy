@@ -65,7 +65,7 @@ impl Forest {
         let result = if has_root_min_max {
             let first_pass = self.compute_internal(
                 root,
-                Size { width: style.size.width.resolve(size.width), height: style.size.height.resolve(size.height) },
+                style.size.resolve(size),
                 size,
                 false,
             );
@@ -92,7 +92,7 @@ impl Forest {
         } else {
             self.compute_internal(
                 root,
-                Size { width: style.size.width.resolve(size.width), height: style.size.height.resolve(size.height) },
+                style.size.resolve(size),
                 size,
                 true,
             )
@@ -101,7 +101,7 @@ impl Forest {
         self.nodes[root].layout = result::Layout {
             order: 0,
             size: Size { width: result.size.width, height: result.size.height },
-            location: Point { x: 0.0, y: 0.0 },
+            location: Point::zero(),
         };
 
         Self::round_layout(&mut self.nodes, &self.children, root, 0.0, 0.0);
@@ -186,8 +186,8 @@ impl Forest {
             height: node_size.height - padding_border.vertical(),
         };
 
-        let mut container_size = Size { width: 0.0, height: 0.0 };
-        let mut inner_container_size = Size { width: 0.0, height: 0.0 };
+        let mut container_size = Size::zero();
+        let mut inner_container_size = Size::zero();
 
         // If this is a leaf node we can skip a lot of this function in some cases
         if self.children[node].is_empty() {
@@ -238,21 +238,9 @@ impl Forest {
             .filter(|(_, style)| style.display != Display::None)
             .map(|(child, child_style)| FlexItem {
                 node: *child,
-
-                size: Size {
-                    width: child_style.size.width.resolve(node_inner_size.width),
-                    height: child_style.size.height.resolve(node_inner_size.height),
-                },
-
-                min_size: Size {
-                    width: child_style.min_size.width.resolve(node_inner_size.width),
-                    height: child_style.min_size.height.resolve(node_inner_size.height),
-                },
-
-                max_size: Size {
-                    width: child_style.max_size.width.resolve(node_inner_size.width),
-                    height: child_style.max_size.height.resolve(node_inner_size.height),
-                },
+                size: child_style.size.resolve(node_inner_size),
+                min_size: child_style.min_size.resolve(node_inner_size),
+                max_size: child_style.max_size.resolve(node_inner_size),
 
                 position: child_style.position.map(|p| p.resolve(node_inner_size.width)),
                 margin: child_style.margin.map(|m| m.resolve(node_inner_size.width).or_else(0.0)),
@@ -264,10 +252,10 @@ impl Forest {
                 violation: 0.0,
                 frozen: false,
 
-                hypothetical_inner_size: Size { width: 0.0, height: 0.0 },
-                hypothetical_outer_size: Size { width: 0.0, height: 0.0 },
-                target_size: Size { width: 0.0, height: 0.0 },
-                outer_target_size: Size { width: 0.0, height: 0.0 },
+                hypothetical_inner_size: Size::zero(),
+                hypothetical_outer_size: Size::zero(),
+                target_size: Size::zero(),
+                outer_target_size: Size::zero(),
 
                 baseline: 0.0,
 
@@ -762,7 +750,7 @@ impl Forest {
                         &result::Layout {
                             order: self.children[node].iter().position(|n| *n == child.node).unwrap() as u32,
                             size: result.size,
-                            location: Point { x: 0.0, y: 0.0 },
+                            location: Point::zero(),
                         },
                     );
                 }
@@ -1326,7 +1314,7 @@ impl Forest {
 
         fn hidden_layout(nodes: &mut [NodeData], children: &[sys::ChildrenVec<NodeId>], node: NodeId, order: u32) {
             nodes[node].layout =
-                result::Layout { order, size: Size { width: 0.0, height: 0.0 }, location: Point { x: 0.0, y: 0.0 } };
+                result::Layout { order, size: Size::zero(), location: Point::zero() };
 
             for (order, child) in children[node].iter().enumerate() {
                 hidden_layout(nodes, children, *child, order as _);
