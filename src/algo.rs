@@ -90,7 +90,7 @@ impl Forest {
 
         self.nodes[root].layout = result::Layout {
             order: 0,
-            size: Size { width: result.size.width, height: result.size.height },
+            size: result.size,
             location: Point::zero(),
         };
 
