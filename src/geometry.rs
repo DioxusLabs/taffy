@@ -145,10 +145,7 @@ impl Size<f32> {
 
 impl Size<style::Dimension> {
     pub(crate) fn resolve(&self, parent: Size<Number>) -> Size<Number> {
-        Size {
-            width: self.width.resolve(parent.width),
-            height: self.height.resolve(parent.height)
-        }
+        Size { width: self.width.resolve(parent.width), height: self.height.resolve(parent.height) }
     }
 }
 

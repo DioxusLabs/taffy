@@ -63,12 +63,7 @@ impl Forest {
             || style.max_size.height.is_defined();
 
         let result = if has_root_min_max {
-            let first_pass = self.compute_internal(
-                root,
-                style.size.resolve(size),
-                size,
-                false,
-            );
+            let first_pass = self.compute_internal(root, style.size.resolve(size), size, false);
 
             self.compute_internal(
                 root,
@@ -90,12 +85,7 @@ impl Forest {
                 true,
             )
         } else {
-            self.compute_internal(
-                root,
-                style.size.resolve(size),
-                size,
-                true,
-            )
+            self.compute_internal(root, style.size.resolve(size), size, true)
         };
 
         self.nodes[root].layout = result::Layout {
@@ -1313,8 +1303,7 @@ impl Forest {
         }
 
         fn hidden_layout(nodes: &mut [NodeData], children: &[sys::ChildrenVec<NodeId>], node: NodeId, order: u32) {
-            nodes[node].layout =
-                result::Layout { order, size: Size::zero(), location: Point::zero() };
+            nodes[node].layout = result::Layout { order, size: Size::zero(), location: Point::zero() };
 
             for (order, child) in children[node].iter().enumerate() {
                 hidden_layout(nodes, children, *child, order as _);
