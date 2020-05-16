@@ -176,7 +176,7 @@ impl ops::Mul<Number> for Number {
 
     fn mul(self, rhs: Self) -> Self {
         match (self, rhs) {
-            (Number::Defined(l), Number::Defined(r)) => Number::Defined(l + r),
+            (Number::Defined(l), Number::Defined(r)) => Number::Defined(l * r),
             (Number::Defined(_), _) => self,
             _ => Number::Undefined,
         }
