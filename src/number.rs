@@ -9,17 +9,13 @@ pub enum Number {
     Undefined,
 }
 
-pub trait ToNumber {
-    fn to_number(self) -> Number;
-}
-
 pub trait OrElse<T> {
     fn or_else(self, other: T) -> T;
 }
 
 impl Default for Number {
-    fn default() -> Number {
-        Number::Undefined
+    fn default() -> Self {
+        Self::Undefined
     }
 }
 
@@ -32,8 +28,8 @@ impl OrElse<f32> for Number {
     }
 }
 
-impl OrElse<Number> for Number {
-    fn or_else(self, other: Number) -> Number {
+impl OrElse<Self> for Number {
+    fn or_else(self, other: Self) -> Self {
         match self {
             Number::Defined(_) => self,
             Number::Undefined => other,
@@ -62,37 +58,33 @@ pub trait MinMax<In, Out> {
     fn maybe_max(self, rhs: In) -> Out;
 }
 
-impl MinMax<Number, Number> for Number {
-    fn maybe_min(self, rhs: Number) -> Number {
-        match self {
-            Number::Defined(val) => match rhs {
-                Number::Defined(other) => Number::Defined(val.min(other)),
-                Number::Undefined => self,
-            },
-            Number::Undefined => Number::Undefined,
+impl MinMax<Self, Self> for Number {
+    fn maybe_min(self, rhs: Self) -> Self {
+        match (self, rhs) {
+            (Number::Defined(l), Number::Defined(r)) => Number::Defined(l.min(r)),
+            (Number::Defined(_), _) => self,
+            _ => Number::Undefined,
         }
     }
 
-    fn maybe_max(self, rhs: Number) -> Number {
-        match self {
-            Number::Defined(val) => match rhs {
-                Number::Defined(other) => Number::Defined(val.max(other)),
-                Number::Undefined => self,
-            },
-            Number::Undefined => Number::Undefined,
+    fn maybe_max(self, rhs: Self) -> Self {
+        match (self, rhs) {
+            (Number::Defined(l), Number::Defined(r)) => Number::Defined(l.max(r)),
+            (Number::Defined(_), _) => self,
+            _ => Number::Undefined,
         }
     }
 }
 
 impl MinMax<f32, Number> for Number {
-    fn maybe_min(self, rhs: f32) -> Number {
+    fn maybe_min(self, rhs: f32) -> Self {
         match self {
             Number::Defined(val) => Number::Defined(val.min(rhs)),
             Number::Undefined => Number::Undefined,
         }
     }
 
-    fn maybe_max(self, rhs: f32) -> Number {
+    fn maybe_max(self, rhs: f32) -> Self {
         match self {
             Number::Defined(val) => Number::Defined(val.max(rhs)),
             Number::Undefined => Number::Undefined,
@@ -116,16 +108,16 @@ impl MinMax<Number, f32> for f32 {
     }
 }
 
-impl ToNumber for f32 {
-    fn to_number(self) -> Number {
-        Number::Defined(self)
+impl From<f32> for Number {
+    fn from(v: f32) -> Self {
+        Self::Defined(v)
     }
 }
 
 impl ops::Add<f32> for Number {
     type Output = Number;
 
-    fn add(self, rhs: f32) -> Number {
+    fn add(self, rhs: f32) -> Self {
         match self {
             Number::Defined(val) => Number::Defined(val + rhs),
             Number::Undefined => Number::Undefined,
@@ -136,13 +128,11 @@ impl ops::Add<f32> for Number {
 impl ops::Add<Number> for Number {
     type Output = Number;
 
-    fn add(self, rhs: Number) -> Number {
-        match self {
-            Number::Defined(val) => match rhs {
-                Number::Defined(other) => Number::Defined(val + other),
-                Number::Undefined => self,
-            },
-            Number::Undefined => Number::Undefined,
+    fn add(self, rhs: Self) -> Self {
+        match (self, rhs) {
+            (Number::Defined(l), Number::Defined(r)) => Number::Defined(l + r),
+            (Number::Defined(_), _) => self,
+            _ => Number::Undefined,
         }
     }
 }
@@ -150,7 +140,7 @@ impl ops::Add<Number> for Number {
 impl ops::Sub<f32> for Number {
     type Output = Number;
 
-    fn sub(self, rhs: f32) -> Number {
+    fn sub(self, rhs: f32) -> Self {
         match self {
             Number::Defined(val) => Number::Defined(val - rhs),
             Number::Undefined => Number::Undefined,
@@ -161,13 +151,11 @@ impl ops::Sub<f32> for Number {
 impl ops::Sub<Number> for Number {
     type Output = Number;
 
-    fn sub(self, rhs: Number) -> Number {
-        match self {
-            Number::Defined(val) => match rhs {
-                Number::Defined(other) => Number::Defined(val - other),
-                Number::Undefined => self,
-            },
-            Number::Undefined => Number::Undefined,
+    fn sub(self, rhs: Self) -> Self {
+        match (self, rhs) {
+            (Number::Defined(l), Number::Defined(r)) => Number::Defined(l - r),
+            (Number::Defined(_), _) => self,
+            _ => Number::Undefined,
         }
     }
 }
@@ -175,7 +163,7 @@ impl ops::Sub<Number> for Number {
 impl ops::Mul<f32> for Number {
     type Output = Number;
 
-    fn mul(self, rhs: f32) -> Number {
+    fn mul(self, rhs: f32) -> Self {
         match self {
             Number::Defined(val) => Number::Defined(val * rhs),
             Number::Undefined => Number::Undefined,
@@ -186,13 +174,11 @@ impl ops::Mul<f32> for Number {
 impl ops::Mul<Number> for Number {
     type Output = Number;
 
-    fn mul(self, rhs: Number) -> Number {
-        match self {
-            Number::Defined(val) => match rhs {
-                Number::Defined(other) => Number::Defined(val * other),
-                Number::Undefined => self,
-            },
-            Number::Undefined => Number::Undefined,
+    fn mul(self, rhs: Self) -> Self {
+        match (self, rhs) {
+            (Number::Defined(l), Number::Defined(r)) => Number::Defined(l * r),
+            (Number::Defined(_), _) => self,
+            _ => Number::Undefined,
         }
     }
 }
@@ -200,7 +186,7 @@ impl ops::Mul<Number> for Number {
 impl ops::Div<f32> for Number {
     type Output = Number;
 
-    fn div(self, rhs: f32) -> Number {
+    fn div(self, rhs: f32) -> Self {
         match self {
             Number::Defined(val) => Number::Defined(val / rhs),
             Number::Undefined => Number::Undefined,
@@ -211,13 +197,11 @@ impl ops::Div<f32> for Number {
 impl ops::Div<Number> for Number {
     type Output = Number;
 
-    fn div(self, rhs: Number) -> Number {
-        match self {
-            Number::Defined(val) => match rhs {
-                Number::Defined(other) => Number::Defined(val / other),
-                Number::Undefined => self,
-            },
-            Number::Undefined => Number::Undefined,
+    fn div(self, rhs: Self) -> Self {
+        match (self, rhs) {
+            (Number::Defined(l), Number::Defined(r)) => Number::Defined(l / r),
+            (Number::Defined(_), _) => self,
+            _ => Number::Undefined,
         }
     }
 }

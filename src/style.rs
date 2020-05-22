@@ -14,8 +14,8 @@ pub enum AlignItems {
 }
 
 impl Default for AlignItems {
-    fn default() -> AlignItems {
-        AlignItems::Stretch
+    fn default() -> Self {
+        Self::Stretch
     }
 }
 
@@ -33,8 +33,8 @@ pub enum AlignSelf {
 }
 
 impl Default for AlignSelf {
-    fn default() -> AlignSelf {
-        AlignSelf::Auto
+    fn default() -> Self {
+        Self::Auto
     }
 }
 
@@ -52,8 +52,8 @@ pub enum AlignContent {
 }
 
 impl Default for AlignContent {
-    fn default() -> AlignContent {
-        AlignContent::Stretch
+    fn default() -> Self {
+        Self::Stretch
     }
 }
 
@@ -70,8 +70,8 @@ pub enum Direction {
 }
 
 impl Default for Direction {
-    fn default() -> Direction {
-        Direction::Inherit
+    fn default() -> Self {
+        Self::Inherit
     }
 }
 
@@ -87,8 +87,8 @@ pub enum Display {
 }
 
 impl Default for Display {
-    fn default() -> Display {
-        Display::Flex
+    fn default() -> Self {
+        Self::Flex
     }
 }
 
@@ -104,22 +104,34 @@ pub enum FlexDirection {
 }
 
 impl Default for FlexDirection {
-    fn default() -> FlexDirection {
-        FlexDirection::Row
+    fn default() -> Self {
+        Self::Row
     }
 }
 
 impl FlexDirection {
+    #[inline]
     pub(crate) fn is_row(self) -> bool {
-        self == FlexDirection::Row || self == FlexDirection::RowReverse
+        match self {
+            Self::Row | Self::RowReverse => true,
+            _ => false,
+        }
     }
 
+    #[inline]
     pub(crate) fn is_column(self) -> bool {
-        self == FlexDirection::Column || self == FlexDirection::ColumnReverse
+        match self {
+            Self::Column | Self::ColumnReverse => true,
+            _ => false,
+        }
     }
 
+    #[inline]
     pub(crate) fn is_reverse(self) -> bool {
-        self == FlexDirection::RowReverse || self == FlexDirection::ColumnReverse
+        match self {
+            Self::RowReverse | Self::ColumnReverse => true,
+            _ => false,
+        }
     }
 }
 
@@ -137,8 +149,8 @@ pub enum JustifyContent {
 }
 
 impl Default for JustifyContent {
-    fn default() -> JustifyContent {
-        JustifyContent::FlexStart
+    fn default() -> Self {
+        Self::FlexStart
     }
 }
 
@@ -153,8 +165,8 @@ pub enum Overflow {
 }
 
 impl Default for Overflow {
-    fn default() -> Overflow {
-        Overflow::Visible
+    fn default() -> Self {
+        Self::Visible
     }
 }
 
@@ -168,8 +180,8 @@ pub enum PositionType {
 }
 
 impl Default for PositionType {
-    fn default() -> PositionType {
-        PositionType::Relative
+    fn default() -> Self {
+        Self::Relative
     }
 }
 
@@ -184,8 +196,8 @@ pub enum FlexWrap {
 }
 
 impl Default for FlexWrap {
-    fn default() -> FlexWrap {
-        FlexWrap::NoWrap
+    fn default() -> Self {
+        Self::NoWrap
     }
 }
 
@@ -201,16 +213,16 @@ pub enum Dimension {
 }
 
 impl Default for Dimension {
-    fn default() -> Dimension {
-        Dimension::Undefined
+    fn default() -> Self {
+        Self::Undefined
     }
 }
 
 impl Dimension {
-    pub(crate) fn resolve(self, parent_width: Number) -> Number {
+    pub(crate) fn resolve(self, parent_dim: Number) -> Number {
         match self {
             Dimension::Points(points) => Number::Defined(points),
-            Dimension::Percent(percent) => parent_width * percent,
+            Dimension::Percent(percent) => parent_dim * percent,
             _ => Number::Undefined,
         }
     }
@@ -225,14 +237,14 @@ impl Dimension {
 }
 
 impl Default for Rect<Dimension> {
-    fn default() -> Rect<Dimension> {
-        Rect { start: Default::default(), end: Default::default(), top: Default::default(), bottom: Default::default() }
+    fn default() -> Self {
+        Self { start: Default::default(), end: Default::default(), top: Default::default(), bottom: Default::default() }
     }
 }
 
 impl Default for Size<Dimension> {
-    fn default() -> Size<Dimension> {
-        Size { width: Dimension::Auto, height: Dimension::Auto }
+    fn default() -> Self {
+        Self { width: Dimension::Auto, height: Dimension::Auto }
     }
 }
 
@@ -266,8 +278,8 @@ pub struct Style {
 }
 
 impl Default for Style {
-    fn default() -> Style {
-        Style {
+    fn default() -> Self {
+        Self {
             display: Default::default(),
             position_type: Default::default(),
             direction: Default::default(),
@@ -295,65 +307,74 @@ impl Default for Style {
 
 impl Style {
     pub(crate) fn min_main_size(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.min_size.width,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.min_size.height,
+        if direction.is_row() {
+            self.min_size.width
+        } else {
+            self.min_size.height
         }
     }
 
     pub(crate) fn max_main_size(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.max_size.width,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.max_size.height,
+        if direction.is_row() {
+            self.max_size.width
+        } else {
+            self.max_size.height
         }
     }
 
     pub(crate) fn main_margin_start(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.margin.start,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.margin.top,
+        if direction.is_row() {
+            self.margin.start
+        } else {
+            self.margin.top
         }
     }
 
     pub(crate) fn main_margin_end(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.margin.end,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.margin.bottom,
+        if direction.is_row() {
+            self.margin.end
+        } else {
+            self.margin.bottom
         }
     }
 
     pub(crate) fn cross_size(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.size.height,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.size.width,
+        if direction.is_row() {
+            self.size.height
+        } else {
+            self.size.width
         }
     }
 
     pub(crate) fn min_cross_size(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.min_size.height,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.min_size.width,
+        if direction.is_row() {
+            self.min_size.height
+        } else {
+            self.min_size.width
         }
     }
 
     pub(crate) fn max_cross_size(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.max_size.height,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.max_size.width,
+        if direction.is_row() {
+            self.max_size.height
+        } else {
+            self.max_size.width
         }
     }
 
     pub(crate) fn cross_margin_start(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.margin.top,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.margin.start,
+        if direction.is_row() {
+            self.margin.top
+        } else {
+            self.margin.start
         }
     }
 
     pub(crate) fn cross_margin_end(&self, direction: FlexDirection) -> Dimension {
-        match direction {
-            FlexDirection::Row | FlexDirection::RowReverse => self.margin.bottom,
-            FlexDirection::Column | FlexDirection::ColumnReverse => self.margin.end,
+        if direction.is_row() {
+            self.margin.bottom
+        } else {
+            self.margin.end
         }
     }
 
