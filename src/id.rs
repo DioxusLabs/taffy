@@ -16,7 +16,7 @@ pub(crate) struct Allocator {
 
 impl Allocator {
     pub const fn new() -> Self {
-        Allocator { new_id: atomic::AtomicUsize::new(0) }
+        Self { new_id: atomic::AtomicUsize::new(0) }
     }
 
     pub fn allocate(&self) -> Id {

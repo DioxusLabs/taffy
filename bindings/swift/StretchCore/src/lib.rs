@@ -247,7 +247,7 @@ pub unsafe extern "C" fn stretch_node_set_measure(
             *node,
             Some(stretch::node::MeasureFunc::Boxed(Box::new(move |constraint| {
                 let size = measure(swift_ptr, constraint.width.or_else(f32::NAN), constraint.height.or_else(f32::NAN));
-                Size { width: size.width, height: size.height }
+                size
             }))),
         )
         .unwrap();

@@ -396,8 +396,8 @@ pub struct Allocator {
 #[wasm_bindgen]
 impl Allocator {
     #[wasm_bindgen(constructor)]
-    pub fn new() -> Allocator {
-        Allocator { stretch: Rc::new(RefCell::new(stretch::node::Stretch::new())) }
+    pub fn new() -> Self {
+        Self { stretch: Rc::new(RefCell::new(stretch::node::Stretch::new())) }
     }
 }
 
@@ -414,8 +414,8 @@ pub struct Node {
 #[wasm_bindgen]
 impl Node {
     #[wasm_bindgen(constructor)]
-    pub fn new(allocator: &Allocator, style: &JsValue) -> Node {
-        Node {
+    pub fn new(allocator: &Allocator, style: &JsValue) -> Self {
+        Self {
             allocator: allocator.clone(),
             node: allocator.stretch.borrow_mut().new_node(parse_style(&style), &[]).unwrap(),
             style: style.clone(),

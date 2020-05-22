@@ -11,7 +11,7 @@ pub struct Layout {
 
 impl Layout {
     pub(crate) fn new() -> Self {
-        Layout { order: 0, size: Size { width: 0.0, height: 0.0 }, location: Point { x: 0.0, y: 0.0 } }
+        Self { order: 0, size: Size::zero(), location: Point::zero() }
     }
 }
 
