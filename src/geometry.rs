@@ -22,6 +22,18 @@ impl<T> Rect<T> {
     {
         Rect { start: f(self.start), end: f(self.end), top: f(self.top), bottom: f(self.bottom) }
     }
+    pub(crate) fn zip_size<R, F, U>(self, size: Size<U>, f: F) -> Rect<R>
+    where
+        F: Fn(T, U) -> R,
+        U: Copy
+    {
+        Rect {
+            start: f(self.start, size.width),
+            end: f(self.end, size.width),
+            top: f(self.top, size.height),
+            bottom: f(self.bottom, size.height)
+        }
+    }
 }
 
 impl<T> Rect<T>
