@@ -156,9 +156,9 @@ impl Forest {
         let is_column = dir.is_column();
         let is_wrap_reverse = self.nodes[node].style.flex_wrap == FlexWrap::WrapReverse;
 
-        let margin = self.nodes[node].style.margin.map(|n| n.resolve(parent_size.width).or_else(0.0));
-        let padding = self.nodes[node].style.padding.map(|n| n.resolve(parent_size.width).or_else(0.0));
-        let border = self.nodes[node].style.border.map(|n| n.resolve(parent_size.width).or_else(0.0));
+        let margin = self.nodes[node].style.margin.zip_size(parent_size, |n, s| n.resolve(s).or_else(0.0));
+        let padding = self.nodes[node].style.padding.zip_size(parent_size, |n, s| n.resolve(s).or_else(0.0));
+        let border = self.nodes[node].style.border.zip_size(parent_size, |n, s| n.resolve(s).or_else(0.0));
 
         let padding_border = Rect {
             start: padding.start + border.start,
@@ -228,10 +228,10 @@ impl Forest {
                 min_size: child_style.min_size.resolve(node_inner_size),
                 max_size: child_style.max_size.resolve(node_inner_size),
 
-                position: child_style.position.map(|p| p.resolve(node_inner_size.width)),
-                margin: child_style.margin.map(|m| m.resolve(node_inner_size.width).or_else(0.0)),
-                padding: child_style.padding.map(|p| p.resolve(node_inner_size.width).or_else(0.0)),
-                border: child_style.border.map(|b| b.resolve(node_inner_size.width).or_else(0.0)),
+                position: child_style.position.zip_size(node_inner_size, |p, s| p.resolve(s)),
+                margin: child_style.margin.zip_size(node_inner_size, |m, s| m.resolve(s).or_else(0.0)),
+                padding: child_style.padding.zip_size(node_inner_size, |p, s| p.resolve(s).or_else(0.0)),
+                border: child_style.border.zip_size(node_inner_size, |b, s| b.resolve(s).or_else(0.0)),
 
                 flex_basis: 0.0,
                 inner_flex_basis: 0.0,
