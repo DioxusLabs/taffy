@@ -1,12 +1,12 @@
 pub fn compute() {
-    let mut stretch = stretch::Stretch::new();
+    let mut stretch = stretch2::Stretch::new();
     let node0 = stretch
         .new_node(
-            stretch::style::Style {
+            stretch2::style::Style {
                 flex_grow: 1f32,
-                flex_basis: stretch::style::Dimension::Percent(0.15f32),
-                max_size: stretch::geometry::Size {
-                    width: stretch::style::Dimension::Percent(0.6f32),
+                flex_basis: stretch2::style::Dimension::Percent(0.15f32),
+                max_size: stretch2::geometry::Size {
+                    width: stretch2::style::Dimension::Percent(0.6f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -16,11 +16,11 @@ pub fn compute() {
         .unwrap();
     let node1 = stretch
         .new_node(
-            stretch::style::Style {
+            stretch2::style::Style {
                 flex_grow: 4f32,
-                flex_basis: stretch::style::Dimension::Percent(0.1f32),
-                max_size: stretch::geometry::Size {
-                    width: stretch::style::Dimension::Percent(0.2f32),
+                flex_basis: stretch2::style::Dimension::Percent(0.1f32),
+                max_size: stretch2::geometry::Size {
+                    width: stretch2::style::Dimension::Percent(0.2f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -30,10 +30,10 @@ pub fn compute() {
         .unwrap();
     let node = stretch
         .new_node(
-            stretch::style::Style {
-                size: stretch::geometry::Size {
-                    width: stretch::style::Dimension::Points(200f32),
-                    height: stretch::style::Dimension::Points(400f32),
+            stretch2::style::Style {
+                size: stretch2::geometry::Size {
+                    width: stretch2::style::Dimension::Points(200f32),
+                    height: stretch2::style::Dimension::Points(400f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -41,5 +41,5 @@ pub fn compute() {
             &[node0, node1],
         )
         .unwrap();
-    stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
+    stretch.compute_layout(node, stretch2::geometry::Size::undefined()).unwrap();
 }

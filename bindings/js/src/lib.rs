@@ -24,14 +24,14 @@ pub enum AlignItems {
     Stretch,
 }
 
-impl Into<stretch::style::AlignItems> for AlignItems {
-    fn into(self) -> stretch::style::AlignItems {
+impl Into<stretch2::style::AlignItems> for AlignItems {
+    fn into(self) -> stretch2::style::AlignItems {
         match self {
-            AlignItems::FlexStart => stretch::style::AlignItems::FlexStart,
-            AlignItems::FlexEnd => stretch::style::AlignItems::FlexEnd,
-            AlignItems::Center => stretch::style::AlignItems::Center,
-            AlignItems::Baseline => stretch::style::AlignItems::Baseline,
-            AlignItems::Stretch => stretch::style::AlignItems::Stretch,
+            AlignItems::FlexStart => stretch2::style::AlignItems::FlexStart,
+            AlignItems::FlexEnd => stretch2::style::AlignItems::FlexEnd,
+            AlignItems::Center => stretch2::style::AlignItems::Center,
+            AlignItems::Baseline => stretch2::style::AlignItems::Baseline,
+            AlignItems::Stretch => stretch2::style::AlignItems::Stretch,
         }
     }
 }
@@ -61,15 +61,15 @@ pub enum AlignSelf {
     Stretch,
 }
 
-impl Into<stretch::style::AlignSelf> for AlignSelf {
-    fn into(self) -> stretch::style::AlignSelf {
+impl Into<stretch2::style::AlignSelf> for AlignSelf {
+    fn into(self) -> stretch2::style::AlignSelf {
         match self {
-            AlignSelf::Auto => stretch::style::AlignSelf::Auto,
-            AlignSelf::FlexStart => stretch::style::AlignSelf::FlexStart,
-            AlignSelf::FlexEnd => stretch::style::AlignSelf::FlexEnd,
-            AlignSelf::Center => stretch::style::AlignSelf::Center,
-            AlignSelf::Baseline => stretch::style::AlignSelf::Baseline,
-            AlignSelf::Stretch => stretch::style::AlignSelf::Stretch,
+            AlignSelf::Auto => stretch2::style::AlignSelf::Auto,
+            AlignSelf::FlexStart => stretch2::style::AlignSelf::FlexStart,
+            AlignSelf::FlexEnd => stretch2::style::AlignSelf::FlexEnd,
+            AlignSelf::Center => stretch2::style::AlignSelf::Center,
+            AlignSelf::Baseline => stretch2::style::AlignSelf::Baseline,
+            AlignSelf::Stretch => stretch2::style::AlignSelf::Stretch,
         }
     }
 }
@@ -100,15 +100,15 @@ pub enum AlignContent {
     SpaceAround,
 }
 
-impl Into<stretch::style::AlignContent> for AlignContent {
-    fn into(self) -> stretch::style::AlignContent {
+impl Into<stretch2::style::AlignContent> for AlignContent {
+    fn into(self) -> stretch2::style::AlignContent {
         match self {
-            AlignContent::FlexStart => stretch::style::AlignContent::FlexStart,
-            AlignContent::FlexEnd => stretch::style::AlignContent::FlexEnd,
-            AlignContent::Center => stretch::style::AlignContent::Center,
-            AlignContent::Stretch => stretch::style::AlignContent::Stretch,
-            AlignContent::SpaceBetween => stretch::style::AlignContent::SpaceBetween,
-            AlignContent::SpaceAround => stretch::style::AlignContent::SpaceAround,
+            AlignContent::FlexStart => stretch2::style::AlignContent::FlexStart,
+            AlignContent::FlexEnd => stretch2::style::AlignContent::FlexEnd,
+            AlignContent::Center => stretch2::style::AlignContent::Center,
+            AlignContent::Stretch => stretch2::style::AlignContent::Stretch,
+            AlignContent::SpaceBetween => stretch2::style::AlignContent::SpaceBetween,
+            AlignContent::SpaceAround => stretch2::style::AlignContent::SpaceAround,
         }
     }
 }
@@ -136,12 +136,12 @@ pub enum Direction {
     RTL,
 }
 
-impl Into<stretch::style::Direction> for Direction {
-    fn into(self) -> stretch::style::Direction {
+impl Into<stretch2::style::Direction> for Direction {
+    fn into(self) -> stretch2::style::Direction {
         match self {
-            Direction::Inherit => stretch::style::Direction::Inherit,
-            Direction::LTR => stretch::style::Direction::LTR,
-            Direction::RTL => stretch::style::Direction::RTL,
+            Direction::Inherit => stretch2::style::Direction::Inherit,
+            Direction::LTR => stretch2::style::Direction::LTR,
+            Direction::RTL => stretch2::style::Direction::RTL,
         }
     }
 }
@@ -165,11 +165,11 @@ pub enum Display {
     None,
 }
 
-impl Into<stretch::style::Display> for Display {
-    fn into(self) -> stretch::style::Display {
+impl Into<stretch2::style::Display> for Display {
+    fn into(self) -> stretch2::style::Display {
         match self {
-            Display::Flex => stretch::style::Display::Flex,
-            Display::None => stretch::style::Display::None,
+            Display::Flex => stretch2::style::Display::Flex,
+            Display::None => stretch2::style::Display::None,
         }
     }
 }
@@ -194,13 +194,13 @@ pub enum FlexDirection {
     ColumnReverse,
 }
 
-impl Into<stretch::style::FlexDirection> for FlexDirection {
-    fn into(self) -> stretch::style::FlexDirection {
+impl Into<stretch2::style::FlexDirection> for FlexDirection {
+    fn into(self) -> stretch2::style::FlexDirection {
         match self {
-            FlexDirection::Row => stretch::style::FlexDirection::Row,
-            FlexDirection::Column => stretch::style::FlexDirection::Column,
-            FlexDirection::RowReverse => stretch::style::FlexDirection::RowReverse,
-            FlexDirection::ColumnReverse => stretch::style::FlexDirection::ColumnReverse,
+            FlexDirection::Row => stretch2::style::FlexDirection::Row,
+            FlexDirection::Column => stretch2::style::FlexDirection::Column,
+            FlexDirection::RowReverse => stretch2::style::FlexDirection::RowReverse,
+            FlexDirection::ColumnReverse => stretch2::style::FlexDirection::ColumnReverse,
         }
     }
 }
@@ -229,15 +229,15 @@ pub enum JustifyContent {
     SpaceEvenly,
 }
 
-impl Into<stretch::style::JustifyContent> for JustifyContent {
-    fn into(self) -> stretch::style::JustifyContent {
+impl Into<stretch2::style::JustifyContent> for JustifyContent {
+    fn into(self) -> stretch2::style::JustifyContent {
         match self {
-            JustifyContent::FlexStart => stretch::style::JustifyContent::FlexStart,
-            JustifyContent::FlexEnd => stretch::style::JustifyContent::FlexEnd,
-            JustifyContent::Center => stretch::style::JustifyContent::Center,
-            JustifyContent::SpaceBetween => stretch::style::JustifyContent::SpaceBetween,
-            JustifyContent::SpaceAround => stretch::style::JustifyContent::SpaceAround,
-            JustifyContent::SpaceEvenly => stretch::style::JustifyContent::SpaceEvenly,
+            JustifyContent::FlexStart => stretch2::style::JustifyContent::FlexStart,
+            JustifyContent::FlexEnd => stretch2::style::JustifyContent::FlexEnd,
+            JustifyContent::Center => stretch2::style::JustifyContent::Center,
+            JustifyContent::SpaceBetween => stretch2::style::JustifyContent::SpaceBetween,
+            JustifyContent::SpaceAround => stretch2::style::JustifyContent::SpaceAround,
+            JustifyContent::SpaceEvenly => stretch2::style::JustifyContent::SpaceEvenly,
         }
     }
 }
@@ -265,12 +265,12 @@ pub enum Overflow {
     Scroll,
 }
 
-impl Into<stretch::style::Overflow> for Overflow {
-    fn into(self) -> stretch::style::Overflow {
+impl Into<stretch2::style::Overflow> for Overflow {
+    fn into(self) -> stretch2::style::Overflow {
         match self {
-            Overflow::Visible => stretch::style::Overflow::Visible,
-            Overflow::Hidden => stretch::style::Overflow::Hidden,
-            Overflow::Scroll => stretch::style::Overflow::Scroll,
+            Overflow::Visible => stretch2::style::Overflow::Visible,
+            Overflow::Hidden => stretch2::style::Overflow::Hidden,
+            Overflow::Scroll => stretch2::style::Overflow::Scroll,
         }
     }
 }
@@ -294,11 +294,11 @@ pub enum PositionType {
     Absolute,
 }
 
-impl Into<stretch::style::PositionType> for PositionType {
-    fn into(self) -> stretch::style::PositionType {
+impl Into<stretch2::style::PositionType> for PositionType {
+    fn into(self) -> stretch2::style::PositionType {
         match self {
-            PositionType::Relative => stretch::style::PositionType::Relative,
-            PositionType::Absolute => stretch::style::PositionType::Absolute,
+            PositionType::Relative => stretch2::style::PositionType::Relative,
+            PositionType::Absolute => stretch2::style::PositionType::Absolute,
         }
     }
 }
@@ -322,12 +322,12 @@ pub enum FlexWrap {
     WrapReverse,
 }
 
-impl Into<stretch::style::FlexWrap> for FlexWrap {
-    fn into(self) -> stretch::style::FlexWrap {
+impl Into<stretch2::style::FlexWrap> for FlexWrap {
+    fn into(self) -> stretch2::style::FlexWrap {
         match self {
-            FlexWrap::NoWrap => stretch::style::FlexWrap::NoWrap,
-            FlexWrap::Wrap => stretch::style::FlexWrap::Wrap,
-            FlexWrap::WrapReverse => stretch::style::FlexWrap::WrapReverse,
+            FlexWrap::NoWrap => stretch2::style::FlexWrap::NoWrap,
+            FlexWrap::Wrap => stretch2::style::FlexWrap::Wrap,
+            FlexWrap::WrapReverse => stretch2::style::FlexWrap::WrapReverse,
         }
     }
 }
@@ -366,7 +366,7 @@ pub struct Layout {
 
 #[wasm_bindgen]
 impl Layout {
-    fn new(allocator: &Allocator, node: stretch::node::Node) -> Layout {
+    fn new(allocator: &Allocator, node: stretch2::node::Node) -> Layout {
         let stretch = allocator.stretch.borrow();
         let layout = stretch.layout(node).unwrap();
         let children = stretch.children(node).unwrap();
@@ -390,21 +390,21 @@ impl Layout {
 #[wasm_bindgen]
 #[derive(Clone)]
 pub struct Allocator {
-    stretch: Rc<RefCell<stretch::node::Stretch>>,
+    stretch: Rc<RefCell<stretch2::node::Stretch>>,
 }
 
 #[wasm_bindgen]
 impl Allocator {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        Self { stretch: Rc::new(RefCell::new(stretch::node::Stretch::new())) }
+        Self { stretch: Rc::new(RefCell::new(stretch2::node::Stretch::new())) }
     }
 }
 
 #[wasm_bindgen]
 pub struct Node {
     allocator: Allocator,
-    node: stretch::node::Node,
+    node: stretch2::node::Node,
     style: JsValue,
 
     #[wasm_bindgen(readonly)]
@@ -432,16 +432,16 @@ impl Node {
             .borrow_mut()
             .set_measure(
                 self.node,
-                Some(stretch::node::MeasureFunc::Boxed(Box::new(move |constraints| {
-                    use stretch::number::OrElse;
+                Some(stretch2::node::MeasureFunc::Boxed(Box::new(move |constraints| {
+                    use stretch2::number::OrElse;
 
-                    let widthConstraint = if let stretch::number::Number::Defined(val) = constraints.width {
+                    let widthConstraint = if let stretch2::number::Number::Defined(val) = constraints.width {
                         val.into()
                     } else {
                         JsValue::UNDEFINED
                     };
 
-                    let heightConstaint = if let stretch::number::Number::Defined(val) = constraints.height {
+                    let heightConstaint = if let stretch2::number::Number::Defined(val) = constraints.height {
                         val.into()
                     } else {
                         JsValue::UNDEFINED
@@ -452,7 +452,7 @@ impl Node {
                         let height = get_f32(&result, "height");
 
                         if width.is_some() && height.is_some() {
-                            return stretch::geometry::Size { width: width.unwrap(), height: height.unwrap() };
+                            return stretch2::geometry::Size { width: width.unwrap(), height: height.unwrap() };
                         }
                     }
 
@@ -513,16 +513,16 @@ impl Node {
             .borrow_mut()
             .compute_layout(
                 self.node,
-                stretch::geometry::Size {
+                stretch2::geometry::Size {
                     width: if let Some(val) = get_f32(size, "width") {
-                        stretch::number::Number::Defined(val)
+                        stretch2::number::Number::Defined(val)
                     } else {
-                        stretch::number::Number::Undefined
+                        stretch2::number::Number::Undefined
                     },
                     height: if let Some(val) = get_f32(size, "height") {
-                        stretch::number::Number::Defined(val)
+                        stretch2::number::Number::Defined(val)
                     } else {
-                        stretch::number::Number::Undefined
+                        stretch2::number::Number::Undefined
                     },
                 },
             )
@@ -531,8 +531,8 @@ impl Node {
     }
 }
 
-fn parse_style(style: &JsValue) -> stretch::style::Style {
-    stretch::style::Style {
+fn parse_style(style: &JsValue) -> stretch2::style::Style {
+    stretch2::style::Style {
         display: get_i32(style, "display").map(|i| Display::from(i).into()).unwrap_or_default(),
         position_type: get_i32(style, "positionType").map(|i| PositionType::from(i).into()).unwrap_or_default(),
         direction: get_i32(style, "direction").map(|i| Direction::from(i).into()).unwrap_or_default(),
@@ -544,28 +544,28 @@ fn parse_style(style: &JsValue) -> stretch::style::Style {
         align_content: get_i32(style, "alignContent").map(|i| AlignContent::from(i).into()).unwrap_or_default(),
         justify_content: get_i32(style, "justifyContent").map(|i| JustifyContent::from(i).into()).unwrap_or_default(),
 
-        position: stretch::geometry::Rect {
+        position: stretch2::geometry::Rect {
             start: get_dimension(style, "start"),
             end: get_dimension(style, "end"),
             top: get_dimension(style, "top"),
             bottom: get_dimension(style, "bottom"),
         },
 
-        margin: stretch::geometry::Rect {
+        margin: stretch2::geometry::Rect {
             start: get_dimension(style, "marginStart"),
             end: get_dimension(style, "marginEnd"),
             top: get_dimension(style, "marginTop"),
             bottom: get_dimension(style, "marginBottom"),
         },
 
-        padding: stretch::geometry::Rect {
+        padding: stretch2::geometry::Rect {
             start: get_dimension(style, "paddingStart"),
             end: get_dimension(style, "paddingEnd"),
             top: get_dimension(style, "paddingTop"),
             bottom: get_dimension(style, "paddingBottom"),
         },
 
-        border: stretch::geometry::Rect {
+        border: stretch2::geometry::Rect {
             start: get_dimension(style, "borderStart"),
             end: get_dimension(style, "borderEnd"),
             top: get_dimension(style, "borderTop"),
@@ -576,58 +576,58 @@ fn parse_style(style: &JsValue) -> stretch::style::Style {
         flex_shrink: get_f32(style, "flexShrink").unwrap_or(1.0),
         flex_basis: get_dimension(style, "flexBasis"),
 
-        size: stretch::geometry::Size {
+        size: stretch2::geometry::Size {
             width: get_size_dimension(style, "width"),
             height: get_size_dimension(style, "height"),
         },
 
-        min_size: stretch::geometry::Size {
+        min_size: stretch2::geometry::Size {
             width: get_size_dimension(style, "minWidth"),
             height: get_size_dimension(style, "minHeight"),
         },
 
-        max_size: stretch::geometry::Size {
+        max_size: stretch2::geometry::Size {
             width: get_size_dimension(style, "maxWidth"),
             height: get_size_dimension(style, "maxHeight"),
         },
 
         aspect_ratio: get_f32(style, "aspectRatio")
-            .map(stretch::number::Number::Defined)
-            .unwrap_or(stretch::number::Number::Undefined),
+            .map(stretch2::number::Number::Defined)
+            .unwrap_or(stretch2::number::Number::Undefined),
     }
 }
 
-fn get_size_dimension(obj: &JsValue, key: &str) -> stretch::style::Dimension {
+fn get_size_dimension(obj: &JsValue, key: &str) -> stretch2::style::Dimension {
     let dimension = get_dimension(obj, key);
     match dimension {
-        stretch::style::Dimension::Undefined => stretch::style::Dimension::Auto,
+        stretch2::style::Dimension::Undefined => stretch2::style::Dimension::Auto,
         _ => dimension,
     }
 }
 
-fn get_dimension(obj: &JsValue, key: &str) -> stretch::style::Dimension {
+fn get_dimension(obj: &JsValue, key: &str) -> stretch2::style::Dimension {
     if has_key(obj, key) {
         if let Ok(val) = Reflect::get(obj, &key.into()) {
             if let Some(number) = val.as_f64() {
-                return stretch::style::Dimension::Points(number as f32);
+                return stretch2::style::Dimension::Points(number as f32);
             }
             if let Some(string) = val.as_string() {
                 if string == "auto" {
-                    return stretch::style::Dimension::Auto;
+                    return stretch2::style::Dimension::Auto;
                 }
                 if let Ok(number) = string.parse::<f32>() {
-                    return stretch::style::Dimension::Points(number);
+                    return stretch2::style::Dimension::Points(number);
                 }
                 if string.ends_with('%') {
                     let len = string.len();
                     if let Ok(number) = string[..len - 1].parse::<f32>() {
-                        return stretch::style::Dimension::Percent(number / 100.0);
+                        return stretch2::style::Dimension::Percent(number / 100.0);
                     }
                 }
             }
         }
     }
-    stretch::style::Dimension::Undefined
+    stretch2::style::Dimension::Undefined
 }
 
 fn get_i32(obj: &JsValue, key: &str) -> Option<i32> {
