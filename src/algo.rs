@@ -228,7 +228,7 @@ impl Forest {
                 min_size: child_style.min_size.resolve(node_inner_size),
                 max_size: child_style.max_size.resolve(node_inner_size),
 
-                position: child_style.position.map(|p| p.resolve(node_inner_size.width)),
+                position: child_style.position.zip_size(node_inner_size, |p, s| p.resolve(s)),
                 margin: child_style.margin.map(|m| m.resolve(node_inner_size.width).or_else(0.0)),
                 padding: child_style.padding.map(|p| p.resolve(node_inner_size.width).or_else(0.0)),
                 border: child_style.border.map(|b| b.resolve(node_inner_size.width).or_else(0.0)),
