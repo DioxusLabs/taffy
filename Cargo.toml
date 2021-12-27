@@ -1,12 +1,11 @@
 [package]
-name = "stretch"
+name = "stretch2"
 version = "0.3.2"
-authors = ["Emil Sjölander <emil@visly.app>"]
+authors = ["elbaro <elbaro@users.noreply.github.com>"]
 edition = "2018"
 include = ["src/**/*", "Cargo.toml"]
 description = "High performance & cross-platform Flexbox implementation"
-repository = "https://github.com/vislyhq/stretch"
-readme = "README.md"
+repository = "https://github.com/elbaro/stretch2"
 keywords = ["ios", "android", "cross-platform", "layout", "flexbox"]
 categories = ["gui"]
 license-file = "LICENSE"
@@ -56,4 +55,4 @@ name = "complex"
 harness = false
 
 [workspace]
-members = [ "scripts/gentest" ]
+members = ["scripts/gentest"]
