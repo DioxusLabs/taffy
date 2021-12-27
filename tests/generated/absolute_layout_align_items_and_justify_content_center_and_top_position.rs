@@ -1,17 +1,17 @@
 #[test]
 fn absolute_layout_align_items_and_justify_content_center_and_top_position() {
-    let mut stretch = stretch::Stretch::new();
+    let mut stretch = stretch2::Stretch::new();
     let node0 = stretch
         .new_node(
-            stretch::style::Style {
-                position_type: stretch::style::PositionType::Absolute,
-                size: stretch::geometry::Size {
-                    width: stretch::style::Dimension::Points(60f32),
-                    height: stretch::style::Dimension::Points(40f32),
+            stretch2::style::Style {
+                position_type: stretch2::style::PositionType::Absolute,
+                size: stretch2::geometry::Size {
+                    width: stretch2::style::Dimension::Points(60f32),
+                    height: stretch2::style::Dimension::Points(40f32),
                     ..Default::default()
                 },
-                position: stretch::geometry::Rect {
-                    top: stretch::style::Dimension::Points(10f32),
+                position: stretch2::geometry::Rect {
+                    top: stretch2::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -21,12 +21,12 @@ fn absolute_layout_align_items_and_justify_content_center_and_top_position() {
         .unwrap();
     let node = stretch
         .new_node(
-            stretch::style::Style {
-                align_items: stretch::style::AlignItems::Center,
-                justify_content: stretch::style::JustifyContent::Center,
-                size: stretch::geometry::Size {
-                    width: stretch::style::Dimension::Points(110f32),
-                    height: stretch::style::Dimension::Points(100f32),
+            stretch2::style::Style {
+                align_items: stretch2::style::AlignItems::Center,
+                justify_content: stretch2::style::JustifyContent::Center,
+                size: stretch2::geometry::Size {
+                    width: stretch2::style::Dimension::Points(110f32),
+                    height: stretch2::style::Dimension::Points(100f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -34,7 +34,7 @@ fn absolute_layout_align_items_and_justify_content_center_and_top_position() {
             &[node0],
         )
         .unwrap();
-    stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
+    stretch.compute_layout(node, stretch2::geometry::Size::undefined()).unwrap();
     assert_eq!(stretch.layout(node).unwrap().size.width, 110f32);
     assert_eq!(stretch.layout(node).unwrap().size.height, 100f32);
     assert_eq!(stretch.layout(node).unwrap().location.x, 0f32);

@@ -1,13 +1,13 @@
 pub fn compute() {
-    let mut stretch = stretch::Stretch::new();
+    let mut stretch = stretch2::Stretch::new();
     let node = stretch
         .new_node(
-            stretch::style::Style {
-                padding: stretch::geometry::Rect {
-                    start: stretch::style::Dimension::Points(10f32),
-                    end: stretch::style::Dimension::Points(10f32),
-                    top: stretch::style::Dimension::Points(10f32),
-                    bottom: stretch::style::Dimension::Points(10f32),
+            stretch2::style::Style {
+                padding: stretch2::geometry::Rect {
+                    start: stretch2::style::Dimension::Points(10f32),
+                    end: stretch2::style::Dimension::Points(10f32),
+                    top: stretch2::style::Dimension::Points(10f32),
+                    bottom: stretch2::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -15,5 +15,5 @@ pub fn compute() {
             &[],
         )
         .unwrap();
-    stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
+    stretch.compute_layout(node, stretch2::geometry::Size::undefined()).unwrap();
 }

@@ -1,17 +1,17 @@
 #[test]
 fn margin_auto_left_fix_right_child_bigger_than_parent() {
-    let mut stretch = stretch::Stretch::new();
+    let mut stretch = stretch2::Stretch::new();
     let node0 = stretch
         .new_node(
-            stretch::style::Style {
-                size: stretch::geometry::Size {
-                    width: stretch::style::Dimension::Points(72f32),
-                    height: stretch::style::Dimension::Points(72f32),
+            stretch2::style::Style {
+                size: stretch2::geometry::Size {
+                    width: stretch2::style::Dimension::Points(72f32),
+                    height: stretch2::style::Dimension::Points(72f32),
                     ..Default::default()
                 },
-                margin: stretch::geometry::Rect {
-                    start: stretch::style::Dimension::Auto,
-                    end: stretch::style::Dimension::Points(10f32),
+                margin: stretch2::geometry::Rect {
+                    start: stretch2::style::Dimension::Auto,
+                    end: stretch2::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -21,11 +21,11 @@ fn margin_auto_left_fix_right_child_bigger_than_parent() {
         .unwrap();
     let node = stretch
         .new_node(
-            stretch::style::Style {
-                justify_content: stretch::style::JustifyContent::Center,
-                size: stretch::geometry::Size {
-                    width: stretch::style::Dimension::Points(52f32),
-                    height: stretch::style::Dimension::Points(52f32),
+            stretch2::style::Style {
+                justify_content: stretch2::style::JustifyContent::Center,
+                size: stretch2::geometry::Size {
+                    width: stretch2::style::Dimension::Points(52f32),
+                    height: stretch2::style::Dimension::Points(52f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -33,7 +33,7 @@ fn margin_auto_left_fix_right_child_bigger_than_parent() {
             &[node0],
         )
         .unwrap();
-    stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
+    stretch.compute_layout(node, stretch2::geometry::Size::undefined()).unwrap();
     assert_eq!(stretch.layout(node).unwrap().size.width, 52f32);
     assert_eq!(stretch.layout(node).unwrap().size.height, 52f32);
     assert_eq!(stretch.layout(node).unwrap().location.x, 0f32);

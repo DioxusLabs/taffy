@@ -1,4 +1,4 @@
-use stretch::prelude::*;
+use stretch2::prelude::*;
 
 fn main() -> Result<(), Error> {
     let mut stretch = Stretch::new();

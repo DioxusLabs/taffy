@@ -1,13 +1,13 @@
 #[test]
 fn rounding_fractial_input_1() {
-    let mut stretch = stretch::Stretch::new();
+    let mut stretch = stretch2::Stretch::new();
     let node0 = stretch
         .new_node(
-            stretch::style::Style {
+            stretch2::style::Style {
                 flex_grow: 1f32,
-                flex_basis: stretch::style::Dimension::Points(50f32),
-                size: stretch::geometry::Size {
-                    height: stretch::style::Dimension::Points(20f32),
+                flex_basis: stretch2::style::Dimension::Points(50f32),
+                size: stretch2::geometry::Size {
+                    height: stretch2::style::Dimension::Points(20f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -17,10 +17,10 @@ fn rounding_fractial_input_1() {
         .unwrap();
     let node1 = stretch
         .new_node(
-            stretch::style::Style {
+            stretch2::style::Style {
                 flex_grow: 1f32,
-                size: stretch::geometry::Size {
-                    height: stretch::style::Dimension::Points(10f32),
+                size: stretch2::geometry::Size {
+                    height: stretch2::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -30,10 +30,10 @@ fn rounding_fractial_input_1() {
         .unwrap();
     let node2 = stretch
         .new_node(
-            stretch::style::Style {
+            stretch2::style::Style {
                 flex_grow: 1f32,
-                size: stretch::geometry::Size {
-                    height: stretch::style::Dimension::Points(10f32),
+                size: stretch2::geometry::Size {
+                    height: stretch2::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -43,11 +43,11 @@ fn rounding_fractial_input_1() {
         .unwrap();
     let node = stretch
         .new_node(
-            stretch::style::Style {
-                flex_direction: stretch::style::FlexDirection::Column,
-                size: stretch::geometry::Size {
-                    width: stretch::style::Dimension::Points(100f32),
-                    height: stretch::style::Dimension::Points(113.4f32),
+            stretch2::style::Style {
+                flex_direction: stretch2::style::FlexDirection::Column,
+                size: stretch2::geometry::Size {
+                    width: stretch2::style::Dimension::Points(100f32),
+                    height: stretch2::style::Dimension::Points(113.4f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -55,7 +55,7 @@ fn rounding_fractial_input_1() {
             &[node0, node1, node2],
         )
         .unwrap();
-    stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
+    stretch.compute_layout(node, stretch2::geometry::Size::undefined()).unwrap();
     assert_eq!(stretch.layout(node).unwrap().size.width, 100f32);
     assert_eq!(stretch.layout(node).unwrap().size.height, 113f32);
     assert_eq!(stretch.layout(node).unwrap().location.x, 0f32);

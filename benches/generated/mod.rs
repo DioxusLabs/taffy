@@ -266,7 +266,7 @@ fn benchmark(c: &mut Criterion) {
             align_baseline_nested_child::compute();
             align_center_should_size_based_on_content::compute();
             align_flex_start_with_shrinking_children::compute();
-            align_flex_start_with_shrinking_children_with_stretch::compute();
+            align_flex_start_with_shrinking_children_with_stretch2::compute();
             align_flex_start_with_stretching_children::compute();
             align_items_center::compute();
             align_items_center_child_with_margin_bigger_than_parent::compute();
@@ -278,7 +278,7 @@ fn benchmark(c: &mut Criterion) {
             align_items_flex_end_child_without_margin_bigger_than_parent::compute();
             align_items_flex_start::compute();
             align_items_min_max::compute();
-            align_items_stretch::compute();
+            align_items_stretch2::compute();
             align_self_baseline::compute();
             align_self_center::compute();
             align_self_flex_end::compute();
@@ -468,7 +468,7 @@ fn benchmark(c: &mut Criterion) {
             wrap_reverse_row_align_content_center::compute();
             wrap_reverse_row_align_content_flex_start::compute();
             wrap_reverse_row_align_content_space_around::compute();
-            wrap_reverse_row_align_content_stretch::compute();
+            wrap_reverse_row_align_content_stretch2::compute();
             wrap_reverse_row_single_line_different_size::compute();
             wrap_row::compute();
             wrap_row_align_items_center::compute();

@@ -12,7 +12,7 @@ stretch = "0.3.2"
 We are ready to use Stretch! Open up `hello_stretch/src/main.rs` and replace its contents with the following. Once finished you should be able to run `cargo run` to see the results of this basic layout calculation.
 
 <Code lang="rust" file="main.rs">{`
-use stretch::{style::*, node::{Node, Stretch}, geometry::Size};
+use stretch2::{style::*, node::{Node, Stretch}, geometry::Size};
  
 fn main() {
   let stretch = Stretch::new();
@@ -34,7 +34,7 @@ fn main() {
 `Node`s are the core building blocks of a stretch layout tree. A node needs a `Style` which describes the `flexbox` properties for the node. By adding nodes as children to a parent node we create a tree which we can perform layout on. The result of a layout computation is a tree of `Layout` nodes. This tree matches the structure of the `Node` tree but contains the computed layout of each node.
 
 <Code lang="rust" file="main.rs">{`
-use stretch::{style::*, node::{Node, Stretch}, geometry::Size};
+use stretch2::{style::*, node::{Node, Stretch}, geometry::Size};
  
 fn main() {
   let stretch = Stretch::new();
@@ -60,7 +60,7 @@ fn main() {
 Nodes can be be mutated and stretch will automatically recompute only the subtrees which have changed. This is incredibly powerful if you have a large node tree, perhaps representing the UI of an app, and only need to change the height of a single element.
 
 <Code lang="rust" file="main.rs">{`
-use stretch::{style::*, node::{Node, Stretch}, geometry::Size};
+use stretch2::{style::*, node::{Node, Stretch}, geometry::Size};
  
 fn main() {
   let stretch = Stretch::new();

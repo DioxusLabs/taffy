@@ -185,9 +185,9 @@ fn generate_bench(description: &json::JsonValue) -> TokenStream {
 
     quote!(
         pub fn compute() {
-            let mut stretch = stretch::Stretch::new();
+            let mut stretch = stretch2::Stretch::new();
             #node_description
-            stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
+            stretch.compute_layout(node, stretch2::geometry::Size::undefined()).unwrap();
         }
     )
 }
@@ -201,9 +201,9 @@ fn generate_test(name: impl AsRef<str>, description: &json::JsonValue) -> TokenS
     quote!(
         #[test]
         fn #name() {
-            let mut stretch = stretch::Stretch::new();
+            let mut stretch = stretch2::Stretch::new();
             #node_description
-            stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
+            stretch.compute_layout(node, stretch2::geometry::Size::undefined()).unwrap();
             #assertions
         }
     )
@@ -249,7 +249,7 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let display = match style["display"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "none" => quote!(display: stretch::style::Display::None,),
+            "none" => quote!(display: stretch2::style::Display::None,),
             _ => quote!(),
         },
         _ => quote!(),
@@ -257,7 +257,7 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let position_type = match style["position_type"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "absolute" => quote!(position_type: stretch::style::PositionType::Absolute,),
+            "absolute" => quote!(position_type: stretch2::style::PositionType::Absolute,),
             _ => quote!(),
         },
         _ => quote!(),
@@ -265,8 +265,8 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let direction = match style["direction"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "rtl" => quote!(direction: stretch::style::Direction::RTL,),
-            "ltr" => quote!(direction: stretch::style::Direction::LTR,),
+            "rtl" => quote!(direction: stretch2::style::Direction::RTL,),
+            "ltr" => quote!(direction: stretch2::style::Direction::LTR,),
             _ => quote!(),
         },
         _ => quote!(),
@@ -274,9 +274,9 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let flex_direction = match style["flexDirection"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "row-reverse" => quote!(flex_direction: stretch::style::FlexDirection::RowReverse,),
-            "column" => quote!(flex_direction: stretch::style::FlexDirection::Column,),
-            "column-reverse" => quote!(flex_direction: stretch::style::FlexDirection::ColumnReverse,),
+            "row-reverse" => quote!(flex_direction: stretch2::style::FlexDirection::RowReverse,),
+            "column" => quote!(flex_direction: stretch2::style::FlexDirection::Column,),
+            "column-reverse" => quote!(flex_direction: stretch2::style::FlexDirection::ColumnReverse,),
             _ => quote!(),
         },
         _ => quote!(),
@@ -284,8 +284,8 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let flex_wrap = match style["flexWrap"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "wrap" => quote!(flex_wrap: stretch::style::FlexWrap::Wrap,),
-            "wrap-reverse" => quote!(flex_wrap: stretch::style::FlexWrap::WrapReverse,),
+            "wrap" => quote!(flex_wrap: stretch2::style::FlexWrap::Wrap,),
+            "wrap-reverse" => quote!(flex_wrap: stretch2::style::FlexWrap::WrapReverse,),
             _ => quote!(),
         },
         _ => quote!(),
@@ -293,8 +293,8 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let overflow = match style["overflow"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "hidden" => quote!(overflow: stretch::style::Overflow::Hidden,),
-            "scroll" => quote!(overflow: stretch::style::Overflow::Scroll,),
+            "hidden" => quote!(overflow: stretch2::style::Overflow::Hidden,),
+            "scroll" => quote!(overflow: stretch2::style::Overflow::Scroll,),
             _ => quote!(),
         },
         _ => quote!(),
@@ -302,10 +302,10 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let align_items = match style["alignItems"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "flex-start" => quote!(align_items: stretch::style::AlignItems::FlexStart,),
-            "flex-end" => quote!(align_items: stretch::style::AlignItems::FlexEnd,),
-            "center" => quote!(align_items: stretch::style::AlignItems::Center,),
-            "baseline" => quote!(align_items: stretch::style::AlignItems::Baseline,),
+            "flex-start" => quote!(align_items: stretch2::style::AlignItems::FlexStart,),
+            "flex-end" => quote!(align_items: stretch2::style::AlignItems::FlexEnd,),
+            "center" => quote!(align_items: stretch2::style::AlignItems::Center,),
+            "baseline" => quote!(align_items: stretch2::style::AlignItems::Baseline,),
             _ => quote!(),
         },
         _ => quote!(),
@@ -313,11 +313,11 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let align_self = match style["alignSelf"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "flex-start" => quote!(align_self: stretch::style::AlignSelf::FlexStart,),
-            "flex-end" => quote!(align_self: stretch::style::AlignSelf::FlexEnd,),
-            "center" => quote!(align_self: stretch::style::AlignSelf::Center,),
-            "baseline" => quote!(align_self: stretch::style::AlignSelf::Baseline,),
-            "stretch" => quote!(align_self: stretch::style::AlignSelf::Stretch,),
+            "flex-start" => quote!(align_self: stretch2::style::AlignSelf::FlexStart,),
+            "flex-end" => quote!(align_self: stretch2::style::AlignSelf::FlexEnd,),
+            "center" => quote!(align_self: stretch2::style::AlignSelf::Center,),
+            "baseline" => quote!(align_self: stretch2::style::AlignSelf::Baseline,),
+            "stretch" => quote!(align_self: stretch2::style::AlignSelf::Stretch,),
             _ => quote!(),
         },
         _ => quote!(),
@@ -325,11 +325,11 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let align_content = match style["alignContent"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "flex-start" => quote!(align_content: stretch::style::AlignContent::FlexStart,),
-            "flex-end" => quote!(align_content: stretch::style::AlignContent::FlexEnd,),
-            "center" => quote!(align_content: stretch::style::AlignContent::Center,),
-            "space-between" => quote!(align_content: stretch::style::AlignContent::SpaceBetween,),
-            "space-around" => quote!(align_content: stretch::style::AlignContent::SpaceAround,),
+            "flex-start" => quote!(align_content: stretch2::style::AlignContent::FlexStart,),
+            "flex-end" => quote!(align_content: stretch2::style::AlignContent::FlexEnd,),
+            "center" => quote!(align_content: stretch2::style::AlignContent::Center,),
+            "space-between" => quote!(align_content: stretch2::style::AlignContent::SpaceBetween,),
+            "space-around" => quote!(align_content: stretch2::style::AlignContent::SpaceAround,),
             _ => quote!(),
         },
         _ => quote!(),
@@ -337,11 +337,11 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let justify_content = match style["justifyContent"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "flex-end" => quote!(justify_content: stretch::style::JustifyContent::FlexEnd,),
-            "center" => quote!(justify_content: stretch::style::JustifyContent::Center,),
-            "space-between" => quote!(justify_content: stretch::style::JustifyContent::SpaceBetween,),
-            "space-around" => quote!(justify_content: stretch::style::JustifyContent::SpaceAround,),
-            "space-evenly" => quote!(justify_content: stretch::style::JustifyContent::SpaceEvenly,),
+            "flex-end" => quote!(justify_content: stretch2::style::JustifyContent::FlexEnd,),
+            "center" => quote!(justify_content: stretch2::style::JustifyContent::Center,),
+            "space-between" => quote!(justify_content: stretch2::style::JustifyContent::SpaceBetween,),
+            "space-around" => quote!(justify_content: stretch2::style::JustifyContent::SpaceAround,),
+            "space-evenly" => quote!(justify_content: stretch2::style::JustifyContent::SpaceEvenly,),
             _ => quote!(),
         },
         _ => quote!(),
@@ -438,7 +438,7 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
     quote!(
         #children_body
         let #ident = stretch.new_node(
-        stretch::style::Style {
+        stretch2::style::Style {
             #display
             #direction
             #position_type
@@ -481,7 +481,7 @@ fn generate_size(size: &json::object::Object) -> TokenStream {
     dim_quoted!(size, width);
     dim_quoted!(size, height);
     quote!(
-        stretch::geometry::Size {
+        stretch2::geometry::Size {
             #width #height
             ..Default::default()
         }
@@ -494,14 +494,14 @@ fn generate_dimension(dimen: &json::object::Object) -> TokenStream {
 
     match unit {
         json::JsonValue::Short(ref unit) => match unit.as_ref() {
-            "auto" => quote!(stretch::style::Dimension::Auto),
+            "auto" => quote!(stretch2::style::Dimension::Auto),
             "points" => {
                 let value = value();
-                quote!(stretch::style::Dimension::Points(#value))
+                quote!(stretch2::style::Dimension::Points(#value))
             }
             "percent" => {
                 let value = value();
-                quote!(stretch::style::Dimension::Percent(#value))
+                quote!(stretch2::style::Dimension::Percent(#value))
             }
             _ => unreachable!(),
         },
@@ -515,7 +515,7 @@ fn generate_edges(dimen: &json::object::Object) -> TokenStream {
     dim_quoted!(dimen, top);
     dim_quoted!(dimen, bottom);
 
-    quote!(stretch::geometry::Rect {
+    quote!(stretch2::geometry::Rect {
         #start #end #top #bottom
         ..Default::default()
     })
