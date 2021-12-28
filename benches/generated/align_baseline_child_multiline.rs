@@ -69,7 +69,10 @@ pub fn compute() {
         .new_node(
             stretch2::style::Style {
                 flex_wrap: stretch2::style::FlexWrap::Wrap,
-                size: stretch2::geometry::Size { width: stretch2::style::Dimension::Points(50f32), ..Default::default() },
+                size: stretch2::geometry::Size {
+                    width: stretch2::style::Dimension::Points(50f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[node10, node11, node12, node13],

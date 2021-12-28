@@ -4,7 +4,10 @@ pub fn compute() {
         .new_node(
             stretch2::style::Style {
                 flex_grow: 1f32,
-                margin: stretch2::geometry::Rect { end: stretch2::style::Dimension::Points(10f32), ..Default::default() },
+                margin: stretch2::geometry::Rect {
+                    end: stretch2::style::Dimension::Points(10f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[],

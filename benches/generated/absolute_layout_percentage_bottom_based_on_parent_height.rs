@@ -40,7 +40,10 @@ pub fn compute() {
         .new_node(
             stretch2::style::Style {
                 position_type: stretch2::style::PositionType::Absolute,
-                size: stretch2::geometry::Size { width: stretch2::style::Dimension::Points(10f32), ..Default::default() },
+                size: stretch2::geometry::Size {
+                    width: stretch2::style::Dimension::Points(10f32),
+                    ..Default::default()
+                },
                 position: stretch2::geometry::Rect {
                     top: stretch2::style::Dimension::Percent(0.1f32),
                     bottom: stretch2::style::Dimension::Percent(0.1f32),

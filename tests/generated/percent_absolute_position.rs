@@ -4,7 +4,10 @@ fn percent_absolute_position() {
     let node00 = stretch
         .new_node(
             stretch2::style::Style {
-                size: stretch2::geometry::Size { width: stretch2::style::Dimension::Percent(1f32), ..Default::default() },
+                size: stretch2::geometry::Size {
+                    width: stretch2::style::Dimension::Percent(1f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[],
@@ -13,7 +16,10 @@ fn percent_absolute_position() {
     let node01 = stretch
         .new_node(
             stretch2::style::Style {
-                size: stretch2::geometry::Size { width: stretch2::style::Dimension::Percent(1f32), ..Default::default() },
+                size: stretch2::geometry::Size {
+                    width: stretch2::style::Dimension::Percent(1f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[],

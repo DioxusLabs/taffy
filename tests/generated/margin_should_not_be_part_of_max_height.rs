@@ -13,7 +13,10 @@ fn margin_should_not_be_part_of_max_height() {
                     height: stretch2::style::Dimension::Points(100f32),
                     ..Default::default()
                 },
-                margin: stretch2::geometry::Rect { top: stretch2::style::Dimension::Points(20f32), ..Default::default() },
+                margin: stretch2::geometry::Rect {
+                    top: stretch2::style::Dimension::Points(20f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[],

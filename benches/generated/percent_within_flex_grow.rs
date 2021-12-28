@@ -15,7 +15,10 @@ pub fn compute() {
     let node10 = stretch
         .new_node(
             stretch2::style::Style {
-                size: stretch2::geometry::Size { width: stretch2::style::Dimension::Percent(1f32), ..Default::default() },
+                size: stretch2::geometry::Size {
+                    width: stretch2::style::Dimension::Percent(1f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[],

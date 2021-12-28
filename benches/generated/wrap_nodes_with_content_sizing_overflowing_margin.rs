@@ -36,7 +36,10 @@ pub fn compute() {
         .new_node(
             stretch2::style::Style {
                 flex_direction: stretch2::style::FlexDirection::Column,
-                margin: stretch2::geometry::Rect { end: stretch2::style::Dimension::Points(10f32), ..Default::default() },
+                margin: stretch2::geometry::Rect {
+                    end: stretch2::style::Dimension::Points(10f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[node010],
@@ -46,7 +49,10 @@ pub fn compute() {
         .new_node(
             stretch2::style::Style {
                 flex_wrap: stretch2::style::FlexWrap::Wrap,
-                size: stretch2::geometry::Size { width: stretch2::style::Dimension::Points(85f32), ..Default::default() },
+                size: stretch2::geometry::Size {
+                    width: stretch2::style::Dimension::Points(85f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[node00, node01],

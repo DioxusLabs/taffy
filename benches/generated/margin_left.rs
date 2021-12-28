@@ -3,7 +3,10 @@ pub fn compute() {
     let node0 = stretch
         .new_node(
             stretch2::style::Style {
-                size: stretch2::geometry::Size { width: stretch2::style::Dimension::Points(10f32), ..Default::default() },
+                size: stretch2::geometry::Size {
+                    width: stretch2::style::Dimension::Points(10f32),
+                    ..Default::default()
+                },
                 margin: stretch2::geometry::Rect {
                     start: stretch2::style::Dimension::Points(10f32),
                     ..Default::default()
