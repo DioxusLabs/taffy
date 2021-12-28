@@ -561,6 +561,6 @@ mod measure {
         let node = stretch.new_node(stretch2::style::Style { ..Default::default() }, &[child]).unwrap();
         stretch.compute_layout(node, stretch2::geometry::Size::undefined()).unwrap();
 
-        assert_eq!(NUM_MEASURES.load(atomic::Ordering::Relaxed), 1);
+        assert_eq!(NUM_MEASURES.load(atomic::Ordering::Relaxed), 2);
     }
 }
