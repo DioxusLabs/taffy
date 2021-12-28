@@ -87,7 +87,6 @@ impl Forest {
             )
         } else {
             self.compute_internal(root, style.size.resolve(size), size, true, true)
-
         };
 
         self.nodes[root].layout = result::Layout { order: 0, size: result.size, location: Point::zero() };
@@ -116,10 +115,10 @@ impl Forest {
     }
 
     fn cache(&mut self, node: NodeId, main_size: bool) -> &mut Option<result::Cache> {
-        if main_size { 
+        if main_size {
             &mut self.nodes[node].main_size_layout_cache
-        } else { 
-            &mut self.nodes[node].other_layout_cache 
+        } else {
+            &mut self.nodes[node].other_layout_cache
         }
     }
 
@@ -713,7 +712,7 @@ impl Forest {
                 let child = db.children[node][0];
                 calc_baseline(db, child, &db.nodes[child].layout)
             }
-        };
+        }
 
         if has_baseline_child {
             for line in &mut flex_lines {
@@ -737,7 +736,7 @@ impl Forest {
                             height: if is_row { node_size.height } else { container_size.height.into() },
                         },
                         true,
-                        false
+                        false,
                     );
 
                     child.baseline = calc_baseline(
@@ -1234,7 +1233,7 @@ impl Forest {
                     child,
                     Size { width, height },
                     Size { width: container_width, height: container_height },
-                    true, 
+                    true,
                     false,
                 );
 
