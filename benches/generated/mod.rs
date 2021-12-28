@@ -266,7 +266,7 @@ fn benchmark(c: &mut Criterion) {
             align_baseline_nested_child::compute();
             align_center_should_size_based_on_content::compute();
             align_flex_start_with_shrinking_children::compute();
-            align_flex_start_with_shrinking_children_with_stretch2::compute();
+            align_flex_start_with_shrinking_children_with_stretch::compute();
             align_flex_start_with_stretching_children::compute();
             align_items_center::compute();
             align_items_center_child_with_margin_bigger_than_parent::compute();
