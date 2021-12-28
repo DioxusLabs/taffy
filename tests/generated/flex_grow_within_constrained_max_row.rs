@@ -14,7 +14,10 @@ fn flex_grow_within_constrained_max_row() {
     let node01 = stretch
         .new_node(
             stretch2::style::Style {
-                size: stretch2::geometry::Size { width: stretch2::style::Dimension::Points(50f32), ..Default::default() },
+                size: stretch2::geometry::Size {
+                    width: stretch2::style::Dimension::Points(50f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[],

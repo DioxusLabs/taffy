@@ -31,7 +31,10 @@ fn percentage_container_in_wrapping_container() {
         .new_node(
             stretch2::style::Style {
                 justify_content: stretch2::style::JustifyContent::Center,
-                size: stretch2::geometry::Size { width: stretch2::style::Dimension::Percent(1f32), ..Default::default() },
+                size: stretch2::geometry::Size {
+                    width: stretch2::style::Dimension::Percent(1f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[node000, node001],

@@ -4,7 +4,10 @@ fn min_width_overrides_width() {
     let node0 = stretch
         .new_node(
             stretch2::style::Style {
-                size: stretch2::geometry::Size { width: stretch2::style::Dimension::Points(50f32), ..Default::default() },
+                size: stretch2::geometry::Size {
+                    width: stretch2::style::Dimension::Points(50f32),
+                    ..Default::default()
+                },
                 min_size: stretch2::geometry::Size {
                     width: stretch2::style::Dimension::Points(100f32),
                     ..Default::default()

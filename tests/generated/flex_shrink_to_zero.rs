@@ -46,7 +46,10 @@ fn flex_shrink_to_zero() {
     let node = stretch
         .new_node(
             stretch2::style::Style {
-                size: stretch2::geometry::Size { width: stretch2::style::Dimension::Points(75f32), ..Default::default() },
+                size: stretch2::geometry::Size {
+                    width: stretch2::style::Dimension::Points(75f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[node0, node1, node2],

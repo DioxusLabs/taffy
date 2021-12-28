@@ -20,11 +20,25 @@ pub(crate) struct NodeData {
 
 impl NodeData {
     fn new_leaf(style: Style, measure: MeasureFunc) -> Self {
-        Self { style, measure: Some(measure), main_size_layout_cache: None, other_layout_cache: None, layout: Layout::new(), is_dirty: true }
+        Self {
+            style,
+            measure: Some(measure),
+            main_size_layout_cache: None,
+            other_layout_cache: None,
+            layout: Layout::new(),
+            is_dirty: true,
+        }
     }
 
     fn new(style: Style) -> Self {
-        Self { style, measure: None, main_size_layout_cache: None, other_layout_cache: None, layout: Layout::new(), is_dirty: true }
+        Self {
+            style,
+            measure: None,
+            main_size_layout_cache: None,
+            other_layout_cache: None,
+            layout: Layout::new(),
+            is_dirty: true,
+        }
     }
 }
 

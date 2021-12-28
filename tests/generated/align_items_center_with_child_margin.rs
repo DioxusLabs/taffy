@@ -9,7 +9,10 @@ fn align_items_center_with_child_margin() {
                     height: stretch2::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
-                margin: stretch2::geometry::Rect { top: stretch2::style::Dimension::Points(10f32), ..Default::default() },
+                margin: stretch2::geometry::Rect {
+                    top: stretch2::style::Dimension::Points(10f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[],
