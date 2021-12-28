@@ -406,7 +406,7 @@ impl Forest {
                     let index = flex_items
                         .iter()
                         .enumerate()
-                        .find(|&(idx, ref child)| {
+                        .find(|&(idx, child)| {
                             line_length += child.hypothetical_outer_size.main(dir);
                             if let Defined(main) = available_space.main(dir) {
                                 line_length > main && idx != 0
