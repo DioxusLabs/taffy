@@ -105,13 +105,12 @@ impl Forest {
         let abs_x = abs_x + layout.location.x;
         let abs_y = abs_y + layout.location.y;
 
-        // layout.location.x = sys::round(layout.location.x);
-        // layout.location.y = sys::round(layout.location.y);
         layout.location.x = sys::round(abs_x);
         layout.location.y = sys::round(abs_y);
 
         layout.size.width = sys::round(abs_x + layout.size.width) - sys::round(abs_x);
         layout.size.height = sys::round(abs_y + layout.size.height) - sys::round(abs_y);
+        
         for child in &children[root] {
             Self::round_layout(nodes, children, *child, abs_x, abs_y);
         }
