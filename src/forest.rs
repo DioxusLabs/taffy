@@ -13,17 +13,32 @@ pub(crate) struct NodeData {
     pub(crate) style: Style,
     pub(crate) measure: Option<MeasureFunc>,
     pub(crate) layout: Layout,
-    pub(crate) layout_cache: Option<Cache>,
+    pub(crate) main_size_layout_cache: Option<Cache>,
+    pub(crate) other_layout_cache: Option<Cache>,
     pub(crate) is_dirty: bool,
 }
 
 impl NodeData {
     fn new_leaf(style: Style, measure: MeasureFunc) -> Self {
-        Self { style, measure: Some(measure), layout_cache: None, layout: Layout::new(), is_dirty: true }
+        Self {
+            style,
+            measure: Some(measure),
+            main_size_layout_cache: None,
+            other_layout_cache: None,
+            layout: Layout::new(),
+            is_dirty: true,
+        }
     }
 
     fn new(style: Style) -> Self {
-        Self { style, measure: None, layout_cache: None, layout: Layout::new(), is_dirty: true }
+        Self {
+            style,
+            measure: None,
+            main_size_layout_cache: None,
+            other_layout_cache: None,
+            layout: Layout::new(),
+            is_dirty: true,
+        }
     }
 }
 
@@ -157,7 +172,8 @@ impl Forest {
     pub fn mark_dirty(&mut self, node: NodeId) {
         fn mark_dirty_impl(nodes: &mut sys::Vec<NodeData>, parents: &[sys::ParentsVec<NodeId>], node_id: NodeId) {
             let node = &mut nodes[node_id];
-            node.layout_cache = None;
+            node.main_size_layout_cache = None;
+            node.other_layout_cache = None;
             node.is_dirty = true;
 
             for parent in &parents[node_id] {
