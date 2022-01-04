@@ -5,10 +5,10 @@ use jni::objects::{JClass, JObject, JValue};
 use jni::sys::{jboolean, jfloat, jfloatArray, jint, jlong, jlongArray};
 use jni::JNIEnv;
 use std::f32;
-use stretch::geometry::*;
-use stretch::node::*;
-use stretch::number::*;
-use stretch::style::*;
+use stretch2::geometry::*;
+use stretch2::node::*;
+use stretch2::number::*;
+use stretch2::style::*;
 
 fn dimension(t: jint, v: jfloat) -> Dimension {
     match t {
@@ -277,7 +277,7 @@ pub unsafe extern "C" fn Java_app_visly_stretch_Node_nConstructLeaf(
     let node = stretch
         .new_leaf(
             *style,
-            stretch::node::MeasureFunc::Boxed(Box::new(move |constraint| {
+            stretch2::node::MeasureFunc::Boxed(Box::new(move |constraint| {
                 let result = env.call_method(
                     measure.as_obj(),
                     "measure",
@@ -332,7 +332,7 @@ pub unsafe extern "C" fn Java_app_visly_stretch_Node_nSetMeasure(
     stretch
         .set_measure(
             *node,
-            Some(stretch::node::MeasureFunc::Boxed(Box::new(move |constraint| {
+            Some(stretch2::node::MeasureFunc::Boxed(Box::new(move |constraint| {
                 let result = env.call_method(
                     measure.as_obj(),
                     "measure",

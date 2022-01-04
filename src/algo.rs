@@ -63,7 +63,7 @@ impl Forest {
             || style.max_size.height.is_defined();
 
         let result = if has_root_min_max {
-            let first_pass = self.compute_internal(root, style.size.resolve(size), size, false);
+            let first_pass = self.compute_internal(root, style.size.resolve(size), size, false, true);
 
             self.compute_internal(
                 root,
@@ -83,9 +83,10 @@ impl Forest {
                 },
                 size,
                 true,
+                true,
             )
         } else {
-            self.compute_internal(root, style.size.resolve(size), size, true)
+            self.compute_internal(root, style.size.resolve(size), size, true, true)
         };
 
         self.nodes[root].layout = result::Layout { order: 0, size: result.size, location: Point::zero() };
@@ -104,12 +105,22 @@ impl Forest {
         let abs_x = abs_x + layout.location.x;
         let abs_y = abs_y + layout.location.y;
 
-        layout.location.x = sys::round(layout.location.x);
-        layout.location.y = sys::round(layout.location.y);
+        layout.location.x = sys::round(abs_x);
+        layout.location.y = sys::round(abs_y);
+
         layout.size.width = sys::round(abs_x + layout.size.width) - sys::round(abs_x);
         layout.size.height = sys::round(abs_y + layout.size.height) - sys::round(abs_y);
+        
         for child in &children[root] {
             Self::round_layout(nodes, children, *child, abs_x, abs_y);
+        }
+    }
+
+    fn cache(&mut self, node: NodeId, main_size: bool) -> &mut Option<result::Cache> {
+        if main_size {
+            &mut self.nodes[node].main_size_layout_cache
+        } else {
+            &mut self.nodes[node].other_layout_cache
         }
     }
 
@@ -120,11 +131,12 @@ impl Forest {
         node_size: Size<Number>,
         parent_size: Size<Number>,
         perform_layout: bool,
+        main_size: bool,
     ) -> ComputeResult {
         self.nodes[node].is_dirty = false;
 
         // First we check if we have a result for the given input
-        if let Some(ref cache) = self.nodes[node].layout_cache {
+        if let Some(ref cache) = self.cache(node, main_size) {
             if cache.perform_layout || !perform_layout {
                 let width_compatible = if let Number::Defined(width) = node_size.width {
                     sys::abs(width - cache.result.size.width) < f32::EPSILON
@@ -187,7 +199,7 @@ impl Forest {
                     #[cfg(any(feature = "std", feature = "alloc"))]
                     MeasureFunc::Boxed(measure) => ComputeResult { size: measure(node_size) },
                 };
-                self.nodes[node].layout_cache =
+                *self.cache(node, main_size) =
                     Some(result::Cache { node_size, parent_size, perform_layout, result: result.clone() });
                 return result;
             }
@@ -228,7 +240,7 @@ impl Forest {
                 min_size: child_style.min_size.resolve(node_inner_size),
                 max_size: child_style.max_size.resolve(node_inner_size),
 
-                position: child_style.position.map(|p| p.resolve(node_inner_size.width)),
+                position: child_style.position.zip_size(node_inner_size, |p, s| p.resolve(s)),
                 margin: child_style.margin.map(|m| m.resolve(node_inner_size.width).or_else(0.0)),
                 padding: child_style.padding.map(|p| p.resolve(node_inner_size.width).or_else(0.0)),
                 border: child_style.border.map(|b| b.resolve(node_inner_size.width).or_else(0.0)),
@@ -331,6 +343,7 @@ impl Forest {
                     },
                     available_space,
                     false,
+                    true,
                 )
                 .size
                 .main(dir)
@@ -349,7 +362,7 @@ impl Forest {
             // webkit handled various scenarios. Can probably be solved better by passing in
             // min-content max-content constraints from the top
             let min_main = self
-                .compute_internal(child.node, Size::undefined(), available_space, false)
+                .compute_internal(child.node, Size::undefined(), available_space, false, false)
                 .size
                 .main(dir)
                 .maybe_max(child.min_size.main(dir))
@@ -395,7 +408,7 @@ impl Forest {
                     let index = flex_items
                         .iter()
                         .enumerate()
-                        .find(|&(idx, ref child)| {
+                        .find(|&(idx, child)| {
                             line_length += child.hypothetical_outer_size.main(dir);
                             if let Defined(main) = available_space.main(dir) {
                                 line_length > main && idx != 0
@@ -454,6 +467,7 @@ impl Forest {
                                     .maybe_min(child.max_size.height),
                             },
                             available_space,
+                            false,
                             false,
                         )
                         .size
@@ -594,7 +608,7 @@ impl Forest {
                     // min-content max-content constraints from the top. Need to figure out correct thing to do here as
                     // just piling on more conditionals.
                     let min_main = if is_row && self.nodes[child.node].measure.is_none() {
-                        self.compute_internal(child.node, Size::undefined(), available_space, false)
+                        self.compute_internal(child.node, Size::undefined(), available_space, false, false)
                             .size
                             .width
                             .maybe_min(child.size.width)
@@ -676,6 +690,7 @@ impl Forest {
                             height: if is_row { available_space.height } else { container_size.main(dir).into() },
                         },
                         false,
+                        false,
                     )
                     .size
                     .cross(dir)
@@ -699,7 +714,7 @@ impl Forest {
                 let child = db.children[node][0];
                 calc_baseline(db, child, &db.nodes[child].layout)
             }
-        };
+        }
 
         if has_baseline_child {
             for line in &mut flex_lines {
@@ -723,6 +738,7 @@ impl Forest {
                             height: if is_row { node_size.height } else { container_size.height.into() },
                         },
                         true,
+                        false,
                     );
 
                     child.baseline = calc_baseline(
@@ -1048,7 +1064,7 @@ impl Forest {
         // layout we are done now.
         if !perform_layout {
             let result = ComputeResult { size: container_size };
-            self.nodes[node].layout_cache =
+            *self.cache(node, main_size) =
                 Some(result::Cache { node_size, parent_size, perform_layout, result: result.clone() });
             return result;
         }
@@ -1121,6 +1137,7 @@ impl Forest {
                         child.target_size.map(|s| s.into()),
                         container_size.map(|s| s.into()),
                         true,
+                        false,
                     );
 
                     let offset_main = total_offset_main
@@ -1219,6 +1236,7 @@ impl Forest {
                     Size { width, height },
                     Size { width: container_width, height: container_height },
                     true,
+                    false,
                 );
 
                 let free_main_space = container_size.main(dir)
@@ -1308,7 +1326,7 @@ impl Forest {
         }
 
         let result = ComputeResult { size: container_size };
-        self.nodes[node].layout_cache =
+        *self.cache(node, main_size) =
             Some(result::Cache { node_size, parent_size, perform_layout, result: result.clone() });
 
         result

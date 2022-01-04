@@ -4,6 +4,7 @@ use crate::number::Number;
 
 #[derive(Copy, Debug, Clone)]
 pub struct Layout {
+    #[allow(dead_code)]
     pub(crate) order: u32,
     pub size: Size<f32>,
     pub location: Point<f32>,

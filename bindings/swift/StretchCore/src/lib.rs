@@ -1,9 +1,9 @@
 use std::f32;
 use std::os::raw::*;
-use stretch::geometry::*;
-use stretch::node::*;
-use stretch::number::*;
-use stretch::style::*;
+use stretch2::geometry::*;
+use stretch2::node::*;
+use stretch2::number::*;
+use stretch2::style::*;
 
 #[repr(C)]
 pub struct StretchSize {
@@ -201,7 +201,7 @@ pub unsafe extern "C" fn stretch_style_free(style: *mut c_void) {
 
 #[no_mangle]
 pub unsafe extern "C" fn stretch_init() -> *mut c_void {
-    let stretch = stretch::node::Stretch::new();
+    let stretch = stretch2::node::Stretch::new();
     Box::into_raw(Box::new(stretch)) as *mut c_void
 }
 
@@ -245,7 +245,7 @@ pub unsafe extern "C" fn stretch_node_set_measure(
     stretch
         .set_measure(
             *node,
-            Some(stretch::node::MeasureFunc::Boxed(Box::new(move |constraint| {
+            Some(stretch2::node::MeasureFunc::Boxed(Box::new(move |constraint| {
                 let size = measure(swift_ptr, constraint.width.or_else(f32::NAN), constraint.height.or_else(f32::NAN));
                 size
             }))),

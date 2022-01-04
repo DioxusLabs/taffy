@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod node {
-    use stretch::geometry::*;
-    use stretch::node::{MeasureFunc, Stretch};
-    use stretch::style::*;
+    use stretch2::geometry::*;
+    use stretch2::node::{MeasureFunc, Stretch};
+    use stretch2::style::*;
 
     #[test]
     fn children() {
@@ -159,7 +159,7 @@ mod node {
         let child2 = stretch.new_node(Style::default(), &[]).unwrap();
         let node = stretch.new_node(Style::default(), &[child1, child2]).unwrap();
 
-        stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
+        stretch.compute_layout(node, stretch2::geometry::Size::undefined()).unwrap();
 
         assert_eq!(stretch.dirty(child1).unwrap(), false);
         assert_eq!(stretch.dirty(child2).unwrap(), false);
@@ -170,7 +170,7 @@ mod node {
         assert_eq!(stretch.dirty(child2).unwrap(), false);
         assert_eq!(stretch.dirty(node).unwrap(), true);
 
-        stretch.compute_layout(node, stretch::geometry::Size::undefined()).unwrap();
+        stretch.compute_layout(node, stretch2::geometry::Size::undefined()).unwrap();
         stretch.mark_dirty(child1).unwrap();
         assert_eq!(stretch.dirty(child1).unwrap(), true);
         assert_eq!(stretch.dirty(child2).unwrap(), false);

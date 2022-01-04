@@ -1,16 +1,16 @@
 #[cfg(test)]
 mod root_constraints {
-    use stretch::number::*;
+    use stretch2::number::*;
 
     #[test]
     fn root_with_percentage_size() {
-        let mut stretch = stretch::node::Stretch::new();
+        let mut stretch = stretch2::node::Stretch::new();
         let node = stretch
             .new_node(
-                stretch::style::Style {
-                    size: stretch::geometry::Size {
-                        width: stretch::style::Dimension::Percent(1.0),
-                        height: stretch::style::Dimension::Percent(1.0),
+                stretch2::style::Style {
+                    size: stretch2::geometry::Size {
+                        width: stretch2::style::Dimension::Percent(1.0),
+                        height: stretch2::style::Dimension::Percent(1.0),
                     },
                     ..Default::default()
                 },
@@ -21,7 +21,7 @@ mod root_constraints {
         stretch
             .compute_layout(
                 node,
-                stretch::geometry::Size { width: Number::Defined(100.0), height: Number::Defined(200.0) },
+                stretch2::geometry::Size { width: Number::Defined(100.0), height: Number::Defined(200.0) },
             )
             .unwrap();
         let layout = stretch.layout(node).unwrap();
@@ -32,13 +32,13 @@ mod root_constraints {
 
     #[test]
     fn root_with_no_size() {
-        let mut stretch = stretch::node::Stretch::new();
-        let node = stretch.new_node(stretch::style::Style { ..Default::default() }, &[]).unwrap();
+        let mut stretch = stretch2::node::Stretch::new();
+        let node = stretch.new_node(stretch2::style::Style { ..Default::default() }, &[]).unwrap();
 
         stretch
             .compute_layout(
                 node,
-                stretch::geometry::Size { width: Number::Defined(100.0), height: Number::Defined(100.0) },
+                stretch2::geometry::Size { width: Number::Defined(100.0), height: Number::Defined(100.0) },
             )
             .unwrap();
         let layout = stretch.layout(node).unwrap();
@@ -49,13 +49,13 @@ mod root_constraints {
 
     #[test]
     fn root_with_larger_size() {
-        let mut stretch = stretch::node::Stretch::new();
+        let mut stretch = stretch2::node::Stretch::new();
         let node = stretch
             .new_node(
-                stretch::style::Style {
-                    size: stretch::geometry::Size {
-                        width: stretch::style::Dimension::Points(200.0),
-                        height: stretch::style::Dimension::Points(200.0),
+                stretch2::style::Style {
+                    size: stretch2::geometry::Size {
+                        width: stretch2::style::Dimension::Points(200.0),
+                        height: stretch2::style::Dimension::Points(200.0),
                     },
                     ..Default::default()
                 },
@@ -66,7 +66,7 @@ mod root_constraints {
         stretch
             .compute_layout(
                 node,
-                stretch::geometry::Size { width: Number::Defined(100.0), height: Number::Defined(100.0) },
+                stretch2::geometry::Size { width: Number::Defined(100.0), height: Number::Defined(100.0) },
             )
             .unwrap();
         let layout = stretch.layout(node).unwrap();
