@@ -1,11 +1,11 @@
 [package]
 name = "stretch2"
-version = "0.3.2"
+version = "0.4.1"
 authors = ["elbaro <elbaro@users.noreply.github.com>"]
 edition = "2021"
 include = ["src/**/*", "Cargo.toml"]
 description = "High performance & cross-platform Flexbox implementation"
-repository = "https://github.com/elbaro/stretch2"
+repository = "https://github.com/dioxuslabs/dioxus"
 keywords = ["ios", "android", "cross-platform", "layout", "flexbox"]
 categories = ["gui"]
 license-file = "LICENSE"
@@ -23,7 +23,7 @@ num-traits = { version = "0.2.14", default-features = false }
 typenum = "1.15.0"
 
 [dependencies.hashbrown]
-version = "0.11.2"
+version = "0.12.0"
 optional = true
 
 [dependencies.serde]
