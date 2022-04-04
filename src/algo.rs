@@ -89,7 +89,8 @@ impl Forest {
             self.compute_internal(root, style.size.resolve(size), size, true, true)
         };
 
-        self.nodes[root].layout = result::Layout { order: 0, size: result.size, location: Point::zero() };
+        self.nodes[root].layout =
+            result::Layout { order: 0, size: result.size, location: Point::zero(), relative_location: Point::zero() };
 
         Self::round_layout(&mut self.nodes, &self.children, root, 0.0, 0.0);
     }
@@ -102,15 +103,15 @@ impl Forest {
         abs_y: f32,
     ) {
         let layout = &mut nodes[root].layout;
-        let abs_x = abs_x + layout.location.x;
-        let abs_y = abs_y + layout.location.y;
+        let abs_x = abs_x + layout.relative_location.x;
+        let abs_y = abs_y + layout.relative_location.y;
 
         layout.location.x = sys::round(abs_x);
         layout.location.y = sys::round(abs_y);
 
         layout.size.width = sys::round(abs_x + layout.size.width) - sys::round(abs_x);
         layout.size.height = sys::round(abs_y + layout.size.height) - sys::round(abs_y);
-        
+
         for child in &children[root] {
             Self::round_layout(nodes, children, *child, abs_x, abs_y);
         }
@@ -748,6 +749,7 @@ impl Forest {
                             order: self.children[node].iter().position(|n| *n == child.node).unwrap() as u32,
                             size: result.size,
                             location: Point::zero(),
+                            relative_location: Point::zero(),
                         },
                     );
                 }
@@ -1154,7 +1156,8 @@ impl Forest {
                     self.nodes[child.node].layout = result::Layout {
                         order: self.children[node].iter().position(|n| *n == child.node).unwrap() as u32,
                         size: result.size,
-                        location: Point {
+                        location: Point::zero(),
+                        relative_location: Point {
                             x: if is_row { offset_main } else { offset_cross },
                             y: if is_column { offset_main } else { offset_cross },
                         },
@@ -1303,16 +1306,18 @@ impl Forest {
                 self.nodes[child].layout = result::Layout {
                     order: order as u32,
                     size: result.size,
-                    location: Point {
+                    relative_location: Point {
                         x: if is_row { offset_main } else { offset_cross },
                         y: if is_column { offset_main } else { offset_cross },
                     },
+                    location: Point::zero(),
                 };
             }
         }
 
         fn hidden_layout(nodes: &mut [NodeData], children: &[sys::ChildrenVec<NodeId>], node: NodeId, order: u32) {
-            nodes[node].layout = result::Layout { order, size: Size::zero(), location: Point::zero() };
+            nodes[node].layout =
+                result::Layout { order, size: Size::zero(), location: Point::zero(), relative_location: Point::zero() };
 
             for (order, child) in children[node].iter().enumerate() {
                 hidden_layout(nodes, children, *child, order as _);
