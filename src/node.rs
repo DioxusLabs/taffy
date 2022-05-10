@@ -206,6 +206,7 @@ impl Stretch {
         Ok(&self.forest.nodes[id].style)
     }
 
+    /// Return this node layout relative to its parent
     pub fn layout(&self, node: Node) -> Result<&Layout, Error> {
         let id = self.find_node(node)?;
         Ok(&self.forest.nodes[id].layout)
