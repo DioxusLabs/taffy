@@ -109,7 +109,6 @@ fn build_deep_hierarchy(stretch: &mut stretch2::node::Stretch) -> stretch2::node
     let node22 = stretch.new_node(stretch2::style::Style { ..Default::default() }, &[node221, node222]).unwrap();
 
     let node2 = stretch.new_node(stretch2::style::Style { ..Default::default() }, &[node21, node22]).unwrap();
-    
 
     stretch.new_node(stretch2::style::Style { ..Default::default() }, &[node1, node2]).unwrap()
 }
