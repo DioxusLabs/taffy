@@ -1,61 +1,29 @@
+#include <stdarg.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <stdbool.h>
 
-typedef struct {
-  float width;
-  float height;
-} StretchSize;
-
-typedef struct {
+typedef struct StretchStyleDimension {
   int32_t dimen_type;
   float dimen_value;
 } StretchStyleDimension;
 
-typedef struct {
-  StretchStyleDimension start;
-  StretchStyleDimension end;
-  StretchStyleDimension top;
-  StretchStyleDimension bottom;
+typedef struct StretchStyleRect {
+  struct StretchStyleDimension start;
+  struct StretchStyleDimension end;
+  struct StretchStyleDimension top;
+  struct StretchStyleDimension bottom;
 } StretchStyleRect;
 
-typedef struct {
-  StretchStyleDimension width;
-  StretchStyleDimension height;
+typedef struct StretchStyleSize {
+  struct StretchStyleDimension width;
+  struct StretchStyleDimension height;
 } StretchStyleSize;
 
-void stretch_free(void *stretch);
-
-void *stretch_init(void);
-
-void stretch_node_add_child(void *stretch, void *node, void *child);
-
-void *stretch_node_compute_layout(void *stretch,
-                                  void *node,
-                                  float width,
-                                  float height,
-                                  void *(*create_layout)(const float*));
-
-void *stretch_node_create(void *stretch, void *style);
-
-bool stretch_node_dirty(void *stretch, void *node);
-
-void stretch_node_free(void *stretch, void *node);
-
-void stretch_node_mark_dirty(void *stretch, void *node);
-
-void stretch_node_remove_child(void *stretch, void *node, void *child);
-
-void stretch_node_remove_child_at_index(void *stretch, void *node, uintptr_t index);
-
-void stretch_node_replace_child_at_index(void *stretch, void *node, uintptr_t index, void *child);
-
-void stretch_node_set_measure(void *stretch,
-                              void *node,
-                              void *swift_ptr,
-                              StretchSize (*measure)(const void*, float, float));
-
-void stretch_node_set_style(void *stretch, void *node, void *style);
+typedef struct StretchSize {
+  float width;
+  float height;
+} StretchSize;
 
 void *stretch_style_create(int32_t display,
                            int32_t position_type,
@@ -67,16 +35,49 @@ void *stretch_style_create(int32_t display,
                            int32_t align_self,
                            int32_t align_content,
                            int32_t justify_content,
-                           StretchStyleRect position,
-                           StretchStyleRect margin,
-                           StretchStyleRect padding,
-                           StretchStyleRect border,
+                           struct StretchStyleRect position,
+                           struct StretchStyleRect margin,
+                           struct StretchStyleRect padding,
+                           struct StretchStyleRect border,
                            float flex_grow,
                            float flex_shrink,
-                           StretchStyleDimension flex_basis,
-                           StretchStyleSize size,
-                           StretchStyleSize min_size,
-                           StretchStyleSize max_size,
+                           struct StretchStyleDimension flex_basis,
+                           struct StretchStyleSize size,
+                           struct StretchStyleSize min_size,
+                           struct StretchStyleSize max_size,
                            float aspect_ratio);
 
 void stretch_style_free(void *style);
+
+void *stretch_init(void);
+
+void stretch_free(void *stretch);
+
+void *stretch_node_create(void *stretch, void *style);
+
+void stretch_node_free(void *stretch, void *node);
+
+void stretch_node_set_measure(void *stretch,
+                              void *node,
+                              void *swift_ptr,
+                              struct StretchSize (*measure)(const void*, float, float));
+
+void stretch_node_set_style(void *stretch, void *node, void *style);
+
+bool stretch_node_dirty(void *stretch, void *node);
+
+void stretch_node_mark_dirty(void *stretch, void *node);
+
+void stretch_node_add_child(void *stretch, void *node, void *child);
+
+void stretch_node_replace_child_at_index(void *stretch, void *node, uintptr_t index, void *child);
+
+void stretch_node_remove_child(void *stretch, void *node, void *child);
+
+void stretch_node_remove_child_at_index(void *stretch, void *node, uintptr_t index);
+
+void *stretch_node_compute_layout(void *stretch,
+                                  void *node,
+                                  float width,
+                                  float height,
+                                  void *(*create_layout)(const float*));
