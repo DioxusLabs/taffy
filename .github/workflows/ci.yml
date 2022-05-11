@@ -66,7 +66,6 @@ jobs:
   markdownlint:
     name: Markdown Lint
     runs-on: ubuntu-latest
-    if: always()
     steps:
       - uses: actions/checkout@v3
         with:
