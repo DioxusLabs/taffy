@@ -153,7 +153,7 @@ impl Stretch {
         let node_id = self.find_node(node)?;
         let child_id = self.find_node(child)?;
 
-        let prev_id = unsafe { self.forest.remove_child(node_id, child_id) };
+        let prev_id = self.forest.remove_child(node_id, child_id);
         Ok(self.ids_to_nodes[&prev_id])
     }
 
