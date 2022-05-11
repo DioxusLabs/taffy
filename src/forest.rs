@@ -157,7 +157,7 @@ impl Forest {
         }
     }
 
-    pub unsafe fn remove_child(&mut self, node: NodeId, child: NodeId) -> NodeId {
+    pub fn remove_child(&mut self, node: NodeId, child: NodeId) -> NodeId {
         let index = self.children[node].iter().position(|n| *n == child).unwrap();
         self.remove_child_at_index(node, index)
     }
