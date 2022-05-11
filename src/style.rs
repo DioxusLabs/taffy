@@ -112,26 +112,17 @@ impl Default for FlexDirection {
 impl FlexDirection {
     #[inline]
     pub(crate) fn is_row(self) -> bool {
-        match self {
-            Self::Row | Self::RowReverse => true,
-            _ => false,
-        }
+        matches!(self, Self::Row | Self::RowReverse)
     }
 
     #[inline]
     pub(crate) fn is_column(self) -> bool {
-        match self {
-            Self::Column | Self::ColumnReverse => true,
-            _ => false,
-        }
+        matches!(self, Self::Column | Self::ColumnReverse)
     }
 
     #[inline]
     pub(crate) fn is_reverse(self) -> bool {
-        match self {
-            Self::RowReverse | Self::ColumnReverse => true,
-            _ => false,
-        }
+        matches!(self, Self::RowReverse | Self::ColumnReverse)
     }
 }
 
@@ -228,11 +219,7 @@ impl Dimension {
     }
 
     pub(crate) fn is_defined(self) -> bool {
-        match self {
-            Dimension::Points(_) => true,
-            Dimension::Percent(_) => true,
-            _ => false,
-        }
+        matches!(self, Dimension::Points(_) | Dimension::Percent(_))
     }
 }
 
