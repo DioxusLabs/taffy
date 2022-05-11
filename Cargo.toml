@@ -10,10 +10,6 @@ keywords = ["ios", "android", "cross-platform", "layout", "flexbox"]
 categories = ["gui"]
 license-file = "LICENSE"
 
-[badges]
-circle-ci = { repository = "vislyhq/stretch", branch = "master" }
-maintenance = { status = "experimental" }
-
 [dependencies]
 arrayvec = { version = "0.7.2", default-features = false }
 hash32 = "0.2.1"
