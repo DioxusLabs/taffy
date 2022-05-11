@@ -17,6 +17,21 @@ jobs:
         with:
           command: check
 
+  check-no-default-features:
+    name: Check (no default features)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --no-default-features
+
   test:
     name: Test Suite
     runs-on: ubuntu-latest
@@ -30,6 +45,21 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
+
+  test-no-default-features:
+    name: Test Suite (no default features)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --no-default-features
 
   fmt:
     name: Rustfmt
