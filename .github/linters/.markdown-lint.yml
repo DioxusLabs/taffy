@@ -18,10 +18,11 @@
 ###############
 # Rules by id #
 ###############
-MD013:
-  line_length: 160
+# MD013:
+#  line_length: 120
 
 #################
 # Rules by tags #
 #################
 # blank_lines: false  # Error on blank lines
+line_length: false # Ignore excessively long lines
