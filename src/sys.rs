@@ -57,16 +57,14 @@ mod alloc {
 
 #[cfg(all(not(feature = "alloc"), not(feature = "std")))]
 mod core {
-    use typenum::marker_traits::Unsigned;
+    const MAX_NODE_COUNT: usize = 256;
+    const MAX_CHILD_COUNT: usize = 16;
+    const MAX_PARENTS_COUNT: usize = 1;
 
-    type MaxNodeCount = heapless::consts::U256;
-    type MaxChildCount = heapless::consts::U16;
-    type MaxParentsCount = heapless::consts::U1;
-
-    pub type Map<K, V> = ::heapless::FnvIndexMap<K, V, MaxNodeCount>;
-    pub type Vec<A> = ::arrayvec::ArrayVec<[A; MaxNodeCount::USIZE]>;
-    pub type ChildrenVec<A> = ::arrayvec::ArrayVec<[A; MaxChildCount::USIZE]>;
-    pub type ParentsVec<A> = ::arrayvec::ArrayVec<[A; MaxParentsCount::USIZE]>;
+    pub type Map<K, V> = ::heapless::FnvIndexMap<K, V, MAX_NODE_COUNT>;
+    pub type Vec<A> = ::arrayvec::ArrayVec<A, MAX_NODE_COUNT>;
+    pub type ChildrenVec<A> = ::arrayvec::ArrayVec<A, MAX_CHILD_COUNT>;
+    pub type ParentsVec<A> = ::arrayvec::ArrayVec<A, MAX_PARENTS_COUNT>;
 
     pub fn new_map_with_capacity<K, V>(_capacity: usize) -> Map<K, V>
     where
@@ -75,10 +73,7 @@ mod core {
         Map::new()
     }
 
-    pub fn new_vec_with_capacity<T, A>(_capacity: usize) -> ::arrayvec::ArrayVec<A>
-    where
-        A: ::arrayvec::Array<Item = T>,
-    {
+    pub fn new_vec_with_capacity<A, const CAP: usize>(_capacity: usize) -> ::arrayvec::ArrayVec<A, CAP> {
         ::arrayvec::ArrayVec::new()
     }
 
