@@ -3,50 +3,6 @@ on: [push, pull_request]
 name: Continuous integration
 
 jobs:
-  check-features-none:
-    name: "Check [Features: None]"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --no-default-features
-
-  check-features-default:
-    name: "Check [Features: Default]"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: check
-
-  check-features-alloc:
-    name: "Check [Features: alloc]"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --no-default-features --features alloc
-
   test-features-none:
     name: "Test Suite [Features: None]"
     runs-on: ubuntu-latest
