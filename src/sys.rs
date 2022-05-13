@@ -73,10 +73,7 @@ mod core {
         Map::new()
     }
 
-    pub fn new_vec_with_capacity<T, A>(_capacity: usize) -> ::arrayvec::ArrayVec<A>
-    where
-        A: ::arrayvec::Array<Item = T>,
-    {
+    pub fn new_vec_with_capacity<A, const CAP: usize>(_capacity: usize) -> ::arrayvec::ArrayVec<A, CAP> {
         ::arrayvec::ArrayVec::new()
     }
 
