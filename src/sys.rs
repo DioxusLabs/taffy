@@ -62,9 +62,9 @@ mod core {
     const MAX_PARENTS_COUNT: usize = 1;
 
     pub type Map<K, V> = ::heapless::FnvIndexMap<K, V, MAX_NODE_COUNT>;
-    pub type Vec<A> = ::arrayvec::ArrayVec<[A; MAX_NODE_COUNT]>;
-    pub type ChildrenVec<A> = ::arrayvec::ArrayVec<[A; MAX_CHILD_COUNT]>;
-    pub type ParentsVec<A> = ::arrayvec::ArrayVec<[A; MAX_PARENTS_COUNT]>;
+    pub type Vec<A> = ::arrayvec::ArrayVec<A, MAX_NODE_COUNT>;
+    pub type ChildrenVec<A> = ::arrayvec::ArrayVec<A, MAX_CHILD_COUNT>;
+    pub type ParentsVec<A> = ::arrayvec::ArrayVec<A, MAX_PARENTS_COUNT>;
 
     pub fn new_map_with_capacity<K, V>(_capacity: usize) -> Map<K, V>
     where
