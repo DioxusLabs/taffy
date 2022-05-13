@@ -706,7 +706,7 @@ expect(actual) ≈ (expected, delta)
 
 ```
 
-(Type <kbd>option</kbd>+<kbd>x</kbd> to get `≈` on a U.S. keyboard)
+(Type `Option + X` to get `≈` on a U.S. keyboard)
 
 The former version uses the default delta of 0.0001. Here is yet another way to do this:
 
@@ -718,7 +718,7 @@ expect(actual) == expected ± delta
 
 ```
 
-(Type <kbd>option</kbd>+<kbd>shift</kbd>+<kbd>=</kbd> to get `±` on a U.S. keyboard)
+(Type `Option + "+"` to get `±` on a U.S. keyboard)
 
 If you are comparing arrays of floating point numbers, you'll find the following useful:
 

@@ -5,7 +5,10 @@
 
 > THIS IS A FORK OF THE ORIGINAL STRETCH. CURRENTLY MAINTAINED BY DIOXUS.
 
-Stretch2 is an implementation of Flexbox written in [Rust](https://www.rust-lang.org). The goal of stretch2 is to provide a solid foundation for layout across all platforms with a specific focus on mobile. Long term we want stretch2 to not only support flexbox but also many other layout algorithms such as grid layout. Stretch was made for and powers <https://visly.app>.
+Stretch2 is an implementation of Flexbox written in [Rust](https://www.rust-lang.org).
+The goal of stretch2 is to provide a solid foundation for layout across all platforms with a specific focus on mobile.
+Long term we want stretch2 to not only support flexbox but also many other layout algorithms such as grid layout.
+Stretch was made for and powers <https://visly.app>.
 
 ## Goals
 
@@ -174,9 +177,11 @@ If you have made any changes to the API you should also update and run tests for
 
 ### Testing
 
-Stretch2 is tested by validating that layouts written in stretch2 perform the same as in Chrome. This is done by rendering an equivalent layout in HTML and then generating a Rust test case which asserts that the resulting layout is the same when run through stretch.
+Stretch2 is tested by validating that layouts written in stretch2 perform the same as in Chrome.
+This is done by rendering an equivalent layout in HTML and then generating a Rust test case which asserts that the resulting layout is the same when run through stretch.
 
-You can run these tests without setting up a webdriver environment but if you are looking to add any test case you will need to install [chromedriver](http://chromedriver.chromium.org). If you are developing on macOS this is easy to do through brew.
+You can run these tests without setting up a webdriver environment but if you are looking to add any test case you will need to install [chromedriver](http://chromedriver.chromium.org).
+If you are developing on macOS this is easy to do through brew.
 
 ```bash
 brew tap homebrew/cask
@@ -189,8 +194,12 @@ To add a new test case add another HTML file to `/test_fixtures` following the c
 
 ### Benchmarking
 
-Benchmarks build on the same infrastructure as testing, and actually benchmarks are automatically generated from test fixtures just like tests. Run `cargo bench` to run benchmarks locally.
+Benchmarks build on the same infrastructure as testing, and actually benchmarks are automatically generated from test fixtures just like tests.
+Run `cargo bench` to run benchmarks locally.
 
 ## Relationship to Yoga
 
-[Yoga](https://www.yogalayout.com) is a cross-platform implementation of Flexbox written in C. Yoga is a fantastic project but has some fundamental issues which we hope to resolve. Compared to Yoga we aim to have a stronger adherence to web standards, a flexible architecture eventually supporting multiple layout algorithms, and future performance improvements including multi-threaded layout. In addition to this we aim to use a safer language with a more modern codebase.
+[Yoga](https://www.yogalayout.com) is a cross-platform implementation of Flexbox written in C.
+Yoga is a fantastic project but has some fundamental issues which we hope to resolve.
+Compared to Yoga we aim to have a stronger adherence to web standards, a flexible architecture eventually supporting multiple layout algorithms, and future performance improvements including multi-threaded layout.
+In addition to this we aim to use a safer language with a more modern codebase.
