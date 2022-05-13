@@ -20,15 +20,17 @@ expect(["Atlantic", "Pacific"]).toNot(contain("Mississippi"))
 expect(ocean.isClean).toEventually(beTruthy())
 ```
 
-# How to Use Nimble
+## How to Use Nimble
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [Some Background: Expressing Outcomes Using Assertions in XCTest](#some-background-expressing-outcomes-using-assertions-in-xctest)
-- [Nimble: Expectations Using `expect(...).to`](#nimble-expectations-using-expectto)
-  - [Custom Failure Messages](#custom-failure-messages)
+- [Nimble](#nimble)
+  - [How to Use Nimble](#how-to-use-nimble)
+  - [Some Background: Expressing Outcomes Using Assertions in XCTest](#some-background-expressing-outcomes-using-assertions-in-xctest)
+  - [Nimble: Expectations Using `expect(...).to`](#nimble-expectations-using-expectto)
+    - [Custom Failure Messages](#custom-failure-messages)
   - [Type Safety](#type-safety)
   - [Operator Overloads](#operator-overloads)
   - [Lazily Computed Values](#lazily-computed-values)
@@ -36,7 +38,7 @@ expect(ocean.isClean).toEventually(beTruthy())
   - [Asynchronous Expectations](#asynchronous-expectations)
   - [Objective-C Support](#objective-c-support)
   - [Disabling Objective-C Shorthand](#disabling-objective-c-shorthand)
-- [Built-in Matcher Functions](#built-in-matcher-functions)
+  - [Built-in Matcher Functions](#built-in-matcher-functions)
   - [Type Checking](#type-checking)
   - [Equivalence](#equivalence)
   - [Identity](#identity)
@@ -49,15 +51,17 @@ expect(ocean.isClean).toEventually(beTruthy())
   - [Collection Membership](#collection-membership)
   - [Strings](#strings)
   - [Collection Elements](#collection-elements)
+    - [Swift](#swift)
+    - [Objective-C](#objective-c)
   - [Collection Count](#collection-count)
   - [Notifications](#notifications)
   - [Matching a value to any of a group of matchers](#matching-a-value-to-any-of-a-group-of-matchers)
   - [Custom Validation](#custom-validation)
-- [Writing Your Own Matchers](#writing-your-own-matchers)
-  - [PredicateResult](#predicateresult)
-  - [Lazy Evaluation](#lazy-evaluation)
-  - [Type Checking via Swift Generics](#type-checking-via-swift-generics)
-  - [Customizing Failure Messages](#customizing-failure-messages)
+  - [Writing Your Own Matchers](#writing-your-own-matchers)
+    - [PredicateResult](#predicateresult)
+    - [Lazy Evaluation](#lazy-evaluation)
+    - [Type Checking via Swift Generics](#type-checking-via-swift-generics)
+    - [Customizing Failure Messages](#customizing-failure-messages)
     - [Basic Customization](#basic-customization)
     - [Full Customization](#full-customization)
   - [Supporting Objective-C](#supporting-objective-c)
@@ -67,14 +71,14 @@ expect(ocean.isClean).toEventually(beTruthy())
     - [Convert to use `Predicate` Type with Old Matcher Constructor](#convert-to-use-predicate-type-with-old-matcher-constructor)
     - [Convert to `Predicate` Type with Preferred Constructor](#convert-to-predicate-type-with-preferred-constructor)
     - [Deprecation Roadmap](#deprecation-roadmap)
-- [Installing Nimble](#installing-nimble)
-  - [Installing Nimble as a Submodule](#installing-nimble-as-a-submodule)
-  - [Installing Nimble via CocoaPods](#installing-nimble-via-cocoapods)
-  - [Using Nimble without XCTest](#using-nimble-without-xctest)
+  - [Installing Nimble](#installing-nimble)
+    - [Installing Nimble as a Submodule](#installing-nimble-as-a-submodule)
+    - [Installing Nimble via CocoaPods](#installing-nimble-via-cocoapods)
+    - [Using Nimble without XCTest](#using-nimble-without-xctest)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# Some Background: Expressing Outcomes Using Assertions in XCTest
+## Some Background: Expressing Outcomes Using Assertions in XCTest
 
 Apple's Xcode includes the XCTest framework, which provides
 assertion macros to test whether code behaves properly.
@@ -104,7 +108,7 @@ XCTest assertions have a couple of drawbacks:
 
 Nimble addresses these concerns.
 
-# Nimble: Expectations Using `expect(...).to`
+## Nimble: Expectations Using `expect(...).to`
 
 Nimble allows you to express expectations using a natural,
 easily understood language:
@@ -150,7 +154,7 @@ expect(seagull.squawk).toNot(equal(@"Oh, hello there!"));
 expect(seagull.squawk).notTo(equal(@"Oh, hello there!"));
 ```
 
-## Custom Failure Messages
+### Custom Failure Messages
 
 Would you like to add more information to the test's failure messages? Use the `description` optional argument to add your own text:
 
@@ -315,7 +319,6 @@ DispatchQueue.main.async {
 expect(ocean).toEventually(contain("dolphins", "whales"))
 ```
 
-
 ```objc
 // Objective-C
 
@@ -465,9 +468,9 @@ to keep in mind when using Nimble in Objective-C:
 
 The following types are currently converted to an `NSObject` type:
 
- - **C Numeric types** are converted to `NSNumber *`
- - `NSRange` is converted to `NSValue *`
- - `char *` is converted to `NSString *`
+- **C Numeric types** are converted to `NSNumber *`
+- `NSRange` is converted to `NSValue *`
+- `char *` is converted to `NSString *`
 
 For the following matchers:
 
@@ -505,7 +508,7 @@ NMB_expect(^{ return seagull.squawk; }, __FILE__, __LINE__).to(NMB_equal(@"Squee
   `equal`. If that's not the case, there's no point in disabling the
   shorthand.
 
-# Built-in Matcher Functions
+## Built-in Matcher Functions
 
 Nimble includes a wide variety of matcher functions.
 
@@ -613,15 +616,14 @@ expect(actual) !== expected
 ```
 
 It is important to remember that `beIdenticalTo` only makes sense when comparing
-types with reference semantics, which have a notion of identity. In Swift, 
-that means types that are defined as a `class`. 
+types with reference semantics, which have a notion of identity. In Swift,
+that means types that are defined as a `class`.
 
 This matcher will not work when comparing types with value semantics such as
 those defined as a `struct` or `enum`. If you need to compare two value types,
 consider what it means for instances of your type to be identical. This may mean
-comparing individual properties or, if it makes sense to do so, conforming your type 
+comparing individual properties or, if it makes sense to do so, conforming your type
 to `Equatable` and using Nimble's equivalence matchers instead.
-
 
 ```objc
 // Objective-C
@@ -703,7 +705,8 @@ expect(actual) ≈ expected
 expect(actual) ≈ (expected, delta)
 
 ```
-(Type <kbd>option</kbd>+<kbd>x</kbd> to get `≈` on a U.S. keyboard)
+
+(Type `Option + X` to get `≈` on a U.S. keyboard)
 
 The former version uses the default delta of 0.0001. Here is yet another way to do this:
 
@@ -714,7 +717,8 @@ expect(actual) ≈ expected ± delta
 expect(actual) == expected ± delta
 
 ```
-(Type <kbd>option</kbd>+<kbd>shift</kbd>+<kbd>=</kbd> to get `±` on a U.S. keyboard)
+
+(Type `Option + "+"` to get `±` on a U.S. keyboard)
 
 If you are comparing arrays of floating point numbers, you'll find the following useful:
 
@@ -840,9 +844,9 @@ expect(reachedPoint2) == false
 
 Notes:
 
-* This feature is only available in Swift.
-* It is only supported for `x86_64` binaries, meaning _you cannot run this matcher on iOS devices, only simulators_.
-* The tvOS simulator is supported, but using a different mechanism, requiring you to turn off the `Debug executable` scheme setting for your tvOS scheme's Test configuration.
+- This feature is only available in Swift.
+- It is only supported for `x86_64` binaries, meaning *you cannot run this matcher on iOS devices, only simulators*.
+- The tvOS simulator is supported, but using a different mechanism, requiring you to turn off the `Debug executable` scheme setting for your tvOS scheme's Test configuration.
 
 ## Swift Error Handling
 
@@ -872,7 +876,7 @@ explicitly cast the error.
 
 The `matchError` matcher allows you to check whether or not the error:
 
-- is the same _type_ of error you are expecting.
+- is the same *type* of error you are expecting.
 - represents a particular error value that you are expecting.
 
 This can be useful when using `Result` or `Promise` types, for example.
@@ -934,7 +938,7 @@ expect(actual).to(raiseException().satisfyingBlock(^(NSException *exception) {
 }));
 ```
 
-Note: Swift currently doesn't have exceptions (see [#220](https://github.com/Quick/Nimble/issues/220#issuecomment-172667064)). 
+Note: Swift currently doesn't have exceptions (see [#220](https://github.com/Quick/Nimble/issues/220#issuecomment-172667064)).
 Only Objective-C code can raise exceptions that Nimble will catch.
 
 ## Collection Membership
@@ -1162,10 +1166,10 @@ For example, instances of `Array`, `Dictionary`, or `Set`.
 
 For Objective-C, the actual value must be one of the following classes, or their subclasses:
 
- - `NSArray`,
- - `NSDictionary`,
- - `NSSet`, or
- - `NSHashTable`.
+- `NSArray`,
+- `NSDictionary`,
+- `NSSet`, or
+- `NSHashTable`.
 
 ## Notifications
 
@@ -1249,7 +1253,7 @@ The `String` provided with `.failed()` is shown when the test fails.
 
 When using `toEventually()` be careful not to make state changes or run process intensive code since this closure will be ran many times.
 
-# Writing Your Own Matchers
+## Writing Your Own Matchers
 
 In Nimble, matchers are Swift functions that take an expected
 value and return a `Predicate` closure. Take `equal`, for example:
@@ -1299,7 +1303,7 @@ For examples of how to write your own matchers, just check out the
 to see how Nimble's built-in set of matchers are implemented. You can
 also check out the tips below.
 
-## PredicateResult
+### PredicateResult
 
 `PredicateResult` is the return struct that `Predicate` return to indicate
 success and failure. A `PredicateResult` is made up of two values:
@@ -1356,7 +1360,7 @@ error with more details.
 A common message to append is failing on nils. For that, `.appendedBeNilHint()`
 can be used.
 
-## Lazy Evaluation
+### Lazy Evaluation
 
 `actualExpression` is a lazy, memoized closure around the value provided to the
 `expect` function. The expression can either be a closure or a value directly
@@ -1384,7 +1388,7 @@ that returns a value. The value it returns, which is accessed via the
 `evaluate()` method, may be `nil`. If that value is `nil`, the `beNil`
 matcher function returns `true`, indicating that the expectation passed.
 
-## Type Checking via Swift Generics
+### Type Checking via Swift Generics
 
 Using Swift's generics, matchers can constrain the type of the actual value
 passed to the `expect` function by modifying the return type.
@@ -1403,7 +1407,7 @@ public func haveDescription(description: String) -> Predicate<Printable?> {
 }
 ```
 
-## Customizing Failure Messages
+### Customizing Failure Messages
 
 When using `Predicate.simple(..)` or `Predicate.simpleNilable(..)`, Nimble
 outputs the following failure message when an expectation fails:
@@ -1664,8 +1668,7 @@ The deprecating plan is a 3 major versions removal. Which is as follows:
     `v9.x.x`)
  3. Remove old API. (Nimble `v10.x.x`)
 
-
-# Installing Nimble
+## Installing Nimble
 
 > Nimble can be used on its own, or in conjunction with its sister
   project, [Quick](https://github.com/Quick/Quick). To install both
@@ -1675,7 +1678,7 @@ The deprecating plan is a 3 major versions removal. Which is as follows:
 Nimble can currently be installed in one of two ways: using CocoaPods, or with
 git submodules.
 
-## Installing Nimble as a Submodule
+### Installing Nimble as a Submodule
 
 To use Nimble as a submodule to test your macOS, iOS or tvOS applications, follow
 these 4 easy steps:
@@ -1690,7 +1693,7 @@ read [How to Install Quick](https://github.com/Quick/Quick#how-to-install-quick)
 Ignore the steps involving adding Quick to your project in order to
 install just Nimble.
 
-## Installing Nimble via CocoaPods
+### Installing Nimble via CocoaPods
 
 To use Nimble in CocoaPods to test your macOS, iOS or tvOS applications, add
 Nimble to your podfile and add the ```use_frameworks!``` line to enable Swift
@@ -1711,14 +1714,14 @@ end
 
 Finally run `pod install`.
 
-## Using Nimble without XCTest
+### Using Nimble without XCTest
 
 Nimble is integrated with XCTest to allow it work well when used in Xcode test
 bundles, however it can also be used in a standalone app. After installing
 Nimble using one of the above methods, there are two additional steps required
 to make this work.
 
-1. Create a custom assertion handler and assign an instance of it to the
+First, create a custom assertion handler and assign an instance of it to the
    global `NimbleAssertionHandler` variable. For example:
 
 ```swift
@@ -1730,18 +1733,20 @@ class MyAssertionHandler : AssertionHandler {
     }
 }
 ```
+
 ```swift
 // Somewhere before you use any assertions
 NimbleAssertionHandler = MyAssertionHandler()
 ```
 
-2. Add a post-build action to fix an issue with the Swift XCTest support
-   library being unnecessarily copied into your app
-  * Edit your scheme in Xcode, and navigate to Build -> Post-actions
-  * Click the "+" icon and select "New Run Script Action"
-  * Open the "Provide build settings from" dropdown and select your target
-  * Enter the following script contents:
-```
+Then, add a post-build action to fix an issue with the Swift XCTest support library being unnecessarily copied into your app
+
+- Edit your scheme in Xcode, and navigate to Build -> Post-actions
+- Click the "+" icon and select "New Run Script Action"
+- Open the "Provide build settings from" dropdown and select your target
+- Enter the following script contents:
+
+```sh
 rm "${SWIFT_STDLIB_TOOL_DESTINATION_DIR}/libswiftXCTest.dylib"
 ```
 
