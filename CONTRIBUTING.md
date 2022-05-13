@@ -12,6 +12,6 @@ The basic process is simple:
 
 PR review is completely open: if you'd like to help us comment on, test and approve PRs.
 
-Questions of "how do I use this library" belong in GitHub Discussions, although those should typically spawn new issues to improve our docs and examples.
+Questions like "how do I use this library?" belong in [GitHub Discussions](https://github.com/DioxusLabs/stretch/discussions/new), although those should typically spawn new issues to improve our docs and examples.
 
 If you'd like to help on a consistent basis or are interested in project management, create a Discussions post, and we'll be happy to hand out triage rights.
