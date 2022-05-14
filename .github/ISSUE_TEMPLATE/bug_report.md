@@ -10,7 +10,7 @@ assignees: ''
 
 The release number or commit hash of the version you're using.
 
-## platform
+## Platform
 
 What platform are you using stretch2 on? e.g. Rust, Andriod, IOS, JavaScript/TypeScript
 
