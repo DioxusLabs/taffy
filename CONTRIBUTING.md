@@ -10,7 +10,7 @@ The basic process is simple:
 3. Submit a PR.
 4. Respond to feedback from reviewers and make sure CI passes.
 
-PR review is completely open: if you'd like to help us comment on, test and approve PRs.
+The PR review process is completely open:  help us by commenting on, testing and approving PRs.
 
 Questions like "how do I use this library?" belong in [GitHub Discussions](https://github.com/DioxusLabs/stretch/discussions/new), although those should typically spawn new issues to improve our docs and examples.
 
