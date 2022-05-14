@@ -141,20 +141,6 @@ const layout = node.computeLayout();
 console.log(layout.width, layout.height);
 ```
 
-## Contributing
-
-Contributions are very welcome. Though we ask that you open an issue or pull request early in the process (before writing code) so we can discuss solutions and additions before you start spending time on implementing them. There are some specific areas where we would be extra happy to receive contributions in.
-
-- Binary size reduction
-- Runtime performance
-- Ensure build / test environment works well on non macOS platforms
-- Alternate layout systems (grid layout perhaps?)
-- Web compatibility tests
-- RTL support
-- Platform bindings
-- API improvements
-- Documentation & Examples
-
 ### Installation
 
 If you don't have Rust installed you have to do that first as well as install some components that we make use of to format and lint the codebase. For more on Rust see their [website](https://www.rust-lang.org).
