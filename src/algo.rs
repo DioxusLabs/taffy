@@ -124,18 +124,15 @@ impl Forest {
         }
     }
 
-    #[allow(clippy::cognitive_complexity)]
-    fn compute_internal(
+    /// Try to get the computation result from the cache.
+    fn compute_from_cache(
         &mut self,
         node: NodeId,
         node_size: Size<Number>,
         parent_size: Size<Number>,
         perform_layout: bool,
         main_size: bool,
-    ) -> ComputeResult {
-        self.nodes[node].is_dirty = false;
-
-        // First we check if we have a result for the given input
+    ) -> Option<ComputeResult> {
         if let Some(ref cache) = self.cache(node, main_size) {
             if cache.perform_layout || !perform_layout {
                 let width_compatible = if let Number::Defined(width) = node_size.width {
@@ -151,13 +148,32 @@ impl Forest {
                 };
 
                 if width_compatible && height_compatible {
-                    return cache.result.clone();
+                    return Some(cache.result.clone());
                 }
 
                 if cache.node_size == node_size && cache.parent_size == parent_size {
-                    return cache.result.clone();
+                    return Some(cache.result.clone());
                 }
             }
+        }
+
+        return None;
+    }
+
+    #[allow(clippy::cognitive_complexity)]
+    fn compute_internal(
+        &mut self,
+        node: NodeId,
+        node_size: Size<Number>,
+        parent_size: Size<Number>,
+        perform_layout: bool,
+        main_size: bool,
+    ) -> ComputeResult {
+        self.nodes[node].is_dirty = false;
+
+        // First we check if we have a result for the given input
+        if let Some(result) = self.compute_from_cache(node, node_size, parent_size, perform_layout, main_size) {
+            return result;
         }
 
         // Define some general constants we will need for the remainder
