@@ -216,6 +216,28 @@ impl Forest {
         }
     }
 
+    /// Determine the available main and cross space for the flex items.
+    ///
+    /// # [9.2. Line Length Determination](https://www.w3.org/TR/css-flexbox-1/#line-sizing)
+    ///
+    /// - 2. [**Determine the available main and cross space for the flex items**](https://www.w3.org/TR/css-flexbox-1/#algo-available).
+    /// For each dimension, if that dimension of the flex container’s content box is a definite size, use that;
+    /// if that dimension of the flex container is being sized under a min or max-content constraint, the available space in that dimension is that constraint;
+    /// otherwise, subtract the flex container’s margin, border, and padding from the space available to the flex container in that dimension and use that value.
+    /// **This might result in an infinite value**.
+    fn determine_available_space(
+        node_size: Size<Number>,
+        parent_size: Size<Number>,
+        constants: &AlgoConstants,
+    ) -> Size<Number> {
+        Size {
+            width: node_size.width.or_else(parent_size.width - constants.margin.horizontal())
+                - constants.padding_border.horizontal(),
+            height: node_size.height.or_else(parent_size.height - constants.margin.vertical())
+                - constants.padding_border.vertical(),
+        }
+    }
+
     #[allow(clippy::cognitive_complexity)]
     fn compute_internal(
         &mut self,
@@ -265,19 +287,7 @@ impl Forest {
         // 1. Generate anonymous flex items as described in §4 Flex Items.
 
         // 2. Determine the available main and cross space for the flex items.
-        //    For each dimension, if that dimension of the flex container’s content box
-        //    is a definite size, use that; if that dimension of the flex container is
-        //    being sized under a min or max-content constraint, the available space in
-        //    that dimension is that constraint; otherwise, subtract the flex container’s
-        //    margin, border, and padding from the space available to the flex container
-        //    in that dimension and use that value. This might result in an infinite value.
-
-        let available_space = Size {
-            width: node_size.width.or_else(parent_size.width - constants.margin.horizontal())
-                - constants.padding_border.horizontal(),
-            height: node_size.height.or_else(parent_size.height - constants.margin.vertical())
-                - constants.padding_border.vertical(),
-        };
+        let available_space = Self::determine_available_space(node_size, parent_size, &constants);
 
         let mut flex_items: sys::Vec<FlexItem> = self.children[node]
             .iter()
