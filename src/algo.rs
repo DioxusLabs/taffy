@@ -173,7 +173,7 @@ impl Forest {
             }
         }
 
-        return None;
+        None
     }
 
     /// Compute constants that can be reused during the flexbox algorithm.
