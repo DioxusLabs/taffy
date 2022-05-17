@@ -216,11 +216,51 @@ impl Forest {
         }
     }
 
+    /// Generate anonymous flex items.
+    ///
+    /// # [9.1. Initial Setup](https://www.w3.org/TR/css-flexbox-1/#box-manip)
+    ///
+    /// - [**Generate anonymous flex items**](https://www.w3.org/TR/css-flexbox-1/#algo-anon-box) as described in [§4 Flex Items](https://www.w3.org/TR/css-flexbox-1/#flex-items).
+    fn generate_anonymous_flex_items(&self, node: NodeId, constants: &AlgoConstants) -> sys::Vec<FlexItem> {
+        self.children[node]
+            .iter()
+            .map(|child| (child, &self.nodes[*child].style))
+            .filter(|(_, style)| style.position_type != PositionType::Absolute)
+            .filter(|(_, style)| style.display != Display::None)
+            .map(|(child, child_style)| FlexItem {
+                node: *child,
+                size: child_style.size.resolve(constants.node_inner_size),
+                min_size: child_style.min_size.resolve(constants.node_inner_size),
+                max_size: child_style.max_size.resolve(constants.node_inner_size),
+
+                position: child_style.position.zip_size(constants.node_inner_size, |p, s| p.resolve(s)),
+                margin: child_style.margin.map(|m| m.resolve(constants.node_inner_size.width).or_else(0.0)),
+                padding: child_style.padding.map(|p| p.resolve(constants.node_inner_size.width).or_else(0.0)),
+                border: child_style.border.map(|b| b.resolve(constants.node_inner_size.width).or_else(0.0)),
+
+                flex_basis: 0.0,
+                inner_flex_basis: 0.0,
+                violation: 0.0,
+                frozen: false,
+
+                hypothetical_inner_size: Size::zero(),
+                hypothetical_outer_size: Size::zero(),
+                target_size: Size::zero(),
+                outer_target_size: Size::zero(),
+
+                baseline: 0.0,
+
+                offset_main: 0.0,
+                offset_cross: 0.0,
+            })
+            .collect()
+    }
+
     /// Determine the available main and cross space for the flex items.
     ///
     /// # [9.2. Line Length Determination](https://www.w3.org/TR/css-flexbox-1/#line-sizing)
     ///
-    /// - 2. [**Determine the available main and cross space for the flex items**](https://www.w3.org/TR/css-flexbox-1/#algo-available).
+    /// - [**Determine the available main and cross space for the flex items**](https://www.w3.org/TR/css-flexbox-1/#algo-available).
     /// For each dimension, if that dimension of the flex container’s content box is a definite size, use that;
     /// if that dimension of the flex container is being sized under a min or max-content constraint, the available space in that dimension is that constraint;
     /// otherwise, subtract the flex container’s margin, border, and padding from the space available to the flex container in that dimension and use that value.
@@ -282,45 +322,17 @@ impl Forest {
             };
         }
 
-        // 9.2. Line Length Determination
+        // 9. Flex Layout Algorithm
+
+        // 9.1. Initial Setup
 
         // 1. Generate anonymous flex items as described in §4 Flex Items.
+        let mut flex_items = self.generate_anonymous_flex_items(node, &constants);
+
+        // 9.2. Line Length Determination
 
         // 2. Determine the available main and cross space for the flex items.
         let available_space = Self::determine_available_space(node_size, parent_size, &constants);
-
-        let mut flex_items: sys::Vec<FlexItem> = self.children[node]
-            .iter()
-            .map(|child| (child, &self.nodes[*child].style))
-            .filter(|(_, style)| style.position_type != PositionType::Absolute)
-            .filter(|(_, style)| style.display != Display::None)
-            .map(|(child, child_style)| FlexItem {
-                node: *child,
-                size: child_style.size.resolve(constants.node_inner_size),
-                min_size: child_style.min_size.resolve(constants.node_inner_size),
-                max_size: child_style.max_size.resolve(constants.node_inner_size),
-
-                position: child_style.position.zip_size(constants.node_inner_size, |p, s| p.resolve(s)),
-                margin: child_style.margin.map(|m| m.resolve(constants.node_inner_size.width).or_else(0.0)),
-                padding: child_style.padding.map(|p| p.resolve(constants.node_inner_size.width).or_else(0.0)),
-                border: child_style.border.map(|b| b.resolve(constants.node_inner_size.width).or_else(0.0)),
-
-                flex_basis: 0.0,
-                inner_flex_basis: 0.0,
-                violation: 0.0,
-                frozen: false,
-
-                hypothetical_inner_size: Size::zero(),
-                hypothetical_outer_size: Size::zero(),
-                target_size: Size::zero(),
-                outer_target_size: Size::zero(),
-
-                baseline: 0.0,
-
-                offset_main: 0.0,
-                offset_cross: 0.0,
-            })
-            .collect();
 
         let has_baseline_child = flex_items
             .iter()
