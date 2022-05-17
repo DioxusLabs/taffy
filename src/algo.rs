@@ -278,69 +278,43 @@ impl Forest {
         }
     }
 
-    #[allow(clippy::cognitive_complexity)]
-    fn compute_internal(
+    /// Determine the flex base size and hypothetical main size of each item.
+    ///
+    /// # [9.2. Line Length Determination](https://www.w3.org/TR/css-flexbox-1/#line-sizing)
+    ///
+    /// - [**Determine the flex base size and hypothetical main size of each item:**](https://www.w3.org/TR/css-flexbox-1/#algo-main-item)
+    ///
+    ///     - A. If the item has a definite used flex basis, that’s the flex base size.
+    ///
+    ///     - B. If the flex item has ...
+    ///
+    ///         - an intrinsic aspect ratio,
+    ///         - a used flex basis of content, and
+    ///         - a definite cross size,
+    ///
+    ///     then the flex base size is calculated from its inner cross size and the flex item’s intrinsic aspect ratio.
+    ///
+    ///     - C. If the used flex basis is content or depends on its available space, and the flex container is being sized under a min-content
+    ///         or max-content constraint (e.g. when performing automatic table layout \[CSS21\]), size the item under that constraint.
+    ///         The flex base size is the item’s resulting main size.
+    ///
+    ///     - E. Otherwise, size the item into the available space using its used flex basis in place of its main size, treating a value of content as max-content.
+    ///         If a cross size is needed to determine the main size (e.g. when the flex item’s main size is in its block axis) and the flex item’s cross size is auto and not definite,
+    ///         in this calculation use fit-content as the flex item’s cross size. The flex base size is the item’s resulting main size.
+    ///
+    ///     When determining the flex base size, the item’s min and max main sizes are ignored (no clamping occurs).
+    ///     Furthermore, the sizing calculations that floor the content box size at zero when applying box-sizing are also ignored.
+    ///     (For example, an item with a specified size of zero, positive padding, and box-sizing: border-box will have an outer flex base size of zero—and hence a negative inner flex base size.)
+    fn determine_flex_base_size(
         &mut self,
         node: NodeId,
         node_size: Size<Number>,
-        parent_size: Size<Number>,
-        perform_layout: bool,
-        main_size: bool,
-    ) -> ComputeResult {
-        self.nodes[node].is_dirty = false;
-
-        // First we check if we have a result for the given input
-        if let Some(result) = self.compute_from_cache(node, node_size, parent_size, perform_layout, main_size) {
-            return result;
-        }
-
-        // Define some general constants we will need for the remainder of the algorithm.
-        let mut constants = self.compute_constants(node, node_size, parent_size);
-
-        // If this is a leaf node we can skip a lot of this function in some cases
-        if self.children[node].is_empty() {
-            if node_size.width.is_defined() && node_size.height.is_defined() {
-                return ComputeResult { size: node_size.map(|s| s.or_else(0.0)) };
-            }
-
-            if let Some(ref measure) = self.nodes[node].measure {
-                let result = match measure {
-                    MeasureFunc::Raw(measure) => ComputeResult { size: measure(node_size) },
-                    #[cfg(any(feature = "std", feature = "alloc"))]
-                    MeasureFunc::Boxed(measure) => ComputeResult { size: measure(node_size) },
-                };
-                *self.cache(node, main_size) =
-                    Some(result::Cache { node_size, parent_size, perform_layout, result: result.clone() });
-                return result;
-            }
-
-            return ComputeResult {
-                size: Size {
-                    width: node_size.width.or_else(0.0) + constants.padding_border.horizontal(),
-                    height: node_size.height.or_else(0.0) + constants.padding_border.vertical(),
-                },
-            };
-        }
-
-        // 9. Flex Layout Algorithm
-
-        // 9.1. Initial Setup
-
-        // 1. Generate anonymous flex items as described in §4 Flex Items.
-        let mut flex_items = self.generate_anonymous_flex_items(node, &constants);
-
-        // 9.2. Line Length Determination
-
-        // 2. Determine the available main and cross space for the flex items.
-        let available_space = Self::determine_available_space(node_size, parent_size, &constants);
-
-        let has_baseline_child = flex_items
-            .iter()
-            .any(|child| self.nodes[child.node].style.align_self(&self.nodes[node].style) == AlignSelf::Baseline);
-
-        // TODO - this does not follow spec. See commented out code below
-        // 3. Determine the flex base size and hypothetical main size of each item:
-        for child in &mut flex_items {
+        constants: &AlgoConstants,
+        available_space: Size<Number>,
+        flex_items: &mut sys::Vec<FlexItem>,
+    ) {
+        // TODO - this does not follow spec. See the TODOs below
+        for child in flex_items.iter_mut() {
             let child_style = self.nodes[child.node].style;
 
             // A. If the item has a definite used flex basis, that’s the flex base size.
@@ -426,7 +400,7 @@ impl Forest {
         // The hypothetical main size is the item’s flex base size clamped according to its
         // used min and max main sizes (and flooring the content box size at zero).
 
-        for child in &mut flex_items {
+        for child in flex_items {
             child.inner_flex_basis =
                 child.flex_basis - child.padding.main(constants.dir) - child.border.main(constants.dir);
 
@@ -452,6 +426,70 @@ impl Forest {
                 child.hypothetical_inner_size.main(constants.dir) + child.margin.main(constants.dir),
             );
         }
+    }
+
+    #[allow(clippy::cognitive_complexity)]
+    fn compute_internal(
+        &mut self,
+        node: NodeId,
+        node_size: Size<Number>,
+        parent_size: Size<Number>,
+        perform_layout: bool,
+        main_size: bool,
+    ) -> ComputeResult {
+        self.nodes[node].is_dirty = false;
+
+        // First we check if we have a result for the given input
+        if let Some(result) = self.compute_from_cache(node, node_size, parent_size, perform_layout, main_size) {
+            return result;
+        }
+
+        // Define some general constants we will need for the remainder of the algorithm.
+        let mut constants = self.compute_constants(node, node_size, parent_size);
+
+        // If this is a leaf node we can skip a lot of this function in some cases
+        if self.children[node].is_empty() {
+            if node_size.width.is_defined() && node_size.height.is_defined() {
+                return ComputeResult { size: node_size.map(|s| s.or_else(0.0)) };
+            }
+
+            if let Some(ref measure) = self.nodes[node].measure {
+                let result = match measure {
+                    MeasureFunc::Raw(measure) => ComputeResult { size: measure(node_size) },
+                    #[cfg(any(feature = "std", feature = "alloc"))]
+                    MeasureFunc::Boxed(measure) => ComputeResult { size: measure(node_size) },
+                };
+                *self.cache(node, main_size) =
+                    Some(result::Cache { node_size, parent_size, perform_layout, result: result.clone() });
+                return result;
+            }
+
+            return ComputeResult {
+                size: Size {
+                    width: node_size.width.or_else(0.0) + constants.padding_border.horizontal(),
+                    height: node_size.height.or_else(0.0) + constants.padding_border.vertical(),
+                },
+            };
+        }
+
+        // 9. Flex Layout Algorithm
+
+        // 9.1. Initial Setup
+
+        // 1. Generate anonymous flex items as described in §4 Flex Items.
+        let mut flex_items = self.generate_anonymous_flex_items(node, &constants);
+
+        // 9.2. Line Length Determination
+
+        // 2. Determine the available main and cross space for the flex items.
+        let available_space = Self::determine_available_space(node_size, parent_size, &constants);
+
+        let has_baseline_child = flex_items
+            .iter()
+            .any(|child| self.nodes[child.node].style.align_self(&self.nodes[node].style) == AlignSelf::Baseline);
+
+        // 3. Determine the flex base size and hypothetical main size of each item
+        self.determine_flex_base_size(node, node_size, &constants, available_space, &mut flex_items);
 
         // 9.3. Main Size Determination
 
