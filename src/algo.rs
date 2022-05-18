@@ -428,6 +428,62 @@ impl Forest {
         }
     }
 
+    /// Collect flex items into flex lines.
+    ///
+    /// # [9.3. Main Size Determination](https://www.w3.org/TR/css-flexbox-1/#main-sizing)
+    ///
+    /// - [**Collect flex items into flex lines**](https://www.w3.org/TR/css-flexbox-1/#algo-line-break):
+    ///
+    ///     - If the flex container is single-line, collect all the flex items into a single flex line.
+    ///
+    ///     - Otherwise, starting from the first uncollected item, collect consecutive items one by one until the first time that the next collected item would not fit into the flex container’s inner main size
+    ///         (or until a forced break is encountered, see [§10 Fragmenting Flex Layout](https://www.w3.org/TR/css-flexbox-1/#pagination)).
+    ///         If the very first uncollected item wouldn’t fit, collect just it into the line.
+    ///         
+    ///         For this step, the size of a flex item is its outer hypothetical main size. (**Note: This can be negative**.)
+    ///
+    ///         Repeat until all flex items have been collected into flex lines.
+    ///         
+    ///         **Note that the "collect as many" line will collect zero-sized flex items onto the end of the previous line even if the last non-zero item exactly "filled up" the line**.
+    fn collect_flex_lines<'a>(
+        &self,
+        node: NodeId,
+        constants: &AlgoConstants,
+        available_space: Size<Number>,
+        flex_items: &'a mut sys::Vec<FlexItem>,
+    ) -> sys::Vec<FlexLine<'a>> {
+        let mut lines = sys::new_vec_with_capacity(1);
+
+        if self.nodes[node].style.flex_wrap == FlexWrap::NoWrap {
+            lines.push(FlexLine { items: flex_items.as_mut_slice(), cross_size: 0.0, offset_cross: 0.0 });
+        } else {
+            let mut flex_items = &mut flex_items[..];
+
+            while !flex_items.is_empty() {
+                let mut line_length = 0.0;
+                let index = flex_items
+                    .iter()
+                    .enumerate()
+                    .find(|&(idx, child)| {
+                        line_length += child.hypothetical_outer_size.main(constants.dir);
+                        if let Defined(main) = available_space.main(constants.dir) {
+                            line_length > main && idx != 0
+                        } else {
+                            false
+                        }
+                    })
+                    .map(|(idx, _)| idx)
+                    .unwrap_or(flex_items.len());
+
+                let (items, rest) = flex_items.split_at_mut(index);
+                lines.push(FlexLine { items, cross_size: 0.0, offset_cross: 0.0 });
+                flex_items = rest;
+            }
+        }
+
+        lines
+    }
+
     #[allow(clippy::cognitive_complexity)]
     fn compute_internal(
         &mut self,
@@ -488,58 +544,13 @@ impl Forest {
             .iter()
             .any(|child| self.nodes[child.node].style.align_self(&self.nodes[node].style) == AlignSelf::Baseline);
 
-        // 3. Determine the flex base size and hypothetical main size of each item
+        // 3. Determine the flex base size and hypothetical main size of each item.
         self.determine_flex_base_size(node, node_size, &constants, available_space, &mut flex_items);
 
         // 9.3. Main Size Determination
 
-        // 5. Collect flex items into flex lines:
-        //    - If the flex container is single-line, collect all the flex items into
-        //      a single flex line.
-        //    - Otherwise, starting from the first uncollected item, collect consecutive
-        //      items one by one until the first time that the next collected item would
-        //      not fit into the flex container’s inner main size (or until a forced break
-        //      is encountered, see §10 Fragmenting Flex Layout). If the very first
-        //      uncollected item wouldn’t fit, collect just it into the line.
-        //
-        //      For this step, the size of a flex item is its outer hypothetical main size. (Note: This can be negative.)
-        //      Repeat until all flex items have been collected into flex lines
-        //
-        //      Note that the "collect as many" line will collect zero-sized flex items onto
-        //      the end of the previous line even if the last non-zero item exactly "filled up" the line.
-
-        let mut flex_lines: sys::Vec<_> = {
-            let mut lines = sys::new_vec_with_capacity(1);
-
-            if self.nodes[node].style.flex_wrap == FlexWrap::NoWrap {
-                lines.push(FlexLine { items: flex_items.as_mut_slice(), cross_size: 0.0, offset_cross: 0.0 });
-            } else {
-                let mut flex_items = &mut flex_items[..];
-
-                while !flex_items.is_empty() {
-                    let mut line_length = 0.0;
-                    let index = flex_items
-                        .iter()
-                        .enumerate()
-                        .find(|&(idx, child)| {
-                            line_length += child.hypothetical_outer_size.main(constants.dir);
-                            if let Defined(main) = available_space.main(constants.dir) {
-                                line_length > main && idx != 0
-                            } else {
-                                false
-                            }
-                        })
-                        .map(|(idx, _)| idx)
-                        .unwrap_or(flex_items.len());
-
-                    let (items, rest) = flex_items.split_at_mut(index);
-                    lines.push(FlexLine { items, cross_size: 0.0, offset_cross: 0.0 });
-                    flex_items = rest;
-                }
-            }
-
-            lines
-        };
+        // 5. Collect flex items into flex lines.
+        let mut flex_lines = self.collect_flex_lines(node, &constants, available_space, &mut flex_items);
 
         // 6. Resolve the flexible lengths of all the flex items to find their used main size.
         //    See §9.7 Resolving Flexible Lengths.
