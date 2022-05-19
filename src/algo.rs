@@ -484,6 +484,231 @@ impl Forest {
         lines
     }
 
+    /// Resolve the flexible lengths of the items within a flex line.
+    ///
+    /// # [9.7. Resolving Flexible Lengths](https://www.w3.org/TR/css-flexbox-1/#resolve-flexible-lengths)
+    fn resolve_flexible_lengths(
+        &mut self,
+        line: &mut FlexLine,
+        constants: &AlgoConstants,
+        available_space: Size<Number>,
+    ) {
+        // 1. Determine the used flex factor. Sum the outer hypothetical main sizes of all
+        //    items on the line. If the sum is less than the flex container’s inner main size,
+        //    use the flex grow factor for the rest of this algorithm; otherwise, use the
+        //    flex shrink factor.
+
+        let used_flex_factor: f32 =
+            line.items.iter().map(|child| child.hypothetical_outer_size.main(constants.dir)).sum();
+        let growing = used_flex_factor < constants.node_inner_size.main(constants.dir).or_else(0.0);
+        let shrinking = !growing;
+
+        // 2. Size inflexible items. Freeze, setting its target main size to its hypothetical main size
+        //    - Any item that has a flex factor of zero
+        //    - If using the flex grow factor: any item that has a flex base size
+        //      greater than its hypothetical main size
+        //    - If using the flex shrink factor: any item that has a flex base size
+        //      smaller than its hypothetical main size
+
+        for child in line.items.iter_mut() {
+            // TODO - This is not found by reading the spec. Maybe this can be done in some other place
+            // instead. This was found by trail and error fixing tests to align with webkit output.
+            if constants.node_inner_size.main(constants.dir).is_undefined() && constants.is_row {
+                child.target_size.set_main(
+                    constants.dir,
+                    self.compute_internal(
+                        child.node,
+                        Size {
+                            width: child.size.width.maybe_max(child.min_size.width).maybe_min(child.max_size.width),
+                            height: child.size.height.maybe_max(child.min_size.height).maybe_min(child.max_size.height),
+                        },
+                        available_space,
+                        false,
+                        false,
+                    )
+                    .size
+                    .main(constants.dir)
+                    .maybe_max(child.min_size.main(constants.dir))
+                    .maybe_min(child.max_size.main(constants.dir)),
+                );
+            } else {
+                child.target_size.set_main(constants.dir, child.hypothetical_inner_size.main(constants.dir));
+            }
+
+            // TODO this should really only be set inside the if-statement below but
+            // that causes the target_main_size to never be set for some items
+
+            child
+                .outer_target_size
+                .set_main(constants.dir, child.target_size.main(constants.dir) + child.margin.main(constants.dir));
+
+            let child_style = &self.nodes[child.node].style;
+            if (child_style.flex_grow == 0.0 && child_style.flex_shrink == 0.0)
+                || (growing && child.flex_basis > child.hypothetical_inner_size.main(constants.dir))
+                || (shrinking && child.flex_basis < child.hypothetical_inner_size.main(constants.dir))
+            {
+                child.frozen = true;
+            }
+        }
+
+        // 3. Calculate initial free space. Sum the outer sizes of all items on the line,
+        //    and subtract this from the flex container’s inner main size. For frozen items,
+        //    use their outer target main size; for other items, use their outer flex base size.
+
+        let used_space: f32 = line
+            .items
+            .iter()
+            .map(|child| {
+                child.margin.main(constants.dir)
+                    + if child.frozen { child.target_size.main(constants.dir) } else { child.flex_basis }
+            })
+            .sum();
+
+        let initial_free_space = (constants.node_inner_size.main(constants.dir) - used_space).or_else(0.0);
+
+        // 4. Loop
+
+        loop {
+            // a. Check for flexible items. If all the flex items on the line are frozen,
+            //    free space has been distributed; exit this loop.
+
+            if line.items.iter().all(|child| child.frozen) {
+                break;
+            }
+
+            // b. Calculate the remaining free space as for initial free space, above.
+            //    If the sum of the unfrozen flex items’ flex factors is less than one,
+            //    multiply the initial free space by this sum. If the magnitude of this
+            //    value is less than the magnitude of the remaining free space, use this
+            //    as the remaining free space.
+
+            let used_space: f32 = line
+                .items
+                .iter()
+                .map(|child| {
+                    child.margin.main(constants.dir)
+                        + if child.frozen { child.target_size.main(constants.dir) } else { child.flex_basis }
+                })
+                .sum();
+
+            let mut unfrozen: sys::Vec<&mut FlexItem> = line.items.iter_mut().filter(|child| !child.frozen).collect();
+
+            let (sum_flex_grow, sum_flex_shrink): (f32, f32) =
+                unfrozen.iter().fold((0.0, 0.0), |(flex_grow, flex_shrink), item| {
+                    let style = &self.nodes[item.node].style;
+                    (flex_grow + style.flex_grow, flex_shrink + style.flex_shrink)
+                });
+
+            let free_space = if growing && sum_flex_grow < 1.0 {
+                (initial_free_space * sum_flex_grow)
+                    .maybe_min(constants.node_inner_size.main(constants.dir) - used_space)
+            } else if shrinking && sum_flex_shrink < 1.0 {
+                (initial_free_space * sum_flex_shrink)
+                    .maybe_max(constants.node_inner_size.main(constants.dir) - used_space)
+            } else {
+                (constants.node_inner_size.main(constants.dir) - used_space).or_else(0.0)
+            };
+
+            // c. Distribute free space proportional to the flex factors.
+            //    - If the remaining free space is zero
+            //        Do Nothing
+            //    - If using the flex grow factor
+            //        Find the ratio of the item’s flex grow factor to the sum of the
+            //        flex grow factors of all unfrozen items on the line. Set the item’s
+            //        target main size to its flex base size plus a fraction of the remaining
+            //        free space proportional to the ratio.
+            //    - If using the flex shrink factor
+            //        For every unfrozen item on the line, multiply its flex shrink factor by
+            //        its inner flex base size, and note this as its scaled flex shrink factor.
+            //        Find the ratio of the item’s scaled flex shrink factor to the sum of the
+            //        scaled flex shrink factors of all unfrozen items on the line. Set the item’s
+            //        target main size to its flex base size minus a fraction of the absolute value
+            //        of the remaining free space proportional to the ratio. Note this may result
+            //        in a negative inner main size; it will be corrected in the next step.
+            //    - Otherwise
+            //        Do Nothing
+
+            if free_space.is_normal() {
+                if growing && sum_flex_grow > 0.0 {
+                    for child in &mut unfrozen {
+                        child.target_size.set_main(
+                            constants.dir,
+                            child.flex_basis + free_space * (self.nodes[child.node].style.flex_grow / sum_flex_grow),
+                        );
+                    }
+                } else if shrinking && sum_flex_shrink > 0.0 {
+                    let sum_scaled_shrink_factor: f32 = unfrozen
+                        .iter()
+                        .map(|child| child.inner_flex_basis * self.nodes[child.node].style.flex_shrink)
+                        .sum();
+
+                    if sum_scaled_shrink_factor > 0.0 {
+                        for child in &mut unfrozen {
+                            let scaled_shrink_factor =
+                                child.inner_flex_basis * self.nodes[child.node].style.flex_shrink;
+                            child.target_size.set_main(
+                                constants.dir,
+                                child.flex_basis + free_space * (scaled_shrink_factor / sum_scaled_shrink_factor),
+                            )
+                        }
+                    }
+                }
+            }
+
+            // d. Fix min/max violations. Clamp each non-frozen item’s target main size by its
+            //    used min and max main sizes and floor its content-box size at zero. If the
+            //    item’s target main size was made smaller by this, it’s a max violation.
+            //    If the item’s target main size was made larger by this, it’s a min violation.
+
+            let total_violation = unfrozen.iter_mut().fold(0.0, |acc, child| -> f32 {
+                // TODO - not really spec abiding but needs to be done somewhere. probably somewhere else though.
+                // The following logic was developed not from the spec but by trail and error looking into how
+                // webkit handled various scenarios. Can probably be solved better by passing in
+                // min-content max-content constraints from the top. Need to figure out correct thing to do here as
+                // just piling on more conditionals.
+                let min_main = if constants.is_row && self.nodes[child.node].measure.is_none() {
+                    self.compute_internal(child.node, Size::undefined(), available_space, false, false)
+                        .size
+                        .width
+                        .maybe_min(child.size.width)
+                        .maybe_max(child.min_size.width)
+                        .into()
+                } else {
+                    child.min_size.main(constants.dir)
+                };
+
+                let max_main = child.max_size.main(constants.dir);
+                let clamped = child.target_size.main(constants.dir).maybe_min(max_main).maybe_max(min_main).max(0.0);
+                child.violation = clamped - child.target_size.main(constants.dir);
+                child.target_size.set_main(constants.dir, clamped);
+                child
+                    .outer_target_size
+                    .set_main(constants.dir, child.target_size.main(constants.dir) + child.margin.main(constants.dir));
+
+                acc + child.violation
+            });
+
+            // e. Freeze over-flexed items. The total violation is the sum of the adjustments
+            //    from the previous step ∑(clamped size - unclamped size). If the total violation is:
+            //    - Zero
+            //        Freeze all items.
+            //    - Positive
+            //        Freeze all the items with min violations.
+            //    - Negative
+            //        Freeze all the items with max violations.
+
+            for child in &mut unfrozen {
+                match total_violation {
+                    v if v > 0.0 => child.frozen = child.violation > 0.0,
+                    v if v < 0.0 => child.frozen = child.violation < 0.0,
+                    _ => child.frozen = true,
+                }
+            }
+
+            // f. Return to the start of this loop.
+        }
+    }
+
     #[allow(clippy::cognitive_complexity)]
     fn compute_internal(
         &mut self,
@@ -553,233 +778,8 @@ impl Forest {
         let mut flex_lines = self.collect_flex_lines(node, &constants, available_space, &mut flex_items);
 
         // 6. Resolve the flexible lengths of all the flex items to find their used main size.
-        //    See §9.7 Resolving Flexible Lengths.
-        //
-        // 9.7. Resolving Flexible Lengths
-
         for line in &mut flex_lines {
-            // 1. Determine the used flex factor. Sum the outer hypothetical main sizes of all
-            //    items on the line. If the sum is less than the flex container’s inner main size,
-            //    use the flex grow factor for the rest of this algorithm; otherwise, use the
-            //    flex shrink factor.
-
-            let used_flex_factor: f32 =
-                line.items.iter().map(|child| child.hypothetical_outer_size.main(constants.dir)).sum();
-            let growing = used_flex_factor < constants.node_inner_size.main(constants.dir).or_else(0.0);
-            let shrinking = !growing;
-
-            // 2. Size inflexible items. Freeze, setting its target main size to its hypothetical main size
-            //    - Any item that has a flex factor of zero
-            //    - If using the flex grow factor: any item that has a flex base size
-            //      greater than its hypothetical main size
-            //    - If using the flex shrink factor: any item that has a flex base size
-            //      smaller than its hypothetical main size
-
-            for child in line.items.iter_mut() {
-                // TODO - This is not found by reading the spec. Maybe this can be done in some other place
-                // instead. This was found by trail and error fixing tests to align with webkit output.
-                if constants.node_inner_size.main(constants.dir).is_undefined() && constants.is_row {
-                    child.target_size.set_main(
-                        constants.dir,
-                        self.compute_internal(
-                            child.node,
-                            Size {
-                                width: child.size.width.maybe_max(child.min_size.width).maybe_min(child.max_size.width),
-                                height: child
-                                    .size
-                                    .height
-                                    .maybe_max(child.min_size.height)
-                                    .maybe_min(child.max_size.height),
-                            },
-                            available_space,
-                            false,
-                            false,
-                        )
-                        .size
-                        .main(constants.dir)
-                        .maybe_max(child.min_size.main(constants.dir))
-                        .maybe_min(child.max_size.main(constants.dir)),
-                    );
-                } else {
-                    child.target_size.set_main(constants.dir, child.hypothetical_inner_size.main(constants.dir));
-                }
-
-                // TODO this should really only be set inside the if-statement below but
-                // that causes the target_main_size to never be set for some items
-
-                child
-                    .outer_target_size
-                    .set_main(constants.dir, child.target_size.main(constants.dir) + child.margin.main(constants.dir));
-
-                let child_style = &self.nodes[child.node].style;
-                if (child_style.flex_grow == 0.0 && child_style.flex_shrink == 0.0)
-                    || (growing && child.flex_basis > child.hypothetical_inner_size.main(constants.dir))
-                    || (shrinking && child.flex_basis < child.hypothetical_inner_size.main(constants.dir))
-                {
-                    child.frozen = true;
-                }
-            }
-
-            // 3. Calculate initial free space. Sum the outer sizes of all items on the line,
-            //    and subtract this from the flex container’s inner main size. For frozen items,
-            //    use their outer target main size; for other items, use their outer flex base size.
-
-            let used_space: f32 = line
-                .items
-                .iter()
-                .map(|child| {
-                    child.margin.main(constants.dir)
-                        + if child.frozen { child.target_size.main(constants.dir) } else { child.flex_basis }
-                })
-                .sum();
-
-            let initial_free_space = (constants.node_inner_size.main(constants.dir) - used_space).or_else(0.0);
-
-            // 4. Loop
-
-            loop {
-                // a. Check for flexible items. If all the flex items on the line are frozen,
-                //    free space has been distributed; exit this loop.
-
-                if line.items.iter().all(|child| child.frozen) {
-                    break;
-                }
-
-                // b. Calculate the remaining free space as for initial free space, above.
-                //    If the sum of the unfrozen flex items’ flex factors is less than one,
-                //    multiply the initial free space by this sum. If the magnitude of this
-                //    value is less than the magnitude of the remaining free space, use this
-                //    as the remaining free space.
-
-                let used_space: f32 = line
-                    .items
-                    .iter()
-                    .map(|child| {
-                        child.margin.main(constants.dir)
-                            + if child.frozen { child.target_size.main(constants.dir) } else { child.flex_basis }
-                    })
-                    .sum();
-
-                let mut unfrozen: sys::Vec<&mut FlexItem> =
-                    line.items.iter_mut().filter(|child| !child.frozen).collect();
-
-                let (sum_flex_grow, sum_flex_shrink): (f32, f32) =
-                    unfrozen.iter().fold((0.0, 0.0), |(flex_grow, flex_shrink), item| {
-                        let style = &self.nodes[item.node].style;
-                        (flex_grow + style.flex_grow, flex_shrink + style.flex_shrink)
-                    });
-
-                let free_space = if growing && sum_flex_grow < 1.0 {
-                    (initial_free_space * sum_flex_grow)
-                        .maybe_min(constants.node_inner_size.main(constants.dir) - used_space)
-                } else if shrinking && sum_flex_shrink < 1.0 {
-                    (initial_free_space * sum_flex_shrink)
-                        .maybe_max(constants.node_inner_size.main(constants.dir) - used_space)
-                } else {
-                    (constants.node_inner_size.main(constants.dir) - used_space).or_else(0.0)
-                };
-
-                // c. Distribute free space proportional to the flex factors.
-                //    - If the remaining free space is zero
-                //        Do Nothing
-                //    - If using the flex grow factor
-                //        Find the ratio of the item’s flex grow factor to the sum of the
-                //        flex grow factors of all unfrozen items on the line. Set the item’s
-                //        target main size to its flex base size plus a fraction of the remaining
-                //        free space proportional to the ratio.
-                //    - If using the flex shrink factor
-                //        For every unfrozen item on the line, multiply its flex shrink factor by
-                //        its inner flex base size, and note this as its scaled flex shrink factor.
-                //        Find the ratio of the item’s scaled flex shrink factor to the sum of the
-                //        scaled flex shrink factors of all unfrozen items on the line. Set the item’s
-                //        target main size to its flex base size minus a fraction of the absolute value
-                //        of the remaining free space proportional to the ratio. Note this may result
-                //        in a negative inner main size; it will be corrected in the next step.
-                //    - Otherwise
-                //        Do Nothing
-
-                if free_space.is_normal() {
-                    if growing && sum_flex_grow > 0.0 {
-                        for child in &mut unfrozen {
-                            child.target_size.set_main(
-                                constants.dir,
-                                child.flex_basis
-                                    + free_space * (self.nodes[child.node].style.flex_grow / sum_flex_grow),
-                            );
-                        }
-                    } else if shrinking && sum_flex_shrink > 0.0 {
-                        let sum_scaled_shrink_factor: f32 = unfrozen
-                            .iter()
-                            .map(|child| child.inner_flex_basis * self.nodes[child.node].style.flex_shrink)
-                            .sum();
-
-                        if sum_scaled_shrink_factor > 0.0 {
-                            for child in &mut unfrozen {
-                                let scaled_shrink_factor =
-                                    child.inner_flex_basis * self.nodes[child.node].style.flex_shrink;
-                                child.target_size.set_main(
-                                    constants.dir,
-                                    child.flex_basis + free_space * (scaled_shrink_factor / sum_scaled_shrink_factor),
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // d. Fix min/max violations. Clamp each non-frozen item’s target main size by its
-                //    used min and max main sizes and floor its content-box size at zero. If the
-                //    item’s target main size was made smaller by this, it’s a max violation.
-                //    If the item’s target main size was made larger by this, it’s a min violation.
-
-                let total_violation = unfrozen.iter_mut().fold(0.0, |acc, child| -> f32 {
-                    // TODO - not really spec abiding but needs to be done somewhere. probably somewhere else though.
-                    // The following logic was developed not from the spec but by trail and error looking into how
-                    // webkit handled various scenarios. Can probably be solved better by passing in
-                    // min-content max-content constraints from the top. Need to figure out correct thing to do here as
-                    // just piling on more conditionals.
-                    let min_main = if constants.is_row && self.nodes[child.node].measure.is_none() {
-                        self.compute_internal(child.node, Size::undefined(), available_space, false, false)
-                            .size
-                            .width
-                            .maybe_min(child.size.width)
-                            .maybe_max(child.min_size.width)
-                            .into()
-                    } else {
-                        child.min_size.main(constants.dir)
-                    };
-
-                    let max_main = child.max_size.main(constants.dir);
-                    let clamped =
-                        child.target_size.main(constants.dir).maybe_min(max_main).maybe_max(min_main).max(0.0);
-                    child.violation = clamped - child.target_size.main(constants.dir);
-                    child.target_size.set_main(constants.dir, clamped);
-                    child.outer_target_size.set_main(
-                        constants.dir,
-                        child.target_size.main(constants.dir) + child.margin.main(constants.dir),
-                    );
-
-                    acc + child.violation
-                });
-
-                // e. Freeze over-flexed items. The total violation is the sum of the adjustments
-                //    from the previous step ∑(clamped size - unclamped size). If the total violation is:
-                //    - Zero
-                //        Freeze all items.
-                //    - Positive
-                //        Freeze all the items with min violations.
-                //    - Negative
-                //        Freeze all the items with max violations.
-
-                for child in &mut unfrozen {
-                    match total_violation {
-                        v if v > 0.0 => child.frozen = child.violation > 0.0,
-                        v if v < 0.0 => child.frozen = child.violation < 0.0,
-                        _ => child.frozen = true,
-                    }
-                }
-
-                // f. Return to the start of this loop.
-            }
+            self.resolve_flexible_lengths(line, &constants, available_space);
         }
 
         // Not part of the spec from what i can see but seems correct
