@@ -709,6 +709,60 @@ impl Forest {
         }
     }
 
+    /// Determine the hypothetical cross size of each item.
+    ///
+    /// # [9.4. Cross Size Determination](https://www.w3.org/TR/css-flexbox-1/#cross-sizing)
+    ///
+    /// - [**Determine the hypothetical cross size of each item**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-item)
+    ///     by performing layout with the used main size and the available space, treating auto as fit-content.
+    fn determine_hypothetical_cross_size(
+        &mut self,
+        line: &mut FlexLine,
+        constants: &AlgoConstants,
+        available_space: Size<Number>,
+    ) {
+        for child in line.items.iter_mut() {
+            let child_cross = child
+                .size
+                .cross(constants.dir)
+                .maybe_max(child.min_size.cross(constants.dir))
+                .maybe_min(child.max_size.cross(constants.dir));
+
+            child.hypothetical_inner_size.set_cross(
+                constants.dir,
+                self.compute_internal(
+                    child.node,
+                    Size {
+                        width: if constants.is_row { child.target_size.width.into() } else { child_cross },
+                        height: if constants.is_row { child_cross } else { child.target_size.height.into() },
+                    },
+                    Size {
+                        width: if constants.is_row {
+                            constants.container_size.main(constants.dir).into()
+                        } else {
+                            available_space.width
+                        },
+                        height: if constants.is_row {
+                            available_space.height
+                        } else {
+                            constants.container_size.main(constants.dir).into()
+                        },
+                    },
+                    false,
+                    false,
+                )
+                .size
+                .cross(constants.dir)
+                .maybe_max(child.min_size.cross(constants.dir))
+                .maybe_min(child.max_size.cross(constants.dir)),
+            );
+
+            child.hypothetical_outer_size.set_cross(
+                constants.dir,
+                child.hypothetical_inner_size.cross(constants.dir) + child.margin.cross(constants.dir),
+            );
+        }
+    }
     #[allow(clippy::cognitive_complexity)]
     fn compute_internal(
         &mut self,
@@ -806,51 +860,9 @@ impl Forest {
 
         // 9.4. Cross Size Determination
 
-        // 7. Determine the hypothetical cross size of each item by performing layout with the
-        //    used main size and the available space, treating auto as fit-content.
-
+        // 7. Determine the hypothetical cross size of each item.
         for line in &mut flex_lines {
-            for child in line.items.iter_mut() {
-                let child_cross = child
-                    .size
-                    .cross(constants.dir)
-                    .maybe_max(child.min_size.cross(constants.dir))
-                    .maybe_min(child.max_size.cross(constants.dir));
-
-                child.hypothetical_inner_size.set_cross(
-                    constants.dir,
-                    self.compute_internal(
-                        child.node,
-                        Size {
-                            width: if constants.is_row { child.target_size.width.into() } else { child_cross },
-                            height: if constants.is_row { child_cross } else { child.target_size.height.into() },
-                        },
-                        Size {
-                            width: if constants.is_row {
-                                constants.container_size.main(constants.dir).into()
-                            } else {
-                                available_space.width
-                            },
-                            height: if constants.is_row {
-                                available_space.height
-                            } else {
-                                constants.container_size.main(constants.dir).into()
-                            },
-                        },
-                        false,
-                        false,
-                    )
-                    .size
-                    .cross(constants.dir)
-                    .maybe_max(child.min_size.cross(constants.dir))
-                    .maybe_min(child.max_size.cross(constants.dir)),
-                );
-
-                child.hypothetical_outer_size.set_cross(
-                    constants.dir,
-                    child.hypothetical_inner_size.cross(constants.dir) + child.margin.cross(constants.dir),
-                );
-            }
+            self.determine_hypothetical_cross_size(line, &constants, available_space);
         }
 
         // TODO - probably should move this somewhere else as it doesn't make a ton of sense here but we need it below
