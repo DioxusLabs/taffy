@@ -38,7 +38,7 @@ Before using or contributing to `stretch` it is good to be aware of the core goa
 # Cargo.toml
 
 [dependencies]
-stretch2 = "0.3.2"
+stretch2 = "0.4.3"
 ```
 
 ```rust
