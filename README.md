@@ -38,7 +38,7 @@ Stretch2 is built in Rust but comes with bindings to multiple languages and plat
 # Cargo.toml
 
 [dependencies]
-stretch2 = "0.3.2"
+stretch2 = "0.4.3"
 ```
 
 ```rust
