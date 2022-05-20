@@ -1,7 +1,7 @@
 [package]
 name = "stretch2"
 version = "0.4.3"
-authors = ["elbaro <elbaro@users.noreply.github.com>"]
+authors = ["Alice Cecile <alice.i.cecile@gmail.com>", "Johnathan Kelley <jkelleyrtp@gmail.com>"]
 edition = "2021"
 include = ["src/**/*", "Cargo.toml"]
 description = "High performance & cross-platform Flexbox implementation"
