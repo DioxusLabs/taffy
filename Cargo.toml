@@ -8,7 +8,7 @@ description = "High performance & cross-platform Flexbox implementation"
 repository = "https://github.com/DioxusLabs/stretch"
 keywords = ["ios", "android", "cross-platform", "layout", "flexbox"]
 categories = ["gui"]
-license-file = "LICENSE.md"
+license = "MIT"
 
 [dependencies]
 arrayvec = { version = "0.7.2", default-features = false }
