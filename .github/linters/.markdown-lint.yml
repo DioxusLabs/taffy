@@ -26,3 +26,4 @@
 #################
 # blank_lines: false  # Error on blank lines
 line_length: false # Ignore excessively long lines
+no-duplicate-heading: false # This is useful in RELEASES.md
