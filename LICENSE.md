@@ -1,6 +1,10 @@
-MIT License
+# License
 
-Copyright (c) 2018 Visly Inc.
+The copyright of all contributions to this open source software library remains with the original authors, who by contributing grant others a license to freely use, share and modify their work under the MIT license below.
+
+This library was forked from the [`stretch`](https://github.com/vislyhq/stretch) crate under the MIT License, which was copyright 2018 Visly Inc.
+
+## MIT License
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,4 +23,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
