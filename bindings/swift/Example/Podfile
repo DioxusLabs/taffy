@@ -1,9 +1,0 @@
-use_frameworks!
-platform :ios, '12.0'
-
-target 'StretchKit_Tests' do
-  pod 'StretchKit', :path => '../../../'
-  
-  pod 'Quick', '~> 2.1.0'
-  pod 'Nimble', '~> 8.0.1'
-end
