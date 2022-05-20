@@ -12,7 +12,6 @@ The basic process is simple:
 
 The PR review process is completely open:  help us by commenting on, testing and approving PRs.
 
-Questions like "how do I use this library?" belong in [GitHub Discussions](https://github.com/DioxusLabs/sprawl/discussions/new), although those should typically spawn new issues to improve our docs and examples.
 
 If you'd like to help on a consistent basis or are interested in project management, create a Discussions post, and we'll be happy to hand out triage rights.
 
