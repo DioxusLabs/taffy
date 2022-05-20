@@ -19,129 +19,15 @@ Before using or contributing to stretch2 it is good to be aware of the core goal
 - Small binary size
 - Support multiple layout systems
 - Multi-threaded layout
-- Language bindings for most common languages
-
-## Supported Platforms
-
-- Rust
-- Android
-- iOS
-- JavaScript / TypeScript
 
 ## Usage
-
-Stretch2 is built in Rust but comes with bindings to multiple languages and platforms so you can use it in a way that feels natural to your project.
-
-### Rust
 
 ```toml
 # Cargo.toml
 
 [dependencies]
-stretch2 = "0.3.2"
+stretch2 = "0.4.3"
 ```
-
-```rust
-// main.rs
-
-use stretch2::geometry::Size;
-use stretch2::style::*;
-
-fn main() -> Result<(), stretch2::Error> {
-    let mut stretch2 = stretch2::node::Stretch::new();
-
-    let child = stretch.new_node(
-        Style { size: Size { width: Dimension::Percent(0.5), height: Dimension::Auto }, ..Default::default() },
-        vec![],
-    )?;
-
-    let node = stretch.new_node(
-        Style {
-            size: Size { width: Dimension::Points(100.0), height: Dimension::Points(100.0) },
-            justify_content: JustifyContent::Center,
-            ..Default::default()
-        },
-        vec![child],
-    )?;
-
-    stretch.compute_layout(node, Size::undefined())?;
-    dbg!(stretch.layout(node)?);
-}
-
-```
-
-### Android
-
-```groovy
-// Build.gradle
-
-android {
-    splits {
-        abi {
-            enable true
-        }
-    }
-}
-
-dependencies {
-    implementation 'app.visly.stretch:stretch:0.3.2'
-}
-```
-
-```kotlin
-// MainActivity.kt
-
-val node = Node(
-  Style(size = Size(Dimension.Points(100f), Dimension.Points(100f)), justifyContent = JustifyContent.Center),
-  listOf(
-    Node(Style(size = Size(Dimension.Percent(0.5f), Dimension.Percent(0.5f))), listOf())
-  ))
-
-val layout = node.computeLayout(Size(null, null))
-Log.d(TAG, "width: ${layout.width}, height: ${layout.height}")
-```
-
-### iOS
-
-```ruby
-# Podfile
-
-pod 'StretchKit', '~> 0.3.2'
-```
-
-```swift
-// ViewController.swift
-
-let node = Node(
-  style: Style(size: Size(width: .points(100.0), height: .points(100.0)), justifyContent: .center),
-  children: [
-    Node(style: Style(size: Size(width: .percent(0.5), height: .percent(0.5))), children: [])
-  ])
-
-let layout = node.computeLayout(thatFits: Size(width: nil, height: nil))
-print("width: \(layout.width), height: \(layout.height)")
-```
-
-### JavaScript
-
-```bash
-> npm install --save stretch-layout
-```
-
-```javascript
-// index.js
-
-import { Allocator, Node, JustifyContent } from 'stretch-layout';
-
-const allocator = new Allocator();
-const node = new Node(allocator, {width: 100, height: 100, justifyContent: JustifyContent.Center});
-node.addChild(new Node(allocator, {width: '50%', height: '50%'}));
-const layout = node.computeLayout();
-
-console.log(layout.width, layout.height);
-```
-
-### Installation
 
 If you don't have Rust installed you have to do that first as well as install some components that we make use of to format and lint the codebase. For more on Rust see their [website](https://www.rust-lang.org).
 
@@ -182,10 +68,3 @@ To add a new test case add another HTML file to `/test_fixtures` following the c
 
 Benchmarks build on the same infrastructure as testing, and actually benchmarks are automatically generated from test fixtures just like tests.
 Run `cargo bench` to run benchmarks locally.
-
-## Relationship to Yoga
-
-[Yoga](https://www.yogalayout.com) is a cross-platform implementation of Flexbox written in C.
-Yoga is a fantastic project but has some fundamental issues which we hope to resolve.
-Compared to Yoga we aim to have a stronger adherence to web standards, a flexible architecture eventually supporting multiple layout algorithms, and future performance improvements including multi-threaded layout.
-In addition to this we aim to use a safer language with a more modern codebase.
