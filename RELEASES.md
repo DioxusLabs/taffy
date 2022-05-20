@@ -11,7 +11,7 @@
 - removed Javascript / Kotlin / Swift bindings
   - the maintainer team lacks expertise to keep these working
   - more serious refactors are planned, and this will be challenging to keep working through that process
-  - if you are interested in helping us maintain bindings to other languages, get in touch!
+  - if you are interested in helping us maintain bindings to other languages, [get in touch](https://github.com/DioxusLabs/sprawl/discussions)!
 
 ## stretch2 0.4.3
 
