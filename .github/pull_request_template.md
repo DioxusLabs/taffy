@@ -9,10 +9,10 @@ Under each bullet point, describe how this change addressed those objectives if 
 
 ## Context
 
-Discuss any context that may be needed for a user with only passing accquaintance with this library to understand the changes you've made.
+Discuss any context that may be needed for a user with only passing acquaintance with this library to understand the changes you've made.
 This may include related issues, previous discussion, or relevant bits of how the library works).
 
-## Feeback wanted
+## Feedback wanted
 
 > This section is optional. If there are no particularly tricky or controversial changes, you can delete this section.
 
