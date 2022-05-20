@@ -1,5 +1,5 @@
 use stretch::style::Dimension;
-use stretch2 as stretch;
+use sprawl as stretch;
 
 #[test]
 fn relayout() {

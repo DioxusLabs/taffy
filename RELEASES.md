@@ -2,7 +2,7 @@
 
 ## stretch2 0.4.3
 
-This is the final release of `stretch2`: migrate to the crate named `sprawl` for future fixes and features!
+This is the final release of `sprawl`: migrate to the crate named `sprawl` for future fixes and features!
 
 These notes describe the differences between this release and `stretch` 0.3.2, the abandoned crate from which this library was forked.
 

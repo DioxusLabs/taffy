@@ -1,12 +1,12 @@
 #[test]
 fn overflow_main_axis() {
-    let mut stretch = stretch2::Stretch::new();
+    let mut stretch = sprawl::Stretch::new();
     let node0 = stretch
         .new_node(
-            stretch2::style::Style {
+            sprawl::style::Style {
                 flex_shrink: 0f32,
-                size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Points(200f32),
+                size: sprawl::geometry::Size {
+                    width: sprawl::style::Dimension::Points(200f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -16,10 +16,10 @@ fn overflow_main_axis() {
         .unwrap();
     let node = stretch
         .new_node(
-            stretch2::style::Style {
-                size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Points(100f32),
-                    height: stretch2::style::Dimension::Points(100f32),
+            sprawl::style::Style {
+                size: sprawl::geometry::Size {
+                    width: sprawl::style::Dimension::Points(100f32),
+                    height: sprawl::style::Dimension::Points(100f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -27,7 +27,7 @@ fn overflow_main_axis() {
             &[node0],
         )
         .unwrap();
-    stretch.compute_layout(node, stretch2::geometry::Size::undefined()).unwrap();
+    stretch.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
     assert_eq!(stretch.layout(node).unwrap().size.width, 100f32);
     assert_eq!(stretch.layout(node).unwrap().size.height, 100f32);
     assert_eq!(stretch.layout(node).unwrap().location.x, 0f32);
