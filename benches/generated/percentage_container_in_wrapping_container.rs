@@ -30,10 +30,7 @@ pub fn compute() {
         .new_node(
             sprawl::style::Style {
                 justify_content: sprawl::style::JustifyContent::Center,
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Percent(1f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Percent(1f32), ..Default::default() },
                 ..Default::default()
             },
             &[node000, node001],

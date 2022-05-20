@@ -5,10 +5,7 @@ fn overflow_main_axis() {
         .new_node(
             sprawl::style::Style {
                 flex_shrink: 0f32,
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(200f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(200f32), ..Default::default() },
                 ..Default::default()
             },
             &[],

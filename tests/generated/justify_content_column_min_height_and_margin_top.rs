@@ -9,10 +9,7 @@ fn justify_content_column_min_height_and_margin_top() {
                     height: sprawl::style::Dimension::Points(20f32),
                     ..Default::default()
                 },
-                margin: sprawl::geometry::Rect {
-                    top: sprawl::style::Dimension::Points(10f32),
-                    ..Default::default()
-                },
+                margin: sprawl::geometry::Rect { top: sprawl::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
             },
             &[],

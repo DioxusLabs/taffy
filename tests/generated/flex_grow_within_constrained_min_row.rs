@@ -5,10 +5,7 @@ fn flex_grow_within_constrained_min_row() {
     let node1 = stretch
         .new_node(
             sprawl::style::Style {
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(50f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(50f32), ..Default::default() },
                 ..Default::default()
             },
             &[],
@@ -17,10 +14,7 @@ fn flex_grow_within_constrained_min_row() {
     let node = stretch
         .new_node(
             sprawl::style::Style {
-                size: sprawl::geometry::Size {
-                    height: sprawl::style::Dimension::Points(100f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(100f32), ..Default::default() },
                 min_size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),
                     ..Default::default()

@@ -69,10 +69,7 @@ pub fn compute() {
         .new_node(
             sprawl::style::Style {
                 flex_wrap: sprawl::style::FlexWrap::Wrap,
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(50f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(50f32), ..Default::default() },
                 ..Default::default()
             },
             &[node10, node11, node12, node13],
@@ -82,10 +79,7 @@ pub fn compute() {
         .new_node(
             sprawl::style::Style {
                 align_items: sprawl::style::AlignItems::Baseline,
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(100f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(100f32), ..Default::default() },
                 ..Default::default()
             },
             &[node0, node1],

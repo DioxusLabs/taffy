@@ -12,7 +12,6 @@ The basic process is simple:
 
 The PR review process is completely open:  help us by commenting on, testing and approving PRs.
 
-
 If you'd like to help on a consistent basis or are interested in project management, create a Discussions post, and we'll be happy to hand out triage rights.
 
 ## Testing

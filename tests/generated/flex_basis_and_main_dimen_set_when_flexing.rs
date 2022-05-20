@@ -34,10 +34,7 @@ fn flex_basis_and_main_dimen_set_when_flexing() {
     let node = stretch
         .new_node(
             sprawl::style::Style {
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(100f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(100f32), ..Default::default() },
                 ..Default::default()
             },
             &[node0, node1],

@@ -28,10 +28,7 @@ fn flex_basis_larger_than_content_column() {
         .new_node(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
-                size: sprawl::geometry::Size {
-                    height: sprawl::style::Dimension::Points(100f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(100f32), ..Default::default() },
                 ..Default::default()
             },
             &[node0],

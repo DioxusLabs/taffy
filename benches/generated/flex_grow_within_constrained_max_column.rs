@@ -13,10 +13,7 @@ pub fn compute() {
     let node1 = stretch
         .new_node(
             sprawl::style::Style {
-                size: sprawl::geometry::Size {
-                    height: sprawl::style::Dimension::Points(50f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(50f32), ..Default::default() },
                 ..Default::default()
             },
             &[],
@@ -26,10 +23,7 @@ pub fn compute() {
         .new_node(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(100f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(100f32), ..Default::default() },
                 max_size: sprawl::geometry::Size {
                     height: sprawl::style::Dimension::Points(100f32),
                     ..Default::default()

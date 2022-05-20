@@ -22,10 +22,7 @@ fn justify_content_row_max_width_and_margin() {
         .new_node(
             sprawl::style::Style {
                 justify_content: sprawl::style::JustifyContent::Center,
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(100f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(100f32), ..Default::default() },
                 max_size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(80f32),
                     ..Default::default()

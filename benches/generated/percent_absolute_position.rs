@@ -3,10 +3,7 @@ pub fn compute() {
     let node00 = stretch
         .new_node(
             sprawl::style::Style {
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Percent(1f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Percent(1f32), ..Default::default() },
                 ..Default::default()
             },
             &[],
@@ -15,10 +12,7 @@ pub fn compute() {
     let node01 = stretch
         .new_node(
             sprawl::style::Style {
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Percent(1f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Percent(1f32), ..Default::default() },
                 ..Default::default()
             },
             &[],

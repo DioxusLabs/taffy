@@ -8,10 +8,7 @@ pub fn compute() {
                     height: sprawl::style::Dimension::Points(20f32),
                     ..Default::default()
                 },
-                margin: sprawl::geometry::Rect {
-                    top: sprawl::style::Dimension::Points(100f32),
-                    ..Default::default()
-                },
+                margin: sprawl::geometry::Rect { top: sprawl::style::Dimension::Points(100f32), ..Default::default() },
                 ..Default::default()
             },
             &[],
@@ -21,10 +18,7 @@ pub fn compute() {
         .new_node(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
-                size: sprawl::geometry::Size {
-                    height: sprawl::style::Dimension::Points(100f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(100f32), ..Default::default() },
                 max_size: sprawl::geometry::Size {
                     height: sprawl::style::Dimension::Points(80f32),
                     ..Default::default()

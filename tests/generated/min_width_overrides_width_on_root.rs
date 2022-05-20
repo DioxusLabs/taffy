@@ -4,10 +4,7 @@ fn min_width_overrides_width_on_root() {
     let node = stretch
         .new_node(
             sprawl::style::Style {
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(50f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(50f32), ..Default::default() },
                 min_size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),
                     ..Default::default()

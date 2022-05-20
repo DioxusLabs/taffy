@@ -4,10 +4,7 @@ fn margin_bottom() {
     let node0 = stretch
         .new_node(
             sprawl::style::Style {
-                size: sprawl::geometry::Size {
-                    height: sprawl::style::Dimension::Points(10f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(10f32), ..Default::default() },
                 margin: sprawl::geometry::Rect {
                     bottom: sprawl::style::Dimension::Points(10f32),
                     ..Default::default()

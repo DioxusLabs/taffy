@@ -57,10 +57,7 @@ fn wrap_row() {
         .new_node(
             sprawl::style::Style {
                 flex_wrap: sprawl::style::FlexWrap::Wrap,
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(100f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(100f32), ..Default::default() },
                 ..Default::default()
             },
             &[node0, node1, node2, node3],

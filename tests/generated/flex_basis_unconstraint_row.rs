@@ -5,10 +5,7 @@ fn flex_basis_unconstraint_row() {
         .new_node(
             sprawl::style::Style {
                 flex_basis: sprawl::style::Dimension::Points(50f32),
-                size: sprawl::geometry::Size {
-                    height: sprawl::style::Dimension::Points(100f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(100f32), ..Default::default() },
                 ..Default::default()
             },
             &[],

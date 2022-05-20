@@ -18,10 +18,7 @@ fn display_none_with_child() {
                 flex_grow: 1f32,
                 flex_shrink: 1f32,
                 flex_basis: sprawl::style::Dimension::Percent(0f32),
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(20f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(20f32), ..Default::default() },
                 ..Default::default()
             },
             &[],

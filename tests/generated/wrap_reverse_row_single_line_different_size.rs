@@ -71,10 +71,7 @@ fn wrap_reverse_row_single_line_different_size() {
             sprawl::style::Style {
                 flex_wrap: sprawl::style::FlexWrap::WrapReverse,
                 align_content: sprawl::style::AlignContent::FlexStart,
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(300f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(300f32), ..Default::default() },
                 ..Default::default()
             },
             &[node0, node1, node2, node3, node4],

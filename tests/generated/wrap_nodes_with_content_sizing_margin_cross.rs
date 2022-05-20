@@ -37,10 +37,7 @@ fn wrap_nodes_with_content_sizing_margin_cross() {
         .new_node(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
-                margin: sprawl::geometry::Rect {
-                    top: sprawl::style::Dimension::Points(10f32),
-                    ..Default::default()
-                },
+                margin: sprawl::geometry::Rect { top: sprawl::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
             },
             &[node010],
@@ -50,10 +47,7 @@ fn wrap_nodes_with_content_sizing_margin_cross() {
         .new_node(
             sprawl::style::Style {
                 flex_wrap: sprawl::style::FlexWrap::Wrap,
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(70f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(70f32), ..Default::default() },
                 ..Default::default()
             },
             &[node00, node01],

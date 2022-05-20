@@ -4,10 +4,7 @@ pub fn compute() {
         .new_node(
             sprawl::style::Style {
                 flex_grow: 1f32,
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(10f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
             },
             &[],

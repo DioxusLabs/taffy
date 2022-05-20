@@ -6,10 +6,7 @@ pub fn compute() {
             sprawl::style::Style {
                 display: sprawl::style::Display::None,
                 flex_grow: 1f32,
-                position: sprawl::geometry::Rect {
-                    top: sprawl::style::Dimension::Points(10f32),
-                    ..Default::default()
-                },
+                position: sprawl::geometry::Rect { top: sprawl::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
             },
             &[],

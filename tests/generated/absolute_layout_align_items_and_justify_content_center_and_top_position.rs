@@ -10,10 +10,7 @@ fn absolute_layout_align_items_and_justify_content_center_and_top_position() {
                     height: sprawl::style::Dimension::Points(40f32),
                     ..Default::default()
                 },
-                position: sprawl::geometry::Rect {
-                    top: sprawl::style::Dimension::Points(10f32),
-                    ..Default::default()
-                },
+                position: sprawl::geometry::Rect { top: sprawl::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
             },
             &[],

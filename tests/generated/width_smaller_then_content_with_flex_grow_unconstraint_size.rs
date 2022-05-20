@@ -19,10 +19,7 @@ fn width_smaller_then_content_with_flex_grow_unconstraint_size() {
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 flex_grow: 1f32,
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(0f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(0f32), ..Default::default() },
                 ..Default::default()
             },
             &[node00],
@@ -46,10 +43,7 @@ fn width_smaller_then_content_with_flex_grow_unconstraint_size() {
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 flex_grow: 1f32,
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(0f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(0f32), ..Default::default() },
                 ..Default::default()
             },
             &[node10],

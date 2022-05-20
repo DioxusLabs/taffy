@@ -40,10 +40,7 @@ pub fn compute() {
         .new_node(
             sprawl::style::Style {
                 position_type: sprawl::style::PositionType::Absolute,
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(10f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(10f32), ..Default::default() },
                 position: sprawl::geometry::Rect {
                     top: sprawl::style::Dimension::Percent(0.1f32),
                     bottom: sprawl::style::Dimension::Percent(0.1f32),

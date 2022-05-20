@@ -5,10 +5,7 @@ fn flex_grow_within_constrained_max_width() {
         .new_node(
             sprawl::style::Style {
                 flex_grow: 1f32,
-                size: sprawl::geometry::Size {
-                    height: sprawl::style::Dimension::Points(20f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(20f32), ..Default::default() },
                 ..Default::default()
             },
             &[],

@@ -30,10 +30,7 @@ pub fn compute() {
         .new_node(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Percent(0.5f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Percent(0.5f32), ..Default::default() },
                 margin: sprawl::geometry::Rect {
                     start: sprawl::style::Dimension::Points(5f32),
                     end: sprawl::style::Dimension::Points(5f32),

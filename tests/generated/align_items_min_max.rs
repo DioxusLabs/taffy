@@ -19,10 +19,7 @@ fn align_items_min_max() {
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 align_items: sprawl::style::AlignItems::Center,
-                size: sprawl::geometry::Size {
-                    height: sprawl::style::Dimension::Points(100f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(100f32), ..Default::default() },
                 min_size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),
                     ..Default::default()

@@ -69,10 +69,7 @@ pub fn compute() {
         .new_node(
             sprawl::style::Style {
                 flex_wrap: sprawl::style::FlexWrap::WrapReverse,
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(100f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(100f32), ..Default::default() },
                 ..Default::default()
             },
             &[node0, node1, node2, node3, node4],

@@ -19,10 +19,7 @@ fn rounding_total_fractial() {
         .new_node(
             sprawl::style::Style {
                 flex_grow: 1.6f32,
-                size: sprawl::geometry::Size {
-                    height: sprawl::style::Dimension::Points(10f32),
-                    ..Default::default()
-                },
+                size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
             },
             &[],
