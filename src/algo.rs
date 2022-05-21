@@ -857,6 +857,46 @@ impl Forest {
         }
     }
 
+    /// Calculate the cross size of each flex line.
+    ///
+    /// # [9.4. Cross Size Determination](https://www.w3.org/TR/css-flexbox-1/#cross-sizing)
+    ///
+    /// - [**Determine the used cross size of each flex item**](https://www.w3.org/TR/css-flexbox-1/#algo-stretch). If a flex item has align-self: stretch, its computed cross size property is auto,
+    ///     and neither of its cross-axis margins are auto, the used outer cross size is the used cross size of its flex line, clamped according to the item’s used min and max cross sizes.
+    ///     Otherwise, the used cross size is the item’s hypothetical cross size.
+    ///
+    ///     If the flex item has align-self: stretch, redo layout for its contents, treating this used size as its definite cross size so that percentage-sized children can be resolved.
+    ///
+    ///     **Note that this step does not affect the main size of the flex item, even if it has an intrinsic aspect ratio**.
+    fn determine_used_cross_size(&mut self, flex_lines: &mut [FlexLine], node: NodeId, constants: &AlgoConstants) {
+        for line in flex_lines {
+            let line_cross_size = line.cross_size;
+
+            for child in line.items.iter_mut() {
+                let child_style = &self.nodes[child.node].style;
+                child.target_size.set_cross(
+                    constants.dir,
+                    if child_style.align_self(&self.nodes[node].style) == AlignSelf::Stretch
+                        && child_style.cross_margin_start(constants.dir) != Dimension::Auto
+                        && child_style.cross_margin_end(constants.dir) != Dimension::Auto
+                        && child_style.cross_size(constants.dir) == Dimension::Auto
+                    {
+                        (line_cross_size - child.margin.cross(constants.dir))
+                            .maybe_max(child.min_size.cross(constants.dir))
+                            .maybe_min(child.max_size.cross(constants.dir))
+                    } else {
+                        child.hypothetical_inner_size.cross(constants.dir)
+                    },
+                );
+
+                child.outer_target_size.set_cross(
+                    constants.dir,
+                    child.target_size.cross(constants.dir) + child.margin.cross(constants.dir),
+                );
+            }
+        }
+    }
+
     #[allow(clippy::cognitive_complexity)]
     fn compute_internal(
         &mut self,
@@ -1038,44 +1078,8 @@ impl Forest {
 
         // TODO implement once (if ever) we support visibility:collapse
 
-        // 11. Determine the used cross size of each flex item. If a flex item has align-self: stretch,
-        //     its computed cross size property is auto, and neither of its cross-axis margins are auto,
-        //     the used outer cross size is the used cross size of its flex line, clamped according to
-        //     the item’s used min and max cross sizes. Otherwise, the used cross size is the item’s
-        //     hypothetical cross size.
-        //
-        //     If the flex item has align-self: stretch, redo layout for its contents, treating this
-        //     used size as its definite cross size so that percentage-sized children can be resolved.
-        //
-        //     Note that this step does not affect the main size of the flex item, even if it has an
-        //     intrinsic aspect ratio.
-
-        for line in &mut flex_lines {
-            let line_cross_size = line.cross_size;
-
-            for child in line.items.iter_mut() {
-                let child_style = &self.nodes[child.node].style;
-                child.target_size.set_cross(
-                    constants.dir,
-                    if child_style.align_self(&self.nodes[node].style) == AlignSelf::Stretch
-                        && child_style.cross_margin_start(constants.dir) != Dimension::Auto
-                        && child_style.cross_margin_end(constants.dir) != Dimension::Auto
-                        && child_style.cross_size(constants.dir) == Dimension::Auto
-                    {
-                        (line_cross_size - child.margin.cross(constants.dir))
-                            .maybe_max(child.min_size.cross(constants.dir))
-                            .maybe_min(child.max_size.cross(constants.dir))
-                    } else {
-                        child.hypothetical_inner_size.cross(constants.dir)
-                    },
-                );
-
-                child.outer_target_size.set_cross(
-                    constants.dir,
-                    child.target_size.cross(constants.dir) + child.margin.cross(constants.dir),
-                );
-            }
-        }
+        // 11. Determine the used cross size of each flex item.
+        self.determine_used_cross_size(&mut flex_lines, node, &constants);
 
         // 9.5. Main-Axis Alignment
 
