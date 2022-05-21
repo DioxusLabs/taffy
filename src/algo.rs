@@ -829,7 +829,7 @@ impl Forest {
         }
     }
 
-    /// Calculate the cross size of each flex line.
+    /// Handle 'align-content: stretch'.
     ///
     /// # [9.4. Cross Size Determination](https://www.w3.org/TR/css-flexbox-1/#cross-sizing)
     ///
@@ -857,7 +857,7 @@ impl Forest {
         }
     }
 
-    /// Calculate the cross size of each flex line.
+    /// Determine the used cross size of each flex item.
     ///
     /// # [9.4. Cross Size Determination](https://www.w3.org/TR/css-flexbox-1/#cross-sizing)
     ///
