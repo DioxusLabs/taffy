@@ -829,6 +829,34 @@ impl Forest {
         }
     }
 
+    /// Calculate the cross size of each flex line.
+    ///
+    /// # [9.4. Cross Size Determination](https://www.w3.org/TR/css-flexbox-1/#cross-sizing)
+    ///
+    /// - [**Handle 'align-content: stretch'**](https://www.w3.org/TR/css-flexbox-1/#algo-line-stretch). If the flex container has a definite cross size, align-content is stretch,
+    ///     and the sum of the flex lines' cross sizes is less than the flex container’s inner cross size,
+    ///     increase the cross size of each flex line by equal amounts such that the sum of their cross sizes exactly equals the flex container’s inner cross size.
+    fn handle_align_content_stretch(
+        &mut self,
+        flex_lines: &mut [FlexLine],
+        node: NodeId,
+        node_size: Size<Number>,
+        constants: &AlgoConstants,
+    ) {
+        if self.nodes[node].style.align_content == AlignContent::Stretch && node_size.cross(constants.dir).is_defined()
+        {
+            let total_cross: f32 = flex_lines.iter().map(|line| line.cross_size).sum();
+            let inner_cross =
+                (node_size.cross(constants.dir) - constants.padding_border.cross(constants.dir)).or_else(0.0);
+
+            if total_cross < inner_cross {
+                let remaining = inner_cross - total_cross;
+                let addition = remaining / flex_lines.len() as f32;
+                flex_lines.iter_mut().for_each(|line| line.cross_size += addition);
+            }
+        }
+    }
+
     #[allow(clippy::cognitive_complexity)]
     fn compute_internal(
         &mut self,
@@ -992,24 +1020,8 @@ impl Forest {
         // 8. Calculate the cross size of each flex line.
         self.calculate_cross_size(&mut flex_lines, node, node_size, &constants);
 
-        // 9. Handle 'align-content: stretch'. If the flex container has a definite cross size,
-        //    align-content is stretch, and the sum of the flex lines' cross sizes is less than
-        //    the flex container’s inner cross size, increase the cross size of each flex line
-        //    by equal amounts such that the sum of their cross sizes exactly equals the
-        //    flex container’s inner cross size.
-
-        if self.nodes[node].style.align_content == AlignContent::Stretch && node_size.cross(constants.dir).is_defined()
-        {
-            let total_cross: f32 = flex_lines.iter().map(|line| line.cross_size).sum();
-            let inner_cross =
-                (node_size.cross(constants.dir) - constants.padding_border.cross(constants.dir)).or_else(0.0);
-
-            if total_cross < inner_cross {
-                let remaining = inner_cross - total_cross;
-                let addition = remaining / flex_lines.len() as f32;
-                flex_lines.iter_mut().for_each(|line| line.cross_size += addition);
-            }
-        }
+        // 9. Handle 'align-content: stretch'.
+        self.handle_align_content_stretch(&mut flex_lines, node, node_size, &constants);
 
         // 10. Collapse visibility:collapse items. If any flex items have visibility: collapse,
         //     note the cross size of the line they’re in as the item’s strut size, and restart
