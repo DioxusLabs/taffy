@@ -1053,47 +1053,70 @@ impl Forest {
                         child.margin.end = free_space;
                     }
                 } else {
-                    // 14. Align all flex items along the cross-axis per align-self, if neither of the item’s
-                    //     cross-axis margins are auto.
+                    // 14. Align all flex items along the cross-axis.
+                    child.offset_cross = self.align_flex_items_along_cross_axis(
+                        node,
+                        child,
+                        child_style,
+                        free_space,
+                        max_baseline,
+                        constants,
+                    );
+                }
+            }
+        }
+    }
 
-                    child.offset_cross = match child_style.align_self(&self.nodes[node].style) {
-                        AlignSelf::Auto => 0.0, // Should never happen
-                        AlignSelf::FlexStart => {
-                            if constants.is_wrap_reverse {
-                                free_space
-                            } else {
-                                0.0
-                            }
-                        }
-                        AlignSelf::FlexEnd => {
-                            if constants.is_wrap_reverse {
-                                0.0
-                            } else {
-                                free_space
-                            }
-                        }
-                        AlignSelf::Center => free_space / 2.0,
-                        AlignSelf::Baseline => {
-                            if constants.is_row {
-                                max_baseline - child.baseline
-                            } else {
-                                // baseline alignment only makes sense if the constants.direction is row
-                                // we treat it as flex-start alignment in columns.
-                                if constants.is_wrap_reverse {
-                                    free_space
-                                } else {
-                                    0.0
-                                }
-                            }
-                        }
-                        AlignSelf::Stretch => {
-                            if constants.is_wrap_reverse {
-                                free_space
-                            } else {
-                                0.0
-                            }
-                        }
-                    };
+    /// Align all flex items along the cross-axis.
+    ///
+    /// # [9.6. Cross-Axis Alignment](https://www.w3.org/TR/css-flexbox-1/#cross-alignment)
+    ///
+    /// - [**Align all flex items along the cross-axis**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-align) per `align-self`,
+    ///     if neither of the item's cross-axis margins are `auto`.
+    fn align_flex_items_along_cross_axis(
+        &self,
+        node: NodeId,
+        child: &mut FlexItem,
+        child_style: &Style,
+        free_space: f32,
+        max_baseline: f32,
+        constants: &AlgoConstants,
+    ) -> f32 {
+        match child_style.align_self(&self.nodes[node].style) {
+            AlignSelf::Auto => 0.0, // Should never happen
+            AlignSelf::FlexStart => {
+                if constants.is_wrap_reverse {
+                    free_space
+                } else {
+                    0.0
+                }
+            }
+            AlignSelf::FlexEnd => {
+                if constants.is_wrap_reverse {
+                    0.0
+                } else {
+                    free_space
+                }
+            }
+            AlignSelf::Center => free_space / 2.0,
+            AlignSelf::Baseline => {
+                if constants.is_row {
+                    max_baseline - child.baseline
+                } else {
+                    // baseline alignment only makes sense if the constants.direction is row
+                    // we treat it as flex-start alignment in columns.
+                    if constants.is_wrap_reverse {
+                        free_space
+                    } else {
+                        0.0
+                    }
+                }
+            }
+            AlignSelf::Stretch => {
+                if constants.is_wrap_reverse {
+                    free_space
+                } else {
+                    0.0
                 }
             }
         }
