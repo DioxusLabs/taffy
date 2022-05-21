@@ -1,14 +1,14 @@
 [package]
 name = "stretch2"
-version = "0.4.2"
-authors = ["elbaro <elbaro@users.noreply.github.com>"]
+version = "0.4.3"
+authors = ["Alice Cecile <alice.i.cecile@gmail.com>", "Johnathan Kelley <jkelleyrtp@gmail.com>"]
 edition = "2021"
 include = ["src/**/*", "Cargo.toml"]
 description = "High performance & cross-platform Flexbox implementation"
 repository = "https://github.com/DioxusLabs/stretch"
 keywords = ["ios", "android", "cross-platform", "layout", "flexbox"]
 categories = ["gui"]
-license-file = "LICENSE"
+license = "MIT"
 
 [dependencies]
 arrayvec = { version = "0.7.2", default-features = false }

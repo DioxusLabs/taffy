@@ -3,16 +3,16 @@
 [![GitHub CI](https://github.com/DioxusLabs/stretch/actions/workflows/ci.yml/badge.svg)](https://github.com/DioxusLabs/stretch/actions/workflows/ci.yml)
 [![crates.io](https://img.shields.io/crates/v/stretch2.svg)](https://crates.io/crates/stretch2)
 
-> THIS IS A FORK OF THE ORIGINAL STRETCH. CURRENTLY MAINTAINED BY DIOXUS.
+> `stretch2` is forked from the abandoned [`vislyhq/stretch`](https://github.com/vislyhq/stretch), and fixes a few pressing bugs. It is now deprecated; see [`DioxusLabs/sprawl`](https://github.com/DioxusLabs/sprawl) for future development. If you want to build the future of layout in Rust, come contribute!
 
-Stretch2 is an implementation of Flexbox written in [Rust](https://www.rust-lang.org).
-The goal of stretch2 is to provide a solid foundation for layout across all platforms with a specific focus on mobile.
-Long term we want stretch2 to not only support flexbox but also many other layout algorithms such as grid layout.
-Stretch was made for and powers <https://visly.app>.
+`stretch` is an implementation of Flexbox written in [Rust](https://www.rust-lang.org).
+The goal of `stretch` is to provide a solid foundation for layout across all platforms with a specific focus on mobile.
+Long term we want `stretch` to not only support flexbox but also many other layout algorithms such as grid layout.
+`stretch` was made for and powers <https://visly.app>.
 
 ## Goals
 
-Before using or contributing to stretch2 it is good to be aware of the core goals of the project. These are goals we are working towards, not necessarily features we currently support.
+Before using or contributing to `stretch` it is good to be aware of the core goals of the project. These are goals we are working towards, not necessarily features we currently support.
 
 - High performance
 - Cross platform
@@ -30,7 +30,7 @@ Before using or contributing to stretch2 it is good to be aware of the core goal
 
 ## Usage
 
-Stretch2 is built in Rust but comes with bindings to multiple languages and platforms so you can use it in a way that feels natural to your project.
+`stretch` is built in Rust but comes with bindings to multiple languages and platforms so you can use it in a way that feels natural to your project.
 
 ### Rust
 
@@ -38,7 +38,7 @@ Stretch2 is built in Rust but comes with bindings to multiple languages and plat
 # Cargo.toml
 
 [dependencies]
-stretch2 = "0.3.2"
+stretch2 = "0.4.3"
 ```
 
 ```rust
