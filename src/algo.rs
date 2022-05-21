@@ -897,6 +897,113 @@ impl Forest {
         }
     }
 
+    /// Distribute any remaining free space.
+    ///
+    /// # [9.5. Main-Axis Alignment](https://www.w3.org/TR/css-flexbox-1/#main-alignment)
+    ///
+    /// - [**Distribute any remaining free space**](https://www.w3.org/TR/css-flexbox-1/#algo-main-align). For each flex line:
+    ///
+    ///     1. If the remaining free space is positive and at least one main-axis margin on this line is `auto`, distribute the free space equally among these margins.
+    ///         Otherwise, set all `auto` margins to zero.
+    ///
+    ///     2. Align the items along the main-axis per `justify-content`.
+    fn distribute_remaining_free_space(
+        &mut self,
+        flex_lines: &mut [FlexLine],
+        node: NodeId,
+        constants: &AlgoConstants,
+    ) {
+        for line in flex_lines {
+            let used_space: f32 = line.items.iter().map(|child| child.outer_target_size.main(constants.dir)).sum();
+            let free_space = constants.inner_container_size.main(constants.dir) - used_space;
+            let mut num_auto_margins = 0;
+
+            for child in line.items.iter_mut() {
+                let child_style = &self.nodes[child.node].style;
+                if child_style.main_margin_start(constants.dir) == Dimension::Auto {
+                    num_auto_margins += 1;
+                }
+                if child_style.main_margin_end(constants.dir) == Dimension::Auto {
+                    num_auto_margins += 1;
+                }
+            }
+
+            if free_space > 0.0 && num_auto_margins > 0 {
+                let margin = free_space / num_auto_margins as f32;
+
+                for child in line.items.iter_mut() {
+                    let child_style = &self.nodes[child.node].style;
+                    if child_style.main_margin_start(constants.dir) == Dimension::Auto {
+                        if constants.is_row {
+                            child.margin.start = margin;
+                        } else {
+                            child.margin.top = margin;
+                        }
+                    }
+                    if child_style.main_margin_end(constants.dir) == Dimension::Auto {
+                        if constants.is_row {
+                            child.margin.end = margin;
+                        } else {
+                            child.margin.bottom = margin;
+                        }
+                    }
+                }
+            } else {
+                let num_items = line.items.len();
+                let layout_reverse = constants.dir.is_reverse();
+
+                let justify_item = |(i, child): (usize, &mut FlexItem)| {
+                    let is_first = i == 0;
+
+                    child.offset_main = match self.nodes[node].style.justify_content {
+                        JustifyContent::FlexStart => {
+                            if layout_reverse && is_first {
+                                free_space
+                            } else {
+                                0.0
+                            }
+                        }
+                        JustifyContent::Center => {
+                            if is_first {
+                                free_space / 2.0
+                            } else {
+                                0.0
+                            }
+                        }
+                        JustifyContent::FlexEnd => {
+                            if is_first && !layout_reverse {
+                                free_space
+                            } else {
+                                0.0
+                            }
+                        }
+                        JustifyContent::SpaceBetween => {
+                            if is_first {
+                                0.0
+                            } else {
+                                free_space / (num_items - 1) as f32
+                            }
+                        }
+                        JustifyContent::SpaceAround => {
+                            if is_first {
+                                (free_space / num_items as f32) / 2.0
+                            } else {
+                                free_space / num_items as f32
+                            }
+                        }
+                        JustifyContent::SpaceEvenly => free_space / (num_items + 1) as f32,
+                    };
+                };
+
+                if layout_reverse {
+                    line.items.iter_mut().rev().enumerate().for_each(justify_item);
+                } else {
+                    line.items.iter_mut().enumerate().for_each(justify_item);
+                }
+            }
+        }
+    }
+
     #[allow(clippy::cognitive_complexity)]
     fn compute_internal(
         &mut self,
@@ -1083,101 +1190,8 @@ impl Forest {
 
         // 9.5. Main-Axis Alignment
 
-        // 12. Distribute any remaining free space. For each flex line:
-        //     1. If the remaining free space is positive and at least one main-axis margin on this
-        //        line is auto, distribute the free space equally among these margins. Otherwise,
-        //        set all auto margins to zero.
-        //     2. Align the items along the main-axis per justify-content.
-
-        for line in &mut flex_lines {
-            let used_space: f32 = line.items.iter().map(|child| child.outer_target_size.main(constants.dir)).sum();
-            let free_space = constants.inner_container_size.main(constants.dir) - used_space;
-            let mut num_auto_margins = 0;
-
-            for child in line.items.iter_mut() {
-                let child_style = &self.nodes[child.node].style;
-                if child_style.main_margin_start(constants.dir) == Dimension::Auto {
-                    num_auto_margins += 1;
-                }
-                if child_style.main_margin_end(constants.dir) == Dimension::Auto {
-                    num_auto_margins += 1;
-                }
-            }
-
-            if free_space > 0.0 && num_auto_margins > 0 {
-                let margin = free_space / num_auto_margins as f32;
-
-                for child in line.items.iter_mut() {
-                    let child_style = &self.nodes[child.node].style;
-                    if child_style.main_margin_start(constants.dir) == Dimension::Auto {
-                        if constants.is_row {
-                            child.margin.start = margin;
-                        } else {
-                            child.margin.top = margin;
-                        }
-                    }
-                    if child_style.main_margin_end(constants.dir) == Dimension::Auto {
-                        if constants.is_row {
-                            child.margin.end = margin;
-                        } else {
-                            child.margin.bottom = margin;
-                        }
-                    }
-                }
-            } else {
-                let num_items = line.items.len();
-                let layout_reverse = constants.dir.is_reverse();
-
-                let justify_item = |(i, child): (usize, &mut FlexItem)| {
-                    let is_first = i == 0;
-
-                    child.offset_main = match self.nodes[node].style.justify_content {
-                        JustifyContent::FlexStart => {
-                            if layout_reverse && is_first {
-                                free_space
-                            } else {
-                                0.0
-                            }
-                        }
-                        JustifyContent::Center => {
-                            if is_first {
-                                free_space / 2.0
-                            } else {
-                                0.0
-                            }
-                        }
-                        JustifyContent::FlexEnd => {
-                            if is_first && !layout_reverse {
-                                free_space
-                            } else {
-                                0.0
-                            }
-                        }
-                        JustifyContent::SpaceBetween => {
-                            if is_first {
-                                0.0
-                            } else {
-                                free_space / (num_items - 1) as f32
-                            }
-                        }
-                        JustifyContent::SpaceAround => {
-                            if is_first {
-                                (free_space / num_items as f32) / 2.0
-                            } else {
-                                free_space / num_items as f32
-                            }
-                        }
-                        JustifyContent::SpaceEvenly => free_space / (num_items + 1) as f32,
-                    };
-                };
-
-                if layout_reverse {
-                    line.items.iter_mut().rev().enumerate().for_each(justify_item);
-                } else {
-                    line.items.iter_mut().enumerate().for_each(justify_item);
-                }
-            }
-        }
+        // 12. Distribute any remaining free space.
+        self.distribute_remaining_free_space(&mut flex_lines, node, &constants);
 
         // 9.6. Cross-Axis Alignment
 
