@@ -1004,6 +1004,101 @@ impl Forest {
         }
     }
 
+    /// Resolve cross-axis `auto` margins.
+    ///
+    /// # [9.6. Cross-Axis Alignment](https://www.w3.org/TR/css-flexbox-1/#cross-alignment)
+    ///
+    /// - [**Resolve cross-axis `auto` margins**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-margins).
+    ///     If a flex item has auto cross-axis margins:
+    ///     
+    ///     - If its outer cross size (treating those auto margins as zero) is less than the cross size of its flex line,
+    ///         distribute the difference in those sizes equally to the auto margins.
+    ///     
+    ///     - Otherwise, if the block-start or inline-start margin (whichever is in the cross axis) is auto, set it to zero.
+    ///         Set the opposite margin so that the outer cross size of the item equals the cross size of its flex line.
+    fn resolve_cross_axis_auto_margins(
+        &mut self,
+        flex_lines: &mut [FlexLine],
+        node: NodeId,
+        constants: &AlgoConstants,
+    ) {
+        for line in flex_lines {
+            let line_cross_size = line.cross_size;
+            let max_baseline: f32 = line.items.iter_mut().map(|child| child.baseline).fold(0.0, |acc, x| acc.max(x));
+
+            for child in line.items.iter_mut() {
+                let free_space = line_cross_size - child.outer_target_size.cross(constants.dir);
+                let child_style = &self.nodes[child.node].style;
+
+                if child_style.cross_margin_start(constants.dir) == Dimension::Auto
+                    && child_style.cross_margin_end(constants.dir) == Dimension::Auto
+                {
+                    if constants.is_row {
+                        child.margin.top = free_space / 2.0;
+                        child.margin.bottom = free_space / 2.0;
+                    } else {
+                        child.margin.start = free_space / 2.0;
+                        child.margin.end = free_space / 2.0;
+                    }
+                } else if child_style.cross_margin_start(constants.dir) == Dimension::Auto {
+                    if constants.is_row {
+                        child.margin.top = free_space;
+                    } else {
+                        child.margin.start = free_space;
+                    }
+                } else if child_style.cross_margin_end(constants.dir) == Dimension::Auto {
+                    if constants.is_row {
+                        child.margin.bottom = free_space;
+                    } else {
+                        child.margin.end = free_space;
+                    }
+                } else {
+                    // 14. Align all flex items along the cross-axis per align-self, if neither of the item’s
+                    //     cross-axis margins are auto.
+
+                    child.offset_cross = match child_style.align_self(&self.nodes[node].style) {
+                        AlignSelf::Auto => 0.0, // Should never happen
+                        AlignSelf::FlexStart => {
+                            if constants.is_wrap_reverse {
+                                free_space
+                            } else {
+                                0.0
+                            }
+                        }
+                        AlignSelf::FlexEnd => {
+                            if constants.is_wrap_reverse {
+                                0.0
+                            } else {
+                                free_space
+                            }
+                        }
+                        AlignSelf::Center => free_space / 2.0,
+                        AlignSelf::Baseline => {
+                            if constants.is_row {
+                                max_baseline - child.baseline
+                            } else {
+                                // baseline alignment only makes sense if the constants.direction is row
+                                // we treat it as flex-start alignment in columns.
+                                if constants.is_wrap_reverse {
+                                    free_space
+                                } else {
+                                    0.0
+                                }
+                            }
+                        }
+                        AlignSelf::Stretch => {
+                            if constants.is_wrap_reverse {
+                                free_space
+                            } else {
+                                0.0
+                            }
+                        }
+                    };
+                }
+            }
+        }
+    }
+
     #[allow(clippy::cognitive_complexity)]
     fn compute_internal(
         &mut self,
@@ -1195,89 +1290,8 @@ impl Forest {
 
         // 9.6. Cross-Axis Alignment
 
-        // 13. Resolve cross-axis auto margins. If a flex item has auto cross-axis margins:
-        //     - If its outer cross size (treating those auto margins as zero) is less than the
-        //       cross size of its flex line, distribute the difference in those sizes equally
-        //       to the auto margins.
-        //     - Otherwise, if the block-start or inline-start margin (whichever is in the cross axis)
-        //       is auto, set it to zero. Set the opposite margin so that the outer cross size of the
-        //       item equals the cross size of its flex line.
-
-        for line in &mut flex_lines {
-            let line_cross_size = line.cross_size;
-            let max_baseline: f32 = line.items.iter_mut().map(|child| child.baseline).fold(0.0, |acc, x| acc.max(x));
-
-            for child in line.items.iter_mut() {
-                let free_space = line_cross_size - child.outer_target_size.cross(constants.dir);
-                let child_style = &self.nodes[child.node].style;
-
-                if child_style.cross_margin_start(constants.dir) == Dimension::Auto
-                    && child_style.cross_margin_end(constants.dir) == Dimension::Auto
-                {
-                    if constants.is_row {
-                        child.margin.top = free_space / 2.0;
-                        child.margin.bottom = free_space / 2.0;
-                    } else {
-                        child.margin.start = free_space / 2.0;
-                        child.margin.end = free_space / 2.0;
-                    }
-                } else if child_style.cross_margin_start(constants.dir) == Dimension::Auto {
-                    if constants.is_row {
-                        child.margin.top = free_space;
-                    } else {
-                        child.margin.start = free_space;
-                    }
-                } else if child_style.cross_margin_end(constants.dir) == Dimension::Auto {
-                    if constants.is_row {
-                        child.margin.bottom = free_space;
-                    } else {
-                        child.margin.end = free_space;
-                    }
-                } else {
-                    // 14. Align all flex items along the cross-axis per align-self, if neither of the item’s
-                    //     cross-axis margins are auto.
-
-                    child.offset_cross = match child_style.align_self(&self.nodes[node].style) {
-                        AlignSelf::Auto => 0.0, // Should never happen
-                        AlignSelf::FlexStart => {
-                            if constants.is_wrap_reverse {
-                                free_space
-                            } else {
-                                0.0
-                            }
-                        }
-                        AlignSelf::FlexEnd => {
-                            if constants.is_wrap_reverse {
-                                0.0
-                            } else {
-                                free_space
-                            }
-                        }
-                        AlignSelf::Center => free_space / 2.0,
-                        AlignSelf::Baseline => {
-                            if constants.is_row {
-                                max_baseline - child.baseline
-                            } else {
-                                // baseline alignment only makes sense if the constants.direction is row
-                                // we treat it as flex-start alignment in columns.
-                                if constants.is_wrap_reverse {
-                                    free_space
-                                } else {
-                                    0.0
-                                }
-                            }
-                        }
-                        AlignSelf::Stretch => {
-                            if constants.is_wrap_reverse {
-                                free_space
-                            } else {
-                                0.0
-                            }
-                        }
-                    };
-                }
-            }
-        }
+        // 13. Resolve cross-axis auto margins (also includes 14).
+        self.resolve_cross_axis_auto_margins(&mut flex_lines, node, &constants);
 
         // 15. Determine the flex container’s used cross size:
         //     - If the cross size property is a definite size, use that, clamped by the used
