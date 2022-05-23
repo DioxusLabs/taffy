@@ -1,6 +1,0 @@
-framework module StretchKit {
-  umbrella header "StretchKit-umbrella.h"
-
-  export *
-  module * { export * }
-}

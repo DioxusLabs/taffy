@@ -1,8 +1,21 @@
 # Release Notes
 
+## 0.1.0
+
+### Changed
+
+- renamed crate from `stretch2` to `sprawl`
+
+### Removed
+
+- removed Javascript / Kotlin / Swift bindings
+  - the maintainer team lacks expertise to keep these working
+  - more serious refactors are planned, and this will be challenging to keep working through that process
+  - if you are interested in helping us maintain bindings to other languages, [get in touch](https://github.com/DioxusLabs/sprawl/discussions)!
+
 ## stretch2 0.4.3
 
-This is the final release of `stretch2`: migrate to the crate named `sprawl` for future fixes and features!
+This is the final release of `sprawl`: migrate to the crate named `sprawl` for future fixes and features!
 
 These notes describe the differences between this release and `stretch` 0.3.2, the abandoned crate from which this library was forked.
 

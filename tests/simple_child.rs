@@ -1,14 +1,13 @@
-use stretch::{geometry::Point, style::Dimension};
-use stretch2 as stretch;
+use sprawl::{geometry::Point, style::Dimension};
 
 #[test]
 fn simple_child() {
-    let mut stretch = stretch::Stretch::new();
+    let mut stretch = sprawl::Stretch::new();
     let node0_0 = stretch
         .new_node(
-            stretch::style::Style {
-                align_self: stretch::prelude::AlignSelf::Center,
-                size: stretch::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
+            sprawl::style::Style {
+                align_self: sprawl::prelude::AlignSelf::Center,
+                size: sprawl::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
                 ..Default::default()
             },
             &[],
@@ -16,8 +15,8 @@ fn simple_child() {
         .unwrap();
     let node0 = stretch
         .new_node(
-            stretch::style::Style {
-                size: stretch::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
+            sprawl::style::Style {
+                size: sprawl::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
                 ..Default::default()
             },
             &[node0_0],
@@ -25,9 +24,9 @@ fn simple_child() {
         .unwrap();
     let node1_0 = stretch
         .new_node(
-            stretch::style::Style {
-                align_self: stretch::prelude::AlignSelf::Center,
-                size: stretch::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
+            sprawl::style::Style {
+                align_self: sprawl::prelude::AlignSelf::Center,
+                size: sprawl::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
                 ..Default::default()
             },
             &[],
@@ -35,9 +34,9 @@ fn simple_child() {
         .unwrap();
     let node1_1 = stretch
         .new_node(
-            stretch::style::Style {
-                align_self: stretch::prelude::AlignSelf::Center,
-                size: stretch::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
+            sprawl::style::Style {
+                align_self: sprawl::prelude::AlignSelf::Center,
+                size: sprawl::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
                 ..Default::default()
             },
             &[],
@@ -45,8 +44,8 @@ fn simple_child() {
         .unwrap();
     let node1 = stretch
         .new_node(
-            stretch::style::Style {
-                size: stretch::geometry::Size { width: Dimension::Undefined, height: Dimension::Undefined },
+            sprawl::style::Style {
+                size: sprawl::geometry::Size { width: Dimension::Undefined, height: Dimension::Undefined },
                 ..Default::default()
             },
             &[node1_0, node1_1],
@@ -54,8 +53,8 @@ fn simple_child() {
         .unwrap();
     let node = stretch
         .new_node(
-            stretch::style::Style {
-                size: stretch::geometry::Size { width: Dimension::Percent(100.0), height: Dimension::Percent(100.0) },
+            sprawl::style::Style {
+                size: sprawl::geometry::Size { width: Dimension::Percent(100.0), height: Dimension::Percent(100.0) },
                 ..Default::default()
             },
             &[node0, node1],
@@ -64,9 +63,9 @@ fn simple_child() {
     stretch
         .compute_layout(
             node,
-            stretch::geometry::Size {
-                width: stretch::prelude::Number::Defined(100f32),
-                height: stretch::prelude::Number::Defined(100f32),
+            sprawl::geometry::Size {
+                width: sprawl::prelude::Number::Defined(100f32),
+                height: sprawl::prelude::Number::Defined(100f32),
             },
         )
         .unwrap();

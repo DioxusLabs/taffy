@@ -6,13 +6,13 @@ labels: bug
 assignees: ''
 ---
 
-## stretch2 version
+## `sprawl` version
 
 The release number or commit hash of the version you're using.
 
 ## Platform
 
-What platform are you using stretch2 on? e.g. Rust, Andriod, IOS, JavaScript/TypeScript
+What platform are you using `sprawl` on? e.g. Rust, Andriod, IOS, JavaScript/TypeScript
 
 ## What you did
 
