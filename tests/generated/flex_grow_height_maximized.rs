@@ -1,11 +1,11 @@
 #[test]
 fn flex_grow_height_maximized() {
-    let mut stretch = stretch2::Stretch::new();
+    let mut stretch = sprawl::Stretch::new();
     let node00 = stretch
         .new_node(
-            stretch2::style::Style {
+            sprawl::style::Style {
                 flex_grow: 1f32,
-                flex_basis: stretch2::style::Dimension::Points(200f32),
+                flex_basis: sprawl::style::Dimension::Points(200f32),
                 ..Default::default()
             },
             &[],
@@ -13,11 +13,8 @@ fn flex_grow_height_maximized() {
         .unwrap();
     let node01 = stretch
         .new_node(
-            stretch2::style::Style {
-                size: stretch2::geometry::Size {
-                    height: stretch2::style::Dimension::Points(100f32),
-                    ..Default::default()
-                },
+            sprawl::style::Style {
+                size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(100f32), ..Default::default() },
                 ..Default::default()
             },
             &[],
@@ -25,15 +22,15 @@ fn flex_grow_height_maximized() {
         .unwrap();
     let node0 = stretch
         .new_node(
-            stretch2::style::Style {
-                flex_direction: stretch2::style::FlexDirection::Column,
+            sprawl::style::Style {
+                flex_direction: sprawl::style::FlexDirection::Column,
                 flex_grow: 1f32,
-                min_size: stretch2::geometry::Size {
-                    height: stretch2::style::Dimension::Points(100f32),
+                min_size: sprawl::geometry::Size {
+                    height: sprawl::style::Dimension::Points(100f32),
                     ..Default::default()
                 },
-                max_size: stretch2::geometry::Size {
-                    height: stretch2::style::Dimension::Points(500f32),
+                max_size: sprawl::geometry::Size {
+                    height: sprawl::style::Dimension::Points(500f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -43,11 +40,11 @@ fn flex_grow_height_maximized() {
         .unwrap();
     let node = stretch
         .new_node(
-            stretch2::style::Style {
-                flex_direction: stretch2::style::FlexDirection::Column,
-                size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Points(100f32),
-                    height: stretch2::style::Dimension::Points(500f32),
+            sprawl::style::Style {
+                flex_direction: sprawl::style::FlexDirection::Column,
+                size: sprawl::geometry::Size {
+                    width: sprawl::style::Dimension::Points(100f32),
+                    height: sprawl::style::Dimension::Points(500f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -55,7 +52,7 @@ fn flex_grow_height_maximized() {
             &[node0],
         )
         .unwrap();
-    stretch.compute_layout(node, stretch2::geometry::Size::undefined()).unwrap();
+    stretch.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
     assert_eq!(stretch.layout(node).unwrap().size.width, 100f32);
     assert_eq!(stretch.layout(node).unwrap().size.height, 500f32);
     assert_eq!(stretch.layout(node).unwrap().location.x, 0f32);

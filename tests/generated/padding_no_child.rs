@@ -1,14 +1,14 @@
 #[test]
 fn padding_no_child() {
-    let mut stretch = stretch2::Stretch::new();
+    let mut stretch = sprawl::Stretch::new();
     let node = stretch
         .new_node(
-            stretch2::style::Style {
-                padding: stretch2::geometry::Rect {
-                    start: stretch2::style::Dimension::Points(10f32),
-                    end: stretch2::style::Dimension::Points(10f32),
-                    top: stretch2::style::Dimension::Points(10f32),
-                    bottom: stretch2::style::Dimension::Points(10f32),
+            sprawl::style::Style {
+                padding: sprawl::geometry::Rect {
+                    start: sprawl::style::Dimension::Points(10f32),
+                    end: sprawl::style::Dimension::Points(10f32),
+                    top: sprawl::style::Dimension::Points(10f32),
+                    bottom: sprawl::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -16,7 +16,7 @@ fn padding_no_child() {
             &[],
         )
         .unwrap();
-    stretch.compute_layout(node, stretch2::geometry::Size::undefined()).unwrap();
+    stretch.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
     assert_eq!(stretch.layout(node).unwrap().size.width, 20f32);
     assert_eq!(stretch.layout(node).unwrap().size.height, 20f32);
     assert_eq!(stretch.layout(node).unwrap().location.x, 0f32);

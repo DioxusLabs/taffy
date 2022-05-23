@@ -1,11 +1,11 @@
 pub fn compute() {
-    let mut stretch = stretch2::Stretch::new();
+    let mut stretch = sprawl::Stretch::new();
     let node0 = stretch
         .new_node(
-            stretch2::style::Style {
+            sprawl::style::Style {
                 flex_grow: 1f32,
                 flex_shrink: 1f32,
-                flex_basis: stretch2::style::Dimension::Percent(0f32),
+                flex_basis: sprawl::style::Dimension::Percent(0f32),
                 ..Default::default()
             },
             &[],
@@ -13,14 +13,11 @@ pub fn compute() {
         .unwrap();
     let node10 = stretch
         .new_node(
-            stretch2::style::Style {
+            sprawl::style::Style {
                 flex_grow: 1f32,
                 flex_shrink: 1f32,
-                flex_basis: stretch2::style::Dimension::Percent(0f32),
-                size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Points(20f32),
-                    ..Default::default()
-                },
+                flex_basis: sprawl::style::Dimension::Percent(0f32),
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(20f32), ..Default::default() },
                 ..Default::default()
             },
             &[],
@@ -28,12 +25,12 @@ pub fn compute() {
         .unwrap();
     let node1 = stretch
         .new_node(
-            stretch2::style::Style {
-                display: stretch2::style::Display::None,
-                flex_direction: stretch2::style::FlexDirection::Column,
+            sprawl::style::Style {
+                display: sprawl::style::Display::None,
+                flex_direction: sprawl::style::FlexDirection::Column,
                 flex_grow: 1f32,
                 flex_shrink: 1f32,
-                flex_basis: stretch2::style::Dimension::Percent(0f32),
+                flex_basis: sprawl::style::Dimension::Percent(0f32),
                 ..Default::default()
             },
             &[node10],
@@ -41,10 +38,10 @@ pub fn compute() {
         .unwrap();
     let node2 = stretch
         .new_node(
-            stretch2::style::Style {
+            sprawl::style::Style {
                 flex_grow: 1f32,
                 flex_shrink: 1f32,
-                flex_basis: stretch2::style::Dimension::Percent(0f32),
+                flex_basis: sprawl::style::Dimension::Percent(0f32),
                 ..Default::default()
             },
             &[],
@@ -52,10 +49,10 @@ pub fn compute() {
         .unwrap();
     let node = stretch
         .new_node(
-            stretch2::style::Style {
-                size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Points(100f32),
-                    height: stretch2::style::Dimension::Points(100f32),
+            sprawl::style::Style {
+                size: sprawl::geometry::Size {
+                    width: sprawl::style::Dimension::Points(100f32),
+                    height: sprawl::style::Dimension::Points(100f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -63,5 +60,5 @@ pub fn compute() {
             &[node0, node1, node2],
         )
         .unwrap();
-    stretch.compute_layout(node, stretch2::geometry::Size::undefined()).unwrap();
+    stretch.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
 }

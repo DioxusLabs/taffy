@@ -1,12 +1,12 @@
 #[test]
 fn align_baseline_child_multiline() {
-    let mut stretch = stretch2::Stretch::new();
+    let mut stretch = sprawl::Stretch::new();
     let node0 = stretch
         .new_node(
-            stretch2::style::Style {
-                size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Points(50f32),
-                    height: stretch2::style::Dimension::Points(60f32),
+            sprawl::style::Style {
+                size: sprawl::geometry::Size {
+                    width: sprawl::style::Dimension::Points(50f32),
+                    height: sprawl::style::Dimension::Points(60f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -16,10 +16,10 @@ fn align_baseline_child_multiline() {
         .unwrap();
     let node10 = stretch
         .new_node(
-            stretch2::style::Style {
-                size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Points(25f32),
-                    height: stretch2::style::Dimension::Points(20f32),
+            sprawl::style::Style {
+                size: sprawl::geometry::Size {
+                    width: sprawl::style::Dimension::Points(25f32),
+                    height: sprawl::style::Dimension::Points(20f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -29,10 +29,10 @@ fn align_baseline_child_multiline() {
         .unwrap();
     let node11 = stretch
         .new_node(
-            stretch2::style::Style {
-                size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Points(25f32),
-                    height: stretch2::style::Dimension::Points(10f32),
+            sprawl::style::Style {
+                size: sprawl::geometry::Size {
+                    width: sprawl::style::Dimension::Points(25f32),
+                    height: sprawl::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -42,10 +42,10 @@ fn align_baseline_child_multiline() {
         .unwrap();
     let node12 = stretch
         .new_node(
-            stretch2::style::Style {
-                size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Points(25f32),
-                    height: stretch2::style::Dimension::Points(20f32),
+            sprawl::style::Style {
+                size: sprawl::geometry::Size {
+                    width: sprawl::style::Dimension::Points(25f32),
+                    height: sprawl::style::Dimension::Points(20f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -55,10 +55,10 @@ fn align_baseline_child_multiline() {
         .unwrap();
     let node13 = stretch
         .new_node(
-            stretch2::style::Style {
-                size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Points(25f32),
-                    height: stretch2::style::Dimension::Points(10f32),
+            sprawl::style::Style {
+                size: sprawl::geometry::Size {
+                    width: sprawl::style::Dimension::Points(25f32),
+                    height: sprawl::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -68,12 +68,9 @@ fn align_baseline_child_multiline() {
         .unwrap();
     let node1 = stretch
         .new_node(
-            stretch2::style::Style {
-                flex_wrap: stretch2::style::FlexWrap::Wrap,
-                size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Points(50f32),
-                    ..Default::default()
-                },
+            sprawl::style::Style {
+                flex_wrap: sprawl::style::FlexWrap::Wrap,
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(50f32), ..Default::default() },
                 ..Default::default()
             },
             &[node10, node11, node12, node13],
@@ -81,18 +78,15 @@ fn align_baseline_child_multiline() {
         .unwrap();
     let node = stretch
         .new_node(
-            stretch2::style::Style {
-                align_items: stretch2::style::AlignItems::Baseline,
-                size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Points(100f32),
-                    ..Default::default()
-                },
+            sprawl::style::Style {
+                align_items: sprawl::style::AlignItems::Baseline,
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(100f32), ..Default::default() },
                 ..Default::default()
             },
             &[node0, node1],
         )
         .unwrap();
-    stretch.compute_layout(node, stretch2::geometry::Size::undefined()).unwrap();
+    stretch.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
     assert_eq!(stretch.layout(node).unwrap().size.width, 100f32);
     assert_eq!(stretch.layout(node).unwrap().size.height, 80f32);
     assert_eq!(stretch.layout(node).unwrap().location.x, 0f32);

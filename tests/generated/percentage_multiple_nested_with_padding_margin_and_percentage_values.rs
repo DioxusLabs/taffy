@@ -1,25 +1,25 @@
 #[test]
 fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
-    let mut stretch = stretch2::Stretch::new();
+    let mut stretch = sprawl::Stretch::new();
     let node000 = stretch
         .new_node(
-            stretch2::style::Style {
-                size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Percent(0.45f32),
+            sprawl::style::Style {
+                size: sprawl::geometry::Size {
+                    width: sprawl::style::Dimension::Percent(0.45f32),
                     ..Default::default()
                 },
-                margin: stretch2::geometry::Rect {
-                    start: stretch2::style::Dimension::Percent(0.05f32),
-                    end: stretch2::style::Dimension::Percent(0.05f32),
-                    top: stretch2::style::Dimension::Percent(0.05f32),
-                    bottom: stretch2::style::Dimension::Percent(0.05f32),
+                margin: sprawl::geometry::Rect {
+                    start: sprawl::style::Dimension::Percent(0.05f32),
+                    end: sprawl::style::Dimension::Percent(0.05f32),
+                    top: sprawl::style::Dimension::Percent(0.05f32),
+                    bottom: sprawl::style::Dimension::Percent(0.05f32),
                     ..Default::default()
                 },
-                padding: stretch2::geometry::Rect {
-                    start: stretch2::style::Dimension::Points(3f32),
-                    end: stretch2::style::Dimension::Points(3f32),
-                    top: stretch2::style::Dimension::Points(3f32),
-                    bottom: stretch2::style::Dimension::Points(3f32),
+                padding: sprawl::geometry::Rect {
+                    start: sprawl::style::Dimension::Points(3f32),
+                    end: sprawl::style::Dimension::Points(3f32),
+                    top: sprawl::style::Dimension::Points(3f32),
+                    bottom: sprawl::style::Dimension::Points(3f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -29,24 +29,21 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
         .unwrap();
     let node00 = stretch
         .new_node(
-            stretch2::style::Style {
-                flex_direction: stretch2::style::FlexDirection::Column,
-                size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Percent(0.5f32),
+            sprawl::style::Style {
+                flex_direction: sprawl::style::FlexDirection::Column,
+                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Percent(0.5f32), ..Default::default() },
+                margin: sprawl::geometry::Rect {
+                    start: sprawl::style::Dimension::Points(5f32),
+                    end: sprawl::style::Dimension::Points(5f32),
+                    top: sprawl::style::Dimension::Points(5f32),
+                    bottom: sprawl::style::Dimension::Points(5f32),
                     ..Default::default()
                 },
-                margin: stretch2::geometry::Rect {
-                    start: stretch2::style::Dimension::Points(5f32),
-                    end: stretch2::style::Dimension::Points(5f32),
-                    top: stretch2::style::Dimension::Points(5f32),
-                    bottom: stretch2::style::Dimension::Points(5f32),
-                    ..Default::default()
-                },
-                padding: stretch2::geometry::Rect {
-                    start: stretch2::style::Dimension::Percent(0.03f32),
-                    end: stretch2::style::Dimension::Percent(0.03f32),
-                    top: stretch2::style::Dimension::Percent(0.03f32),
-                    bottom: stretch2::style::Dimension::Percent(0.03f32),
+                padding: sprawl::geometry::Rect {
+                    start: sprawl::style::Dimension::Percent(0.03f32),
+                    end: sprawl::style::Dimension::Percent(0.03f32),
+                    top: sprawl::style::Dimension::Percent(0.03f32),
+                    bottom: sprawl::style::Dimension::Percent(0.03f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -56,26 +53,26 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
         .unwrap();
     let node0 = stretch
         .new_node(
-            stretch2::style::Style {
-                flex_direction: stretch2::style::FlexDirection::Column,
+            sprawl::style::Style {
+                flex_direction: sprawl::style::FlexDirection::Column,
                 flex_grow: 1f32,
-                flex_basis: stretch2::style::Dimension::Percent(0.1f32),
-                min_size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Percent(0.6f32),
+                flex_basis: sprawl::style::Dimension::Percent(0.1f32),
+                min_size: sprawl::geometry::Size {
+                    width: sprawl::style::Dimension::Percent(0.6f32),
                     ..Default::default()
                 },
-                margin: stretch2::geometry::Rect {
-                    start: stretch2::style::Dimension::Points(5f32),
-                    end: stretch2::style::Dimension::Points(5f32),
-                    top: stretch2::style::Dimension::Points(5f32),
-                    bottom: stretch2::style::Dimension::Points(5f32),
+                margin: sprawl::geometry::Rect {
+                    start: sprawl::style::Dimension::Points(5f32),
+                    end: sprawl::style::Dimension::Points(5f32),
+                    top: sprawl::style::Dimension::Points(5f32),
+                    bottom: sprawl::style::Dimension::Points(5f32),
                     ..Default::default()
                 },
-                padding: stretch2::geometry::Rect {
-                    start: stretch2::style::Dimension::Points(3f32),
-                    end: stretch2::style::Dimension::Points(3f32),
-                    top: stretch2::style::Dimension::Points(3f32),
-                    bottom: stretch2::style::Dimension::Points(3f32),
+                padding: sprawl::geometry::Rect {
+                    start: sprawl::style::Dimension::Points(3f32),
+                    end: sprawl::style::Dimension::Points(3f32),
+                    top: sprawl::style::Dimension::Points(3f32),
+                    bottom: sprawl::style::Dimension::Points(3f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -85,11 +82,11 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
         .unwrap();
     let node1 = stretch
         .new_node(
-            stretch2::style::Style {
+            sprawl::style::Style {
                 flex_grow: 4f32,
-                flex_basis: stretch2::style::Dimension::Percent(0.15f32),
-                min_size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Percent(0.2f32),
+                flex_basis: sprawl::style::Dimension::Percent(0.15f32),
+                min_size: sprawl::geometry::Size {
+                    width: sprawl::style::Dimension::Percent(0.2f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -99,11 +96,11 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
         .unwrap();
     let node = stretch
         .new_node(
-            stretch2::style::Style {
-                flex_direction: stretch2::style::FlexDirection::Column,
-                size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Points(200f32),
-                    height: stretch2::style::Dimension::Points(200f32),
+            sprawl::style::Style {
+                flex_direction: sprawl::style::FlexDirection::Column,
+                size: sprawl::geometry::Size {
+                    width: sprawl::style::Dimension::Points(200f32),
+                    height: sprawl::style::Dimension::Points(200f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -111,7 +108,7 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
             &[node0, node1],
         )
         .unwrap();
-    stretch.compute_layout(node, stretch2::geometry::Size::undefined()).unwrap();
+    stretch.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
     assert_eq!(stretch.layout(node).unwrap().size.width, 200f32);
     assert_eq!(stretch.layout(node).unwrap().size.height, 200f32);
     assert_eq!(stretch.layout(node).unwrap().location.x, 0f32);
