@@ -7,7 +7,6 @@ use core::sync::atomic;
 pub(crate) type NodeId = usize;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-#[cfg_attr(not(any(feature = "std", feature = "alloc")), derive(hash32_derive::Hash32))]
 pub(crate) struct Id(usize);
 
 pub(crate) struct Allocator {

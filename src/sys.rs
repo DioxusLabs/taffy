@@ -68,7 +68,7 @@ mod core {
 
     pub fn new_map_with_capacity<K, V>(_capacity: usize) -> Map<K, V>
     where
-        K: Eq + ::hash32::Hash,
+        K: Eq + core::hash::Hash,
     {
         Map::new()
     }
