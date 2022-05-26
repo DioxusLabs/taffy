@@ -141,6 +141,7 @@ impl Forest {
     }
 
     /// Try to get the computation result from the cache.
+    #[inline]
     fn compute_from_cache(
         &mut self,
         node: NodeId,
@@ -177,6 +178,7 @@ impl Forest {
     }
 
     /// Compute constants that can be reused during the flexbox algorithm.
+    #[inline]
     fn compute_constants(&self, node: NodeId, node_size: Size<Number>, parent_size: Size<Number>) -> AlgoConstants {
         let dir = self.nodes[node].style.flex_direction;
         let is_row = dir.is_row();
@@ -221,6 +223,7 @@ impl Forest {
     /// # [9.1. Initial Setup](https://www.w3.org/TR/css-flexbox-1/#box-manip)
     ///
     /// - [**Generate anonymous flex items**](https://www.w3.org/TR/css-flexbox-1/#algo-anon-box) as described in [§4 Flex Items](https://www.w3.org/TR/css-flexbox-1/#flex-items).
+    #[inline]
     fn generate_anonymous_flex_items(&self, node: NodeId, constants: &AlgoConstants) -> sys::Vec<FlexItem> {
         self.children[node]
             .iter()
@@ -265,6 +268,7 @@ impl Forest {
     /// if that dimension of the flex container is being sized under a min or max-content constraint, the available space in that dimension is that constraint;
     /// otherwise, subtract the flex container’s margin, border, and padding from the space available to the flex container in that dimension and use that value.
     /// **This might result in an infinite value**.
+    #[inline]
     fn determine_available_space(
         node_size: Size<Number>,
         parent_size: Size<Number>,
@@ -305,6 +309,7 @@ impl Forest {
     ///     When determining the flex base size, the item’s min and max main sizes are ignored (no clamping occurs).
     ///     Furthermore, the sizing calculations that floor the content box size at zero when applying box-sizing are also ignored.
     ///     (For example, an item with a specified size of zero, positive padding, and box-sizing: border-box will have an outer flex base size of zero—and hence a negative inner flex base size.)
+    #[inline]
     fn determine_flex_base_size(
         &mut self,
         node: NodeId,
@@ -445,6 +450,7 @@ impl Forest {
     ///         Repeat until all flex items have been collected into flex lines.
     ///         
     ///         **Note that the "collect as many" line will collect zero-sized flex items onto the end of the previous line even if the last non-zero item exactly "filled up" the line**.
+    #[inline]
     fn collect_flex_lines<'a>(
         &self,
         node: NodeId,
@@ -487,6 +493,7 @@ impl Forest {
     /// Resolve the flexible lengths of the items within a flex line.
     ///
     /// # [9.7. Resolving Flexible Lengths](https://www.w3.org/TR/css-flexbox-1/#resolve-flexible-lengths)
+    #[inline]
     fn resolve_flexible_lengths(
         &mut self,
         line: &mut FlexLine,
@@ -715,6 +722,7 @@ impl Forest {
     ///
     /// - [**Determine the hypothetical cross size of each item**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-item)
     ///     by performing layout with the used main size and the available space, treating auto as fit-content.
+    #[inline]
     fn determine_hypothetical_cross_size(
         &mut self,
         line: &mut FlexLine,
@@ -765,6 +773,7 @@ impl Forest {
     }
 
     /// Calculate the base lines of the children.
+    #[inline]
     fn calculate_children_base_lines(
         &mut self,
         node: NodeId,
@@ -842,6 +851,7 @@ impl Forest {
     ///         
     ///         If the flex container is single-line, then clamp the line’s cross-size to be within the container’s computed min and max cross sizes.
     ///         **Note that if CSS 2.1’s definition of min/max-width/height applied more generally, this behavior would fall out automatically**.
+    #[inline]
     fn calculate_cross_size(
         &mut self,
         flex_lines: &mut [FlexLine],
@@ -894,6 +904,7 @@ impl Forest {
     /// - [**Handle 'align-content: stretch'**](https://www.w3.org/TR/css-flexbox-1/#algo-line-stretch). If the flex container has a definite cross size, align-content is stretch,
     ///     and the sum of the flex lines' cross sizes is less than the flex container’s inner cross size,
     ///     increase the cross size of each flex line by equal amounts such that the sum of their cross sizes exactly equals the flex container’s inner cross size.
+    #[inline]
     fn handle_align_content_stretch(
         &mut self,
         flex_lines: &mut [FlexLine],
@@ -926,6 +937,7 @@ impl Forest {
     ///     If the flex item has align-self: stretch, redo layout for its contents, treating this used size as its definite cross size so that percentage-sized children can be resolved.
     ///
     ///     **Note that this step does not affect the main size of the flex item, even if it has an intrinsic aspect ratio**.
+    #[inline]
     fn determine_used_cross_size(&mut self, flex_lines: &mut [FlexLine], node: NodeId, constants: &AlgoConstants) {
         for line in flex_lines {
             let line_cross_size = line.cross_size;
@@ -965,6 +977,7 @@ impl Forest {
     ///         Otherwise, set all `auto` margins to zero.
     ///
     ///     2. Align the items along the main-axis per `justify-content`.
+    #[inline]
     fn distribute_remaining_free_space(
         &mut self,
         flex_lines: &mut [FlexLine],
@@ -1074,6 +1087,7 @@ impl Forest {
     ///     
     ///     - Otherwise, if the block-start or inline-start margin (whichever is in the cross axis) is auto, set it to zero.
     ///         Set the opposite margin so that the outer cross size of the item equals the cross size of its flex line.
+    #[inline]
     fn resolve_cross_axis_auto_margins(
         &mut self,
         flex_lines: &mut [FlexLine],
@@ -1131,6 +1145,7 @@ impl Forest {
     ///
     /// - [**Align all flex items along the cross-axis**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-align) per `align-self`,
     ///     if neither of the item's cross-axis margins are `auto`.
+    #[inline]
     fn align_flex_items_along_cross_axis(
         &self,
         node: NodeId,
@@ -1189,6 +1204,7 @@ impl Forest {
     ///     - If the cross size property is a definite size, use that, clamped by the used min and max cross sizes of the flex container.
     ///
     ///     - Otherwise, use the sum of the flex lines' cross sizes, clamped by the used min and max cross sizes of the flex container.
+    #[inline]
     fn determine_container_cross_size(
         flex_lines: &mut [FlexLine],
         node_size: Size<Number>,
@@ -1214,6 +1230,7 @@ impl Forest {
     /// # [9.6. Cross-Axis Alignment](https://www.w3.org/TR/css-flexbox-1/#cross-alignment)
     ///
     /// - [**Align all flex lines**](https://www.w3.org/TR/css-flexbox-1/#algo-line-align) per `align-content`.
+    #[inline]
     fn align_flex_lines_per_align_content(
         &self,
         flex_lines: &mut [FlexLine],
@@ -1275,6 +1292,7 @@ impl Forest {
     }
 
     /// Do a final layout pass and collect the resulting layouts.
+    #[inline]
     fn final_layout_pass(&mut self, node: NodeId, flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
         let mut total_offset_cross = constants.padding_border.cross_start(constants.dir);
 
@@ -1334,6 +1352,7 @@ impl Forest {
     }
 
     /// Perform absolute layout on all absolutely positioned children.
+    #[inline]
     fn perform_absolute_layout_on_absolute_children(&mut self, node: NodeId, constants: &AlgoConstants) {
         // TODO: remove number of Vec<_> generated
         let candidates = self.children[node]
