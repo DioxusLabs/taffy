@@ -1275,6 +1275,152 @@ impl Forest {
         }
     }
 
+    /// Perform absolute layout on all absolutely positioned children.
+    fn perform_absolute_layout_on_absolute_children(&mut self, node: NodeId, constants: &AlgoConstants) {
+        // TODO: remove number of Vec<_> generated
+        let candidates = self.children[node]
+            .iter()
+            .cloned()
+            .enumerate()
+            .filter(|(_, child)| self.nodes[*child].style.position_type == PositionType::Absolute)
+            .collect::<sys::Vec<_>>();
+
+        for (order, child) in candidates {
+            let container_width = constants.container_size.width.into();
+            let container_height = constants.container_size.height.into();
+
+            let child_style = self.nodes[child].style;
+
+            let start =
+                child_style.position.start.resolve(container_width) + child_style.margin.start.resolve(container_width);
+            let end =
+                child_style.position.end.resolve(container_width) + child_style.margin.end.resolve(container_width);
+            let top =
+                child_style.position.top.resolve(container_height) + child_style.margin.top.resolve(container_height);
+            let bottom = child_style.position.bottom.resolve(container_height)
+                + child_style.margin.bottom.resolve(container_height);
+
+            let (start_main, end_main) = if constants.is_row { (start, end) } else { (top, bottom) };
+            let (start_cross, end_cross) = if constants.is_row { (top, bottom) } else { (start, end) };
+
+            let width = child_style
+                .size
+                .width
+                .resolve(container_width)
+                .maybe_max(child_style.min_size.width.resolve(container_width))
+                .maybe_min(child_style.max_size.width.resolve(container_width))
+                .or_else(if start.is_defined() && end.is_defined() {
+                    container_width - start - end
+                } else {
+                    Undefined
+                });
+
+            let height = child_style
+                .size
+                .height
+                .resolve(container_height)
+                .maybe_max(child_style.min_size.height.resolve(container_height))
+                .maybe_min(child_style.max_size.height.resolve(container_height))
+                .or_else(if top.is_defined() && bottom.is_defined() {
+                    container_height - top - bottom
+                } else {
+                    Undefined
+                });
+
+            let result = self.compute_internal(
+                child,
+                Size { width, height },
+                Size { width: container_width, height: container_height },
+                true,
+                false,
+            );
+
+            let free_main_space = constants.container_size.main(constants.dir)
+                - result
+                    .size
+                    .main(constants.dir)
+                    .maybe_max(
+                        child_style.min_main_size(constants.dir).resolve(constants.node_inner_size.main(constants.dir)),
+                    )
+                    .maybe_min(
+                        child_style.max_main_size(constants.dir).resolve(constants.node_inner_size.main(constants.dir)),
+                    );
+
+            let free_cross_space = constants.container_size.cross(constants.dir)
+                - result
+                    .size
+                    .cross(constants.dir)
+                    .maybe_max(
+                        child_style
+                            .min_cross_size(constants.dir)
+                            .resolve(constants.node_inner_size.cross(constants.dir)),
+                    )
+                    .maybe_min(
+                        child_style
+                            .max_cross_size(constants.dir)
+                            .resolve(constants.node_inner_size.cross(constants.dir)),
+                    );
+
+            let offset_main = if start_main.is_defined() {
+                start_main.or_else(0.0) + constants.border.main_start(constants.dir)
+            } else if end_main.is_defined() {
+                free_main_space - end_main.or_else(0.0) - constants.border.main_end(constants.dir)
+            } else {
+                match self.nodes[node].style.justify_content {
+                    JustifyContent::SpaceBetween | JustifyContent::FlexStart => {
+                        constants.padding_border.main_start(constants.dir)
+                    }
+                    JustifyContent::FlexEnd => free_main_space - constants.padding_border.main_end(constants.dir),
+                    JustifyContent::SpaceEvenly | JustifyContent::SpaceAround | JustifyContent::Center => {
+                        free_main_space / 2.0
+                    }
+                }
+            };
+
+            let offset_cross = if start_cross.is_defined() {
+                start_cross.or_else(0.0) + constants.border.cross_start(constants.dir)
+            } else if end_cross.is_defined() {
+                free_cross_space - end_cross.or_else(0.0) - constants.border.cross_end(constants.dir)
+            } else {
+                match child_style.align_self(&self.nodes[node].style) {
+                    AlignSelf::Auto => 0.0, // Should never happen
+                    AlignSelf::FlexStart => {
+                        if constants.is_wrap_reverse {
+                            free_cross_space - constants.padding_border.cross_end(constants.dir)
+                        } else {
+                            constants.padding_border.cross_start(constants.dir)
+                        }
+                    }
+                    AlignSelf::FlexEnd => {
+                        if constants.is_wrap_reverse {
+                            constants.padding_border.cross_start(constants.dir)
+                        } else {
+                            free_cross_space - constants.padding_border.cross_end(constants.dir)
+                        }
+                    }
+                    AlignSelf::Center => free_cross_space / 2.0,
+                    AlignSelf::Baseline => free_cross_space / 2.0, // Treat as center for now until we have baseline support
+                    AlignSelf::Stretch => {
+                        if constants.is_wrap_reverse {
+                            free_cross_space - constants.padding_border.cross_end(constants.dir)
+                        } else {
+                            constants.padding_border.cross_start(constants.dir)
+                        }
+                    }
+                }
+            };
+
+            self.nodes[child].layout = result::Layout {
+                order: order as u32,
+                size: result.size,
+                location: Point {
+                    x: if constants.is_row { offset_main } else { offset_cross },
+                    y: if constants.is_column { offset_main } else { offset_cross },
+                },
+            };
+        }
+    }
+
     #[allow(clippy::cognitive_complexity)]
     fn compute_internal(
         &mut self,
@@ -1488,154 +1634,7 @@ impl Forest {
         self.final_layout_pass(node, &mut flex_lines, &constants);
 
         // Before returning we perform absolute layout on all absolutely positioned children
-        {
-            // TODO: remove number of Vec<_> generated
-            let candidates = self.children[node]
-                .iter()
-                .cloned()
-                .enumerate()
-                .filter(|(_, child)| self.nodes[*child].style.position_type == PositionType::Absolute)
-                .collect::<sys::Vec<_>>();
-
-            for (order, child) in candidates {
-                let container_width = constants.container_size.width.into();
-                let container_height = constants.container_size.height.into();
-
-                let child_style = self.nodes[child].style;
-
-                let start = child_style.position.start.resolve(container_width)
-                    + child_style.margin.start.resolve(container_width);
-                let end =
-                    child_style.position.end.resolve(container_width) + child_style.margin.end.resolve(container_width);
-                let top = child_style.position.top.resolve(container_height)
-                    + child_style.margin.top.resolve(container_height);
-                let bottom = child_style.position.bottom.resolve(container_height)
-                    + child_style.margin.bottom.resolve(container_height);
-
-                let (start_main, end_main) = if constants.is_row { (start, end) } else { (top, bottom) };
-                let (start_cross, end_cross) = if constants.is_row { (top, bottom) } else { (start, end) };
-
-                let width = child_style
-                    .size
-                    .width
-                    .resolve(container_width)
-                    .maybe_max(child_style.min_size.width.resolve(container_width))
-                    .maybe_min(child_style.max_size.width.resolve(container_width))
-                    .or_else(if start.is_defined() && end.is_defined() {
-                        container_width - start - end
-                    } else {
-                        Undefined
-                    });
-
-                let height = child_style
-                    .size
-                    .height
-                    .resolve(container_height)
-                    .maybe_max(child_style.min_size.height.resolve(container_height))
-                    .maybe_min(child_style.max_size.height.resolve(container_height))
-                    .or_else(if top.is_defined() && bottom.is_defined() {
-                        container_height - top - bottom
-                    } else {
-                        Undefined
-                    });
-
-                let result = self.compute_internal(
-                    child,
-                    Size { width, height },
-                    Size { width: container_width, height: container_height },
-                    true,
-                    false,
-                );
-
-                let free_main_space = constants.container_size.main(constants.dir)
-                    - result
-                        .size
-                        .main(constants.dir)
-                        .maybe_max(
-                            child_style
-                                .min_main_size(constants.dir)
-                                .resolve(constants.node_inner_size.main(constants.dir)),
-                        )
-                        .maybe_min(
-                            child_style
-                                .max_main_size(constants.dir)
-                                .resolve(constants.node_inner_size.main(constants.dir)),
-                        );
-
-                let free_cross_space = constants.container_size.cross(constants.dir)
-                    - result
-                        .size
-                        .cross(constants.dir)
-                        .maybe_max(
-                            child_style
-                                .min_cross_size(constants.dir)
-                                .resolve(constants.node_inner_size.cross(constants.dir)),
-                        )
-                        .maybe_min(
-                            child_style
-                                .max_cross_size(constants.dir)
-                                .resolve(constants.node_inner_size.cross(constants.dir)),
-                        );
-
-                let offset_main = if start_main.is_defined() {
-                    start_main.or_else(0.0) + constants.border.main_start(constants.dir)
-                } else if end_main.is_defined() {
-                    free_main_space - end_main.or_else(0.0) - constants.border.main_end(constants.dir)
-                } else {
-                    match self.nodes[node].style.justify_content {
-                        JustifyContent::SpaceBetween | JustifyContent::FlexStart => {
-                            constants.padding_border.main_start(constants.dir)
-                        }
-                        JustifyContent::FlexEnd => free_main_space - constants.padding_border.main_end(constants.dir),
-                        JustifyContent::SpaceEvenly | JustifyContent::SpaceAround | JustifyContent::Center => {
-                            free_main_space / 2.0
-                        }
-                    }
-                };
-
-                let offset_cross = if start_cross.is_defined() {
-                    start_cross.or_else(0.0) + constants.border.cross_start(constants.dir)
-                } else if end_cross.is_defined() {
-                    free_cross_space - end_cross.or_else(0.0) - constants.border.cross_end(constants.dir)
-                } else {
-                    match child_style.align_self(&self.nodes[node].style) {
-                        AlignSelf::Auto => 0.0, // Should never happen
-                        AlignSelf::FlexStart => {
-                            if constants.is_wrap_reverse {
-                                free_cross_space - constants.padding_border.cross_end(constants.dir)
-                            } else {
-                                constants.padding_border.cross_start(constants.dir)
-                            }
-                        }
-                        AlignSelf::FlexEnd => {
-                            if constants.is_wrap_reverse {
-                                constants.padding_border.cross_start(constants.dir)
-                            } else {
-                                free_cross_space - constants.padding_border.cross_end(constants.dir)
-                            }
-                        }
-                        AlignSelf::Center => free_cross_space / 2.0,
-                        AlignSelf::Baseline => free_cross_space / 2.0, // Treat as center for now until we have baseline support
-                        AlignSelf::Stretch => {
-                            if constants.is_wrap_reverse {
-                                free_cross_space - constants.padding_border.cross_end(constants.dir)
-                            } else {
-                                constants.padding_border.cross_start(constants.dir)
-                            }
-                        }
-                    }
-                };
-
-                self.nodes[child].layout = result::Layout {
-                    order: order as u32,
-                    size: result.size,
-                    location: Point {
-                        x: if constants.is_row { offset_main } else { offset_cross },
-                        y: if constants.is_column { offset_main } else { offset_cross },
-                    },
-                };
-            }
-        }
+        self.perform_absolute_layout_on_absolute_children(node, &constants);
 
         fn hidden_layout(nodes: &mut [NodeData], children: &[sys::ChildrenVec<NodeId>], node: NodeId, order: u32) {
             nodes[node].layout = result::Layout { order, size: Size::zero(), location: Point::zero() };
