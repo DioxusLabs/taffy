@@ -764,6 +764,64 @@ impl Forest {
         }
     }
 
+    /// Calculate the base lines of the children.
+    fn calculate_children_base_lines(
+        &mut self,
+        node: NodeId,
+        node_size: Size<Number>,
+        flex_lines: &mut [FlexLine],
+        constants: &AlgoConstants,
+    ) {
+        fn calc_baseline(db: &Forest, node: NodeId, layout: &result::Layout) -> f32 {
+            if db.children[node].is_empty() {
+                layout.size.height
+            } else {
+                let child = db.children[node][0];
+                calc_baseline(db, child, &db.nodes[child].layout)
+            }
+        }
+
+        for line in flex_lines {
+            for child in line.items.iter_mut() {
+                let result = self.compute_internal(
+                    child.node,
+                    Size {
+                        width: if constants.is_row {
+                            child.target_size.width.into()
+                        } else {
+                            child.hypothetical_inner_size.width.into()
+                        },
+                        height: if constants.is_row {
+                            child.hypothetical_inner_size.height.into()
+                        } else {
+                            child.target_size.height.into()
+                        },
+                    },
+                    Size {
+                        width: if constants.is_row { constants.container_size.width.into() } else { node_size.width },
+                        height: if constants.is_row {
+                            node_size.height
+                        } else {
+                            constants.container_size.height.into()
+                        },
+                    },
+                    true,
+                    false,
+                );
+
+                child.baseline = calc_baseline(
+                    self,
+                    child.node,
+                    &result::Layout {
+                        order: self.children[node].iter().position(|n| *n == child.node).unwrap() as u32,
+                        size: result.size,
+                        location: Point::zero(),
+                    },
+                );
+            }
+        }
+    }
+
     /// Calculate the cross size of each flex line.
     ///
     /// # [9.4. Cross Size Determination](https://www.w3.org/TR/css-flexbox-1/#cross-sizing)
@@ -1525,60 +1583,8 @@ impl Forest {
 
         // TODO - probably should move this somewhere else as it doesn't make a ton of sense here but we need it below
         // TODO - This is expensive and should only be done if we really require a baseline. aka, make it lazy
-
-        fn calc_baseline(db: &Forest, node: NodeId, layout: &result::Layout) -> f32 {
-            if db.children[node].is_empty() {
-                layout.size.height
-            } else {
-                let child = db.children[node][0];
-                calc_baseline(db, child, &db.nodes[child].layout)
-            }
-        }
-
         if has_baseline_child {
-            for line in &mut flex_lines {
-                for child in line.items.iter_mut() {
-                    let result = self.compute_internal(
-                        child.node,
-                        Size {
-                            width: if constants.is_row {
-                                child.target_size.width.into()
-                            } else {
-                                child.hypothetical_inner_size.width.into()
-                            },
-                            height: if constants.is_row {
-                                child.hypothetical_inner_size.height.into()
-                            } else {
-                                child.target_size.height.into()
-                            },
-                        },
-                        Size {
-                            width: if constants.is_row {
-                                constants.container_size.width.into()
-                            } else {
-                                node_size.width
-                            },
-                            height: if constants.is_row {
-                                node_size.height
-                            } else {
-                                constants.container_size.height.into()
-                            },
-                        },
-                        true,
-                        false,
-                    );
-
-                    child.baseline = calc_baseline(
-                        self,
-                        child.node,
-                        &result::Layout {
-                            order: self.children[node].iter().position(|n| *n == child.node).unwrap() as u32,
-                            size: result.size,
-                            location: Point::zero(),
-                        },
-                    );
-                }
-            }
+            self.calculate_children_base_lines(node, node_size, &mut flex_lines, &constants);
         }
 
         // 8. Calculate the cross size of each flex line.
