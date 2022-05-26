@@ -1122,6 +1122,35 @@ impl Forest {
         }
     }
 
+    /// Determine the flex container’s used cross size.
+    ///
+    /// # [9.6. Cross-Axis Alignment](https://www.w3.org/TR/css-flexbox-1/#cross-alignment)
+    ///
+    /// - [**Determine the flex container’s used cross size**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-container):
+    ///     
+    ///     - If the cross size property is a definite size, use that, clamped by the used min and max cross sizes of the flex container.
+    ///
+    ///     - Otherwise, use the sum of the flex lines' cross sizes, clamped by the used min and max cross sizes of the flex container.
+    fn determine_container_cross_size(
+        flex_lines: &mut [FlexLine],
+        node_size: Size<Number>,
+        constants: &mut AlgoConstants,
+    ) -> f32 {
+        let total_cross_size: f32 = flex_lines.iter().map(|line| line.cross_size).sum();
+
+        constants.container_size.set_cross(
+            constants.dir,
+            node_size.cross(constants.dir).or_else(total_cross_size + constants.padding_border.cross(constants.dir)),
+        );
+
+        constants.inner_container_size.set_cross(
+            constants.dir,
+            constants.container_size.cross(constants.dir) - constants.padding_border.cross(constants.dir),
+        );
+
+        total_cross_size
+    }
+
     #[allow(clippy::cognitive_complexity)]
     fn compute_internal(
         &mut self,
@@ -1316,24 +1345,11 @@ impl Forest {
         // 13. Resolve cross-axis auto margins (also includes 14).
         self.resolve_cross_axis_auto_margins(&mut flex_lines, node, &constants);
 
-        // 15. Determine the flex container’s used cross size:
-        //     - If the cross size property is a definite size, use that, clamped by the used
-        //       min and max cross sizes of the flex container.
-        //     - Otherwise, use the sum of the flex lines' cross sizes, clamped by the used
-        //       min and max cross sizes of the flex container.
+        // 15. Determine the flex container’s used cross size.
+        let total_cross_size = Self::determine_container_cross_size(&mut flex_lines, node_size, &mut constants);
 
-        let total_cross_size: f32 = flex_lines.iter().map(|line| line.cross_size).sum();
-        constants.container_size.set_cross(
-            constants.dir,
-            node_size.cross(constants.dir).or_else(total_cross_size + constants.padding_border.cross(constants.dir)),
-        );
-        constants.inner_container_size.set_cross(
-            constants.dir,
-            constants.container_size.cross(constants.dir) - constants.padding_border.cross(constants.dir),
-        );
-
-        // We have the container size. If our caller does not care about performing
-        // layout we are done now.
+        // We have the container size.
+        // If our caller does not care about performing layout we are done now.
         if !perform_layout {
             let result = ComputeResult { size: constants.container_size };
             *self.cache(node, main_size) =
