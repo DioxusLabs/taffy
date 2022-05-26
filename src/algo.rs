@@ -1479,7 +1479,6 @@ impl Forest {
         }
     }
 
-    #[allow(clippy::cognitive_complexity)]
     fn compute_internal(
         &mut self,
         node: NodeId,
