@@ -1,12 +1,12 @@
 pub fn compute() {
-    let mut stretch = stretch2::Stretch::new();
+    let mut stretch = sprawl::Stretch::new();
     let node0 = stretch
         .new_node(
-            stretch2::style::Style {
-                position_type: stretch2::style::PositionType::Absolute,
-                size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Points(60f32),
-                    height: stretch2::style::Dimension::Points(40f32),
+            sprawl::style::Style {
+                position_type: sprawl::style::PositionType::Absolute,
+                size: sprawl::geometry::Size {
+                    width: sprawl::style::Dimension::Points(60f32),
+                    height: sprawl::style::Dimension::Points(40f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -16,11 +16,11 @@ pub fn compute() {
         .unwrap();
     let node = stretch
         .new_node(
-            stretch2::style::Style {
-                justify_content: stretch2::style::JustifyContent::Center,
-                size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Points(110f32),
-                    height: stretch2::style::Dimension::Points(100f32),
+            sprawl::style::Style {
+                justify_content: sprawl::style::JustifyContent::Center,
+                size: sprawl::geometry::Size {
+                    width: sprawl::style::Dimension::Points(110f32),
+                    height: sprawl::style::Dimension::Points(100f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -28,5 +28,5 @@ pub fn compute() {
             &[node0],
         )
         .unwrap();
-    stretch.compute_layout(node, stretch2::geometry::Size::undefined()).unwrap();
+    stretch.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
 }

@@ -1,17 +1,17 @@
 #[test]
 fn margin_auto_left_and_right_column_and_center() {
-    let mut stretch = stretch2::Stretch::new();
+    let mut stretch = sprawl::Stretch::new();
     let node0 = stretch
         .new_node(
-            stretch2::style::Style {
-                size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Points(50f32),
-                    height: stretch2::style::Dimension::Points(50f32),
+            sprawl::style::Style {
+                size: sprawl::geometry::Size {
+                    width: sprawl::style::Dimension::Points(50f32),
+                    height: sprawl::style::Dimension::Points(50f32),
                     ..Default::default()
                 },
-                margin: stretch2::geometry::Rect {
-                    start: stretch2::style::Dimension::Auto,
-                    end: stretch2::style::Dimension::Auto,
+                margin: sprawl::geometry::Rect {
+                    start: sprawl::style::Dimension::Auto,
+                    end: sprawl::style::Dimension::Auto,
                     ..Default::default()
                 },
                 ..Default::default()
@@ -21,10 +21,10 @@ fn margin_auto_left_and_right_column_and_center() {
         .unwrap();
     let node1 = stretch
         .new_node(
-            stretch2::style::Style {
-                size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Points(50f32),
-                    height: stretch2::style::Dimension::Points(50f32),
+            sprawl::style::Style {
+                size: sprawl::geometry::Size {
+                    width: sprawl::style::Dimension::Points(50f32),
+                    height: sprawl::style::Dimension::Points(50f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -34,11 +34,11 @@ fn margin_auto_left_and_right_column_and_center() {
         .unwrap();
     let node = stretch
         .new_node(
-            stretch2::style::Style {
-                align_items: stretch2::style::AlignItems::Center,
-                size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Points(200f32),
-                    height: stretch2::style::Dimension::Points(200f32),
+            sprawl::style::Style {
+                align_items: sprawl::style::AlignItems::Center,
+                size: sprawl::geometry::Size {
+                    width: sprawl::style::Dimension::Points(200f32),
+                    height: sprawl::style::Dimension::Points(200f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -46,7 +46,7 @@ fn margin_auto_left_and_right_column_and_center() {
             &[node0, node1],
         )
         .unwrap();
-    stretch.compute_layout(node, stretch2::geometry::Size::undefined()).unwrap();
+    stretch.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
     assert_eq!(stretch.layout(node).unwrap().size.width, 200f32);
     assert_eq!(stretch.layout(node).unwrap().size.height, 200f32);
     assert_eq!(stretch.layout(node).unwrap().location.x, 0f32);

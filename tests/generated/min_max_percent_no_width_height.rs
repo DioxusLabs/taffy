@@ -1,17 +1,17 @@
 #[test]
 fn min_max_percent_no_width_height() {
-    let mut stretch = stretch2::Stretch::new();
+    let mut stretch = sprawl::Stretch::new();
     let node0 = stretch
         .new_node(
-            stretch2::style::Style {
-                min_size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Percent(0.1f32),
-                    height: stretch2::style::Dimension::Percent(0.1f32),
+            sprawl::style::Style {
+                min_size: sprawl::geometry::Size {
+                    width: sprawl::style::Dimension::Percent(0.1f32),
+                    height: sprawl::style::Dimension::Percent(0.1f32),
                     ..Default::default()
                 },
-                max_size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Percent(0.1f32),
-                    height: stretch2::style::Dimension::Percent(0.1f32),
+                max_size: sprawl::geometry::Size {
+                    width: sprawl::style::Dimension::Percent(0.1f32),
+                    height: sprawl::style::Dimension::Percent(0.1f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -21,12 +21,12 @@ fn min_max_percent_no_width_height() {
         .unwrap();
     let node = stretch
         .new_node(
-            stretch2::style::Style {
-                flex_direction: stretch2::style::FlexDirection::Column,
-                align_items: stretch2::style::AlignItems::FlexStart,
-                size: stretch2::geometry::Size {
-                    width: stretch2::style::Dimension::Points(100f32),
-                    height: stretch2::style::Dimension::Points(100f32),
+            sprawl::style::Style {
+                flex_direction: sprawl::style::FlexDirection::Column,
+                align_items: sprawl::style::AlignItems::FlexStart,
+                size: sprawl::geometry::Size {
+                    width: sprawl::style::Dimension::Points(100f32),
+                    height: sprawl::style::Dimension::Points(100f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -34,7 +34,7 @@ fn min_max_percent_no_width_height() {
             &[node0],
         )
         .unwrap();
-    stretch.compute_layout(node, stretch2::geometry::Size::undefined()).unwrap();
+    stretch.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
     assert_eq!(stretch.layout(node).unwrap().size.width, 100f32);
     assert_eq!(stretch.layout(node).unwrap().size.height, 100f32);
     assert_eq!(stretch.layout(node).unwrap().location.x, 0f32);

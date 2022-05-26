@@ -1,4 +1,4 @@
-use stretch2::prelude::*;
+use sprawl::prelude::*;
 
 fn main() -> Result<(), Error> {
     let mut stretch = Stretch::new();
