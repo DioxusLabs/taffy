@@ -1151,6 +1151,71 @@ impl Forest {
         total_cross_size
     }
 
+    /// Align all flex lines per `align-content`.
+    ///
+    /// # [9.6. Cross-Axis Alignment](https://www.w3.org/TR/css-flexbox-1/#cross-alignment)
+    ///
+    /// - [**Align all flex lines**](https://www.w3.org/TR/css-flexbox-1/#algo-line-align) per `align-content`.
+    fn align_flex_lines_per_align_content(
+        &self,
+        flex_lines: &mut [FlexLine],
+        node: NodeId,
+        constants: &AlgoConstants,
+        total_cross_size: f32,
+    ) {
+        let free_space = constants.inner_container_size.cross(constants.dir) - total_cross_size;
+        let num_lines = flex_lines.len();
+
+        let align_line = |(i, line): (usize, &mut FlexLine)| {
+            let is_first = i == 0;
+
+            line.offset_cross = match self.nodes[node].style.align_content {
+                AlignContent::FlexStart => {
+                    if is_first && constants.is_wrap_reverse {
+                        free_space
+                    } else {
+                        0.0
+                    }
+                }
+                AlignContent::FlexEnd => {
+                    if is_first && !constants.is_wrap_reverse {
+                        free_space
+                    } else {
+                        0.0
+                    }
+                }
+                AlignContent::Center => {
+                    if is_first {
+                        free_space / 2.0
+                    } else {
+                        0.0
+                    }
+                }
+                AlignContent::Stretch => 0.0,
+                AlignContent::SpaceBetween => {
+                    if is_first {
+                        0.0
+                    } else {
+                        free_space / (num_lines - 1) as f32
+                    }
+                }
+                AlignContent::SpaceAround => {
+                    if is_first {
+                        (free_space / num_lines as f32) / 2.0
+                    } else {
+                        free_space / num_lines as f32
+                    }
+                }
+            };
+        };
+
+        if constants.is_wrap_reverse {
+            flex_lines.iter_mut().rev().enumerate().for_each(align_line);
+        } else {
+            flex_lines.iter_mut().enumerate().for_each(align_line);
+        }
+    }
+
     #[allow(clippy::cognitive_complexity)]
     fn compute_internal(
         &mut self,
@@ -1358,58 +1423,7 @@ impl Forest {
         }
 
         // 16. Align all flex lines per align-content.
-
-        let free_space = constants.inner_container_size.cross(constants.dir) - total_cross_size;
-        let num_lines = flex_lines.len();
-
-        let align_line = |(i, line): (usize, &mut FlexLine)| {
-            let is_first = i == 0;
-
-            line.offset_cross = match self.nodes[node].style.align_content {
-                AlignContent::FlexStart => {
-                    if is_first && constants.is_wrap_reverse {
-                        free_space
-                    } else {
-                        0.0
-                    }
-                }
-                AlignContent::FlexEnd => {
-                    if is_first && !constants.is_wrap_reverse {
-                        free_space
-                    } else {
-                        0.0
-                    }
-                }
-                AlignContent::Center => {
-                    if is_first {
-                        free_space / 2.0
-                    } else {
-                        0.0
-                    }
-                }
-                AlignContent::Stretch => 0.0,
-                AlignContent::SpaceBetween => {
-                    if is_first {
-                        0.0
-                    } else {
-                        free_space / (num_lines - 1) as f32
-                    }
-                }
-                AlignContent::SpaceAround => {
-                    if is_first {
-                        (free_space / num_lines as f32) / 2.0
-                    } else {
-                        free_space / num_lines as f32
-                    }
-                }
-            };
-        };
-
-        if constants.is_wrap_reverse {
-            flex_lines.iter_mut().rev().enumerate().for_each(align_line);
-        } else {
-            flex_lines.iter_mut().enumerate().for_each(align_line);
-        }
+        self.align_flex_lines_per_align_content(&mut flex_lines, node, &constants, total_cross_size);
 
         // Do a final layout pass and gather the resulting layouts
         {
