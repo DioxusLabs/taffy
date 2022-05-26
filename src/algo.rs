@@ -1216,6 +1216,65 @@ impl Forest {
         }
     }
 
+    /// Do a final layout pass and collect the resulting layouts.
+    fn final_layout_pass(&mut self, node: NodeId, flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
+        let mut total_offset_cross = constants.padding_border.cross_start(constants.dir);
+
+        let layout_line = |line: &mut FlexLine| {
+            let mut total_offset_main = constants.padding_border.main_start(constants.dir);
+            let line_offset_cross = line.offset_cross;
+
+            let layout_item = |child: &mut FlexItem| {
+                let result = self.compute_internal(
+                    child.node,
+                    child.target_size.map(|s| s.into()),
+                    constants.container_size.map(|s| s.into()),
+                    true,
+                    false,
+                );
+
+                let offset_main = total_offset_main
+                    + child.offset_main
+                    + child.margin.main_start(constants.dir)
+                    + (child.position.main_start(constants.dir).or_else(0.0)
+                        - child.position.main_end(constants.dir).or_else(0.0));
+
+                let offset_cross = total_offset_cross
+                    + child.offset_cross
+                    + line_offset_cross
+                    + child.margin.cross_start(constants.dir)
+                    + (child.position.cross_start(constants.dir).or_else(0.0)
+                        - child.position.cross_end(constants.dir).or_else(0.0));
+
+                self.nodes[child.node].layout = result::Layout {
+                    order: self.children[node].iter().position(|n| *n == child.node).unwrap() as u32,
+                    size: result.size,
+                    location: Point {
+                        x: if constants.is_row { offset_main } else { offset_cross },
+                        y: if constants.is_column { offset_main } else { offset_cross },
+                    },
+                };
+
+                total_offset_main +=
+                    child.offset_main + child.margin.main(constants.dir) + result.size.main(constants.dir);
+            };
+
+            if constants.dir.is_reverse() {
+                line.items.iter_mut().rev().for_each(layout_item);
+            } else {
+                line.items.iter_mut().for_each(layout_item);
+            }
+
+            total_offset_cross += line_offset_cross + line.cross_size;
+        };
+
+        if constants.is_wrap_reverse {
+            flex_lines.iter_mut().rev().for_each(layout_line);
+        } else {
+            flex_lines.iter_mut().for_each(layout_line);
+        }
+    }
+
     #[allow(clippy::cognitive_complexity)]
     fn compute_internal(
         &mut self,
@@ -1426,63 +1485,7 @@ impl Forest {
         self.align_flex_lines_per_align_content(&mut flex_lines, node, &constants, total_cross_size);
 
         // Do a final layout pass and gather the resulting layouts
-        {
-            let mut total_offset_cross = constants.padding_border.cross_start(constants.dir);
-
-            let layout_line = |line: &mut FlexLine| {
-                let mut total_offset_main = constants.padding_border.main_start(constants.dir);
-                let line_offset_cross = line.offset_cross;
-
-                let layout_item = |child: &mut FlexItem| {
-                    let result = self.compute_internal(
-                        child.node,
-                        child.target_size.map(|s| s.into()),
-                        constants.container_size.map(|s| s.into()),
-                        true,
-                        false,
-                    );
-
-                    let offset_main = total_offset_main
-                        + child.offset_main
-                        + child.margin.main_start(constants.dir)
-                        + (child.position.main_start(constants.dir).or_else(0.0)
-                            - child.position.main_end(constants.dir).or_else(0.0));
-
-                    let offset_cross = total_offset_cross
-                        + child.offset_cross
-                        + line_offset_cross
-                        + child.margin.cross_start(constants.dir)
-                        + (child.position.cross_start(constants.dir).or_else(0.0)
-                            - child.position.cross_end(constants.dir).or_else(0.0));
-
-                    self.nodes[child.node].layout = result::Layout {
-                        order: self.children[node].iter().position(|n| *n == child.node).unwrap() as u32,
-                        size: result.size,
-                        location: Point {
-                            x: if constants.is_row { offset_main } else { offset_cross },
-                            y: if constants.is_column { offset_main } else { offset_cross },
-                        },
-                    };
-
-                    total_offset_main +=
-                        child.offset_main + child.margin.main(constants.dir) + result.size.main(constants.dir);
-                };
-
-                if constants.dir.is_reverse() {
-                    line.items.iter_mut().rev().for_each(layout_item);
-                } else {
-                    line.items.iter_mut().for_each(layout_item);
-                }
-
-                total_offset_cross += line_offset_cross + line.cross_size;
-            };
-
-            if constants.is_wrap_reverse {
-                flex_lines.iter_mut().rev().for_each(layout_line);
-            } else {
-                flex_lines.iter_mut().for_each(layout_line);
-            }
-        }
+        self.final_layout_pass(node, &mut flex_lines, &constants);
 
         // Before returning we perform absolute layout on all absolutely positioned children
         {
