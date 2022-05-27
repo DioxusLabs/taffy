@@ -5,6 +5,7 @@
 ### Changed
 
 - renamed crate from `stretch2` to `sprawl`
+- updated to the latest version of all dependencies to reduce upstream pain caused by duplicate dependencies
 
 ### Removed
 

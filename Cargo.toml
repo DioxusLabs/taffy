@@ -11,19 +11,19 @@ categories = ["gui"]
 license = "MIT"
 
 [dependencies]
-arrayvec = { version = "0.7.2", default-features = false }
-hash32 = "0.2.1"
-hash32-derive = "0.1.1"
-heapless = "0.7.9"
-num-traits = { version = "0.2.14", default-features = false }
-typenum = "1.15.0"
+arrayvec = { version = "0.7", default-features = false }
+hash32 = "0.2"
+hash32-derive = "0.1"
+heapless = "0.7"
+num-traits = { version = "0.2", default-features = false }
+typenum = "1"
 
 [dependencies.hashbrown]
-version = "0.12.0"
+version = "0.12"
 optional = true
 
 [dependencies.serde]
-version = "1.0.132"
+version = "1.0"
 features = ["serde_derive"]
 optional = true
 
@@ -35,7 +35,7 @@ serde_camel_case = ["serde"]
 serde_kebab_case = ["serde"]
 
 [dev-dependencies]
-criterion = "0.3.5"
+criterion = "0.3"
 
 [profile.release]
 lto = true
