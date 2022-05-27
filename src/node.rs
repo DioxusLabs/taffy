@@ -6,7 +6,7 @@ use crate::id::{Allocator, Id, NodeId};
 use crate::number::Number;
 use crate::result::Layout;
 use crate::style::Style;
-#[cfg(feature = "std")]
+#[cfg(any(feature = "std", feature = "alloc"))]
 use crate::sys::Box;
 use crate::sys::{new_map_with_capacity, ChildrenVec, Map, Vec};
 use crate::Error;
