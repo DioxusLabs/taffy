@@ -6,7 +6,9 @@ use crate::id::{Allocator, Id, NodeId};
 use crate::number::Number;
 use crate::result::Layout;
 use crate::style::Style;
-use crate::sys::{new_map_with_capacity, Box, ChildrenVec, Map, Vec};
+#[cfg(feature = "std")]
+use crate::sys::Box;
+use crate::sys::{new_map_with_capacity, ChildrenVec, Map, Vec};
 use crate::Error;
 
 pub enum MeasureFunc {
