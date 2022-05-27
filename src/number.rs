@@ -1,4 +1,4 @@
-use core::ops;
+use core::ops::{Add, Div, Mul, Sub};
 
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -114,7 +114,7 @@ impl From<f32> for Number {
     }
 }
 
-impl ops::Add<f32> for Number {
+impl Add<f32> for Number {
     type Output = Number;
 
     fn add(self, rhs: f32) -> Self {
@@ -125,7 +125,7 @@ impl ops::Add<f32> for Number {
     }
 }
 
-impl ops::Add<Number> for Number {
+impl Add<Number> for Number {
     type Output = Number;
 
     fn add(self, rhs: Self) -> Self {
@@ -137,7 +137,7 @@ impl ops::Add<Number> for Number {
     }
 }
 
-impl ops::Sub<f32> for Number {
+impl Sub<f32> for Number {
     type Output = Number;
 
     fn sub(self, rhs: f32) -> Self {
@@ -148,7 +148,7 @@ impl ops::Sub<f32> for Number {
     }
 }
 
-impl ops::Sub<Number> for Number {
+impl Sub<Number> for Number {
     type Output = Number;
 
     fn sub(self, rhs: Self) -> Self {
@@ -160,7 +160,7 @@ impl ops::Sub<Number> for Number {
     }
 }
 
-impl ops::Mul<f32> for Number {
+impl Mul<f32> for Number {
     type Output = Number;
 
     fn mul(self, rhs: f32) -> Self {
@@ -171,7 +171,7 @@ impl ops::Mul<f32> for Number {
     }
 }
 
-impl ops::Mul<Number> for Number {
+impl Mul<Number> for Number {
     type Output = Number;
 
     fn mul(self, rhs: Self) -> Self {
@@ -183,7 +183,7 @@ impl ops::Mul<Number> for Number {
     }
 }
 
-impl ops::Div<f32> for Number {
+impl Div<f32> for Number {
     type Output = Number;
 
     fn div(self, rhs: f32) -> Self {
@@ -194,7 +194,7 @@ impl ops::Div<f32> for Number {
     }
 }
 
-impl ops::Div<Number> for Number {
+impl Div<Number> for Number {
     type Output = Number;
 
     fn div(self, rhs: Self) -> Self {
