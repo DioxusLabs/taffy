@@ -2,34 +2,36 @@ use core::ops::Drop;
 
 use crate::forest::Forest;
 use crate::geometry::Size;
-use crate::id::{self, NodeId};
+use crate::id::{Allocator, Id, NodeId};
 use crate::number::Number;
 use crate::result::Layout;
-use crate::style::*;
-use crate::sys;
+use crate::style::Style;
+#[cfg(any(feature = "std", feature = "alloc"))]
+use crate::sys::Box;
+use crate::sys::{new_map_with_capacity, ChildrenVec, Map, Vec};
 use crate::Error;
 
 pub enum MeasureFunc {
     Raw(fn(Size<Number>) -> Size<f32>),
     #[cfg(any(feature = "std", feature = "alloc"))]
-    Boxed(sys::Box<dyn Fn(Size<Number>) -> Size<f32>>),
+    Boxed(Box<dyn Fn(Size<Number>) -> Size<f32>>),
 }
 
 /// Global stretch instance id allocator.
-static INSTANCE_ALLOCATOR: id::Allocator = id::Allocator::new();
+static INSTANCE_ALLOCATOR: Allocator = Allocator::new();
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(not(any(feature = "std", feature = "alloc")), derive(hash32_derive::Hash32))]
 pub struct Node {
-    instance: id::Id,
-    local: id::Id,
+    instance: Id,
+    local: Id,
 }
 
 pub struct Stretch {
-    id: id::Id,
-    nodes: id::Allocator,
-    nodes_to_ids: crate::sys::Map<Node, NodeId>,
-    ids_to_nodes: crate::sys::Map<NodeId, Node>,
+    id: Id,
+    nodes: Allocator,
+    nodes_to_ids: Map<Node, NodeId>,
+    ids_to_nodes: Map<NodeId, Node>,
     forest: Forest,
 }
 
@@ -47,9 +49,9 @@ impl Stretch {
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
             id: INSTANCE_ALLOCATOR.allocate(),
-            nodes: id::Allocator::new(),
-            nodes_to_ids: crate::sys::new_map_with_capacity(capacity),
-            ids_to_nodes: crate::sys::new_map_with_capacity(capacity),
+            nodes: Allocator::new(),
+            nodes_to_ids: new_map_with_capacity(capacity),
+            ids_to_nodes: new_map_with_capacity(capacity),
             forest: Forest::with_capacity(capacity),
         }
     }
@@ -82,7 +84,7 @@ impl Stretch {
     pub fn new_node(&mut self, style: Style, children: &[Node]) -> Result<Node, Error> {
         let node = self.allocate_node();
         let children =
-            children.iter().map(|child| self.find_node(*child)).collect::<Result<sys::ChildrenVec<_>, Error>>()?;
+            children.iter().map(|child| self.find_node(*child)).collect::<Result<ChildrenVec<_>, Error>>()?;
         let id = self.forest.new_node(style, children);
         self.add_node(node, id);
         Ok(node)
@@ -131,8 +133,7 @@ impl Stretch {
 
     pub fn set_children(&mut self, node: Node, children: &[Node]) -> Result<(), Error> {
         let node_id = self.find_node(node)?;
-        let children_id =
-            children.iter().map(|child| self.find_node(*child)).collect::<Result<sys::ChildrenVec<_>, _>>()?;
+        let children_id = children.iter().map(|child| self.find_node(*child)).collect::<Result<ChildrenVec<_>, _>>()?;
 
         // Remove node as parent from all its current children.
         for child in &self.forest.children[node_id] {
@@ -179,7 +180,7 @@ impl Stretch {
         Ok(self.ids_to_nodes[&old_child])
     }
 
-    pub fn children(&self, node: Node) -> Result<sys::Vec<Node>, Error> {
+    pub fn children(&self, node: Node) -> Result<Vec<Node>, Error> {
         let id = self.find_node(node)?;
         Ok(self.forest.children[id].iter().map(|child| self.ids_to_nodes[child]).collect())
     }
