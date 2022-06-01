@@ -18,8 +18,10 @@ pub mod style;
 mod algo;
 mod forest;
 mod id;
-
 mod sys;
+
+#[cfg(feature = "std")]
+use core::fmt::{Display, Formatter, Result};
 
 pub use crate::node::Stretch;
 
@@ -29,8 +31,8 @@ pub enum Error {
 }
 
 #[cfg(feature = "std")]
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+impl Display for Error {
+    fn fmt(&self, f: &mut Formatter) -> Result {
         match *self {
             Error::InvalidNode(ref node) => write!(f, "Invalid node {:?}", node),
         }
