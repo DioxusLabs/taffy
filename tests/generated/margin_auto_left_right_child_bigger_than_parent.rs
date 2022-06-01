@@ -1,7 +1,7 @@
 #[test]
 fn margin_auto_left_right_child_bigger_than_parent() {
-    let mut stretch = sprawl::Sprawl::new();
-    let node0 = stretch
+    let mut sprawl = sprawl::Sprawl::new();
+    let node0 = sprawl
         .new_node(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
@@ -19,7 +19,7 @@ fn margin_auto_left_right_child_bigger_than_parent() {
             &[],
         )
         .unwrap();
-    let node = stretch
+    let node = sprawl
         .new_node(
             sprawl::style::Style {
                 justify_content: sprawl::style::JustifyContent::Center,
@@ -33,13 +33,13 @@ fn margin_auto_left_right_child_bigger_than_parent() {
             &[node0],
         )
         .unwrap();
-    stretch.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
-    assert_eq!(stretch.layout(node).unwrap().size.width, 52f32);
-    assert_eq!(stretch.layout(node).unwrap().size.height, 52f32);
-    assert_eq!(stretch.layout(node).unwrap().location.x, 0f32);
-    assert_eq!(stretch.layout(node).unwrap().location.y, 0f32);
-    assert_eq!(stretch.layout(node0).unwrap().size.width, 52f32);
-    assert_eq!(stretch.layout(node0).unwrap().size.height, 72f32);
-    assert_eq!(stretch.layout(node0).unwrap().location.x, 0f32);
-    assert_eq!(stretch.layout(node0).unwrap().location.y, 0f32);
+    sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
+    assert_eq!(sprawl.layout(node).unwrap().size.width, 52f32);
+    assert_eq!(sprawl.layout(node).unwrap().size.height, 52f32);
+    assert_eq!(sprawl.layout(node).unwrap().location.x, 0f32);
+    assert_eq!(sprawl.layout(node).unwrap().location.y, 0f32);
+    assert_eq!(sprawl.layout(node0).unwrap().size.width, 52f32);
+    assert_eq!(sprawl.layout(node0).unwrap().size.height, 72f32);
+    assert_eq!(sprawl.layout(node0).unwrap().location.x, 0f32);
+    assert_eq!(sprawl.layout(node0).unwrap().location.y, 0f32);
 }

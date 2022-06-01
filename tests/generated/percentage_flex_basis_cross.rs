@@ -1,7 +1,7 @@
 #[test]
 fn percentage_flex_basis_cross() {
-    let mut stretch = sprawl::Sprawl::new();
-    let node0 = stretch
+    let mut sprawl = sprawl::Sprawl::new();
+    let node0 = sprawl
         .new_node(
             sprawl::style::Style {
                 flex_grow: 1f32,
@@ -11,7 +11,7 @@ fn percentage_flex_basis_cross() {
             &[],
         )
         .unwrap();
-    let node1 = stretch
+    let node1 = sprawl
         .new_node(
             sprawl::style::Style {
                 flex_grow: 1f32,
@@ -21,7 +21,7 @@ fn percentage_flex_basis_cross() {
             &[],
         )
         .unwrap();
-    let node = stretch
+    let node = sprawl
         .new_node(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
@@ -35,17 +35,17 @@ fn percentage_flex_basis_cross() {
             &[node0, node1],
         )
         .unwrap();
-    stretch.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
-    assert_eq!(stretch.layout(node).unwrap().size.width, 200f32);
-    assert_eq!(stretch.layout(node).unwrap().size.height, 400f32);
-    assert_eq!(stretch.layout(node).unwrap().location.x, 0f32);
-    assert_eq!(stretch.layout(node).unwrap().location.y, 0f32);
-    assert_eq!(stretch.layout(node0).unwrap().size.width, 200f32);
-    assert_eq!(stretch.layout(node0).unwrap().size.height, 250f32);
-    assert_eq!(stretch.layout(node0).unwrap().location.x, 0f32);
-    assert_eq!(stretch.layout(node0).unwrap().location.y, 0f32);
-    assert_eq!(stretch.layout(node1).unwrap().size.width, 200f32);
-    assert_eq!(stretch.layout(node1).unwrap().size.height, 150f32);
-    assert_eq!(stretch.layout(node1).unwrap().location.x, 0f32);
-    assert_eq!(stretch.layout(node1).unwrap().location.y, 250f32);
+    sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
+    assert_eq!(sprawl.layout(node).unwrap().size.width, 200f32);
+    assert_eq!(sprawl.layout(node).unwrap().size.height, 400f32);
+    assert_eq!(sprawl.layout(node).unwrap().location.x, 0f32);
+    assert_eq!(sprawl.layout(node).unwrap().location.y, 0f32);
+    assert_eq!(sprawl.layout(node0).unwrap().size.width, 200f32);
+    assert_eq!(sprawl.layout(node0).unwrap().size.height, 250f32);
+    assert_eq!(sprawl.layout(node0).unwrap().location.x, 0f32);
+    assert_eq!(sprawl.layout(node0).unwrap().location.y, 0f32);
+    assert_eq!(sprawl.layout(node1).unwrap().size.width, 200f32);
+    assert_eq!(sprawl.layout(node1).unwrap().size.height, 150f32);
+    assert_eq!(sprawl.layout(node1).unwrap().location.x, 0f32);
+    assert_eq!(sprawl.layout(node1).unwrap().location.y, 250f32);
 }
