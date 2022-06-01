@@ -43,7 +43,7 @@ impl Display for Error {
 impl std::error::Error for Error {
     fn description(&self) -> &str {
         match *self {
-            Error::InvalidNode(_) => "The node is not part of the stretch instance",
+            Error::InvalidNode(_) => "The node is not part of the sprawl instance",
         }
     }
 }

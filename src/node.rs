@@ -17,7 +17,7 @@ pub enum MeasureFunc {
     Boxed(Box<dyn Fn(Size<Number>) -> Size<f32>>),
 }
 
-/// Global stretch instance id allocator.
+/// Global sprawl instance id allocator.
 static INSTANCE_ALLOCATOR: Allocator = Allocator::new();
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]

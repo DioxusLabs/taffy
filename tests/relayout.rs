@@ -2,8 +2,8 @@ use sprawl::style::Dimension;
 
 #[test]
 fn relayout() {
-    let mut stretch = sprawl::Sprawl::new();
-    let node1 = stretch
+    let mut sprawl = sprawl::Sprawl::new();
+    let node1 = sprawl
         .new_node(
             sprawl::style::Style {
                 size: sprawl::geometry::Size { width: Dimension::Points(8f32), height: Dimension::Points(80f32) },
@@ -12,7 +12,7 @@ fn relayout() {
             &[],
         )
         .unwrap();
-    let node0 = stretch
+    let node0 = sprawl
         .new_node(
             sprawl::style::Style {
                 align_self: sprawl::prelude::AlignSelf::Center,
@@ -23,7 +23,7 @@ fn relayout() {
             &[node1],
         )
         .unwrap();
-    let node = stretch
+    let node = sprawl
         .new_node(
             sprawl::style::Style {
                 size: sprawl::geometry::Size { width: Dimension::Percent(1f32), height: Dimension::Percent(1f32) },
@@ -33,7 +33,7 @@ fn relayout() {
         )
         .unwrap();
     println!("0:");
-    stretch
+    sprawl
         .compute_layout(
             node,
             sprawl::geometry::Size {
@@ -42,12 +42,12 @@ fn relayout() {
             },
         )
         .unwrap();
-    let initial = stretch.layout(node).unwrap().location;
-    let initial0 = stretch.layout(node0).unwrap().location;
-    let initial1 = stretch.layout(node1).unwrap().location;
+    let initial = sprawl.layout(node).unwrap().location;
+    let initial0 = sprawl.layout(node0).unwrap().location;
+    let initial1 = sprawl.layout(node1).unwrap().location;
     for i in 1..10 {
         println!("\n\n{i}:");
-        stretch
+        sprawl
             .compute_layout(
                 node,
                 sprawl::geometry::Size {
@@ -56,8 +56,8 @@ fn relayout() {
                 },
             )
             .unwrap();
-        assert_eq!(stretch.layout(node).unwrap().location, initial);
-        assert_eq!(stretch.layout(node0).unwrap().location, initial0);
-        assert_eq!(stretch.layout(node1).unwrap().location, initial1);
+        assert_eq!(sprawl.layout(node).unwrap().location, initial);
+        assert_eq!(sprawl.layout(node0).unwrap().location, initial0);
+        assert_eq!(sprawl.layout(node1).unwrap().location, initial1);
     }
 }

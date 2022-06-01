@@ -4,8 +4,8 @@ mod root_constraints {
 
     #[test]
     fn root_with_percentage_size() {
-        let mut stretch = sprawl::node::Sprawl::new();
-        let node = stretch
+        let mut sprawl = sprawl::node::Sprawl::new();
+        let node = sprawl
             .new_node(
                 sprawl::style::Style {
                     size: sprawl::geometry::Size {
@@ -18,13 +18,13 @@ mod root_constraints {
             )
             .unwrap();
 
-        stretch
+        sprawl
             .compute_layout(
                 node,
                 sprawl::geometry::Size { width: Number::Defined(100.0), height: Number::Defined(200.0) },
             )
             .unwrap();
-        let layout = stretch.layout(node).unwrap();
+        let layout = sprawl.layout(node).unwrap();
 
         assert_eq!(layout.size.width, 100.0);
         assert_eq!(layout.size.height, 200.0);
@@ -32,16 +32,16 @@ mod root_constraints {
 
     #[test]
     fn root_with_no_size() {
-        let mut stretch = sprawl::node::Sprawl::new();
-        let node = stretch.new_node(sprawl::style::Style { ..Default::default() }, &[]).unwrap();
+        let mut sprawl = sprawl::node::Sprawl::new();
+        let node = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[]).unwrap();
 
-        stretch
+        sprawl
             .compute_layout(
                 node,
                 sprawl::geometry::Size { width: Number::Defined(100.0), height: Number::Defined(100.0) },
             )
             .unwrap();
-        let layout = stretch.layout(node).unwrap();
+        let layout = sprawl.layout(node).unwrap();
 
         assert_eq!(layout.size.width, 0.0);
         assert_eq!(layout.size.height, 0.0);
@@ -49,8 +49,8 @@ mod root_constraints {
 
     #[test]
     fn root_with_larger_size() {
-        let mut stretch = sprawl::node::Sprawl::new();
-        let node = stretch
+        let mut sprawl = sprawl::node::Sprawl::new();
+        let node = sprawl
             .new_node(
                 sprawl::style::Style {
                     size: sprawl::geometry::Size {
@@ -63,13 +63,13 @@ mod root_constraints {
             )
             .unwrap();
 
-        stretch
+        sprawl
             .compute_layout(
                 node,
                 sprawl::geometry::Size { width: Number::Defined(100.0), height: Number::Defined(100.0) },
             )
             .unwrap();
-        let layout = stretch.layout(node).unwrap();
+        let layout = sprawl.layout(node).unwrap();
 
         assert_eq!(layout.size.width, 200.0);
         assert_eq!(layout.size.height, 200.0);
