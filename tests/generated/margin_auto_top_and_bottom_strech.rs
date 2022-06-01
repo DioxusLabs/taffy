@@ -1,6 +1,6 @@
 #[test]
 fn margin_auto_top_and_bottom_strech() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node0 = stretch
         .new_node(
             sprawl::style::Style {

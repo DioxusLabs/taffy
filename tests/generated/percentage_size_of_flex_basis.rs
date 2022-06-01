@@ -1,6 +1,6 @@
 #[test]
 fn percentage_size_of_flex_basis() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node00 = stretch
         .new_node(
             sprawl::style::Style {

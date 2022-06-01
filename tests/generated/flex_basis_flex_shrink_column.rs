@@ -1,6 +1,6 @@
 #[test]
 fn flex_basis_flex_shrink_column() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node0 = stretch
         .new_node(
             sprawl::style::Style { flex_basis: sprawl::style::Dimension::Points(100f32), ..Default::default() },

@@ -1,6 +1,6 @@
 #[test]
 fn wrapped_row_within_align_items_flex_end() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node00 = stretch
         .new_node(
             sprawl::style::Style {

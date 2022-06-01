@@ -1,6 +1,6 @@
 #[test]
 fn margin_should_not_be_part_of_max_width() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node0 = stretch
         .new_node(
             sprawl::style::Style {

@@ -17,7 +17,7 @@ pub enum MeasureFunc {
     Boxed(Box<dyn Fn(Size<Number>) -> Size<f32>>),
 }
 
-/// Global stretch instance id allocator.
+/// Global sprawl instance id allocator.
 static INSTANCE_ALLOCATOR: Allocator = Allocator::new();
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -27,7 +27,7 @@ pub struct Node {
     local: Id,
 }
 
-pub struct Stretch {
+pub struct Sprawl {
     id: Id,
     nodes: Allocator,
     nodes_to_ids: Map<Node, NodeId>,
@@ -35,13 +35,13 @@ pub struct Stretch {
     forest: Forest,
 }
 
-impl Default for Stretch {
+impl Default for Sprawl {
     fn default() -> Self {
         Self::with_capacity(16)
     }
 }
 
-impl Stretch {
+impl Sprawl {
     pub fn new() -> Self {
         Default::default()
     }
@@ -231,7 +231,7 @@ impl Stretch {
     }
 }
 
-impl Drop for Stretch {
+impl Drop for Sprawl {
     fn drop(&mut self) {
         INSTANCE_ALLOCATOR.free(&[self.id]);
     }

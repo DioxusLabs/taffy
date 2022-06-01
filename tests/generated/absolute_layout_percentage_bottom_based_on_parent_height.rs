@@ -1,6 +1,6 @@
 #[test]
 fn absolute_layout_percentage_bottom_based_on_parent_height() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node0 = stretch
         .new_node(
             sprawl::style::Style {

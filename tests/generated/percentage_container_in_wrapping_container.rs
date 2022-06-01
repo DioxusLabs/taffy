@@ -1,6 +1,6 @@
 #[test]
 fn percentage_container_in_wrapping_container() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node000 = stretch
         .new_node(
             sprawl::style::Style {

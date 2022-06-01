@@ -1,6 +1,6 @@
 #[test]
 fn relative_position_should_not_nudge_siblings() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node0 = stretch
         .new_node(
             sprawl::style::Style {

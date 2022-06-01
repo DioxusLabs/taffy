@@ -1,6 +1,6 @@
 #[test]
 fn flex_shrink_to_zero() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node0 = stretch
         .new_node(
             sprawl::style::Style {

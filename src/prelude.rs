@@ -1,6 +1,6 @@
 pub use crate::{
     geometry::{Rect, Size},
-    node::{Node, Stretch},
+    node::{Node, Sprawl},
     number::Number,
     result::Layout,
     style::{
