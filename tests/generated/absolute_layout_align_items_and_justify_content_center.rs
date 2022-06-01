@@ -1,6 +1,6 @@
 #[test]
 fn absolute_layout_align_items_and_justify_content_center() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node0 = stretch
         .new_node(
             sprawl::style::Style {

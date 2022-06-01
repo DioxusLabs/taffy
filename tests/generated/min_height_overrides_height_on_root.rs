@@ -1,6 +1,6 @@
 #[test]
 fn min_height_overrides_height_on_root() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node = stretch
         .new_node(
             sprawl::style::Style {

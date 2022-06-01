@@ -1,7 +1,7 @@
 use sprawl::prelude::*;
 
 fn main() -> Result<(), Error> {
-    let mut stretch = Stretch::new();
+    let mut stretch = Sprawl::new();
 
     let child = stretch.new_node(
         Style { size: Size { width: Dimension::Percent(0.5), height: Dimension::Auto }, ..Default::default() },

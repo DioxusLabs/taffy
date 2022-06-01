@@ -4,7 +4,7 @@ mod root_constraints {
 
     #[test]
     fn root_with_percentage_size() {
-        let mut stretch = sprawl::node::Stretch::new();
+        let mut stretch = sprawl::node::Sprawl::new();
         let node = stretch
             .new_node(
                 sprawl::style::Style {
@@ -32,7 +32,7 @@ mod root_constraints {
 
     #[test]
     fn root_with_no_size() {
-        let mut stretch = sprawl::node::Stretch::new();
+        let mut stretch = sprawl::node::Sprawl::new();
         let node = stretch.new_node(sprawl::style::Style { ..Default::default() }, &[]).unwrap();
 
         stretch
@@ -49,7 +49,7 @@ mod root_constraints {
 
     #[test]
     fn root_with_larger_size() {
-        let mut stretch = sprawl::node::Stretch::new();
+        let mut stretch = sprawl::node::Sprawl::new();
         let node = stretch
             .new_node(
                 sprawl::style::Style {

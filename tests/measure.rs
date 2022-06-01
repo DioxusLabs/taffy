@@ -5,7 +5,7 @@ mod measure {
 
     #[test]
     fn measure_root() {
-        let mut stretch = sprawl::node::Stretch::new();
+        let mut stretch = sprawl::node::Sprawl::new();
         let node = stretch
             .new_leaf(
                 sprawl::style::Style { ..Default::default() },
@@ -24,7 +24,7 @@ mod measure {
 
     #[test]
     fn measure_child() {
-        let mut stretch = sprawl::node::Stretch::new();
+        let mut stretch = sprawl::node::Sprawl::new();
 
         let child = stretch
             .new_leaf(
@@ -48,7 +48,7 @@ mod measure {
 
     #[test]
     fn measure_child_constraint() {
-        let mut stretch = sprawl::node::Stretch::new();
+        let mut stretch = sprawl::node::Sprawl::new();
         let child = stretch
             .new_leaf(
                 sprawl::style::Style { ..Default::default() },
@@ -83,7 +83,7 @@ mod measure {
 
     #[test]
     fn measure_child_constraint_padding_parent() {
-        let mut stretch = sprawl::node::Stretch::new();
+        let mut stretch = sprawl::node::Sprawl::new();
         let child = stretch
             .new_leaf(
                 sprawl::style::Style { ..Default::default() },
@@ -123,7 +123,7 @@ mod measure {
 
     #[test]
     fn measure_child_with_flex_grow() {
-        let mut stretch = sprawl::node::Stretch::new();
+        let mut stretch = sprawl::node::Sprawl::new();
         let child0 = stretch
             .new_node(
                 sprawl::style::Style {
@@ -168,7 +168,7 @@ mod measure {
 
     #[test]
     fn measure_child_with_flex_shrink() {
-        let mut stretch = sprawl::node::Stretch::new();
+        let mut stretch = sprawl::node::Sprawl::new();
         let child0 = stretch
             .new_node(
                 sprawl::style::Style {
@@ -214,7 +214,7 @@ mod measure {
 
     #[test]
     fn remeasure_child_after_growing() {
-        let mut stretch = sprawl::node::Stretch::new();
+        let mut stretch = sprawl::node::Sprawl::new();
         let child0 = stretch
             .new_node(
                 sprawl::style::Style {
@@ -261,7 +261,7 @@ mod measure {
 
     #[test]
     fn remeasure_child_after_shrinking() {
-        let mut stretch = sprawl::node::Stretch::new();
+        let mut stretch = sprawl::node::Sprawl::new();
 
         let child0 = stretch
             .new_node(
@@ -310,7 +310,7 @@ mod measure {
 
     #[test]
     fn remeasure_child_after_stretching() {
-        let mut stretch = sprawl::node::Stretch::new();
+        let mut stretch = sprawl::node::Sprawl::new();
 
         let child = stretch
             .new_leaf(
@@ -344,7 +344,7 @@ mod measure {
 
     #[test]
     fn width_overrides_measure() {
-        let mut stretch = sprawl::node::Stretch::new();
+        let mut stretch = sprawl::node::Sprawl::new();
         let child = stretch
             .new_leaf(
                 sprawl::style::Style {
@@ -370,7 +370,7 @@ mod measure {
 
     #[test]
     fn height_overrides_measure() {
-        let mut stretch = sprawl::node::Stretch::new();
+        let mut stretch = sprawl::node::Sprawl::new();
         let child = stretch
             .new_leaf(
                 sprawl::style::Style {
@@ -396,7 +396,7 @@ mod measure {
 
     #[test]
     fn flex_basis_overrides_measure() {
-        let mut stretch = sprawl::node::Stretch::new();
+        let mut stretch = sprawl::node::Sprawl::new();
         let child0 = stretch
             .new_node(
                 sprawl::style::Style {
@@ -445,7 +445,7 @@ mod measure {
 
     #[test]
     fn stretch_overrides_measure() {
-        let mut stretch = sprawl::node::Stretch::new();
+        let mut stretch = sprawl::node::Sprawl::new();
         let child = stretch
             .new_leaf(
                 sprawl::style::Style { ..Default::default() },
@@ -477,7 +477,7 @@ mod measure {
 
     #[test]
     fn measure_absolute_child() {
-        let mut stretch = sprawl::node::Stretch::new();
+        let mut stretch = sprawl::node::Sprawl::new();
         let child = stretch
             .new_leaf(
                 sprawl::style::Style { position_type: sprawl::style::PositionType::Absolute, ..Default::default() },
@@ -509,7 +509,7 @@ mod measure {
 
     #[test]
     fn ignore_invalid_measure() {
-        let mut stretch = sprawl::node::Stretch::new();
+        let mut stretch = sprawl::node::Sprawl::new();
         let child = stretch
             .new_leaf(
                 sprawl::style::Style { flex_grow: 1.0, ..Default::default() },
@@ -540,7 +540,7 @@ mod measure {
     fn only_measure_once() {
         use std::sync::atomic;
 
-        let mut stretch = sprawl::node::Stretch::new();
+        let mut stretch = sprawl::node::Sprawl::new();
         static NUM_MEASURES: atomic::AtomicU32 = atomic::AtomicU32::new(0);
 
         let grandchild = stretch

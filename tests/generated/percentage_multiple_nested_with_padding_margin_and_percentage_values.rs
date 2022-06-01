@@ -1,6 +1,6 @@
 #[test]
 fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node000 = stretch
         .new_node(
             sprawl::style::Style {

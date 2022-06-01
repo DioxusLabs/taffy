@@ -1,6 +1,6 @@
 #[test]
 fn flex_basis_and_main_dimen_set_when_flexing() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node0 = stretch
         .new_node(
             sprawl::style::Style {

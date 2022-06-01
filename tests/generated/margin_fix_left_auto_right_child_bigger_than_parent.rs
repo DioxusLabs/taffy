@@ -1,6 +1,6 @@
 #[test]
 fn margin_fix_left_auto_right_child_bigger_than_parent() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node0 = stretch
         .new_node(
             sprawl::style::Style {

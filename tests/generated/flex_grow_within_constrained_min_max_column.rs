@@ -1,6 +1,6 @@
 #[test]
 fn flex_grow_within_constrained_min_max_column() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node0 = stretch.new_node(sprawl::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
     let node1 = stretch
         .new_node(

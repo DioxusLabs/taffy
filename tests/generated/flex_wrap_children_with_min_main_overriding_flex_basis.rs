@@ -1,6 +1,6 @@
 #[test]
 fn flex_wrap_children_with_min_main_overriding_flex_basis() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node0 = stretch
         .new_node(
             sprawl::style::Style {

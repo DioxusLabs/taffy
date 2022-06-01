@@ -1,6 +1,6 @@
 #[test]
 fn max_width_overrides_width_on_root() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node = stretch
         .new_node(
             sprawl::style::Style {

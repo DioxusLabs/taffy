@@ -1,12 +1,12 @@
 #[cfg(test)]
 mod node {
     use sprawl::geometry::*;
-    use sprawl::node::{MeasureFunc, Stretch};
+    use sprawl::node::{MeasureFunc, Sprawl};
     use sprawl::style::*;
 
     #[test]
     fn children() {
-        let mut stretch = Stretch::new();
+        let mut stretch = Sprawl::new();
         let child1 = stretch.new_node(Style::default(), &[]).unwrap();
         let child2 = stretch.new_node(Style::default(), &[]).unwrap();
         let node = stretch.new_node(Style::default(), &[child1, child2]).unwrap();
@@ -18,7 +18,7 @@ mod node {
 
     #[test]
     fn set_measure() {
-        let mut stretch = Stretch::new();
+        let mut stretch = Sprawl::new();
         let node =
             stretch.new_leaf(Style::default(), MeasureFunc::Raw(|_| Size { width: 200.0, height: 200.0 })).unwrap();
         stretch.compute_layout(node, Size::undefined()).unwrap();
@@ -31,7 +31,7 @@ mod node {
 
     #[test]
     fn add_child() {
-        let mut stretch = Stretch::new();
+        let mut stretch = Sprawl::new();
         let node = stretch.new_node(Style::default(), &[]).unwrap();
         assert_eq!(stretch.child_count(node).unwrap(), 0);
 
@@ -46,7 +46,7 @@ mod node {
 
     #[test]
     fn remove_child() {
-        let mut stretch = Stretch::new();
+        let mut stretch = Sprawl::new();
 
         let child1 = stretch.new_node(Style::default(), &[]).unwrap();
         let child2 = stretch.new_node(Style::default(), &[]).unwrap();
@@ -64,7 +64,7 @@ mod node {
 
     #[test]
     fn remove_child_at_index() {
-        let mut stretch = Stretch::new();
+        let mut stretch = Sprawl::new();
 
         let child1 = stretch.new_node(Style::default(), &[]).unwrap();
         let child2 = stretch.new_node(Style::default(), &[]).unwrap();
@@ -82,7 +82,7 @@ mod node {
 
     #[test]
     fn replace_child_at_index() {
-        let mut stretch = Stretch::new();
+        let mut stretch = Sprawl::new();
 
         let child1 = stretch.new_node(Style::default(), &[]).unwrap();
         let child2 = stretch.new_node(Style::default(), &[]).unwrap();
@@ -98,7 +98,7 @@ mod node {
 
     #[test]
     fn remove() {
-        let mut stretch = Stretch::new();
+        let mut stretch = Sprawl::new();
 
         let style2 = Style { flex_direction: FlexDirection::Column, ..Style::default() };
 
@@ -121,7 +121,7 @@ mod node {
 
     #[test]
     fn set_children() {
-        let mut stretch = Stretch::new();
+        let mut stretch = Sprawl::new();
 
         let child1 = stretch.new_node(Style::default(), &[]).unwrap();
         let child2 = stretch.new_node(Style::default(), &[]).unwrap();
@@ -142,7 +142,7 @@ mod node {
 
     #[test]
     fn set_style() {
-        let mut stretch = Stretch::new();
+        let mut stretch = Sprawl::new();
 
         let node = stretch.new_node(Style::default(), &[]).unwrap();
         assert_eq!(stretch.style(node).unwrap().display, Display::Flex);
@@ -153,7 +153,7 @@ mod node {
 
     #[test]
     fn mark_dirty() {
-        let mut stretch = Stretch::new();
+        let mut stretch = Sprawl::new();
 
         let child1 = stretch.new_node(Style::default(), &[]).unwrap();
         let child2 = stretch.new_node(Style::default(), &[]).unwrap();
@@ -179,7 +179,7 @@ mod node {
 
     #[test]
     fn remove_last_node() {
-        let mut stretch = Stretch::new();
+        let mut stretch = Sprawl::new();
 
         let parent = stretch.new_node(Style::default(), &[]).unwrap();
         let child = stretch.new_node(Style::default(), &[]).unwrap();

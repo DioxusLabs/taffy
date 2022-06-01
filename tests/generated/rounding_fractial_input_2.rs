@@ -1,6 +1,6 @@
 #[test]
 fn rounding_fractial_input_2() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node0 = stretch
         .new_node(
             sprawl::style::Style {

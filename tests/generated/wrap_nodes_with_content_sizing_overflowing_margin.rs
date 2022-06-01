@@ -1,6 +1,6 @@
 #[test]
 fn wrap_nodes_with_content_sizing_overflowing_margin() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node000 = stretch
         .new_node(
             sprawl::style::Style {

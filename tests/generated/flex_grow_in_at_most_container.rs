@@ -1,6 +1,6 @@
 #[test]
 fn flex_grow_in_at_most_container() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node00 = stretch
         .new_node(
             sprawl::style::Style {

@@ -2,7 +2,7 @@ use sprawl::{geometry::Point, style::Dimension};
 
 #[test]
 fn simple_child() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node0_0 = stretch
         .new_node(
             sprawl::style::Style {

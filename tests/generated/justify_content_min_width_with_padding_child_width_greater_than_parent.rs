@@ -1,6 +1,6 @@
 #[test]
 fn justify_content_min_width_with_padding_child_width_greater_than_parent() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node000 = stretch
         .new_node(
             sprawl::style::Style {

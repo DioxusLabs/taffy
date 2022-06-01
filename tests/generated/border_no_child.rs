@@ -1,6 +1,6 @@
 #[test]
 fn border_no_child() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node = stretch
         .new_node(
             sprawl::style::Style {

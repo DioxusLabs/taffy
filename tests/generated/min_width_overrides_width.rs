@@ -1,6 +1,6 @@
 #[test]
 fn min_width_overrides_width() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node0 = stretch
         .new_node(
             sprawl::style::Style {

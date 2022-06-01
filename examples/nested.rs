@@ -1,7 +1,7 @@
 use sprawl::prelude::*;
 
 fn main() -> Result<(), Error> {
-    let mut stretch = Stretch::new();
+    let mut stretch = Sprawl::new();
 
     // left
     let child_t1 = stretch.new_node(

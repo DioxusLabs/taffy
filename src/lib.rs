@@ -23,7 +23,7 @@ mod sys;
 #[cfg(feature = "std")]
 use core::fmt::{Display, Formatter, Result};
 
-pub use crate::node::Stretch;
+pub use crate::node::Sprawl;
 
 #[derive(Debug)]
 pub enum Error {

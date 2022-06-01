@@ -1,6 +1,6 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 
-fn build_deep_hierarchy(stretch: &mut sprawl::node::Stretch) -> sprawl::node::Node {
+fn build_deep_hierarchy(stretch: &mut sprawl::node::Sprawl) -> sprawl::node::Node {
     let node111 = stretch
         .new_node(
             sprawl::style::Style {
@@ -116,21 +116,21 @@ fn build_deep_hierarchy(stretch: &mut sprawl::node::Stretch) -> sprawl::node::No
 fn stretch_benchmarks(c: &mut Criterion) {
     c.bench_function("deep hierarchy - build", |b| {
         b.iter(|| {
-            let mut stretch = sprawl::node::Stretch::new();
+            let mut stretch = sprawl::node::Sprawl::new();
             build_deep_hierarchy(&mut stretch);
         })
     });
 
     c.bench_function("deep hierarchy - single", |b| {
         b.iter(|| {
-            let mut stretch = sprawl::node::Stretch::new();
+            let mut stretch = sprawl::node::Sprawl::new();
             let root = build_deep_hierarchy(&mut stretch);
             stretch.compute_layout(root, sprawl::geometry::Size::undefined()).unwrap()
         })
     });
 
     c.bench_function("deep hierarchy - relayout", |b| {
-        let mut stretch = sprawl::node::Stretch::new();
+        let mut stretch = sprawl::node::Sprawl::new();
         let root = build_deep_hierarchy(&mut stretch);
 
         b.iter(|| {

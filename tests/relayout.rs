@@ -2,7 +2,7 @@ use sprawl::style::Dimension;
 
 #[test]
 fn relayout() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node1 = stretch
         .new_node(
             sprawl::style::Style {

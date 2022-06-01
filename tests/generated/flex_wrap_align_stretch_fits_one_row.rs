@@ -1,6 +1,6 @@
 #[test]
 fn flex_wrap_align_stretch_fits_one_row() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node0 = stretch
         .new_node(
             sprawl::style::Style {
