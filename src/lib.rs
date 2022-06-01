@@ -23,7 +23,7 @@ mod sys;
 #[cfg(feature = "std")]
 use core::fmt::{Display, Formatter, Result};
 
-pub use crate::node::Stretch;
+pub use crate::node::Sprawl;
 
 #[derive(Debug)]
 pub enum Error {
@@ -43,7 +43,7 @@ impl Display for Error {
 impl std::error::Error for Error {
     fn description(&self) -> &str {
         match *self {
-            Error::InvalidNode(_) => "The node is not part of the stretch instance",
+            Error::InvalidNode(_) => "The node is not part of the sprawl instance",
         }
     }
 }

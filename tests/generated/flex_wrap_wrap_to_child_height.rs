@@ -1,6 +1,6 @@
 #[test]
 fn flex_wrap_wrap_to_child_height() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node000 = stretch
         .new_node(
             sprawl::style::Style {

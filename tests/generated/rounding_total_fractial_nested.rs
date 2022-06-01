@@ -1,6 +1,6 @@
 #[test]
 fn rounding_total_fractial_nested() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node00 = stretch
         .new_node(
             sprawl::style::Style {

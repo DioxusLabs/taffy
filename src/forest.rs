@@ -1,6 +1,6 @@
 //! Forest - ECS like datastructure for storing node trees.
 //!
-//! Backing datastructure for `Stretch` structs.
+//! Backing datastructure for `Sprawl` structs.
 use crate::geometry::Size;
 use crate::id::NodeId;
 use crate::node::MeasureFunc;

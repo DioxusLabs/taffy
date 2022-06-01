@@ -1,6 +1,6 @@
 #[test]
 fn flex_grow_flex_basis_percent_min_max() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node0 = stretch
         .new_node(
             sprawl::style::Style {

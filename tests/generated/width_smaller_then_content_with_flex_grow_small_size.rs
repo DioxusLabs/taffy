@@ -1,6 +1,6 @@
 #[test]
 fn width_smaller_then_content_with_flex_grow_small_size() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node00 = stretch
         .new_node(
             sprawl::style::Style {

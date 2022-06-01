@@ -1,6 +1,6 @@
 #[test]
 fn child_min_max_width_flexing() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node0 = stretch
         .new_node(
             sprawl::style::Style {

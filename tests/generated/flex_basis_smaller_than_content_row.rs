@@ -1,6 +1,6 @@
 #[test]
 fn flex_basis_smaller_than_content_row() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node00 = stretch
         .new_node(
             sprawl::style::Style {

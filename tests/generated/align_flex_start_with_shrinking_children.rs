@@ -1,6 +1,6 @@
 #[test]
 fn align_flex_start_with_shrinking_children() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node000 = stretch
         .new_node(sprawl::style::Style { flex_grow: 1f32, flex_shrink: 1f32, ..Default::default() }, &[])
         .unwrap();

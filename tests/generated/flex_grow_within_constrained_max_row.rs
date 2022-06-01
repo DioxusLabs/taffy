@@ -1,6 +1,6 @@
 #[test]
 fn flex_grow_within_constrained_max_row() {
-    let mut stretch = sprawl::Stretch::new();
+    let mut stretch = sprawl::Sprawl::new();
     let node00 = stretch
         .new_node(
             sprawl::style::Style {
