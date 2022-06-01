@@ -1,6 +1,6 @@
 pub fn compute() {
-    let mut stretch = sprawl::Sprawl::new();
-    let node0 = stretch
+    let mut sprawl = sprawl::Sprawl::new();
+    let node0 = sprawl
         .new_node(
             sprawl::style::Style {
                 size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(200f32), ..Default::default() },
@@ -13,6 +13,6 @@ pub fn compute() {
             &[],
         )
         .unwrap();
-    let node = stretch.new_node(sprawl::style::Style { ..Default::default() }, &[node0]).unwrap();
-    stretch.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
+    let node = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[node0]).unwrap();
+    sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
 }
