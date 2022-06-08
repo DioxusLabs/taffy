@@ -1560,6 +1560,7 @@ impl Forest {
         // 3. Determine the flex base size and hypothetical main size of each item.
         self.determine_flex_base_size(node, node_size, &constants, available_space, &mut flex_items);
 
+        // TODO: Add step 4 according to spec: https://www.w3.org/TR/css-flexbox-1/#algo-main-container
         // 9.3. Main Size Determination
 
         // 5. Collect flex items into flex lines.
