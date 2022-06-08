@@ -2,17 +2,18 @@
 
 ## 0.1.0
 
-### Changed
+### 0.1.0 Changed
 
+- the `order` field of `Layout` is now public, and describes the relative z-ordering of nodes
 - renamed crate from `stretch2` to `sprawl`
 - updated to the latest version of all dependencies to reduce upstream pain caused by duplicate dependencies
 - Renamed `stretch::node::Strech` -> `sprawl::node::Sprawl`
 
-### Fixed
+### 0.1.0 Fixed
 
 - fixed feature strategy for `alloc` and `std`: these can now be compiled together, with `std`'s types taking priority
 
-### Removed
+### 0.1.0 Removed
 
 - removed Javascript / Kotlin / Swift bindings
   - the maintainer team lacks expertise to keep these working
@@ -22,7 +23,7 @@
 
 ## stretch2 0.4.3
 
-This is the final release of `sprawl`: migrate to the crate named `sprawl` for future fixes and features!
+This is the final release of `stretch`: migrate to the crate named `sprawl` for future fixes and features!
 
 These notes describe the differences between this release and `stretch` 0.3.2, the abandoned crate from which this library was forked.
 
