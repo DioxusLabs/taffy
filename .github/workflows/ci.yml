@@ -47,7 +47,7 @@ jobs:
           command: test
           args: --no-default-features --features alloc
 
-  test-features-alloc:
+  workspace-compiles:
     name: "Workspace Compiles"
     runs-on: ubuntu-latest
     steps:
