@@ -75,10 +75,10 @@ mod core_data_types {
     const MAX_CHILD_COUNT: usize = 16;
     const MAX_PARENTS_COUNT: usize = 1;
 
-    type Map<K, V> = ::heapless::FnvIndexMap<K, V, MAX_NODE_COUNT>;
-    type Vec<A> = ::arrayvec::ArrayVec<A, MAX_NODE_COUNT>;
-    type ChildrenVec<A> = ::arrayvec::ArrayVec<A, MAX_CHILD_COUNT>;
-    type ParentsVec<A> = ::arrayvec::ArrayVec<A, MAX_PARENTS_COUNT>;
+    type Map<K, V> = heapless::FnvIndexMap<K, V, MAX_NODE_COUNT>;
+    type Vec<A> = arrayvec::ArrayVec<A, MAX_NODE_COUNT>;
+    type ChildrenVec<A> = arrayvec::ArrayVec<A, MAX_CHILD_COUNT>;
+    type ParentsVec<A> = arrayvec::ArrayVec<A, MAX_PARENTS_COUNT>;
 
     fn new_map_with_capacity<K, V>(_capacity: usize) -> Map<K, V>
     where
@@ -87,8 +87,8 @@ mod core_data_types {
         Map::new()
     }
 
-    fn new_vec_with_capacity<A, const CAP: usize>(_capacity: usize) -> ::arrayvec::ArrayVec<A, CAP> {
-        ::arrayvec::ArrayVec::new()
+    fn new_vec_with_capacity<A, const CAP: usize>(_capacity: usize) -> arrayvec::ArrayVec<A, CAP> {
+        arrayvec::ArrayVec::new()
     }
 
     #[inline]
