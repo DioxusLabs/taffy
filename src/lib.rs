@@ -22,13 +22,16 @@ mod flexbox;
 mod forest;
 mod sys;
 
+pub use crate::node::Sprawl;
+
 #[cfg(feature = "std")]
 use core::fmt::{Display, Formatter, Result};
 
-pub use crate::node::Sprawl;
-
+/// An error that can occur when performing layout
+#[non_exhaustive]
 #[derive(Debug)]
 pub enum Error {
+    /// The [`Node`](node::Node) was invalid
     InvalidNode(node::Node),
 }
 
@@ -45,7 +48,7 @@ impl Display for Error {
 impl std::error::Error for Error {
     fn description(&self) -> &str {
         match *self {
-            Error::InvalidNode(_) => "The node is not part of the sprawl instance",
+            Error::InvalidNode(_) => "The node is not part of the Sprawl instance",
         }
     }
 }
