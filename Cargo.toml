@@ -31,8 +31,6 @@ optional = true
 default = ["std"]
 alloc = ["hashbrown"]
 std = ["num-traits/std"]
-serde_camel_case = ["serde"]
-serde_kebab_case = ["serde"]
 
 [dev-dependencies]
 criterion = "0.3"
