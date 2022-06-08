@@ -12,15 +12,15 @@ pub use self::core::*;
 
 #[cfg(feature = "std")]
 mod std {
-    pub type Box<A> = ::std::boxed::Box<A>;
-    pub type Map<K, V> = ::std::collections::HashMap<K, V>;
-    pub type Vec<A> = ::std::vec::Vec<A>;
-    pub type ChildrenVec<A> = ::std::vec::Vec<A>;
-    pub type ParentsVec<A> = ::std::vec::Vec<A>;
+    pub type Box<A> = std::boxed::Box<A>;
+    pub type Map<K, V> = std::collections::HashMap<K, V>;
+    pub type Vec<A> = std::vec::Vec<A>;
+    pub type ChildrenVec<A> = std::vec::Vec<A>;
+    pub type ParentsVec<A> = std::vec::Vec<A>;
 
     pub fn new_map_with_capacity<K, V>(capacity: usize) -> Map<K, V>
     where
-        K: Eq + ::std::hash::Hash,
+        K: Eq + std::hash::Hash,
     {
         Map::with_capacity(capacity)
     }
