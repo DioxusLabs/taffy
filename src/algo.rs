@@ -10,6 +10,7 @@ use crate::prelude::Number;
 use crate::result;
 use crate::style::{AlignContent, AlignSelf, Dimension, Display, FlexWrap, JustifyContent, PositionType};
 use crate::sys;
+use crate::style::{Style, FlexDirection};
 
 #[derive(Debug, Clone)]
 pub struct ComputeResult {
