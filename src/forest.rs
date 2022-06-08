@@ -2,8 +2,7 @@
 //!
 //! Backing datastructure for `Sprawl` structs.
 use crate::geometry::Size;
-use crate::id::NodeId;
-use crate::node::MeasureFunc;
+use crate::node::{MeasureFunc, NodeId};
 use crate::number::Number;
 use crate::result::{Cache, Layout};
 use crate::style::Style;

@@ -8,8 +8,6 @@
 - renamed crate from `stretch2` to `sprawl`
 - updated to the latest version of all dependencies to reduce upstream pain caused by duplicate dependencies
 - renamed `stretch::node::Strech` -> `sprawl::node::Sprawl`
-- renamed several modules
-  - `algo` is now `flexbox`
 
 ### 0.1.0 Fixed
 
