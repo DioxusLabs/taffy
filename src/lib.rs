@@ -15,7 +15,7 @@ pub mod prelude;
 pub mod result;
 pub mod style;
 
-mod algo;
+mod flexbox;
 mod forest;
 mod id;
 mod sys;

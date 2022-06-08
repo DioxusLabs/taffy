@@ -1,6 +1,6 @@
 use core::f32;
 
-use crate::algo::Number::{Defined, Undefined};
+use crate::flexbox::Number::{Defined, Undefined};
 use crate::forest::{Forest, NodeData};
 use crate::geometry::{Point, Rect, Size};
 use crate::id::NodeId;
