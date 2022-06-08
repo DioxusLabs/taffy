@@ -2,8 +2,8 @@ use core::ops::Drop;
 
 use crate::forest::Forest;
 use crate::geometry::Size;
+use crate::layout::Layout;
 use crate::number::Number;
-use crate::result::Layout;
 use crate::style::Style;
 #[cfg(any(feature = "std", feature = "alloc"))]
 use crate::sys::Box;

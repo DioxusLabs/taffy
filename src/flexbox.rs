@@ -3,10 +3,10 @@ use core::f32;
 use crate::flexbox::Number::{Defined, Undefined};
 use crate::forest::{Forest, NodeData};
 use crate::geometry::{Point, Rect, Size};
+use crate::layout;
 use crate::node::{MeasureFunc, NodeId};
 use crate::number::{MinMax, OrElse};
 use crate::prelude::Number;
-use crate::result;
 use crate::style::{AlignContent, AlignSelf, Dimension, Display, FlexWrap, JustifyContent, PositionType};
 use crate::style::{FlexDirection, Style};
 use crate::sys;
@@ -104,7 +104,7 @@ impl Forest {
             self.compute_internal(root, style.size.resolve(size), size, true, true)
         };
 
-        self.nodes[root].layout = result::Layout { order: 0, size: result.size, location: Point::zero() };
+        self.nodes[root].layout = layout::Layout { order: 0, size: result.size, location: Point::zero() };
 
         Self::round_layout(&mut self.nodes, &self.children, root, 0.0, 0.0);
     }
@@ -131,7 +131,7 @@ impl Forest {
         }
     }
 
-    fn cache(&mut self, node: NodeId, main_size: bool) -> &mut Option<result::Cache> {
+    fn cache(&mut self, node: NodeId, main_size: bool) -> &mut Option<layout::Cache> {
         if main_size {
             &mut self.nodes[node].main_size_layout_cache
         } else {
@@ -780,7 +780,7 @@ impl Forest {
         flex_lines: &mut [FlexLine],
         constants: &AlgoConstants,
     ) {
-        fn calc_baseline(db: &Forest, node: NodeId, layout: &result::Layout) -> f32 {
+        fn calc_baseline(db: &Forest, node: NodeId, layout: &layout::Layout) -> f32 {
             if db.children[node].is_empty() {
                 layout.size.height
             } else {
@@ -820,7 +820,7 @@ impl Forest {
                 child.baseline = calc_baseline(
                     self,
                     child.node,
-                    &result::Layout {
+                    &layout::Layout {
                         order: self.children[node].iter().position(|n| *n == child.node).unwrap() as u32,
                         size: result.size,
                         location: Point::zero(),
@@ -1321,7 +1321,7 @@ impl Forest {
                     + (child.position.cross_start(constants.dir).or_else(0.0)
                         - child.position.cross_end(constants.dir).or_else(0.0));
 
-                self.nodes[child.node].layout = result::Layout {
+                self.nodes[child.node].layout = layout::Layout {
                     order: self.children[node].iter().position(|n| *n == child.node).unwrap() as u32,
                     size: result.size,
                     location: Point {
@@ -1486,7 +1486,7 @@ impl Forest {
                 }
             };
 
-            self.nodes[child].layout = result::Layout {
+            self.nodes[child].layout = layout::Layout {
                 order: order as u32,
                 size: result.size,
                 location: Point {
@@ -1528,7 +1528,7 @@ impl Forest {
                     MeasureFunc::Boxed(measure) => ComputeResult { size: measure(node_size) },
                 };
                 *self.cache(node, main_size) =
-                    Some(result::Cache { node_size, parent_size, perform_layout, result: result.clone() });
+                    Some(layout::Cache { node_size, parent_size, perform_layout, result: result.clone() });
                 return result;
             }
 
@@ -1648,7 +1648,7 @@ impl Forest {
         if !perform_layout {
             let result = ComputeResult { size: constants.container_size };
             *self.cache(node, main_size) =
-                Some(result::Cache { node_size, parent_size, perform_layout, result: result.clone() });
+                Some(layout::Cache { node_size, parent_size, perform_layout, result: result.clone() });
             return result;
         }
 
@@ -1662,7 +1662,7 @@ impl Forest {
         self.perform_absolute_layout_on_absolute_children(node, &constants);
 
         fn hidden_layout(nodes: &mut [NodeData], children: &[sys::ChildrenVec<NodeId>], node: NodeId, order: u32) {
-            nodes[node].layout = result::Layout { order, size: Size::zero(), location: Point::zero() };
+            nodes[node].layout = layout::Layout { order, size: Size::zero(), location: Point::zero() };
 
             for (order, child) in children[node].iter().enumerate() {
                 hidden_layout(nodes, children, *child, order as _);
@@ -1677,7 +1677,7 @@ impl Forest {
 
         let result = ComputeResult { size: constants.container_size };
         *self.cache(node, main_size) =
-            Some(result::Cache { node_size, parent_size, perform_layout, result: result.clone() });
+            Some(layout::Cache { node_size, parent_size, perform_layout, result: result.clone() });
 
         result
     }

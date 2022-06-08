@@ -2,9 +2,9 @@
 //!
 //! Backing datastructure for `Sprawl` structs.
 use crate::geometry::Size;
+use crate::layout::{Cache, Layout};
 use crate::node::{MeasureFunc, NodeId};
 use crate::number::Number;
-use crate::result::{Cache, Layout};
 use crate::style::Style;
 use crate::sys::{new_vec_with_capacity, ChildrenVec, ParentsVec, Vec};
 
