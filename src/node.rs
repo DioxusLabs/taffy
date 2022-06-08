@@ -1,5 +1,3 @@
-use core::ops::Drop;
-
 use crate::forest::Forest;
 use crate::geometry::Size;
 use crate::layout::Layout;
@@ -94,9 +92,6 @@ impl Sprawl {
     ///
     /// All associated nodes will be invalid.
     pub fn clear(&mut self) {
-        for node in self.nodes_to_ids.keys() {
-            self.nodes.free(&[node.local]);
-        }
         self.nodes_to_ids.clear();
         self.ids_to_nodes.clear();
         self.forest.clear();
@@ -231,12 +226,6 @@ impl Sprawl {
     }
 }
 
-impl Drop for Sprawl {
-    fn drop(&mut self) {
-        INSTANCE_ALLOCATOR.free(&[self.id]);
-    }
-}
-
 /// Internal node id.
 pub(crate) type NodeId = usize;
 
@@ -256,6 +245,4 @@ impl Allocator {
     pub fn allocate(&self) -> Id {
         Id(self.new_id.fetch_add(1, Ordering::Relaxed))
     }
-
-    pub fn free(&self, _ids: &[Id]) {}
 }
