@@ -1,7 +1,7 @@
 use crate::geometry::{Rect, Size};
 use crate::number::Number;
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum AlignItems {
     FlexStart,
@@ -17,7 +17,7 @@ impl Default for AlignItems {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum AlignSelf {
     Auto,
@@ -34,7 +34,7 @@ impl Default for AlignSelf {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum AlignContent {
     FlexStart,
@@ -51,7 +51,7 @@ impl Default for AlignContent {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Direction {
     Inherit,
@@ -67,7 +67,7 @@ impl Default for Direction {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Display {
     #[cfg_attr(feature = "serde", serde(rename = "flex"))]
@@ -82,7 +82,7 @@ impl Default for Display {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum FlexDirection {
     Row,
@@ -114,7 +114,7 @@ impl FlexDirection {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum JustifyContent {
     FlexStart,
@@ -131,7 +131,7 @@ impl Default for JustifyContent {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Overflow {
     Visible,
@@ -145,7 +145,7 @@ impl Default for Overflow {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum PositionType {
     Relative,
@@ -158,7 +158,7 @@ impl Default for PositionType {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum FlexWrap {
     NoWrap,
