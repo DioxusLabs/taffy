@@ -1,4 +1,4 @@
-use crate::algo::ComputeResult;
+use crate::flexbox::ComputeResult;
 use crate::geometry::{Point, Size};
 use crate::number::Number;
 
