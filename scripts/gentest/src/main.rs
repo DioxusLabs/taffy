@@ -49,7 +49,9 @@ fn main() {
     let (test_descs_sink, mut test_descs) = channel();
 
     info!("spawning webdriver client and collecting test descriptions");
+    // FIXME: this method no longer exists
     tokio::run(
+        // FIXME: seems to be replaced by https://docs.rs/fantoccini/latest/fantoccini/struct.Client.html#method.with_capabilities_and_connector
         Client::with_capabilities(webdriver_url, caps.clone())
             .map_err(|e| Error::from(e))
             .and_then(move |client| {
@@ -89,6 +91,7 @@ fn main() {
         })
         .collect();
 
+    // FIXME: type is unclear
     let test_descs: Vec<_> = test_descs
         .iter()
         .map(|(name, description)| {
@@ -97,6 +100,7 @@ fn main() {
         })
         .collect();
 
+    // FIXME: type is unclear
     let benchmarks: Vec<_> = test_descs
         .iter()
         .map(|(name, _)| {
@@ -105,6 +109,7 @@ fn main() {
         })
         .collect();
 
+    // FIXME: type is unclear
     let test_mods = test_descs
         .iter()
         .map(|(name, _)| {
@@ -154,6 +159,7 @@ fn test_root_element(
     client: Client,
     name: String,
     fixture_path: impl AsRef<Path>,
+    // FIXME: Future's type signature appears to have changed
 ) -> impl Future<Item = (String, json::JsonValue), Error = Error> {
     let fixture_path = fixture_path.as_ref();
 
