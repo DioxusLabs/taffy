@@ -6,7 +6,11 @@
 
 - renamed crate from `stretch2` to `sprawl`
 - updated to the latest version of all dependencies to reduce upstream pain caused by duplicate dependencies
-- Renamed `sprawl::node::Strech` -> `sprawl::node::Sprawl`
+- Renamed `stretch::node::Strech` -> `sprawl::node::Sprawl`
+
+### Fixed
+
+- fixed feature strategy for `alloc` and `std`: these can now be compiled together, with `std`'s types taking priority
 
 ### Removed
 
