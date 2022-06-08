@@ -42,11 +42,13 @@ mod std_data_types {
 
 #[cfg(feature = "alloc")]
 mod alloc_data_types {
-    pub type Box<A> = ::alloc::boxed::Box<A>;
-    pub type Map<K, V> = ::hashbrown::HashMap<K, V>;
-    pub type Vec<A> = ::alloc::vec::Vec<A>;
-    pub type ChildrenVec<A> = ::alloc::vec::Vec<A>;
-    pub type ParentsVec<A> = ::alloc::vec::Vec<A>;
+    extern crate alloc;
+
+    type Box<A> = alloc::boxed::Box<A>;
+    type Map<K, V> = hashbrown::HashMap<K, V>;
+    type Vec<A> = alloc::vec::Vec<A>;
+    type ChildrenVec<A> = alloc::vec::Vec<A>;
+    type ParentsVec<A> = alloc::vec::Vec<A>;
 
     fn new_map_with_capacity<K, V>(capacity: usize) -> Map<K, V> {
         Map::with_capacity(capacity)
