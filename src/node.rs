@@ -2,14 +2,14 @@ use core::ops::Drop;
 
 use crate::forest::Forest;
 use crate::geometry::Size;
-use crate::id::{Allocator, Id, NodeId};
+use crate::layout::Layout;
 use crate::number::Number;
-use crate::result::Layout;
 use crate::style::Style;
 #[cfg(any(feature = "std", feature = "alloc"))]
 use crate::sys::Box;
 use crate::sys::{new_map_with_capacity, ChildrenVec, Map, Vec};
 use crate::Error;
+use core::sync::atomic::{AtomicUsize, Ordering};
 
 pub enum MeasureFunc {
     Raw(fn(Size<Number>) -> Size<f32>),
@@ -235,4 +235,27 @@ impl Drop for Sprawl {
     fn drop(&mut self) {
         INSTANCE_ALLOCATOR.free(&[self.id]);
     }
+}
+
+/// Internal node id.
+pub(crate) type NodeId = usize;
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(not(any(feature = "std", feature = "alloc")), derive(hash32_derive::Hash32))]
+pub(crate) struct Id(usize);
+
+pub(crate) struct Allocator {
+    new_id: AtomicUsize,
+}
+
+impl Allocator {
+    pub const fn new() -> Self {
+        Self { new_id: AtomicUsize::new(0) }
+    }
+
+    pub fn allocate(&self) -> Id {
+        Id(self.new_id.fetch_add(1, Ordering::Relaxed))
+    }
+
+    pub fn free(&self, _ids: &[Id]) {}
 }

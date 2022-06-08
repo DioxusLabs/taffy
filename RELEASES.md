@@ -7,7 +7,7 @@
 - the `order` field of `Layout` is now public, and describes the relative z-ordering of nodes
 - renamed crate from `stretch2` to `sprawl`
 - updated to the latest version of all dependencies to reduce upstream pain caused by duplicate dependencies
-- Renamed `stretch::node::Strech` -> `sprawl::node::Sprawl`
+- renamed `stretch::node::Strech` -> `sprawl::node::Sprawl`
 
 ### 0.1.0 Fixed
 
