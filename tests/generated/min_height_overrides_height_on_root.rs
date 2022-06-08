@@ -1,7 +1,7 @@
 #[test]
 fn min_height_overrides_height_on_root() {
-    let mut stretch = sprawl::Stretch::new();
-    let node = stretch
+    let mut sprawl = sprawl::Sprawl::new();
+    let node = sprawl
         .new_node(
             sprawl::style::Style {
                 size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(50f32), ..Default::default() },
@@ -14,9 +14,9 @@ fn min_height_overrides_height_on_root() {
             &[],
         )
         .unwrap();
-    stretch.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
-    assert_eq!(stretch.layout(node).unwrap().size.width, 0f32);
-    assert_eq!(stretch.layout(node).unwrap().size.height, 100f32);
-    assert_eq!(stretch.layout(node).unwrap().location.x, 0f32);
-    assert_eq!(stretch.layout(node).unwrap().location.y, 0f32);
+    sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
+    assert_eq!(sprawl.layout(node).unwrap().size.width, 0f32);
+    assert_eq!(sprawl.layout(node).unwrap().size.height, 100f32);
+    assert_eq!(sprawl.layout(node).unwrap().location.x, 0f32);
+    assert_eq!(sprawl.layout(node).unwrap().location.y, 0f32);
 }

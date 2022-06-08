@@ -1,7 +1,7 @@
 #[test]
 fn percentage_absolute_position() {
-    let mut stretch = sprawl::Stretch::new();
-    let node0 = stretch
+    let mut sprawl = sprawl::Sprawl::new();
+    let node0 = sprawl
         .new_node(
             sprawl::style::Style {
                 position_type: sprawl::style::PositionType::Absolute,
@@ -20,7 +20,7 @@ fn percentage_absolute_position() {
             &[],
         )
         .unwrap();
-    let node = stretch
+    let node = sprawl
         .new_node(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
@@ -34,13 +34,13 @@ fn percentage_absolute_position() {
             &[node0],
         )
         .unwrap();
-    stretch.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
-    assert_eq!(stretch.layout(node).unwrap().size.width, 200f32);
-    assert_eq!(stretch.layout(node).unwrap().size.height, 100f32);
-    assert_eq!(stretch.layout(node).unwrap().location.x, 0f32);
-    assert_eq!(stretch.layout(node).unwrap().location.y, 0f32);
-    assert_eq!(stretch.layout(node0).unwrap().size.width, 10f32);
-    assert_eq!(stretch.layout(node0).unwrap().size.height, 10f32);
-    assert_eq!(stretch.layout(node0).unwrap().location.x, 60f32);
-    assert_eq!(stretch.layout(node0).unwrap().location.y, 10f32);
+    sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
+    assert_eq!(sprawl.layout(node).unwrap().size.width, 200f32);
+    assert_eq!(sprawl.layout(node).unwrap().size.height, 100f32);
+    assert_eq!(sprawl.layout(node).unwrap().location.x, 0f32);
+    assert_eq!(sprawl.layout(node).unwrap().location.y, 0f32);
+    assert_eq!(sprawl.layout(node0).unwrap().size.width, 10f32);
+    assert_eq!(sprawl.layout(node0).unwrap().size.height, 10f32);
+    assert_eq!(sprawl.layout(node0).unwrap().location.x, 60f32);
+    assert_eq!(sprawl.layout(node0).unwrap().location.y, 10f32);
 }

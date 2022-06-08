@@ -1,7 +1,7 @@
 use core::ops::Add;
 
 use crate::number::Number;
-use crate::style;
+use crate::style::{Dimension, FlexDirection};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -48,7 +48,7 @@ where
         self.top + self.bottom
     }
 
-    pub(crate) fn main(&self, direction: style::FlexDirection) -> T {
+    pub(crate) fn main(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.horizontal()
         } else {
@@ -56,7 +56,7 @@ where
         }
     }
 
-    pub(crate) fn cross(&self, direction: style::FlexDirection) -> T {
+    pub(crate) fn cross(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.vertical()
         } else {
@@ -69,7 +69,7 @@ impl<T> Rect<T>
 where
     T: Copy + Clone,
 {
-    pub(crate) fn main_start(&self, direction: style::FlexDirection) -> T {
+    pub(crate) fn main_start(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.start
         } else {
@@ -77,7 +77,7 @@ where
         }
     }
 
-    pub(crate) fn main_end(&self, direction: style::FlexDirection) -> T {
+    pub(crate) fn main_end(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.end
         } else {
@@ -85,7 +85,7 @@ where
         }
     }
 
-    pub(crate) fn cross_start(&self, direction: style::FlexDirection) -> T {
+    pub(crate) fn cross_start(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.top
         } else {
@@ -93,7 +93,7 @@ where
         }
     }
 
-    pub(crate) fn cross_end(&self, direction: style::FlexDirection) -> T {
+    pub(crate) fn cross_end(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.bottom
         } else {
@@ -126,7 +126,7 @@ impl<T> Size<T> {
         Size { width: f(self.width), height: f(self.height) }
     }
 
-    pub(crate) fn set_main(&mut self, direction: style::FlexDirection, value: T) {
+    pub(crate) fn set_main(&mut self, direction: FlexDirection, value: T) {
         if direction.is_row() {
             self.width = value
         } else {
@@ -134,7 +134,7 @@ impl<T> Size<T> {
         }
     }
 
-    pub(crate) fn set_cross(&mut self, direction: style::FlexDirection, value: T) {
+    pub(crate) fn set_cross(&mut self, direction: FlexDirection, value: T) {
         if direction.is_row() {
             self.height = value
         } else {
@@ -142,7 +142,7 @@ impl<T> Size<T> {
         }
     }
 
-    pub(crate) fn main(self, direction: style::FlexDirection) -> T {
+    pub(crate) fn main(self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.width
         } else {
@@ -150,7 +150,7 @@ impl<T> Size<T> {
         }
     }
 
-    pub(crate) fn cross(self, direction: style::FlexDirection) -> T {
+    pub(crate) fn cross(self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.height
         } else {
@@ -165,7 +165,7 @@ impl Size<f32> {
     }
 }
 
-impl Size<style::Dimension> {
+impl Size<Dimension> {
     pub(crate) fn resolve(&self, parent: Size<Number>) -> Size<Number> {
         Size { width: self.width.resolve(parent.width), height: self.height.resolve(parent.height) }
     }

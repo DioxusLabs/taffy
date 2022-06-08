@@ -1,6 +1,6 @@
 pub fn compute() {
-    let mut stretch = sprawl::Stretch::new();
-    let node0 = stretch
+    let mut sprawl = sprawl::Sprawl::new();
+    let node0 = sprawl
         .new_node(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
@@ -13,7 +13,7 @@ pub fn compute() {
             &[],
         )
         .unwrap();
-    let node10 = stretch
+    let node10 = sprawl
         .new_node(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
@@ -26,7 +26,7 @@ pub fn compute() {
             &[],
         )
         .unwrap();
-    let node11 = stretch
+    let node11 = sprawl
         .new_node(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
@@ -39,7 +39,7 @@ pub fn compute() {
             &[],
         )
         .unwrap();
-    let node12 = stretch
+    let node12 = sprawl
         .new_node(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
@@ -52,7 +52,7 @@ pub fn compute() {
             &[],
         )
         .unwrap();
-    let node13 = stretch
+    let node13 = sprawl
         .new_node(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
@@ -65,7 +65,7 @@ pub fn compute() {
             &[],
         )
         .unwrap();
-    let node1 = stretch
+    let node1 = sprawl
         .new_node(
             sprawl::style::Style {
                 flex_wrap: sprawl::style::FlexWrap::Wrap,
@@ -75,7 +75,7 @@ pub fn compute() {
             &[node10, node11, node12, node13],
         )
         .unwrap();
-    let node = stretch
+    let node = sprawl
         .new_node(
             sprawl::style::Style {
                 align_items: sprawl::style::AlignItems::Baseline,
@@ -85,5 +85,5 @@ pub fn compute() {
             &[node0, node1],
         )
         .unwrap();
-    stretch.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
+    sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
 }

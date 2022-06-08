@@ -1,7 +1,7 @@
 #[test]
 fn margin_auto_mutiple_children_column() {
-    let mut stretch = sprawl::Stretch::new();
-    let node0 = stretch
+    let mut sprawl = sprawl::Sprawl::new();
+    let node0 = sprawl
         .new_node(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
@@ -15,7 +15,7 @@ fn margin_auto_mutiple_children_column() {
             &[],
         )
         .unwrap();
-    let node1 = stretch
+    let node1 = sprawl
         .new_node(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
@@ -29,7 +29,7 @@ fn margin_auto_mutiple_children_column() {
             &[],
         )
         .unwrap();
-    let node2 = stretch
+    let node2 = sprawl
         .new_node(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
@@ -42,7 +42,7 @@ fn margin_auto_mutiple_children_column() {
             &[],
         )
         .unwrap();
-    let node = stretch
+    let node = sprawl
         .new_node(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
@@ -57,21 +57,21 @@ fn margin_auto_mutiple_children_column() {
             &[node0, node1, node2],
         )
         .unwrap();
-    stretch.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
-    assert_eq!(stretch.layout(node).unwrap().size.width, 200f32);
-    assert_eq!(stretch.layout(node).unwrap().size.height, 200f32);
-    assert_eq!(stretch.layout(node).unwrap().location.x, 0f32);
-    assert_eq!(stretch.layout(node).unwrap().location.y, 0f32);
-    assert_eq!(stretch.layout(node0).unwrap().size.width, 50f32);
-    assert_eq!(stretch.layout(node0).unwrap().size.height, 50f32);
-    assert_eq!(stretch.layout(node0).unwrap().location.x, 75f32);
-    assert_eq!(stretch.layout(node0).unwrap().location.y, 25f32);
-    assert_eq!(stretch.layout(node1).unwrap().size.width, 50f32);
-    assert_eq!(stretch.layout(node1).unwrap().size.height, 50f32);
-    assert_eq!(stretch.layout(node1).unwrap().location.x, 75f32);
-    assert_eq!(stretch.layout(node1).unwrap().location.y, 100f32);
-    assert_eq!(stretch.layout(node2).unwrap().size.width, 50f32);
-    assert_eq!(stretch.layout(node2).unwrap().size.height, 50f32);
-    assert_eq!(stretch.layout(node2).unwrap().location.x, 75f32);
-    assert_eq!(stretch.layout(node2).unwrap().location.y, 150f32);
+    sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
+    assert_eq!(sprawl.layout(node).unwrap().size.width, 200f32);
+    assert_eq!(sprawl.layout(node).unwrap().size.height, 200f32);
+    assert_eq!(sprawl.layout(node).unwrap().location.x, 0f32);
+    assert_eq!(sprawl.layout(node).unwrap().location.y, 0f32);
+    assert_eq!(sprawl.layout(node0).unwrap().size.width, 50f32);
+    assert_eq!(sprawl.layout(node0).unwrap().size.height, 50f32);
+    assert_eq!(sprawl.layout(node0).unwrap().location.x, 75f32);
+    assert_eq!(sprawl.layout(node0).unwrap().location.y, 25f32);
+    assert_eq!(sprawl.layout(node1).unwrap().size.width, 50f32);
+    assert_eq!(sprawl.layout(node1).unwrap().size.height, 50f32);
+    assert_eq!(sprawl.layout(node1).unwrap().location.x, 75f32);
+    assert_eq!(sprawl.layout(node1).unwrap().location.y, 100f32);
+    assert_eq!(sprawl.layout(node2).unwrap().size.width, 50f32);
+    assert_eq!(sprawl.layout(node2).unwrap().size.height, 50f32);
+    assert_eq!(sprawl.layout(node2).unwrap().location.x, 75f32);
+    assert_eq!(sprawl.layout(node2).unwrap().location.y, 150f32);
 }

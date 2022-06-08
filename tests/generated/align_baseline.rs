@@ -1,7 +1,7 @@
 #[test]
 fn align_baseline() {
-    let mut stretch = sprawl::Stretch::new();
-    let node0 = stretch
+    let mut sprawl = sprawl::Sprawl::new();
+    let node0 = sprawl
         .new_node(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
@@ -14,7 +14,7 @@ fn align_baseline() {
             &[],
         )
         .unwrap();
-    let node1 = stretch
+    let node1 = sprawl
         .new_node(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
@@ -27,7 +27,7 @@ fn align_baseline() {
             &[],
         )
         .unwrap();
-    let node = stretch
+    let node = sprawl
         .new_node(
             sprawl::style::Style {
                 align_items: sprawl::style::AlignItems::Baseline,
@@ -41,17 +41,17 @@ fn align_baseline() {
             &[node0, node1],
         )
         .unwrap();
-    stretch.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
-    assert_eq!(stretch.layout(node).unwrap().size.width, 100f32);
-    assert_eq!(stretch.layout(node).unwrap().size.height, 100f32);
-    assert_eq!(stretch.layout(node).unwrap().location.x, 0f32);
-    assert_eq!(stretch.layout(node).unwrap().location.y, 0f32);
-    assert_eq!(stretch.layout(node0).unwrap().size.width, 50f32);
-    assert_eq!(stretch.layout(node0).unwrap().size.height, 50f32);
-    assert_eq!(stretch.layout(node0).unwrap().location.x, 0f32);
-    assert_eq!(stretch.layout(node0).unwrap().location.y, 0f32);
-    assert_eq!(stretch.layout(node1).unwrap().size.width, 50f32);
-    assert_eq!(stretch.layout(node1).unwrap().size.height, 20f32);
-    assert_eq!(stretch.layout(node1).unwrap().location.x, 50f32);
-    assert_eq!(stretch.layout(node1).unwrap().location.y, 30f32);
+    sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
+    assert_eq!(sprawl.layout(node).unwrap().size.width, 100f32);
+    assert_eq!(sprawl.layout(node).unwrap().size.height, 100f32);
+    assert_eq!(sprawl.layout(node).unwrap().location.x, 0f32);
+    assert_eq!(sprawl.layout(node).unwrap().location.y, 0f32);
+    assert_eq!(sprawl.layout(node0).unwrap().size.width, 50f32);
+    assert_eq!(sprawl.layout(node0).unwrap().size.height, 50f32);
+    assert_eq!(sprawl.layout(node0).unwrap().location.x, 0f32);
+    assert_eq!(sprawl.layout(node0).unwrap().location.y, 0f32);
+    assert_eq!(sprawl.layout(node1).unwrap().size.width, 50f32);
+    assert_eq!(sprawl.layout(node1).unwrap().size.height, 20f32);
+    assert_eq!(sprawl.layout(node1).unwrap().location.x, 50f32);
+    assert_eq!(sprawl.layout(node1).unwrap().location.y, 30f32);
 }
