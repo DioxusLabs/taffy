@@ -2,11 +2,11 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use failure::*;
+use failure::Error;
 use fantoccini::{Client, Locator};
-use futures::{future::Future, stream::Stream, sync::oneshot::channel};
+use futures::{channel::oneshot::channel, future::Future};
 use json;
-use log::*;
+use log::{debug, error, info};
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::Ident;
