@@ -14,6 +14,7 @@
   - the maintainer team lacks expertise to keep these working
   - more serious refactors are planned, and this will be challenging to keep working through that process
   - if you are interested in helping us maintain bindings to other languages, [get in touch](https://github.com/DioxusLabs/sprawl/discussions)!
+- the `serde_camel_case` and `serde_kebab_case` features have been removed: they were poorly motivated and were not correctly additive (if both were enabled compilation would fail)
 
 ## stretch2 0.4.3
 
