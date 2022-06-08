@@ -12,8 +12,11 @@ use crate::sys::{new_map_with_capacity, ChildrenVec, Map, Vec};
 use crate::Error;
 use core::sync::atomic::{AtomicUsize, Ordering};
 
+/// A function that can be applied to a `Size<Number>` to obetain a `<Size<f32>`
 pub enum MeasureFunc {
+    /// Stores a unboxed function
     Raw(fn(Size<Number>) -> Size<f32>),
+    /// Stores a boxed function
     #[cfg(any(feature = "std", feature = "alloc"))]
     Boxed(Box<dyn Fn(Size<Number>) -> Size<f32>>),
 }
@@ -25,15 +28,23 @@ static INSTANCE_ALLOCATOR: Allocator = Allocator::new();
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(not(any(feature = "std", feature = "alloc")), derive(hash32_derive::Hash32))]
 pub struct Node {
+    /// The id of the forest that this node lives with
     instance: Id,
+    /// The identifier of this particular node within the tree
     local: Id,
 }
 
+/// A forest of UI [`Nodes`](`Node`), suitable for UI layout
 pub struct Sprawl {
+    /// The ID of the root node
     id: Id,
-    nodes: Allocator,
+    /// A monotonically-increasing index that tracks the [`Id`] of the next node
+    allocator: Allocator,
+    /// A map from Node -> NodeId
     nodes_to_ids: Map<Node, NodeId>,
+    /// A map from NodeId -> Node
     ids_to_nodes: Map<NodeId, Node>,
+    /// An efficient data structure that stores the node trees
     forest: Forest,
 }
 
@@ -44,31 +55,37 @@ impl Default for Sprawl {
 }
 
 impl Sprawl {
+    /// Creates a new [`Sprawl`]
+    ///
+    /// The default capacity of a [`Sprawl`] is 16 nodes.
     pub fn new() -> Self {
         Default::default()
     }
 
+    /// Creates a new [`Sprawl`] that can store `capacity` nodes before reallocation
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
             id: INSTANCE_ALLOCATOR.allocate(),
-            nodes: Allocator::new(),
+            allocator: Allocator::new(),
             nodes_to_ids: new_map_with_capacity(capacity),
             ids_to_nodes: new_map_with_capacity(capacity),
             forest: Forest::with_capacity(capacity),
         }
     }
 
+    /// Allocates memory for a new node, and returns a matching generated [`Node`]
     fn allocate_node(&mut self) -> Node {
-        let local = self.nodes.allocate();
+        let local = self.allocator.allocate();
         Node { instance: self.id, local }
     }
 
+    /// Stores a new
     fn add_node(&mut self, node: Node, id: NodeId) {
         let _ = self.nodes_to_ids.insert(node, id);
         let _ = self.ids_to_nodes.insert(id, node);
     }
 
-    // Find node in the forest.
+    // Returns the `NodeId` of the provided node within the forest
     fn find_node(&self, node: Node) -> Result<NodeId, Error> {
         match self.nodes_to_ids.get(&node) {
             Some(id) => Ok(*id),
@@ -76,6 +93,7 @@ impl Sprawl {
         }
     }
 
+    /// Adds a new leaf node, which does not have any children
     pub fn new_leaf(&mut self, style: Style, measure: MeasureFunc) -> Result<Node, Error> {
         let node = self.allocate_node();
         let id = self.forest.new_leaf(style, measure);
@@ -83,6 +101,7 @@ impl Sprawl {
         Ok(node)
     }
 
+    /// Adds a new node, which may have any number of `children`
     pub fn new_node(&mut self, style: Style, children: &[Node]) -> Result<Node, Error> {
         let node = self.allocate_node();
         let children =
@@ -92,19 +111,21 @@ impl Sprawl {
         Ok(node)
     }
 
-    /// Removes all nodes.
+    /// Removes all nodes
     ///
-    /// All associated nodes will be invalid.
+    /// All associated [`Id`] will be rendered invalid.
     pub fn clear(&mut self) {
         for node in self.nodes_to_ids.keys() {
-            self.nodes.free(&[node.local]);
+            self.allocator.free(&[node.local]);
         }
         self.nodes_to_ids.clear();
         self.ids_to_nodes.clear();
         self.forest.clear();
     }
 
-    /// Remove nodes.
+    /// Remove a specific [`Node`] from the tree
+    ///
+    /// Its [`Id`] is rendered invalid
     pub fn remove(&mut self, node: Node) {
         let id = if let Ok(id) = self.find_node(node) { id } else { return };
 
@@ -118,6 +139,7 @@ impl Sprawl {
         }
     }
 
+    /// Sets the [`MeasureFunc`] of the associated node
     pub fn set_measure(&mut self, node: Node, measure: Option<MeasureFunc>) -> Result<(), Error> {
         let id = self.find_node(node)?;
         self.forest.nodes[id].measure = measure;
@@ -125,6 +147,7 @@ impl Sprawl {
         Ok(())
     }
 
+    /// Adds a `child` [`Node`] under the supplied `node`
     pub fn add_child(&mut self, node: Node, child: Node) -> Result<(), Error> {
         let node_id = self.find_node(node)?;
         let child_id = self.find_node(child)?;
@@ -133,6 +156,7 @@ impl Sprawl {
         Ok(())
     }
 
+    /// Directly sets the `children` of the supplied `Node`
     pub fn set_children(&mut self, node: Node, children: &[Node]) -> Result<(), Error> {
         let node_id = self.find_node(node)?;
         let children_id = children.iter().map(|child| self.find_node(*child)).collect::<Result<ChildrenVec<_>, _>>()?;
@@ -152,6 +176,9 @@ impl Sprawl {
         Ok(())
     }
 
+    /// Removes the `child` of the parent `node`
+    ///
+    /// The child is not removed from the forest entirely, it is simply no longer attached to its previous parent.
     pub fn remove_child(&mut self, node: Node, child: Node) -> Result<Node, Error> {
         let node_id = self.find_node(node)?;
         let child_id = self.find_node(child)?;
@@ -160,6 +187,9 @@ impl Sprawl {
         Ok(self.ids_to_nodes[&prev_id])
     }
 
+    /// Removes the "n-th" child from the parent `node`
+    ///
+    /// The child is not removed from the forest entirely, it is simply no longer attached to its previous parent.
     pub fn remove_child_at_index(&mut self, node: Node, index: usize) -> Result<Node, Error> {
         let node_id = self.find_node(node)?;
         // TODO: index check
@@ -168,6 +198,9 @@ impl Sprawl {
         Ok(self.ids_to_nodes[&prev_id])
     }
 
+    /// Replaces the "n-th" child from the parent `node` with the new `child` node
+    ///
+    /// The child is not removed from the forest entirely, it is simply no longer attached to its previous parent.
     pub fn replace_child_at_index(&mut self, node: Node, index: usize, child: Node) -> Result<Node, Error> {
         let node_id = self.find_node(node)?;
         let child_id = self.find_node(child)?;
@@ -182,21 +215,25 @@ impl Sprawl {
         Ok(self.ids_to_nodes[&old_child])
     }
 
+    /// Returns a list of children of the given [`Node`]
     pub fn children(&self, node: Node) -> Result<Vec<Node>, Error> {
         let id = self.find_node(node)?;
         Ok(self.forest.children[id].iter().map(|child| self.ids_to_nodes[child]).collect())
     }
 
+    /// Returns the child [`Node`] of the parent `node` at the provided `index`
     pub fn child_at_index(&self, node: Node, index: usize) -> Result<Node, Error> {
         let id = self.find_node(node)?;
         Ok(self.ids_to_nodes[&self.forest.children[id][index]])
     }
 
+    /// Returns the number of children of the parent `node`
     pub fn child_count(&self, node: Node) -> Result<usize, Error> {
         let id = self.find_node(node)?;
         Ok(self.forest.children[id].len())
     }
 
+    /// Sets the [`Style`] of the provided `node`
     pub fn set_style(&mut self, node: Node, style: Style) -> Result<(), Error> {
         let id = self.find_node(node)?;
         self.forest.nodes[id].style = style;
@@ -204,6 +241,7 @@ impl Sprawl {
         Ok(())
     }
 
+    /// Gets the [`Style`] of the provided `node`
     pub fn style(&self, node: Node) -> Result<&Style, Error> {
         let id = self.find_node(node)?;
         Ok(&self.forest.nodes[id].style)
@@ -215,17 +253,20 @@ impl Sprawl {
         Ok(&self.forest.nodes[id].layout)
     }
 
+    /// Indicates that the layout of this node and its children must be recomputed
     pub fn mark_dirty(&mut self, node: Node) -> Result<(), Error> {
         let id = self.find_node(node)?;
         self.forest.mark_dirty(id);
         Ok(())
     }
 
+    /// Does the layout of this node (and its children) need to be recomputed
     pub fn dirty(&self, node: Node) -> Result<bool, Error> {
         let id = self.find_node(node)?;
         Ok(self.forest.nodes[id].is_dirty)
     }
 
+    /// Updates the stored layout of the provided `node` and its children
     pub fn compute_layout(&mut self, node: Node, size: Size<Number>) -> Result<(), Error> {
         let id = self.find_node(node)?;
         self.forest.compute_layout(id, size);
@@ -242,22 +283,29 @@ impl Drop for Sprawl {
 /// Internal node id.
 pub(crate) type NodeId = usize;
 
+/// The identifier of a [`Node`]
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(not(any(feature = "std", feature = "alloc")), derive(hash32_derive::Hash32))]
 pub(crate) struct Id(usize);
 
+/// An bump-allocator index that tracks how many [`Nodes`](Node) have been allocated in a [`Sprawl`].
 pub(crate) struct Allocator {
     new_id: AtomicUsize,
 }
 
 impl Allocator {
+    /// Creates a fresh [`Allocator`]
     pub const fn new() -> Self {
         Self { new_id: AtomicUsize::new(0) }
     }
 
+    /// Allocates space for one more [`Node`]
     pub fn allocate(&self) -> Id {
         Id(self.new_id.fetch_add(1, Ordering::Relaxed))
     }
 
+    /// Frees [`Ids`](Id) from the allocator
+    ///
+    /// NOTE: this does not actually free memory in any way.
     pub fn free(&self, _ids: &[Id]) {}
 }
