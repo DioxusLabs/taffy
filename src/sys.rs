@@ -4,7 +4,7 @@ pub use self::std::*;
 
 // When alloc but not std is enabled, use those types
 #[cfg(all(feature = "alloc", not(feature = "std")))]
-pub use alloc::*;
+pub use self::alloc::*;
 
 // When neither alloc or std is enabled, use a heapless fallback
 #[cfg(all(not(feature = "alloc"), not(feature = "std")))]
