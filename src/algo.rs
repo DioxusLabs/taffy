@@ -1570,6 +1570,7 @@ impl Forest {
             self.resolve_flexible_lengths(line, &constants, available_space);
         }
 
+        // TODO: Cleanup and make according to spec
         // Not part of the spec from what i can see but seems correct
         constants.container_size.set_main(
             constants.dir,
