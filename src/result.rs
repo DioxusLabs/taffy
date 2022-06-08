@@ -1,3 +1,4 @@
+//! The final results of a layout algorithm.
 use crate::algo::ComputeResult;
 use crate::geometry::{Point, Size};
 use crate::number::Number;

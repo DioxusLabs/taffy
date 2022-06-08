@@ -1,3 +1,5 @@
+//! Allocator-flexible data types
+
 // When std is enabled, prefer those types
 #[cfg(feature = "std")]
 pub use self::std::*;

@@ -1,3 +1,5 @@
+//! A representation of the [CSS style attribute](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust, used for flexbox layout
+
 use crate::geometry::{Rect, Size};
 use crate::number::Number;
 

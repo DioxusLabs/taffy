@@ -1,5 +1,6 @@
-use core::ops::Drop;
-
+//! UI [`Node`] types and related data structures.
+//!
+//! Layouts are composed of multiple nodes, which live in a forest-like data structure.
 use crate::forest::Forest;
 use crate::geometry::Size;
 use crate::id::{Allocator, Id, NodeId};
@@ -10,6 +11,7 @@ use crate::style::Style;
 use crate::sys::Box;
 use crate::sys::{new_map_with_capacity, ChildrenVec, Map, Vec};
 use crate::Error;
+use core::ops::Drop;
 
 pub enum MeasureFunc {
     Raw(fn(Size<Number>) -> Size<f32>),
@@ -20,6 +22,7 @@ pub enum MeasureFunc {
 /// Global sprawl instance id allocator.
 static INSTANCE_ALLOCATOR: Allocator = Allocator::new();
 
+/// An [`Id`]-containing identifier
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(not(any(feature = "std", feature = "alloc")), derive(hash32_derive::Hash32))]
 pub struct Node {

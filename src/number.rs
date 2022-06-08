@@ -1,3 +1,5 @@
+//! Contains the [`Number`] type and associated methods
+
 use core::ops::{Add, Div, Mul, Sub};
 
 #[derive(Copy, Clone, PartialEq, Debug)]

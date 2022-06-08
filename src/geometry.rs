@@ -1,3 +1,5 @@
+//! Geometric primitives useful for layout
+
 use core::ops::Add;
 
 use crate::number::Number;
