@@ -85,11 +85,11 @@ impl Forest {
         id
     }
 
-    /// Adds a `child` node to the parent `node`
-    pub(crate) fn add_child(&mut self, node: NodeId, child: NodeId) {
-        self.parents[child].push(node);
-        self.children[node].push(child);
-        self.mark_dirty(node)
+    /// Adds a `child` node to the `parent` node
+    pub(crate) fn add_child(&mut self, parent: NodeId, child: NodeId) {
+        self.parents[child].push(parent);
+        self.children[parent].push(child);
+        self.mark_dirty(parent)
     }
 
     /// Removes all nodes and resets the data structure
@@ -173,21 +173,21 @@ impl Forest {
         }
     }
 
-    /// Breaks the link between the parent `node` and the `child` node
+    /// Breaks the link between the `parent` node and the `child` node
     ///
     /// The `child`'s data is not removed.
-    pub(crate) fn remove_child(&mut self, node: NodeId, child: NodeId) -> NodeId {
-        let index = self.children[node].iter().position(|n| *n == child).unwrap();
-        self.remove_child_at_index(node, index)
+    pub(crate) fn remove_child(&mut self, parent: NodeId, child: NodeId) -> NodeId {
+        let index = self.children[parent].iter().position(|n| *n == child).unwrap();
+        self.remove_child_at_index(parent, index)
     }
 
-    /// Breaks the link between the parent `node` and the n-th child node
+    /// Breaks the link between the `parent` node and the n-th child node
     ///
     /// The child's data is not removed.
-    pub(crate) fn remove_child_at_index(&mut self, node: NodeId, index: usize) -> NodeId {
-        let child = self.children[node].remove(index);
-        self.parents[child].retain(|p| *p != node);
-        self.mark_dirty(node);
+    pub(crate) fn remove_child_at_index(&mut self, parent: NodeId, index: usize) -> NodeId {
+        let child = self.children[parent].remove(index);
+        self.parents[child].retain(|p| *p != parent);
+        self.mark_dirty(parent);
         child
     }
 
