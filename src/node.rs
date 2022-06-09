@@ -115,9 +115,6 @@ impl Sprawl {
     ///
     /// All associated [`Id`] will be rendered invalid.
     pub fn clear(&mut self) {
-        for node in self.nodes_to_ids.keys() {
-            self.allocator.free(&[node.local]);
-        }
         self.nodes_to_ids.clear();
         self.ids_to_nodes.clear();
         self.forest.clear();
@@ -274,12 +271,6 @@ impl Sprawl {
     }
 }
 
-impl Drop for Sprawl {
-    fn drop(&mut self) {
-        INSTANCE_ALLOCATOR.free(&[self.id]);
-    }
-}
-
 /// Internal node id.
 pub(crate) type NodeId = usize;
 
@@ -303,9 +294,4 @@ impl Allocator {
     pub fn allocate(&self) -> Id {
         Id(self.new_id.fetch_add(1, Ordering::Relaxed))
     }
-
-    /// Frees [`Ids`](Id) from the allocator
-    ///
-    /// NOTE: this does not actually free memory in any way.
-    pub fn free(&self, _ids: &[Id]) {}
 }
