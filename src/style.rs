@@ -3,13 +3,21 @@
 use crate::geometry::{Rect, Size};
 use crate::number::Number;
 
+/// How [`Nodes`](crate::node::Node) are aligned relative to the cross axis
+///
+/// The default behavior is [`AlignItems::Stretch`].
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum AlignItems {
+    /// Items are packed toward the start of the cross axis
     FlexStart,
+    /// Items are packed toward the end of the cross axis
     FlexEnd,
+    /// Items are packed along the center of the cross axis
     Center,
+    /// Items are aligned such as their baselines align
     Baseline,
+    /// Stretch to fill the container
     Stretch,
 }
 
@@ -19,14 +27,23 @@ impl Default for AlignItems {
     }
 }
 
+/// Allows the alignment specified by [`AlignItems`] to be overridden by child [`Nodes`](crate::node::Node).
+///
+/// The default behavior is [`AlignSelf::Auto`].
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum AlignSelf {
+    /// Inherits the [`AlignItems`] behavior of the parent
     Auto,
+    /// Items are packed toward the start of the cross axis
     FlexStart,
+    /// Items are packed toward the end of the cross axis
     FlexEnd,
+    /// Items are packed along the center of the cross axis
     Center,
+    /// Items are aligned such as their baselines align
     Baseline,
+    /// Stretch to fill the container
     Stretch,
 }
 
@@ -56,6 +73,7 @@ impl Default for AlignContent {
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Direction {
+    /// Inherits the [`Direction`] defined by the parent
     Inherit,
     #[cfg_attr(feature = "serde", serde(rename = "ltr"))]
     LTR,
@@ -84,12 +102,32 @@ impl Default for Display {
     }
 }
 
+/// The direction in which the flexbox layout should be defined relative to.
+///
+/// There are always two perpendicular layout axes: main (or primary) and cross (or secondary).
+/// Items will be laid out along the main axis (which can then be swapped for the children).
+///
+/// Items are always aligned relative to the cross axis, and justified relative to the main axis.
+///
+/// The default behavior is [`FlexDirection::Row`].
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum FlexDirection {
+    /// Defines +x as the main axis
+    ///
+    /// Items will be added from left to right in a row.
     Row,
+    /// Defines +y as the main axis
+    ///
+    /// Items will be added from top to bottom in a column.
     Column,
+    /// Defines -x as the main axis
+    ///
+    /// Items will be added from right to left in a row.
     RowReverse,
+    /// Defines -y as the main axis
+    ///
+    /// Items will be added from bottom to top in a column.
     ColumnReverse,
 }
 
