@@ -2529,7 +2529,7 @@ mod tests {
         let mut map = FnvIndexMap::<_, _, 8>::new();
         assert_eq!(map.insert(37, "a"), Ok(None));
         assert_eq!(map.is_empty(), false);
-        map.insert(37, "b");
+        map.insert(37, "b").unwrap();
         assert_eq!(map.insert(37, "c"), Ok(Some("b")));
         assert_eq!(map[&37], "c");
     }
