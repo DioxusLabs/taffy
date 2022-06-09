@@ -69,7 +69,7 @@ where
     /// This is typically used when computing total padding.
     ///
     /// **NOTE:** this is *not* the width of the rectangle.
-    pub(crate) fn horizontal(&self) -> T {
+    pub(crate) fn horizontal_axis_sum(&self) -> T {
         self.start + self.end
     }
 
@@ -78,7 +78,7 @@ where
     /// This is typically used when computing total padding.
     ///
     /// **NOTE:** this is *not* the height of the rectangle.
-    pub(crate) fn vertical(&self) -> T {
+    pub(crate) fn vertical_axis_sum(&self) -> T {
         self.top + self.bottom
     }
 
@@ -88,11 +88,11 @@ where
     ///
     /// If the [`FlexDirection`] is [`FlexDirection::Row`] or [`FlexDirection::RowReverse`], this is [`Rect::horizontal`].
     /// Otherwise, this is [`Rect::vertical`].
-    pub(crate) fn main(&self, direction: FlexDirection) -> T {
+    pub(crate) fn main_axis_sum(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
-            self.horizontal()
+            self.horizontal_axis_sum()
         } else {
-            self.vertical()
+            self.vertical_axis_sum()
         }
     }
 
@@ -100,11 +100,11 @@ where
     ///
     /// If the [`FlexDirection`] is [`FlexDirection::Row`] or [`FlexDirection::RowReverse`], this is [`Rect::vertical`].
     /// Otherwise, this is [`Rect::horizontal`].
-    pub(crate) fn cross(&self, direction: FlexDirection) -> T {
+    pub(crate) fn cross_axis_sum(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
-            self.vertical()
+            self.vertical_axis_sum()
         } else {
-            self.horizontal()
+            self.horizontal_axis_sum()
         }
     }
 }
