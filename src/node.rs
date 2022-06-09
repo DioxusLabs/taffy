@@ -161,7 +161,6 @@ impl Sprawl {
         Ok(self.ids_to_nodes[&prev_id])
     }
 
-    
     pub fn replace_child_at_index(&mut self, parent: Node, child_index: usize, new_child: Node) -> Result<Node, Error> {
         let node_id = self.find_node(parent)?;
         let child_id = self.find_node(new_child)?;
@@ -175,7 +174,6 @@ impl Sprawl {
 
         Ok(self.ids_to_nodes[&old_child])
     }
-
 
     pub fn children(&self, parent: Node) -> Result<Vec<Node>, Error> {
         let id = self.find_node(parent)?;
