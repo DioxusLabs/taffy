@@ -6,6 +6,8 @@ use crate::number::Number;
 /// How [`Nodes`](crate::node::Node) are aligned relative to the cross axis
 ///
 /// The default behavior is [`AlignItems::Stretch`].
+/// 
+/// [Specification](https://www.w3.org/TR/css-flexbox-1/#align-items-property)
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum AlignItems {
@@ -32,6 +34,8 @@ impl Default for AlignItems {
 /// The behavior of any child nodes will be controlled by this node's [`AlignItems`] value.
 ///
 /// The default behavior is [`AlignSelf::Auto`].
+/// 
+/// [Specification](https://www.w3.org/TR/css-flexbox-1/#align-items-property)
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum AlignSelf {
@@ -58,6 +62,8 @@ impl Default for AlignSelf {
 /// Sets the distribution of space between and around content items along the cross-axis
 ///
 /// The default value is [`AlignContent::Stretch`].
+/// 
+/// [Specification](https://www.w3.org/TR/css-flexbox-1/#align-content-property)
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum AlignContent {
@@ -111,6 +117,8 @@ impl Default for Display {
 /// Items are always aligned relative to the cross axis, and justified relative to the main axis.
 ///
 /// The default behavior is [`FlexDirection::Row`].
+/// 
+/// [Specification](https://www.w3.org/TR/css-flexbox-1/#flex-direction-property)
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum FlexDirection {
@@ -158,6 +166,8 @@ impl FlexDirection {
 /// Sets the distribution of space between and around content items along the main-axis
 ///
 /// The default value is [`JustifyContent::FlexStart`].
+/// 
+/// [Specification](https://www.w3.org/TR/css-flexbox-1/#justify-content-property)
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum JustifyContent {
@@ -213,10 +223,14 @@ impl Default for PositionType {
 }
 
 /// Controls whether flex items are forced onto one line or can wrap onto multiple lines.
+/// 
+/// Defaults to [`FlexWrap::NoWrap`]
+/// 
+/// [Specification](https://www.w3.org/TR/css-flexbox-1/#flex-wrap-property)
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum FlexWrap {
-    /// Items will not wrap
+    /// Items will not wrap and stay on a single line
     NoWrap,
     /// Items will wrap according to this item's [`FlexDirection`]
     Wrap,
