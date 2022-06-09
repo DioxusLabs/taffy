@@ -28,7 +28,6 @@ pub use crate::node::Sprawl;
 use core::fmt::{Display, Formatter, Result};
 
 /// An error that can occur when performing layout
-#[non_exhaustive]
 #[derive(Debug)]
 pub enum Error {
     /// The [`Node`](node::Node) was invalid
