@@ -1,6 +1,6 @@
 #![doc = include_str!("../README.md")]
 #![cfg_attr(not(feature = "std"), no_std)]
-#![forbid(unsafe_code)]
+#![deny(unsafe_code)]
 #![warn(missing_docs)]
 #![warn(clippy::missing_docs_in_private_items)]
 
@@ -21,6 +21,8 @@ pub mod style;
 mod flexbox;
 mod forest;
 mod sys;
+#[cfg(all(not(feature = "alloc"), not(feature = "std")))]
+mod indexmap;
 
 pub use crate::node::Sprawl;
 
