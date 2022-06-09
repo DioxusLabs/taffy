@@ -250,7 +250,7 @@ impl Sprawl {
         Ok(&self.forest.nodes[id].layout)
     }
 
-    /// Indicates that the layout of this node and its children must be recomputed
+    /// Marks the layout computation of this node and its children as outdated
     pub fn mark_dirty(&mut self, node: Node) -> Result<(), Error> {
         let id = self.find_node(node)?;
         self.forest.mark_dirty(id);
