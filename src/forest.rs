@@ -184,8 +184,8 @@ impl Forest {
     /// Breaks the link between the `parent` node and the n-th child node
     ///
     /// The child's data is not removed.
-    pub(crate) fn remove_child_at_index(&mut self, parent: NodeId, index: usize) -> NodeId {
-        let child = self.children[parent].remove(index);
+    pub(crate) fn remove_child_at_index(&mut self, parent: NodeId, child_index: usize) -> NodeId {
+        let child = self.children[parent].remove(child_index);
         self.parents[child].retain(|p| *p != parent);
         self.mark_dirty(parent);
         child
