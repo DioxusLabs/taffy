@@ -5,18 +5,28 @@ use core::ops::Add;
 use crate::number::Number;
 use crate::style::{Dimension, FlexDirection};
 
-/// The spatial extent of an axis-aligned UI rectangle
+/// An axis-aligned UI rectangle
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 pub struct Rect<T> {
-    /// The x-coordinate of the left edge
+    /// This can represent either the x-coordinate of the starting edge,
+    /// or the amount of padding on the starting side.
+    ///
+    /// The starting edge is the left edge when working with LTR text,
+    /// and the right edge when working with RTL text.
     pub start: T,
-    /// The x-coordinate of the right edge
+    /// This can represent either the x-coordinate of the ending edge,
+    /// or the amount of padding on the ending side.
+    ///
+    /// The ending edge is the right edge when working with LTR text,
+    /// and the left edge when working with RTL text.
     pub end: T,
-    /// The y-coordinate of the top edge
+    /// This can represent either the y-coordinate of the top edge,
+    /// or the amount of padding on the top side.
     pub top: T,
-    /// the y-coordinate of the bottom edge
+    /// This can represent either the y-coordinate of the bottom edge,
+    /// or the amount of padding on the bottom side.
     pub bottom: T,
 }
 
@@ -54,23 +64,27 @@ impl<T> Rect<T>
 where
     T: Add<Output = T> + Copy + Clone,
 {
-    /// The sum of the coordinates of the left and right side of the rectangle
+    /// The sum of [`Rect.left`](Rect) and [`Rect.right](Rect)
+    ///
+    /// This is typically used when computing total padding.
     ///
     /// **NOTE:** this is *not* the width of the rectangle.
     pub(crate) fn horizontal(&self) -> T {
         self.start + self.end
     }
 
-    /// The sum of the coordinates of the bottom and top side of the rectangle
+    /// The sum of [`Rect.top`](Rect) and [`Rect.bottom](Rect)
+    ///
+    /// This is typically used when computing total padding.
     ///
     /// **NOTE:** this is *not* the height of the rectangle.
     pub(crate) fn vertical(&self) -> T {
         self.top + self.bottom
     }
 
-    /// The main layout-axis sum of the rectangle
+    /// The sum of the two fields of the [`Rect`] representing the main axis.
     ///
-    /// This is always perpendicular to [`Rect::cross`].
+    /// This is typically used when computing total padding.
     ///
     /// If the [`FlexDirection`] is [`FlexDirection::Row`] or [`FlexDirection::RowReverse`], this is [`Rect::horizontal`].
     /// Otherwise, this is [`Rect::vertical`].
@@ -82,9 +96,7 @@ where
         }
     }
 
-    /// The cross layout-axis sum of the rectangle
-    ///
-    /// This is always perpendicular to [`Rect::main`].
+    /// The sum of the two fields of the [`Rect`] representing the cross axis.
     ///
     /// If the [`FlexDirection`] is [`FlexDirection::Row`] or [`FlexDirection::RowReverse`], this is [`Rect::vertical`].
     /// Otherwise, this is [`Rect::horizontal`].
@@ -101,7 +113,7 @@ impl<T> Rect<T>
 where
     T: Copy + Clone,
 {
-    /// The lowest coordinate of the rectangle, from the perspective of the main layout axis
+    /// The `start` or `top` value of the [`Rect`], from the perspective of the main layout axis
     pub(crate) fn main_start(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.start
@@ -110,7 +122,7 @@ where
         }
     }
 
-    /// The highest coordinate of the rectangle, from the perspective of the main layout axis
+    /// The `end` or `bottom` value of the [`Rect`], from the perspective of the main layout axis
     pub(crate) fn main_end(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.end
@@ -119,7 +131,7 @@ where
         }
     }
 
-    /// The lowest coordinate of the rectangle, from the perspective of the cross layout axis
+    /// The `start` or `top` value of the [`Rect`], from the perspective of the cross layout axis
     pub(crate) fn cross_start(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.top
@@ -128,7 +140,7 @@ where
         }
     }
 
-    /// The highest coordinate of the rectangle, from the perspective of the cross layout axis
+    /// The `end` or `bottom` value of the [`Rect`], from the perspective of the main layout axis
     pub(crate) fn cross_end(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.bottom
