@@ -185,20 +185,6 @@ impl Default for JustifyContent {
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum Overflow {
-    Visible,
-    Hidden,
-    Scroll,
-}
-
-impl Default for Overflow {
-    fn default() -> Self {
-        Self::Visible
-    }
-}
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum PositionType {
     Relative,
     Absolute,
@@ -277,7 +263,6 @@ pub struct Style {
     pub position_type: PositionType,
     pub flex_direction: FlexDirection,
     pub flex_wrap: FlexWrap,
-    pub overflow: Overflow,
     pub align_items: AlignItems,
     pub align_self: AlignSelf,
     pub align_content: AlignContent,
@@ -302,7 +287,6 @@ impl Default for Style {
             position_type: Default::default(),
             flex_direction: Default::default(),
             flex_wrap: Default::default(),
-            overflow: Default::default(),
             align_items: Default::default(),
             align_self: Default::default(),
             align_content: Default::default(),
