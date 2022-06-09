@@ -3,12 +3,15 @@
 ## 0.2.0
 
 ### 0.2.0 Changed
+
 - `Sprawl::remove` now returns a `Result<usize, Error>`, to indicate if the operation was sucessful, and if it was, which ID was invalidated.
 
 ### 0.2.0 Fixed
+
 - Nothing yet!
 
 ### 0.2.0 Removed
+
 - Nothing yet!
 
 ## 0.1.0
