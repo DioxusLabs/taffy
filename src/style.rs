@@ -27,7 +27,9 @@ impl Default for AlignItems {
     }
 }
 
-/// Allows the alignment specified by [`AlignItems`] to be overridden by child [`Nodes`](crate::node::Node).
+/// Overrides the inherited [`AlignItems`] behavior for this node.
+///
+/// The behavior of any child nodes will be controlled by this node's [`AlignItems`] value.
 ///
 /// The default behavior is [`AlignSelf::Auto`].
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -43,7 +45,7 @@ pub enum AlignSelf {
     Center,
     /// Items are aligned such as their baselines align
     Baseline,
-    /// Stretch to fill the container
+    /// Distribute items evenly, but stretch them to fill the container
     Stretch,
 }
 
@@ -53,14 +55,24 @@ impl Default for AlignSelf {
     }
 }
 
+/// Sets the distribution of space between and around content items along the cross-axis
+///
+/// The default value is [`AlignContent::Stretch`].
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum AlignContent {
+    /// Items are packed toward the start of the cross axis
     FlexStart,
+    /// Items are packed toward the end of the cross axis
     FlexEnd,
+    /// Items are packed along the center of the cross axis
     Center,
+    /// Distribute items evenly, but stretch them to fill the container
     Stretch,
+    /// Distribute items evenly, such that the first and last item are aligned with the edges
     SpaceBetween,
+    /// Distribute items evenly,
+    /// such that the space between items is the same as the space between the first and last item and the edges
     SpaceAround,
 }
 
@@ -87,11 +99,16 @@ impl Default for Direction {
     }
 }
 
+/// Sets the layout used for the children of this node
+///
+/// [`Display::Flex`] is the default value.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Display {
+    /// The children will follow the flexbox layout algorithm
     #[cfg_attr(feature = "serde", serde(rename = "flex"))]
     Flex,
+    /// The children will not be laid out, and will follow absolute positioning
     #[cfg_attr(feature = "serde", serde(rename = "none"))]
     None,
 }
@@ -102,10 +119,11 @@ impl Default for Display {
     }
 }
 
-/// The direction in which the flexbox layout should be defined relative to.
+/// The direction of the flexbox layout main axis.
 ///
 /// There are always two perpendicular layout axes: main (or primary) and cross (or secondary).
-/// Items will be laid out along the main axis (which can then be swapped for the children).
+/// Adding items will cause them to be positioned adjacent to each other along the main axis.
+/// By varying this value throughout your tree, you can create complex axis-aligned layouts.
 ///
 /// Items are always aligned relative to the cross axis, and justified relative to the main axis.
 ///
@@ -253,6 +271,10 @@ impl Default for Size<Dimension> {
     }
 }
 
+/// The flexbox layout information for a single [`Node`](crate::node::Node).
+///
+/// This struct follows the [CSS equivalent](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flexible_Box_Layout/Basic_Concepts_of_Flexbox) directly;
+/// information about the behavior on the web should transfer directly.
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(default))]
