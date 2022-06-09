@@ -353,77 +353,6 @@ mod vec {
         /// - The elements at `old_len..new_len` must be initialized.
         ///
         /// [`capacity()`]: #method.capacity
-        ///
-        /// # Examples
-        ///
-        /// This method can be useful for situations in which the vector
-        /// is serving as a buffer for other code, particularly over FFI:
-        ///
-        /// ```no_run
-        /// # #![allow(dead_code)]
-        /// use heapless::Vec;
-        ///
-        /// # // This is just a minimal skeleton for the doc example;
-        /// # // don't use this as a starting point for a real library.
-        /// # pub struct StreamWrapper { strm: *mut core::ffi::c_void }
-        /// # const Z_OK: i32 = 0;
-        /// # extern "C" {
-        /// #     fn deflateGetDictionary(
-        /// #         strm: *mut core::ffi::c_void,
-        /// #         dictionary: *mut u8,
-        /// #         dictLength: *mut usize,
-        /// #     ) -> i32;
-        /// # }
-        /// # impl StreamWrapper {
-        /// pub fn get_dictionary(&self) -> Option<Vec<u8, 32768>> {
-        ///     // Per the FFI method's docs, "32768 bytes is always enough".
-        ///     let mut dict = Vec::new();
-        ///     let mut dict_length = 0;
-        ///     // SAFETY: When `deflateGetDictionary` returns `Z_OK`, it holds that:
-        ///     // 1. `dict_length` elements were initialized.
-        ///     // 2. `dict_length` <= the capacity (32_768)
-        ///     // which makes `set_len` safe to call.
-        ///     unsafe {
-        ///         // Make the FFI call...
-        ///         let r = deflateGetDictionary(self.strm, dict.as_mut_ptr(), &mut dict_length);
-        ///         if r == Z_OK {
-        ///             // ...and update the length to what was initialized.
-        ///             dict.set_len(dict_length);
-        ///             Some(dict)
-        ///         } else {
-        ///             None
-        ///         }
-        ///     }
-        /// }
-        /// # }
-        /// ```
-        ///
-        /// While the following example is sound, there is a memory leak since
-        /// the inner vectors were not freed prior to the `set_len` call:
-        ///
-        /// ```
-        /// use core::iter::FromIterator;
-        /// use heapless::Vec;
-        ///
-        /// let mut vec = Vec::<Vec<u8, 3>, 3>::from_iter(
-        ///     [
-        ///         Vec::from_iter([1, 0, 0].iter().cloned()),
-        ///         Vec::from_iter([0, 1, 0].iter().cloned()),
-        ///         Vec::from_iter([0, 0, 1].iter().cloned()),
-        ///     ]
-        ///     .iter()
-        ///     .cloned()
-        /// );
-        /// // SAFETY:
-        /// // 1. `old_len..0` is empty so no elements need to be initialized.
-        /// // 2. `0 <= capacity` always holds whatever `capacity` is.
-        /// unsafe {
-        ///     vec.set_len(0);
-        /// }
-        /// ```
-        ///
-        /// Normally, here, one would use [`clear`] instead to correctly drop
-        /// the contents and thus not leak memory.
         pub unsafe fn set_len(&mut self, new_len: usize) {
             debug_assert!(new_len <= self.capacity());
 
@@ -1221,6 +1150,7 @@ mod vec {
             assert!(v.is_full());
         }
 
+        #[cfg(feature = "std")]
         #[test]
         fn struct_definition_doctest() {
             // A vector with a fixed capacity of 8 elements allocated on the stack
@@ -1240,6 +1170,7 @@ mod vec {
             assert_eq!(*vec, [7, 1, 2, 3]);
         }
 
+        #[cfg(feature = "std")]
         #[test]
         fn new_doctest() {
             // allocate the vector on the stack
@@ -1249,12 +1180,14 @@ mod vec {
             static mut X: Vec<u8, 16> = Vec::new();
         }
 
+        #[cfg(feature = "std")]
         #[test]
         fn as_slice_doctest() {
             let buffer: Vec<u8, 5> = Vec::from_slice(&[1, 2, 3, 5, 8]).unwrap();
             assert_eq!(buffer.as_slice(), &[1, 2, 3, 5, 8]);
         }
 
+        #[cfg(feature = "std")]
         #[test]
         fn into_array_doctest() {
             let buffer: Vec<u8, 42> = Vec::from_slice(&[1, 2, 3, 5, 8]).unwrap();
@@ -1262,6 +1195,7 @@ mod vec {
             assert_eq!(array, [1, 2, 3, 5, 8]);
         }
 
+        #[cfg(feature = "std")]
         #[test]
         fn as_mut_slice_doctest() {
             let mut buffer: Vec<u8, 5> = Vec::from_slice(&[1, 2, 3, 5, 8]).unwrap();
@@ -1269,6 +1203,7 @@ mod vec {
             assert_eq!(buffer.as_slice(), &[9, 2, 3, 5, 8]);
         }
 
+        #[cfg(feature = "std")]
         #[test]
         fn extend_from_slice_doctest() {
             let mut vec = Vec::<u8, 8>::new();
@@ -1277,6 +1212,7 @@ mod vec {
             assert_eq!(*vec, [1, 2, 3, 4]);
         }
 
+        #[cfg(feature = "std")]
         #[test]
         fn swap_remove_doctest() {
             let mut v: Vec<_, 8> = Vec::new();
@@ -1290,6 +1226,7 @@ mod vec {
             assert_eq!(&*v, ["baz", "qux"]);
         }
 
+        #[cfg(feature = "std")]
         #[test]
         fn swap_remove_unchecked_doctest() {
             let mut v: Vec<_, 8> = Vec::new();
@@ -1303,6 +1240,7 @@ mod vec {
             assert_eq!(&*v, ["baz", "qux"]);
         }
 
+        #[cfg(feature = "std")]
         #[test]
         fn starts_with_doctest() {
             let v: Vec<_, 8> = Vec::from_slice(b"abc").unwrap();
@@ -1311,6 +1249,7 @@ mod vec {
             assert_eq!(v.starts_with(b"bc"), false);
         }
 
+        #[cfg(feature = "std")]
         #[test]
         fn ends_with_doctest() {
             let v: Vec<_, 8> = Vec::from_slice(b"abc").unwrap();
@@ -2379,6 +2318,7 @@ mod tests {
         assert_eq!(Some((&1, &2)), map.last());
     }
 
+    #[cfg(feature = "std")]
     #[test]
     fn fnv_index_map_doctest() {
         // A hash map with a capacity of 16 key-value pairs allocated on the stack
@@ -2408,6 +2348,7 @@ mod tests {
         }
     }
 
+    #[cfg(feature = "std")]
     #[test]
     fn struct_definition_doctest() {
         // Since `IndexMap` cannot be used directly, we're using its `FnvIndexMap` instantiation
@@ -2439,6 +2380,7 @@ mod tests {
         }
     }
 
+    #[cfg(feature = "std")]
     #[test]
     fn keys_doctest() {
         let mut map = FnvIndexMap::<_, _, 16>::new();
@@ -2450,6 +2392,7 @@ mod tests {
         }
     }
 
+    #[cfg(feature = "std")]
     #[test]
     fn values_doctest() {
         let mut map = FnvIndexMap::<_, _, 16>::new();
@@ -2461,6 +2404,7 @@ mod tests {
         }
     }
 
+    #[cfg(feature = "std")]
     #[test]
     fn values_mut_doctest() {
         let mut map = FnvIndexMap::<_, _, 16>::new();
@@ -2475,6 +2419,7 @@ mod tests {
         }
     }
 
+    #[cfg(feature = "std")]
     #[test]
     fn iter_doctest() {
         let mut map = FnvIndexMap::<_, _, 16>::new();
@@ -2486,6 +2431,7 @@ mod tests {
         }
     }
 
+    #[cfg(feature = "std")]
     #[test]
     fn iter_mut_doctest() {
         let mut map = FnvIndexMap::<_, _, 16>::new();
@@ -2500,6 +2446,7 @@ mod tests {
         }
     }
 
+    #[cfg(feature = "std")]
     #[test]
     fn entry_doctest() {
         let mut map = FnvIndexMap::<_, _, 16>::new();
@@ -2514,6 +2461,7 @@ mod tests {
         println!("val: {}", *map.get("a").unwrap());
     }
 
+    #[cfg(feature = "std")]
     #[test]
     fn len_doctest() {
         let mut a = FnvIndexMap::<_, _, 16>::new();
@@ -2522,6 +2470,7 @@ mod tests {
         assert_eq!(a.len(), 1);
     }
 
+    #[cfg(feature = "std")]
     #[test]
     fn is_empty_doctest() {
         let mut a = FnvIndexMap::<_, _, 16>::new();
@@ -2530,6 +2479,7 @@ mod tests {
         assert!(!a.is_empty());
     }
 
+    #[cfg(feature = "std")]
     #[test]
     fn clear_doctest() {
         let mut a = FnvIndexMap::<_, _, 16>::new();
@@ -2538,6 +2488,7 @@ mod tests {
         assert!(a.is_empty());
     }
 
+    #[cfg(feature = "std")]
     #[test]
     fn get_doctest() {
         let mut map = FnvIndexMap::<_, _, 16>::new();
@@ -2546,6 +2497,7 @@ mod tests {
         assert_eq!(map.get(&2), None);
     }
 
+    #[cfg(feature = "std")]
     #[test]
     fn contains_key_doctest() {
         let mut map = FnvIndexMap::<_, _, 8>::new();
@@ -2554,6 +2506,7 @@ mod tests {
         assert_eq!(map.contains_key(&2), false);
     }
 
+    #[cfg(feature = "std")]
     #[test]
     fn get_mut_doctest() {
         let mut map = FnvIndexMap::<_, _, 8>::new();
@@ -2564,6 +2517,7 @@ mod tests {
         assert_eq!(map[&1], "b");
     }
 
+    #[cfg(feature = "std")]
     #[test]
     fn insert_doctest() {
         let mut map = FnvIndexMap::<_, _, 8>::new();
@@ -2574,6 +2528,7 @@ mod tests {
         assert_eq!(map[&37], "c");
     }
 
+    #[cfg(feature = "std")]
     #[test]
     fn remove_doctest() {
         let mut map = FnvIndexMap::<_, _, 8>::new();
