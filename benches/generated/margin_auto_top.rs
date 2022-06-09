@@ -8,7 +8,7 @@ pub fn compute() {
                     height: sprawl::style::Dimension::Points(50f32),
                     ..Default::default()
                 },
-                margin: sprawl::geometry::Rect { top: sprawl::style::Dimension::Auto, ..Default::default() },
+                margin: sprawl::geometry::Rect { cross_start: sprawl::style::Dimension::Auto, ..Default::default() },
                 ..Default::default()
             },
             &[],

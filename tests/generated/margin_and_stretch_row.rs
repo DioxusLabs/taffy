@@ -6,8 +6,8 @@ fn margin_and_stretch_row() {
             sprawl::style::Style {
                 flex_grow: 1f32,
                 margin: sprawl::geometry::Rect {
-                    top: sprawl::style::Dimension::Points(10f32),
-                    bottom: sprawl::style::Dimension::Points(10f32),
+                    cross_start: sprawl::style::Dimension::Points(10f32),
+                    cross_end: sprawl::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 ..Default::default()

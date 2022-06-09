@@ -10,8 +10,8 @@ fn margin_auto_top_and_bottom_strech() {
                     ..Default::default()
                 },
                 margin: sprawl::geometry::Rect {
-                    top: sprawl::style::Dimension::Auto,
-                    bottom: sprawl::style::Dimension::Auto,
+                    cross_start: sprawl::style::Dimension::Auto,
+                    cross_end: sprawl::style::Dimension::Auto,
                     ..Default::default()
                 },
                 ..Default::default()

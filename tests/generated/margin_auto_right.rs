@@ -9,7 +9,7 @@ fn margin_auto_right() {
                     height: sprawl::style::Dimension::Points(50f32),
                     ..Default::default()
                 },
-                margin: sprawl::geometry::Rect { end: sprawl::style::Dimension::Auto, ..Default::default() },
+                margin: sprawl::geometry::Rect { main_end: sprawl::style::Dimension::Auto, ..Default::default() },
                 ..Default::default()
             },
             &[],

@@ -37,7 +37,10 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
         .new_node(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
-                margin: sprawl::geometry::Rect { end: sprawl::style::Dimension::Points(10f32), ..Default::default() },
+                margin: sprawl::geometry::Rect {
+                    main_end: sprawl::style::Dimension::Points(10f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[node010],

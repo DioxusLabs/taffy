@@ -9,7 +9,7 @@ pub fn compute() {
                     ..Default::default()
                 },
                 margin: sprawl::geometry::Rect {
-                    bottom: sprawl::style::Dimension::Points(10f32),
+                    cross_end: sprawl::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 ..Default::default()

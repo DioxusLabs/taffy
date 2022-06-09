@@ -11,7 +11,7 @@ fn absolute_layout_percentage_bottom_based_on_parent_height() {
                     ..Default::default()
                 },
                 position: sprawl::geometry::Rect {
-                    top: sprawl::style::Dimension::Percent(0.5f32),
+                    cross_start: sprawl::style::Dimension::Percent(0.5f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -29,7 +29,7 @@ fn absolute_layout_percentage_bottom_based_on_parent_height() {
                     ..Default::default()
                 },
                 position: sprawl::geometry::Rect {
-                    bottom: sprawl::style::Dimension::Percent(0.5f32),
+                    cross_end: sprawl::style::Dimension::Percent(0.5f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -43,8 +43,8 @@ fn absolute_layout_percentage_bottom_based_on_parent_height() {
                 position_type: sprawl::style::PositionType::Absolute,
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(10f32), ..Default::default() },
                 position: sprawl::geometry::Rect {
-                    top: sprawl::style::Dimension::Percent(0.1f32),
-                    bottom: sprawl::style::Dimension::Percent(0.1f32),
+                    cross_start: sprawl::style::Dimension::Percent(0.1f32),
+                    cross_end: sprawl::style::Dimension::Percent(0.1f32),
                     ..Default::default()
                 },
                 ..Default::default()

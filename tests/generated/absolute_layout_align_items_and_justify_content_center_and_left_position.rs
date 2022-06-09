@@ -11,7 +11,7 @@ fn absolute_layout_align_items_and_justify_content_center_and_left_position() {
                     ..Default::default()
                 },
                 position: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Points(5f32),
+                    main_start: sprawl::style::Dimension::Points(5f32),
                     ..Default::default()
                 },
                 ..Default::default()

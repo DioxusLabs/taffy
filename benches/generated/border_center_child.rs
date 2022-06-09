@@ -24,8 +24,8 @@ pub fn compute() {
                     ..Default::default()
                 },
                 border: sprawl::geometry::Rect {
-                    top: sprawl::style::Dimension::Points(10f32),
-                    bottom: sprawl::style::Dimension::Points(20f32),
+                    cross_start: sprawl::style::Dimension::Points(10f32),
+                    cross_end: sprawl::style::Dimension::Points(20f32),
                     ..Default::default()
                 },
                 ..Default::default()

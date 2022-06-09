@@ -19,10 +19,10 @@ pub fn compute() {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 flex_grow: 1f32,
                 margin: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Percent(0.1f32),
-                    end: sprawl::style::Dimension::Percent(0.1f32),
-                    top: sprawl::style::Dimension::Percent(0.1f32),
-                    bottom: sprawl::style::Dimension::Percent(0.1f32),
+                    main_start: sprawl::style::Dimension::Percent(0.1f32),
+                    main_end: sprawl::style::Dimension::Percent(0.1f32),
+                    cross_start: sprawl::style::Dimension::Percent(0.1f32),
+                    cross_end: sprawl::style::Dimension::Percent(0.1f32),
                     ..Default::default()
                 },
                 ..Default::default()

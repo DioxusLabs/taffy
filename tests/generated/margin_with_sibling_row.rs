@@ -5,7 +5,10 @@ fn margin_with_sibling_row() {
         .new_node(
             sprawl::style::Style {
                 flex_grow: 1f32,
-                margin: sprawl::geometry::Rect { end: sprawl::style::Dimension::Points(10f32), ..Default::default() },
+                margin: sprawl::geometry::Rect {
+                    main_end: sprawl::style::Dimension::Points(10f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[],

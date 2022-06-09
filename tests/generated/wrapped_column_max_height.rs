@@ -27,10 +27,10 @@ fn wrapped_column_max_height() {
                     ..Default::default()
                 },
                 margin: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Points(20f32),
-                    end: sprawl::style::Dimension::Points(20f32),
-                    top: sprawl::style::Dimension::Points(20f32),
-                    bottom: sprawl::style::Dimension::Points(20f32),
+                    main_start: sprawl::style::Dimension::Points(20f32),
+                    main_end: sprawl::style::Dimension::Points(20f32),
+                    cross_start: sprawl::style::Dimension::Points(20f32),
+                    cross_end: sprawl::style::Dimension::Points(20f32),
                     ..Default::default()
                 },
                 ..Default::default()

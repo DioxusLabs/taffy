@@ -10,8 +10,8 @@ fn margin_auto_left_fix_right_child_bigger_than_parent() {
                     ..Default::default()
                 },
                 margin: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Auto,
-                    end: sprawl::style::Dimension::Points(10f32),
+                    main_start: sprawl::style::Dimension::Auto,
+                    main_end: sprawl::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 ..Default::default()

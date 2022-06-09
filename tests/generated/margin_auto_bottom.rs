@@ -9,7 +9,7 @@ fn margin_auto_bottom() {
                     height: sprawl::style::Dimension::Points(50f32),
                     ..Default::default()
                 },
-                margin: sprawl::geometry::Rect { bottom: sprawl::style::Dimension::Auto, ..Default::default() },
+                margin: sprawl::geometry::Rect { cross_end: sprawl::style::Dimension::Auto, ..Default::default() },
                 ..Default::default()
             },
             &[],

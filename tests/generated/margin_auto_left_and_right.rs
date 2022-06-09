@@ -10,8 +10,8 @@ fn margin_auto_left_and_right() {
                     ..Default::default()
                 },
                 margin: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Auto,
-                    end: sprawl::style::Dimension::Auto,
+                    main_start: sprawl::style::Dimension::Auto,
+                    main_end: sprawl::style::Dimension::Auto,
                     ..Default::default()
                 },
                 ..Default::default()

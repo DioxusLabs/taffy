@@ -6,8 +6,8 @@ fn margin_and_flex_row() {
             sprawl::style::Style {
                 flex_grow: 1f32,
                 margin: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Points(10f32),
-                    end: sprawl::style::Dimension::Points(10f32),
+                    main_start: sprawl::style::Dimension::Points(10f32),
+                    main_end: sprawl::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 ..Default::default()

@@ -10,8 +10,8 @@ pub fn compute() {
                     ..Default::default()
                 },
                 position: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Percent(0.3f32),
-                    top: sprawl::style::Dimension::Percent(0.1f32),
+                    main_start: sprawl::style::Dimension::Percent(0.3f32),
+                    cross_start: sprawl::style::Dimension::Percent(0.1f32),
                     ..Default::default()
                 },
                 ..Default::default()

@@ -20,10 +20,10 @@ fn border_flex_child() {
                     ..Default::default()
                 },
                 border: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Points(10f32),
-                    end: sprawl::style::Dimension::Points(10f32),
-                    top: sprawl::style::Dimension::Points(10f32),
-                    bottom: sprawl::style::Dimension::Points(10f32),
+                    main_start: sprawl::style::Dimension::Points(10f32),
+                    main_end: sprawl::style::Dimension::Points(10f32),
+                    cross_start: sprawl::style::Dimension::Points(10f32),
+                    cross_end: sprawl::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 ..Default::default()

@@ -10,8 +10,8 @@ fn percentage_position_bottom_right() {
                     ..Default::default()
                 },
                 position: sprawl::geometry::Rect {
-                    end: sprawl::style::Dimension::Percent(0.2f32),
-                    bottom: sprawl::style::Dimension::Percent(0.1f32),
+                    main_end: sprawl::style::Dimension::Percent(0.2f32),
+                    cross_end: sprawl::style::Dimension::Percent(0.1f32),
                     ..Default::default()
                 },
                 ..Default::default()

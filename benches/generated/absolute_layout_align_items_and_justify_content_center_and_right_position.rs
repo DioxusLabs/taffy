@@ -9,7 +9,10 @@ pub fn compute() {
                     height: sprawl::style::Dimension::Points(40f32),
                     ..Default::default()
                 },
-                position: sprawl::geometry::Rect { end: sprawl::style::Dimension::Points(5f32), ..Default::default() },
+                position: sprawl::geometry::Rect {
+                    main_end: sprawl::style::Dimension::Points(5f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[],

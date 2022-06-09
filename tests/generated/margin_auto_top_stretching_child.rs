@@ -7,7 +7,7 @@ fn margin_auto_top_stretching_child() {
                 flex_grow: 1f32,
                 flex_shrink: 1f32,
                 flex_basis: sprawl::style::Dimension::Percent(0f32),
-                margin: sprawl::geometry::Rect { top: sprawl::style::Dimension::Auto, ..Default::default() },
+                margin: sprawl::geometry::Rect { cross_start: sprawl::style::Dimension::Auto, ..Default::default() },
                 ..Default::default()
             },
             &[],

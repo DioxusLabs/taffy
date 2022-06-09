@@ -9,17 +9,17 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
                     ..Default::default()
                 },
                 margin: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Percent(0.05f32),
-                    end: sprawl::style::Dimension::Percent(0.05f32),
-                    top: sprawl::style::Dimension::Percent(0.05f32),
-                    bottom: sprawl::style::Dimension::Percent(0.05f32),
+                    main_start: sprawl::style::Dimension::Percent(0.05f32),
+                    main_end: sprawl::style::Dimension::Percent(0.05f32),
+                    cross_start: sprawl::style::Dimension::Percent(0.05f32),
+                    cross_end: sprawl::style::Dimension::Percent(0.05f32),
                     ..Default::default()
                 },
                 padding: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Points(3f32),
-                    end: sprawl::style::Dimension::Points(3f32),
-                    top: sprawl::style::Dimension::Points(3f32),
-                    bottom: sprawl::style::Dimension::Points(3f32),
+                    main_start: sprawl::style::Dimension::Points(3f32),
+                    main_end: sprawl::style::Dimension::Points(3f32),
+                    cross_start: sprawl::style::Dimension::Points(3f32),
+                    cross_end: sprawl::style::Dimension::Points(3f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -33,17 +33,17 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Percent(0.5f32), ..Default::default() },
                 margin: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Points(5f32),
-                    end: sprawl::style::Dimension::Points(5f32),
-                    top: sprawl::style::Dimension::Points(5f32),
-                    bottom: sprawl::style::Dimension::Points(5f32),
+                    main_start: sprawl::style::Dimension::Points(5f32),
+                    main_end: sprawl::style::Dimension::Points(5f32),
+                    cross_start: sprawl::style::Dimension::Points(5f32),
+                    cross_end: sprawl::style::Dimension::Points(5f32),
                     ..Default::default()
                 },
                 padding: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Percent(0.03f32),
-                    end: sprawl::style::Dimension::Percent(0.03f32),
-                    top: sprawl::style::Dimension::Percent(0.03f32),
-                    bottom: sprawl::style::Dimension::Percent(0.03f32),
+                    main_start: sprawl::style::Dimension::Percent(0.03f32),
+                    main_end: sprawl::style::Dimension::Percent(0.03f32),
+                    cross_start: sprawl::style::Dimension::Percent(0.03f32),
+                    cross_end: sprawl::style::Dimension::Percent(0.03f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -62,17 +62,17 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
                     ..Default::default()
                 },
                 margin: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Points(5f32),
-                    end: sprawl::style::Dimension::Points(5f32),
-                    top: sprawl::style::Dimension::Points(5f32),
-                    bottom: sprawl::style::Dimension::Points(5f32),
+                    main_start: sprawl::style::Dimension::Points(5f32),
+                    main_end: sprawl::style::Dimension::Points(5f32),
+                    cross_start: sprawl::style::Dimension::Points(5f32),
+                    cross_end: sprawl::style::Dimension::Points(5f32),
                     ..Default::default()
                 },
                 padding: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Points(3f32),
-                    end: sprawl::style::Dimension::Points(3f32),
-                    top: sprawl::style::Dimension::Points(3f32),
-                    bottom: sprawl::style::Dimension::Points(3f32),
+                    main_start: sprawl::style::Dimension::Points(3f32),
+                    main_end: sprawl::style::Dimension::Points(3f32),
+                    cross_start: sprawl::style::Dimension::Points(3f32),
+                    cross_end: sprawl::style::Dimension::Points(3f32),
                     ..Default::default()
                 },
                 ..Default::default()

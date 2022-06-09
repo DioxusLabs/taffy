@@ -7,10 +7,10 @@ use crate::style::{Dimension, FlexDirection};
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 pub struct Rect<T> {
-    pub start: T,
-    pub end: T,
-    pub top: T,
-    pub bottom: T,
+    pub main_start: T,
+    pub main_end: T,
+    pub cross_start: T,
+    pub cross_end: T,
 }
 
 impl<T> Rect<T> {
@@ -18,7 +18,12 @@ impl<T> Rect<T> {
     where
         F: Fn(T) -> R,
     {
-        Rect { start: f(self.start), end: f(self.end), top: f(self.top), bottom: f(self.bottom) }
+        Rect {
+            main_start: f(self.main_start),
+            main_end: f(self.main_end),
+            cross_start: f(self.cross_start),
+            cross_end: f(self.cross_end),
+        }
     }
     pub(crate) fn zip_size<R, F, U>(self, size: Size<U>, f: F) -> Rect<R>
     where
@@ -26,10 +31,10 @@ impl<T> Rect<T> {
         U: Copy,
     {
         Rect {
-            start: f(self.start, size.width),
-            end: f(self.end, size.width),
-            top: f(self.top, size.height),
-            bottom: f(self.bottom, size.height),
+            main_start: f(self.main_start, size.width),
+            main_end: f(self.main_end, size.width),
+            cross_start: f(self.cross_start, size.height),
+            cross_end: f(self.cross_end, size.height),
         }
     }
 }
@@ -39,11 +44,11 @@ where
     T: Add<Output = T> + Copy + Clone,
 {
     pub(crate) fn horizontal(&self) -> T {
-        self.start + self.end
+        self.main_start + self.main_end
     }
 
     pub(crate) fn vertical(&self) -> T {
-        self.top + self.bottom
+        self.cross_start + self.cross_end
     }
 
     pub(crate) fn main(&self, direction: FlexDirection) -> T {
@@ -69,33 +74,33 @@ where
 {
     pub(crate) fn main_start(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
-            self.start
+            self.main_start
         } else {
-            self.top
+            self.cross_start
         }
     }
 
     pub(crate) fn main_end(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
-            self.end
+            self.main_end
         } else {
-            self.bottom
+            self.cross_end
         }
     }
 
     pub(crate) fn cross_start(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
-            self.top
+            self.cross_start
         } else {
-            self.start
+            self.main_start
         }
     }
 
     pub(crate) fn cross_end(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
-            self.bottom
+            self.cross_end
         } else {
-            self.end
+            self.main_end
         }
     }
 }

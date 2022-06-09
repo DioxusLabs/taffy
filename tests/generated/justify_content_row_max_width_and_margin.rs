@@ -10,7 +10,7 @@ fn justify_content_row_max_width_and_margin() {
                     ..Default::default()
                 },
                 margin: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Points(100f32),
+                    main_start: sprawl::style::Dimension::Points(100f32),
                     ..Default::default()
                 },
                 ..Default::default()

@@ -23,8 +23,8 @@ fn justify_content_min_width_with_padding_child_width_greater_than_parent() {
                     ..Default::default()
                 },
                 padding: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Points(100f32),
-                    end: sprawl::style::Dimension::Points(100f32),
+                    main_start: sprawl::style::Dimension::Points(100f32),
+                    main_end: sprawl::style::Dimension::Points(100f32),
                     ..Default::default()
                 },
                 ..Default::default()

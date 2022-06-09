@@ -29,7 +29,7 @@ fn percent_absolute_position() {
                     ..Default::default()
                 },
                 position: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Percent(0.5f32),
+                    main_start: sprawl::style::Dimension::Percent(0.5f32),
                     ..Default::default()
                 },
                 ..Default::default()

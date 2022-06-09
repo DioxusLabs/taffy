@@ -10,8 +10,8 @@ pub fn compute() {
                     ..Default::default()
                 },
                 position: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Points(0f32),
-                    top: sprawl::style::Dimension::Points(0f32),
+                    main_start: sprawl::style::Dimension::Points(0f32),
+                    cross_start: sprawl::style::Dimension::Points(0f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -29,8 +29,8 @@ pub fn compute() {
                     ..Default::default()
                 },
                 position: sprawl::geometry::Rect {
-                    end: sprawl::style::Dimension::Points(0f32),
-                    bottom: sprawl::style::Dimension::Points(0f32),
+                    main_end: sprawl::style::Dimension::Points(0f32),
+                    cross_end: sprawl::style::Dimension::Points(0f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -48,15 +48,15 @@ pub fn compute() {
                     ..Default::default()
                 },
                 margin: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Points(10f32),
-                    end: sprawl::style::Dimension::Points(10f32),
-                    top: sprawl::style::Dimension::Points(10f32),
-                    bottom: sprawl::style::Dimension::Points(10f32),
+                    main_start: sprawl::style::Dimension::Points(10f32),
+                    main_end: sprawl::style::Dimension::Points(10f32),
+                    cross_start: sprawl::style::Dimension::Points(10f32),
+                    cross_end: sprawl::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 position: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Points(0f32),
-                    top: sprawl::style::Dimension::Points(0f32),
+                    main_start: sprawl::style::Dimension::Points(0f32),
+                    cross_start: sprawl::style::Dimension::Points(0f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -74,15 +74,15 @@ pub fn compute() {
                     ..Default::default()
                 },
                 margin: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Points(10f32),
-                    end: sprawl::style::Dimension::Points(10f32),
-                    top: sprawl::style::Dimension::Points(10f32),
-                    bottom: sprawl::style::Dimension::Points(10f32),
+                    main_start: sprawl::style::Dimension::Points(10f32),
+                    main_end: sprawl::style::Dimension::Points(10f32),
+                    cross_start: sprawl::style::Dimension::Points(10f32),
+                    cross_end: sprawl::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 position: sprawl::geometry::Rect {
-                    end: sprawl::style::Dimension::Points(0f32),
-                    bottom: sprawl::style::Dimension::Points(0f32),
+                    main_end: sprawl::style::Dimension::Points(0f32),
+                    cross_end: sprawl::style::Dimension::Points(0f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -99,17 +99,17 @@ pub fn compute() {
                     ..Default::default()
                 },
                 padding: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Points(10f32),
-                    end: sprawl::style::Dimension::Points(10f32),
-                    top: sprawl::style::Dimension::Points(10f32),
-                    bottom: sprawl::style::Dimension::Points(10f32),
+                    main_start: sprawl::style::Dimension::Points(10f32),
+                    main_end: sprawl::style::Dimension::Points(10f32),
+                    cross_start: sprawl::style::Dimension::Points(10f32),
+                    cross_end: sprawl::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 border: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Points(10f32),
-                    end: sprawl::style::Dimension::Points(10f32),
-                    top: sprawl::style::Dimension::Points(10f32),
-                    bottom: sprawl::style::Dimension::Points(10f32),
+                    main_start: sprawl::style::Dimension::Points(10f32),
+                    main_end: sprawl::style::Dimension::Points(10f32),
+                    cross_start: sprawl::style::Dimension::Points(10f32),
+                    cross_end: sprawl::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 ..Default::default()

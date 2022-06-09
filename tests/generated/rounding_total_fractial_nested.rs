@@ -8,7 +8,7 @@ fn rounding_total_fractial_nested() {
                 flex_basis: sprawl::style::Dimension::Points(0.3f32),
                 size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(9.9f32), ..Default::default() },
                 position: sprawl::geometry::Rect {
-                    bottom: sprawl::style::Dimension::Points(13.3f32),
+                    cross_end: sprawl::style::Dimension::Points(13.3f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -23,7 +23,7 @@ fn rounding_total_fractial_nested() {
                 flex_basis: sprawl::style::Dimension::Points(0.3f32),
                 size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(1.1f32), ..Default::default() },
                 position: sprawl::geometry::Rect {
-                    top: sprawl::style::Dimension::Points(13.3f32),
+                    cross_start: sprawl::style::Dimension::Points(13.3f32),
                     ..Default::default()
                 },
                 ..Default::default()

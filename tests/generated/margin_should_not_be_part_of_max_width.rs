@@ -13,7 +13,10 @@ fn margin_should_not_be_part_of_max_width() {
                     width: sprawl::style::Dimension::Points(100f32),
                     ..Default::default()
                 },
-                margin: sprawl::geometry::Rect { start: sprawl::style::Dimension::Points(20f32), ..Default::default() },
+                margin: sprawl::geometry::Rect {
+                    main_start: sprawl::style::Dimension::Points(20f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[],

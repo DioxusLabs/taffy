@@ -9,8 +9,8 @@ pub fn compute() {
                     ..Default::default()
                 },
                 margin: sprawl::geometry::Rect {
-                    start: sprawl::style::Dimension::Points(10f32),
-                    end: sprawl::style::Dimension::Auto,
+                    main_start: sprawl::style::Dimension::Points(10f32),
+                    main_end: sprawl::style::Dimension::Auto,
                     ..Default::default()
                 },
                 ..Default::default()

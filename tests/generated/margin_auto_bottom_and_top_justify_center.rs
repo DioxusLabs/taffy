@@ -10,8 +10,8 @@ fn margin_auto_bottom_and_top_justify_center() {
                     ..Default::default()
                 },
                 margin: sprawl::geometry::Rect {
-                    top: sprawl::style::Dimension::Auto,
-                    bottom: sprawl::style::Dimension::Auto,
+                    cross_start: sprawl::style::Dimension::Auto,
+                    cross_end: sprawl::style::Dimension::Auto,
                     ..Default::default()
                 },
                 ..Default::default()

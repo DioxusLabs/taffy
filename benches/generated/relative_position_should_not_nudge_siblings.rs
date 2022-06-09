@@ -4,7 +4,10 @@ pub fn compute() {
         .new_node(
             sprawl::style::Style {
                 size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(10f32), ..Default::default() },
-                position: sprawl::geometry::Rect { top: sprawl::style::Dimension::Points(15f32), ..Default::default() },
+                position: sprawl::geometry::Rect {
+                    cross_start: sprawl::style::Dimension::Points(15f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[],
@@ -14,7 +17,10 @@ pub fn compute() {
         .new_node(
             sprawl::style::Style {
                 size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(10f32), ..Default::default() },
-                position: sprawl::geometry::Rect { top: sprawl::style::Dimension::Points(15f32), ..Default::default() },
+                position: sprawl::geometry::Rect {
+                    cross_start: sprawl::style::Dimension::Points(15f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[],

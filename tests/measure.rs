@@ -102,10 +102,10 @@ mod measure {
                         ..Default::default()
                     },
                     padding: sprawl::geometry::Rect {
-                        start: sprawl::style::Dimension::Points(10.0),
-                        end: sprawl::style::Dimension::Points(10.0),
-                        top: sprawl::style::Dimension::Points(10.0),
-                        bottom: sprawl::style::Dimension::Points(10.0),
+                        main_start: sprawl::style::Dimension::Points(10.0),
+                        main_end: sprawl::style::Dimension::Points(10.0),
+                        cross_start: sprawl::style::Dimension::Points(10.0),
+                        cross_end: sprawl::style::Dimension::Points(10.0),
                     },
                     ..Default::default()
                 },

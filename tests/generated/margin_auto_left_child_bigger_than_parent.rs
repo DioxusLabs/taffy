@@ -9,7 +9,7 @@ fn margin_auto_left_child_bigger_than_parent() {
                     height: sprawl::style::Dimension::Points(72f32),
                     ..Default::default()
                 },
-                margin: sprawl::geometry::Rect { start: sprawl::style::Dimension::Auto, ..Default::default() },
+                margin: sprawl::geometry::Rect { main_start: sprawl::style::Dimension::Auto, ..Default::default() },
                 ..Default::default()
             },
             &[],

@@ -11,7 +11,7 @@ fn absolute_layout_align_items_and_justify_content_center_and_bottom_position() 
                     ..Default::default()
                 },
                 position: sprawl::geometry::Rect {
-                    bottom: sprawl::style::Dimension::Points(10f32),
+                    cross_end: sprawl::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 ..Default::default()

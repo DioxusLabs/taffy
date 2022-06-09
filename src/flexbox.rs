@@ -189,10 +189,10 @@ impl Forest {
         let border = self.nodes[node].style.border.map(|n| n.resolve(parent_size.width).or_else(0.0));
 
         let padding_border = Rect {
-            start: padding.start + border.start,
-            end: padding.end + border.end,
-            top: padding.top + border.top,
-            bottom: padding.bottom + border.bottom,
+            main_start: padding.main_start + border.main_start,
+            main_end: padding.main_end + border.main_end,
+            cross_start: padding.cross_start + border.cross_start,
+            cross_end: padding.cross_end + border.cross_end,
         };
 
         let node_inner_size = Size {
@@ -1005,16 +1005,16 @@ impl Forest {
                     let child_style = &self.nodes[child.node].style;
                     if child_style.main_margin_start(constants.dir) == Dimension::Auto {
                         if constants.is_row {
-                            child.margin.start = margin;
+                            child.margin.main_start = margin;
                         } else {
-                            child.margin.top = margin;
+                            child.margin.cross_start = margin;
                         }
                     }
                     if child_style.main_margin_end(constants.dir) == Dimension::Auto {
                         if constants.is_row {
-                            child.margin.end = margin;
+                            child.margin.main_end = margin;
                         } else {
-                            child.margin.bottom = margin;
+                            child.margin.cross_end = margin;
                         }
                     }
                 }
@@ -1105,23 +1105,23 @@ impl Forest {
                     && child_style.cross_margin_end(constants.dir) == Dimension::Auto
                 {
                     if constants.is_row {
-                        child.margin.top = free_space / 2.0;
-                        child.margin.bottom = free_space / 2.0;
+                        child.margin.cross_start = free_space / 2.0;
+                        child.margin.cross_end = free_space / 2.0;
                     } else {
-                        child.margin.start = free_space / 2.0;
-                        child.margin.end = free_space / 2.0;
+                        child.margin.main_start = free_space / 2.0;
+                        child.margin.main_end = free_space / 2.0;
                     }
                 } else if child_style.cross_margin_start(constants.dir) == Dimension::Auto {
                     if constants.is_row {
-                        child.margin.top = free_space;
+                        child.margin.cross_start = free_space;
                     } else {
-                        child.margin.start = free_space;
+                        child.margin.main_start = free_space;
                     }
                 } else if child_style.cross_margin_end(constants.dir) == Dimension::Auto {
                     if constants.is_row {
-                        child.margin.bottom = free_space;
+                        child.margin.cross_end = free_space;
                     } else {
-                        child.margin.end = free_space;
+                        child.margin.main_end = free_space;
                     }
                 } else {
                     // 14. Align all flex items along the cross-axis.
@@ -1367,14 +1367,14 @@ impl Forest {
 
             let child_style = self.nodes[child].style;
 
-            let start =
-                child_style.position.start.resolve(container_width) + child_style.margin.start.resolve(container_width);
-            let end =
-                child_style.position.end.resolve(container_width) + child_style.margin.end.resolve(container_width);
-            let top =
-                child_style.position.top.resolve(container_height) + child_style.margin.top.resolve(container_height);
-            let bottom = child_style.position.bottom.resolve(container_height)
-                + child_style.margin.bottom.resolve(container_height);
+            let start = child_style.position.main_start.resolve(container_width)
+                + child_style.margin.main_start.resolve(container_width);
+            let end = child_style.position.main_end.resolve(container_width)
+                + child_style.margin.main_end.resolve(container_width);
+            let top = child_style.position.cross_start.resolve(container_height)
+                + child_style.margin.cross_start.resolve(container_height);
+            let bottom = child_style.position.cross_end.resolve(container_height)
+                + child_style.margin.cross_end.resolve(container_height);
 
             let (start_main, end_main) = if constants.is_row { (start, end) } else { (top, bottom) };
             let (start_cross, end_cross) = if constants.is_row { (top, bottom) } else { (start, end) };

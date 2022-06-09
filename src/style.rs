@@ -173,7 +173,12 @@ impl Dimension {
 
 impl Default for Rect<Dimension> {
     fn default() -> Self {
-        Self { start: Default::default(), end: Default::default(), top: Default::default(), bottom: Default::default() }
+        Self {
+            main_start: Default::default(),
+            main_end: Default::default(),
+            cross_start: Default::default(),
+            cross_end: Default::default(),
+        }
     }
 }
 
@@ -253,17 +258,17 @@ impl Style {
 
     pub(crate) fn main_margin_start(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
-            self.margin.start
+            self.margin.main_start
         } else {
-            self.margin.top
+            self.margin.cross_start
         }
     }
 
     pub(crate) fn main_margin_end(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
-            self.margin.end
+            self.margin.main_end
         } else {
-            self.margin.bottom
+            self.margin.cross_end
         }
     }
 
@@ -293,17 +298,17 @@ impl Style {
 
     pub(crate) fn cross_margin_start(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
-            self.margin.top
+            self.margin.cross_start
         } else {
-            self.margin.start
+            self.margin.main_start
         }
     }
 
     pub(crate) fn cross_margin_end(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
-            self.margin.bottom
+            self.margin.cross_end
         } else {
-            self.margin.end
+            self.margin.main_end
         }
     }
 
