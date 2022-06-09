@@ -257,7 +257,7 @@ impl Sprawl {
         Ok(())
     }
 
-    /// Does the layout of this node (and its children) need to be recomputed
+    /// Indicates whether the layout of this node (and its children) need to be recomputed
     pub fn dirty(&self, node: Node) -> Result<bool, Error> {
         let id = self.find_node(node)?;
         Ok(self.forest.nodes[id].is_dirty)
