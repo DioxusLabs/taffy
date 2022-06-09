@@ -18,6 +18,7 @@ pub(crate) struct NodeData {
 }
 
 impl NodeData {
+    #[must_use]
     fn new_leaf(style: Style, measure: MeasureFunc) -> Self {
         Self {
             style,
@@ -29,6 +30,7 @@ impl NodeData {
         }
     }
 
+    #[must_use]
     fn new(style: Style) -> Self {
         Self {
             style,
@@ -58,6 +60,7 @@ pub(crate) struct Forest {
 }
 
 impl Forest {
+    #[must_use]
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
             nodes: new_vec_with_capacity(capacity),

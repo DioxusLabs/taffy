@@ -17,6 +17,7 @@ pub struct Layout {
 }
 
 impl Layout {
+    #[must_use]
     pub(crate) fn new() -> Self {
         Self { order: 0, size: Size::zero(), location: Point::zero() }
     }
