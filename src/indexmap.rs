@@ -1160,7 +1160,7 @@ mod vec {
 
         #[cfg(feature = "std")]
         #[test]
-        fn struct_definition_doctest() {
+        fn vec() {
             // A vector with a fixed capacity of 8 elements allocated on the stack
             let mut vec = Vec::<_, 8>::new();
             vec.push(1);
@@ -1180,24 +1180,14 @@ mod vec {
 
         #[cfg(feature = "std")]
         #[test]
-        fn new_doctest() {
-            // allocate the vector on the stack
-            let mut x: Vec<u8, 16> = Vec::new();
-
-            // allocate the vector in a static variable
-            static mut X: Vec<u8, 16> = Vec::new();
-        }
-
-        #[cfg(feature = "std")]
-        #[test]
-        fn as_slice_doctest() {
+        fn as_slice() {
             let buffer: Vec<u8, 5> = Vec::from_slice(&[1, 2, 3, 5, 8]).unwrap();
             assert_eq!(buffer.as_slice(), &[1, 2, 3, 5, 8]);
         }
 
         #[cfg(feature = "std")]
         #[test]
-        fn into_array_doctest() {
+        fn into_array() {
             let buffer: Vec<u8, 42> = Vec::from_slice(&[1, 2, 3, 5, 8]).unwrap();
             let array: [u8; 5] = buffer.into_array().unwrap();
             assert_eq!(array, [1, 2, 3, 5, 8]);
@@ -1205,7 +1195,7 @@ mod vec {
 
         #[cfg(feature = "std")]
         #[test]
-        fn as_mut_slice_doctest() {
+        fn as_mut_slice() {
             let mut buffer: Vec<u8, 5> = Vec::from_slice(&[1, 2, 3, 5, 8]).unwrap();
             buffer[0] = 9;
             assert_eq!(buffer.as_slice(), &[9, 2, 3, 5, 8]);
@@ -1213,16 +1203,7 @@ mod vec {
 
         #[cfg(feature = "std")]
         #[test]
-        fn extend_from_slice_doctest() {
-            let mut vec = Vec::<u8, 8>::new();
-            vec.push(1).unwrap();
-            vec.extend_from_slice(&[2, 3, 4]).unwrap();
-            assert_eq!(*vec, [1, 2, 3, 4]);
-        }
-
-        #[cfg(feature = "std")]
-        #[test]
-        fn swap_remove_doctest() {
+        fn swap_remove() {
             let mut v: Vec<_, 8> = Vec::new();
             v.push("foo").unwrap();
             v.push("bar").unwrap();
@@ -1236,7 +1217,7 @@ mod vec {
 
         #[cfg(feature = "std")]
         #[test]
-        fn swap_remove_unchecked_doctest() {
+        fn swap_remove_unchecked() {
             let mut v: Vec<_, 8> = Vec::new();
             v.push("foo").unwrap();
             v.push("bar").unwrap();
@@ -2327,7 +2308,7 @@ mod tests {
 
     #[cfg(feature = "std")]
     #[test]
-    fn fnv_index_map_doctest() {
+    fn fnv_index_map() {
         // A hash map with a capacity of 16 key-value pairs allocated on the stack
         let mut book_reviews = FnvIndexMap::<_, _, 16>::new();
         // review some books.
@@ -2357,39 +2338,7 @@ mod tests {
 
     #[cfg(feature = "std")]
     #[test]
-    fn struct_definition_doctest() {
-        // Since `IndexMap` cannot be used directly, we're using its `FnvIndexMap` instantiation
-        // for this example.
-        // A hash map with a capacity of 16 key-value pairs allocated on the stack
-        let mut book_reviews = FnvIndexMap::<_, _, 16>::new();
-        // review some books.
-        book_reviews.insert("Adventures of Huckleberry Finn", "My favorite book.").unwrap();
-        book_reviews.insert("Grimms' Fairy Tales", "Masterpiece.").unwrap();
-        book_reviews.insert("Pride and Prejudice", "Very enjoyable.").unwrap();
-        book_reviews.insert("The Adventures of Sherlock Holmes", "Eye lyked it alot.").unwrap();
-        // check for a specific one.
-        if !book_reviews.contains_key("Les Misérables") {
-            println!("We've got {} reviews, but Les Misérables ain't one.", book_reviews.len());
-        }
-        // oops, this review has a lot of spelling mistakes, let's delete it.
-        book_reviews.remove("The Adventures of Sherlock Holmes");
-        // look up the values associated with some keys.
-        let to_find = ["Pride and Prejudice", "Alice's Adventure in Wonderland"];
-        for book in &to_find {
-            match book_reviews.get(book) {
-                Some(review) => println!("{}: {}", book, review),
-                None => println!("{} is unreviewed.", book),
-            }
-        }
-        // iterate over everything.
-        for (book, review) in &book_reviews {
-            println!("{}: \"{}\"", book, review);
-        }
-    }
-
-    #[cfg(feature = "std")]
-    #[test]
-    fn keys_doctest() {
+    fn keys() {
         let mut map = FnvIndexMap::<_, _, 16>::new();
         map.insert("a", 1).unwrap();
         map.insert("b", 2).unwrap();
@@ -2401,7 +2350,7 @@ mod tests {
 
     #[cfg(feature = "std")]
     #[test]
-    fn values_doctest() {
+    fn values() {
         let mut map = FnvIndexMap::<_, _, 16>::new();
         map.insert("a", 1).unwrap();
         map.insert("b", 2).unwrap();
@@ -2413,7 +2362,7 @@ mod tests {
 
     #[cfg(feature = "std")]
     #[test]
-    fn values_mut_doctest() {
+    fn values_mut() {
         let mut map = FnvIndexMap::<_, _, 16>::new();
         map.insert("a", 1).unwrap();
         map.insert("b", 2).unwrap();
@@ -2428,7 +2377,7 @@ mod tests {
 
     #[cfg(feature = "std")]
     #[test]
-    fn iter_doctest() {
+    fn iter() {
         let mut map = FnvIndexMap::<_, _, 16>::new();
         map.insert("a", 1).unwrap();
         map.insert("b", 2).unwrap();
@@ -2440,7 +2389,7 @@ mod tests {
 
     #[cfg(feature = "std")]
     #[test]
-    fn iter_mut_doctest() {
+    fn iter_mut() {
         let mut map = FnvIndexMap::<_, _, 16>::new();
         map.insert("a", 1).unwrap();
         map.insert("b", 2).unwrap();
@@ -2470,7 +2419,7 @@ mod tests {
 
     #[cfg(feature = "std")]
     #[test]
-    fn len_doctest() {
+    fn len() {
         let mut a = FnvIndexMap::<_, _, 16>::new();
         assert_eq!(a.len(), 0);
         a.insert(1, "a").unwrap();
@@ -2479,7 +2428,7 @@ mod tests {
 
     #[cfg(feature = "std")]
     #[test]
-    fn is_empty_doctest() {
+    fn is_empty() {
         let mut a = FnvIndexMap::<_, _, 16>::new();
         assert!(a.is_empty());
         a.insert(1, "a");
@@ -2488,7 +2437,7 @@ mod tests {
 
     #[cfg(feature = "std")]
     #[test]
-    fn clear_doctest() {
+    fn clear() {
         let mut a = FnvIndexMap::<_, _, 16>::new();
         a.insert(1, "a");
         a.clear();
@@ -2497,7 +2446,7 @@ mod tests {
 
     #[cfg(feature = "std")]
     #[test]
-    fn get_doctest() {
+    fn get() {
         let mut map = FnvIndexMap::<_, _, 16>::new();
         map.insert(1, "a").unwrap();
         assert_eq!(map.get(&1), Some(&"a"));
@@ -2506,7 +2455,7 @@ mod tests {
 
     #[cfg(feature = "std")]
     #[test]
-    fn contains_key_doctest() {
+    fn contains_key() {
         let mut map = FnvIndexMap::<_, _, 8>::new();
         map.insert(1, "a").unwrap();
         assert_eq!(map.contains_key(&1), true);
@@ -2515,7 +2464,7 @@ mod tests {
 
     #[cfg(feature = "std")]
     #[test]
-    fn get_mut_doctest() {
+    fn get_mut() {
         let mut map = FnvIndexMap::<_, _, 8>::new();
         map.insert(1, "a").unwrap();
         if let Some(x) = map.get_mut(&1) {
@@ -2526,7 +2475,7 @@ mod tests {
 
     #[cfg(feature = "std")]
     #[test]
-    fn insert_doctest() {
+    fn insert() {
         let mut map = FnvIndexMap::<_, _, 8>::new();
         assert_eq!(map.insert(37, "a"), Ok(None));
         assert_eq!(map.is_empty(), false);
@@ -2537,7 +2486,7 @@ mod tests {
 
     #[cfg(feature = "std")]
     #[test]
-    fn remove_doctest() {
+    fn remove() {
         let mut map = FnvIndexMap::<_, _, 8>::new();
         map.insert(1, "a").unwrap();
         assert_eq!(map.remove(&1), Some("a"));
