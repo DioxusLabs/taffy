@@ -110,7 +110,7 @@ mod node {
         assert_eq!(sprawl.children(node0).unwrap().as_slice(), &[node1]);
 
         // Disconnect the tree: <0> <2>
-        sprawl.remove(node1);
+        let _ = sprawl.remove(node1).unwrap();
 
         assert!(sprawl.style(node1).is_err());
 
@@ -185,7 +185,7 @@ mod node {
         let child = sprawl.new_node(Style::default(), &[]).unwrap();
         sprawl.add_child(parent, child).unwrap();
 
-        sprawl.remove(child);
-        sprawl.remove(parent);
+        let _  = sprawl.remove(child).unwrap();
+        let _ = sprawl.remove(parent).unwrap();
     }
 }

@@ -110,7 +110,7 @@ impl Sprawl {
             let _ = self.ids_to_nodes.insert(id, new);
         }
 
-        return Ok(id);
+        Ok(id)
     }
 
     pub fn set_measure(&mut self, node: Node, measure: Option<MeasureFunc>) -> Result<(), Error> {
