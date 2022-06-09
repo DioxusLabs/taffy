@@ -185,7 +185,7 @@ mod node {
         let child = sprawl.new_node(Style::default(), &[]).unwrap();
         sprawl.add_child(parent, child).unwrap();
 
-        let _  = sprawl.remove(child).unwrap();
+        let _ = sprawl.remove(child).unwrap();
         let _ = sprawl.remove(parent).unwrap();
     }
 }
