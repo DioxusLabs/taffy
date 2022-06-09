@@ -8,6 +8,7 @@
 - renamed crate from `stretch2` to `sprawl`
 - updated to the latest version of all dependencies to reduce upstream pain caused by duplicate dependencies
 - renamed `stretch::node::Strech` -> `sprawl::node::Sprawl`
+- `Sprawl::remove` now returns a `Result<usize, Error>`, to indicate if the operation was sucessful, and if it was, which ID was invalidated.
 
 ### 0.1.0 Fixed
 
