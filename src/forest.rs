@@ -1,4 +1,4 @@
-//! Forest - ECS like datastructure for storing node trees.
+//! Forest - a struct-of-arrays data structure for storing node trees.
 //!
 //! Backing datastructure for `Sprawl` structs.
 use crate::geometry::Size;
@@ -8,6 +8,9 @@ use crate::number::Number;
 use crate::style::Style;
 use crate::sys::{new_vec_with_capacity, ChildrenVec, ParentsVec, Vec};
 
+/// Layout information for a given [`Node`](crate::node::Node)
+///
+/// Stored in a [`Forest`].
 pub(crate) struct NodeData {
     pub(crate) style: Style,
     pub(crate) measure: Option<MeasureFunc>,
@@ -18,6 +21,7 @@ pub(crate) struct NodeData {
 }
 
 impl NodeData {
+    /// Create the data for a new leaf node
     fn new_leaf(style: Style, measure: MeasureFunc) -> Self {
         Self {
             style,
@@ -29,6 +33,8 @@ impl NodeData {
         }
     }
 
+    /// Create the data for a new node
+    // TODO: why is this different from new_leaf?
     fn new(style: Style) -> Self {
         Self {
             style,
@@ -41,6 +47,7 @@ impl NodeData {
     }
 }
 
+/// A collection of UI layout trees used to store [`NodeData`] associated with specific [`Nodes`](crate::node::Node)
 pub(crate) struct Forest {
     pub(crate) nodes: Vec<NodeData>,
     pub(crate) children: Vec<ChildrenVec<NodeId>>,
@@ -48,7 +55,8 @@ pub(crate) struct Forest {
 }
 
 impl Forest {
-    pub fn with_capacity(capacity: usize) -> Self {
+    /// Creates a new [`Forest`] that can store up to `capacity` [`Nodes`](crate::node::Node) before needing to be expanded
+    pub(crate) fn with_capacity(capacity: usize) -> Self {
         Self {
             nodes: new_vec_with_capacity(capacity),
             children: new_vec_with_capacity(capacity),
@@ -56,7 +64,8 @@ impl Forest {
         }
     }
 
-    pub fn new_leaf(&mut self, style: Style, measure: MeasureFunc) -> NodeId {
+    /// Adds a new unattached leaf node to the forest, and returns the [`NodeId`] of the new node
+    pub(crate) fn new_leaf(&mut self, style: Style, measure: MeasureFunc) -> NodeId {
         let id = self.nodes.len();
         self.nodes.push(NodeData::new_leaf(style, measure));
         self.children.push(new_vec_with_capacity(0));
@@ -64,7 +73,8 @@ impl Forest {
         id
     }
 
-    pub fn new_node(&mut self, style: Style, children: ChildrenVec<NodeId>) -> NodeId {
+    /// Adds a new unparented node to the forest with the associated children attached, and returns the [`NodeId`] of the new node
+    pub(crate) fn new_node(&mut self, style: Style, children: ChildrenVec<NodeId>) -> NodeId {
         let id = self.nodes.len();
         for child in &children {
             self.parents[*child].push(id);
@@ -75,20 +85,27 @@ impl Forest {
         id
     }
 
-    pub fn add_child(&mut self, node: NodeId, child: NodeId) {
+    /// Adds a `child` node to the parent `node`
+    pub(crate) fn add_child(&mut self, node: NodeId, child: NodeId) {
         self.parents[child].push(node);
         self.children[node].push(child);
         self.mark_dirty(node)
     }
 
-    pub fn clear(&mut self) {
+    /// Removes all nodes and resets the data structure
+    ///
+    /// The capacity is retained.
+    pub(crate) fn clear(&mut self) {
         self.nodes.clear();
         self.children.clear();
         self.parents.clear();
     }
 
-    /// Removes a node and swaps with the last node.
-    pub fn swap_remove(&mut self, node: NodeId) -> Option<NodeId> {
+    /// Removes the specified `node`
+    ///
+    /// The last existing node is moved to its previous position, in order to ensure compactness.
+    /// Returns the previous [`NodeId`] of the moved node, if one was moved.
+    pub(crate) fn swap_remove(&mut self, node: NodeId) -> Option<NodeId> {
         self.nodes.swap_remove(node);
 
         // Now the last element is swapped in at index `node`.
@@ -156,19 +173,28 @@ impl Forest {
         }
     }
 
-    pub fn remove_child(&mut self, node: NodeId, child: NodeId) -> NodeId {
+    /// Breaks the link between the parent `node` and the `child` node
+    ///
+    /// The `child`'s data is not removed.
+    pub(crate) fn remove_child(&mut self, node: NodeId, child: NodeId) -> NodeId {
         let index = self.children[node].iter().position(|n| *n == child).unwrap();
         self.remove_child_at_index(node, index)
     }
 
-    pub fn remove_child_at_index(&mut self, node: NodeId, index: usize) -> NodeId {
+    /// Breaks the link between the parent `node` and the n-th child node
+    ///
+    /// The child's data is not removed.
+    pub(crate) fn remove_child_at_index(&mut self, node: NodeId, index: usize) -> NodeId {
         let child = self.children[node].remove(index);
         self.parents[child].retain(|p| *p != node);
         self.mark_dirty(node);
         child
     }
 
-    pub fn mark_dirty(&mut self, node: NodeId) {
+    /// Marks the `node` as needing layout recalculation
+    ///
+    /// Any cached layout information is cleared.
+    pub(crate) fn mark_dirty(&mut self, node: NodeId) {
         fn mark_dirty_impl(nodes: &mut Vec<NodeData>, parents: &[ParentsVec<NodeId>], node_id: NodeId) {
             let node = &mut nodes[node_id];
             node.main_size_layout_cache = None;
@@ -183,7 +209,9 @@ impl Forest {
         mark_dirty_impl(&mut self.nodes, &self.parents, node);
     }
 
-    pub fn compute_layout(&mut self, node: NodeId, size: Size<Number>) {
+    /// Computes the layout of the `node` and its children
+    pub(crate) fn compute_layout(&mut self, node: NodeId, size: Size<Number>) {
+        // TODO: It's not clear why this method is distinct
         self.compute(node, size)
     }
 }
