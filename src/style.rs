@@ -183,10 +183,26 @@ impl Default for JustifyContent {
     }
 }
 
+/// The positioning strategy for this item.
+///
+/// This controls both how the origin is determined for the [`Style::position`] field,
+/// and whether or not the item will be controlled by flexbox's layout algorithm.
+///
+/// WARNING: this enum follows the behavior of [CSS's `position` property](https://developer.mozilla.org/en-US/docs/Web/CSS/position),
+/// which can be unintuitive.
+///
+/// [`PositionType::Relative`] is the default value, in contrast to the default behavior in CSS.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum PositionType {
+    /// The offset is computed relative to the final position given by the layout algorithm.
+    /// Offsets do not affect the position of any other items; they are effectively a correction factor applied at the end.
     Relative,
+    /// The offset is computed relative to this item's closest positioned ancestor, if any.
+    /// Otherwise, it is placed relative to the origin.
+    /// No space is created for the item in the page layout, and its size will not be altered.
+    ///
+    /// WARNING: to opt-out of layouting entirely, you must use [`Display::None`] instead on your [`Style`] object.
     Absolute,
 }
 
@@ -196,11 +212,15 @@ impl Default for PositionType {
     }
 }
 
+/// Controls whether flex items are forced onto one line or can wrap onto multiple lines.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum FlexWrap {
+    /// Items will not wrap
     NoWrap,
+    /// Items will wrap according to this item's [`FlexDirection`]
     Wrap,
+    /// Items will wrap in the oppposite direction to this item's [`FlexDirection`]
     WrapReverse,
 }
 
@@ -210,12 +230,22 @@ impl Default for FlexWrap {
     }
 }
 
+/// A unit of linear measurement
+///
+/// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
+/// The default value is [`Dimension::Undefined`].
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Dimension {
+    /// The dimension is not given
     Undefined,
+    /// The dimension should be automatically computed
     Auto,
+    /// The dimension is stored in [points](https://en.wikipedia.org/wiki/Point_(typography))
+    ///
+    /// Each point is about 0.353 mm in size.
     Points(f32),
+    /// The dimension is stored in percentage relative to the parent item.
     Percent(f32),
 }
 
@@ -226,6 +256,7 @@ impl Default for Dimension {
 }
 
 impl Dimension {
+    /// Converts the given [`Dimension`] into a concrete value of points
     pub(crate) fn resolve(self, parent_dim: Number) -> Number {
         match self {
             Dimension::Points(points) => Number::Defined(points),
@@ -234,6 +265,7 @@ impl Dimension {
         }
     }
 
+    /// Is this value defined?
     pub(crate) fn is_defined(self) -> bool {
         matches!(self, Dimension::Points(_) | Dimension::Percent(_))
     }
@@ -253,30 +285,66 @@ impl Default for Size<Dimension> {
 
 /// The flexbox layout information for a single [`Node`](crate::node::Node).
 ///
+/// The most important idea in flexbox is the notion of a "main" and "cross" axis, which are always perpendicular to each other.
+/// The orientation of these axes are controlled via the [`FlexDirection`] field of this struct.
+///
 /// This struct follows the [CSS equivalent](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flexible_Box_Layout/Basic_Concepts_of_Flexbox) directly;
 /// information about the behavior on the web should transfer directly.
+///
+/// Detailed information about the exact behavior of each of these fields
+/// can be found on [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS) by searching for the field name.
+/// The distinction between margin, padding and border is explained well in
+/// this [introduction to the box model](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Box_Model/Introduction_to_the_CSS_box_model).
+///
+/// If the behavior does not match the flexbox layout algorithm on the web, please file a bug!
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 pub struct Style {
+    /// What layout strategy should be used?
     pub display: Display,
+    /// What should the `position` value of this struct use as a base offset?
     pub position_type: PositionType,
+    /// Which direction does the main axis flow in?
     pub flex_direction: FlexDirection,
+    /// Should elements wrap, or stay in a single line?
     pub flex_wrap: FlexWrap,
+    /// How should items be aligned relative to the cross axis?
     pub align_items: AlignItems,
+    /// Should this item violate the cross axis alignment specified by its parent's [`AlignItems`]?
     pub align_self: AlignSelf,
+    /// How should content contained within this item be aligned relative to the cross axis?
     pub align_content: AlignContent,
+    /// How should items be aligned relative to the main axis?
     pub justify_content: JustifyContent,
+    /// How should the position of this element be tweaked relative to the layout defined?
     pub position: Rect<Dimension>,
+    /// How large should the margin be on each side?
     pub margin: Rect<Dimension>,
+    /// How large should the padding be on each side?
     pub padding: Rect<Dimension>,
+    /// How large should the border be on each side?
     pub border: Rect<Dimension>,
+    /// The relative rate at which this item grows when it is expanding to fill space
+    ///
+    /// 1.0 is the default value, and this value must be positive.
     pub flex_grow: f32,
+    /// The relative rate at which this item shrinks when it is contracting to fit into space
+    ///
+    /// 1.0 is the default value, and this value must be positive.
     pub flex_shrink: f32,
+    /// Sets the initial main axis size of the item
     pub flex_basis: Dimension,
+    /// Sets the initial size of the item
+    // TODO: why does this exist as distinct from flex_basis? How do they interact?
     pub size: Size<Dimension>,
+    /// Controls the minimum size of the item
     pub min_size: Size<Dimension>,
+    /// Controls the maximum size of the item
     pub max_size: Size<Dimension>,
+    /// Sets the preferred aspect ratio for the item
+    ///
+    /// The ratio is calculated as width divided by height.
     pub aspect_ratio: Number,
 }
 
