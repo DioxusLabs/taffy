@@ -28,30 +28,35 @@
 
 mod sealed {
     // copied from https://github.com/japaric/heapless/blob/39273893deda34fa741f79438134fd4d4d7ac3ae/src/sealed.rs
+    #[allow(clippy::no_effect)]
     #[allow(dead_code)]
     #[allow(path_statements)]
     pub(crate) const fn smaller_than<const N: usize, const MAX: usize>() {
         Assert::<N, MAX>::LESS;
     }
 
+    #[allow(clippy::no_effect)]
     #[allow(dead_code)]
     #[allow(path_statements)]
     pub(crate) const fn greater_than_eq_0<const N: usize>() {
         Assert::<N, 0>::GREATER_EQ;
     }
 
+    #[allow(clippy::no_effect)]
     #[allow(dead_code)]
     #[allow(path_statements)]
     pub(crate) const fn greater_than_0<const N: usize>() {
         Assert::<N, 0>::GREATER;
     }
 
+    #[allow(clippy::no_effect)]
     #[allow(dead_code)]
     #[allow(path_statements)]
     pub(crate) const fn greater_than_1<const N: usize>() {
         Assert::<N, 1>::GREATER;
     }
 
+    #[allow(clippy::no_effect)]
     #[allow(dead_code)]
     #[allow(path_statements)]
     pub(crate) const fn power_of_two<const N: usize>() {
@@ -59,6 +64,7 @@ mod sealed {
         Assert::<N, 0>::POWER_OF_TWO;
     }
 
+    #[allow(clippy::no_effect)]
     #[allow(dead_code)]
     /// Const assert hack
     pub struct Assert<const L: usize, const R: usize>;
@@ -71,6 +77,7 @@ mod sealed {
         /// Const assert hack
         pub const LESS_EQ: usize = R - L;
 
+        #[allow(clippy::erasing_op)]
         /// Const assert hack
         pub const NOT_EQ: isize = 0 / (R as isize - L as isize);
 
@@ -622,7 +629,7 @@ mod vec {
         A: PartialEq<B>,
     {
         fn eq(&self, other: &[B]) -> bool {
-            <[A]>::eq(self, &other[..])
+            <[A]>::eq(self, other)
         }
     }
 
@@ -1518,7 +1525,7 @@ where
     V: Clone,
 {
     fn clone(&self) -> Self {
-        Self { entries: self.entries.clone(), indices: self.indices.clone() }
+        Self { entries: self.entries.clone(), indices: self.indices }
     }
 }
 
@@ -1848,7 +1855,7 @@ where
         K: Borrow<Q>,
         Q: ?Sized + Hash + Eq,
     {
-        if self.len() == 0 {
+        if self.is_empty() {
             return None;
         }
         let h = hash_with(key, &self.build_hasher);
