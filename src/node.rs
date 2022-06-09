@@ -14,7 +14,7 @@ use core::sync::atomic::{AtomicUsize, Ordering};
 
 /// A function that can be applied to a `Size<Number>` to obetain a `<Size<f32>`
 pub enum MeasureFunc {
-    /// Stores a unboxed function
+    /// Stores an unboxed function
     Raw(fn(Size<Number>) -> Size<f32>),
     /// Stores a boxed function
     #[cfg(any(feature = "std", feature = "alloc"))]
