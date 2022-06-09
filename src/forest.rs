@@ -45,6 +45,16 @@ impl NodeData {
             is_dirty: true,
         }
     }
+
+    /// Marks a node and all of its parents (recursively) as dirty
+    ///
+    /// This clears any cached data and signals that the data must be recomputed.
+    #[inline]
+    fn mark_dirty(&mut self) {
+        self.main_size_layout_cache = None;
+        self.other_layout_cache = None;
+        self.is_dirty = true;
+    }
 }
 
 /// A collection of UI layout trees used to store [`NodeData`] associated with specific [`Nodes`](crate::node::Node)
@@ -195,18 +205,17 @@ impl Forest {
     ///
     /// Any cached layout information is cleared.
     pub(crate) fn mark_dirty(&mut self, node: NodeId) {
-        fn mark_dirty_impl(nodes: &mut Vec<NodeData>, parents: &[ParentsVec<NodeId>], node_id: NodeId) {
-            let node = &mut nodes[node_id];
-            node.main_size_layout_cache = None;
-            node.other_layout_cache = None;
-            node.is_dirty = true;
+        // Performs a recursive depth-first search up the tree until the root node is reached
+        // WARNING: this will stack-overflow if the tree contains a cycle
+        fn mark_dirty_recursive(nodes: &mut Vec<NodeData>, parents: &[ParentsVec<NodeId>], node_id: NodeId) {
+            nodes[node_id].mark_dirty();
 
             for parent in &parents[node_id] {
-                mark_dirty_impl(nodes, parents, *parent);
+                mark_dirty_recursive(nodes, parents, *parent);
             }
         }
 
-        mark_dirty_impl(&mut self.nodes, &self.parents, node);
+        mark_dirty_recursive(&mut self.nodes, &self.parents, node);
     }
 
     /// Computes the layout of the `node` and its children

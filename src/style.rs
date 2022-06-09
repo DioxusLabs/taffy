@@ -84,21 +84,6 @@ impl Default for AlignContent {
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum Direction {
-    /// Inherits the [`Direction`] defined by the parent
-    Inherit,
-    #[cfg_attr(feature = "serde", serde(rename = "ltr"))]
-    LTR,
-    #[cfg_attr(feature = "serde", serde(rename = "rtl"))]
-    RTL,
-}
-
-impl Default for Direction {
-    fn default() -> Self {
-        Self::Inherit
-    }
-}
-
 /// Sets the layout used for the children of this node
 ///
 /// [`Display::Flex`] is the default value.
@@ -281,7 +266,6 @@ impl Default for Size<Dimension> {
 pub struct Style {
     pub display: Display,
     pub position_type: PositionType,
-    pub direction: Direction,
     pub flex_direction: FlexDirection,
     pub flex_wrap: FlexWrap,
     pub overflow: Overflow,
@@ -307,7 +291,6 @@ impl Default for Style {
         Self {
             display: Default::default(),
             position_type: Default::default(),
-            direction: Default::default(),
             flex_direction: Default::default(),
             flex_wrap: Default::default(),
             overflow: Default::default(),
