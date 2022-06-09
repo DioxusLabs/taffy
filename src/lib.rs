@@ -17,8 +17,10 @@ pub mod style;
 
 mod flexbox;
 mod forest;
-mod indexmap;
 mod sys;
+
+#[cfg(all(not(feature = "alloc"), not(feature = "std")))]
+mod indexmap;
 
 #[cfg(feature = "std")]
 use core::fmt::{Display, Formatter, Result};
