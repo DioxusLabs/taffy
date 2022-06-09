@@ -2,7 +2,7 @@
 fn flex_wrap_wrap_to_child_height() {
     let mut sprawl = sprawl::Sprawl::new();
     let node000 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),
@@ -15,7 +15,7 @@ fn flex_wrap_wrap_to_child_height() {
         )
         .unwrap();
     let node00 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(100f32), ..Default::default() },
@@ -25,7 +25,7 @@ fn flex_wrap_wrap_to_child_height() {
         )
         .unwrap();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_wrap: sprawl::style::FlexWrap::Wrap,
                 align_items: sprawl::style::AlignItems::FlexStart,
@@ -35,7 +35,7 @@ fn flex_wrap_wrap_to_child_height() {
         )
         .unwrap();
     let node1 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),
@@ -48,7 +48,7 @@ fn flex_wrap_wrap_to_child_height() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style { flex_direction: sprawl::style::FlexDirection::Column, ..Default::default() },
             &[node0, node1],
         )

@@ -2,7 +2,7 @@
 fn align_items_flex_end() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(10f32),
@@ -15,7 +15,7 @@ fn align_items_flex_end() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 align_items: sprawl::style::AlignItems::FlexEnd,
                 size: sprawl::geometry::Size {

@@ -2,7 +2,7 @@
 fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
     let mut sprawl = sprawl::Sprawl::new();
     let node000 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Percent(0.45f32),
@@ -28,7 +28,7 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
         )
         .unwrap();
     let node00 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Percent(0.5f32), ..Default::default() },
@@ -52,7 +52,7 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
         )
         .unwrap();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 flex_grow: 1f32,
@@ -81,7 +81,7 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
         )
         .unwrap();
     let node1 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_grow: 4f32,
                 flex_basis: sprawl::style::Dimension::Percent(0.15f32),
@@ -95,7 +95,7 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 size: sprawl::geometry::Size {

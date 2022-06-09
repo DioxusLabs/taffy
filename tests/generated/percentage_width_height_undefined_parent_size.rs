@@ -2,7 +2,7 @@
 fn percentage_width_height_undefined_parent_size() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Percent(0.5f32),
@@ -15,7 +15,7 @@ fn percentage_width_height_undefined_parent_size() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style { flex_direction: sprawl::style::FlexDirection::Column, ..Default::default() },
             &[node0],
         )

@@ -2,7 +2,7 @@
 fn wrap_reverse_row_align_content_space_around() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(30f32),
@@ -15,7 +15,7 @@ fn wrap_reverse_row_align_content_space_around() {
         )
         .unwrap();
     let node1 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(30f32),
@@ -28,7 +28,7 @@ fn wrap_reverse_row_align_content_space_around() {
         )
         .unwrap();
     let node2 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(30f32),
@@ -41,7 +41,7 @@ fn wrap_reverse_row_align_content_space_around() {
         )
         .unwrap();
     let node3 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(30f32),
@@ -54,7 +54,7 @@ fn wrap_reverse_row_align_content_space_around() {
         )
         .unwrap();
     let node4 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(30f32),
@@ -67,7 +67,7 @@ fn wrap_reverse_row_align_content_space_around() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_wrap: sprawl::style::FlexWrap::WrapReverse,
                 align_content: sprawl::style::AlignContent::SpaceAround,

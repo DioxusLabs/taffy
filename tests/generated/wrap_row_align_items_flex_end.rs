@@ -2,7 +2,7 @@
 fn wrap_row_align_items_flex_end() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(30f32),
@@ -15,7 +15,7 @@ fn wrap_row_align_items_flex_end() {
         )
         .unwrap();
     let node1 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(30f32),
@@ -28,7 +28,7 @@ fn wrap_row_align_items_flex_end() {
         )
         .unwrap();
     let node2 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(30f32),
@@ -41,7 +41,7 @@ fn wrap_row_align_items_flex_end() {
         )
         .unwrap();
     let node3 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(30f32),
@@ -54,7 +54,7 @@ fn wrap_row_align_items_flex_end() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_wrap: sprawl::style::FlexWrap::Wrap,
                 align_items: sprawl::style::AlignItems::FlexEnd,

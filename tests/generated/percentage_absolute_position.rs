@@ -2,7 +2,7 @@
 fn percentage_absolute_position() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 position_type: sprawl::style::PositionType::Absolute,
                 size: sprawl::geometry::Size {
@@ -21,7 +21,7 @@ fn percentage_absolute_position() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 size: sprawl::geometry::Size {

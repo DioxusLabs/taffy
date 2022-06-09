@@ -2,7 +2,7 @@
 fn absolute_layout_align_items_center_on_child_only() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 position_type: sprawl::style::PositionType::Absolute,
                 align_self: sprawl::style::AlignSelf::Center,
@@ -17,7 +17,7 @@ fn absolute_layout_align_items_center_on_child_only() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(110f32),

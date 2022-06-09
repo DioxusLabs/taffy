@@ -2,7 +2,7 @@
 fn percentage_flex_basis_cross() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_grow: 1f32,
                 flex_basis: sprawl::style::Dimension::Percent(0.5f32),
@@ -12,7 +12,7 @@ fn percentage_flex_basis_cross() {
         )
         .unwrap();
     let node1 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_grow: 1f32,
                 flex_basis: sprawl::style::Dimension::Percent(0.25f32),
@@ -22,7 +22,7 @@ fn percentage_flex_basis_cross() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 size: sprawl::geometry::Size {

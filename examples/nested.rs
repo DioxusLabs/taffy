@@ -4,12 +4,12 @@ fn main() -> Result<(), Error> {
     let mut sprawl = Sprawl::new();
 
     // left
-    let child_t1 = sprawl.new_node(
+    let child_t1 = sprawl.new_with_children(
         Style { size: Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) }, ..Default::default() },
         &[],
     )?;
 
-    let div1 = sprawl.new_node(
+    let div1 = sprawl.new_with_children(
         Style {
             size: Size { width: Dimension::Percent(0.5), height: Dimension::Percent(1.0) },
             // justify_content: JustifyContent::Center,
@@ -19,12 +19,12 @@ fn main() -> Result<(), Error> {
     )?;
 
     // right
-    let child_t2 = sprawl.new_node(
+    let child_t2 = sprawl.new_with_children(
         Style { size: Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) }, ..Default::default() },
         &[],
     )?;
 
-    let div2 = sprawl.new_node(
+    let div2 = sprawl.new_with_children(
         Style {
             size: Size { width: Dimension::Percent(0.5), height: Dimension::Percent(1.0) },
             // justify_content: JustifyContent::Center,
@@ -33,7 +33,7 @@ fn main() -> Result<(), Error> {
         &[child_t2],
     )?;
 
-    let container = sprawl.new_node(
+    let container = sprawl.new_with_children(
         Style { size: Size { width: Dimension::Percent(1.0), height: Dimension::Percent(1.0) }, ..Default::default() },
         &[div1, div2],
     )?;

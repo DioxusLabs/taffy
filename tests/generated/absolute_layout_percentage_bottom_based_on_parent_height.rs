@@ -2,7 +2,7 @@
 fn absolute_layout_percentage_bottom_based_on_parent_height() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 position_type: sprawl::style::PositionType::Absolute,
                 size: sprawl::geometry::Size {
@@ -20,7 +20,7 @@ fn absolute_layout_percentage_bottom_based_on_parent_height() {
         )
         .unwrap();
     let node1 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 position_type: sprawl::style::PositionType::Absolute,
                 size: sprawl::geometry::Size {
@@ -38,7 +38,7 @@ fn absolute_layout_percentage_bottom_based_on_parent_height() {
         )
         .unwrap();
     let node2 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 position_type: sprawl::style::PositionType::Absolute,
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(10f32), ..Default::default() },
@@ -53,7 +53,7 @@ fn absolute_layout_percentage_bottom_based_on_parent_height() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),

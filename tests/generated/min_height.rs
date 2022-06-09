@@ -2,7 +2,7 @@
 fn min_height() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_grow: 1f32,
                 min_size: sprawl::geometry::Size {
@@ -14,9 +14,9 @@ fn min_height() {
             &[],
         )
         .unwrap();
-    let node1 = sprawl.new_node(sprawl::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
+    let node1 = sprawl.new_with_children(sprawl::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 size: sprawl::geometry::Size {

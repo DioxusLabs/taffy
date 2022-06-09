@@ -1,7 +1,7 @@
 pub fn compute() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 position_type: sprawl::style::PositionType::Absolute,
                 align_self: sprawl::style::AlignSelf::FlexEnd,
@@ -16,7 +16,7 @@ pub fn compute() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_wrap: sprawl::style::FlexWrap::WrapReverse,
                 size: sprawl::geometry::Size {

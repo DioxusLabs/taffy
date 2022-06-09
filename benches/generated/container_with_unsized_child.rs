@@ -1,8 +1,8 @@
 pub fn compute() {
     let mut sprawl = sprawl::Sprawl::new();
-    let node0 = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[]).unwrap();
+    let node0 = sprawl.new_with_children(sprawl::style::Style { ..Default::default() }, &[]).unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),

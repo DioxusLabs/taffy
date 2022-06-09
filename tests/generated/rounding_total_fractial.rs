@@ -2,7 +2,7 @@
 fn rounding_total_fractial() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_grow: 0.7f32,
                 flex_basis: sprawl::style::Dimension::Points(50.3f32),
@@ -16,7 +16,7 @@ fn rounding_total_fractial() {
         )
         .unwrap();
     let node1 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_grow: 1.6f32,
                 size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(10f32), ..Default::default() },
@@ -26,7 +26,7 @@ fn rounding_total_fractial() {
         )
         .unwrap();
     let node2 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_grow: 1.1f32,
                 size: sprawl::geometry::Size {
@@ -39,7 +39,7 @@ fn rounding_total_fractial() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 size: sprawl::geometry::Size {

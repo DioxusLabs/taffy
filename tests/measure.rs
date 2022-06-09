@@ -36,7 +36,7 @@ mod measure {
             )
             .unwrap();
 
-        let node = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[child]).unwrap();
+        let node = sprawl.new_with_children(sprawl::style::Style { ..Default::default() }, &[child]).unwrap();
         sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
 
         assert_eq!(sprawl.layout(node).unwrap().size.width, 100.0);
@@ -60,7 +60,7 @@ mod measure {
             .unwrap();
 
         let node = sprawl
-            .new_node(
+            .new_with_children(
                 sprawl::style::Style {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(50.0),
@@ -95,7 +95,7 @@ mod measure {
             .unwrap();
 
         let node = sprawl
-            .new_node(
+            .new_with_children(
                 sprawl::style::Style {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(50.0),
@@ -125,7 +125,7 @@ mod measure {
     fn measure_child_with_flex_grow() {
         let mut sprawl = sprawl::node::Sprawl::new();
         let child0 = sprawl
-            .new_node(
+            .new_with_children(
                 sprawl::style::Style {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(50.0),
@@ -148,7 +148,7 @@ mod measure {
             .unwrap();
 
         let node = sprawl
-            .new_node(
+            .new_with_children(
                 sprawl::style::Style {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(100.0),
@@ -170,7 +170,7 @@ mod measure {
     fn measure_child_with_flex_shrink() {
         let mut sprawl = sprawl::node::Sprawl::new();
         let child0 = sprawl
-            .new_node(
+            .new_with_children(
                 sprawl::style::Style {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(50.0),
@@ -194,7 +194,7 @@ mod measure {
             .unwrap();
 
         let node = sprawl
-            .new_node(
+            .new_with_children(
                 sprawl::style::Style {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(100.0),
@@ -216,7 +216,7 @@ mod measure {
     fn remeasure_child_after_growing() {
         let mut sprawl = sprawl::node::Sprawl::new();
         let child0 = sprawl
-            .new_node(
+            .new_with_children(
                 sprawl::style::Style {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(50.0),
@@ -240,7 +240,7 @@ mod measure {
             .unwrap();
 
         let node = sprawl
-            .new_node(
+            .new_with_children(
                 sprawl::style::Style {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(100.0),
@@ -264,7 +264,7 @@ mod measure {
         let mut sprawl = sprawl::node::Sprawl::new();
 
         let child0 = sprawl
-            .new_node(
+            .new_with_children(
                 sprawl::style::Style {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(50.0),
@@ -289,7 +289,7 @@ mod measure {
             .unwrap();
 
         let node = sprawl
-            .new_node(
+            .new_with_children(
                 sprawl::style::Style {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(100.0),
@@ -324,7 +324,7 @@ mod measure {
             .unwrap();
 
         let node = sprawl
-            .new_node(
+            .new_with_children(
                 sprawl::style::Style {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(100.0),
@@ -361,7 +361,7 @@ mod measure {
             )
             .unwrap();
 
-        let node = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[child]).unwrap();
+        let node = sprawl.new_with_children(sprawl::style::Style { ..Default::default() }, &[child]).unwrap();
         sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
 
         assert_eq!(sprawl.layout(child).unwrap().size.width, 50.0);
@@ -387,7 +387,7 @@ mod measure {
             )
             .unwrap();
 
-        let node = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[child]).unwrap();
+        let node = sprawl.new_with_children(sprawl::style::Style { ..Default::default() }, &[child]).unwrap();
         sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
 
         assert_eq!(sprawl.layout(child).unwrap().size.width, 100.0);
@@ -398,7 +398,7 @@ mod measure {
     fn flex_basis_overrides_measure() {
         let mut sprawl = sprawl::node::Sprawl::new();
         let child0 = sprawl
-            .new_node(
+            .new_with_children(
                 sprawl::style::Style {
                     flex_basis: sprawl::style::Dimension::Points(50.0),
                     flex_grow: 1.0,
@@ -423,7 +423,7 @@ mod measure {
             .unwrap();
 
         let node = sprawl
-            .new_node(
+            .new_with_children(
                 sprawl::style::Style {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(200.0),
@@ -457,7 +457,7 @@ mod measure {
             .unwrap();
 
         let node = sprawl
-            .new_node(
+            .new_with_children(
                 sprawl::style::Style {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(100.0),
@@ -489,7 +489,7 @@ mod measure {
             .unwrap();
 
         let node = sprawl
-            .new_node(
+            .new_with_children(
                 sprawl::style::Style {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(100.0),
@@ -518,7 +518,7 @@ mod measure {
             .unwrap();
 
         let node = sprawl
-            .new_node(
+            .new_with_children(
                 sprawl::style::Style {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(100.0),
@@ -556,9 +556,9 @@ mod measure {
             )
             .unwrap();
 
-        let child = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[grandchild]).unwrap();
+        let child = sprawl.new_with_children(sprawl::style::Style { ..Default::default() }, &[grandchild]).unwrap();
 
-        let node = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[child]).unwrap();
+        let node = sprawl.new_with_children(sprawl::style::Style { ..Default::default() }, &[child]).unwrap();
         sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
 
         assert_eq!(NUM_MEASURES.load(atomic::Ordering::Relaxed), 2);

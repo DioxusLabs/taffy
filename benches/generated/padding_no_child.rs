@@ -1,7 +1,7 @@
 pub fn compute() {
     let mut sprawl = sprawl::Sprawl::new();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 padding: sprawl::geometry::Rect {
                     start: sprawl::style::Dimension::Points(10f32),

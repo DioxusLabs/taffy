@@ -2,7 +2,7 @@
 fn nested_overflowing_child_in_constraint_parent() {
     let mut sprawl = sprawl::Sprawl::new();
     let node00 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(200f32),
@@ -15,7 +15,7 @@ fn nested_overflowing_child_in_constraint_parent() {
         )
         .unwrap();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),
@@ -28,7 +28,7 @@ fn nested_overflowing_child_in_constraint_parent() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),

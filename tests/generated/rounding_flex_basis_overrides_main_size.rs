@@ -2,7 +2,7 @@
 fn rounding_flex_basis_overrides_main_size() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_grow: 1f32,
                 flex_basis: sprawl::style::Dimension::Points(50f32),
@@ -13,7 +13,7 @@ fn rounding_flex_basis_overrides_main_size() {
         )
         .unwrap();
     let node1 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_grow: 1f32,
                 size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(10f32), ..Default::default() },
@@ -23,7 +23,7 @@ fn rounding_flex_basis_overrides_main_size() {
         )
         .unwrap();
     let node2 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_grow: 1f32,
                 size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(10f32), ..Default::default() },
@@ -33,7 +33,7 @@ fn rounding_flex_basis_overrides_main_size() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 size: sprawl::geometry::Size {

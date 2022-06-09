@@ -2,7 +2,7 @@
 fn flex_basis_slightly_smaller_then_content_with_flex_grow_large_size() {
     let mut sprawl = sprawl::Sprawl::new();
     let node00 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(70f32),
@@ -15,7 +15,7 @@ fn flex_basis_slightly_smaller_then_content_with_flex_grow_large_size() {
         )
         .unwrap();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 flex_grow: 1f32,
@@ -26,7 +26,7 @@ fn flex_basis_slightly_smaller_then_content_with_flex_grow_large_size() {
         )
         .unwrap();
     let node10 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(20f32),
@@ -39,7 +39,7 @@ fn flex_basis_slightly_smaller_then_content_with_flex_grow_large_size() {
         )
         .unwrap();
     let node1 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 flex_grow: 1f32,
@@ -50,7 +50,7 @@ fn flex_basis_slightly_smaller_then_content_with_flex_grow_large_size() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(100f32), ..Default::default() },
                 ..Default::default()

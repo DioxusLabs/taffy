@@ -2,7 +2,7 @@
 fn parent_wrap_child_size_overflowing_parent() {
     let mut sprawl = sprawl::Sprawl::new();
     let node00 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),
@@ -15,7 +15,7 @@ fn parent_wrap_child_size_overflowing_parent() {
         )
         .unwrap();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(100f32), ..Default::default() },
                 ..Default::default()
@@ -24,7 +24,7 @@ fn parent_wrap_child_size_overflowing_parent() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),

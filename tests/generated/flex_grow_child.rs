@@ -2,7 +2,7 @@
 fn flex_grow_child() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_grow: 1f32,
                 flex_basis: sprawl::style::Dimension::Points(0f32),
@@ -12,7 +12,7 @@ fn flex_grow_child() {
             &[],
         )
         .unwrap();
-    let node = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[node0]).unwrap();
+    let node = sprawl.new_with_children(sprawl::style::Style { ..Default::default() }, &[node0]).unwrap();
     sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
     assert_eq!(sprawl.layout(node).unwrap().size.width, 0f32);
     assert_eq!(sprawl.layout(node).unwrap().size.height, 100f32);

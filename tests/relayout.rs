@@ -4,7 +4,7 @@ use sprawl::style::Dimension;
 fn relayout() {
     let mut sprawl = sprawl::Sprawl::new();
     let node1 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size { width: Dimension::Points(8f32), height: Dimension::Points(80f32) },
                 ..Default::default()
@@ -13,7 +13,7 @@ fn relayout() {
         )
         .unwrap();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 align_self: sprawl::prelude::AlignSelf::Center,
                 size: sprawl::geometry::Size { width: Dimension::Auto, height: Dimension::Auto },
@@ -24,7 +24,7 @@ fn relayout() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size { width: Dimension::Percent(1f32), height: Dimension::Percent(1f32) },
                 ..Default::default()

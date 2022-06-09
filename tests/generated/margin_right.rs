@@ -2,7 +2,7 @@
 fn margin_right() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(10f32), ..Default::default() },
                 margin: sprawl::geometry::Rect { end: sprawl::style::Dimension::Points(10f32), ..Default::default() },
@@ -12,7 +12,7 @@ fn margin_right() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 justify_content: sprawl::style::JustifyContent::FlexEnd,
                 size: sprawl::geometry::Size {

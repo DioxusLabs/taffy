@@ -2,7 +2,7 @@
 fn absolute_layout_width_height_start_top() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 position_type: sprawl::style::PositionType::Absolute,
                 size: sprawl::geometry::Size {
@@ -21,7 +21,7 @@ fn absolute_layout_width_height_start_top() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),

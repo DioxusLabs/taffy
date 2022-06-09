@@ -2,7 +2,7 @@
 fn flex_basis_unconstraint_column() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_basis: sprawl::style::Dimension::Points(50f32),
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(100f32), ..Default::default() },
@@ -12,7 +12,7 @@ fn flex_basis_unconstraint_column() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style { flex_direction: sprawl::style::FlexDirection::Column, ..Default::default() },
             &[node0],
         )

@@ -2,7 +2,7 @@
 fn flex_grow_less_than_factor_one() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_grow: 0.2f32,
                 flex_shrink: 0f32,
@@ -13,13 +13,13 @@ fn flex_grow_less_than_factor_one() {
         )
         .unwrap();
     let node1 = sprawl
-        .new_node(sprawl::style::Style { flex_grow: 0.2f32, flex_shrink: 0f32, ..Default::default() }, &[])
+        .new_with_children(sprawl::style::Style { flex_grow: 0.2f32, flex_shrink: 0f32, ..Default::default() }, &[])
         .unwrap();
     let node2 = sprawl
-        .new_node(sprawl::style::Style { flex_grow: 0.4f32, flex_shrink: 0f32, ..Default::default() }, &[])
+        .new_with_children(sprawl::style::Style { flex_grow: 0.4f32, flex_shrink: 0f32, ..Default::default() }, &[])
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(500f32),

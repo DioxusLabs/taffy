@@ -2,7 +2,7 @@
 fn display_none_with_child() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_grow: 1f32,
                 flex_shrink: 1f32,
@@ -13,7 +13,7 @@ fn display_none_with_child() {
         )
         .unwrap();
     let node10 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_grow: 1f32,
                 flex_shrink: 1f32,
@@ -25,7 +25,7 @@ fn display_none_with_child() {
         )
         .unwrap();
     let node1 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 display: sprawl::style::Display::None,
                 flex_direction: sprawl::style::FlexDirection::Column,
@@ -38,7 +38,7 @@ fn display_none_with_child() {
         )
         .unwrap();
     let node2 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_grow: 1f32,
                 flex_shrink: 1f32,
@@ -49,7 +49,7 @@ fn display_none_with_child() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),

@@ -2,7 +2,7 @@
 fn wrapped_row_within_align_items_center() {
     let mut sprawl = sprawl::Sprawl::new();
     let node00 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(150f32),
@@ -15,7 +15,7 @@ fn wrapped_row_within_align_items_center() {
         )
         .unwrap();
     let node01 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(80f32),
@@ -28,13 +28,13 @@ fn wrapped_row_within_align_items_center() {
         )
         .unwrap();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style { flex_wrap: sprawl::style::FlexWrap::Wrap, ..Default::default() },
             &[node00, node01],
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 align_items: sprawl::style::AlignItems::Center,

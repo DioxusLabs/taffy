@@ -2,7 +2,7 @@
 fn min_width_overrides_width() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(50f32), ..Default::default() },
                 min_size: sprawl::geometry::Size {
@@ -14,7 +14,7 @@ fn min_width_overrides_width() {
             &[],
         )
         .unwrap();
-    let node = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[node0]).unwrap();
+    let node = sprawl.new_with_children(sprawl::style::Style { ..Default::default() }, &[node0]).unwrap();
     sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
     assert_eq!(sprawl.layout(node).unwrap().size.width, 100f32);
     assert_eq!(sprawl.layout(node).unwrap().size.height, 0f32);

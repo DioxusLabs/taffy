@@ -2,7 +2,7 @@
 fn flex_basis_unconstraint_row() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_basis: sprawl::style::Dimension::Points(50f32),
                 size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(100f32), ..Default::default() },
@@ -11,7 +11,7 @@ fn flex_basis_unconstraint_row() {
             &[],
         )
         .unwrap();
-    let node = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[node0]).unwrap();
+    let node = sprawl.new_with_children(sprawl::style::Style { ..Default::default() }, &[node0]).unwrap();
     sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
     assert_eq!(sprawl.layout(node).unwrap().size.width, 0f32);
     assert_eq!(sprawl.layout(node).unwrap().size.height, 100f32);

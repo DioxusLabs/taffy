@@ -2,7 +2,7 @@
 fn percentage_size_of_flex_basis() {
     let mut sprawl = sprawl::Sprawl::new();
     let node00 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Percent(1f32),
@@ -15,13 +15,13 @@ fn percentage_size_of_flex_basis() {
         )
         .unwrap();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style { flex_basis: sprawl::style::Dimension::Points(50f32), ..Default::default() },
             &[node00],
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(100f32), ..Default::default() },
                 ..Default::default()

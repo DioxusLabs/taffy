@@ -2,7 +2,7 @@
 fn margin_fix_left_auto_right_child_bigger_than_parent() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(72f32),
@@ -20,7 +20,7 @@ fn margin_fix_left_auto_right_child_bigger_than_parent() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 justify_content: sprawl::style::JustifyContent::Center,
                 size: sprawl::geometry::Size {

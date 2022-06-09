@@ -2,7 +2,7 @@
 fn justify_content_min_width_with_padding_child_width_lower_than_parent() {
     let mut sprawl = sprawl::Sprawl::new();
     let node000 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(199f32),
@@ -15,7 +15,7 @@ fn justify_content_min_width_with_padding_child_width_lower_than_parent() {
         )
         .unwrap();
     let node00 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 justify_content: sprawl::style::JustifyContent::Center,
                 min_size: sprawl::geometry::Size {
@@ -32,9 +32,9 @@ fn justify_content_min_width_with_padding_child_width_lower_than_parent() {
             &[node000],
         )
         .unwrap();
-    let node0 = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[node00]).unwrap();
+    let node0 = sprawl.new_with_children(sprawl::style::Style { ..Default::default() }, &[node00]).unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 size: sprawl::geometry::Size {

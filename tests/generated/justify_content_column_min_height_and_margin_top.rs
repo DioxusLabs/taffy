@@ -2,7 +2,7 @@
 fn justify_content_column_min_height_and_margin_top() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(20f32),
@@ -16,7 +16,7 @@ fn justify_content_column_min_height_and_margin_top() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 justify_content: sprawl::style::JustifyContent::Center,

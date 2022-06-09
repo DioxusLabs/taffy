@@ -3,12 +3,12 @@ use sprawl::prelude::*;
 fn main() -> Result<(), Error> {
     let mut sprawl = Sprawl::new();
 
-    let child = sprawl.new_node(
+    let child = sprawl.new_with_children(
         Style { size: Size { width: Dimension::Percent(0.5), height: Dimension::Auto }, ..Default::default() },
         &[],
     )?;
 
-    let node = sprawl.new_node(
+    let node = sprawl.new_with_children(
         Style {
             size: Size { width: Dimension::Points(100.0), height: Dimension::Points(100.0) },
             justify_content: JustifyContent::Center,

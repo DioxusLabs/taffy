@@ -2,19 +2,19 @@
 fn flex_basis_flex_shrink_column() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style { flex_basis: sprawl::style::Dimension::Points(100f32), ..Default::default() },
             &[],
         )
         .unwrap();
     let node1 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style { flex_basis: sprawl::style::Dimension::Points(50f32), ..Default::default() },
             &[],
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 size: sprawl::geometry::Size {

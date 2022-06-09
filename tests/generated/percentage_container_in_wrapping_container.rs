@@ -2,7 +2,7 @@
 fn percentage_container_in_wrapping_container() {
     let mut sprawl = sprawl::Sprawl::new();
     let node000 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(50f32),
@@ -15,7 +15,7 @@ fn percentage_container_in_wrapping_container() {
         )
         .unwrap();
     let node001 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(50f32),
@@ -28,7 +28,7 @@ fn percentage_container_in_wrapping_container() {
         )
         .unwrap();
     let node00 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 justify_content: sprawl::style::JustifyContent::Center,
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Percent(1f32), ..Default::default() },
@@ -38,13 +38,13 @@ fn percentage_container_in_wrapping_container() {
         )
         .unwrap();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style { flex_direction: sprawl::style::FlexDirection::Column, ..Default::default() },
             &[node00],
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 align_items: sprawl::style::AlignItems::Center,

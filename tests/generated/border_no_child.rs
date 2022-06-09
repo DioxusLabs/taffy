@@ -2,7 +2,7 @@
 fn border_no_child() {
     let mut sprawl = sprawl::Sprawl::new();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 border: sprawl::geometry::Rect {
                     start: sprawl::style::Dimension::Points(10f32),

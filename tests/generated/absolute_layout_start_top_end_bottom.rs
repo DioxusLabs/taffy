@@ -2,7 +2,7 @@
 fn absolute_layout_start_top_end_bottom() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 position_type: sprawl::style::PositionType::Absolute,
                 position: sprawl::geometry::Rect {
@@ -18,7 +18,7 @@ fn absolute_layout_start_top_end_bottom() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),

@@ -2,7 +2,7 @@
 fn absolute_layout_in_wrap_reverse_column_container_flex_end() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 position_type: sprawl::style::PositionType::Absolute,
                 align_self: sprawl::style::AlignSelf::FlexEnd,
@@ -17,7 +17,7 @@ fn absolute_layout_in_wrap_reverse_column_container_flex_end() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 flex_wrap: sprawl::style::FlexWrap::WrapReverse,

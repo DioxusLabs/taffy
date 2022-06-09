@@ -2,7 +2,7 @@
 fn flex_basis_and_main_dimen_set_when_flexing() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_grow: 1f32,
                 flex_basis: sprawl::style::Dimension::Points(10f32),
@@ -17,7 +17,7 @@ fn flex_basis_and_main_dimen_set_when_flexing() {
         )
         .unwrap();
     let node1 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_grow: 1f32,
                 flex_basis: sprawl::style::Dimension::Points(10f32),
@@ -32,7 +32,7 @@ fn flex_basis_and_main_dimen_set_when_flexing() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(100f32), ..Default::default() },
                 ..Default::default()

@@ -2,7 +2,7 @@
 fn margin_auto_mutiple_children_row() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(50f32),
@@ -16,7 +16,7 @@ fn margin_auto_mutiple_children_row() {
         )
         .unwrap();
     let node1 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(50f32),
@@ -30,7 +30,7 @@ fn margin_auto_mutiple_children_row() {
         )
         .unwrap();
     let node2 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(50f32),
@@ -43,7 +43,7 @@ fn margin_auto_mutiple_children_row() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 align_items: sprawl::style::AlignItems::Center,
                 size: sprawl::geometry::Size {

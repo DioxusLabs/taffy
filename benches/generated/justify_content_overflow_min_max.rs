@@ -1,7 +1,7 @@
 pub fn compute() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_shrink: 0f32,
                 size: sprawl::geometry::Size {
@@ -15,7 +15,7 @@ pub fn compute() {
         )
         .unwrap();
     let node1 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_shrink: 0f32,
                 size: sprawl::geometry::Size {
@@ -29,7 +29,7 @@ pub fn compute() {
         )
         .unwrap();
     let node2 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_shrink: 0f32,
                 size: sprawl::geometry::Size {
@@ -43,7 +43,7 @@ pub fn compute() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 justify_content: sprawl::style::JustifyContent::Center,

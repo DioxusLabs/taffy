@@ -6,7 +6,7 @@ mod root_constraints {
     fn root_with_percentage_size() {
         let mut sprawl = sprawl::node::Sprawl::new();
         let node = sprawl
-            .new_node(
+            .new_with_children(
                 sprawl::style::Style {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Percent(1.0),
@@ -33,7 +33,7 @@ mod root_constraints {
     #[test]
     fn root_with_no_size() {
         let mut sprawl = sprawl::node::Sprawl::new();
-        let node = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[]).unwrap();
+        let node = sprawl.new_with_children(sprawl::style::Style { ..Default::default() }, &[]).unwrap();
 
         sprawl
             .compute_layout(
@@ -51,7 +51,7 @@ mod root_constraints {
     fn root_with_larger_size() {
         let mut sprawl = sprawl::node::Sprawl::new();
         let node = sprawl
-            .new_node(
+            .new_with_children(
                 sprawl::style::Style {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(200.0),

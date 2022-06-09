@@ -2,7 +2,7 @@
 fn margin_auto_left_and_right_column_and_center() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(50f32),
@@ -20,7 +20,7 @@ fn margin_auto_left_and_right_column_and_center() {
         )
         .unwrap();
     let node1 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(50f32),
@@ -33,7 +33,7 @@ fn margin_auto_left_and_right_column_and_center() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 align_items: sprawl::style::AlignItems::Center,
                 size: sprawl::geometry::Size {

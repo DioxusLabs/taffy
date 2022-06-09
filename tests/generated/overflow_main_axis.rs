@@ -2,7 +2,7 @@
 fn overflow_main_axis() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_shrink: 0f32,
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(200f32), ..Default::default() },
@@ -12,7 +12,7 @@ fn overflow_main_axis() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),

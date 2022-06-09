@@ -2,7 +2,7 @@
 fn flex_wrap_align_stretch_fits_one_row() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(50f32), ..Default::default() },
                 ..Default::default()
@@ -11,7 +11,7 @@ fn flex_wrap_align_stretch_fits_one_row() {
         )
         .unwrap();
     let node1 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(50f32), ..Default::default() },
                 ..Default::default()
@@ -20,7 +20,7 @@ fn flex_wrap_align_stretch_fits_one_row() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_wrap: sprawl::style::FlexWrap::Wrap,
                 size: sprawl::geometry::Size {

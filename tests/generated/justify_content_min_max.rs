@@ -2,7 +2,7 @@
 fn justify_content_min_max() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(60f32),
@@ -15,7 +15,7 @@ fn justify_content_min_max() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 justify_content: sprawl::style::JustifyContent::Center,

@@ -2,7 +2,7 @@
 fn child_min_max_width_flexing() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_grow: 1f32,
                 flex_shrink: 0f32,
@@ -17,7 +17,7 @@ fn child_min_max_width_flexing() {
         )
         .unwrap();
     let node1 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_grow: 1f32,
                 flex_shrink: 0f32,
@@ -32,7 +32,7 @@ fn child_min_max_width_flexing() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(120f32),

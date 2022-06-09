@@ -2,7 +2,7 @@
 fn flex_grow_within_max_width() {
     let mut sprawl = sprawl::Sprawl::new();
     let node00 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_grow: 1f32,
                 size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(20f32), ..Default::default() },
@@ -12,7 +12,7 @@ fn flex_grow_within_max_width() {
         )
         .unwrap();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 max_size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),
@@ -24,7 +24,7 @@ fn flex_grow_within_max_width() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 size: sprawl::geometry::Size {

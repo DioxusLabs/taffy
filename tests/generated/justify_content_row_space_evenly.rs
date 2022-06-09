@@ -2,7 +2,7 @@
 fn justify_content_row_space_evenly() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
@@ -11,7 +11,7 @@ fn justify_content_row_space_evenly() {
         )
         .unwrap();
     let node1 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
@@ -20,7 +20,7 @@ fn justify_content_row_space_evenly() {
         )
         .unwrap();
     let node2 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
@@ -29,7 +29,7 @@ fn justify_content_row_space_evenly() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 justify_content: sprawl::style::JustifyContent::SpaceEvenly,
                 size: sprawl::geometry::Size {

@@ -2,7 +2,7 @@
 fn margin_with_sibling_row() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_grow: 1f32,
                 margin: sprawl::geometry::Rect { end: sprawl::style::Dimension::Points(10f32), ..Default::default() },
@@ -11,9 +11,9 @@ fn margin_with_sibling_row() {
             &[],
         )
         .unwrap();
-    let node1 = sprawl.new_node(sprawl::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
+    let node1 = sprawl.new_with_children(sprawl::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),

@@ -2,7 +2,7 @@
 fn wrap_nodes_with_content_sizing_overflowing_margin() {
     let mut sprawl = sprawl::Sprawl::new();
     let node000 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(40f32),
@@ -15,13 +15,13 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
         )
         .unwrap();
     let node00 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style { flex_direction: sprawl::style::FlexDirection::Column, ..Default::default() },
             &[node000],
         )
         .unwrap();
     let node010 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(40f32),
@@ -34,7 +34,7 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
         )
         .unwrap();
     let node01 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 margin: sprawl::geometry::Rect { end: sprawl::style::Dimension::Points(10f32), ..Default::default() },
@@ -44,7 +44,7 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
         )
         .unwrap();
     let node0 = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_wrap: sprawl::style::FlexWrap::Wrap,
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(85f32), ..Default::default() },
@@ -54,7 +54,7 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
         )
         .unwrap();
     let node = sprawl
-        .new_node(
+        .new_with_children(
             sprawl::style::Style {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 size: sprawl::geometry::Size {
