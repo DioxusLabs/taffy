@@ -12,7 +12,7 @@ use crate::sys::{new_map_with_capacity, ChildrenVec, Map, Vec};
 use crate::Error;
 use core::sync::atomic::{AtomicUsize, Ordering};
 
-/// A function that can be applied to a `Size<Number>` to obetain a `<Size<f32>`
+/// A function that can be applied to a `Size<Number>` to obtain a `<Size<f32>`
 pub enum MeasureFunc {
     /// Stores an unboxed function
     Raw(fn(Size<Number>) -> Size<f32>),
