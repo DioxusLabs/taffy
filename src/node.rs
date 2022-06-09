@@ -79,7 +79,7 @@ impl Sprawl {
         Node { instance: self.id, local }
     }
 
-    /// Stores a new
+    /// Stores a new node in the tree
     fn add_node(&mut self, node: Node, id: NodeId) {
         let _ = self.nodes_to_ids.insert(node, id);
         let _ = self.ids_to_nodes.insert(id, node);
