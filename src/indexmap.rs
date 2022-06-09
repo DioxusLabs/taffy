@@ -27,7 +27,10 @@
 // DEALINGS IN THE SOFTWARE.
 
 mod sealed {
-    // copied from https://github.com/japaric/heapless/blob/39273893deda34fa741f79438134fd4d4d7ac3ae/src/sealed.rs
+    // copied from
+    // https://github.com/japaric/heapless/blob/39273893deda34fa741f79438134fd4d4d7ac3ae/src/sealed.rs
+    // https://web.archive.org/web/20220609184545/https://github.com/japaric/heapless/blob/39273893deda34fa741f79438134fd4d4d7ac3ae/src/sealed.rs
+
     #[allow(clippy::no_effect)]
     #[allow(dead_code)]
     #[allow(path_statements)]
@@ -96,7 +99,10 @@ mod sealed {
 }
 
 mod vec {
-    // copied from https://github.com/japaric/heapless/blob/39273893deda34fa741f79438134fd4d4d7ac3ae/src/vec.rs
+    // copied from
+    // https://github.com/japaric/heapless/blob/39273893deda34fa741f79438134fd4d4d7ac3ae/src/vec.rs
+    // https://web.archive.org/web/20220609184505/https://github.com/japaric/heapless/blob/39273893deda34fa741f79438134fd4d4d7ac3ae/src/vec.rs
+
     use core::{cmp::Ordering, convert::TryFrom, fmt, hash, iter::FromIterator, mem::MaybeUninit, ops, ptr, slice};
 
     /// A fixed capacity [`Vec`](https://doc.rust-lang.org/std/vec/struct.Vec.html)
@@ -752,7 +758,9 @@ mod vec {
         use super::Vec;
         use core::fmt::Write;
 
-        // droppable macro copied from this file https://github.com/japaric/heapless/blob/39273893deda34fa741f79438134fd4d4d7ac3ae/src/test_helpers.rs
+        // droppable macro copied from this file
+        // https://github.com/japaric/heapless/blob/39273893deda34fa741f79438134fd4d4d7ac3ae/src/test_helpers.rs
+        // https://web.archive.org/web/20220609184423/https://github.com/japaric/heapless/blob/39273893deda34fa741f79438134fd4d4d7ac3ae/src/test_helpers.rs
         macro_rules! droppable {
             () => {
                 static COUNT: core::sync::atomic::AtomicI32 = core::sync::atomic::AtomicI32::new(0);
@@ -1221,7 +1229,9 @@ mod vec {
     }
 }
 
-// copied from https://github.com/japaric/heapless/blob/39273893deda34fa741f79438134fd4d4d7ac3ae/src/indexmap.rs
+// copied from
+// https://github.com/japaric/heapless/blob/39273893deda34fa741f79438134fd4d4d7ac3ae/src/indexmap.rs
+// https://web.archive.org/web/20220609184614/https://github.com/japaric/heapless/blob/39273893deda34fa741f79438134fd4d4d7ac3ae/src/indexmap.rs
 
 use core::{borrow::Borrow, fmt, iter::FromIterator, mem, num::NonZeroU32, ops, slice};
 
