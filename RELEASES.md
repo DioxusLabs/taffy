@@ -4,6 +4,7 @@
 
 ### 0.1.0 Changed
 
+- the fields of `Rect<T>` has been renamed to adhere to flexbox specifications
 - the `order` field of `Layout` is now public, and describes the relative z-ordering of nodes
 - renamed crate from `stretch2` to `sprawl`
 - updated to the latest version of all dependencies to reduce upstream pain caused by duplicate dependencies
