@@ -97,9 +97,9 @@ impl Sprawl {
         self.forest.clear();
     }
 
-    /// Remove nodes.
-    pub fn remove(&mut self, node: Node) {
-        let id = if let Ok(id) = self.find_node(node) { id } else { return };
+    /// Remove nodes. Returns the id of the node removed.
+    pub fn remove(&mut self, node: Node) -> Result<usize, Error> {
+        let id = self.find_node(node)?;
 
         self.nodes_to_ids.remove(&node);
         self.ids_to_nodes.remove(&id);
@@ -109,6 +109,8 @@ impl Sprawl {
             let _ = self.nodes_to_ids.insert(new, id);
             let _ = self.ids_to_nodes.insert(id, new);
         }
+
+        return Ok(id);
     }
 
     pub fn set_measure(&mut self, node: Node, measure: Option<MeasureFunc>) -> Result<(), Error> {
