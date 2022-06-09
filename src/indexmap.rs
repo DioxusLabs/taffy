@@ -753,6 +753,7 @@ mod vec {
         use super::Vec;
         use core::fmt::Write;
 
+        // droppable macro copied from this file https://github.com/japaric/heapless/blob/39273893deda34fa741f79438134fd4d4d7ac3ae/src/test_helpers.rs
         macro_rules! droppable {
             () => {
                 static COUNT: core::sync::atomic::AtomicI32 = core::sync::atomic::AtomicI32::new(0);
