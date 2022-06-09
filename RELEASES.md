@@ -4,6 +4,7 @@
 
 ### 0.1.0 Changed
 
+- renamed `Sprawl.new_node(&mut self, style: Style, children: &[Node])` -> `Sprawl.new_with_children(&mut self, style: Style, children: &[Node])`
 - the `order` field of `Layout` is now public, and describes the relative z-ordering of nodes
 - renamed crate from `stretch2` to `sprawl`
 - updated to the latest version of all dependencies to reduce upstream pain caused by duplicate dependencies
