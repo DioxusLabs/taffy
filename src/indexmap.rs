@@ -1,3 +1,17 @@
+//! We used to have a dependency on the entirety of the [`heapless`] crate and
+//! therefore all of its dependencies. We only use heapless::FnvIndexMap from
+//! that crate and then only in the config
+//! `#[cfg(all(not(feature = "alloc"), not(feature = "std")))]` so we decided to
+//! vendor the relevant code. The only changes we have made are removing the entry
+//! api because we didn't need it, fixing some of the things clippy complained
+//! about, and migrating some of the doctests to unit tests. We advise future
+//! contributors to use caution if you need to touch this code.
+//! This is vendored well-tested code that we didn't want to modify so we opted to
+//! switch from `#![forbid(unsafe_code)]` to `#![deny(unsafe_code)] in our lib.rs,
+//! and to `#![allow(unsafe_code)]` for this file only for the reasons listed.
+//!
+//! [`heapless`]: https://github.com/japaric/heapless
+//! https://web.archive.org/web/20220609184943/https://github.com/japaric/heapless
 #![allow(unsafe_code)]
 
 // Copyright (c) 2017 Jorge Aparicio
