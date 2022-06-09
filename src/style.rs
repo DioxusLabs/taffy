@@ -1,4 +1,4 @@
-//! A representation of the [CSS style attribute](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust, used for flexbox layout
+//! A representation of [CSS layout properties](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust, used for flexbox layout
 
 use crate::geometry::{Rect, Size};
 use crate::number::Number;
@@ -155,14 +155,25 @@ impl FlexDirection {
     }
 }
 
+/// Sets the distribution of space between and around content items along the main-axis
+///
+/// The default value is [`JustifyContent::FlexStart`].
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum JustifyContent {
+    /// Items are packed toward the start of the main axis
     FlexStart,
+    /// Items are packed toward the end of the main axis
     FlexEnd,
+    /// Items are packed along the center of the main axis
     Center,
+    /// Distribute items evenly, such that the first and last item are aligned with the edges
     SpaceBetween,
+    /// Distribute items evenly,
+    /// such that the space between items is twice same as the space between the first and last item and the edges
     SpaceAround,
+    /// Distribute items evenly,
+    /// such that the space between items is the same as the space between the first and last item and the edges
     SpaceEvenly,
 }
 
