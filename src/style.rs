@@ -82,8 +82,6 @@ impl Default for AlignContent {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 /// Sets the layout used for the children of this node
 ///
 /// [`Display::Flex`] is the default value.
