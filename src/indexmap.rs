@@ -98,7 +98,6 @@ mod sealed {
 mod vec {
     // copied from https://github.com/japaric/heapless/blob/39273893deda34fa741f79438134fd4d4d7ac3ae/src/vec.rs
     use core::{cmp::Ordering, convert::TryFrom, fmt, hash, iter::FromIterator, mem::MaybeUninit, ops, ptr, slice};
-    use hash32;
 
     /// A fixed capacity [`Vec`](https://doc.rust-lang.org/std/vec/struct.Vec.html)
     pub(super) struct Vec<T, const N: usize> {
@@ -1158,13 +1157,12 @@ mod vec {
             assert!(v.is_full());
         }
 
-        #[cfg(feature = "std")]
         #[test]
         fn vec() {
             // A vector with a fixed capacity of 8 elements allocated on the stack
             let mut vec = Vec::<_, 8>::new();
-            vec.push(1);
-            vec.push(2);
+            vec.push(1).unwrap();
+            vec.push(2).unwrap();
             assert_eq!(vec.len(), 2);
             assert_eq!(vec[0], 1);
             assert_eq!(vec.pop(), Some(2));
@@ -1172,20 +1170,15 @@ mod vec {
             vec[0] = 7;
             assert_eq!(vec[0], 7);
             vec.extend([1, 2, 3].iter().cloned());
-            for x in &vec {
-                println!("{}", x);
-            }
             assert_eq!(*vec, [7, 1, 2, 3]);
         }
 
-        #[cfg(feature = "std")]
         #[test]
         fn as_slice() {
             let buffer: Vec<u8, 5> = Vec::from_slice(&[1, 2, 3, 5, 8]).unwrap();
             assert_eq!(buffer.as_slice(), &[1, 2, 3, 5, 8]);
         }
 
-        #[cfg(feature = "std")]
         #[test]
         fn into_array() {
             let buffer: Vec<u8, 42> = Vec::from_slice(&[1, 2, 3, 5, 8]).unwrap();
@@ -1193,7 +1186,6 @@ mod vec {
             assert_eq!(array, [1, 2, 3, 5, 8]);
         }
 
-        #[cfg(feature = "std")]
         #[test]
         fn as_mut_slice() {
             let mut buffer: Vec<u8, 5> = Vec::from_slice(&[1, 2, 3, 5, 8]).unwrap();
@@ -1201,7 +1193,6 @@ mod vec {
             assert_eq!(buffer.as_slice(), &[9, 2, 3, 5, 8]);
         }
 
-        #[cfg(feature = "std")]
         #[test]
         fn swap_remove() {
             let mut v: Vec<_, 8> = Vec::new();
@@ -1215,7 +1206,6 @@ mod vec {
             assert_eq!(&*v, ["baz", "qux"]);
         }
 
-        #[cfg(feature = "std")]
         #[test]
         fn swap_remove_unchecked() {
             let mut v: Vec<_, 8> = Vec::new();
@@ -1227,24 +1217,6 @@ mod vec {
             assert_eq!(&*v, ["foo", "qux", "baz"]);
             assert_eq!(unsafe { v.swap_remove_unchecked(0) }, "foo");
             assert_eq!(&*v, ["baz", "qux"]);
-        }
-
-        #[cfg(feature = "std")]
-        #[test]
-        fn starts_with_doctest() {
-            let v: Vec<_, 8> = Vec::from_slice(b"abc").unwrap();
-            assert_eq!(v.starts_with(b""), true);
-            assert_eq!(v.starts_with(b"ab"), true);
-            assert_eq!(v.starts_with(b"bc"), false);
-        }
-
-        #[cfg(feature = "std")]
-        #[test]
-        fn ends_with_doctest() {
-            let v: Vec<_, 8> = Vec::from_slice(b"abc").unwrap();
-            assert_eq!(v.ends_with(b""), true);
-            assert_eq!(v.ends_with(b"ab"), false);
-            assert_eq!(v.ends_with(b"bc"), true);
         }
     }
 }
@@ -2336,31 +2308,22 @@ mod tests {
         }
     }
 
-    #[cfg(feature = "std")]
     #[test]
     fn keys() {
         let mut map = FnvIndexMap::<_, _, 16>::new();
         map.insert("a", 1).unwrap();
         map.insert("b", 2).unwrap();
         map.insert("c", 3).unwrap();
-        for key in map.keys() {
-            println!("{}", key);
-        }
     }
 
-    #[cfg(feature = "std")]
     #[test]
     fn values() {
         let mut map = FnvIndexMap::<_, _, 16>::new();
         map.insert("a", 1).unwrap();
         map.insert("b", 2).unwrap();
         map.insert("c", 3).unwrap();
-        for val in map.values() {
-            println!("{}", val);
-        }
     }
 
-    #[cfg(feature = "std")]
     #[test]
     fn values_mut() {
         let mut map = FnvIndexMap::<_, _, 16>::new();
@@ -2369,9 +2332,6 @@ mod tests {
         map.insert("c", 3).unwrap();
         for val in map.values_mut() {
             *val += 10;
-        }
-        for val in map.values() {
-            println!("{}", val);
         }
     }
 
@@ -2387,7 +2347,6 @@ mod tests {
         }
     }
 
-    #[cfg(feature = "std")]
     #[test]
     fn iter_mut() {
         let mut map = FnvIndexMap::<_, _, 16>::new();
@@ -2397,27 +2356,8 @@ mod tests {
         for (_, val) in map.iter_mut() {
             *val = 2;
         }
-        for (key, val) in &map {
-            println!("key: {} val: {}", key, val);
-        }
     }
 
-    #[cfg(feature = "std")]
-    #[test]
-    fn entry_doctest() {
-        let mut map = FnvIndexMap::<_, _, 16>::new();
-        if let Entry::Vacant(v) = map.entry("a") {
-            v.insert(1).unwrap();
-        }
-        if let Entry::Occupied(mut o) = map.entry("a") {
-            println!("found {}", *o.get()); // Prints 1
-            o.insert(2);
-        }
-        // Prints 2
-        println!("val: {}", *map.get("a").unwrap());
-    }
-
-    #[cfg(feature = "std")]
     #[test]
     fn len() {
         let mut a = FnvIndexMap::<_, _, 16>::new();
@@ -2426,25 +2366,22 @@ mod tests {
         assert_eq!(a.len(), 1);
     }
 
-    #[cfg(feature = "std")]
     #[test]
     fn is_empty() {
         let mut a = FnvIndexMap::<_, _, 16>::new();
         assert!(a.is_empty());
-        a.insert(1, "a");
+        a.insert(1, "a").unwrap();
         assert!(!a.is_empty());
     }
 
-    #[cfg(feature = "std")]
     #[test]
     fn clear() {
         let mut a = FnvIndexMap::<_, _, 16>::new();
-        a.insert(1, "a");
+        a.insert(1, "a").unwrap();
         a.clear();
         assert!(a.is_empty());
     }
 
-    #[cfg(feature = "std")]
     #[test]
     fn get() {
         let mut map = FnvIndexMap::<_, _, 16>::new();
@@ -2453,7 +2390,6 @@ mod tests {
         assert_eq!(map.get(&2), None);
     }
 
-    #[cfg(feature = "std")]
     #[test]
     fn contains_key() {
         let mut map = FnvIndexMap::<_, _, 8>::new();
@@ -2462,7 +2398,6 @@ mod tests {
         assert_eq!(map.contains_key(&2), false);
     }
 
-    #[cfg(feature = "std")]
     #[test]
     fn get_mut() {
         let mut map = FnvIndexMap::<_, _, 8>::new();
@@ -2473,7 +2408,6 @@ mod tests {
         assert_eq!(map[&1], "b");
     }
 
-    #[cfg(feature = "std")]
     #[test]
     fn insert() {
         let mut map = FnvIndexMap::<_, _, 8>::new();
@@ -2484,7 +2418,6 @@ mod tests {
         assert_eq!(map[&37], "c");
     }
 
-    #[cfg(feature = "std")]
     #[test]
     fn remove() {
         let mut map = FnvIndexMap::<_, _, 8>::new();
