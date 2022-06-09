@@ -1,6 +1,33 @@
 #![allow(unsafe_code)]
 
+// Copyright (c) 2017 Jorge Aparicio
+
+// Permission is hereby granted, free of charge, to any
+// person obtaining a copy of this software and associated
+// documentation files (the "Software"), to deal in the
+// Software without restriction, including without
+// limitation the rights to use, copy, modify, merge,
+// publish, distribute, sublicense, and/or sell copies of
+// the Software, and to permit persons to whom the Software
+// is furnished to do so, subject to the following
+// conditions:
+
+// The above copyright notice and this permission notice
+// shall be included in all copies or substantial portions
+// of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
+// ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+// TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+// PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+// SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+// CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+// IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+
 mod sealed {
+    // copied from https://github.com/japaric/heapless/blob/39273893deda34fa741f79438134fd4d4d7ac3ae/src/sealed.rs
     #[allow(dead_code)]
     #[allow(path_statements)]
     pub(crate) const fn smaller_than<const N: usize, const MAX: usize>() {
@@ -62,6 +89,7 @@ mod sealed {
 }
 
 mod vec {
+    // copied from https://github.com/japaric/heapless/blob/39273893deda34fa741f79438134fd4d4d7ac3ae/src/vec.rs
     use core::{cmp::Ordering, convert::TryFrom, fmt, hash, iter::FromIterator, mem::MaybeUninit, ops, ptr, slice};
     use hash32;
 
@@ -1292,6 +1320,8 @@ mod vec {
         }
     }
 }
+
+// copied from https://github.com/japaric/heapless/blob/39273893deda34fa741f79438134fd4d4d7ac3ae/src/indexmap.rs
 
 use core::{borrow::Borrow, fmt, iter::FromIterator, mem, num::NonZeroU32, ops, slice};
 
