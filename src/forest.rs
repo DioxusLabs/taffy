@@ -12,11 +12,16 @@ use crate::sys::{new_vec_with_capacity, ChildrenVec, ParentsVec, Vec};
 ///
 /// Stored in a [`Forest`].
 pub(crate) struct NodeData {
+    /// The layout strategy used by this node
     pub(crate) style: Style,
+    /// The mapping from the Size<Number> (in units) to Size<f32> (in points) for this node
     pub(crate) measure: Option<MeasureFunc>,
+    /// The results of the layout computation
     pub(crate) layout: Layout,
+    /// The cached results of the layout computation
     pub(crate) main_size_layout_cache: Option<Cache>,
     pub(crate) other_layout_cache: Option<Cache>,
+    /// Does this node's layout need to be recomputed?
     pub(crate) is_dirty: bool,
 }
 
@@ -59,8 +64,15 @@ impl NodeData {
 
 /// A collection of UI layout trees used to store [`NodeData`] associated with specific [`Nodes`](crate::node::Node)
 pub(crate) struct Forest {
+    /// The [`NodeData`] for each node stored in this forest
     pub(crate) nodes: Vec<NodeData>,
+    /// The children of each node
+    ///
+    /// The indexes in the outer vector correspond to the position of the parent [`NodeData`]
     pub(crate) children: Vec<ChildrenVec<NodeId>>,
+    /// The parents of each node
+    ///
+    /// The indexes in the outer vector correspond to the position of the child [`NodeData`]
     pub(crate) parents: Vec<ParentsVec<NodeId>>,
 }
 
@@ -205,8 +217,9 @@ impl Forest {
     ///
     /// Any cached layout information is cleared.
     pub(crate) fn mark_dirty(&mut self, node: NodeId) {
-        // Performs a recursive depth-first search up the tree until the root node is reached
-        // WARNING: this will stack-overflow if the tree contains a cycle
+        /// Performs a recursive depth-first search up the tree until the root node is reached
+        ///
+        ///  WARNING: this will stack-overflow if the tree contains a cycle
         fn mark_dirty_recursive(nodes: &mut Vec<NodeData>, parents: &[ParentsVec<NodeId>], node_id: NodeId) {
             nodes[node_id].mark_dirty();
 
