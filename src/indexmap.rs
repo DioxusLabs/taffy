@@ -31,35 +31,35 @@ mod sealed {
     #[allow(clippy::no_effect)]
     #[allow(dead_code)]
     #[allow(path_statements)]
-    pub(crate) const fn smaller_than<const N: usize, const MAX: usize>() {
+    pub(super) const fn smaller_than<const N: usize, const MAX: usize>() {
         Assert::<N, MAX>::LESS;
     }
 
     #[allow(clippy::no_effect)]
     #[allow(dead_code)]
     #[allow(path_statements)]
-    pub(crate) const fn greater_than_eq_0<const N: usize>() {
+    pub(super) const fn greater_than_eq_0<const N: usize>() {
         Assert::<N, 0>::GREATER_EQ;
     }
 
     #[allow(clippy::no_effect)]
     #[allow(dead_code)]
     #[allow(path_statements)]
-    pub(crate) const fn greater_than_0<const N: usize>() {
+    pub(super) const fn greater_than_0<const N: usize>() {
         Assert::<N, 0>::GREATER;
     }
 
     #[allow(clippy::no_effect)]
     #[allow(dead_code)]
     #[allow(path_statements)]
-    pub(crate) const fn greater_than_1<const N: usize>() {
+    pub(super) const fn greater_than_1<const N: usize>() {
         Assert::<N, 1>::GREATER;
     }
 
     #[allow(clippy::no_effect)]
     #[allow(dead_code)]
     #[allow(path_statements)]
-    pub(crate) const fn power_of_two<const N: usize>() {
+    pub(super) const fn power_of_two<const N: usize>() {
         Assert::<N, 0>::GREATER;
         Assert::<N, 0>::POWER_OF_TWO;
     }
@@ -67,31 +67,31 @@ mod sealed {
     #[allow(clippy::no_effect)]
     #[allow(dead_code)]
     /// Const assert hack
-    pub struct Assert<const L: usize, const R: usize>;
+    pub(super) struct Assert<const L: usize, const R: usize>;
 
     #[allow(dead_code)]
     impl<const L: usize, const R: usize> Assert<L, R> {
         /// Const assert hack
-        pub const GREATER_EQ: usize = L - R;
+        pub(super) const GREATER_EQ: usize = L - R;
 
         /// Const assert hack
-        pub const LESS_EQ: usize = R - L;
+        pub(super) const LESS_EQ: usize = R - L;
 
         #[allow(clippy::erasing_op)]
         /// Const assert hack
-        pub const NOT_EQ: isize = 0 / (R as isize - L as isize);
+        pub(super) const NOT_EQ: isize = 0 / (R as isize - L as isize);
 
         /// Const assert hack
-        pub const EQ: usize = (R - L) + (L - R);
+        pub(super) const EQ: usize = (R - L) + (L - R);
 
         /// Const assert hack
-        pub const GREATER: usize = L - R - 1;
+        pub(super) const GREATER: usize = L - R - 1;
 
         /// Const assert hack
-        pub const LESS: usize = R - L - 1;
+        pub(super) const LESS: usize = R - L - 1;
 
         /// Const assert hack
-        pub const POWER_OF_TWO: usize = 0 - (L & (L - 1));
+        pub(super) const POWER_OF_TWO: usize = 0 - (L & (L - 1));
     }
 }
 
@@ -101,7 +101,7 @@ mod vec {
     use hash32;
 
     /// A fixed capacity [`Vec`](https://doc.rust-lang.org/std/vec/struct.Vec.html)
-    pub struct Vec<T, const N: usize> {
+    pub(super) struct Vec<T, const N: usize> {
         // NOTE order is important for optimizations. the `len` first layout lets the compiler optimize
         // `new` to: reserve stack space and zero the first word. With the fields in the reverse order
         // the compiler optimizes `new` to `memclr`-ing the *entire* stack space, including the `buffer`
@@ -117,7 +117,7 @@ mod vec {
 
         /// Constructs a new, empty vector with a fixed capacity of `N`
         /// `Vec` `const` constructor; wrap the returned value in [`Vec`](../struct.Vec.html)
-        pub const fn new() -> Self {
+        pub(super) const fn new() -> Self {
             // Const assert N >= 0
             super::sealed::greater_than_eq_0::<N>();
 
@@ -127,7 +127,7 @@ mod vec {
         /// Constructs a new vector with a fixed capacity of `N` and fills it
         /// with the provided slice.
         #[inline]
-        pub fn from_slice(other: &[T]) -> Result<Self, ()>
+        pub(super) fn from_slice(other: &[T]) -> Result<Self, ()>
         where
             T: Clone,
         {
@@ -137,7 +137,7 @@ mod vec {
         }
 
         /// Clones a vec into a new vec
-        pub(crate) fn clone(&self) -> Self
+        pub(super) fn clone(&self) -> Self
         where
             T: Clone,
         {
@@ -154,7 +154,7 @@ mod vec {
         /// Extracts a slice containing the entire vector.
         ///
         /// Equivalent to `&s[..]`.
-        pub fn as_slice(&self) -> &[T] {
+        pub(super) fn as_slice(&self) -> &[T] {
             // NOTE(unsafe) avoid bound checks in the slicing operation
             // &buffer[..self.len]
             unsafe { slice::from_raw_parts(self.buffer.as_ptr() as *const T, self.len) }
@@ -162,7 +162,7 @@ mod vec {
 
         /// Returns the contents of the vector as an array of length `M` if the length
         /// of the vector is exactly `M`, otherwise returns `Err(self)`.
-        pub fn into_array<const M: usize>(self) -> Result<[T; M], Self> {
+        pub(super) fn into_array<const M: usize>(self) -> Result<[T; M], Self> {
             if self.len() == M {
                 // This is how the unstable `MaybeUninit::array_assume_init` method does it
                 let array = unsafe { (&self.buffer as *const _ as *const [T; M]).read() };
@@ -180,19 +180,19 @@ mod vec {
         /// Extracts a mutable slice containing the entire vector.
         ///
         /// Equivalent to `&s[..]`.
-        pub(crate) fn as_mut_slice(&mut self) -> &mut [T] {
+        pub(super) fn as_mut_slice(&mut self) -> &mut [T] {
             // NOTE(unsafe) avoid bound checks in the slicing operation
             // &mut buffer[..self.len]
             unsafe { slice::from_raw_parts_mut(self.buffer.as_mut_ptr() as *mut T, self.len) }
         }
 
         /// Returns the maximum number of elements the vector can hold.
-        pub const fn capacity(&self) -> usize {
+        pub(super) const fn capacity(&self) -> usize {
             N
         }
 
         /// Clears the vector, removing all values.
-        pub fn clear(&mut self) {
+        pub(super) fn clear(&mut self) {
             self.truncate(0);
         }
 
@@ -201,7 +201,7 @@ mod vec {
         /// # Panic
         ///
         /// Panics if the vec cannot hold all elements of the iterator.
-        pub fn extend<I>(&mut self, iter: I)
+        pub(super) fn extend<I>(&mut self, iter: I)
         where
             I: IntoIterator<Item = T>,
         {
@@ -214,7 +214,7 @@ mod vec {
         ///
         /// Iterates over the slice `other`, clones each element, and then appends
         /// it to this `Vec`. The `other` vector is traversed in-order.
-        pub fn extend_from_slice(&mut self, other: &[T]) -> Result<(), ()>
+        pub(super) fn extend_from_slice(&mut self, other: &[T]) -> Result<(), ()>
         where
             T: Clone,
         {
@@ -232,7 +232,7 @@ mod vec {
         }
 
         /// Removes the last element from a vector and returns it, or `None` if it's empty
-        pub fn pop(&mut self) -> Option<T> {
+        pub(super) fn pop(&mut self) -> Option<T> {
             if self.len != 0 {
                 Some(unsafe { self.pop_unchecked() })
             } else {
@@ -243,7 +243,7 @@ mod vec {
         /// Appends an `item` to the back of the collection
         ///
         /// Returns back the `item` if the vector is full
-        pub fn push(&mut self, item: T) -> Result<(), T> {
+        pub(super) fn push(&mut self, item: T) -> Result<(), T> {
             if self.len < self.capacity() {
                 unsafe { self.push_unchecked(item) }
                 Ok(())
@@ -257,7 +257,7 @@ mod vec {
         /// # Safety
         ///
         /// This assumes the vec to have at least one element.
-        pub unsafe fn pop_unchecked(&mut self) -> T {
+        pub(super) unsafe fn pop_unchecked(&mut self) -> T {
             debug_assert!(!self.is_empty());
 
             self.len -= 1;
@@ -269,7 +269,7 @@ mod vec {
         /// # Safety
         ///
         /// This assumes the vec is not full.
-        pub unsafe fn push_unchecked(&mut self, item: T) {
+        pub(super) unsafe fn push_unchecked(&mut self, item: T) {
             // NOTE(ptr::write) the memory slot that we are about to write to is uninitialized. We
             // use `ptr::write` to avoid running `T`'s destructor on the uninitialized memory
             debug_assert!(!self.is_full());
@@ -280,7 +280,7 @@ mod vec {
         }
 
         /// Shortens the vector, keeping the first `len` elements and dropping the rest.
-        pub fn truncate(&mut self, len: usize) {
+        pub(super) fn truncate(&mut self, len: usize) {
             // This is safe because:
             //
             // * the slice passed to `drop_in_place` is valid; the `len > self.len`
@@ -309,7 +309,7 @@ mod vec {
         /// new_len is less than len, the Vec is simply truncated.
         ///
         /// See also [`resize_default`](struct.Vec.html#method.resize_default).
-        pub fn resize(&mut self, new_len: usize, value: T) -> Result<(), ()>
+        pub(super) fn resize(&mut self, new_len: usize, value: T) -> Result<(), ()>
         where
             T: Clone,
         {
@@ -335,7 +335,7 @@ mod vec {
         /// If `new_len` is less than `len`, the `Vec` is simply truncated.
         ///
         /// See also [`resize`](struct.Vec.html#method.resize).
-        pub fn resize_default(&mut self, new_len: usize) -> Result<(), ()>
+        pub(super) fn resize_default(&mut self, new_len: usize) -> Result<(), ()>
         where
             T: Clone + Default,
         {
@@ -360,7 +360,7 @@ mod vec {
         /// - The elements at `old_len..new_len` must be initialized.
         ///
         /// [`capacity()`]: #method.capacity
-        pub unsafe fn set_len(&mut self, new_len: usize) {
+        pub(super) unsafe fn set_len(&mut self, new_len: usize) {
             debug_assert!(new_len <= self.capacity());
 
             self.len = new_len
@@ -375,7 +375,7 @@ mod vec {
         /// # Panics
         ///
         /// Panics if `index` is out of bounds.
-        pub fn swap_remove(&mut self, index: usize) -> T {
+        pub(super) fn swap_remove(&mut self, index: usize) -> T {
             assert!(index < self.len);
             unsafe { self.swap_remove_unchecked(index) }
         }
@@ -389,7 +389,7 @@ mod vec {
         /// # Safety
         ///
         ///  Assumes `index` within bounds.
-        pub unsafe fn swap_remove_unchecked(&mut self, index: usize) -> T {
+        pub(super) unsafe fn swap_remove_unchecked(&mut self, index: usize) -> T {
             let length = self.len();
             debug_assert!(index < length);
             let value = ptr::read(self.as_ptr().add(index));
@@ -401,13 +401,13 @@ mod vec {
 
         /// Returns true if the vec is full
         #[inline]
-        pub fn is_full(&self) -> bool {
+        pub(super) fn is_full(&self) -> bool {
             self.len == self.capacity()
         }
 
         /// Returns true if the vec is empty
         #[inline]
-        pub fn is_empty(&self) -> bool {
+        pub(super) fn is_empty(&self) -> bool {
             self.len == 0
         }
 
@@ -415,7 +415,7 @@ mod vec {
         ///
         /// Always returns `true` if `needle` is an empty slice.
         #[inline]
-        pub fn starts_with(&self, needle: &[T]) -> bool
+        pub(super) fn starts_with(&self, needle: &[T]) -> bool
         where
             T: PartialEq,
         {
@@ -427,7 +427,7 @@ mod vec {
         ///
         /// Always returns `true` if `needle` is an empty slice.
         #[inline]
-        pub fn ends_with(&self, needle: &[T]) -> bool
+        pub(super) fn ends_with(&self, needle: &[T]) -> bool
         where
             T: PartialEq,
         {
@@ -555,7 +555,7 @@ mod vec {
     ///
     /// [`Vec`]: (https://doc.rust-lang.org/std/vec/struct.Vec.html)
     ///
-    pub struct IntoIter<T, const N: usize> {
+    pub(super) struct IntoIter<T, const N: usize> {
         vec: Vec<T, N>,
         next: usize,
     }
@@ -1294,17 +1294,15 @@ impl HashValue {
     }
 }
 
-#[doc(hidden)]
 #[derive(Clone)]
-pub struct Bucket<K, V> {
+struct Bucket<K, V> {
     hash: HashValue,
     key: K,
     value: V,
 }
 
-#[doc(hidden)]
 #[derive(Clone, Copy, PartialEq)]
-pub struct Pos {
+struct Pos {
     // compact representation of `{ hash_value: u16, index: u16 }`
     // To get the most from `NonZero` we store the *value minus 1*. This way `None::Option<Pos>`
     // is equivalent to the very unlikely value of  `{ hash_value: 0xffff, index: 0xffff }` instead
@@ -1330,6 +1328,7 @@ enum Insert<K, V> {
     Success(Inserted<V>),
     Full((K, V)),
 }
+
 struct Inserted<V> {
     index: usize,
     old_value: Option<V>,
@@ -1530,7 +1529,7 @@ where
 }
 
 /// A view into an entry in the map
-pub enum Entry<'a, K, V, const N: usize> {
+enum Entry<'a, K, V, const N: usize> {
     /// The entry corresponding to the key `K` exists in the map
     Occupied(OccupiedEntry<'a, K, V, N>),
     /// The entry corresponding to the key `K` does not exist in the map
@@ -1538,7 +1537,7 @@ pub enum Entry<'a, K, V, const N: usize> {
 }
 
 /// An occupied entry which can be manipulated
-pub struct OccupiedEntry<'a, K, V, const N: usize> {
+struct OccupiedEntry<'a, K, V, const N: usize> {
     key: K,
     probe: usize,
     pos: usize,
@@ -1550,51 +1549,51 @@ where
     K: Eq + Hash,
 {
     /// Gets a reference to the key that this entity corresponds to
-    pub fn key(&self) -> &K {
+    fn key(&self) -> &K {
         &self.key
     }
 
     /// Removes this entry from the map and yields its corresponding key and value
-    pub fn remove_entry(self) -> (K, V) {
+    fn remove_entry(self) -> (K, V) {
         self.core.remove_found(self.probe, self.pos)
     }
 
     /// Gets a reference to the value associated with this entry
-    pub fn get(&self) -> &V {
+    fn get(&self) -> &V {
         // SAFETY: Already checked existence at instantiation and the only mutable reference
         // to the map is internally held.
         unsafe { &self.core.entries.get_unchecked(self.pos).value }
     }
 
     /// Gets a mutable reference to the value associated with this entry
-    pub fn get_mut(&mut self) -> &mut V {
+    fn get_mut(&mut self) -> &mut V {
         // SAFETY: Already checked existence at instantiation and the only mutable reference
         // to the map is internally held.
         unsafe { &mut self.core.entries.get_unchecked_mut(self.pos).value }
     }
 
     /// Consumes this entry and yields a reference to the underlying value
-    pub fn into_mut(self) -> &'a mut V {
+    fn into_mut(self) -> &'a mut V {
         // SAFETY: Already checked existence at instantiation and the only mutable reference
         // to the map is internally held.
         unsafe { &mut self.core.entries.get_unchecked_mut(self.pos).value }
     }
 
     /// Overwrites the underlying map's value with this entry's value
-    pub fn insert(self, value: V) -> V {
+    fn insert(self, value: V) -> V {
         // SAFETY: Already checked existence at instantiation and the only mutable reference
         // to the map is internally held.
         unsafe { mem::replace(&mut self.core.entries.get_unchecked_mut(self.pos).value, value) }
     }
 
     /// Removes this entry from the map and yields its value
-    pub fn remove(self) -> V {
+    fn remove(self) -> V {
         self.remove_entry().1
     }
 }
 
 /// A view into an empty slot in the underlying map
-pub struct VacantEntry<'a, K, V, const N: usize> {
+struct VacantEntry<'a, K, V, const N: usize> {
     key: K,
     hash_val: HashValue,
     core: &'a mut CoreMap<K, V, N>,
@@ -1604,18 +1603,18 @@ where
     K: Eq + Hash,
 {
     /// Get the key associated with this entry
-    pub fn key(&self) -> &K {
+    fn key(&self) -> &K {
         &self.key
     }
 
     /// Consumes this entry to yield to key associated with it
-    pub fn into_key(self) -> K {
+    fn into_key(self) -> K {
         self.key
     }
 
     /// Inserts this entry into to underlying map, yields a mutable reference to the inserted value.
     /// If the map is at capacity the value is returned instead.
-    pub fn insert(self, value: V) -> Result<&'a mut V, V> {
+    fn insert(self, value: V) -> Result<&'a mut V, V> {
         if self.core.entries.is_full() {
             Err(value)
         } else {
@@ -1663,65 +1662,65 @@ where
 {
     /* Public API */
     /// Returns the number of elements the map can hold
-    pub fn capacity(&self) -> usize {
+    fn capacity(&self) -> usize {
         N
     }
 
     /// Return an iterator over the keys of the map, in their order
-    pub fn keys(&self) -> impl Iterator<Item = &K> {
+    fn keys(&self) -> impl Iterator<Item = &K> {
         self.core.entries.iter().map(|bucket| &bucket.key)
     }
 
     /// Return an iterator over the values of the map, in their order
-    pub fn values(&self) -> impl Iterator<Item = &V> {
+    fn values(&self) -> impl Iterator<Item = &V> {
         self.core.entries.iter().map(|bucket| &bucket.value)
     }
 
     /// Return an iterator over mutable references to the the values of the map, in their order
-    pub fn values_mut(&mut self) -> impl Iterator<Item = &mut V> {
+    fn values_mut(&mut self) -> impl Iterator<Item = &mut V> {
         self.core.entries.iter_mut().map(|bucket| &mut bucket.value)
     }
 
     /// Return an iterator over the key-value pairs of the map, in their order
-    pub fn iter(&self) -> Iter<'_, K, V> {
+    fn iter(&self) -> Iter<'_, K, V> {
         Iter { iter: self.core.entries.iter() }
     }
 
     /// Return an iterator over the key-value pairs of the map, in their order
-    pub fn iter_mut(&mut self) -> IterMut<'_, K, V> {
+    fn iter_mut(&mut self) -> IterMut<'_, K, V> {
         IterMut { iter: self.core.entries.iter_mut() }
     }
 
     /// Get the first key-value pair
     ///
     /// Computes in **O(1)** time
-    pub fn first(&self) -> Option<(&K, &V)> {
+    fn first(&self) -> Option<(&K, &V)> {
         self.core.entries.first().map(|bucket| (&bucket.key, &bucket.value))
     }
 
     /// Get the first key-value pair, with mutable access to the value
     ///
     /// Computes in **O(1)** time
-    pub fn first_mut(&mut self) -> Option<(&K, &mut V)> {
+    fn first_mut(&mut self) -> Option<(&K, &mut V)> {
         self.core.entries.first_mut().map(|bucket| (&bucket.key, &mut bucket.value))
     }
 
     /// Get the last key-value pair
     ///
     /// Computes in **O(1)** time
-    pub fn last(&self) -> Option<(&K, &V)> {
+    fn last(&self) -> Option<(&K, &V)> {
         self.core.entries.last().map(|bucket| (&bucket.key, &bucket.value))
     }
 
     /// Get the last key-value pair, with mutable access to the value
     ///
     /// Computes in **O(1)** time
-    pub fn last_mut(&mut self) -> Option<(&K, &mut V)> {
+    fn last_mut(&mut self) -> Option<(&K, &mut V)> {
         self.core.entries.last_mut().map(|bucket| (&bucket.key, &mut bucket.value))
     }
 
     /// Returns an entry for the corresponding key
-    pub fn entry(&mut self, key: K) -> Entry<'_, K, V, N> {
+    fn entry(&mut self, key: K) -> Entry<'_, K, V, N> {
         let hash_val = hash_with(&key, &self.build_hasher);
         if let Some((probe, pos)) = self.core.find(hash_val, &key) {
             Entry::Occupied(OccupiedEntry { key, probe, pos, core: &mut self.core })
@@ -1733,21 +1732,21 @@ where
     /// Return the number of key-value pairs in the map.
     ///
     /// Computes in **O(1)** time.
-    pub fn len(&self) -> usize {
+    fn len(&self) -> usize {
         self.core.entries.len()
     }
 
     /// Returns true if the map contains no elements.
     ///
     /// Computes in **O(1)** time.
-    pub fn is_empty(&self) -> bool {
+    fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
     /// Remove all key-value pairs in the map, while preserving its capacity.
     ///
     /// Computes in **O(n)** time.
-    pub fn clear(&mut self) {
+    pub(crate) fn clear(&mut self) {
         self.core.entries.clear();
         for pos in self.core.indices.iter_mut() {
             *pos = None;
@@ -1760,7 +1759,7 @@ where
     /// form *must* match those for the key type.
     ///
     /// Computes in **O(1)** time (average).
-    pub fn get<Q>(&self, key: &Q) -> Option<&V>
+    pub(crate) fn get<Q>(&self, key: &Q) -> Option<&V>
     where
         K: Borrow<Q>,
         Q: ?Sized + Hash + Eq,
@@ -1774,7 +1773,7 @@ where
     /// form *must* match those for the key type.
     ///
     /// Computes in **O(1)** time (average).
-    pub fn contains_key<Q>(&self, key: &Q) -> bool
+    fn contains_key<Q>(&self, key: &Q) -> bool
     where
         K: Borrow<Q>,
         Q: ?Sized + Eq + Hash,
@@ -1788,7 +1787,7 @@ where
     /// form *must* match those for the key type.
     ///
     /// Computes in **O(1)** time (average).
-    pub fn get_mut<'v, Q>(&'v mut self, key: &Q) -> Option<&'v mut V>
+    fn get_mut<'v, Q>(&'v mut self, key: &Q) -> Option<&'v mut V>
     where
         K: Borrow<Q>,
         Q: ?Sized + Hash + Eq,
@@ -1813,7 +1812,7 @@ where
     ///
     /// See also entry if you you want to insert or modify or if you need to get the index of the
     /// corresponding key-value pair.
-    pub fn insert(&mut self, key: K, value: V) -> Result<Option<V>, (K, V)> {
+    pub(crate) fn insert(&mut self, key: K, value: V) -> Result<Option<V>, (K, V)> {
         let hash = hash_with(&key, &self.build_hasher);
         match self.core.insert(hash, key, value) {
             Insert::Success(inserted) => Ok(inserted.old_value),
@@ -1824,7 +1823,7 @@ where
     /// Same as [`swap_remove`](struct.IndexMap.html#method.swap_remove)
     ///
     /// Computes in **O(1)** time (average).
-    pub fn remove<Q>(&mut self, key: &Q) -> Option<V>
+    pub(crate) fn remove<Q>(&mut self, key: &Q) -> Option<V>
     where
         K: Borrow<Q>,
         Q: ?Sized + Hash + Eq,
@@ -1840,7 +1839,7 @@ where
     /// Return `None` if `key` is not in map.
     ///
     /// Computes in **O(1)** time (average).
-    pub fn swap_remove<Q>(&mut self, key: &Q) -> Option<V>
+    fn swap_remove<Q>(&mut self, key: &Q) -> Option<V>
     where
         K: Borrow<Q>,
         Q: ?Sized + Hash + Eq,
