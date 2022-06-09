@@ -269,7 +269,6 @@ pub struct Style {
     pub justify_content: JustifyContent,
     pub position: Rect<Dimension>,
     pub margin: Rect<Dimension>,
-    /// WARNING: this currently has no effect!
     pub padding: Rect<Dimension>,
     pub border: Rect<Dimension>,
     pub flex_grow: f32,
