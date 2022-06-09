@@ -1,5 +1,5 @@
 #![cfg_attr(not(feature = "std"), no_std)]
-#![forbid(unsafe_code)]
+#![deny(unsafe_code)]
 
 #[cfg(all(not(feature = "std"), feature = "alloc"))]
 extern crate alloc;
@@ -17,6 +17,7 @@ pub mod style;
 
 mod flexbox;
 mod forest;
+mod indexmap;
 mod sys;
 
 #[cfg(feature = "std")]
