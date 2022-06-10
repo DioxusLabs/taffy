@@ -119,16 +119,16 @@ impl Sprawl {
         Ok(())
     }
 
-    pub fn add_child(&mut self, node: Node, child: Node) -> Result<(), Error> {
-        let node_id = self.find_node(node)?;
+    pub fn add_child(&mut self, parent: Node, child: Node) -> Result<(), Error> {
+        let node_id = self.find_node(parent)?;
         let child_id = self.find_node(child)?;
 
         self.forest.add_child(node_id, child_id);
         Ok(())
     }
 
-    pub fn set_children(&mut self, node: Node, children: &[Node]) -> Result<(), Error> {
-        let node_id = self.find_node(node)?;
+    pub fn set_children(&mut self, parent: Node, children: &[Node]) -> Result<(), Error> {
+        let node_id = self.find_node(parent)?;
         let children_id = children.iter().map(|child| self.find_node(*child)).collect::<Result<ChildrenVec<_>, _>>()?;
 
         // Remove node as parent from all its current children.
@@ -146,29 +146,29 @@ impl Sprawl {
         Ok(())
     }
 
-    pub fn remove_child(&mut self, node: Node, child: Node) -> Result<Node, Error> {
-        let node_id = self.find_node(node)?;
+    pub fn remove_child(&mut self, parent: Node, child: Node) -> Result<Node, Error> {
+        let node_id = self.find_node(parent)?;
         let child_id = self.find_node(child)?;
 
         let prev_id = self.forest.remove_child(node_id, child_id);
         Ok(self.ids_to_nodes[&prev_id])
     }
 
-    pub fn remove_child_at_index(&mut self, node: Node, index: usize) -> Result<Node, Error> {
-        let node_id = self.find_node(node)?;
+    pub fn remove_child_at_index(&mut self, parent: Node, child_index: usize) -> Result<Node, Error> {
+        let node_id = self.find_node(parent)?;
         // TODO: index check
 
-        let prev_id = self.forest.remove_child_at_index(node_id, index);
+        let prev_id = self.forest.remove_child_at_index(node_id, child_index);
         Ok(self.ids_to_nodes[&prev_id])
     }
 
-    pub fn replace_child_at_index(&mut self, node: Node, index: usize, child: Node) -> Result<Node, Error> {
-        let node_id = self.find_node(node)?;
-        let child_id = self.find_node(child)?;
+    pub fn replace_child_at_index(&mut self, parent: Node, child_index: usize, new_child: Node) -> Result<Node, Error> {
+        let node_id = self.find_node(parent)?;
+        let child_id = self.find_node(new_child)?;
         // TODO: index check
 
         self.forest.parents[child_id].push(node_id);
-        let old_child = core::mem::replace(&mut self.forest.children[node_id][index], child_id);
+        let old_child = core::mem::replace(&mut self.forest.children[node_id][child_index], child_id);
         self.forest.parents[old_child].retain(|p| *p != node_id);
 
         self.forest.mark_dirty(node_id);
@@ -176,18 +176,18 @@ impl Sprawl {
         Ok(self.ids_to_nodes[&old_child])
     }
 
-    pub fn children(&self, node: Node) -> Result<Vec<Node>, Error> {
-        let id = self.find_node(node)?;
+    pub fn children(&self, parent: Node) -> Result<Vec<Node>, Error> {
+        let id = self.find_node(parent)?;
         Ok(self.forest.children[id].iter().map(|child| self.ids_to_nodes[child]).collect())
     }
 
-    pub fn child_at_index(&self, node: Node, index: usize) -> Result<Node, Error> {
-        let id = self.find_node(node)?;
-        Ok(self.ids_to_nodes[&self.forest.children[id][index]])
+    pub fn child_at_index(&self, parent: Node, child_index: usize) -> Result<Node, Error> {
+        let id = self.find_node(parent)?;
+        Ok(self.ids_to_nodes[&self.forest.children[id][child_index]])
     }
 
-    pub fn child_count(&self, node: Node) -> Result<usize, Error> {
-        let id = self.find_node(node)?;
+    pub fn child_count(&self, parent: Node) -> Result<usize, Error> {
+        let id = self.find_node(parent)?;
         Ok(self.forest.children[id].len())
     }
 
