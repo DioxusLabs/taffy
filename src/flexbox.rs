@@ -16,9 +16,9 @@ use crate::sys::{abs, round, ChildrenVec, Vec};
 
 /// The computed results of a [`flexbox`](crate::flexbox) calculation
 #[derive(Debug, Clone)]
-pub struct ComputeResult {
+pub(crate) struct ComputeResult {
     /// The computed size
-    pub size: Size<f32>,
+    pub(crate) size: Size<f32>,
 }
 
 /// The intermediate results of a flexbox calculation for a single item
