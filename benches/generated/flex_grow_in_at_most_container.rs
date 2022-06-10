@@ -1,7 +1,7 @@
 pub fn compute() {
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 flex_grow: 1f32,
                 flex_basis: taffy::style::Dimension::Points(0f32),
@@ -10,9 +10,9 @@ pub fn compute() {
             &[],
         )
         .unwrap();
-    let node0 = taffy.new_node(taffy::style::FlexboxLayout { ..Default::default() }, &[node00]).unwrap();
+    let node0 = taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[node00]).unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 align_items: taffy::style::AlignItems::FlexStart,
                 size: taffy::geometry::Size {

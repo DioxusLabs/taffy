@@ -2,7 +2,7 @@
 fn justify_content_min_width_with_padding_child_width_greater_than_parent() {
     let mut taffy = taffy::Taffy::new();
     let node000 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(300f32),
@@ -15,7 +15,7 @@ fn justify_content_min_width_with_padding_child_width_greater_than_parent() {
         )
         .unwrap();
     let node00 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 justify_content: taffy::style::JustifyContent::Center,
                 min_size: taffy::geometry::Size {
@@ -32,9 +32,9 @@ fn justify_content_min_width_with_padding_child_width_greater_than_parent() {
             &[node000],
         )
         .unwrap();
-    let node0 = taffy.new_node(taffy::style::FlexboxLayout { ..Default::default() }, &[node00]).unwrap();
+    let node0 = taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[node00]).unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {

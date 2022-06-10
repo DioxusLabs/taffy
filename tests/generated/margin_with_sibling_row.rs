@@ -2,7 +2,7 @@
 fn margin_with_sibling_row() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 flex_grow: 1f32,
                 margin: taffy::geometry::Rect { end: taffy::style::Dimension::Points(10f32), ..Default::default() },
@@ -11,9 +11,10 @@ fn margin_with_sibling_row() {
             &[],
         )
         .unwrap();
-    let node1 = taffy.new_node(taffy::style::FlexboxLayout { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
+    let node1 =
+        taffy.new_with_children(taffy::style::FlexboxLayout { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),

@@ -4,7 +4,7 @@ use taffy::style::Dimension;
 fn relayout() {
     let mut taffy = taffy::Taffy::new();
     let node1 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size { width: Dimension::Points(8f32), height: Dimension::Points(80f32) },
                 ..Default::default()
@@ -13,7 +13,7 @@ fn relayout() {
         )
         .unwrap();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 align_self: taffy::prelude::AlignSelf::Center,
                 size: taffy::geometry::Size { width: Dimension::Auto, height: Dimension::Auto },
@@ -24,7 +24,7 @@ fn relayout() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size { width: Dimension::Percent(1f32), height: Dimension::Percent(1f32) },
                 ..Default::default()

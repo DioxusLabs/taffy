@@ -1,9 +1,9 @@
 #[test]
 fn container_with_unsized_child() {
     let mut taffy = taffy::Taffy::new();
-    let node0 = taffy.new_node(taffy::style::FlexboxLayout { ..Default::default() }, &[]).unwrap();
+    let node0 = taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[]).unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),

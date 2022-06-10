@@ -2,7 +2,7 @@
 fn absolute_layout_align_items_center_on_child_only() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 position_type: taffy::style::PositionType::Absolute,
                 align_self: taffy::style::AlignSelf::Center,
@@ -17,7 +17,7 @@ fn absolute_layout_align_items_center_on_child_only() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(110f32),

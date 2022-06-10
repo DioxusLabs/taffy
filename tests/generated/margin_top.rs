@@ -2,7 +2,7 @@
 fn margin_top() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Default::default() },
                 margin: taffy::geometry::Rect { top: taffy::style::Dimension::Points(10f32), ..Default::default() },
@@ -12,7 +12,7 @@ fn margin_top() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {

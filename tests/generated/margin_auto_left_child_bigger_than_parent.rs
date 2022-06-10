@@ -2,7 +2,7 @@
 fn margin_auto_left_child_bigger_than_parent() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(72f32),
@@ -16,7 +16,7 @@ fn margin_auto_left_child_bigger_than_parent() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 justify_content: taffy::style::JustifyContent::Center,
                 size: taffy::geometry::Size {

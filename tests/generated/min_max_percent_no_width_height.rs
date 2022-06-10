@@ -2,7 +2,7 @@
 fn min_max_percent_no_width_height() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 min_size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Percent(0.1f32),
@@ -20,7 +20,7 @@ fn min_max_percent_no_width_height() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_items: taffy::style::AlignItems::FlexStart,
