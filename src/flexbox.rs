@@ -193,11 +193,11 @@ impl Forest {
                 };
 
                 if width_compatible && height_compatible {
-                    return Some(cache.size.clone());
+                    return Some(cache.size);
                 }
 
                 if cache.node_size == node_size && cache.parent_size == parent_size {
-                    return Some(cache.size.clone());
+                    return Some(cache.size);
                 }
             }
         }
@@ -1560,7 +1560,7 @@ impl Forest {
                     MeasureFunc::Boxed(measure) => measure(node_size),
                 };
                 *self.cache(node, main_size) =
-                    Some(Cache { node_size, parent_size, perform_layout, size: converted_size.clone() });
+                    Some(Cache { node_size, parent_size, perform_layout, size: converted_size });
                 return converted_size;
             }
 
@@ -1678,7 +1678,7 @@ impl Forest {
         if !perform_layout {
             let container_size = constants.container_size;
             *self.cache(node, main_size) =
-                Some(Cache { node_size, parent_size, perform_layout, size: container_size.clone() });
+                Some(Cache { node_size, parent_size, perform_layout, size: container_size });
             return container_size;
         }
 
@@ -1710,7 +1710,7 @@ impl Forest {
 
         let container_size = constants.container_size;
         *self.cache(node, main_size) =
-            Some(Cache { node_size, parent_size, perform_layout, size: container_size.clone() });
+            Some(Cache { node_size, parent_size, perform_layout, size: container_size });
 
         container_size
     }
