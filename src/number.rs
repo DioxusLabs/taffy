@@ -128,6 +128,7 @@ impl MinMax<Number, f32> for f32 {
 }
 
 impl From<f32> for Number {
+    #[must_use]
     fn from(v: f32) -> Self {
         Self::Defined(v)
     }

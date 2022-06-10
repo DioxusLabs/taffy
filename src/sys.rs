@@ -26,6 +26,7 @@ mod std {
     pub type ParentsVec<A> = std::vec::Vec<A>;
 
     /// Creates a new map with the capacity for the specified number of items before it must be resized
+    #[must_use]
     pub fn new_map_with_capacity<K, V>(capacity: usize) -> Map<K, V>
     where
         K: Eq + std::hash::Hash,
@@ -33,19 +34,20 @@ mod std {
         Map::with_capacity(capacity)
     }
 
-    /// Creates a new vector with the capacity for the specified number of items before it must be resized
+    /// Creates a new vector with the capacity for the specified number of items before it must be resized    
+    #[must_use]
     pub fn new_vec_with_capacity<A>(capacity: usize) -> Vec<A> {
         Vec::with_capacity(capacity)
     }
 
-    #[inline]
     /// Rounds to the nearest whole number
+    #[must_use]
     pub fn round(value: f32) -> f32 {
         value.round()
     }
 
-    #[inline]
     /// Computes the absolute value
+    #[must_use]
     pub fn abs(value: f32) -> f32 {
         value.abs()
     }
@@ -67,23 +69,25 @@ mod alloc {
     pub type ParentsVec<A> = alloc::vec::Vec<A>;
 
     /// Creates a new map with the capacity for the specified number of items before it must be resized
+    #[must_use]
     pub fn new_map_with_capacity<K, V>(capacity: usize) -> Map<K, V> {
         Map::with_capacity(capacity)
     }
 
     /// Creates a new vector with the capacity for the specified number of items before it must be resized
+    #[must_use]
     pub fn new_vec_with_capacity<A>(capacity: usize) -> Vec<A> {
         Vec::with_capacity(capacity)
     }
 
-    #[inline]
     /// Rounds to the nearest whole number
+    #[must_use]
     pub fn round(value: f32) -> f32 {
         num_traits::float::FloatCore::round(value)
     }
 
-    #[inline]
     /// Computes the absolute value
+    #[must_use]
     pub fn abs(value: f32) -> f32 {
         num_traits::float::FloatCore::abs(value)
     }
@@ -110,6 +114,7 @@ mod core {
     /// Creates a new map with the capacity for the specified number of items
     ///
     /// This map cannot be resized.
+    #[must_use]
     pub fn new_map_with_capacity<K, V>(_capacity: usize) -> Map<K, V>
     where
         K: Eq + ::hash32::Hash,
@@ -120,18 +125,21 @@ mod core {
     /// Creates a new map with the capacity for the specified number of items before it must be resized
     ///
     /// This vector cannot be resized.
+    #[must_use]
     pub fn new_vec_with_capacity<A, const CAP: usize>(_capacity: usize) -> arrayvec::ArrayVec<A, CAP> {
         arrayvec::ArrayVec::new()
     }
 
     /// Rounds to the nearest whole number
     #[inline]
+    #[must_use]
     pub fn round(value: f32) -> f32 {
         num_traits::float::FloatCore::round(value)
     }
 
     /// Computes the absolute value
     #[inline]
+    #[must_use]
     pub fn abs(value: f32) -> f32 {
         num_traits::float::FloatCore::abs(value)
     }

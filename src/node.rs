@@ -58,6 +58,7 @@ impl Sprawl {
     /// Creates a new [`Sprawl`]
     ///
     /// The default capacity of a [`Sprawl`] is 16 nodes.
+    #[must_use]
     pub fn new() -> Self {
         Default::default()
     }
@@ -144,18 +145,18 @@ impl Sprawl {
         Ok(())
     }
 
-    /// Adds a `child` [`Node`] under the supplied `node`
-    pub fn add_child(&mut self, node: Node, child: Node) -> Result<(), Error> {
-        let node_id = self.find_node(node)?;
+    /// Adds a `child` [`Node`] under the supplied `parent`
+    pub fn add_child(&mut self, parent: Node, child: Node) -> Result<(), Error> {
+        let node_id = self.find_node(parent)?;
         let child_id = self.find_node(child)?;
 
         self.forest.add_child(node_id, child_id);
         Ok(())
     }
 
-    /// Directly sets the `children` of the supplied `Node`
-    pub fn set_children(&mut self, node: Node, children: &[Node]) -> Result<(), Error> {
-        let node_id = self.find_node(node)?;
+    /// Directly sets the `children` of the supplied `parent`
+    pub fn set_children(&mut self, parent: Node, children: &[Node]) -> Result<(), Error> {
+        let node_id = self.find_node(parent)?;
         let children_id = children.iter().map(|child| self.find_node(*child)).collect::<Result<ChildrenVec<_>, _>>()?;
 
         // Remove node as parent from all its current children.
@@ -176,35 +177,35 @@ impl Sprawl {
     /// Removes the `child` of the parent `node`
     ///
     /// The child is not removed from the forest entirely, it is simply no longer attached to its previous parent.
-    pub fn remove_child(&mut self, node: Node, child: Node) -> Result<Node, Error> {
-        let node_id = self.find_node(node)?;
+    pub fn remove_child(&mut self, parent: Node, child: Node) -> Result<Node, Error> {
+        let node_id = self.find_node(parent)?;
         let child_id = self.find_node(child)?;
 
         let prev_id = self.forest.remove_child(node_id, child_id);
         Ok(self.ids_to_nodes[&prev_id])
     }
 
-    /// Removes the child at the given `index` from the parent `node`
+    /// Removes the child at the given `index` from the `parent`
     ///
     /// The child is not removed from the forest entirely, it is simply no longer attached to its previous parent.
-    pub fn remove_child_at_index(&mut self, node: Node, index: usize) -> Result<Node, Error> {
-        let node_id = self.find_node(node)?;
+    pub fn remove_child_at_index(&mut self, parent: Node, child_index: usize) -> Result<Node, Error> {
+        let node_id = self.find_node(parent)?;
         // TODO: index check
 
-        let prev_id = self.forest.remove_child_at_index(node_id, index);
+        let prev_id = self.forest.remove_child_at_index(node_id, child_index);
         Ok(self.ids_to_nodes[&prev_id])
     }
 
-    /// Replaces the child at the given `index` from the parent `node` with the new `child` node
+    /// Replaces the child at the given `child_index` from the `parent` node with the new `child` node
     ///
     /// The child is not removed from the forest entirely, it is simply no longer attached to its previous parent.
-    pub fn replace_child_at_index(&mut self, node: Node, index: usize, child: Node) -> Result<Node, Error> {
-        let node_id = self.find_node(node)?;
-        let child_id = self.find_node(child)?;
+    pub fn replace_child_at_index(&mut self, parent: Node, child_index: usize, new_child: Node) -> Result<Node, Error> {
+        let node_id = self.find_node(parent)?;
+        let child_id = self.find_node(new_child)?;
         // TODO: index check
 
         self.forest.parents[child_id].push(node_id);
-        let old_child = core::mem::replace(&mut self.forest.children[node_id][index], child_id);
+        let old_child = core::mem::replace(&mut self.forest.children[node_id][child_index], child_id);
         self.forest.parents[old_child].retain(|p| *p != node_id);
 
         self.forest.mark_dirty(node_id);
@@ -212,22 +213,22 @@ impl Sprawl {
         Ok(self.ids_to_nodes[&old_child])
     }
 
-    /// Returns a list of children of the given [`Node`]
-    pub fn children(&self, node: Node) -> Result<Vec<Node>, Error> {
-        let id = self.find_node(node)?;
-        Ok(self.forest.children[id].iter().map(|child| self.ids_to_nodes[child]).collect())
+    /// Returns the child [`Node`] of the parent `node` at the provided `child_index`
+    pub fn child_at_index(&self, parent: Node, child_index: usize) -> Result<Node, Error> {
+        let id = self.find_node(parent)?;
+        Ok(self.ids_to_nodes[&self.forest.children[id][child_index]])
     }
 
-    /// Returns the child [`Node`] of the parent `node` at the provided `index`
-    pub fn child_at_index(&self, node: Node, index: usize) -> Result<Node, Error> {
-        let id = self.find_node(node)?;
-        Ok(self.ids_to_nodes[&self.forest.children[id][index]])
-    }
-
-    /// Returns the number of children of the parent `node`
-    pub fn child_count(&self, node: Node) -> Result<usize, Error> {
-        let id = self.find_node(node)?;
+    /// Returns the number of children of the `parent` [`Node`]
+    pub fn child_count(&self, parent: Node) -> Result<usize, Error> {
+        let id = self.find_node(parent)?;
         Ok(self.forest.children[id].len())
+    }
+  
+    /// Returns a list of children that belong to the [`Parent`]
+    pub fn children(&self, parent: Node) -> Result<Vec<Node>, Error> {
+        let id = self.find_node(parent)?;
+        Ok(self.forest.children[id].iter().map(|child| self.ids_to_nodes[child]).collect())
     }
 
     /// Sets the [`Style`] of the provided `node`
@@ -286,6 +287,7 @@ pub(crate) struct Allocator {
 
 impl Allocator {
     /// Creates a fresh [`Allocator`]
+    #[must_use]
     pub const fn new() -> Self {
         Self { new_id: AtomicUsize::new(0) }
     }

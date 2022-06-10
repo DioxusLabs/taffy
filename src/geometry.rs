@@ -163,6 +163,7 @@ pub struct Size<T> {
 
 impl Size<()> {
     /// Generates a `Size<Number>` with undefined width and height
+    #[must_use]
     pub fn undefined() -> Size<Number> {
         Size { width: Number::Undefined, height: Number::Undefined }
     }
@@ -226,6 +227,7 @@ impl<T> Size<T> {
 
 impl Size<f32> {
     /// A [`Size`] with zero width and height
+    #[must_use]
     pub fn zero() -> Self {
         Self { width: 0.0, height: 0.0 }
     }
@@ -250,6 +252,7 @@ pub struct Point<T> {
 
 impl Point<f32> {
     /// A [`Point`] with values (0,0), representing the origin
+    #[must_use]
     pub fn zero() -> Self {
         Self { x: 0.0, y: 0.0 }
     }
