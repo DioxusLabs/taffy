@@ -181,6 +181,7 @@ mod vec {
 
         /// Returns the contents of the vector as an array of length `M` if the length
         /// of the vector is exactly `M`, otherwise returns `Err(self)`.
+        #[allow(unused_code)]
         pub(super) fn into_array<const M: usize>(self) -> Result<[T; M], Self> {
             if self.len() == M {
                 // This is how the unstable `MaybeUninit::array_assume_init` method does it
@@ -328,6 +329,7 @@ mod vec {
         /// new_len is less than len, the Vec is simply truncated.
         ///
         /// See also [`resize_default`](struct.Vec.html#method.resize_default).
+        #[allow(unused_code)]
         pub(super) fn resize(&mut self, new_len: usize, value: T) -> Result<(), ()>
         where
             T: Clone,
@@ -354,6 +356,7 @@ mod vec {
         /// If `new_len` is less than `len`, the `Vec` is simply truncated.
         ///
         /// See also [`resize`](struct.Vec.html#method.resize).
+        #[allow(unused_code)]
         pub(super) fn resize_default(&mut self, new_len: usize) -> Result<(), ()>
         where
             T: Clone + Default,
@@ -379,6 +382,7 @@ mod vec {
         /// - The elements at `old_len..new_len` must be initialized.
         ///
         /// [`capacity()`]: #method.capacity
+        #[allow(unused_code)]
         pub(super) unsafe fn set_len(&mut self, new_len: usize) {
             debug_assert!(new_len <= self.capacity());
 
@@ -394,6 +398,7 @@ mod vec {
         /// # Panics
         ///
         /// Panics if `index` is out of bounds.
+        #[allow(unused_code)]
         pub(super) fn swap_remove(&mut self, index: usize) -> T {
             assert!(index < self.len);
             unsafe { self.swap_remove_unchecked(index) }
@@ -434,6 +439,7 @@ mod vec {
         ///
         /// Always returns `true` if `needle` is an empty slice.
         #[inline]
+        #[allow(unused_code)]
         pub(super) fn starts_with(&self, needle: &[T]) -> bool
         where
             T: PartialEq,
@@ -446,6 +452,7 @@ mod vec {
         ///
         /// Always returns `true` if `needle` is an empty slice.
         #[inline]
+        #[allow(unused_code)]
         pub(super) fn ends_with(&self, needle: &[T]) -> bool
         where
             T: PartialEq,
