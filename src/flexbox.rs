@@ -262,6 +262,7 @@ impl Forest {
     /// otherwise, subtract the flex container’s margin, border, and padding from the space available to the flex container in that dimension and use that value.
     /// **This might result in an infinite value**.
     #[inline]
+    #[must_use]
     fn determine_available_space(
         node_size: Size<Number>,
         parent_size: Size<Number>,
@@ -1198,6 +1199,7 @@ impl Forest {
     ///
     ///     - Otherwise, use the sum of the flex lines' cross sizes, clamped by the used min and max cross sizes of the flex container.
     #[inline]
+    #[must_use]
     fn determine_container_cross_size(
         flex_lines: &mut [FlexLine],
         node_size: Size<Number>,
