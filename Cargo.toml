@@ -44,6 +44,3 @@ harness = false
 name = "complex"
 path = "benches/complex.rs"
 harness = false
-
-[workspace]
-members = ["scripts/gentest"]
