@@ -2,7 +2,7 @@ pub fn compute() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 position_type: sprawl::style::PositionType::Absolute,
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(60f32),
@@ -16,7 +16,7 @@ pub fn compute() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 align_items: sprawl::style::AlignItems::Center,
                 justify_content: sprawl::style::JustifyContent::Center,
                 size: sprawl::geometry::Size {

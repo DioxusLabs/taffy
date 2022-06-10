@@ -3,7 +3,7 @@ fn percentage_flex_basis_main_max_height() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_grow: 1f32,
                 flex_basis: sprawl::style::Dimension::Percent(0.1f32),
                 max_size: sprawl::geometry::Size {
@@ -17,7 +17,7 @@ fn percentage_flex_basis_main_max_height() {
         .unwrap();
     let node1 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_grow: 4f32,
                 flex_basis: sprawl::style::Dimension::Percent(0.1f32),
                 max_size: sprawl::geometry::Size {
@@ -31,7 +31,7 @@ fn percentage_flex_basis_main_max_height() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(200f32),
                     height: sprawl::style::Dimension::Points(400f32),

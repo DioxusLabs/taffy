@@ -3,7 +3,7 @@ fn absolute_layout_in_wrap_reverse_row_container_flex_end() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 position_type: sprawl::style::PositionType::Absolute,
                 align_self: sprawl::style::AlignSelf::FlexEnd,
                 size: sprawl::geometry::Size {
@@ -18,7 +18,7 @@ fn absolute_layout_in_wrap_reverse_row_container_flex_end() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_wrap: sprawl::style::FlexWrap::WrapReverse,
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),

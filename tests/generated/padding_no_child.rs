@@ -3,7 +3,7 @@ fn padding_no_child() {
     let mut sprawl = sprawl::Sprawl::new();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 padding: sprawl::geometry::Rect {
                     start: sprawl::style::Dimension::Points(10f32),
                     end: sprawl::style::Dimension::Points(10f32),

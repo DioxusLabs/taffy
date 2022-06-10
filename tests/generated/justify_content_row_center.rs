@@ -3,7 +3,7 @@ fn justify_content_row_center() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
             },
@@ -12,7 +12,7 @@ fn justify_content_row_center() {
         .unwrap();
     let node1 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
             },
@@ -21,7 +21,7 @@ fn justify_content_row_center() {
         .unwrap();
     let node2 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
             },
@@ -30,7 +30,7 @@ fn justify_content_row_center() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 justify_content: sprawl::style::JustifyContent::Center,
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),

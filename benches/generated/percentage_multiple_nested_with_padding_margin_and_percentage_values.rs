@@ -2,7 +2,7 @@ pub fn compute() {
     let mut sprawl = sprawl::Sprawl::new();
     let node000 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Percent(0.45f32),
                     ..Default::default()
@@ -28,7 +28,7 @@ pub fn compute() {
         .unwrap();
     let node00 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Percent(0.5f32), ..Default::default() },
                 margin: sprawl::geometry::Rect {
@@ -52,7 +52,7 @@ pub fn compute() {
         .unwrap();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 flex_grow: 1f32,
                 flex_basis: sprawl::style::Dimension::Percent(0.1f32),
@@ -81,7 +81,7 @@ pub fn compute() {
         .unwrap();
     let node1 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_grow: 4f32,
                 flex_basis: sprawl::style::Dimension::Percent(0.15f32),
                 min_size: sprawl::geometry::Size {
@@ -95,7 +95,7 @@ pub fn compute() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(200f32),

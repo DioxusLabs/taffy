@@ -1,10 +1,10 @@
 #[test]
 fn flex_grow_within_constrained_min_column() {
     let mut sprawl = sprawl::Sprawl::new();
-    let node0 = sprawl.new_node(sprawl::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
+    let node0 = sprawl.new_node(sprawl::style::FlexboxLayout { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
     let node1 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(50f32), ..Default::default() },
                 ..Default::default()
             },
@@ -13,7 +13,7 @@ fn flex_grow_within_constrained_min_column() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 min_size: sprawl::geometry::Size {
                     height: sprawl::style::Dimension::Points(100f32),

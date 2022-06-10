@@ -3,7 +3,7 @@ fn border_no_child() {
     let mut sprawl = sprawl::Sprawl::new();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 border: sprawl::geometry::Rect {
                     start: sprawl::style::Dimension::Points(10f32),
                     end: sprawl::style::Dimension::Points(10f32),

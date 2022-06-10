@@ -3,7 +3,7 @@ fn width_smaller_then_content_with_flex_grow_unconstraint_size() {
     let mut sprawl = sprawl::Sprawl::new();
     let node00 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(70f32),
                     height: sprawl::style::Dimension::Points(100f32),
@@ -16,7 +16,7 @@ fn width_smaller_then_content_with_flex_grow_unconstraint_size() {
         .unwrap();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 flex_grow: 1f32,
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(0f32), ..Default::default() },
@@ -27,7 +27,7 @@ fn width_smaller_then_content_with_flex_grow_unconstraint_size() {
         .unwrap();
     let node10 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(20f32),
                     height: sprawl::style::Dimension::Points(100f32),
@@ -40,7 +40,7 @@ fn width_smaller_then_content_with_flex_grow_unconstraint_size() {
         .unwrap();
     let node1 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 flex_grow: 1f32,
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(0f32), ..Default::default() },
@@ -49,7 +49,7 @@ fn width_smaller_then_content_with_flex_grow_unconstraint_size() {
             &[node10],
         )
         .unwrap();
-    let node = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[node0, node1]).unwrap();
+    let node = sprawl.new_node(sprawl::style::FlexboxLayout { ..Default::default() }, &[node0, node1]).unwrap();
     sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
     assert_eq!(sprawl.layout(node).unwrap().size.width, 0f32);
     assert_eq!(sprawl.layout(node).unwrap().size.height, 100f32);

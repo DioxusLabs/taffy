@@ -3,7 +3,7 @@ fn align_self_flex_end_override_flex_start() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 align_self: sprawl::style::AlignSelf::FlexEnd,
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(10f32),
@@ -17,7 +17,7 @@ fn align_self_flex_end_override_flex_start() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 align_items: sprawl::style::AlignItems::FlexStart,
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),

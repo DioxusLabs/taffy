@@ -3,7 +3,7 @@ fn wrapped_column_max_height() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),
                     height: sprawl::style::Dimension::Points(500f32),
@@ -20,7 +20,7 @@ fn wrapped_column_max_height() {
         .unwrap();
     let node1 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(200f32),
                     height: sprawl::style::Dimension::Points(200f32),
@@ -40,7 +40,7 @@ fn wrapped_column_max_height() {
         .unwrap();
     let node2 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),
                     height: sprawl::style::Dimension::Points(100f32),
@@ -53,7 +53,7 @@ fn wrapped_column_max_height() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 flex_wrap: sprawl::style::FlexWrap::Wrap,
                 align_items: sprawl::style::AlignItems::Center,

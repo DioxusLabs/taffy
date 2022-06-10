@@ -3,7 +3,7 @@ fn margin_should_not_be_part_of_max_height() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),
                     height: sprawl::style::Dimension::Points(100f32),
@@ -21,7 +21,7 @@ fn margin_should_not_be_part_of_max_height() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(250f32),
                     height: sprawl::style::Dimension::Points(250f32),

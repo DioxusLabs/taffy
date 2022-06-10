@@ -3,7 +3,7 @@ fn flex_grow_root_minimized() {
     let mut sprawl = sprawl::Sprawl::new();
     let node00 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_grow: 1f32,
                 flex_basis: sprawl::style::Dimension::Points(200f32),
                 ..Default::default()
@@ -13,7 +13,7 @@ fn flex_grow_root_minimized() {
         .unwrap();
     let node01 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(100f32), ..Default::default() },
                 ..Default::default()
             },
@@ -22,7 +22,7 @@ fn flex_grow_root_minimized() {
         .unwrap();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 flex_grow: 1f32,
                 min_size: sprawl::geometry::Size {
@@ -40,7 +40,7 @@ fn flex_grow_root_minimized() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(100f32), ..Default::default() },
                 min_size: sprawl::geometry::Size {

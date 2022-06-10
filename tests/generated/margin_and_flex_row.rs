@@ -3,7 +3,7 @@ fn margin_and_flex_row() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_grow: 1f32,
                 margin: sprawl::geometry::Rect {
                     start: sprawl::style::Dimension::Points(10f32),
@@ -17,7 +17,7 @@ fn margin_and_flex_row() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),
                     height: sprawl::style::Dimension::Points(100f32),

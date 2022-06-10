@@ -2,7 +2,7 @@ pub fn compute() {
     let mut sprawl = sprawl::Sprawl::new();
     let node00 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_grow: 1f32,
                 flex_basis: sprawl::style::Dimension::Points(0.3f32),
                 size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(9.9f32), ..Default::default() },
@@ -17,7 +17,7 @@ pub fn compute() {
         .unwrap();
     let node01 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_grow: 4f32,
                 flex_basis: sprawl::style::Dimension::Points(0.3f32),
                 size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(1.1f32), ..Default::default() },
@@ -32,7 +32,7 @@ pub fn compute() {
         .unwrap();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 flex_grow: 0.7f32,
                 flex_basis: sprawl::style::Dimension::Points(50.3f32),
@@ -47,7 +47,7 @@ pub fn compute() {
         .unwrap();
     let node1 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_grow: 1.6f32,
                 size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
@@ -57,7 +57,7 @@ pub fn compute() {
         .unwrap();
     let node2 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_grow: 1.1f32,
                 size: sprawl::geometry::Size {
                     height: sprawl::style::Dimension::Points(10.7f32),
@@ -70,7 +70,7 @@ pub fn compute() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(87.4f32),

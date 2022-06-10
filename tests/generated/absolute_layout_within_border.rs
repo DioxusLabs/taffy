@@ -3,7 +3,7 @@ fn absolute_layout_within_border() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 position_type: sprawl::style::PositionType::Absolute,
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(50f32),
@@ -22,7 +22,7 @@ fn absolute_layout_within_border() {
         .unwrap();
     let node1 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 position_type: sprawl::style::PositionType::Absolute,
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(50f32),
@@ -41,7 +41,7 @@ fn absolute_layout_within_border() {
         .unwrap();
     let node2 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 position_type: sprawl::style::PositionType::Absolute,
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(50f32),
@@ -67,7 +67,7 @@ fn absolute_layout_within_border() {
         .unwrap();
     let node3 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 position_type: sprawl::style::PositionType::Absolute,
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(50f32),
@@ -93,7 +93,7 @@ fn absolute_layout_within_border() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),
                     height: sprawl::style::Dimension::Points(100f32),

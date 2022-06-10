@@ -2,7 +2,7 @@ pub fn compute() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(30f32),
                     height: sprawl::style::Dimension::Points(10f32),
@@ -15,7 +15,7 @@ pub fn compute() {
         .unwrap();
     let node1 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(30f32),
                     height: sprawl::style::Dimension::Points(20f32),
@@ -28,7 +28,7 @@ pub fn compute() {
         .unwrap();
     let node2 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(30f32),
                     height: sprawl::style::Dimension::Points(30f32),
@@ -41,7 +41,7 @@ pub fn compute() {
         .unwrap();
     let node3 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(30f32),
                     height: sprawl::style::Dimension::Points(40f32),
@@ -54,7 +54,7 @@ pub fn compute() {
         .unwrap();
     let node4 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(30f32),
                     height: sprawl::style::Dimension::Points(50f32),
@@ -67,7 +67,7 @@ pub fn compute() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 flex_wrap: sprawl::style::FlexWrap::WrapReverse,
                 align_items: sprawl::style::AlignItems::Center,

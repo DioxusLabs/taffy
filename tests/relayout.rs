@@ -5,7 +5,7 @@ fn relayout() {
     let mut sprawl = sprawl::Sprawl::new();
     let node1 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size { width: Dimension::Points(8f32), height: Dimension::Points(80f32) },
                 ..Default::default()
             },
@@ -14,7 +14,7 @@ fn relayout() {
         .unwrap();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 align_self: sprawl::prelude::AlignSelf::Center,
                 size: sprawl::geometry::Size { width: Dimension::Auto, height: Dimension::Auto },
                 // size: sprawl::geometry::Size { width: Dimension::Percent(1.0), height: Dimension::Percent(1.0) },
@@ -25,7 +25,7 @@ fn relayout() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size { width: Dimension::Percent(1f32), height: Dimension::Percent(1f32) },
                 ..Default::default()
             },

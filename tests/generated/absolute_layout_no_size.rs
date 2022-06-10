@@ -3,13 +3,13 @@ fn absolute_layout_no_size() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style { position_type: sprawl::style::PositionType::Absolute, ..Default::default() },
+            sprawl::style::FlexboxLayout { position_type: sprawl::style::PositionType::Absolute, ..Default::default() },
             &[],
         )
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),
                     height: sprawl::style::Dimension::Points(100f32),

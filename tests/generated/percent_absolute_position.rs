@@ -3,7 +3,7 @@ fn percent_absolute_position() {
     let mut sprawl = sprawl::Sprawl::new();
     let node00 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Percent(1f32), ..Default::default() },
                 ..Default::default()
             },
@@ -12,7 +12,7 @@ fn percent_absolute_position() {
         .unwrap();
     let node01 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Percent(1f32), ..Default::default() },
                 ..Default::default()
             },
@@ -21,7 +21,7 @@ fn percent_absolute_position() {
         .unwrap();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 position_type: sprawl::style::PositionType::Absolute,
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Percent(1f32),
@@ -39,7 +39,7 @@ fn percent_absolute_position() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(60f32),

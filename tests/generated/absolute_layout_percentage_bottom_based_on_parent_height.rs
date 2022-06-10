@@ -3,7 +3,7 @@ fn absolute_layout_percentage_bottom_based_on_parent_height() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 position_type: sprawl::style::PositionType::Absolute,
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(10f32),
@@ -21,7 +21,7 @@ fn absolute_layout_percentage_bottom_based_on_parent_height() {
         .unwrap();
     let node1 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 position_type: sprawl::style::PositionType::Absolute,
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(10f32),
@@ -39,7 +39,7 @@ fn absolute_layout_percentage_bottom_based_on_parent_height() {
         .unwrap();
     let node2 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 position_type: sprawl::style::PositionType::Absolute,
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(10f32), ..Default::default() },
                 position: sprawl::geometry::Rect {
@@ -54,7 +54,7 @@ fn absolute_layout_percentage_bottom_based_on_parent_height() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),
                     height: sprawl::style::Dimension::Points(200f32),

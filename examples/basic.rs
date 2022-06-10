@@ -4,12 +4,12 @@ fn main() -> Result<(), Error> {
     let mut sprawl = Sprawl::new();
 
     let child = sprawl.new_node(
-        Style { size: Size { width: Dimension::Percent(0.5), height: Dimension::Auto }, ..Default::default() },
+        FlexboxLayout { size: Size { width: Dimension::Percent(0.5), height: Dimension::Auto }, ..Default::default() },
         &[],
     )?;
 
     let node = sprawl.new_node(
-        Style {
+        FlexboxLayout {
             size: Size { width: Dimension::Points(100.0), height: Dimension::Points(100.0) },
             justify_content: JustifyContent::Center,
             ..Default::default()

@@ -1,10 +1,10 @@
 #[test]
 fn display_none_with_position() {
     let mut sprawl = sprawl::Sprawl::new();
-    let node0 = sprawl.new_node(sprawl::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
+    let node0 = sprawl.new_node(sprawl::style::FlexboxLayout { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
     let node1 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 display: sprawl::style::Display::None,
                 flex_grow: 1f32,
                 position: sprawl::geometry::Rect { top: sprawl::style::Dimension::Points(10f32), ..Default::default() },
@@ -15,7 +15,7 @@ fn display_none_with_position() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),
                     height: sprawl::style::Dimension::Points(100f32),

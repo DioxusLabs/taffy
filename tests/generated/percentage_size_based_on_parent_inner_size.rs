@@ -3,7 +3,7 @@ fn percentage_size_based_on_parent_inner_size() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Percent(0.5f32),
                     height: sprawl::style::Dimension::Percent(0.5f32),
@@ -16,7 +16,7 @@ fn percentage_size_based_on_parent_inner_size() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(200f32),

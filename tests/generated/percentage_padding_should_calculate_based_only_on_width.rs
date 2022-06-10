@@ -3,7 +3,7 @@ fn percentage_padding_should_calculate_based_only_on_width() {
     let mut sprawl = sprawl::Sprawl::new();
     let node00 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(10f32),
                     height: sprawl::style::Dimension::Points(10f32),
@@ -16,7 +16,7 @@ fn percentage_padding_should_calculate_based_only_on_width() {
         .unwrap();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 flex_grow: 1f32,
                 padding: sprawl::geometry::Rect {
@@ -33,7 +33,7 @@ fn percentage_padding_should_calculate_based_only_on_width() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(200f32),

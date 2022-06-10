@@ -6,8 +6,8 @@ pub use crate::{
     node::{Node, Sprawl},
     number::Number,
     style::{
-        AlignContent, AlignItems, AlignSelf, Dimension, Display, FlexDirection, FlexWrap, JustifyContent, PositionType,
-        Style,
+        AlignContent, AlignItems, AlignSelf, Dimension, Display, FlexDirection, FlexWrap, FlexboxLayout,
+        JustifyContent, PositionType,
     },
     Error,
 };

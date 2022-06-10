@@ -3,7 +3,7 @@ fn relative_position_should_not_nudge_siblings() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(10f32), ..Default::default() },
                 position: sprawl::geometry::Rect { top: sprawl::style::Dimension::Points(15f32), ..Default::default() },
                 ..Default::default()
@@ -13,7 +13,7 @@ fn relative_position_should_not_nudge_siblings() {
         .unwrap();
     let node1 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(10f32), ..Default::default() },
                 position: sprawl::geometry::Rect { top: sprawl::style::Dimension::Points(15f32), ..Default::default() },
                 ..Default::default()
@@ -23,7 +23,7 @@ fn relative_position_should_not_nudge_siblings() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),

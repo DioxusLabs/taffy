@@ -3,7 +3,7 @@ fn min_max_percent_no_width_height() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 min_size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Percent(0.1f32),
                     height: sprawl::style::Dimension::Percent(0.1f32),
@@ -21,7 +21,7 @@ fn min_max_percent_no_width_height() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 align_items: sprawl::style::AlignItems::FlexStart,
                 size: sprawl::geometry::Size {

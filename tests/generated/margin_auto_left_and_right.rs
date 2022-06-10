@@ -3,7 +3,7 @@ fn margin_auto_left_and_right() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(50f32),
                     height: sprawl::style::Dimension::Points(50f32),
@@ -21,7 +21,7 @@ fn margin_auto_left_and_right() {
         .unwrap();
     let node1 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(50f32),
                     height: sprawl::style::Dimension::Points(50f32),
@@ -34,7 +34,7 @@ fn margin_auto_left_and_right() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(200f32),
                     height: sprawl::style::Dimension::Points(200f32),

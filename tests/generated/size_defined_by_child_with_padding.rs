@@ -3,7 +3,7 @@ fn size_defined_by_child_with_padding() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(10f32),
                     height: sprawl::style::Dimension::Points(10f32),
@@ -16,7 +16,7 @@ fn size_defined_by_child_with_padding() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 padding: sprawl::geometry::Rect {
                     start: sprawl::style::Dimension::Points(10f32),
                     end: sprawl::style::Dimension::Points(10f32),

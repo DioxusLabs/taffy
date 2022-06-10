@@ -8,7 +8,7 @@ mod measure {
         let mut sprawl = sprawl::node::Sprawl::new();
         let node = sprawl
             .new_leaf(
-                sprawl::style::Style { ..Default::default() },
+                sprawl::style::FlexboxLayout { ..Default::default() },
                 MeasureFunc::Raw(|constraint| sprawl::geometry::Size {
                     width: constraint.width.or_else(100.0),
                     height: constraint.height.or_else(100.0),
@@ -28,7 +28,7 @@ mod measure {
 
         let child = sprawl
             .new_leaf(
-                sprawl::style::Style { ..Default::default() },
+                sprawl::style::FlexboxLayout { ..Default::default() },
                 MeasureFunc::Raw(|constraint| sprawl::geometry::Size {
                     width: constraint.width.or_else(100.0),
                     height: constraint.height.or_else(100.0),
@@ -36,7 +36,7 @@ mod measure {
             )
             .unwrap();
 
-        let node = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[child]).unwrap();
+        let node = sprawl.new_node(sprawl::style::FlexboxLayout { ..Default::default() }, &[child]).unwrap();
         sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
 
         assert_eq!(sprawl.layout(node).unwrap().size.width, 100.0);
@@ -51,7 +51,7 @@ mod measure {
         let mut sprawl = sprawl::node::Sprawl::new();
         let child = sprawl
             .new_leaf(
-                sprawl::style::Style { ..Default::default() },
+                sprawl::style::FlexboxLayout { ..Default::default() },
                 MeasureFunc::Raw(|constraint| sprawl::geometry::Size {
                     width: constraint.width.or_else(100.0),
                     height: constraint.height.or_else(100.0),
@@ -61,7 +61,7 @@ mod measure {
 
         let node = sprawl
             .new_node(
-                sprawl::style::Style {
+                sprawl::style::FlexboxLayout {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(50.0),
                         ..Default::default()
@@ -86,7 +86,7 @@ mod measure {
         let mut sprawl = sprawl::node::Sprawl::new();
         let child = sprawl
             .new_leaf(
-                sprawl::style::Style { ..Default::default() },
+                sprawl::style::FlexboxLayout { ..Default::default() },
                 MeasureFunc::Raw(|constraint| sprawl::geometry::Size {
                     width: constraint.width.or_else(100.0),
                     height: constraint.height.or_else(100.0),
@@ -96,7 +96,7 @@ mod measure {
 
         let node = sprawl
             .new_node(
-                sprawl::style::Style {
+                sprawl::style::FlexboxLayout {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(50.0),
                         ..Default::default()
@@ -126,7 +126,7 @@ mod measure {
         let mut sprawl = sprawl::node::Sprawl::new();
         let child0 = sprawl
             .new_node(
-                sprawl::style::Style {
+                sprawl::style::FlexboxLayout {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(50.0),
                         height: sprawl::style::Dimension::Points(50.0),
@@ -139,7 +139,7 @@ mod measure {
 
         let child1 = sprawl
             .new_leaf(
-                sprawl::style::Style { flex_grow: 1.0, ..Default::default() },
+                sprawl::style::FlexboxLayout { flex_grow: 1.0, ..Default::default() },
                 MeasureFunc::Raw(|constraint| sprawl::geometry::Size {
                     width: constraint.width.or_else(10.0),
                     height: constraint.height.or_else(50.0),
@@ -149,7 +149,7 @@ mod measure {
 
         let node = sprawl
             .new_node(
-                sprawl::style::Style {
+                sprawl::style::FlexboxLayout {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(100.0),
                         ..Default::default()
@@ -171,7 +171,7 @@ mod measure {
         let mut sprawl = sprawl::node::Sprawl::new();
         let child0 = sprawl
             .new_node(
-                sprawl::style::Style {
+                sprawl::style::FlexboxLayout {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(50.0),
                         height: sprawl::style::Dimension::Points(50.0),
@@ -185,7 +185,7 @@ mod measure {
 
         let child1 = sprawl
             .new_leaf(
-                sprawl::style::Style { ..Default::default() },
+                sprawl::style::FlexboxLayout { ..Default::default() },
                 MeasureFunc::Raw(|constraint| sprawl::geometry::Size {
                     width: constraint.width.or_else(100.0),
                     height: constraint.height.or_else(50.0),
@@ -195,7 +195,7 @@ mod measure {
 
         let node = sprawl
             .new_node(
-                sprawl::style::Style {
+                sprawl::style::FlexboxLayout {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(100.0),
                         ..Default::default()
@@ -217,7 +217,7 @@ mod measure {
         let mut sprawl = sprawl::node::Sprawl::new();
         let child0 = sprawl
             .new_node(
-                sprawl::style::Style {
+                sprawl::style::FlexboxLayout {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(50.0),
                         height: sprawl::style::Dimension::Points(50.0),
@@ -230,7 +230,7 @@ mod measure {
 
         let child1 = sprawl
             .new_leaf(
-                sprawl::style::Style { flex_grow: 1.0, ..Default::default() },
+                sprawl::style::FlexboxLayout { flex_grow: 1.0, ..Default::default() },
                 MeasureFunc::Raw(|constraint| {
                     let width = constraint.width.or_else(10.0);
                     let height = constraint.height.or_else(width * 2.0);
@@ -241,7 +241,7 @@ mod measure {
 
         let node = sprawl
             .new_node(
-                sprawl::style::Style {
+                sprawl::style::FlexboxLayout {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(100.0),
                         ..Default::default()
@@ -265,7 +265,7 @@ mod measure {
 
         let child0 = sprawl
             .new_node(
-                sprawl::style::Style {
+                sprawl::style::FlexboxLayout {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(50.0),
                         height: sprawl::style::Dimension::Points(50.0),
@@ -279,7 +279,7 @@ mod measure {
 
         let child1 = sprawl
             .new_leaf(
-                sprawl::style::Style { ..Default::default() },
+                sprawl::style::FlexboxLayout { ..Default::default() },
                 MeasureFunc::Raw(|constraint| {
                     let width = constraint.width.or_else(100.0);
                     let height = constraint.height.or_else(width * 2.0);
@@ -290,7 +290,7 @@ mod measure {
 
         let node = sprawl
             .new_node(
-                sprawl::style::Style {
+                sprawl::style::FlexboxLayout {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(100.0),
                         ..Default::default()
@@ -314,7 +314,7 @@ mod measure {
 
         let child = sprawl
             .new_leaf(
-                sprawl::style::Style { ..Default::default() },
+                sprawl::style::FlexboxLayout { ..Default::default() },
                 MeasureFunc::Raw(|constraint| {
                     let height = constraint.height.or_else(50.0);
                     let width = constraint.width.or_else(height);
@@ -325,7 +325,7 @@ mod measure {
 
         let node = sprawl
             .new_node(
-                sprawl::style::Style {
+                sprawl::style::FlexboxLayout {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(100.0),
                         height: sprawl::style::Dimension::Points(100.0),
@@ -347,7 +347,7 @@ mod measure {
         let mut sprawl = sprawl::node::Sprawl::new();
         let child = sprawl
             .new_leaf(
-                sprawl::style::Style {
+                sprawl::style::FlexboxLayout {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(50.0),
                         ..Default::default()
@@ -361,7 +361,7 @@ mod measure {
             )
             .unwrap();
 
-        let node = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[child]).unwrap();
+        let node = sprawl.new_node(sprawl::style::FlexboxLayout { ..Default::default() }, &[child]).unwrap();
         sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
 
         assert_eq!(sprawl.layout(child).unwrap().size.width, 50.0);
@@ -373,7 +373,7 @@ mod measure {
         let mut sprawl = sprawl::node::Sprawl::new();
         let child = sprawl
             .new_leaf(
-                sprawl::style::Style {
+                sprawl::style::FlexboxLayout {
                     size: sprawl::geometry::Size {
                         height: sprawl::style::Dimension::Points(50.0),
                         ..Default::default()
@@ -387,7 +387,7 @@ mod measure {
             )
             .unwrap();
 
-        let node = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[child]).unwrap();
+        let node = sprawl.new_node(sprawl::style::FlexboxLayout { ..Default::default() }, &[child]).unwrap();
         sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
 
         assert_eq!(sprawl.layout(child).unwrap().size.width, 100.0);
@@ -399,7 +399,7 @@ mod measure {
         let mut sprawl = sprawl::node::Sprawl::new();
         let child0 = sprawl
             .new_node(
-                sprawl::style::Style {
+                sprawl::style::FlexboxLayout {
                     flex_basis: sprawl::style::Dimension::Points(50.0),
                     flex_grow: 1.0,
                     ..Default::default()
@@ -410,7 +410,7 @@ mod measure {
 
         let child1 = sprawl
             .new_leaf(
-                sprawl::style::Style {
+                sprawl::style::FlexboxLayout {
                     flex_basis: sprawl::style::Dimension::Points(50.0),
                     flex_grow: 1.0,
                     ..Default::default()
@@ -424,7 +424,7 @@ mod measure {
 
         let node = sprawl
             .new_node(
-                sprawl::style::Style {
+                sprawl::style::FlexboxLayout {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(200.0),
                         height: sprawl::style::Dimension::Points(100.0),
@@ -448,7 +448,7 @@ mod measure {
         let mut sprawl = sprawl::node::Sprawl::new();
         let child = sprawl
             .new_leaf(
-                sprawl::style::Style { ..Default::default() },
+                sprawl::style::FlexboxLayout { ..Default::default() },
                 MeasureFunc::Raw(|constraint| sprawl::geometry::Size {
                     width: constraint.width.or_else(50.0),
                     height: constraint.height.or_else(50.0),
@@ -458,7 +458,7 @@ mod measure {
 
         let node = sprawl
             .new_node(
-                sprawl::style::Style {
+                sprawl::style::FlexboxLayout {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(100.0),
                         height: sprawl::style::Dimension::Points(100.0),
@@ -480,7 +480,10 @@ mod measure {
         let mut sprawl = sprawl::node::Sprawl::new();
         let child = sprawl
             .new_leaf(
-                sprawl::style::Style { position_type: sprawl::style::PositionType::Absolute, ..Default::default() },
+                sprawl::style::FlexboxLayout {
+                    position_type: sprawl::style::PositionType::Absolute,
+                    ..Default::default()
+                },
                 MeasureFunc::Raw(|constraint| sprawl::geometry::Size {
                     width: constraint.width.or_else(50.0),
                     height: constraint.height.or_else(50.0),
@@ -490,7 +493,7 @@ mod measure {
 
         let node = sprawl
             .new_node(
-                sprawl::style::Style {
+                sprawl::style::FlexboxLayout {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(100.0),
                         height: sprawl::style::Dimension::Points(100.0),
@@ -512,14 +515,14 @@ mod measure {
         let mut sprawl = sprawl::node::Sprawl::new();
         let child = sprawl
             .new_leaf(
-                sprawl::style::Style { flex_grow: 1.0, ..Default::default() },
+                sprawl::style::FlexboxLayout { flex_grow: 1.0, ..Default::default() },
                 MeasureFunc::Raw(|_| sprawl::geometry::Size { width: 200.0, height: 200.0 }),
             )
             .unwrap();
 
         let node = sprawl
             .new_node(
-                sprawl::style::Style {
+                sprawl::style::FlexboxLayout {
                     size: sprawl::geometry::Size {
                         width: sprawl::style::Dimension::Points(100.0),
                         height: sprawl::style::Dimension::Points(100.0),
@@ -545,7 +548,7 @@ mod measure {
 
         let grandchild = sprawl
             .new_leaf(
-                sprawl::style::Style { ..Default::default() },
+                sprawl::style::FlexboxLayout { ..Default::default() },
                 MeasureFunc::Raw(|constraint| {
                     NUM_MEASURES.fetch_add(1, atomic::Ordering::Relaxed);
                     sprawl::geometry::Size {
@@ -556,9 +559,9 @@ mod measure {
             )
             .unwrap();
 
-        let child = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[grandchild]).unwrap();
+        let child = sprawl.new_node(sprawl::style::FlexboxLayout { ..Default::default() }, &[grandchild]).unwrap();
 
-        let node = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[child]).unwrap();
+        let node = sprawl.new_node(sprawl::style::FlexboxLayout { ..Default::default() }, &[child]).unwrap();
         sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
 
         assert_eq!(NUM_MEASURES.load(atomic::Ordering::Relaxed), 2);

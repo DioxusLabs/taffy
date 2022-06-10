@@ -3,7 +3,7 @@ fn percent_within_flex_grow() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(100f32), ..Default::default() },
                 ..Default::default()
             },
@@ -12,7 +12,7 @@ fn percent_within_flex_grow() {
         .unwrap();
     let node10 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Percent(1f32), ..Default::default() },
                 ..Default::default()
             },
@@ -21,7 +21,7 @@ fn percent_within_flex_grow() {
         .unwrap();
     let node1 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 flex_grow: 1f32,
                 ..Default::default()
@@ -31,7 +31,7 @@ fn percent_within_flex_grow() {
         .unwrap();
     let node2 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(100f32), ..Default::default() },
                 ..Default::default()
             },
@@ -40,7 +40,7 @@ fn percent_within_flex_grow() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(350f32),
                     height: sprawl::style::Dimension::Points(100f32),

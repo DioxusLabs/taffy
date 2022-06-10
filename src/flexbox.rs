@@ -11,7 +11,7 @@ use crate::node::{MeasureFunc, NodeId};
 use crate::number::{MinMax, OrElse};
 use crate::prelude::Number;
 use crate::style::{AlignContent, AlignSelf, Dimension, Display, FlexWrap, JustifyContent, PositionType};
-use crate::style::{FlexDirection, Style};
+use crate::style::{FlexDirection, FlexboxLayout};
 use crate::sys::{abs, round, ChildrenVec, Vec};
 
 /// The computed results of a [`flexbox`](crate::flexbox) calculation
@@ -1192,7 +1192,7 @@ impl Forest {
         &self,
         node: NodeId,
         child: &mut FlexItem,
-        child_style: &Style,
+        child_style: &FlexboxLayout,
         free_space: f32,
         max_baseline: f32,
         constants: &AlgoConstants,

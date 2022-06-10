@@ -2,7 +2,7 @@ pub fn compute() {
     let mut sprawl = sprawl::Sprawl::new();
     let node00 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(70f32),
                     height: sprawl::style::Dimension::Points(100f32),
@@ -15,7 +15,7 @@ pub fn compute() {
         .unwrap();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 flex_grow: 1f32,
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(0f32), ..Default::default() },
@@ -26,7 +26,7 @@ pub fn compute() {
         .unwrap();
     let node10 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(20f32),
                     height: sprawl::style::Dimension::Points(100f32),
@@ -39,7 +39,7 @@ pub fn compute() {
         .unwrap();
     let node1 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 flex_grow: 1f32,
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(0f32), ..Default::default() },
@@ -50,7 +50,7 @@ pub fn compute() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
             },

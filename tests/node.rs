@@ -7,9 +7,9 @@ mod node {
     #[test]
     fn children() {
         let mut sprawl = Sprawl::new();
-        let child1 = sprawl.new_node(Style::default(), &[]).unwrap();
-        let child2 = sprawl.new_node(Style::default(), &[]).unwrap();
-        let node = sprawl.new_node(Style::default(), &[child1, child2]).unwrap();
+        let child1 = sprawl.new_node(FlexboxLayout::default(), &[]).unwrap();
+        let child2 = sprawl.new_node(FlexboxLayout::default(), &[]).unwrap();
+        let node = sprawl.new_node(FlexboxLayout::default(), &[child1, child2]).unwrap();
 
         assert_eq!(sprawl.child_count(node).unwrap(), 2);
         assert_eq!(sprawl.children(node).unwrap()[0], child1);
@@ -19,8 +19,9 @@ mod node {
     #[test]
     fn set_measure() {
         let mut sprawl = Sprawl::new();
-        let node =
-            sprawl.new_leaf(Style::default(), MeasureFunc::Raw(|_| Size { width: 200.0, height: 200.0 })).unwrap();
+        let node = sprawl
+            .new_leaf(FlexboxLayout::default(), MeasureFunc::Raw(|_| Size { width: 200.0, height: 200.0 }))
+            .unwrap();
         sprawl.compute_layout(node, Size::undefined()).unwrap();
         assert_eq!(sprawl.layout(node).unwrap().size.width, 200.0);
 
@@ -32,14 +33,14 @@ mod node {
     #[test]
     fn add_child() {
         let mut sprawl = Sprawl::new();
-        let node = sprawl.new_node(Style::default(), &[]).unwrap();
+        let node = sprawl.new_node(FlexboxLayout::default(), &[]).unwrap();
         assert_eq!(sprawl.child_count(node).unwrap(), 0);
 
-        let child1 = sprawl.new_node(Style::default(), &[]).unwrap();
+        let child1 = sprawl.new_node(FlexboxLayout::default(), &[]).unwrap();
         sprawl.add_child(node, child1).unwrap();
         assert_eq!(sprawl.child_count(node).unwrap(), 1);
 
-        let child2 = sprawl.new_node(Style::default(), &[]).unwrap();
+        let child2 = sprawl.new_node(FlexboxLayout::default(), &[]).unwrap();
         sprawl.add_child(node, child2).unwrap();
         assert_eq!(sprawl.child_count(node).unwrap(), 2);
     }
@@ -48,10 +49,10 @@ mod node {
     fn remove_child() {
         let mut sprawl = Sprawl::new();
 
-        let child1 = sprawl.new_node(Style::default(), &[]).unwrap();
-        let child2 = sprawl.new_node(Style::default(), &[]).unwrap();
+        let child1 = sprawl.new_node(FlexboxLayout::default(), &[]).unwrap();
+        let child2 = sprawl.new_node(FlexboxLayout::default(), &[]).unwrap();
 
-        let node = sprawl.new_node(Style::default(), &[child1, child2]).unwrap();
+        let node = sprawl.new_node(FlexboxLayout::default(), &[child1, child2]).unwrap();
         assert_eq!(sprawl.child_count(node).unwrap(), 2);
 
         sprawl.remove_child(node, child1).unwrap();
@@ -66,10 +67,10 @@ mod node {
     fn remove_child_at_index() {
         let mut sprawl = Sprawl::new();
 
-        let child1 = sprawl.new_node(Style::default(), &[]).unwrap();
-        let child2 = sprawl.new_node(Style::default(), &[]).unwrap();
+        let child1 = sprawl.new_node(FlexboxLayout::default(), &[]).unwrap();
+        let child2 = sprawl.new_node(FlexboxLayout::default(), &[]).unwrap();
 
-        let node = sprawl.new_node(Style::default(), &[child1, child2]).unwrap();
+        let node = sprawl.new_node(FlexboxLayout::default(), &[child1, child2]).unwrap();
         assert_eq!(sprawl.child_count(node).unwrap(), 2);
 
         sprawl.remove_child_at_index(node, 0).unwrap();
@@ -84,10 +85,10 @@ mod node {
     fn replace_child_at_index() {
         let mut sprawl = Sprawl::new();
 
-        let child1 = sprawl.new_node(Style::default(), &[]).unwrap();
-        let child2 = sprawl.new_node(Style::default(), &[]).unwrap();
+        let child1 = sprawl.new_node(FlexboxLayout::default(), &[]).unwrap();
+        let child2 = sprawl.new_node(FlexboxLayout::default(), &[]).unwrap();
 
-        let node = sprawl.new_node(Style::default(), &[child1]).unwrap();
+        let node = sprawl.new_node(FlexboxLayout::default(), &[child1]).unwrap();
         assert_eq!(sprawl.child_count(node).unwrap(), 1);
         assert_eq!(sprawl.children(node).unwrap()[0], child1);
 
@@ -100,12 +101,12 @@ mod node {
     fn remove() {
         let mut sprawl = Sprawl::new();
 
-        let style2 = Style { flex_direction: FlexDirection::Column, ..Style::default() };
+        let style2 = FlexboxLayout { flex_direction: FlexDirection::Column, ..FlexboxLayout::default() };
 
         // Build a linear tree layout: <0> <- <1> <- <2>
         let node2 = sprawl.new_node(style2, &[]).unwrap();
-        let node1 = sprawl.new_node(Style::default(), &[node2]).unwrap();
-        let node0 = sprawl.new_node(Style::default(), &[node1]).unwrap();
+        let node1 = sprawl.new_node(FlexboxLayout::default(), &[node2]).unwrap();
+        let node0 = sprawl.new_node(FlexboxLayout::default(), &[node1]).unwrap();
 
         assert_eq!(sprawl.children(node0).unwrap().as_slice(), &[node1]);
 
@@ -123,16 +124,16 @@ mod node {
     fn set_children() {
         let mut sprawl = Sprawl::new();
 
-        let child1 = sprawl.new_node(Style::default(), &[]).unwrap();
-        let child2 = sprawl.new_node(Style::default(), &[]).unwrap();
-        let node = sprawl.new_node(Style::default(), &[child1, child2]).unwrap();
+        let child1 = sprawl.new_node(FlexboxLayout::default(), &[]).unwrap();
+        let child2 = sprawl.new_node(FlexboxLayout::default(), &[]).unwrap();
+        let node = sprawl.new_node(FlexboxLayout::default(), &[child1, child2]).unwrap();
 
         assert_eq!(sprawl.child_count(node).unwrap(), 2);
         assert_eq!(sprawl.children(node).unwrap()[0], child1);
         assert_eq!(sprawl.children(node).unwrap()[1], child2);
 
-        let child3 = sprawl.new_node(Style::default(), &[]).unwrap();
-        let child4 = sprawl.new_node(Style::default(), &[]).unwrap();
+        let child3 = sprawl.new_node(FlexboxLayout::default(), &[]).unwrap();
+        let child4 = sprawl.new_node(FlexboxLayout::default(), &[]).unwrap();
         sprawl.set_children(node, &[child3, child4]).unwrap();
 
         assert_eq!(sprawl.child_count(node).unwrap(), 2);
@@ -144,10 +145,10 @@ mod node {
     fn set_style() {
         let mut sprawl = Sprawl::new();
 
-        let node = sprawl.new_node(Style::default(), &[]).unwrap();
+        let node = sprawl.new_node(FlexboxLayout::default(), &[]).unwrap();
         assert_eq!(sprawl.style(node).unwrap().display, Display::Flex);
 
-        sprawl.set_style(node, Style { display: Display::None, ..Style::default() }).unwrap();
+        sprawl.set_style(node, FlexboxLayout { display: Display::None, ..FlexboxLayout::default() }).unwrap();
         assert_eq!(sprawl.style(node).unwrap().display, Display::None);
     }
 
@@ -155,9 +156,9 @@ mod node {
     fn mark_dirty() {
         let mut sprawl = Sprawl::new();
 
-        let child1 = sprawl.new_node(Style::default(), &[]).unwrap();
-        let child2 = sprawl.new_node(Style::default(), &[]).unwrap();
-        let node = sprawl.new_node(Style::default(), &[child1, child2]).unwrap();
+        let child1 = sprawl.new_node(FlexboxLayout::default(), &[]).unwrap();
+        let child2 = sprawl.new_node(FlexboxLayout::default(), &[]).unwrap();
+        let node = sprawl.new_node(FlexboxLayout::default(), &[child1, child2]).unwrap();
 
         sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
 
@@ -181,8 +182,8 @@ mod node {
     fn remove_last_node() {
         let mut sprawl = Sprawl::new();
 
-        let parent = sprawl.new_node(Style::default(), &[]).unwrap();
-        let child = sprawl.new_node(Style::default(), &[]).unwrap();
+        let parent = sprawl.new_node(FlexboxLayout::default(), &[]).unwrap();
+        let child = sprawl.new_node(FlexboxLayout::default(), &[]).unwrap();
         sprawl.add_child(parent, child).unwrap();
 
         sprawl.remove(child);

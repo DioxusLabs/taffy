@@ -3,7 +3,7 @@ fn percentage_position_bottom_right() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Percent(0.55f32),
                     height: sprawl::style::Dimension::Percent(0.15f32),
@@ -21,7 +21,7 @@ fn percentage_position_bottom_right() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(500f32),
                     height: sprawl::style::Dimension::Points(500f32),

@@ -3,7 +3,7 @@ fn max_width_overrides_width_on_root() {
     let mut sprawl = sprawl::Sprawl::new();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(200f32), ..Default::default() },
                 max_size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),

@@ -3,7 +3,7 @@ fn margin_and_stretch_column() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_grow: 1f32,
                 margin: sprawl::geometry::Rect {
                     start: sprawl::style::Dimension::Points(10f32),
@@ -17,7 +17,7 @@ fn margin_and_stretch_column() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),

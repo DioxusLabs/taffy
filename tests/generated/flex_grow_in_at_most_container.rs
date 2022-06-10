@@ -3,7 +3,7 @@ fn flex_grow_in_at_most_container() {
     let mut sprawl = sprawl::Sprawl::new();
     let node00 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_grow: 1f32,
                 flex_basis: sprawl::style::Dimension::Points(0f32),
                 ..Default::default()
@@ -11,10 +11,10 @@ fn flex_grow_in_at_most_container() {
             &[],
         )
         .unwrap();
-    let node0 = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[node00]).unwrap();
+    let node0 = sprawl.new_node(sprawl::style::FlexboxLayout { ..Default::default() }, &[node00]).unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 align_items: sprawl::style::AlignItems::FlexStart,
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),

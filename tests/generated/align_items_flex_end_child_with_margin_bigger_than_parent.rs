@@ -3,7 +3,7 @@ fn align_items_flex_end_child_with_margin_bigger_than_parent() {
     let mut sprawl = sprawl::Sprawl::new();
     let node00 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(50f32),
                     height: sprawl::style::Dimension::Points(50f32),
@@ -21,13 +21,13 @@ fn align_items_flex_end_child_with_margin_bigger_than_parent() {
         .unwrap();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style { align_items: sprawl::style::AlignItems::FlexEnd, ..Default::default() },
+            sprawl::style::FlexboxLayout { align_items: sprawl::style::AlignItems::FlexEnd, ..Default::default() },
             &[node00],
         )
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 align_items: sprawl::style::AlignItems::Center,
                 justify_content: sprawl::style::JustifyContent::Center,
                 size: sprawl::geometry::Size {

@@ -3,7 +3,7 @@ fn align_items_min_max() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(60f32),
                     height: sprawl::style::Dimension::Points(60f32),
@@ -16,7 +16,7 @@ fn align_items_min_max() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_direction: sprawl::style::FlexDirection::Column,
                 align_items: sprawl::style::AlignItems::Center,
                 size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(100f32), ..Default::default() },

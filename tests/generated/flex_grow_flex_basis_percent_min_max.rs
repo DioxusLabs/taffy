@@ -3,7 +3,7 @@ fn flex_grow_flex_basis_percent_min_max() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_grow: 1f32,
                 flex_shrink: 0f32,
                 flex_basis: sprawl::style::Dimension::Points(0f32),
@@ -19,7 +19,7 @@ fn flex_grow_flex_basis_percent_min_max() {
         .unwrap();
     let node1 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 flex_grow: 1f32,
                 flex_shrink: 0f32,
                 flex_basis: sprawl::style::Dimension::Percent(0.5f32),
@@ -39,7 +39,7 @@ fn flex_grow_flex_basis_percent_min_max() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(120f32), ..Default::default() },
                 ..Default::default()
             },

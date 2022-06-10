@@ -3,7 +3,7 @@ fn padding_align_end_child() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),
                     height: sprawl::style::Dimension::Points(100f32),
@@ -23,7 +23,7 @@ fn padding_align_end_child() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 align_items: sprawl::style::AlignItems::FlexEnd,
                 justify_content: sprawl::style::JustifyContent::FlexEnd,
                 size: sprawl::geometry::Size {

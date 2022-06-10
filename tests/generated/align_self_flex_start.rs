@@ -3,7 +3,7 @@ fn align_self_flex_start() {
     let mut sprawl = sprawl::Sprawl::new();
     let node0 = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 align_self: sprawl::style::AlignSelf::FlexStart,
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(10f32),
@@ -17,7 +17,7 @@ fn align_self_flex_start() {
         .unwrap();
     let node = sprawl
         .new_node(
-            sprawl::style::Style {
+            sprawl::style::FlexboxLayout {
                 size: sprawl::geometry::Size {
                     width: sprawl::style::Dimension::Points(100f32),
                     height: sprawl::style::Dimension::Points(100f32),
