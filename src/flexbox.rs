@@ -1677,8 +1677,7 @@ impl Forest {
         // If our caller does not care about performing layout we are done now.
         if !perform_layout {
             let container_size = constants.container_size;
-            *self.cache(node, main_size) =
-                Some(Cache { node_size, parent_size, perform_layout, size: container_size });
+            *self.cache(node, main_size) = Some(Cache { node_size, parent_size, perform_layout, size: container_size });
             return container_size;
         }
 
@@ -1709,8 +1708,7 @@ impl Forest {
         }
 
         let container_size = constants.container_size;
-        *self.cache(node, main_size) =
-            Some(Cache { node_size, parent_size, perform_layout, size: container_size });
+        *self.cache(node, main_size) = Some(Cache { node_size, parent_size, perform_layout, size: container_size });
 
         container_size
     }
