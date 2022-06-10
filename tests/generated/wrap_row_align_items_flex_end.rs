@@ -2,7 +2,7 @@
 fn wrap_row_align_items_flex_end() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
@@ -15,7 +15,7 @@ fn wrap_row_align_items_flex_end() {
         )
         .unwrap();
     let node1 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
@@ -28,7 +28,7 @@ fn wrap_row_align_items_flex_end() {
         )
         .unwrap();
     let node2 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
@@ -41,7 +41,7 @@ fn wrap_row_align_items_flex_end() {
         )
         .unwrap();
     let node3 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
@@ -54,7 +54,7 @@ fn wrap_row_align_items_flex_end() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 align_items: taffy::style::AlignItems::FlexEnd,

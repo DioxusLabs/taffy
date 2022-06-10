@@ -1,7 +1,7 @@
 pub fn compute() {
     let mut taffy = taffy::Taffy::new();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), ..Default::default() },
                 min_size: taffy::geometry::Size {
