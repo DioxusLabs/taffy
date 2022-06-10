@@ -18,8 +18,9 @@ pub(crate) struct NodeData {
     pub(crate) measure: Option<MeasureFunc>,
     /// The results of the layout computation
     pub(crate) layout: Layout,
-    /// The cached results of the layout computation
+    /// The primary cached results of the layout computation
     pub(crate) main_size_layout_cache: Option<Cache>,
+    /// Secondary cached results of the layout computation
     pub(crate) other_layout_cache: Option<Cache>,
     /// Does this node's layout need to be recomputed?
     pub(crate) is_dirty: bool,
