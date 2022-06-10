@@ -1,13 +1,25 @@
+//! Contains the [`Number`] type and associated methods
+
 use core::ops::{Add, Div, Mul, Sub};
 
+/// A [`f32`] that may be undefined
+///
+/// NOTE: this should *really* be an [`Option<f32>`],
+/// but we're optimizing for backwards compatibility for now.
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Number {
+    /// Pretend this is [`Some(f32)`]
+    ///
+    /// WARNING: the contained value may be NaN
     Defined(f32),
+    /// Pretend this is [`None`]
     Undefined,
 }
 
+/// An extension method used for [`Number`]
 pub trait OrElse<T> {
+    /// Returns the contained value if it is defined, otherwise returns `other`
     fn or_else(self, other: T) -> T;
 }
 
@@ -36,6 +48,7 @@ impl OrElse<Self> for Number {
 }
 
 impl Number {
+    /// Is the number defined?
     pub fn is_defined(self) -> bool {
         match self {
             Number::Defined(_) => true,
@@ -43,6 +56,7 @@ impl Number {
         }
     }
 
+    /// Is the number undefined?
     pub fn is_undefined(self) -> bool {
         match self {
             Number::Defined(_) => false,
@@ -51,8 +65,15 @@ impl Number {
     }
 }
 
+/// An extension trait for [`Number`]
 pub trait MinMax<In, Out> {
+    /// Returns the minimum of self and rhs
+    ///
+    /// If either either value is invalid, returns the other value.
     fn maybe_min(self, rhs: In) -> Out;
+    /// Returns the maximum of self and rhs
+    ///
+    /// If either either value is invalid, returns the other value.
     fn maybe_max(self, rhs: In) -> Out;
 }
 

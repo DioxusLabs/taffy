@@ -1,3 +1,5 @@
+//! Commonly used types
+
 pub use crate::{
     geometry::{Rect, Size},
     layout::Layout,

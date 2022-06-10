@@ -1,5 +1,8 @@
+#![doc = include_str!("../README.md")]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(unsafe_code)]
+#![warn(missing_docs)]
+#![warn(clippy::missing_docs_in_private_items)]
 
 #[cfg(all(not(feature = "std"), feature = "alloc"))]
 extern crate alloc;
@@ -17,18 +20,19 @@ pub mod style;
 
 mod flexbox;
 mod forest;
-mod sys;
-
 #[cfg(all(not(feature = "alloc"), not(feature = "std")))]
 mod indexmap;
+mod sys;
+
+pub use crate::node::Sprawl;
 
 #[cfg(feature = "std")]
 use core::fmt::{Display, Formatter, Result};
 
-pub use crate::node::Sprawl;
-
+/// An error that can occur when performing layout
 #[derive(Debug)]
 pub enum Error {
+    /// The [`Node`](node::Node) was invalid
     InvalidNode(node::Node),
 }
 
@@ -45,7 +49,7 @@ impl Display for Error {
 impl std::error::Error for Error {
     fn description(&self) -> &str {
         match *self {
-            Error::InvalidNode(_) => "The node is not part of the sprawl instance",
+            Error::InvalidNode(_) => "The node is not part of the Sprawl instance",
         }
     }
 }
