@@ -38,8 +38,18 @@ impl OrElse<f32> for Number {
     }
 }
 
-impl OrElse<Self> for Number {
-    fn or_else(self, other: Self) -> Self {
+// FIXME: this is terrible; use unwrap_or_else
+impl OrElse<f32> for Option<f32> {
+    fn or_else(self, other: f32) -> f32 {
+        match self {
+            Some(val) => val,
+            None => other,
+        }
+    }
+}
+
+impl OrElse<Number> for Number {
+    fn or_else(self, other: Number) -> Self {
         match self {
             Number::Defined(_) => self,
             Number::Undefined => other,
@@ -48,6 +58,7 @@ impl OrElse<Self> for Number {
 }
 
 impl Number {
+    // FIXME: replace with is_some
     /// Is the number defined?
     pub fn is_defined(self) -> bool {
         match self {
@@ -56,6 +67,7 @@ impl Number {
         }
     }
 
+    // FIXME: replace with is_none
     /// Is the number undefined?
     pub fn is_undefined(self) -> bool {
         match self {
@@ -65,7 +77,7 @@ impl Number {
     }
 }
 
-/// An extension trait for [`Number`]
+/// A trait to conveniently calculate minimums and maximums when some data may not be defined
 pub trait MinMax<In, Out> {
     /// Returns the minimum of self and rhs
     ///
@@ -75,6 +87,24 @@ pub trait MinMax<In, Out> {
     ///
     /// If either either value is invalid, returns the other value.
     fn maybe_max(self, rhs: In) -> Out;
+}
+
+impl MinMax<Option<f32>, Option<f32>> for Option<f32> {
+    fn maybe_min(self, rhs: Option<f32>) -> Option<f32> {
+        match (self, rhs) {
+            (Some(l), Some(r)) => Some(l.min(r)),
+            (Some(_l), _) => self,
+            _ => None,
+        }
+    }
+
+    fn maybe_max(self, rhs: Option<f32>) -> Option<f32> {
+        match (self, rhs) {
+            (Some(l), Some(r)) => Some(l.max(r)),
+            (Some(_l), _) => self,
+            _ => None,
+        }
+    }
 }
 
 impl MinMax<Self, Self> for Number {
@@ -111,6 +141,22 @@ impl MinMax<f32, Number> for Number {
     }
 }
 
+impl MinMax<f32, Option<f32>> for Option<f32> {
+    fn maybe_min(self, rhs: f32) -> Option<f32> {
+        match self {
+            Some(val) => Some(val.min(rhs)),
+            None => None,
+        }
+    }
+
+    fn maybe_max(self, rhs: f32) -> Option<f32> {
+        match self {
+            Some(val) => Some(val.max(rhs)),
+            None => None,
+        }
+    }
+}
+
 impl MinMax<Number, f32> for f32 {
     fn maybe_min(self, rhs: Number) -> f32 {
         match rhs {
@@ -123,6 +169,22 @@ impl MinMax<Number, f32> for f32 {
         match rhs {
             Number::Defined(val) => self.max(val),
             Number::Undefined => self,
+        }
+    }
+}
+
+impl MinMax<Option<f32>, f32> for f32 {
+    fn maybe_min(self, rhs: Option<f32>) -> f32 {
+        match rhs {
+            Some(val) => self.min(val),
+            None => self,
+        }
+    }
+
+    fn maybe_max(self, rhs: Option<f32>) -> f32 {
+        match rhs {
+            Some(val) => self.max(val),
+            None => self,
         }
     }
 }
