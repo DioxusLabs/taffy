@@ -2,7 +2,7 @@
 fn max_width_overrides_width_on_root() {
     let mut taffy = taffy::Taffy::new();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(200f32), ..Default::default() },
                 max_size: taffy::geometry::Size {

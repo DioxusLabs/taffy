@@ -1,7 +1,7 @@
 pub fn compute() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Percent(0.55f32),
@@ -19,7 +19,7 @@ pub fn compute() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(500f32),

@@ -2,7 +2,7 @@
 fn margin_and_flex_column() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 flex_grow: 1f32,
                 margin: taffy::geometry::Rect {
@@ -16,7 +16,7 @@ fn margin_and_flex_column() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {

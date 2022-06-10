@@ -2,7 +2,7 @@
 fn absolute_layout_align_items_center() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 position_type: taffy::style::PositionType::Absolute,
                 size: taffy::geometry::Size {
@@ -16,7 +16,7 @@ fn absolute_layout_align_items_center() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 align_items: taffy::style::AlignItems::Center,
                 size: taffy::geometry::Size {

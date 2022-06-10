@@ -2,7 +2,7 @@
 fn flex_basis_flex_grow_column() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 flex_grow: 1f32,
                 flex_basis: taffy::style::Dimension::Points(50f32),
@@ -11,9 +11,9 @@ fn flex_basis_flex_grow_column() {
             &[],
         )
         .unwrap();
-    let node1 = taffy.new_node(taffy::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
+    let node1 = taffy.new_with_children(taffy::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {

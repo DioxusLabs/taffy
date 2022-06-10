@@ -2,7 +2,7 @@
 fn align_self_flex_end_override_flex_start() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 align_self: taffy::style::AlignSelf::FlexEnd,
                 size: taffy::geometry::Size {
@@ -16,7 +16,7 @@ fn align_self_flex_end_override_flex_start() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 align_items: taffy::style::AlignItems::FlexStart,
                 size: taffy::geometry::Size {

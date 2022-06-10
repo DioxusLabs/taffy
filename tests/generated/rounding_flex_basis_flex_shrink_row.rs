@@ -2,7 +2,7 @@
 fn rounding_flex_basis_flex_shrink_row() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 flex_shrink: 1f32,
                 flex_basis: taffy::style::Dimension::Points(100f32),
@@ -12,13 +12,13 @@ fn rounding_flex_basis_flex_shrink_row() {
         )
         .unwrap();
     let node1 = taffy
-        .new_node(taffy::style::Style { flex_basis: taffy::style::Dimension::Points(25f32), ..Default::default() }, &[])
+        .new_with_children(taffy::style::Style { flex_basis: taffy::style::Dimension::Points(25f32), ..Default::default() }, &[])
         .unwrap();
     let node2 = taffy
-        .new_node(taffy::style::Style { flex_basis: taffy::style::Dimension::Points(25f32), ..Default::default() }, &[])
+        .new_with_children(taffy::style::Style { flex_basis: taffy::style::Dimension::Points(25f32), ..Default::default() }, &[])
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(101f32),

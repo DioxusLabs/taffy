@@ -2,7 +2,7 @@
 fn flex_grow_root_minimized() {
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 flex_grow: 1f32,
                 flex_basis: taffy::style::Dimension::Points(200f32),
@@ -12,7 +12,7 @@ fn flex_grow_root_minimized() {
         )
         .unwrap();
     let node01 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Default::default() },
                 ..Default::default()
@@ -21,7 +21,7 @@ fn flex_grow_root_minimized() {
         )
         .unwrap();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 1f32,
@@ -39,7 +39,7 @@ fn flex_grow_root_minimized() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Default::default() },

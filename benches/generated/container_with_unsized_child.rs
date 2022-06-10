@@ -1,8 +1,8 @@
 pub fn compute() {
     let mut taffy = taffy::Taffy::new();
-    let node0 = taffy.new_node(taffy::style::Style { ..Default::default() }, &[]).unwrap();
+    let node0 = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[]).unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),

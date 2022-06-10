@@ -103,11 +103,11 @@ impl Taffy {
     }
 
     /// Adds a new node, which may have any number of `children`
-    pub fn new_node(&mut self, style: Style, children: &[Node]) -> Result<Node, Error> {
+    pub fn new_with_children(&mut self, style: Style, children: &[Node]) -> Result<Node, Error> {
         let node = self.allocate_node();
         let children =
             children.iter().map(|child| self.find_node(*child)).collect::<Result<ChildrenVec<_>, Error>>()?;
-        let id = self.forest.new_node(style, children);
+        let id = self.forest.new_with_children(style, children);
         self.add_node(node, id);
         Ok(node)
     }

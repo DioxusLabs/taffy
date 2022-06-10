@@ -2,7 +2,7 @@
 fn absolute_layout_percentage_bottom_based_on_parent_height() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 position_type: taffy::style::PositionType::Absolute,
                 size: taffy::geometry::Size {
@@ -17,7 +17,7 @@ fn absolute_layout_percentage_bottom_based_on_parent_height() {
         )
         .unwrap();
     let node1 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 position_type: taffy::style::PositionType::Absolute,
                 size: taffy::geometry::Size {
@@ -35,7 +35,7 @@ fn absolute_layout_percentage_bottom_based_on_parent_height() {
         )
         .unwrap();
     let node2 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 position_type: taffy::style::PositionType::Absolute,
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), ..Default::default() },
@@ -50,7 +50,7 @@ fn absolute_layout_percentage_bottom_based_on_parent_height() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),

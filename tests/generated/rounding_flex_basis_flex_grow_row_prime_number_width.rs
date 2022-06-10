@@ -1,13 +1,13 @@
 #[test]
 fn rounding_flex_basis_flex_grow_row_prime_number_width() {
     let mut taffy = taffy::Taffy::new();
-    let node0 = taffy.new_node(taffy::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
-    let node1 = taffy.new_node(taffy::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
-    let node2 = taffy.new_node(taffy::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
-    let node3 = taffy.new_node(taffy::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
-    let node4 = taffy.new_node(taffy::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
+    let node0 = taffy.new_with_children(taffy::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
+    let node1 = taffy.new_with_children(taffy::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
+    let node2 = taffy.new_with_children(taffy::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
+    let node3 = taffy.new_with_children(taffy::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
+    let node4 = taffy.new_with_children(taffy::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(113f32),

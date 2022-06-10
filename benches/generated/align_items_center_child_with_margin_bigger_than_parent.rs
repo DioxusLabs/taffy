@@ -1,7 +1,7 @@
 pub fn compute() {
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
@@ -19,13 +19,13 @@ pub fn compute() {
         )
         .unwrap();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style { align_items: taffy::style::AlignItems::Center, ..Default::default() },
             &[node00],
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 align_items: taffy::style::AlignItems::Center,
                 justify_content: taffy::style::JustifyContent::Center,

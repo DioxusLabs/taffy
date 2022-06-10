@@ -2,7 +2,7 @@
 fn wrap_reverse_row_align_content_center() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
@@ -15,7 +15,7 @@ fn wrap_reverse_row_align_content_center() {
         )
         .unwrap();
     let node1 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
@@ -28,7 +28,7 @@ fn wrap_reverse_row_align_content_center() {
         )
         .unwrap();
     let node2 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
@@ -41,7 +41,7 @@ fn wrap_reverse_row_align_content_center() {
         )
         .unwrap();
     let node3 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
@@ -54,7 +54,7 @@ fn wrap_reverse_row_align_content_center() {
         )
         .unwrap();
     let node4 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
@@ -67,7 +67,7 @@ fn wrap_reverse_row_align_content_center() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::WrapReverse,
                 align_content: taffy::style::AlignContent::Center,

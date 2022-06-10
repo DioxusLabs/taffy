@@ -2,7 +2,7 @@
 fn align_items_flex_end() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(10f32),
@@ -15,7 +15,7 @@ fn align_items_flex_end() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 align_items: taffy::style::AlignItems::FlexEnd,
                 size: taffy::geometry::Size {

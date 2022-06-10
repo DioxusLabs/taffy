@@ -2,7 +2,7 @@
 fn margin_auto_left_stretching_child() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 flex_grow: 1f32,
                 flex_shrink: 1f32,
@@ -14,7 +14,7 @@ fn margin_auto_left_stretching_child() {
         )
         .unwrap();
     let node1 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
@@ -27,7 +27,7 @@ fn margin_auto_left_stretching_child() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 align_items: taffy::style::AlignItems::Center,
                 size: taffy::geometry::Size {

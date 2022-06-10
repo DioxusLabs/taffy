@@ -2,7 +2,7 @@
 fn justify_content_overflow_min_max() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 flex_shrink: 0f32,
                 size: taffy::geometry::Size {
@@ -16,7 +16,7 @@ fn justify_content_overflow_min_max() {
         )
         .unwrap();
     let node1 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 flex_shrink: 0f32,
                 size: taffy::geometry::Size {
@@ -30,7 +30,7 @@ fn justify_content_overflow_min_max() {
         )
         .unwrap();
     let node2 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 flex_shrink: 0f32,
                 size: taffy::geometry::Size {
@@ -44,7 +44,7 @@ fn justify_content_overflow_min_max() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 justify_content: taffy::style::JustifyContent::Center,

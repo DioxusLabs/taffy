@@ -2,7 +2,7 @@
 fn absolute_layout_width_height_start_top() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 position_type: taffy::style::PositionType::Absolute,
                 size: taffy::geometry::Size {
@@ -21,7 +21,7 @@ fn absolute_layout_width_height_start_top() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),

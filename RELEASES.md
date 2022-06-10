@@ -8,7 +8,8 @@
 
 ### 0.2.0 Changed
 
-- Nothing yet
+- renamed `taffy::forest::Forest.new-node(..)` `taffy::forest::Forest.new_with_children(..)`
+- renamed `taffy::node::Taffy.new-node(..)` -> `taffy::node::Taffy.new_with_children(..)`
 
 ### 0.2.0 Fixed
 

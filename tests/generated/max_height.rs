@@ -2,7 +2,7 @@
 fn max_height() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), ..Default::default() },
                 max_size: taffy::geometry::Size {
@@ -15,7 +15,7 @@ fn max_height() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
