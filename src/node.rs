@@ -12,7 +12,7 @@ use crate::sys::{new_map_with_capacity, ChildrenVec, Map, Vec};
 use crate::Error;
 use core::sync::atomic::{AtomicUsize, Ordering};
 
-/// A function that can be applied to a `Size<Number>` to obtain a `<Size<f32>`
+/// A function that can be applied to a `Size<Number>` to obtain a `Size<f32>`
 pub enum MeasureFunc {
     /// Stores an unboxed function
     Raw(fn(Size<Number>) -> Size<f32>),
@@ -122,7 +122,7 @@ impl Sprawl {
 
     /// Remove a specific [`Node`] from the tree
     ///
-    /// Its [`Id`] is rendered invalid
+    /// Its [`Id`] is marked as invalid.
     pub fn remove(&mut self, node: Node) {
         let id = if let Ok(id) = self.find_node(node) { id } else { return };
 
@@ -184,7 +184,7 @@ impl Sprawl {
         Ok(self.ids_to_nodes[&prev_id])
     }
 
-    /// Removes the "n-th" child from the parent `node`
+    /// Removes the child at the given `index` from the parent `node`
     ///
     /// The child is not removed from the forest entirely, it is simply no longer attached to its previous parent.
     pub fn remove_child_at_index(&mut self, node: Node, index: usize) -> Result<Node, Error> {
@@ -195,7 +195,7 @@ impl Sprawl {
         Ok(self.ids_to_nodes[&prev_id])
     }
 
-    /// Replaces the "n-th" child from the parent `node` with the new `child` node
+    /// Replaces the child at the given `index` from the parent `node` with the new `child` node
     ///
     /// The child is not removed from the forest entirely, it is simply no longer attached to its previous parent.
     pub fn replace_child_at_index(&mut self, node: Node, index: usize, child: Node) -> Result<Node, Error> {
