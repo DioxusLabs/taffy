@@ -1,8 +1,9 @@
 #[test]
 fn flex_grow_to_min() {
     let mut taffy = taffy::Taffy::new();
-    let node0 =
-        taffy.new_with_children(taffy::style::Style { flex_grow: 1f32, flex_shrink: 1f32, ..Default::default() }, &[]).unwrap();
+    let node0 = taffy
+        .new_with_children(taffy::style::Style { flex_grow: 1f32, flex_shrink: 1f32, ..Default::default() }, &[])
+        .unwrap();
     let node1 = taffy
         .new_with_children(
             taffy::style::Style {

@@ -11,10 +11,16 @@ pub fn compute() {
         )
         .unwrap();
     let node1 = taffy
-        .new_with_children(taffy::style::Style { flex_basis: taffy::style::Dimension::Points(25f32), ..Default::default() }, &[])
+        .new_with_children(
+            taffy::style::Style { flex_basis: taffy::style::Dimension::Points(25f32), ..Default::default() },
+            &[],
+        )
         .unwrap();
     let node2 = taffy
-        .new_with_children(taffy::style::Style { flex_basis: taffy::style::Dimension::Points(25f32), ..Default::default() }, &[])
+        .new_with_children(
+            taffy::style::Style { flex_basis: taffy::style::Dimension::Points(25f32), ..Default::default() },
+            &[],
+        )
         .unwrap();
     let node = taffy
         .new_with_children(

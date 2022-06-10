@@ -8,7 +8,10 @@ fn flex_basis_flex_shrink_row() {
         )
         .unwrap();
     let node1 = taffy
-        .new_with_children(taffy::style::Style { flex_basis: taffy::style::Dimension::Points(50f32), ..Default::default() }, &[])
+        .new_with_children(
+            taffy::style::Style { flex_basis: taffy::style::Dimension::Points(50f32), ..Default::default() },
+            &[],
+        )
         .unwrap();
     let node = taffy
         .new_with_children(
