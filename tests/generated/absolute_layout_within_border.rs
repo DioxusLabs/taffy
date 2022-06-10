@@ -3,7 +3,7 @@ fn absolute_layout_within_border() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 position_type: taffy::style::PositionType::Absolute,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
@@ -22,7 +22,7 @@ fn absolute_layout_within_border() {
         .unwrap();
     let node1 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 position_type: taffy::style::PositionType::Absolute,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
@@ -41,7 +41,7 @@ fn absolute_layout_within_border() {
         .unwrap();
     let node2 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 position_type: taffy::style::PositionType::Absolute,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
@@ -67,7 +67,7 @@ fn absolute_layout_within_border() {
         .unwrap();
     let node3 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 position_type: taffy::style::PositionType::Absolute,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
@@ -93,7 +93,7 @@ fn absolute_layout_within_border() {
         .unwrap();
     let node = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),

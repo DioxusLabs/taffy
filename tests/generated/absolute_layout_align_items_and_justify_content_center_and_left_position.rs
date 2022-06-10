@@ -3,7 +3,7 @@ fn absolute_layout_align_items_and_justify_content_center_and_left_position() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 position_type: taffy::style::PositionType::Absolute,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(60f32),
@@ -18,7 +18,7 @@ fn absolute_layout_align_items_and_justify_content_center_and_left_position() {
         .unwrap();
     let node = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 align_items: taffy::style::AlignItems::Center,
                 justify_content: taffy::style::JustifyContent::Center,
                 size: taffy::geometry::Size {

@@ -7,7 +7,7 @@ pub use crate::{
     number::Number,
     style::{
         AlignContent, AlignItems, AlignSelf, Dimension, Display, FlexDirection, FlexWrap, JustifyContent, PositionType,
-        Style,
+        FlexboxLayout,
     },
     Error,
 };

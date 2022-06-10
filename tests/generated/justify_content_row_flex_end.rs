@@ -3,7 +3,7 @@ fn justify_content_row_flex_end() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
             },
@@ -12,7 +12,7 @@ fn justify_content_row_flex_end() {
         .unwrap();
     let node1 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
             },
@@ -21,7 +21,7 @@ fn justify_content_row_flex_end() {
         .unwrap();
     let node2 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
             },
@@ -30,7 +30,7 @@ fn justify_content_row_flex_end() {
         .unwrap();
     let node = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 justify_content: taffy::style::JustifyContent::FlexEnd,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),

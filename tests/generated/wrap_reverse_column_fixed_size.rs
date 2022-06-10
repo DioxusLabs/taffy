@@ -3,7 +3,7 @@ fn wrap_reverse_column_fixed_size() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
                     height: taffy::style::Dimension::Points(10f32),
@@ -16,7 +16,7 @@ fn wrap_reverse_column_fixed_size() {
         .unwrap();
     let node1 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
                     height: taffy::style::Dimension::Points(20f32),
@@ -29,7 +29,7 @@ fn wrap_reverse_column_fixed_size() {
         .unwrap();
     let node2 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
                     height: taffy::style::Dimension::Points(30f32),
@@ -42,7 +42,7 @@ fn wrap_reverse_column_fixed_size() {
         .unwrap();
     let node3 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
                     height: taffy::style::Dimension::Points(40f32),
@@ -55,7 +55,7 @@ fn wrap_reverse_column_fixed_size() {
         .unwrap();
     let node4 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
                     height: taffy::style::Dimension::Points(50f32),
@@ -68,7 +68,7 @@ fn wrap_reverse_column_fixed_size() {
         .unwrap();
     let node = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_wrap: taffy::style::FlexWrap::WrapReverse,
                 align_items: taffy::style::AlignItems::Center,

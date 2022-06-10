@@ -5,7 +5,7 @@ use crate::geometry::Size;
 use crate::layout::{Cache, Layout};
 use crate::node::{MeasureFunc, NodeId};
 use crate::number::Number;
-use crate::style::Style;
+use crate::style::FlexboxLayout;
 use crate::sys::{new_vec_with_capacity, ChildrenVec, ParentsVec, Vec};
 
 /// Layout information for a given [`Node`](crate::node::Node)
@@ -13,7 +13,7 @@ use crate::sys::{new_vec_with_capacity, ChildrenVec, ParentsVec, Vec};
 /// Stored in a [`Forest`].
 pub(crate) struct NodeData {
     /// The layout strategy used by this node
-    pub(crate) style: Style,
+    pub(crate) style: FlexboxLayout,
     /// The mapping from the Size<Number> (in units) to Size<f32> (in points) for this node
     pub(crate) measure: Option<MeasureFunc>,
     /// The results of the layout computation
@@ -29,7 +29,7 @@ pub(crate) struct NodeData {
 impl NodeData {
     /// Create the data for a new leaf node
     #[must_use]
-    fn new_leaf(style: Style, measure: MeasureFunc) -> Self {
+    fn new_leaf(style: FlexboxLayout, measure: MeasureFunc) -> Self {
         Self {
             style,
             measure: Some(measure),
@@ -43,7 +43,7 @@ impl NodeData {
     /// Create the data for a new node
     // TODO: why is this different from new_leaf?
     #[must_use]
-    fn new(style: Style) -> Self {
+    fn new(style: FlexboxLayout) -> Self {
         Self {
             style,
             measure: None,
@@ -91,7 +91,7 @@ impl Forest {
     }
 
     /// Adds a new unattached leaf node to the forest, and returns the [`NodeId`] of the new node
-    pub(crate) fn new_leaf(&mut self, style: Style, measure: MeasureFunc) -> NodeId {
+    pub(crate) fn new_leaf(&mut self, style: FlexboxLayout, measure: MeasureFunc) -> NodeId {
         let id = self.nodes.len();
         self.nodes.push(NodeData::new_leaf(style, measure));
         self.children.push(new_vec_with_capacity(0));
@@ -100,7 +100,7 @@ impl Forest {
     }
 
     /// Adds a new unparented node to the forest with the associated children attached, and returns the [`NodeId`] of the new node
-    pub(crate) fn new_node(&mut self, style: Style, children: ChildrenVec<NodeId>) -> NodeId {
+    pub(crate) fn new_node(&mut self, style: FlexboxLayout, children: ChildrenVec<NodeId>) -> NodeId {
         let id = self.nodes.len();
         for child in &children {
             self.parents[*child].push(id);

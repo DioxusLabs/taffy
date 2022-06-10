@@ -3,7 +3,7 @@ fn flex_wrap_children_with_min_main_overriding_flex_basis() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 flex_basis: taffy::style::Dimension::Points(50f32),
                 size: taffy::geometry::Size { height: taffy::style::Dimension::Points(50f32), ..Default::default() },
                 min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(55f32), ..Default::default() },
@@ -14,7 +14,7 @@ fn flex_wrap_children_with_min_main_overriding_flex_basis() {
         .unwrap();
     let node1 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 flex_basis: taffy::style::Dimension::Points(50f32),
                 size: taffy::geometry::Size { height: taffy::style::Dimension::Points(50f32), ..Default::default() },
                 min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(55f32), ..Default::default() },
@@ -25,7 +25,7 @@ fn flex_wrap_children_with_min_main_overriding_flex_basis() {
         .unwrap();
     let node = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Default::default() },
                 ..Default::default()

@@ -3,7 +3,7 @@ fn percentage_flex_basis_cross_min_height() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 flex_grow: 1f32,
                 min_size: taffy::geometry::Size {
                     height: taffy::style::Dimension::Percent(0.6f32),
@@ -16,7 +16,7 @@ fn percentage_flex_basis_cross_min_height() {
         .unwrap();
     let node1 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 flex_grow: 2f32,
                 min_size: taffy::geometry::Size {
                     height: taffy::style::Dimension::Percent(0.1f32),
@@ -29,7 +29,7 @@ fn percentage_flex_basis_cross_min_height() {
         .unwrap();
     let node = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),

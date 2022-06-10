@@ -5,12 +5,12 @@ fn main() -> Result<(), Error> {
 
     // left
     let child_t1 = taffy.new_node(
-        Style { size: Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) }, ..Default::default() },
+        FlexboxLayout { size: Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) }, ..Default::default() },
         &[],
     )?;
 
     let div1 = taffy.new_node(
-        Style {
+        FlexboxLayout {
             size: Size { width: Dimension::Percent(0.5), height: Dimension::Percent(1.0) },
             // justify_content: JustifyContent::Center,
             ..Default::default()
@@ -20,12 +20,12 @@ fn main() -> Result<(), Error> {
 
     // right
     let child_t2 = taffy.new_node(
-        Style { size: Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) }, ..Default::default() },
+        FlexboxLayout { size: Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) }, ..Default::default() },
         &[],
     )?;
 
     let div2 = taffy.new_node(
-        Style {
+        FlexboxLayout {
             size: Size { width: Dimension::Percent(0.5), height: Dimension::Percent(1.0) },
             // justify_content: JustifyContent::Center,
             ..Default::default()
@@ -34,7 +34,7 @@ fn main() -> Result<(), Error> {
     )?;
 
     let container = taffy.new_node(
-        Style { size: Size { width: Dimension::Percent(1.0), height: Dimension::Percent(1.0) }, ..Default::default() },
+        FlexboxLayout { size: Size { width: Dimension::Percent(1.0), height: Dimension::Percent(1.0) }, ..Default::default() },
         &[div1, div2],
     )?;
 

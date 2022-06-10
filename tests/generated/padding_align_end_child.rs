@@ -3,7 +3,7 @@ fn padding_align_end_child() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
@@ -23,7 +23,7 @@ fn padding_align_end_child() {
         .unwrap();
     let node = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 align_items: taffy::style::AlignItems::FlexEnd,
                 justify_content: taffy::style::JustifyContent::FlexEnd,
                 size: taffy::geometry::Size {

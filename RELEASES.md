@@ -8,7 +8,7 @@
 
 ### 0.2.0 Changed
 
-- Nothing yet
+- renamed `taffy::style::Style` -> `taffy::style::FlexboxLayout` to more precicely indicate its purpose
 
 ### 0.2.0 Fixed
 

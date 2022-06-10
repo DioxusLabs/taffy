@@ -5,7 +5,7 @@ use crate::forest::Forest;
 use crate::geometry::Size;
 use crate::layout::Layout;
 use crate::number::Number;
-use crate::style::Style;
+use crate::style::FlexboxLayout;
 #[cfg(any(feature = "std", feature = "alloc"))]
 use crate::sys::Box;
 use crate::sys::{new_map_with_capacity, ChildrenVec, Map, Vec};
@@ -95,7 +95,7 @@ impl Taffy {
     }
 
     /// Adds a new leaf node, which does not have any children
-    pub fn new_leaf(&mut self, style: Style, measure: MeasureFunc) -> Result<Node, Error> {
+    pub fn new_leaf(&mut self, style: FlexboxLayout, measure: MeasureFunc) -> Result<Node, Error> {
         let node = self.allocate_node();
         let id = self.forest.new_leaf(style, measure);
         self.add_node(node, id);
@@ -103,7 +103,7 @@ impl Taffy {
     }
 
     /// Adds a new node, which may have any number of `children`
-    pub fn new_node(&mut self, style: Style, children: &[Node]) -> Result<Node, Error> {
+    pub fn new_node(&mut self, style: FlexboxLayout, children: &[Node]) -> Result<Node, Error> {
         let node = self.allocate_node();
         let children =
             children.iter().map(|child| self.find_node(*child)).collect::<Result<ChildrenVec<_>, Error>>()?;
@@ -232,7 +232,7 @@ impl Taffy {
     }
 
     /// Sets the [`Style`] of the provided `node`
-    pub fn set_style(&mut self, node: Node, style: Style) -> Result<(), Error> {
+    pub fn set_style(&mut self, node: Node, style: FlexboxLayout) -> Result<(), Error> {
         let id = self.find_node(node)?;
         self.forest.nodes[id].style = style;
         self.forest.mark_dirty(id);
@@ -240,7 +240,7 @@ impl Taffy {
     }
 
     /// Gets the [`Style`] of the provided `node`
-    pub fn style(&self, node: Node) -> Result<&Style, Error> {
+    pub fn style(&self, node: Node) -> Result<&FlexboxLayout, Error> {
         let id = self.find_node(node)?;
         Ok(&self.forest.nodes[id].style)
     }
