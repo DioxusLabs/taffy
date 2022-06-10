@@ -1,6 +1,5 @@
 //! Final and cached data structures that represent the high-level UI layout
 
-use crate::flexbox::ComputeResult;
 use crate::geometry::{Point, Size};
 use crate::number::Number;
 
@@ -37,5 +36,5 @@ pub(crate) struct Cache {
     pub(crate) perform_layout: bool,
 
     /// The stored result of the layout calculations
-    pub(crate) result: ComputeResult,
+    pub(crate) result: Size<f32>,
 }
