@@ -2,7 +2,7 @@ pub fn compute() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 position_type: taffy::style::PositionType::Absolute,
                 align_self: taffy::style::AlignSelf::Center,
                 size: taffy::geometry::Size {
@@ -17,7 +17,7 @@ pub fn compute() {
         .unwrap();
     let node = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(110f32),
                     height: taffy::style::Dimension::Points(100f32),

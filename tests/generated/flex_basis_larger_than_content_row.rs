@@ -3,7 +3,7 @@ fn flex_basis_larger_than_content_row() {
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(10f32),
                     height: taffy::style::Dimension::Points(100f32),
@@ -16,7 +16,7 @@ fn flex_basis_larger_than_content_row() {
         .unwrap();
     let node0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_basis: taffy::style::Dimension::Points(50f32),
                 ..Default::default()
@@ -26,7 +26,7 @@ fn flex_basis_larger_than_content_row() {
         .unwrap();
     let node = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Default::default() },
                 ..Default::default()
             },

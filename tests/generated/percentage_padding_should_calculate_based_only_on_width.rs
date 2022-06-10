@@ -3,7 +3,7 @@ fn percentage_padding_should_calculate_based_only_on_width() {
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(10f32),
                     height: taffy::style::Dimension::Points(10f32),
@@ -16,7 +16,7 @@ fn percentage_padding_should_calculate_based_only_on_width() {
         .unwrap();
     let node0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 1f32,
                 padding: taffy::geometry::Rect {
@@ -33,7 +33,7 @@ fn percentage_padding_should_calculate_based_only_on_width() {
         .unwrap();
     let node = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
