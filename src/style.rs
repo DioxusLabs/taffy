@@ -317,7 +317,7 @@ impl Default for Size<Dimension> {
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(default))]
-pub struct Style {
+pub struct FlexboxLayout {
     /// What layout strategy should be used?
     pub display: Display,
     /// What should the `position` value of this struct use as a base offset?
@@ -365,7 +365,7 @@ pub struct Style {
     pub aspect_ratio: Number,
 }
 
-impl Default for Style {
+impl Default for FlexboxLayout {
     fn default() -> Self {
         Self {
             display: Default::default(),
@@ -391,7 +391,7 @@ impl Default for Style {
     }
 }
 
-impl Style {
+impl FlexboxLayout {
     /// If the `direction` is row-oriented, the min width. Otherwise the min height
     pub(crate) fn min_main_size(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
@@ -474,7 +474,7 @@ impl Style {
     }
 
     /// Computes the final alignment of this item based on the parent's [`AlignItems`] and this item's [`AlignSelf`]
-    pub(crate) fn align_self(&self, parent: &Style) -> AlignSelf {
+    pub(crate) fn align_self(&self, parent: &FlexboxLayout) -> AlignSelf {
         if self.align_self == AlignSelf::Auto {
             match parent.align_items {
                 AlignItems::FlexStart => AlignSelf::FlexStart,

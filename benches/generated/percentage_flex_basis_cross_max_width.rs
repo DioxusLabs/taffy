@@ -2,7 +2,7 @@ pub fn compute() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 flex_grow: 1f32,
                 flex_basis: taffy::style::Dimension::Percent(0.1f32),
                 max_size: taffy::geometry::Size {
@@ -16,7 +16,7 @@ pub fn compute() {
         .unwrap();
     let node1 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 flex_grow: 4f32,
                 flex_basis: taffy::style::Dimension::Percent(0.15f32),
                 max_size: taffy::geometry::Size {
@@ -30,7 +30,7 @@ pub fn compute() {
         .unwrap();
     let node = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),

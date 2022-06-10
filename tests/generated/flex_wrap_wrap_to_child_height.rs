@@ -3,7 +3,7 @@ fn flex_wrap_wrap_to_child_height() {
     let mut taffy = taffy::Taffy::new();
     let node000 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
@@ -16,7 +16,7 @@ fn flex_wrap_wrap_to_child_height() {
         .unwrap();
     let node00 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Default::default() },
                 ..Default::default()
@@ -26,7 +26,7 @@ fn flex_wrap_wrap_to_child_height() {
         .unwrap();
     let node0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 align_items: taffy::style::AlignItems::FlexStart,
                 ..Default::default()
@@ -36,7 +36,7 @@ fn flex_wrap_wrap_to_child_height() {
         .unwrap();
     let node1 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
@@ -49,7 +49,7 @@ fn flex_wrap_wrap_to_child_height() {
         .unwrap();
     let node = taffy
         .new_node(
-            taffy::style::Style { flex_direction: taffy::style::FlexDirection::Column, ..Default::default() },
+            taffy::style::FlexboxLayout { flex_direction: taffy::style::FlexDirection::Column, ..Default::default() },
             &[node0, node1],
         )
         .unwrap();

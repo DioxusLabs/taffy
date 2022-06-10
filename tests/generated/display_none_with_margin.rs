@@ -3,7 +3,7 @@ fn display_none_with_margin() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 display: taffy::style::Display::None,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(20f32),
@@ -22,10 +22,10 @@ fn display_none_with_margin() {
             &[],
         )
         .unwrap();
-    let node1 = taffy.new_node(taffy::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
+    let node1 = taffy.new_node(taffy::style::FlexboxLayout { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
     let node = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
