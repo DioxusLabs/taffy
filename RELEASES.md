@@ -1,5 +1,10 @@
 # Release Notes
 
+## 0.2.0 Removed
+
+- various internal types are no longer public
+  - if you needed one of these, please file an issue!
+
 ## 0.1.0
 
 ### 0.1.0 Changed
