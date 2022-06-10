@@ -5,7 +5,7 @@ fn simple_child() {
     let mut taffy = taffy::Taffy::new();
     let node0_0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 align_self: taffy::prelude::AlignSelf::Center,
                 size: taffy::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
                 ..Default::default()
@@ -15,7 +15,7 @@ fn simple_child() {
         .unwrap();
     let node0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
                 ..Default::default()
             },
@@ -24,7 +24,7 @@ fn simple_child() {
         .unwrap();
     let node1_0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 align_self: taffy::prelude::AlignSelf::Center,
                 size: taffy::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
                 ..Default::default()
@@ -34,7 +34,7 @@ fn simple_child() {
         .unwrap();
     let node1_1 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 align_self: taffy::prelude::AlignSelf::Center,
                 size: taffy::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
                 ..Default::default()
@@ -44,7 +44,7 @@ fn simple_child() {
         .unwrap();
     let node1 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size { width: Dimension::Undefined, height: Dimension::Undefined },
                 ..Default::default()
             },
@@ -53,7 +53,7 @@ fn simple_child() {
         .unwrap();
     let node = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size { width: Dimension::Percent(100.0), height: Dimension::Percent(100.0) },
                 ..Default::default()
             },

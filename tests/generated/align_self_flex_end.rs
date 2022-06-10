@@ -3,7 +3,7 @@ fn align_self_flex_end() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 align_self: taffy::style::AlignSelf::FlexEnd,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(10f32),
@@ -17,7 +17,7 @@ fn align_self_flex_end() {
         .unwrap();
     let node = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),

@@ -3,7 +3,7 @@ fn justify_content_row_max_width_and_margin() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(20f32),
                     height: taffy::style::Dimension::Points(20f32),
@@ -17,7 +17,7 @@ fn justify_content_row_max_width_and_margin() {
         .unwrap();
     let node = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 justify_content: taffy::style::JustifyContent::Center,
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Default::default() },
                 max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(80f32), ..Default::default() },

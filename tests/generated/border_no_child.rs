@@ -3,7 +3,7 @@ fn border_no_child() {
     let mut taffy = taffy::Taffy::new();
     let node = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 border: taffy::geometry::Rect {
                     start: taffy::style::Dimension::Points(10f32),
                     end: taffy::style::Dimension::Points(10f32),

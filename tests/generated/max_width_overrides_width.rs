@@ -3,7 +3,7 @@ fn max_width_overrides_width() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(200f32), ..Default::default() },
                 max_size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
@@ -14,7 +14,7 @@ fn max_width_overrides_width() {
             &[],
         )
         .unwrap();
-    let node = taffy.new_node(taffy::style::Style { ..Default::default() }, &[node0]).unwrap();
+    let node = taffy.new_node(taffy::style::FlexboxLayout { ..Default::default() }, &[node0]).unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
     assert_eq!(taffy.layout(node).unwrap().size.width, 100f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 0f32);

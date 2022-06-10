@@ -3,7 +3,7 @@ fn justify_content_column_center() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
             },
@@ -12,7 +12,7 @@ fn justify_content_column_center() {
         .unwrap();
     let node1 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
             },
@@ -21,7 +21,7 @@ fn justify_content_column_center() {
         .unwrap();
     let node2 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
             },
@@ -30,7 +30,7 @@ fn justify_content_column_center() {
         .unwrap();
     let node = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 flex_direction: taffy::style::FlexDirection::Column,
                 justify_content: taffy::style::JustifyContent::Center,
                 size: taffy::geometry::Size {
