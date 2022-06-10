@@ -1,22 +1,23 @@
 #[test]
 fn flex_grow_within_constrained_min_row() {
-    let mut sprawl = sprawl::Sprawl::new();
-    let node0 = sprawl.new_node(sprawl::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
-    let node1 = sprawl
-        .new_node(
-            sprawl::style::Style {
-                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(50f32), ..Default::default() },
+    let mut taffy = taffy::Taffy::new();
+    let node0 =
+        taffy.new_with_children(taffy::style::FlexboxLayout { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
+    let node1 = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), ..Default::default() },
                 ..Default::default()
             },
             &[],
         )
         .unwrap();
-    let node = sprawl
-        .new_node(
-            sprawl::style::Style {
-                size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(100f32), ..Default::default() },
-                min_size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(100f32),
+    let node = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Default::default() },
+                min_size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(100f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -24,17 +25,17 @@ fn flex_grow_within_constrained_min_row() {
             &[node0, node1],
         )
         .unwrap();
-    sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
-    assert_eq!(sprawl.layout(node).unwrap().size.width, 100f32);
-    assert_eq!(sprawl.layout(node).unwrap().size.height, 100f32);
-    assert_eq!(sprawl.layout(node).unwrap().location.x, 0f32);
-    assert_eq!(sprawl.layout(node).unwrap().location.y, 0f32);
-    assert_eq!(sprawl.layout(node0).unwrap().size.width, 50f32);
-    assert_eq!(sprawl.layout(node0).unwrap().size.height, 100f32);
-    assert_eq!(sprawl.layout(node0).unwrap().location.x, 0f32);
-    assert_eq!(sprawl.layout(node0).unwrap().location.y, 0f32);
-    assert_eq!(sprawl.layout(node1).unwrap().size.width, 50f32);
-    assert_eq!(sprawl.layout(node1).unwrap().size.height, 100f32);
-    assert_eq!(sprawl.layout(node1).unwrap().location.x, 50f32);
-    assert_eq!(sprawl.layout(node1).unwrap().location.y, 0f32);
+    taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+    assert_eq!(taffy.layout(node).unwrap().size.width, 100f32);
+    assert_eq!(taffy.layout(node).unwrap().size.height, 100f32);
+    assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);
+    assert_eq!(taffy.layout(node).unwrap().location.y, 0f32);
+    assert_eq!(taffy.layout(node0).unwrap().size.width, 50f32);
+    assert_eq!(taffy.layout(node0).unwrap().size.height, 100f32);
+    assert_eq!(taffy.layout(node0).unwrap().location.x, 0f32);
+    assert_eq!(taffy.layout(node0).unwrap().location.y, 0f32);
+    assert_eq!(taffy.layout(node1).unwrap().size.width, 50f32);
+    assert_eq!(taffy.layout(node1).unwrap().size.height, 100f32);
+    assert_eq!(taffy.layout(node1).unwrap().location.x, 50f32);
+    assert_eq!(taffy.layout(node1).unwrap().location.y, 0f32);
 }

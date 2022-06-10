@@ -1,11 +1,11 @@
 pub fn compute() {
-    let mut sprawl = sprawl::Sprawl::new();
-    let node0 = sprawl
-        .new_node(
-            sprawl::style::Style {
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(30f32),
-                    height: sprawl::style::Dimension::Points(10f32),
+    let mut taffy = taffy::Taffy::new();
+    let node0 = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(30f32),
+                    height: taffy::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -13,12 +13,12 @@ pub fn compute() {
             &[],
         )
         .unwrap();
-    let node1 = sprawl
-        .new_node(
-            sprawl::style::Style {
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(30f32),
-                    height: sprawl::style::Dimension::Points(20f32),
+    let node1 = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(30f32),
+                    height: taffy::style::Dimension::Points(20f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -26,12 +26,12 @@ pub fn compute() {
             &[],
         )
         .unwrap();
-    let node2 = sprawl
-        .new_node(
-            sprawl::style::Style {
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(30f32),
-                    height: sprawl::style::Dimension::Points(30f32),
+    let node2 = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(30f32),
+                    height: taffy::style::Dimension::Points(30f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -39,12 +39,12 @@ pub fn compute() {
             &[],
         )
         .unwrap();
-    let node3 = sprawl
-        .new_node(
-            sprawl::style::Style {
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(30f32),
-                    height: sprawl::style::Dimension::Points(40f32),
+    let node3 = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(30f32),
+                    height: taffy::style::Dimension::Points(40f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -52,12 +52,12 @@ pub fn compute() {
             &[],
         )
         .unwrap();
-    let node4 = sprawl
-        .new_node(
-            sprawl::style::Style {
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(30f32),
-                    height: sprawl::style::Dimension::Points(50f32),
+    let node4 = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(30f32),
+                    height: taffy::style::Dimension::Points(50f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -65,16 +65,16 @@ pub fn compute() {
             &[],
         )
         .unwrap();
-    let node = sprawl
-        .new_node(
-            sprawl::style::Style {
-                flex_wrap: sprawl::style::FlexWrap::WrapReverse,
-                align_content: sprawl::style::AlignContent::FlexStart,
-                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(300f32), ..Default::default() },
+    let node = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                flex_wrap: taffy::style::FlexWrap::WrapReverse,
+                align_content: taffy::style::AlignContent::FlexStart,
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(300f32), ..Default::default() },
                 ..Default::default()
             },
             &[node0, node1, node2, node3, node4],
         )
         .unwrap();
-    sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
+    taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
 }

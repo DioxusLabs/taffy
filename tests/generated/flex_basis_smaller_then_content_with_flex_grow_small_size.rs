@@ -1,12 +1,12 @@
 #[test]
 fn flex_basis_smaller_then_content_with_flex_grow_small_size() {
-    let mut sprawl = sprawl::Sprawl::new();
-    let node00 = sprawl
-        .new_node(
-            sprawl::style::Style {
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(70f32),
-                    height: sprawl::style::Dimension::Points(100f32),
+    let mut taffy = taffy::Taffy::new();
+    let node00 = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(70f32),
+                    height: taffy::style::Dimension::Points(100f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -14,23 +14,23 @@ fn flex_basis_smaller_then_content_with_flex_grow_small_size() {
             &[],
         )
         .unwrap();
-    let node0 = sprawl
-        .new_node(
-            sprawl::style::Style {
-                flex_direction: sprawl::style::FlexDirection::Column,
+    let node0 = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 1f32,
-                flex_basis: sprawl::style::Dimension::Points(0f32),
+                flex_basis: taffy::style::Dimension::Points(0f32),
                 ..Default::default()
             },
             &[node00],
         )
         .unwrap();
-    let node10 = sprawl
-        .new_node(
-            sprawl::style::Style {
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(20f32),
-                    height: sprawl::style::Dimension::Points(100f32),
+    let node10 = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(20f32),
+                    height: taffy::style::Dimension::Points(100f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -38,45 +38,45 @@ fn flex_basis_smaller_then_content_with_flex_grow_small_size() {
             &[],
         )
         .unwrap();
-    let node1 = sprawl
-        .new_node(
-            sprawl::style::Style {
-                flex_direction: sprawl::style::FlexDirection::Column,
+    let node1 = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 1f32,
-                flex_basis: sprawl::style::Dimension::Points(0f32),
+                flex_basis: taffy::style::Dimension::Points(0f32),
                 ..Default::default()
             },
             &[node10],
         )
         .unwrap();
-    let node = sprawl
-        .new_node(
-            sprawl::style::Style {
-                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(10f32), ..Default::default() },
+    let node = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
             },
             &[node0, node1],
         )
         .unwrap();
-    sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
-    assert_eq!(sprawl.layout(node).unwrap().size.width, 10f32);
-    assert_eq!(sprawl.layout(node).unwrap().size.height, 100f32);
-    assert_eq!(sprawl.layout(node).unwrap().location.x, 0f32);
-    assert_eq!(sprawl.layout(node).unwrap().location.y, 0f32);
-    assert_eq!(sprawl.layout(node0).unwrap().size.width, 70f32);
-    assert_eq!(sprawl.layout(node0).unwrap().size.height, 100f32);
-    assert_eq!(sprawl.layout(node0).unwrap().location.x, 0f32);
-    assert_eq!(sprawl.layout(node0).unwrap().location.y, 0f32);
-    assert_eq!(sprawl.layout(node00).unwrap().size.width, 70f32);
-    assert_eq!(sprawl.layout(node00).unwrap().size.height, 100f32);
-    assert_eq!(sprawl.layout(node00).unwrap().location.x, 0f32);
-    assert_eq!(sprawl.layout(node00).unwrap().location.y, 0f32);
-    assert_eq!(sprawl.layout(node1).unwrap().size.width, 20f32);
-    assert_eq!(sprawl.layout(node1).unwrap().size.height, 100f32);
-    assert_eq!(sprawl.layout(node1).unwrap().location.x, 70f32);
-    assert_eq!(sprawl.layout(node1).unwrap().location.y, 0f32);
-    assert_eq!(sprawl.layout(node10).unwrap().size.width, 20f32);
-    assert_eq!(sprawl.layout(node10).unwrap().size.height, 100f32);
-    assert_eq!(sprawl.layout(node10).unwrap().location.x, 0f32);
-    assert_eq!(sprawl.layout(node10).unwrap().location.y, 0f32);
+    taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+    assert_eq!(taffy.layout(node).unwrap().size.width, 10f32);
+    assert_eq!(taffy.layout(node).unwrap().size.height, 100f32);
+    assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);
+    assert_eq!(taffy.layout(node).unwrap().location.y, 0f32);
+    assert_eq!(taffy.layout(node0).unwrap().size.width, 70f32);
+    assert_eq!(taffy.layout(node0).unwrap().size.height, 100f32);
+    assert_eq!(taffy.layout(node0).unwrap().location.x, 0f32);
+    assert_eq!(taffy.layout(node0).unwrap().location.y, 0f32);
+    assert_eq!(taffy.layout(node00).unwrap().size.width, 70f32);
+    assert_eq!(taffy.layout(node00).unwrap().size.height, 100f32);
+    assert_eq!(taffy.layout(node00).unwrap().location.x, 0f32);
+    assert_eq!(taffy.layout(node00).unwrap().location.y, 0f32);
+    assert_eq!(taffy.layout(node1).unwrap().size.width, 20f32);
+    assert_eq!(taffy.layout(node1).unwrap().size.height, 100f32);
+    assert_eq!(taffy.layout(node1).unwrap().location.x, 70f32);
+    assert_eq!(taffy.layout(node1).unwrap().location.y, 0f32);
+    assert_eq!(taffy.layout(node10).unwrap().size.width, 20f32);
+    assert_eq!(taffy.layout(node10).unwrap().size.height, 100f32);
+    assert_eq!(taffy.layout(node10).unwrap().location.x, 0f32);
+    assert_eq!(taffy.layout(node10).unwrap().location.y, 0f32);
 }
