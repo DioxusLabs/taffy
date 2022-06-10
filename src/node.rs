@@ -40,6 +40,7 @@ impl Default for Sprawl {
 }
 
 impl Sprawl {
+    #[must_use]
     pub fn new() -> Self {
         Default::default()
     }
@@ -238,6 +239,7 @@ pub(crate) struct Allocator {
 }
 
 impl Allocator {
+    #[must_use]
     pub const fn new() -> Self {
         Self { new_id: AtomicUsize::new(0) }
     }
