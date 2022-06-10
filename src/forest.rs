@@ -100,7 +100,7 @@ impl Forest {
     }
 
     /// Adds a new unparented node to the forest with the associated children attached, and returns the [`NodeId`] of the new node
-    pub(crate) fn new_node(&mut self, style: FlexboxLayout, children: ChildrenVec<NodeId>) -> NodeId {
+    pub(crate) fn new_with_children(&mut self, style: FlexboxLayout, children: ChildrenVec<NodeId>) -> NodeId {
         let id = self.nodes.len();
         for child in &children {
             self.parents[*child].push(id);
