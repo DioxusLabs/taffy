@@ -19,8 +19,9 @@ mod node {
     #[test]
     fn set_measure() {
         let mut taffy = Taffy::new();
-        let node =
-            taffy.new_leaf(FlexboxLayout::default(), MeasureFunc::Raw(|_| Size { width: 200.0, height: 200.0 })).unwrap();
+        let node = taffy
+            .new_leaf(FlexboxLayout::default(), MeasureFunc::Raw(|_| Size { width: 200.0, height: 200.0 }))
+            .unwrap();
         taffy.compute_layout(node, Size::undefined()).unwrap();
         assert_eq!(taffy.layout(node).unwrap().size.width, 200.0);
 

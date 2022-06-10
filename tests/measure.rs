@@ -456,7 +456,10 @@ mod measure {
         let mut taffy = taffy::node::Taffy::new();
         let child = taffy
             .new_leaf(
-                taffy::style::FlexboxLayout { position_type: taffy::style::PositionType::Absolute, ..Default::default() },
+                taffy::style::FlexboxLayout {
+                    position_type: taffy::style::PositionType::Absolute,
+                    ..Default::default()
+                },
                 MeasureFunc::Raw(|constraint| taffy::geometry::Size {
                     width: constraint.width.or_else(50.0),
                     height: constraint.height.or_else(50.0),

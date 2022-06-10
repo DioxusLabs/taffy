@@ -12,10 +12,16 @@ fn rounding_flex_basis_flex_shrink_row() {
         )
         .unwrap();
     let node1 = taffy
-        .new_node(taffy::style::FlexboxLayout { flex_basis: taffy::style::Dimension::Points(25f32), ..Default::default() }, &[])
+        .new_node(
+            taffy::style::FlexboxLayout { flex_basis: taffy::style::Dimension::Points(25f32), ..Default::default() },
+            &[],
+        )
         .unwrap();
     let node2 = taffy
-        .new_node(taffy::style::FlexboxLayout { flex_basis: taffy::style::Dimension::Points(25f32), ..Default::default() }, &[])
+        .new_node(
+            taffy::style::FlexboxLayout { flex_basis: taffy::style::Dimension::Points(25f32), ..Default::default() },
+            &[],
+        )
         .unwrap();
     let node = taffy
         .new_node(

@@ -1,7 +1,8 @@
 pub fn compute() {
     let mut taffy = taffy::Taffy::new();
-    let node00 =
-        taffy.new_node(taffy::style::FlexboxLayout { flex_grow: 1f32, flex_shrink: 1f32, ..Default::default() }, &[]).unwrap();
+    let node00 = taffy
+        .new_node(taffy::style::FlexboxLayout { flex_grow: 1f32, flex_shrink: 1f32, ..Default::default() }, &[])
+        .unwrap();
     let node0 = taffy.new_node(taffy::style::FlexboxLayout { ..Default::default() }, &[node00]).unwrap();
     let node = taffy
         .new_node(
