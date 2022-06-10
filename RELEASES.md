@@ -4,6 +4,7 @@
 
 ### 0.1.0 Changed
 
+- renamed `sprawl::style::Style` -> `sprawl::style::FlexboxLayout` to more precicely indicate its purpose
 - the `order` field of `Layout` is now public, and describes the relative z-ordering of nodes
 - renamed crate from `stretch2` to `sprawl`
 - updated to the latest version of all dependencies to reduce upstream pain caused by duplicate dependencies
@@ -20,7 +21,7 @@
   - more serious refactors are planned, and this will be challenging to keep working through that process
   - if you are interested in helping us maintain bindings to other languages, [get in touch](https://github.com/DioxusLabs/sprawl/discussions)!
 - the `serde_camel_case` and `serde_kebab_case` features have been removed: they were poorly motivated and were not correctly additive (if both were enabled compilation would fail)
-- removed the `Direction` and `Overflow` structs, and the corresponding `direction` and `overflow` fields from `Style`
+- removed the `Direction` and `Overflow` structs, and the corresponding `direction` and `overflow` fields from `Style` (now `FlexboxLayout`)
   - these had no effect in the current code base and were actively misleading
 
 ## stretch2 0.4.3
