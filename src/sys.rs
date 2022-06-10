@@ -18,6 +18,7 @@ mod std {
     pub type ChildrenVec<A> = std::vec::Vec<A>;
     pub type ParentsVec<A> = std::vec::Vec<A>;
 
+    #[must_use]
     pub fn new_map_with_capacity<K, V>(capacity: usize) -> Map<K, V>
     where
         K: Eq + std::hash::Hash,
@@ -25,16 +26,19 @@ mod std {
         Map::with_capacity(capacity)
     }
 
+    #[must_use]
     pub fn new_vec_with_capacity<A>(capacity: usize) -> Vec<A> {
         Vec::with_capacity(capacity)
     }
 
     #[inline]
+    #[must_use]
     pub fn round(value: f32) -> f32 {
         value.round()
     }
 
     #[inline]
+    #[must_use]
     pub fn abs(value: f32) -> f32 {
         value.abs()
     }
@@ -50,20 +54,24 @@ mod alloc {
     pub type ChildrenVec<A> = alloc::vec::Vec<A>;
     pub type ParentsVec<A> = alloc::vec::Vec<A>;
 
+    #[must_use]
     pub fn new_map_with_capacity<K, V>(capacity: usize) -> Map<K, V> {
         Map::with_capacity(capacity)
     }
 
+    #[must_use]
     pub fn new_vec_with_capacity<A>(capacity: usize) -> Vec<A> {
         Vec::with_capacity(capacity)
     }
 
     #[inline]
+    #[must_use]
     pub fn round(value: f32) -> f32 {
         num_traits::float::FloatCore::round(value)
     }
 
     #[inline]
+    #[must_use]
     pub fn abs(value: f32) -> f32 {
         num_traits::float::FloatCore::abs(value)
     }
@@ -80,6 +88,7 @@ mod core {
     pub type ChildrenVec<A> = arrayvec::ArrayVec<A, MAX_CHILD_COUNT>;
     pub type ParentsVec<A> = arrayvec::ArrayVec<A, MAX_PARENTS_COUNT>;
 
+    #[must_use]
     pub fn new_map_with_capacity<K, V>(_capacity: usize) -> Map<K, V>
     where
         K: Eq + ::hash32::Hash,
@@ -87,16 +96,19 @@ mod core {
         Map::new()
     }
 
+    #[must_use]
     pub fn new_vec_with_capacity<A, const CAP: usize>(_capacity: usize) -> arrayvec::ArrayVec<A, CAP> {
         arrayvec::ArrayVec::new()
     }
 
     #[inline]
+    #[must_use]
     pub fn round(value: f32) -> f32 {
         num_traits::float::FloatCore::round(value)
     }
 
     #[inline]
+    #[must_use]
     pub fn abs(value: f32) -> f32 {
         num_traits::float::FloatCore::abs(value)
     }
