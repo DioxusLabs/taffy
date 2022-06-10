@@ -3,7 +3,7 @@ fn percentage_width_height_undefined_parent_size() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Percent(0.5f32),
                     height: taffy::style::Dimension::Percent(0.5f32),
@@ -16,7 +16,7 @@ fn percentage_width_height_undefined_parent_size() {
         .unwrap();
     let node = taffy
         .new_node(
-            taffy::style::Style { flex_direction: taffy::style::FlexDirection::Column, ..Default::default() },
+            taffy::style::FlexboxLayout { flex_direction: taffy::style::FlexDirection::Column, ..Default::default() },
             &[node0],
         )
         .unwrap();

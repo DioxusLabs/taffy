@@ -3,7 +3,7 @@ fn align_items_center_with_child_top() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(10f32),
                     height: taffy::style::Dimension::Points(10f32),
@@ -17,7 +17,7 @@ fn align_items_center_with_child_top() {
         .unwrap();
     let node = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 align_items: taffy::style::AlignItems::Center,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),

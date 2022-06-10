@@ -3,7 +3,7 @@ fn flex_shrink_by_outer_margin_with_max_size() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(20f32),
                     height: taffy::style::Dimension::Points(20f32),
@@ -17,7 +17,7 @@ fn flex_shrink_by_outer_margin_with_max_size() {
         .unwrap();
     let node = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Default::default() },
                 max_size: taffy::geometry::Size {

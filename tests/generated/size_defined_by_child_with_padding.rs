@@ -3,7 +3,7 @@ fn size_defined_by_child_with_padding() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(10f32),
                     height: taffy::style::Dimension::Points(10f32),
@@ -16,7 +16,7 @@ fn size_defined_by_child_with_padding() {
         .unwrap();
     let node = taffy
         .new_node(
-            taffy::style::Style {
+            taffy::style::FlexboxLayout {
                 padding: taffy::geometry::Rect {
                     start: taffy::style::Dimension::Points(10f32),
                     end: taffy::style::Dimension::Points(10f32),
