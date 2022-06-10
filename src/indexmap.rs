@@ -1308,7 +1308,7 @@ enum Insert<K, V> {
 }
 
 struct Inserted<V> {
-    #[allow(unused_code)]
+    #[allow(dead_code)]
     index: usize,
     old_value: Option<V>,
 }
@@ -1537,25 +1537,25 @@ where
 {
     /* Public API */
     /// Returns the number of elements the map can hold
-    #[allow(unused_code)]
+    #[allow(dead_code)]
     fn capacity(&self) -> usize {
         N
     }
 
     /// Return an iterator over the keys of the map, in their order
-    #[allow(unused_code)]
+    #[allow(dead_code)]
     fn keys(&self) -> impl Iterator<Item = &K> {
         self.core.entries.iter().map(|bucket| &bucket.key)
     }
 
     /// Return an iterator over the values of the map, in their order
-    #[allow(unused_code)]
+    #[allow(dead_code)]
     fn values(&self) -> impl Iterator<Item = &V> {
         self.core.entries.iter().map(|bucket| &bucket.value)
     }
 
     /// Return an iterator over mutable references to the the values of the map, in their order
-    #[allow(unused_code)]
+    #[allow(dead_code)]
     fn values_mut(&mut self) -> impl Iterator<Item = &mut V> {
         self.core.entries.iter_mut().map(|bucket| &mut bucket.value)
     }
@@ -1573,7 +1573,7 @@ where
     /// Get the first key-value pair
     ///
     /// Computes in **O(1)** time
-    #[allow(unused_code)]
+    #[allow(dead_code)]
     fn first(&self) -> Option<(&K, &V)> {
         self.core.entries.first().map(|bucket| (&bucket.key, &bucket.value))
     }
@@ -1581,7 +1581,7 @@ where
     /// Get the first key-value pair, with mutable access to the value
     ///
     /// Computes in **O(1)** time
-    #[allow(unused_code)]
+    #[allow(dead_code)]
     fn first_mut(&mut self) -> Option<(&K, &mut V)> {
         self.core.entries.first_mut().map(|bucket| (&bucket.key, &mut bucket.value))
     }
@@ -1589,7 +1589,7 @@ where
     /// Get the last key-value pair
     ///
     /// Computes in **O(1)** time
-    #[allow(unused_code)]
+    #[allow(dead_code)]
     fn last(&self) -> Option<(&K, &V)> {
         self.core.entries.last().map(|bucket| (&bucket.key, &bucket.value))
     }
@@ -1597,7 +1597,7 @@ where
     /// Get the last key-value pair, with mutable access to the value
     ///
     /// Computes in **O(1)** time
-    #[allow(unused_code)]
+    #[allow(dead_code)]
     fn last_mut(&mut self) -> Option<(&K, &mut V)> {
         self.core.entries.last_mut().map(|bucket| (&bucket.key, &mut bucket.value))
     }
@@ -1646,7 +1646,7 @@ where
     /// form *must* match those for the key type.
     ///
     /// Computes in **O(1)** time (average).
-    #[allow(unused_code)]
+    #[allow(dead_code)]
     fn contains_key<Q>(&self, key: &Q) -> bool
     where
         K: Borrow<Q>,
