@@ -64,7 +64,7 @@ impl<T> Rect<T>
 where
     T: Add<Output = T> + Copy + Clone,
 {
-    /// The sum of [`Rect.left`](Rect) and [`Rect.right](Rect)
+    /// The sum of [`Rect.start`](Rect) and [`Rect.end`](Rect)
     ///
     /// This is typically used when computing total padding.
     ///
@@ -73,7 +73,7 @@ where
         self.start + self.end
     }
 
-    /// The sum of [`Rect.top`](Rect) and [`Rect.bottom](Rect)
+    /// The sum of [`Rect.top`](Rect) and [`Rect.bottom`](Rect)
     ///
     /// This is typically used when computing total padding.
     ///
