@@ -35,6 +35,6 @@ pub(crate) struct Cache {
     /// Whether or not layout should be recomputed
     pub(crate) perform_layout: bool,
 
-    /// The stored result of the layout calculations
-    pub(crate) result: Size<f32>,
+    /// The cached size of the item
+    pub(crate) size: Size<f32>,
 }
