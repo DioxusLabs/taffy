@@ -1253,10 +1253,10 @@ use hash32::{BuildHasher, BuildHasherDefault, FnvHasher, Hash, Hasher};
 
 use vec::Vec;
 
-/// A [`sprawl::indexmap::IndexMap`](./struct.IndexMap.html) using the default FNV hasher
+/// A [`taffy::indexmap::IndexMap`](./struct.IndexMap.html) using the default FNV hasher
 ///
 /// A list of all Methods and Traits available for `FnvIndexMap` can be found in
-/// the [`sprawl::indexmap::IndexMap`](./struct.IndexMap.html) documentation.
+/// the [`taffy::indexmap::IndexMap`](./struct.IndexMap.html) documentation.
 pub type FnvIndexMap<K, V, const N: usize> = IndexMap<K, V, BuildHasherDefault<FnvHasher>, N>;
 
 #[derive(Clone, Copy, Eq, PartialEq)]

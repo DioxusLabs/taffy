@@ -24,7 +24,7 @@ mod forest;
 mod indexmap;
 mod sys;
 
-pub use crate::node::Sprawl;
+pub use crate::node::Taffy;
 
 #[cfg(feature = "std")]
 use core::fmt::{Display, Formatter, Result};
@@ -49,7 +49,7 @@ impl Display for Error {
 impl std::error::Error for Error {
     fn description(&self) -> &str {
         match *self {
-            Error::InvalidNode(_) => "The node is not part of the Sprawl instance",
+            Error::InvalidNode(_) => "The node is not part of the Taffy instance",
         }
     }
 }

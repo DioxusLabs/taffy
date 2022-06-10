@@ -1,6 +1,6 @@
 //! Forest - a struct-of-arrays data structure for storing node trees.
 //!
-//! Backing datastructure for `Sprawl` structs.
+//! Backing datastructure for `Taffy` structs.
 use crate::geometry::Size;
 use crate::layout::{Cache, Layout};
 use crate::node::{MeasureFunc, NodeId};

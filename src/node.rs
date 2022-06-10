@@ -21,7 +21,7 @@ pub enum MeasureFunc {
     Boxed(Box<dyn Fn(Size<Number>) -> Size<f32>>),
 }
 
-/// Global sprawl instance id allocator.
+/// Global taffy instance id allocator.
 static INSTANCE_ALLOCATOR: Allocator = Allocator::new();
 
 /// An [`Id`]-containing identifier
@@ -35,7 +35,7 @@ pub struct Node {
 }
 
 /// A forest of UI [`Nodes`](`Node`), suitable for UI layout
-pub struct Sprawl {
+pub struct Taffy {
     /// The ID of the root node
     id: Id,
     /// A monotonically-increasing index that tracks the [`Id`] of the next node
@@ -48,22 +48,22 @@ pub struct Sprawl {
     forest: Forest,
 }
 
-impl Default for Sprawl {
+impl Default for Taffy {
     fn default() -> Self {
         Self::with_capacity(16)
     }
 }
 
-impl Sprawl {
-    /// Creates a new [`Sprawl`]
+impl Taffy {
+    /// Creates a new [`Taffy`]
     ///
-    /// The default capacity of a [`Sprawl`] is 16 nodes.
+    /// The default capacity of a [`Taffy`] is 16 nodes.
     #[must_use]
     pub fn new() -> Self {
         Default::default()
     }
 
-    /// Creates a new [`Sprawl`] that can store `capacity` nodes before reallocation
+    /// Creates a new [`Taffy`] that can store `capacity` nodes before reallocation
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
             id: INSTANCE_ALLOCATOR.allocate(),
@@ -280,7 +280,7 @@ pub(crate) type NodeId = usize;
 #[cfg_attr(not(any(feature = "std", feature = "alloc")), derive(hash32_derive::Hash32))]
 pub(crate) struct Id(usize);
 
-/// An bump-allocator index that tracks how many [`Nodes`](Node) have been allocated in a [`Sprawl`].
+/// An bump-allocator index that tracks how many [`Nodes`](Node) have been allocated in a [`Taffy`].
 pub(crate) struct Allocator {
     /// The last reserved [`NodeId`]
     last_id: AtomicUsize,

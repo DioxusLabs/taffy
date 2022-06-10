@@ -1,42 +1,36 @@
 pub fn compute() {
-    let mut sprawl = sprawl::Sprawl::new();
-    let node0 = sprawl
+    let mut taffy = taffy::Taffy::new();
+    let node0 = taffy
         .new_node(
-            sprawl::style::Style {
-                flex_basis: sprawl::style::Dimension::Points(50f32),
-                size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(50f32), ..Default::default() },
-                min_size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(55f32),
-                    ..Default::default()
-                },
+            taffy::style::Style {
+                flex_basis: taffy::style::Dimension::Points(50f32),
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(50f32), ..Default::default() },
+                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(55f32), ..Default::default() },
                 ..Default::default()
             },
             &[],
         )
         .unwrap();
-    let node1 = sprawl
+    let node1 = taffy
         .new_node(
-            sprawl::style::Style {
-                flex_basis: sprawl::style::Dimension::Points(50f32),
-                size: sprawl::geometry::Size { height: sprawl::style::Dimension::Points(50f32), ..Default::default() },
-                min_size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(55f32),
-                    ..Default::default()
-                },
+            taffy::style::Style {
+                flex_basis: taffy::style::Dimension::Points(50f32),
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(50f32), ..Default::default() },
+                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(55f32), ..Default::default() },
                 ..Default::default()
             },
             &[],
         )
         .unwrap();
-    let node = sprawl
+    let node = taffy
         .new_node(
-            sprawl::style::Style {
-                flex_wrap: sprawl::style::FlexWrap::Wrap,
-                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(100f32), ..Default::default() },
+            taffy::style::Style {
+                flex_wrap: taffy::style::FlexWrap::Wrap,
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Default::default() },
                 ..Default::default()
             },
             &[node0, node1],
         )
         .unwrap();
-    sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
+    taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
 }

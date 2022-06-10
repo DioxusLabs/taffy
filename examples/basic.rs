@@ -1,14 +1,14 @@
-use sprawl::prelude::*;
+use taffy::prelude::*;
 
 fn main() -> Result<(), Error> {
-    let mut sprawl = Sprawl::new();
+    let mut taffy = Taffy::new();
 
-    let child = sprawl.new_node(
+    let child = taffy.new_node(
         Style { size: Size { width: Dimension::Percent(0.5), height: Dimension::Auto }, ..Default::default() },
         &[],
     )?;
 
-    let node = sprawl.new_node(
+    let node = taffy.new_node(
         Style {
             size: Size { width: Dimension::Points(100.0), height: Dimension::Points(100.0) },
             justify_content: JustifyContent::Center,
@@ -17,13 +17,13 @@ fn main() -> Result<(), Error> {
         &[child],
     )?;
 
-    sprawl.compute_layout(node, Size { height: Number::Defined(100.0), width: Number::Defined(100.0) })?;
+    taffy.compute_layout(node, Size { height: Number::Defined(100.0), width: Number::Defined(100.0) })?;
 
     // or just use undefined for 100 x 100
-    // sprawl.compute_layout(node, Size::undefined())?;
+    // taffy.compute_layout(node, Size::undefined())?;
 
-    println!("node: {:#?}", sprawl.layout(node)?);
-    println!("child: {:#?}", sprawl.layout(child)?);
+    println!("node: {:#?}", taffy.layout(node)?);
+    println!("child: {:#?}", taffy.layout(child)?);
 
     Ok(())
 }
