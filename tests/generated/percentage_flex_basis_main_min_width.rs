@@ -2,7 +2,7 @@
 fn percentage_flex_basis_main_min_width() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 flex_grow: 1f32,
                 flex_basis: taffy::style::Dimension::Percent(0.15f32),
@@ -16,7 +16,7 @@ fn percentage_flex_basis_main_min_width() {
         )
         .unwrap();
     let node1 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 flex_grow: 4f32,
                 flex_basis: taffy::style::Dimension::Percent(0.1f32),
@@ -30,7 +30,7 @@ fn percentage_flex_basis_main_min_width() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),

@@ -2,7 +2,7 @@
 fn size_defined_by_child_with_border() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(10f32),
@@ -15,7 +15,7 @@ fn size_defined_by_child_with_border() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 border: taffy::geometry::Rect {
                     start: taffy::style::Dimension::Points(10f32),

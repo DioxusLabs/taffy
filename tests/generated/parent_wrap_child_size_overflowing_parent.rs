@@ -2,7 +2,7 @@
 fn parent_wrap_child_size_overflowing_parent() {
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
@@ -15,7 +15,7 @@ fn parent_wrap_child_size_overflowing_parent() {
         )
         .unwrap();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Default::default() },
                 ..Default::default()
@@ -24,7 +24,7 @@ fn parent_wrap_child_size_overflowing_parent() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),

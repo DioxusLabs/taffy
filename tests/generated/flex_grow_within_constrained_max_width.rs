@@ -2,7 +2,7 @@
 fn flex_grow_within_constrained_max_width() {
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 flex_grow: 1f32,
                 size: taffy::geometry::Size { height: taffy::style::Dimension::Points(20f32), ..Default::default() },
@@ -12,7 +12,7 @@ fn flex_grow_within_constrained_max_width() {
         )
         .unwrap();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 max_size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(300f32),
@@ -24,7 +24,7 @@ fn flex_grow_within_constrained_max_width() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
