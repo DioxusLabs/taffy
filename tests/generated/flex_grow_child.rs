@@ -2,7 +2,7 @@
 fn flex_grow_child() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 flex_grow: 1f32,
                 flex_basis: taffy::style::Dimension::Points(0f32),
@@ -12,7 +12,7 @@ fn flex_grow_child() {
             &[],
         )
         .unwrap();
-    let node = taffy.new_node(taffy::style::FlexboxLayout { ..Default::default() }, &[node0]).unwrap();
+    let node = taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[node0]).unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
     assert_eq!(taffy.layout(node).unwrap().size.width, 0f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 100f32);

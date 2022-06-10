@@ -3,12 +3,12 @@ use taffy::prelude::*;
 fn main() -> Result<(), Error> {
     let mut taffy = Taffy::new();
 
-    let child = taffy.new_node(
+    let child = taffy.new_with_children(
         FlexboxLayout { size: Size { width: Dimension::Percent(0.5), height: Dimension::Auto }, ..Default::default() },
         &[],
     )?;
 
-    let node = taffy.new_node(
+    let node = taffy.new_with_children(
         FlexboxLayout {
             size: Size { width: Dimension::Points(100.0), height: Dimension::Points(100.0) },
             justify_content: JustifyContent::Center,

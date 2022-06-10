@@ -2,7 +2,7 @@
 fn align_items_center_with_child_margin() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(10f32),
@@ -16,7 +16,7 @@ fn align_items_center_with_child_margin() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 align_items: taffy::style::AlignItems::Center,
                 size: taffy::geometry::Size {

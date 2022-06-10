@@ -2,7 +2,7 @@
 fn align_baseline_child_multiline() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
@@ -15,7 +15,7 @@ fn align_baseline_child_multiline() {
         )
         .unwrap();
     let node10 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(25f32),
@@ -28,7 +28,7 @@ fn align_baseline_child_multiline() {
         )
         .unwrap();
     let node11 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(25f32),
@@ -41,7 +41,7 @@ fn align_baseline_child_multiline() {
         )
         .unwrap();
     let node12 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(25f32),
@@ -54,7 +54,7 @@ fn align_baseline_child_multiline() {
         )
         .unwrap();
     let node13 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(25f32),
@@ -67,7 +67,7 @@ fn align_baseline_child_multiline() {
         )
         .unwrap();
     let node1 = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), ..Default::default() },
@@ -77,7 +77,7 @@ fn align_baseline_child_multiline() {
         )
         .unwrap();
     let node = taffy
-        .new_node(
+        .new_with_children(
             taffy::style::FlexboxLayout {
                 align_items: taffy::style::AlignItems::Baseline,
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Default::default() },
