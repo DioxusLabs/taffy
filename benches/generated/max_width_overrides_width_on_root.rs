@@ -1,11 +1,11 @@
 pub fn compute() {
-    let mut sprawl = sprawl::Sprawl::new();
-    let node = sprawl
+    let mut taffy = taffy::Taffy::new();
+    let node = taffy
         .new_node(
-            sprawl::style::Style {
-                size: sprawl::geometry::Size { width: sprawl::style::Dimension::Points(200f32), ..Default::default() },
-                max_size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(100f32),
+            taffy::style::Style {
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(200f32), ..Default::default() },
+                max_size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(100f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -13,5 +13,5 @@ pub fn compute() {
             &[],
         )
         .unwrap();
-    sprawl.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
+    taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
 }

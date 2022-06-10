@@ -1,63 +1,63 @@
-use sprawl::style::Dimension;
+use taffy::style::Dimension;
 
 #[test]
 fn relayout() {
-    let mut sprawl = sprawl::Sprawl::new();
-    let node1 = sprawl
+    let mut taffy = taffy::Taffy::new();
+    let node1 = taffy
         .new_node(
-            sprawl::style::Style {
-                size: sprawl::geometry::Size { width: Dimension::Points(8f32), height: Dimension::Points(80f32) },
+            taffy::style::Style {
+                size: taffy::geometry::Size { width: Dimension::Points(8f32), height: Dimension::Points(80f32) },
                 ..Default::default()
             },
             &[],
         )
         .unwrap();
-    let node0 = sprawl
+    let node0 = taffy
         .new_node(
-            sprawl::style::Style {
-                align_self: sprawl::prelude::AlignSelf::Center,
-                size: sprawl::geometry::Size { width: Dimension::Auto, height: Dimension::Auto },
-                // size: sprawl::geometry::Size { width: Dimension::Percent(1.0), height: Dimension::Percent(1.0) },
+            taffy::style::Style {
+                align_self: taffy::prelude::AlignSelf::Center,
+                size: taffy::geometry::Size { width: Dimension::Auto, height: Dimension::Auto },
+                // size: taffy::geometry::Size { width: Dimension::Percent(1.0), height: Dimension::Percent(1.0) },
                 ..Default::default()
             },
             &[node1],
         )
         .unwrap();
-    let node = sprawl
+    let node = taffy
         .new_node(
-            sprawl::style::Style {
-                size: sprawl::geometry::Size { width: Dimension::Percent(1f32), height: Dimension::Percent(1f32) },
+            taffy::style::Style {
+                size: taffy::geometry::Size { width: Dimension::Percent(1f32), height: Dimension::Percent(1f32) },
                 ..Default::default()
             },
             &[node0],
         )
         .unwrap();
     println!("0:");
-    sprawl
+    taffy
         .compute_layout(
             node,
-            sprawl::geometry::Size {
-                width: sprawl::prelude::Number::Defined(100f32),
-                height: sprawl::prelude::Number::Defined(100f32),
+            taffy::geometry::Size {
+                width: taffy::prelude::Number::Defined(100f32),
+                height: taffy::prelude::Number::Defined(100f32),
             },
         )
         .unwrap();
-    let initial = sprawl.layout(node).unwrap().location;
-    let initial0 = sprawl.layout(node0).unwrap().location;
-    let initial1 = sprawl.layout(node1).unwrap().location;
+    let initial = taffy.layout(node).unwrap().location;
+    let initial0 = taffy.layout(node0).unwrap().location;
+    let initial1 = taffy.layout(node1).unwrap().location;
     for i in 1..10 {
         println!("\n\n{i}:");
-        sprawl
+        taffy
             .compute_layout(
                 node,
-                sprawl::geometry::Size {
-                    width: sprawl::prelude::Number::Defined(100f32),
-                    height: sprawl::prelude::Number::Defined(100f32),
+                taffy::geometry::Size {
+                    width: taffy::prelude::Number::Defined(100f32),
+                    height: taffy::prelude::Number::Defined(100f32),
                 },
             )
             .unwrap();
-        assert_eq!(sprawl.layout(node).unwrap().location, initial);
-        assert_eq!(sprawl.layout(node0).unwrap().location, initial0);
-        assert_eq!(sprawl.layout(node1).unwrap().location, initial1);
+        assert_eq!(taffy.layout(node).unwrap().location, initial);
+        assert_eq!(taffy.layout(node0).unwrap().location, initial0);
+        assert_eq!(taffy.layout(node1).unwrap().location, initial1);
     }
 }

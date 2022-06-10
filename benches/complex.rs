@@ -1,49 +1,24 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 
-fn build_deep_hierarchy(sprawl: &mut sprawl::node::Sprawl) -> sprawl::node::Node {
-    let node111 = sprawl
+fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
+    let node111 = taffy
         .new_node(
-            sprawl::style::Style {
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(10.0),
-                    height: sprawl::style::Dimension::Points(10.0),
+            taffy::style::Style {
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(10.0),
+                    height: taffy::style::Dimension::Points(10.0),
                 },
                 ..Default::default()
             },
             &[],
         )
         .unwrap();
-    let node112 = sprawl
+    let node112 = taffy
         .new_node(
-            sprawl::style::Style {
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(10.0),
-                    height: sprawl::style::Dimension::Points(10.0),
-                },
-                ..Default::default()
-            },
-            &[],
-        )
-        .unwrap();
-
-    let node121 = sprawl
-        .new_node(
-            sprawl::style::Style {
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(10.0),
-                    height: sprawl::style::Dimension::Points(10.0),
-                },
-                ..Default::default()
-            },
-            &[],
-        )
-        .unwrap();
-    let node122 = sprawl
-        .new_node(
-            sprawl::style::Style {
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(10.0),
-                    height: sprawl::style::Dimension::Points(10.0),
+            taffy::style::Style {
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(10.0),
+                    height: taffy::style::Dimension::Points(10.0),
                 },
                 ..Default::default()
             },
@@ -51,53 +26,24 @@ fn build_deep_hierarchy(sprawl: &mut sprawl::node::Sprawl) -> sprawl::node::Node
         )
         .unwrap();
 
-    let node11 = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[node111, node112]).unwrap();
-    let node12 = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[node121, node122]).unwrap();
-    let node1 = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[node11, node12]).unwrap();
-
-    let node211 = sprawl
+    let node121 = taffy
         .new_node(
-            sprawl::style::Style {
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(10.0),
-                    height: sprawl::style::Dimension::Points(10.0),
+            taffy::style::Style {
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(10.0),
+                    height: taffy::style::Dimension::Points(10.0),
                 },
                 ..Default::default()
             },
             &[],
         )
         .unwrap();
-    let node212 = sprawl
+    let node122 = taffy
         .new_node(
-            sprawl::style::Style {
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(10.0),
-                    height: sprawl::style::Dimension::Points(10.0),
-                },
-                ..Default::default()
-            },
-            &[],
-        )
-        .unwrap();
-
-    let node221 = sprawl
-        .new_node(
-            sprawl::style::Style {
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(10.0),
-                    height: sprawl::style::Dimension::Points(10.0),
-                },
-                ..Default::default()
-            },
-            &[],
-        )
-        .unwrap();
-    let node222 = sprawl
-        .new_node(
-            sprawl::style::Style {
-                size: sprawl::geometry::Size {
-                    width: sprawl::style::Dimension::Points(10.0),
-                    height: sprawl::style::Dimension::Points(10.0),
+            taffy::style::Style {
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(10.0),
+                    height: taffy::style::Dimension::Points(10.0),
                 },
                 ..Default::default()
             },
@@ -105,40 +51,94 @@ fn build_deep_hierarchy(sprawl: &mut sprawl::node::Sprawl) -> sprawl::node::Node
         )
         .unwrap();
 
-    let node21 = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[node211, node212]).unwrap();
-    let node22 = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[node221, node222]).unwrap();
+    let node11 = taffy.new_node(taffy::style::Style { ..Default::default() }, &[node111, node112]).unwrap();
+    let node12 = taffy.new_node(taffy::style::Style { ..Default::default() }, &[node121, node122]).unwrap();
+    let node1 = taffy.new_node(taffy::style::Style { ..Default::default() }, &[node11, node12]).unwrap();
 
-    let node2 = sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[node21, node22]).unwrap();
+    let node211 = taffy
+        .new_node(
+            taffy::style::Style {
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(10.0),
+                    height: taffy::style::Dimension::Points(10.0),
+                },
+                ..Default::default()
+            },
+            &[],
+        )
+        .unwrap();
+    let node212 = taffy
+        .new_node(
+            taffy::style::Style {
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(10.0),
+                    height: taffy::style::Dimension::Points(10.0),
+                },
+                ..Default::default()
+            },
+            &[],
+        )
+        .unwrap();
 
-    sprawl.new_node(sprawl::style::Style { ..Default::default() }, &[node1, node2]).unwrap()
+    let node221 = taffy
+        .new_node(
+            taffy::style::Style {
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(10.0),
+                    height: taffy::style::Dimension::Points(10.0),
+                },
+                ..Default::default()
+            },
+            &[],
+        )
+        .unwrap();
+    let node222 = taffy
+        .new_node(
+            taffy::style::Style {
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(10.0),
+                    height: taffy::style::Dimension::Points(10.0),
+                },
+                ..Default::default()
+            },
+            &[],
+        )
+        .unwrap();
+
+    let node21 = taffy.new_node(taffy::style::Style { ..Default::default() }, &[node211, node212]).unwrap();
+    let node22 = taffy.new_node(taffy::style::Style { ..Default::default() }, &[node221, node222]).unwrap();
+
+    let node2 = taffy.new_node(taffy::style::Style { ..Default::default() }, &[node21, node22]).unwrap();
+
+    taffy.new_node(taffy::style::Style { ..Default::default() }, &[node1, node2]).unwrap()
 }
 
-fn sprawl_benchmarks(c: &mut Criterion) {
+fn taffy_benchmarks(c: &mut Criterion) {
     c.bench_function("deep hierarchy - build", |b| {
         b.iter(|| {
-            let mut sprawl = sprawl::node::Sprawl::new();
-            build_deep_hierarchy(&mut sprawl);
+            let mut taffy = taffy::node::Taffy::new();
+            build_deep_hierarchy(&mut taffy);
         })
     });
 
     c.bench_function("deep hierarchy - single", |b| {
         b.iter(|| {
-            let mut sprawl = sprawl::node::Sprawl::new();
-            let root = build_deep_hierarchy(&mut sprawl);
-            sprawl.compute_layout(root, sprawl::geometry::Size::undefined()).unwrap()
+            let mut taffy = taffy::node::Taffy::new();
+            let root = build_deep_hierarchy(&mut taffy);
+            taffy.compute_layout(root, taffy::geometry::Size::undefined()).unwrap()
         })
     });
 
     c.bench_function("deep hierarchy - relayout", |b| {
-        let mut sprawl = sprawl::node::Sprawl::new();
-        let root = build_deep_hierarchy(&mut sprawl);
+        let mut taffy = taffy::node::Taffy::new();
+        let root = build_deep_hierarchy(&mut taffy);
 
         b.iter(|| {
-            sprawl.mark_dirty(root).unwrap();
-            sprawl.compute_layout(root, sprawl::geometry::Size::undefined()).unwrap()
+            taffy.mark_dirty(root).unwrap();
+            taffy.compute_layout(root, taffy::geometry::Size::undefined()).unwrap()
         })
     });
 }
 
-criterion_group!(benches, sprawl_benchmarks);
+criterion_group!(benches, taffy_benchmarks);
 criterion_main!(benches);

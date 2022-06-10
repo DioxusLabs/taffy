@@ -185,9 +185,9 @@ fn generate_bench(description: &json::JsonValue) -> TokenStream {
 
     quote!(
         pub fn compute() {
-            let mut stretch = sprawl::Stretch::new();
+            let mut stretch = taffy::Stretch::new();
             #node_description
-            stretch.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
+            stretch.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
         }
     )
 }
@@ -201,9 +201,9 @@ fn generate_test(name: impl AsRef<str>, description: &json::JsonValue) -> TokenS
     quote!(
         #[test]
         fn #name() {
-            let mut stretch = sprawl::Stretch::new();
+            let mut stretch = taffy::Stretch::new();
             #node_description
-            stretch.compute_layout(node, sprawl::geometry::Size::undefined()).unwrap();
+            stretch.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
             #assertions
         }
     )
@@ -249,7 +249,7 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let display = match style["display"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "none" => quote!(display: sprawl::style::Display::None,),
+            "none" => quote!(display: taffy::style::Display::None,),
             _ => quote!(),
         },
         _ => quote!(),
@@ -257,7 +257,7 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let position_type = match style["position_type"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "absolute" => quote!(position_type: sprawl::style::PositionType::Absolute,),
+            "absolute" => quote!(position_type: taffy::style::PositionType::Absolute,),
             _ => quote!(),
         },
         _ => quote!(),
@@ -265,8 +265,8 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let direction = match style["direction"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "rtl" => quote!(direction: sprawl::style::Direction::RTL,),
-            "ltr" => quote!(direction: sprawl::style::Direction::LTR,),
+            "rtl" => quote!(direction: taffy::style::Direction::RTL,),
+            "ltr" => quote!(direction: taffy::style::Direction::LTR,),
             _ => quote!(),
         },
         _ => quote!(),
@@ -274,9 +274,9 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let flex_direction = match style["flexDirection"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "row-reverse" => quote!(flex_direction: sprawl::style::FlexDirection::RowReverse,),
-            "column" => quote!(flex_direction: sprawl::style::FlexDirection::Column,),
-            "column-reverse" => quote!(flex_direction: sprawl::style::FlexDirection::ColumnReverse,),
+            "row-reverse" => quote!(flex_direction: taffy::style::FlexDirection::RowReverse,),
+            "column" => quote!(flex_direction: taffy::style::FlexDirection::Column,),
+            "column-reverse" => quote!(flex_direction: taffy::style::FlexDirection::ColumnReverse,),
             _ => quote!(),
         },
         _ => quote!(),
@@ -284,8 +284,8 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let flex_wrap = match style["flexWrap"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "wrap" => quote!(flex_wrap: sprawl::style::FlexWrap::Wrap,),
-            "wrap-reverse" => quote!(flex_wrap: sprawl::style::FlexWrap::WrapReverse,),
+            "wrap" => quote!(flex_wrap: taffy::style::FlexWrap::Wrap,),
+            "wrap-reverse" => quote!(flex_wrap: taffy::style::FlexWrap::WrapReverse,),
             _ => quote!(),
         },
         _ => quote!(),
@@ -293,8 +293,8 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let overflow = match style["overflow"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "hidden" => quote!(overflow: sprawl::style::Overflow::Hidden,),
-            "scroll" => quote!(overflow: sprawl::style::Overflow::Scroll,),
+            "hidden" => quote!(overflow: taffy::style::Overflow::Hidden,),
+            "scroll" => quote!(overflow: taffy::style::Overflow::Scroll,),
             _ => quote!(),
         },
         _ => quote!(),
@@ -302,10 +302,10 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let align_items = match style["alignItems"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "flex-start" => quote!(align_items: sprawl::style::AlignItems::FlexStart,),
-            "flex-end" => quote!(align_items: sprawl::style::AlignItems::FlexEnd,),
-            "center" => quote!(align_items: sprawl::style::AlignItems::Center,),
-            "baseline" => quote!(align_items: sprawl::style::AlignItems::Baseline,),
+            "flex-start" => quote!(align_items: taffy::style::AlignItems::FlexStart,),
+            "flex-end" => quote!(align_items: taffy::style::AlignItems::FlexEnd,),
+            "center" => quote!(align_items: taffy::style::AlignItems::Center,),
+            "baseline" => quote!(align_items: taffy::style::AlignItems::Baseline,),
             _ => quote!(),
         },
         _ => quote!(),
@@ -313,11 +313,11 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let align_self = match style["alignSelf"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "flex-start" => quote!(align_self: sprawl::style::AlignSelf::FlexStart,),
-            "flex-end" => quote!(align_self: sprawl::style::AlignSelf::FlexEnd,),
-            "center" => quote!(align_self: sprawl::style::AlignSelf::Center,),
-            "baseline" => quote!(align_self: sprawl::style::AlignSelf::Baseline,),
-            "stretch" => quote!(align_self: sprawl::style::AlignSelf::Stretch,),
+            "flex-start" => quote!(align_self: taffy::style::AlignSelf::FlexStart,),
+            "flex-end" => quote!(align_self: taffy::style::AlignSelf::FlexEnd,),
+            "center" => quote!(align_self: taffy::style::AlignSelf::Center,),
+            "baseline" => quote!(align_self: taffy::style::AlignSelf::Baseline,),
+            "stretch" => quote!(align_self: taffy::style::AlignSelf::Stretch,),
             _ => quote!(),
         },
         _ => quote!(),
@@ -325,11 +325,11 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let align_content = match style["alignContent"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "flex-start" => quote!(align_content: sprawl::style::AlignContent::FlexStart,),
-            "flex-end" => quote!(align_content: sprawl::style::AlignContent::FlexEnd,),
-            "center" => quote!(align_content: sprawl::style::AlignContent::Center,),
-            "space-between" => quote!(align_content: sprawl::style::AlignContent::SpaceBetween,),
-            "space-around" => quote!(align_content: sprawl::style::AlignContent::SpaceAround,),
+            "flex-start" => quote!(align_content: taffy::style::AlignContent::FlexStart,),
+            "flex-end" => quote!(align_content: taffy::style::AlignContent::FlexEnd,),
+            "center" => quote!(align_content: taffy::style::AlignContent::Center,),
+            "space-between" => quote!(align_content: taffy::style::AlignContent::SpaceBetween,),
+            "space-around" => quote!(align_content: taffy::style::AlignContent::SpaceAround,),
             _ => quote!(),
         },
         _ => quote!(),
@@ -337,11 +337,11 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let justify_content = match style["justifyContent"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "flex-end" => quote!(justify_content: sprawl::style::JustifyContent::FlexEnd,),
-            "center" => quote!(justify_content: sprawl::style::JustifyContent::Center,),
-            "space-between" => quote!(justify_content: sprawl::style::JustifyContent::SpaceBetween,),
-            "space-around" => quote!(justify_content: sprawl::style::JustifyContent::SpaceAround,),
-            "space-evenly" => quote!(justify_content: sprawl::style::JustifyContent::SpaceEvenly,),
+            "flex-end" => quote!(justify_content: taffy::style::JustifyContent::FlexEnd,),
+            "center" => quote!(justify_content: taffy::style::JustifyContent::Center,),
+            "space-between" => quote!(justify_content: taffy::style::JustifyContent::SpaceBetween,),
+            "space-around" => quote!(justify_content: taffy::style::JustifyContent::SpaceAround,),
+            "space-evenly" => quote!(justify_content: taffy::style::JustifyContent::SpaceEvenly,),
             _ => quote!(),
         },
         _ => quote!(),
@@ -438,7 +438,7 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
     quote!(
         #children_body
         let #ident = stretch.new_node(
-        sprawl::style::Style {
+        taffy::style::Style {
             #display
             #direction
             #position_type
@@ -481,7 +481,7 @@ fn generate_size(size: &json::object::Object) -> TokenStream {
     dim_quoted!(size, width);
     dim_quoted!(size, height);
     quote!(
-        sprawl::geometry::Size {
+        taffy::geometry::Size {
             #width #height
             ..Default::default()
         }
@@ -494,14 +494,14 @@ fn generate_dimension(dimen: &json::object::Object) -> TokenStream {
 
     match unit {
         json::JsonValue::Short(ref unit) => match unit.as_ref() {
-            "auto" => quote!(sprawl::style::Dimension::Auto),
+            "auto" => quote!(taffy::style::Dimension::Auto),
             "points" => {
                 let value = value();
-                quote!(sprawl::style::Dimension::Points(#value))
+                quote!(taffy::style::Dimension::Points(#value))
             }
             "percent" => {
                 let value = value();
-                quote!(sprawl::style::Dimension::Percent(#value))
+                quote!(taffy::style::Dimension::Percent(#value))
             }
             _ => unreachable!(),
         },
@@ -515,7 +515,7 @@ fn generate_edges(dimen: &json::object::Object) -> TokenStream {
     dim_quoted!(dimen, top);
     dim_quoted!(dimen, bottom);
 
-    quote!(sprawl::geometry::Rect {
+    quote!(taffy::geometry::Rect {
         #start #end #top #bottom
         ..Default::default()
     })

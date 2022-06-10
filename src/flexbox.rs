@@ -1,6 +1,6 @@
 //! Computes the [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) layout algorithm on a [`Forest`](crate::forest::Forest) according to the [spec](https://www.w3.org/TR/css-flexbox-1/)
 //!
-//! Note that some minor steps appear to be missing: see https://github.com/DioxusLabs/sprawl/issues for more information.
+//! Note that some minor steps appear to be missing: see https://github.com/DioxusLabs/taffy/issues for more information.
 use core::f32;
 
 use crate::flexbox::Number::{Defined, Undefined};
