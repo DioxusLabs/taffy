@@ -6,7 +6,7 @@ use crate::number::Number;
 /// How [`Nodes`](crate::node::Node) are aligned relative to the cross axis
 ///
 /// The default behavior is [`AlignItems::Stretch`].
-/// 
+///
 /// [Specification](https://www.w3.org/TR/css-flexbox-1/#align-items-property)
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -34,7 +34,7 @@ impl Default for AlignItems {
 /// The behavior of any child nodes will be controlled by this node's [`AlignItems`] value.
 ///
 /// The default behavior is [`AlignSelf::Auto`].
-/// 
+///
 /// [Specification](https://www.w3.org/TR/css-flexbox-1/#align-items-property)
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -62,7 +62,7 @@ impl Default for AlignSelf {
 /// Sets the distribution of space between and around content items along the cross-axis
 ///
 /// The default value is [`AlignContent::Stretch`].
-/// 
+///
 /// [Specification](https://www.w3.org/TR/css-flexbox-1/#align-content-property)
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -117,7 +117,7 @@ impl Default for Display {
 /// Items are always aligned relative to the cross axis, and justified relative to the main axis.
 ///
 /// The default behavior is [`FlexDirection::Row`].
-/// 
+///
 /// [Specification](https://www.w3.org/TR/css-flexbox-1/#flex-direction-property)
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -148,16 +148,19 @@ impl Default for FlexDirection {
 
 impl FlexDirection {
     #[inline]
+    /// Is the direction [`FlexDirection::Row`] or [`FlexDirection::RowReverse`]?
     pub(crate) fn is_row(self) -> bool {
         matches!(self, Self::Row | Self::RowReverse)
     }
 
     #[inline]
+    /// Is the direction [`FlexDirection::Column`] or [`FlexDirection::ColumnReverse`]?
     pub(crate) fn is_column(self) -> bool {
         matches!(self, Self::Column | Self::ColumnReverse)
     }
 
     #[inline]
+    /// Is the direction [`FlexDirection::RowReverse`] or [`FlexDirection::ColumnReverse`]?
     pub(crate) fn is_reverse(self) -> bool {
         matches!(self, Self::RowReverse | Self::ColumnReverse)
     }
@@ -166,7 +169,7 @@ impl FlexDirection {
 /// Sets the distribution of space between and around content items along the main-axis
 ///
 /// The default value is [`JustifyContent::FlexStart`].
-/// 
+///
 /// [Specification](https://www.w3.org/TR/css-flexbox-1/#justify-content-property)
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -223,9 +226,9 @@ impl Default for PositionType {
 }
 
 /// Controls whether flex items are forced onto one line or can wrap onto multiple lines.
-/// 
+///
 /// Defaults to [`FlexWrap::NoWrap`]
-/// 
+///
 /// [Specification](https://www.w3.org/TR/css-flexbox-1/#flex-wrap-property)
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -389,6 +392,7 @@ impl Default for Style {
 }
 
 impl Style {
+    /// If the `direction` is row-oriented, the min width. Otherwise the min height
     pub(crate) fn min_main_size(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
             self.min_size.width
@@ -397,6 +401,7 @@ impl Style {
         }
     }
 
+    /// If the `direction` is row-oriented, the max width. Otherwise the max height
     pub(crate) fn max_main_size(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
             self.max_size.width
@@ -405,6 +410,7 @@ impl Style {
         }
     }
 
+    /// If the `direction` is row-oriented, the margin start. Otherwise the margin top
     pub(crate) fn main_margin_start(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
             self.margin.start
@@ -413,6 +419,7 @@ impl Style {
         }
     }
 
+    /// If the `direction` is row-oriented, the margin end. Otherwise the margin bottom
     pub(crate) fn main_margin_end(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
             self.margin.end
@@ -421,6 +428,7 @@ impl Style {
         }
     }
 
+    /// If the `direction` is row-oriented, the height. Otherwise the width
     pub(crate) fn cross_size(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
             self.size.height
@@ -429,6 +437,7 @@ impl Style {
         }
     }
 
+    /// If the `direction` is row-oriented, the min height. Otherwise the min width
     pub(crate) fn min_cross_size(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
             self.min_size.height
@@ -437,6 +446,7 @@ impl Style {
         }
     }
 
+    /// If the `direction` is row-oriented, the max height. Otherwise the max width
     pub(crate) fn max_cross_size(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
             self.max_size.height
@@ -445,6 +455,7 @@ impl Style {
         }
     }
 
+    /// If the `direction` is row-oriented, the margin top. Otherwise the margin start
     pub(crate) fn cross_margin_start(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
             self.margin.top
@@ -453,6 +464,7 @@ impl Style {
         }
     }
 
+    /// If the `direction` is row-oriented, the margin bottom. Otherwise the margin end
     pub(crate) fn cross_margin_end(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
             self.margin.bottom
@@ -461,6 +473,7 @@ impl Style {
         }
     }
 
+    /// Computes the final alignment of this item based on the parent's [`AlignItems`] and this item's [`AlignSelf`]
     pub(crate) fn align_self(&self, parent: &Style) -> AlignSelf {
         if self.align_self == AlignSelf::Auto {
             match parent.align_items {

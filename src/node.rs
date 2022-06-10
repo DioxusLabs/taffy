@@ -224,7 +224,7 @@ impl Sprawl {
         let id = self.find_node(parent)?;
         Ok(self.forest.children[id].len())
     }
-  
+
     /// Returns a list of children that belong to the [`Parent`]
     pub fn children(&self, parent: Node) -> Result<Vec<Node>, Error> {
         let id = self.find_node(parent)?;
@@ -282,18 +282,19 @@ pub(crate) struct Id(usize);
 
 /// An bump-allocator index that tracks how many [`Nodes`](Node) have been allocated in a [`Sprawl`].
 pub(crate) struct Allocator {
-    new_id: AtomicUsize,
+    /// The last reserved [`NodeId`]
+    last_id: AtomicUsize,
 }
 
 impl Allocator {
     /// Creates a fresh [`Allocator`]
     #[must_use]
     pub const fn new() -> Self {
-        Self { new_id: AtomicUsize::new(0) }
+        Self { last_id: AtomicUsize::new(0) }
     }
 
     /// Allocates space for one more [`Node`]
     pub fn allocate(&self) -> Id {
-        Id(self.new_id.fetch_add(1, Ordering::Relaxed))
+        Id(self.last_id.fetch_add(1, Ordering::Relaxed))
     }
 }

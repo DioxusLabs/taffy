@@ -12,6 +12,7 @@ pub use self::alloc::*;
 #[cfg(all(not(feature = "alloc"), not(feature = "std")))]
 pub use self::core::*;
 
+/// For when `std` is enabled
 #[cfg(feature = "std")]
 mod std {
     /// An allocation-backend agnostic [`Box`] type
@@ -53,6 +54,7 @@ mod std {
     }
 }
 
+/// For when `alloc` but not `std` is enabled
 #[cfg(all(feature = "alloc", not(feature = "std")))]
 mod alloc {
     extern crate alloc;
@@ -93,6 +95,7 @@ mod alloc {
     }
 }
 
+/// For when neither `alloc` nor `std` is enabled
 #[cfg(all(not(feature = "alloc"), not(feature = "std")))]
 mod core {
     /// The maximum number of nodes in the forest

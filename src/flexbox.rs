@@ -1,3 +1,6 @@
+//! Computes the [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) layout algorithm on a [`Forest`](crate::forest::Forest) according to the [spec](https://www.w3.org/TR/css-flexbox-1/)
+//!
+//! Note that some minor steps appear to be missing: see https://github.com/DioxusLabs/sprawl/issues for more information.
 use core::f32;
 
 use crate::flexbox::Number::{Defined, Undefined};
@@ -11,65 +14,104 @@ use crate::style::{AlignContent, AlignSelf, Dimension, Display, FlexWrap, Justif
 use crate::style::{FlexDirection, Style};
 use crate::sys::{abs, round, ChildrenVec, Vec};
 
+/// The computed results of a [`flexbox`](crate::flexbox) calculation
 #[derive(Debug, Clone)]
 pub struct ComputeResult {
+    /// The computed size
     pub size: Size<f32>,
 }
 
+/// The intermediate results of a flexbox calculation for a single item
 struct FlexItem {
+    /// The identifier for the associated [`Node`](crate::node::Node)
     node: NodeId,
 
+    /// The base size of this item
     size: Size<Number>,
+    /// The minimum allowable size of this item
     min_size: Size<Number>,
+    /// The maximum allowable size of this item
     max_size: Size<Number>,
 
+    /// The final offset of this item
     position: Rect<Number>,
+    /// The margin of this item
     margin: Rect<f32>,
+    /// The padding of this item
     padding: Rect<f32>,
+    /// The border of this item
     border: Rect<f32>,
 
+    /// The default size of this item
     flex_basis: f32,
+    /// The default size of this item, minus padding and border
     inner_flex_basis: f32,
+    /// The amount by which this item has deviated from its target size
     violation: f32,
+    /// Is the size of this item locked
     frozen: bool,
 
+    /// The proposed inner size of this item
     hypothetical_inner_size: Size<f32>,
+    /// The proposed outer size of this item
     hypothetical_outer_size: Size<f32>,
+    /// The size that this item wants to be
     target_size: Size<f32>,
+    /// The size that this item wants to be, plus any padding and border
     outer_target_size: Size<f32>,
 
+    /// The position of the bottom edge of this item
     baseline: f32,
 
-    // temporary values for holding offset in the main / cross direction.
-    // offset is the relative position from the item's natural flow position based on
-    // relative position values, alignment, and justification. Does not include margin/padding/border.
+    /// A temporary values for holding offset in the main / cross direction.
+
+    /// A temporary value for the main offset
+    ///
+    /// Offset is the relative position from the item's natural flow position based on
+    /// relative position values, alignment, and justification. Does not include margin/padding/border.
     offset_main: f32,
+    /// A temporary value for the cross offset
     offset_cross: f32,
 }
 
+/// A line of [`FlexItem`] used for intermediate computation
 struct FlexLine<'a> {
+    /// The slice of items to
     items: &'a mut [FlexItem],
+    /// The dimensions of the cross-axis
     cross_size: f32,
+    /// The relative offset of the cross-axis
     offset_cross: f32,
 }
 
-/// Constant values that can be reused for the flexbox algorithm.
+/// Values that can be cached during the flexbox algorithm
 struct AlgoConstants {
+    /// The direction of the current segment being layed out
     dir: FlexDirection,
+    /// Is this segment a row
     is_row: bool,
+    /// Is this segment a column
     is_column: bool,
+    /// Is the wrap direction inverted
     is_wrap_reverse: bool,
 
+    /// The margin of this section
     margin: Rect<f32>,
+    /// The border of this section
     border: Rect<f32>,
+    /// The padding of this section
     padding_border: Rect<f32>,
 
+    /// The size of the internal node
     node_inner_size: Size<Number>,
+    /// The size of the surrounding container
     container_size: Size<f32>,
+    /// The size of the internal container
     inner_container_size: Size<f32>,
 }
 
 impl Forest {
+    /// Computes the layout of this [`Forest`] according to the flexbox algorithm
     pub(crate) fn compute(&mut self, root: NodeId, size: Size<Number>) {
         let style = self.nodes[root].style;
         let has_root_min_max = style.min_size.width.is_defined()
@@ -78,9 +120,9 @@ impl Forest {
             || style.max_size.height.is_defined();
 
         let result = if has_root_min_max {
-            let first_pass = self.compute_internal(root, style.size.resolve(size), size, false, true);
+            let first_pass = self.compute_preliminary(root, style.size.resolve(size), size, false, true);
 
-            self.compute_internal(
+            self.compute_preliminary(
                 root,
                 Size {
                     width: first_pass
@@ -101,7 +143,7 @@ impl Forest {
                 true,
             )
         } else {
-            self.compute_internal(root, style.size.resolve(size), size, true, true)
+            self.compute_preliminary(root, style.size.resolve(size), size, true, true)
         };
 
         self.nodes[root].layout = Layout { order: 0, size: result.size, location: Point::zero() };
@@ -109,6 +151,7 @@ impl Forest {
         Self::round_layout(&mut self.nodes, &self.children, root, 0.0, 0.0);
     }
 
+    /// Rounds the calculated [`NodeData`] according to the spec
     fn round_layout(nodes: &mut [NodeData], children: &[ChildrenVec<NodeId>], root: NodeId, abs_x: f32, abs_y: f32) {
         let layout = &mut nodes[root].layout;
         let abs_x = abs_x + layout.location.x;
@@ -125,6 +168,7 @@ impl Forest {
         }
     }
 
+    /// Saves intermediate results to a [`Cache`]
     fn cache(&mut self, node: NodeId, main_size: bool) -> &mut Option<Cache> {
         if main_size {
             &mut self.nodes[node].main_size_layout_cache
@@ -380,7 +424,7 @@ impl Forest {
             };
 
             child.flex_basis = self
-                .compute_internal(
+                .compute_preliminary(
                     child.node,
                     Size {
                         width: width.maybe_max(child.min_size.width).maybe_min(child.max_size.width),
@@ -409,7 +453,7 @@ impl Forest {
             // webkit handled various scenarios. Can probably be solved better by passing in
             // min-content max-content constraints from the top
             let min_main = self
-                .compute_internal(child.node, Size::undefined(), available_space, false, false)
+                .compute_preliminary(child.node, Size::undefined(), available_space, false, false)
                 .size
                 .main(constants.dir)
                 .maybe_max(child.min_size.main(constants.dir))
@@ -518,7 +562,7 @@ impl Forest {
             if constants.node_inner_size.main(constants.dir).is_undefined() && constants.is_row {
                 child.target_size.set_main(
                     constants.dir,
-                    self.compute_internal(
+                    self.compute_preliminary(
                         child.node,
                         Size {
                             width: child.size.width.maybe_max(child.min_size.width).maybe_min(child.max_size.width),
@@ -670,7 +714,7 @@ impl Forest {
                 // min-content max-content constraints from the top. Need to figure out correct thing to do here as
                 // just piling on more conditionals.
                 let min_main = if constants.is_row && self.nodes[child.node].measure.is_none() {
-                    self.compute_internal(child.node, Size::undefined(), available_space, false, false)
+                    self.compute_preliminary(child.node, Size::undefined(), available_space, false, false)
                         .size
                         .width
                         .maybe_min(child.size.width)
@@ -735,7 +779,7 @@ impl Forest {
 
             child.hypothetical_inner_size.set_cross(
                 constants.dir,
-                self.compute_internal(
+                self.compute_preliminary(
                     child.node,
                     Size {
                         width: if constants.is_row { child.target_size.width.into() } else { child_cross },
@@ -778,6 +822,7 @@ impl Forest {
         flex_lines: &mut [FlexLine],
         constants: &AlgoConstants,
     ) {
+        /// Recursively caluculates the baseline for children
         fn calc_baseline(db: &Forest, node: NodeId, layout: &Layout) -> f32 {
             if db.children[node].is_empty() {
                 layout.size.height
@@ -789,7 +834,7 @@ impl Forest {
 
         for line in flex_lines {
             for child in line.items.iter_mut() {
-                let result = self.compute_internal(
+                let result = self.compute_preliminary(
                     child.node,
                     Size {
                         width: if constants.is_row {
@@ -1301,7 +1346,7 @@ impl Forest {
             let line_offset_cross = line.offset_cross;
 
             let layout_item = |child: &mut FlexItem| {
-                let result = self.compute_internal(
+                let result = self.compute_preliminary(
                     child.node,
                     child.target_size.map(|s| s.into()),
                     constants.container_size.map(|s| s.into()),
@@ -1404,7 +1449,7 @@ impl Forest {
                     Undefined
                 });
 
-            let result = self.compute_internal(
+            let result = self.compute_preliminary(
                 child,
                 Size { width, height },
                 Size { width: container_width, height: container_height },
@@ -1498,7 +1543,8 @@ impl Forest {
         }
     }
 
-    fn compute_internal(
+    /// Compute a preliminary size for an item
+    fn compute_preliminary(
         &mut self,
         node: NodeId,
         node_size: Size<Number>,
@@ -1662,6 +1708,9 @@ impl Forest {
         // Before returning we perform absolute layout on all absolutely positioned children
         self.perform_absolute_layout_on_absolute_children(node, &constants);
 
+        /// Lay out all hidden nodes recursively
+        ///
+        /// Each hidden node has zero size and is placed at the origin
         fn hidden_layout(nodes: &mut [NodeData], children: &[ChildrenVec<NodeId>], node: NodeId, order: u32) {
             nodes[node].layout = Layout { order, size: Size::zero(), location: Point::zero() };
 

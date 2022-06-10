@@ -234,6 +234,7 @@ impl Size<f32> {
 }
 
 impl Size<Dimension> {
+    /// Converts any `parent`-relative values for size into an absolute size
     pub(crate) fn resolve(&self, parent: Size<Number>) -> Size<Number> {
         Size { width: self.width.resolve(parent.width), height: self.height.resolve(parent.height) }
     }
