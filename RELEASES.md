@@ -1,5 +1,23 @@
 # Release Notes
 
+## 0.2.0
+
+### 0.2.0 Added
+
+- Nothing yet
+
+### 0.2.0 Changed
+
+- Nothing yet
+
+### 0.2.0 Fixed
+
+- Nothing yet
+
+### 0.2.0 Removed
+
+- Nothing yet
+
 ## 0.1.0
 
 ### 0.1.0 Changed
