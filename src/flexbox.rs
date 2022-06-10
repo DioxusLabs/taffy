@@ -3,13 +3,13 @@ use core::f32;
 use crate::flexbox::Number::{Defined, Undefined};
 use crate::forest::{Forest, NodeData};
 use crate::geometry::{Point, Rect, Size};
-use crate::layout;
+use crate::layout::{Cache, Layout};
 use crate::node::{MeasureFunc, NodeId};
 use crate::number::{MinMax, OrElse};
 use crate::prelude::Number;
 use crate::style::{AlignContent, AlignSelf, Dimension, Display, FlexWrap, JustifyContent, PositionType};
 use crate::style::{FlexDirection, Style};
-use crate::sys;
+use crate::sys::{abs, round, ChildrenVec, Vec};
 
 #[derive(Debug, Clone)]
 pub struct ComputeResult {
@@ -104,34 +104,28 @@ impl Forest {
             self.compute_internal(root, style.size.resolve(size), size, true, true)
         };
 
-        self.nodes[root].layout = layout::Layout { order: 0, size: result.size, location: Point::zero() };
+        self.nodes[root].layout = Layout { order: 0, size: result.size, location: Point::zero() };
 
         Self::round_layout(&mut self.nodes, &self.children, root, 0.0, 0.0);
     }
 
-    fn round_layout(
-        nodes: &mut [NodeData],
-        children: &[sys::ChildrenVec<NodeId>],
-        root: NodeId,
-        abs_x: f32,
-        abs_y: f32,
-    ) {
+    fn round_layout(nodes: &mut [NodeData], children: &[ChildrenVec<NodeId>], root: NodeId, abs_x: f32, abs_y: f32) {
         let layout = &mut nodes[root].layout;
         let abs_x = abs_x + layout.location.x;
         let abs_y = abs_y + layout.location.y;
 
-        layout.location.x = sys::round(layout.location.x);
-        layout.location.y = sys::round(layout.location.y);
+        layout.location.x = round(layout.location.x);
+        layout.location.y = round(layout.location.y);
 
-        layout.size.width = sys::round(abs_x + layout.size.width) - sys::round(abs_x);
-        layout.size.height = sys::round(abs_y + layout.size.height) - sys::round(abs_y);
+        layout.size.width = round(abs_x + layout.size.width) - round(abs_x);
+        layout.size.height = round(abs_y + layout.size.height) - round(abs_y);
 
         for child in &children[root] {
             Self::round_layout(nodes, children, *child, abs_x, abs_y);
         }
     }
 
-    fn cache(&mut self, node: NodeId, main_size: bool) -> &mut Option<layout::Cache> {
+    fn cache(&mut self, node: NodeId, main_size: bool) -> &mut Option<Cache> {
         if main_size {
             &mut self.nodes[node].main_size_layout_cache
         } else {
@@ -152,13 +146,13 @@ impl Forest {
         if let Some(ref cache) = self.cache(node, main_size) {
             if cache.perform_layout || !perform_layout {
                 let width_compatible = if let Number::Defined(width) = node_size.width {
-                    sys::abs(width - cache.result.size.width) < f32::EPSILON
+                    abs(width - cache.result.size.width) < f32::EPSILON
                 } else {
                     cache.node_size.width.is_undefined()
                 };
 
                 let height_compatible = if let Number::Defined(height) = node_size.height {
-                    sys::abs(height - cache.result.size.height) < f32::EPSILON
+                    abs(height - cache.result.size.height) < f32::EPSILON
                 } else {
                     cache.node_size.height.is_undefined()
                 };
@@ -223,7 +217,7 @@ impl Forest {
     ///
     /// - [**Generate anonymous flex items**](https://www.w3.org/TR/css-flexbox-1/#algo-anon-box) as described in [§4 Flex Items](https://www.w3.org/TR/css-flexbox-1/#flex-items).
     #[inline]
-    fn generate_anonymous_flex_items(&self, node: NodeId, constants: &AlgoConstants) -> sys::Vec<FlexItem> {
+    fn generate_anonymous_flex_items(&self, node: NodeId, constants: &AlgoConstants) -> Vec<FlexItem> {
         self.children[node]
             .iter()
             .map(|child| (child, &self.nodes[*child].style))
@@ -316,7 +310,7 @@ impl Forest {
         node_size: Size<Number>,
         constants: &AlgoConstants,
         available_space: Size<Number>,
-        flex_items: &mut sys::Vec<FlexItem>,
+        flex_items: &mut Vec<FlexItem>,
     ) {
         // TODO - this does not follow spec. See the TODOs below
         for child in flex_items.iter_mut() {
@@ -456,9 +450,9 @@ impl Forest {
         node: NodeId,
         constants: &AlgoConstants,
         available_space: Size<Number>,
-        flex_items: &'a mut sys::Vec<FlexItem>,
-    ) -> sys::Vec<FlexLine<'a>> {
-        let mut lines = sys::new_vec_with_capacity(1);
+        flex_items: &'a mut Vec<FlexItem>,
+    ) -> Vec<FlexLine<'a>> {
+        let mut lines = crate::sys::new_vec_with_capacity(1);
 
         if self.nodes[node].style.flex_wrap == FlexWrap::NoWrap {
             lines.push(FlexLine { items: flex_items.as_mut_slice(), cross_size: 0.0, offset_cross: 0.0 });
@@ -598,7 +592,7 @@ impl Forest {
                 })
                 .sum();
 
-            let mut unfrozen: sys::Vec<&mut FlexItem> = line.items.iter_mut().filter(|child| !child.frozen).collect();
+            let mut unfrozen: Vec<&mut FlexItem> = line.items.iter_mut().filter(|child| !child.frozen).collect();
 
             let (sum_flex_grow, sum_flex_shrink): (f32, f32) =
                 unfrozen.iter().fold((0.0, 0.0), |(flex_grow, flex_shrink), item| {
@@ -781,7 +775,7 @@ impl Forest {
         flex_lines: &mut [FlexLine],
         constants: &AlgoConstants,
     ) {
-        fn calc_baseline(db: &Forest, node: NodeId, layout: &layout::Layout) -> f32 {
+        fn calc_baseline(db: &Forest, node: NodeId, layout: &Layout) -> f32 {
             if db.children[node].is_empty() {
                 layout.size.height
             } else {
@@ -821,7 +815,7 @@ impl Forest {
                 child.baseline = calc_baseline(
                     self,
                     child.node,
-                    &layout::Layout {
+                    &Layout {
                         order: self.children[node].iter().position(|n| *n == child.node).unwrap() as u32,
                         size: result.size,
                         location: Point::zero(),
@@ -1323,7 +1317,7 @@ impl Forest {
                     + (child.position.cross_start(constants.dir).or_else(0.0)
                         - child.position.cross_end(constants.dir).or_else(0.0));
 
-                self.nodes[child.node].layout = layout::Layout {
+                self.nodes[child.node].layout = Layout {
                     order: self.children[node].iter().position(|n| *n == child.node).unwrap() as u32,
                     size: result.size,
                     location: Point {
@@ -1361,7 +1355,7 @@ impl Forest {
             .cloned()
             .enumerate()
             .filter(|(_, child)| self.nodes[*child].style.position_type == PositionType::Absolute)
-            .collect::<sys::Vec<_>>();
+            .collect::<Vec<_>>();
 
         for (order, child) in candidates {
             let container_width = constants.container_size.width.into();
@@ -1488,7 +1482,7 @@ impl Forest {
                 }
             };
 
-            self.nodes[child].layout = layout::Layout {
+            self.nodes[child].layout = Layout {
                 order: order as u32,
                 size: result.size,
                 location: Point {
@@ -1530,7 +1524,7 @@ impl Forest {
                     MeasureFunc::Boxed(measure) => ComputeResult { size: measure(node_size) },
                 };
                 *self.cache(node, main_size) =
-                    Some(layout::Cache { node_size, parent_size, perform_layout, result: result.clone() });
+                    Some(Cache { node_size, parent_size, perform_layout, result: result.clone() });
                 return result;
             }
 
@@ -1650,7 +1644,7 @@ impl Forest {
         if !perform_layout {
             let result = ComputeResult { size: constants.container_size };
             *self.cache(node, main_size) =
-                Some(layout::Cache { node_size, parent_size, perform_layout, result: result.clone() });
+                Some(Cache { node_size, parent_size, perform_layout, result: result.clone() });
             return result;
         }
 
@@ -1663,8 +1657,8 @@ impl Forest {
         // Before returning we perform absolute layout on all absolutely positioned children
         self.perform_absolute_layout_on_absolute_children(node, &constants);
 
-        fn hidden_layout(nodes: &mut [NodeData], children: &[sys::ChildrenVec<NodeId>], node: NodeId, order: u32) {
-            nodes[node].layout = layout::Layout { order, size: Size::zero(), location: Point::zero() };
+        fn hidden_layout(nodes: &mut [NodeData], children: &[ChildrenVec<NodeId>], node: NodeId, order: u32) {
+            nodes[node].layout = Layout { order, size: Size::zero(), location: Point::zero() };
 
             for (order, child) in children[node].iter().enumerate() {
                 hidden_layout(nodes, children, *child, order as _);
@@ -1678,8 +1672,7 @@ impl Forest {
         }
 
         let result = ComputeResult { size: constants.container_size };
-        *self.cache(node, main_size) =
-            Some(layout::Cache { node_size, parent_size, perform_layout, result: result.clone() });
+        *self.cache(node, main_size) = Some(Cache { node_size, parent_size, perform_layout, result: result.clone() });
 
         result
     }
