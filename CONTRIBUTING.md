@@ -5,7 +5,7 @@ New contributions are extremely welcome!
 
 The basic process is simple:
 
-1. Pick an [issue](https://github.com/DioxusLabs/sprawl/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22), or [file a new one](https://github.com/DioxusLabs/sprawl/issues/new).
+1. Pick an [issue](https://github.com/DioxusLabs/taffy/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22), or [file a new one](https://github.com/DioxusLabs/taffy/issues/new).
 2. Comment in the issue that you plan to tackle it, and the team will assign the task to you.
 3. Submit a PR.
 4. Respond to feedback from reviewers and make sure CI passes.

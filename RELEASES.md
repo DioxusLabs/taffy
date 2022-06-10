@@ -5,9 +5,9 @@
 ### 0.1.0 Changed
 
 - the `order` field of `Layout` is now public, and describes the relative z-ordering of nodes
-- renamed crate from `stretch2` to `sprawl`
+- renamed crate from `stretch2` to `taffy`
 - updated to the latest version of all dependencies to reduce upstream pain caused by duplicate dependencies
-- renamed `stretch::node::Strech` -> `sprawl::node::Sprawl`
+- renamed `stretch::node::Strech` -> `taffy::node::Taffy`
 
 ### 0.1.0 Fixed
 
@@ -18,14 +18,14 @@
 - removed Javascript / Kotlin / Swift bindings
   - the maintainer team lacks expertise to keep these working
   - more serious refactors are planned, and this will be challenging to keep working through that process
-  - if you are interested in helping us maintain bindings to other languages, [get in touch](https://github.com/DioxusLabs/sprawl/discussions)!
+  - if you are interested in helping us maintain bindings to other languages, [get in touch](https://github.com/DioxusLabs/taffy/discussions)!
 - the `serde_camel_case` and `serde_kebab_case` features have been removed: they were poorly motivated and were not correctly additive (if both were enabled compilation would fail)
 - removed the `Direction` and `Overflow` structs, and the corresponding `direction` and `overflow` fields from `Style`
   - these had no effect in the current code base and were actively misleading
 
 ## stretch2 0.4.3
 
-This is the final release of `stretch`: migrate to the crate named `sprawl` for future fixes and features!
+This is the final release of `stretch`: migrate to the crate named `taffy` for future fixes and features!
 
 These notes describe the differences between this release and `stretch` 0.3.2, the abandoned crate from which this library was forked.
 
