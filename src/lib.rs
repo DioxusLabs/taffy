@@ -20,9 +20,9 @@ pub mod style;
 
 mod flexbox;
 mod forest;
-mod sys;
 #[cfg(all(not(feature = "alloc"), not(feature = "std")))]
 mod indexmap;
+mod sys;
 
 pub use crate::node::Sprawl;
 

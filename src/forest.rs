@@ -81,7 +81,7 @@ pub(crate) struct Forest {
 
 impl Forest {
     /// Creates a new [`Forest`] that can store up to `capacity` [`Nodes`](crate::node::Node) before needing to be expanded
-    #[must_use]    
+    #[must_use]
     pub(crate) fn with_capacity(capacity: usize) -> Self {
         Self {
             nodes: new_vec_with_capacity(capacity),
