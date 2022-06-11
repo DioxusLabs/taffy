@@ -155,15 +155,15 @@ where
 #[cfg_attr(feature = "serde", serde(default))]
 pub struct Size<T> {
     /// The x extent of the rectangle
-    pub width: T,
+    pub width: Option<T>,
     /// The y extent of the rectangle
-    pub height: T,
+    pub height: Option<T>,
 }
 
 impl Size<()> {
     /// Generates a `Size<Option<f32>>` with undefined width and height
     #[must_use]
-    pub fn undefined() -> Size<Option<f32>> {
+    pub fn undefined() -> Size<f32> {
         Size { width: None, height: None }
     }
 }
@@ -236,16 +236,8 @@ impl Size<Option<Dimension>> {
     /// Converts any `parent`-relative values for size into an absolute size
     pub(crate) fn resolve(&self, parent: Size<Option<f32>>) -> Size<Option<f32>> {
         Size {
-            width: if let Some(width) = self.width {
-                width.resolve(parent.width)
-            } else {
-                None
-            },
-            height: if let Some(height) = self.height {
-                height.resolve(parent.height)
-            } else {
-                None
-            }, 
+            width: if let Some(width) = self.width { width.resolve(parent.width) } else { None },
+            height: if let Some(height) = self.height { height.resolve(parent.height) } else { None },
         }
     }
 }
