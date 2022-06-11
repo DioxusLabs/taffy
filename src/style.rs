@@ -94,10 +94,8 @@ impl Default for AlignContent {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Display {
     /// The children will follow the flexbox layout algorithm
-    #[cfg_attr(feature = "serde", serde(rename = "flex"))]
     Flex,
     /// The children will not be laid out, and will follow absolute positioning
-    #[cfg_attr(feature = "serde", serde(rename = "none"))]
     None,
 }
 

@@ -4,15 +4,18 @@
 
 ### 0.2.0 Added
 
-- Nothing yet
+- Added `taffy::error::InvalidChild` Error type
 
 ### 0.2.0 Changed
 
 - removed the public `Number` type; a more idiomatic `Option<f32>` is used instead
   - the associated public `MinMax` and `OrElse` traits have also been removed; these should never have been public
+- `Sprawl::remove` now returns a `Result<usize, Error>`, to indicate if the operation was sucessful, and if it was, which ID was invalidated.
 - renamed `taffy::forest::Forest.new-node(..)` `taffy::forest::Forest.new_with_children(..)`
 - renamed `taffy::node::Taffy.new-node(..)` -> `taffy::node::Taffy.new_with_children(..)`
 - renamed `taffy::style::Style` -> `taffy::style::FlexboxLayout` to more precicely indicate its purpose
+- renamed `taffy::Error` -> `taffy::error::InvalidNode`
+- `taffy::Taffy::remove_child_at_index`, `taffy::Taffy::replace_child_at_index`, and `taffy::Taffy::child_at_index` now return `taffy::InvalidChild::ChildIndexOutOfBounds` instead of panicing
 
 ### 0.2.0 Fixed
 
