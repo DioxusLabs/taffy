@@ -56,7 +56,7 @@ fn rounding_fractial_input_4() {
     assert_eq!(taffy.layout(node0).unwrap().location.x, 0f32);
     assert_eq!(taffy.layout(node0).unwrap().location.y, 0f32);
     assert_eq!(taffy.layout(node1).unwrap().size.width, 100f32);
-    assert_eq!(taffy.layout(node1).unwrap().size.height, 25f32);
+    assert_eq!(taffy.layout(node1).unwrap().size.height, 24f32);
     assert_eq!(taffy.layout(node1).unwrap().location.x, 0f32);
     assert_eq!(taffy.layout(node1).unwrap().location.y, 64f32);
     assert_eq!(taffy.layout(node2).unwrap().size.width, 100f32);
