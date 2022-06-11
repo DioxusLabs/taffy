@@ -285,11 +285,12 @@ impl Default for Rect<Dimension> {
     }
 }
 
-impl Default for Rect<Option<Dimension>> {
-    fn default() -> Self {
-        Self { start: Default::default(), end: Default::default(), top: Default::default(), bottom: Default::default() }
-    }
-}
+// TODO: This does not work.
+// impl Default for Rect<Option<Dimension>> {
+//     fn default() -> Self {
+//         Self { start: Default::default(), end: Default::default(), top: Default::default(), bottom: Default::default() }
+//     }
+// }
 
 impl Default for Size<Dimension> {
     fn default() -> Self {
@@ -385,7 +386,7 @@ impl Default for FlexboxLayout {
             border: Default::default(),
             flex_grow: 0.0,
             flex_shrink: 1.0,
-            flex_basis: Dimension::Auto,
+            flex_basis: Default::default(),
             size: Default::default(),
             min_size: Default::default(),
             max_size: Default::default(),

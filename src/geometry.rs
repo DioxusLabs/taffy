@@ -148,6 +148,7 @@ where
     }
 }
 
+// 2 dimensional
 /// The width and height of a [`Rect`]
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -234,7 +235,18 @@ impl Size<f32> {
 impl Size<Option<Dimension>> {
     /// Converts any `parent`-relative values for size into an absolute size
     pub(crate) fn resolve(&self, parent: Size<Option<f32>>) -> Size<Option<f32>> {
-        Size { width: self.width.resolve(parent.width), height: self.height.resolve(parent.height) }
+        Size {
+            width: if let Some(width) = self.width {
+                width.resolve(parent.width)
+            } else {
+                None
+            },
+            height: if let Some(height) = self.height {
+                height.resolve(parent.height)
+            } else {
+                None
+            }, 
+        }
     }
 }
 
