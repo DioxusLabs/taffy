@@ -56,20 +56,21 @@ struct FlexItem {
     /// The position of the bottom edge of this item
     baseline: f32,
 
-    /// A temporary values for holding offset in the main / cross direction.
-
     /// A temporary value for the main offset
     ///
     /// Offset is the relative position from the item's natural flow position based on
     /// relative position values, alignment, and justification. Does not include margin/padding/border.
     offset_main: f32,
     /// A temporary value for the cross offset
+    /// 
+    /// Offset is the relative position from the item's natural flow position based on
+    /// relative position values, alignment, and justification. Does not include margin/padding/border.
     offset_cross: f32,
 }
 
 /// A line of [`FlexItem`] used for intermediate computation
 struct FlexLine<'a> {
-    /// The slice of items to
+    /// The slice of items to iterate over during computation of this line
     items: &'a mut [FlexItem],
     /// The dimensions of the cross-axis
     cross_size: f32,
