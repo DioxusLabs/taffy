@@ -16,7 +16,8 @@
 
 ### 0.2.0 Fixed
 
-- Nothing yet
+- fixed rounding of fractional values to follow latest Chrome - values are now rounded the same regardless of their position
+- fixed computing free space when using both `flex-grow` and a minimum size
 
 ### 0.2.0 Removed
 
