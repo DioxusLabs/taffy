@@ -4,7 +4,7 @@
 
 ### 0.2.0 Added
 
-- added `taffy::TaffyError::ChildIndexOutOfBounds` variant
+- added `taffy::ChildOperationError` enum
 
 ### 0.2.0 Changed
 
@@ -12,13 +12,13 @@
 - renamed `taffy::forest::Forest.new-node(..)` `taffy::forest::Forest.new_with_children(..)`
 - renamed `taffy::node::Taffy.new-node(..)` -> `taffy::node::Taffy.new_with_children(..)`
 - renamed `taffy::style::Style` -> `taffy::style::FlexboxLayout` to more precicely indicate its purpose
-- renamed `taffy::Error` -> `taffy::TaffyError`
+- renamed `taffy::Error` -> `taffy::NodeNotFoundError` and converted it into a tuple struct to precisely show what causes it
+- `taffy::Taffy::remove_child_at_index`, `taffy::Taffy::replace_child_at_index`, and `taffy::Taffy::child_at_index` now return `taffy::ChildOperationError::ChildIndexOutOfBounds` instead of panicing
 
 ### 0.2.0 Fixed
 
 - fixed rounding of fractional values to follow latest Chrome - values are now rounded the same regardless of their position
 - fixed computing free space when using both `flex-grow` and a minimum size
-- `taffy::Taffy::remove_child_at_index`, `taffy::Taffy::replace_child_at_index`, and `taffy::Taffy::child_at_index` now return `Taffy::TaffyError::ChildIndexOutOfBounds` instead of panicing
 
 ### 0.2.0 Removed
 
