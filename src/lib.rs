@@ -29,11 +29,24 @@ pub use crate::node::Taffy;
 #[cfg(feature = "std")]
 use core::fmt::{Display, Formatter, Result};
 
-/// An error that can occur when performing layout
+/// The [`Node`](node::Node) was not found in the [`Taffy`] instance
 #[derive(Debug)]
-pub enum Error {
-    /// The [`Node`](node::Node) is not part of the [`Taffy`](Taffy) instance.
-    InvalidNode(node::Node),
+pub struct NodeNotFoundError(pub node::Node);
+
+#[cfg(feature = "std")]
+impl Display for NodeNotFoundError {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "Node {:?} is not in the Taffy instance", self.0)
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for NodeNotFoundError {
+}
+
+/// An error that occurs while trying to access or modify a [`Node`](node::Node)'s children by index.
+#[derive(Debug)]
+pub enum ChildOperationError {
     /// The parent [`Node`](node::Node) does not have a child at `child_index`. It only has `child_count` children
     ChildIndexOutOfBounds {
         /// The parent node whose child was being looked up
@@ -42,26 +55,34 @@ pub enum Error {
         child_index: usize,
         /// The total number of children the parent has
         child_count: usize,
-    }
+    },
+    ///The [`Node`](node::Node) was not found in the [`Taffy`] instance
+    NodeNotFoundError(NodeNotFoundError),
 }
 
 #[cfg(feature = "std")]
-impl Display for Error {
+impl Display for ChildOperationError {
     fn fmt(&self, f: &mut Formatter) -> Result {
-        match *self {
-            Error::InvalidNode(ref node) => write!(f, "Node {:?} is not in the Taffy instance", node),
-            Error::ChildIndexOutOfBounds { parent, child_index, child_count } => 
+        match self {
+            ChildOperationError::ChildIndexOutOfBounds { parent, child_index, child_count } => 
                 write!(f, "Index (is {}) should be < child_count ({}) for parent node {:?}", child_index, child_count, parent),
+            ChildOperationError::NodeNotFoundError(inner) => inner.fmt(f),
         }
     }
 }
 
 #[cfg(feature = "std")]
-impl std::error::Error for Error {
-    fn description(&self) -> &str {
-        match *self {
-            Error::InvalidNode(_) => "The node is not part of the Taffy instance",
-            Error::ChildIndexOutOfBounds { .. } => "The parent node didn't have a child at child_index. It only has child_count children",
+impl std::error::Error for ChildOperationError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            ChildOperationError::ChildIndexOutOfBounds { .. } => None,
+            ChildOperationError::NodeNotFoundError(node) => Some(node),
         }
+    }
+}
+
+impl From<NodeNotFoundError> for ChildOperationError {
+    fn from(node: NodeNotFoundError) -> Self {
+        Self::NodeNotFoundError(node)
     }
 }

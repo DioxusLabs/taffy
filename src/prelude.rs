@@ -9,5 +9,5 @@ pub use crate::{
         AlignContent, AlignItems, AlignSelf, Dimension, Display, FlexDirection, FlexWrap, FlexboxLayout,
         JustifyContent, PositionType,
     },
-    Error,
+    NodeNotFoundError,
 };
