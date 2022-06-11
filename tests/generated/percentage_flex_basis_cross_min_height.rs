@@ -47,11 +47,11 @@ fn percentage_flex_basis_cross_min_height() {
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);
     assert_eq!(taffy.layout(node).unwrap().location.y, 0f32);
     assert_eq!(taffy.layout(node0).unwrap().size.width, 200f32);
-    assert_eq!(taffy.layout(node0).unwrap().size.height, 280f32);
+    assert_eq!(taffy.layout(node0).unwrap().size.height, 240f32);
     assert_eq!(taffy.layout(node0).unwrap().location.x, 0f32);
     assert_eq!(taffy.layout(node0).unwrap().location.y, 0f32);
     assert_eq!(taffy.layout(node1).unwrap().size.width, 200f32);
-    assert_eq!(taffy.layout(node1).unwrap().size.height, 120f32);
+    assert_eq!(taffy.layout(node1).unwrap().size.height, 160f32);
     assert_eq!(taffy.layout(node1).unwrap().location.x, 0f32);
-    assert_eq!(taffy.layout(node1).unwrap().location.y, 280f32);
+    assert_eq!(taffy.layout(node1).unwrap().location.y, 240f32);
 }

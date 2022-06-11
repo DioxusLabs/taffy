@@ -29,7 +29,7 @@ fn rounding_flex_basis_flex_grow_row_width_of_100() {
     assert_eq!(taffy.layout(node0).unwrap().size.height, 100f32);
     assert_eq!(taffy.layout(node0).unwrap().location.x, 0f32);
     assert_eq!(taffy.layout(node0).unwrap().location.y, 0f32);
-    assert_eq!(taffy.layout(node1).unwrap().size.width, 34f32);
+    assert_eq!(taffy.layout(node1).unwrap().size.width, 33f32);
     assert_eq!(taffy.layout(node1).unwrap().size.height, 100f32);
     assert_eq!(taffy.layout(node1).unwrap().location.x, 33f32);
     assert_eq!(taffy.layout(node1).unwrap().location.y, 0f32);

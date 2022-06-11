@@ -36,11 +36,11 @@ fn min_height() {
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);
     assert_eq!(taffy.layout(node).unwrap().location.y, 0f32);
     assert_eq!(taffy.layout(node0).unwrap().size.width, 100f32);
-    assert_eq!(taffy.layout(node0).unwrap().size.height, 80f32);
+    assert_eq!(taffy.layout(node0).unwrap().size.height, 60f32);
     assert_eq!(taffy.layout(node0).unwrap().location.x, 0f32);
     assert_eq!(taffy.layout(node0).unwrap().location.y, 0f32);
     assert_eq!(taffy.layout(node1).unwrap().size.width, 100f32);
-    assert_eq!(taffy.layout(node1).unwrap().size.height, 20f32);
+    assert_eq!(taffy.layout(node1).unwrap().size.height, 40f32);
     assert_eq!(taffy.layout(node1).unwrap().location.x, 0f32);
-    assert_eq!(taffy.layout(node1).unwrap().location.y, 80f32);
+    assert_eq!(taffy.layout(node1).unwrap().location.y, 60f32);
 }
