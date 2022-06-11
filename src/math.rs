@@ -2,24 +2,19 @@
 
 /// A trait to conveniently calculate minimums and maximums when some data may not be defined
 ///
+/// If the left-hand value is [`None`], these operations return [`None`].
+/// If the right-hand value is [`None`], it is treated as zero.
 pub(crate) trait MaybeMath<In, Out> {
     /// Returns the minimum of `self` and `rhs`
-    ///
-    /// If either either value is invalid, returns the other value.
-    /// If both values are invalid, return [`None`]
     fn maybe_min(self, rhs: In) -> Out;
+
     /// Returns the maximum of `self` and `rhs`
-    ///
-    /// If either either value is invalid, returns the other value.
-    /// If both values are invalid, return [`None`]
     fn maybe_max(self, rhs: In) -> Out;
 
-    /// Adds `self` and `rhs`, treating [`None`] values as default
-    /// If both values are invalid, return [`None`]
+    /// Adds `self` and `rhs`.
     fn maybe_add(self, rhs: In) -> Out;
 
     /// Subracts rhs from `self`, treating [`None`] values as default
-    /// If both values are invalid, return [`None`]
     fn maybe_sub(self, rhs: In) -> Out;
 }
 
@@ -28,7 +23,7 @@ impl MaybeMath<Option<f32>, Option<f32>> for Option<f32> {
         match (self, rhs) {
             (Some(l), Some(r)) => Some(l.min(r)),
             (Some(_l), None) => self,
-            (None, Some(_r)) => rhs,
+            (None, Some(_r)) => None,
             (None, None) => None,
         }
     }
@@ -37,7 +32,7 @@ impl MaybeMath<Option<f32>, Option<f32>> for Option<f32> {
         match (self, rhs) {
             (Some(l), Some(r)) => Some(l.max(r)),
             (Some(_l), None) => self,
-            (None, Some(_r)) => rhs,
+            (None, Some(_r)) => None,
             (None, None) => None,
         }
     }
@@ -46,7 +41,7 @@ impl MaybeMath<Option<f32>, Option<f32>> for Option<f32> {
         match (self, rhs) {
             (Some(l), Some(r)) => Some(l + r),
             (Some(_l), None) => self,
-            (None, Some(_r)) => rhs,
+            (None, Some(_r)) => None,
             (None, None) => None,
         }
     }
@@ -55,7 +50,7 @@ impl MaybeMath<Option<f32>, Option<f32>> for Option<f32> {
         match (self, rhs) {
             (Some(l), Some(r)) => Some(l - r),
             (Some(_l), None) => self,
-            (None, Some(r)) => Some(-r),
+            (None, Some(_r)) => None,
             (None, None) => None,
         }
     }
