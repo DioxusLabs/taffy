@@ -125,7 +125,8 @@ impl Taffy {
     ///
     /// Its [`Id`] is marked as invalid. Returns the id of the node removed.
     pub fn remove(&mut self, node: Node) -> Result<usize, Error> {
-        let id = if let Ok(id) = self.find_node(node) { id } else { return };
+        let id = self.find_node(node)?;
+
         self.nodes_to_ids.remove(&node);
         self.ids_to_nodes.remove(&id);
 
