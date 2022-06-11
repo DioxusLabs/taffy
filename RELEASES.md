@@ -9,6 +9,7 @@
 ### 0.2.0 Changed
 
 - removed the public `Number` type; a more idiomatic `Option<f32>` is used instead
+  - the associated public `MinMax` and `OrElse` traits have also been removed; these should never have been public
 - renamed `taffy::forest::Forest.new-node(..)` `taffy::forest::Forest.new_with_children(..)`
 - renamed `taffy::node::Taffy.new-node(..)` -> `taffy::node::Taffy.new_with_children(..)`
 - renamed `taffy::style::Style` -> `taffy::style::FlexboxLayout` to more precicely indicate its purpose
