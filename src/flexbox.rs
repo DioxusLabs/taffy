@@ -229,8 +229,8 @@ impl Forest {
         };
 
         let node_inner_size = Size {
-            width: Some(node_size.width.unwrap_or_default() - padding_border.horizontal_axis_sum()),
-            height: Some(node_size.height.unwrap_or_default() - padding_border.vertical_axis_sum()),
+            width: node_size.width.maybe_sub(padding_border.horizontal_axis_sum()),
+            height: node_size.height.maybe_sub(padding_border.vertical_axis_sum()),
         };
 
         let container_size = Size::zero();
@@ -307,19 +307,19 @@ impl Forest {
         parent_size: Size<Option<f32>>,
         constants: &AlgoConstants,
     ) -> Size<Option<f32>> {
+        let width = match node_size.width {
+            Some(width) => Some(width),
+            None => parent_size.width.maybe_sub(constants.margin.horizontal_axis_sum()),
+        };
+
+        let height = match node_size.height {
+            Some(height) => Some(height),
+            None => parent_size.height.maybe_sub(constants.margin.vertical_axis_sum()),
+        };
+
         Size {
-            width: Some(
-                node_size
-                    .width
-                    .unwrap_or(parent_size.width.unwrap_or_default() - constants.margin.horizontal_axis_sum())
-                    - constants.padding_border.horizontal_axis_sum(),
-            ),
-            height: Some(
-                node_size
-                    .height
-                    .unwrap_or(parent_size.height.unwrap_or_default() - constants.margin.vertical_axis_sum())
-                    - constants.padding_border.vertical_axis_sum(),
-            ),
+            width: width.maybe_sub(constants.padding_border.horizontal_axis_sum()),
+            height: height.maybe_sub(constants.padding_border.vertical_axis_sum()),
         }
     }
 
@@ -610,10 +610,7 @@ impl Forest {
             })
             .sum();
 
-        let initial_free_space = match constants.node_inner_size.main(constants.dir) {
-            Some(inner_size) => inner_size - used_space,
-            None => 0.0,
-        };
+        let initial_free_space = constants.node_inner_size.main(constants.dir).maybe_sub(used_space).unwrap_or(0.0);
 
         // 4. Loop
 
@@ -711,7 +708,7 @@ impl Forest {
 
             let total_violation = unfrozen.iter_mut().fold(0.0, |acc, child| -> f32 {
                 // TODO - not really spec abiding but needs to be done somewhere. probably somewhere else though.
-                // The following logic was developed not from the spec but by trail and error looking into how
+                // The following logic was developed not from the spec but by trial and error looking into how
                 // webkit handled various scenarios. Can probably be solved better by passing in
                 // min-content max-content constraints from the top. Need to figure out correct thing to do here as
                 // just piling on more conditionals.
@@ -1418,18 +1415,20 @@ impl Forest {
             // X-axis
             let child_position_start = child_style.position.start.resolve(container_width);
             let child_margin_start = child_style.margin.start.resolve(container_width);
+            let start = child_position_start.maybe_add(child_margin_start);
+
             let child_position_end = child_style.position.end.resolve(container_width);
             let child_margin_end = child_style.margin.end.resolve(container_width);
+            let end = child_position_end.maybe_add(child_margin_end);
+
             // Y-axis
             let child_position_top = child_style.position.top.resolve(container_height);
             let child_margin_top = child_style.margin.top.resolve(container_height);
+            let top = child_position_top.maybe_add(child_margin_top);
+
             let child_position_bottom = child_style.position.bottom.resolve(container_height);
             let child_margin_bottom = child_style.margin.bottom.resolve(container_height);
-
-            let start = Some(child_position_start.unwrap_or_default() + child_margin_start.unwrap_or_default());
-            let end = Some(child_position_end.unwrap_or_default() + child_margin_end.unwrap_or_default());
-            let top = Some(child_position_top.unwrap_or_default() + child_margin_top.unwrap_or_default());
-            let bottom = Some(child_position_bottom.unwrap_or_default() + child_margin_bottom.unwrap_or_default());
+            let bottom = child_position_bottom.maybe_add(child_margin_bottom);
 
             let (start_main, end_main) = if constants.is_row { (start, end) } else { (top, bottom) };
             let (start_cross, end_cross) = if constants.is_row { (top, bottom) } else { (start, end) };
