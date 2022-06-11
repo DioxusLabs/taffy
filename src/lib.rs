@@ -31,25 +31,36 @@ use core::fmt::{Display, Formatter, Result};
 
 /// An error that can occur when performing layout
 #[derive(Debug)]
-pub enum Error {
-    /// The [`Node`](node::Node) was invalid
+pub enum TaffyError {
+    /// The [`Node`](node::Node) is not part of the [`Taffy`](Taffy) instance.
     InvalidNode(node::Node),
+    IndexOutOfBounds {
+        /// The parent node whose child was being looked up
+        parent: node::Node,
+        /// The index that was looked up
+        child_index: usize,
+        /// The total number of children the parent has
+        child_count: usize,
+    }
 }
 
 #[cfg(feature = "std")]
-impl Display for Error {
+impl Display for TaffyError {
     fn fmt(&self, f: &mut Formatter) -> Result {
         match *self {
-            Error::InvalidNode(ref node) => write!(f, "Invalid node {:?}", node),
+            TaffyError::InvalidNode(ref node) => write!(f, "Invalid node {:?}", node),
+            TaffyError::IndexOutOfBounds { parent, child_index, child_count } => 
+                write!(f, "Index (is {}) should be < len ({}) for parent node {:?}", child_index, child_count, parent),
         }
     }
 }
 
 #[cfg(feature = "std")]
-impl std::error::Error for Error {
+impl std::error::Error for TaffyError {
     fn description(&self) -> &str {
         match *self {
-            Error::InvalidNode(_) => "The node is not part of the Taffy instance",
+            TaffyError::InvalidNode(_) => "The node is not part of the Taffy instance",
+            TaffyError::IndexOutOfBounds { .. } => todo!(),
         }
     }
 }
