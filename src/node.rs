@@ -123,9 +123,9 @@ impl Taffy {
 
     /// Remove a specific [`Node`] from the tree
     ///
-    /// Its [`Id`] is marked as invalid.
-    pub fn remove(&mut self, node: Node) {
-        let id = if let Ok(id) = self.find_node(node) { id } else { return };
+    /// Its [`Id`] is marked as invalid. Returns the id of the node removed.
+    pub fn remove(&mut self, node: Node) -> Result<usize, Error> {
+        let id = self.find_node(node)?;
 
         self.nodes_to_ids.remove(&node);
         self.ids_to_nodes.remove(&id);
@@ -135,6 +135,8 @@ impl Taffy {
             let _ = self.nodes_to_ids.insert(new, id);
             let _ = self.ids_to_nodes.insert(id, new);
         }
+
+        Ok(id)
     }
 
     /// Sets the [`MeasureFunc`] of the associated node

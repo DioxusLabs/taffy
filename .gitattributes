@@ -1,0 +1,2 @@
+/tests/generated/** linguist-generated=true
+/benches/generated/** linguist-generated=true

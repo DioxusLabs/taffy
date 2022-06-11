@@ -111,7 +111,7 @@ mod node {
         assert_eq!(taffy.children(node0).unwrap().as_slice(), &[node1]);
 
         // Disconnect the tree: <0> <2>
-        taffy.remove(node1);
+        taffy.remove(node1).unwrap();
 
         assert!(taffy.style(node1).is_err());
 
@@ -186,7 +186,7 @@ mod node {
         let child = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
         taffy.add_child(parent, child).unwrap();
 
-        taffy.remove(child);
-        taffy.remove(parent);
+        taffy.remove(child).unwrap();
+        taffy.remove(parent).unwrap();
     }
 }
