@@ -1,6 +1,6 @@
 use taffy::prelude::*;
 
-fn main() -> Result<(), NodeNotFoundError> {
+fn main() -> Result<(), taffy::error::InvalidNode> {
     let mut taffy = Taffy::new();
 
     // left
