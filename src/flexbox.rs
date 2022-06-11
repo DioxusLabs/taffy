@@ -151,8 +151,8 @@ impl Forest {
         layout.location.x = round(layout.location.x);
         layout.location.y = round(layout.location.y);
 
-        layout.size.width = round(abs_x + layout.size.width) - round(abs_x);
-        layout.size.height = round(abs_y + layout.size.height) - round(abs_y);
+        layout.size.width = round(layout.size.width);
+        layout.size.height = round(layout.size.height);
 
         for child in &children[root] {
             Self::round_layout(nodes, children, *child, abs_x, abs_y);
