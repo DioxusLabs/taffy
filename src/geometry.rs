@@ -238,6 +238,13 @@ impl Size<Dimension> {
     }
 }
 
+impl Size<Option<Dimension>> {
+    /// Converts any `parent`-relative values for size into an absolute size
+    pub(crate) fn resolve(&self, parent: Size<Option<f32>>) -> Size<Option<f32>> {
+        Size { width: self.width.resolve(parent.width), height: self.height.resolve(parent.height) }
+    }
+}
+
 /// A 2-dimensional coordinate.
 ///
 /// When used in association with a [`Rect`], represents the bottom-left corner.

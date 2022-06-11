@@ -105,12 +105,8 @@ impl Forest {
     /// Computes the layout of this [`Forest`] according to the flexbox algorithm
     pub(crate) fn compute(&mut self, root: NodeId, size: Size<Option<f32>>) {
         let style = self.nodes[root].style;
-        let has_root_min_max = style.min_size.width.is_defined()
-            || style.min_size.height.is_defined()
-            || style.max_size.width.is_defined()
-            || style.max_size.height.is_defined();
 
-        let preliminary_size = if has_root_min_max {
+        let preliminary_size = if style.has_defined_size() {
             let first_pass = self.compute_preliminary(root, style.size.resolve(size), size, false, true);
 
             self.compute_preliminary(
