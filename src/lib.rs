@@ -34,7 +34,8 @@ use core::fmt::{Display, Formatter, Result};
 pub enum TaffyError {
     /// The [`Node`](node::Node) is not part of the [`Taffy`](Taffy) instance.
     InvalidNode(node::Node),
-    IndexOutOfBounds {
+    /// The parent [`Node`](node::Node) does not have a child at `child_index`. It only has `child_count` children
+    ChildIndexOutOfBounds {
         /// The parent node whose child was being looked up
         parent: node::Node,
         /// The index that was looked up
@@ -48,9 +49,9 @@ pub enum TaffyError {
 impl Display for TaffyError {
     fn fmt(&self, f: &mut Formatter) -> Result {
         match *self {
-            TaffyError::InvalidNode(ref node) => write!(f, "Invalid node {:?}", node),
-            TaffyError::IndexOutOfBounds { parent, child_index, child_count } => 
-                write!(f, "Index (is {}) should be < len ({}) for parent node {:?}", child_index, child_count, parent),
+            TaffyError::InvalidNode(ref node) => write!(f, "Node {:?} is not in the Taffy instance", node),
+            TaffyError::ChildIndexOutOfBounds { parent, child_index, child_count } => 
+                write!(f, "Index (is {}) should be < child_count ({}) for parent node {:?}", child_index, child_count, parent),
         }
     }
 }
@@ -60,7 +61,7 @@ impl std::error::Error for TaffyError {
     fn description(&self) -> &str {
         match *self {
             TaffyError::InvalidNode(_) => "The node is not part of the Taffy instance",
-            TaffyError::IndexOutOfBounds { .. } => todo!(),
+            TaffyError::ChildIndexOutOfBounds { .. } => "The parent node didn't have a child at child_index. It only has child_count children",
         }
     }
 }

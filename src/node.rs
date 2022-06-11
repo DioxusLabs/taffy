@@ -193,7 +193,7 @@ impl Taffy {
 
         let child_count = self.forest.children[node_id].len();
         if child_index >= child_count {
-            return Err(TaffyError::IndexOutOfBounds { parent, child_index, child_count });
+            return Err(TaffyError::ChildIndexOutOfBounds { parent, child_index, child_count });
         }
 
         let prev_id = self.forest.remove_child_at_index(node_id, child_index);
@@ -209,7 +209,7 @@ impl Taffy {
         // TODO: index check
         let child_count = self.forest.children[node_id].len();
         if child_index >= child_count {
-            return Err(TaffyError::IndexOutOfBounds { parent, child_index, child_count });
+            return Err(TaffyError::ChildIndexOutOfBounds { parent, child_index, child_count });
         }
 
         self.forest.parents[child_id].push(node_id);
@@ -227,7 +227,7 @@ impl Taffy {
 
         let child_count = self.forest.children[id].len();
         if child_index >= child_count {
-            return Err(TaffyError::IndexOutOfBounds { parent, child_index, child_count });
+            return Err(TaffyError::ChildIndexOutOfBounds { parent, child_index, child_count });
         }
 
         Ok(self.ids_to_nodes[&self.forest.children[id][child_index]])
