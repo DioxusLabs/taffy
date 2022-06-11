@@ -8,6 +8,7 @@
 
 ### 0.2.0 Changed
 
+- `Sprawl::remove` now returns a `Result<usize, Error>`, to indicate if the operation was sucessful, and if it was, which ID was invalidated.
 - renamed `taffy::forest::Forest.new-node(..)` `taffy::forest::Forest.new_with_children(..)`
 - renamed `taffy::node::Taffy.new-node(..)` -> `taffy::node::Taffy.new_with_children(..)`
 - renamed `taffy::style::Style` -> `taffy::style::FlexboxLayout` to more precicely indicate its purpose
