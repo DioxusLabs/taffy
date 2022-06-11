@@ -21,6 +21,7 @@
 
 - fixed rounding of fractional values to follow latest Chrome - values are now rounded the same regardless of their position
 - fixed computing free space when using both `flex-grow` and a minimum size
+- padding is now only subtracted when determining the available space if the node size is unspecified, following [section 9.2.2 of the flexbox spec](https://www.w3.org/TR/css-flexbox-1/#line-sizing)
 
 ### 0.2.0 Removed
 

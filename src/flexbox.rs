@@ -308,19 +308,22 @@ impl Forest {
         constants: &AlgoConstants,
     ) -> Size<Option<f32>> {
         let width = match node_size.width {
-            Some(width) => Some(width),
-            None => parent_size.width.maybe_sub(constants.margin.horizontal_axis_sum()),
+            Some(node_width) => Some(node_width),
+            None => parent_size
+                .width
+                .maybe_sub(constants.margin.horizontal_axis_sum())
+                .maybe_sub(constants.padding_border.horizontal_axis_sum()),
         };
 
         let height = match node_size.height {
-            Some(height) => Some(height),
-            None => parent_size.height.maybe_sub(constants.margin.vertical_axis_sum()),
+            Some(node_height) => Some(node_height),
+            None => parent_size
+                .height
+                .maybe_sub(constants.margin.vertical_axis_sum())
+                .maybe_sub(constants.padding_border.vertical_axis_sum()),
         };
 
-        Size {
-            width: width.maybe_sub(constants.padding_border.horizontal_axis_sum()),
-            height: height.maybe_sub(constants.padding_border.vertical_axis_sum()),
-        }
+        Size { width, height }
     }
 
     /// Determine the flex base size and hypothetical main size of each item.
