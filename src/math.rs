@@ -55,7 +55,7 @@ impl MaybeMath<Option<f32>, Option<f32>> for Option<f32> {
         match (self, rhs) {
             (Some(l), Some(r)) => Some(l - r),
             (Some(_l), None) => self,
-            (None, Some(_r)) => rhs,
+            (None, Some(r)) => Some(-r),
             (None, None) => None,
         }
     }
@@ -86,7 +86,7 @@ impl MaybeMath<f32, Option<f32>> for Option<f32> {
     fn maybe_sub(self, rhs: f32) -> Option<f32> {
         match self {
             Some(val) => Some(val - rhs),
-            None => None,
+            None => Some(-rhs),
         }
     }
 }
