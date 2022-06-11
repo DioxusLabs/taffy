@@ -62,7 +62,7 @@ struct FlexItem {
     /// relative position values, alignment, and justification. Does not include margin/padding/border.
     offset_main: f32,
     /// A temporary value for the cross offset
-    /// 
+    ///
     /// Offset is the relative position from the item's natural flow position based on
     /// relative position values, alignment, and justification. Does not include margin/padding/border.
     offset_cross: f32,
