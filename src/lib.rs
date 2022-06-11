@@ -41,8 +41,7 @@ impl Display for NodeNotFoundError {
 }
 
 #[cfg(feature = "std")]
-impl std::error::Error for NodeNotFoundError {
-}
+impl std::error::Error for NodeNotFoundError {}
 
 /// An error that occurs while trying to access or modify a [`Node`](node::Node)'s children by index.
 #[derive(Debug)]
@@ -64,8 +63,11 @@ pub enum ChildOperationError {
 impl Display for ChildOperationError {
     fn fmt(&self, f: &mut Formatter) -> Result {
         match self {
-            ChildOperationError::ChildIndexOutOfBounds { parent, child_index, child_count } => 
-                write!(f, "Index (is {}) should be < child_count ({}) for parent node {:?}", child_index, child_count, parent),
+            ChildOperationError::ChildIndexOutOfBounds { parent, child_index, child_count } => write!(
+                f,
+                "Index (is {}) should be < child_count ({}) for parent node {:?}",
+                child_index, child_count, parent
+            ),
             ChildOperationError::NodeNotFoundError(inner) => inner.fmt(f),
         }
     }

@@ -9,7 +9,7 @@ use crate::style::FlexboxLayout;
 #[cfg(any(feature = "std", feature = "alloc"))]
 use crate::sys::Box;
 use crate::sys::{new_map_with_capacity, ChildrenVec, Map, Vec};
-use crate::{NodeNotFoundError, ChildOperationError};
+use crate::{ChildOperationError, NodeNotFoundError};
 use core::sync::atomic::{AtomicUsize, Ordering};
 
 /// A function that can be applied to a `Size<Number>` to obtain a `Size<f32>`
@@ -105,8 +105,10 @@ impl Taffy {
     /// Adds a new node, which may have any number of `children`
     pub fn new_with_children(&mut self, style: FlexboxLayout, children: &[Node]) -> Result<Node, NodeNotFoundError> {
         let node = self.allocate_node();
-        let children =
-            children.iter().map(|child| self.find_node(*child)).collect::<Result<ChildrenVec<_>, NodeNotFoundError>>()?;
+        let children = children
+            .iter()
+            .map(|child| self.find_node(*child))
+            .collect::<Result<ChildrenVec<_>, NodeNotFoundError>>()?;
         let id = self.forest.new_with_children(style, children);
         self.add_node(node, id);
         Ok(node)
@@ -205,7 +207,12 @@ impl Taffy {
     /// Replaces the child at the given `child_index` from the `parent` node with the new `child` node
     ///
     /// The child is not removed from the forest entirely, it is simply no longer attached to its previous parent.
-    pub fn replace_child_at_index(&mut self, parent: Node, child_index: usize, new_child: Node) -> Result<Node, ChildOperationError> {
+    pub fn replace_child_at_index(
+        &mut self,
+        parent: Node,
+        child_index: usize,
+        new_child: Node,
+    ) -> Result<Node, ChildOperationError> {
         let node_id = self.find_node(parent)?;
         let child_id = self.find_node(new_child)?;
         // TODO: index check
