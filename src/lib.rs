@@ -11,6 +11,7 @@ extern crate alloc;
 #[cfg(feature = "serde")]
 extern crate serde;
 
+pub mod error;
 pub mod geometry;
 pub mod layout;
 pub mod node;
@@ -25,31 +26,3 @@ mod indexmap;
 mod sys;
 
 pub use crate::node::Taffy;
-
-#[cfg(feature = "std")]
-use core::fmt::{Display, Formatter, Result};
-
-/// An error that can occur when performing layout
-#[derive(Debug)]
-pub enum Error {
-    /// The [`Node`](node::Node) was invalid
-    InvalidNode(node::Node),
-}
-
-#[cfg(feature = "std")]
-impl Display for Error {
-    fn fmt(&self, f: &mut Formatter) -> Result {
-        match *self {
-            Error::InvalidNode(ref node) => write!(f, "Invalid node {:?}", node),
-        }
-    }
-}
-
-#[cfg(feature = "std")]
-impl std::error::Error for Error {
-    fn description(&self) -> &str {
-        match *self {
-            Error::InvalidNode(_) => "The node is not part of the Taffy instance",
-        }
-    }
-}
