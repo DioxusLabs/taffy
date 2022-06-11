@@ -19,15 +19,14 @@ If you'd like to help on a consistent basis or are interested in project managem
 Flexbox layouts are tested by validating that layouts written in this crate perform the same as in Chrome.
 This is done by rendering an equivalent layout in HTML and then generating a Rust test case which asserts that the resulting layout is the same when run through our layout engine.
 
-You can run these tests without setting up a webdriver environment but if you are looking to add any test case you will need to install [chromedriver](http://chromedriver.chromium.org).
+You can run these tests without setting up a webdriver environment but if you are looking to add any test case you will need to install [chromedriver](http://chromedriver.chromium.org) and [Chrome](https://www.google.com/chrome/).
 If you are developing on macOS this is easy to do through brew.
 
 ```bash
-brew tap homebrew/cask
-brew cask install chromedriver
+brew install chromedriver
 ```
 
-Once you have chromedriver installed and available in `PATH` you can re-generate all tests by running `cargo run --package gentest`.
+Once you have chromedriver installed and available in `PATH` you can re-generate all tests by running `cargo run --package gentest`. You should not manually update the tests in `tests/generated`. Instead, fix the script in `scripts/gentest/` and re-generate them. This can happen after a refactor. It can be helpful to commit the updated tests in a dedicated commit so that they can be easier to ignore during review.
 
 To add a new test case add another HTML file to `/test_fixtures` following the current tests as a template for new tests.
 

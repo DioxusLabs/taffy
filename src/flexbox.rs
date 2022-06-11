@@ -151,8 +151,8 @@ impl Forest {
         layout.location.x = round(layout.location.x);
         layout.location.y = round(layout.location.y);
 
-        layout.size.width = round(abs_x + layout.size.width) - round(abs_x);
-        layout.size.height = round(abs_y + layout.size.height) - round(abs_y);
+        layout.size.width = round(layout.size.width);
+        layout.size.height = round(layout.size.height);
 
         for child in &children[root] {
             Self::round_layout(nodes, children, *child, abs_x, abs_y);
@@ -418,15 +418,14 @@ impl Forest {
                 .compute_preliminary(
                     child.node,
                     Size {
-                        width: width.maybe_max(child.min_size.width).maybe_min(child.max_size.width),
-                        height: height.maybe_max(child.min_size.height).maybe_min(child.max_size.height),
+                        width: width.maybe_min(child.max_size.width),
+                        height: height.maybe_min(child.max_size.height),
                     },
                     available_space,
                     false,
                     true,
                 )
                 .main(constants.dir)
-                .maybe_max(child.min_size.main(constants.dir))
                 .maybe_min(child.max_size.main(constants.dir));
         }
 
