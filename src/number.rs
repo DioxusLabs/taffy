@@ -1,147 +1,67 @@
-//! Contains the [`Number`] type and associated methods
-
-use core::ops::{Add, Div, Mul, Sub};
-
-/// A [`f32`] that may be undefined
-///
-/// NOTE: this should *really* be an [`Option<f32>`],
-/// but we're optimizing for backwards compatibility for now.
-#[derive(Copy, Clone, PartialEq, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum Number {
-    /// Pretend this is [`Some(f32)`]
-    ///
-    /// WARNING: the contained value may be NaN
-    Defined(f32),
-    /// Pretend this is [`None`]
-    Undefined,
-}
-
-/// An extension method used for [`Number`]
-pub trait OrElse<T> {
-    /// Returns the contained value if it is defined, otherwise returns `other`
-    fn or_else(self, other: T) -> T;
-}
-
-impl Default for Number {
-    fn default() -> Self {
-        Self::Undefined
-    }
-}
-
-impl OrElse<f32> for Number {
-    fn or_else(self, other: f32) -> f32 {
-        match self {
-            Number::Defined(val) => val,
-            Number::Undefined => other,
-        }
-    }
-}
-
-// FIXME: this is terrible; use unwrap_or_else
-impl OrElse<f32> for Option<f32> {
-    fn or_else(self, other: f32) -> f32 {
-        match self {
-            Some(val) => val,
-            None => other,
-        }
-    }
-}
-
-impl OrElse<Number> for Number {
-    fn or_else(self, other: Number) -> Self {
-        match self {
-            Number::Defined(_) => self,
-            Number::Undefined => other,
-        }
-    }
-}
-
-impl Number {
-    // FIXME: replace with is_some
-    /// Is the number defined?
-    pub fn is_defined(self) -> bool {
-        match self {
-            Number::Defined(_) => true,
-            Number::Undefined => false,
-        }
-    }
-
-    // FIXME: replace with is_none
-    /// Is the number undefined?
-    pub fn is_undefined(self) -> bool {
-        match self {
-            Number::Defined(_) => false,
-            Number::Undefined => true,
-        }
-    }
-}
+//! Contains numberical helper traits and functions
 
 /// A trait to conveniently calculate minimums and maximums when some data may not be defined
-pub trait MinMax<In, Out> {
-    /// Returns the minimum of self and rhs
+///
+pub(crate) trait MaybeMath<In, Out> {
+    /// Returns the minimum of `self` and `rhs`
     ///
     /// If either either value is invalid, returns the other value.
+    /// If both values are invalid, return [`None`]
     fn maybe_min(self, rhs: In) -> Out;
-    /// Returns the maximum of self and rhs
+    /// Returns the maximum of `self` and `rhs`
     ///
     /// If either either value is invalid, returns the other value.
+    /// If both values are invalid, return [`None`]
     fn maybe_max(self, rhs: In) -> Out;
+
+    /// Adds `self` and `rhs`, treating [`None`] values as default
+    /// If both values are invalid, return [`None`]
+    fn maybe_add(self, rhs: In) -> Out;
+
+    /// Subracts rhs from `self`, treating [`None`] values as default
+    /// If both values are invalid, return [`None`]
+    fn maybe_sub(self, rhs: In) -> Out;
 }
 
-impl MinMax<Option<f32>, Option<f32>> for Option<f32> {
+impl MaybeMath<Option<f32>, Option<f32>> for Option<f32> {
     fn maybe_min(self, rhs: Option<f32>) -> Option<f32> {
         match (self, rhs) {
             (Some(l), Some(r)) => Some(l.min(r)),
-            (Some(_l), _) => self,
-            _ => None,
+            (Some(_l), None) => self,
+            (None, Some(_r)) => rhs,
+            (None, None) => None,
         }
     }
 
     fn maybe_max(self, rhs: Option<f32>) -> Option<f32> {
         match (self, rhs) {
             (Some(l), Some(r)) => Some(l.max(r)),
-            (Some(_l), _) => self,
-            _ => None,
+            (Some(_l), None) => self,
+            (None, Some(_r)) => rhs,
+            (None, None) => None,
         }
     }
-}
 
-impl MinMax<Self, Self> for Number {
-    fn maybe_min(self, rhs: Self) -> Self {
+    fn maybe_add(self, rhs: Option<f32>) -> Option<f32> {
         match (self, rhs) {
-            (Number::Defined(l), Number::Defined(r)) => Number::Defined(l.min(r)),
-            (Number::Defined(_), _) => self,
-            _ => Number::Undefined,
+            (Some(l), Some(r)) => Some(l + r),
+            (Some(_l), None) => self,
+            (None, Some(_r)) => rhs,
+            (None, None) => None,
         }
     }
 
-    fn maybe_max(self, rhs: Self) -> Self {
+    fn maybe_sub(self, rhs: Option<f32>) -> Option<f32> {
         match (self, rhs) {
-            (Number::Defined(l), Number::Defined(r)) => Number::Defined(l.max(r)),
-            (Number::Defined(_), _) => self,
-            _ => Number::Undefined,
+            (Some(l), Some(r)) => Some(l - r),
+            (Some(_l), None) => self,
+            (None, Some(_r)) => rhs,
+            (None, None) => None,
         }
     }
 }
 
-impl MinMax<f32, Number> for Number {
-    fn maybe_min(self, rhs: f32) -> Self {
-        match self {
-            Number::Defined(val) => Number::Defined(val.min(rhs)),
-            Number::Undefined => Number::Undefined,
-        }
-    }
-
-    fn maybe_max(self, rhs: f32) -> Self {
-        match self {
-            Number::Defined(val) => Number::Defined(val.max(rhs)),
-            Number::Undefined => Number::Undefined,
-        }
-    }
-}
-
-impl MinMax<f32, Option<f32>> for Option<f32> {
+impl MaybeMath<f32, Option<f32>> for Option<f32> {
     fn maybe_min(self, rhs: f32) -> Option<f32> {
         match self {
             Some(val) => Some(val.min(rhs)),
@@ -155,25 +75,22 @@ impl MinMax<f32, Option<f32>> for Option<f32> {
             None => None,
         }
     }
-}
 
-impl MinMax<Number, f32> for f32 {
-    fn maybe_min(self, rhs: Number) -> f32 {
-        match rhs {
-            Number::Defined(val) => self.min(val),
-            Number::Undefined => self,
+    fn maybe_add(self, rhs: f32) -> Option<f32> {
+        match self {
+            Some(val) => Some(val + rhs),
+            None => Some(rhs),
         }
     }
 
-    fn maybe_max(self, rhs: Number) -> f32 {
-        match rhs {
-            Number::Defined(val) => self.max(val),
-            Number::Undefined => self,
+    fn maybe_sub(self, rhs: f32) -> Option<f32> {
+        match self {
+            Some(val) => Some(val - rhs),
+            None => None,
         }
     }
 }
-
-impl MinMax<Option<f32>, f32> for f32 {
+impl MaybeMath<Option<f32>, f32> for f32 {
     fn maybe_min(self, rhs: Option<f32>) -> f32 {
         match rhs {
             Some(val) => self.min(val),
@@ -187,103 +104,18 @@ impl MinMax<Option<f32>, f32> for f32 {
             None => self,
         }
     }
-}
 
-impl From<f32> for Number {
-    #[must_use]
-    fn from(v: f32) -> Self {
-        Self::Defined(v)
-    }
-}
-
-impl Add<f32> for Number {
-    type Output = Number;
-
-    fn add(self, rhs: f32) -> Self {
-        match self {
-            Number::Defined(val) => Number::Defined(val + rhs),
-            Number::Undefined => Number::Undefined,
+    fn maybe_add(self, rhs: Option<f32>) -> f32 {
+        match rhs {
+            Some(val) => self + val,
+            None => self,
         }
     }
-}
 
-impl Add<Number> for Number {
-    type Output = Number;
-
-    fn add(self, rhs: Self) -> Self {
-        match (self, rhs) {
-            (Number::Defined(l), Number::Defined(r)) => Number::Defined(l + r),
-            (Number::Defined(_), _) => self,
-            _ => Number::Undefined,
-        }
-    }
-}
-
-impl Sub<f32> for Number {
-    type Output = Number;
-
-    fn sub(self, rhs: f32) -> Self {
-        match self {
-            Number::Defined(val) => Number::Defined(val - rhs),
-            Number::Undefined => Number::Undefined,
-        }
-    }
-}
-
-impl Sub<Number> for Number {
-    type Output = Number;
-
-    fn sub(self, rhs: Self) -> Self {
-        match (self, rhs) {
-            (Number::Defined(l), Number::Defined(r)) => Number::Defined(l - r),
-            (Number::Defined(_), _) => self,
-            _ => Number::Undefined,
-        }
-    }
-}
-
-impl Mul<f32> for Number {
-    type Output = Number;
-
-    fn mul(self, rhs: f32) -> Self {
-        match self {
-            Number::Defined(val) => Number::Defined(val * rhs),
-            Number::Undefined => Number::Undefined,
-        }
-    }
-}
-
-impl Mul<Number> for Number {
-    type Output = Number;
-
-    fn mul(self, rhs: Self) -> Self {
-        match (self, rhs) {
-            (Number::Defined(l), Number::Defined(r)) => Number::Defined(l * r),
-            (Number::Defined(_), _) => self,
-            _ => Number::Undefined,
-        }
-    }
-}
-
-impl Div<f32> for Number {
-    type Output = Number;
-
-    fn div(self, rhs: f32) -> Self {
-        match self {
-            Number::Defined(val) => Number::Defined(val / rhs),
-            Number::Undefined => Number::Undefined,
-        }
-    }
-}
-
-impl Div<Number> for Number {
-    type Output = Number;
-
-    fn div(self, rhs: Self) -> Self {
-        match (self, rhs) {
-            (Number::Defined(l), Number::Defined(r)) => Number::Defined(l / r),
-            (Number::Defined(_), _) => self,
-            _ => Number::Undefined,
+    fn maybe_sub(self, rhs: Option<f32>) -> f32 {
+        match rhs {
+            Some(val) => self - val,
+            None => self,
         }
     }
 }

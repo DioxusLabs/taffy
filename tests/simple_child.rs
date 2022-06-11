@@ -60,15 +60,7 @@ fn simple_child() {
             &[node0, node1],
         )
         .unwrap();
-    taffy
-        .compute_layout(
-            node,
-            taffy::geometry::Size {
-                width: taffy::prelude::Number::Defined(100f32),
-                height: taffy::prelude::Number::Defined(100f32),
-            },
-        )
-        .unwrap();
+    taffy.compute_layout(node, taffy::geometry::Size { width: Some(100.), height: Some(100.) }).unwrap();
     assert_eq!(taffy.layout(node).unwrap().location, Point { x: 0.0, y: 0.0 });
     assert_eq!(taffy.layout(node0).unwrap().location, Point { x: 0.0, y: 0.0 });
     assert_eq!(taffy.layout(node1).unwrap().location, Point { x: 10.0, y: 0.0 });

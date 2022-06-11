@@ -1,7 +1,6 @@
 //! A representation of [CSS layout properties](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust, used for flexbox layout
 
 use crate::geometry::{Rect, Size};
-use crate::number::Number;
 
 /// How [`Nodes`](crate::node::Node) are aligned relative to the cross axis
 ///
@@ -274,11 +273,15 @@ impl Default for Dimension {
 
 impl Dimension {
     /// Converts the given [`Dimension`] into a concrete value of points
-    pub(crate) fn resolve(self, parent_dim: Number) -> Number {
+    pub(crate) fn resolve(self, parent_dim: Option<f32>) -> Option<f32> {
         match self {
-            Dimension::Points(points) => Number::Defined(points),
-            Dimension::Percent(percent) => parent_dim * percent,
-            _ => Number::Undefined,
+            Dimension::Points(points) => Some(points),
+            // parent_dim * percent
+            Dimension::Percent(percent) => match parent_dim {
+                Some(dim) => Some(dim * percent),
+                None => None,
+            },
+            _ => None,
         }
     }
 
@@ -362,7 +365,7 @@ pub struct FlexboxLayout {
     /// Sets the preferred aspect ratio for the item
     ///
     /// The ratio is calculated as width divided by height.
-    pub aspect_ratio: Number,
+    pub aspect_ratio: Option<f32>,
 }
 
 impl Default for FlexboxLayout {

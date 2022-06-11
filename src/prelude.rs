@@ -4,7 +4,6 @@ pub use crate::{
     geometry::{Rect, Size},
     layout::Layout,
     node::{Node, Taffy},
-    number::Number,
     style::{
         AlignContent, AlignItems, AlignSelf, Dimension, Display, FlexDirection, FlexWrap, FlexboxLayout,
         JustifyContent, PositionType,

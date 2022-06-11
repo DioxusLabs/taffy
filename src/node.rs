@@ -4,7 +4,6 @@
 use crate::forest::Forest;
 use crate::geometry::Size;
 use crate::layout::Layout;
-use crate::number::Number;
 use crate::style::FlexboxLayout;
 #[cfg(any(feature = "std", feature = "alloc"))]
 use crate::sys::Box;
@@ -12,13 +11,13 @@ use crate::sys::{new_map_with_capacity, ChildrenVec, Map, Vec};
 use crate::Error;
 use core::sync::atomic::{AtomicUsize, Ordering};
 
-/// A function that can be applied to a `Size<Number>` to obtain a `Size<f32>`
+/// A function that can be applied to a `Size<Option<f32>>` to obtain a `Size<f32>`
 pub enum MeasureFunc {
     /// Stores an unboxed function
-    Raw(fn(Size<Number>) -> Size<f32>),
+    Raw(fn(Size<Option<f32>>) -> Size<f32>),
     /// Stores a boxed function
     #[cfg(any(feature = "std", feature = "alloc"))]
-    Boxed(Box<dyn Fn(Size<Number>) -> Size<f32>>),
+    Boxed(Box<dyn Fn(Size<Option<f32>>) -> Size<f32>>),
 }
 
 /// Global taffy instance id allocator.
@@ -265,7 +264,7 @@ impl Taffy {
     }
 
     /// Updates the stored layout of the provided `node` and its children
-    pub fn compute_layout(&mut self, node: Node, size: Size<Number>) -> Result<(), Error> {
+    pub fn compute_layout(&mut self, node: Node, size: Size<Option<f32>>) -> Result<(), Error> {
         let id = self.find_node(node)?;
         self.forest.compute_layout(id, size);
         Ok(())
