@@ -14,8 +14,8 @@ extern crate serde;
 pub mod error;
 pub mod geometry;
 pub mod layout;
+pub mod math;
 pub mod node;
-pub mod number;
 pub mod prelude;
 pub mod style;
 

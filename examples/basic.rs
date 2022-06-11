@@ -17,7 +17,7 @@ fn main() -> Result<(), taffy::error::InvalidNode> {
         &[child],
     )?;
 
-    taffy.compute_layout(node, Size { height: Number::Defined(100.0), width: Number::Defined(100.0) })?;
+    taffy.compute_layout(node, Size { height: Some(100.0), width: Some(100.0) })?;
 
     // or just use undefined for 100 x 100
     // taffy.compute_layout(node, Size::undefined())?;

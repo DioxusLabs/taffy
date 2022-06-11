@@ -1,9 +1,7 @@
 //! Geometric primitives useful for layout
 
-use core::ops::Add;
-
-use crate::number::Number;
 use crate::style::{Dimension, FlexDirection};
+use core::ops::Add;
 
 /// An axis-aligned UI rectangle
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -162,10 +160,10 @@ pub struct Size<T> {
 }
 
 impl Size<()> {
-    /// Generates a `Size<Number>` with undefined width and height
+    /// Generates a `Size<Option<f32>>` with undefined width and height
     #[must_use]
-    pub fn undefined() -> Size<Number> {
-        Size { width: Number::Undefined, height: Number::Undefined }
+    pub fn undefined() -> Size<Option<f32>> {
+        Size { width: None, height: None }
     }
 }
 
@@ -235,7 +233,7 @@ impl Size<f32> {
 
 impl Size<Dimension> {
     /// Converts any `parent`-relative values for size into an absolute size
-    pub(crate) fn resolve(&self, parent: Size<Number>) -> Size<Number> {
+    pub(crate) fn resolve(&self, parent: Size<Option<f32>>) -> Size<Option<f32>> {
         Size { width: self.width.resolve(parent.width), height: self.height.resolve(parent.height) }
     }
 }

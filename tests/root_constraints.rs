@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod root_constraints {
-    use taffy::number::*;
 
     #[test]
     fn root_with_percentage_size() {
@@ -18,12 +17,7 @@ mod root_constraints {
             )
             .unwrap();
 
-        taffy
-            .compute_layout(
-                node,
-                taffy::geometry::Size { width: Number::Defined(100.0), height: Number::Defined(200.0) },
-            )
-            .unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size { width: Some(100.0), height: Some(200.0) }).unwrap();
         let layout = taffy.layout(node).unwrap();
 
         assert_eq!(layout.size.width, 100.0);
@@ -35,12 +29,7 @@ mod root_constraints {
         let mut taffy = taffy::node::Taffy::new();
         let node = taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[]).unwrap();
 
-        taffy
-            .compute_layout(
-                node,
-                taffy::geometry::Size { width: Number::Defined(100.0), height: Number::Defined(100.0) },
-            )
-            .unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size { width: Some(100.0), height: Some(100.0) }).unwrap();
         let layout = taffy.layout(node).unwrap();
 
         assert_eq!(layout.size.width, 0.0);
@@ -63,12 +52,7 @@ mod root_constraints {
             )
             .unwrap();
 
-        taffy
-            .compute_layout(
-                node,
-                taffy::geometry::Size { width: Number::Defined(100.0), height: Number::Defined(100.0) },
-            )
-            .unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size { width: Some(100.0), height: Some(100.0) }).unwrap();
         let layout = taffy.layout(node).unwrap();
 
         assert_eq!(layout.size.width, 200.0);

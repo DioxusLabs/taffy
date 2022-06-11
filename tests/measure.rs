@@ -1,7 +1,6 @@
 #[cfg(test)]
 mod measure {
     use taffy::node::MeasureFunc;
-    use taffy::number::OrElse;
 
     #[test]
     fn measure_root() {
@@ -10,8 +9,8 @@ mod measure {
             .new_leaf(
                 taffy::style::FlexboxLayout { ..Default::default() },
                 MeasureFunc::Raw(|constraint| taffy::geometry::Size {
-                    width: constraint.width.or_else(100.0),
-                    height: constraint.height.or_else(100.0),
+                    width: constraint.width.unwrap_or(100.0),
+                    height: constraint.height.unwrap_or(100.0),
                 }),
             )
             .unwrap();
@@ -30,8 +29,8 @@ mod measure {
             .new_leaf(
                 taffy::style::FlexboxLayout { ..Default::default() },
                 MeasureFunc::Raw(|constraint| taffy::geometry::Size {
-                    width: constraint.width.or_else(100.0),
-                    height: constraint.height.or_else(100.0),
+                    width: constraint.width.unwrap_or(100.0),
+                    height: constraint.height.unwrap_or(100.0),
                 }),
             )
             .unwrap();
@@ -53,8 +52,8 @@ mod measure {
             .new_leaf(
                 taffy::style::FlexboxLayout { ..Default::default() },
                 MeasureFunc::Raw(|constraint| taffy::geometry::Size {
-                    width: constraint.width.or_else(100.0),
-                    height: constraint.height.or_else(100.0),
+                    width: constraint.width.unwrap_or(100.0),
+                    height: constraint.height.unwrap_or(100.0),
                 }),
             )
             .unwrap();
@@ -85,8 +84,8 @@ mod measure {
             .new_leaf(
                 taffy::style::FlexboxLayout { ..Default::default() },
                 MeasureFunc::Raw(|constraint| taffy::geometry::Size {
-                    width: constraint.width.or_else(100.0),
-                    height: constraint.height.or_else(100.0),
+                    width: constraint.width.unwrap_or(100.0),
+                    height: constraint.height.unwrap_or(100.0),
                 }),
             )
             .unwrap();
@@ -135,8 +134,8 @@ mod measure {
             .new_leaf(
                 taffy::style::FlexboxLayout { flex_grow: 1.0, ..Default::default() },
                 MeasureFunc::Raw(|constraint| taffy::geometry::Size {
-                    width: constraint.width.or_else(10.0),
-                    height: constraint.height.or_else(50.0),
+                    width: constraint.width.unwrap_or(10.0),
+                    height: constraint.height.unwrap_or(50.0),
                 }),
             )
             .unwrap();
@@ -178,8 +177,8 @@ mod measure {
             .new_leaf(
                 taffy::style::FlexboxLayout { ..Default::default() },
                 MeasureFunc::Raw(|constraint| taffy::geometry::Size {
-                    width: constraint.width.or_else(100.0),
-                    height: constraint.height.or_else(50.0),
+                    width: constraint.width.unwrap_or(100.0),
+                    height: constraint.height.unwrap_or(50.0),
                 }),
             )
             .unwrap();
@@ -220,8 +219,8 @@ mod measure {
             .new_leaf(
                 taffy::style::FlexboxLayout { flex_grow: 1.0, ..Default::default() },
                 MeasureFunc::Raw(|constraint| {
-                    let width = constraint.width.or_else(10.0);
-                    let height = constraint.height.or_else(width * 2.0);
+                    let width = constraint.width.unwrap_or(10.0);
+                    let height = constraint.height.unwrap_or(width * 2.0);
                     taffy::geometry::Size { width, height }
                 }),
             )
@@ -266,8 +265,8 @@ mod measure {
             .new_leaf(
                 taffy::style::FlexboxLayout { ..Default::default() },
                 MeasureFunc::Raw(|constraint| {
-                    let width = constraint.width.or_else(100.0);
-                    let height = constraint.height.or_else(width * 2.0);
+                    let width = constraint.width.unwrap_or(100.0);
+                    let height = constraint.height.unwrap_or(width * 2.0);
                     taffy::geometry::Size { width, height }
                 }),
             )
@@ -298,8 +297,8 @@ mod measure {
             .new_leaf(
                 taffy::style::FlexboxLayout { ..Default::default() },
                 MeasureFunc::Raw(|constraint| {
-                    let height = constraint.height.or_else(50.0);
-                    let width = constraint.width.or_else(height);
+                    let height = constraint.height.unwrap_or(50.0);
+                    let width = constraint.width.unwrap_or(height);
                     taffy::geometry::Size { width, height }
                 }),
             )
@@ -334,8 +333,8 @@ mod measure {
                     ..Default::default()
                 },
                 MeasureFunc::Raw(|constraint| taffy::geometry::Size {
-                    width: constraint.width.or_else(100.0),
-                    height: constraint.height.or_else(100.0),
+                    width: constraint.width.unwrap_or(100.0),
+                    height: constraint.height.unwrap_or(100.0),
                 }),
             )
             .unwrap();
@@ -357,8 +356,8 @@ mod measure {
                     ..Default::default()
                 },
                 MeasureFunc::Raw(|constraint| taffy::geometry::Size {
-                    width: constraint.width.or_else(100.0),
-                    height: constraint.height.or_else(100.0),
+                    width: constraint.width.unwrap_or(100.0),
+                    height: constraint.height.unwrap_or(100.0),
                 }),
             )
             .unwrap();
@@ -392,8 +391,8 @@ mod measure {
                     ..Default::default()
                 },
                 MeasureFunc::Raw(|constraint| taffy::geometry::Size {
-                    width: constraint.width.or_else(100.0),
-                    height: constraint.height.or_else(100.0),
+                    width: constraint.width.unwrap_or(100.0),
+                    height: constraint.height.unwrap_or(100.0),
                 }),
             )
             .unwrap();
@@ -426,8 +425,8 @@ mod measure {
             .new_leaf(
                 taffy::style::FlexboxLayout { ..Default::default() },
                 MeasureFunc::Raw(|constraint| taffy::geometry::Size {
-                    width: constraint.width.or_else(50.0),
-                    height: constraint.height.or_else(50.0),
+                    width: constraint.width.unwrap_or(50.0),
+                    height: constraint.height.unwrap_or(50.0),
                 }),
             )
             .unwrap();
@@ -461,8 +460,8 @@ mod measure {
                     ..Default::default()
                 },
                 MeasureFunc::Raw(|constraint| taffy::geometry::Size {
-                    width: constraint.width.or_else(50.0),
-                    height: constraint.height.or_else(50.0),
+                    width: constraint.width.unwrap_or(50.0),
+                    height: constraint.height.unwrap_or(50.0),
                 }),
             )
             .unwrap();
@@ -528,8 +527,8 @@ mod measure {
                 MeasureFunc::Raw(|constraint| {
                     NUM_MEASURES.fetch_add(1, atomic::Ordering::Relaxed);
                     taffy::geometry::Size {
-                        width: constraint.width.or_else(50.0),
-                        height: constraint.height.or_else(50.0),
+                        width: constraint.width.unwrap_or(50.0),
+                        height: constraint.height.unwrap_or(50.0),
                     }
                 }),
             )
