@@ -1,6 +1,7 @@
 //! UI [`Node`] types and related data structures.
 //!
 //! Layouts are composed of multiple nodes, which live in a forest-like data structure.
+use crate::error;
 use crate::forest::Forest;
 use crate::geometry::Size;
 use crate::layout::Layout;
@@ -9,7 +10,6 @@ use crate::style::FlexboxLayout;
 #[cfg(any(feature = "std", feature = "alloc"))]
 use crate::sys::Box;
 use crate::sys::{new_map_with_capacity, ChildrenVec, Map, Vec};
-use crate::error;
 use core::sync::atomic::{AtomicUsize, Ordering};
 
 /// A function that can be applied to a `Size<Number>` to obtain a `Size<f32>`
@@ -193,8 +193,7 @@ impl Taffy {
     ///
     /// The child is not removed from the forest entirely, it is simply no longer attached to its previous parent.
     pub fn remove_child_at_index(&mut self, parent: Node, child_index: usize) -> Result<Node, error::InvalidChild> {
-        let node_id = self.find_node(parent)
-            .map_err(|e| error::InvalidChild::InvalidParentNode(e.0))?;
+        let node_id = self.find_node(parent).map_err(|e| error::InvalidChild::InvalidParentNode(e.0))?;
 
         let child_count = self.forest.children[node_id].len();
         if child_index >= child_count {
@@ -214,10 +213,8 @@ impl Taffy {
         child_index: usize,
         new_child: Node,
     ) -> Result<Node, error::InvalidChild> {
-        let node_id = self.find_node(parent)
-            .map_err(|e| error::InvalidChild::InvalidParentNode(e.0))?;
-        let child_id = self.find_node(new_child)
-            .map_err(|e| error::InvalidChild::InvalidChildNode(e.0))?;
+        let node_id = self.find_node(parent).map_err(|e| error::InvalidChild::InvalidParentNode(e.0))?;
+        let child_id = self.find_node(new_child).map_err(|e| error::InvalidChild::InvalidChildNode(e.0))?;
         // TODO: index check
         let child_count = self.forest.children[node_id].len();
         if child_index >= child_count {
@@ -235,8 +232,7 @@ impl Taffy {
 
     /// Returns the child [`Node`] of the parent `node` at the provided `child_index`
     pub fn child_at_index(&self, parent: Node, child_index: usize) -> Result<Node, error::InvalidChild> {
-        let id = self.find_node(parent)
-            .map_err(|e| error::InvalidChild::InvalidParentNode(e.0))?;
+        let id = self.find_node(parent).map_err(|e| error::InvalidChild::InvalidParentNode(e.0))?;
 
         let child_count = self.forest.children[id].len();
         if child_index >= child_count {

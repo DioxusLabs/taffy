@@ -45,20 +45,13 @@ impl Display for InvalidChild {
                 "Index (is {}) should be < child_count ({}) for parent node {:?}",
                 child_index, child_count, parent
             ),
-            InvalidChild::InvalidParentNode(parent) => write!(
-                f,
-                "Parent Node {:?} is not in the Taffy instance",
-                parent
-            ),
-            InvalidChild::InvalidChildNode(child) => write!(
-                f,
-                "Child Node {:?} is not in the Taffy instance",
-                child
-            ),
+            InvalidChild::InvalidParentNode(parent) => {
+                write!(f, "Parent Node {:?} is not in the Taffy instance", parent)
+            }
+            InvalidChild::InvalidChildNode(child) => write!(f, "Child Node {:?} is not in the Taffy instance", child),
         }
     }
 }
 
 #[cfg(feature = "std")]
-impl std::error::Error for InvalidChild {
-}
+impl std::error::Error for InvalidChild {}
