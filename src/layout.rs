@@ -1,7 +1,6 @@
 //! Final and cached data structures that represent the high-level UI layout
 
 use crate::geometry::{Point, Size};
-use crate::number::Number;
 
 /// The final result of a layout algorithm for a single [`Node`](crate::node::Node).
 #[derive(Copy, Debug, Clone)]
@@ -29,9 +28,9 @@ impl Layout {
 #[derive(Debug, Clone)]
 pub(crate) struct Cache {
     /// The initial cached size of the node itself
-    pub(crate) node_size: Size<Number>,
+    pub(crate) node_size: Size<Option<f32>>,
     /// The initial cached size of the parent's node
-    pub(crate) parent_size: Size<Number>,
+    pub(crate) parent_size: Size<Option<f32>>,
     /// Whether or not layout should be recomputed
     pub(crate) perform_layout: bool,
 

@@ -4,7 +4,6 @@
 use crate::geometry::Size;
 use crate::layout::{Cache, Layout};
 use crate::node::{MeasureFunc, NodeId};
-use crate::number::Number;
 use crate::style::FlexboxLayout;
 use crate::sys::{new_vec_with_capacity, ChildrenVec, ParentsVec, Vec};
 
@@ -14,7 +13,7 @@ use crate::sys::{new_vec_with_capacity, ChildrenVec, ParentsVec, Vec};
 pub(crate) struct NodeData {
     /// The layout strategy used by this node
     pub(crate) style: FlexboxLayout,
-    /// The mapping from the Size<Number> (in units) to Size<f32> (in points) for this node
+    /// The mapping from the Size<Option<f32>> (in real units) to Size<f32> (in points) for this node
     pub(crate) measure: Option<MeasureFunc>,
     /// The results of the layout computation
     pub(crate) layout: Layout,
@@ -236,7 +235,7 @@ impl Forest {
     }
 
     /// Computes the layout of the `node` and its children
-    pub(crate) fn compute_layout(&mut self, node: NodeId, size: Size<Number>) {
+    pub(crate) fn compute_layout(&mut self, node: NodeId, size: Size<Option<f32>>) {
         // TODO: It's not clear why this method is distinct
         self.compute(node, size)
     }
