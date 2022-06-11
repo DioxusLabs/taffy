@@ -63,17 +63,11 @@ impl MaybeMath<Option<f32>, Option<f32>> for Option<f32> {
 
 impl MaybeMath<f32, Option<f32>> for Option<f32> {
     fn maybe_min(self, rhs: f32) -> Option<f32> {
-        match self {
-            Some(val) => Some(val.min(rhs)),
-            None => None,
-        }
+        self.map(|val| val.min(rhs))
     }
 
     fn maybe_max(self, rhs: f32) -> Option<f32> {
-        match self {
-            Some(val) => Some(val.max(rhs)),
-            None => None,
-        }
+        self.map(|val| val.max(rhs))
     }
 
     fn maybe_add(self, rhs: f32) -> Option<f32> {

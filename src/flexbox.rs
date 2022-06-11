@@ -407,7 +407,7 @@ impl Forest {
             //    is auto and not definite, in this calculation use fit-content as the
             //    flex item’s cross size. The flex base size is the item’s resulting main size.
 
-            let width: Option<f32> = if !child.size.width.is_some()
+            let width: Option<f32> = if child.size.width.is_none()
                 && child_style.align_self(&self.nodes[node].style) == AlignSelf::Stretch
                 && constants.is_column
             {
@@ -416,7 +416,7 @@ impl Forest {
                 child.size.width
             };
 
-            let height: Option<f32> = if !child.size.height.is_some()
+            let height: Option<f32> = if child.size.height.is_none()
                 && child_style.align_self(&self.nodes[node].style) == AlignSelf::Stretch
                 && constants.is_row
             {

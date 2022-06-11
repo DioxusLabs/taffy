@@ -277,10 +277,7 @@ impl Dimension {
         match self {
             Dimension::Points(points) => Some(points),
             // parent_dim * percent
-            Dimension::Percent(percent) => match parent_dim {
-                Some(dim) => Some(dim * percent),
-                None => None,
-            },
+            Dimension::Percent(percent) => parent_dim.map(|dim| dim * percent),
             _ => None,
         }
     }
