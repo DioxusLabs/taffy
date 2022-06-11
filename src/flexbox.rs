@@ -418,15 +418,14 @@ impl Forest {
                 .compute_preliminary(
                     child.node,
                     Size {
-                        width: width.maybe_max(child.min_size.width).maybe_min(child.max_size.width),
-                        height: height.maybe_max(child.min_size.height).maybe_min(child.max_size.height),
+                        width: width.maybe_min(child.max_size.width),
+                        height: height.maybe_min(child.max_size.height),
                     },
                     available_space,
                     false,
                     true,
                 )
                 .main(constants.dir)
-                .maybe_max(child.min_size.main(constants.dir))
                 .maybe_min(child.max_size.main(constants.dir));
         }
 
