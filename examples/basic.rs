@@ -1,6 +1,6 @@
 use taffy::prelude::*;
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<(), taffy::error::InvalidNode> {
     let mut taffy = Taffy::new();
 
     let child = taffy.new_with_children(

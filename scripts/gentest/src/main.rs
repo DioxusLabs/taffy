@@ -34,7 +34,10 @@ async fn main() {
 
     info!("starting webdriver instance");
     let webdriver_url = "http://localhost:4444";
-    let mut webdriver_handle = Command::new("chromedriver").arg("--port=4444").spawn().unwrap();
+    let mut webdriver_handle = Command::new("chromedriver")
+        .arg("--port=4444")
+        .spawn()
+        .expect("ChromeDriver not found: Make sure you have it installed and added to your PATH.");
 
     // this is silly, but it works
     std::thread::sleep(std::time::Duration::from_secs(1));

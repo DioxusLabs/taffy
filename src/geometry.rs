@@ -231,13 +231,6 @@ impl Size<f32> {
     }
 }
 
-impl Size<Dimension> {
-    /// Converts any `parent`-relative values for size into an absolute size
-    pub(crate) fn resolve(&self, parent: Size<Option<f32>>) -> Size<Option<f32>> {
-        Size { width: self.width.resolve(parent.width), height: self.height.resolve(parent.height) }
-    }
-}
-
 impl Size<Option<Dimension>> {
     /// Converts any `parent`-relative values for size into an absolute size
     pub(crate) fn resolve(&self, parent: Size<Option<f32>>) -> Size<Option<f32>> {
