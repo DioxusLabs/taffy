@@ -33,7 +33,7 @@ fn rounding_flex_basis_flex_grow_row_prime_number_width() {
     assert_eq!(taffy.layout(node0).unwrap().size.height, 100f32);
     assert_eq!(taffy.layout(node0).unwrap().location.x, 0f32);
     assert_eq!(taffy.layout(node0).unwrap().location.y, 0f32);
-    assert_eq!(taffy.layout(node1).unwrap().size.width, 22f32);
+    assert_eq!(taffy.layout(node1).unwrap().size.width, 23f32);
     assert_eq!(taffy.layout(node1).unwrap().size.height, 100f32);
     assert_eq!(taffy.layout(node1).unwrap().location.x, 23f32);
     assert_eq!(taffy.layout(node1).unwrap().location.y, 0f32);
@@ -41,7 +41,7 @@ fn rounding_flex_basis_flex_grow_row_prime_number_width() {
     assert_eq!(taffy.layout(node2).unwrap().size.height, 100f32);
     assert_eq!(taffy.layout(node2).unwrap().location.x, 45f32);
     assert_eq!(taffy.layout(node2).unwrap().location.y, 0f32);
-    assert_eq!(taffy.layout(node3).unwrap().size.width, 22f32);
+    assert_eq!(taffy.layout(node3).unwrap().size.width, 23f32);
     assert_eq!(taffy.layout(node3).unwrap().size.height, 100f32);
     assert_eq!(taffy.layout(node3).unwrap().location.x, 68f32);
     assert_eq!(taffy.layout(node3).unwrap().location.y, 0f32);
