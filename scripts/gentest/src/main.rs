@@ -397,7 +397,7 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     quote!(
         #children_body
-        let #ident = taffy.new_node(
+        let #ident = taffy.new_with_children(
         taffy::style::FlexboxLayout {
             #display
             #direction
