@@ -31,7 +31,7 @@ use core::fmt::{Display, Formatter, Result};
 
 /// An error that can occur when performing layout
 #[derive(Debug)]
-pub enum TaffyError {
+pub enum Error {
     /// The [`Node`](node::Node) is not part of the [`Taffy`](Taffy) instance.
     InvalidNode(node::Node),
     /// The parent [`Node`](node::Node) does not have a child at `child_index`. It only has `child_count` children
@@ -46,22 +46,22 @@ pub enum TaffyError {
 }
 
 #[cfg(feature = "std")]
-impl Display for TaffyError {
+impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> Result {
         match *self {
-            TaffyError::InvalidNode(ref node) => write!(f, "Node {:?} is not in the Taffy instance", node),
-            TaffyError::ChildIndexOutOfBounds { parent, child_index, child_count } => 
+            Error::InvalidNode(ref node) => write!(f, "Node {:?} is not in the Taffy instance", node),
+            Error::ChildIndexOutOfBounds { parent, child_index, child_count } => 
                 write!(f, "Index (is {}) should be < child_count ({}) for parent node {:?}", child_index, child_count, parent),
         }
     }
 }
 
 #[cfg(feature = "std")]
-impl std::error::Error for TaffyError {
+impl std::error::Error for Error {
     fn description(&self) -> &str {
         match *self {
-            TaffyError::InvalidNode(_) => "The node is not part of the Taffy instance",
-            TaffyError::ChildIndexOutOfBounds { .. } => "The parent node didn't have a child at child_index. It only has child_count children",
+            Error::InvalidNode(_) => "The node is not part of the Taffy instance",
+            Error::ChildIndexOutOfBounds { .. } => "The parent node didn't have a child at child_index. It only has child_count children",
         }
     }
 }

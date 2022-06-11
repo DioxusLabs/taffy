@@ -1,6 +1,6 @@
 use taffy::prelude::*;
 
-fn main() -> Result<(), TaffyError> {
+fn main() -> Result<(), Error> {
     let mut taffy = Taffy::new();
 
     // left

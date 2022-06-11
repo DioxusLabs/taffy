@@ -9,7 +9,7 @@ use crate::style::FlexboxLayout;
 #[cfg(any(feature = "std", feature = "alloc"))]
 use crate::sys::Box;
 use crate::sys::{new_map_with_capacity, ChildrenVec, Map, Vec};
-use crate::TaffyError;
+use crate::Error;
 use core::sync::atomic::{AtomicUsize, Ordering};
 
 /// A function that can be applied to a `Size<Number>` to obtain a `Size<f32>`
@@ -87,15 +87,15 @@ impl Taffy {
     }
 
     /// Returns the `NodeId` of the provided node within the forest
-    fn find_node(&self, node: Node) -> Result<NodeId, TaffyError> {
+    fn find_node(&self, node: Node) -> Result<NodeId, Error> {
         match self.nodes_to_ids.get(&node) {
             Some(id) => Ok(*id),
-            None => Err(TaffyError::InvalidNode(node)),
+            None => Err(Error::InvalidNode(node)),
         }
     }
 
     /// Adds a new leaf node, which does not have any children
-    pub fn new_leaf(&mut self, style: FlexboxLayout, measure: MeasureFunc) -> Result<Node, TaffyError> {
+    pub fn new_leaf(&mut self, style: FlexboxLayout, measure: MeasureFunc) -> Result<Node, Error> {
         let node = self.allocate_node();
         let id = self.forest.new_leaf(style, measure);
         self.add_node(node, id);
@@ -103,10 +103,10 @@ impl Taffy {
     }
 
     /// Adds a new node, which may have any number of `children`
-    pub fn new_with_children(&mut self, style: FlexboxLayout, children: &[Node]) -> Result<Node, TaffyError> {
+    pub fn new_with_children(&mut self, style: FlexboxLayout, children: &[Node]) -> Result<Node, Error> {
         let node = self.allocate_node();
         let children =
-            children.iter().map(|child| self.find_node(*child)).collect::<Result<ChildrenVec<_>, TaffyError>>()?;
+            children.iter().map(|child| self.find_node(*child)).collect::<Result<ChildrenVec<_>, Error>>()?;
         let id = self.forest.new_with_children(style, children);
         self.add_node(node, id);
         Ok(node)
@@ -138,7 +138,7 @@ impl Taffy {
     }
 
     /// Sets the [`MeasureFunc`] of the associated node
-    pub fn set_measure(&mut self, node: Node, measure: Option<MeasureFunc>) -> Result<(), TaffyError> {
+    pub fn set_measure(&mut self, node: Node, measure: Option<MeasureFunc>) -> Result<(), Error> {
         let id = self.find_node(node)?;
         self.forest.nodes[id].measure = measure;
         self.forest.mark_dirty(id);
@@ -146,7 +146,7 @@ impl Taffy {
     }
 
     /// Adds a `child` [`Node`] under the supplied `parent`
-    pub fn add_child(&mut self, parent: Node, child: Node) -> Result<(), TaffyError> {
+    pub fn add_child(&mut self, parent: Node, child: Node) -> Result<(), Error> {
         let node_id = self.find_node(parent)?;
         let child_id = self.find_node(child)?;
 
@@ -155,7 +155,7 @@ impl Taffy {
     }
 
     /// Directly sets the `children` of the supplied `parent`
-    pub fn set_children(&mut self, parent: Node, children: &[Node]) -> Result<(), TaffyError> {
+    pub fn set_children(&mut self, parent: Node, children: &[Node]) -> Result<(), Error> {
         let node_id = self.find_node(parent)?;
         let children_id = children.iter().map(|child| self.find_node(*child)).collect::<Result<ChildrenVec<_>, _>>()?;
 
@@ -177,7 +177,7 @@ impl Taffy {
     /// Removes the `child` of the parent `node`
     ///
     /// The child is not removed from the forest entirely, it is simply no longer attached to its previous parent.
-    pub fn remove_child(&mut self, parent: Node, child: Node) -> Result<Node, TaffyError> {
+    pub fn remove_child(&mut self, parent: Node, child: Node) -> Result<Node, Error> {
         let node_id = self.find_node(parent)?;
         let child_id = self.find_node(child)?;
 
@@ -188,12 +188,12 @@ impl Taffy {
     /// Removes the child at the given `index` from the `parent`
     ///
     /// The child is not removed from the forest entirely, it is simply no longer attached to its previous parent.
-    pub fn remove_child_at_index(&mut self, parent: Node, child_index: usize) -> Result<Node, TaffyError> {
+    pub fn remove_child_at_index(&mut self, parent: Node, child_index: usize) -> Result<Node, Error> {
         let node_id = self.find_node(parent)?;
 
         let child_count = self.forest.children[node_id].len();
         if child_index >= child_count {
-            return Err(TaffyError::ChildIndexOutOfBounds { parent, child_index, child_count });
+            return Err(Error::ChildIndexOutOfBounds { parent, child_index, child_count });
         }
 
         let prev_id = self.forest.remove_child_at_index(node_id, child_index);
@@ -203,13 +203,13 @@ impl Taffy {
     /// Replaces the child at the given `child_index` from the `parent` node with the new `child` node
     ///
     /// The child is not removed from the forest entirely, it is simply no longer attached to its previous parent.
-    pub fn replace_child_at_index(&mut self, parent: Node, child_index: usize, new_child: Node) -> Result<Node, TaffyError> {
+    pub fn replace_child_at_index(&mut self, parent: Node, child_index: usize, new_child: Node) -> Result<Node, Error> {
         let node_id = self.find_node(parent)?;
         let child_id = self.find_node(new_child)?;
         // TODO: index check
         let child_count = self.forest.children[node_id].len();
         if child_index >= child_count {
-            return Err(TaffyError::ChildIndexOutOfBounds { parent, child_index, child_count });
+            return Err(Error::ChildIndexOutOfBounds { parent, child_index, child_count });
         }
 
         self.forest.parents[child_id].push(node_id);
@@ -222,31 +222,31 @@ impl Taffy {
     }
 
     /// Returns the child [`Node`] of the parent `node` at the provided `child_index`
-    pub fn child_at_index(&self, parent: Node, child_index: usize) -> Result<Node, TaffyError> {
+    pub fn child_at_index(&self, parent: Node, child_index: usize) -> Result<Node, Error> {
         let id = self.find_node(parent)?;
 
         let child_count = self.forest.children[id].len();
         if child_index >= child_count {
-            return Err(TaffyError::ChildIndexOutOfBounds { parent, child_index, child_count });
+            return Err(Error::ChildIndexOutOfBounds { parent, child_index, child_count });
         }
 
         Ok(self.ids_to_nodes[&self.forest.children[id][child_index]])
     }
 
     /// Returns the number of children of the `parent` [`Node`]
-    pub fn child_count(&self, parent: Node) -> Result<usize, TaffyError> {
+    pub fn child_count(&self, parent: Node) -> Result<usize, Error> {
         let id = self.find_node(parent)?;
         Ok(self.forest.children[id].len())
     }
 
     /// Returns a list of children that belong to the [`Parent`]
-    pub fn children(&self, parent: Node) -> Result<Vec<Node>, TaffyError> {
+    pub fn children(&self, parent: Node) -> Result<Vec<Node>, Error> {
         let id = self.find_node(parent)?;
         Ok(self.forest.children[id].iter().map(|child| self.ids_to_nodes[child]).collect())
     }
 
     /// Sets the [`Style`] of the provided `node`
-    pub fn set_style(&mut self, node: Node, style: FlexboxLayout) -> Result<(), TaffyError> {
+    pub fn set_style(&mut self, node: Node, style: FlexboxLayout) -> Result<(), Error> {
         let id = self.find_node(node)?;
         self.forest.nodes[id].style = style;
         self.forest.mark_dirty(id);
@@ -254,32 +254,32 @@ impl Taffy {
     }
 
     /// Gets the [`Style`] of the provided `node`
-    pub fn style(&self, node: Node) -> Result<&FlexboxLayout, TaffyError> {
+    pub fn style(&self, node: Node) -> Result<&FlexboxLayout, Error> {
         let id = self.find_node(node)?;
         Ok(&self.forest.nodes[id].style)
     }
 
     /// Return this node layout relative to its parent
-    pub fn layout(&self, node: Node) -> Result<&Layout, TaffyError> {
+    pub fn layout(&self, node: Node) -> Result<&Layout, Error> {
         let id = self.find_node(node)?;
         Ok(&self.forest.nodes[id].layout)
     }
 
     /// Marks the layout computation of this node and its children as outdated
-    pub fn mark_dirty(&mut self, node: Node) -> Result<(), TaffyError> {
+    pub fn mark_dirty(&mut self, node: Node) -> Result<(), Error> {
         let id = self.find_node(node)?;
         self.forest.mark_dirty(id);
         Ok(())
     }
 
     /// Indicates whether the layout of this node (and its children) need to be recomputed
-    pub fn dirty(&self, node: Node) -> Result<bool, TaffyError> {
+    pub fn dirty(&self, node: Node) -> Result<bool, Error> {
         let id = self.find_node(node)?;
         Ok(self.forest.nodes[id].is_dirty)
     }
 
     /// Updates the stored layout of the provided `node` and its children
-    pub fn compute_layout(&mut self, node: Node, size: Size<Number>) -> Result<(), TaffyError> {
+    pub fn compute_layout(&mut self, node: Node, size: Size<Number>) -> Result<(), Error> {
         let id = self.find_node(node)?;
         self.forest.compute_layout(id, size);
         Ok(())
