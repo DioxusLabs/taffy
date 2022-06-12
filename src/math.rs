@@ -57,38 +57,20 @@ impl MaybeMath<Option<f32>, Option<f32>> for Option<f32> {
 }
 
 impl MaybeMath<f32, Option<f32>> for Option<f32> {
-    // The logic here is subtle and critical;
-    // explicit match statements make it more clear what's going on
-    #[allow(clippy::manual_map)]
     fn maybe_min(self, rhs: f32) -> Option<f32> {
-        match self {
-            Some(val) => Some(val.min(rhs)),
-            None => None,
-        }
+        self.map(|val| val.min(rhs))
     }
 
-    #[allow(clippy::manual_map)]
     fn maybe_max(self, rhs: f32) -> Option<f32> {
-        match self {
-            Some(val) => Some(val.max(rhs)),
-            None => None,
-        }
+        self.map(|val| val.max(rhs))
     }
 
-    #[allow(clippy::manual_map)]
     fn maybe_add(self, rhs: f32) -> Option<f32> {
-        match self {
-            Some(val) => Some(val + rhs),
-            None => None,
-        }
+        self.map(|val| val + rhs)
     }
 
-    #[allow(clippy::manual_map)]
     fn maybe_sub(self, rhs: f32) -> Option<f32> {
-        match self {
-            Some(val) => Some(val - rhs),
-            None => None,
-        }
+        self.map(|val| val - rhs)
     }
 }
 
