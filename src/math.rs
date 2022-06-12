@@ -207,4 +207,42 @@ mod tests {
             assert_eq!(lhs.maybe_sub(rhs), expected);
         }
     }
+
+    mod lhs_f32_rhs_option_f32 {
+
+        use crate::math::MaybeMath;
+        use rstest::rstest;
+
+        #[rstest]
+        #[case(3.0, Some(5.0), 3.0)]
+        #[case(5.0, Some(3.0), 3.0)]
+        #[case(3.0, None, 3.0)]
+        fn test_maybe_min(#[case] lhs: f32, #[case] rhs: Option<f32>, #[case] expected: f32) {
+            assert_eq!(lhs.maybe_min(rhs), expected);
+        }
+
+        #[rstest]
+        #[case(3.0, Some(5.0), 5.0)]
+        #[case(5.0, Some(3.0), 5.0)]
+        #[case(3.0, None, 3.0)]
+        fn test_maybe_max(#[case] lhs: f32, #[case] rhs: Option<f32>, #[case] expected: f32) {
+            assert_eq!(lhs.maybe_max(rhs), expected);
+        }
+
+        #[rstest]
+        #[case(3.0, Some(5.0), 8.0)]
+        #[case(5.0, Some(3.0), 8.0)]
+        #[case(3.0, None, 3.0)]
+        fn test_maybe_add(#[case] lhs: f32, #[case] rhs: Option<f32>, #[case] expected: f32) {
+            assert_eq!(lhs.maybe_add(rhs), expected);
+        }
+
+        #[rstest]
+        #[case(3.0, Some(5.0), -2.0)]
+        #[case(5.0, Some(3.0), 2.0)]
+        #[case(3.0, None, 3.0)]
+        fn test_maybe_sub(#[case] lhs: f32, #[case] rhs: Option<f32>, #[case] expected: f32) {
+            assert_eq!(lhs.maybe_sub(rhs), expected);
+        }
+    }
 }
