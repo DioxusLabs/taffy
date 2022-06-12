@@ -122,3 +122,5 @@ impl MaybeMath<Option<f32>, f32> for f32 {
         }
     }
 }
+
+// TODO: Impl maybemath for <Option<Dimension>>

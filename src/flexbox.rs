@@ -18,11 +18,11 @@ struct FlexItem {
     node: NodeId,
 
     /// The base size of this item
-    size: Size<Option<f32>>,
+    size: Size<f32>,
     /// The minimum allowable size of this item
-    min_size: Size<Option<f32>>,
+    min_size: Size<f32>,
     /// The maximum allowable size of this item
-    max_size: Size<Option<f32>>,
+    max_size: Size<f32>,
 
     /// The final offset of this item
     position: Rect<Option<f32>>,
@@ -95,7 +95,7 @@ struct AlgoConstants {
     padding_border: Rect<f32>,
 
     /// The size of the internal node
-    node_inner_size: Size<Option<f32>>,
+    node_inner_size: Size<f32>,
     /// The size of the surrounding container
     container_size: Size<f32>,
     /// The size of the internal container
@@ -104,7 +104,7 @@ struct AlgoConstants {
 
 impl Forest {
     /// Computes the layout of this [`Forest`] according to the flexbox algorithm
-    pub(crate) fn compute(&mut self, root: NodeId, size: Size<Option<f32>>) {
+    pub(crate) fn compute(&mut self, root: NodeId, size: Size<f32>) {
         let style = self.nodes[root].style;
 
         let preliminary_size = if style.has_defined_size() {
@@ -168,8 +168,8 @@ impl Forest {
     fn compute_from_cache(
         &mut self,
         node: NodeId,
-        node_size: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
+        node_size: Size<f32>,
+        parent_size: Size<f32>,
         perform_layout: bool,
         main_size: bool,
     ) -> Option<Size<f32>> {
@@ -202,12 +202,7 @@ impl Forest {
 
     /// Compute constants that can be reused during the flexbox algorithm.
     #[inline]
-    fn compute_constants(
-        &self,
-        node: NodeId,
-        node_size: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
-    ) -> AlgoConstants {
+    fn compute_constants(&self, node: NodeId, node_size: Size<f32>, parent_size: Size<f32>) -> AlgoConstants {
         let dir = self.nodes[node].style.flex_direction;
         let is_row = dir.is_row();
         let is_column = dir.is_column();
@@ -298,11 +293,7 @@ impl Forest {
     /// **This might result in an infinite value**.
     #[inline]
     #[must_use]
-    fn determine_available_space(
-        node_size: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
-        constants: &AlgoConstants,
-    ) -> Size<Option<f32>> {
+    fn determine_available_space(node_size: Size<f32>, parent_size: Size<f32>, constants: &AlgoConstants) -> Size<f32> {
         let width = match node_size.width {
             Some(node_width) => Some(node_width),
             None => parent_size
@@ -353,9 +344,9 @@ impl Forest {
     fn determine_flex_base_size(
         &mut self,
         node: NodeId,
-        node_size: Size<Option<f32>>,
+        node_size: Size<f32>,
         constants: &AlgoConstants,
-        available_space: Size<Option<f32>>,
+        available_space: Size<f32>,
         flex_items: &mut Vec<FlexItem>,
     ) {
         // TODO - this does not follow spec. See the TODOs below
@@ -493,7 +484,7 @@ impl Forest {
         &self,
         node: NodeId,
         constants: &AlgoConstants,
-        available_space: Size<Option<f32>>,
+        available_space: Size<f32>,
         flex_items: &'a mut Vec<FlexItem>,
     ) -> Vec<FlexLine<'a>> {
         let mut lines = crate::sys::new_vec_with_capacity(1);
@@ -532,12 +523,7 @@ impl Forest {
     ///
     /// # [9.7. Resolving Flexible Lengths](https://www.w3.org/TR/css-flexbox-1/#resolve-flexible-lengths)
     #[inline]
-    fn resolve_flexible_lengths(
-        &mut self,
-        line: &mut FlexLine,
-        constants: &AlgoConstants,
-        available_space: Size<Option<f32>>,
-    ) {
+    fn resolve_flexible_lengths(&mut self, line: &mut FlexLine, constants: &AlgoConstants, available_space: Size<f32>) {
         // 1. Determine the used flex factor. Sum the outer hypothetical main sizes of all
         //    items on the line. If the sum is less than the flex container’s inner main size,
         //    use the flex grow factor for the rest of this algorithm; otherwise, use the
@@ -765,7 +751,7 @@ impl Forest {
         &mut self,
         line: &mut FlexLine,
         constants: &AlgoConstants,
-        available_space: Size<Option<f32>>,
+        available_space: Size<f32>,
     ) {
         for child in line.items.iter_mut() {
             let child_cross = child
@@ -814,7 +800,7 @@ impl Forest {
     fn calculate_children_base_lines(
         &mut self,
         node: NodeId,
-        node_size: Size<Option<f32>>,
+        node_size: Size<f32>,
         flex_lines: &mut [FlexLine],
         constants: &AlgoConstants,
     ) {
@@ -894,7 +880,7 @@ impl Forest {
         &mut self,
         flex_lines: &mut [FlexLine],
         node: NodeId,
-        node_size: Size<Option<f32>>,
+        node_size: Size<f32>,
         constants: &AlgoConstants,
     ) {
         if flex_lines.len() == 1 && node_size.cross(constants.dir).is_some() {
@@ -948,7 +934,7 @@ impl Forest {
         &mut self,
         flex_lines: &mut [FlexLine],
         node: NodeId,
-        node_size: Size<Option<f32>>,
+        node_size: Size<f32>,
         constants: &AlgoConstants,
     ) {
         if self.nodes[node].style.align_content == AlignContent::Stretch && node_size.cross(constants.dir).is_some() {
@@ -1247,7 +1233,7 @@ impl Forest {
     #[must_use]
     fn determine_container_cross_size(
         flex_lines: &mut [FlexLine],
-        node_size: Size<Option<f32>>,
+        node_size: Size<f32>,
         constants: &mut AlgoConstants,
     ) -> f32 {
         let total_cross_size: f32 = flex_lines.iter().map(|line| line.cross_size).sum();
@@ -1550,8 +1536,8 @@ impl Forest {
     fn compute_preliminary(
         &mut self,
         node: NodeId,
-        node_size: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
+        node_size: Size<f32>,
+        parent_size: Size<f32>,
         perform_layout: bool,
         main_size: bool,
     ) -> Size<f32> {

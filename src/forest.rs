@@ -235,7 +235,7 @@ impl Forest {
     }
 
     /// Computes the layout of the `node` and its children
-    pub(crate) fn compute_layout(&mut self, node: NodeId, size: Size<Option<f32>>) {
+    pub(crate) fn compute_layout(&mut self, node: NodeId, size: Size<f32>) {
         // TODO: It's not clear why this method is distinct
         self.compute(node, size)
     }

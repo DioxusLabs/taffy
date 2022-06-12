@@ -287,7 +287,7 @@ impl Taffy {
     }
 
     /// Updates the stored layout of the provided `node` and its children
-    pub fn compute_layout(&mut self, node: Node, size: Size<Option<f32>>) -> Result<(), error::InvalidNode> {
+    pub fn compute_layout(&mut self, node: Node, size: Size<f32>) -> Result<(), error::InvalidNode> {
         let id = self.find_node(node)?;
         self.forest.compute_layout(id, size);
         Ok(())

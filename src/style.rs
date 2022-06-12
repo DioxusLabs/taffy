@@ -285,20 +285,7 @@ impl Default for Rect<Dimension> {
     }
 }
 
-// TODO: This does not work.
-// impl Default for Rect<Option<Dimension>> {
-//     fn default() -> Self {
-//         Self { start: Default::default(), end: Default::default(), top: Default::default(), bottom: Default::default() }
-//     }
-// }
-
 impl Default for Size<Dimension> {
-    fn default() -> Self {
-        Self { width: Default::default(), height: Default::default() }
-    }
-}
-
-impl Default for Size<Option<Dimension>> {
     fn default() -> Self {
         Self { width: Default::default(), height: Default::default() }
     }
@@ -339,13 +326,13 @@ pub struct FlexboxLayout {
     /// How should items be aligned relative to the main axis?
     pub justify_content: JustifyContent,
     /// How should the position of this element be tweaked relative to the layout defined?
-    pub position: Rect<Option<Dimension>>,
+    pub position: Rect<Dimension>,
     /// How large should the margin be on each side?
-    pub margin: Rect<Option<Dimension>>,
+    pub margin: Rect<Dimension>,
     /// How large should the padding be on each side?
-    pub padding: Rect<Option<Dimension>>,
+    pub padding: Rect<Dimension>,
     /// How large should the border be on each side?
-    pub border: Rect<Option<Dimension>>,
+    pub border: Rect<Dimension>,
     /// The relative rate at which this item grows when it is expanding to fill space
     ///
     /// 0.0 is the default value, and this value must be positive.
@@ -358,11 +345,11 @@ pub struct FlexboxLayout {
     pub flex_basis: Dimension,
     /// Sets the initial size of the item
     // TODO: why does this exist as distinct from flex_basis? How do they interact?
-    pub size: Size<Option<Dimension>>,
+    pub size: Size<Dimension>,
     /// Controls the minimum size of the item
-    pub min_size: Size<Option<Dimension>>,
+    pub min_size: Size<Dimension>,
     /// Controls the maximum size of the item
-    pub max_size: Size<Option<Dimension>>,
+    pub max_size: Size<Dimension>,
     /// Sets the preferred aspect ratio for the item
     ///
     /// The ratio is calculated as width divided by height.
@@ -494,7 +481,7 @@ impl FlexboxLayout {
 
     /// Returns true if at least one dimension is `Some` on `min_size` or `max_size`
     pub(crate) fn has_defined_size(&self) -> bool {
-        self.min_size.width.is_some() 
+        self.min_size.width.is_some()
             || self.min_size.height.is_some()
             || self.max_size.width.is_some()
             || self.max_size.height.is_some()
