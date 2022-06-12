@@ -71,7 +71,6 @@ where
     /// **NOTE:** this is *not* the width of the rectangle.
     pub(crate) fn horizontal_axis_sum(&self) -> Option<T> {
         self.start.and_then(|start| start.maybe_add(self.end))
-        // self.start.maybe_add(self.end)
     }
 
     /// The sum of [`Rect.top`](Rect) and [`Rect.bottom`](Rect)
