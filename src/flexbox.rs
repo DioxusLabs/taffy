@@ -25,7 +25,7 @@ struct FlexItem {
     max_size: Size<f32>,
 
     /// The final offset of this item
-    position: Rect<Option<f32>>,
+    position: Rect<f32>,
     /// The margin of this item
     margin: Rect<f32>,
     /// The padding of this item
@@ -115,13 +115,13 @@ impl Forest {
                 Size {
                     width: first_pass
                         .width
-                        .maybe_max(style.min_size.width.resolve(size.width))
-                        .maybe_min(style.max_size.width.resolve(size.width))
+                        .maybe_max(style.min_size.width.and_then(|max_width| max_width.resolve(size.width)))
+                        .maybe_min(style.max_size.width.and_then(|min_width| min_width.resolve(size.width)))
                         .into(),
                     height: first_pass
                         .height
-                        .maybe_max(style.min_size.height.resolve(size.height))
-                        .maybe_min(style.max_size.height.resolve(size.height))
+                        .maybe_max(style.min_size.height.and_then(|max_height| max_height.resolve(size.height)))
+                        .maybe_min(style.max_size.height.and_then(|min_height| min_height.resolve(size.height)))
                         .into(),
                 },
                 size,
@@ -146,8 +146,8 @@ impl Forest {
         layout.location.x = round(layout.location.x);
         layout.location.y = round(layout.location.y);
 
-        layout.size.width = round(layout.size.width);
-        layout.size.height = round(layout.size.height);
+        layout.size.width = layout.size.width.map(|width| width.round());
+        layout.size.height = layout.size.height.map(|height| height.round());
 
         for child in &children[root] {
             Self::round_layout(nodes, children, *child, abs_x, abs_y);
@@ -176,13 +176,14 @@ impl Forest {
         if let Some(ref cache) = self.cache(node, main_size) {
             if cache.perform_layout || !perform_layout {
                 let width_compatible = if let Some(width) = node_size.width {
-                    abs(width - cache.size.width) < f32::EPSILON
+                    abs(width.maybe_sub(cache.size.width)) < f32::EPSILON
                 } else {
                     cache.node_size.width.is_none()
                 };
 
                 let height_compatible = if let Some(height) = node_size.height {
-                    abs(height - cache.size.height) < f32::EPSILON
+                    // More maybemath shenanigans
+                    abs(height.maybe_sub(cache.size.height)) < f32::EPSILON
                 } else {
                     cache.node_size.height.is_none()
                 };
@@ -208,15 +209,18 @@ impl Forest {
         let is_column = dir.is_column();
         let is_wrap_reverse = self.nodes[node].style.flex_wrap == FlexWrap::WrapReverse;
 
-        let margin = self.nodes[node].style.margin.map(|n| n.resolve(parent_size.width).unwrap_or(0.0));
-        let padding = self.nodes[node].style.padding.map(|n| n.resolve(parent_size.width).unwrap_or(0.0));
-        let border = self.nodes[node].style.border.map(|n| n.resolve(parent_size.width).unwrap_or(0.0));
+        let margin =
+            self.nodes[node].style.margin.map(|n| n.map(|d| d.resolve(parent_size.width)).unwrap_or(Some(0.0)));
+        let padding =
+            self.nodes[node].style.padding.map(|n| n.map(|d| d.resolve(parent_size.width)).unwrap_or(Some(0.0)));
+        let border =
+            self.nodes[node].style.border.map(|n| n.map(|d| d.resolve(parent_size.width)).unwrap_or(Some(0.0)));
 
         let padding_border = Rect {
-            start: padding.start + border.start,
-            end: padding.end + border.end,
-            top: padding.top + border.top,
-            bottom: padding.bottom + border.bottom,
+            start: padding.start.maybe_add(border.start),
+            end: padding.end.maybe_add(border.end),
+            top: padding.top.maybe_add(border.top),
+            bottom: padding.bottom.maybe_add(border.bottom),
         };
 
         let node_inner_size = Size {
@@ -428,7 +432,8 @@ impl Forest {
                     true,
                 )
                 .main(constants.dir)
-                .maybe_min(child.max_size.main(constants.dir));
+                .maybe_min(child.max_size.main(constants.dir))
+                .unwrap(); // TODO: This is probably not correct
         }
 
         // The hypothetical main size is the item’s flex base size clamped according to its
@@ -452,7 +457,7 @@ impl Forest {
 
             child.hypothetical_inner_size.set_main(
                 constants.dir,
-                child.flex_basis.maybe_max(min_main).maybe_min(child.max_size.main(constants.dir)),
+                Some(child.flex_basis.maybe_max(min_main).maybe_min(child.max_size.main(constants.dir))), // Will this lead to Some(None) outputs? If so, how to unrawp correctly?
             );
 
             child.hypothetical_outer_size.set_main(
@@ -500,7 +505,7 @@ impl Forest {
                     .iter()
                     .enumerate()
                     .find(|&(idx, child)| {
-                        line_length += child.hypothetical_outer_size.main(constants.dir);
+                        line_length = line_length.maybe_add(child.hypothetical_outer_size.main(constants.dir));
                         if let Some(main) = available_space.main(constants.dir) {
                             line_length > main && idx != 0
                         } else {
@@ -664,7 +669,10 @@ impl Forest {
                     for child in &mut unfrozen {
                         child.target_size.set_main(
                             constants.dir,
-                            child.flex_basis + free_space * (self.nodes[child.node].style.flex_grow / sum_flex_grow),
+                            Some(
+                                child.flex_basis
+                                    + free_space * (self.nodes[child.node].style.flex_grow / sum_flex_grow),
+                            ),
                         );
                     }
                 } else if shrinking && sum_flex_shrink > 0.0 {
@@ -679,7 +687,7 @@ impl Forest {
                                 child.inner_flex_basis * self.nodes[child.node].style.flex_shrink;
                             child.target_size.set_main(
                                 constants.dir,
-                                child.flex_basis + free_space * (scaled_shrink_factor / sum_scaled_shrink_factor),
+                                Some(child.flex_basis + free_space * (scaled_shrink_factor / sum_scaled_shrink_factor)),
                             )
                         }
                     }
@@ -908,13 +916,13 @@ impl Forest {
                     .map(|child| {
                         let child_style = &self.nodes[child.node].style;
                         if child_style.align_self(&self.nodes[node].style) == AlignSelf::Baseline
-                            && child_style.cross_margin_start(constants.dir) != Dimension::Auto
-                            && child_style.cross_margin_end(constants.dir) != Dimension::Auto
-                            && child_style.cross_size(constants.dir) == Dimension::Auto
+                            && child_style.cross_margin_start(constants.dir) != Some(Dimension::Auto)
+                            && child_style.cross_margin_end(constants.dir) != Some(Dimension::Auto)
+                            && child_style.cross_size(constants.dir) == Some(Dimension::Auto)
                         {
-                            max_baseline - child.baseline + child.hypothetical_outer_size.cross(constants.dir)
+                            max_baseline - child.baseline.maybe_add(child.hypothetical_outer_size.cross(constants.dir))
                         } else {
-                            child.hypothetical_outer_size.cross(constants.dir)
+                            child.hypothetical_outer_size.cross(constants.dir).unwrap()
                         }
                     })
                     .fold(0.0, |acc, x| acc.max(x));
@@ -1016,10 +1024,10 @@ impl Forest {
 
             for child in line.items.iter_mut() {
                 let child_style = &self.nodes[child.node].style;
-                if child_style.main_margin_start(constants.dir) == Dimension::Auto {
+                if child_style.main_margin_start(constants.dir) == Some(Dimension::Auto) {
                     num_auto_margins += 1;
                 }
-                if child_style.main_margin_end(constants.dir) == Dimension::Auto {
+                if child_style.main_margin_end(constants.dir) == Some(Dimension::Auto) {
                     num_auto_margins += 1;
                 }
             }
@@ -1029,14 +1037,14 @@ impl Forest {
 
                 for child in line.items.iter_mut() {
                     let child_style = &self.nodes[child.node].style;
-                    if child_style.main_margin_start(constants.dir) == Dimension::Auto {
+                    if child_style.main_margin_start(constants.dir) == Some(Dimension::Auto) {
                         if constants.is_row {
                             child.margin.start = margin;
                         } else {
                             child.margin.top = margin;
                         }
                     }
-                    if child_style.main_margin_end(constants.dir) == Dimension::Auto {
+                    if child_style.main_margin_end(constants.dir) == Some(Dimension::Auto) {
                         if constants.is_row {
                             child.margin.end = margin;
                         } else {
@@ -1124,30 +1132,30 @@ impl Forest {
             let max_baseline: f32 = line.items.iter_mut().map(|child| child.baseline).fold(0.0, |acc, x| acc.max(x));
 
             for child in line.items.iter_mut() {
-                let free_space = line_cross_size - child.outer_target_size.cross(constants.dir);
+                let free_space = line_cross_size.maybe_sub(child.outer_target_size.cross(constants.dir));
                 let child_style = &self.nodes[child.node].style;
 
-                if child_style.cross_margin_start(constants.dir) == Dimension::Auto
-                    && child_style.cross_margin_end(constants.dir) == Dimension::Auto
+                if child_style.cross_margin_start(constants.dir) == Some(Dimension::Auto)
+                    && child_style.cross_margin_end(constants.dir) == Some(Dimension::Auto)
                 {
                     if constants.is_row {
-                        child.margin.top = free_space / 2.0;
-                        child.margin.bottom = free_space / 2.0;
+                        child.margin.top = Some(free_space / 2.0);
+                        child.margin.bottom = Some(free_space / 2.0);
                     } else {
-                        child.margin.start = free_space / 2.0;
-                        child.margin.end = free_space / 2.0;
+                        child.margin.start = Some(free_space / 2.0);
+                        child.margin.end = Some(free_space / 2.0);
                     }
-                } else if child_style.cross_margin_start(constants.dir) == Dimension::Auto {
+                } else if child_style.cross_margin_start(constants.dir) == Some(Dimension::Auto) {
                     if constants.is_row {
-                        child.margin.top = free_space;
+                        child.margin.top = Some(free_space);
                     } else {
-                        child.margin.start = free_space;
+                        child.margin.start = Some(free_space);
                     }
-                } else if child_style.cross_margin_end(constants.dir) == Dimension::Auto {
+                } else if child_style.cross_margin_end(constants.dir) == Some(Dimension::Auto) {
                     if constants.is_row {
-                        child.margin.bottom = free_space;
+                        child.margin.bottom = Some(free_space);
                     } else {
-                        child.margin.end = free_space;
+                        child.margin.end = Some(free_space);
                     }
                 } else {
                     // 14. Align all flex items along the cross-axis.
@@ -1338,17 +1346,27 @@ impl Forest {
                 );
 
                 let offset_main = total_offset_main
-                    + child.offset_main
-                    + child.margin.main_start(constants.dir)
-                    + (child.position.main_start(constants.dir).unwrap_or(0.0)
-                        - child.position.main_end(constants.dir).unwrap_or(0.0));
+                    .maybe_add(child.offset_main)
+                    .maybe_add(child.margin.main_start(constants.dir))
+                    .maybe_add(
+                        child
+                            .position
+                            .main_start(constants.dir)
+                            .unwrap_or(0.0)
+                            .maybe_sub(child.position.main_end(constants.dir)),
+                    );
 
                 let offset_cross = total_offset_cross
-                    + child.offset_cross
-                    + line_offset_cross
-                    + child.margin.cross_start(constants.dir)
-                    + (child.position.cross_start(constants.dir).unwrap_or(0.0)
-                        - child.position.cross_end(constants.dir).unwrap_or(0.0));
+                    .maybe_add(child.offset_cross)
+                    .maybe_add(line_offset_cross)
+                    .maybe_add(child.margin.cross_start(constants.dir))
+                    .maybe_add(
+                        child
+                            .position
+                            .cross_start(constants.dir)
+                            .unwrap_or(0.0)
+                            .maybe_sub(child.position.cross_end(constants.dir)),
+                    );
 
                 self.nodes[child.node].layout = Layout {
                     order: self.children[node].iter().position(|n| *n == child.node).unwrap() as u32,
@@ -1554,7 +1572,7 @@ impl Forest {
         // If this is a leaf node we can skip a lot of this function in some cases
         if self.children[node].is_empty() {
             if node_size.width.is_some() && node_size.height.is_some() {
-                return node_size.map(|s| s.unwrap_or(0.0));
+                return node_size.map(|s| Some(s.unwrap_or(0.0)));
             }
 
             if let Some(ref measure) = self.nodes[node].measure {
@@ -1569,8 +1587,8 @@ impl Forest {
             }
 
             return Size {
-                width: node_size.width.unwrap_or(0.0) + constants.padding_border.horizontal_axis_sum(),
-                height: node_size.height.unwrap_or(0.0) + constants.padding_border.vertical_axis_sum(),
+                width: node_size.width.maybe_add(constants.padding_border.horizontal_axis_sum()),
+                height: Some(node_size.height.unwrap_or(0.0) + constants.padding_border.vertical_axis_sum()),
             };
         }
 
@@ -1608,7 +1626,7 @@ impl Forest {
         // Not part of the spec from what i can see but seems correct
         constants.container_size.set_main(
             constants.dir,
-            node_size.main(constants.dir).unwrap_or({
+            Some(node_size.main(constants.dir).unwrap_or({
                 let longest_line = flex_lines.iter().fold(f32::MIN, |acc, line| {
                     let length: f32 = line.items.iter().map(|item| item.outer_target_size.main(constants.dir)).sum();
                     acc.max(length)
@@ -1619,7 +1637,7 @@ impl Forest {
                     Some(val) if flex_lines.len() > 1 && size < val => val,
                     _ => size,
                 }
-            }),
+            })),
         );
 
         constants.inner_container_size.set_main(
