@@ -123,4 +123,9 @@ impl MaybeMath<Option<f32>, f32> for f32 {
     }
 }
 
-// TODO: Impl maybemath for <Option<Dimension>>
+pub(crate) trait MaybeAxisSum<In, Out> {
+    fn horizontal_axis_sum(self, rhs: In) -> Out;
+    fn vertical_axis_sum(self, rhs: In) -> Out;
+    fn main_axis_sum(self, rhs: In) -> Out;
+    fn cross_axis_sum(self, rhs: In) -> Out;
+}

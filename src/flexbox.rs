@@ -223,8 +223,8 @@ impl Forest {
             bottom: padding.bottom.maybe_add(border.bottom),
         };
 
-        let node_inner_size = Size {
-            width: Some(node_size.width.maybe_sub(padding_border.horizontal_axis_sum())),
+        let node_inner_size: Size<f32> = Size {
+            width: node_size.width.and_then(|w| w - padding_border.horizontal_axis_sum()),
             height: Some(node_size.height.maybe_sub(padding_border.vertical_axis_sum())),
         };
 
@@ -980,9 +980,9 @@ impl Forest {
                 child.target_size.set_cross(
                     constants.dir,
                     if child_style.align_self(&self.nodes[node].style) == AlignSelf::Stretch
-                        && child_style.cross_margin_start(constants.dir) != Dimension::Auto
-                        && child_style.cross_margin_end(constants.dir) != Dimension::Auto
-                        && child_style.cross_size(constants.dir) == Dimension::Auto
+                        && child_style.cross_margin_start(constants.dir) != Some(Dimension::Auto)
+                        && child_style.cross_margin_end(constants.dir) != Some(Dimension::Auto)
+                        && child_style.cross_size(constants.dir) == Some(Dimension::Auto)
                     {
                         (line_cross_size - child.margin.cross_axis_sum(constants.dir))
                             .maybe_max(child.min_size.cross(constants.dir))
@@ -1248,9 +1248,11 @@ impl Forest {
 
         constants.container_size.set_cross(
             constants.dir,
-            node_size
-                .cross(constants.dir)
-                .unwrap_or(total_cross_size + constants.padding_border.cross_axis_sum(constants.dir)),
+            Some(
+                node_size
+                    .cross(constants.dir)
+                    .unwrap_or(total_cross_size + constants.padding_border.cross_axis_sum(constants.dir)),
+            ),
         );
 
         constants.inner_container_size.set_cross(

@@ -64,7 +64,7 @@ impl<T> Rect<T>
 where
     T: MaybeMath<T, Option<T>> + Copy + Clone,
     T: MaybeMath<Option<T>, Option<T>> + Copy + Clone,
-    T: MaybeMath<Option<T>, T> + Copy + Clone,
+    // T: MaybeMath<Option<T>, T> + Copy + Clone,
 {
     /// The sum of [`Rect.start`](Rect) and [`Rect.end`](Rect)
     ///
