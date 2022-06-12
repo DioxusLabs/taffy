@@ -214,7 +214,7 @@ impl Taffy {
     ) -> Result<Node, error::InvalidChild> {
         let node_id = self.find_node(parent).map_err(|e| error::InvalidChild::InvalidParentNode(e.0))?;
         let child_id = self.find_node(new_child).map_err(|e| error::InvalidChild::InvalidChildNode(e.0))?;
-        // TODO: index check
+
         let child_count = self.forest.children[node_id].len();
         if child_index >= child_count {
             return Err(error::InvalidChild::ChildIndexOutOfBounds { parent, child_index, child_count });
