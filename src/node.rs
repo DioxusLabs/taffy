@@ -334,7 +334,7 @@ mod tests {
 
     #[test]
     fn measure_func_is_send_and_sync() {
-        fn is_send_and_sync<T: Sync>() {}
+        fn is_send_and_sync<T: Send + Sync>() {}
         is_send_and_sync::<MeasureFunc>();
     }
 }
