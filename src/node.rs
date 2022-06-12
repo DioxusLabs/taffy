@@ -11,13 +11,20 @@ use crate::sys::Box;
 use crate::sys::{new_map_with_capacity, ChildrenVec, Map, Vec};
 use core::sync::atomic::{AtomicUsize, Ordering};
 
-/// A function that can be applied to a `Size<Option<f32>>` to obtain a `Size<f32>`
+/// A function type that can be used in a [`MeasureFunc`]
+///
+/// This trait is automatically implemented for all types (including closures) that define a function with the appropriate type signature.
+pub trait Measurable: Send + Sync + Fn(Size<Option<f32>>) -> Size<f32> {}
+
+impl<F: Send + Sync + Fn(Size<Option<f32>>) -> Size<f32>> Measurable for F {}
+
+/// A function that can be used to compute the intrinsic size of a node
 pub enum MeasureFunc {
     /// Stores an unboxed function
     Raw(fn(Size<Option<f32>>) -> Size<f32>),
     /// Stores a boxed function
     #[cfg(any(feature = "std", feature = "alloc"))]
-    Boxed(Box<dyn Fn(Size<Option<f32>>) -> Size<f32>>),
+    Boxed(Box<dyn Measurable>),
 }
 
 /// Global taffy instance id allocator.
@@ -318,5 +325,16 @@ impl Allocator {
     /// Allocates space for one more [`Node`]
     pub fn allocate(&self) -> Id {
         Id(self.last_id.fetch_add(1, Ordering::Relaxed))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn measure_func_is_send_and_sync() {
+        fn is_send_and_sync<T: Sync>() {}
+        is_send_and_sync::<MeasureFunc>();
     }
 }
