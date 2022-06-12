@@ -1,7 +1,9 @@
 //! Geometric primitives useful for layout
 
-use crate::style::{Dimension, FlexDirection};
-use core::ops::Add;
+use crate::{
+    math::MaybeMath,
+    style::{Dimension, FlexDirection},
+};
 
 /// An axis-aligned UI rectangle
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -60,7 +62,7 @@ impl<T> Rect<T> {
 
 impl<T> Rect<T>
 where
-    T: Add<Output = T> + Copy + Clone,
+    T: MaybeMath<Option<T>, Option<T>> + Copy + Clone,
 {
     /// The sum of [`Rect.start`](Rect) and [`Rect.end`](Rect)
     ///
@@ -68,7 +70,8 @@ where
     ///
     /// **NOTE:** this is *not* the width of the rectangle.
     pub(crate) fn horizontal_axis_sum(&self) -> Option<T> {
-        self.start + self.end
+        self.start.and_then(|start| start.maybe_add(self.end))
+        // self.start.maybe_add(self.end)
     }
 
     /// The sum of [`Rect.top`](Rect) and [`Rect.bottom`](Rect)
@@ -77,7 +80,7 @@ where
     ///
     /// **NOTE:** this is *not* the height of the rectangle.
     pub(crate) fn vertical_axis_sum(&self) -> Option<T> {
-        self.top + self.bottom
+        self.top.and_then(|top| top.maybe_add(self.bottom))
     }
 
     /// The sum of the two fields of the [`Rect`] representing the main axis.
