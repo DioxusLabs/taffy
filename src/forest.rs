@@ -13,7 +13,7 @@ use crate::sys::{new_vec_with_capacity, ChildrenVec, ParentsVec, Vec};
 pub(crate) struct NodeData {
     /// The layout strategy used by this node
     pub(crate) style: FlexboxLayout,
-    /// The mapping from the Size<Option<f32>> (in real units) to Size<f32> (in points) for this node
+    /// The mapping from the Size<f32> (in real units) to Size<f32> (in points) for this node
     pub(crate) measure: Option<MeasureFunc>,
     /// The results of the layout computation
     pub(crate) layout: Layout,

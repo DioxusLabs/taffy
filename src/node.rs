@@ -11,13 +11,13 @@ use crate::sys::Box;
 use crate::sys::{new_map_with_capacity, ChildrenVec, Map, Vec};
 use core::sync::atomic::{AtomicUsize, Ordering};
 
-/// A function that can be applied to a `Size<Option<f32>>` to obtain a `Size<f32>`
+/// A function that can be applied to a `Size<f32>` to obtain a `Size<f32>`
 pub enum MeasureFunc {
     /// Stores an unboxed function
-    Raw(fn(Size<Option<f32>>) -> Size<f32>),
+    Raw(fn(Size<f32>) -> Size<f32>),
     /// Stores a boxed function
     #[cfg(any(feature = "std", feature = "alloc"))]
-    Boxed(Box<dyn Fn(Size<Option<f32>>) -> Size<f32>>),
+    Boxed(Box<dyn Fn(Size<f32>) -> Size<f32>>),
 }
 
 /// Global taffy instance id allocator.

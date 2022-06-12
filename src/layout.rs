@@ -28,9 +28,9 @@ impl Layout {
 #[derive(Debug, Clone)]
 pub(crate) struct Cache {
     /// The initial cached size of the node itself
-    pub(crate) node_size: Size<Option<f32>>,
+    pub(crate) node_size: Size<f32>,
     /// The initial cached size of the parent's node
-    pub(crate) parent_size: Size<Option<f32>>,
+    pub(crate) parent_size: Size<f32>,
     /// Whether or not layout should be recomputed
     pub(crate) perform_layout: bool,
 
