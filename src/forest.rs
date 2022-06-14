@@ -1,6 +1,6 @@
 //! Forest - a struct-of-arrays data structure for storing node trees.
 //!
-//! Backing datastructure for `Taffy` structs.
+//! Backing data structure for `Taffy` structs.
 use crate::geometry::Size;
 use crate::layout::{Cache, Layout};
 use crate::node::{MeasureFunc, NodeId};
@@ -140,7 +140,7 @@ impl Forest {
             return None;
         }
 
-        // Remove old node as parent from all its chilren.
+        // Remove old node as parent from all its children.
         for child in &self.children[node] {
             let parents_child = &mut self.parents[*child];
             let mut pos = 0;

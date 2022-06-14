@@ -234,7 +234,7 @@ pub enum FlexWrap {
     NoWrap,
     /// Items will wrap according to this item's [`FlexDirection`]
     Wrap,
-    /// Items will wrap in the oppposite direction to this item's [`FlexDirection`]
+    /// Items will wrap in the opposite direction to this item's [`FlexDirection`]
     WrapReverse,
 }
 
