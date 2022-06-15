@@ -1,4 +1,4 @@
-//! Contains numberical helper traits and functions
+//! Contains numerical helper traits and functions
 
 /// A trait to conveniently calculate minimums and maximums when some data may not be defined
 ///
@@ -14,7 +14,7 @@ pub(crate) trait MaybeMath<In, Out> {
     /// Adds `self` and `rhs`.
     fn maybe_add(self, rhs: In) -> Out;
 
-    /// Subracts rhs from `self`, treating [`None`] values as default
+    /// Subtracts rhs from `self`, treating [`None`] values as default
     fn maybe_sub(self, rhs: In) -> Out;
 }
 
