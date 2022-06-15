@@ -486,11 +486,11 @@ impl Forest {
     ///     - Otherwise, starting from the first uncollected item, collect consecutive items one by one until the first time that the next collected item would not fit into the flex container’s inner main size
     ///         (or until a forced break is encountered, see [§10 Fragmenting Flex Layout](https://www.w3.org/TR/css-flexbox-1/#pagination)).
     ///         If the very first uncollected item wouldn’t fit, collect just it into the line.
-    ///         
+    ///
     ///         For this step, the size of a flex item is its outer hypothetical main size. (**Note: This can be negative**.)
     ///
     ///         Repeat until all flex items have been collected into flex lines.
-    ///         
+    ///
     ///         **Note that the "collect as many" line will collect zero-sized flex items onto the end of the previous line even if the last non-zero item exactly "filled up" the line**.
     #[inline]
     fn collect_flex_lines<'a>(
@@ -822,7 +822,7 @@ impl Forest {
         flex_lines: &mut [FlexLine],
         constants: &AlgoConstants,
     ) {
-        /// Recursively caluculates the baseline for children
+        /// Recursively calculates the baseline for children
         fn calc_baseline(db: &Forest, node: NodeId, layout: &Layout) -> f32 {
             if db.children[node].is_empty() {
                 layout.size.height
@@ -880,7 +880,7 @@ impl Forest {
     /// - [**Calculate the cross size of each flex line**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-line).
     ///
     ///     If the flex container is single-line and has a definite cross size, the cross size of the flex line is the flex container’s inner cross size.
-    ///         
+    ///
     ///     Otherwise, for each flex line:
     ///
     ///     1. Collect all the flex items whose inline-axis is parallel to the main-axis, whose align-self is baseline, and whose cross-axis margins are both non-auto.
@@ -890,7 +890,7 @@ impl Forest {
     ///     2. Among all the items not collected by the previous step, find the largest outer hypothetical cross size.
     ///
     ///     3. The used cross-size of the flex line is the largest of the numbers found in the previous two steps and zero.
-    ///         
+    ///
     ///         If the flex container is single-line, then clamp the line’s cross-size to be within the container’s computed min and max cross sizes.
     ///         **Note that if CSS 2.1’s definition of min/max-width/height applied more generally, this behavior would fall out automatically**.
     #[inline]
@@ -1124,10 +1124,10 @@ impl Forest {
     ///
     /// - [**Resolve cross-axis `auto` margins**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-margins).
     ///     If a flex item has auto cross-axis margins:
-    ///     
+    ///
     ///     - If its outer cross size (treating those auto margins as zero) is less than the cross size of its flex line,
     ///         distribute the difference in those sizes equally to the auto margins.
-    ///     
+    ///
     ///     - Otherwise, if the block-start or inline-start margin (whichever is in the cross axis) is auto, set it to zero.
     ///         Set the opposite margin so that the outer cross size of the item equals the cross size of its flex line.
     #[inline]
@@ -1243,7 +1243,7 @@ impl Forest {
     /// # [9.6. Cross-Axis Alignment](https://www.w3.org/TR/css-flexbox-1/#cross-alignment)
     ///
     /// - [**Determine the flex container’s used cross size**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-container):
-    ///     
+    ///
     ///     - If the cross size property is a definite size, use that, clamped by the used min and max cross sizes of the flex container.
     ///
     ///     - Otherwise, use the sum of the flex lines' cross sizes, clamped by the used min and max cross sizes of the flex container.
