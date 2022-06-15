@@ -4,6 +4,12 @@
 #![warn(missing_docs)]
 #![warn(clippy::missing_docs_in_private_items)]
 
+// We always need std for the tests
+// See <https://github.com/la10736/rstest/issues/149#issuecomment-1156402989>
+#[cfg(all(test, not(feature = "std")))]
+#[macro_use]
+extern crate std;
+
 #[cfg(all(not(feature = "std"), feature = "alloc"))]
 extern crate alloc;
 
