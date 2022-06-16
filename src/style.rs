@@ -473,6 +473,9 @@ impl FlexboxLayout {
 
     /// Computes the final alignment of this item based on the parent's [`AlignItems`] and this item's [`AlignSelf`]
     pub(crate) fn align_self(&self, parent: &FlexboxLayout) -> AlignSelf {
+        // FUTURE WARNING: This function should never return AlignSelf::Auto
+        // See #169 https://github.com/DioxusLabs/taffy/pull/169#issuecomment-1157698840
+
         if self.align_self == AlignSelf::Auto {
             match parent.align_items {
                 AlignItems::FlexStart => AlignSelf::FlexStart,
