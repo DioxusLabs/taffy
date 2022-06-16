@@ -31,7 +31,7 @@ wildcards = "deny"
 highlight = "all"
 # Certain crates/versions that will be skipped when doing duplicate detection.
 skip = [
-    { name = "iota", version = "1.0.2" }
+    { name = "itoa", version = "1.0.2" }
 ]
 
 [sources]
