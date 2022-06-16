@@ -37,7 +37,7 @@ fn build_random_leaf(taffy: &mut Taffy, rng: &mut ChaCha8Rng) -> Node {
 }
 
 /// A single root node with many children that have shallow depth
-fn build_single_root_flat_hierachy(taffy: &mut Taffy) -> Node {
+fn build_single_root_flat_hierarchy(taffy: &mut Taffy) -> Node {
     let mut rng = ChaCha8Rng::seed_from_u64(12345);
     let mut children = Vec::new();
     let mut node_count = 0;
@@ -55,10 +55,10 @@ fn build_single_root_flat_hierachy(taffy: &mut Taffy) -> Node {
 }
 
 fn taffy_benchmarks(c: &mut Criterion) {
-    c.bench_function("single root, flat hierachy", |b| {
+    c.bench_function("single root, flat hierarchy", |b| {
         b.iter(|| {
             let mut taffy = Taffy::new();
-            let root = build_single_root_flat_hierachy(&mut taffy);
+            let root = build_single_root_flat_hierarchy(&mut taffy);
             taffy.compute_layout(root, Size::undefined()).unwrap()
         })
     });
