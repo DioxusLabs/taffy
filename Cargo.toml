@@ -28,6 +28,8 @@ serde = ["dep:serde"]
 [dev-dependencies]
 criterion = "0.3"
 rstest = "0.15.0"
+rand = "0.8.5"
+rand_chacha = "0.3.1"
 
 [profile.release]
 lto = true
