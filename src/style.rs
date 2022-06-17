@@ -486,3 +486,47 @@ impl FlexboxLayout {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    mod test_resolve_dimensions {
+        use crate::style::Dimension;
+        use rstest::rstest;
+
+        #[rstest]
+        #[case(Dimension::Undefined, None, None)]
+        #[case(Dimension::Undefined, Some(5.0), None)]
+        #[case(Dimension::Undefined, Some(-5.0), None)]
+        #[case(Dimension::Undefined, Some(0.), None)]
+        fn resolve_undefined(#[case] input: Dimension, #[case] parent: Option<f32>, #[case] expected: Option<f32>) {
+            assert_eq!(input.resolve(parent), expected);
+        }
+
+        #[rstest]
+        #[case(Dimension::Auto, None, None)]
+        #[case(Dimension::Auto, Some(5.0), None)]
+        #[case(Dimension::Auto, Some(-5.0), None)]
+        #[case(Dimension::Auto, Some(0.), None)]
+        fn resolve_auto(#[case] input: Dimension, #[case] parent: Option<f32>, #[case] expected: Option<f32>) {
+            assert_eq!(input.resolve(parent), expected);
+        }
+
+        #[rstest]
+        #[case(Dimension::Points(0.), None, Some(0.))]
+        #[case(Dimension::Points(1.), Some(5.0), Some(1.))]
+        #[case(Dimension::Points(-1.), Some(-5.0), Some(-1.))]
+        #[case(Dimension::Points(1.0), Some(0.), Some(1.0))]
+        fn resolve_points(#[case] input: Dimension, #[case] parent: Option<f32>, #[case] expected: Option<f32>) {
+            assert_eq!(input.resolve(parent), expected);
+        }
+
+        #[rstest]
+        #[case(Dimension::Percent(1.0), None, None)]
+        #[case(Dimension::Percent(1.0), Some(5.0), Some(5.0))]
+        #[case(Dimension::Percent(1.0), Some(-5.0), Some(-5.0))]
+        #[case(Dimension::Percent(10.0), Some(5.0), Some(50.0))]
+        fn resolve_percent(#[case] input: Dimension, #[case] parent: Option<f32>, #[case] expected: Option<f32>) {
+            assert_eq!(input.resolve(parent), expected);
+        }
+    }
+}

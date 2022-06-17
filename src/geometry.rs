@@ -256,3 +256,37 @@ impl Point<f32> {
         Self { x: 0.0, y: 0.0 }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    mod test_resolve_size {
+        use crate::geometry::Size;
+        use crate::style::Dimension;
+        use rstest::rstest;
+
+        #[rstest]
+        #[case(Size { width: Dimension::Undefined, height: Dimension::Undefined }, Size { width: None, height: None }, Size { width: None, height: None })]
+        #[case(Size { width: Dimension::Undefined, height: Dimension::Undefined }, Size { width: Some(0.0), height: Some(0.0) }, Size { width: None, height: None })]
+        #[case(Size { width: Dimension::Undefined, height: Dimension::Undefined }, Size { width: Some(1.0), height: Some(1.0) }, Size { width: None, height: None })]
+        #[case(Size { width: Dimension::Undefined, height: Dimension::Undefined }, Size { width: Some(-1.0), height: Some(-1.0) }, Size { width: None, height: None })]
+        #[case(Size { width: Dimension::Auto, height: Dimension::Auto }, Size { width: None, height: None }, Size { width: None, height: None })]
+        #[case(Size { width: Dimension::Auto, height: Dimension::Auto }, Size { width: Some(0.0), height: Some(0.0) }, Size { width: None, height: None })]
+        #[case(Size { width: Dimension::Auto, height: Dimension::Auto }, Size { width: Some(1.0), height: Some(1.0) }, Size { width: None, height: None })]
+        #[case(Size { width: Dimension::Auto, height: Dimension::Auto }, Size { width: Some(-1.0), height: Some(-1.0) }, Size { width: None, height: None })]
+        #[case(Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) }, Size { width: None, height: None }, Size { width: Some(5.0), height: Some(5.0) })]
+        #[case(Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) }, Size { width: Some(0.0), height: Some(0.0) }, Size { width: Some(5.0), height: Some(5.0) })]
+        #[case(Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) }, Size { width: Some(1.0), height: Some(1.0) }, Size { width: Some(5.0), height: Some(5.0) })]
+        #[case(Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) }, Size { width: Some(-1.0), height: Some(-1.0) }, Size { width: Some(5.0), height: Some(5.0) })]
+        #[case(Size { width: Dimension::Percent(50.0), height: Dimension::Percent(50.0) }, Size { width: None, height: None }, Size { width: None, height: None })]
+        #[case(Size { width: Dimension::Percent(50.0), height: Dimension::Percent(50.0) }, Size { width: Some(0.0), height: Some(0.0) }, Size { width: Some(0.0), height: Some(0.0) })]
+        #[case(Size { width: Dimension::Percent(50.0), height: Dimension::Percent(50.0) }, Size { width: Some(1.0), height: Some(1.0) }, Size { width: Some(50.0), height: Some(50.0) })]
+        #[case(Size { width: Dimension::Percent(50.0), height: Dimension::Percent(50.0) }, Size { width: Some(-1.0), height: Some(-1.0) }, Size { width: Some(-50.0), height: Some(-50.0) })]
+        fn resolve_size(
+            #[case] input: Size<Dimension>,
+            #[case] parent: Size<Option<f32>>,
+            #[case] expected: Size<Option<f32>>,
+        ) {
+            assert_eq!(input.resolve(parent), expected);
+        }
+    }
+}
