@@ -529,4 +529,285 @@ mod tests {
             assert_eq!(input.resolve(parent), expected);
         }
     }
+
+    mod test_flex_direction {
+        use crate::style::*;
+        use rstest::rstest;
+
+        #[rstest]
+        #[case(FlexDirection::Row, true)]
+        #[case(FlexDirection::RowReverse, true)]
+        #[case(FlexDirection::Column, false)]
+        #[case(FlexDirection::ColumnReverse, false)]
+        fn flex_direction_is_row(#[case] dir: FlexDirection, #[case] expected: bool) {
+            assert_eq!(dir.is_row(), expected);
+        }
+
+        #[rstest]
+        #[case(FlexDirection::Row, false)]
+        #[case(FlexDirection::RowReverse, false)]
+        #[case(FlexDirection::Column, true)]
+        #[case(FlexDirection::ColumnReverse, true)]
+        fn flex_direction_is_column(#[case] dir: FlexDirection, #[case] expected: bool) {
+            assert_eq!(dir.is_column(), expected);
+        }
+
+        #[rstest]
+        #[case(FlexDirection::Row, false)]
+        #[case(FlexDirection::RowReverse, true)]
+        #[case(FlexDirection::Column, false)]
+        #[case(FlexDirection::ColumnReverse, true)]
+        fn flex_direction_is_reverse(#[case] dir: FlexDirection, #[case] expected: bool) {
+            assert_eq!(dir.is_reverse(), expected);
+        }
+    }
+
+    mod test_flexbox_layout {
+        use crate::style::*;
+        use rstest::rstest;
+
+        #[rstest]
+        #[case(
+            FlexDirection::Row,
+            Size { width: Dimension::Points(1.0), height: Dimension::Points(2.0) },
+            Dimension::Points(1.0)
+        )]
+        #[case(
+            FlexDirection::Column,
+            Size { width: Dimension::Points(1.0), height: Dimension::Points(2.0) },
+            Dimension::Points(2.0)
+        )]
+        fn flexbox_layout_min_main_size(
+            #[case] dir: FlexDirection,
+            #[case] min_size: Size<Dimension>,
+            #[case] expected: Dimension,
+        ) {
+            let layout = FlexboxLayout { min_size, ..Default::default() };
+            assert_eq!(layout.min_main_size(dir), expected);
+        }
+
+        #[rstest]
+        #[case(
+            FlexDirection::Row,
+            Size { width: Dimension::Points(1.0), height: Dimension::Points(2.0) },
+            Dimension::Points(1.0)
+        )]
+        #[case(
+            FlexDirection::Column,
+            Size { width: Dimension::Points(1.0), height: Dimension::Points(2.0) },
+            Dimension::Points(2.0)
+        )]
+        fn flexbox_layout_max_main_size(
+            #[case] dir: FlexDirection,
+            #[case] max_size: Size<Dimension>,
+            #[case] expected: Dimension,
+        ) {
+            let layout = FlexboxLayout { max_size, ..Default::default() };
+            assert_eq!(layout.max_main_size(dir), expected);
+        }
+
+        #[rstest]
+        #[case(
+            FlexDirection::Row,
+            Rect { start: Dimension::Points(1.0), top: Dimension::Points(2.0), ..Default::default() },
+            Dimension::Points(1.0)
+        )]
+        #[case(
+            FlexDirection::Column,
+            Rect { start: Dimension::Points(1.0), top: Dimension::Points(2.0), ..Default::default() },
+            Dimension::Points(2.0)
+        )]
+        fn flexbox_layout_main_margin_start(
+            #[case] dir: FlexDirection,
+            #[case] margin: Rect<Dimension>,
+            #[case] expected: Dimension,
+        ) {
+            let layout = FlexboxLayout { margin, ..Default::default() };
+            assert_eq!(layout.main_margin_start(dir), expected);
+        }
+
+        #[rstest]
+        #[case(
+            FlexDirection::Row,
+            Rect { end: Dimension::Points(1.0), bottom: Dimension::Points(2.0), ..Default::default() },
+            Dimension::Points(1.0)
+        )]
+        #[case(
+            FlexDirection::Column,
+            Rect { end: Dimension::Points(1.0), bottom: Dimension::Points(2.0), ..Default::default() },
+            Dimension::Points(2.0)
+        )]
+        fn flexbox_layout_main_margin_end(
+            #[case] dir: FlexDirection,
+            #[case] margin: Rect<Dimension>,
+            #[case] expected: Dimension,
+        ) {
+            let layout = FlexboxLayout { margin, ..Default::default() };
+            assert_eq!(layout.main_margin_end(dir), expected);
+        }
+
+        #[rstest]
+        #[case(
+            FlexDirection::Row,
+            Size { height: Dimension::Points(1.0), width: Dimension::Points(2.0), ..Default::default() },
+            Dimension::Points(1.0)
+        )]
+        #[case(
+            FlexDirection::Column,
+            Size { height: Dimension::Points(1.0), width: Dimension::Points(2.0), ..Default::default() },
+            Dimension::Points(2.0)
+        )]
+        fn flexbox_layout_cross_size(
+            #[case] dir: FlexDirection,
+            #[case] size: Size<Dimension>,
+            #[case] expected: Dimension,
+        ) {
+            let layout = FlexboxLayout { size, ..Default::default() };
+            assert_eq!(layout.cross_size(dir), expected);
+        }
+
+        #[rstest]
+        #[case(
+            FlexDirection::Row,
+            Size { height: Dimension::Points(1.0), width: Dimension::Points(2.0), ..Default::default() },
+            Dimension::Points(1.0)
+        )]
+        #[case(
+            FlexDirection::Column,
+            Size { height: Dimension::Points(1.0), width: Dimension::Points(2.0), ..Default::default() },
+            Dimension::Points(2.0)
+        )]
+        fn flexbox_layout_min_cross_size(
+            #[case] dir: FlexDirection,
+            #[case] min_size: Size<Dimension>,
+            #[case] expected: Dimension,
+        ) {
+            let layout = FlexboxLayout { min_size, ..Default::default() };
+            assert_eq!(layout.min_cross_size(dir), expected);
+        }
+
+        #[rstest]
+        #[case(
+            FlexDirection::Row,
+            Size { height: Dimension::Points(1.0), width: Dimension::Points(2.0), ..Default::default() },
+            Dimension::Points(1.0)
+        )]
+        #[case(
+            FlexDirection::Column,
+            Size { height: Dimension::Points(1.0), width: Dimension::Points(2.0), ..Default::default() },
+            Dimension::Points(2.0)
+        )]
+        fn flexbox_layout_max_cross_size(
+            #[case] dir: FlexDirection,
+            #[case] max_size: Size<Dimension>,
+            #[case] expected: Dimension,
+        ) {
+            let layout = FlexboxLayout { max_size, ..Default::default() };
+            assert_eq!(layout.max_cross_size(dir), expected);
+        }
+
+        #[rstest]
+        #[case(
+            FlexDirection::Row,
+            Rect { top: Dimension::Points(1.0), start: Dimension::Points(2.0), ..Default::default() },
+            Dimension::Points(1.0)
+        )]
+        #[case(
+            FlexDirection::Column,
+            Rect { top: Dimension::Points(1.0), start: Dimension::Points(2.0), ..Default::default() },
+            Dimension::Points(2.0)
+        )]
+        fn flexbox_layout_cross_margin_start(
+            #[case] dir: FlexDirection,
+            #[case] margin: Rect<Dimension>,
+            #[case] expected: Dimension,
+        ) {
+            let layout = FlexboxLayout { margin, ..Default::default() };
+            assert_eq!(layout.cross_margin_start(dir), expected);
+        }
+
+        #[rstest]
+        #[case(
+            FlexDirection::Row,
+            Rect { bottom: Dimension::Points(1.0), end: Dimension::Points(2.0), ..Default::default() },
+            Dimension::Points(1.0)
+        )]
+        #[case(
+            FlexDirection::Column,
+            Rect { bottom: Dimension::Points(1.0), end: Dimension::Points(2.0), ..Default::default() },
+            Dimension::Points(2.0)
+        )]
+        fn flexbox_layout_cross_margin_end(
+            #[case] dir: FlexDirection,
+            #[case] margin: Rect<Dimension>,
+            #[case] expected: Dimension,
+        ) {
+            let layout = FlexboxLayout { margin, ..Default::default() };
+            assert_eq!(layout.cross_margin_end(dir), expected);
+        }
+
+        #[rstest]
+        #[case(
+            FlexboxLayout { align_items: AlignItems::FlexStart, ..Default::default() },
+            FlexboxLayout { align_self: AlignSelf::Auto, ..Default::default() },
+            AlignSelf::FlexStart
+        )]
+        #[case(
+            FlexboxLayout { align_items: AlignItems::FlexEnd, ..Default::default() },
+            FlexboxLayout { align_self: AlignSelf::Auto, ..Default::default() },
+            AlignSelf::FlexEnd
+        )]
+        #[case(
+            FlexboxLayout { align_items: AlignItems::Center, ..Default::default() },
+            FlexboxLayout { align_self: AlignSelf::Auto, ..Default::default() },
+            AlignSelf::Center
+        )]
+        #[case(
+            FlexboxLayout { align_items: AlignItems::Baseline, ..Default::default() },
+            FlexboxLayout { align_self: AlignSelf::Auto, ..Default::default() },
+            AlignSelf::Baseline
+        )]
+        #[case(
+            FlexboxLayout { align_items: AlignItems::Stretch, ..Default::default() },
+            FlexboxLayout { align_self: AlignSelf::Auto, ..Default::default() },
+            AlignSelf::Stretch
+        )]
+        fn flexbox_layout_align_self_auto(
+            #[case] parent: FlexboxLayout,
+            #[case] layout: FlexboxLayout,
+            #[case] expected: AlignSelf,
+        ) {
+            assert_eq!(layout.align_self(&parent), expected);
+        }
+
+        #[rstest]
+        #[case(
+            FlexboxLayout { align_items: AlignItems::FlexEnd, ..Default::default() },
+            FlexboxLayout { align_self: AlignSelf::FlexStart, ..Default::default() },
+            AlignSelf::FlexStart
+        )]
+        #[case(
+            FlexboxLayout { align_items: AlignItems::FlexStart, ..Default::default() },
+            FlexboxLayout { align_self: AlignSelf::FlexEnd, ..Default::default() },
+            AlignSelf::FlexEnd
+        )]
+        #[case(
+            FlexboxLayout { align_items: AlignItems::FlexStart, ..Default::default() },
+            FlexboxLayout { align_self: AlignSelf::Center, ..Default::default() },
+            AlignSelf::Center
+        )]
+        #[case(
+            FlexboxLayout { align_items: AlignItems::FlexStart, ..Default::default() },
+            FlexboxLayout { align_self: AlignSelf::Baseline, ..Default::default() },
+            AlignSelf::Baseline
+        )]
+        #[case(
+            FlexboxLayout { align_items: AlignItems::FlexStart, ..Default::default() },
+            FlexboxLayout { align_self: AlignSelf::Stretch, ..Default::default() },
+            AlignSelf::Stretch
+        )]
+        fn align_self(#[case] parent: FlexboxLayout, #[case] layout: FlexboxLayout, #[case] expected: AlignSelf) {
+            assert_eq!(layout.align_self(&parent), expected);
+        }
+    }
 }
