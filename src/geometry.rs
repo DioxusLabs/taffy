@@ -169,7 +169,7 @@ impl Size<()> {
 
 impl<T> Default for Size<Option<T>> {
     fn default() -> Self {
-        Self { width: Default::default(), height: Default::default() }
+        Self { width: None, height: None }
     }
 }
 
