@@ -7,7 +7,10 @@ fn simple_child() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 align_self: taffy::prelude::AlignSelf::Center,
-                size: taffy::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
+                size: taffy::geometry::Size {
+                    width: Some(Dimension::Points(10f32)),
+                    height: Some(Dimension::Points(10f32)),
+                },
                 ..Default::default()
             },
             &[],
@@ -16,7 +19,10 @@ fn simple_child() {
     let node0 = taffy
         .new_with_children(
             taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
+                size: taffy::geometry::Size {
+                    width: Some(Dimension::Points(10f32)),
+                    height: Some(Dimension::Points(10f32)),
+                },
                 ..Default::default()
             },
             &[node0_0],
@@ -26,7 +32,10 @@ fn simple_child() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 align_self: taffy::prelude::AlignSelf::Center,
-                size: taffy::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
+                size: taffy::geometry::Size {
+                    width: Some(Dimension::Points(10f32)),
+                    height: Some(Dimension::Points(10f32)),
+                },
                 ..Default::default()
             },
             &[],
@@ -36,7 +45,10 @@ fn simple_child() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 align_self: taffy::prelude::AlignSelf::Center,
-                size: taffy::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
+                size: taffy::geometry::Size {
+                    width: Some(Dimension::Points(10f32)),
+                    height: Some(Dimension::Points(10f32)),
+                },
                 ..Default::default()
             },
             &[],
@@ -45,7 +57,7 @@ fn simple_child() {
     let node1 = taffy
         .new_with_children(
             taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size { width: Dimension::Undefined, height: Dimension::Undefined },
+                size: taffy::geometry::Size { width: None, height: None },
                 ..Default::default()
             },
             &[node1_0, node1_1],
@@ -54,7 +66,10 @@ fn simple_child() {
     let node = taffy
         .new_with_children(
             taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size { width: Dimension::Percent(100.0), height: Dimension::Percent(100.0) },
+                size: taffy::geometry::Size {
+                    width: Some(Dimension::Percent(100.0)),
+                    height: Some(Dimension::Percent(100.0)),
+                },
                 ..Default::default()
             },
             &[node0, node1],

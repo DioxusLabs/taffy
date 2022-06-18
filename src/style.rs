@@ -1,6 +1,6 @@
 //! A representation of [CSS layout properties](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust, used for flexbox layout
 
-use crate::geometry::{Rect, Size};
+use crate::geometry::{Rect, Resolve, Size};
 
 /// How [`Nodes`](crate::node::Node) are aligned relative to the cross axis
 ///
@@ -247,12 +247,10 @@ impl Default for FlexWrap {
 /// A unit of linear measurement
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
-/// The default value is [`Dimension::Undefined`].
+/// The default value is [`Dimension::Auto`].
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Dimension {
-    /// The dimension is not given
-    Undefined,
     /// The dimension should be automatically computed
     Auto,
     /// The dimension is stored in [points](https://en.wikipedia.org/wiki/Point_(typography))
@@ -265,22 +263,37 @@ pub enum Dimension {
 
 impl Default for Dimension {
     fn default() -> Self {
-        Self::Undefined
+        Self::Auto
     }
 }
 
-impl Dimension {
+impl Resolve<Option<f32>> for Dimension {
     /// Converts the given [`Dimension`] into a concrete value of points
-    pub(crate) fn resolve(self, parent_dim: Option<f32>) -> Option<f32> {
+    fn resolve(&self, parent_dim: Option<f32>) -> Option<f32> {
         match self {
-            Dimension::Points(points) => Some(points),
+            Dimension::Points(points) => Some(*points),
             // parent_dim * percent
             Dimension::Percent(percent) => parent_dim.map(|dim| dim * percent),
             _ => None,
         }
     }
+}
+
+// impl Resolve for Option<Dimension>
+
+impl Dimension {
+    /// Converts the given [`Dimension`] into a concrete value of points
+    // pub(crate) fn resolve(self, parent_dim: Option<f32>) -> Option<f32> {
+    //     match self {
+    //         Dimension::Points(points) => Some(points),
+    //         // parent_dim * percent
+    //         Dimension::Percent(percent) => parent_dim.map(|dim| dim * percent),
+    //         _ => None,
+    //     }
+    // }
 
     /// Is this value defined?
+    /// TODO: Auto does not count as defined in that case?
     pub(crate) fn is_defined(self) -> bool {
         matches!(self, Dimension::Points(_) | Dimension::Percent(_))
     }
@@ -352,7 +365,7 @@ pub struct FlexboxLayout {
     pub flex_basis: Dimension,
     /// Sets the initial size of the item
     // TODO: why does this exist as distinct from flex_basis? How do they interact?
-    pub size: Size<Dimension>,
+    pub size: Size<Option<Dimension>>,
     /// Controls the minimum size of the item
     pub min_size: Size<Dimension>,
     /// Controls the maximum size of the item

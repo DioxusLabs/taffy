@@ -4,7 +4,7 @@
 use core::f32;
 
 use crate::forest::{Forest, NodeData};
-use crate::geometry::{Point, Rect, Size};
+use crate::geometry::{Point, Rect, Resolve, Size};
 use crate::layout::{Cache, Layout};
 use crate::math::MaybeMath;
 use crate::node::{MeasureFunc, NodeId};

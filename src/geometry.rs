@@ -167,6 +167,12 @@ impl Size<()> {
     }
 }
 
+impl<T> Default for Size<Option<T>> {
+    fn default() -> Self {
+        Self { width: Default::default(), height: Default::default() }
+    }
+}
+
 impl<T> Size<T> {
     /// Applies the function `f` to both the width and height
     ///
@@ -231,10 +237,23 @@ impl Size<f32> {
     }
 }
 
-impl Size<Dimension> {
+pub(crate) trait Resolve<T> {
+    fn resolve(&self, parent: T) -> T;
+}
+
+impl Resolve<Size<Option<f32>>> for Size<Dimension> {
     /// Converts any `parent`-relative values for size into an absolute size
-    pub(crate) fn resolve(&self, parent: Size<Option<f32>>) -> Size<Option<f32>> {
+    fn resolve(&self, parent: Size<Option<f32>>) -> Size<Option<f32>> {
         Size { width: self.width.resolve(parent.width), height: self.height.resolve(parent.height) }
+    }
+}
+
+impl Resolve<Size<Option<f32>>> for Size<Option<Dimension>> {
+    fn resolve(&self, parent: Size<Option<f32>>) -> Size<Option<f32>> {
+        Size {
+            width: self.width.and_then(|w| w.resolve(parent.width)),
+            height: self.height.and_then(|h| h.resolve(parent.height)),
+        }
     }
 }
 
