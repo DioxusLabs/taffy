@@ -96,7 +96,10 @@ mod measure {
         let node = taffy
             .new_with_children(
                 taffy::style::FlexboxLayout {
-                    size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50.0), ..Default::default() },
+                    size: taffy::geometry::Size {
+                        width: Some(taffy::style::Dimension::Points(50.0)),
+                        ..Default::default()
+                    },
                     padding: taffy::geometry::Rect {
                         start: taffy::style::Dimension::Points(10.0),
                         end: taffy::style::Dimension::Points(10.0),
@@ -124,8 +127,8 @@ mod measure {
             .new_with_children(
                 taffy::style::FlexboxLayout {
                     size: taffy::geometry::Size {
-                        width: taffy::style::Dimension::Points(50.0),
-                        height: taffy::style::Dimension::Points(50.0),
+                        width: Some(taffy::style::Dimension::Points(50.0)),
+                        height: Some(taffy::style::Dimension::Points(50.0)),
                     },
                     ..Default::default()
                 },
@@ -146,7 +149,10 @@ mod measure {
         let node = taffy
             .new_with_children(
                 taffy::style::FlexboxLayout {
-                    size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100.0), ..Default::default() },
+                    size: taffy::geometry::Size {
+                        width: Some(taffy::style::Dimension::Points(100.0)),
+                        ..Default::default()
+                    },
                     ..Default::default()
                 },
                 &[child0, child1],
@@ -166,8 +172,8 @@ mod measure {
             .new_with_children(
                 taffy::style::FlexboxLayout {
                     size: taffy::geometry::Size {
-                        width: taffy::style::Dimension::Points(50.0),
-                        height: taffy::style::Dimension::Points(50.0),
+                        width: Some(taffy::style::Dimension::Points(50.0)),
+                        height: Some(taffy::style::Dimension::Points(50.0)),
                     },
                     flex_shrink: 0.0,
                     ..Default::default()
@@ -189,7 +195,10 @@ mod measure {
         let node = taffy
             .new_with_children(
                 taffy::style::FlexboxLayout {
-                    size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100.0), ..Default::default() },
+                    size: taffy::geometry::Size {
+                        width: Some(taffy::style::Dimension::Points(100.0)),
+                        ..Default::default()
+                    },
                     ..Default::default()
                 },
                 &[child0, child1],
@@ -209,8 +218,8 @@ mod measure {
             .new_with_children(
                 taffy::style::FlexboxLayout {
                     size: taffy::geometry::Size {
-                        width: taffy::style::Dimension::Points(50.0),
-                        height: taffy::style::Dimension::Points(50.0),
+                        width: Some(taffy::style::Dimension::Points(50.0)),
+                        height: Some(taffy::style::Dimension::Points(50.0)),
                     },
                     ..Default::default()
                 },
@@ -232,7 +241,10 @@ mod measure {
         let node = taffy
             .new_with_children(
                 taffy::style::FlexboxLayout {
-                    size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100.0), ..Default::default() },
+                    size: taffy::geometry::Size {
+                        width: Some(taffy::style::Dimension::Points(100.0)),
+                        ..Default::default()
+                    },
                     align_items: taffy::style::AlignItems::FlexStart,
                     ..Default::default()
                 },
@@ -254,8 +266,8 @@ mod measure {
             .new_with_children(
                 taffy::style::FlexboxLayout {
                     size: taffy::geometry::Size {
-                        width: taffy::style::Dimension::Points(50.0),
-                        height: taffy::style::Dimension::Points(50.0),
+                        width: Some(taffy::style::Dimension::Points(50.0)),
+                        height: Some(taffy::style::Dimension::Points(50.0)),
                     },
                     flex_shrink: 0.0,
                     ..Default::default()
@@ -278,7 +290,10 @@ mod measure {
         let node = taffy
             .new_with_children(
                 taffy::style::FlexboxLayout {
-                    size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100.0), ..Default::default() },
+                    size: taffy::geometry::Size {
+                        width: Some(taffy::style::Dimension::Points(100.0)),
+                        ..Default::default()
+                    },
                     align_items: taffy::style::AlignItems::FlexStart,
                     ..Default::default()
                 },
@@ -311,8 +326,8 @@ mod measure {
             .new_with_children(
                 taffy::style::FlexboxLayout {
                     size: taffy::geometry::Size {
-                        width: taffy::style::Dimension::Points(100.0),
-                        height: taffy::style::Dimension::Points(100.0),
+                        width: Some(taffy::style::Dimension::Points(100.0)),
+                        height: Some(taffy::style::Dimension::Points(100.0)),
                     },
                     ..Default::default()
                 },
@@ -332,7 +347,10 @@ mod measure {
         let child = taffy
             .new_leaf(
                 taffy::style::FlexboxLayout {
-                    size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50.0), ..Default::default() },
+                    size: taffy::geometry::Size {
+                        width: Some(taffy::style::Dimension::Points(50.0)),
+                        ..Default::default()
+                    },
                     ..Default::default()
                 },
                 MeasureFunc::Raw(|constraint| taffy::geometry::Size {
@@ -355,7 +373,10 @@ mod measure {
         let child = taffy
             .new_leaf(
                 taffy::style::FlexboxLayout {
-                    size: taffy::geometry::Size { height: taffy::style::Dimension::Points(50.0), ..Default::default() },
+                    size: taffy::geometry::Size {
+                        height: Some(taffy::style::Dimension::Points(50.0)),
+                        ..Default::default()
+                    },
                     ..Default::default()
                 },
                 MeasureFunc::Raw(|constraint| taffy::geometry::Size {
@@ -404,8 +425,8 @@ mod measure {
             .new_with_children(
                 taffy::style::FlexboxLayout {
                     size: taffy::geometry::Size {
-                        width: taffy::style::Dimension::Points(200.0),
-                        height: taffy::style::Dimension::Points(100.0),
+                        width: Some(taffy::style::Dimension::Points(200.0)),
+                        height: Some(taffy::style::Dimension::Points(100.0)),
                     },
                     ..Default::default()
                 },
@@ -438,8 +459,8 @@ mod measure {
             .new_with_children(
                 taffy::style::FlexboxLayout {
                     size: taffy::geometry::Size {
-                        width: taffy::style::Dimension::Points(100.0),
-                        height: taffy::style::Dimension::Points(100.0),
+                        width: Some(taffy::style::Dimension::Points(100.0)),
+                        height: Some(taffy::style::Dimension::Points(100.0)),
                     },
                     ..Default::default()
                 },
@@ -473,8 +494,8 @@ mod measure {
             .new_with_children(
                 taffy::style::FlexboxLayout {
                     size: taffy::geometry::Size {
-                        width: taffy::style::Dimension::Points(100.0),
-                        height: taffy::style::Dimension::Points(100.0),
+                        width: Some(taffy::style::Dimension::Points(100.0)),
+                        height: Some(taffy::style::Dimension::Points(100.0)),
                     },
                     ..Default::default()
                 },
@@ -502,8 +523,8 @@ mod measure {
             .new_with_children(
                 taffy::style::FlexboxLayout {
                     size: taffy::geometry::Size {
-                        width: taffy::style::Dimension::Points(100.0),
-                        height: taffy::style::Dimension::Points(100.0),
+                        width: Some(taffy::style::Dimension::Points(100.0)),
+                        height: Some(taffy::style::Dimension::Points(100.0)),
                     },
                     ..Default::default()
                 },

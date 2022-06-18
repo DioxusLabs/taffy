@@ -8,8 +8,8 @@ mod root_constraints {
             .new_with_children(
                 taffy::style::FlexboxLayout {
                     size: taffy::geometry::Size {
-                        width: taffy::style::Dimension::Percent(1.0),
-                        height: taffy::style::Dimension::Percent(1.0),
+                        width: Some(taffy::style::Dimension::Percent(1.0)),
+                        height: Some(taffy::style::Dimension::Percent(1.0)),
                     },
                     ..Default::default()
                 },
@@ -43,8 +43,8 @@ mod root_constraints {
             .new_with_children(
                 taffy::style::FlexboxLayout {
                     size: taffy::geometry::Size {
-                        width: taffy::style::Dimension::Points(200.0),
-                        height: taffy::style::Dimension::Points(200.0),
+                        width: Some(taffy::style::Dimension::Points(200.0)),
+                        height: Some(taffy::style::Dimension::Points(200.0)),
                     },
                     ..Default::default()
                 },

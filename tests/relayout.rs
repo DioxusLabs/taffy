@@ -6,7 +6,10 @@ fn relayout() {
     let node1 = taffy
         .new_with_children(
             taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size { width: Dimension::Points(8f32), height: Dimension::Points(80f32) },
+                size: taffy::geometry::Size {
+                    width: Some(Dimension::Points(8f32)),
+                    height: Some(Dimension::Points(80f32)),
+                },
                 ..Default::default()
             },
             &[],
@@ -16,7 +19,7 @@ fn relayout() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 align_self: taffy::prelude::AlignSelf::Center,
-                size: taffy::geometry::Size { width: Dimension::Auto, height: Dimension::Auto },
+                size: taffy::geometry::Size { width: Some(Dimension::Auto), height: Some(Dimension::Auto) },
                 // size: taffy::geometry::Size { width: Dimension::Percent(1.0), height: Dimension::Percent(1.0) },
                 ..Default::default()
             },
@@ -26,7 +29,10 @@ fn relayout() {
     let node = taffy
         .new_with_children(
             taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size { width: Dimension::Percent(1f32), height: Dimension::Percent(1f32) },
+                size: taffy::geometry::Size {
+                    width: Some(Dimension::Percent(1f32)),
+                    height: Some(Dimension::Percent(1f32)),
+                },
                 ..Default::default()
             },
             &[node0],
