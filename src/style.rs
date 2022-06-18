@@ -292,6 +292,28 @@ impl Default for Rect<Dimension> {
     }
 }
 
+impl Rect<Dimension> {
+    /// Generates a [`Rect<Dimension>`] using [`Dimension::Points`] values for `start` and `top`
+    pub fn top_from_points(start: f32, top: f32) -> Rect<Dimension> {
+        Rect { start: Dimension::Points(start), top: Dimension::Points(top), ..Default::default() }
+    }
+
+    /// Generates a [`Rect<Dimension>`] using [`Dimension::Points`] values for `end` and `bottom`
+    pub fn bot_from_points(end: f32, bottom: f32) -> Rect<Dimension> {
+        Rect { end: Dimension::Points(end), bottom: Dimension::Points(bottom), ..Default::default() }
+    }
+
+    /// Generates a [`Rect<Dimension>`] using [`Dimension::Percent`] values for `start` and `top`
+    pub fn top_from_percent(start: f32, top: f32) -> Rect<Dimension> {
+        Rect { start: Dimension::Percent(start), top: Dimension::Percent(top), ..Default::default() }
+    }
+
+    /// Generates a [`Rect<Dimension>`] using [`Dimension::Percent`] values for `end` and `bottom`
+    pub fn bot_from_percent(end: f32, bottom: f32) -> Rect<Dimension> {
+        Rect { end: Dimension::Percent(end), bottom: Dimension::Percent(bottom), ..Default::default() }
+    }
+}
+
 impl Default for Size<Dimension> {
     fn default() -> Self {
         Self { width: Dimension::Auto, height: Dimension::Auto }
@@ -561,18 +583,6 @@ mod tests {
     mod test_flexbox_layout {
         use crate::style::*;
 
-        fn size_from_points(width: f32, height: f32) -> Size<Dimension> {
-            Size { width: Dimension::Points(width), height: Dimension::Points(height) }
-        }
-
-        fn top_rect_from_points(top: f32, start: f32) -> Rect<Dimension> {
-            Rect { top: Dimension::Points(top), start: Dimension::Points(start), ..Default::default() }
-        }
-
-        fn bot_rect_from_points(bottom: f32, end: f32) -> Rect<Dimension> {
-            Rect { bottom: Dimension::Points(bottom), end: Dimension::Points(end), ..Default::default() }
-        }
-
         fn layout_from_align_items(align: AlignItems) -> FlexboxLayout {
             FlexboxLayout { align_items: align, ..Default::default() }
         }
@@ -583,63 +593,63 @@ mod tests {
 
         #[test]
         fn flexbox_layout_min_main_size() {
-            let layout = FlexboxLayout { min_size: size_from_points(1.0, 2.0), ..Default::default() };
+            let layout = FlexboxLayout { min_size: Size::from_points(1.0, 2.0), ..Default::default() };
             assert_eq!(layout.min_main_size(FlexDirection::Row), Dimension::Points(1.0));
             assert_eq!(layout.min_main_size(FlexDirection::Column), Dimension::Points(2.0));
         }
 
         #[test]
         fn flexbox_layout_max_main_size() {
-            let layout = FlexboxLayout { max_size: size_from_points(1.0, 2.0), ..Default::default() };
+            let layout = FlexboxLayout { max_size: Size::from_points(1.0, 2.0), ..Default::default() };
             assert_eq!(layout.max_main_size(FlexDirection::Row), Dimension::Points(1.0));
             assert_eq!(layout.max_main_size(FlexDirection::Column), Dimension::Points(2.0));
         }
 
         #[test]
         fn flexbox_layout_main_margin_start() {
-            let layout = FlexboxLayout { margin: top_rect_from_points(1.0, 2.0), ..Default::default() };
+            let layout = FlexboxLayout { margin: Rect::top_from_points(2.0, 1.0), ..Default::default() };
             assert_eq!(layout.main_margin_start(FlexDirection::Row), Dimension::Points(2.0));
             assert_eq!(layout.main_margin_start(FlexDirection::Column), Dimension::Points(1.0));
         }
 
         #[test]
         fn flexbox_layout_main_margin_end() {
-            let layout = FlexboxLayout { margin: bot_rect_from_points(1.0, 2.0), ..Default::default() };
+            let layout = FlexboxLayout { margin: Rect::bot_from_points(2.0, 1.0), ..Default::default() };
             assert_eq!(layout.main_margin_end(FlexDirection::Row), Dimension::Points(2.0));
             assert_eq!(layout.main_margin_end(FlexDirection::Column), Dimension::Points(1.0));
         }
 
         #[test]
         fn flexbox_layout_cross_size() {
-            let layout = FlexboxLayout { size: size_from_points(1.0, 2.0), ..Default::default() };
+            let layout = FlexboxLayout { size: Size::from_points(1.0, 2.0), ..Default::default() };
             assert_eq!(layout.cross_size(FlexDirection::Row), Dimension::Points(2.0));
             assert_eq!(layout.cross_size(FlexDirection::Column), Dimension::Points(1.0));
         }
 
         #[test]
         fn flexbox_layout_min_cross_size() {
-            let layout = FlexboxLayout { min_size: size_from_points(1.0, 2.0), ..Default::default() };
+            let layout = FlexboxLayout { min_size: Size::from_points(1.0, 2.0), ..Default::default() };
             assert_eq!(layout.min_cross_size(FlexDirection::Row), Dimension::Points(2.0));
             assert_eq!(layout.min_cross_size(FlexDirection::Column), Dimension::Points(1.0));
         }
 
         #[test]
         fn flexbox_layout_max_cross_size() {
-            let layout = FlexboxLayout { max_size: size_from_points(1.0, 2.0), ..Default::default() };
+            let layout = FlexboxLayout { max_size: Size::from_points(1.0, 2.0), ..Default::default() };
             assert_eq!(layout.max_cross_size(FlexDirection::Row), Dimension::Points(2.0));
             assert_eq!(layout.max_cross_size(FlexDirection::Column), Dimension::Points(1.0));
         }
 
         #[test]
         fn flexbox_layout_cross_margin_start() {
-            let layout = FlexboxLayout { margin: top_rect_from_points(1.0, 2.0), ..Default::default() };
+            let layout = FlexboxLayout { margin: Rect::top_from_points(2.0, 1.0), ..Default::default() };
             assert_eq!(layout.cross_margin_start(FlexDirection::Row), Dimension::Points(1.0));
             assert_eq!(layout.cross_margin_start(FlexDirection::Column), Dimension::Points(2.0));
         }
 
         #[test]
         fn flexbox_layout_cross_margin_end() {
-            let layout = FlexboxLayout { margin: bot_rect_from_points(1.0, 2.0), ..Default::default() };
+            let layout = FlexboxLayout { margin: Rect::bot_from_points(2.0, 1.0), ..Default::default() };
             assert_eq!(layout.cross_margin_end(FlexDirection::Row), Dimension::Points(1.0));
             assert_eq!(layout.cross_margin_end(FlexDirection::Column), Dimension::Points(2.0));
         }
