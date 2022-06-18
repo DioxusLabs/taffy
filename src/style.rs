@@ -440,7 +440,7 @@ impl FlexboxLayout {
     }
 
     /// If the `direction` is row-oriented, the height. Otherwise the width
-    pub(crate) fn cross_size(&self, direction: FlexDirection) -> Dimension {
+    pub(crate) fn cross_size(&self, direction: FlexDirection) -> Option<Dimension> {
         if direction.is_row() {
             self.size.height
         } else {

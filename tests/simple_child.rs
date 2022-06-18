@@ -57,7 +57,7 @@ fn simple_child() {
     let node1 = taffy
         .new_with_children(
             taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size { width: None, height: None },
+                size: taffy::geometry::Size { width: Some(Dimension::Auto), height: Some(Dimension::Auto) },
                 ..Default::default()
             },
             &[node1_0, node1_1],

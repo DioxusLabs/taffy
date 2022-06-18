@@ -61,7 +61,10 @@ mod measure {
         let node = taffy
             .new_with_children(
                 taffy::style::FlexboxLayout {
-                    size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50.0), ..Default::default() },
+                    size: taffy::geometry::Size {
+                        width: Some(taffy::style::Dimension::Points(50.0)),
+                        ..Default::default()
+                    },
                     ..Default::default()
                 },
                 &[child],

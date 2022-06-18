@@ -5,8 +5,8 @@ fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(10.0),
-                    height: taffy::style::Dimension::Points(10.0),
+                    width: Some(taffy::style::Dimension::Points(10.0)),
+                    height: Some(taffy::style::Dimension::Points(10.0)),
                 },
                 ..Default::default()
             },
@@ -17,8 +17,8 @@ fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(10.0),
-                    height: taffy::style::Dimension::Points(10.0),
+                    width: Some(taffy::style::Dimension::Points(10.0)),
+                    height: Some(taffy::style::Dimension::Points(10.0)),
                 },
                 ..Default::default()
             },
@@ -30,8 +30,8 @@ fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(10.0),
-                    height: taffy::style::Dimension::Points(10.0),
+                    width: Some(taffy::style::Dimension::Points(10.0)),
+                    height: Some(taffy::style::Dimension::Points(10.0)),
                 },
                 ..Default::default()
             },
@@ -42,8 +42,8 @@ fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(10.0),
-                    height: taffy::style::Dimension::Points(10.0),
+                    width: Some(taffy::style::Dimension::Points(10.0)),
+                    height: Some(taffy::style::Dimension::Points(10.0)),
                 },
                 ..Default::default()
             },
@@ -62,8 +62,8 @@ fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(10.0),
-                    height: taffy::style::Dimension::Points(10.0),
+                    width: Some(taffy::style::Dimension::Points(10.0)),
+                    height: Some(taffy::style::Dimension::Points(10.0)),
                 },
                 ..Default::default()
             },
@@ -74,8 +74,8 @@ fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(10.0),
-                    height: taffy::style::Dimension::Points(10.0),
+                    width: Some(taffy::style::Dimension::Points(10.0)),
+                    height: Some(taffy::style::Dimension::Points(10.0)),
                 },
                 ..Default::default()
             },
@@ -87,8 +87,8 @@ fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(10.0),
-                    height: taffy::style::Dimension::Points(10.0),
+                    width: Some(taffy::style::Dimension::Points(10.0)),
+                    height: Some(taffy::style::Dimension::Points(10.0)),
                 },
                 ..Default::default()
             },
@@ -99,8 +99,8 @@ fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(10.0),
-                    height: taffy::style::Dimension::Points(10.0),
+                    width: Some(taffy::style::Dimension::Points(10.0)),
+                    height: Some(taffy::style::Dimension::Points(10.0)),
                 },
                 ..Default::default()
             },

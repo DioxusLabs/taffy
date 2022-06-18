@@ -928,7 +928,7 @@ impl Forest {
                         if child_style.align_self(&self.nodes[node].style) == AlignSelf::Baseline
                             && child_style.cross_margin_start(constants.dir) != Dimension::Auto
                             && child_style.cross_margin_end(constants.dir) != Dimension::Auto
-                            && child_style.cross_size(constants.dir) == Dimension::Auto
+                            && child_style.cross_size(constants.dir) == Some(Dimension::Auto)
                         {
                             max_baseline - child.baseline + child.hypothetical_outer_size.cross(constants.dir)
                         } else {
@@ -992,7 +992,7 @@ impl Forest {
                     if child_style.align_self(&self.nodes[node].style) == AlignSelf::Stretch
                         && child_style.cross_margin_start(constants.dir) != Dimension::Auto
                         && child_style.cross_margin_end(constants.dir) != Dimension::Auto
-                        && child_style.cross_size(constants.dir) == Dimension::Auto
+                        && child_style.cross_size(constants.dir) == Some(Dimension::Auto)
                     {
                         (line_cross_size - child.margin.cross_axis_sum(constants.dir))
                             .maybe_max(child.min_size.cross(constants.dir))
@@ -1439,7 +1439,8 @@ impl Forest {
             let mut width = child_style
                 .size
                 .width
-                .resolve(container_width)
+                .and_then(|w| w.resolve(container_width))
+                // .resolve(container_width)
                 .maybe_max(child_style.min_size.width.resolve(container_width))
                 .maybe_min(child_style.max_size.width.resolve(container_width));
 
@@ -1450,7 +1451,7 @@ impl Forest {
             let mut height: Option<f32> = child_style
                 .size
                 .height
-                .resolve(container_height)
+                .and_then(|h| h.resolve(container_height))
                 .maybe_max(child_style.min_size.height.resolve(container_height))
                 .maybe_min(child_style.max_size.height.resolve(container_height));
 
