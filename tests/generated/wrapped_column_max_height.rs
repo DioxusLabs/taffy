@@ -5,8 +5,8 @@ fn wrapped_column_max_height() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(500f32),
+                    width: Some(taffy::style::Dimension::Points(100f32)),
+                    height: Some(taffy::style::Dimension::Points(500f32)),
                     ..Default::default()
                 },
                 max_size: taffy::geometry::Size {
@@ -22,8 +22,8 @@ fn wrapped_column_max_height() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(200f32),
-                    height: taffy::style::Dimension::Points(200f32),
+                    width: Some(taffy::style::Dimension::Points(200f32)),
+                    height: Some(taffy::style::Dimension::Points(200f32)),
                     ..Default::default()
                 },
                 margin: taffy::geometry::Rect {
@@ -42,8 +42,8 @@ fn wrapped_column_max_height() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: Some(taffy::style::Dimension::Points(100f32)),
+                    height: Some(taffy::style::Dimension::Points(100f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -60,8 +60,8 @@ fn wrapped_column_max_height() {
                 align_content: taffy::style::AlignContent::Center,
                 justify_content: taffy::style::JustifyContent::Center,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(700f32),
-                    height: taffy::style::Dimension::Points(500f32),
+                    width: Some(taffy::style::Dimension::Points(700f32)),
+                    height: Some(taffy::style::Dimension::Points(500f32)),
                     ..Default::default()
                 },
                 ..Default::default()

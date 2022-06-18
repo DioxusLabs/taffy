@@ -5,8 +5,8 @@ fn size_defined_by_child_with_border() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(10f32),
-                    height: taffy::style::Dimension::Points(10f32),
+                    width: Some(taffy::style::Dimension::Points(10f32)),
+                    height: Some(taffy::style::Dimension::Points(10f32)),
                     ..Default::default()
                 },
                 ..Default::default()

@@ -5,8 +5,8 @@ fn percentage_position_bottom_right() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(0.55f32),
-                    height: taffy::style::Dimension::Percent(0.15f32),
+                    width: Some(taffy::style::Dimension::Percent(0.55f32)),
+                    height: Some(taffy::style::Dimension::Percent(0.15f32)),
                     ..Default::default()
                 },
                 position: taffy::geometry::Rect {
@@ -23,8 +23,8 @@ fn percentage_position_bottom_right() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(500f32),
-                    height: taffy::style::Dimension::Points(500f32),
+                    width: Some(taffy::style::Dimension::Points(500f32)),
+                    height: Some(taffy::style::Dimension::Points(500f32)),
                     ..Default::default()
                 },
                 ..Default::default()

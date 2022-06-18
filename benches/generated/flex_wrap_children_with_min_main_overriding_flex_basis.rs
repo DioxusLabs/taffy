@@ -4,7 +4,10 @@ pub fn compute() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 flex_basis: taffy::style::Dimension::Points(50f32),
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(50f32), ..Default::default() },
+                size: taffy::geometry::Size {
+                    height: Some(taffy::style::Dimension::Points(50f32)),
+                    ..Default::default()
+                },
                 min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(55f32), ..Default::default() },
                 ..Default::default()
             },
@@ -15,7 +18,10 @@ pub fn compute() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 flex_basis: taffy::style::Dimension::Points(50f32),
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(50f32), ..Default::default() },
+                size: taffy::geometry::Size {
+                    height: Some(taffy::style::Dimension::Points(50f32)),
+                    ..Default::default()
+                },
                 min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(55f32), ..Default::default() },
                 ..Default::default()
             },
@@ -26,7 +32,10 @@ pub fn compute() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Default::default() },
+                size: taffy::geometry::Size {
+                    width: Some(taffy::style::Dimension::Points(100f32)),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[node0, node1],

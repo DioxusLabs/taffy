@@ -4,8 +4,8 @@ pub fn compute() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(40f32),
-                    height: taffy::style::Dimension::Points(40f32),
+                    width: Some(taffy::style::Dimension::Points(40f32)),
+                    height: Some(taffy::style::Dimension::Points(40f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -23,8 +23,8 @@ pub fn compute() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(40f32),
-                    height: taffy::style::Dimension::Points(40f32),
+                    width: Some(taffy::style::Dimension::Points(40f32)),
+                    height: Some(taffy::style::Dimension::Points(40f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -46,7 +46,10 @@ pub fn compute() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(70f32), ..Default::default() },
+                size: taffy::geometry::Size {
+                    width: Some(taffy::style::Dimension::Points(70f32)),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[node00, node01],
@@ -57,8 +60,8 @@ pub fn compute() {
             taffy::style::FlexboxLayout {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(500f32),
-                    height: taffy::style::Dimension::Points(500f32),
+                    width: Some(taffy::style::Dimension::Points(500f32)),
+                    height: Some(taffy::style::Dimension::Points(500f32)),
                     ..Default::default()
                 },
                 ..Default::default()

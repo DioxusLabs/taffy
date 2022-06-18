@@ -6,8 +6,8 @@ fn align_self_flex_end_override_flex_start() {
             taffy::style::FlexboxLayout {
                 align_self: taffy::style::AlignSelf::FlexEnd,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(10f32),
-                    height: taffy::style::Dimension::Points(10f32),
+                    width: Some(taffy::style::Dimension::Points(10f32)),
+                    height: Some(taffy::style::Dimension::Points(10f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -20,8 +20,8 @@ fn align_self_flex_end_override_flex_start() {
             taffy::style::FlexboxLayout {
                 align_items: taffy::style::AlignItems::FlexStart,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: Some(taffy::style::Dimension::Points(100f32)),
+                    height: Some(taffy::style::Dimension::Points(100f32)),
                     ..Default::default()
                 },
                 ..Default::default()

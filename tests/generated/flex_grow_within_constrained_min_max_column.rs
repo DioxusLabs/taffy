@@ -6,7 +6,10 @@ fn flex_grow_within_constrained_min_max_column() {
     let node1 = taffy
         .new_with_children(
             taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(50f32), ..Default::default() },
+                size: taffy::geometry::Size {
+                    height: Some(taffy::style::Dimension::Points(50f32)),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[],

@@ -5,8 +5,8 @@ fn margin_should_not_be_part_of_max_width() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: Some(taffy::style::Dimension::Points(100f32)),
+                    height: Some(taffy::style::Dimension::Points(100f32)),
                     ..Default::default()
                 },
                 max_size: taffy::geometry::Size {
@@ -23,8 +23,8 @@ fn margin_should_not_be_part_of_max_width() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(250f32),
-                    height: taffy::style::Dimension::Points(250f32),
+                    width: Some(taffy::style::Dimension::Points(250f32)),
+                    height: Some(taffy::style::Dimension::Points(250f32)),
                     ..Default::default()
                 },
                 ..Default::default()

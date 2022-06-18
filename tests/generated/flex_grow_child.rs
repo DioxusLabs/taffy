@@ -6,7 +6,10 @@ fn flex_grow_child() {
             taffy::style::FlexboxLayout {
                 flex_grow: 1f32,
                 flex_basis: taffy::style::Dimension::Points(0f32),
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Default::default() },
+                size: taffy::geometry::Size {
+                    height: Some(taffy::style::Dimension::Points(100f32)),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[],
