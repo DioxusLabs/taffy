@@ -4,7 +4,7 @@ use crate::style::{Dimension, FlexDirection};
 use core::ops::Add;
 
 /// An axis-aligned UI rectangle
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 pub struct Rect<T> {
@@ -149,7 +149,7 @@ where
 }
 
 /// The width and height of a [`Rect`]
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 pub struct Size<T> {
@@ -241,7 +241,7 @@ impl Size<Dimension> {
 /// A 2-dimensional coordinate.
 ///
 /// When used in association with a [`Rect`], represents the bottom-left corner.
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Point<T> {
     /// The x-coordinate
     pub x: T,
