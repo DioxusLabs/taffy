@@ -345,14 +345,6 @@ mod tests {
     use super::*;
     use crate::style::{Dimension, Display, FlexDirection};
 
-    /// New should be an empty with allocated size of 16
-    #[test]
-    fn test_new_is_default() {
-        // FIXME: This does not work unless we implement `PartialEq`, `Eq` on most types in the
-        // Is this a useful test to keep?
-        // assert_eq!(Taffy::new(), Taffy::default());
-    }
-
     #[test]
     fn new_should_allocate_default_capacity() {
         const DEFAULT_CAPACITY: usize = 16;
@@ -376,15 +368,6 @@ mod tests {
         assert!(taffy.forest.parents.capacity() >= CAPACITY);
         assert!(taffy.forest.nodes.capacity() >= CAPACITY);
     }
-
-    // #[test]
-    // fn allocate_node() {
-    //     let mut taffy = Taffy::new();
-    //     // let old_last_id = taffy.allocator.last_id.;
-    //     let id = taffy.allocate_node();
-
-    //     todo!("How to verify that this is working?");
-    // }
 
     #[test]
     fn add_node() {
