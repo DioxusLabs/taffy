@@ -400,7 +400,25 @@ fn add_node() {
 
 #[test]
 fn find_node() {
-    todo!("Test is missing");
+    let mut taffy = Taffy::new();
+
+    let child1 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+    let child2 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+    let node = taffy.new_with_children(FlexboxLayout::default(), &[child1, child2]).unwrap();
+
+    // Should find the nodes
+    assert!(if let Ok(node_id) = taffy.find_node(node) { node_id == node.local.0 } else { false });
+    assert!(if let Ok(node_id) = taffy.find_node(child1) { node_id == child1.local.0 } else { false });
+    assert!(if let Ok(node_id) = taffy.find_node(child2) { node_id == child2.local.0 } else { false });
+
+    let _ = taffy.remove(node);
+    let _ = taffy.remove(child1);
+    let _ = taffy.remove(child2);
+
+    // Should not find the nodes
+    assert!(taffy.find_node(node).is_err());
+    assert!(taffy.find_node(child1).is_err());
+    assert!(taffy.find_node(child2).is_err());
 }
 
 #[test]
