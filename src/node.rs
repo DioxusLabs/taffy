@@ -650,7 +650,7 @@ mod tests {
         let child1 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
         let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]).unwrap();
 
-        let children: sys::Vec<Node> = vec![child0, child1];
+        let children: sys::Vec<Node> = sys::Vec::from([child0, child1]);
         let children_result = taffy.children(node).unwrap();
         assert_eq!(children_result, children);
 
