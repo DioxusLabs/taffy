@@ -416,7 +416,20 @@ mod tests {
     fn test_new_leaf() {
         let mut taffy = Taffy::new();
 
-        let res = taffy.new_leaf(FlexboxLayout::default(), MeasureFunc::Raw(|_| Size { width: 0.0, height: 0.0 }));
+        let res = taffy.new_leaf(FlexboxLayout::default());
+        assert!(res.is_ok());
+        let node = res.unwrap();
+
+        // node should be in the taffy tree and have no children
+        assert!(taffy.find_node(node).is_ok());
+        assert!(taffy.child_count(node).unwrap() == 0);
+    }
+
+    #[test]
+    fn new_leaf_with_measure() {
+        let mut taffy = Taffy::new();
+
+        let res = taffy.new_leaf_with_measure(FlexboxLayout::default(), MeasureFunc::Raw(|_| Size::zero()));
         assert!(res.is_ok());
         let node = res.unwrap();
 
@@ -523,7 +536,7 @@ mod tests {
     fn set_measure() {
         let mut taffy = Taffy::new();
         let node = taffy
-            .new_leaf(FlexboxLayout::default(), MeasureFunc::Raw(|_| Size { width: 200.0, height: 200.0 }))
+            .new_leaf_with_measure(FlexboxLayout::default(), MeasureFunc::Raw(|_| Size { width: 200.0, height: 200.0 }))
             .unwrap();
         taffy.compute_layout(node, Size::undefined()).unwrap();
         assert_eq!(taffy.layout(node).unwrap().size.width, 200.0);
