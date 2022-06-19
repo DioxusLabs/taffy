@@ -4,12 +4,18 @@
 use crate::forest::Forest;
 use crate::geometry::Size;
 use crate::layout::Layout;
-use crate::style::{Dimension, FlexDirection, FlexboxLayout};
+
+use crate::error;
+use crate::style::FlexboxLayout;
 #[cfg(any(feature = "std", feature = "alloc"))]
 use crate::sys::Box;
 use crate::sys::{new_map_with_capacity, ChildrenVec, Map, Vec};
-use crate::{error, style::Display};
 use core::sync::atomic::{AtomicUsize, Ordering};
+
+#[cfg(test)]
+use crate::style::Display;
+#[cfg(test)]
+use crate::style::{Dimension, FlexDirection};
 
 /// Internal node id.
 pub(crate) type NodeId = usize;
