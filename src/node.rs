@@ -638,7 +638,15 @@ fn test_child_count() {
 }
 #[test]
 fn test_children() {
-    todo!("Test is missing");
+    let mut taffy = Taffy::new();
+    let child0 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+    let child1 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+    let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]).unwrap();
+
+    let children = taffy.children(node).unwrap();
+    assert_eq!(children, vec![child0, child1]);
+
+    assert!(taffy.children(child0).unwrap().len() == 0);
 }
 #[test]
 fn test_set_style() {
