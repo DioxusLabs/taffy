@@ -5,9 +5,11 @@
 ### 0.2.0 Added
 
 - Added `taffy::error::InvalidChild` Error type
+- `taffy::node::Taffy.new_leaf()` which allows the creation of new leaf-nodes without having to supply a measure function
 
 ### 0.2.0 Changed
 
+- renamed `taffy::node::Taffy.new_leaf()` -> `taffy::node::Taffy.new_leaf_with_measure()`
 - removed the public `Number` type; a more idiomatic `Option<f32>` is used instead
   - the associated public `MinMax` and `OrElse` traits have also been removed; these should never have been public
 - `Sprawl::remove` now returns a `Result<usize, Error>`, to indicate if the operation was sucessful, and if it was, which ID was invalidated.
