@@ -50,3 +50,14 @@ impl ResolveOrDefault<Size<Option<f32>>, Rect<f32>> for Rect<Dimension> {
         }
     }
 }
+
+impl ResolveOrDefault<Option<f32>, Rect<f32>> for Rect<Dimension> {
+    fn resolve_or_default(self, context: Option<f32>) -> Rect<f32> {
+        Rect {
+            start: self.start.resolve_or_default(context),
+            end: self.end.resolve_or_default(context),
+            top: self.top.resolve_or_default(context),
+            bottom: self.bottom.resolve_or_default(context),
+        }
+    }
+}

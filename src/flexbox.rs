@@ -217,10 +217,9 @@ impl Forest {
         let is_column = dir.is_column();
         let is_wrap_reverse = node.style.flex_wrap == FlexWrap::WrapReverse;
 
-        // TODO: This applies the width to all four sides. Should this be applying
-        let margin = node.style.margin.resolve_or_default(parent_size);
-        let padding = node.style.padding.resolve_or_default(parent_size);
-        let border = node.style.border.resolve_or_default(parent_size);
+        let margin = node.style.margin.resolve_or_default(parent_size.width);
+        let padding = node.style.padding.resolve_or_default(parent_size.width);
+        let border = node.style.border.resolve_or_default(parent_size.width);
 
         let padding_border = Rect {
             start: padding.start + border.start,
@@ -270,9 +269,9 @@ impl Forest {
                 max_size: child_style.max_size.maybe_resolve(constants.node_inner_size),
 
                 position: child_style.position.zip_size(constants.node_inner_size, |p, s| p.maybe_resolve(s)),
-                margin: child_style.margin.resolve_or_default(constants.node_inner_size),
-                padding: child_style.padding.resolve_or_default(constants.node_inner_size),
-                border: child_style.border.resolve_or_default(constants.node_inner_size),
+                margin: child_style.margin.resolve_or_default(constants.node_inner_size.width),
+                padding: child_style.padding.resolve_or_default(constants.node_inner_size.width),
+                border: child_style.border.resolve_or_default(constants.node_inner_size.width),
                 flex_basis: 0.0,
                 inner_flex_basis: 0.0,
                 violation: 0.0,
