@@ -292,6 +292,28 @@ impl Default for Rect<Dimension> {
     }
 }
 
+impl Rect<Dimension> {
+    /// Generates a [`Rect<Dimension>`] using [`Dimension::Points`] values for `start` and `top`
+    pub fn top_from_points(start: f32, top: f32) -> Rect<Dimension> {
+        Rect { start: Dimension::Points(start), top: Dimension::Points(top), ..Default::default() }
+    }
+
+    /// Generates a [`Rect<Dimension>`] using [`Dimension::Points`] values for `end` and `bottom`
+    pub fn bot_from_points(end: f32, bottom: f32) -> Rect<Dimension> {
+        Rect { end: Dimension::Points(end), bottom: Dimension::Points(bottom), ..Default::default() }
+    }
+
+    /// Generates a [`Rect<Dimension>`] using [`Dimension::Percent`] values for `start` and `top`
+    pub fn top_from_percent(start: f32, top: f32) -> Rect<Dimension> {
+        Rect { start: Dimension::Percent(start), top: Dimension::Percent(top), ..Default::default() }
+    }
+
+    /// Generates a [`Rect<Dimension>`] using [`Dimension::Percent`] values for `end` and `bottom`
+    pub fn bot_from_percent(end: f32, bottom: f32) -> Rect<Dimension> {
+        Rect { end: Dimension::Percent(end), bottom: Dimension::Percent(bottom), ..Default::default() }
+    }
+}
+
 impl Default for Size<Dimension> {
     fn default() -> Self {
         Self { width: Dimension::Auto, height: Dimension::Auto }
@@ -527,6 +549,155 @@ mod tests {
         #[case(Dimension::Percent(10.0), Some(5.0), Some(50.0))]
         fn resolve_percent(#[case] input: Dimension, #[case] parent: Option<f32>, #[case] expected: Option<f32>) {
             assert_eq!(input.resolve(parent), expected);
+        }
+    }
+
+    mod test_flex_direction {
+        use crate::style::*;
+
+        #[test]
+        fn flex_direction_is_row() {
+            assert_eq!(FlexDirection::Row.is_row(), true);
+            assert_eq!(FlexDirection::RowReverse.is_row(), true);
+            assert_eq!(FlexDirection::Column.is_row(), false);
+            assert_eq!(FlexDirection::ColumnReverse.is_row(), false);
+        }
+
+        #[test]
+        fn flex_direction_is_column() {
+            assert_eq!(FlexDirection::Row.is_column(), false);
+            assert_eq!(FlexDirection::RowReverse.is_column(), false);
+            assert_eq!(FlexDirection::Column.is_column(), true);
+            assert_eq!(FlexDirection::ColumnReverse.is_column(), true);
+        }
+
+        #[test]
+        fn flex_direction_is_reverse() {
+            assert_eq!(FlexDirection::Row.is_reverse(), false);
+            assert_eq!(FlexDirection::RowReverse.is_reverse(), true);
+            assert_eq!(FlexDirection::Column.is_reverse(), false);
+            assert_eq!(FlexDirection::ColumnReverse.is_reverse(), true);
+        }
+    }
+
+    mod test_flexbox_layout {
+        use crate::style::*;
+
+        fn layout_from_align_items(align: AlignItems) -> FlexboxLayout {
+            FlexboxLayout { align_items: align, ..Default::default() }
+        }
+
+        fn layout_from_align_self(align: AlignSelf) -> FlexboxLayout {
+            FlexboxLayout { align_self: align, ..Default::default() }
+        }
+
+        #[test]
+        fn flexbox_layout_min_main_size() {
+            let layout = FlexboxLayout { min_size: Size::from_points(1.0, 2.0), ..Default::default() };
+            assert_eq!(layout.min_main_size(FlexDirection::Row), Dimension::Points(1.0));
+            assert_eq!(layout.min_main_size(FlexDirection::Column), Dimension::Points(2.0));
+        }
+
+        #[test]
+        fn flexbox_layout_max_main_size() {
+            let layout = FlexboxLayout { max_size: Size::from_points(1.0, 2.0), ..Default::default() };
+            assert_eq!(layout.max_main_size(FlexDirection::Row), Dimension::Points(1.0));
+            assert_eq!(layout.max_main_size(FlexDirection::Column), Dimension::Points(2.0));
+        }
+
+        #[test]
+        fn flexbox_layout_main_margin_start() {
+            let layout = FlexboxLayout { margin: Rect::top_from_points(2.0, 1.0), ..Default::default() };
+            assert_eq!(layout.main_margin_start(FlexDirection::Row), Dimension::Points(2.0));
+            assert_eq!(layout.main_margin_start(FlexDirection::Column), Dimension::Points(1.0));
+        }
+
+        #[test]
+        fn flexbox_layout_main_margin_end() {
+            let layout = FlexboxLayout { margin: Rect::bot_from_points(2.0, 1.0), ..Default::default() };
+            assert_eq!(layout.main_margin_end(FlexDirection::Row), Dimension::Points(2.0));
+            assert_eq!(layout.main_margin_end(FlexDirection::Column), Dimension::Points(1.0));
+        }
+
+        #[test]
+        fn flexbox_layout_cross_size() {
+            let layout = FlexboxLayout { size: Size::from_points(1.0, 2.0), ..Default::default() };
+            assert_eq!(layout.cross_size(FlexDirection::Row), Dimension::Points(2.0));
+            assert_eq!(layout.cross_size(FlexDirection::Column), Dimension::Points(1.0));
+        }
+
+        #[test]
+        fn flexbox_layout_min_cross_size() {
+            let layout = FlexboxLayout { min_size: Size::from_points(1.0, 2.0), ..Default::default() };
+            assert_eq!(layout.min_cross_size(FlexDirection::Row), Dimension::Points(2.0));
+            assert_eq!(layout.min_cross_size(FlexDirection::Column), Dimension::Points(1.0));
+        }
+
+        #[test]
+        fn flexbox_layout_max_cross_size() {
+            let layout = FlexboxLayout { max_size: Size::from_points(1.0, 2.0), ..Default::default() };
+            assert_eq!(layout.max_cross_size(FlexDirection::Row), Dimension::Points(2.0));
+            assert_eq!(layout.max_cross_size(FlexDirection::Column), Dimension::Points(1.0));
+        }
+
+        #[test]
+        fn flexbox_layout_cross_margin_start() {
+            let layout = FlexboxLayout { margin: Rect::top_from_points(2.0, 1.0), ..Default::default() };
+            assert_eq!(layout.cross_margin_start(FlexDirection::Row), Dimension::Points(1.0));
+            assert_eq!(layout.cross_margin_start(FlexDirection::Column), Dimension::Points(2.0));
+        }
+
+        #[test]
+        fn flexbox_layout_cross_margin_end() {
+            let layout = FlexboxLayout { margin: Rect::bot_from_points(2.0, 1.0), ..Default::default() };
+            assert_eq!(layout.cross_margin_end(FlexDirection::Row), Dimension::Points(1.0));
+            assert_eq!(layout.cross_margin_end(FlexDirection::Column), Dimension::Points(2.0));
+        }
+
+        #[test]
+        fn flexbox_layout_align_self_auto() {
+            let parent = layout_from_align_items(AlignItems::FlexStart);
+            let layout = layout_from_align_self(AlignSelf::Auto);
+            assert_eq!(layout.align_self(&parent), AlignSelf::FlexStart);
+
+            let parent = layout_from_align_items(AlignItems::FlexEnd);
+            let layout = layout_from_align_self(AlignSelf::Auto);
+            assert_eq!(layout.align_self(&parent), AlignSelf::FlexEnd);
+
+            let parent = layout_from_align_items(AlignItems::Center);
+            let layout = layout_from_align_self(AlignSelf::Auto);
+            assert_eq!(layout.align_self(&parent), AlignSelf::Center);
+
+            let parent = layout_from_align_items(AlignItems::Baseline);
+            let layout = layout_from_align_self(AlignSelf::Auto);
+            assert_eq!(layout.align_self(&parent), AlignSelf::Baseline);
+
+            let parent = layout_from_align_items(AlignItems::Stretch);
+            let layout = layout_from_align_self(AlignSelf::Auto);
+            assert_eq!(layout.align_self(&parent), AlignSelf::Stretch);
+        }
+
+        #[test]
+        fn align_self() {
+            let parent = layout_from_align_items(AlignItems::FlexEnd);
+            let layout = layout_from_align_self(AlignSelf::FlexStart);
+            assert_eq!(layout.align_self(&parent), AlignSelf::FlexStart);
+
+            let parent = layout_from_align_items(AlignItems::FlexStart);
+            let layout = layout_from_align_self(AlignSelf::FlexEnd);
+            assert_eq!(layout.align_self(&parent), AlignSelf::FlexEnd);
+
+            let parent = layout_from_align_items(AlignItems::FlexStart);
+            let layout = layout_from_align_self(AlignSelf::Center);
+            assert_eq!(layout.align_self(&parent), AlignSelf::Center);
+
+            let parent = layout_from_align_items(AlignItems::FlexStart);
+            let layout = layout_from_align_self(AlignSelf::Baseline);
+            assert_eq!(layout.align_self(&parent), AlignSelf::Baseline);
+
+            let parent = layout_from_align_items(AlignItems::FlexStart);
+            let layout = layout_from_align_self(AlignSelf::Stretch);
+            assert_eq!(layout.align_self(&parent), AlignSelf::Stretch);
         }
     }
 }
