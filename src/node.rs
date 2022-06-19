@@ -630,7 +630,14 @@ fn test_child_at_index() {
 }
 #[test]
 fn test_child_count() {
-    todo!("Test is missing");
+    let mut taffy = Taffy::new();
+    let child0 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+    let child1 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+    let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]).unwrap();
+
+    assert!(if let Ok(count) = taffy.child_count(node) { count == 2 } else { false });
+    assert!(if let Ok(count) = taffy.child_count(child0) { count == 0 } else { false });
+    assert!(if let Ok(count) = taffy.child_count(child1) { count == 0 } else { false });
 }
 #[test]
 fn test_children() {
