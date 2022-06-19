@@ -648,7 +648,7 @@ mod tests {
         let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]).unwrap();
 
         let children = taffy.children(node).unwrap();
-        assert_eq!(children, vec![child0, child1]);
+        assert_eq!(children, &[child0, child1]);
 
         assert!(taffy.children(child0).unwrap().len() == 0);
     }
