@@ -1,21 +1,19 @@
 //! UI [`Node`] types and related data structures.
 //!
 //! Layouts are composed of multiple nodes, which live in a forest-like data structure.
+use crate::error;
 use crate::forest::Forest;
 use crate::geometry::Size;
 use crate::layout::Layout;
-
-use crate::error;
 use crate::style::FlexboxLayout;
-#[cfg(any(feature = "std", feature = "alloc"))]
-use crate::sys::Box;
 use crate::sys::{new_map_with_capacity, ChildrenVec, Map, Vec};
 use core::sync::atomic::{AtomicUsize, Ordering};
 
+#[cfg(any(feature = "std", feature = "alloc"))]
+use crate::sys::Box;
+
 #[cfg(test)]
-use crate::style::Display;
-#[cfg(test)]
-use crate::style::{Dimension, FlexDirection};
+use crate::style::{Dimension, Display, FlexDirection};
 
 /// Internal node id.
 pub(crate) type NodeId = usize;
@@ -354,38 +352,38 @@ fn test_new_is_default() {
     // assert_eq!(Taffy::new(), Taffy::default());
 }
 
-#[test]
-fn new_should_allocate_default_capacity() {
-    const DEFAULT_CAPACITY: usize = 16;
-    let taffy = Taffy::new();
+// #[test]
+// fn new_should_allocate_default_capacity() {
+//     const DEFAULT_CAPACITY: usize = 16;
+//     let taffy = Taffy::new();
 
-    assert!(taffy.nodes_to_ids.capacity() >= DEFAULT_CAPACITY);
-    assert!(taffy.ids_to_nodes.capacity() >= DEFAULT_CAPACITY);
-    assert!(taffy.forest.children.capacity() >= DEFAULT_CAPACITY);
-    assert!(taffy.forest.parents.capacity() >= DEFAULT_CAPACITY);
-    assert!(taffy.forest.nodes.capacity() >= DEFAULT_CAPACITY);
-}
+//     assert!(taffy.nodes_to_ids.capacity() >= DEFAULT_CAPACITY);
+//     assert!(taffy.ids_to_nodes.capacity() >= DEFAULT_CAPACITY);
+//     assert!(taffy.forest.children.capacity() >= DEFAULT_CAPACITY);
+//     assert!(taffy.forest.parents.capacity() >= DEFAULT_CAPACITY);
+//     assert!(taffy.forest.nodes.capacity() >= DEFAULT_CAPACITY);
+// }
 
-#[test]
-fn test_with_capacity() {
-    const CAPACITY: usize = 8;
-    let taffy = Taffy::with_capacity(CAPACITY);
+// #[test]
+// fn test_with_capacity() {
+//     const CAPACITY: usize = 8;
+//     let taffy = Taffy::with_capacity(CAPACITY);
 
-    assert!(taffy.nodes_to_ids.capacity() >= CAPACITY);
-    assert!(taffy.ids_to_nodes.capacity() >= CAPACITY);
-    assert!(taffy.forest.children.capacity() >= CAPACITY);
-    assert!(taffy.forest.parents.capacity() >= CAPACITY);
-    assert!(taffy.forest.nodes.capacity() >= CAPACITY);
-}
+//     assert!(taffy.nodes_to_ids.capacity() >= CAPACITY);
+//     assert!(taffy.ids_to_nodes.capacity() >= CAPACITY);
+//     assert!(taffy.forest.children.capacity() >= CAPACITY);
+//     assert!(taffy.forest.parents.capacity() >= CAPACITY);
+//     assert!(taffy.forest.nodes.capacity() >= CAPACITY);
+// }
 
-#[test]
-fn allocate_node() {
-    let mut taffy = Taffy::new();
-    // let old_last_id = taffy.allocator.last_id.;
-    let id = taffy.allocate_node();
+// #[test]
+// fn allocate_node() {
+//     let mut taffy = Taffy::new();
+//     // let old_last_id = taffy.allocator.last_id.;
+//     let id = taffy.allocate_node();
 
-    todo!("How to verify that this is working?");
-}
+//     todo!("How to verify that this is working?");
+// }
 
 #[test]
 fn add_node() {
@@ -430,9 +428,14 @@ fn find_node() {
 #[test]
 fn test_new_leaf() {
     let mut taffy = Taffy::new();
-    // Should add a node to the tree
-    // the returning node should have no children
-    todo!("Test is missing");
+
+    let res = taffy.new_leaf(FlexboxLayout::default(), MeasureFunc::Raw(|_| Size { width: 0.0, height: 0.0 }));
+    assert!(res.is_ok());
+    let node = res.unwrap();
+
+    // node should be in the taffy tree and have no children
+    assert!(taffy.find_node(node).is_ok());
+    assert!(taffy.child_count(node).unwrap() == 0);
 }
 
 #[test]
@@ -457,8 +460,6 @@ fn clear_should_clear_nodes() {
     let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]).unwrap();
 
     // Nodes should be present
-    assert!(taffy.ids_to_nodes.len() == 3);
-    assert!(taffy.nodes_to_ids.len() == 3);
     assert!(taffy.find_node(node).is_ok());
     assert!(taffy.find_node(child0).is_ok());
     assert!(taffy.find_node(child1).is_ok());
@@ -466,39 +467,57 @@ fn clear_should_clear_nodes() {
     taffy.clear();
 
     // nodes should not be present
-    assert!(taffy.ids_to_nodes.len() == 0);
-    assert!(taffy.nodes_to_ids.len() == 0);
     assert!(taffy.find_node(node).is_err());
     assert!(taffy.find_node(child0).is_err());
     assert!(taffy.find_node(child1).is_err());
 }
 
+// #[test]
+// fn clear_should_invalidate_id() {
+//     // I'm not sure how to test this
+//     todo!("Test is missing");
+// }
+
 #[test]
-fn clear_should_invalidate_id() {
-    todo!("Test is missing");
+fn remove_node_should_remove() {
+    let mut taffy = Taffy::new();
+
+    let node = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+
+    // node should exist
+    assert!(taffy.find_node(node).is_ok());
+
+    let _ = taffy.remove(node).unwrap();
+
+    // node should no longer exist
+    assert!(taffy.find_node(node).is_err());
 }
 
 #[test]
-fn test_remove() {
+fn remove_node_should_detach_herarchy() {
     let mut taffy = Taffy::new();
 
-    let style2 = FlexboxLayout { flex_direction: FlexDirection::Column, ..FlexboxLayout::default() };
-
     // Build a linear tree layout: <0> <- <1> <- <2>
-    let node2 = taffy.new_with_children(style2, &[]).unwrap();
+    let node2 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
     let node1 = taffy.new_with_children(FlexboxLayout::default(), &[node2]).unwrap();
     let node0 = taffy.new_with_children(FlexboxLayout::default(), &[node1]).unwrap();
 
+    // Node1 should exist
+    assert!(taffy.find_node(node1).is_ok());
+
+    // Both node0 and node1 should have 1 child nodes
     assert_eq!(taffy.children(node0).unwrap().as_slice(), &[node1]);
+    assert_eq!(taffy.children(node1).unwrap().as_slice(), &[node2]);
 
     // Disconnect the tree: <0> <2>
-    taffy.remove(node1).unwrap();
+    let _ = taffy.remove(node1).unwrap();
 
-    assert!(taffy.style(node1).is_err());
+    // Node1 should no longer exist
+    assert!(taffy.find_node(node1).is_err());
 
+    // Both remaining nodes should have no child nodes
     assert!(taffy.children(node0).unwrap().is_empty());
     assert!(taffy.children(node2).unwrap().is_empty());
-    assert_eq!(taffy.style(node2).unwrap().flex_direction, style2.flex_direction);
 }
 
 #[test]
@@ -554,13 +573,13 @@ fn set_children() {
     assert_eq!(taffy.children(node).unwrap()[0], child0);
     assert_eq!(taffy.children(node).unwrap()[1], child1);
 
+    let child2 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
     let child3 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
-    let child4 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
-    taffy.set_children(node, &[child3, child4]).unwrap();
+    taffy.set_children(node, &[child2, child3]).unwrap();
 
     assert_eq!(taffy.child_count(node).unwrap(), 2);
-    assert_eq!(taffy.children(node).unwrap()[0], child3);
-    assert_eq!(taffy.children(node).unwrap()[1], child4);
+    assert_eq!(taffy.children(node).unwrap()[0], child2);
+    assert_eq!(taffy.children(node).unwrap()[1], child3);
 }
 
 #[test]
@@ -660,11 +679,25 @@ fn test_set_style() {
 }
 #[test]
 fn test_style() {
-    todo!("Test is missing");
+    let mut taffy = Taffy::new();
+
+    let style =
+        FlexboxLayout { display: Display::None, flex_direction: FlexDirection::RowReverse, ..Default::default() };
+
+    let node = taffy.new_with_children(style, &[]).unwrap();
+
+    let res = taffy.style(node);
+    assert!(res.is_ok());
+    assert!(res.unwrap() == &style);
 }
 #[test]
 fn test_layout() {
-    todo!("Test is missing");
+    let mut taffy = Taffy::new();
+    let node = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+
+    // TODO: Improve this test?
+    let res = taffy.layout(node);
+    assert!(res.is_ok());
 }
 
 #[test]
@@ -693,12 +726,7 @@ fn test_mark_dirty() {
 }
 
 #[test]
-fn test_dirty() {
-    todo!("Test is missing");
-}
-
-#[test]
-fn test_compute_layout() {
+fn compute_layout_should_produce_valid_result() {
     let mut taffy = Taffy::new();
     let node_result = taffy.new_with_children(
         FlexboxLayout {
@@ -713,11 +741,11 @@ fn test_compute_layout() {
     assert!(layout_result.is_ok());
 }
 
-#[test]
-fn test_invalid_layout() {
-    // ensure taffy.compute_layout will produce InvalidNode if operating on an invalid node
-    todo!("Test is missing");
-}
+// #[test]
+// fn compute_layout_should_produce_error_on_invalid() {
+//     // ensure taffy.compute_layout will produce InvalidNodeError if operating on an invalid node
+//     // todo!("Test is missing");
+// }
 
 #[cfg(test)]
 mod tests {
