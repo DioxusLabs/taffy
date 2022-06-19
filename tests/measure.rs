@@ -488,12 +488,7 @@ mod measure {
     #[test]
     fn ignore_invalid_measure() {
         let mut taffy = taffy::node::Taffy::new();
-        let child = taffy
-            .new_leaf_with_measure(
-                taffy::style::FlexboxLayout { flex_grow: 1.0, ..Default::default() },
-                MeasureFunc::Raw(|_| taffy::geometry::Size { width: 200.0, height: 200.0 }),
-            )
-            .unwrap();
+        let child = taffy.new_leaf(taffy::style::FlexboxLayout { flex_grow: 1.0, ..Default::default() }).unwrap();
 
         let node = taffy
             .new_with_children(
