@@ -121,11 +121,7 @@ impl Taffy {
     }
 
     /// Creates and adds a new node, which may have any number of `children`
-    pub fn new_with_children(
-        &mut self,
-        style: FlexboxLayout,
-        children: &[Node],
-    ) -> Result<Node, error::InvalidNode> {
+    pub fn new_with_children(&mut self, style: FlexboxLayout, children: &[Node]) -> Result<Node, error::InvalidNode> {
         let node = self.allocate_node();
         let children = children
             .iter()
