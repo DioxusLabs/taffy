@@ -100,22 +100,34 @@ impl Taffy {
         }
     }
 
-    /// Adds a new leaf node, which does not have any children
-    pub fn new_leaf(&mut self, style: FlexboxLayout, measure: MeasureFunc) -> Result<Node, error::InvalidNode> {
+    /// Creates and adds a new leaf node
+    pub fn new_leaf(&mut self, layout: FlexboxLayout) -> Result<Node, error::InvalidNode> {
         let node = self.allocate_node();
-        let id = self.forest.new_leaf(style, measure);
+        let id = self.forest.new_leaf(layout);
         self.add_node(node, id);
         Ok(node)
     }
 
-    /// Adds a new node, which may have any number of `children`
-    pub fn new_with_children(&mut self, style: FlexboxLayout, children: &[Node]) -> Result<Node, error::InvalidNode> {
+    /// Creates and adds a new leaf node with a supplied [`MeasureFunc`]
+    pub fn new_leaf_with_measure(
+        &mut self,
+        layout: FlexboxLayout,
+        measure: MeasureFunc,
+    ) -> Result<Node, error::InvalidNode> {
+        let node = self.allocate_node();
+        let id = self.forest.new_leaf_with_measure(layout, measure);
+        self.add_node(node, id);
+        Ok(node)
+    }
+
+    /// Creates and adds a new node, which may have any number of `children`
+    pub fn new_with_children(&mut self, layout: FlexboxLayout, children: &[Node]) -> Result<Node, error::InvalidNode> {
         let node = self.allocate_node();
         let children = children
             .iter()
             .map(|child| self.find_node(*child))
             .collect::<Result<ChildrenVec<_>, error::InvalidNode>>()?;
-        let id = self.forest.new_with_children(style, children);
+        let id = self.forest.new_with_children(layout, children);
         self.add_node(node, id);
         Ok(node)
     }
