@@ -217,6 +217,7 @@ impl Forest {
         let is_column = dir.is_column();
         let is_wrap_reverse = self.nodes[node].style.flex_wrap == FlexWrap::WrapReverse;
 
+        // TODO: This applies the width to all four sides. Should this be applying
         let margin = self.nodes[node].style.margin.map(|n| n.resolve(parent_size.width).unwrap_or(0.0));
         let padding = self.nodes[node].style.padding.map(|n| n.resolve(parent_size.width).unwrap_or(0.0));
         let border = self.nodes[node].style.border.map(|n| n.resolve(parent_size.width).unwrap_or(0.0));
@@ -1734,4 +1735,59 @@ impl Forest {
 
         container_size
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        forest::Forest,
+        node::MeasureFunc,
+        prelude::{Rect, Size},
+        style::{Dimension, FlexWrap, FlexboxLayout},
+    };
+
+    // Make sure we get correct constants
+    #[test]
+    fn correct_constants() {
+        let mut forest = Forest::with_capacity(16);
+        let style = FlexboxLayout::default();
+        let node_id = forest.new_leaf(style, MeasureFunc::Raw(|_| Size::zero()));
+        let parent_size = Size::undefined();
+
+        let constants = forest.compute_constants(node_id, Size::undefined(), parent_size);
+
+        assert!(constants.dir == style.flex_direction);
+        assert!(constants.is_row == style.flex_direction.is_row());
+        assert!(constants.is_column == style.flex_direction.is_column());
+        assert!(constants.is_wrap_reverse == (style.flex_wrap == FlexWrap::WrapReverse));
+
+        // margin
+        let margin = style.margin.map(|d| d.resolve(parent_size.width).unwrap_or(0.0));
+        // padding
+        // border
+        // padding_border
+        // inner size
+
+        assert_eq!(constants.container_size, Size::zero());
+        assert_eq!(constants.inner_container_size, Size::zero());
+    }
+
+    // Margin Dimension::Undefined
+    #[test]
+    fn dimension_undefined_margin() {
+        let mut forest = Forest::with_capacity(16);
+        let style = FlexboxLayout {
+            margin: Rect {
+                start: Dimension::Undefined,
+                end: Dimension::Undefined,
+                top: Dimension::Undefined,
+                bottom: Dimension::Undefined,
+            },
+            ..Default::default()
+        };
+        let node_id = forest.new_leaf(style, MeasureFunc::Raw(|_| Size::zero()));
+    }
+    // Padding Dimension::Undefined
+    // Border Dimension::Undefined
+    // Margin Dimension::Undefined
 }
