@@ -241,11 +241,6 @@ impl Size<Dimension> {
     pub fn from_percent(width: f32, height: f32) -> Self {
         Size { width: Dimension::Percent(width), height: Dimension::Percent(height) }
     }
-
-    /// Converts any `parent`-relative values for size into an absolute size
-    pub(crate) fn resolve(&self, parent: Size<Option<f32>>) -> Size<Option<f32>> {
-        Size { width: self.width.resolve(parent.width), height: self.height.resolve(parent.height) }
-    }
 }
 
 /// A 2-dimensional coordinate.
@@ -271,6 +266,7 @@ impl Point<f32> {
 mod tests {
     mod test_resolve_size {
         use crate::geometry::Size;
+        use crate::resolve::MaybeResolve;
         use crate::style::Dimension;
         use rstest::rstest;
 
@@ -296,7 +292,7 @@ mod tests {
             #[case] parent: Size<Option<f32>>,
             #[case] expected: Size<Option<f32>>,
         ) {
-            assert_eq!(input.resolve(parent), expected);
+            assert_eq!(input.maybe_resolve(parent), expected);
         }
     }
 }

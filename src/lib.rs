@@ -29,6 +29,7 @@ mod flexbox;
 mod forest;
 #[cfg(all(not(feature = "alloc"), not(feature = "std")))]
 mod indexmap;
+mod resolve;
 mod sys;
 
 pub use crate::node::Taffy;

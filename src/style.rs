@@ -270,16 +270,6 @@ impl Default for Dimension {
 }
 
 impl Dimension {
-    /// Converts the given [`Dimension`] into a concrete value of points
-    pub(crate) fn resolve(self, parent_dim: Option<f32>) -> Option<f32> {
-        match self {
-            Dimension::Points(points) => Some(points),
-            // parent_dim * percent
-            Dimension::Percent(percent) => parent_dim.map(|dim| dim * percent),
-            _ => None,
-        }
-    }
-
     /// Is this value defined?
     pub(crate) fn is_defined(self) -> bool {
         matches!(self, Dimension::Points(_) | Dimension::Percent(_))
@@ -512,6 +502,7 @@ impl FlexboxLayout {
 #[cfg(test)]
 mod tests {
     mod test_resolve_dimensions {
+        use crate::resolve::MaybeResolve;
         use crate::style::Dimension;
         use rstest::rstest;
 
@@ -521,7 +512,7 @@ mod tests {
         #[case(Dimension::Undefined, Some(-5.0), None)]
         #[case(Dimension::Undefined, Some(0.), None)]
         fn resolve_undefined(#[case] input: Dimension, #[case] parent: Option<f32>, #[case] expected: Option<f32>) {
-            assert_eq!(input.resolve(parent), expected);
+            assert_eq!(input.maybe_resolve(parent), expected);
         }
 
         #[rstest]
@@ -530,7 +521,7 @@ mod tests {
         #[case(Dimension::Auto, Some(-5.0), None)]
         #[case(Dimension::Auto, Some(0.), None)]
         fn resolve_auto(#[case] input: Dimension, #[case] parent: Option<f32>, #[case] expected: Option<f32>) {
-            assert_eq!(input.resolve(parent), expected);
+            assert_eq!(input.maybe_resolve(parent), expected);
         }
 
         #[rstest]
@@ -539,7 +530,7 @@ mod tests {
         #[case(Dimension::Points(-1.), Some(-5.0), Some(-1.))]
         #[case(Dimension::Points(1.0), Some(0.), Some(1.0))]
         fn resolve_points(#[case] input: Dimension, #[case] parent: Option<f32>, #[case] expected: Option<f32>) {
-            assert_eq!(input.resolve(parent), expected);
+            assert_eq!(input.maybe_resolve(parent), expected);
         }
 
         #[rstest]
@@ -548,7 +539,7 @@ mod tests {
         #[case(Dimension::Percent(1.0), Some(-5.0), Some(-5.0))]
         #[case(Dimension::Percent(10.0), Some(5.0), Some(50.0))]
         fn resolve_percent(#[case] input: Dimension, #[case] parent: Option<f32>, #[case] expected: Option<f32>) {
-            assert_eq!(input.resolve(parent), expected);
+            assert_eq!(input.maybe_resolve(parent), expected);
         }
     }
 
