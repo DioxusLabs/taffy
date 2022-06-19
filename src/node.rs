@@ -376,7 +376,7 @@ mod tests {
     fn add_node() {
         let mut taffy = Taffy::new();
         let node = taffy.allocate_node();
-        let id = taffy.forest.new_with_children(FlexboxLayout::default(), (&[]).to_vec());
+        let id = taffy.forest.new_with_children(FlexboxLayout::default(), ChildrenVec::new());
 
         // Should not contain nodes
         assert!(!taffy.nodes_to_ids.contains_key(&node));
