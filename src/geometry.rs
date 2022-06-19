@@ -232,6 +232,16 @@ impl Size<f32> {
 }
 
 impl Size<Dimension> {
+    /// Generates a [`Size<Dimension>`] using [`Dimension::Points`] values
+    pub fn from_points(width: f32, height: f32) -> Self {
+        Size { width: Dimension::Points(width), height: Dimension::Points(height) }
+    }
+
+    /// Generates a [`Size<Dimension>`] using [`Dimension::Percent`] values
+    pub fn from_percent(width: f32, height: f32) -> Self {
+        Size { width: Dimension::Percent(width), height: Dimension::Percent(height) }
+    }
+
     /// Converts any `parent`-relative values for size into an absolute size
     pub(crate) fn resolve(&self, parent: Size<Option<f32>>) -> Size<Option<f32>> {
         Size { width: self.width.resolve(parent.width), height: self.height.resolve(parent.height) }
