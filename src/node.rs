@@ -472,12 +472,6 @@ mod tests {
         assert!(taffy.find_node(child1).is_err());
     }
 
-    // #[test]
-    // fn clear_should_invalidate_id() {
-    //     // I'm not sure how to test this
-    //     todo!("Test is missing");
-    // }
-
     #[test]
     fn remove_node_should_remove() {
         let mut taffy = Taffy::new();
@@ -745,12 +739,6 @@ mod tests {
         let layout_result = taffy.compute_layout(node, Size { width: Some(100.), height: Some(100.) });
         assert!(layout_result.is_ok());
     }
-
-    // #[test]
-    // fn compute_layout_should_produce_error_on_invalid() {
-    //     // ensure taffy.compute_layout will produce InvalidNodeError if operating on an invalid node
-    //     // todo!("Test is missing");
-    // }
 
     #[test]
     fn measure_func_is_send_and_sync() {
