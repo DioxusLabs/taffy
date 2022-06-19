@@ -343,7 +343,10 @@ impl Taffy {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::style::{Dimension, Display, FlexDirection};
+    use crate::{
+        style::{Dimension, Display, FlexDirection},
+        sys,
+    };
 
     #[test]
     fn new_should_allocate_default_capacity() {
@@ -647,8 +650,9 @@ mod tests {
         let child1 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
         let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]).unwrap();
 
-        let children = taffy.children(node).unwrap();
-        assert_eq!(children, &[child0, child1]);
+        let children: sys::Vec<Node> = vec![child0, child1];
+        let children_result = taffy.children(node).unwrap();
+        assert_eq!(children_result, children);
 
         assert!(taffy.children(child0).unwrap().len() == 0);
     }
