@@ -100,16 +100,32 @@ impl Taffy {
         }
     }
 
-    /// Adds a new leaf node, which does not have any children
-    pub fn new_leaf(&mut self, style: FlexboxLayout, measure: MeasureFunc) -> Result<Node, error::InvalidNode> {
+    /// Creates and adds a new leaf node
+    pub fn new_leaf(&mut self, style: FlexboxLayout) -> Result<Node, error::InvalidNode> {
         let node = self.allocate_node();
-        let id = self.forest.new_leaf(style, measure);
+        let id = self.forest.new_leaf(style);
         self.add_node(node, id);
         Ok(node)
     }
 
-    /// Adds a new node, which may have any number of `children`
-    pub fn new_with_children(&mut self, style: FlexboxLayout, children: &[Node]) -> Result<Node, error::InvalidNode> {
+    /// Creates and adds a new leaf node with a supplied [`MeasureFunc`]
+    pub fn new_leaf_with_measure(
+        &mut self,
+        style: FlexboxLayout,
+        measure: MeasureFunc,
+    ) -> Result<Node, error::InvalidNode> {
+        let node = self.allocate_node();
+        let id = self.forest.new_leaf_with_measure(style, measure);
+        self.add_node(node, id);
+        Ok(node)
+    }
+
+    /// Creates and adds a new node, which may have any number of `children`
+    pub fn new_with_children(
+        &mut self,
+        style: FlexboxLayout,
+        children: &[Node],
+    ) -> Result<Node, error::InvalidNode> {
         let node = self.allocate_node();
         let children = children
             .iter()
