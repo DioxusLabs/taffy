@@ -89,9 +89,9 @@ impl Forest {
     }
 
     /// Creates and adds a new unattached leaf node to the forest, and returns the [`NodeId`] of the new node
-    pub(crate) fn new_leaf(&mut self, style: FlexboxLayout) -> NodeId {
+    pub(crate) fn new_leaf(&mut self, layout: FlexboxLayout) -> NodeId {
         let id = self.nodes.len();
-        self.nodes.push(NodeData::new(style));
+        self.nodes.push(NodeData::new(layout));
         self.children.push(new_vec_with_capacity(0));
         self.parents.push(new_vec_with_capacity(1));
         id
@@ -100,21 +100,21 @@ impl Forest {
     /// Creates and adds a new unattached leaf node to the forest, and returns the [`NodeId`] of the new node
     ///
     /// The node must have a [`MeasureFunc`] supplied
-    pub(crate) fn new_leaf_with_measure(&mut self, style: FlexboxLayout, measure: MeasureFunc) -> NodeId {
+    pub(crate) fn new_leaf_with_measure(&mut self, layout: FlexboxLayout, measure: MeasureFunc) -> NodeId {
         let id = self.nodes.len();
-        self.nodes.push(NodeData::new_with_measure(style, measure));
+        self.nodes.push(NodeData::new_with_measure(layout, measure));
         self.children.push(new_vec_with_capacity(0));
         self.parents.push(new_vec_with_capacity(1));
         id
     }
 
     /// Creates and adds a new unparented node to the forest with the associated children attached, and returns the [`NodeId`] of the new node
-    pub(crate) fn new_with_children(&mut self, style: FlexboxLayout, children: ChildrenVec<NodeId>) -> NodeId {
+    pub(crate) fn new_with_children(&mut self, layout: FlexboxLayout, children: ChildrenVec<NodeId>) -> NodeId {
         let id = self.nodes.len();
         for child in &children {
             self.parents[*child].push(id);
         }
-        self.nodes.push(NodeData::new(style));
+        self.nodes.push(NodeData::new(layout));
         self.children.push(children);
         self.parents.push(new_vec_with_capacity(1));
         id
