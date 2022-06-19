@@ -351,68 +351,325 @@ mod tests {
     }
 
     mod taffy_tests {
+        use crate::{
+            node::MeasureFunc,
+            prelude::Size,
+            style::{Dimension, Display, FlexDirection, FlexboxLayout},
+            Taffy,
+        };
 
         #[test]
-        fn test_new() {}
+        /// New should be an empty with allocated size of 16
+        fn test_new_is_default() {
+            // FIXME: This does not work unless we implement `PartialEq`, `Eq` on most types in the
+            // Is this a useful test to keep?
+            // assert_eq!(Taffy::new(), Taffy::default());
+        }
 
         #[test]
-        fn test_with_capacity() {}
+        fn new_should_allocate_default_capacity() {
+            const DEFAULT_CAPACITY: usize = 16;
+            let taffy = Taffy::new();
+
+            assert_eq!(taffy.nodes_to_ids.capacity(), DEFAULT_CAPACITY);
+            assert_eq!(taffy.ids_to_nodes.capacity(), DEFAULT_CAPACITY);
+            assert_eq!(taffy.forest.children.capacity(), DEFAULT_CAPACITY);
+            assert_eq!(taffy.forest.parents.capacity(), DEFAULT_CAPACITY);
+            assert_eq!(taffy.forest.nodes.capacity(), DEFAULT_CAPACITY);
+        }
 
         #[test]
-        fn test_allocate_node() {}
+        fn test_with_capacity() {
+            const CAPACITY: usize = 8;
+            let taffy = Taffy::with_capacity(CAPACITY);
+
+            assert_eq!(taffy.nodes_to_ids.capacity(), CAPACITY);
+            assert_eq!(taffy.ids_to_nodes.capacity(), CAPACITY);
+            assert_eq!(taffy.forest.children.capacity(), CAPACITY);
+            assert_eq!(taffy.forest.parents.capacity(), CAPACITY);
+            assert_eq!(taffy.forest.nodes.capacity(), CAPACITY);
+        }
 
         #[test]
-        fn add_node() {}
+        fn test_allocate_node() {
+            todo!("Test is missing");
+        }
 
         #[test]
-        fn find_node() {}
+        fn add_node() {
+            todo!("Test is missing");
+        }
 
         #[test]
-        fn test_new_leaf() {}
+        fn find_node() {
+            todo!("Test is missing");
+        }
 
         #[test]
-        fn test_new_with_children() {}
+        fn test_new_leaf() {
+            todo!("Test is missing");
+        }
 
         #[test]
-        fn test_clear() {}
+        /// Test that new_with_children works as expected
+        fn test_new_with_children() {
+            let mut taffy = Taffy::new();
+            let child1 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+            let child2 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+            let node = taffy.new_with_children(FlexboxLayout::default(), &[child1, child2]).unwrap();
+
+            assert_eq!(taffy.child_count(node).unwrap(), 2);
+            assert_eq!(taffy.children(node).unwrap()[0], child1);
+            assert_eq!(taffy.children(node).unwrap()[1], child2);
+        }
 
         #[test]
-        fn test_remove() {}
+        fn clear_should_clear_nodes() {
+            let mut taffy = Taffy::new();
+
+            let child1 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+            let child2 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+            let node = taffy.new_with_children(FlexboxLayout::default(), &[child1, child2]).unwrap();
+
+            assert!(taffy.ids_to_nodes.len() == 3);
+            assert!(taffy.nodes_to_ids.len() == 3);
+            assert!(taffy.find_node(node).is_ok());
+            assert!(taffy.find_node(child1).is_ok());
+            assert!(taffy.find_node(child2).is_ok());
+
+            taffy.clear();
+
+            assert!(taffy.ids_to_nodes.len() == 0);
+            assert!(taffy.nodes_to_ids.len() == 0);
+            assert!(taffy.find_node(node).is_err());
+            assert!(taffy.find_node(child1).is_err());
+            assert!(taffy.find_node(child2).is_err());
+        }
 
         #[test]
-        fn test_set_measure() {}
+        fn clear_should_invalidate_id() {
+            todo!("Test is missing");
+        }
 
         #[test]
-        fn test_add_child() {}
+        fn test_remove() {
+            let mut taffy = Taffy::new();
+
+            let style2 = FlexboxLayout { flex_direction: FlexDirection::Column, ..FlexboxLayout::default() };
+
+            // Build a linear tree layout: <0> <- <1> <- <2>
+            let node2 = taffy.new_with_children(style2, &[]).unwrap();
+            let node1 = taffy.new_with_children(FlexboxLayout::default(), &[node2]).unwrap();
+            let node0 = taffy.new_with_children(FlexboxLayout::default(), &[node1]).unwrap();
+
+            assert_eq!(taffy.children(node0).unwrap().as_slice(), &[node1]);
+
+            // Disconnect the tree: <0> <2>
+            taffy.remove(node1).unwrap();
+
+            assert!(taffy.style(node1).is_err());
+
+            assert!(taffy.children(node0).unwrap().is_empty());
+            assert!(taffy.children(node2).unwrap().is_empty());
+            assert_eq!(taffy.style(node2).unwrap().flex_direction, style2.flex_direction);
+        }
 
         #[test]
-        fn test_set_children() {}
+        fn remove_last_node() {
+            let mut taffy = Taffy::new();
+
+            let parent = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+            let child = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+            taffy.add_child(parent, child).unwrap();
+
+            taffy.remove(child).unwrap();
+            taffy.remove(parent).unwrap();
+        }
 
         #[test]
-        fn test_remove_child() {}
+        fn test_set_measure() {
+            let mut taffy = Taffy::new();
+            let node = taffy
+                .new_leaf(FlexboxLayout::default(), MeasureFunc::Raw(|_| Size { width: 200.0, height: 200.0 }))
+                .unwrap();
+            taffy.compute_layout(node, Size::undefined()).unwrap();
+            assert_eq!(taffy.layout(node).unwrap().size.width, 200.0);
+
+            taffy.set_measure(node, Some(MeasureFunc::Raw(|_| Size { width: 100.0, height: 100.0 }))).unwrap();
+            taffy.compute_layout(node, Size::undefined()).unwrap();
+            assert_eq!(taffy.layout(node).unwrap().size.width, 100.0);
+        }
 
         #[test]
-        fn test_remove_child_at_index() {}
+        /// Test that adding `add_child()` works
+        fn test_add_child() {
+            let mut taffy = Taffy::new();
+            let node = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+            assert_eq!(taffy.child_count(node).unwrap(), 0);
+
+            let child1 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+            taffy.add_child(node, child1).unwrap();
+            assert_eq!(taffy.child_count(node).unwrap(), 1);
+
+            let child2 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+            taffy.add_child(node, child2).unwrap();
+            assert_eq!(taffy.child_count(node).unwrap(), 2);
+        }
 
         #[test]
-        fn test_replace_child_at_index() {}
+        fn test_set_children() {
+            let mut taffy = Taffy::new();
+
+            let child1 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+            let child2 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+            let node = taffy.new_with_children(FlexboxLayout::default(), &[child1, child2]).unwrap();
+
+            assert_eq!(taffy.child_count(node).unwrap(), 2);
+            assert_eq!(taffy.children(node).unwrap()[0], child1);
+            assert_eq!(taffy.children(node).unwrap()[1], child2);
+
+            let child3 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+            let child4 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+            taffy.set_children(node, &[child3, child4]).unwrap();
+
+            assert_eq!(taffy.child_count(node).unwrap(), 2);
+            assert_eq!(taffy.children(node).unwrap()[0], child3);
+            assert_eq!(taffy.children(node).unwrap()[1], child4);
+        }
+
         #[test]
-        fn test_child_at_index() {}
+        /// Test that removing a child works
+        fn test_remove_child() {
+            let mut taffy = Taffy::new();
+
+            let child1 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+            let child2 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+
+            let node = taffy.new_with_children(FlexboxLayout::default(), &[child1, child2]).unwrap();
+            assert_eq!(taffy.child_count(node).unwrap(), 2);
+
+            taffy.remove_child(node, child1).unwrap();
+            assert_eq!(taffy.child_count(node).unwrap(), 1);
+            assert_eq!(taffy.children(node).unwrap()[0], child2);
+
+            taffy.remove_child(node, child2).unwrap();
+            assert_eq!(taffy.child_count(node).unwrap(), 0);
+        }
+
         #[test]
-        fn test_child_count() {}
+        fn test_remove_child_at_index() {
+            let mut taffy = Taffy::new();
+
+            let child1 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+            let child2 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+
+            let node = taffy.new_with_children(FlexboxLayout::default(), &[child1, child2]).unwrap();
+            assert_eq!(taffy.child_count(node).unwrap(), 2);
+
+            taffy.remove_child_at_index(node, 0).unwrap();
+            assert_eq!(taffy.child_count(node).unwrap(), 1);
+            assert_eq!(taffy.children(node).unwrap()[0], child2);
+
+            taffy.remove_child_at_index(node, 0).unwrap();
+            assert_eq!(taffy.child_count(node).unwrap(), 0);
+        }
+
         #[test]
-        fn test_children() {}
+        fn test_replace_child_at_index() {
+            let mut taffy = Taffy::new();
+
+            let child1 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+            let child2 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+
+            let node = taffy.new_with_children(FlexboxLayout::default(), &[child1]).unwrap();
+            assert_eq!(taffy.child_count(node).unwrap(), 1);
+            assert_eq!(taffy.children(node).unwrap()[0], child1);
+
+            taffy.replace_child_at_index(node, 0, child2).unwrap();
+            assert_eq!(taffy.child_count(node).unwrap(), 1);
+            assert_eq!(taffy.children(node).unwrap()[0], child2);
+        }
         #[test]
-        fn test_set_style() {}
+        fn test_child_at_index() {
+            todo!("Test is missing");
+        }
         #[test]
-        fn test_style() {}
+        fn test_child_count() {
+            todo!("Test is missing");
+        }
         #[test]
-        fn test_layout() {}
+        fn test_children() {
+            todo!("Test is missing");
+        }
         #[test]
-        fn test_mark_dirty() {}
+        fn test_set_style() {
+            let mut taffy = Taffy::new();
+
+            let node = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+            assert_eq!(taffy.style(node).unwrap().display, Display::Flex);
+
+            taffy.set_style(node, FlexboxLayout { display: Display::None, ..FlexboxLayout::default() }).unwrap();
+            assert_eq!(taffy.style(node).unwrap().display, Display::None);
+        }
         #[test]
-        fn test_dirty() {}
+        fn test_style() {
+            todo!("Test is missing");
+        }
         #[test]
-        fn test_compute_layout() {}
+        fn test_layout() {
+            todo!("Test is missing");
+        }
+
+        #[test]
+        fn test_mark_dirty() {
+            let mut taffy = Taffy::new();
+
+            let child1 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+            let child2 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+            let node = taffy.new_with_children(FlexboxLayout::default(), &[child1, child2]).unwrap();
+
+            taffy.compute_layout(node, Size::undefined()).unwrap();
+
+            assert_eq!(taffy.dirty(child1).unwrap(), false);
+            assert_eq!(taffy.dirty(child2).unwrap(), false);
+            assert_eq!(taffy.dirty(node).unwrap(), false);
+
+            taffy.mark_dirty(node).unwrap();
+            assert_eq!(taffy.dirty(child1).unwrap(), false);
+            assert_eq!(taffy.dirty(child2).unwrap(), false);
+            assert_eq!(taffy.dirty(node).unwrap(), true);
+
+            taffy.compute_layout(node, Size::undefined()).unwrap();
+            taffy.mark_dirty(child1).unwrap();
+            assert_eq!(taffy.dirty(child1).unwrap(), true);
+            assert_eq!(taffy.dirty(child2).unwrap(), false);
+            assert_eq!(taffy.dirty(node).unwrap(), true);
+        }
+
+        #[test]
+        fn test_dirty() {
+            todo!("Test is missing");
+        }
+
+        #[test]
+        fn test_compute_layout() {
+            let mut taffy = Taffy::new();
+            let node_result = taffy.new_with_children(
+                FlexboxLayout {
+                    size: Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
+                    ..Default::default()
+                },
+                &[],
+            );
+            assert!(node_result.is_ok());
+            let node = node_result.unwrap();
+            let layout_result = taffy.compute_layout(node, Size { width: Some(100.), height: Some(100.) });
+            assert!(layout_result.is_ok());
+        }
+
+        #[test]
+        fn test_invalid_layout() {
+            todo!("Test is missing");
+        }
     }
 }
