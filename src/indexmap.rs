@@ -1545,7 +1545,7 @@ where
     /* Public API */
     /// Returns the number of elements the map can hold
     #[allow(dead_code)]
-    fn capacity(&self) -> usize {
+    pub(crate) fn capacity(&self) -> usize {
         N
     }
 
@@ -1654,7 +1654,7 @@ where
     ///
     /// Computes in **O(1)** time (average).
     #[allow(dead_code)]
-    fn contains_key<Q>(&self, key: &Q) -> bool
+    pub(crate) fn contains_key<Q>(&self, key: &Q) -> bool
     where
         K: Borrow<Q>,
         Q: ?Sized + Eq + Hash,
