@@ -4,8 +4,15 @@ mod node {
     use taffy::node::{MeasureFunc, Taffy};
     use taffy::style::*;
 
+    // TODO: create tests for new()
+
+    // TODO: create tests for with_capacity()
+
+    // TODO: create tests for new_leaf()
+
     #[test]
-    fn children() {
+    /// Test that new_with_children works as expected
+    fn new_with_children() {
         let mut taffy = Taffy::new();
         let child1 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
         let child2 = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
@@ -15,6 +22,8 @@ mod node {
         assert_eq!(taffy.children(node).unwrap()[0], child1);
         assert_eq!(taffy.children(node).unwrap()[1], child2);
     }
+
+    // TODO: create tests for clear()
 
     #[test]
     fn set_measure() {
@@ -31,6 +40,7 @@ mod node {
     }
 
     #[test]
+    /// Test that adding `add_child()` works
     fn add_child() {
         let mut taffy = Taffy::new();
         let node = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
@@ -46,6 +56,7 @@ mod node {
     }
 
     #[test]
+    /// Test that removing a child works
     fn remove_child() {
         let mut taffy = Taffy::new();
 
@@ -97,6 +108,10 @@ mod node {
         assert_eq!(taffy.children(node).unwrap()[0], child2);
     }
 
+    // TODO: Get child at index
+    // TODO: Get child count
+    // TODO: Get list of children
+
     #[test]
     fn remove() {
         let mut taffy = Taffy::new();
@@ -121,6 +136,7 @@ mod node {
     }
 
     #[test]
+    /// Test that `set_children()` works
     fn set_children() {
         let mut taffy = Taffy::new();
 

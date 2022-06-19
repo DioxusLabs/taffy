@@ -349,4 +349,70 @@ mod tests {
         fn is_send_and_sync<T: Send + Sync>() {}
         is_send_and_sync::<MeasureFunc>();
     }
+
+    mod taffy_tests {
+
+        #[test]
+        fn test_new() {}
+
+        #[test]
+        fn test_with_capacity() {}
+
+        #[test]
+        fn test_allocate_node() {}
+
+        #[test]
+        fn add_node() {}
+
+        #[test]
+        fn find_node() {}
+
+        #[test]
+        fn test_new_leaf() {}
+
+        #[test]
+        fn test_new_with_children() {}
+
+        #[test]
+        fn test_clear() {}
+
+        #[test]
+        fn test_remove() {}
+
+        #[test]
+        fn test_set_measure() {}
+
+        #[test]
+        fn test_add_child() {}
+
+        #[test]
+        fn test_set_children() {}
+
+        #[test]
+        fn test_remove_child() {}
+
+        #[test]
+        fn test_remove_child_at_index() {}
+
+        #[test]
+        fn test_replace_child_at_index() {}
+        #[test]
+        fn test_child_at_index() {}
+        #[test]
+        fn test_child_count() {}
+        #[test]
+        fn test_children() {}
+        #[test]
+        fn test_set_style() {}
+        #[test]
+        fn test_style() {}
+        #[test]
+        fn test_layout() {}
+        #[test]
+        fn test_mark_dirty() {}
+        #[test]
+        fn test_dirty() {}
+        #[test]
+        fn test_compute_layout() {}
+    }
 }
