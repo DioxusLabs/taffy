@@ -350,7 +350,7 @@ mod tests {
 
     #[test]
     fn new_should_allocate_default_capacity() {
-        const DEFAULT_CAPACITY: usize = 16;
+        const DEFAULT_CAPACITY: usize = 16; // This is the capacity defined in the `impl Default`
         let taffy = Taffy::new();
 
         assert!(taffy.nodes_to_ids.capacity() >= DEFAULT_CAPACITY);
