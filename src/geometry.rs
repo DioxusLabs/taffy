@@ -231,15 +231,43 @@ impl Size<f32> {
     }
 }
 
+impl Size<Option<f32>> {
+    /// TODO
+    #[must_use]
+    pub fn from_none() -> Self {
+        Size { width: None, height: None }
+    }
+
+    /// TODO
+    #[must_use]
+    pub fn from_some(width: f32, height: f32) -> Self {
+        Size { width: Some(width), height: Some(height) }
+    }
+}
+
 impl Size<Dimension> {
     /// Generates a [`Size<Dimension>`] using [`Dimension::Points`] values
+    #[must_use]
     pub fn from_points(width: f32, height: f32) -> Self {
         Size { width: Dimension::Points(width), height: Dimension::Points(height) }
     }
 
     /// Generates a [`Size<Dimension>`] using [`Dimension::Percent`] values
+    #[must_use]
     pub fn from_percent(width: f32, height: f32) -> Self {
         Size { width: Dimension::Percent(width), height: Dimension::Percent(height) }
+    }
+
+    /// TODO
+    #[must_use]
+    pub fn from_auto() -> Self {
+        Size { width: Dimension::Auto, height: Dimension::Auto }
+    }
+
+    /// TODO
+    #[must_use]
+    pub fn from_undefined() -> Self {
+        Size { width: Dimension::Undefined, height: Dimension::Undefined }
     }
 }
 
