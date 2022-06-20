@@ -31,6 +31,8 @@ serde = ["dep:serde"]
 [dev-dependencies]
 criterion = "0.3"
 rstest = "0.13.0"
+rand = "0.8.5"
+rand_chacha = "0.3.1"
 
 [profile.release]
 lto = true
@@ -44,6 +46,11 @@ harness = false
 [[bench]]
 name = "complex"
 path = "benches/complex.rs"
+harness = false
+
+[[bench]]
+name = "big_tree"
+path = "benches/big_tree.rs"
 harness = false
 
 [workspace]
