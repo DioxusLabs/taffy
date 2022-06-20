@@ -232,4 +232,65 @@ mod tests {
             assert_eq!(input.resolve_or_default(context), expected);
         }
     }
+
+    mod resolve_or_default_rect_dimension_to_rect {
+        use crate::geometry::{Rect, Size};
+        use crate::resolve::ResolveOrDefault;
+        use crate::style::Dimension;
+        use rstest::rstest;
+
+        #[rstest]
+        #[case(Rect::UNDEFINED, Size::NONE, Rect::ZERO)]
+        #[case(Rect::UNDEFINED, Size::new(5.0, 5.0), Rect::ZERO)]
+        #[case(Rect::UNDEFINED, Size::new(-5.0, -5.0), Rect::ZERO)]
+        #[case(Rect::UNDEFINED, Size::new(0.0, 0.0), Rect::ZERO)]
+        fn resolve_or_default_undefined(
+            #[case] input: Rect<Dimension>,
+            #[case] context: Size<Option<f32>>,
+            #[case] expected: Rect<f32>,
+        ) {
+            assert_eq!(input.resolve_or_default(context), expected);
+        }
+
+        #[rstest]
+        #[case(Rect::AUTO, Size::NONE, Rect::ZERO)]
+        #[case(Rect::AUTO, Size::new(5.0, 5.0), Rect::ZERO)]
+        #[case(Rect::AUTO, Size::new(-5.0, -5.0), Rect::ZERO)]
+        #[case(Rect::AUTO, Size::new(0.0, 0.0), Rect::ZERO)]
+        fn resolve_or_default_auto(
+            #[case] input: Rect<Dimension>,
+            #[case] context: Size<Option<f32>>,
+            #[case] expected: Rect<f32>,
+        ) {
+            assert_eq!(input.resolve_or_default(context), expected);
+        }
+
+        #[rstest]
+        #[case(Rect::from_points(5.0, 5.0, 5.0, 5.0), Size::NONE, Rect::new(5.0, 5.0, 5.0, 5.0))]
+        #[case(Rect::from_points(5.0, 5.0, 5.0, 5.0), Size::new(5.0, 5.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
+        #[case(Rect::from_points(5.0, 5.0, 5.0, 5.0), Size::new(-5.0, -5.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
+        #[case(Rect::from_points(5.0, 5.0, 5.0, 5.0), Size::new(0.0, 0.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
+        fn resolve_or_default_points(
+            #[case] input: Rect<Dimension>,
+            #[case] context: Size<Option<f32>>,
+            #[case] expected: Rect<f32>,
+        ) {
+            assert_eq!(input.resolve_or_default(context), expected);
+        }
+
+        #[rstest]
+        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::NONE, Rect::ZERO)]
+        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::new(5.0, 5.0), Rect::new(25.0, 25.0, 25.0, 25.0))]
+        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::new(-5.0, -5.0), Rect::new(-25.0, -25.0, -25.0, -25.0))]
+        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::new(0.0, 0.0), Rect::ZERO)]
+        fn resolve_or_default_percent(
+            #[case] input: Rect<Dimension>,
+            #[case] context: Size<Option<f32>>,
+            #[case] expected: Rect<f32>,
+        ) {
+            assert_eq!(input.resolve_or_default(context), expected);
+        }
+    }
+
+    // TODO: Add tests for ResolveOrDefault<Option<f32>, Rect<f32>> for Rect<Dimension>
 }
