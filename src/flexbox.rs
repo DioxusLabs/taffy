@@ -1198,7 +1198,7 @@ impl Forest {
         constants: &AlgoConstants,
     ) -> f32 {
         match child_style.align_self(&self.nodes[node].style) {
-            AlignSelf::Auto => 0.0, // Should never happen
+            AlignSelf::Auto => unreachable!(),
             AlignSelf::FlexStart => {
                 if constants.is_wrap_reverse {
                     free_space
@@ -1515,7 +1515,7 @@ impl Forest {
                 free_cross_space - end_cross.unwrap_or(0.0) - constants.border.cross_end(constants.dir)
             } else {
                 match child_style.align_self(&self.nodes[node].style) {
-                    AlignSelf::Auto => 0.0, // Should never happen
+                    AlignSelf::Auto => unreachable!(),
                     AlignSelf::FlexStart => {
                         if constants.is_wrap_reverse {
                             free_cross_space - constants.padding_border.cross_end(constants.dir)
