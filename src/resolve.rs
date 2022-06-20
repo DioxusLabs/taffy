@@ -136,10 +136,10 @@ mod tests {
         #[case(Size::from_undefined(), Size::from_some(0.0, 0.0), Size::from_none())]
         fn maybe_resolve_undefined(
             #[case] input: Size<Dimension>,
-            #[case] parent: Size<Option<f32>>,
+            #[case] context: Size<Option<f32>>,
             #[case] expected: Size<Option<f32>>,
         ) {
-            assert_eq!(input.maybe_resolve(parent), expected);
+            assert_eq!(input.maybe_resolve(context), expected);
         }
 
         /// Size<Dimension::Auto> should always return Size<None>
@@ -152,10 +152,10 @@ mod tests {
         #[case(Size::from_auto(), Size::from_some(0.0, 0.0), Size::from_none())]
         fn maybe_resolve_auto(
             #[case] input: Size<Dimension>,
-            #[case] parent: Size<Option<f32>>,
+            #[case] context: Size<Option<f32>>,
             #[case] expected: Size<Option<f32>>,
         ) {
-            assert_eq!(input.maybe_resolve(parent), expected);
+            assert_eq!(input.maybe_resolve(context), expected);
         }
 
         /// Size<Dimension::Points> should always return a Size<Some(f32)>
@@ -169,10 +169,10 @@ mod tests {
         #[case(Size::from_points(5.0, 5.0), Size::from_some(0.0, 0.0), Size::from_some(5.0, 5.0))]
         fn maybe_resolve_points(
             #[case] input: Size<Dimension>,
-            #[case] parent: Size<Option<f32>>,
+            #[case] context: Size<Option<f32>>,
             #[case] expected: Size<Option<f32>>,
         ) {
-            assert_eq!(input.maybe_resolve(parent), expected);
+            assert_eq!(input.maybe_resolve(context), expected);
         }
     }
 }
