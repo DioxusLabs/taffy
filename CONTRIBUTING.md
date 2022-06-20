@@ -34,7 +34,7 @@ To add a new test case add another HTML file to `/test_fixtures` following the c
 
 ### Writing tests
 
-1. All tests should be wrapped in a module called `tests`, to ensure they are not compiled unless testing
+1. All tests should be wrapped in a module called `tests` gated by the standard `test` feature flag, to ensure they are not compiled unless tests are being run.
 
     ```rs
     #[cfg(test)]
@@ -43,8 +43,8 @@ To add a new test case add another HTML file to `/test_fixtures` following the c
     }
     ```
 
-2. For unit-testing this should be placed within the file of the definition they are testing
-    1. If file becomes significantly long, tests should be split out into its own file under the same module
+2. For unit-testing this should be placed in the same file as the code they are testing
+    1. If files become extremely long (more than a couple thousand lines of code), tests should be split out into its own file under the same module
 
     ```rs
     // file: ./src/my_struct.rs
@@ -74,7 +74,7 @@ To add a new test case add another HTML file to `/test_fixtures` following the c
 4. Each test should have a clear intent
     1. It should be evident what is being tested (naming, code, comments)
     2. When this test fails, it should be easy to understand what went wrong
-    3. Ue fixture or parameter-based testing (`#[rstest]`) wherever it improves the two previous points compared to normal rust tests
+    3. Fixture-based tests (`#[rstest]`) can help improve clarity when many related scenarios need to be checked
 
 ## Benchmarking
 
