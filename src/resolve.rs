@@ -193,4 +193,43 @@ mod tests {
             assert_eq!(input.maybe_resolve(context), expected);
         }
     }
+
+    mod resolve_or_default_dimension_to_option_f32 {
+        use crate::resolve::ResolveOrDefault;
+        use crate::style::Dimension;
+        use rstest::rstest;
+
+        #[rstest]
+        #[case(Dimension::Undefined, None, 0.0)]
+        #[case(Dimension::Undefined, Some(5.0), 0.0)]
+        #[case(Dimension::Undefined, Some(-5.0), 0.0)]
+        #[case(Dimension::Undefined, Some(0.0), 0.0)]
+        fn resolve_or_default_undefined(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: f32) {
+            assert_eq!(input.resolve_or_default(context), expected);
+        }
+        #[rstest]
+        #[case(Dimension::Auto, None, 0.0)]
+        #[case(Dimension::Auto, Some(5.0), 0.0)]
+        #[case(Dimension::Auto, Some(-5.0), 0.0)]
+        #[case(Dimension::Auto, Some(0.0), 0.0)]
+        fn resolve_or_default_auto(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: f32) {
+            assert_eq!(input.resolve_or_default(context), expected);
+        }
+        #[rstest]
+        #[case(Dimension::Points(5.0), None, 5.0)]
+        #[case(Dimension::Points(5.0), Some(5.0), 5.0)]
+        #[case(Dimension::Points(5.0), Some(-5.0), 5.0)]
+        #[case(Dimension::Points(5.0), Some(0.0), 5.0)]
+        fn resolve_or_default_points(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: f32) {
+            assert_eq!(input.resolve_or_default(context), expected);
+        }
+        #[rstest]
+        #[case(Dimension::Percent(5.0), None, 0.0)]
+        #[case(Dimension::Percent(5.0), Some(5.0), 25.0)]
+        #[case(Dimension::Percent(5.0), Some(-5.0), -25.0)]
+        #[case(Dimension::Percent(5.0), Some(0.0), 0.0)]
+        fn resolve_or_default_percent(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: f32) {
+            assert_eq!(input.resolve_or_default(context), expected);
+        }
+    }
 }
