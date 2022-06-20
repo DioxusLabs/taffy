@@ -65,13 +65,10 @@ To add a new test case add another HTML file to `/test_fixtures` following the c
 
     ```rs
     // file: ./tests/my_integration_test.rs
-    #[cfg(test)]
-    mod tests {
-        #[test]
-        fn integration_test_one() { .. }
-        #[test]
-        fn integration_test_two() { .. }
-    }
+    #[test]
+    fn integration_test_one() { .. }
+    #[test]
+    fn integration_test_two() { .. }
     ```
 
 4. Each test should have a clear intent
