@@ -307,23 +307,19 @@ impl Rect<Dimension> {
         Rect { end: Dimension::Percent(end), bottom: Dimension::Percent(bottom), ..Default::default() }
     }
 
-    /// Create a new Rect where all rect-parameters are `Dimension::Undefined`
-    #[must_use]
-    pub fn from_undefined() -> Self {
-        Rect {
-            start: Dimension::Undefined,
-            end: Dimension::Undefined,
-            top: Dimension::Undefined,
-            bottom: Dimension::Undefined,
-        }
-    }
-    /// Create a new Rect where all rect-parameters are `Dimension::Auto`
-    #[must_use]
-    pub fn from_auto() -> Self {
-        Rect { start: Dimension::Auto, end: Dimension::Auto, top: Dimension::Auto, bottom: Dimension::Auto }
-    }
+    /// Generates a [`Rect<Dimension>`] using [`Dimension::Undefined`] for all values
+    pub const UNDEFINED: Rect<Dimension> = Self {
+        start: Dimension::Undefined,
+        end: Dimension::Undefined,
+        top: Dimension::Undefined,
+        bottom: Dimension::Undefined,
+    };
 
-    /// Create a new Rect with `Dimension::Points`
+    /// Generates a [`Rect<Dimension>`] using [`Dimension::Auto`] for all values
+    pub const AUTO: Rect<Dimension> =
+        Self { start: Dimension::Auto, end: Dimension::Auto, top: Dimension::Auto, bottom: Dimension::Auto };
+
+    /// Create a new Rect with [`Dimension::Points`]
     #[must_use]
     pub fn from_points(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Rect {
@@ -334,7 +330,7 @@ impl Rect<Dimension> {
         }
     }
 
-    /// Create a new Rect with `Dimension::Percent`
+    /// Create a new Rect with [`Dimension::Percent`]
     #[must_use]
     pub fn from_percent(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Rect {

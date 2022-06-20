@@ -148,6 +148,17 @@ where
     }
 }
 
+impl Rect<f32> {
+    /// Creates a new Rect with `0.0` as all parameters
+    pub const ZERO: Rect<f32> = Self { start: 0.0, end: 0.0, top: 0.0, bottom: 0.0 };
+
+    /// Creates a new Rect
+    #[must_use]
+    pub fn new(start: f32, end: f32, top: f32, bottom: f32) -> Self {
+        Self { start, end, top, bottom }
+    }
+}
+
 /// The width and height of a [`Rect`]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
