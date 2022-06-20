@@ -122,4 +122,57 @@ mod tests {
         }
     }
 
+    mod maybe_resolve_size_dimension {
+        use crate::{prelude::Size, resolve::MaybeResolve, style::Dimension};
+        use rstest::rstest;
+
+        /// Size<Dimension::Undefined> should always return Size<None>
+        ///
+        /// The parent / context should not affect the outcome.
+        #[rstest]
+        #[case(Size::from_undefined(), Size::from_none(), Size::from_none())]
+        #[case(Size::from_undefined(), Size::from_some(5.0, 5.0), Size::from_none())]
+        #[case(Size::from_undefined(), Size::from_some(-5.0, -5.0), Size::from_none())]
+        #[case(Size::from_undefined(), Size::from_some(0.0, 0.0), Size::from_none())]
+        fn maybe_resolve_undefined(
+            #[case] input: Size<Dimension>,
+            #[case] parent: Size<Option<f32>>,
+            #[case] expected: Size<Option<f32>>,
+        ) {
+            assert_eq!(input.maybe_resolve(parent), expected);
+        }
+
+        /// Size<Dimension::Auto> should always return Size<None>
+        ///
+        /// The parent / context should not affect the outcome.
+        #[rstest]
+        #[case(Size::from_auto(), Size::from_none(), Size::from_none())]
+        #[case(Size::from_auto(), Size::from_some(5.0, 5.0), Size::from_none())]
+        #[case(Size::from_auto(), Size::from_some(-5.0, -5.0), Size::from_none())]
+        #[case(Size::from_auto(), Size::from_some(0.0, 0.0), Size::from_none())]
+        fn maybe_resolve_auto(
+            #[case] input: Size<Dimension>,
+            #[case] parent: Size<Option<f32>>,
+            #[case] expected: Size<Option<f32>>,
+        ) {
+            assert_eq!(input.maybe_resolve(parent), expected);
+        }
+
+        /// Size<Dimension::Points> should always return a Size<Some(f32)>
+        /// where the f32 values are the inner value of the points.
+        ///
+        /// The parent / context should not affect the outcome.
+        #[rstest]
+        #[case(Size::from_points(5.0, 5.0), Size::from_none(), Size::from_some(5.0, 5.0))]
+        #[case(Size::from_points(5.0, 5.0), Size::from_some(5.0, 5.0), Size::from_some(5.0, 5.0))]
+        #[case(Size::from_points(5.0, 5.0), Size::from_some(-5.0, -5.0), Size::from_some(5.0, 5.0))]
+        #[case(Size::from_points(5.0, 5.0), Size::from_some(0.0, 0.0), Size::from_some(5.0, 5.0))]
+        fn maybe_resolve_points(
+            #[case] input: Size<Dimension>,
+            #[case] parent: Size<Option<f32>>,
+            #[case] expected: Size<Option<f32>>,
+        ) {
+            assert_eq!(input.maybe_resolve(parent), expected);
+        }
+    }
 }
