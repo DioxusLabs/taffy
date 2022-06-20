@@ -137,7 +137,7 @@ impl Forest {
             self.compute_preliminary(root, style.size.maybe_resolve(size), size, true, true)
         };
 
-        self.nodes[root].layout = Layout { order: 0, size: preliminary_size, location: Point::zero() };
+        self.nodes[root].layout = Layout { order: 0, size: preliminary_size, location: Point::ZERO };
 
         Self::round_layout(&mut self.nodes, &self.children, root, 0.0, 0.0);
     }
@@ -233,8 +233,8 @@ impl Forest {
             height: node_size.height.maybe_sub(padding_border.vertical_axis_sum()),
         };
 
-        let container_size = Size::zero();
-        let inner_container_size = Size::zero();
+        let container_size = Size::ZERO;
+        let inner_container_size = Size::ZERO;
 
         AlgoConstants {
             dir,
@@ -277,10 +277,10 @@ impl Forest {
                 violation: 0.0,
                 frozen: false,
 
-                hypothetical_inner_size: Size::zero(),
-                hypothetical_outer_size: Size::zero(),
-                target_size: Size::zero(),
-                outer_target_size: Size::zero(),
+                hypothetical_inner_size: Size::ZERO,
+                hypothetical_outer_size: Size::ZERO,
+                target_size: Size::ZERO,
+                outer_target_size: Size::ZERO,
 
                 baseline: 0.0,
 
@@ -865,7 +865,7 @@ impl Forest {
                     &Layout {
                         order: self.children[node].iter().position(|n| *n == child.node).unwrap() as u32,
                         size: preliminary_size,
-                        location: Point::zero(),
+                        location: Point::ZERO,
                     },
                 );
             }
@@ -1719,7 +1719,7 @@ impl Forest {
         ///
         /// Each hidden node has zero size and is placed at the origin
         fn hidden_layout(nodes: &mut [NodeData], children: &[ChildrenVec<NodeId>], node: NodeId, order: u32) {
-            nodes[node].layout = Layout { order, size: Size::zero(), location: Point::zero() };
+            nodes[node].layout = Layout { order, size: Size::ZERO, location: Point::ZERO };
 
             for (order, child) in children[node].iter().enumerate() {
                 hidden_layout(nodes, children, *child, order as _);
@@ -1777,8 +1777,8 @@ mod tests {
 
         // inner size
 
-        assert_eq!(constants.container_size, Size::zero());
-        assert_eq!(constants.inner_container_size, Size::zero());
+        assert_eq!(constants.container_size, Size::ZERO);
+        assert_eq!(constants.inner_container_size, Size::ZERO);
     }
 
     // Margin Dimension::Undefined

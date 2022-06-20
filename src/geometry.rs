@@ -225,18 +225,12 @@ impl<T> Size<T> {
 
 impl Size<f32> {
     /// A [`Size`] with zero width and height
-    #[must_use]
-    pub fn zero() -> Self {
-        Self { width: 0.0, height: 0.0 }
-    }
+    pub const ZERO: Size<f32> = Self { width: 0.0, height: 0.0 };
 }
 
 impl Size<Option<f32>> {
-    /// TODO
-    #[must_use]
-    pub fn from_none() -> Self {
-        Size { width: None, height: None }
-    }
+    /// A [`Size`] with `None` width and height
+    pub const NONE: Size<Option<f32>> = Self { width: None, height: None };
 
     /// TODO
     #[must_use]
@@ -284,8 +278,5 @@ pub struct Point<T> {
 
 impl Point<f32> {
     /// A [`Point`] with values (0,0), representing the origin
-    #[must_use]
-    pub fn zero() -> Self {
-        Self { x: 0.0, y: 0.0 }
-    }
+    pub const ZERO: Point<f32> = Self { x: 0.0, y: 0.0 };
 }
