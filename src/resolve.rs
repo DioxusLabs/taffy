@@ -174,5 +174,23 @@ mod tests {
         ) {
             assert_eq!(input.maybe_resolve(context), expected);
         }
+
+        /// `Size<Dimension::Percent>` should return `Size<None>` if context is `Size<None>`.
+        /// Otherwise it should return `Size<Some(f32)>`
+        /// where the f32 value is the inner value of the percent * context value.
+        ///
+        /// The context __should__ affect the outcome.
+        #[rstest]
+        #[case(Size::from_percent(5.0, 5.0), Size::from_none(), Size::from_none())]
+        #[case(Size::from_percent(5.0, 5.0), Size::from_some(5.0, 5.0), Size::from_some(25.0, 25.0))]
+        #[case(Size::from_percent(5.0, 5.0), Size::from_some(-5.0, -5.0), Size::from_some(-25.0, -25.0))]
+        #[case(Size::from_percent(5.0, 5.0), Size::from_some(0.0, 0.0), Size::from_some(0.0, 0.0))]
+        fn maybe_resolve_percent(
+            #[case] input: Size<Dimension>,
+            #[case] context: Size<Option<f32>>,
+            #[case] expected: Size<Option<f32>>,
+        ) {
+            assert_eq!(input.maybe_resolve(context), expected);
+        }
     }
 }
