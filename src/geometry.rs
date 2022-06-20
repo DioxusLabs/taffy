@@ -4,7 +4,7 @@ use crate::style::{Dimension, FlexDirection};
 use core::ops::Add;
 
 /// An axis-aligned UI rectangle
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 pub struct Rect<T> {
@@ -149,7 +149,7 @@ where
 }
 
 /// The width and height of a [`Rect`]
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 pub struct Size<T> {
@@ -232,6 +232,16 @@ impl Size<f32> {
 }
 
 impl Size<Dimension> {
+    /// Generates a [`Size<Dimension>`] using [`Dimension::Points`] values
+    pub fn from_points(width: f32, height: f32) -> Self {
+        Size { width: Dimension::Points(width), height: Dimension::Points(height) }
+    }
+
+    /// Generates a [`Size<Dimension>`] using [`Dimension::Percent`] values
+    pub fn from_percent(width: f32, height: f32) -> Self {
+        Size { width: Dimension::Percent(width), height: Dimension::Percent(height) }
+    }
+
     /// Converts any `parent`-relative values for size into an absolute size
     pub(crate) fn resolve(&self, parent: Size<Option<f32>>) -> Size<Option<f32>> {
         Size { width: self.width.resolve(parent.width), height: self.height.resolve(parent.height) }
@@ -241,7 +251,7 @@ impl Size<Dimension> {
 /// A 2-dimensional coordinate.
 ///
 /// When used in association with a [`Rect`], represents the bottom-left corner.
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Point<T> {
     /// The x-coordinate
     pub x: T,
@@ -254,5 +264,39 @@ impl Point<f32> {
     #[must_use]
     pub fn zero() -> Self {
         Self { x: 0.0, y: 0.0 }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    mod test_resolve_size {
+        use crate::geometry::Size;
+        use crate::style::Dimension;
+        use rstest::rstest;
+
+        #[rstest]
+        #[case(Size { width: Dimension::Undefined, height: Dimension::Undefined }, Size { width: None, height: None }, Size { width: None, height: None })]
+        #[case(Size { width: Dimension::Undefined, height: Dimension::Undefined }, Size { width: Some(0.0), height: Some(0.0) }, Size { width: None, height: None })]
+        #[case(Size { width: Dimension::Undefined, height: Dimension::Undefined }, Size { width: Some(1.0), height: Some(1.0) }, Size { width: None, height: None })]
+        #[case(Size { width: Dimension::Undefined, height: Dimension::Undefined }, Size { width: Some(-1.0), height: Some(-1.0) }, Size { width: None, height: None })]
+        #[case(Size { width: Dimension::Auto, height: Dimension::Auto }, Size { width: None, height: None }, Size { width: None, height: None })]
+        #[case(Size { width: Dimension::Auto, height: Dimension::Auto }, Size { width: Some(0.0), height: Some(0.0) }, Size { width: None, height: None })]
+        #[case(Size { width: Dimension::Auto, height: Dimension::Auto }, Size { width: Some(1.0), height: Some(1.0) }, Size { width: None, height: None })]
+        #[case(Size { width: Dimension::Auto, height: Dimension::Auto }, Size { width: Some(-1.0), height: Some(-1.0) }, Size { width: None, height: None })]
+        #[case(Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) }, Size { width: None, height: None }, Size { width: Some(5.0), height: Some(5.0) })]
+        #[case(Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) }, Size { width: Some(0.0), height: Some(0.0) }, Size { width: Some(5.0), height: Some(5.0) })]
+        #[case(Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) }, Size { width: Some(1.0), height: Some(1.0) }, Size { width: Some(5.0), height: Some(5.0) })]
+        #[case(Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) }, Size { width: Some(-1.0), height: Some(-1.0) }, Size { width: Some(5.0), height: Some(5.0) })]
+        #[case(Size { width: Dimension::Percent(50.0), height: Dimension::Percent(50.0) }, Size { width: None, height: None }, Size { width: None, height: None })]
+        #[case(Size { width: Dimension::Percent(50.0), height: Dimension::Percent(50.0) }, Size { width: Some(0.0), height: Some(0.0) }, Size { width: Some(0.0), height: Some(0.0) })]
+        #[case(Size { width: Dimension::Percent(50.0), height: Dimension::Percent(50.0) }, Size { width: Some(1.0), height: Some(1.0) }, Size { width: Some(50.0), height: Some(50.0) })]
+        #[case(Size { width: Dimension::Percent(50.0), height: Dimension::Percent(50.0) }, Size { width: Some(-1.0), height: Some(-1.0) }, Size { width: Some(-50.0), height: Some(-50.0) })]
+        fn resolve_size(
+            #[case] input: Size<Dimension>,
+            #[case] parent: Size<Option<f32>>,
+            #[case] expected: Size<Option<f32>>,
+        ) {
+            assert_eq!(input.resolve(parent), expected);
+        }
     }
 }
