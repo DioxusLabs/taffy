@@ -252,17 +252,11 @@ impl Size<Dimension> {
         Size { width: Dimension::Percent(width), height: Dimension::Percent(height) }
     }
 
-    /// TODO
-    #[must_use]
-    pub fn from_auto() -> Self {
-        Size { width: Dimension::Auto, height: Dimension::Auto }
-    }
+    /// Generates a [`Size<Dimension>`] using [`Dimension::Auto`] in both width and height
+    pub const AUTO: Size<Dimension> = Self { width: Dimension::Auto, height: Dimension::Auto };
 
-    /// TODO
-    #[must_use]
-    pub fn from_undefined() -> Self {
-        Size { width: Dimension::Undefined, height: Dimension::Undefined }
-    }
+    /// Generates a [`Size<Dimension>`] using [`Dimension::Undefined`] in both width and height
+    pub const UNDEFINED: Size<Dimension> = Self { width: Dimension::Undefined, height: Dimension::Undefined };
 }
 
 /// A 2-dimensional coordinate.

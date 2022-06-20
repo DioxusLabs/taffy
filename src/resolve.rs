@@ -130,10 +130,10 @@ mod tests {
         ///
         /// The parent / context should not affect the outcome.
         #[rstest]
-        #[case(Size::from_undefined(), Size::NONE, Size::NONE)]
-        #[case(Size::from_undefined(), Size::new(5.0, 5.0), Size::NONE)]
-        #[case(Size::from_undefined(), Size::new(-5.0, -5.0), Size::NONE)]
-        #[case(Size::from_undefined(), Size::new(0.0, 0.0), Size::NONE)]
+        #[case(Size::UNDEFINED, Size::NONE, Size::NONE)]
+        #[case(Size::UNDEFINED, Size::new(5.0, 5.0), Size::NONE)]
+        #[case(Size::UNDEFINED, Size::new(-5.0, -5.0), Size::NONE)]
+        #[case(Size::UNDEFINED, Size::new(0.0, 0.0), Size::NONE)]
         fn maybe_resolve_undefined(
             #[case] input: Size<Dimension>,
             #[case] context: Size<Option<f32>>,
@@ -146,10 +146,10 @@ mod tests {
         ///
         /// The parent / context should not affect the outcome.
         #[rstest]
-        #[case(Size::from_auto(), Size::NONE, Size::NONE)]
-        #[case(Size::from_auto(), Size::new(5.0, 5.0), Size::NONE)]
-        #[case(Size::from_auto(), Size::new(-5.0, -5.0), Size::NONE)]
-        #[case(Size::from_auto(), Size::new(0.0, 0.0), Size::NONE)]
+        #[case(Size::AUTO, Size::NONE, Size::NONE)]
+        #[case(Size::AUTO, Size::new(5.0, 5.0), Size::NONE)]
+        #[case(Size::AUTO, Size::new(-5.0, -5.0), Size::NONE)]
+        #[case(Size::AUTO, Size::new(0.0, 0.0), Size::NONE)]
         fn maybe_resolve_auto(
             #[case] input: Size<Dimension>,
             #[case] context: Size<Option<f32>>,
