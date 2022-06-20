@@ -74,6 +74,7 @@ To add a new test case add another HTML file to `/test_fixtures` following the c
 4. Each test should have a clear intent
     1. It should be evident what is being tested (naming, code, comments)
     2. When this test fails, it should be easy to understand what went wrong
+    3. Ue fixture or parameter-based testing (`#[rstest]`) wherever it improves the two previous points compared to normal rust tests
 
 ## Benchmarking
 
