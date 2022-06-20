@@ -36,47 +36,47 @@ To add a new test case add another HTML file to `/test_fixtures` following the c
 
 1. All tests should be wrapped in a module called `tests`, to ensure they are not compiled unless testing
 
-```rs
-#[cfg(test)]
-mod tests {
-    // Place tests here
-}
-```
+    ```rs
+    #[cfg(test)]
+    mod tests {
+        // Place tests here
+    }
+    ```
 
 2. For unit-testing this should be placed within the file of the definition they are testing
     1. If file becomes significantly long, tests should be split out into its own file under the same module
 
-```rs
-// file: ./src/my_struct.rs
-struct MyStruct;
+    ```rs
+    // file: ./src/my_struct.rs
+    struct MyStruct;
 
-impl MyStruct {
-    fn some_method() { .. }
-}
+    impl MyStruct {
+        fn some_method() { .. }
+    }
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn test_of_some_method() { .. }
-}
-```
+    #[cfg(test)]
+    mod tests {
+        #[test]
+        fn test_of_some_method() { .. }
+    }
+    ```
 
-4. For integration tests this should be placed within the `./tests` folder
+3. For integration tests this should be placed within the `./tests` folder
 
-```rs
-// file: ./tests/my_integration_test.rs
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn integration_test_one() { .. }
-    #[test]
-    fn integration_test_two() { .. }
-}
-```
+    ```rs
+    // file: ./tests/my_integration_test.rs
+    #[cfg(test)]
+    mod tests {
+        #[test]
+        fn integration_test_one() { .. }
+        #[test]
+        fn integration_test_two() { .. }
+    }
+    ```
 
-5. Each test should have a clear intent
+4. Each test should have a clear intent
     1. It should be evident what is being tested (naming, code, comments)
-    1. When this test fails, it should be easy to understand why
+    2. When this test fails, it should be easy to understand what went wrong
 
 ## Benchmarking
 
