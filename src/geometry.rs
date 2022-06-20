@@ -234,7 +234,7 @@ impl Size<Option<f32>> {
 
     /// TODO
     #[must_use]
-    pub fn from_some(width: f32, height: f32) -> Self {
+    pub fn new(width: f32, height: f32) -> Self {
         Size { width: Some(width), height: Some(height) }
     }
 }

@@ -131,9 +131,9 @@ mod tests {
         /// The parent / context should not affect the outcome.
         #[rstest]
         #[case(Size::from_undefined(), Size::NONE, Size::NONE)]
-        #[case(Size::from_undefined(), Size::from_some(5.0, 5.0), Size::NONE)]
-        #[case(Size::from_undefined(), Size::from_some(-5.0, -5.0), Size::NONE)]
-        #[case(Size::from_undefined(), Size::from_some(0.0, 0.0), Size::NONE)]
+        #[case(Size::from_undefined(), Size::new(5.0, 5.0), Size::NONE)]
+        #[case(Size::from_undefined(), Size::new(-5.0, -5.0), Size::NONE)]
+        #[case(Size::from_undefined(), Size::new(0.0, 0.0), Size::NONE)]
         fn maybe_resolve_undefined(
             #[case] input: Size<Dimension>,
             #[case] context: Size<Option<f32>>,
@@ -147,9 +147,9 @@ mod tests {
         /// The parent / context should not affect the outcome.
         #[rstest]
         #[case(Size::from_auto(), Size::NONE, Size::NONE)]
-        #[case(Size::from_auto(), Size::from_some(5.0, 5.0), Size::NONE)]
-        #[case(Size::from_auto(), Size::from_some(-5.0, -5.0), Size::NONE)]
-        #[case(Size::from_auto(), Size::from_some(0.0, 0.0), Size::NONE)]
+        #[case(Size::from_auto(), Size::new(5.0, 5.0), Size::NONE)]
+        #[case(Size::from_auto(), Size::new(-5.0, -5.0), Size::NONE)]
+        #[case(Size::from_auto(), Size::new(0.0, 0.0), Size::NONE)]
         fn maybe_resolve_auto(
             #[case] input: Size<Dimension>,
             #[case] context: Size<Option<f32>>,
@@ -163,10 +163,10 @@ mod tests {
         ///
         /// The parent / context should not affect the outcome.
         #[rstest]
-        #[case(Size::from_points(5.0, 5.0), Size::NONE, Size::from_some(5.0, 5.0))]
-        #[case(Size::from_points(5.0, 5.0), Size::from_some(5.0, 5.0), Size::from_some(5.0, 5.0))]
-        #[case(Size::from_points(5.0, 5.0), Size::from_some(-5.0, -5.0), Size::from_some(5.0, 5.0))]
-        #[case(Size::from_points(5.0, 5.0), Size::from_some(0.0, 0.0), Size::from_some(5.0, 5.0))]
+        #[case(Size::from_points(5.0, 5.0), Size::NONE, Size::new(5.0, 5.0))]
+        #[case(Size::from_points(5.0, 5.0), Size::new(5.0, 5.0), Size::new(5.0, 5.0))]
+        #[case(Size::from_points(5.0, 5.0), Size::new(-5.0, -5.0), Size::new(5.0, 5.0))]
+        #[case(Size::from_points(5.0, 5.0), Size::new(0.0, 0.0), Size::new(5.0, 5.0))]
         fn maybe_resolve_points(
             #[case] input: Size<Dimension>,
             #[case] context: Size<Option<f32>>,
@@ -182,9 +182,9 @@ mod tests {
         /// The context __should__ affect the outcome.
         #[rstest]
         #[case(Size::from_percent(5.0, 5.0), Size::NONE, Size::NONE)]
-        #[case(Size::from_percent(5.0, 5.0), Size::from_some(5.0, 5.0), Size::from_some(25.0, 25.0))]
-        #[case(Size::from_percent(5.0, 5.0), Size::from_some(-5.0, -5.0), Size::from_some(-25.0, -25.0))]
-        #[case(Size::from_percent(5.0, 5.0), Size::from_some(0.0, 0.0), Size::from_some(0.0, 0.0))]
+        #[case(Size::from_percent(5.0, 5.0), Size::new(5.0, 5.0), Size::new(25.0, 25.0))]
+        #[case(Size::from_percent(5.0, 5.0), Size::new(-5.0, -5.0), Size::new(-25.0, -25.0))]
+        #[case(Size::from_percent(5.0, 5.0), Size::new(0.0, 0.0), Size::new(0.0, 0.0))]
         fn maybe_resolve_percent(
             #[case] input: Size<Dimension>,
             #[case] context: Size<Option<f32>>,
