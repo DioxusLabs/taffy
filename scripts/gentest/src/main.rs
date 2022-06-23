@@ -336,7 +336,7 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let size = match style["size"] {
         json::JsonValue::Object(ref value) => {
-            let size = generate_size(value);
+            let size = generate_size_optional(value);
             quote!(size: #size,)
         }
         _ => quote!(),
@@ -455,6 +455,17 @@ macro_rules! dim_quoted_some {
 fn generate_size(size: &json::object::Object) -> TokenStream {
     dim_quoted!(size, width);
     dim_quoted!(size, height);
+    quote!(
+        taffy::geometry::Size {
+            #width #height
+            ..Default::default()
+        }
+    )
+}
+
+fn generate_size_optional(size: &json::object::Object) -> TokenStream {
+    dim_quoted_some!(size, width);
+    dim_quoted_some!(size, height);
     quote!(
         taffy::geometry::Size {
             #width #height

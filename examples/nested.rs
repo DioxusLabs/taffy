@@ -4,14 +4,13 @@ fn main() -> Result<(), taffy::error::TaffyError> {
     let mut taffy = Taffy::new();
 
     // left
-    let child_t1 = taffy.new_leaf(FlexboxLayout {
-        size: Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) },
-        ..Default::default()
-    })?;
+    let child_t1 = taffy.new_leaf(
+        FlexboxLayout { size: Size::<Option<Dimension>>::from_points(5.0, 5.0), ..Default::default() }
+    )?;
 
     let div1 = taffy.new_with_children(
         FlexboxLayout {
-            size: Size { width: Dimension::Percent(0.5), height: Dimension::Percent(1.0) },
+            size: Size::<Option<Dimension>>::from_percent(0.5, 1.0),
             // justify_content: JustifyContent::Center,
             ..Default::default()
         },
@@ -19,14 +18,13 @@ fn main() -> Result<(), taffy::error::TaffyError> {
     )?;
 
     // right
-    let child_t2 = taffy.new_leaf(FlexboxLayout {
-        size: Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) },
-        ..Default::default()
-    })?;
+    let child_t2 = taffy.new_leaf(
+        FlexboxLayout { size: Size::<Option<Dimension>>::from_points(5.0, 5.0), ..Default::default() }
+    )?;
 
     let div2 = taffy.new_with_children(
         FlexboxLayout {
-            size: Size { width: Dimension::Percent(0.5), height: Dimension::Percent(1.0) },
+            size: Size::<Option<Dimension>>::from_percent(0.5, 1.0),
             // justify_content: JustifyContent::Center,
             ..Default::default()
         },
@@ -34,10 +32,7 @@ fn main() -> Result<(), taffy::error::TaffyError> {
     )?;
 
     let container = taffy.new_with_children(
-        FlexboxLayout {
-            size: Size { width: Dimension::Percent(1.0), height: Dimension::Percent(1.0) },
-            ..Default::default()
-        },
+        FlexboxLayout { size: Size::<Option<Dimension>>::from_percent(1.0, 1.0), ..Default::default() },
         &[div1, div2],
     )?;
 

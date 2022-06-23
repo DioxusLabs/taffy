@@ -5,7 +5,7 @@ fn relayout() {
     let mut taffy = taffy::Taffy::new();
     let node1 = taffy
         .new_leaf(taffy::style::FlexboxLayout {
-            size: taffy::geometry::Size { width: Dimension::Points(8f32), height: Dimension::Points(80f32) },
+            size: taffy::geometry::Size::<Option<Dimension>>::from_points(8f32, 80f32),
             ..Default::default()
         })
         .unwrap();
@@ -13,7 +13,7 @@ fn relayout() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 align_self: taffy::prelude::AlignSelf::Center,
-                size: taffy::geometry::Size { width: Dimension::Auto, height: Dimension::Auto },
+                size: taffy::geometry::Size::<Option<Dimension>>::AUTO,
                 // size: taffy::geometry::Size { width: Dimension::Percent(1.0), height: Dimension::Percent(1.0) },
                 ..Default::default()
             },
@@ -23,7 +23,7 @@ fn relayout() {
     let node = taffy
         .new_with_children(
             taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size { width: Dimension::Percent(1f32), height: Dimension::Percent(1f32) },
+                size: taffy::geometry::Size::<Option<Dimension>>::from_percent(1.0, 1.0),
                 ..Default::default()
             },
             &[node0],
