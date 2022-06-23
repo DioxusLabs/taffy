@@ -429,7 +429,7 @@ mod tests {
     fn new_leaf_with_measure() {
         let mut taffy = Taffy::new();
 
-        let res = taffy.new_leaf_with_measure(FlexboxLayout::default(), MeasureFunc::Raw(|_| Size::zero()));
+        let res = taffy.new_leaf_with_measure(FlexboxLayout::default(), MeasureFunc::Raw(|_| Size::ZERO));
         assert!(res.is_ok());
         let node = res.unwrap();
 

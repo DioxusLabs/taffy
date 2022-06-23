@@ -9,6 +9,8 @@
 
 ### 0.2.0 Changed
 
+- `Size<f32>.zero()` is now `Size::<f32>::ZERO`
+- `Point<f32>.zero()` is now  `Point::<f32>::ZERO`
 - renamed `taffy::node::Taffy.new_leaf()` -> `taffy::node::Taffy.new_leaf_with_measure()`
 - removed the public `Number` type; a more idiomatic `Option<f32>` is used instead
   - the associated public `MinMax` and `OrElse` traits have also been removed; these should never have been public

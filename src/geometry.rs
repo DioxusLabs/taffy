@@ -29,16 +29,6 @@ pub struct Rect<T> {
 }
 
 impl<T> Rect<T> {
-    /// Applies the function `f` to all four sides of the [`Rect`]
-    ///
-    /// This is used to transform a `Rect<T>` into a `Rect<R>`.
-    pub(crate) fn map<R, F>(self, f: F) -> Rect<R>
-    where
-        F: Fn(T) -> R,
-    {
-        Rect { start: f(self.start), end: f(self.end), top: f(self.top), bottom: f(self.bottom) }
-    }
-
     /// Applies the function `f` to all four sides of the rect
     ///
     /// When applied to the left and right sides, the width is used
@@ -148,6 +138,17 @@ where
     }
 }
 
+impl Rect<f32> {
+    /// Creates a new Rect with `0.0` as all parameters
+    pub const ZERO: Rect<f32> = Self { start: 0.0, end: 0.0, top: 0.0, bottom: 0.0 };
+
+    /// Creates a new Rect
+    #[must_use]
+    pub fn new(start: f32, end: f32, top: f32, bottom: f32) -> Self {
+        Self { start, end, top, bottom }
+    }
+}
+
 /// The width and height of a [`Rect`]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -225,27 +226,38 @@ impl<T> Size<T> {
 
 impl Size<f32> {
     /// A [`Size`] with zero width and height
+    pub const ZERO: Size<f32> = Self { width: 0.0, height: 0.0 };
+}
+
+impl Size<Option<f32>> {
+    /// A [`Size`] with `None` width and height
+    pub const NONE: Size<Option<f32>> = Self { width: None, height: None };
+
+    /// A [`Size<Option<f32>>`] with `Some(width)` and `Some(height)` as parameters
     #[must_use]
-    pub fn zero() -> Self {
-        Self { width: 0.0, height: 0.0 }
+    pub fn new(width: f32, height: f32) -> Self {
+        Size { width: Some(width), height: Some(height) }
     }
 }
 
 impl Size<Dimension> {
     /// Generates a [`Size<Dimension>`] using [`Dimension::Points`] values
+    #[must_use]
     pub fn from_points(width: f32, height: f32) -> Self {
         Size { width: Dimension::Points(width), height: Dimension::Points(height) }
     }
 
     /// Generates a [`Size<Dimension>`] using [`Dimension::Percent`] values
+    #[must_use]
     pub fn from_percent(width: f32, height: f32) -> Self {
         Size { width: Dimension::Percent(width), height: Dimension::Percent(height) }
     }
 
-    /// Converts any `parent`-relative values for size into an absolute size
-    pub(crate) fn resolve(&self, parent: Size<Option<f32>>) -> Size<Option<f32>> {
-        Size { width: self.width.resolve(parent.width), height: self.height.resolve(parent.height) }
-    }
+    /// Generates a [`Size<Dimension>`] using [`Dimension::Auto`] in both width and height
+    pub const AUTO: Size<Dimension> = Self { width: Dimension::Auto, height: Dimension::Auto };
+
+    /// Generates a [`Size<Dimension>`] using [`Dimension::Undefined`] in both width and height
+    pub const UNDEFINED: Size<Dimension> = Self { width: Dimension::Undefined, height: Dimension::Undefined };
 }
 
 /// A 2-dimensional coordinate.
@@ -261,42 +273,5 @@ pub struct Point<T> {
 
 impl Point<f32> {
     /// A [`Point`] with values (0,0), representing the origin
-    #[must_use]
-    pub fn zero() -> Self {
-        Self { x: 0.0, y: 0.0 }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    mod test_resolve_size {
-        use crate::geometry::Size;
-        use crate::style::Dimension;
-        use rstest::rstest;
-
-        #[rstest]
-        #[case(Size { width: Dimension::Undefined, height: Dimension::Undefined }, Size { width: None, height: None }, Size { width: None, height: None })]
-        #[case(Size { width: Dimension::Undefined, height: Dimension::Undefined }, Size { width: Some(0.0), height: Some(0.0) }, Size { width: None, height: None })]
-        #[case(Size { width: Dimension::Undefined, height: Dimension::Undefined }, Size { width: Some(1.0), height: Some(1.0) }, Size { width: None, height: None })]
-        #[case(Size { width: Dimension::Undefined, height: Dimension::Undefined }, Size { width: Some(-1.0), height: Some(-1.0) }, Size { width: None, height: None })]
-        #[case(Size { width: Dimension::Auto, height: Dimension::Auto }, Size { width: None, height: None }, Size { width: None, height: None })]
-        #[case(Size { width: Dimension::Auto, height: Dimension::Auto }, Size { width: Some(0.0), height: Some(0.0) }, Size { width: None, height: None })]
-        #[case(Size { width: Dimension::Auto, height: Dimension::Auto }, Size { width: Some(1.0), height: Some(1.0) }, Size { width: None, height: None })]
-        #[case(Size { width: Dimension::Auto, height: Dimension::Auto }, Size { width: Some(-1.0), height: Some(-1.0) }, Size { width: None, height: None })]
-        #[case(Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) }, Size { width: None, height: None }, Size { width: Some(5.0), height: Some(5.0) })]
-        #[case(Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) }, Size { width: Some(0.0), height: Some(0.0) }, Size { width: Some(5.0), height: Some(5.0) })]
-        #[case(Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) }, Size { width: Some(1.0), height: Some(1.0) }, Size { width: Some(5.0), height: Some(5.0) })]
-        #[case(Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) }, Size { width: Some(-1.0), height: Some(-1.0) }, Size { width: Some(5.0), height: Some(5.0) })]
-        #[case(Size { width: Dimension::Percent(50.0), height: Dimension::Percent(50.0) }, Size { width: None, height: None }, Size { width: None, height: None })]
-        #[case(Size { width: Dimension::Percent(50.0), height: Dimension::Percent(50.0) }, Size { width: Some(0.0), height: Some(0.0) }, Size { width: Some(0.0), height: Some(0.0) })]
-        #[case(Size { width: Dimension::Percent(50.0), height: Dimension::Percent(50.0) }, Size { width: Some(1.0), height: Some(1.0) }, Size { width: Some(50.0), height: Some(50.0) })]
-        #[case(Size { width: Dimension::Percent(50.0), height: Dimension::Percent(50.0) }, Size { width: Some(-1.0), height: Some(-1.0) }, Size { width: Some(-50.0), height: Some(-50.0) })]
-        fn resolve_size(
-            #[case] input: Size<Dimension>,
-            #[case] parent: Size<Option<f32>>,
-            #[case] expected: Size<Option<f32>>,
-        ) {
-            assert_eq!(input.resolve(parent), expected);
-        }
-    }
+    pub const ZERO: Point<f32> = Self { x: 0.0, y: 0.0 };
 }
