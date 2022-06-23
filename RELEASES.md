@@ -9,6 +9,8 @@
 
 ### 0.2.0 Changed
 
+- The `Default` of `Dimension` is now `Dimension::Auto` instead of the now removed `Dimension::Undefined`
+- `FlexboxLayout` fields `position`, `margin`, `padding` and `border` is now `Rect<Option<Dimension>>` instead of `Rect<Dimension>`
 - `Size<f32>.zero()` is now `Size::<f32>::ZERO`
 - `Point<f32>.zero()` is now  `Point::<f32>::ZERO`
 - renamed `taffy::node::Taffy.new_leaf()` -> `taffy::node::Taffy.new_leaf_with_measure()`
@@ -35,6 +37,7 @@
 
 ### 0.2.0 Removed
 
+- `Dimension::Undefined` no longer exist. Instead use `Option<Dimension>`
 - various internal types are no longer public
   - if you needed one of these, please file an issue!
 
