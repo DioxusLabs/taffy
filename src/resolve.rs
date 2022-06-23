@@ -302,9 +302,8 @@ mod tests {
         }
     }
 
-    // TODO: Add tests for ResolveOrDefault<Option<f32>, Rect<f32>> for Rect<Dimension>
     mod resolve_or_default_rect_dimension_to_rect_f32_via_option {
-        use crate::geometry::{Rect, Size};
+        use crate::geometry::Rect;
         use crate::resolve::ResolveOrDefault;
         use crate::style::Dimension;
         use rstest::rstest;

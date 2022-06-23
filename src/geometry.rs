@@ -29,17 +29,6 @@ pub struct Rect<T> {
 }
 
 impl<T> Rect<T> {
-    /// Applies the function `f` to all four sides of the [`Rect`]
-    ///
-    /// This is used to transform a `Rect<T>` into a `Rect<R>`.
-    #[allow(dead_code)]
-    pub(crate) fn map<R, F>(self, f: F) -> Rect<R>
-    where
-        F: Fn(T) -> R,
-    {
-        Rect { start: f(self.start), end: f(self.end), top: f(self.top), bottom: f(self.bottom) }
-    }
-
     /// Applies the function `f` to all four sides of the rect
     ///
     /// When applied to the left and right sides, the width is used
