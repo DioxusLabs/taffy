@@ -10,8 +10,8 @@ fn percentage_position_left_top() {
                     ..Default::default()
                 },
                 position: taffy::geometry::Rect {
-                    start: taffy::style::Dimension::Percent(0.1f32),
-                    top: taffy::style::Dimension::Percent(0.2f32),
+                    start: Some(taffy::style::Dimension::Percent(0.1f32)),
+                    top: Some(taffy::style::Dimension::Percent(0.2f32)),
                     ..Default::default()
                 },
                 ..Default::default()

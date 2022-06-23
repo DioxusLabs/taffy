@@ -7,7 +7,10 @@ pub fn compute() {
             taffy::style::FlexboxLayout {
                 display: taffy::style::Display::None,
                 flex_grow: 1f32,
-                position: taffy::geometry::Rect { top: taffy::style::Dimension::Points(10f32), ..Default::default() },
+                position: taffy::geometry::Rect {
+                    top: Some(taffy::style::Dimension::Points(10f32)),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[],

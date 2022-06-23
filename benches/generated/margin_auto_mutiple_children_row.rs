@@ -8,7 +8,7 @@ pub fn compute() {
                     height: taffy::style::Dimension::Points(50f32),
                     ..Default::default()
                 },
-                margin: taffy::geometry::Rect { end: taffy::style::Dimension::Auto, ..Default::default() },
+                margin: taffy::geometry::Rect { end: Some(taffy::style::Dimension::Auto), ..Default::default() },
                 ..Default::default()
             },
             &[],
@@ -22,7 +22,7 @@ pub fn compute() {
                     height: taffy::style::Dimension::Points(50f32),
                     ..Default::default()
                 },
-                margin: taffy::geometry::Rect { end: taffy::style::Dimension::Auto, ..Default::default() },
+                margin: taffy::geometry::Rect { end: Some(taffy::style::Dimension::Auto), ..Default::default() },
                 ..Default::default()
             },
             &[],

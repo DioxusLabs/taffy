@@ -10,8 +10,8 @@ fn align_items_flex_end_child_with_margin_bigger_than_parent() {
                     ..Default::default()
                 },
                 margin: taffy::geometry::Rect {
-                    start: taffy::style::Dimension::Points(10f32),
-                    end: taffy::style::Dimension::Points(10f32),
+                    start: Some(taffy::style::Dimension::Points(10f32)),
+                    end: Some(taffy::style::Dimension::Points(10f32)),
                     ..Default::default()
                 },
                 ..Default::default()

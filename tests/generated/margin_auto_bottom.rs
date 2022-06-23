@@ -9,7 +9,7 @@ fn margin_auto_bottom() {
                     height: taffy::style::Dimension::Points(50f32),
                     ..Default::default()
                 },
-                margin: taffy::geometry::Rect { bottom: taffy::style::Dimension::Auto, ..Default::default() },
+                margin: taffy::geometry::Rect { bottom: Some(taffy::style::Dimension::Auto), ..Default::default() },
                 ..Default::default()
             },
             &[],

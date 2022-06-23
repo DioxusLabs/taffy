@@ -10,7 +10,10 @@ fn absolute_layout_align_items_and_justify_content_center_and_right_position() {
                     height: taffy::style::Dimension::Points(40f32),
                     ..Default::default()
                 },
-                position: taffy::geometry::Rect { end: taffy::style::Dimension::Points(5f32), ..Default::default() },
+                position: taffy::geometry::Rect {
+                    end: Some(taffy::style::Dimension::Points(5f32)),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[],

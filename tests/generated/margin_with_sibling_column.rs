@@ -5,7 +5,10 @@ fn margin_with_sibling_column() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 flex_grow: 1f32,
-                margin: taffy::geometry::Rect { bottom: taffy::style::Dimension::Points(10f32), ..Default::default() },
+                margin: taffy::geometry::Rect {
+                    bottom: Some(taffy::style::Dimension::Points(10f32)),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[],

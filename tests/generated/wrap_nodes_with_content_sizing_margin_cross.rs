@@ -37,7 +37,10 @@ fn wrap_nodes_with_content_sizing_margin_cross() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 flex_direction: taffy::style::FlexDirection::Column,
-                margin: taffy::geometry::Rect { top: taffy::style::Dimension::Points(10f32), ..Default::default() },
+                margin: taffy::geometry::Rect {
+                    top: Some(taffy::style::Dimension::Points(10f32)),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[node010],

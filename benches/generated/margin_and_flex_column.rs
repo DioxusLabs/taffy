@@ -5,8 +5,8 @@ pub fn compute() {
             taffy::style::FlexboxLayout {
                 flex_grow: 1f32,
                 margin: taffy::geometry::Rect {
-                    top: taffy::style::Dimension::Points(10f32),
-                    bottom: taffy::style::Dimension::Points(10f32),
+                    top: Some(taffy::style::Dimension::Points(10f32)),
+                    bottom: Some(taffy::style::Dimension::Points(10f32)),
                     ..Default::default()
                 },
                 ..Default::default()

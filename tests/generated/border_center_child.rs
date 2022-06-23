@@ -25,8 +25,8 @@ fn border_center_child() {
                     ..Default::default()
                 },
                 border: taffy::geometry::Rect {
-                    top: taffy::style::Dimension::Points(10f32),
-                    bottom: taffy::style::Dimension::Points(20f32),
+                    top: Some(taffy::style::Dimension::Points(10f32)),
+                    bottom: Some(taffy::style::Dimension::Points(20f32)),
                     ..Default::default()
                 },
                 ..Default::default()

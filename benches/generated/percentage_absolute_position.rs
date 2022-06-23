@@ -10,8 +10,8 @@ pub fn compute() {
                     ..Default::default()
                 },
                 position: taffy::geometry::Rect {
-                    start: taffy::style::Dimension::Percent(0.3f32),
-                    top: taffy::style::Dimension::Percent(0.1f32),
+                    start: Some(taffy::style::Dimension::Percent(0.3f32)),
+                    top: Some(taffy::style::Dimension::Percent(0.1f32)),
                     ..Default::default()
                 },
                 ..Default::default()

@@ -10,8 +10,8 @@ fn margin_auto_bottom_and_top_justify_center() {
                     ..Default::default()
                 },
                 margin: taffy::geometry::Rect {
-                    top: taffy::style::Dimension::Auto,
-                    bottom: taffy::style::Dimension::Auto,
+                    top: Some(taffy::style::Dimension::Auto),
+                    bottom: Some(taffy::style::Dimension::Auto),
                     ..Default::default()
                 },
                 ..Default::default()

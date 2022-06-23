@@ -10,8 +10,8 @@ fn margin_auto_top_and_bottom_strech() {
                     ..Default::default()
                 },
                 margin: taffy::geometry::Rect {
-                    top: taffy::style::Dimension::Auto,
-                    bottom: taffy::style::Dimension::Auto,
+                    top: Some(taffy::style::Dimension::Auto),
+                    bottom: Some(taffy::style::Dimension::Auto),
                     ..Default::default()
                 },
                 ..Default::default()

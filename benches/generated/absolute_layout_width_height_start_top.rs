@@ -10,8 +10,8 @@ pub fn compute() {
                     ..Default::default()
                 },
                 position: taffy::geometry::Rect {
-                    start: taffy::style::Dimension::Points(10f32),
-                    top: taffy::style::Dimension::Points(10f32),
+                    start: Some(taffy::style::Dimension::Points(10f32)),
+                    top: Some(taffy::style::Dimension::Points(10f32)),
                     ..Default::default()
                 },
                 ..Default::default()

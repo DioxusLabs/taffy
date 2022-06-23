@@ -10,10 +10,10 @@ fn padding_align_end_child() {
                     ..Default::default()
                 },
                 padding: taffy::geometry::Rect {
-                    start: taffy::style::Dimension::Points(20f32),
-                    end: taffy::style::Dimension::Points(20f32),
-                    top: taffy::style::Dimension::Points(20f32),
-                    bottom: taffy::style::Dimension::Points(20f32),
+                    start: Some(taffy::style::Dimension::Points(20f32)),
+                    end: Some(taffy::style::Dimension::Points(20f32)),
+                    top: Some(taffy::style::Dimension::Points(20f32)),
+                    bottom: Some(taffy::style::Dimension::Points(20f32)),
                     ..Default::default()
                 },
                 ..Default::default()

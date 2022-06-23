@@ -9,7 +9,10 @@ pub fn compute() {
                     height: taffy::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
-                position: taffy::geometry::Rect { top: taffy::style::Dimension::Percent(0.5f32), ..Default::default() },
+                position: taffy::geometry::Rect {
+                    top: Some(taffy::style::Dimension::Percent(0.5f32)),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[],
@@ -25,7 +28,7 @@ pub fn compute() {
                     ..Default::default()
                 },
                 position: taffy::geometry::Rect {
-                    bottom: taffy::style::Dimension::Percent(0.5f32),
+                    bottom: Some(taffy::style::Dimension::Percent(0.5f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -39,8 +42,8 @@ pub fn compute() {
                 position_type: taffy::style::PositionType::Absolute,
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), ..Default::default() },
                 position: taffy::geometry::Rect {
-                    top: taffy::style::Dimension::Percent(0.1f32),
-                    bottom: taffy::style::Dimension::Percent(0.1f32),
+                    top: Some(taffy::style::Dimension::Percent(0.1f32)),
+                    bottom: Some(taffy::style::Dimension::Percent(0.1f32)),
                     ..Default::default()
                 },
                 ..Default::default()

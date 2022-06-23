@@ -7,7 +7,7 @@ fn margin_auto_top_stretching_child() {
                 flex_grow: 1f32,
                 flex_shrink: 1f32,
                 flex_basis: taffy::style::Dimension::Percent(0f32),
-                margin: taffy::geometry::Rect { top: taffy::style::Dimension::Auto, ..Default::default() },
+                margin: taffy::geometry::Rect { top: Some(taffy::style::Dimension::Auto), ..Default::default() },
                 ..Default::default()
             },
             &[],

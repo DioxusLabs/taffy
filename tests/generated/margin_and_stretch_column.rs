@@ -6,8 +6,8 @@ fn margin_and_stretch_column() {
             taffy::style::FlexboxLayout {
                 flex_grow: 1f32,
                 margin: taffy::geometry::Rect {
-                    start: taffy::style::Dimension::Points(10f32),
-                    end: taffy::style::Dimension::Points(10f32),
+                    start: Some(taffy::style::Dimension::Points(10f32)),
+                    end: Some(taffy::style::Dimension::Points(10f32)),
                     ..Default::default()
                 },
                 ..Default::default()

@@ -9,7 +9,10 @@ fn flex_shrink_by_outer_margin_with_max_size() {
                     height: taffy::style::Dimension::Points(20f32),
                     ..Default::default()
                 },
-                margin: taffy::geometry::Rect { top: taffy::style::Dimension::Points(100f32), ..Default::default() },
+                margin: taffy::geometry::Rect {
+                    top: Some(taffy::style::Dimension::Points(100f32)),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[],

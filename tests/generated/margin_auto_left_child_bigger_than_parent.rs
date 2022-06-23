@@ -9,7 +9,7 @@ fn margin_auto_left_child_bigger_than_parent() {
                     height: taffy::style::Dimension::Points(72f32),
                     ..Default::default()
                 },
-                margin: taffy::geometry::Rect { start: taffy::style::Dimension::Auto, ..Default::default() },
+                margin: taffy::geometry::Rect { start: Some(taffy::style::Dimension::Auto), ..Default::default() },
                 ..Default::default()
             },
             &[],

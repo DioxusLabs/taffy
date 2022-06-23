@@ -9,8 +9,8 @@ pub fn compute() {
                     ..Default::default()
                 },
                 margin: taffy::geometry::Rect {
-                    top: taffy::style::Dimension::Auto,
-                    bottom: taffy::style::Dimension::Auto,
+                    top: Some(taffy::style::Dimension::Auto),
+                    bottom: Some(taffy::style::Dimension::Auto),
                     ..Default::default()
                 },
                 ..Default::default()
