@@ -1,14 +1,24 @@
+//! Helper trait to calculate dimensions during layout resolution
+
 use crate::prelude::{Dimension, Rect, Size};
 
+/// Trait to encapsulate behaviour where we need to resolve from a
+/// potentially context-dependent size or dimension into
+/// a context-independent size or dimension.
+///
+/// Will return a default value if it unable to resolve.
 pub(crate) trait ResolveOrDefault<TContext, TOutput> {
-    /// Resolves a value from something that can be either absolute or relative
-    /// into one that is absolute.
-    ///
-    /// `context` is size of the parent
+    /// Resolve a dimension that might be dependent on a context, with a default fallback value
     fn resolve_or_default(self, context: TContext) -> TOutput;
 }
 
+/// Trait to encapsulate behaviour where we need to resolve from a
+/// potentially context-dependent size or dimension into
+/// a context-independent size or dimension.
+///
+/// Will return a `None` if it unable to resolve.
 pub(crate) trait MaybeResolve<T> {
+    /// Resolve a dimension that might be dependent on a context, with `None` as fallback value
     fn maybe_resolve(self, context: T) -> T;
 }
 

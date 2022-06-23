@@ -32,6 +32,7 @@ impl<T> Rect<T> {
     /// Applies the function `f` to all four sides of the [`Rect`]
     ///
     /// This is used to transform a `Rect<T>` into a `Rect<R>`.
+    #[allow(dead_code)]
     pub(crate) fn map<R, F>(self, f: F) -> Rect<R>
     where
         F: Fn(T) -> R,
@@ -243,7 +244,7 @@ impl Size<Option<f32>> {
     /// A [`Size`] with `None` width and height
     pub const NONE: Size<Option<f32>> = Self { width: None, height: None };
 
-    /// TODO
+    /// A [`Size<Option<f32>>`] with `Some(width)` and `Some(height)` as parameters
     #[must_use]
     pub fn new(width: f32, height: f32) -> Self {
         Size { width: Some(width), height: Some(height) }
