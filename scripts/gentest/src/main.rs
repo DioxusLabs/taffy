@@ -363,7 +363,7 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
             let $val = match $style[stringify!($val)] {
                 json::JsonValue::Object(ref value) => {
                     let edges = generate_edges(value);
-                    quote!($val: Some(#edges),)
+                    quote!($val: #edges,)
                 },
                 _ => quote!(),
             };
@@ -440,6 +440,17 @@ macro_rules! dim_quoted {
         };
     };
 }
+macro_rules! dim_quoted_some {
+    ($obj:ident, $dim_name:ident) => {
+        let $dim_name = match $obj.get(stringify!($dim_name)) {
+            Some(json::JsonValue::Object(ref value)) => {
+                let dim = generate_dimension(value);
+                quote!($dim_name: Some(#dim),)
+            }
+            _ => quote!(),
+        };
+    };
+}
 
 fn generate_size(size: &json::object::Object) -> TokenStream {
     dim_quoted!(size, width);
@@ -474,10 +485,10 @@ fn generate_dimension(dimen: &json::object::Object) -> TokenStream {
 }
 
 fn generate_edges(dimen: &json::object::Object) -> TokenStream {
-    dim_quoted!(dimen, start);
-    dim_quoted!(dimen, end);
-    dim_quoted!(dimen, top);
-    dim_quoted!(dimen, bottom);
+    dim_quoted_some!(dimen, start);
+    dim_quoted_some!(dimen, end);
+    dim_quoted_some!(dimen, top);
+    dim_quoted_some!(dimen, bottom);
 
     quote!(taffy::geometry::Rect {
         #start #end #top #bottom
