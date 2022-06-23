@@ -276,7 +276,35 @@ impl Dimension {
 
 impl Default for Rect<Option<Dimension>> {
     fn default() -> Self {
-        Self { start: None, end: None, top: None, bottom: None }
+        Self::NONE
+    }
+}
+
+impl Rect<Dimension> {
+    /// Generates a [`Rect<Dimension>`] using [`Dimension::Auto`] for all values
+    pub const AUTO: Rect<Dimension> =
+        Self { start: Dimension::Auto, end: Dimension::Auto, top: Dimension::Auto, bottom: Dimension::Auto };
+
+    /// Create a new Rect with [`Dimension::Points`]
+    #[must_use]
+    pub fn from_points(start: f32, end: f32, top: f32, bottom: f32) -> Self {
+        Rect {
+            start: Dimension::Points(start),
+            end: Dimension::Points(end),
+            top: Dimension::Points(top),
+            bottom: Dimension::Points(bottom),
+        }
+    }
+
+    /// Create a new Rect with [`Dimension::Percent`]
+    #[must_use]
+    pub fn from_percent(start: f32, end: f32, top: f32, bottom: f32) -> Self {
+        Rect {
+            start: Dimension::Percent(start),
+            end: Dimension::Percent(end),
+            top: Dimension::Percent(top),
+            bottom: Dimension::Percent(bottom),
+        }
     }
 }
 
@@ -305,15 +333,10 @@ impl Rect<Option<Dimension>> {
         Rect { end: Some(Dimension::Percent(end)), bottom: Some(Dimension::Percent(bottom)), ..Default::default() }
     }
 
-    // /// Generates a [`Rect<Dimension>`] using [`Dimension::Undefined`] for all values
-    // pub const UNDEFINED: Rect<Dimension> = Self {
-    //     start: Dimension::Undefined,
-    //     end: Dimension::Undefined,
-    //     top: Dimension::Undefined,
-    //     bottom: Dimension::Undefined,
-    // };
+    /// Generates a [`Rect<Option<Dimension>>`] using [`None`] for all values
+    pub const NONE: Rect<Option<Dimension>> = Self { start: None, end: None, top: None, bottom: None };
 
-    /// Generates a [`Rect<Dimension>`] using [`Dimension::Auto`] for all values
+    /// Generates a [`Rect<Option<Dimension>>`] using [`Some(Dimension::Auto)`] for all values
     pub const AUTO: Rect<Option<Dimension>> = Self {
         start: Some(Dimension::Auto),
         end: Some(Dimension::Auto),
@@ -321,7 +344,7 @@ impl Rect<Option<Dimension>> {
         bottom: Some(Dimension::Auto),
     };
 
-    /// Create a new Rect with [`Dimension::Points`]
+    /// Create a new [`Rect<Option<Dimension>>`] with [`Some(Dimension::Points)`] for all values
     #[must_use]
     pub fn from_points(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Rect {
@@ -332,7 +355,7 @@ impl Rect<Option<Dimension>> {
         }
     }
 
-    /// Create a new Rect with [`Dimension::Percent`]
+    /// Create a new [`Rect<Option<Dimension>>`] with [`Some(Dimension::Percent)`] for all values
     #[must_use]
     pub fn from_percent(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Rect {
