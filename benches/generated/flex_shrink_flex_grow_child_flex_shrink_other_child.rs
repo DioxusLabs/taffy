@@ -6,8 +6,8 @@ pub fn compute() {
                 flex_grow: 0f32,
                 flex_shrink: 1f32,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(500f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: Some(taffy::style::Dimension::Points(500f32)),
+                    height: Some(taffy::style::Dimension::Points(100f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -21,8 +21,8 @@ pub fn compute() {
                 flex_grow: 1f32,
                 flex_shrink: 1f32,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(500f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: Some(taffy::style::Dimension::Points(500f32)),
+                    height: Some(taffy::style::Dimension::Points(100f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -34,8 +34,8 @@ pub fn compute() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(500f32),
-                    height: taffy::style::Dimension::Points(500f32),
+                    width: Some(taffy::style::Dimension::Points(500f32)),
+                    height: Some(taffy::style::Dimension::Points(500f32)),
                     ..Default::default()
                 },
                 ..Default::default()

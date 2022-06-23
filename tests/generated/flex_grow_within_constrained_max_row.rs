@@ -14,7 +14,10 @@ fn flex_grow_within_constrained_max_row() {
     let node01 = taffy
         .new_with_children(
             taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), ..Default::default() },
+                size: taffy::geometry::Size {
+                    width: Some(taffy::style::Dimension::Points(50f32)),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[],
@@ -23,7 +26,10 @@ fn flex_grow_within_constrained_max_row() {
     let node0 = taffy
         .new_with_children(
             taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Default::default() },
+                size: taffy::geometry::Size {
+                    height: Some(taffy::style::Dimension::Points(100f32)),
+                    ..Default::default()
+                },
                 max_size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     ..Default::default()
@@ -37,7 +43,10 @@ fn flex_grow_within_constrained_max_row() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(200f32), ..Default::default() },
+                size: taffy::geometry::Size {
+                    width: Some(taffy::style::Dimension::Points(200f32)),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[node0],

@@ -5,8 +5,8 @@ fn margin_auto_top_and_bottom_strech() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(50f32),
-                    height: taffy::style::Dimension::Points(50f32),
+                    width: Some(taffy::style::Dimension::Points(50f32)),
+                    height: Some(taffy::style::Dimension::Points(50f32)),
                     ..Default::default()
                 },
                 margin: taffy::geometry::Rect {
@@ -23,8 +23,8 @@ fn margin_auto_top_and_bottom_strech() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(50f32),
-                    height: taffy::style::Dimension::Points(50f32),
+                    width: Some(taffy::style::Dimension::Points(50f32)),
+                    height: Some(taffy::style::Dimension::Points(50f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -37,8 +37,8 @@ fn margin_auto_top_and_bottom_strech() {
             taffy::style::FlexboxLayout {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(200f32),
-                    height: taffy::style::Dimension::Points(200f32),
+                    width: Some(taffy::style::Dimension::Points(200f32)),
+                    height: Some(taffy::style::Dimension::Points(200f32)),
                     ..Default::default()
                 },
                 ..Default::default()

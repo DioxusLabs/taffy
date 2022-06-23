@@ -4,7 +4,10 @@ fn relative_position_should_not_nudge_siblings() {
     let node0 = taffy
         .new_with_children(
             taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Default::default() },
+                size: taffy::geometry::Size {
+                    height: Some(taffy::style::Dimension::Points(10f32)),
+                    ..Default::default()
+                },
                 position: taffy::geometry::Rect {
                     top: Some(taffy::style::Dimension::Points(15f32)),
                     ..Default::default()
@@ -17,7 +20,10 @@ fn relative_position_should_not_nudge_siblings() {
     let node1 = taffy
         .new_with_children(
             taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Default::default() },
+                size: taffy::geometry::Size {
+                    height: Some(taffy::style::Dimension::Points(10f32)),
+                    ..Default::default()
+                },
                 position: taffy::geometry::Rect {
                     top: Some(taffy::style::Dimension::Points(15f32)),
                     ..Default::default()
@@ -32,8 +38,8 @@ fn relative_position_should_not_nudge_siblings() {
             taffy::style::FlexboxLayout {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: Some(taffy::style::Dimension::Points(100f32)),
+                    height: Some(taffy::style::Dimension::Points(100f32)),
                     ..Default::default()
                 },
                 ..Default::default()

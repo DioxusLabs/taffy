@@ -7,8 +7,8 @@ fn absolute_layout_align_items_center_on_child_only() {
                 position_type: taffy::style::PositionType::Absolute,
                 align_self: taffy::style::AlignSelf::Center,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(60f32),
-                    height: taffy::style::Dimension::Points(40f32),
+                    width: Some(taffy::style::Dimension::Points(60f32)),
+                    height: Some(taffy::style::Dimension::Points(40f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -20,8 +20,8 @@ fn absolute_layout_align_items_center_on_child_only() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(110f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: Some(taffy::style::Dimension::Points(110f32)),
+                    height: Some(taffy::style::Dimension::Points(100f32)),
                     ..Default::default()
                 },
                 ..Default::default()

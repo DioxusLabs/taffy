@@ -5,8 +5,8 @@ fn justify_content_column_min_height_and_margin_bottom() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(20f32),
-                    height: taffy::style::Dimension::Points(20f32),
+                    width: Some(taffy::style::Dimension::Points(20f32)),
+                    height: Some(taffy::style::Dimension::Points(20f32)),
                     ..Default::default()
                 },
                 margin: taffy::geometry::Rect {

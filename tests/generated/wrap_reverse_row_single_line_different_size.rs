@@ -5,8 +5,8 @@ fn wrap_reverse_row_single_line_different_size() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(30f32),
-                    height: taffy::style::Dimension::Points(10f32),
+                    width: Some(taffy::style::Dimension::Points(30f32)),
+                    height: Some(taffy::style::Dimension::Points(10f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -18,8 +18,8 @@ fn wrap_reverse_row_single_line_different_size() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(30f32),
-                    height: taffy::style::Dimension::Points(20f32),
+                    width: Some(taffy::style::Dimension::Points(30f32)),
+                    height: Some(taffy::style::Dimension::Points(20f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -31,8 +31,8 @@ fn wrap_reverse_row_single_line_different_size() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(30f32),
-                    height: taffy::style::Dimension::Points(30f32),
+                    width: Some(taffy::style::Dimension::Points(30f32)),
+                    height: Some(taffy::style::Dimension::Points(30f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -44,8 +44,8 @@ fn wrap_reverse_row_single_line_different_size() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(30f32),
-                    height: taffy::style::Dimension::Points(40f32),
+                    width: Some(taffy::style::Dimension::Points(30f32)),
+                    height: Some(taffy::style::Dimension::Points(40f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -57,8 +57,8 @@ fn wrap_reverse_row_single_line_different_size() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(30f32),
-                    height: taffy::style::Dimension::Points(50f32),
+                    width: Some(taffy::style::Dimension::Points(30f32)),
+                    height: Some(taffy::style::Dimension::Points(50f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -71,7 +71,10 @@ fn wrap_reverse_row_single_line_different_size() {
             taffy::style::FlexboxLayout {
                 flex_wrap: taffy::style::FlexWrap::WrapReverse,
                 align_content: taffy::style::AlignContent::FlexStart,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(300f32), ..Default::default() },
+                size: taffy::geometry::Size {
+                    width: Some(taffy::style::Dimension::Points(300f32)),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[node0, node1, node2, node3, node4],

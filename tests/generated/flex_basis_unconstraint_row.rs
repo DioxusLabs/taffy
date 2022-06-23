@@ -5,7 +5,10 @@ fn flex_basis_unconstraint_row() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 flex_basis: taffy::style::Dimension::Points(50f32),
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Default::default() },
+                size: taffy::geometry::Size {
+                    height: Some(taffy::style::Dimension::Points(100f32)),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[],
