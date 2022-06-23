@@ -427,7 +427,7 @@ pub struct FlexboxLayout {
     pub flex_basis: Dimension,
     /// Sets the initial size of the item
     // TODO: why does this exist as distinct from flex_basis? How do they interact?
-    pub size: Size<Dimension>,
+    pub size: Size<Option<Dimension>>,
     /// Controls the minimum size of the item
     pub min_size: Size<Dimension>,
     /// Controls the maximum size of the item
@@ -502,7 +502,7 @@ impl FlexboxLayout {
     }
 
     /// If the `direction` is row-oriented, the height. Otherwise the width
-    pub(crate) fn cross_size(&self, direction: FlexDirection) -> Dimension {
+    pub(crate) fn cross_size(&self, direction: FlexDirection) -> Option<Dimension> {
         if direction.is_row() {
             self.size.height
         } else {
@@ -609,14 +609,14 @@ mod tests {
 
         #[test]
         fn flexbox_layout_min_main_size() {
-            let layout = FlexboxLayout { min_size: Size::from_points(1.0, 2.0), ..Default::default() };
+            let layout = FlexboxLayout { min_size: Size::<Dimension>::from_points(1.0, 2.0), ..Default::default() };
             assert_eq!(layout.min_main_size(FlexDirection::Row), Dimension::Points(1.0));
             assert_eq!(layout.min_main_size(FlexDirection::Column), Dimension::Points(2.0));
         }
 
         #[test]
         fn flexbox_layout_max_main_size() {
-            let layout = FlexboxLayout { max_size: Size::from_points(1.0, 2.0), ..Default::default() };
+            let layout = FlexboxLayout { max_size: Size::<Dimension>::from_points(1.0, 2.0), ..Default::default() };
             assert_eq!(layout.max_main_size(FlexDirection::Row), Dimension::Points(1.0));
             assert_eq!(layout.max_main_size(FlexDirection::Column), Dimension::Points(2.0));
         }
@@ -637,21 +637,21 @@ mod tests {
 
         #[test]
         fn flexbox_layout_cross_size() {
-            let layout = FlexboxLayout { size: Size::from_points(1.0, 2.0), ..Default::default() };
-            assert_eq!(layout.cross_size(FlexDirection::Row), Dimension::Points(2.0));
-            assert_eq!(layout.cross_size(FlexDirection::Column), Dimension::Points(1.0));
+            let layout = FlexboxLayout { size: Size::<Option<Dimension>>::from_points(1.0, 2.0), ..Default::default() };
+            assert_eq!(layout.cross_size(FlexDirection::Row), Some(Dimension::Points(2.0)));
+            assert_eq!(layout.cross_size(FlexDirection::Column), Some(Dimension::Points(1.0)));
         }
 
         #[test]
         fn flexbox_layout_min_cross_size() {
-            let layout = FlexboxLayout { min_size: Size::from_points(1.0, 2.0), ..Default::default() };
+            let layout = FlexboxLayout { min_size: Size::<Dimension>::from_points(1.0, 2.0), ..Default::default() };
             assert_eq!(layout.min_cross_size(FlexDirection::Row), Dimension::Points(2.0));
             assert_eq!(layout.min_cross_size(FlexDirection::Column), Dimension::Points(1.0));
         }
 
         #[test]
         fn flexbox_layout_max_cross_size() {
-            let layout = FlexboxLayout { max_size: Size::from_points(1.0, 2.0), ..Default::default() };
+            let layout = FlexboxLayout { max_size: Size::<Dimension>::from_points(1.0, 2.0), ..Default::default() };
             assert_eq!(layout.max_cross_size(FlexDirection::Row), Dimension::Points(2.0));
             assert_eq!(layout.max_cross_size(FlexDirection::Column), Dimension::Points(1.0));
         }

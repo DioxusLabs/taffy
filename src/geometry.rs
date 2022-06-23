@@ -255,9 +255,32 @@ impl Size<Dimension> {
 
     /// Generates a [`Size<Dimension>`] using [`Dimension::Auto`] in both width and height
     pub const AUTO: Size<Dimension> = Self { width: Dimension::Auto, height: Dimension::Auto };
+}
 
-    // /// Generates a [`Size<Dimension>`] using [`Dimension::Undefined`] in both width and height
-    // pub const UNDEFINED: Size<Dimension> = Self { width: Dimension::Undefined, height: Dimension::Undefined };
+impl Default for Size<Option<Dimension>> {
+    fn default() -> Self {
+        Self::NONE
+    }
+}
+
+impl Size<Option<Dimension>> {
+    /// A [`Size<Option<Dimension>>`] with `None` width and height
+    pub const NONE: Size<Option<Dimension>> = Self { width: None, height: None };
+
+    /// Generates a [`Size<Option<Dimension>>`] using [`Dimension::Points`] values
+    #[must_use]
+    pub fn from_points(width: f32, height: f32) -> Self {
+        Size { width: Some(Dimension::Points(width)), height: Some(Dimension::Points(height)) }
+    }
+
+    /// Generates a [`Size<Option<Dimension>>`] using [`Dimension::Percent`] values
+    #[must_use]
+    pub fn from_percent(width: f32, height: f32) -> Self {
+        Size { width: Some(Dimension::Percent(width)), height: Some(Dimension::Percent(height)) }
+    }
+
+    /// Generates a [`Size<Option<Dimension>>`] using [`Dimension::Auto`] in both width and height
+    pub const AUTO: Size<Option<Dimension>> = Self { width: Some(Dimension::Auto), height: Some(Dimension::Auto) };
 }
 
 /// A 2-dimensional coordinate.

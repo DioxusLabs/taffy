@@ -936,7 +936,7 @@ impl Taffy {
                         if child_style.align_self(&self.nodes[node].style) == AlignSelf::Baseline
                             && child_style.cross_margin_start(constants.dir) != Some(Dimension::Auto)
                             && child_style.cross_margin_end(constants.dir) != Some(Dimension::Auto)
-                            && child_style.cross_size(constants.dir) == Dimension::Auto
+                            && child_style.cross_size(constants.dir) == Some(Dimension::Auto)
                         {
                             max_baseline - child.baseline + child.hypothetical_outer_size.cross(constants.dir)
                         } else {
@@ -1000,7 +1000,7 @@ impl Taffy {
                     if child_style.align_self(&self.nodes[node].style) == AlignSelf::Stretch
                         && child_style.cross_margin_start(constants.dir) != Some(Dimension::Auto)
                         && child_style.cross_margin_end(constants.dir) != Some(Dimension::Auto)
-                        && child_style.cross_size(constants.dir) == Dimension::Auto
+                        && child_style.cross_size(constants.dir) == Some(Dimension::Auto)
                     {
                         (line_cross_size - child.margin.cross_axis_sum(constants.dir))
                             .maybe_max(child.min_size.cross(constants.dir))
