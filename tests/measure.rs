@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod measure {
-    use taffy::node::MeasureFunc;
+    use taffy::{node::MeasureFunc, style::Dimension};
 
     #[test]
     fn measure_root() {
