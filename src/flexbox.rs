@@ -1743,9 +1743,10 @@ impl Forest {
 mod tests {
     use crate::{
         forest::Forest,
+        math::MaybeMath,
         prelude::{Rect, Size},
         resolve::ResolveOrDefault,
-        style::{Dimension, FlexWrap, FlexboxLayout},
+        style::{FlexWrap, FlexboxLayout},
     };
 
     // Make sure we get correct constants
@@ -1772,31 +1773,26 @@ mod tests {
         let border = style.border.resolve_or_default(parent_size);
         assert_eq!(constants.border, border);
 
-        let padding_border = style.padding.resolve_or_default(parent_size);
+        let padding = style.padding.resolve_or_default(parent_size);
+
+        // TODO: Replace with something less hardcoded?
+        let padding_border = Rect {
+            start: padding.start + border.start,
+            end: padding.end + border.end,
+            top: padding.top + border.top,
+            bottom: padding.bottom + border.bottom,
+        };
+
         assert_eq!(constants.padding_border, padding_border);
 
-        // inner size
+        // TODO: Replace with something less hardcoded?
+        let inner_size = Size {
+            width: node_size.width.maybe_sub(padding_border.horizontal_axis_sum()),
+            height: node_size.height.maybe_sub(padding_border.vertical_axis_sum()),
+        };
+        assert_eq!(constants.node_inner_size, inner_size);
 
         assert_eq!(constants.container_size, Size::ZERO);
         assert_eq!(constants.inner_container_size, Size::ZERO);
     }
-
-    // Margin Dimension::Undefined
-    #[test]
-    fn dimension_undefined_margin() {
-        let mut forest = Forest::with_capacity(16);
-        let style = FlexboxLayout {
-            margin: Rect {
-                start: Dimension::Undefined,
-                end: Dimension::Undefined,
-                top: Dimension::Undefined,
-                bottom: Dimension::Undefined,
-            },
-            ..Default::default()
-        };
-        let node_id = forest.new_leaf(style);
-    }
-    // Padding Dimension::Undefined
-    // Border Dimension::Undefined
-    // Margin Dimension::Undefined
 }
