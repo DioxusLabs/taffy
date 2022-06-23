@@ -270,16 +270,6 @@ impl Default for Dimension {
 }
 
 impl Dimension {
-    /// Converts the given [`Dimension`] into a concrete value of points
-    pub(crate) fn resolve(self, parent_dim: Option<f32>) -> Option<f32> {
-        match self {
-            Dimension::Points(points) => Some(points),
-            // parent_dim * percent
-            Dimension::Percent(percent) => parent_dim.map(|dim| dim * percent),
-            _ => None,
-        }
-    }
-
     /// Is this value defined?
     pub(crate) fn is_defined(self) -> bool {
         matches!(self, Dimension::Points(_) | Dimension::Percent(_))
@@ -294,23 +284,61 @@ impl Default for Rect<Dimension> {
 
 impl Rect<Dimension> {
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Points`] values for `start` and `top`
+    #[must_use]
     pub fn top_from_points(start: f32, top: f32) -> Rect<Dimension> {
         Rect { start: Dimension::Points(start), top: Dimension::Points(top), ..Default::default() }
     }
 
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Points`] values for `end` and `bottom`
+    #[must_use]
     pub fn bot_from_points(end: f32, bottom: f32) -> Rect<Dimension> {
         Rect { end: Dimension::Points(end), bottom: Dimension::Points(bottom), ..Default::default() }
     }
 
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Percent`] values for `start` and `top`
+    #[must_use]
     pub fn top_from_percent(start: f32, top: f32) -> Rect<Dimension> {
         Rect { start: Dimension::Percent(start), top: Dimension::Percent(top), ..Default::default() }
     }
 
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Percent`] values for `end` and `bottom`
+    #[must_use]
     pub fn bot_from_percent(end: f32, bottom: f32) -> Rect<Dimension> {
         Rect { end: Dimension::Percent(end), bottom: Dimension::Percent(bottom), ..Default::default() }
+    }
+
+    /// Generates a [`Rect<Dimension>`] using [`Dimension::Undefined`] for all values
+    pub const UNDEFINED: Rect<Dimension> = Self {
+        start: Dimension::Undefined,
+        end: Dimension::Undefined,
+        top: Dimension::Undefined,
+        bottom: Dimension::Undefined,
+    };
+
+    /// Generates a [`Rect<Dimension>`] using [`Dimension::Auto`] for all values
+    pub const AUTO: Rect<Dimension> =
+        Self { start: Dimension::Auto, end: Dimension::Auto, top: Dimension::Auto, bottom: Dimension::Auto };
+
+    /// Create a new Rect with [`Dimension::Points`]
+    #[must_use]
+    pub fn from_points(start: f32, end: f32, top: f32, bottom: f32) -> Self {
+        Rect {
+            start: Dimension::Points(start),
+            end: Dimension::Points(end),
+            top: Dimension::Points(top),
+            bottom: Dimension::Points(bottom),
+        }
+    }
+
+    /// Create a new Rect with [`Dimension::Percent`]
+    #[must_use]
+    pub fn from_percent(start: f32, end: f32, top: f32, bottom: f32) -> Self {
+        Rect {
+            start: Dimension::Percent(start),
+            end: Dimension::Percent(end),
+            top: Dimension::Percent(top),
+            bottom: Dimension::Percent(bottom),
+        }
     }
 }
 
@@ -514,47 +542,6 @@ impl FlexboxLayout {
 
 #[cfg(test)]
 mod tests {
-    mod test_resolve_dimensions {
-        use crate::style::Dimension;
-        use rstest::rstest;
-
-        #[rstest]
-        #[case(Dimension::Undefined, None, None)]
-        #[case(Dimension::Undefined, Some(5.0), None)]
-        #[case(Dimension::Undefined, Some(-5.0), None)]
-        #[case(Dimension::Undefined, Some(0.), None)]
-        fn resolve_undefined(#[case] input: Dimension, #[case] parent: Option<f32>, #[case] expected: Option<f32>) {
-            assert_eq!(input.resolve(parent), expected);
-        }
-
-        #[rstest]
-        #[case(Dimension::Auto, None, None)]
-        #[case(Dimension::Auto, Some(5.0), None)]
-        #[case(Dimension::Auto, Some(-5.0), None)]
-        #[case(Dimension::Auto, Some(0.), None)]
-        fn resolve_auto(#[case] input: Dimension, #[case] parent: Option<f32>, #[case] expected: Option<f32>) {
-            assert_eq!(input.resolve(parent), expected);
-        }
-
-        #[rstest]
-        #[case(Dimension::Points(0.), None, Some(0.))]
-        #[case(Dimension::Points(1.), Some(5.0), Some(1.))]
-        #[case(Dimension::Points(-1.), Some(-5.0), Some(-1.))]
-        #[case(Dimension::Points(1.0), Some(0.), Some(1.0))]
-        fn resolve_points(#[case] input: Dimension, #[case] parent: Option<f32>, #[case] expected: Option<f32>) {
-            assert_eq!(input.resolve(parent), expected);
-        }
-
-        #[rstest]
-        #[case(Dimension::Percent(1.0), None, None)]
-        #[case(Dimension::Percent(1.0), Some(5.0), Some(5.0))]
-        #[case(Dimension::Percent(1.0), Some(-5.0), Some(-5.0))]
-        #[case(Dimension::Percent(10.0), Some(5.0), Some(50.0))]
-        fn resolve_percent(#[case] input: Dimension, #[case] parent: Option<f32>, #[case] expected: Option<f32>) {
-            assert_eq!(input.resolve(parent), expected);
-        }
-    }
-
     mod test_flex_direction {
         use crate::style::*;
 
