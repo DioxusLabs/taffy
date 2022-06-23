@@ -363,7 +363,7 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
             let $val = match $style[stringify!($val)] {
                 json::JsonValue::Object(ref value) => {
                     let edges = generate_edges(value);
-                    quote!($val: #edges,)
+                    quote!($val: Some(#edges),)
                 },
                 _ => quote!(),
             };

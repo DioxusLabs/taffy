@@ -256,8 +256,8 @@ impl Size<Dimension> {
     /// Generates a [`Size<Dimension>`] using [`Dimension::Auto`] in both width and height
     pub const AUTO: Size<Dimension> = Self { width: Dimension::Auto, height: Dimension::Auto };
 
-    /// Generates a [`Size<Dimension>`] using [`Dimension::Undefined`] in both width and height
-    pub const UNDEFINED: Size<Dimension> = Self { width: Dimension::Undefined, height: Dimension::Undefined };
+    // /// Generates a [`Size<Dimension>`] using [`Dimension::Undefined`] in both width and height
+    // pub const UNDEFINED: Size<Dimension> = Self { width: Dimension::Undefined, height: Dimension::Undefined };
 }
 
 /// A 2-dimensional coordinate.

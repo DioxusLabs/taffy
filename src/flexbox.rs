@@ -934,8 +934,8 @@ impl Taffy {
                     .map(|child| {
                         let child_style = &self.nodes[child.node].style;
                         if child_style.align_self(&self.nodes[node].style) == AlignSelf::Baseline
-                            && child_style.cross_margin_start(constants.dir) != Dimension::Auto
-                            && child_style.cross_margin_end(constants.dir) != Dimension::Auto
+                            && child_style.cross_margin_start(constants.dir) != Some(Dimension::Auto)
+                            && child_style.cross_margin_end(constants.dir) != Some(Dimension::Auto)
                             && child_style.cross_size(constants.dir) == Dimension::Auto
                         {
                             max_baseline - child.baseline + child.hypothetical_outer_size.cross(constants.dir)
@@ -998,8 +998,8 @@ impl Taffy {
                 child.target_size.set_cross(
                     constants.dir,
                     if child_style.align_self(&self.nodes[node].style) == AlignSelf::Stretch
-                        && child_style.cross_margin_start(constants.dir) != Dimension::Auto
-                        && child_style.cross_margin_end(constants.dir) != Dimension::Auto
+                        && child_style.cross_margin_start(constants.dir) != Some(Dimension::Auto)
+                        && child_style.cross_margin_end(constants.dir) != Some(Dimension::Auto)
                         && child_style.cross_size(constants.dir) == Dimension::Auto
                     {
                         (line_cross_size - child.margin.cross_axis_sum(constants.dir))
@@ -1037,10 +1037,10 @@ impl Taffy {
 
             for child in line.items.iter_mut() {
                 let child_style = &self.nodes[child.node].style;
-                if child_style.main_margin_start(constants.dir) == Dimension::Auto {
+                if child_style.main_margin_start(constants.dir) == Some(Dimension::Auto) {
                     num_auto_margins += 1;
                 }
-                if child_style.main_margin_end(constants.dir) == Dimension::Auto {
+                if child_style.main_margin_end(constants.dir) == Some(Dimension::Auto) {
                     num_auto_margins += 1;
                 }
             }
@@ -1050,14 +1050,14 @@ impl Taffy {
 
                 for child in line.items.iter_mut() {
                     let child_style = &self.nodes[child.node].style;
-                    if child_style.main_margin_start(constants.dir) == Dimension::Auto {
+                    if child_style.main_margin_start(constants.dir) == Some(Dimension::Auto) {
                         if constants.is_row {
                             child.margin.start = margin;
                         } else {
                             child.margin.top = margin;
                         }
                     }
-                    if child_style.main_margin_end(constants.dir) == Dimension::Auto {
+                    if child_style.main_margin_end(constants.dir) == Some(Dimension::Auto) {
                         if constants.is_row {
                             child.margin.end = margin;
                         } else {
@@ -1143,8 +1143,8 @@ impl Taffy {
                 let free_space = line_cross_size - child.outer_target_size.cross(constants.dir);
                 let child_style = &self.nodes[child.node].style;
 
-                if child_style.cross_margin_start(constants.dir) == Dimension::Auto
-                    && child_style.cross_margin_end(constants.dir) == Dimension::Auto
+                if child_style.cross_margin_start(constants.dir) == Some(Dimension::Auto)
+                    && child_style.cross_margin_end(constants.dir) == Some(Dimension::Auto)
                 {
                     if constants.is_row {
                         child.margin.top = free_space / 2.0;
@@ -1153,13 +1153,13 @@ impl Taffy {
                         child.margin.start = free_space / 2.0;
                         child.margin.end = free_space / 2.0;
                     }
-                } else if child_style.cross_margin_start(constants.dir) == Dimension::Auto {
+                } else if child_style.cross_margin_start(constants.dir) == Some(Dimension::Auto) {
                     if constants.is_row {
                         child.margin.top = free_space;
                     } else {
                         child.margin.start = free_space;
                     }
-                } else if child_style.cross_margin_end(constants.dir) == Dimension::Auto {
+                } else if child_style.cross_margin_end(constants.dir) == Some(Dimension::Auto) {
                     if constants.is_row {
                         child.margin.bottom = free_space;
                     } else {
