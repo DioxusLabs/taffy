@@ -425,6 +425,7 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
             ..Default::default()
         },
         #children
+        // TODO: Only add children if they exist
     ).unwrap();)
 }
 

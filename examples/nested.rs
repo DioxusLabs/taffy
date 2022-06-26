@@ -4,13 +4,10 @@ fn main() -> Result<(), taffy::error::InvalidNode> {
     let mut taffy = Taffy::new();
 
     // left
-    let child_t1 = taffy.new_with_children(
-        FlexboxLayout {
-            size: Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) },
-            ..Default::default()
-        },
-        &[],
-    )?;
+    let child_t1 = taffy.new_leaf(FlexboxLayout {
+        size: Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) },
+        ..Default::default()
+    })?;
 
     let div1 = taffy.new_with_children(
         FlexboxLayout {
@@ -22,13 +19,10 @@ fn main() -> Result<(), taffy::error::InvalidNode> {
     )?;
 
     // right
-    let child_t2 = taffy.new_with_children(
-        FlexboxLayout {
-            size: Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) },
-            ..Default::default()
-        },
-        &[],
-    )?;
+    let child_t2 = taffy.new_leaf(FlexboxLayout {
+        size: Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) },
+        ..Default::default()
+    })?;
 
     let div2 = taffy.new_with_children(
         FlexboxLayout {

@@ -4,13 +4,10 @@ use taffy::style::Dimension;
 fn relayout() {
     let mut taffy = taffy::Taffy::new();
     let node1 = taffy
-        .new_with_children(
-            taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size { width: Dimension::Points(8f32), height: Dimension::Points(80f32) },
-                ..Default::default()
-            },
-            &[],
-        )
+        .new_leaf(taffy::style::FlexboxLayout {
+            size: taffy::geometry::Size { width: Dimension::Points(8f32), height: Dimension::Points(80f32) },
+            ..Default::default()
+        })
         .unwrap();
     let node0 = taffy
         .new_with_children(

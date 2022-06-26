@@ -3,10 +3,10 @@ use taffy::prelude::*;
 fn main() -> Result<(), taffy::error::InvalidNode> {
     let mut taffy = Taffy::new();
 
-    let child = taffy.new_with_children(
-        FlexboxLayout { size: Size { width: Dimension::Percent(0.5), height: Dimension::Auto }, ..Default::default() },
-        &[],
-    )?;
+    let child = taffy.new_leaf(FlexboxLayout {
+        size: Size { width: Dimension::Percent(0.5), height: Dimension::Auto },
+        ..Default::default()
+    })?;
 
     let node = taffy.new_with_children(
         FlexboxLayout {
