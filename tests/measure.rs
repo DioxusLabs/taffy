@@ -118,7 +118,7 @@ mod measure {
     fn measure_child_with_flex_grow() {
         let mut taffy = taffy::node::Taffy::new();
         let child0 = taffy
-            .new_with_children(
+            .new_leaf(
                 taffy::style::FlexboxLayout {
                     size: taffy::geometry::Size {
                         width: taffy::style::Dimension::Points(50.0),
@@ -126,7 +126,6 @@ mod measure {
                     },
                     ..Default::default()
                 },
-                &[],
             )
             .unwrap();
 
@@ -160,7 +159,7 @@ mod measure {
     fn measure_child_with_flex_shrink() {
         let mut taffy = taffy::node::Taffy::new();
         let child0 = taffy
-            .new_with_children(
+            .new_leaf(
                 taffy::style::FlexboxLayout {
                     size: taffy::geometry::Size {
                         width: taffy::style::Dimension::Points(50.0),
@@ -169,7 +168,6 @@ mod measure {
                     flex_shrink: 0.0,
                     ..Default::default()
                 },
-                &[],
             )
             .unwrap();
 
@@ -203,7 +201,7 @@ mod measure {
     fn remeasure_child_after_growing() {
         let mut taffy = taffy::node::Taffy::new();
         let child0 = taffy
-            .new_with_children(
+            .new_leaf(
                 taffy::style::FlexboxLayout {
                     size: taffy::geometry::Size {
                         width: taffy::style::Dimension::Points(50.0),
@@ -211,7 +209,6 @@ mod measure {
                     },
                     ..Default::default()
                 },
-                &[],
             )
             .unwrap();
 
@@ -248,7 +245,7 @@ mod measure {
         let mut taffy = taffy::node::Taffy::new();
 
         let child0 = taffy
-            .new_with_children(
+            .new_leaf(
                 taffy::style::FlexboxLayout {
                     size: taffy::geometry::Size {
                         width: taffy::style::Dimension::Points(50.0),
@@ -257,7 +254,6 @@ mod measure {
                     flex_shrink: 0.0,
                     ..Default::default()
                 },
-                &[],
             )
             .unwrap();
 
@@ -373,13 +369,12 @@ mod measure {
     fn flex_basis_overrides_measure() {
         let mut taffy = taffy::node::Taffy::new();
         let child0 = taffy
-            .new_with_children(
+            .new_leaf(
                 taffy::style::FlexboxLayout {
                     flex_basis: taffy::style::Dimension::Points(50.0),
                     flex_grow: 1.0,
                     ..Default::default()
                 },
-                &[],
             )
             .unwrap();
 

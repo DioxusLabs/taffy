@@ -476,7 +476,7 @@ mod tests {
     fn remove_node_should_remove() {
         let mut taffy = Taffy::new();
 
-        let node = taffy.new_with_children(FlexboxLayout::default(), &[]).unwrap();
+        let node = taffy.new_leaf(FlexboxLayout::default()).unwrap();
 
         // node should exist
         assert!(taffy.find_node(node).is_ok());

@@ -2,53 +2,41 @@ use criterion::{criterion_group, criterion_main, Criterion};
 
 fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
     let node111 = taffy
-        .new_with_children(
-            taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(10.0),
-                    height: taffy::style::Dimension::Points(10.0),
-                },
-                ..Default::default()
+        .new_leaf(taffy::style::FlexboxLayout {
+            size: taffy::geometry::Size {
+                width: taffy::style::Dimension::Points(10.0),
+                height: taffy::style::Dimension::Points(10.0),
             },
-            &[],
-        )
+            ..Default::default()
+        })
         .unwrap();
     let node112 = taffy
-        .new_with_children(
-            taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(10.0),
-                    height: taffy::style::Dimension::Points(10.0),
-                },
-                ..Default::default()
+        .new_leaf(taffy::style::FlexboxLayout {
+            size: taffy::geometry::Size {
+                width: taffy::style::Dimension::Points(10.0),
+                height: taffy::style::Dimension::Points(10.0),
             },
-            &[],
-        )
+            ..Default::default()
+        })
         .unwrap();
 
     let node121 = taffy
-        .new_with_children(
-            taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(10.0),
-                    height: taffy::style::Dimension::Points(10.0),
-                },
-                ..Default::default()
+        .new_leaf(taffy::style::FlexboxLayout {
+            size: taffy::geometry::Size {
+                width: taffy::style::Dimension::Points(10.0),
+                height: taffy::style::Dimension::Points(10.0),
             },
-            &[],
-        )
+            ..Default::default()
+        })
         .unwrap();
     let node122 = taffy
-        .new_with_children(
-            taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(10.0),
-                    height: taffy::style::Dimension::Points(10.0),
-                },
-                ..Default::default()
+        .new_leaf(taffy::style::FlexboxLayout {
+            size: taffy::geometry::Size {
+                width: taffy::style::Dimension::Points(10.0),
+                height: taffy::style::Dimension::Points(10.0),
             },
-            &[],
-        )
+            ..Default::default()
+        })
         .unwrap();
 
     let node11 =
@@ -59,53 +47,41 @@ fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
         taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[node11, node12]).unwrap();
 
     let node211 = taffy
-        .new_with_children(
-            taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(10.0),
-                    height: taffy::style::Dimension::Points(10.0),
-                },
-                ..Default::default()
+        .new_leaf(taffy::style::FlexboxLayout {
+            size: taffy::geometry::Size {
+                width: taffy::style::Dimension::Points(10.0),
+                height: taffy::style::Dimension::Points(10.0),
             },
-            &[],
-        )
+            ..Default::default()
+        })
         .unwrap();
     let node212 = taffy
-        .new_with_children(
-            taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(10.0),
-                    height: taffy::style::Dimension::Points(10.0),
-                },
-                ..Default::default()
+        .new_leaf(taffy::style::FlexboxLayout {
+            size: taffy::geometry::Size {
+                width: taffy::style::Dimension::Points(10.0),
+                height: taffy::style::Dimension::Points(10.0),
             },
-            &[],
-        )
+            ..Default::default()
+        })
         .unwrap();
 
     let node221 = taffy
-        .new_with_children(
-            taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(10.0),
-                    height: taffy::style::Dimension::Points(10.0),
-                },
-                ..Default::default()
+        .new_leaf(taffy::style::FlexboxLayout {
+            size: taffy::geometry::Size {
+                width: taffy::style::Dimension::Points(10.0),
+                height: taffy::style::Dimension::Points(10.0),
             },
-            &[],
-        )
+            ..Default::default()
+        })
         .unwrap();
     let node222 = taffy
-        .new_with_children(
-            taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(10.0),
-                    height: taffy::style::Dimension::Points(10.0),
-                },
-                ..Default::default()
+        .new_leaf(taffy::style::FlexboxLayout {
+            size: taffy::geometry::Size {
+                width: taffy::style::Dimension::Points(10.0),
+                height: taffy::style::Dimension::Points(10.0),
             },
-            &[],
-        )
+            ..Default::default()
+        })
         .unwrap();
 
     let node21 =
