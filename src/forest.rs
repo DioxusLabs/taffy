@@ -89,7 +89,7 @@ impl Forest {
 
     /// Creates and adds a new unattached leaf node to the forest, and returns the [`NodeId`] of the new node
     pub(crate) fn new_leaf(&mut self, layout: FlexboxLayout) -> NodeId {
-        let id = self.nodes.len();
+        let id = self.len();
         self.nodes.push(NodeData::new(layout));
         self.children.push(new_vec_with_capacity(0));
         self.parents.push(new_vec_with_capacity(1));
@@ -100,7 +100,7 @@ impl Forest {
     ///
     /// The node must have a [`MeasureFunc`] supplied
     pub(crate) fn new_leaf_with_measure(&mut self, layout: FlexboxLayout, measure: MeasureFunc) -> NodeId {
-        let id = self.nodes.len();
+        let id = self.len();
         self.nodes.push(NodeData::new_with_measure(layout, measure));
         self.children.push(new_vec_with_capacity(0));
         self.parents.push(new_vec_with_capacity(1));
@@ -109,7 +109,7 @@ impl Forest {
 
     /// Creates and adds a new unparented node to the forest with the associated children attached, and returns the [`NodeId`] of the new node
     pub(crate) fn new_with_children(&mut self, layout: FlexboxLayout, children: ChildrenVec<NodeId>) -> NodeId {
-        let id = self.nodes.len();
+        let id = self.len();
         for child in &children {
             self.parents[*child].push(id);
         }
@@ -175,7 +175,7 @@ impl Forest {
             }
         }
 
-        let last = self.nodes.len();
+        let last = self.len();
         if last != node {
             // Update ids for every child of the swapped in node.
             for child in &self.children[last] {
@@ -241,6 +241,14 @@ impl Forest {
 
         mark_dirty_recursive(&mut self.nodes, &self.parents, node);
     }
+
+    /// Returns the number of elements in the forest.
+    #[inline]
+    pub(crate) fn len(&self) -> usize {
+        // This could be either [nodes], [parents] or [children] since they all must always have
+        // the same length, given the data structure properties.
+        self.nodes.len()
+    }
 }
 
 #[cfg(test)]
@@ -249,9 +257,10 @@ mod tests {
     use crate::geometry::Size;
     use crate::node::{MeasureFunc, NodeId};
     use crate::style::FlexboxLayout;
-    use crate::sys::new_vec_with_capacity;
+    use crate::sys::ChildrenVec;
 
     fn assert_forest_size(forest: &Forest, size: usize) {
+        // This should assert the forest consistency, each vector must be have the same length
         assert_eq!(forest.nodes.len(), size);
         assert_eq!(forest.children.len(), size);
         assert_eq!(forest.parents.len(), size);
@@ -268,10 +277,15 @@ mod tests {
         forest.new_leaf(FlexboxLayout::default())
     }
 
+    /// Generates a non-default FlexboxLayout that is used to compare NodeData instances
+    fn get_non_default_layout(val: f32) -> FlexboxLayout {
+        FlexboxLayout { flex_grow: val, ..Default::default() }
+    }
+
     #[test]
     fn new_leaf_first_leaf() {
         let mut forest = Forest::with_capacity(1);
-        let s1 = FlexboxLayout { flex_grow: 1.0, ..Default::default() };
+        let s1 = get_non_default_layout(1.0);
 
         let id = forest.new_leaf(s1);
 
@@ -284,9 +298,8 @@ mod tests {
     #[test]
     fn new_leaf_second_leaf() {
         let mut forest = Forest::with_capacity(2);
-        let s1 = FlexboxLayout { flex_grow: 1.0, ..Default::default() };
-        let s2 = FlexboxLayout { flex_grow: 2.0, ..Default::default() };
-
+        let s1 = get_non_default_layout(1.0);
+        let s2 = get_non_default_layout(2.0);
         forest.new_leaf(s1);
         let id = forest.new_leaf(s2);
 
@@ -299,7 +312,7 @@ mod tests {
     #[test]
     fn new_leaf_with_measure_first_leaf() {
         let mut forest = Forest::with_capacity(1);
-        let s1 = FlexboxLayout { flex_grow: 1.0, ..Default::default() };
+        let s1 = get_non_default_layout(1.0);
         let measure_fn1 = |_| Size { width: 1.0, height: 1.0 };
 
         let id = forest.new_leaf_with_measure(s1, MeasureFunc::Raw(measure_fn1));
@@ -314,8 +327,8 @@ mod tests {
     #[test]
     fn new_leaf_with_measure_second_leaf() {
         let mut forest = Forest::with_capacity(2);
-        let s1 = FlexboxLayout { flex_grow: 1.0, ..Default::default() };
-        let s2 = FlexboxLayout { flex_grow: 2.0, ..Default::default() };
+        let s1 = get_non_default_layout(1.0);
+        let s2 = get_non_default_layout(2.0);
         let measure_fn1 = |_| Size { width: 1.0, height: 1.0 };
         let measure_fn2 = |_| Size { width: 2.0, height: 2.0 };
 
@@ -332,10 +345,9 @@ mod tests {
     #[test]
     fn new_with_children_single() {
         let mut forest = Forest::with_capacity(2);
-        let style = FlexboxLayout { flex_grow: 1.0, ..Default::default() };
+        let style = get_non_default_layout(1.0);
         let c1_id = add_default_leaf(&mut forest);
-        let mut children = new_vec_with_capacity(1);
-        children.push(c1_id);
+        let children = ChildrenVec::from_iter([c1_id]);
 
         let id = forest.new_with_children(style, children);
         let new_node = &forest.nodes[id];
@@ -350,12 +362,10 @@ mod tests {
     #[test]
     fn new_with_children_multiple() {
         let mut forest = Forest::with_capacity(3);
-        let style = FlexboxLayout { flex_grow: 1.0, ..Default::default() };
+        let style = get_non_default_layout(1.0);
         let c1_id = add_default_leaf(&mut forest);
         let c2_id = add_default_leaf(&mut forest);
-        let mut children = new_vec_with_capacity(2);
-        children.push(c1_id);
-        children.push(c2_id);
+        let children = ChildrenVec::from_iter([c1_id, c2_id]);
 
         let id = forest.new_with_children(style, children);
         let new_node = &forest.nodes[id];
@@ -511,8 +521,9 @@ mod tests {
     #[test]
     fn remove_child() {
         let mut forest = Forest::with_capacity(3);
-        let parent_id = add_default_leaf(&mut forest);
-        let c1_id = add_default_leaf(&mut forest);
+        let layout = get_non_default_layout(1.0);
+        let parent_id =  add_default_leaf(&mut forest);
+        let c1_id = forest.new_leaf(layout);
         let c2_id = add_default_leaf(&mut forest);
         forest.add_child(parent_id, c1_id);
         forest.add_child(parent_id, c2_id);
@@ -520,18 +531,22 @@ mod tests {
         let removed_id = forest.remove_child(parent_id, c1_id);
         let parent = &forest.nodes[parent_id];
 
-        assert!(parent.is_dirty);
+        // node data should be preserved
+        assert_forest_size(&forest, 3);
+        assert_eq!(forest.nodes[removed_id].style, layout);
         assert_eq!(forest.children[parent_id].len(), 1);
         assert_eq!(forest.parents[c1_id].len(), 0);
         assert_eq!(forest.parents[c2_id].len(), 1);
         assert_eq!(removed_id, c1_id);
+        assert!(parent.is_dirty);
     }
 
     #[test]
     fn remove_child_at_index() {
         let mut forest = Forest::with_capacity(3);
-        let parent_id = add_default_leaf(&mut forest);
-        let c1_id = add_default_leaf(&mut forest);
+        let layout = get_non_default_layout(1.0);
+        let parent_id =  add_default_leaf(&mut forest);
+        let c1_id = forest.new_leaf(layout);
         let c2_id = add_default_leaf(&mut forest);
         forest.add_child(parent_id, c1_id);
         forest.add_child(parent_id, c2_id);
@@ -539,15 +554,18 @@ mod tests {
         let removed_id = forest.remove_child_at_index(parent_id, 0);
         let parent = &forest.nodes[parent_id];
 
-        assert!(parent.is_dirty);
+        // node data should be preserved
+        assert_forest_size(&forest, 3);
+        assert_eq!(&forest.nodes[removed_id].style, &layout);
         assert_eq!(forest.children[parent_id].len(), 1);
         assert_eq!(forest.parents[c1_id].len(), 0);
         assert_eq!(forest.parents[c2_id].len(), 1);
         assert_eq!(removed_id, c1_id);
+        assert!(parent.is_dirty);
     }
 
     #[test]
-    fn mark_dirty() {
+    fn mark_dirty_propagates_to_parents() {
         let mut forest = Forest::with_capacity(3);
         let parent_id = add_default_leaf(&mut forest);
         let c1_id = add_default_leaf(&mut forest);
@@ -557,8 +575,22 @@ mod tests {
 
         forest.mark_dirty(c2_id);
 
-        assert!(forest.nodes[0].is_dirty);
-        assert!(forest.nodes[1].is_dirty);
-        assert!(forest.nodes[2].is_dirty);
+        assert!(forest.nodes[c2_id].is_dirty);
+        assert!(forest.nodes[c1_id].is_dirty);
+        assert!(forest.nodes[parent_id].is_dirty);
+    }
+
+    #[test]
+    fn len_zero() {
+        let forest = Forest::with_capacity(1);
+        assert_eq!(forest.len(), 0);
+    }
+
+    #[test]
+    fn len_multiple() {
+        let mut forest = Forest::with_capacity(2);
+        _ = add_default_leaf(&mut forest);
+        _ = add_default_leaf(&mut forest);
+        assert_eq!(forest.len(), 2);
     }
 }
