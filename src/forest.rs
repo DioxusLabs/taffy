@@ -522,7 +522,7 @@ mod tests {
     fn remove_child() {
         let mut forest = Forest::with_capacity(3);
         let layout = get_non_default_layout(1.0);
-        let parent_id =  add_default_leaf(&mut forest);
+        let parent_id = add_default_leaf(&mut forest);
         let c1_id = forest.new_leaf(layout);
         let c2_id = add_default_leaf(&mut forest);
         forest.add_child(parent_id, c1_id);
@@ -545,7 +545,7 @@ mod tests {
     fn remove_child_at_index() {
         let mut forest = Forest::with_capacity(3);
         let layout = get_non_default_layout(1.0);
-        let parent_id =  add_default_leaf(&mut forest);
+        let parent_id = add_default_leaf(&mut forest);
         let c1_id = forest.new_leaf(layout);
         let c2_id = add_default_leaf(&mut forest);
         forest.add_child(parent_id, c1_id);
