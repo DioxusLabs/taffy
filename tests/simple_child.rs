@@ -4,14 +4,11 @@ use taffy::{geometry::Point, style::Dimension};
 fn simple_child() {
     let mut taffy = taffy::Taffy::new();
     let node0_0 = taffy
-        .new_with_children(
-            taffy::style::FlexboxLayout {
-                align_self: taffy::prelude::AlignSelf::Center,
-                size: taffy::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
-                ..Default::default()
-            },
-            &[],
-        )
+        .new_leaf(taffy::style::FlexboxLayout {
+            align_self: taffy::prelude::AlignSelf::Center,
+            size: taffy::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
+            ..Default::default()
+        })
         .unwrap();
     let node0 = taffy
         .new_with_children(
@@ -23,24 +20,18 @@ fn simple_child() {
         )
         .unwrap();
     let node1_0 = taffy
-        .new_with_children(
-            taffy::style::FlexboxLayout {
-                align_self: taffy::prelude::AlignSelf::Center,
-                size: taffy::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
-                ..Default::default()
-            },
-            &[],
-        )
+        .new_leaf(taffy::style::FlexboxLayout {
+            align_self: taffy::prelude::AlignSelf::Center,
+            size: taffy::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
+            ..Default::default()
+        })
         .unwrap();
     let node1_1 = taffy
-        .new_with_children(
-            taffy::style::FlexboxLayout {
-                align_self: taffy::prelude::AlignSelf::Center,
-                size: taffy::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
-                ..Default::default()
-            },
-            &[],
-        )
+        .new_leaf(taffy::style::FlexboxLayout {
+            align_self: taffy::prelude::AlignSelf::Center,
+            size: taffy::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
+            ..Default::default()
+        })
         .unwrap();
     let node1 = taffy
         .new_with_children(
