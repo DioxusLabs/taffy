@@ -269,6 +269,7 @@ mod tests {
     fn node_measure_eq(node: &NodeData, measure_fn: fn(Size<Option<f32>>) -> Size<f32>) -> bool {
         match node.measure.as_ref().unwrap() {
             MeasureFunc::Raw(m) => measure_fn(Size::NONE) == m(Size::NONE),
+            #[cfg(any(feature = "std", feature = "alloc"))]
             _ => false,
         }
     }
