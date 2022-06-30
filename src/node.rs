@@ -210,12 +210,12 @@ impl Taffy {
 
         // Remove node as parent from all its current children.
         for child in &self.forest.children[node_id] {
-            self.forest.parents[*child].retain(|p| *p != node_id);
+            self.forest.parents[*child] = NodeId::MAX;
         }
 
         // Build up relation node <-> child
         for child in &children_id {
-            self.forest.parents[*child].push(node_id);
+            self.forest.parents[*child] = node_id;
         }
         self.forest.children[node_id] = children_id;
 
@@ -266,9 +266,9 @@ impl Taffy {
             return Err(error::InvalidChild::ChildIndexOutOfBounds { parent, child_index, child_count });
         }
 
-        self.forest.parents[child_id].push(node_id);
+        self.forest.parents[child_id] = node_id;
         let old_child = core::mem::replace(&mut self.forest.children[node_id][child_index], child_id);
-        self.forest.parents[old_child].retain(|p| *p != node_id);
+        self.forest.parents[old_child] = NodeId::MAX;
 
         self.forest.mark_dirty(node_id);
 
