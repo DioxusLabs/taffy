@@ -140,6 +140,13 @@ impl Forest {
     }
 
     /// Removes the specified `node`
+    pub(crate) fn remove(&mut self, node: NodeId) {
+        let _ = self.children.remove(node);
+        let _ = self.parents.remove(node);
+        let _ = self.nodes.remove(node);
+    }
+
+    /// Removes the specified `node`
     ///
     /// The last existing node is moved to its previous position, in order to ensure compactness.
     /// Returns the previous [`NodeId`] of the moved node, if one was moved.
@@ -237,21 +244,15 @@ impl Forest {
         ///
         ///  WARNING: this will stack-overflow if the tree contains a cycle
         fn mark_dirty_recursive(nodes: &mut Slab<NodeData>, parents: &Slab<NodeId>, node_id: NodeId) {
-            nodes[node_id].mark_dirty();
-            if let Some(node) = parents.get(node_id) {
-                mark_dirty_recursive(nodes, parents, *node);
+            if node_id != NodeId::MAX {
+                nodes[node_id].mark_dirty();
+                if let Some(node) = parents.get(node_id) {
+                    mark_dirty_recursive(nodes, parents, *node);
+                }
             }
         }
 
         mark_dirty_recursive(&mut self.nodes, &self.parents, node);
-    }
-
-    /// Returns the number of elements in the forest.
-    #[inline]
-    pub(crate) fn len(&self) -> usize {
-        // This could be either [nodes], [parents] or [children] since they all must always have
-        // the same length, given the data structure properties.
-        self.nodes.len()
     }
 }
 

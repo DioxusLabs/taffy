@@ -177,11 +177,13 @@ impl Taffy {
         self.nodes_to_ids.remove(&node);
         self.ids_to_nodes.remove(&id);
 
-        if let Some(new_id) = self.forest.swap_remove(id) {
-            let new = self.ids_to_nodes.remove(&new_id).unwrap();
-            let _ = self.nodes_to_ids.insert(new, id);
-            let _ = self.ids_to_nodes.insert(id, new);
-        }
+        self.forest.remove(id);
+
+        // if let Some(new_id) = self.forest.swap_remove(id) {
+        //     let new = self.ids_to_nodes.remove(&new_id).unwrap();
+        //     let _ = self.nodes_to_ids.insert(new, id);
+        //     let _ = self.ids_to_nodes.insert(id, new);
+        // }
 
         Ok(id)
     }
