@@ -1,13 +1,14 @@
-//! Forest - a struct-of-arrays data structure for storing node trees.
+//! Node Data - important layout and styling data for nodes
 //!
-//! Backing data structure for `Taffy` structs.
+//! Used to compute layout for Taffy trees
+//!
 use crate::layout::{Cache, Layout};
 use crate::node::MeasureFunc;
 use crate::style::FlexboxLayout;
 
 /// Layout information for a given [`Node`](crate::node::Node)
 ///
-/// Stored in a [`Forest`].
+/// Stored in a [`Taffy`].
 pub(crate) struct NodeData {
     /// The layout strategy used by this node
     pub(crate) style: FlexboxLayout,

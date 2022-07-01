@@ -1,6 +1,6 @@
 //! UI [`Node`] types and related data structures.
 //!
-//! Layouts are composed of multiple nodes, which live in a forest-like data structure.
+//! Layouts are composed of multiple nodes, which live in a tree-like data structure.
 use slotmap::SlotMap;
 
 /// A node in a layout.
@@ -13,7 +13,7 @@ use crate::style::FlexboxLayout;
 #[cfg(any(feature = "std", feature = "alloc"))]
 use crate::sys::Box;
 use crate::sys::{new_vec_with_capacity, ChildrenVec, Vec};
-use crate::{error, forest::NodeData};
+use crate::{data::NodeData, error};
 
 /// A function type that can be used in a [`MeasureFunc`]
 ///
@@ -31,9 +31,9 @@ pub enum MeasureFunc {
     Boxed(Box<dyn Measurable>),
 }
 
-/// A forest of UI [`Nodes`](`Node`), suitable for UI layout
+/// A tree of UI [`Nodes`](`Node`), suitable for UI layout
 pub struct Taffy {
-    /// The [`NodeData`] for each node stored in this forest
+    /// The [`NodeData`] for each node stored in this tree
     pub(crate) nodes: SlotMap<Node, NodeData>,
 
     /// The children of each node
@@ -73,7 +73,7 @@ impl Taffy {
         }
     }
 
-    /// Creates and adds a new unattached leaf node to the forest, and returns the [`NodeId`] of the new node
+    /// Creates and adds a new unattached leaf node to the tree, and returns the [`NodeId`] of the new node
     pub fn new_leaf(&mut self, layout: FlexboxLayout) -> TaffyResult<Node> {
         let id = self.nodes.insert(NodeData::new(layout));
         let _ = self.children.insert(new_vec_with_capacity(0));
@@ -82,7 +82,7 @@ impl Taffy {
         Ok(id)
     }
 
-    /// Creates and adds a new unattached leaf node to the forest, and returns the [`NodeId`] of the new node
+    /// Creates and adds a new unattached leaf node to the tree, and returns the [`NodeId`] of the new node
     ///
     /// Creates and adds a new leaf node with a supplied [`MeasureFunc`]
     pub fn new_leaf_with_measure(&mut self, layout: FlexboxLayout, measure: MeasureFunc) -> TaffyResult<Node> {
@@ -171,7 +171,7 @@ impl Taffy {
 
     /// Removes the `child` of the parent `node`
     ///
-    /// The child is not removed from the forest entirely, it is simply no longer attached to its previous parent.
+    /// The child is not removed from the tree entirely, it is simply no longer attached to its previous parent.
     pub fn remove_child(&mut self, parent: Node, child: Node) -> TaffyResult<Node> {
         let index = self.children[parent].iter().position(|n| *n == child).unwrap();
         self.remove_child_at_index(parent, index)
@@ -179,7 +179,7 @@ impl Taffy {
 
     /// Removes the child at the given `index` from the `parent`
     ///
-    /// The child is not removed from the forest entirely, it is simply no longer attached to its previous parent.
+    /// The child is not removed from the tree entirely, it is simply no longer attached to its previous parent.
     pub fn remove_child_at_index(&mut self, parent: Node, child_index: usize) -> TaffyResult<Node> {
         let child_count = self.children[parent].len();
         if child_index >= child_count {
@@ -196,7 +196,7 @@ impl Taffy {
 
     /// Replaces the child at the given `child_index` from the `parent` node with the new `child` node
     ///
-    /// The child is not removed from the forest entirely, it is simply no longer attached to its previous parent.
+    /// The child is not removed from the tree entirely, it is simply no longer attached to its previous parent.
     pub fn replace_child_at_index(&mut self, parent: Node, child_index: usize, new_child: Node) -> TaffyResult<Node> {
         let child_count = self.children[parent].len();
         if child_index >= child_count {

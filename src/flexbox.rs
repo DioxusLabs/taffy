@@ -1,11 +1,11 @@
-//! Computes the [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) layout algorithm on a [`Forest`](crate::Taffy::Forest) according to the [spec](https://www.w3.org/TR/css-flexbox-1/)
+//! Computes the [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) layout algorithm on [`Taffy`](crate::Taffy) according to the [spec](https://www.w3.org/TR/css-flexbox-1/)
 //!
 //! Note that some minor steps appear to be missing: see https://github.com/DioxusLabs/taffy/issues for more information.
 use core::f32;
 
 use slotmap::SlotMap;
 
-use crate::forest::NodeData;
+use crate::data::NodeData;
 use crate::geometry::{Point, Rect, Size};
 use crate::layout::{Cache, Layout};
 use crate::math::MaybeMath;
@@ -107,7 +107,7 @@ struct AlgoConstants {
 }
 
 impl Taffy {
-    /// Computes the layout of this [`Forest`] according to the flexbox algorithm
+    /// Computes the layout of [`Taffy`] according to the flexbox algorithm
     pub(crate) fn compute(&mut self, root: Node, size: Size<Option<f32>>) {
         let style = self.nodes[root].style;
         let has_root_min_max = style.min_size.width.is_defined()
@@ -1757,15 +1757,15 @@ mod tests {
     // Make sure we get correct constants
     #[test]
     fn correct_constants() {
-        let mut forest = Taffy::with_capacity(16);
+        let mut tree = Taffy::with_capacity(16);
 
         let style = FlexboxLayout::default();
-        let node_id = forest.new_leaf(style).unwrap();
+        let node_id = tree.new_leaf(style).unwrap();
 
         let node_size = Size::undefined();
         let parent_size = Size::undefined();
 
-        let constants = Taffy::compute_constants(&forest.nodes[node_id], node_size, parent_size);
+        let constants = Taffy::compute_constants(&tree.nodes[node_id], node_size, parent_size);
 
         assert!(constants.dir == style.flex_direction);
         assert!(constants.is_row == style.flex_direction.is_row());
