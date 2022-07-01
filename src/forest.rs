@@ -1,13 +1,9 @@
 //! Forest - a struct-of-arrays data structure for storing node trees.
 //!
 //! Backing data structure for `Taffy` structs.
-use slab::Slab;
-
 use crate::layout::{Cache, Layout};
-use crate::node::{MeasureFunc, Node};
+use crate::node::MeasureFunc;
 use crate::style::FlexboxLayout;
-use crate::sys::{new_vec_with_capacity, ChildrenVec, ParentsVec, Vec};
-use crate::Taffy;
 
 /// Layout information for a given [`Node`](crate::node::Node)
 ///
@@ -62,80 +58,6 @@ impl NodeData {
         self.main_size_layout_cache = None;
         self.other_layout_cache = None;
         self.is_dirty = true;
-    }
-}
-
-impl Taffy {
-    /// Removes the specified `node`
-    ///
-    /// The last existing node is moved to its previous position, in order to ensure compactness.
-    /// Returns the previous [`NodeId`] of the moved node, if one was moved.
-    pub(crate) fn swap_remove(&mut self, node: Node) -> Option<Node> {
-        todo!("removing nodes")
-        // self.nodes.swap_remove(node);
-
-        // // Now the last element is swapped in at index `node`.
-        // if self.nodes.is_empty() {
-        //     self.children.clear();
-        //     self.parents.clear();
-        //     return None;
-        // }
-
-        // // Remove old node as parent from all its children.
-        // for child in &self.children[node] {
-        //     let parents_child = &mut self.parents[*child];
-        //     let mut pos = 0;
-        //     while pos < parents_child.len() {
-        //         if parents_child[pos] == node {
-        //             parents_child.swap_remove(pos);
-        //         } else {
-        //             pos += 1;
-        //         }
-        //     }
-        // }
-
-        // // Remove old node as child from all its parents.
-        // for parent in &self.parents[node] {
-        //     let childrens_parent = &mut self.children[*parent];
-        //     let mut pos = 0;
-        //     while pos < childrens_parent.len() {
-        //         if childrens_parent[pos] == node {
-        //             childrens_parent.swap_remove(pos);
-        //         } else {
-        //             pos += 1;
-        //         }
-        //     }
-        // }
-
-        // let last = self.len();
-        // if last != node {
-        //     // Update ids for every child of the swapped in node.
-        //     for child in &self.children[last] {
-        //         for parent in &mut self.parents[*child] {
-        //             if *parent == last {
-        //                 *parent = node;
-        //             }
-        //         }
-        //     }
-
-        //     // Update ids for every parent of the swapped in node.
-        //     for parent in &self.parents[last] {
-        //         for child in &mut self.children[*parent] {
-        //             if *child == last {
-        //                 *child = node;
-        //             }
-        //         }
-        //     }
-
-        //     self.children.swap_remove(node);
-        //     self.parents.swap_remove(node);
-
-        //     Some(last)
-        // } else {
-        //     self.children.swap_remove(node);
-        //     self.parents.swap_remove(node);
-        //     None
-        // }
     }
 }
 

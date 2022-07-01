@@ -285,6 +285,7 @@ impl Taffy {
     }
 }
 
+#[allow(clippy::bool_assert_comparison)]
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -605,7 +606,7 @@ mod tests {
         let children_result = taffy.children(node).unwrap();
         assert_eq!(children_result, children);
 
-        assert!(taffy.children(child0).unwrap().len() == 0);
+        assert!(taffy.children(child0).unwrap().is_empty());
     }
     #[test]
     fn test_set_style() {
