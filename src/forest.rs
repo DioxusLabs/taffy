@@ -162,7 +162,7 @@ mod tests {
         let c1_id = add_default_leaf(&mut forest);
         let children = ChildrenVec::from_iter([c1_id]);
 
-        let id = forest.new_with_children(style, &children).unwrap();
+        let id = forest.new_with_children(style, &children);
         let new_node = &forest.nodes[id];
 
         assert_eq!(id, 1);
@@ -180,7 +180,7 @@ mod tests {
         let c2_id = add_default_leaf(&mut forest);
         let children = ChildrenVec::from_iter([c1_id, c2_id]);
 
-        let id = forest.new_with_children(style, &children).unwrap();
+        let id = forest.new_with_children(style, &children);
         let new_node = &forest.nodes[id];
 
         assert_eq!(id, 2);
@@ -341,7 +341,7 @@ mod tests {
         forest.add_child(parent_id, c1_id);
         forest.add_child(parent_id, c2_id);
 
-        let removed_id = forest.remove_child(parent_id, c1_id).unwrap();
+        let removed_id = forest.remove_child(parent_id, c1_id);
         let parent = &forest.nodes[parent_id];
 
         // node data should be preserved

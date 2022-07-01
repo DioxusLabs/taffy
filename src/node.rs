@@ -1,5 +1,3 @@
-#![warn(clippy::pedantic)]
-
 //! UI [`Node`] types and related data structures.
 //!
 //! Layouts are composed of multiple nodes, which live in a forest-like data structure.
@@ -35,7 +33,7 @@ pub enum MeasureFunc {
 /// A forest of UI [`Nodes`](`Node`), suitable for UI layout
 pub struct Taffy {
     /// The ID of the root node
-    root_id: Node,
+    _root_id: Node,
 
     /// The [`NodeData`] for each node stored in this forest
     pub(crate) nodes: Slab<NodeData>,
@@ -71,7 +69,7 @@ impl Taffy {
     #[must_use]
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
-            root_id: 0,
+            _root_id: 0,
             nodes: Slab::with_capacity(capacity),
             children: Slab::with_capacity(capacity),
             parents: Slab::with_capacity(capacity),
@@ -99,7 +97,7 @@ impl Taffy {
     }
 
     /// Creates and adds a new node, which may have any number of `children`
-    pub fn new_with_children(&mut self, layout: FlexboxLayout, children: &[Node]) -> Result<Node, error::InvalidNode> {
+    pub fn new_with_children(&mut self, layout: FlexboxLayout, children: &[Node]) -> Node {
         let id = self.nodes.insert(NodeData::new(layout));
 
         for child in children {
@@ -109,7 +107,7 @@ impl Taffy {
         let _ = self.children.insert(children.iter().copied().collect::<_>());
         let _ = self.parents.insert(Node::MAX);
 
-        Ok(id)
+        id
     }
 
     /// Removes all nodes
@@ -124,7 +122,7 @@ impl Taffy {
     /// Remove a specific [`Node`] from the tree
     ///
     /// Its [`Id`] is marked as invalid. Returns the id of the node removed.
-    pub fn remove(&mut self, node: Node) -> Result<usize, error::InvalidNode> {
+    pub fn remove(&mut self, node: Node) -> usize {
         if let Some(children) = self.children.get_mut(self.parents[node]) {
             children.retain(|f| *f != node);
         }
@@ -133,27 +131,24 @@ impl Taffy {
         let _ = self.parents.remove(node);
         let _ = self.nodes.remove(node);
 
-        Ok(node)
+        node
     }
 
     /// Sets the [`MeasureFunc`] of the associated node
-    pub fn set_measure(&mut self, node: Node, measure: Option<MeasureFunc>) -> Result<(), error::InvalidNode> {
+    pub fn set_measure(&mut self, node: Node, measure: Option<MeasureFunc>) {
         self.nodes[node].measure = measure;
-        self.mark_dirty(node)?;
-        Ok(())
+        self.mark_dirty(node);
     }
 
     /// Adds a `child` [`Node`] under the supplied `parent`
-    pub fn add_child(&mut self, parent: Node, child: Node) -> Result<(), error::InvalidNode> {
+    pub fn add_child(&mut self, parent: Node, child: Node) {
         self.parents[child] = parent;
         self.children[parent].push(child);
-        self.mark_dirty(parent)?;
-
-        Ok(())
+        self.mark_dirty(parent);
     }
 
     /// Directly sets the `children` of the supplied `parent`
-    pub fn set_children(&mut self, parent: Node, children: &[Node]) -> Result<(), error::InvalidNode> {
+    pub fn set_children(&mut self, parent: Node, children: &[Node]) {
         // Remove node as parent from all its current children.
         for child in &self.children[parent] {
             self.parents[*child] = Node::MAX;
@@ -166,16 +161,15 @@ impl Taffy {
 
         self.children[parent] = children.iter().copied().collect::<_>();
 
-        self.mark_dirty(parent)?;
-        Ok(())
+        self.mark_dirty(parent);
     }
 
     /// Removes the `child` of the parent `node`
     ///
     /// The child is not removed from the forest entirely, it is simply no longer attached to its previous parent.
-    pub fn remove_child(&mut self, parent: Node, child: Node) -> Result<Node, error::InvalidNode> {
+    pub fn remove_child(&mut self, parent: Node, child: Node) -> Node {
         let index = self.children[parent].iter().position(|n| *n == child).unwrap();
-        Ok(self.remove_child_at_index(parent, index).unwrap())
+        self.remove_child_at_index(parent, index).unwrap()
     }
 
     /// Removes the child at the given `index` from the `parent`
@@ -229,34 +223,33 @@ impl Taffy {
     }
 
     /// Returns the number of children of the `parent` [`Node`]
-    pub fn child_count(&self, parent: Node) -> Result<usize, error::InvalidNode> {
-        Ok(self.children[parent].len())
+    pub fn child_count(&self, parent: Node) -> usize {
+        self.children[parent].len()
     }
 
     /// Returns a list of children that belong to the [`Parent`]
-    pub fn children(&self, parent: Node) -> Result<Vec<Node>, error::InvalidNode> {
-        Ok(self.children[parent].iter().copied().collect::<_>())
+    pub fn children(&self, parent: Node) -> Vec<Node> {
+        self.children[parent].iter().copied().collect::<_>()
     }
 
     /// Sets the [`Style`] of the provided `node`
-    pub fn set_style(&mut self, node: Node, style: FlexboxLayout) -> Result<(), error::InvalidNode> {
+    pub fn set_style(&mut self, node: Node, style: FlexboxLayout) {
         self.nodes[node].style = style;
-        self.mark_dirty(node)?;
-        Ok(())
+        self.mark_dirty(node);
     }
 
     /// Gets the [`Style`] of the provided `node`
-    pub fn style(&self, node: Node) -> Result<&FlexboxLayout, error::InvalidNode> {
-        Ok(&self.nodes[node].style)
+    pub fn style(&self, node: Node) -> &FlexboxLayout {
+        &self.nodes[node].style
     }
 
     /// Return this node layout relative to its parent
-    pub fn layout(&self, node: Node) -> Result<&Layout, error::InvalidNode> {
-        Ok(&self.nodes[node].layout)
+    pub fn layout(&self, node: Node) -> &Layout {
+        &self.nodes[node].layout
     }
 
     /// Marks the layout computation of this node and its children as outdated
-    pub fn mark_dirty(&mut self, node: Node) -> Result<(), error::InvalidNode> {
+    pub fn mark_dirty(&mut self, node: Node) {
         /// Performs a recursive depth-first search up the tree until the root node is reached
         ///
         ///  WARNING: this will stack-overflow if the tree contains a cycle
@@ -270,19 +263,16 @@ impl Taffy {
         }
 
         mark_dirty_recursive(&mut self.nodes, &self.parents, node);
-
-        Ok(())
     }
 
     /// Indicates whether the layout of this node (and its children) need to be recomputed
-    pub fn dirty(&self, node: Node) -> Result<bool, error::InvalidNode> {
-        Ok(self.nodes[node].is_dirty)
+    pub fn dirty(&self, node: Node) -> bool {
+        self.nodes[node].is_dirty
     }
 
     /// Updates the stored layout of the provided `node` and its children
-    pub fn compute_layout(&mut self, node: Node, size: Size<Option<f32>>) -> Result<(), error::InvalidNode> {
+    pub fn compute_layout(&mut self, node: Node, size: Size<Option<f32>>) {
         self.compute(node, size);
-        Ok(())
     }
 }
 
@@ -419,25 +409,25 @@ mod tests {
 
         // Build a linear tree layout: <0> <- <1> <- <2>
         let node2 = taffy.new_leaf(FlexboxLayout::default());
-        let node1 = taffy.new_with_children(FlexboxLayout::default(), &[node2]).unwrap();
-        let node0 = taffy.new_with_children(FlexboxLayout::default(), &[node1]).unwrap();
+        let node1 = taffy.new_with_children(FlexboxLayout::default(), &[node2]);
+        let node0 = taffy.new_with_children(FlexboxLayout::default(), &[node1]);
 
         // Node1 should exist
         assert!(taffy.nodes.get(node1).is_some());
 
         // Both node0 and node1 should have 1 child nodes
-        assert_eq!(taffy.children(node0).unwrap().as_slice(), &[node1]);
-        assert_eq!(taffy.children(node1).unwrap().as_slice(), &[node2]);
+        assert_eq!(taffy.children(node0).as_slice(), &[node1]);
+        assert_eq!(taffy.children(node1).as_slice(), &[node2]);
 
         // Disconnect the tree: <0> <2>
-        let _ = taffy.remove(node1).unwrap();
+        let _ = taffy.remove(node1);
 
         // Node1 should no longer exist
         assert!(taffy.nodes.get(node1).is_none());
 
         // Both remaining nodes should have no child nodes
-        assert!(taffy.children(node0).unwrap().is_empty());
-        assert!(taffy.children(node2).unwrap().is_empty());
+        assert!(taffy.children(node0).is_empty());
+        assert!(taffy.children(node2).is_empty());
     }
 
     #[test]
@@ -446,10 +436,10 @@ mod tests {
 
         let parent = taffy.new_leaf(FlexboxLayout::default());
         let child = taffy.new_leaf(FlexboxLayout::default());
-        taffy.add_child(parent, child).unwrap();
+        taffy.add_child(parent, child);
 
-        taffy.remove(child).unwrap();
-        taffy.remove(parent).unwrap();
+        taffy.remove(child);
+        taffy.remove(parent);
     }
 
     #[test]
@@ -460,12 +450,12 @@ mod tests {
             MeasureFunc::Raw(|_| Size { width: 200.0, height: 200.0 }),
         );
 
-        taffy.compute_layout(node, Size::undefined()).unwrap();
-        assert_eq!(taffy.layout(node).unwrap().size.width, 200.0);
+        taffy.compute_layout(node, Size::undefined());
+        assert_eq!(taffy.layout(node).size.width, 200.0);
 
-        taffy.set_measure(node, Some(MeasureFunc::Raw(|_| Size { width: 100.0, height: 100.0 }))).unwrap();
-        taffy.compute_layout(node, Size::undefined()).unwrap();
-        assert_eq!(taffy.layout(node).unwrap().size.width, 100.0);
+        taffy.set_measure(node, Some(MeasureFunc::Raw(|_| Size { width: 100.0, height: 100.0 })));
+        taffy.compute_layout(node, Size::undefined());
+        assert_eq!(taffy.layout(node).size.width, 100.0);
     }
 
     /// Test that adding `add_child()` works
@@ -473,15 +463,15 @@ mod tests {
     fn add_child() {
         let mut taffy = Taffy::new();
         let node = taffy.new_leaf(FlexboxLayout::default());
-        assert_eq!(taffy.child_count(node).unwrap(), 0);
+        assert_eq!(taffy.child_count(node), 0);
 
         let child0 = taffy.new_leaf(FlexboxLayout::default());
-        taffy.add_child(node, child0).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 1);
+        taffy.add_child(node, child0);
+        assert_eq!(taffy.child_count(node), 1);
 
         let child1 = taffy.new_leaf(FlexboxLayout::default());
-        taffy.add_child(node, child1).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 2);
+        taffy.add_child(node, child1);
+        assert_eq!(taffy.child_count(node), 2);
     }
 
     #[test]
@@ -490,19 +480,19 @@ mod tests {
 
         let child0 = taffy.new_leaf(FlexboxLayout::default());
         let child1 = taffy.new_leaf(FlexboxLayout::default());
-        let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]).unwrap();
+        let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]);
 
-        assert_eq!(taffy.child_count(node).unwrap(), 2);
-        assert_eq!(taffy.children(node).unwrap()[0], child0);
-        assert_eq!(taffy.children(node).unwrap()[1], child1);
+        assert_eq!(taffy.child_count(node), 2);
+        assert_eq!(taffy.children(node)[0], child0);
+        assert_eq!(taffy.children(node)[1], child1);
 
         let child2 = taffy.new_leaf(FlexboxLayout::default());
         let child3 = taffy.new_leaf(FlexboxLayout::default());
-        taffy.set_children(node, &[child2, child3]).unwrap();
+        taffy.set_children(node, &[child2, child3]);
 
-        assert_eq!(taffy.child_count(node).unwrap(), 2);
-        assert_eq!(taffy.children(node).unwrap()[0], child2);
-        assert_eq!(taffy.children(node).unwrap()[1], child3);
+        assert_eq!(taffy.child_count(node), 2);
+        assert_eq!(taffy.children(node)[0], child2);
+        assert_eq!(taffy.children(node)[1], child3);
     }
 
     /// Test that removing a child works
@@ -511,16 +501,16 @@ mod tests {
         let mut taffy = Taffy::new();
         let child0 = taffy.new_leaf(FlexboxLayout::default());
         let child1 = taffy.new_leaf(FlexboxLayout::default());
-        let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]).unwrap();
+        let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]);
 
-        assert_eq!(taffy.child_count(node).unwrap(), 2);
+        assert_eq!(taffy.child_count(node), 2);
 
-        taffy.remove_child(node, child0).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 1);
-        assert_eq!(taffy.children(node).unwrap()[0], child1);
+        taffy.remove_child(node, child0);
+        assert_eq!(taffy.child_count(node), 1);
+        assert_eq!(taffy.children(node)[0], child1);
 
-        taffy.remove_child(node, child1).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 0);
+        taffy.remove_child(node, child1);
+        assert_eq!(taffy.child_count(node), 0);
     }
 
     #[test]
@@ -528,16 +518,16 @@ mod tests {
         let mut taffy = Taffy::new();
         let child0 = taffy.new_leaf(FlexboxLayout::default());
         let child1 = taffy.new_leaf(FlexboxLayout::default());
-        let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]).unwrap();
+        let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]);
 
-        assert_eq!(taffy.child_count(node).unwrap(), 2);
-
-        taffy.remove_child_at_index(node, 0).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 1);
-        assert_eq!(taffy.children(node).unwrap()[0], child1);
+        assert_eq!(taffy.child_count(node), 2);
 
         taffy.remove_child_at_index(node, 0).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 0);
+        assert_eq!(taffy.child_count(node), 1);
+        assert_eq!(taffy.children(node)[0], child1);
+
+        taffy.remove_child_at_index(node, 0).unwrap();
+        assert_eq!(taffy.child_count(node), 0);
     }
 
     #[test]
@@ -547,13 +537,13 @@ mod tests {
         let child0 = taffy.new_leaf(FlexboxLayout::default());
         let child1 = taffy.new_leaf(FlexboxLayout::default());
 
-        let node = taffy.new_with_children(FlexboxLayout::default(), &[child0]).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 1);
-        assert_eq!(taffy.children(node).unwrap()[0], child0);
+        let node = taffy.new_with_children(FlexboxLayout::default(), &[child0]);
+        assert_eq!(taffy.child_count(node), 1);
+        assert_eq!(taffy.children(node)[0], child0);
 
         taffy.replace_child_at_index(node, 0, child1).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 1);
-        assert_eq!(taffy.children(node).unwrap()[0], child1);
+        assert_eq!(taffy.child_count(node), 1);
+        assert_eq!(taffy.children(node)[0], child1);
     }
     #[test]
     fn test_child_at_index() {
@@ -561,7 +551,7 @@ mod tests {
         let child0 = taffy.new_leaf(FlexboxLayout::default());
         let child1 = taffy.new_leaf(FlexboxLayout::default());
         let child2 = taffy.new_leaf(FlexboxLayout::default());
-        let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1, child2]).unwrap();
+        let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1, child2]);
 
         assert!(if let Ok(result) = taffy.child_at_index(node, 0) { result == child0 } else { false });
         assert!(if let Ok(result) = taffy.child_at_index(node, 1) { result == child1 } else { false });
@@ -572,11 +562,11 @@ mod tests {
         let mut taffy = Taffy::new();
         let child0 = taffy.new_leaf(FlexboxLayout::default());
         let child1 = taffy.new_leaf(FlexboxLayout::default());
-        let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]).unwrap();
+        let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]);
 
-        assert!(if let Ok(count) = taffy.child_count(node) { count == 2 } else { false });
-        assert!(if let Ok(count) = taffy.child_count(child0) { count == 0 } else { false });
-        assert!(if let Ok(count) = taffy.child_count(child1) { count == 0 } else { false });
+        assert_eq!(taffy.child_count(node), 2);
+        assert_eq!(taffy.child_count(child0), 0);
+        assert_eq!(taffy.child_count(child1), 0);
     }
 
     #[allow(clippy::all)]
@@ -585,26 +575,26 @@ mod tests {
         let mut taffy = Taffy::new();
         let child0 = taffy.new_leaf(FlexboxLayout::default());
         let child1 = taffy.new_leaf(FlexboxLayout::default());
-        let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]).unwrap();
+        let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]);
 
         let mut children: sys::Vec<Node> = sys::Vec::new();
         children.push(child0);
         children.push(child1);
 
-        let children_result = taffy.children(node).unwrap();
+        let children_result = taffy.children(node);
         assert_eq!(children_result, children);
 
-        assert!(taffy.children(child0).unwrap().is_empty());
+        assert!(taffy.children(child0).is_empty());
     }
     #[test]
     fn test_set_style() {
         let mut taffy = Taffy::new();
 
         let node = taffy.new_leaf(FlexboxLayout::default());
-        assert_eq!(taffy.style(node).unwrap().display, Display::Flex);
+        assert_eq!(taffy.style(node).display, Display::Flex);
 
-        taffy.set_style(node, FlexboxLayout { display: Display::None, ..FlexboxLayout::default() }).unwrap();
-        assert_eq!(taffy.style(node).unwrap().display, Display::None);
+        taffy.set_style(node, FlexboxLayout { display: Display::None, ..FlexboxLayout::default() });
+        assert_eq!(taffy.style(node).display, Display::None);
     }
     #[test]
     fn test_style() {
@@ -616,8 +606,7 @@ mod tests {
         let node = taffy.new_leaf(style);
 
         let res = taffy.style(node);
-        assert!(res.is_ok());
-        assert!(res.unwrap() == &style);
+        assert!(res == &style);
     }
     #[test]
     fn test_layout() {
@@ -625,8 +614,7 @@ mod tests {
         let node = taffy.new_leaf(FlexboxLayout::default());
 
         // TODO: Improve this test?
-        let res = taffy.layout(node);
-        assert!(res.is_ok());
+        taffy.layout(node);
     }
 
     #[test]
@@ -634,24 +622,24 @@ mod tests {
         let mut taffy = Taffy::new();
         let child0 = taffy.new_leaf(FlexboxLayout::default());
         let child1 = taffy.new_leaf(FlexboxLayout::default());
-        let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]).unwrap();
+        let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]);
 
-        taffy.compute_layout(node, Size::undefined()).unwrap();
+        taffy.compute_layout(node, Size::undefined());
 
-        assert_eq!(taffy.dirty(child0).unwrap(), false);
-        assert_eq!(taffy.dirty(child1).unwrap(), false);
-        assert_eq!(taffy.dirty(node).unwrap(), false);
+        assert_eq!(taffy.dirty(child0), false);
+        assert_eq!(taffy.dirty(child1), false);
+        assert_eq!(taffy.dirty(node), false);
 
-        taffy.mark_dirty(node).unwrap();
-        assert_eq!(taffy.dirty(child0).unwrap(), false);
-        assert_eq!(taffy.dirty(child1).unwrap(), false);
-        assert_eq!(taffy.dirty(node).unwrap(), true);
+        taffy.mark_dirty(node);
+        assert_eq!(taffy.dirty(child0), false);
+        assert_eq!(taffy.dirty(child1), false);
+        assert_eq!(taffy.dirty(node), true);
 
-        taffy.compute_layout(node, Size::undefined()).unwrap();
-        taffy.mark_dirty(child0).unwrap();
-        assert_eq!(taffy.dirty(child0).unwrap(), true);
-        assert_eq!(taffy.dirty(child1).unwrap(), false);
-        assert_eq!(taffy.dirty(node).unwrap(), true);
+        taffy.compute_layout(node, Size::undefined());
+        taffy.mark_dirty(child0);
+        assert_eq!(taffy.dirty(child0), true);
+        assert_eq!(taffy.dirty(child1), false);
+        assert_eq!(taffy.dirty(node), true);
     }
 
     #[test]
@@ -661,8 +649,7 @@ mod tests {
             size: Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
             ..Default::default()
         });
-        let layout_result = taffy.compute_layout(node, Size { width: Some(100.), height: Some(100.) });
-        assert!(layout_result.is_ok());
+        taffy.compute_layout(node, Size { width: Some(100.), height: Some(100.) });
     }
 
     #[test]
