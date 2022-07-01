@@ -20,6 +20,11 @@
 - renamed `taffy::style::Style` -> `taffy::style::FlexboxLayout` to more precicely indicate its purpose
 - renamed `taffy::Error` -> `taffy::error::InvalidNode`
 - `taffy::Taffy::remove_child_at_index`, `taffy::Taffy::replace_child_at_index`, and `taffy::Taffy::child_at_index` now return `taffy::InvalidChild::ChildIndexOutOfBounds` instead of panicing
+- `taffy::Node` is now unique only to the Taffy instance from which it was created.
+- `taffy::error::InvalidChild` is now `taffy::error::TaffyError`
+- `taffy::error::InvalidNode` has been removed and is now just a branch on the `TaffyError` enum
+- `taffy::forest::Forest` has been merged into `taffy::node::Taffy` for a performance boost up to 90%
+
 
 ### 0.2.0 Fixed
 
