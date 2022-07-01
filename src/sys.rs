@@ -75,7 +75,7 @@ mod alloc {
 /// For when neither `alloc` nor `std` is enabled
 #[cfg(all(not(feature = "alloc"), not(feature = "std")))]
 mod core {
-    /// The maximum number of nodes in the forest
+    /// The maximum number of nodes in the tree
     pub const MAX_NODE_COUNT: usize = 256;
     /// The maximum number of children of any given node
     pub const MAX_CHILD_COUNT: usize = 16;
