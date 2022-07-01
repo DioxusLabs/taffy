@@ -1755,7 +1755,7 @@ mod tests {
         let mut forest = Taffy::with_capacity(16);
 
         let style = FlexboxLayout::default();
-        let node_id = forest.new_leaf(style).unwrap();
+        let node_id = forest.new_leaf(style);
 
         let node_size = Size::undefined();
         let parent_size = Size::undefined();
