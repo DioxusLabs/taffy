@@ -3,7 +3,7 @@
 //! Note that some minor steps appear to be missing: see https://github.com/DioxusLabs/taffy/issues for more information.
 use core::f32;
 
-use slotmap::{DefaultKey, SlotMap};
+use slotmap::SlotMap;
 
 use crate::forest::NodeData;
 use crate::geometry::{Point, Rect, Size};
@@ -1760,7 +1760,7 @@ mod tests {
         let mut forest = Taffy::with_capacity(16);
 
         let style = FlexboxLayout::default();
-        let node_id = forest.new_leaf(style);
+        let node_id = forest.new_leaf(style).unwrap();
 
         let node_size = Size::undefined();
         let parent_size = Size::undefined();
