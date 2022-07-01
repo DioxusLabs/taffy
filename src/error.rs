@@ -4,23 +4,12 @@ use core::fmt::{Display, Formatter, Result};
 
 use crate::node::Node;
 
-/// The [`Node`] was not found in the [`Taffy`](crate::Taffy) instance
-#[derive(Debug)]
-pub struct InvalidNode(pub Node);
-
-#[cfg(feature = "std")]
-impl Display for InvalidNode {
-    fn fmt(&self, f: &mut Formatter) -> Result {
-        write!(f, "Node {:?} is not in the Taffy instance", self.0)
-    }
-}
-
-#[cfg(feature = "std")]
-impl std::error::Error for InvalidNode {}
+/// The error Taffy generates on invalid operations
+pub type TaffyResult<T> = core::result::Result<T, TaffyError>;
 
 /// An error that occurs while trying to access or modify a [`Node`]'s children by index.
 #[derive(Debug)]
-pub enum InvalidChild {
+pub enum TaffyError {
     /// The parent [`Node`] does not have a child at `child_index`. It only has `child_count` children
     ChildIndexOutOfBounds {
         /// The parent node whose child was being looked up
@@ -34,24 +23,27 @@ pub enum InvalidChild {
     InvalidParentNode(Node),
     /// The child [`Node`] was not found in the [`Taffy`](crate::Taffy) instance.
     InvalidChildNode(Node),
+    /// The supplied [`Node`] was not found in the [`Taffy`](crate::Taffy) instance.
+    InvalidInputNode(Node),
 }
 
 #[cfg(feature = "std")]
-impl Display for InvalidChild {
+impl Display for TaffyError {
     fn fmt(&self, f: &mut Formatter) -> Result {
         match self {
-            InvalidChild::ChildIndexOutOfBounds { parent, child_index, child_count } => write!(
+            TaffyError::ChildIndexOutOfBounds { parent, child_index, child_count } => write!(
                 f,
                 "Index (is {}) should be < child_count ({}) for parent node {:?}",
                 child_index, child_count, parent
             ),
-            InvalidChild::InvalidParentNode(parent) => {
+            TaffyError::InvalidParentNode(parent) => {
                 write!(f, "Parent Node {:?} is not in the Taffy instance", parent)
             }
-            InvalidChild::InvalidChildNode(child) => write!(f, "Child Node {:?} is not in the Taffy instance", child),
+            TaffyError::InvalidChildNode(child) => write!(f, "Child Node {:?} is not in the Taffy instance", child),
+            TaffyError::InvalidInputNode(node) => write!(f, "Supplied Node {:?} is not in the Taffy instance", node),
         }
     }
 }
 
 #[cfg(feature = "std")]
-impl std::error::Error for InvalidChild {}
+impl std::error::Error for TaffyError {}

@@ -3,6 +3,7 @@
 #![deny(unsafe_code)]
 #![warn(missing_docs)]
 #![warn(clippy::missing_docs_in_private_items)]
+#![forbid(unsafe_code)]
 
 // We always need std for the tests
 // See <https://github.com/la10736/rstest/issues/149#issuecomment-1156402989>
@@ -25,10 +26,8 @@ pub mod node;
 pub mod prelude;
 pub mod style;
 
+mod data;
 mod flexbox;
-mod forest;
-#[cfg(all(not(feature = "alloc"), not(feature = "std")))]
-mod indexmap;
 mod resolve;
 mod sys;
 

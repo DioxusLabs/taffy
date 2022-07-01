@@ -540,6 +540,7 @@ impl FlexboxLayout {
     }
 }
 
+#[allow(clippy::bool_assert_comparison)]
 #[cfg(test)]
 mod tests {
     mod test_flex_direction {
