@@ -250,10 +250,12 @@ impl Taffy {
     }
 
     /// Marks the layout computation of this node and its children as outdated
+    ///
+    /// Performs a recursive depth-first search up the tree until the root node is reached
+    ///
+    /// WARNING: this will stack-overflow if the tree contains a cycle
     pub fn mark_dirty(&mut self, node: Node) -> TaffyResult<()> {
-        /// Performs a recursive depth-first search up the tree until the root node is reached
-        ///
-        ///  WARNING: this will stack-overflow if the tree contains a cycle
+        /// WARNING: this will stack-overflow if the tree contains a cycle
         fn mark_dirty_recursive(
             nodes: &mut SlotMap<Node, NodeData>,
             parents: &SlotMap<Node, Option<Node>>,
