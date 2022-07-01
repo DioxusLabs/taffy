@@ -3,7 +3,6 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use fantoccini::{Client, ClientBuilder};
-use json;
 use log::*;
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
@@ -25,7 +24,7 @@ async fn main() {
         .filter_map(|a| a.ok())
         .filter(|f| f.path().is_file() && f.path().extension().map(|p| p == "html").unwrap_or(false))
         .map(|f| {
-            let fixture_path = f.path().to_path_buf();
+            let fixture_path = f.path();
             let name = fixture_path.file_stem().unwrap().to_str().unwrap().to_string();
             (name, fixture_path)
         })
@@ -144,7 +143,7 @@ async fn test_root_element(client: Client, name: String, fixture_path: impl AsRe
 }
 
 fn generate_bench(description: &json::JsonValue) -> TokenStream {
-    let node_description = generate_node("node", &description);
+    let node_description = generate_node("node", description);
 
     quote!(
         pub fn compute() {
@@ -158,8 +157,8 @@ fn generate_bench(description: &json::JsonValue) -> TokenStream {
 fn generate_test(name: impl AsRef<str>, description: &json::JsonValue) -> TokenStream {
     let name = name.as_ref();
     let name = Ident::new(name, Span::call_site());
-    let node_description = generate_node("node", &description);
-    let assertions = generate_assertions("node", &description);
+    let node_description = generate_node("node", description);
+    let assertions = generate_assertions("node", description);
 
     quote!(
         #[test]
@@ -183,14 +182,10 @@ fn generate_assertions(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let children = {
         let mut c = Vec::new();
-        match node["children"] {
-            json::JsonValue::Array(ref value) => {
-                for i in 0..value.len() {
-                    let child = &value[i];
-                    c.push(generate_assertions(&format!("{}{}", ident, i), child));
-                }
+        if let json::JsonValue::Array(ref value) = node["children"] {
+            for (i, child) in value.iter().enumerate() {
+                c.push(generate_assertions(&format!("{}{}", ident, i), child));
             }
-            _ => (),
         };
         c.into_iter().fold(quote!(), |a, b| quote!(#a #b))
     };
@@ -377,7 +372,7 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let (children_body, children) = match node["children"] {
         json::JsonValue::Array(ref value) => {
-            if value.len() > 0 {
+            if !value.is_empty() {
                 let body = value
                     .iter()
                     .enumerate()
@@ -396,7 +391,7 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
         _ => (quote!(), quote!()),
     };
 
-    let ident = Ident::new(&format!("{}", ident), Span::call_site());
+    let ident = Ident::new(ident, Span::call_site());
 
     quote!(
         #children_body
