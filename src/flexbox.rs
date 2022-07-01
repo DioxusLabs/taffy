@@ -1,24 +1,25 @@
-//! Computes the [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) layout algorithm on a [`Forest`](crate::forest::Forest) according to the [spec](https://www.w3.org/TR/css-flexbox-1/)
+//! Computes the [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) layout algorithm on a [`Forest`](crate::Taffy::Forest) according to the [spec](https://www.w3.org/TR/css-flexbox-1/)
 //!
 //! Note that some minor steps appear to be missing: see https://github.com/DioxusLabs/taffy/issues for more information.
 use core::f32;
 
 use slab::Slab;
 
-use crate::forest::{Forest, NodeData};
+use crate::forest::NodeData;
 use crate::geometry::{Point, Rect, Size};
 use crate::layout::{Cache, Layout};
 use crate::math::MaybeMath;
-use crate::node::{MeasureFunc, NodeId};
+use crate::node::{MeasureFunc, Node};
 use crate::resolve::{MaybeResolve, ResolveOrDefault};
 use crate::style::{AlignContent, AlignSelf, Dimension, Display, FlexWrap, JustifyContent, PositionType};
 use crate::style::{FlexDirection, FlexboxLayout};
 use crate::sys::{abs, round, ChildrenVec, Vec};
+use crate::Taffy;
 
 /// The intermediate results of a flexbox calculation for a single item
 struct FlexItem {
     /// The identifier for the associated [`Node`](crate::node::Node)
-    node: NodeId,
+    node: Node,
 
     /// The base size of this item
     size: Size<Option<f32>>,
@@ -105,9 +106,9 @@ struct AlgoConstants {
     inner_container_size: Size<f32>,
 }
 
-impl Forest {
+impl Taffy {
     /// Computes the layout of this [`Forest`] according to the flexbox algorithm
-    pub(crate) fn compute(&mut self, root: NodeId, size: Size<Option<f32>>) {
+    pub(crate) fn compute(&mut self, root: Node, size: Size<Option<f32>>) {
         let style = self.nodes[root].style;
         let has_root_min_max = style.min_size.width.is_defined()
             || style.min_size.height.is_defined()
@@ -147,8 +148,8 @@ impl Forest {
     /// Rounds the calculated [`NodeData`] according to the spec
     fn round_layout(
         nodes: &mut Slab<NodeData>,
-        children: &Slab<ChildrenVec<NodeId>>,
-        root: NodeId,
+        children: &Slab<ChildrenVec<Node>>,
+        root: Node,
         abs_x: f32,
         abs_y: f32,
     ) {
@@ -168,7 +169,7 @@ impl Forest {
     }
 
     /// Saves intermediate results to a [`Cache`]
-    fn cache(&mut self, node: NodeId, main_size: bool) -> &mut Option<Cache> {
+    fn cache(&mut self, node: Node, main_size: bool) -> &mut Option<Cache> {
         if main_size {
             &mut self.nodes[node].main_size_layout_cache
         } else {
@@ -180,7 +181,7 @@ impl Forest {
     #[inline]
     fn compute_from_cache(
         &mut self,
-        node: NodeId,
+        node: Node,
         node_size: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         perform_layout: bool,
@@ -264,7 +265,7 @@ impl Forest {
     ///
     /// - [**Generate anonymous flex items**](https://www.w3.org/TR/css-flexbox-1/#algo-anon-box) as described in [§4 Flex Items](https://www.w3.org/TR/css-flexbox-1/#flex-items).
     #[inline]
-    fn generate_anonymous_flex_items(&self, node: NodeId, constants: &AlgoConstants) -> Vec<FlexItem> {
+    fn generate_anonymous_flex_items(&self, node: Node, constants: &AlgoConstants) -> Vec<FlexItem> {
         self.children[node]
             .iter()
             .map(|child| (child, &self.nodes[*child].style))
@@ -363,7 +364,7 @@ impl Forest {
     #[inline]
     fn determine_flex_base_size(
         &mut self,
-        node: NodeId,
+        node: Node,
         node_size: Size<Option<f32>>,
         constants: &AlgoConstants,
         available_space: Size<Option<f32>>,
@@ -502,7 +503,7 @@ impl Forest {
     #[inline]
     fn collect_flex_lines<'a>(
         &self,
-        node: NodeId,
+        node: Node,
         constants: &AlgoConstants,
         available_space: Size<Option<f32>>,
         flex_items: &'a mut Vec<FlexItem>,
@@ -824,13 +825,13 @@ impl Forest {
     #[inline]
     fn calculate_children_base_lines(
         &mut self,
-        node: NodeId,
+        node: Node,
         node_size: Size<Option<f32>>,
         flex_lines: &mut [FlexLine],
         constants: &AlgoConstants,
     ) {
         /// Recursively calculates the baseline for children
-        fn calc_baseline(db: &Forest, node: NodeId, layout: &Layout) -> f32 {
+        fn calc_baseline(db: &Taffy, node: Node, layout: &Layout) -> f32 {
             if db.children[node].is_empty() {
                 layout.size.height
             } else {
@@ -904,7 +905,7 @@ impl Forest {
     fn calculate_cross_size(
         &mut self,
         flex_lines: &mut [FlexLine],
-        node: NodeId,
+        node: Node,
         node_size: Size<Option<f32>>,
         constants: &AlgoConstants,
     ) {
@@ -958,7 +959,7 @@ impl Forest {
     fn handle_align_content_stretch(
         &mut self,
         flex_lines: &mut [FlexLine],
-        node: NodeId,
+        node: Node,
         node_size: Size<Option<f32>>,
         constants: &AlgoConstants,
     ) {
@@ -988,7 +989,7 @@ impl Forest {
     ///
     ///     **Note that this step does not affect the main size of the flex item, even if it has an intrinsic aspect ratio**.
     #[inline]
-    fn determine_used_cross_size(&mut self, flex_lines: &mut [FlexLine], node: NodeId, constants: &AlgoConstants) {
+    fn determine_used_cross_size(&mut self, flex_lines: &mut [FlexLine], node: Node, constants: &AlgoConstants) {
         for line in flex_lines {
             let line_cross_size = line.cross_size;
 
@@ -1028,12 +1029,7 @@ impl Forest {
     ///
     ///     2. Align the items along the main-axis per `justify-content`.
     #[inline]
-    fn distribute_remaining_free_space(
-        &mut self,
-        flex_lines: &mut [FlexLine],
-        node: NodeId,
-        constants: &AlgoConstants,
-    ) {
+    fn distribute_remaining_free_space(&mut self, flex_lines: &mut [FlexLine], node: Node, constants: &AlgoConstants) {
         for line in flex_lines {
             let used_space: f32 = line.items.iter().map(|child| child.outer_target_size.main(constants.dir)).sum();
             let free_space = constants.inner_container_size.main(constants.dir) - used_space;
@@ -1138,12 +1134,7 @@ impl Forest {
     ///     - Otherwise, if the block-start or inline-start margin (whichever is in the cross axis) is auto, set it to zero.
     ///         Set the opposite margin so that the outer cross size of the item equals the cross size of its flex line.
     #[inline]
-    fn resolve_cross_axis_auto_margins(
-        &mut self,
-        flex_lines: &mut [FlexLine],
-        node: NodeId,
-        constants: &AlgoConstants,
-    ) {
+    fn resolve_cross_axis_auto_margins(&mut self, flex_lines: &mut [FlexLine], node: Node, constants: &AlgoConstants) {
         for line in flex_lines {
             let line_cross_size = line.cross_size;
             let max_baseline: f32 = line.items.iter_mut().map(|child| child.baseline).fold(0.0, |acc, x| acc.max(x));
@@ -1198,7 +1189,7 @@ impl Forest {
     #[inline]
     fn align_flex_items_along_cross_axis(
         &self,
-        node: NodeId,
+        node: Node,
         child: &mut FlexItem,
         child_style: &FlexboxLayout,
         free_space: f32,
@@ -1287,7 +1278,7 @@ impl Forest {
     fn align_flex_lines_per_align_content(
         &self,
         flex_lines: &mut [FlexLine],
-        node: NodeId,
+        node: Node,
         constants: &AlgoConstants,
         total_cross_size: f32,
     ) {
@@ -1346,7 +1337,7 @@ impl Forest {
 
     /// Do a final layout pass and collect the resulting layouts.
     #[inline]
-    fn final_layout_pass(&mut self, node: NodeId, flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
+    fn final_layout_pass(&mut self, node: Node, flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
         let mut total_offset_cross = constants.padding_border.cross_start(constants.dir);
 
         let layout_line = |line: &mut FlexLine| {
@@ -1407,7 +1398,7 @@ impl Forest {
 
     /// Perform absolute layout on all absolutely positioned children.
     #[inline]
-    fn perform_absolute_layout_on_absolute_children(&mut self, node: NodeId, constants: &AlgoConstants) {
+    fn perform_absolute_layout_on_absolute_children(&mut self, node: Node, constants: &AlgoConstants) {
         // TODO: remove number of Vec<_> generated
         let candidates = self.children[node]
             .iter()
@@ -1564,7 +1555,7 @@ impl Forest {
     /// Compute a preliminary size for an item
     fn compute_preliminary(
         &mut self,
-        node: NodeId,
+        node: Node,
         node_size: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         perform_layout: bool,
@@ -1578,7 +1569,7 @@ impl Forest {
         }
 
         // Define some general constants we will need for the remainder of the algorithm.
-        let mut constants = Forest::compute_constants(&self.nodes[node], node_size, parent_size);
+        let mut constants = Taffy::compute_constants(&self.nodes[node], node_size, parent_size);
 
         // If this is a leaf node we can skip a lot of this function in some cases
         if self.children[node].is_empty() {
@@ -1589,6 +1580,7 @@ impl Forest {
             if let Some(ref measure) = self.nodes[node].measure {
                 let converted_size = match measure {
                     MeasureFunc::Raw(measure) => measure(node_size),
+
                     #[cfg(any(feature = "std", feature = "alloc"))]
                     MeasureFunc::Boxed(measure) => measure(node_size),
                 };
@@ -1726,7 +1718,7 @@ impl Forest {
         /// Lay out all hidden nodes recursively
         ///
         /// Each hidden node has zero size and is placed at the origin
-        fn hidden_layout(nodes: &mut Slab<NodeData>, children: &Slab<ChildrenVec<NodeId>>, node: NodeId, order: u32) {
+        fn hidden_layout(nodes: &mut Slab<NodeData>, children: &Slab<ChildrenVec<Node>>, node: Node, order: u32) {
             nodes[node].layout = Layout { order, size: Size::ZERO, location: Point::ZERO };
 
             for (order, child) in children[node].iter().enumerate() {
@@ -1750,25 +1742,25 @@ impl Forest {
 #[cfg(test)]
 mod tests {
     use crate::{
-        forest::Forest,
         math::MaybeMath,
         prelude::{Rect, Size},
         resolve::ResolveOrDefault,
         style::{FlexWrap, FlexboxLayout},
+        Taffy,
     };
 
     // Make sure we get correct constants
     #[test]
     fn correct_constants() {
-        let mut forest = Forest::with_capacity(16);
+        let mut forest = Taffy::with_capacity(16);
 
         let style = FlexboxLayout::default();
-        let node_id = forest.new_leaf(style);
+        let node_id = forest.new_leaf(style).unwrap();
 
         let node_size = Size::undefined();
         let parent_size = Size::undefined();
 
-        let constants = Forest::compute_constants(&forest.nodes[node_id], node_size, parent_size);
+        let constants = Taffy::compute_constants(&forest.nodes[node_id], node_size, parent_size);
 
         assert!(constants.dir == style.flex_direction);
         assert!(constants.is_row == style.flex_direction.is_row());
