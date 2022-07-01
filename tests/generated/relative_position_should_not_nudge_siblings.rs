@@ -1,34 +1,40 @@
 #[test]
 fn relative_position_should_not_nudge_siblings() {
     let mut taffy = taffy::Taffy::new();
-    let node0 = taffy.new_with_children(
-        taffy::style::FlexboxLayout {
-            size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Default::default() },
-            position: taffy::geometry::Rect { top: taffy::style::Dimension::Points(15f32), ..Default::default() },
-            ..Default::default()
-        },
-        &[],
-    );
-    let node1 = taffy.new_with_children(
-        taffy::style::FlexboxLayout {
-            size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Default::default() },
-            position: taffy::geometry::Rect { top: taffy::style::Dimension::Points(15f32), ..Default::default() },
-            ..Default::default()
-        },
-        &[],
-    );
-    let node = taffy.new_with_children(
-        taffy::style::FlexboxLayout {
-            flex_direction: taffy::style::FlexDirection::Column,
-            size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(100f32),
-                height: taffy::style::Dimension::Points(100f32),
+    let node0 = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Default::default() },
+                position: taffy::geometry::Rect { top: taffy::style::Dimension::Points(15f32), ..Default::default() },
                 ..Default::default()
             },
-            ..Default::default()
-        },
-        &[node0, node1],
-    );
+            &[],
+        )
+        .unwrap();
+    let node1 = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Default::default() },
+                position: taffy::geometry::Rect { top: taffy::style::Dimension::Points(15f32), ..Default::default() },
+                ..Default::default()
+            },
+            &[],
+        )
+        .unwrap();
+    let node = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                flex_direction: taffy::style::FlexDirection::Column,
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(100f32),
+                    height: taffy::style::Dimension::Points(100f32),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            &[node0, node1],
+        )
+        .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
     assert_eq!(taffy.layout(node).unwrap().size.width, 100f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 100f32);

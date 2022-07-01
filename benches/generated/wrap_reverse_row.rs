@@ -1,56 +1,66 @@
 pub fn compute() {
     let mut taffy = taffy::Taffy::new();
-    let node0 = taffy.new_with_children(
-        taffy::style::FlexboxLayout {
-            size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(31f32),
-                height: taffy::style::Dimension::Points(30f32),
+    let node0 = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(31f32),
+                    height: taffy::style::Dimension::Points(30f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
-            ..Default::default()
-        },
-        &[],
-    );
-    let node1 = taffy.new_with_children(
-        taffy::style::FlexboxLayout {
-            size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(32f32),
-                height: taffy::style::Dimension::Points(30f32),
+            &[],
+        )
+        .unwrap();
+    let node1 = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(32f32),
+                    height: taffy::style::Dimension::Points(30f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
-            ..Default::default()
-        },
-        &[],
-    );
-    let node2 = taffy.new_with_children(
-        taffy::style::FlexboxLayout {
-            size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(33f32),
-                height: taffy::style::Dimension::Points(30f32),
+            &[],
+        )
+        .unwrap();
+    let node2 = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(33f32),
+                    height: taffy::style::Dimension::Points(30f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
-            ..Default::default()
-        },
-        &[],
-    );
-    let node3 = taffy.new_with_children(
-        taffy::style::FlexboxLayout {
-            size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(34f32),
-                height: taffy::style::Dimension::Points(30f32),
+            &[],
+        )
+        .unwrap();
+    let node3 = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(34f32),
+                    height: taffy::style::Dimension::Points(30f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
-            ..Default::default()
-        },
-        &[],
-    );
-    let node = taffy.new_with_children(
-        taffy::style::FlexboxLayout {
-            flex_wrap: taffy::style::FlexWrap::WrapReverse,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Default::default() },
-            ..Default::default()
-        },
-        &[node0, node1, node2, node3],
-    );
+            &[],
+        )
+        .unwrap();
+    let node = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                flex_wrap: taffy::style::FlexWrap::WrapReverse,
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Default::default() },
+                ..Default::default()
+            },
+            &[node0, node1, node2, node3],
+        )
+        .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
 }

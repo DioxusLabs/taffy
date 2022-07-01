@@ -1,53 +1,61 @@
 #[test]
 fn absolute_layout_child_order() {
     let mut taffy = taffy::Taffy::new();
-    let node0 = taffy.new_with_children(
-        taffy::style::FlexboxLayout {
-            size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(60f32),
-                height: taffy::style::Dimension::Points(40f32),
+    let node0 = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(60f32),
+                    height: taffy::style::Dimension::Points(40f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
-            ..Default::default()
-        },
-        &[],
-    );
-    let node1 = taffy.new_with_children(
-        taffy::style::FlexboxLayout {
-            position_type: taffy::style::PositionType::Absolute,
-            size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(60f32),
-                height: taffy::style::Dimension::Points(40f32),
+            &[],
+        )
+        .unwrap();
+    let node1 = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                position_type: taffy::style::PositionType::Absolute,
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(60f32),
+                    height: taffy::style::Dimension::Points(40f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
-            ..Default::default()
-        },
-        &[],
-    );
-    let node2 = taffy.new_with_children(
-        taffy::style::FlexboxLayout {
-            size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(60f32),
-                height: taffy::style::Dimension::Points(40f32),
+            &[],
+        )
+        .unwrap();
+    let node2 = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(60f32),
+                    height: taffy::style::Dimension::Points(40f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
-            ..Default::default()
-        },
-        &[],
-    );
-    let node = taffy.new_with_children(
-        taffy::style::FlexboxLayout {
-            align_items: taffy::style::AlignItems::Center,
-            justify_content: taffy::style::JustifyContent::Center,
-            size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(110f32),
-                height: taffy::style::Dimension::Points(100f32),
+            &[],
+        )
+        .unwrap();
+    let node = taffy
+        .new_with_children(
+            taffy::style::FlexboxLayout {
+                align_items: taffy::style::AlignItems::Center,
+                justify_content: taffy::style::JustifyContent::Center,
+                size: taffy::geometry::Size {
+                    width: taffy::style::Dimension::Points(110f32),
+                    height: taffy::style::Dimension::Points(100f32),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
-            ..Default::default()
-        },
-        &[node0, node1, node2],
-    );
+            &[node0, node1, node2],
+        )
+        .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
     assert_eq!(taffy.layout(node).unwrap().size.width, 110f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 100f32);
