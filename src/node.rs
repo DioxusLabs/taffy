@@ -55,6 +55,7 @@ impl Default for Taffy {
     }
 }
 
+#[allow(clippy::iter_cloned_collect)] // due to no-std support, we need to use `iter_cloned` instead of `collect`
 impl Taffy {
     /// Creates a new [`Taffy`]
     ///
@@ -77,7 +78,7 @@ impl Taffy {
     /// Creates and adds a new unattached leaf node to the forest, and returns the [`NodeId`] of the new node
     pub fn new_leaf(&mut self, layout: FlexboxLayout) -> Result<Node, error::InvalidNode> {
         let id = self.nodes.insert(NodeData::new(layout));
-        let _ = self.children.insert(Vec::with_capacity(0));
+        let _ = self.children.insert(new_vec_with_capacity(0));
         let _ = self.parents.insert(Node::MAX);
 
         Ok(id)
@@ -106,7 +107,7 @@ impl Taffy {
             self.parents[*child] = id;
         }
 
-        let _ = self.children.insert(children.to_vec());
+        let _ = self.children.insert(children.iter().copied().collect::<_>());
         let _ = self.parents.insert(Node::MAX);
 
         Ok(id)
@@ -164,7 +165,7 @@ impl Taffy {
             self.parents[*child] = parent;
         }
 
-        self.children[parent] = children.to_vec();
+        self.children[parent] = children.iter().copied().collect::<_>();
 
         self.mark_dirty(parent)?;
         Ok(())
@@ -189,6 +190,7 @@ impl Taffy {
 
         let child = self.children[parent].remove(child_index);
         self.parents[child] = Node::MAX;
+
         self.mark_dirty(parent);
 
         Ok(child)
@@ -234,7 +236,7 @@ impl Taffy {
 
     /// Returns a list of children that belong to the [`Parent`]
     pub fn children(&self, parent: Node) -> Result<Vec<Node>, error::InvalidNode> {
-        Ok(self.children[parent].to_vec())
+        Ok(self.children[parent].iter().copied().collect::<_>())
     }
 
     /// Sets the [`Style`] of the provided `node`
@@ -592,6 +594,8 @@ mod tests {
         assert!(if let Ok(count) = taffy.child_count(child0) { count == 0 } else { false });
         assert!(if let Ok(count) = taffy.child_count(child1) { count == 0 } else { false });
     }
+
+    #[allow(clippy::all)]
     #[test]
     fn test_children() {
         let mut taffy = Taffy::new();
