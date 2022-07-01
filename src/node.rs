@@ -110,15 +110,6 @@ impl Taffy {
         let _ = self.parents.insert(Node::MAX);
 
         Ok(id)
-
-        // let node = self.allocate_node();
-        // let children = children
-        //     .iter()
-        //     .map(|child| self.find_node(*child))
-        //     .collect::<Result<ChildrenVec<_>, error::InvalidNode>>()?;
-        // let id = self.new_with_children(layout, children);
-        // self.add_node(node, id);
-        // Ok(node)
     }
 
     /// Removes all nodes
@@ -134,27 +125,13 @@ impl Taffy {
     ///
     /// Its [`Id`] is marked as invalid. Returns the id of the node removed.
     pub fn remove(&mut self, node: Node) -> Result<usize, error::InvalidNode> {
-        let parent_id = self.parents[node];
-        if let Some(children) = self.children.get_mut(parent_id) {
+        if let Some(children) = self.children.get_mut(self.parents[node]) {
             children.retain(|f| *f != node);
         }
 
         let _ = self.children.remove(node);
         let _ = self.parents.remove(node);
         let _ = self.nodes.remove(node);
-
-        // let id = self.find_node(node)?;
-
-        // self.nodes_to_ids.remove(&node);
-        // self.ids_to_nodes.remove(&id);
-
-        // self.remove(id);
-
-        // if let Some(new_id) = self.swap_remove(id) {
-        //     let new = self.ids_to_nodes.remove(&new_id).unwrap();
-        //     let _ = self.nodes_to_ids.insert(new, id);
-        //     let _ = self.ids_to_nodes.insert(id, new);
-        // }
 
         Ok(node)
     }
@@ -205,8 +182,6 @@ impl Taffy {
     ///
     /// The child is not removed from the forest entirely, it is simply no longer attached to its previous parent.
     pub fn remove_child_at_index(&mut self, parent: Node, child_index: usize) -> Result<Node, error::InvalidChild> {
-        // let parent = self.find_node(parent).map_err(|e| error::InvalidChild::InvalidParentNode(e.0))?;
-
         let child_count = self.children[parent].len();
         if child_index >= child_count {
             return Err(error::InvalidChild::ChildIndexOutOfBounds { parent, child_index, child_count });
@@ -228,9 +203,6 @@ impl Taffy {
         child_index: usize,
         new_child: Node,
     ) -> Result<Node, error::InvalidChild> {
-        // let parent = self.find_node(parent).map_err(|e| error::InvalidChild::InvalidParentNode(e.0))?;
-        // let new_child = self.find_node(new_child).map_err(|e| error::InvalidChild::InvalidChildNode(e.0))?;
-
         let child_count = self.children[parent].len();
         if child_index >= child_count {
             return Err(error::InvalidChild::ChildIndexOutOfBounds { parent, child_index, child_count });
@@ -247,8 +219,6 @@ impl Taffy {
 
     /// Returns the child [`Node`] of the parent `node` at the provided `child_index`
     pub fn child_at_index(&self, parent: Node, child_index: usize) -> Result<Node, error::InvalidChild> {
-        // let id = self.find_node(parent).map_err(|e| error::InvalidChild::InvalidParentNode(e.0))?;
-
         let child_count = self.children[parent].len();
         if child_index >= child_count {
             return Err(error::InvalidChild::ChildIndexOutOfBounds { parent, child_index, child_count });
@@ -481,11 +451,7 @@ mod tests {
         assert!(taffy.nodes.get(node1).is_none());
 
         // Both remaining nodes should have no child nodes
-        // assert!(taffy.children(node0).unwrap().is_empty());
-        let children_of_node0 = taffy.children(node0);
-
-        dbg!(children_of_node0);
-
+        assert!(taffy.children(node0).unwrap().is_empty());
         assert!(taffy.children(node2).unwrap().is_empty());
     }
 
