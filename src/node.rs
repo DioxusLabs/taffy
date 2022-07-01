@@ -1,8 +1,12 @@
 //! UI [`Node`] types and related data structures.
 //!
 //! Layouts are composed of multiple nodes, which live in a forest-like data structure.
-use slab::Slab;
+use slotmap::SlotMap;
 
+/// A node in a layout.
+pub type Node = slotmap::DefaultKey;
+
+use crate::error::InvalidNode;
 use crate::geometry::Size;
 use crate::layout::Layout;
 use crate::style::FlexboxLayout;
@@ -10,9 +14,6 @@ use crate::style::FlexboxLayout;
 use crate::sys::Box;
 use crate::sys::{new_vec_with_capacity, ChildrenVec, Vec};
 use crate::{error, forest::NodeData};
-
-/// Internal node id.
-pub type Node = usize;
 
 /// A function type that can be used in a [`MeasureFunc`]
 ///
@@ -32,21 +33,18 @@ pub enum MeasureFunc {
 
 /// A forest of UI [`Nodes`](`Node`), suitable for UI layout
 pub struct Taffy {
-    /// The ID of the root node
-    _root_id: Node,
-
     /// The [`NodeData`] for each node stored in this forest
-    pub(crate) nodes: Slab<NodeData>,
+    pub(crate) nodes: SlotMap<Node, NodeData>,
 
     /// The children of each node
     ///
     /// The indexes in the outer vector correspond to the position of the parent [`NodeData`]
-    pub(crate) children: Slab<ChildrenVec<Node>>,
+    pub(crate) children: SlotMap<Node, ChildrenVec<Node>>,
 
     /// The parents of each node
     ///
     /// The indexes in the outer vector correspond to the position of the child [`NodeData`]
-    pub(crate) parents: Slab<Node>,
+    pub(crate) parents: SlotMap<Node, Option<Node>>,
 }
 
 impl Default for Taffy {
@@ -69,10 +67,9 @@ impl Taffy {
     #[must_use]
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
-            _root_id: 0,
-            nodes: Slab::with_capacity(capacity),
-            children: Slab::with_capacity(capacity),
-            parents: Slab::with_capacity(capacity),
+            nodes: SlotMap::with_capacity(capacity),
+            children: SlotMap::with_capacity(capacity),
+            parents: SlotMap::with_capacity(capacity),
         }
     }
 
@@ -80,7 +77,7 @@ impl Taffy {
     pub fn new_leaf(&mut self, layout: FlexboxLayout) -> Node {
         let id = self.nodes.insert(NodeData::new(layout));
         let _ = self.children.insert(new_vec_with_capacity(0));
-        let _ = self.parents.insert(Node::MAX);
+        let _ = self.parents.insert(None);
 
         id
     }
@@ -91,7 +88,7 @@ impl Taffy {
     pub fn new_leaf_with_measure(&mut self, layout: FlexboxLayout, measure: MeasureFunc) -> Node {
         let id = self.nodes.insert(NodeData::new_with_measure(layout, measure));
         let _ = self.children.insert(new_vec_with_capacity(0));
-        let _ = self.parents.insert(Node::MAX);
+        let _ = self.parents.insert(None);
 
         id
     }
@@ -101,11 +98,11 @@ impl Taffy {
         let id = self.nodes.insert(NodeData::new(layout));
 
         for child in children {
-            self.parents[*child] = id;
+            self.parents[*child] = Some(id);
         }
 
         let _ = self.children.insert(children.iter().copied().collect::<_>());
-        let _ = self.parents.insert(Node::MAX);
+        let _ = self.parents.insert(None);
 
         id
     }
@@ -122,8 +119,8 @@ impl Taffy {
     /// Remove a specific [`Node`] from the tree
     ///
     /// Its [`Id`] is marked as invalid. Returns the id of the node removed.
-    pub fn remove(&mut self, node: Node) -> usize {
-        if let Some(children) = self.children.get_mut(self.parents[node]) {
+    pub fn remove(&mut self, node: Node) -> Node {
+        if let Some(children) = self.children.get_mut(self.parents[node].unwrap()) {
             children.retain(|f| *f != node);
         }
 
@@ -142,7 +139,7 @@ impl Taffy {
 
     /// Adds a `child` [`Node`] under the supplied `parent`
     pub fn add_child(&mut self, parent: Node, child: Node) {
-        self.parents[child] = parent;
+        self.parents[child] = Some(parent);
         self.children[parent].push(child);
         self.mark_dirty(parent);
     }
@@ -151,12 +148,12 @@ impl Taffy {
     pub fn set_children(&mut self, parent: Node, children: &[Node]) {
         // Remove node as parent from all its current children.
         for child in &self.children[parent] {
-            self.parents[*child] = Node::MAX;
+            self.parents[*child] = None;
         }
 
         // Build up relation node <-> child
         for child in children {
-            self.parents[*child] = parent;
+            self.parents[*child] = Some(parent);
         }
 
         self.children[parent] = children.iter().copied().collect::<_>();
@@ -182,7 +179,7 @@ impl Taffy {
         }
 
         let child = self.children[parent].remove(child_index);
-        self.parents[child] = Node::MAX;
+        self.parents[child] = None;
 
         self.mark_dirty(parent);
 
@@ -203,9 +200,9 @@ impl Taffy {
             return Err(error::InvalidChild::ChildIndexOutOfBounds { parent, child_index, child_count });
         }
 
-        self.parents[new_child] = parent;
+        self.parents[new_child] = Some(parent);
         let old_child = core::mem::replace(&mut self.children[parent][child_index], new_child);
-        self.parents[old_child] = Node::MAX;
+        self.parents[old_child] = None;
 
         self.mark_dirty(parent);
 
@@ -253,12 +250,15 @@ impl Taffy {
         /// Performs a recursive depth-first search up the tree until the root node is reached
         ///
         ///  WARNING: this will stack-overflow if the tree contains a cycle
-        fn mark_dirty_recursive(nodes: &mut Slab<NodeData>, parents: &Slab<Node>, node_id: Node) {
-            if node_id != Node::MAX {
-                nodes[node_id].mark_dirty();
-                if let Some(node) = parents.get(node_id) {
-                    mark_dirty_recursive(nodes, parents, *node);
-                }
+        fn mark_dirty_recursive(
+            nodes: &mut SlotMap<Node, NodeData>,
+            parents: &SlotMap<Node, Option<Node>>,
+            node_id: Node,
+        ) {
+            nodes[node_id].mark_dirty();
+
+            if let Some(Some(node)) = parents.get(node_id) {
+                mark_dirty_recursive(nodes, parents, *node);
             }
         }
 
@@ -271,8 +271,9 @@ impl Taffy {
     }
 
     /// Updates the stored layout of the provided `node` and its children
-    pub fn compute_layout(&mut self, node: Node, size: Size<Option<f32>>) {
+    pub fn compute_layout(&mut self, node: Node, size: Size<Option<f32>>) -> Result<(), InvalidNode> {
         self.compute(node, size);
+        Ok(())
     }
 }
 

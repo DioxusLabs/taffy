@@ -421,7 +421,7 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
         },
         #children
         // TODO: Only add children if they exist
-    ).unwrap();)
+    );)
 }
 
 macro_rules! dim_quoted {

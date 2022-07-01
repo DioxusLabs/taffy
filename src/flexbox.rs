@@ -3,7 +3,7 @@
 //! Note that some minor steps appear to be missing: see https://github.com/DioxusLabs/taffy/issues for more information.
 use core::f32;
 
-use slab::Slab;
+use slotmap::{DefaultKey, SlotMap};
 
 use crate::forest::NodeData;
 use crate::geometry::{Point, Rect, Size};
@@ -147,8 +147,8 @@ impl Taffy {
 
     /// Rounds the calculated [`NodeData`] according to the spec
     fn round_layout(
-        nodes: &mut Slab<NodeData>,
-        children: &Slab<ChildrenVec<Node>>,
+        nodes: &mut SlotMap<Node, NodeData>,
+        children: &SlotMap<Node, ChildrenVec<Node>>,
         root: Node,
         abs_x: f32,
         abs_y: f32,
@@ -1718,7 +1718,12 @@ impl Taffy {
         /// Lay out all hidden nodes recursively
         ///
         /// Each hidden node has zero size and is placed at the origin
-        fn hidden_layout(nodes: &mut Slab<NodeData>, children: &Slab<ChildrenVec<Node>>, node: Node, order: u32) {
+        fn hidden_layout(
+            nodes: &mut SlotMap<Node, NodeData>,
+            children: &SlotMap<Node, ChildrenVec<Node>>,
+            node: Node,
+            order: u32,
+        ) {
             nodes[node].layout = Layout { order, size: Size::ZERO, location: Point::ZERO };
 
             for (order, child) in children[node].iter().enumerate() {
