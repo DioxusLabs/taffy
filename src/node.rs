@@ -120,8 +120,10 @@ impl Taffy {
     ///
     /// Its [`Id`] is marked as invalid. Returns the id of the node removed.
     pub fn remove(&mut self, node: Node) -> TaffyResult<Node> {
-        if let Some(children) = self.children.get_mut(self.parents[node].unwrap()) {
-            children.retain(|f| *f != node);
+        if let Some(parent) = self.parents[node] {
+            if let Some(children) = self.children.get_mut(parent) {
+                children.retain(|f| *f != node);
+            }
         }
 
         let _ = self.children.remove(node);
