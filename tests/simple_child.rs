@@ -41,7 +41,7 @@ fn simple_child() {
         .unwrap();
     let node1 = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout { size: taffy::geometry::Size::AUTO, ..Default::default() },
+            taffy::style::FlexboxLayout { size: taffy::geometry::Size::<Option<Dimension>>::AUTO, ..Default::default() },
             &[node1_0, node1_1],
         )
         .unwrap();
