@@ -1,7 +1,9 @@
 //! UI [`Node`] types and related data structures.
 //!
 //! Layouts are composed of multiple nodes, which live in a tree-like data structure.
-use slotmap::SlotMap;
+use core::marker::PhantomData;
+
+use slotmap::{SlotMap, SparseSecondaryMap};
 
 /// A node in a layout.
 pub type Node = slotmap::DefaultKey;
@@ -10,26 +12,19 @@ use crate::error::{TaffyError, TaffyResult};
 use crate::geometry::Size;
 use crate::layout::Layout;
 use crate::style::FlexboxLayout;
-#[cfg(any(feature = "std", feature = "alloc"))]
-use crate::sys::Box;
 use crate::sys::{new_vec_with_capacity, ChildrenVec, Vec};
 use crate::{data::NodeData, error};
 
-/// A function type that can be used in a [`MeasureFunc`]
-///
-/// This trait is automatically implemented for all types (including closures) that define a function with the appropriate type signature.
-pub trait Measurable: Send + Sync + Fn(Size<Option<f32>>) -> Size<f32> {}
-impl<F: Send + Sync + Fn(Size<Option<f32>>) -> Size<f32>> Measurable for F {}
-
-/// A function that can be used to compute the intrinsic size of a node
-pub enum MeasureFunc {
-    /// Stores an unboxed function
-    Raw(fn(Size<Option<f32>>) -> Size<f32>),
-
-    /// Stores a boxed function
-    #[cfg(any(feature = "std", feature = "alloc"))]
-    Boxed(Box<dyn Measurable>),
+/// Trait that can measure nodes using previously stored associated data
+pub trait Measure {
+    fn measure(&self, node: Node, constraint: Size<Option<f32>>) -> Size<f32>;
 }
+
+pub struct NoMeasure {
+    phantom: PhantomData<()>,
+}
+
+// pub type Taffy = Taffy<NoMeasure>;
 
 /// A tree of UI [`Nodes`](`Node`), suitable for UI layout
 pub struct Taffy {
@@ -85,8 +80,8 @@ impl Taffy {
     /// Creates and adds a new unattached leaf node to the tree, and returns the [`NodeId`] of the new node
     ///
     /// Creates and adds a new leaf node with a supplied [`MeasureFunc`]
-    pub fn new_leaf_with_measure(&mut self, layout: FlexboxLayout, measure: MeasureFunc) -> TaffyResult<Node> {
-        let id = self.nodes.insert(NodeData::new_with_measure(layout, measure));
+    pub fn new_leaf_with_required_measure(&mut self, layout: FlexboxLayout) -> TaffyResult<Node> {
+        let id = self.nodes.insert(NodeData::new_with_required_measure(layout));
         let _ = self.children.insert(new_vec_with_capacity(0));
         let _ = self.parents.insert(None);
 
@@ -131,14 +126,6 @@ impl Taffy {
         let _ = self.nodes.remove(node);
 
         Ok(node)
-    }
-
-    /// Sets the [`MeasureFunc`] of the associated node
-    pub fn set_measure(&mut self, node: Node, measure: Option<MeasureFunc>) -> TaffyResult<()> {
-        self.nodes[node].measure = measure;
-        self.mark_dirty(node)?;
-
-        Ok(())
     }
 
     /// Adds a `child` [`Node`] under the supplied `parent`
@@ -278,9 +265,31 @@ impl Taffy {
         Ok(self.nodes[node].is_dirty)
     }
 
-    /// Updates the stored layout of the provided `node` and its children
+    /// Updates the stored layout of the provided `node` and its children with measure
+    pub fn compute_measured_layout(
+        &mut self,
+        node: Node,
+        measure: &impl Measure,
+        size: Size<Option<f32>>,
+    ) -> Result<(), TaffyError> {
+        self.compute(node, size, measure);
+        Ok(())
+    }
+}
+
+struct NoopMeasure();
+
+impl Measure for NoopMeasure {
+    fn measure(&self, _node: Node, _size: Size<Option<f32>>) -> Size<f32> {
+        Size::ZERO
+    }
+}
+
+impl Taffy {
+    /// Updates the stored layout of the provided `node` and its children with no measurements
     pub fn compute_layout(&mut self, node: Node, size: Size<Option<f32>>) -> Result<(), TaffyError> {
-        self.compute(node, size);
+        let noop = NoopMeasure();
+        self.compute(node, size, &noop);
         Ok(())
     }
 }
@@ -327,9 +336,9 @@ mod tests {
 
     #[test]
     fn new_leaf_with_measure() {
-        let mut taffy = Taffy::new();
+        let mut taffy: Taffy = Taffy::new();
 
-        let res = taffy.new_leaf_with_measure(FlexboxLayout::default(), MeasureFunc::Raw(|_| Size::ZERO));
+        let res = taffy.new_leaf_with_required_measure(FlexboxLayout::default());
         assert!(res.is_ok());
         let node = res.unwrap();
 
@@ -395,15 +404,27 @@ mod tests {
 
     #[test]
     fn set_measure() {
+        struct ReturnStoredSize {
+            size: f32,
+        }
+
+        impl Measure for ReturnStoredSize {
+            fn measure(&self, _node: Node, _size: Size<Option<f32>>) -> Size<f32> {
+                let ReturnStoredSize { size } = self;
+                Size { width: *size, height: *size }
+            }
+        }
+
         let mut taffy = Taffy::new();
-        let node = taffy
-            .new_leaf_with_measure(FlexboxLayout::default(), MeasureFunc::Raw(|_| Size { width: 200.0, height: 200.0 }))
-            .unwrap();
-        taffy.compute_layout(node, Size::undefined()).unwrap();
+        let node = taffy.new_leaf_with_required_measure(FlexboxLayout::default()).unwrap();
+
+        let mut measure = ReturnStoredSize { size: 200. };
+        taffy.compute_measured_layout(node, &measure, Size::undefined()).unwrap();
         assert_eq!(taffy.layout(node).unwrap().size.width, 200.0);
 
-        taffy.set_measure(node, Some(MeasureFunc::Raw(|_| Size { width: 100.0, height: 100.0 }))).unwrap();
-        taffy.compute_layout(node, Size::undefined()).unwrap();
+        measure.size = 100.;
+        taffy.mark_dirty(node).unwrap();
+        taffy.compute_measured_layout(node, &measure, Size::undefined()).unwrap();
         assert_eq!(taffy.layout(node).unwrap().size.width, 100.0);
     }
 
@@ -602,11 +623,5 @@ mod tests {
         let node = node_result.unwrap();
         let layout_result = taffy.compute_layout(node, Size { width: Some(100.), height: Some(100.) });
         assert!(layout_result.is_ok());
-    }
-
-    #[test]
-    fn measure_func_is_send_and_sync() {
-        fn is_send_and_sync<T: Send + Sync>() {}
-        is_send_and_sync::<MeasureFunc>();
     }
 }
