@@ -9,12 +9,12 @@ use crate::data::NodeData;
 use crate::geometry::{Point, Rect, Size};
 use crate::layout::{Cache, Layout};
 use crate::math::MaybeMath;
-use crate::node::{MeasureFunc, Node};
+use crate::node::{Measure, Node, Taffy};
 use crate::resolve::{MaybeResolve, ResolveOrDefault};
 use crate::style::{AlignContent, AlignSelf, Dimension, Display, FlexWrap, JustifyContent, PositionType};
 use crate::style::{FlexDirection, FlexboxLayout};
 use crate::sys::{abs, round, ChildrenVec, Vec};
-use crate::Taffy;
+// use crate::Taffy;
 
 /// The intermediate results of a flexbox calculation for a single item
 struct FlexItem {
@@ -106,9 +106,9 @@ struct AlgoConstants {
     inner_container_size: Size<f32>,
 }
 
-impl Taffy {
+impl<T> Taffy<T> {
     /// Computes the layout of [`Taffy`] according to the flexbox algorithm
-    pub(crate) fn compute(&mut self, root: Node, size: Size<Option<f32>>) {
+    pub(crate) fn compute(&mut self, root: Node, size: Size<Option<f32>>, measure: &impl Measure<T>) {
         let style = self.nodes[root].style;
         let has_root_min_max = style.min_size.width.is_defined()
             || style.min_size.height.is_defined()
@@ -116,7 +116,7 @@ impl Taffy {
             || style.max_size.height.is_defined();
 
         let preliminary_size = if has_root_min_max {
-            let first_pass = self.compute_preliminary(root, style.size.maybe_resolve(size), size, false, true);
+            let first_pass = self.compute_preliminary(root, style.size.maybe_resolve(size), size, measure, false, true);
 
             self.compute_preliminary(
                 root,
@@ -133,11 +133,12 @@ impl Taffy {
                         .into(),
                 },
                 size,
+                measure,
                 true,
                 true,
             )
         } else {
-            self.compute_preliminary(root, style.size.maybe_resolve(size), size, true, true)
+            self.compute_preliminary(root, style.size.maybe_resolve(size), size, measure, true, true)
         };
 
         self.nodes[root].layout = Layout { order: 0, size: preliminary_size, location: Point::ZERO };
@@ -369,6 +370,7 @@ impl Taffy {
         constants: &AlgoConstants,
         available_space: Size<Option<f32>>,
         flex_items: &mut Vec<FlexItem>,
+        measure: &impl Measure<T>,
     ) {
         // TODO - this does not follow spec. See the TODOs below
         for child in flex_items.iter_mut() {
@@ -445,6 +447,7 @@ impl Taffy {
                         height: height.maybe_min(child.max_size.height),
                     },
                     available_space,
+                    measure,
                     false,
                     true,
                 )
@@ -465,7 +468,7 @@ impl Taffy {
             // webkit handled various scenarios. Can probably be solved better by passing in
             // min-content max-content constraints from the top
             let min_main = self
-                .compute_preliminary(child.node, Size::undefined(), available_space, false, false)
+                .compute_preliminary(child.node, Size::undefined(), available_space, measure, false, false)
                 .main(constants.dir)
                 .maybe_max(child.min_size.main(constants.dir))
                 .maybe_min(child.size.main(constants.dir))
@@ -549,6 +552,7 @@ impl Taffy {
         line: &mut FlexLine,
         constants: &AlgoConstants,
         available_space: Size<Option<f32>>,
+        measure: &impl Measure<T>,
     ) {
         // 1. Determine the used flex factor. Sum the outer hypothetical main sizes of all
         //    items on the line. If the sum is less than the flex container’s inner main size,
@@ -580,6 +584,7 @@ impl Taffy {
                             height: child.size.height.maybe_max(child.min_size.height).maybe_min(child.max_size.height),
                         },
                         available_space,
+                        measure,
                         false,
                         false,
                     )
@@ -723,8 +728,8 @@ impl Taffy {
                 // webkit handled various scenarios. Can probably be solved better by passing in
                 // min-content max-content constraints from the top. Need to figure out correct thing to do here as
                 // just piling on more conditionals.
-                let min_main = if constants.is_row && self.nodes[child.node].measure.is_none() {
-                    self.compute_preliminary(child.node, Size::undefined(), available_space, false, false)
+                let min_main = if constants.is_row && !self.nodes[child.node].has_measure {
+                    self.compute_preliminary(child.node, Size::undefined(), available_space, measure, false, false)
                         .width
                         .maybe_min(child.size.width)
                         .maybe_max(child.min_size.width)
@@ -778,6 +783,7 @@ impl Taffy {
         line: &mut FlexLine,
         constants: &AlgoConstants,
         available_space: Size<Option<f32>>,
+        measure: &impl Measure<T>,
     ) {
         for child in line.items.iter_mut() {
             let child_cross = child
@@ -806,6 +812,7 @@ impl Taffy {
                             constants.container_size.main(constants.dir).into()
                         },
                     },
+                    measure,
                     false,
                     false,
                 )
@@ -829,9 +836,10 @@ impl Taffy {
         node_size: Size<Option<f32>>,
         flex_lines: &mut [FlexLine],
         constants: &AlgoConstants,
+        measure: &impl Measure<T>,
     ) {
         /// Recursively calculates the baseline for children
-        fn calc_baseline(db: &Taffy, node: Node, layout: &Layout) -> f32 {
+        fn calc_baseline<T>(db: &Taffy<T>, node: Node, layout: &Layout) -> f32 {
             if db.children[node].is_empty() {
                 layout.size.height
             } else {
@@ -864,6 +872,7 @@ impl Taffy {
                             constants.container_size.height.into()
                         },
                     },
+                    measure,
                     true,
                     false,
                 );
@@ -1337,7 +1346,13 @@ impl Taffy {
 
     /// Do a final layout pass and collect the resulting layouts.
     #[inline]
-    fn final_layout_pass(&mut self, node: Node, flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
+    fn final_layout_pass(
+        &mut self,
+        node: Node,
+        flex_lines: &mut [FlexLine],
+        constants: &AlgoConstants,
+        measure: &impl Measure<T>,
+    ) {
         let mut total_offset_cross = constants.padding_border.cross_start(constants.dir);
 
         let layout_line = |line: &mut FlexLine| {
@@ -1349,6 +1364,7 @@ impl Taffy {
                     child.node,
                     child.target_size.map(|s| s.into()),
                     constants.container_size.map(|s| s.into()),
+                    measure,
                     true,
                     false,
                 );
@@ -1398,7 +1414,12 @@ impl Taffy {
 
     /// Perform absolute layout on all absolutely positioned children.
     #[inline]
-    fn perform_absolute_layout_on_absolute_children(&mut self, node: Node, constants: &AlgoConstants) {
+    fn perform_absolute_layout_on_absolute_children(
+        &mut self,
+        node: Node,
+        constants: &AlgoConstants,
+        measure: &impl Measure<T>,
+    ) {
         // TODO: remove number of Vec<_> generated
         let candidates = self.children[node]
             .iter()
@@ -1460,6 +1481,7 @@ impl Taffy {
                 child,
                 Size { width, height },
                 Size { width: container_width, height: container_height },
+                measure,
                 true,
                 false,
             );
@@ -1558,6 +1580,7 @@ impl Taffy {
         node: Node,
         node_size: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
+        measure: &impl Measure<T>,
         perform_layout: bool,
         main_size: bool,
     ) -> Size<f32> {
@@ -1569,7 +1592,7 @@ impl Taffy {
         }
 
         // Define some general constants we will need for the remainder of the algorithm.
-        let mut constants = Taffy::compute_constants(&self.nodes[node], node_size, parent_size);
+        let mut constants = Taffy::<()>::compute_constants(&self.nodes[node], node_size, parent_size);
 
         // If this is a leaf node we can skip a lot of this function in some cases
         if self.children[node].is_empty() {
@@ -1577,16 +1600,15 @@ impl Taffy {
                 return node_size.map(|s| s.unwrap_or(0.0));
             }
 
-            if let Some(ref measure) = self.nodes[node].measure {
-                let converted_size = match measure {
-                    MeasureFunc::Raw(measure) => measure(node_size),
+            if self.nodes[node].has_measure {
+                if let Some(measure_data) = self.measure_data.get(node) {
+                    let converted_size = measure.measure(node, measure_data, node_size);
 
-                    #[cfg(any(feature = "std", feature = "alloc"))]
-                    MeasureFunc::Boxed(measure) => measure(node_size),
-                };
-                *self.cache(node, main_size) =
-                    Some(Cache { node_size, parent_size, perform_layout, size: converted_size });
-                return converted_size;
+                    *self.cache(node, main_size) =
+                        Some(Cache { node_size, parent_size, perform_layout, size: converted_size });
+
+                    return converted_size;
+                }
             }
 
             return Size {
@@ -1612,7 +1634,7 @@ impl Taffy {
             .any(|child| self.nodes[child.node].style.align_self(&self.nodes[node].style) == AlignSelf::Baseline);
 
         // 3. Determine the flex base size and hypothetical main size of each item.
-        self.determine_flex_base_size(node, node_size, &constants, available_space, &mut flex_items);
+        self.determine_flex_base_size(node, node_size, &constants, available_space, &mut flex_items, measure);
 
         // TODO: Add step 4 according to spec: https://www.w3.org/TR/css-flexbox-1/#algo-main-container
         // 9.3. Main Size Determination
@@ -1622,7 +1644,7 @@ impl Taffy {
 
         // 6. Resolve the flexible lengths of all the flex items to find their used main size.
         for line in &mut flex_lines {
-            self.resolve_flexible_lengths(line, &constants, available_space);
+            self.resolve_flexible_lengths(line, &constants, available_space, measure);
         }
 
         // TODO: Cleanup and make according to spec
@@ -1652,13 +1674,13 @@ impl Taffy {
 
         // 7. Determine the hypothetical cross size of each item.
         for line in &mut flex_lines {
-            self.determine_hypothetical_cross_size(line, &constants, available_space);
+            self.determine_hypothetical_cross_size(line, &constants, available_space, measure);
         }
 
         // TODO - probably should move this somewhere else as it doesn't make a ton of sense here but we need it below
         // TODO - This is expensive and should only be done if we really require a baseline. aka, make it lazy
         if has_baseline_child {
-            self.calculate_children_base_lines(node, node_size, &mut flex_lines, &constants);
+            self.calculate_children_base_lines(node, node_size, &mut flex_lines, &constants, measure);
         }
 
         // 8. Calculate the cross size of each flex line.
@@ -1710,10 +1732,10 @@ impl Taffy {
         self.align_flex_lines_per_align_content(&mut flex_lines, node, &constants, total_cross_size);
 
         // Do a final layout pass and gather the resulting layouts
-        self.final_layout_pass(node, &mut flex_lines, &constants);
+        self.final_layout_pass(node, &mut flex_lines, &constants, measure);
 
         // Before returning we perform absolute layout on all absolutely positioned children
-        self.perform_absolute_layout_on_absolute_children(node, &constants);
+        self.perform_absolute_layout_on_absolute_children(node, &constants, measure);
 
         /// Lay out all hidden nodes recursively
         ///
@@ -1748,6 +1770,7 @@ impl Taffy {
 mod tests {
     use crate::{
         math::MaybeMath,
+        node::SimpleTaffy,
         prelude::{Rect, Size},
         resolve::ResolveOrDefault,
         style::{FlexWrap, FlexboxLayout},
@@ -1757,7 +1780,7 @@ mod tests {
     // Make sure we get correct constants
     #[test]
     fn correct_constants() {
-        let mut tree = Taffy::with_capacity(16);
+        let mut tree = SimpleTaffy::with_capacity(16);
 
         let style = FlexboxLayout::default();
         let node_id = tree.new_leaf(style).unwrap();
@@ -1765,7 +1788,7 @@ mod tests {
         let node_size = Size::undefined();
         let parent_size = Size::undefined();
 
-        let constants = Taffy::compute_constants(&tree.nodes[node_id], node_size, parent_size);
+        let constants = Taffy::<()>::compute_constants(&tree.nodes[node_id], node_size, parent_size);
 
         assert!(constants.dir == style.flex_direction);
         assert!(constants.is_row == style.flex_direction.is_row());

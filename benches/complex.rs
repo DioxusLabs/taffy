@@ -1,6 +1,6 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 
-fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
+fn build_deep_hierarchy(taffy: &mut taffy::node::SimpleTaffy) -> taffy::node::Node {
     let node111 = taffy
         .new_leaf(taffy::style::FlexboxLayout {
             size: taffy::geometry::Size {
