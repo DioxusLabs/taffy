@@ -28,7 +28,7 @@ pub(crate) struct NodeData {
 impl NodeData {
     /// Create the data for a new node with a [`MeasureFunc`]
     #[must_use]
-    pub fn new_with_measure(style: FlexboxLayout) -> Self {
+    pub fn new_with_required_measure(style: FlexboxLayout) -> Self {
         Self {
             style,
             main_size_layout_cache: None,

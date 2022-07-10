@@ -16,23 +16,20 @@ use crate::sys::{new_vec_with_capacity, ChildrenVec, Vec};
 use crate::{data::NodeData, error};
 
 /// Trait that can measure nodes using previously stored associated data
-pub trait Measure<T> {
-    fn measure(&self, node: Node, data: &T, constraint: Size<Option<f32>>) -> Size<f32>;
+pub trait Measure {
+    fn measure(&self, node: Node, constraint: Size<Option<f32>>) -> Size<f32>;
 }
 
 pub struct NoMeasure {
     phantom: PhantomData<()>,
 }
 
-pub type SimpleTaffy = Taffy<NoMeasure>;
+// pub type Taffy = Taffy<NoMeasure>;
 
 /// A tree of UI [`Nodes`](`Node`), suitable for UI layout
-pub struct Taffy<T: Sized> {
+pub struct Taffy {
     /// The [`NodeData`] for each node stored in this tree
     pub(crate) nodes: SlotMap<Node, NodeData>,
-
-    /// The stored data for each leaf node that needs measurements
-    pub(crate) measure_data: SparseSecondaryMap<Node, T>,
 
     /// The children of each node
     ///
@@ -45,14 +42,14 @@ pub struct Taffy<T: Sized> {
     pub(crate) parents: SlotMap<Node, Option<Node>>,
 }
 
-impl<T> Default for Taffy<T> {
+impl Default for Taffy {
     fn default() -> Self {
         Self::with_capacity(16)
     }
 }
 
 #[allow(clippy::iter_cloned_collect)] // due to no-std support, we need to use `iter_cloned` instead of `collect`
-impl<T: Sized> Taffy<T> {
+impl Taffy {
     /// Creates a new [`Taffy`]
     ///
     /// The default capacity of a [`Taffy`] is 16 nodes.
@@ -68,9 +65,6 @@ impl<T: Sized> Taffy<T> {
             nodes: SlotMap::with_capacity(capacity),
             children: SlotMap::with_capacity(capacity),
             parents: SlotMap::with_capacity(capacity),
-
-            // Note that only few nodes will require measurements
-            measure_data: SparseSecondaryMap::new(),
         }
     }
 
@@ -86,9 +80,8 @@ impl<T: Sized> Taffy<T> {
     /// Creates and adds a new unattached leaf node to the tree, and returns the [`NodeId`] of the new node
     ///
     /// Creates and adds a new leaf node with a supplied [`MeasureFunc`]
-    pub fn new_leaf_with_measure(&mut self, layout: FlexboxLayout, measure_data: T) -> TaffyResult<Node> {
-        let id = self.nodes.insert(NodeData::new_with_measure(layout));
-        self.measure_data.insert(id, measure_data);
+    pub fn new_leaf_with_required_measure(&mut self, layout: FlexboxLayout) -> TaffyResult<Node> {
+        let id = self.nodes.insert(NodeData::new_with_required_measure(layout));
         let _ = self.children.insert(new_vec_with_capacity(0));
         let _ = self.parents.insert(None);
 
@@ -116,7 +109,6 @@ impl<T: Sized> Taffy<T> {
         self.nodes.clear();
         self.children.clear();
         self.parents.clear();
-        self.measure_data.clear();
     }
 
     /// Remove a specific [`Node`] from the tree
@@ -131,23 +123,9 @@ impl<T: Sized> Taffy<T> {
 
         let _ = self.children.remove(node);
         let _ = self.parents.remove(node);
-
-        if let Some(data) = self.nodes.remove(node) {
-            if data.has_measure {
-                let _ = self.measure_data.remove(node);
-            }
-        }
+        let _ = self.nodes.remove(node);
 
         Ok(node)
-    }
-
-    /// Sets the data needed for measurement for the associated node
-    pub fn set_measure(&mut self, node: Node, measure_data: T) -> TaffyResult<()> {
-        self.nodes[node].has_measure = true;
-        self.measure_data.insert(node, measure_data);
-        self.mark_dirty(node)?;
-
-        Ok(())
     }
 
     /// Adds a `child` [`Node`] under the supplied `parent`
@@ -291,7 +269,7 @@ impl<T: Sized> Taffy<T> {
     pub fn compute_measured_layout(
         &mut self,
         node: Node,
-        measure: &impl Measure<T>,
+        measure: &impl Measure,
         size: Size<Option<f32>>,
     ) -> Result<(), TaffyError> {
         self.compute(node, size, measure);
@@ -301,13 +279,13 @@ impl<T: Sized> Taffy<T> {
 
 struct NoopMeasure();
 
-impl<NoMeasure> Measure<NoMeasure> for NoopMeasure {
-    fn measure(&self, node: Node, data: &NoMeasure, size: Size<Option<f32>>) -> Size<f32> {
+impl Measure for NoopMeasure {
+    fn measure(&self, _node: Node, _size: Size<Option<f32>>) -> Size<f32> {
         Size::ZERO
     }
 }
 
-impl Taffy<NoMeasure> {
+impl Taffy {
     /// Updates the stored layout of the provided `node` and its children with no measurements
     pub fn compute_layout(&mut self, node: Node, size: Size<Option<f32>>) -> Result<(), TaffyError> {
         let noop = NoopMeasure();
@@ -327,7 +305,7 @@ mod tests {
     #[test]
     fn new_should_allocate_default_capacity() {
         const DEFAULT_CAPACITY: usize = 16; // This is the capacity defined in the `impl Default`
-        let taffy = SimpleTaffy::new();
+        let taffy = Taffy::new();
 
         assert!(taffy.children.capacity() >= DEFAULT_CAPACITY);
         assert!(taffy.parents.capacity() >= DEFAULT_CAPACITY);
@@ -337,7 +315,7 @@ mod tests {
     #[test]
     fn test_with_capacity() {
         const CAPACITY: usize = 8;
-        let taffy = SimpleTaffy::with_capacity(CAPACITY);
+        let taffy = Taffy::with_capacity(CAPACITY);
 
         assert!(taffy.children.capacity() >= CAPACITY);
         assert!(taffy.parents.capacity() >= CAPACITY);
@@ -346,7 +324,7 @@ mod tests {
 
     #[test]
     fn test_new_leaf() {
-        let mut taffy = SimpleTaffy::new();
+        let mut taffy = Taffy::new();
 
         let res = taffy.new_leaf(FlexboxLayout::default());
         assert!(res.is_ok());
@@ -358,9 +336,9 @@ mod tests {
 
     #[test]
     fn new_leaf_with_measure() {
-        let mut taffy: Taffy<u32> = Taffy::new();
+        let mut taffy: Taffy = Taffy::new();
 
-        let res = taffy.new_leaf_with_measure(FlexboxLayout::default(), 100500);
+        let res = taffy.new_leaf_with_required_measure(FlexboxLayout::default());
         assert!(res.is_ok());
         let node = res.unwrap();
 
@@ -371,7 +349,7 @@ mod tests {
     /// Test that new_with_children works as expected
     #[test]
     fn test_new_with_children() {
-        let mut taffy = SimpleTaffy::new();
+        let mut taffy = Taffy::new();
         let child0 = taffy.new_leaf(FlexboxLayout::default()).unwrap();
         let child1 = taffy.new_leaf(FlexboxLayout::default()).unwrap();
         let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]).unwrap();
@@ -384,7 +362,7 @@ mod tests {
 
     #[test]
     fn remove_node_should_remove() {
-        let mut taffy = SimpleTaffy::new();
+        let mut taffy = Taffy::new();
 
         let node = taffy.new_leaf(FlexboxLayout::default()).unwrap();
 
@@ -393,7 +371,7 @@ mod tests {
 
     #[test]
     fn remove_node_should_detach_herarchy() {
-        let mut taffy = SimpleTaffy::new();
+        let mut taffy = Taffy::new();
 
         // Build a linear tree layout: <0> <- <1> <- <2>
         let node2 = taffy.new_leaf(FlexboxLayout::default()).unwrap();
@@ -414,7 +392,7 @@ mod tests {
 
     #[test]
     fn remove_last_node() {
-        let mut taffy = SimpleTaffy::new();
+        let mut taffy = Taffy::new();
 
         let parent = taffy.new_leaf(FlexboxLayout::default()).unwrap();
         let child = taffy.new_leaf(FlexboxLayout::default()).unwrap();
@@ -426,21 +404,26 @@ mod tests {
 
     #[test]
     fn set_measure() {
-        struct CustomMeasure();
+        struct ReturnStoredSize {
+            size: f32,
+        }
 
-        impl Measure<f32> for CustomMeasure {
-            fn measure(&self, _node: Node, data: &f32, _size: Size<Option<f32>>) -> Size<f32> {
-                Size { width: *data, height: *data }
+        impl Measure for ReturnStoredSize {
+            fn measure(&self, _node: Node, _size: Size<Option<f32>>) -> Size<f32> {
+                let ReturnStoredSize { size } = self;
+                Size { width: *size, height: *size }
             }
         }
 
-        let measure = CustomMeasure();
-        let mut taffy: Taffy<f32> = Taffy::new();
-        let node = taffy.new_leaf_with_measure(FlexboxLayout::default(), 200.).unwrap();
+        let mut taffy = Taffy::new();
+        let node = taffy.new_leaf_with_required_measure(FlexboxLayout::default()).unwrap();
+
+        let mut measure = ReturnStoredSize { size: 200. };
         taffy.compute_measured_layout(node, &measure, Size::undefined()).unwrap();
         assert_eq!(taffy.layout(node).unwrap().size.width, 200.0);
 
-        taffy.set_measure(node, 100.).unwrap();
+        measure.size = 100.;
+        taffy.mark_dirty(node).unwrap();
         taffy.compute_measured_layout(node, &measure, Size::undefined()).unwrap();
         assert_eq!(taffy.layout(node).unwrap().size.width, 100.0);
     }
@@ -448,7 +431,7 @@ mod tests {
     /// Test that adding `add_child()` works
     #[test]
     fn add_child() {
-        let mut taffy = SimpleTaffy::new();
+        let mut taffy = Taffy::new();
         let node = taffy.new_leaf(FlexboxLayout::default()).unwrap();
         assert_eq!(taffy.child_count(node).unwrap(), 0);
 
@@ -463,7 +446,7 @@ mod tests {
 
     #[test]
     fn set_children() {
-        let mut taffy = SimpleTaffy::new();
+        let mut taffy = Taffy::new();
 
         let child0 = taffy.new_leaf(FlexboxLayout::default()).unwrap();
         let child1 = taffy.new_leaf(FlexboxLayout::default()).unwrap();
@@ -485,7 +468,7 @@ mod tests {
     /// Test that removing a child works
     #[test]
     fn remove_child() {
-        let mut taffy = SimpleTaffy::new();
+        let mut taffy = Taffy::new();
         let child0 = taffy.new_leaf(FlexboxLayout::default()).unwrap();
         let child1 = taffy.new_leaf(FlexboxLayout::default()).unwrap();
         let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]).unwrap();
@@ -502,7 +485,7 @@ mod tests {
 
     #[test]
     fn remove_child_at_index() {
-        let mut taffy = SimpleTaffy::new();
+        let mut taffy = Taffy::new();
         let child0 = taffy.new_leaf(FlexboxLayout::default()).unwrap();
         let child1 = taffy.new_leaf(FlexboxLayout::default()).unwrap();
         let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]).unwrap();
@@ -519,7 +502,7 @@ mod tests {
 
     #[test]
     fn replace_child_at_index() {
-        let mut taffy = SimpleTaffy::new();
+        let mut taffy = Taffy::new();
 
         let child0 = taffy.new_leaf(FlexboxLayout::default()).unwrap();
         let child1 = taffy.new_leaf(FlexboxLayout::default()).unwrap();
@@ -534,7 +517,7 @@ mod tests {
     }
     #[test]
     fn test_child_at_index() {
-        let mut taffy = SimpleTaffy::new();
+        let mut taffy = Taffy::new();
         let child0 = taffy.new_leaf(FlexboxLayout::default()).unwrap();
         let child1 = taffy.new_leaf(FlexboxLayout::default()).unwrap();
         let child2 = taffy.new_leaf(FlexboxLayout::default()).unwrap();
@@ -546,7 +529,7 @@ mod tests {
     }
     #[test]
     fn test_child_count() {
-        let mut taffy = SimpleTaffy::new();
+        let mut taffy = Taffy::new();
         let child0 = taffy.new_leaf(FlexboxLayout::default()).unwrap();
         let child1 = taffy.new_leaf(FlexboxLayout::default()).unwrap();
         let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]).unwrap();
@@ -557,7 +540,7 @@ mod tests {
     }
     #[test]
     fn test_children() {
-        let mut taffy = SimpleTaffy::new();
+        let mut taffy = Taffy::new();
         let child0 = taffy.new_leaf(FlexboxLayout::default()).unwrap();
         let child1 = taffy.new_leaf(FlexboxLayout::default()).unwrap();
         let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]).unwrap();
@@ -573,7 +556,7 @@ mod tests {
     }
     #[test]
     fn test_set_style() {
-        let mut taffy = SimpleTaffy::new();
+        let mut taffy = Taffy::new();
 
         let node = taffy.new_leaf(FlexboxLayout::default()).unwrap();
         assert_eq!(taffy.style(node).unwrap().display, Display::Flex);
@@ -583,7 +566,7 @@ mod tests {
     }
     #[test]
     fn test_style() {
-        let mut taffy = SimpleTaffy::new();
+        let mut taffy = Taffy::new();
 
         let style =
             FlexboxLayout { display: Display::None, flex_direction: FlexDirection::RowReverse, ..Default::default() };
@@ -596,7 +579,7 @@ mod tests {
     }
     #[test]
     fn test_layout() {
-        let mut taffy = SimpleTaffy::new();
+        let mut taffy = Taffy::new();
         let node = taffy.new_leaf(FlexboxLayout::default()).unwrap();
 
         // TODO: Improve this test?
@@ -606,7 +589,7 @@ mod tests {
 
     #[test]
     fn test_mark_dirty() {
-        let mut taffy = SimpleTaffy::new();
+        let mut taffy = Taffy::new();
         let child0 = taffy.new_leaf(FlexboxLayout::default()).unwrap();
         let child1 = taffy.new_leaf(FlexboxLayout::default()).unwrap();
         let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]).unwrap();
@@ -631,7 +614,7 @@ mod tests {
 
     #[test]
     fn compute_layout_should_produce_valid_result() {
-        let mut taffy = SimpleTaffy::new();
+        let mut taffy = Taffy::new();
         let node_result = taffy.new_leaf(FlexboxLayout {
             size: Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
             ..Default::default()
