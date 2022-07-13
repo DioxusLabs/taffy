@@ -3,37 +3,29 @@ use taffy::style::Dimension;
 
 fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
     let node111 = taffy
-        .new_leaf(
-            taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size::<Option<Dimension>>::from_points(10.0, 10.0),
-                ..Default::default()
-            },
-        )
+        .new_leaf(taffy::style::FlexboxLayout {
+            size: taffy::geometry::Size::<Option<Dimension>>::from_points(10.0, 10.0),
+            ..Default::default()
+        })
         .unwrap();
     let node112 = taffy
-        .new_leaf(
-            taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size::<Option<Dimension>>::from_points(10.0, 10.0),
-                ..Default::default()
-            }
-        )
+        .new_leaf(taffy::style::FlexboxLayout {
+            size: taffy::geometry::Size::<Option<Dimension>>::from_points(10.0, 10.0),
+            ..Default::default()
+        })
         .unwrap();
 
     let node121 = taffy
-        .new_leaf(
-            taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size::<Option<Dimension>>::from_points(10.0, 10.0),
-                ..Default::default()
-            }
-        )
+        .new_leaf(taffy::style::FlexboxLayout {
+            size: taffy::geometry::Size::<Option<Dimension>>::from_points(10.0, 10.0),
+            ..Default::default()
+        })
         .unwrap();
     let node122 = taffy
-        .new_leaf(
-            taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size::<Option<Dimension>>::from_points(10.0, 10.0),
-                ..Default::default()
-            }
-        )
+        .new_leaf(taffy::style::FlexboxLayout {
+            size: taffy::geometry::Size::<Option<Dimension>>::from_points(10.0, 10.0),
+            ..Default::default()
+        })
         .unwrap();
 
     let node11 =
@@ -44,37 +36,29 @@ fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
         taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[node11, node12]).unwrap();
 
     let node211 = taffy
-        .new_leaf(
-            taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size::<Option<Dimension>>::from_points(10.0, 10.0),
-                ..Default::default()
-            }
-        )
+        .new_leaf(taffy::style::FlexboxLayout {
+            size: taffy::geometry::Size::<Option<Dimension>>::from_points(10.0, 10.0),
+            ..Default::default()
+        })
         .unwrap();
     let node212 = taffy
-        .new_leaf(
-            taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size::<Option<Dimension>>::from_points(10.0, 10.0),
-                ..Default::default()
-            }
-        )
+        .new_leaf(taffy::style::FlexboxLayout {
+            size: taffy::geometry::Size::<Option<Dimension>>::from_points(10.0, 10.0),
+            ..Default::default()
+        })
         .unwrap();
 
     let node221 = taffy
-        .new_leaf(
-            taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size::<Option<Dimension>>::from_points(10.0, 10.0),
-                ..Default::default()
-            }
-        )
+        .new_leaf(taffy::style::FlexboxLayout {
+            size: taffy::geometry::Size::<Option<Dimension>>::from_points(10.0, 10.0),
+            ..Default::default()
+        })
         .unwrap();
     let node222 = taffy
-        .new_leaf(
-            taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size::<Option<Dimension>>::from_points(10.0, 10.0),
-                ..Default::default()
-            }
-        )
+        .new_leaf(taffy::style::FlexboxLayout {
+            size: taffy::geometry::Size::<Option<Dimension>>::from_points(10.0, 10.0),
+            ..Default::default()
+        })
         .unwrap();
 
     let node21 =

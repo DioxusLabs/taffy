@@ -160,13 +160,13 @@ pub struct Size<T> {
     pub height: T,
 }
 
-impl Size<()> {
-    /// Generates a `Size<Option<f32>>` with undefined width and height
-    #[must_use]
-    pub fn undefined() -> Size<Option<f32>> {
-        Size { width: None, height: None }
-    }
-}
+// impl Size<()> {
+//     /// Generates a `Size<Option<f32>>` with undefined width and height
+//     #[must_use]
+//     pub fn undefined() -> Size<Option<f32>> {
+//         Size { width: None, height: None }
+//     }
+// }
 
 impl<T> Size<T> {
     /// Applies the function `f` to both the width and height

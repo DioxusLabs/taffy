@@ -4,9 +4,8 @@ fn main() -> Result<(), taffy::error::TaffyError> {
     let mut taffy = Taffy::new();
 
     // left
-    let child_t1 = taffy.new_leaf(
-        FlexboxLayout { size: Size::<Option<Dimension>>::from_points(5.0, 5.0), ..Default::default() }
-    )?;
+    let child_t1 = taffy
+        .new_leaf(FlexboxLayout { size: Size::<Option<Dimension>>::from_points(5.0, 5.0), ..Default::default() })?;
 
     let div1 = taffy.new_with_children(
         FlexboxLayout {
@@ -18,9 +17,8 @@ fn main() -> Result<(), taffy::error::TaffyError> {
     )?;
 
     // right
-    let child_t2 = taffy.new_leaf(
-        FlexboxLayout { size: Size::<Option<Dimension>>::from_points(5.0, 5.0), ..Default::default() }
-    )?;
+    let child_t2 = taffy
+        .new_leaf(FlexboxLayout { size: Size::<Option<Dimension>>::from_points(5.0, 5.0), ..Default::default() })?;
 
     let div2 = taffy.new_with_children(
         FlexboxLayout {
