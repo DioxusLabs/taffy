@@ -251,8 +251,6 @@ impl Default for FlexWrap {
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Dimension {
-    /// The dimension is not given
-    Undefined,
     /// The dimension should be automatically computed
     Auto,
     /// The dimension is stored in [points](https://en.wikipedia.org/wiki/Point_(typography))
@@ -265,7 +263,7 @@ pub enum Dimension {
 
 impl Default for Dimension {
     fn default() -> Self {
-        Self::Undefined
+        Self::Auto
     }
 }
 
@@ -276,45 +274,13 @@ impl Dimension {
     }
 }
 
-impl Default for Rect<Dimension> {
+impl Default for Rect<Option<Dimension>> {
     fn default() -> Self {
-        Self { start: Default::default(), end: Default::default(), top: Default::default(), bottom: Default::default() }
+        Self::NONE
     }
 }
 
 impl Rect<Dimension> {
-    /// Generates a [`Rect<Dimension>`] using [`Dimension::Points`] values for `start` and `top`
-    #[must_use]
-    pub fn top_from_points(start: f32, top: f32) -> Rect<Dimension> {
-        Rect { start: Dimension::Points(start), top: Dimension::Points(top), ..Default::default() }
-    }
-
-    /// Generates a [`Rect<Dimension>`] using [`Dimension::Points`] values for `end` and `bottom`
-    #[must_use]
-    pub fn bot_from_points(end: f32, bottom: f32) -> Rect<Dimension> {
-        Rect { end: Dimension::Points(end), bottom: Dimension::Points(bottom), ..Default::default() }
-    }
-
-    /// Generates a [`Rect<Dimension>`] using [`Dimension::Percent`] values for `start` and `top`
-    #[must_use]
-    pub fn top_from_percent(start: f32, top: f32) -> Rect<Dimension> {
-        Rect { start: Dimension::Percent(start), top: Dimension::Percent(top), ..Default::default() }
-    }
-
-    /// Generates a [`Rect<Dimension>`] using [`Dimension::Percent`] values for `end` and `bottom`
-    #[must_use]
-    pub fn bot_from_percent(end: f32, bottom: f32) -> Rect<Dimension> {
-        Rect { end: Dimension::Percent(end), bottom: Dimension::Percent(bottom), ..Default::default() }
-    }
-
-    /// Generates a [`Rect<Dimension>`] using [`Dimension::Undefined`] for all values
-    pub const UNDEFINED: Rect<Dimension> = Self {
-        start: Dimension::Undefined,
-        end: Dimension::Undefined,
-        top: Dimension::Undefined,
-        bottom: Dimension::Undefined,
-    };
-
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Auto`] for all values
     pub const AUTO: Rect<Dimension> =
         Self { start: Dimension::Auto, end: Dimension::Auto, top: Dimension::Auto, bottom: Dimension::Auto };
@@ -338,6 +304,65 @@ impl Rect<Dimension> {
             end: Dimension::Percent(end),
             top: Dimension::Percent(top),
             bottom: Dimension::Percent(bottom),
+        }
+    }
+}
+
+impl Rect<Option<Dimension>> {
+    /// Generates a [`Rect<Dimension>`] using [`Dimension::Points`] values for `start` and `top`
+    #[must_use]
+    pub fn top_from_points(start: f32, top: f32) -> Rect<Option<Dimension>> {
+        Rect { start: Some(Dimension::Points(start)), top: Some(Dimension::Points(top)), ..Default::default() }
+    }
+
+    /// Generates a [`Rect<Dimension>`] using [`Dimension::Points`] values for `end` and `bottom`
+    #[must_use]
+    pub fn bot_from_points(end: f32, bottom: f32) -> Rect<Option<Dimension>> {
+        Rect { end: Some(Dimension::Points(end)), bottom: Some(Dimension::Points(bottom)), ..Default::default() }
+    }
+
+    /// Generates a [`Rect<Dimension>`] using [`Dimension::Percent`] values for `start` and `top`
+    #[must_use]
+    pub fn top_from_percent(start: f32, top: f32) -> Rect<Option<Dimension>> {
+        Rect { start: Some(Dimension::Percent(start)), top: Some(Dimension::Percent(top)), ..Default::default() }
+    }
+
+    /// Generates a [`Rect<Dimension>`] using [`Dimension::Percent`] values for `end` and `bottom`
+    #[must_use]
+    pub fn bot_from_percent(end: f32, bottom: f32) -> Rect<Option<Dimension>> {
+        Rect { end: Some(Dimension::Percent(end)), bottom: Some(Dimension::Percent(bottom)), ..Default::default() }
+    }
+
+    /// Generates a [`Rect<Option<Dimension>>`] using [`None`] for all values
+    pub const NONE: Rect<Option<Dimension>> = Self { start: None, end: None, top: None, bottom: None };
+
+    /// Generates a [`Rect<Option<Dimension>>`] using [`Some(Dimension::Auto)`] for all values
+    pub const AUTO: Rect<Option<Dimension>> = Self {
+        start: Some(Dimension::Auto),
+        end: Some(Dimension::Auto),
+        top: Some(Dimension::Auto),
+        bottom: Some(Dimension::Auto),
+    };
+
+    /// Create a new [`Rect<Option<Dimension>>`] with [`Some(Dimension::Points)`] for all values
+    #[must_use]
+    pub fn from_points(start: f32, end: f32, top: f32, bottom: f32) -> Self {
+        Rect {
+            start: Some(Dimension::Points(start)),
+            end: Some(Dimension::Points(end)),
+            top: Some(Dimension::Points(top)),
+            bottom: Some(Dimension::Points(bottom)),
+        }
+    }
+
+    /// Create a new [`Rect<Option<Dimension>>`] with [`Some(Dimension::Percent)`] for all values
+    #[must_use]
+    pub fn from_percent(start: f32, end: f32, top: f32, bottom: f32) -> Self {
+        Rect {
+            start: Some(Dimension::Percent(start)),
+            end: Some(Dimension::Percent(end)),
+            top: Some(Dimension::Percent(top)),
+            bottom: Some(Dimension::Percent(bottom)),
         }
     }
 }
@@ -383,13 +408,13 @@ pub struct FlexboxLayout {
     /// How should items be aligned relative to the main axis?
     pub justify_content: JustifyContent,
     /// How should the position of this element be tweaked relative to the layout defined?
-    pub position: Rect<Dimension>,
+    pub position: Rect<Option<Dimension>>,
     /// How large should the margin be on each side?
-    pub margin: Rect<Dimension>,
+    pub margin: Rect<Option<Dimension>>,
     /// How large should the padding be on each side?
-    pub padding: Rect<Dimension>,
+    pub padding: Rect<Option<Dimension>>,
     /// How large should the border be on each side?
-    pub border: Rect<Dimension>,
+    pub border: Rect<Option<Dimension>>,
     /// The relative rate at which this item grows when it is expanding to fill space
     ///
     /// 0.0 is the default value, and this value must be positive.
@@ -402,7 +427,7 @@ pub struct FlexboxLayout {
     pub flex_basis: Dimension,
     /// Sets the initial size of the item
     // TODO: why does this exist as distinct from flex_basis? How do they interact?
-    pub size: Size<Dimension>,
+    pub size: Size<Option<Dimension>>,
     /// Controls the minimum size of the item
     pub min_size: Size<Dimension>,
     /// Controls the maximum size of the item
@@ -459,7 +484,7 @@ impl FlexboxLayout {
     }
 
     /// If the `direction` is row-oriented, the margin start. Otherwise the margin top
-    pub(crate) fn main_margin_start(&self, direction: FlexDirection) -> Dimension {
+    pub(crate) fn main_margin_start(&self, direction: FlexDirection) -> Option<Dimension> {
         if direction.is_row() {
             self.margin.start
         } else {
@@ -468,7 +493,7 @@ impl FlexboxLayout {
     }
 
     /// If the `direction` is row-oriented, the margin end. Otherwise the margin bottom
-    pub(crate) fn main_margin_end(&self, direction: FlexDirection) -> Dimension {
+    pub(crate) fn main_margin_end(&self, direction: FlexDirection) -> Option<Dimension> {
         if direction.is_row() {
             self.margin.end
         } else {
@@ -477,7 +502,7 @@ impl FlexboxLayout {
     }
 
     /// If the `direction` is row-oriented, the height. Otherwise the width
-    pub(crate) fn cross_size(&self, direction: FlexDirection) -> Dimension {
+    pub(crate) fn cross_size(&self, direction: FlexDirection) -> Option<Dimension> {
         if direction.is_row() {
             self.size.height
         } else {
@@ -504,7 +529,7 @@ impl FlexboxLayout {
     }
 
     /// If the `direction` is row-oriented, the margin top. Otherwise the margin start
-    pub(crate) fn cross_margin_start(&self, direction: FlexDirection) -> Dimension {
+    pub(crate) fn cross_margin_start(&self, direction: FlexDirection) -> Option<Dimension> {
         if direction.is_row() {
             self.margin.top
         } else {
@@ -513,7 +538,7 @@ impl FlexboxLayout {
     }
 
     /// If the `direction` is row-oriented, the margin bottom. Otherwise the margin end
-    pub(crate) fn cross_margin_end(&self, direction: FlexDirection) -> Dimension {
+    pub(crate) fn cross_margin_end(&self, direction: FlexDirection) -> Option<Dimension> {
         if direction.is_row() {
             self.margin.bottom
         } else {
@@ -584,14 +609,14 @@ mod tests {
 
         #[test]
         fn flexbox_layout_min_main_size() {
-            let layout = FlexboxLayout { min_size: Size::from_points(1.0, 2.0), ..Default::default() };
+            let layout = FlexboxLayout { min_size: Size::<Dimension>::from_points(1.0, 2.0), ..Default::default() };
             assert_eq!(layout.min_main_size(FlexDirection::Row), Dimension::Points(1.0));
             assert_eq!(layout.min_main_size(FlexDirection::Column), Dimension::Points(2.0));
         }
 
         #[test]
         fn flexbox_layout_max_main_size() {
-            let layout = FlexboxLayout { max_size: Size::from_points(1.0, 2.0), ..Default::default() };
+            let layout = FlexboxLayout { max_size: Size::<Dimension>::from_points(1.0, 2.0), ..Default::default() };
             assert_eq!(layout.max_main_size(FlexDirection::Row), Dimension::Points(1.0));
             assert_eq!(layout.max_main_size(FlexDirection::Column), Dimension::Points(2.0));
         }
@@ -599,34 +624,34 @@ mod tests {
         #[test]
         fn flexbox_layout_main_margin_start() {
             let layout = FlexboxLayout { margin: Rect::top_from_points(2.0, 1.0), ..Default::default() };
-            assert_eq!(layout.main_margin_start(FlexDirection::Row), Dimension::Points(2.0));
-            assert_eq!(layout.main_margin_start(FlexDirection::Column), Dimension::Points(1.0));
+            assert_eq!(layout.main_margin_start(FlexDirection::Row), Some(Dimension::Points(2.0)));
+            assert_eq!(layout.main_margin_start(FlexDirection::Column), Some(Dimension::Points(1.0)));
         }
 
         #[test]
         fn flexbox_layout_main_margin_end() {
             let layout = FlexboxLayout { margin: Rect::bot_from_points(2.0, 1.0), ..Default::default() };
-            assert_eq!(layout.main_margin_end(FlexDirection::Row), Dimension::Points(2.0));
-            assert_eq!(layout.main_margin_end(FlexDirection::Column), Dimension::Points(1.0));
+            assert_eq!(layout.main_margin_end(FlexDirection::Row), Some(Dimension::Points(2.0)));
+            assert_eq!(layout.main_margin_end(FlexDirection::Column), Some(Dimension::Points(1.0)));
         }
 
         #[test]
         fn flexbox_layout_cross_size() {
-            let layout = FlexboxLayout { size: Size::from_points(1.0, 2.0), ..Default::default() };
-            assert_eq!(layout.cross_size(FlexDirection::Row), Dimension::Points(2.0));
-            assert_eq!(layout.cross_size(FlexDirection::Column), Dimension::Points(1.0));
+            let layout = FlexboxLayout { size: Size::<Option<Dimension>>::from_points(1.0, 2.0), ..Default::default() };
+            assert_eq!(layout.cross_size(FlexDirection::Row), Some(Dimension::Points(2.0)));
+            assert_eq!(layout.cross_size(FlexDirection::Column), Some(Dimension::Points(1.0)));
         }
 
         #[test]
         fn flexbox_layout_min_cross_size() {
-            let layout = FlexboxLayout { min_size: Size::from_points(1.0, 2.0), ..Default::default() };
+            let layout = FlexboxLayout { min_size: Size::<Dimension>::from_points(1.0, 2.0), ..Default::default() };
             assert_eq!(layout.min_cross_size(FlexDirection::Row), Dimension::Points(2.0));
             assert_eq!(layout.min_cross_size(FlexDirection::Column), Dimension::Points(1.0));
         }
 
         #[test]
         fn flexbox_layout_max_cross_size() {
-            let layout = FlexboxLayout { max_size: Size::from_points(1.0, 2.0), ..Default::default() };
+            let layout = FlexboxLayout { max_size: Size::<Dimension>::from_points(1.0, 2.0), ..Default::default() };
             assert_eq!(layout.max_cross_size(FlexDirection::Row), Dimension::Points(2.0));
             assert_eq!(layout.max_cross_size(FlexDirection::Column), Dimension::Points(1.0));
         }
@@ -634,15 +659,15 @@ mod tests {
         #[test]
         fn flexbox_layout_cross_margin_start() {
             let layout = FlexboxLayout { margin: Rect::top_from_points(2.0, 1.0), ..Default::default() };
-            assert_eq!(layout.cross_margin_start(FlexDirection::Row), Dimension::Points(1.0));
-            assert_eq!(layout.cross_margin_start(FlexDirection::Column), Dimension::Points(2.0));
+            assert_eq!(layout.cross_margin_start(FlexDirection::Row), Some(Dimension::Points(1.0)));
+            assert_eq!(layout.cross_margin_start(FlexDirection::Column), Some(Dimension::Points(2.0)));
         }
 
         #[test]
         fn flexbox_layout_cross_margin_end() {
             let layout = FlexboxLayout { margin: Rect::bot_from_points(2.0, 1.0), ..Default::default() };
-            assert_eq!(layout.cross_margin_end(FlexDirection::Row), Dimension::Points(1.0));
-            assert_eq!(layout.cross_margin_end(FlexDirection::Column), Dimension::Points(2.0));
+            assert_eq!(layout.cross_margin_end(FlexDirection::Row), Some(Dimension::Points(1.0)));
+            assert_eq!(layout.cross_margin_end(FlexDirection::Column), Some(Dimension::Points(2.0)));
         }
 
         #[test]

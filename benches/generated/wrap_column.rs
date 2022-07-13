@@ -4,8 +4,8 @@ pub fn compute() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(30f32),
-                    height: taffy::style::Dimension::Points(31f32),
+                    width: Some(taffy::style::Dimension::Points(30f32)),
+                    height: Some(taffy::style::Dimension::Points(31f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -17,8 +17,8 @@ pub fn compute() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(30f32),
-                    height: taffy::style::Dimension::Points(32f32),
+                    width: Some(taffy::style::Dimension::Points(30f32)),
+                    height: Some(taffy::style::Dimension::Points(32f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -30,8 +30,8 @@ pub fn compute() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(30f32),
-                    height: taffy::style::Dimension::Points(33f32),
+                    width: Some(taffy::style::Dimension::Points(30f32)),
+                    height: Some(taffy::style::Dimension::Points(33f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -43,8 +43,8 @@ pub fn compute() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(30f32),
-                    height: taffy::style::Dimension::Points(34f32),
+                    width: Some(taffy::style::Dimension::Points(30f32)),
+                    height: Some(taffy::style::Dimension::Points(34f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -58,8 +58,8 @@ pub fn compute() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: Some(taffy::style::Dimension::Points(100f32)),
+                    height: Some(taffy::style::Dimension::Points(100f32)),
                     ..Default::default()
                 },
                 ..Default::default()

@@ -5,8 +5,8 @@ fn align_items_min_max() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(60f32),
-                    height: taffy::style::Dimension::Points(60f32),
+                    width: Some(taffy::style::Dimension::Points(60f32)),
+                    height: Some(taffy::style::Dimension::Points(60f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -19,7 +19,10 @@ fn align_items_min_max() {
             taffy::style::FlexboxLayout {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_items: taffy::style::AlignItems::Center,
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Default::default() },
+                size: taffy::geometry::Size {
+                    height: Some(taffy::style::Dimension::Points(100f32)),
+                    ..Default::default()
+                },
                 min_size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     ..Default::default()

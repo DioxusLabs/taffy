@@ -4,13 +4,13 @@ fn main() -> Result<(), taffy::error::TaffyError> {
     let mut taffy = Taffy::new();
 
     let child = taffy.new_leaf(FlexboxLayout {
-        size: Size { width: Dimension::Percent(0.5), height: Dimension::Auto },
+        size: Size { width: Some(Dimension::Percent(0.5)), height: Some(Dimension::Auto) },
         ..Default::default()
     })?;
 
     let node = taffy.new_with_children(
         FlexboxLayout {
-            size: Size { width: Dimension::Points(100.0), height: Dimension::Points(100.0) },
+            size: Size::<Option<Dimension>>::from_points(100.0, 100.0),
             justify_content: JustifyContent::Center,
             ..Default::default()
         },

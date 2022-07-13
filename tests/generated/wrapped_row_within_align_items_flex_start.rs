@@ -5,8 +5,8 @@ fn wrapped_row_within_align_items_flex_start() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(150f32),
-                    height: taffy::style::Dimension::Points(80f32),
+                    width: Some(taffy::style::Dimension::Points(150f32)),
+                    height: Some(taffy::style::Dimension::Points(80f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -18,8 +18,8 @@ fn wrapped_row_within_align_items_flex_start() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(80f32),
-                    height: taffy::style::Dimension::Points(80f32),
+                    width: Some(taffy::style::Dimension::Points(80f32)),
+                    height: Some(taffy::style::Dimension::Points(80f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -39,8 +39,8 @@ fn wrapped_row_within_align_items_flex_start() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_items: taffy::style::AlignItems::FlexStart,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(200f32),
-                    height: taffy::style::Dimension::Points(200f32),
+                    width: Some(taffy::style::Dimension::Points(200f32)),
+                    height: Some(taffy::style::Dimension::Points(200f32)),
                     ..Default::default()
                 },
                 ..Default::default()

@@ -20,8 +20,8 @@ pub fn compute() {
             taffy::style::FlexboxLayout {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: Some(taffy::style::Dimension::Points(100f32)),
+                    height: Some(taffy::style::Dimension::Points(100f32)),
                     ..Default::default()
                 },
                 ..Default::default()

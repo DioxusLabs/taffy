@@ -5,8 +5,8 @@ fn align_items_flex_end_child_without_margin_bigger_than_parent() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(70f32),
-                    height: taffy::style::Dimension::Points(70f32),
+                    width: Some(taffy::style::Dimension::Points(70f32)),
+                    height: Some(taffy::style::Dimension::Points(70f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -26,8 +26,8 @@ fn align_items_flex_end_child_without_margin_bigger_than_parent() {
                 align_items: taffy::style::AlignItems::Center,
                 justify_content: taffy::style::JustifyContent::Center,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(50f32),
-                    height: taffy::style::Dimension::Points(50f32),
+                    width: Some(taffy::style::Dimension::Points(50f32)),
+                    height: Some(taffy::style::Dimension::Points(50f32)),
                     ..Default::default()
                 },
                 ..Default::default()

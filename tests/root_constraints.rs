@@ -1,15 +1,13 @@
 #[cfg(test)]
 mod root_constraints {
+    use taffy::style::Dimension;
 
     #[test]
     fn root_with_percentage_size() {
         let mut taffy = taffy::node::Taffy::new();
         let node = taffy
             .new_leaf(taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(1.0),
-                    height: taffy::style::Dimension::Percent(1.0),
-                },
+                size: taffy::geometry::Size::<Option<Dimension>>::from_percent(1.0, 1.0),
                 ..Default::default()
             })
             .unwrap();
@@ -38,10 +36,7 @@ mod root_constraints {
         let mut taffy = taffy::node::Taffy::new();
         let node = taffy
             .new_leaf(taffy::style::FlexboxLayout {
-                size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(200.0),
-                    height: taffy::style::Dimension::Points(200.0),
-                },
+                size: taffy::geometry::Size::<Option<Dimension>>::from_points(200.0, 200.0),
                 ..Default::default()
             })
             .unwrap();

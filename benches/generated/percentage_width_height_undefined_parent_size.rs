@@ -4,8 +4,8 @@ pub fn compute() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(0.5f32),
-                    height: taffy::style::Dimension::Percent(0.5f32),
+                    width: Some(taffy::style::Dimension::Percent(0.5f32)),
+                    height: Some(taffy::style::Dimension::Percent(0.5f32)),
                     ..Default::default()
                 },
                 ..Default::default()

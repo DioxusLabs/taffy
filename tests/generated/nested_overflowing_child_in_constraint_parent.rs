@@ -5,8 +5,8 @@ fn nested_overflowing_child_in_constraint_parent() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(200f32),
-                    height: taffy::style::Dimension::Points(200f32),
+                    width: Some(taffy::style::Dimension::Points(200f32)),
+                    height: Some(taffy::style::Dimension::Points(200f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -18,8 +18,8 @@ fn nested_overflowing_child_in_constraint_parent() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: Some(taffy::style::Dimension::Points(100f32)),
+                    height: Some(taffy::style::Dimension::Points(100f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -31,8 +31,8 @@ fn nested_overflowing_child_in_constraint_parent() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: Some(taffy::style::Dimension::Points(100f32)),
+                    height: Some(taffy::style::Dimension::Points(100f32)),
                     ..Default::default()
                 },
                 ..Default::default()

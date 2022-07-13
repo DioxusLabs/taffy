@@ -6,13 +6,13 @@ fn percentage_absolute_position() {
             taffy::style::FlexboxLayout {
                 position_type: taffy::style::PositionType::Absolute,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(10f32),
-                    height: taffy::style::Dimension::Points(10f32),
+                    width: Some(taffy::style::Dimension::Points(10f32)),
+                    height: Some(taffy::style::Dimension::Points(10f32)),
                     ..Default::default()
                 },
                 position: taffy::geometry::Rect {
-                    start: taffy::style::Dimension::Percent(0.3f32),
-                    top: taffy::style::Dimension::Percent(0.1f32),
+                    start: Some(taffy::style::Dimension::Percent(0.3f32)),
+                    top: Some(taffy::style::Dimension::Percent(0.1f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -25,8 +25,8 @@ fn percentage_absolute_position() {
             taffy::style::FlexboxLayout {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(200f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: Some(taffy::style::Dimension::Points(200f32)),
+                    height: Some(taffy::style::Dimension::Points(100f32)),
                     ..Default::default()
                 },
                 ..Default::default()

@@ -5,8 +5,8 @@ fn absolute_layout_child_order() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(60f32),
-                    height: taffy::style::Dimension::Points(40f32),
+                    width: Some(taffy::style::Dimension::Points(60f32)),
+                    height: Some(taffy::style::Dimension::Points(40f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -19,8 +19,8 @@ fn absolute_layout_child_order() {
             taffy::style::FlexboxLayout {
                 position_type: taffy::style::PositionType::Absolute,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(60f32),
-                    height: taffy::style::Dimension::Points(40f32),
+                    width: Some(taffy::style::Dimension::Points(60f32)),
+                    height: Some(taffy::style::Dimension::Points(40f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -32,8 +32,8 @@ fn absolute_layout_child_order() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(60f32),
-                    height: taffy::style::Dimension::Points(40f32),
+                    width: Some(taffy::style::Dimension::Points(60f32)),
+                    height: Some(taffy::style::Dimension::Points(40f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -47,8 +47,8 @@ fn absolute_layout_child_order() {
                 align_items: taffy::style::AlignItems::Center,
                 justify_content: taffy::style::JustifyContent::Center,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(110f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: Some(taffy::style::Dimension::Points(110f32)),
+                    height: Some(taffy::style::Dimension::Points(100f32)),
                     ..Default::default()
                 },
                 ..Default::default()

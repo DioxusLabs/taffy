@@ -6,8 +6,8 @@ fn flex_basis_smaller_than_main_dimen_column() {
             taffy::style::FlexboxLayout {
                 flex_basis: taffy::style::Dimension::Points(10f32),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(50f32),
-                    height: taffy::style::Dimension::Points(50f32),
+                    width: Some(taffy::style::Dimension::Points(50f32)),
+                    height: Some(taffy::style::Dimension::Points(50f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -19,7 +19,10 @@ fn flex_basis_smaller_than_main_dimen_column() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Default::default() },
+                size: taffy::geometry::Size {
+                    height: Some(taffy::style::Dimension::Points(100f32)),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
             &[node0],

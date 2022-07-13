@@ -5,13 +5,13 @@ fn margin_fix_left_auto_right_child_bigger_than_parent() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(72f32),
-                    height: taffy::style::Dimension::Points(72f32),
+                    width: Some(taffy::style::Dimension::Points(72f32)),
+                    height: Some(taffy::style::Dimension::Points(72f32)),
                     ..Default::default()
                 },
                 margin: taffy::geometry::Rect {
-                    start: taffy::style::Dimension::Points(10f32),
-                    end: taffy::style::Dimension::Auto,
+                    start: Some(taffy::style::Dimension::Points(10f32)),
+                    end: Some(taffy::style::Dimension::Auto),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -24,8 +24,8 @@ fn margin_fix_left_auto_right_child_bigger_than_parent() {
             taffy::style::FlexboxLayout {
                 justify_content: taffy::style::JustifyContent::Center,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(52f32),
-                    height: taffy::style::Dimension::Points(52f32),
+                    width: Some(taffy::style::Dimension::Points(52f32)),
+                    height: Some(taffy::style::Dimension::Points(52f32)),
                     ..Default::default()
                 },
                 ..Default::default()

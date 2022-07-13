@@ -4,13 +4,13 @@ pub fn compute() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(0.55f32),
-                    height: taffy::style::Dimension::Percent(0.15f32),
+                    width: Some(taffy::style::Dimension::Percent(0.55f32)),
+                    height: Some(taffy::style::Dimension::Percent(0.15f32)),
                     ..Default::default()
                 },
                 position: taffy::geometry::Rect {
-                    end: taffy::style::Dimension::Percent(0.2f32),
-                    bottom: taffy::style::Dimension::Percent(0.1f32),
+                    end: Some(taffy::style::Dimension::Percent(0.2f32)),
+                    bottom: Some(taffy::style::Dimension::Percent(0.1f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -22,8 +22,8 @@ pub fn compute() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(500f32),
-                    height: taffy::style::Dimension::Points(500f32),
+                    width: Some(taffy::style::Dimension::Points(500f32)),
+                    height: Some(taffy::style::Dimension::Points(500f32)),
                     ..Default::default()
                 },
                 ..Default::default()

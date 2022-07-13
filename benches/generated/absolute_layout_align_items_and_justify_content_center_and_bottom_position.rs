@@ -5,12 +5,12 @@ pub fn compute() {
             taffy::style::FlexboxLayout {
                 position_type: taffy::style::PositionType::Absolute,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(60f32),
-                    height: taffy::style::Dimension::Points(40f32),
+                    width: Some(taffy::style::Dimension::Points(60f32)),
+                    height: Some(taffy::style::Dimension::Points(40f32)),
                     ..Default::default()
                 },
                 position: taffy::geometry::Rect {
-                    bottom: taffy::style::Dimension::Points(10f32),
+                    bottom: Some(taffy::style::Dimension::Points(10f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -24,8 +24,8 @@ pub fn compute() {
                 align_items: taffy::style::AlignItems::Center,
                 justify_content: taffy::style::JustifyContent::Center,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(110f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: Some(taffy::style::Dimension::Points(110f32)),
+                    height: Some(taffy::style::Dimension::Points(100f32)),
                     ..Default::default()
                 },
                 ..Default::default()

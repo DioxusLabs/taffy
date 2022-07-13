@@ -5,8 +5,8 @@ fn align_center_should_size_based_on_content() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(20f32),
-                    height: taffy::style::Dimension::Points(20f32),
+                    width: Some(taffy::style::Dimension::Points(20f32)),
+                    height: Some(taffy::style::Dimension::Points(20f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -36,8 +36,8 @@ fn align_center_should_size_based_on_content() {
             taffy::style::FlexboxLayout {
                 align_items: taffy::style::AlignItems::Center,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: Some(taffy::style::Dimension::Points(100f32)),
+                    height: Some(taffy::style::Dimension::Points(100f32)),
                     ..Default::default()
                 },
                 ..Default::default()

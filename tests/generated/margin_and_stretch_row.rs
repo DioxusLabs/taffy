@@ -6,8 +6,8 @@ fn margin_and_stretch_row() {
             taffy::style::FlexboxLayout {
                 flex_grow: 1f32,
                 margin: taffy::geometry::Rect {
-                    top: taffy::style::Dimension::Points(10f32),
-                    bottom: taffy::style::Dimension::Points(10f32),
+                    top: Some(taffy::style::Dimension::Points(10f32)),
+                    bottom: Some(taffy::style::Dimension::Points(10f32)),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -19,8 +19,8 @@ fn margin_and_stretch_row() {
         .new_with_children(
             taffy::style::FlexboxLayout {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: Some(taffy::style::Dimension::Points(100f32)),
+                    height: Some(taffy::style::Dimension::Points(100f32)),
                     ..Default::default()
                 },
                 ..Default::default()
