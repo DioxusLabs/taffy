@@ -32,7 +32,7 @@ pub trait LayoutTree {
     fn layout_mut(&mut self, node: Node) -> &mut Layout;
 
     /// Mark a node as finished
-    fn mark_dirty(&mut self, node: Node);
+    fn mark_dirty(&mut self, node: Node, dirty: bool);
 
     /// Measure a node. Taffy uses this to force reflows of things like text and overflowing content.
     fn measure_node(&self, node: Node, node_size: Size<Option<f32>>) -> Size<f32>;

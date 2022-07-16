@@ -78,8 +78,8 @@ impl LayoutTree for Taffy {
         &mut self.nodes[node].layout
     }
 
-    fn mark_dirty(&mut self, node: Node) {
-        self.nodes[node].is_dirty = true;
+    fn mark_dirty(&mut self, node: Node, dirty: bool) {
+        self.nodes[node].is_dirty = dirty;
     }
 
     fn measure_node(&self, node: Node, node_size: Size<Option<f32>>) -> Size<f32> {
@@ -92,7 +92,7 @@ impl LayoutTree for Taffy {
     }
 
     fn needs_measure(&self, node: Node) -> bool {
-        self.nodes[node].needs_measure
+        self.nodes[node].needs_measure && self.measure_funcs.get(node).is_some()
     }
 
     fn primary_cache(&mut self, node: Node) -> &mut Option<Cache> {
@@ -125,7 +125,7 @@ impl Taffy {
             nodes: SlotMap::with_capacity(capacity),
             children: SlotMap::with_capacity(capacity),
             parents: SlotMap::with_capacity(capacity),
-            measure_funcs: SparseSecondaryMap::default(),
+            measure_funcs: SparseSecondaryMap::with_capacity(capacity),
         }
     }
 
@@ -147,6 +147,7 @@ impl Taffy {
 
         let id = self.nodes.insert(data);
         self.measure_funcs.insert(id, measure);
+
         let _ = self.children.insert(new_vec_with_capacity(0));
         let _ = self.parents.insert(None);
 
