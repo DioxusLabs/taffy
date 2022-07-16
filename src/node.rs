@@ -1,7 +1,7 @@
 //! UI [`Node`] types and related data structures.
 //!
 //! Layouts are composed of multiple nodes, which live in a tree-like data structure.
-use slotmap::SlotMap;
+use slotmap::{SlotMap, SparseSecondaryMap};
 
 /// A node in a layout.
 pub type Node = slotmap::DefaultKey;
@@ -35,6 +35,9 @@ pub enum MeasureFunc {
 pub struct Taffy {
     /// The [`NodeData`] for each node stored in this tree
     pub(crate) nodes: SlotMap<Node, NodeData>,
+
+    /// The mapping from the Size<Option<f32>> (in real units) to Size<f32> (in points) for this node
+    pub(crate) measure_funcs: SparseSecondaryMap<Node, Option<MeasureFunc>>,
 
     /// The children of each node
     ///
@@ -70,6 +73,7 @@ impl Taffy {
             nodes: SlotMap::with_capacity(capacity),
             children: SlotMap::with_capacity(capacity),
             parents: SlotMap::with_capacity(capacity),
+            measure_funcs: SparseSecondaryMap::default(),
         }
     }
 
@@ -86,7 +90,8 @@ impl Taffy {
     ///
     /// Creates and adds a new leaf node with a supplied [`MeasureFunc`]
     pub fn new_leaf_with_measure(&mut self, layout: FlexboxLayout, measure: MeasureFunc) -> TaffyResult<Node> {
-        let id = self.nodes.insert(NodeData::new_with_measure(layout, measure));
+        let id = self.nodes.insert(NodeData::new(layout));
+        self.measure_funcs.insert(id, Some(measure));
         let _ = self.children.insert(new_vec_with_capacity(0));
         let _ = self.parents.insert(None);
 
@@ -135,7 +140,7 @@ impl Taffy {
 
     /// Sets the [`MeasureFunc`] of the associated node
     pub fn set_measure(&mut self, node: Node, measure: Option<MeasureFunc>) -> TaffyResult<()> {
-        self.nodes[node].measure = measure;
+        self.measure_funcs[node] = measure;
         self.mark_dirty(node)?;
 
         Ok(())
