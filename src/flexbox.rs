@@ -1593,15 +1593,7 @@ fn compute_preliminary(
         }
 
         if tree.needs_measure(node) {
-            // if let Some(ref measure) = tree.needs_measure(node) {
-            // if let Some(ref measure) = self.nodes[node].measure {
-            // let converted_size = match measure {
-            //     MeasureFunc::Raw(measure) => measure(node_size),
-
-            //     #[cfg(any(feature = "std", feature = "alloc"))]
-            //     MeasureFunc::Boxed(measure) => measure(node_size),
-            // };
-            let converted_size = tree.measure_node(node).expect("Nodes that need measure should return a size");
+            let converted_size = tree.measure_node(node, node_size);
             *cache(tree, node, main_size) =
                 Some(Cache { node_size, parent_size, perform_layout, size: converted_size });
             return converted_size;

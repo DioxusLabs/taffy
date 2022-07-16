@@ -37,7 +37,7 @@ pub struct Taffy {
     pub(crate) nodes: SlotMap<Node, NodeData>,
 
     /// The mapping from the Size<Option<f32>> (in real units) to Size<f32> (in points) for this node
-    pub(crate) measure_funcs: SparseSecondaryMap<Node, Option<MeasureFunc>>,
+    pub(crate) measure_funcs: SparseSecondaryMap<Node, MeasureFunc>,
 
     /// The children of each node
     ///
@@ -90,8 +90,11 @@ impl Taffy {
     ///
     /// Creates and adds a new leaf node with a supplied [`MeasureFunc`]
     pub fn new_leaf_with_measure(&mut self, layout: FlexboxLayout, measure: MeasureFunc) -> TaffyResult<Node> {
-        let id = self.nodes.insert(NodeData::new(layout));
-        self.measure_funcs.insert(id, Some(measure));
+        let mut data = NodeData::new(layout);
+        data.needs_measure = true;
+
+        let id = self.nodes.insert(data);
+        self.measure_funcs.insert(id, measure);
         let _ = self.children.insert(new_vec_with_capacity(0));
         let _ = self.parents.insert(None);
 
@@ -140,7 +143,14 @@ impl Taffy {
 
     /// Sets the [`MeasureFunc`] of the associated node
     pub fn set_measure(&mut self, node: Node, measure: Option<MeasureFunc>) -> TaffyResult<()> {
-        self.measure_funcs[node] = measure;
+        if let Some(measure) = measure {
+            self.nodes[node].needs_measure = true;
+            self.measure_funcs[node] = measure
+        } else {
+            self.nodes[node].needs_measure = false;
+            self.measure_funcs.remove(node);
+        }
+
         self.mark_dirty(node)?;
 
         Ok(())
@@ -293,6 +303,8 @@ impl Taffy {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::bool_assert_comparison)]
+
     use super::*;
     use crate::{
         style::{Dimension, Display, FlexDirection},
@@ -523,6 +535,8 @@ mod tests {
         assert!(if let Ok(count) = taffy.child_count(child0) { count == 0 } else { false });
         assert!(if let Ok(count) = taffy.child_count(child1) { count == 0 } else { false });
     }
+
+    #[allow(clippy::vec_init_then_push)]
     #[test]
     fn test_children() {
         let mut taffy = Taffy::new();
@@ -537,7 +551,7 @@ mod tests {
         let children_result = taffy.children(node).unwrap();
         assert_eq!(children_result, children);
 
-        assert!(taffy.children(child0).unwrap().len() == 0);
+        assert!(taffy.children(child0).unwrap().is_empty());
     }
     #[test]
     fn test_set_style() {

@@ -32,7 +32,7 @@ pub trait LayoutTree {
     fn mark_dirty(&mut self, node: Node);
 
     /// Measure a node. Taffy uses this to force reflows of things like text and overflowing content.
-    fn measure_node(&self, node: Node) -> Option<Size<f32>>;
+    fn measure_node(&self, node: Node, size: Size<Option<f32>>) -> Size<f32>;
 
     /// Node needs to be measured
     fn needs_measure(&self, node: Node) -> bool;
@@ -80,12 +80,23 @@ impl LayoutTree for Taffy {
         self.nodes[node].is_dirty = true;
     }
 
-    fn measure_node(&self, node: Node) -> Option<Size<f32>> {
-        todo!()
+    fn measure_node(&self, node: Node, node_size: Size<Option<f32>>) -> Size<f32> {
+        use crate::node::MeasureFunc;
+
+        match &self.measure_funcs[node] {
+            MeasureFunc::Raw(measure) => measure(node_size),
+
+            #[cfg(any(feature = "std", feature = "alloc"))]
+            MeasureFunc::Boxed(measure) => {
+                // need to cast the box for whatever reason
+                let f: &dyn Fn(_) -> _ = measure;
+                f(node_size)
+            }
+        }
     }
 
     fn needs_measure(&self, node: Node) -> bool {
-        todo!()
+        self.nodes[node].needs_measure
     }
 
     fn primary_cache(&mut self, node: Node) -> &mut Option<Cache> {
