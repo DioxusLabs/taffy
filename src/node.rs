@@ -8,7 +8,8 @@ pub type Node = slotmap::DefaultKey;
 
 use crate::error::{TaffyError, TaffyResult};
 use crate::geometry::Size;
-use crate::layout::Layout;
+use crate::layout::{Cache, Layout};
+use crate::prelude::LayoutTree;
 use crate::style::FlexboxLayout;
 #[cfg(any(feature = "std", feature = "alloc"))]
 use crate::sys::Box;
@@ -53,6 +54,57 @@ pub struct Taffy {
 impl Default for Taffy {
     fn default() -> Self {
         Self::with_capacity(16)
+    }
+}
+
+impl LayoutTree for Taffy {
+    fn children(&self, node: Node) -> &[Node] {
+        &self.children[node]
+    }
+
+    fn parent(&self, node: Node) -> Option<Node> {
+        self.parents.get(node).copied().flatten()
+    }
+
+    fn style(&self, node: Node) -> &FlexboxLayout {
+        &self.nodes[node].style
+    }
+
+    fn layout(&self, node: Node) -> &Layout {
+        &self.nodes[node].layout
+    }
+
+    fn layout_mut(&mut self, node: Node) -> &mut Layout {
+        &mut self.nodes[node].layout
+    }
+
+    fn mark_dirty(&mut self, node: Node) {
+        self.nodes[node].is_dirty = true;
+    }
+
+    fn measure_node(&self, node: Node, node_size: Size<Option<f32>>) -> Size<f32> {
+        match &self.measure_funcs[node] {
+            MeasureFunc::Raw(measure) => measure(node_size),
+
+            #[cfg(any(feature = "std", feature = "alloc"))]
+            MeasureFunc::Boxed(measure) => (measure as &dyn Fn(_) -> _)(node_size),
+        }
+    }
+
+    fn needs_measure(&self, node: Node) -> bool {
+        self.nodes[node].needs_measure
+    }
+
+    fn primary_cache(&mut self, node: Node) -> &mut Option<Cache> {
+        &mut self.nodes[node].main_size_layout_cache
+    }
+
+    fn secondary_cache(&mut self, node: Node) -> &mut Option<Cache> {
+        &mut self.nodes[node].other_layout_cache
+    }
+
+    fn child(&self, node: Node, id: usize) -> Node {
+        self.children[node][id]
     }
 }
 
