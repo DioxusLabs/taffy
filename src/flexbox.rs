@@ -3,19 +3,15 @@
 //! Note that some minor steps appear to be missing: see https://github.com/DioxusLabs/taffy/issues for more information.
 use core::f32;
 
-use slotmap::SlotMap;
-
 use crate::abstracted::LayoutTree;
-use crate::data::NodeData;
 use crate::geometry::{Point, Rect, Size};
 use crate::layout::{Cache, Layout};
 use crate::math::MaybeMath;
-use crate::node::{MeasureFunc, Node};
+use crate::node::Node;
 use crate::resolve::{MaybeResolve, ResolveOrDefault};
 use crate::style::{AlignContent, AlignSelf, Dimension, Display, FlexWrap, JustifyContent, PositionType};
 use crate::style::{FlexDirection, FlexboxLayout};
-use crate::sys::{abs, round, ChildrenVec, Vec};
-use crate::Taffy;
+use crate::sys::{abs, round, Vec};
 
 /// The intermediate results of a flexbox calculation for a single item
 struct FlexItem {
@@ -146,16 +142,8 @@ pub(crate) fn compute(tree: &mut impl LayoutTree, root: Node, size: Size<Option<
 }
 
 /// Rounds the calculated [`NodeData`] according to the spec
-fn round_layout(
-    tree: &mut impl LayoutTree,
-    // nodes: &mut SlotMap<Node, NodeData>,
-    // children: &SlotMap<Node, ChildrenVec<Node>>,
-    root: Node,
-    abs_x: f32,
-    abs_y: f32,
-) {
+fn round_layout(tree: &mut impl LayoutTree, root: Node, abs_x: f32, abs_y: f32) {
     let layout = tree.layout_mut(root);
-    // let layout = &mut nodes[root].layout;
     let abs_x = abs_x + layout.location.x;
     let abs_y = abs_y + layout.location.y;
 
@@ -164,12 +152,6 @@ fn round_layout(
 
     layout.size.width = round(layout.size.width);
     layout.size.height = round(layout.size.height);
-
-    // for child in &children[root] {
-    // for child in tree.children(root) {
-    //     round_layout(tree, *child, abs_x, abs_y);
-    //     // round_layout(nodes, children, *child, abs_x, abs_y);
-    // }
 
     // Satisfy the borrow checker here by re-indexing to shorten the lifetime to the loop scope
     let num_children = tree.children(root).len();
@@ -182,10 +164,8 @@ fn round_layout(
 fn cache(tree: &mut impl LayoutTree, node: Node, main_size: bool) -> &mut Option<Cache> {
     if main_size {
         tree.primary_cache(node)
-        // &mut self.nodes[node].main_size_layout_cache
     } else {
         tree.secondary_cache(node)
-        // &mut self.nodes[node].other_layout_cache
     }
 }
 
@@ -433,7 +413,7 @@ fn determine_flex_base_size(
         //    flex item’s cross size. The flex base size is the item’s resulting main size.
 
         let width: Option<f32> = if child.size.width.is_none()
-            && child_style.align_self(&tree.style(node)) == AlignSelf::Stretch
+            && child_style.align_self(tree.style(node)) == AlignSelf::Stretch
             && constants.is_column
         {
             available_space.width
@@ -442,7 +422,7 @@ fn determine_flex_base_size(
         };
 
         let height: Option<f32> = if child.size.height.is_none()
-            && child_style.align_self(&tree.style(node)) == AlignSelf::Stretch
+            && child_style.align_self(tree.style(node)) == AlignSelf::Stretch
             && constants.is_row
         {
             available_space.height
@@ -837,7 +817,14 @@ fn calculate_children_base_lines(
 ) {
     /// Recursively calculates the baseline for children
     fn calc_baseline(db: &impl LayoutTree, node: Node, layout: &Layout) -> f32 {
-        todo!()
+        let children = db.children(node);
+        if children.is_empty() {
+            layout.size.height
+        } else {
+            let child = children[0];
+            let layout = db.layout(node);
+            calc_baseline(db, child, layout)
+        }
         // if db.children[node].is_empty() {
         //     layout.size.height
         // } else {
@@ -1749,23 +1736,31 @@ fn compute_preliminary(
     ///
     /// Each hidden node has zero size and is placed at the origin
     fn hidden_layout(
-        nodes: &mut SlotMap<Node, NodeData>,
-        children: &SlotMap<Node, ChildrenVec<Node>>,
+        tree: &mut impl LayoutTree,
+        // nodes: &mut SlotMap<Node, NodeData>,
+        // children: &SlotMap<Node, ChildrenVec<Node>>,
         node: Node,
         order: u32,
     ) {
-        nodes[node].layout = Layout { order, size: Size::ZERO, location: Point::ZERO };
+        *tree.layout_mut(node) = Layout { order, size: Size::ZERO, location: Point::ZERO };
+        // nodes[node].layout = Layout { order, size: Size::ZERO, location: Point::ZERO };
 
-        for (order, child) in children[node].iter().enumerate() {
-            hidden_layout(nodes, children, *child, order as _);
+        let len = tree.children(node).len();
+        for order in 0..len {
+            hidden_layout(tree, tree.child(node, order), order as _);
         }
+
+        // for (order, child) in children[node].iter().enumerate() {
+        //     hidden_layout(nodes, children, *child, order as _);
+        // }
     }
 
-    for (order, child) in tree.children(node).iter().enumerate() {
-        if tree.style(*child).display == Display::None {
-            todo!("hidden layout")
+    let len = tree.children(node).len();
+    for order in 0..len {
+        let child = tree.child(node, order);
+        if tree.style(child).display == Display::None {
             // if self.nodes[*child].style.display == Display::None {
-            // hidden_layout(&mut self.nodes, &self.children, *child, order as _);
+            hidden_layout(tree, child, order as _);
         }
     }
 

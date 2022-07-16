@@ -12,6 +12,7 @@ pub trait LayoutTree {
 
     fn style(&self, node: Node) -> &FlexboxLayout;
 
+    fn layout(&self, node: Node) -> &Layout;
     fn layout_mut(&mut self, node: Node) -> &mut Layout;
 
     fn mark_dirty(&mut self, node: Node);
@@ -39,6 +40,9 @@ impl LayoutTree for Taffy {
         todo!()
     }
 
+    fn layout(&mut self, node: Node) -> &Layout {
+        todo!()
+    }
     fn layout_mut(&mut self, node: Node) -> &mut Layout {
         todo!()
     }
