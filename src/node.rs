@@ -280,7 +280,8 @@ impl Taffy {
 
     /// Updates the stored layout of the provided `node` and its children
     pub fn compute_layout(&mut self, node: Node, size: Size<Option<f32>>) -> Result<(), TaffyError> {
-        self.compute(node, size);
+        crate::flexbox::compute(self, node, size);
+        // self.compute(node, size);
         Ok(())
     }
 }
