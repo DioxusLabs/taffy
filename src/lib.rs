@@ -1,9 +1,9 @@
 #![doc = include_str!("../README.md")]
 #![cfg_attr(not(feature = "std"), no_std)]
-// #![deny(unsafe_code)]
+#![deny(unsafe_code)]
 #![warn(missing_docs)]
 #![warn(clippy::missing_docs_in_private_items)]
-// #![forbid(unsafe_code)]
+#![forbid(unsafe_code)]
 
 // We always need std for the tests
 // See <https://github.com/la10736/rstest/issues/149#issuecomment-1156402989>
@@ -18,7 +18,6 @@ extern crate alloc;
 #[cfg(feature = "serde")]
 extern crate serde;
 
-pub mod abstracted;
 pub mod error;
 pub mod geometry;
 pub mod layout;
@@ -26,6 +25,7 @@ pub mod math;
 pub mod node;
 pub mod prelude;
 pub mod style;
+pub mod tree;
 
 mod data;
 mod flexbox;
