@@ -19,6 +19,9 @@ pub trait LayoutTree {
     /// Get any available parent for this node
     fn parent(&self, node: Node) -> Option<Node>;
 
+    // todo: allow abstractions over this so we don't prescribe how layout works
+    // for reference, CSS cascades require context, and storing a full flexbox layout for each node could be inefficient
+    //
     /// Get the [`FlexboxLayout`] for this Node.
     fn style(&self, node: Node) -> &FlexboxLayout;
 
@@ -32,7 +35,7 @@ pub trait LayoutTree {
     fn mark_dirty(&mut self, node: Node);
 
     /// Measure a node. Taffy uses this to force reflows of things like text and overflowing content.
-    fn measure_node(&self, node: Node, size: Size<Option<f32>>) -> Size<f32>;
+    fn measure_node(&self, node: Node, node_size: Size<Option<f32>>) -> Size<f32>;
 
     /// Node needs to be measured
     fn needs_measure(&self, node: Node) -> bool;
@@ -53,61 +56,4 @@ pub trait LayoutTree {
     /// The secondary cache is for nodes who have a main size already calculated, but need to calculate a secondary size.
     /// This typically happens due to conflicting constraints.
     fn secondary_cache(&mut self, node: Node) -> &mut Option<Cache>;
-}
-
-impl LayoutTree for Taffy {
-    fn children(&self, node: Node) -> &[Node] {
-        &self.children[node]
-    }
-
-    fn parent(&self, node: Node) -> Option<Node> {
-        self.parents.get(node).copied().flatten()
-    }
-
-    fn style(&self, node: Node) -> &FlexboxLayout {
-        &self.nodes[node].style
-    }
-
-    fn layout(&self, node: Node) -> &Layout {
-        &self.nodes[node].layout
-    }
-
-    fn layout_mut(&mut self, node: Node) -> &mut Layout {
-        &mut self.nodes[node].layout
-    }
-
-    fn mark_dirty(&mut self, node: Node) {
-        self.nodes[node].is_dirty = true;
-    }
-
-    fn measure_node(&self, node: Node, node_size: Size<Option<f32>>) -> Size<f32> {
-        use crate::node::MeasureFunc;
-
-        match &self.measure_funcs[node] {
-            MeasureFunc::Raw(measure) => measure(node_size),
-
-            #[cfg(any(feature = "std", feature = "alloc"))]
-            MeasureFunc::Boxed(measure) => {
-                // need to cast the box for whatever reason
-                let f: &dyn Fn(_) -> _ = measure;
-                f(node_size)
-            }
-        }
-    }
-
-    fn needs_measure(&self, node: Node) -> bool {
-        self.nodes[node].needs_measure
-    }
-
-    fn primary_cache(&mut self, node: Node) -> &mut Option<Cache> {
-        &mut self.nodes[node].main_size_layout_cache
-    }
-
-    fn secondary_cache(&mut self, node: Node) -> &mut Option<Cache> {
-        &mut self.nodes[node].other_layout_cache
-    }
-
-    fn child(&self, node: Node, id: usize) -> Node {
-        self.children[node][id]
-    }
 }
