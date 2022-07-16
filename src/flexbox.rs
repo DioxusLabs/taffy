@@ -138,7 +138,6 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, size: Size<Option<f32>>) 
     *tree.layout_mut(root) = Layout { order: 0, size: preliminary_size, location: Point::ZERO };
 
     round_layout(tree, root, 0.0, 0.0);
-    // round_layout(tree, &mut self.nodes, &self.children, root, 0.0, 0.0);
 }
 
 /// Rounds the calculated [`NodeData`] according to the spec
@@ -154,9 +153,9 @@ fn round_layout(tree: &mut impl LayoutTree, root: Node, abs_x: f32, abs_y: f32) 
     layout.size.height = round(layout.size.height);
 
     // Satisfy the borrow checker here by re-indexing to shorten the lifetime to the loop scope
-    let num_children = tree.children(root).len();
-    for x in 0..num_children {
-        round_layout(tree, tree.child(root, x), abs_x, abs_y);
+    for x in 0..tree.children(root).len() {
+        let child = tree.child(root, x);
+        round_layout(tree, child, abs_x, abs_y);
     }
 }
 
@@ -365,7 +364,6 @@ fn determine_flex_base_size(
     // TODO - this does not follow spec. See the TODOs below
     for child in flex_items.iter_mut() {
         let child_style = tree.style(child.node);
-        // let child_style = tree.style(child.node);
 
         // A. If the item has a definite used flex basis, that’s the flex base size.
 
@@ -822,7 +820,7 @@ fn calculate_children_base_lines(
             layout.size.height
         } else {
             let child = children[0];
-            let layout = db.layout(node);
+            let layout = db.layout(child);
             calc_baseline(db, child, layout)
         }
         // if db.children[node].is_empty() {
@@ -1574,9 +1572,7 @@ fn compute_preliminary(
     main_size: bool,
 ) -> Size<f32> {
     // clear the dirtiness of the node now that we've computed it
-    // todo!("undo mark dirty");
-    // self.nodes[node].is_dirty = false;
-    // tree.mark_dirty(node);
+    tree.mark_dirty(node, false);
 
     // First we check if we have a result for the given input
     if let Some(cached_size) = compute_from_cache(tree, node, node_size, parent_size, perform_layout, main_size) {
