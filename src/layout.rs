@@ -26,7 +26,7 @@ impl Layout {
 
 /// Cached intermediate layout results
 #[derive(Debug, Clone)]
-pub(crate) struct Cache {
+pub struct Cache {
     /// The initial cached size of the node itself
     pub(crate) node_size: Size<Option<f32>>,
     /// The initial cached size of the parent's node
