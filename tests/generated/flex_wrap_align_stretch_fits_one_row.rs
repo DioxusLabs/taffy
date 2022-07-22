@@ -33,7 +33,7 @@ fn flex_wrap_align_stretch_fits_one_row() {
             &[node0, node1],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+    taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
     assert_eq!(taffy.layout(node).unwrap().size.width, 150f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 100f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

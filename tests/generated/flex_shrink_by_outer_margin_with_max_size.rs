@@ -29,7 +29,7 @@ fn flex_shrink_by_outer_margin_with_max_size() {
             &[node0],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+    taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
     assert_eq!(taffy.layout(node).unwrap().size.width, 20f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 80f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

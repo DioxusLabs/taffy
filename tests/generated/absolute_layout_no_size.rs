@@ -20,7 +20,7 @@ fn absolute_layout_no_size() {
             &[node0],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+    taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
     assert_eq!(taffy.layout(node).unwrap().size.width, 100f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 100f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);
