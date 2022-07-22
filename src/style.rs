@@ -285,26 +285,26 @@ impl Default for Rect<Dimension> {
 impl Rect<Dimension> {
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Points`] values for `start` and `top`
     #[must_use]
-    pub fn top_from_points(start: f32, top: f32) -> Rect<Dimension> {
-        Rect { start: Dimension::Points(start), top: Dimension::Points(top), ..Default::default() }
+    pub const fn top_from_points(start: f32, top: f32) -> Rect<Dimension> {
+        Rect { start: Dimension::Points(start), top: Dimension::Points(top), ..Rect::AUTO }
     }
 
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Points`] values for `end` and `bottom`
     #[must_use]
-    pub fn bot_from_points(end: f32, bottom: f32) -> Rect<Dimension> {
-        Rect { end: Dimension::Points(end), bottom: Dimension::Points(bottom), ..Default::default() }
+    pub const fn bot_from_points(end: f32, bottom: f32) -> Rect<Dimension> {
+        Rect { end: Dimension::Points(end), bottom: Dimension::Points(bottom), ..Rect::AUTO }
     }
 
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Percent`] values for `start` and `top`
     #[must_use]
-    pub fn top_from_percent(start: f32, top: f32) -> Rect<Dimension> {
-        Rect { start: Dimension::Percent(start), top: Dimension::Percent(top), ..Default::default() }
+    pub const fn top_from_percent(start: f32, top: f32) -> Rect<Dimension> {
+        Rect { start: Dimension::Percent(start), top: Dimension::Percent(top), ..Rect::AUTO }
     }
 
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Percent`] values for `end` and `bottom`
     #[must_use]
-    pub fn bot_from_percent(end: f32, bottom: f32) -> Rect<Dimension> {
-        Rect { end: Dimension::Percent(end), bottom: Dimension::Percent(bottom), ..Default::default() }
+    pub const fn bot_from_percent(end: f32, bottom: f32) -> Rect<Dimension> {
+        Rect { end: Dimension::Percent(end), bottom: Dimension::Percent(bottom), ..Rect::AUTO }
     }
 
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Undefined`] for all values
@@ -321,7 +321,7 @@ impl Rect<Dimension> {
 
     /// Create a new Rect with [`Dimension::Points`]
     #[must_use]
-    pub fn from_points(start: f32, end: f32, top: f32, bottom: f32) -> Self {
+    pub const fn from_points(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Rect {
             start: Dimension::Points(start),
             end: Dimension::Points(end),
@@ -332,7 +332,7 @@ impl Rect<Dimension> {
 
     /// Create a new Rect with [`Dimension::Percent`]
     #[must_use]
-    pub fn from_percent(start: f32, end: f32, top: f32, bottom: f32) -> Self {
+    pub const fn from_percent(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Rect {
             start: Dimension::Percent(start),
             end: Dimension::Percent(end),
