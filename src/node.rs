@@ -49,7 +49,7 @@ pub struct Taffy {
 
 impl Default for Taffy {
     fn default() -> Self {
-        Self::with_capacity(16)
+        Taffy::new()
     }
 }
 
@@ -60,13 +60,15 @@ impl Taffy {
     /// The default capacity of a [`Taffy`] is 16 nodes.
     #[must_use]
     pub fn new() -> Self {
-        Taffy::default()
+        Self::with_capacity(16)
     }
 
     /// Creates a new [`Taffy`] that can store `capacity` nodes before reallocation
     #[must_use]
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
+            // TODO: make this method const upstream,
+            // so constructors here can be const
             nodes: SlotMap::with_capacity(capacity),
             children: SlotMap::with_capacity(capacity),
             parents: SlotMap::with_capacity(capacity),
