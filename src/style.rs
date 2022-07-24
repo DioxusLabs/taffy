@@ -373,43 +373,15 @@ impl Rect<Dimension> {
 pub struct Style {
     /// What layout strategy should be used?
     pub display: Display,
+
+    // Position properties
     /// What should the `position` value of this struct use as a base offset?
     pub position_type: PositionType,
-    /// Which direction does the main axis flow in?
-    pub flex_direction: FlexDirection,
-    /// Should elements wrap, or stay in a single line?
-    pub flex_wrap: FlexWrap,
-    /// How should items be aligned relative to the cross axis?
-    pub align_items: AlignItems,
-    /// Should this item violate the cross axis alignment specified by its parent's [`AlignItems`]?
-    pub align_self: AlignSelf,
-    /// How should content contained within this item be aligned relative to the cross axis?
-    pub align_content: AlignContent,
-    /// How should items be aligned relative to the main axis?
-    pub justify_content: JustifyContent,
     /// How should the position of this element be tweaked relative to the layout defined?
     pub position: Rect<LengthPercentageAuto>,
-    /// How large should the margin be on each side?
-    pub margin: Rect<LengthPercentageAuto>,
-    /// How large should the padding be on each side?
-    pub padding: Rect<LengthPercentage>,
-    /// How large should the border be on each side?
-    pub border: Rect<LengthPercentage>,
-    // Gap
-    /// How large should the gaps between items in a grid or flex container be?
-    pub gap: Size<LengthPercentage>,
-    /// The relative rate at which this item grows when it is expanding to fill space
-    ///
-    /// 0.0 is the default value, and this value must not be negative.
-    pub flex_grow: f32,
-    /// The relative rate at which this item shrinks when it is contracting to fit into space
-    ///
-    /// 1.0 is the default value, and this value must not be negative.
-    pub flex_shrink: f32,
-    /// Sets the initial main axis size of the item
-    pub flex_basis: Dimension,
+
+    // Size properies
     /// Sets the initial size of the item
-    // TODO: why does this exist as distinct from flex_basis? How do they interact?
     pub size: Size<Dimension>,
     /// Controls the minimum size of the item
     pub min_size: Size<Dimension>,
@@ -419,6 +391,42 @@ pub struct Style {
     ///
     /// The ratio is calculated as width divided by height.
     pub aspect_ratio: Option<f32>,
+
+    // Spacing Properties
+    /// How large should the margin be on each side?
+    pub margin: Rect<LengthPercentageAuto>,
+    /// How large should the padding be on each side?
+    pub padding: Rect<LengthPercentage>,
+    /// How large should the border be on each side?
+    pub border: Rect<LengthPercentage>,
+
+    // Alignment properties
+    /// How should items be aligned relative to the cross axis?
+    pub align_items: AlignItems,
+    /// Should this item violate the cross axis alignment specified by its parent's [`AlignItems`]?
+    pub align_self: AlignSelf,
+    /// How should content contained within this item be aligned relative to the cross axis?
+    pub align_content: AlignContent,
+    /// How should items be aligned relative to the main axis?
+    pub justify_content: JustifyContent,
+    /// How large should the gaps between items in a grid or flex container be?
+    pub gap: Size<LengthPercentage>,
+
+    // Flexbox properies
+    /// Which direction does the main axis flow in?
+    pub flex_direction: FlexDirection,
+    /// Should elements wrap, or stay in a single line?
+    pub flex_wrap: FlexWrap,
+    /// Sets the initial main axis size of the item
+    pub flex_basis: Dimension,
+    /// The relative rate at which this item grows when it is expanding to fill space
+    ///
+    /// 0.0 is the default value, and this value must be positive.
+    pub flex_grow: f32,
+    /// The relative rate at which this item shrinks when it is contracting to fit into space
+    ///
+    /// 1.0 is the default value, and this value must be positive.
+    pub flex_shrink: f32,
 }
 
 impl Style {
