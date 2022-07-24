@@ -1,6 +1,7 @@
 //! A representation of [CSS layout properties](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust, used for flexbox layout
 
 use crate::geometry::{Rect, Size};
+use crate::sys::GridTrackVec;
 
 /// How [`Nodes`](crate::node::Node) are aligned relative to the cross axis
 ///
@@ -251,6 +252,33 @@ impl Default for FlexWrap {
     }
 }
 
+/// Controls whether grid items are placed row-wise or column-wise. And whether the sparse or dense packing algorithm is used.
+/// The "dense" packing algorithm attempts to fill in holes earlier in the grid, if smaller items come up later. This may cause items to appear out-of-order, when doing so would fill in holes left by larger items.
+///
+/// Defaults to [`GridAutoFlow::Row`]
+///
+/// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-flow)
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum GridAutoFlow {
+    /// Items are placed by filling each row in turn, adding new rows as necessary
+    Row,
+    /// Items are placed by filling each column in turn, adding new columns as necessary.
+    Column,
+    ///
+    Dense,
+    /// Combines `Row` with the dense packing algorithm.
+    RowDense,
+    /// Combines `Column` with the dense packing algorithm.
+    ColumnDense,
+}
+
+impl Default for GridAutoFlow {
+    fn default() -> Self {
+        Self::Row
+    }
+}
+
 /// A unit of linear measurement
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
@@ -367,7 +395,7 @@ impl Rect<Dimension> {
 /// this [introduction to the box model](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Box_Model/Introduction_to_the_CSS_box_model).
 ///
 /// If the behavior does not match the flexbox layout algorithm on the web, please file a bug!
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 pub struct Style {
@@ -427,6 +455,18 @@ pub struct Style {
     ///
     /// 1.0 is the default value, and this value must be positive.
     pub flex_shrink: f32,
+
+    // Grid container properies
+    /// Defines the track sizing functions (widths) of the grid rows
+    pub grid_template_rows: GridTrackVec<Dimension>,
+    /// Defines the track sizing functions (heights) of the grid columns
+    pub grid_template_columns: GridTrackVec<Dimension>,
+    /// Defines the size of implicitly created rows
+    pub grid_auto_rows: Dimension,
+    /// Defined the size of implicitly created columns
+    pub grid_auto_columns: Dimension,
+    /// Controls how items get placed into the grid for auto-placed items
+    pub grid_auto_flow: GridAutoFlow,
 }
 
 impl Style {
@@ -452,6 +492,11 @@ impl Style {
         min_size: Size::auto(),
         max_size: Size::auto(),
         aspect_ratio: None,
+        grid_template_rows: Vec::new(),
+        grid_template_columns: Vec::new(),
+        grid_auto_rows: Dimension::Auto,
+        grid_auto_columns: Dimension::Auto,
+        grid_auto_flow: GridAutoFlow::Row,
     };
 }
 
@@ -591,6 +636,11 @@ mod tests {
             min_size: Size::auto(),
             max_size: Size::auto(),
             aspect_ratio: Default::default(),
+            grid_template_rows: Default::default(),
+            grid_template_columns: Default::default(),
+            grid_auto_rows: super::Dimension::Auto,
+            grid_auto_columns: super::Dimension::Auto,
+            grid_auto_flow: Default::default(),
         };
 
         assert_eq!(Style::DEFAULT, Style::default());

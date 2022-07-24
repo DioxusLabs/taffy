@@ -1864,7 +1864,7 @@ mod tests {
         let mut tree = Taffy::with_capacity(16);
 
         let style = Style::default();
-        let node_id = tree.new_leaf(style).unwrap();
+        let node_id = tree.new_leaf(style.clone()).unwrap();
 
         let node_size = Size::NONE;
         let parent_size = Size::MAX_CONTENT;
@@ -1912,15 +1912,15 @@ mod tests {
 
         let style: Style = Style { display: Flex, size: Size::from_points(50.0, 50.0), ..Default::default() };
 
-        let grandchild_00 = taffy.new_leaf(style).unwrap();
+        let grandchild_00 = taffy.new_leaf(style.clone()).unwrap();
 
-        let grandchild_01 = taffy.new_leaf(style).unwrap();
+        let grandchild_01 = taffy.new_leaf(style.clone()).unwrap();
 
-        let grandchild_02 = taffy.new_leaf(style).unwrap();
+        let grandchild_02 = taffy.new_leaf(style.clone()).unwrap();
 
-        let child_00 = taffy.new_with_children(style, &[grandchild_00, grandchild_01]).unwrap();
+        let child_00 = taffy.new_with_children(style.clone(), &[grandchild_00, grandchild_01]).unwrap();
 
-        let child_01 = taffy.new_with_children(style, &[grandchild_02]).unwrap();
+        let child_01 = taffy.new_with_children(style.clone(), &[grandchild_02]).unwrap();
 
         let root = taffy
             .new_with_children(
