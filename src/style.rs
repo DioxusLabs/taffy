@@ -99,6 +99,8 @@ impl Default for AlignContent {
 pub enum Display {
     /// The children will follow the flexbox layout algorithm
     Flex,
+    /// The children will follow the CSS Grid layout algorithm
+    Grid,
     /// The children will not be laid out, and will follow absolute positioning
     None,
 }
