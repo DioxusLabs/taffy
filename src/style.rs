@@ -279,6 +279,28 @@ impl Default for GridAutoFlow {
     }
 }
 
+/// A track placement specicification. Used for grid-[row/column]-[start/end]. Named tracks are not implemented.
+///
+/// Defaults to [`GridLine::Auto`]
+///
+/// [Specification](https://www.w3.org/TR/css3-grid-layout/#typedef-grid-row-start-grid-line)
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum GridLine {
+    /// Place item according to the auto-placement algorithm, and the parent's grid_auto_flow property
+    Auto,
+    /// Place item at specified track (column or row) index
+    Track(i16),
+    /// Item should span specified number of tracks (columns or rows)
+    Span(u16),
+}
+
+impl Default for GridLine {
+    fn default() -> Self {
+        Self::Auto
+    }
+}
+
 /// A unit of linear measurement
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
@@ -467,6 +489,16 @@ pub struct Style {
     pub grid_auto_columns: Dimension,
     /// Controls how items get placed into the grid for auto-placed items
     pub grid_auto_flow: GridAutoFlow,
+
+    // Grid child properties
+    /// Defines which row in the grid the item should start at
+    pub grid_row_start: GridLine,
+    /// Defines which row in the grid the item should end at
+    pub grid_row_end: GridLine,
+    /// Defines which column in the grid the item should start at
+    pub grid_column_start: GridLine,
+    /// Defines which column in the grid the item should end at
+    pub grid_column_end: GridLine,
 }
 
 impl Style {
@@ -497,6 +529,10 @@ impl Style {
         grid_auto_rows: Dimension::Auto,
         grid_auto_columns: Dimension::Auto,
         grid_auto_flow: GridAutoFlow::Row,
+        grid_row_start: GridLine::Auto,
+        grid_row_end: GridLine::Auto,
+        grid_column_start: GridLine::Auto,
+        grid_column_end: GridLine::Auto,
     };
 }
 
@@ -641,6 +677,10 @@ mod tests {
             grid_auto_rows: super::Dimension::Auto,
             grid_auto_columns: super::Dimension::Auto,
             grid_auto_flow: Default::default(),
+            grid_row_start: Default::default(),
+            grid_row_end: Default::default(),
+            grid_column_start: Default::default(),
+            grid_column_end: Default::default(),
         };
 
         assert_eq!(Style::DEFAULT, Style::default());
