@@ -15,7 +15,7 @@ mod measure {
             )
             .unwrap();
 
-        taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
 
         assert_eq!(taffy.layout(node).unwrap().size.width, 100.0);
         assert_eq!(taffy.layout(node).unwrap().size.height, 100.0);
@@ -36,7 +36,7 @@ mod measure {
             .unwrap();
 
         let node = taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[child]).unwrap();
-        taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
 
         assert_eq!(taffy.layout(node).unwrap().size.width, 100.0);
         assert_eq!(taffy.layout(node).unwrap().size.height, 100.0);
@@ -68,7 +68,7 @@ mod measure {
             )
             .unwrap();
 
-        taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
 
         assert_eq!(taffy.layout(node).unwrap().size.width, 50.0);
         assert_eq!(taffy.layout(node).unwrap().size.height, 100.0);
@@ -105,7 +105,7 @@ mod measure {
                 &[child],
             )
             .unwrap();
-        taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
 
         assert_eq!(taffy.layout(node).unwrap().size.width, 50.0);
         assert_eq!(taffy.layout(node).unwrap().size.height, 120.0);
@@ -147,7 +147,7 @@ mod measure {
             )
             .unwrap();
 
-        taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
 
         assert_eq!(taffy.layout(child1).unwrap().size.width, 50.0);
         assert_eq!(taffy.layout(child1).unwrap().size.height, 50.0);
@@ -187,7 +187,7 @@ mod measure {
             )
             .unwrap();
 
-        taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
 
         assert_eq!(taffy.layout(child1).unwrap().size.width, 50.0);
         assert_eq!(taffy.layout(child1).unwrap().size.height, 50.0);
@@ -228,7 +228,7 @@ mod measure {
             )
             .unwrap();
 
-        taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
 
         assert_eq!(taffy.layout(child1).unwrap().size.width, 50.0);
         assert_eq!(taffy.layout(child1).unwrap().size.height, 100.0);
@@ -271,7 +271,7 @@ mod measure {
             )
             .unwrap();
 
-        taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
 
         assert_eq!(taffy.layout(child1).unwrap().size.width, 50.0);
         assert_eq!(taffy.layout(child1).unwrap().size.height, 100.0);
@@ -305,7 +305,7 @@ mod measure {
             )
             .unwrap();
 
-        taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
 
         assert_eq!(taffy.layout(child).unwrap().size.width, 100.0);
         assert_eq!(taffy.layout(child).unwrap().size.height, 100.0);
@@ -328,7 +328,7 @@ mod measure {
             .unwrap();
 
         let node = taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[child]).unwrap();
-        taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
 
         assert_eq!(taffy.layout(child).unwrap().size.width, 50.0);
         assert_eq!(taffy.layout(child).unwrap().size.height, 100.0);
@@ -351,7 +351,7 @@ mod measure {
             .unwrap();
 
         let node = taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[child]).unwrap();
-        taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
 
         assert_eq!(taffy.layout(child).unwrap().size.width, 100.0);
         assert_eq!(taffy.layout(child).unwrap().size.height, 50.0);
@@ -395,7 +395,7 @@ mod measure {
             )
             .unwrap();
 
-        taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
 
         assert_eq!(taffy.layout(child0).unwrap().size.width, 100.0);
         assert_eq!(taffy.layout(child0).unwrap().size.height, 100.0);
@@ -429,7 +429,7 @@ mod measure {
             )
             .unwrap();
 
-        taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
 
         assert_eq!(taffy.layout(child).unwrap().size.width, 50.0);
         assert_eq!(taffy.layout(child).unwrap().size.height, 100.0);
@@ -464,7 +464,7 @@ mod measure {
             )
             .unwrap();
 
-        taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
 
         assert_eq!(taffy.layout(child).unwrap().size.width, 50.0);
         assert_eq!(taffy.layout(child).unwrap().size.height, 50.0);
@@ -488,7 +488,7 @@ mod measure {
             )
             .unwrap();
 
-        taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
 
         assert_eq!(taffy.layout(child).unwrap().size.width, 100.0);
         assert_eq!(taffy.layout(child).unwrap().size.height, 100.0);
@@ -518,7 +518,7 @@ mod measure {
             taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[grandchild]).unwrap();
 
         let node = taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[child]).unwrap();
-        taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
 
         assert_eq!(NUM_MEASURES.load(atomic::Ordering::Relaxed), 2);
     }

@@ -465,7 +465,7 @@ impl Taffy {
             // webkit handled various scenarios. Can probably be solved better by passing in
             // min-content max-content constraints from the top
             let min_main = self
-                .compute_preliminary(child.node, Size::undefined(), available_space, false, false)
+                .compute_preliminary(child.node, Size::NONE, available_space, false, false)
                 .main(constants.dir)
                 .maybe_max(child.min_size.main(constants.dir))
                 .maybe_min(child.size.main(constants.dir))
@@ -724,7 +724,7 @@ impl Taffy {
                 // min-content max-content constraints from the top. Need to figure out correct thing to do here as
                 // just piling on more conditionals.
                 let min_main = if constants.is_row && self.nodes[child.node].measure.is_none() {
-                    self.compute_preliminary(child.node, Size::undefined(), available_space, false, false)
+                    self.compute_preliminary(child.node, Size::NONE, available_space, false, false)
                         .width
                         .maybe_min(child.size.width)
                         .maybe_max(child.min_size.width)
@@ -1762,8 +1762,8 @@ mod tests {
         let style = FlexboxLayout::default();
         let node_id = tree.new_leaf(style).unwrap();
 
-        let node_size = Size::undefined();
-        let parent_size = Size::undefined();
+        let node_size = Size::NONE;
+        let parent_size = Size::NONE;
 
         let constants = Taffy::compute_constants(&tree.nodes[node_id], node_size, parent_size);
 

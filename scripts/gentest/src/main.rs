@@ -150,7 +150,7 @@ fn generate_bench(description: &json::JsonValue) -> TokenStream {
         pub fn compute() {
             let mut taffy = taffy::Taffy::new();
             #node_description
-            taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+            taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
         }
     )
 }
@@ -166,7 +166,7 @@ fn generate_test(name: impl AsRef<str>, description: &json::JsonValue) -> TokenS
         fn #name() {
             let mut taffy = taffy::Taffy::new();
             #node_description
-            taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+            taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
             #assertions
         }
     )
