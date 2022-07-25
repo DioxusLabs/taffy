@@ -15,5 +15,5 @@ pub fn compute() {
         .unwrap();
     let node0 = taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[node00]).unwrap();
     let node = taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[node0]).unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+    taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
 }

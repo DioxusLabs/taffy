@@ -285,26 +285,26 @@ impl Default for Rect<Dimension> {
 impl Rect<Dimension> {
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Points`] values for `start` and `top`
     #[must_use]
-    pub fn top_from_points(start: f32, top: f32) -> Rect<Dimension> {
-        Rect { start: Dimension::Points(start), top: Dimension::Points(top), ..Default::default() }
+    pub const fn top_from_points(start: f32, top: f32) -> Rect<Dimension> {
+        Rect { start: Dimension::Points(start), top: Dimension::Points(top), ..Rect::AUTO }
     }
 
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Points`] values for `end` and `bottom`
     #[must_use]
-    pub fn bot_from_points(end: f32, bottom: f32) -> Rect<Dimension> {
-        Rect { end: Dimension::Points(end), bottom: Dimension::Points(bottom), ..Default::default() }
+    pub const fn bot_from_points(end: f32, bottom: f32) -> Rect<Dimension> {
+        Rect { end: Dimension::Points(end), bottom: Dimension::Points(bottom), ..Rect::AUTO }
     }
 
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Percent`] values for `start` and `top`
     #[must_use]
-    pub fn top_from_percent(start: f32, top: f32) -> Rect<Dimension> {
-        Rect { start: Dimension::Percent(start), top: Dimension::Percent(top), ..Default::default() }
+    pub const fn top_from_percent(start: f32, top: f32) -> Rect<Dimension> {
+        Rect { start: Dimension::Percent(start), top: Dimension::Percent(top), ..Rect::AUTO }
     }
 
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Percent`] values for `end` and `bottom`
     #[must_use]
-    pub fn bot_from_percent(end: f32, bottom: f32) -> Rect<Dimension> {
-        Rect { end: Dimension::Percent(end), bottom: Dimension::Percent(bottom), ..Default::default() }
+    pub const fn bot_from_percent(end: f32, bottom: f32) -> Rect<Dimension> {
+        Rect { end: Dimension::Percent(end), bottom: Dimension::Percent(bottom), ..Rect::AUTO }
     }
 
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Undefined`] for all values
@@ -321,7 +321,7 @@ impl Rect<Dimension> {
 
     /// Create a new Rect with [`Dimension::Points`]
     #[must_use]
-    pub fn from_points(start: f32, end: f32, top: f32, bottom: f32) -> Self {
+    pub const fn from_points(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Rect {
             start: Dimension::Points(start),
             end: Dimension::Points(end),
@@ -332,7 +332,7 @@ impl Rect<Dimension> {
 
     /// Create a new Rect with [`Dimension::Percent`]
     #[must_use]
-    pub fn from_percent(start: f32, end: f32, top: f32, bottom: f32) -> Self {
+    pub const fn from_percent(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Rect {
             start: Dimension::Percent(start),
             end: Dimension::Percent(end),
@@ -413,29 +413,34 @@ pub struct FlexboxLayout {
     pub aspect_ratio: Option<f32>,
 }
 
+impl FlexboxLayout {
+    /// The [`Default`] layout, in a form that can be used in const functions
+    pub const DEFAULT: FlexboxLayout = FlexboxLayout {
+        display: Display::Flex,
+        position_type: PositionType::Relative,
+        flex_direction: FlexDirection::Row,
+        flex_wrap: FlexWrap::NoWrap,
+        align_items: AlignItems::Stretch,
+        align_self: AlignSelf::Auto,
+        align_content: AlignContent::Stretch,
+        justify_content: JustifyContent::FlexStart,
+        position: Rect::UNDEFINED,
+        margin: Rect::UNDEFINED,
+        padding: Rect::UNDEFINED,
+        border: Rect::UNDEFINED,
+        flex_grow: 0.0,
+        flex_shrink: 1.0,
+        flex_basis: Dimension::Auto,
+        size: Size::AUTO,
+        min_size: Size::AUTO,
+        max_size: Size::AUTO,
+        aspect_ratio: None,
+    };
+}
+
 impl Default for FlexboxLayout {
     fn default() -> Self {
-        Self {
-            display: Default::default(),
-            position_type: Default::default(),
-            flex_direction: Default::default(),
-            flex_wrap: Default::default(),
-            align_items: Default::default(),
-            align_self: Default::default(),
-            align_content: Default::default(),
-            justify_content: Default::default(),
-            position: Default::default(),
-            margin: Default::default(),
-            padding: Default::default(),
-            border: Default::default(),
-            flex_grow: 0.0,
-            flex_shrink: 1.0,
-            flex_basis: Dimension::Auto,
-            size: Default::default(),
-            min_size: Default::default(),
-            max_size: Default::default(),
-            aspect_ratio: Default::default(),
-        }
+        FlexboxLayout::DEFAULT
     }
 }
 
@@ -543,6 +548,36 @@ impl FlexboxLayout {
 #[allow(clippy::bool_assert_comparison)]
 #[cfg(test)]
 mod tests {
+    use super::FlexboxLayout;
+
+    #[test]
+    fn defaults_match() {
+        let old_defaults = FlexboxLayout {
+            display: Default::default(),
+            position_type: Default::default(),
+            flex_direction: Default::default(),
+            flex_wrap: Default::default(),
+            align_items: Default::default(),
+            align_self: Default::default(),
+            align_content: Default::default(),
+            justify_content: Default::default(),
+            position: Default::default(),
+            margin: Default::default(),
+            padding: Default::default(),
+            border: Default::default(),
+            flex_grow: 0.0,
+            flex_shrink: 1.0,
+            flex_basis: super::Dimension::Auto,
+            size: Default::default(),
+            min_size: Default::default(),
+            max_size: Default::default(),
+            aspect_ratio: Default::default(),
+        };
+
+        assert_eq!(FlexboxLayout::DEFAULT, FlexboxLayout::default());
+        assert_eq!(FlexboxLayout::DEFAULT, old_defaults);
+    }
+
     mod test_flex_direction {
         use crate::style::*;
 

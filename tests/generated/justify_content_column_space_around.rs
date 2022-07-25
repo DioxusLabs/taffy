@@ -43,7 +43,7 @@ fn justify_content_column_space_around() {
             &[node0, node1, node2],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+    taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
     assert_eq!(taffy.layout(node).unwrap().size.width, 100f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 100f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

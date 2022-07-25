@@ -144,7 +144,7 @@ impl Rect<f32> {
 
     /// Creates a new Rect
     #[must_use]
-    pub fn new(start: f32, end: f32, top: f32, bottom: f32) -> Self {
+    pub const fn new(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Self { start, end, top, bottom }
     }
 }
@@ -158,14 +158,6 @@ pub struct Size<T> {
     pub width: T,
     /// The y extent of the rectangle
     pub height: T,
-}
-
-impl Size<()> {
-    /// Generates a `Size<Option<f32>>` with undefined width and height
-    #[must_use]
-    pub fn undefined() -> Size<Option<f32>> {
-        Size { width: None, height: None }
-    }
 }
 
 impl<T> Size<T> {
@@ -235,7 +227,7 @@ impl Size<Option<f32>> {
 
     /// A [`Size<Option<f32>>`] with `Some(width)` and `Some(height)` as parameters
     #[must_use]
-    pub fn new(width: f32, height: f32) -> Self {
+    pub const fn new(width: f32, height: f32) -> Self {
         Size { width: Some(width), height: Some(height) }
     }
 }
@@ -243,13 +235,13 @@ impl Size<Option<f32>> {
 impl Size<Dimension> {
     /// Generates a [`Size<Dimension>`] using [`Dimension::Points`] values
     #[must_use]
-    pub fn from_points(width: f32, height: f32) -> Self {
+    pub const fn from_points(width: f32, height: f32) -> Self {
         Size { width: Dimension::Points(width), height: Dimension::Points(height) }
     }
 
     /// Generates a [`Size<Dimension>`] using [`Dimension::Percent`] values
     #[must_use]
-    pub fn from_percent(width: f32, height: f32) -> Self {
+    pub const fn from_percent(width: f32, height: f32) -> Self {
         Size { width: Dimension::Percent(width), height: Dimension::Percent(height) }
     }
 

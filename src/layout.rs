@@ -19,7 +19,7 @@ pub struct Layout {
 impl Layout {
     /// Creates a new [`Layout`] struct with zero size positioned at the origin
     #[must_use]
-    pub(crate) fn new() -> Self {
+    pub const fn new() -> Self {
         Self { order: 0, size: Size::ZERO, location: Point::ZERO }
     }
 }

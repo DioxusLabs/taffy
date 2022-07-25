@@ -27,7 +27,7 @@ pub(crate) struct NodeData {
 impl NodeData {
     /// Create the data for a new node with a [`MeasureFunc`]
     #[must_use]
-    pub fn new_with_measure(style: FlexboxLayout, measure: MeasureFunc) -> Self {
+    pub const fn new_with_measure(style: FlexboxLayout, measure: MeasureFunc) -> Self {
         Self {
             style,
             measure: Some(measure),
@@ -40,7 +40,7 @@ impl NodeData {
 
     /// Create the data for a new node
     #[must_use]
-    pub fn new(style: FlexboxLayout) -> Self {
+    pub const fn new(style: FlexboxLayout) -> Self {
         Self {
             style,
             measure: None,

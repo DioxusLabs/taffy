@@ -6,6 +6,8 @@
 
 - Added `taffy::error::InvalidChild` Error type
 - `taffy::node::Taffy.new_leaf()` which allows the creation of new leaf-nodes without having to supply a measure function
+- Builder methods are now `const` where possible
+  - Several convenenience constants have been defined: notably `FlexboxLayout::DEFAULT`
 
 ### 0.2.0 Changed
 
@@ -24,6 +26,7 @@
 - `taffy::error::InvalidChild` is now `taffy::error::TaffyError`
 - `taffy::error::InvalidNode` has been removed and is now just a branch on the `TaffyError` enum
 - `taffy::forest::Forest` has been merged into `taffy::node::Taffy` for a performance boost up to 90%
+- `Size::undefined()` has been removed, use `Size::NONE` instead.
 
 ### 0.2.0 Fixed
 
