@@ -392,11 +392,11 @@ pub struct FlexboxLayout {
     pub border: Rect<Dimension>,
     /// The relative rate at which this item grows when it is expanding to fill space
     ///
-    /// 0.0 is the default value, and this value must be positive.
+    /// 0.0 is the default value, and this value must not be negative.
     pub flex_grow: f32,
     /// The relative rate at which this item shrinks when it is contracting to fit into space
     ///
-    /// 1.0 is the default value, and this value must be positive.
+    /// 1.0 is the default value, and this value must not be negative.
     pub flex_shrink: f32,
     /// Sets the initial main axis size of the item
     pub flex_basis: Dimension,
