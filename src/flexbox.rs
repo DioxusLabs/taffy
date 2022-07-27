@@ -1736,7 +1736,7 @@ fn hidden_layout(
     node: Node,
     order: u32,
 ) {
-    nodes[node].layout = Layout::from_order(order);
+    nodes[node].layout = Layout::with_order(order);
 
     for (order, child) in children[node].iter().enumerate() {
         hidden_layout(nodes, children, *child, order as _);
