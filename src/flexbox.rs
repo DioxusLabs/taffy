@@ -82,7 +82,7 @@ struct FlexLine<'a> {
 
 /// Values that can be cached during the flexbox algorithm
 struct AlgoConstants {
-    /// The direction of the current segment being layed out
+    /// The direction of the current segment being laid out
     dir: FlexDirection,
     /// Is this segment a row
     is_row: bool,
@@ -493,7 +493,7 @@ impl Taffy {
     ///
     ///     - Otherwise, starting from the first uncollected item, collect consecutive items one by one until the first time that the next collected item would not fit into the flex container’s inner main size
     ///         (or until a forced break is encountered, see [§10 Fragmenting Flex Layout](https://www.w3.org/TR/css-flexbox-1/#pagination)).
-    ///         If the very first uncollected item wouldn’t fit, collect just it into the line.
+    ///         If the very first uncollected item wouldn't fit, collect just it into the line.
     ///
     ///         For this step, the size of a flex item is its outer hypothetical main size. (**Note: This can be negative**.)
     ///
@@ -1335,64 +1335,119 @@ impl Taffy {
         }
     }
 
+    /// Calculates the layout for a flex-item
+    #[allow(clippy::too_many_arguments)]
+    fn calculate_flex_item(
+        &mut self,
+        node: Node,
+        item: &mut FlexItem,
+        total_offset_main: &mut f32,
+        total_offset_cross: f32,
+        line_offset_cross: f32,
+        container_size: Size<f32>,
+        direction: FlexDirection,
+    ) {
+        let preliminary_size = self.compute_preliminary(
+            item.node,
+            item.target_size.map(|s| s.into()),
+            container_size.map(|s| s.into()),
+            true,
+            false,
+        );
+
+        let offset_main = *total_offset_main
+            + item.offset_main
+            + item.margin.main_start(direction)
+            + (item.position.main_start(direction).unwrap_or(0.0) - item.position.main_end(direction).unwrap_or(0.0));
+
+        let offset_cross = total_offset_cross
+            + item.offset_cross
+            + line_offset_cross
+            + item.margin.cross_start(direction)
+            + (item.position.cross_start(direction).unwrap_or(0.0) - item.position.cross_end(direction).unwrap_or(0.0));
+
+        self.nodes[item.node].layout = Layout {
+            order: self.children[node].iter().position(|n| *n == item.node).unwrap() as u32,
+            size: preliminary_size,
+            location: Point {
+                x: if direction.is_row() { offset_main } else { offset_cross },
+                y: if direction.is_column() { offset_main } else { offset_cross },
+            },
+        };
+
+        *total_offset_main +=
+            item.offset_main + item.margin.main_axis_sum(direction) + preliminary_size.main(direction);
+    }
+
+    /// Calculates the layout line
+    fn calculate_layout_line(
+        &mut self,
+        node: Node,
+        line: &mut FlexLine,
+        total_offset_cross: &mut f32,
+        container_size: Size<f32>,
+        padding_border: Rect<f32>,
+        direction: FlexDirection,
+    ) {
+        let mut total_offset_main = padding_border.main_start(direction);
+        let line_offset_cross = line.offset_cross;
+
+        if direction.is_reverse() {
+            for item in line.items.iter_mut().rev() {
+                self.calculate_flex_item(
+                    node,
+                    item,
+                    &mut total_offset_main,
+                    *total_offset_cross,
+                    line_offset_cross,
+                    container_size,
+                    direction,
+                );
+            }
+        } else {
+            for item in line.items.iter_mut() {
+                self.calculate_flex_item(
+                    node,
+                    item,
+                    &mut total_offset_main,
+                    *total_offset_cross,
+                    line_offset_cross,
+                    container_size,
+                    direction,
+                );
+            }
+        }
+
+        *total_offset_cross += line_offset_cross + line.cross_size;
+    }
+
     /// Do a final layout pass and collect the resulting layouts.
     #[inline]
     fn final_layout_pass(&mut self, node: Node, flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
         let mut total_offset_cross = constants.padding_border.cross_start(constants.dir);
 
-        let layout_line = |line: &mut FlexLine| {
-            let mut total_offset_main = constants.padding_border.main_start(constants.dir);
-            let line_offset_cross = line.offset_cross;
-
-            let layout_item = |child: &mut FlexItem| {
-                let preliminary_size = self.compute_preliminary(
-                    child.node,
-                    child.target_size.map(|s| s.into()),
-                    constants.container_size.map(|s| s.into()),
-                    true,
-                    false,
-                );
-
-                let offset_main = total_offset_main
-                    + child.offset_main
-                    + child.margin.main_start(constants.dir)
-                    + (child.position.main_start(constants.dir).unwrap_or(0.0)
-                        - child.position.main_end(constants.dir).unwrap_or(0.0));
-
-                let offset_cross = total_offset_cross
-                    + child.offset_cross
-                    + line_offset_cross
-                    + child.margin.cross_start(constants.dir)
-                    + (child.position.cross_start(constants.dir).unwrap_or(0.0)
-                        - child.position.cross_end(constants.dir).unwrap_or(0.0));
-
-                self.nodes[child.node].layout = Layout {
-                    order: self.children[node].iter().position(|n| *n == child.node).unwrap() as u32,
-                    size: preliminary_size,
-                    location: Point {
-                        x: if constants.is_row { offset_main } else { offset_cross },
-                        y: if constants.is_column { offset_main } else { offset_cross },
-                    },
-                };
-
-                total_offset_main += child.offset_main
-                    + child.margin.main_axis_sum(constants.dir)
-                    + preliminary_size.main(constants.dir);
-            };
-
-            if constants.dir.is_reverse() {
-                line.items.iter_mut().rev().for_each(layout_item);
-            } else {
-                line.items.iter_mut().for_each(layout_item);
-            }
-
-            total_offset_cross += line_offset_cross + line.cross_size;
-        };
-
         if constants.is_wrap_reverse {
-            flex_lines.iter_mut().rev().for_each(layout_line);
+            for line in flex_lines.iter_mut().rev() {
+                self.calculate_layout_line(
+                    node,
+                    line,
+                    &mut total_offset_cross,
+                    constants.container_size,
+                    constants.padding_border,
+                    constants.dir,
+                );
+            }
         } else {
-            flex_lines.iter_mut().for_each(layout_line);
+            for line in flex_lines.iter_mut() {
+                self.calculate_layout_line(
+                    node,
+                    line,
+                    &mut total_offset_cross,
+                    constants.container_size,
+                    constants.padding_border,
+                    constants.dir,
+                );
+            }
         }
     }
 
