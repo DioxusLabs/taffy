@@ -82,7 +82,7 @@ struct FlexLine<'a> {
 
 /// Values that can be cached during the flexbox algorithm
 struct AlgoConstants {
-    /// The direction of the current segment being layed out
+    /// The direction of the current segment being laid out
     dir: FlexDirection,
     /// Is this segment a row
     is_row: bool,
@@ -493,7 +493,7 @@ impl Taffy {
     ///
     ///     - Otherwise, starting from the first uncollected item, collect consecutive items one by one until the first time that the next collected item would not fit into the flex container’s inner main size
     ///         (or until a forced break is encountered, see [§10 Fragmenting Flex Layout](https://www.w3.org/TR/css-flexbox-1/#pagination)).
-    ///         If the very first uncollected item wouldn’t fit, collect just it into the line.
+    ///         If the very first uncollected item wouldn't fit, collect just it into the line.
     ///
     ///         For this step, the size of a flex item is its outer hypothetical main size. (**Note: This can be negative**.)
     ///
