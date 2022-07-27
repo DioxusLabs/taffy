@@ -1808,31 +1808,18 @@ mod tests {
     fn hidden_layout_should_hide_recursively() {
         let mut taffy = Taffy::new();
 
-        let grandchild_00 = taffy
-            .new_leaf(FlexboxLayout { display: Flex, size: Size::from_points(50.0, 50.0), ..Default::default() })
-            .unwrap();
+        let style: FlexboxLayout =
+            FlexboxLayout { display: Flex, size: Size::from_points(50.0, 50.0), ..Default::default() };
 
-        let grandchild_01 = taffy
-            .new_leaf(FlexboxLayout { display: Flex, size: Size::from_points(50.0, 50.0), ..Default::default() })
-            .unwrap();
+        let grandchild_00 = taffy.new_leaf(style).unwrap();
 
-        let grandchild_02 = taffy
-            .new_leaf(FlexboxLayout { display: Flex, size: Size::from_points(50.0, 50.0), ..Default::default() })
-            .unwrap();
+        let grandchild_01 = taffy.new_leaf(style).unwrap();
 
-        let child_00 = taffy
-            .new_with_children(
-                FlexboxLayout { display: Flex, size: Size::from_points(50.0, 50.0), ..Default::default() },
-                &[grandchild_00, grandchild_01],
-            )
-            .unwrap();
+        let grandchild_02 = taffy.new_leaf(style).unwrap();
 
-        let child_01 = taffy
-            .new_with_children(
-                FlexboxLayout { display: Flex, size: Size::from_points(50.0, 50.0), ..Default::default() },
-                &[grandchild_02],
-            )
-            .unwrap();
+        let child_00 = taffy.new_with_children(style, &[grandchild_00, grandchild_01]).unwrap();
+
+        let child_01 = taffy.new_with_children(style, &[grandchild_02]).unwrap();
 
         let root = taffy
             .new_with_children(
@@ -1843,7 +1830,8 @@ mod tests {
 
         hidden_layout(&mut taffy.nodes, &taffy.children, root, 0);
 
-        // Whatever size the nodes had, all layouts should resolve to zero
+        // Whatever size and display-mode the nodes had previously,
+        // all layouts should resolve to ZERO due to the root's DISPLAY::NONE
         for (node, _) in &taffy.nodes {
             if let Ok(layout) = taffy.layout(node) {
                 assert_eq!(layout.size, Size::ZERO);
