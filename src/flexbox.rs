@@ -1336,6 +1336,7 @@ impl Taffy {
     }
 
     /// Calculates the layout for a flex-item
+    #[allow(clippy::too_many_arguments)]
     fn calculate_flex_item(
         &mut self,
         node: Node,
