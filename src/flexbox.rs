@@ -1770,22 +1770,7 @@ impl Taffy {
         // Before returning we perform absolute layout on all absolutely positioned children
         self.perform_absolute_layout_on_absolute_children(node, &constants);
 
-        /// Lay out all hidden nodes recursively
-        ///
-        /// Each hidden node has zero size and is placed at the origin
-        fn hidden_layout(
-            nodes: &mut SlotMap<Node, NodeData>,
-            children: &SlotMap<Node, ChildrenVec<Node>>,
-            node: Node,
-            order: u32,
-        ) {
-            nodes[node].layout = Layout { order, size: Size::ZERO, location: Point::ZERO };
-
-            for (order, child) in children[node].iter().enumerate() {
-                hidden_layout(nodes, children, *child, order as _);
-            }
-        }
-
+        // Recursively hide all nodes set to Display::None
         for (order, child) in self.children[node].iter().enumerate() {
             if self.nodes[*child].style.display == Display::None {
                 hidden_layout(&mut self.nodes, &self.children, *child, order as _);
@@ -1799,8 +1784,26 @@ impl Taffy {
     }
 }
 
+/// Creates a zero-sized layout for this node and its children, recursively.
+fn hidden_layout(
+    nodes: &mut SlotMap<Node, NodeData>,
+    children: &SlotMap<Node, ChildrenVec<Node>>,
+    node: Node,
+    order: u32,
+) {
+    nodes[node].layout = Layout::with_order(order);
+
+    for (order, child) in children[node].iter().enumerate() {
+        hidden_layout(nodes, children, *child, order as _);
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::flexbox::hidden_layout;
+    use crate::geometry::Point;
+    use crate::style::Display;
+    use crate::style::Display::Flex;
     use crate::{
         math::MaybeMath,
         prelude::{Rect, Size},
@@ -1854,5 +1857,41 @@ mod tests {
 
         assert_eq!(constants.container_size, Size::ZERO);
         assert_eq!(constants.inner_container_size, Size::ZERO);
+    }
+
+    #[test]
+    fn hidden_layout_should_hide_recursively() {
+        let mut taffy = Taffy::new();
+
+        let style: FlexboxLayout =
+            FlexboxLayout { display: Flex, size: Size::from_points(50.0, 50.0), ..Default::default() };
+
+        let grandchild_00 = taffy.new_leaf(style).unwrap();
+
+        let grandchild_01 = taffy.new_leaf(style).unwrap();
+
+        let grandchild_02 = taffy.new_leaf(style).unwrap();
+
+        let child_00 = taffy.new_with_children(style, &[grandchild_00, grandchild_01]).unwrap();
+
+        let child_01 = taffy.new_with_children(style, &[grandchild_02]).unwrap();
+
+        let root = taffy
+            .new_with_children(
+                FlexboxLayout { display: Display::None, size: Size::from_points(50.0, 50.0), ..Default::default() },
+                &[child_00, child_01],
+            )
+            .unwrap();
+
+        hidden_layout(&mut taffy.nodes, &taffy.children, root, 0);
+
+        // Whatever size and display-mode the nodes had previously,
+        // all layouts should resolve to ZERO due to the root's DISPLAY::NONE
+        for (node, _) in &taffy.nodes {
+            if let Ok(layout) = taffy.layout(node) {
+                assert_eq!(layout.size, Size::ZERO);
+                assert_eq!(layout.location, Point::ZERO);
+            }
+        }
     }
 }
