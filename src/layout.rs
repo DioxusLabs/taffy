@@ -17,13 +17,19 @@ pub struct Layout {
 }
 
 impl Layout {
-    /// Creates a new [`Layout`] struct with zero size positioned at the origin.
+    /// Creates a new zero-[`Layout`].
+    ///
+    /// The Zero-layout has size and location set to ZERO.
+    /// Order is set to 0.
     #[must_use]
     pub const fn new() -> Self {
         Self { order: 0, size: Size::ZERO, location: Point::ZERO }
     }
 
-    /// Creates a new [`Layout`] from order, with zero size positioned at the origin.
+    /// Creates a new zero-[`Layout`] from order.
+    ///
+    /// Nodes with a higher order should be rendered on top of those with a lower order.
+    /// The Zero-layout has size and location set to ZERO.
     #[must_use]
     pub const fn from_order(order: u32) -> Self {
         Self { order, size: Size::ZERO, location: Point::ZERO }
