@@ -20,18 +20,19 @@ impl Layout {
     /// Creates a new zero-[`Layout`].
     ///
     /// The Zero-layout has size and location set to ZERO.
-    /// Order is set to 0.
+    /// The `order` value of this layout is set to the minimum value of 0.
+    /// This means it should be rendered below all other [`Layout`]s.
     #[must_use]
     pub const fn new() -> Self {
         Self { order: 0, size: Size::ZERO, location: Point::ZERO }
     }
 
-    /// Creates a new zero-[`Layout`] from order.
+    /// Creates a new zero-[`Layout`] with the supplied `order` value.
     ///
     /// Nodes with a higher order should be rendered on top of those with a lower order.
     /// The Zero-layout has size and location set to ZERO.
     #[must_use]
-    pub const fn from_order(order: u32) -> Self {
+    pub const fn with_order(order: u32) -> Self {
         Self { order, size: Size::ZERO, location: Point::ZERO }
     }
 }

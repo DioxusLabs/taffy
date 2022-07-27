@@ -8,7 +8,7 @@
 - `taffy::node::Taffy.new_leaf()` which allows the creation of new leaf-nodes without having to supply a measure function
 - Builder methods are now `const` where possible
   - Several convenience constants have been defined: notably `FlexboxLayout::DEFAULT`
-- New `Layout` convenience constructor: `from_order(order: u32)`
+- New `Layout` convenience constructor: `with_order(order: u32)`
 
 ### 0.2.0 Changed
 
