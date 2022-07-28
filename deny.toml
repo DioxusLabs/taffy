@@ -14,6 +14,7 @@ unlicensed = "deny"
 copyleft = "deny"
 allow = [
     "MIT",
+    "Unicode-DFS-2016",
     "Apache-2.0",
     "Zlib",
 ]
