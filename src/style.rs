@@ -265,8 +265,6 @@ pub enum GridAutoFlow {
     Row,
     /// Items are placed by filling each column in turn, adding new columns as necessary.
     Column,
-    ///
-    Dense,
     /// Combines `Row` with the dense packing algorithm.
     RowDense,
     /// Combines `Column` with the dense packing algorithm.
@@ -298,6 +296,66 @@ pub enum GridLine {
 impl Default for GridLine {
     fn default() -> Self {
         Self::Auto
+    }
+}
+
+/// Track sizing function
+///
+/// Each function is either
+///   - A FIXED sizing function (<length> or resolvable <percentage>).
+///   - An INTRINSIC sizing function (min-content, max-content, auto, fit-content()).
+///   - A FLEXIBLE sizing function (<flex>).
+///
+/// [Specification](https://www.w3.org/TR/css3-grid-layout/#layout-algorithm)
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum GridScalarTrackSizingFunction {
+    Fixed(Dimension),
+    MinContent,
+    MaxContent,
+    Auto,
+    Flex(f32),
+}
+
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum GridTrackSizingFunction {
+    Fixed(Dimension),
+    MinContent,
+    MaxContent,
+    Auto,
+    Flex(f32),
+    MinMax { min: GridScalarTrackSizingFunction, max: GridScalarTrackSizingFunction },
+}
+
+impl GridTrackSizingFunction {
+    /// Getter for the min_track_sizing_function. This is either the `min` property of the MinMax Variant,
+    /// or else another variant converted to the same variant in the GridScalarTrackSizingFunction enum
+    pub fn min_sizing_function(&self) -> GridScalarTrackSizingFunction {
+        match self {
+            Self::MinMax { min, .. } => *min,
+            _ => self.into_scalar(),
+        }
+    }
+
+    /// Getter for the max_track_sizing_function. This is either the `max` property of the MinMax Variant,
+    /// or else another variant converted to the same variant in the GridScalarTrackSizingFunction enum
+    pub fn max_sizing_function(&self) -> GridScalarTrackSizingFunction {
+        match self {
+            Self::MinMax { max, .. } => *max,
+            _ => self.into_scalar(),
+        }
+    }
+
+    fn into_scalar(&self) -> GridScalarTrackSizingFunction {
+        match self {
+            Self::MinMax { max, .. } => {
+                panic!("Cannot convert MinMax GridTrackSizingFunction into GridScalarTrackSizingFunction")
+            }
+            Self::Fixed(value) => GridScalarTrackSizingFunction::Fixed(*value),
+            Self::MinContent => GridScalarTrackSizingFunction::MinContent,
+            Self::MaxContent => GridScalarTrackSizingFunction::MaxContent,
+            Self::Auto => GridScalarTrackSizingFunction::Auto,
+            Self::Flex(value) => GridScalarTrackSizingFunction::Flex(*value),
+        }
     }
 }
 
@@ -480,13 +538,13 @@ pub struct Style {
 
     // Grid container properies
     /// Defines the track sizing functions (widths) of the grid rows
-    pub grid_template_rows: GridTrackVec<Dimension>,
+    pub grid_template_rows: GridTrackVec<GridTrackSizingFunction>,
     /// Defines the track sizing functions (heights) of the grid columns
-    pub grid_template_columns: GridTrackVec<Dimension>,
+    pub grid_template_columns: GridTrackVec<GridTrackSizingFunction>,
     /// Defines the size of implicitly created rows
-    pub grid_auto_rows: Dimension,
+    pub grid_auto_rows: GridTrackVec<GridTrackSizingFunction>,
     /// Defined the size of implicitly created columns
-    pub grid_auto_columns: Dimension,
+    pub grid_auto_columns: GridTrackVec<GridTrackSizingFunction>,
     /// Controls how items get placed into the grid for auto-placed items
     pub grid_auto_flow: GridAutoFlow,
 
@@ -526,8 +584,8 @@ impl Style {
         aspect_ratio: None,
         grid_template_rows: Vec::new(),
         grid_template_columns: Vec::new(),
-        grid_auto_rows: Dimension::Auto,
-        grid_auto_columns: Dimension::Auto,
+        grid_auto_rows: Vec::new(),
+        grid_auto_columns: Vec::new(),
         grid_auto_flow: GridAutoFlow::Row,
         grid_row_start: GridLine::Auto,
         grid_row_end: GridLine::Auto,
@@ -674,8 +732,8 @@ mod tests {
             aspect_ratio: Default::default(),
             grid_template_rows: Default::default(),
             grid_template_columns: Default::default(),
-            grid_auto_rows: super::Dimension::Auto,
-            grid_auto_columns: super::Dimension::Auto,
+            grid_auto_rows: Default::default(),
+            grid_auto_columns: Default::default(),
             grid_auto_flow: Default::default(),
             grid_row_start: Default::default(),
             grid_row_end: Default::default(),
