@@ -81,7 +81,7 @@ function describeElement(e) {
     style: {
       display: parseEnum(e.style.display),
 
-      position_type: parseEnum(e.style.position),
+      positionType: parseEnum(e.style.position),
       direction: parseEnum(e.style.direction),
       flexDirection: parseEnum(e.style.flexDirection),
 
@@ -99,8 +99,8 @@ function describeElement(e) {
       flexBasis: parseDimension(e.style.flexBasis),
 
       size: parseSize({width: e.style.width, height: e.style.height}),
-      min_size: parseSize({width: e.style.minWidth, height: e.style.minHeight}),
-      max_size: parseSize({width: e.style.maxWidth, height: e.style.maxHeight}),
+      minSize: parseSize({width: e.style.minWidth, height: e.style.minHeight}),
+      maxSize: parseSize({width: e.style.maxWidth, height: e.style.maxHeight}),
 
       margin: parseEdges({
         start: e.style.marginLeft,
