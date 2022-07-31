@@ -29,6 +29,7 @@ pub mod tree;
 
 mod data;
 mod flexbox;
+mod grid;
 mod resolve;
 mod sys;
 

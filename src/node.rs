@@ -623,7 +623,7 @@ mod tests {
         let style =
             FlexboxLayout { display: Display::None, flex_direction: FlexDirection::RowReverse, ..Default::default() };
 
-        let node = taffy.new_leaf(style).unwrap();
+        let node = taffy.new_leaf(style.clone()).unwrap();
 
         let res = taffy.style(node);
         assert!(res.is_ok());
