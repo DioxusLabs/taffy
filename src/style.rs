@@ -308,53 +308,66 @@ impl Default for GridLine {
 ///
 /// [Specification](https://www.w3.org/TR/css3-grid-layout/#layout-algorithm)
 #[derive(Copy, Clone, PartialEq, Debug)]
-pub enum GridScalarTrackSizingFunction {
+pub enum MaxTrackSizingFunction {
     Fixed(Dimension),
     MinContent,
     MaxContent,
     Auto,
+    /// The dimension as a fraction of the total available grid space.
+    /// Specified value is the numerator of the fraction. Denominator is the sum of all fraction specified in that grid dimension
+    /// Spec: https://www.w3.org/TR/css3-grid-layout/#fr-unit
     Flex(f32),
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
-pub enum GridTrackSizingFunction {
+pub enum MinTrackSizingFunction {
     Fixed(Dimension),
     MinContent,
     MaxContent,
     Auto,
-    Flex(f32),
-    MinMax { min: GridScalarTrackSizingFunction, max: GridScalarTrackSizingFunction },
 }
 
-impl GridTrackSizingFunction {
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum TrackSizingFunction {
+    Fixed(Dimension),
+    MinContent,
+    MaxContent,
+    Auto,
+    /// The dimension as a fraction of the total available grid space.
+    /// Specified value is the numerator of the fraction. Denominator is the sum of all fraction specified in that grid dimension
+    /// Spec: https://www.w3.org/TR/css3-grid-layout/#fr-unit
+    Flex(f32),
+    MinMax {
+        min: MinTrackSizingFunction,
+        max: MaxTrackSizingFunction,
+    },
+}
+
+impl TrackSizingFunction {
     /// Getter for the min_track_sizing_function. This is either the `min` property of the MinMax Variant,
     /// or else another variant converted to the same variant in the GridScalarTrackSizingFunction enum
-    pub fn min_sizing_function(&self) -> GridScalarTrackSizingFunction {
+    /// Flex is not valid MinTrackingSizing function, and thus get converted to Auto
+    pub fn min_sizing_function(&self) -> MinTrackSizingFunction {
         match self {
             Self::MinMax { min, .. } => *min,
-            _ => self.into_scalar(),
+            Self::Fixed(value) => MinTrackSizingFunction::Fixed(*value),
+            Self::MinContent => MinTrackSizingFunction::MinContent,
+            Self::MaxContent => MinTrackSizingFunction::MaxContent,
+            Self::Auto => MinTrackSizingFunction::Auto,
+            Self::Flex(value) => MinTrackSizingFunction::Auto,
         }
     }
 
     /// Getter for the max_track_sizing_function. This is either the `max` property of the MinMax Variant,
     /// or else another variant converted to the same variant in the GridScalarTrackSizingFunction enum
-    pub fn max_sizing_function(&self) -> GridScalarTrackSizingFunction {
+    pub fn max_sizing_function(&self) -> MaxTrackSizingFunction {
         match self {
             Self::MinMax { max, .. } => *max,
-            _ => self.into_scalar(),
-        }
-    }
-
-    fn into_scalar(&self) -> GridScalarTrackSizingFunction {
-        match self {
-            Self::MinMax { max, .. } => {
-                panic!("Cannot convert MinMax GridTrackSizingFunction into GridScalarTrackSizingFunction")
-            }
-            Self::Fixed(value) => GridScalarTrackSizingFunction::Fixed(*value),
-            Self::MinContent => GridScalarTrackSizingFunction::MinContent,
-            Self::MaxContent => GridScalarTrackSizingFunction::MaxContent,
-            Self::Auto => GridScalarTrackSizingFunction::Auto,
-            Self::Flex(value) => GridScalarTrackSizingFunction::Flex(*value),
+            Self::Fixed(value) => MaxTrackSizingFunction::Fixed(*value),
+            Self::MinContent => MaxTrackSizingFunction::MinContent,
+            Self::MaxContent => MaxTrackSizingFunction::MaxContent,
+            Self::Auto => MaxTrackSizingFunction::Auto,
+            Self::Flex(value) => MaxTrackSizingFunction::Flex(*value),
         }
     }
 }
@@ -538,13 +551,13 @@ pub struct Style {
 
     // Grid container properies
     /// Defines the track sizing functions (widths) of the grid rows
-    pub grid_template_rows: GridTrackVec<GridTrackSizingFunction>,
+    pub grid_template_rows: GridTrackVec<TrackSizingFunction>,
     /// Defines the track sizing functions (heights) of the grid columns
-    pub grid_template_columns: GridTrackVec<GridTrackSizingFunction>,
+    pub grid_template_columns: GridTrackVec<TrackSizingFunction>,
     /// Defines the size of implicitly created rows
-    pub grid_auto_rows: GridTrackVec<GridTrackSizingFunction>,
+    pub grid_auto_rows: GridTrackVec<TrackSizingFunction>,
     /// Defined the size of implicitly created columns
-    pub grid_auto_columns: GridTrackVec<GridTrackSizingFunction>,
+    pub grid_auto_columns: GridTrackVec<TrackSizingFunction>,
     /// Controls how items get placed into the grid for auto-placed items
     pub grid_auto_flow: GridAutoFlow,
 

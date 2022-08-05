@@ -1,6 +1,6 @@
 use crate::geometry::Size;
 use crate::node::Node;
-use crate::style::GridScalarTrackSizingFunction;
+use crate::style::{MaxTrackSizingFunction, MinTrackSizingFunction};
 use crate::sys::GridTrackVec;
 
 struct AreaOccupancyMatrix {
@@ -13,10 +13,13 @@ enum GridTrackKind {
     Gutter,
 }
 
+/// Internal sizing information for a single grid track (row/column)
+/// Gutters between tracks are sized similarly to actual tracks, so they
+/// are also represented by this struct
 struct GridTrack {
     kind: GridTrackKind,
-    min_track_sizing_function: GridScalarTrackSizingFunction,
-    max_track_sizing_function: GridScalarTrackSizingFunction,
+    min_track_sizing_function: MinTrackSizingFunction,
+    max_track_sizing_function: MaxTrackSizingFunction,
     base_size: f32,
     growth_limit: f32,         // Note: can be infinity
     infinitely_growable: bool, // https://www.w3.org/TR/css3-grid-layout/#infinitely-growable
