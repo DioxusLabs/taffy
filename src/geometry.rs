@@ -160,6 +160,17 @@ impl Rect<f32> {
     }
 }
 
+/// An abstract "line". Represents any type that has a start and an end
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(default))]
+pub struct Line<T> {
+    // The start position of a line
+    pub start: T,
+    /// The end position of a line
+    pub end: T,
+}
+
 /// The width and height of a [`Rect`]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

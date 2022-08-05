@@ -1,7 +1,9 @@
 //! A representation of [CSS layout properties](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust, used for flexbox layout
 
-use crate::geometry::{Rect, Size};
+use crate::geometry::{Line, Rect, Size};
+use crate::grid::RowColumn;
 use crate::sys::GridTrackVec;
+use std::cmp::{max, min};
 
 /// How [`Nodes`](crate::node::Node) are aligned relative to the cross axis
 ///
@@ -277,6 +279,22 @@ impl Default for GridAutoFlow {
     }
 }
 
+impl GridAutoFlow {
+    pub fn is_dense(&self) -> bool {
+        match self {
+            Self::Row | Self::Column => false,
+            Self::RowDense | Self::ColumnDense => true,
+        }
+    }
+
+    pub fn flow_direction(&self) -> RowColumn {
+        match self {
+            Self::Row | Self::RowDense => RowColumn::Row,
+            Self::Column | Self::ColumnDense => RowColumn::Column,
+        }
+    }
+}
+
 /// A track placement specicification. Used for grid-[row/column]-[start/end]. Named tracks are not implemented.
 ///
 /// Defaults to [`GridLine::Auto`]
@@ -284,7 +302,7 @@ impl Default for GridAutoFlow {
 /// [Specification](https://www.w3.org/TR/css3-grid-layout/#typedef-grid-row-start-grid-line)
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum GridLine {
+pub enum GridPlacement {
     /// Place item according to the auto-placement algorithm, and the parent's grid_auto_flow property
     Auto,
     /// Place item at specified track (column or row) index
@@ -293,9 +311,84 @@ pub enum GridLine {
     Span(u16),
 }
 
-impl Default for GridLine {
+impl Default for GridPlacement {
     fn default() -> Self {
         Self::Auto
+    }
+}
+
+/// Represents the start and end points of a GridItem within a given axis
+impl Line<GridPlacement> {
+    #[inline]
+    /// Whether the track position is definite in this axis (or the item will need auto placement)
+    /// The track position is definite if least one of the start and end positions is a track index
+    pub fn is_definite(&self) -> bool {
+        use GridPlacement::*;
+        match (self.start, self.end) {
+            (Track(_), _) | (_, Track(_)) => true,
+            _ => false,
+        }
+    }
+
+    /// If at least one of the of the start and end positions is a track index then the other end can be resolved
+    /// into a track index purely based on the information contained with the placement specification
+    pub fn resolve_definite_grid_tracks(&self) -> Line<i16> {
+        use GridPlacement::*;
+        match (self.start, self.end) {
+            (Track(track1), Track(track2)) => {
+                if track1 == track2 {
+                    Line { start: track1, end: track1 + 1 }
+                } else {
+                    Line { start: min(track1, track2), end: max(track1, track2) }
+                }
+            }
+            (Track(track), Span(span)) => Line { start: track, end: track + span as i16 },
+            (Track(track), Auto) => Line { start: track, end: track + 1 as i16 },
+            (Span(span), Track(track)) => Line { start: track - span as i16, end: track },
+            (Auto, Track(track)) => Line { start: track - 1 as i16, end: track },
+            _ => panic!("resolve_definite_grid_tracks should only be called on definite grid tracks"),
+        }
+    }
+
+    /// If neither of the start and end positions is a track index then the other end can be resolved
+    /// into a track index if a definite start position is supplied externally
+    pub fn resolve_indefinite_grid_tracks(&self, start: i16) -> Line<i16> {
+        use GridPlacement::*;
+        match (self.start, self.end) {
+            (Auto, Auto) => Line { start, end: start + 1 },
+            (Span(span), Auto) => Line { start, end: start + span as i16 },
+            (Auto, Span(span)) => Line { start, end: start + span as i16 },
+            (Span(span), Span(_)) => Line { start, end: start + span as i16 },
+            _ => panic!("resolve_indefinite_grid_tracks should only be called on indefinite grid tracks"),
+        }
+    }
+
+    pub fn span(&self) -> u16 {
+        use GridPlacement::*;
+        match (self.start, self.end) {
+            (Track(track1), Track(track2)) => {
+                if track1 == track2 {
+                    1
+                } else {
+                    (max(track1, track2) - min(track1, track2)) as u16
+                }
+            }
+            (Track(_), Auto) => 1,
+            (Auto, Track(_)) => 1,
+            (Auto, Auto) => 1,
+            (Track(_), Span(span)) => span,
+            (Span(span), Track(_)) => span,
+            (Span(span), Auto) => span,
+            (Auto, Span(span)) => span,
+            (Span(span), Span(_)) => span,
+        }
+    }
+}
+
+/// Represents the start and end points of a GridItem within a given axis
+impl Default for Line<GridPlacement> {
+    fn default() -> Self {
+        Line { start: GridPlacement::Auto, end: GridPlacement::Auto }
     }
 }
 
@@ -345,8 +438,8 @@ pub enum TrackSizingFunction {
 
 impl TrackSizingFunction {
     /// Getter for the min_track_sizing_function. This is either the `min` property of the MinMax Variant,
-    /// or else another variant converted to the same variant in the GridScalarTrackSizingFunction enum
-    /// Flex is not valid MinTrackingSizing function, and thus get converted to Auto
+    /// or else another variant converted to the same variant in the MinTrackSizingFunction enum
+    /// Flex is not valid MinTrackingSizingFunction, and thus get converted to Auto
     pub fn min_sizing_function(&self) -> MinTrackSizingFunction {
         match self {
             Self::MinMax { min, .. } => *min,
@@ -359,7 +452,7 @@ impl TrackSizingFunction {
     }
 
     /// Getter for the max_track_sizing_function. This is either the `max` property of the MinMax Variant,
-    /// or else another variant converted to the same variant in the GridScalarTrackSizingFunction enum
+    /// or else another variant converted to the same variant in the MaxTrackSizingFunction enum
     pub fn max_sizing_function(&self) -> MaxTrackSizingFunction {
         match self {
             Self::MinMax { max, .. } => *max,
@@ -400,6 +493,15 @@ pub enum LengthPercentageAuto {
     Auto,
 }
 
+impl From<LengthPercentage> for LengthPercentageAuto {
+    fn from(input: LengthPercentage) -> Self {
+        match input {
+            LengthPercentage::Points(value) => Self::Points(value),
+            LengthPercentage::Percent(value) => Self::Percent(value),
+        }
+    }
+}
+
 /// A unit of linear measurement
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
@@ -413,6 +515,25 @@ pub enum Dimension {
     Percent(f32),
     /// The dimension should be automatically computed
     Auto,
+}
+
+impl From<LengthPercentage> for Dimension {
+    fn from(input: LengthPercentage) -> Self {
+        match input {
+            LengthPercentage::Points(value) => Self::Points(value),
+            LengthPercentage::Percent(value) => Self::Percent(value),
+        }
+    }
+}
+
+impl From<LengthPercentageAuto> for Dimension {
+    fn from(input: LengthPercentageAuto) -> Self {
+        match input {
+            LengthPercentageAuto::Points(value) => Self::Points(value),
+            LengthPercentageAuto::Percent(value) => Self::Percent(value),
+            LengthPercentageAuto::Auto => Self::Auto,
+        }
+    }
 }
 
 impl Dimension {
@@ -562,14 +683,10 @@ pub struct Style {
     pub grid_auto_flow: GridAutoFlow,
 
     // Grid child properties
-    /// Defines which row in the grid the item should start at
-    pub grid_row_start: GridLine,
-    /// Defines which row in the grid the item should end at
-    pub grid_row_end: GridLine,
-    /// Defines which column in the grid the item should start at
-    pub grid_column_start: GridLine,
-    /// Defines which column in the grid the item should end at
-    pub grid_column_end: GridLine,
+    /// Defines which row in the grid the item should start and end at
+    pub grid_row: Line<GridPlacement>,
+    /// Defines which column in the grid the item should start and end at
+    pub grid_column: Line<GridPlacement>,
 }
 
 impl Style {
@@ -600,10 +717,8 @@ impl Style {
         grid_auto_rows: Vec::new(),
         grid_auto_columns: Vec::new(),
         grid_auto_flow: GridAutoFlow::Row,
-        grid_row_start: GridLine::Auto,
-        grid_row_end: GridLine::Auto,
-        grid_column_start: GridLine::Auto,
-        grid_column_end: GridLine::Auto,
+        grid_row: Line { start: GridPlacement::Auto, end: GridPlacement::Auto },
+        grid_column: Line { start: GridPlacement::Auto, end: GridPlacement::Auto },
     };
 }
 
@@ -712,13 +827,21 @@ impl Style {
             self.align_self
         }
     }
+
+    pub(crate) fn grid_placement(&self, axis: RowColumn) -> Line<GridPlacement> {
+        match axis {
+            RowColumn::Row => self.grid_row,
+            RowColumn::Column => self.grid_column,
+        }
+    }
 }
 
 #[allow(clippy::bool_assert_comparison)]
 #[cfg(test)]
 mod tests {
+    use super::GridPlacement;
     use super::Style;
-    use crate::geometry::{Rect, Size};
+    use crate::geometry::{Line, Rect, Size};
 
     #[test]
     fn defaults_match() {
@@ -748,10 +871,8 @@ mod tests {
             grid_auto_rows: Default::default(),
             grid_auto_columns: Default::default(),
             grid_auto_flow: Default::default(),
-            grid_row_start: Default::default(),
-            grid_row_end: Default::default(),
-            grid_column_start: Default::default(),
-            grid_column_end: Default::default(),
+            grid_row: Line { start: GridPlacement::Auto, end: GridPlacement::Auto },
+            grid_column: Line { start: GridPlacement::Auto, end: GridPlacement::Auto },
         };
 
         assert_eq!(Style::DEFAULT, Style::default());

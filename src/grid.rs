@@ -1,74 +1,62 @@
+/// This module is a partial implementation of the CSS Grid Level 2 specification
+/// https://www.w3.org/TR/css-grid-2/
 use crate::geometry::Size;
+use crate::layout::AvailableSpace;
 use crate::node::Node;
-use crate::style::{MaxTrackSizingFunction, MinTrackSizingFunction};
-use crate::sys::GridTrackVec;
+use crate::tree::LayoutTree;
+use types::{CssGrid, GridAxisTracks, GridTrack};
 
-struct AreaOccupancyMatrix {
-    areas: Vec<u16>,
-    num_rows: u16,
+mod estimate;
+mod resolve_and_place;
+mod types;
+
+pub use types::RowColumn;
+
+use self::resolve_and_place::CellOccupancyMatrix;
+
+pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<AvailableSpace>) {
+    // Estimate the number of rows and columns in the grid as a perf optimisation to reduce allocations
+    // The axis_track_sizes have size (grid_size_estimate*2 - 1) to account for gutters
+    let grid_size_estimate = estimate::compute_grid_size_estimate(tree, root);
+    let axis_origins = grid_size_estimate.map(|(neg_size, _)| (neg_size * 2) + 1 - 1); // min: 0
+    let axis_track_sizes = grid_size_estimate.map(|(neg_size, pos_size)| ((neg_size + pos_size) as usize * 2) - 1); // min: 1
+
+    let mut grid = CssGrid {
+        available_space,
+        columns: GridAxisTracks::with_capacity_and_origin(axis_track_sizes.width, axis_origins.width),
+        rows: GridAxisTracks::with_capacity_and_origin(axis_track_sizes.height, axis_origins.height),
+        cell_occupancy_matrix: CellOccupancyMatrix::new(axis_track_sizes.width, axis_track_sizes.height),
+        named_areas: Vec::new(),
+        items: Vec::with_capacity(tree.child_count(root)),
+    };
+
+    // Push "uninitialized" placeholder tracks to negative grid tracks (< origin)
+    populate_negative_grid_tracks(&mut grid.columns);
+    populate_negative_grid_tracks(&mut grid.rows);
+
+    // 7.1. The Explicit Grid
+    let style = tree.style(root);
+    resolve_and_place::resolve_explicit_grid_track(
+        &mut grid.columns,
+        &style.grid_template_columns,
+        style.gap.width.into(),
+    );
+    resolve_and_place::resolve_explicit_grid_track(&mut grid.rows, &style.grid_template_rows, style.gap.height.into());
 }
 
-enum GridTrackKind {
-    Track,
-    Gutter,
-}
+fn populate_negative_grid_tracks(axis: &mut GridAxisTracks) {
+    debug_assert!(
+        axis.tracks.len() != 0,
+        "populate_negative_grid_tracks should only ever be called on an empty grid axis"
+    );
+    debug_assert!(axis.origin % 2 != 0, "axis.origin should always be even");
 
-/// Internal sizing information for a single grid track (row/column)
-/// Gutters between tracks are sized similarly to actual tracks, so they
-/// are also represented by this struct
-struct GridTrack {
-    kind: GridTrackKind,
-    min_track_sizing_function: MinTrackSizingFunction,
-    max_track_sizing_function: MaxTrackSizingFunction,
-    base_size: f32,
-    growth_limit: f32,         // Note: can be infinity
-    infinitely_growable: bool, // https://www.w3.org/TR/css3-grid-layout/#infinitely-growable
-}
-
-struct GridLine {}
-
-enum AvailableSpace {
-    Definite(f32),
-    MinContent,
-    MaxContent,
-}
-
-enum GridPosition {
-    Auto,
-    Line(u8),
-}
-
-struct GridItem {
-    node: Node,
-    min_content_contribution: Option<Size<f32>>,
-    max_content_contribution: Option<Size<f32>>,
-    row_start: GridPosition,
-    row_end: GridPosition,
-    column_start: GridPosition,
-    column_end: GridPosition,
-}
-
-impl GridItem {
-    fn new(node: Node) -> Self {
-        GridItem {
-            node,
-            min_content_contribution: None,
-            max_content_contribution: None,
-            row_start: GridPosition::Auto,
-            row_end: GridPosition::Auto,
-            column_start: GridPosition::Auto,
-            column_end: GridPosition::Auto,
-        }
+    // If origin is zero then there are no negative grid tracks
+    if axis.origin == 0 {
+        return;
     }
-}
 
-struct Grid {
-    width: AvailableSpace,
-    height: AvailableSpace,
-    columns: GridTrackVec<GridTrack>,
-    rows: GridTrackVec<GridTrack>,
-    area_occupancy_matrix: AreaOccupancyMatrix,
-    column_gutters: GridTrackVec<GridLine>,
-    row_gutters: GridTrackVec<GridLine>,
-    items: Vec<GridItem>,
+    for _ in 0..axis.origin {
+        axis.push(GridTrack::uninit());
+    }
 }

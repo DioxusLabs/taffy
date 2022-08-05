@@ -115,7 +115,10 @@ fn compute_node_layout(
                 NODE_LOGGER.log("Algo: flexbox");
                 self::flexbox::compute(tree, node, known_dimensions, available_space, run_mode)
             }
-            Display::Grid => Size::ZERO,
+            Display::Grid => {
+                // crate::grid::compute(tree, node, available_space)
+                Size::ZERO // TODO proper size computation
+            }
             Display::None => {
                 #[cfg(feature = "debug")]
                 NODE_LOGGER.log("Algo: none");
