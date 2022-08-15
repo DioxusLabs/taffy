@@ -12,20 +12,28 @@ mod types;
 
 pub use types::RowColumn;
 
-use self::resolve_and_place::CellOccupancyMatrix;
+use self::resolve_and_place::{CellOccupancyMatrix, TrackCounts};
 
 pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<AvailableSpace>) {
     // Estimate the number of rows and columns in the grid as a perf optimisation to reduce allocations
     // The axis_track_sizes have size (grid_size_estimate*2 - 1) to account for gutters
     let grid_size_estimate = estimate::compute_grid_size_estimate(tree, root);
-    let axis_origins = grid_size_estimate.map(|(neg_size, _)| (neg_size * 2) + 1 - 1); // min: 0
-    let axis_track_sizes = grid_size_estimate.map(|(neg_size, pos_size)| ((neg_size + pos_size) as usize * 2) - 1); // min: 1
+    let axis_origins = grid_size_estimate.map(|(neg_size, _, _)| (neg_size * 2) + 1 - 1); // min: 0
+    let axis_track_sizes = grid_size_estimate
+        .map(|(neg_size, exp_size, pos_imp_size)| ((neg_size + exp_size + pos_imp_size) as usize * 2) - 1); // min: 1
 
     let mut grid = CssGrid {
         available_space,
         columns: GridAxisTracks::with_capacity_and_origin(axis_track_sizes.width, axis_origins.width),
         rows: GridAxisTracks::with_capacity_and_origin(axis_track_sizes.height, axis_origins.height),
-        cell_occupancy_matrix: CellOccupancyMatrix::new(axis_track_sizes.width, axis_track_sizes.height),
+        cell_occupancy_matrix: CellOccupancyMatrix::with_track_counts(
+            TrackCounts::from_raw(
+                grid_size_estimate.height.0,
+                grid_size_estimate.height.1,
+                grid_size_estimate.height.2,
+            ),
+            TrackCounts::from_raw(grid_size_estimate.width.0, grid_size_estimate.width.1, grid_size_estimate.width.2),
+        ),
         named_areas: Vec::new(),
         items: Vec::with_capacity(tree.child_count(root)),
     };
@@ -42,6 +50,9 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
         style.gap.width.into(),
     );
     resolve_and_place::resolve_explicit_grid_track(&mut grid.rows, &style.grid_template_rows, style.gap.height.into());
+
+    // 8. Placing Grid Items
+    resolve_and_place::place_grid_items(&mut grid, tree, root);
 }
 
 fn populate_negative_grid_tracks(axis: &mut GridAxisTracks) {

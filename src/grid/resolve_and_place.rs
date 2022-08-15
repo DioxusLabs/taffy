@@ -5,7 +5,6 @@ use crate::style::{Dimension, GridAutoFlow, GridPlacement, Style, TrackSizingFun
 use crate::sys::GridTrackVec;
 use crate::tree::LayoutTree;
 use grid::Grid;
-use std::cmp::{max, min};
 use std::ops::Range;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
@@ -30,16 +29,21 @@ impl CellOccupancyState {
     }
 }
 
-struct TrackCounts {
-    origin: u16,
-    explicit_track_count: u16,
-    negative_implicit_track_count: u16,
-    positive_implicit_track_count: u16,
+pub(crate) struct TrackCounts {
+    pub negative_implicit: u16,
+    pub explicit: u16,
+    pub positive_implicit: u16,
+}
+
+impl TrackCounts {
+    pub fn from_raw(negative_implicit: u16, explicit: u16, positive_implicit: u16) -> Self {
+        Self { negative_implicit, explicit, positive_implicit }
+    }
 }
 
 impl Default for TrackCounts {
     fn default() -> Self {
-        Self { origin: 0, explicit_track_count: 0, negative_implicit_track_count: 0, positive_implicit_track_count: 0 }
+        Self { explicit: 0, negative_implicit: 0, positive_implicit: 0 }
     }
 }
 
@@ -53,24 +57,24 @@ impl Default for TrackCounts {
 // -2 =>
 
 impl TrackCounts {
-    fn len(&self) -> u16 {
-        return self.negative_implicit_track_count + self.explicit_track_count + self.positive_implicit_track_count;
+    fn len(&self) -> usize {
+        return (self.negative_implicit + self.explicit + self.positive_implicit) as usize;
     }
 
     fn line_index_to_proceeding_track_index(&self, index: i16) -> i16 {
         use std::cmp::Ordering;
         match index.cmp(&0) {
             Ordering::Equal => 0,
-            Ordering::Less => self.negative_implicit_track_count as i16 + self.explicit_track_count as i16 + index,
-            Ordering::Greater => self.negative_implicit_track_count as i16 + index,
+            Ordering::Less => self.negative_implicit as i16 + self.explicit as i16 + index,
+            Ordering::Greater => self.negative_implicit as i16 + index,
         }
     }
 
     fn track_index_to_preceeding_line_index(&self, index: u16) -> i16 {
-        if index < self.negative_implicit_track_count {
-            -(self.negative_implicit_track_count as i16 + self.explicit_track_count as i16 + 1 - index as i16)
+        if index < self.negative_implicit {
+            -(self.negative_implicit as i16 + self.explicit as i16 + 1 - index as i16)
         } else {
-            (index + 1 - self.negative_implicit_track_count) as i16
+            (index + 1 - self.negative_implicit) as i16
         }
     }
 
@@ -89,6 +93,10 @@ pub(super) struct CellOccupancyMatrix {
 impl CellOccupancyMatrix {
     pub fn new(rows: usize, columns: usize) -> Self {
         Self { inner: Grid::new(rows, columns), rows: TrackCounts::default(), columns: TrackCounts::default() }
+    }
+
+    pub fn with_track_counts(rows: TrackCounts, columns: TrackCounts) -> Self {
+        Self { inner: Grid::new(rows.len(), columns.len()), rows, columns }
     }
 
     pub fn mark_area_as(
@@ -263,9 +271,19 @@ pub(super) fn place_grid_items(grid: &mut CssGrid, tree: &impl LayoutTree, node:
         .for_each(|child_style| place_definite_primary_axis_item(grid, node, child_style, grid_auto_flow));
 
     // 3. Determine the number of columns in the implicit grid
-    // (the implicit grid is inclusive of the explicit grid)
-
-    // TODO
+    // By the time we get to this point in the execution, this is actually already accounted for:
+    //
+    // 3.1 Start with the columns from the explicit grid
+    //        => Handled by grid size estimate which is used to pre-size the GridOccupancyMatrix
+    //
+    // 3.2 Among all the items with a definite column position (explicitly positioned items, items positioned in the previous step,
+    //     and items not yet positioned but with a definite column) add columns to the beginning and end of the implicit grid as necessary
+    //     to accommodate those items.
+    //        => Handled by mark_area_as called in record_grid_placement which expands the GridOccupancyMatrix as necessary
+    //
+    // 3.3 If the largest column span among all the items without a definite column position is larger than the width of
+    //     the implicit grid, add columns to the end of the implicit grid to accommodate that column span.
+    //        => Handled by grid size estimate which is used to pre-size the GridOccupancyMatrix
 
     // 4. Position the remaining grid items
     // (which either have definite position only in the secondary axis or indefinite positions in both axis)
