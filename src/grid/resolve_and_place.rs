@@ -5,6 +5,7 @@ use crate::style::{Dimension, GridAutoFlow, GridPlacement, Style, TrackSizingFun
 use crate::sys::GridTrackVec;
 use crate::tree::LayoutTree;
 use grid::Grid;
+use std::cmp::{max, min};
 use std::ops::Range;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
@@ -99,6 +100,67 @@ impl CellOccupancyMatrix {
         Self { inner: Grid::new(rows.len(), columns.len()), rows, columns }
     }
 
+    /// Expands the grid (potentially in all 4 directions) in order to ensure
+    /// That
+    fn ensure_area_is_in_range(&mut self, row_range: Range<i16>, col_range: Range<i16>) -> bool {
+        let old_row_count = self.rows.negative_implicit + self.rows.explicit + self.rows.positive_implicit;
+        let old_col_count = self.columns.negative_implicit + self.columns.explicit + self.columns.positive_implicit;
+
+        // Calculate number of rows and columns missing to accomodate ranges (if any)
+        let req_negative_rows = min(row_range.start, 0);
+        let req_positive_rows =
+            max(row_range.end + 1 - self.rows.explicit as i16 - self.rows.negative_implicit as i16, 0);
+        let req_negative_cols = min(col_range.start, 0);
+        let req_positive_cols =
+            max(col_range.end - self.columns.explicit as i16 - self.columns.negative_implicit as i16, 0);
+
+        // Return early (with true to indicated "already in range") if no new rows or columns are required
+        if (req_negative_rows + req_positive_rows + req_negative_cols + req_positive_cols == 0) {
+            return true;
+        }
+
+        let new_row_count = self.inner.rows() + (req_negative_rows + req_positive_rows) as usize;
+        let new_col_count = self.inner.cols() + (req_negative_cols + req_positive_cols) as usize;
+
+        let mut data = Vec::with_capacity(new_row_count * new_col_count);
+
+        // Push new negative rows
+        for _ in 0..(req_negative_rows as usize * new_col_count) {
+            data.push(CellOccupancyState::Unoccupied);
+        }
+
+        // Push existing rows
+        for row in 0..old_row_count {
+            // Push new negative columns
+            for _ in 0..req_negative_cols {
+                data.push(CellOccupancyState::Unoccupied);
+            }
+            // Push existing columns
+            for col in 0..old_col_count {
+                data.push(*self.inner.get(row as usize, col as usize).unwrap());
+            }
+            // Push new positive columns
+            for _ in 0..req_positive_cols {
+                data.push(CellOccupancyState::Unoccupied);
+            }
+        }
+
+        // Push new negative rows
+        for _ in 0..(req_positive_rows as usize * new_col_count) {
+            data.push(CellOccupancyState::Unoccupied);
+        }
+
+        // Update self with new data
+        self.inner = Grid::from_vec(data, new_col_count);
+        self.rows.negative_implicit += req_negative_rows as u16;
+        self.rows.positive_implicit += req_positive_rows as u16;
+        self.columns.negative_implicit += req_negative_cols as u16;
+        self.columns.positive_implicit += req_positive_cols as u16;
+
+        // Return false to indicate "not already in range"
+        false
+    }
+
     pub fn mark_area_as(
         &mut self,
         primary_axis: RowColumn,
@@ -111,8 +173,16 @@ impl CellOccupancyMatrix {
             RowColumn::Column => (secondary_span, primary_span),
         };
 
-        let row_range = self.rows.convert_grid_line_range_to_track_index_range(row_span);
-        let col_range = self.columns.convert_grid_line_range_to_track_index_range(column_span);
+        let mut row_range = self.rows.convert_grid_line_range_to_track_index_range(row_span);
+        let mut col_range = self.columns.convert_grid_line_range_to_track_index_range(column_span);
+
+        // Ensure resolve ranges fit within the allocated grid. And if they didn't already fit then re-resolve the ranges
+        // once the grid has been expanded as the resolved indexes may have changed
+        let was_in_range = self.ensure_area_is_in_range(row_range.clone(), col_range.clone());
+        if !was_in_range {
+            row_range = self.rows.convert_grid_line_range_to_track_index_range(row_span);
+            col_range = self.columns.convert_grid_line_range_to_track_index_range(column_span);
+        }
 
         for x in row_range {
             for y in col_range.clone() {
@@ -279,7 +349,9 @@ pub(super) fn place_grid_items(grid: &mut CssGrid, tree: &impl LayoutTree, node:
     // 3.2 Among all the items with a definite column position (explicitly positioned items, items positioned in the previous step,
     //     and items not yet positioned but with a definite column) add columns to the beginning and end of the implicit grid as necessary
     //     to accommodate those items.
-    //        => Handled by mark_area_as called in record_grid_placement which expands the GridOccupancyMatrix as necessary
+    //        => Handled by ensure_area_is_in_range which expands the GridOccupancyMatrix as necessary
+    //            -> Called by mark_area_as
+    //            -> Called by record_grid_placement
     //
     // 3.3 If the largest column span among all the items without a definite column position is larger than the width of
     //     the implicit grid, add columns to the end of the implicit grid to accommodate that column span.
