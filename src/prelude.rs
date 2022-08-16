@@ -2,7 +2,7 @@
 
 pub use crate::{
     compute::flexbox::compute as layout_flexbox,
-    geometry::{Rect, Size},
+    geometry::{Line, Rect, Size},
     layout::{AvailableSpace, Layout},
     node::{Node, Taffy},
     style::{

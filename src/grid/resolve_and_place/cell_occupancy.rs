@@ -24,6 +24,7 @@ impl CellOccupancyState {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct TrackCounts {
     pub negative_implicit: u16,
     pub explicit: u16,

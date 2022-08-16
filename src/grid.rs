@@ -16,21 +16,16 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
     // Estimate the number of rows and columns in the grid as a perf optimisation to reduce allocations
     // The axis_track_sizes have size (grid_size_estimate*2 - 1) to account for gutters
     let grid_size_estimate = resolve_and_place::compute_grid_size_estimate(tree, root);
-    let axis_origins = grid_size_estimate.map(|(neg_size, _, _)| (neg_size * 2) + 1 - 1); // min: 0
-    let axis_track_sizes = grid_size_estimate
-        .map(|(neg_size, exp_size, pos_imp_size)| ((neg_size + exp_size + pos_imp_size) as usize * 2) - 1); // min: 1
+    let axis_origins = grid_size_estimate.map(|counts| (counts.negative_implicit * 2) + 1 - 1); // min: 0
+    let axis_track_sizes = grid_size_estimate.map(|counts| (counts.len() * 2) - 1); // min: 1
 
     let mut grid = CssGrid {
         available_space,
         columns: GridAxisTracks::with_capacity_and_origin(axis_track_sizes.width, axis_origins.width),
         rows: GridAxisTracks::with_capacity_and_origin(axis_track_sizes.height, axis_origins.height),
         cell_occupancy_matrix: CellOccupancyMatrix::with_track_counts(
-            TrackCounts::from_raw(
-                grid_size_estimate.height.0,
-                grid_size_estimate.height.1,
-                grid_size_estimate.height.2,
-            ),
-            TrackCounts::from_raw(grid_size_estimate.width.0, grid_size_estimate.width.1, grid_size_estimate.width.2),
+            grid_size_estimate.height,
+            grid_size_estimate.width,
         ),
         named_areas: Vec::new(),
         items: Vec::with_capacity(tree.child_count(root)),

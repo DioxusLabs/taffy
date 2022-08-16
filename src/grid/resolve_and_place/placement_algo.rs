@@ -136,8 +136,8 @@ fn place_indefinitely_positioned_item(
     let primary_placement_style = style.grid_placement(flow_direction);
     let secondary_placement_style = style.grid_placement(flow_direction.opposite_axis());
 
-    let primary_span = primary_placement_style.span();
-    let secondary_span = secondary_placement_style.span();
+    let primary_span = primary_placement_style.indefinite_span();
+    let secondary_span = secondary_placement_style.indefinite_span();
     let has_definite_secondary_axis_position = secondary_placement_style.is_definite();
     let secondary_axis_length = cell_occupancy_matrix.track_counts(flow_direction).len() as i16;
 

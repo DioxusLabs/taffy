@@ -363,16 +363,9 @@ impl Line<GridPlacement> {
         }
     }
 
-    pub fn span(&self) -> u16 {
+    pub fn indefinite_span(&self) -> u16 {
         use GridPlacement::*;
         match (self.start, self.end) {
-            (Track(track1), Track(track2)) => {
-                if track1 == track2 {
-                    1
-                } else {
-                    (max(track1, track2) - min(track1, track2)) as u16
-                }
-            }
             (Track(_), Auto) => 1,
             (Auto, Track(_)) => 1,
             (Auto, Auto) => 1,
@@ -381,6 +374,7 @@ impl Line<GridPlacement> {
             (Span(span), Auto) => span,
             (Auto, Span(span)) => span,
             (Span(span), Span(_)) => span,
+            (Track(track1), Track(track2)) => panic!("indefinite_span should only be called on indefinite grid tracks"),
         }
     }
 }
