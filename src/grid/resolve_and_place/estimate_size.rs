@@ -49,14 +49,16 @@ pub(crate) fn compute_explicit_grid_size(style: &Style) -> (u16, u16) {
 /// Note that this function internally mixes use of grid track numbers and grid line numbers
 pub(crate) fn compute_grid_size_estimate(tree: &impl LayoutTree, node: Node) -> Size<TrackCounts> {
     let style = tree.style(node);
-    let child_styles_iter = tree.children(node).into_iter().copied().map(|child_node| tree.style(child_node));
+    let child_styles_iter = tree.children(node).into_iter().map(|child_node| tree.style(*child_node));
     compute_grid_size_estimate_inner(style, child_styles_iter)
 }
 
 /// Estimate the number of rows and columns in the grid
-/// This is used as a performance optimisation to pre-size vectors and reduce allocations
-///
-/// Note that this function internally mixes use of grid track numbers and grid line numbers
+/// This is used as a performance optimisation to pre-size vectors and reduce allocations. It also forms a necessary step
+/// in the auto-placement
+///   - The estimates for the explicit and negative implicit track counts are exact.
+///   - However, the estimates for the positive explicit track count is a lower bound as auto-placement can affect this
+///     in ways which are impossible to predict until the auto-placement algorithm is run.
 pub(crate) fn compute_grid_size_estimate_inner<'a>(
     style: &Style,
     child_styles_iter: impl Iterator<Item = &'a Style>,
@@ -66,6 +68,7 @@ pub(crate) fn compute_grid_size_estimate_inner<'a>(
 
     // Iterate over children, producing an estimate of the min and max grid lines (in origin-zero coordinates where)
     // along with the span of each itme
+
     let (col_min, col_max, col_max_span, row_min, row_max, row_max_span) =
         get_known_child_positions(child_styles_iter, explicit_col_count, explicit_row_count);
 
