@@ -10,7 +10,7 @@ use core::cmp::{max, min};
 /// This is used as a performance optimisation to pre-size vectors and reduce allocations
 ///
 /// Note that this function internally mixes use of grid track numbers and grid line numbers
-pub(super) fn compute_grid_size_estimate(tree: &impl LayoutTree, node: Node) -> Size<(u16, u16, u16)> {
+pub(crate) fn compute_grid_size_estimate(tree: &impl LayoutTree, node: Node) -> Size<(u16, u16, u16)> {
     // Initialise estimates with explicit track lengths (flooring at 1)
     let style = tree.style(node);
     let explicit_col_estimate = max(style.grid_template_columns.len(), 1) as u16;

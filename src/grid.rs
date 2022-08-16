@@ -6,18 +6,16 @@ use crate::node::Node;
 use crate::tree::LayoutTree;
 use types::{CssGrid, GridAxisTracks, GridTrack};
 
-mod estimate;
 mod resolve_and_place;
 mod types;
 
-pub use types::RowColumn;
-
 use self::resolve_and_place::{CellOccupancyMatrix, TrackCounts};
+pub use types::RowColumn;
 
 pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<AvailableSpace>) {
     // Estimate the number of rows and columns in the grid as a perf optimisation to reduce allocations
     // The axis_track_sizes have size (grid_size_estimate*2 - 1) to account for gutters
-    let grid_size_estimate = estimate::compute_grid_size_estimate(tree, root);
+    let grid_size_estimate = resolve_and_place::compute_grid_size_estimate(tree, root);
     let axis_origins = grid_size_estimate.map(|(neg_size, _, _)| (neg_size * 2) + 1 - 1); // min: 0
     let axis_track_sizes = grid_size_estimate
         .map(|(neg_size, exp_size, pos_imp_size)| ((neg_size + exp_size + pos_imp_size) as usize * 2) - 1); // min: 1
@@ -44,12 +42,12 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
 
     // 7.1. The Explicit Grid
     let style = tree.style(root);
-    resolve_and_place::resolve_explicit_grid_track(
+    resolve_and_place::resolve_explicit_grid_tracks(
         &mut grid.columns,
         &style.grid_template_columns,
         style.gap.width.into(),
     );
-    resolve_and_place::resolve_explicit_grid_track(&mut grid.rows, &style.grid_template_rows, style.gap.height.into());
+    resolve_and_place::resolve_explicit_grid_tracks(&mut grid.rows, &style.grid_template_rows, style.gap.height.into());
 
     // 8. Placing Grid Items
     resolve_and_place::place_grid_items(&mut grid, tree, root);

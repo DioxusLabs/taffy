@@ -1,5 +1,3 @@
-use slotmap::secondary;
-
 use super::resolve_and_place::CellOccupancyMatrix;
 use crate::geometry::{Line, Size};
 use crate::layout::AvailableSpace;
