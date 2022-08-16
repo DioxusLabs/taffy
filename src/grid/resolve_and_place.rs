@@ -4,9 +4,9 @@ use crate::node::Node;
 use crate::style::{Dimension, GridAutoFlow, GridPlacement, Style, TrackSizingFunction};
 use crate::sys::GridTrackVec;
 use crate::tree::LayoutTree;
+use core::cmp::{max, min};
+use core::ops::Range;
 use grid::Grid;
-use std::cmp::{max, min};
-use std::ops::Range;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
 pub(super) enum CellOccupancyState {
@@ -61,7 +61,7 @@ impl TrackCounts {
     }
 
     fn line_index_to_proceeding_track_index(&self, index: i16) -> i16 {
-        use std::cmp::Ordering;
+        use core::cmp::Ordering;
         match index.cmp(&0) {
             Ordering::Equal => 0,
             Ordering::Less => self.negative_implicit as i16 + self.explicit as i16 + index,

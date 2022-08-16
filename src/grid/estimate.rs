@@ -4,7 +4,7 @@ use crate::geometry::{Line, Size};
 use crate::node::Node;
 use crate::style::{GridPlacement, Style};
 use crate::tree::LayoutTree;
-use std::cmp::{max, min};
+use core::cmp::{max, min};
 
 /// Estimate the number of rows and columns in the grid
 /// This is used as a performance optimisation to pre-size vectors and reduce allocations

@@ -3,7 +3,7 @@
 use crate::geometry::{Line, Rect, Size};
 use crate::grid::RowColumn;
 use crate::sys::GridTrackVec;
-use std::cmp::{max, min};
+use core::cmp::{max, min};
 
 /// How [`Nodes`](crate::node::Node) are aligned relative to the cross axis
 ///

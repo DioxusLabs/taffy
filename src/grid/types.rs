@@ -6,7 +6,7 @@ use crate::layout::AvailableSpace;
 use crate::node::Node;
 use crate::style::{Dimension, MaxTrackSizingFunction, MinTrackSizingFunction, TrackSizingFunction};
 use crate::sys::GridTrackVec;
-use std::cmp::max;
+use core::cmp::max;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum RowColumn {
@@ -204,7 +204,7 @@ impl GridAxisTracks {
 
     /// Get a track's index in self.tracks given its index as defined in CSS grid coordinates
     fn get_track_index_raw(&self, index: i16) -> i16 {
-        use std::cmp::Ordering;
+        use core::cmp::Ordering;
 
         // Compute the index of the track in the tracks vector based on its CSS grid index
         // taking into account:
