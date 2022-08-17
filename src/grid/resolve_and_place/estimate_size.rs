@@ -49,15 +49,14 @@ pub(crate) fn compute_grid_size_estimate_inner<'a>(
 
     // In each axis, adjust positive track estimate if any items have a span that does not fit within
     // the total number of tracks in the estimate
-    let total_inline_tracks =
-        negative_implicit_inline_tracks + explicit_inline_tracks + positive_implicit_inline_tracks;
-    if total_inline_tracks < row_max_span {
-        positive_implicit_inline_tracks = row_max_span - explicit_inline_tracks - negative_implicit_inline_tracks;
+    let tot_inline_tracks = negative_implicit_inline_tracks + explicit_inline_tracks + positive_implicit_inline_tracks;
+    if tot_inline_tracks < col_max_span {
+        positive_implicit_inline_tracks = col_max_span - explicit_inline_tracks - negative_implicit_inline_tracks;
     }
 
-    let total_block_tracks = negative_implicit_block_tracks + explicit_block_tracks + positive_implicit_block_tracks;
-    if total_block_tracks < col_max_span {
-        positive_implicit_block_tracks = col_max_span - explicit_block_tracks - negative_implicit_block_tracks;
+    let tot_block_tracks = negative_implicit_block_tracks + explicit_block_tracks + positive_implicit_block_tracks;
+    if tot_block_tracks < row_max_span {
+        positive_implicit_block_tracks = row_max_span - explicit_block_tracks - negative_implicit_block_tracks;
     }
 
     Size {

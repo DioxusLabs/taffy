@@ -443,5 +443,22 @@ mod tests {
             let expected_rows = TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 0 };
             placement_test_runner(explicit_col_count, explicit_row_count, children, expected_cols, expected_rows, flow);
         }
+
+        #[test]
+        fn test_oversized_item() {
+            let flow = GridAutoFlow::Row;
+            let explicit_col_count = 2;
+            let explicit_row_count = 2;
+            let children = {
+                let mut sm = SlotMap::new();
+                vec![
+                    // node, style (grid coords), expected_placement (oz coords)
+                    (sm.insert(()), (Span(5), Auto, Auto, Auto).into_grid_child(), (0, 5, 0, 1)),
+                ]
+            };
+            let expected_cols = TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 3 };
+            let expected_rows = TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 0 };
+            placement_test_runner(explicit_col_count, explicit_row_count, children, expected_cols, expected_rows, flow);
+        }
     }
 }
