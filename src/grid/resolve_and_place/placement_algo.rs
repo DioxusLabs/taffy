@@ -310,7 +310,7 @@ fn record_grid_placement(
     println!("{:?}", cell_occupancy_matrix);
 
     // Create grid item
-    let (row_span, col_span) = primary_axis.into_row_column(primary_span, secondary_span);
+    let (col_span, row_span) = primary_axis.into_column_row(primary_span, secondary_span);
     items.push(GridItem {
         node,
         min_content_contribution: None,
@@ -344,33 +344,52 @@ mod tests {
             explicit_col_count: u16,
             explicit_row_count: u16,
             children: Vec<(Node, Style, (i16, i16, i16, i16))>,
+            expected_col_counts: TrackCounts,
+            expected_row_counts: TrackCounts,
         ) {
+            // Setup test
             let children_iter = || children.iter().map(|(node, style, _)| (*node, style));
             let child_styles_iter = children.iter().map(|(_, style, _)| style);
-
             let estimated_sizes =
                 compute_grid_size_estimate_inner(explicit_col_count, explicit_row_count, child_styles_iter);
-
             let mut items = Vec::new();
             let mut cell_occupancy_matrix =
                 CellOccupancyMatrix::with_track_counts(estimated_sizes.height, estimated_sizes.width);
+
+            // Run placement algorithm
             place_grid_items_inner(&mut cell_occupancy_matrix, &mut items, children_iter, GridAutoFlow::Row);
 
-            assert_eq!(
-                *cell_occupancy_matrix.track_counts(crate::grid::AbsoluteAxis::Vertical),
-                TrackCounts::from_raw(0, 2, 2),
-                "row track counts"
-            );
-            assert_eq!(
-                *cell_occupancy_matrix.track_counts(crate::grid::AbsoluteAxis::Horizontal),
-                TrackCounts::from_raw(0, 2, 0),
-                "column track counts"
-            );
+            // Assert that each item has been placed in the right location
             for (idx, ((node, _style, expected_placement), item)) in children.iter().zip(items.iter()).enumerate() {
                 assert_eq!(item.node, *node);
                 let actual_placement = (item.column.start, item.column.end, item.row.start, item.row.end);
                 assert_eq!(actual_placement, *expected_placement, "Item {idx} (0-indexed)");
             }
+
+            // Assert that the correct number of implicit rows have been generated
+            let actual_row_counts = *cell_occupancy_matrix.track_counts(crate::grid::AbsoluteAxis::Vertical);
+            assert_eq!(actual_row_counts, expected_row_counts, "row track counts");
+            let actual_col_counts = *cell_occupancy_matrix.track_counts(crate::grid::AbsoluteAxis::Horizontal);
+            assert_eq!(actual_col_counts, expected_col_counts, "column track counts");
+        }
+
+        #[test]
+        fn test_only_fixed_placement() {
+            let explicit_col_count = 2;
+            let explicit_row_count = 2;
+            let children = {
+                let mut sm = SlotMap::new();
+                vec![
+                    // node, style (grid coords), expected_placement (oz coords)
+                    (sm.insert(()), (Track(1), Auto, Track(1), Auto).into_grid_child(), (0, 1, 0, 1)),
+                    (sm.insert(()), (Track(-4), Auto, Track(-3), Auto).into_grid_child(), (-1, 0, 0, 1)),
+                    (sm.insert(()), (Track(-3), Auto, Track(-4), Auto).into_grid_child(), (0, 1, -1, 0)),
+                    (sm.insert(()), (Track(3), Span(2), Track(5), Auto).into_grid_child(), (2, 4, 4, 5)),
+                ]
+            };
+            let expected_cols = TrackCounts { negative_implicit: 1, explicit: 2, positive_implicit: 2 };
+            let expected_rows = TrackCounts { negative_implicit: 1, explicit: 2, positive_implicit: 3 };
+            placement_test_runner(explicit_col_count, explicit_row_count, children, expected_cols, expected_rows);
         }
 
         #[test]
@@ -381,18 +400,20 @@ mod tests {
                 let mut sm = SlotMap::new();
                 let auto_child = (Auto, Auto, Auto, Auto).into_grid_child();
                 vec![
-                    // node, style, expected_placement
+                    // node, style (grid coords), expected_placement (oz coords)
                     (sm.insert(()), auto_child.clone(), (0, 1, 0, 1)),
-                    (sm.insert(()), auto_child.clone(), (0, 1, 1, 2)),
                     (sm.insert(()), auto_child.clone(), (1, 2, 0, 1)),
+                    (sm.insert(()), auto_child.clone(), (0, 1, 1, 2)),
                     (sm.insert(()), auto_child.clone(), (1, 2, 1, 2)),
-                    (sm.insert(()), auto_child.clone(), (2, 3, 0, 1)),
-                    (sm.insert(()), auto_child.clone(), (2, 3, 1, 2)),
-                    (sm.insert(()), auto_child.clone(), (3, 4, 0, 1)),
-                    (sm.insert(()), auto_child.clone(), (3, 4, 1, 2)),
+                    (sm.insert(()), auto_child.clone(), (0, 1, 2, 3)),
+                    (sm.insert(()), auto_child.clone(), (1, 2, 2, 3)),
+                    (sm.insert(()), auto_child.clone(), (0, 1, 3, 4)),
+                    (sm.insert(()), auto_child.clone(), (1, 2, 3, 4)),
                 ]
             };
-            placement_test_runner(explicit_col_count, explicit_row_count, children);
+            let expected_cols = TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 0 };
+            let expected_rows = TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 2 };
+            placement_test_runner(explicit_col_count, explicit_row_count, children, expected_cols, expected_rows);
         }
     }
 }

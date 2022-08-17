@@ -22,7 +22,7 @@ impl AbsoluteAxis {
     }
 
     #[inline]
-    pub fn into_row_column<T>(&self, primary: T, secondary: T) -> (T, T) {
+    pub fn into_column_row<T>(&self, primary: T, secondary: T) -> (T, T) {
         match *self {
             AbsoluteAxis::Horizontal => (primary, secondary),
             AbsoluteAxis::Vertical => (secondary, primary),
