@@ -7,10 +7,12 @@ use crate::tree::LayoutTree;
 use types::{CssGrid, GridAxisTracks, GridTrack};
 
 mod resolve_and_place;
+#[cfg(test)]
+mod test_helpers;
 mod types;
 
-use self::resolve_and_place::{CellOccupancyMatrix, TrackCounts};
-pub use types::RowColumn;
+use self::resolve_and_place::CellOccupancyMatrix;
+pub use types::AbsoluteAxis;
 
 pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<AvailableSpace>) {
     // Estimate the number of rows and columns in the grid as a perf optimisation to reduce allocations

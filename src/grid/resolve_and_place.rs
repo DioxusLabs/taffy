@@ -1,4 +1,5 @@
 pub mod cell_occupancy;
+pub mod coordinates;
 pub mod estimate_size;
 pub mod explicit_grid;
 pub mod placement_algo;

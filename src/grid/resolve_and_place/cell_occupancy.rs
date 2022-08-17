@@ -1,4 +1,4 @@
-use super::super::types::RowColumn;
+use super::super::types::AbsoluteAxis;
 use crate::geometry::Line;
 use core::cmp::{max, min};
 use core::ops::Range;
@@ -57,32 +57,34 @@ impl TrackCounts {
         return (self.negative_implicit + self.explicit + self.positive_implicit) as usize;
     }
 
-    fn line_index_to_proceeding_track_index(&self, index: i16) -> i16 {
-        use core::cmp::Ordering;
-        match index.cmp(&0) {
-            Ordering::Equal => 0,
-            Ordering::Less => self.negative_implicit as i16 + self.explicit as i16 + index,
-            Ordering::Greater => self.negative_implicit as i16 + index,
-        }
+    fn oz_line_to_next_track(&self, index: i16) -> i16 {
+        // use core::cmp::Ordering;
+        // match index.cmp(&0) {
+        //     Ordering::Equal => 0,
+        //     Ordering::Less => self.negative_implicit as i16 + self.explicit as i16 + index,
+        //     Ordering::Greater => self.negative_implicit as i16 + index,
+        // }
+        index + (self.negative_implicit as i16)
     }
 
-    fn track_index_to_preceeding_line_index(&self, index: u16) -> i16 {
-        if index < self.negative_implicit {
-            -(self.negative_implicit as i16 + self.explicit as i16 + 1 - index as i16)
-        } else {
-            (index + 1 - self.negative_implicit) as i16
-        }
+    fn track_to_prev_oz_line(&self, index: u16) -> i16 {
+        // if index < self.negative_implicit {
+        //     -(self.negative_implicit as i16 + self.explicit as i16 + 1 - index as i16)
+        // } else {
+        //     (index - self.negative_implicit) as i16
+        // }
+        (index as i16) - (self.negative_implicit as i16)
     }
 
-    pub fn convert_grid_line_range_to_track_index_range(&self, input: Line<i16>) -> Range<i16> {
-        let start = self.line_index_to_proceeding_track_index(input.start);
-        let end = self.line_index_to_proceeding_track_index(input.end);
+    pub fn oz_line_range_to_track_range(&self, input: Line<i16>) -> Range<i16> {
+        let start = self.oz_line_to_next_track(input.start);
+        let end = self.oz_line_to_next_track(input.end); // Don't subtract 1 as output range is exclusive
         start..end
     }
 
-    pub fn convert_track_index_range_to_line_range(&self, input: Range<i16>) -> Line<i16> {
-        let start = self.track_index_to_preceeding_line_index(input.start as u16);
-        let end = self.track_index_to_preceeding_line_index(input.end as u16);
+    pub fn track_range_to_oz_line_range(&self, input: Range<i16>) -> Line<i16> {
+        let start = self.track_to_prev_oz_line(input.start as u16);
+        let end = self.track_to_prev_oz_line(input.end as u16); // Don't add 1 as input range is exclusive
         Line { start, end }
     }
 }
@@ -92,6 +94,37 @@ pub(crate) struct CellOccupancyMatrix {
     rows: TrackCounts,
     columns: TrackCounts,
 }
+
+impl std::fmt::Debug for CellOccupancyMatrix {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(
+            f,
+            "Rows: neg_implicit={} explicit={} pos_implicit={}",
+            self.rows.negative_implicit, self.rows.explicit, self.rows.positive_implicit
+        )?;
+        writeln!(
+            f,
+            "Cols: neg_implicit={} explicit={} pos_implicit={}",
+            self.columns.negative_implicit, self.columns.explicit, self.columns.positive_implicit
+        )?;
+        writeln!(f, "State:")?;
+
+        for row_idx in 0..self.inner.rows() {
+            for cell in self.inner.iter_row(row_idx) {
+                let letter = match *cell {
+                    CellOccupancyState::Unoccupied => '_',
+                    CellOccupancyState::DefinitelyPlaced => 'D',
+                    CellOccupancyState::AutoPlaced => 'A',
+                };
+                write!(f, "{letter}")?;
+            }
+            writeln!(f, "")?;
+        }
+
+        Ok(())
+    }
+}
+
 impl CellOccupancyMatrix {
     pub fn new(rows: usize, columns: usize) -> Self {
         Self { inner: Grid::new(rows, columns), rows: TrackCounts::default(), columns: TrackCounts::default() }
@@ -103,15 +136,14 @@ impl CellOccupancyMatrix {
 
     pub fn is_area_in_range(
         &mut self,
-        primary_axis: RowColumn,
+        primary_axis: AbsoluteAxis,
         primary_range: Range<i16>,
         secondary_range: Range<i16>,
     ) -> bool {
-        if primary_range.start < 0 || primary_range.end >= self.track_counts(primary_axis).len() as i16 {
+        if primary_range.start < 0 || primary_range.end > self.track_counts(primary_axis).len() as i16 {
             return false;
         }
-        if secondary_range.start < 0
-            || secondary_range.end >= self.track_counts(primary_axis.opposite_axis()).len() as i16
+        if secondary_range.start < 0 || secondary_range.end > self.track_counts(primary_axis.other_axis()).len() as i16
         {
             return false;
         }
@@ -120,19 +152,17 @@ impl CellOccupancyMatrix {
 
     /// Expands the grid (potentially in all 4 directions) in order to ensure that the specified range fits within the allocated space
     fn expand_to_fit_range(&mut self, row_range: Range<i16>, col_range: Range<i16>) {
-        let old_row_count = self.rows.negative_implicit + self.rows.explicit + self.rows.positive_implicit;
-        let old_col_count = self.columns.negative_implicit + self.columns.explicit + self.columns.positive_implicit;
-
         // Calculate number of rows and columns missing to accomodate ranges (if any)
         let req_negative_rows = min(row_range.start, 0);
-        let req_positive_rows =
-            max(row_range.end + 1 - self.rows.explicit as i16 - self.rows.negative_implicit as i16, 0);
+        let req_positive_rows = max(row_range.end - self.rows.explicit as i16 - self.rows.positive_implicit as i16, 0);
         let req_negative_cols = min(col_range.start, 0);
         let req_positive_cols =
-            max(col_range.end - self.columns.explicit as i16 - self.columns.negative_implicit as i16, 0);
+            max(col_range.end - self.columns.explicit as i16 - self.columns.positive_implicit as i16, 0);
 
-        let new_row_count = self.inner.rows() + (req_negative_rows + req_positive_rows) as usize;
-        let new_col_count = self.inner.cols() + (req_negative_cols + req_positive_cols) as usize;
+        let old_row_count = self.rows.len();
+        let old_col_count = self.columns.len();
+        let new_row_count = old_row_count + (req_negative_rows + req_positive_rows) as usize;
+        let new_col_count = old_col_count + (req_negative_cols + req_positive_cols) as usize;
 
         let mut data = Vec::with_capacity(new_row_count * new_col_count);
 
@@ -173,26 +203,26 @@ impl CellOccupancyMatrix {
     /// Mark an area of the matrix as occupied, expanding the allocated space as necessary to accomodate the passed area.
     pub fn mark_area_as(
         &mut self,
-        primary_axis: RowColumn,
+        primary_axis: AbsoluteAxis,
         primary_span: Line<i16>,
         secondary_span: Line<i16>,
         value: CellOccupancyState,
     ) {
         let (row_span, column_span) = match primary_axis {
-            RowColumn::Row => (primary_span, secondary_span),
-            RowColumn::Column => (secondary_span, primary_span),
+            AbsoluteAxis::Horizontal => (secondary_span, primary_span),
+            AbsoluteAxis::Vertical => (primary_span, secondary_span),
         };
 
-        let mut row_range = self.rows.convert_grid_line_range_to_track_index_range(row_span);
-        let mut col_range = self.columns.convert_grid_line_range_to_track_index_range(column_span);
+        let mut col_range = self.columns.oz_line_range_to_track_range(column_span);
+        let mut row_range = self.rows.oz_line_range_to_track_range(row_span);
 
         // Check that if the resolved ranges fit within the allocated grid. And if they don't then expand the grid to fit
         // and then re-resolve the ranges once the grid has been expanded as the resolved indexes may have changed
-        let is_in_range = self.is_area_in_range(RowColumn::Row, row_range.clone(), col_range.clone());
+        let is_in_range = self.is_area_in_range(AbsoluteAxis::Horizontal, col_range.clone(), row_range.clone());
         if !is_in_range {
             self.expand_to_fit_range(row_range.clone(), col_range.clone());
-            row_range = self.rows.convert_grid_line_range_to_track_index_range(row_span);
-            col_range = self.columns.convert_grid_line_range_to_track_index_range(column_span);
+            col_range = self.columns.oz_line_range_to_track_range(column_span);
+            row_range = self.rows.oz_line_range_to_track_range(row_span);
         }
 
         for x in row_range {
@@ -202,40 +232,40 @@ impl CellOccupancyMatrix {
         }
     }
 
-    pub fn lines_to_tracks(&self, axis: RowColumn, span: Line<i16>) -> Range<i16> {
-        self.track_counts(axis).convert_grid_line_range_to_track_index_range(span)
+    pub fn lines_to_tracks(&self, axis: AbsoluteAxis, span: Line<i16>) -> Range<i16> {
+        self.track_counts(axis).oz_line_range_to_track_range(span)
     }
 
-    pub fn tracks_to_lines(&self, axis: RowColumn, span: Range<i16>) -> Line<i16> {
-        self.track_counts(axis).convert_track_index_range_to_line_range(span)
+    pub fn tracks_to_lines(&self, axis: AbsoluteAxis, span: Range<i16>) -> Line<i16> {
+        self.track_counts(axis).track_range_to_oz_line_range(span)
     }
 
     pub fn line_area_is_unoccupied(
         &self,
-        primary_axis: RowColumn,
+        primary_axis: AbsoluteAxis,
         primary_span: Line<i16>,
         secondary_span: Line<i16>,
     ) -> bool {
         let (row_span, column_span) = match primary_axis {
-            RowColumn::Row => (primary_span, secondary_span),
-            RowColumn::Column => (secondary_span, primary_span),
+            AbsoluteAxis::Horizontal => (primary_span, secondary_span),
+            AbsoluteAxis::Vertical => (secondary_span, primary_span),
         };
 
-        let row_range = self.rows.convert_grid_line_range_to_track_index_range(row_span);
-        let col_range = self.columns.convert_grid_line_range_to_track_index_range(column_span);
+        let row_range = self.rows.oz_line_range_to_track_range(row_span);
+        let col_range = self.columns.oz_line_range_to_track_range(column_span);
 
-        self.track_area_is_unoccupied(RowColumn::Row, row_range, col_range)
+        self.track_area_is_unoccupied(AbsoluteAxis::Horizontal, row_range, col_range)
     }
 
     pub fn track_area_is_unoccupied(
         &self,
-        primary_axis: RowColumn,
+        primary_axis: AbsoluteAxis,
         primary_range: Range<i16>,
         secondary_range: Range<i16>,
     ) -> bool {
         let (row_range, col_range) = match primary_axis {
-            RowColumn::Row => (primary_range, secondary_range),
-            RowColumn::Column => (secondary_range, primary_range),
+            AbsoluteAxis::Horizontal => (secondary_range, primary_range),
+            AbsoluteAxis::Vertical => (primary_range, secondary_range),
         };
 
         // Search for occupied cells in the specified area. Out of bounds cells are considered unoccupied.
@@ -251,71 +281,76 @@ impl CellOccupancyMatrix {
         true
     }
 
-    pub fn track_counts(&self, track_type: RowColumn) -> &TrackCounts {
+    pub fn track_counts(&self, track_type: AbsoluteAxis) -> &TrackCounts {
         match track_type {
-            RowColumn::Row => &self.rows,
-            RowColumn::Column => &self.columns,
+            AbsoluteAxis::Horizontal => &self.columns,
+            AbsoluteAxis::Vertical => &self.rows,
         }
     }
 
-    pub fn get(&self, track_type: RowColumn, primary_index: u16, secondary_index: u16) -> Option<&CellOccupancyState> {
+    pub fn get(
+        &self,
+        track_type: AbsoluteAxis,
+        primary_index: u16,
+        secondary_index: u16,
+    ) -> Option<&CellOccupancyState> {
         match track_type {
-            RowColumn::Row => self.inner.get(primary_index as usize, secondary_index as usize),
-            RowColumn::Column => self.inner.get(secondary_index as usize, primary_index as usize),
+            AbsoluteAxis::Horizontal => self.inner.get(secondary_index as usize, primary_index as usize),
+            AbsoluteAxis::Vertical => self.inner.get(primary_index as usize, secondary_index as usize),
         }
     }
 
     pub fn next_of_type(
         &self,
-        track_type: RowColumn,
+        track_type: AbsoluteAxis,
         primary_track_index: i16,
         kind: CellOccupancyState,
         start_after: i16,
     ) -> Option<i16> {
         let track_counts = self.track_counts(track_type);
-        let primary_track_computed_index = track_counts.line_index_to_proceeding_track_index(primary_track_index);
+        let primary_track_computed_index = track_counts.oz_line_to_next_track(primary_track_index);
 
         let maybe_index = match track_type {
-            RowColumn::Row => self
+            AbsoluteAxis::Horizontal => self
                 .inner
                 .iter_row(primary_track_computed_index as usize)
                 .skip(start_after as usize)
                 .position(|item| *item == kind),
-            RowColumn::Column => self
+            AbsoluteAxis::Vertical => self
                 .inner
                 .iter_col(primary_track_computed_index as usize)
                 .skip(start_after as usize)
                 .position(|item| *item == kind),
         };
 
-        maybe_index.map(|idx| track_counts.track_index_to_preceeding_line_index(idx as u16))
+        maybe_index.map(|idx| track_counts.track_to_prev_oz_line(idx as u16))
     }
 
     pub fn last_of_type(
         &self,
-        track_type: RowColumn,
+        track_type: AbsoluteAxis,
         primary_track_index: i16,
         kind: CellOccupancyState,
     ) -> Option<i16> {
         let track_counts = self.track_counts(track_type);
-        let primary_track_computed_index = track_counts.line_index_to_proceeding_track_index(primary_track_index);
+        let primary_track_computed_index = track_counts.oz_line_to_next_track(primary_track_index);
 
         let maybe_index = match track_type {
-            RowColumn::Row => {
+            AbsoluteAxis::Horizontal => {
                 self.inner.iter_row(primary_track_computed_index as usize).rposition(|item| *item == kind)
             }
-            RowColumn::Column => {
+            AbsoluteAxis::Vertical => {
                 self.inner.iter_col(primary_track_computed_index as usize).rposition(|item| *item == kind)
             }
         };
 
-        maybe_index.map(|idx| track_counts.track_index_to_preceeding_line_index(idx as u16))
+        maybe_index.map(|idx| track_counts.track_to_prev_oz_line(idx as u16))
     }
 
-    pub fn next_unoccupied(&self, track_type: RowColumn, index: i16, start_after: i16) -> Option<i16> {
+    pub fn next_unoccupied(&self, track_type: AbsoluteAxis, index: i16, start_after: i16) -> Option<i16> {
         self.next_of_type(track_type, index, CellOccupancyState::Unoccupied, start_after)
     }
-    pub fn first_unoccupied(&self, track_type: RowColumn, index: i16) -> Option<i16> {
+    pub fn first_unoccupied(&self, track_type: AbsoluteAxis, index: i16) -> Option<i16> {
         self.next_of_type(track_type, index, CellOccupancyState::Unoccupied, 0)
     }
 }

@@ -7,33 +7,33 @@ use crate::sys::GridTrackVec;
 use core::cmp::max;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub enum RowColumn {
-    Row,
-    Column,
+pub enum AbsoluteAxis {
+    Horizontal,
+    Vertical,
 }
 
-impl RowColumn {
+impl AbsoluteAxis {
     #[inline]
-    pub fn opposite_axis(&self) -> Self {
+    pub fn other_axis(&self) -> Self {
         match *self {
-            RowColumn::Row => RowColumn::Column,
-            RowColumn::Column => RowColumn::Row,
+            AbsoluteAxis::Horizontal => AbsoluteAxis::Vertical,
+            AbsoluteAxis::Vertical => AbsoluteAxis::Horizontal,
         }
     }
 
     #[inline]
     pub fn into_row_column<T>(&self, primary: T, secondary: T) -> (T, T) {
         match *self {
-            RowColumn::Row => (primary, secondary),
-            RowColumn::Column => (secondary, primary),
+            AbsoluteAxis::Horizontal => (primary, secondary),
+            AbsoluteAxis::Vertical => (secondary, primary),
         }
     }
 
     #[inline]
     pub fn into_primary_secondary<T>(&self, row: T, column: T) -> (T, T) {
         match *self {
-            RowColumn::Row => (row, column),
-            RowColumn::Column => (column, row),
+            AbsoluteAxis::Horizontal => (row, column),
+            AbsoluteAxis::Vertical => (column, row),
         }
     }
 }
@@ -41,17 +41,17 @@ impl RowColumn {
 /// The abstract axis in CSS Grid
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub(super) enum GridAxis {
-    /// The axis in the block dimension, i.e. the vertical axis in horizontal writing modes and the horizontal axis in vertical writing modes.
-    Block,
     /// The axis in the inline dimension, i.e. the horizontal axis in horizontal writing modes and the vertical axis in vertical writing modes.
     Inline,
+    /// The axis in the block dimension, i.e. the vertical axis in horizontal writing modes and the horizontal axis in vertical writing modes.
+    Block,
 }
 
 impl GridAxis {
     pub fn other(&self) -> GridAxis {
         match *self {
-            GridAxis::Block => GridAxis::Inline,
             GridAxis::Inline => GridAxis::Block,
+            GridAxis::Block => GridAxis::Inline,
         }
     }
 }
@@ -330,13 +330,13 @@ impl GridAxisTracks {
     }
 }
 
-pub(super) enum GridPosition {
-    Auto,
-    LineIndex(i16),
-    LineName(u16),
-    // GridAreaStart(u16),
-    // GridAreaEnd(u16),
-}
+// pub(super) enum GridPosition {
+//     Auto,
+//     LineIndex(i16),
+//     LineName(u16),
+//     // GridAreaStart(u16),
+//     // GridAreaEnd(u16),
+// }
 
 pub(super) struct NamedArea {
     name: u16,
@@ -381,9 +381,9 @@ impl GridItem {
 
 pub(super) struct CssGrid {
     pub available_space: Size<AvailableSpace>,
+    pub cell_occupancy_matrix: CellOccupancyMatrix,
+    pub items: Vec<GridItem>,
     pub columns: GridAxisTracks,
     pub rows: GridAxisTracks,
-    pub cell_occupancy_matrix: CellOccupancyMatrix,
     pub named_areas: Vec<NamedArea>,
-    pub items: Vec<GridItem>,
 }

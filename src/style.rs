@@ -1,7 +1,7 @@
 //! A representation of [CSS layout properties](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust, used for flexbox layout
 
 use crate::geometry::{Line, Rect, Size};
-use crate::grid::RowColumn;
+use crate::grid::AbsoluteAxis;
 use crate::sys::GridTrackVec;
 use core::cmp::{max, min};
 
@@ -287,10 +287,10 @@ impl GridAutoFlow {
         }
     }
 
-    pub fn flow_direction(&self) -> RowColumn {
+    pub fn primary_axis(&self) -> AbsoluteAxis {
         match self {
-            Self::Row | Self::RowDense => RowColumn::Row,
-            Self::Column | Self::ColumnDense => RowColumn::Column,
+            Self::Row | Self::RowDense => AbsoluteAxis::Horizontal,
+            Self::Column | Self::ColumnDense => AbsoluteAxis::Vertical,
         }
     }
 }
@@ -314,6 +314,17 @@ pub enum GridPlacement {
 impl Default for GridPlacement {
     fn default() -> Self {
         Self::Auto
+    }
+}
+
+impl GridPlacement {
+    pub fn map_track(&self, map_fn: impl FnOnce(i16) -> i16) -> Self {
+        use GridPlacement::*;
+        match *self {
+            Auto => Auto,
+            Span(span) => Span(span),
+            Track(track) => Track(map_fn(track)),
+        }
     }
 }
 
@@ -822,10 +833,10 @@ impl Style {
         }
     }
 
-    pub(crate) fn grid_placement(&self, axis: RowColumn) -> Line<GridPlacement> {
+    pub(crate) fn grid_placement(&self, axis: AbsoluteAxis) -> Line<GridPlacement> {
         match axis {
-            RowColumn::Row => self.grid_row,
-            RowColumn::Column => self.grid_column,
+            AbsoluteAxis::Horizontal => self.grid_row,
+            AbsoluteAxis::Vertical => self.grid_column,
         }
     }
 }

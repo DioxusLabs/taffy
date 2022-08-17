@@ -171,6 +171,18 @@ pub struct Line<T> {
     pub end: T,
 }
 
+impl<T> Line<T> {
+    /// Applies the function `f` to both the width and height
+    ///
+    /// This is used to transform a `Line<T>` into a `Line<R>`.
+    pub fn map<R, F>(self, f: F) -> Line<R>
+    where
+        F: Fn(T) -> R,
+    {
+        Line { start: f(self.start), end: f(self.end) }
+    }
+}
+
 /// The width and height of a [`Rect`]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

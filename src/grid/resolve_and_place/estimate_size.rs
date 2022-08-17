@@ -6,35 +6,8 @@ use crate::style::{GridPlacement, Style};
 use crate::tree::LayoutTree;
 use core::cmp::{max, min};
 
+use super::coordinates::into_origin_zero_coordinates;
 use super::TrackCounts;
-
-/// Convert from grid line coordinates to our custom origin-zero coordinates
-///
-/// Grid line coordinates are those used in grid-row/grid-column in the CSS grid spec
-///
-/// In origin-zero coordinates:
-///   - The line at left hand (or top) edge of the explicit grid is line 0
-///   - The next line to the right (or down) is 1, and so on
-///   - The next line to the left (or up) is -1, and so on
-fn into_origin_zero_coordinates(grid_line: i16, explicit_track_count: u16) -> i16 {
-    let explicit_line_count = explicit_track_count + 1;
-    if grid_line > 0 {
-        grid_line - 1
-    } else if grid_line < 0 {
-        grid_line + explicit_line_count as i16
-    } else {
-        panic!("Grid line of zero is invalid");
-    }
-}
-
-fn into_grid_coordinates(origin_zero_line: i16, explicit_track_count: u16) -> i16 {
-    let explicit_line_count = explicit_track_count + 1;
-    if origin_zero_line >= 0 {
-        origin_zero_line + 1
-    } else {
-        -(origin_zero_line + explicit_line_count as i16)
-    }
-}
 
 pub(crate) fn compute_explicit_grid_size(style: &Style) -> (u16, u16) {
     let explicit_col_count = max(style.grid_template_columns.len(), 1) as u16;
@@ -243,39 +216,9 @@ mod tests {
     mod test_intial_grid_sizing {
         use super::super::compute_explicit_grid_size;
         use super::super::compute_grid_size_estimate_inner;
+        use crate::grid::test_helpers::*;
         use crate::prelude::*;
-        use crate::style::Dimension::{self, Points};
-        use crate::style::GridPlacement::{self, *};
-        use crate::style::Style;
-        use crate::style::TrackSizingFunction;
-
-        trait CreateParentTestNode {
-            fn into_grid(&self) -> Style;
-        }
-        impl CreateParentTestNode for (f32, f32, i32, i32) {
-            fn into_grid(&self) -> Style {
-                Style {
-                    display: Display::Grid,
-                    size: Size { width: Points(self.0 as f32), height: Points(self.1 as f32) },
-                    grid_template_columns: vec![TrackSizingFunction::Flex(1f32); self.2 as usize],
-                    grid_template_rows: vec![TrackSizingFunction::Flex(1f32); self.3 as usize],
-                    ..Default::default()
-                }
-            }
-        }
-        trait CreateChildTestNode {
-            fn into_grid_child(&self) -> Style;
-        }
-        impl CreateChildTestNode for (GridPlacement, GridPlacement, GridPlacement, GridPlacement) {
-            fn into_grid_child(&self) -> Style {
-                Style {
-                    display: Display::Grid,
-                    grid_column: Line { start: self.0, end: self.1 },
-                    grid_row: Line { start: self.2, end: self.3 },
-                    ..Default::default()
-                }
-            }
-        }
+        use crate::style::GridPlacement::*;
 
         #[test]
         fn explicit_grid_sizing() {
