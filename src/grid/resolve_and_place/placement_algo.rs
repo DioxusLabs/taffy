@@ -346,6 +346,7 @@ mod tests {
             children: Vec<(Node, Style, (i16, i16, i16, i16))>,
             expected_col_counts: TrackCounts,
             expected_row_counts: TrackCounts,
+            flow: GridAutoFlow,
         ) {
             // Setup test
             let children_iter = || children.iter().map(|(node, style, _)| (*node, style));
@@ -357,7 +358,7 @@ mod tests {
                 CellOccupancyMatrix::with_track_counts(estimated_sizes.height, estimated_sizes.width);
 
             // Run placement algorithm
-            place_grid_items_inner(&mut cell_occupancy_matrix, &mut items, children_iter, GridAutoFlow::Row);
+            place_grid_items_inner(&mut cell_occupancy_matrix, &mut items, children_iter, flow);
 
             // Assert that each item has been placed in the right location
             for (idx, ((node, _style, expected_placement), item)) in children.iter().zip(items.iter()).enumerate() {
@@ -375,6 +376,7 @@ mod tests {
 
         #[test]
         fn test_only_fixed_placement() {
+            let flow = GridAutoFlow::Row;
             let explicit_col_count = 2;
             let explicit_row_count = 2;
             let children = {
@@ -389,11 +391,12 @@ mod tests {
             };
             let expected_cols = TrackCounts { negative_implicit: 1, explicit: 2, positive_implicit: 2 };
             let expected_rows = TrackCounts { negative_implicit: 1, explicit: 2, positive_implicit: 3 };
-            placement_test_runner(explicit_col_count, explicit_row_count, children, expected_cols, expected_rows);
+            placement_test_runner(explicit_col_count, explicit_row_count, children, expected_cols, expected_rows, flow);
         }
 
         #[test]
-        fn test_only_auto_placement() {
+        fn test_only_auto_placement_row_flow() {
+            let flow = GridAutoFlow::Row;
             let explicit_col_count = 2;
             let explicit_row_count = 2;
             let children = {
@@ -413,7 +416,32 @@ mod tests {
             };
             let expected_cols = TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 0 };
             let expected_rows = TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 2 };
-            placement_test_runner(explicit_col_count, explicit_row_count, children, expected_cols, expected_rows);
+            placement_test_runner(explicit_col_count, explicit_row_count, children, expected_cols, expected_rows, flow);
+        }
+
+        #[test]
+        fn test_only_auto_placement_column_flow() {
+            let flow = GridAutoFlow::Column;
+            let explicit_col_count = 2;
+            let explicit_row_count = 2;
+            let children = {
+                let mut sm = SlotMap::new();
+                let auto_child = (Auto, Auto, Auto, Auto).into_grid_child();
+                vec![
+                    // node, style (grid coords), expected_placement (oz coords)
+                    (sm.insert(()), auto_child.clone(), (0, 1, 0, 1)),
+                    (sm.insert(()), auto_child.clone(), (0, 1, 1, 2)),
+                    (sm.insert(()), auto_child.clone(), (1, 2, 0, 1)),
+                    (sm.insert(()), auto_child.clone(), (1, 2, 1, 2)),
+                    (sm.insert(()), auto_child.clone(), (2, 3, 0, 1)),
+                    (sm.insert(()), auto_child.clone(), (2, 3, 1, 2)),
+                    (sm.insert(()), auto_child.clone(), (3, 4, 0, 1)),
+                    (sm.insert(()), auto_child.clone(), (3, 4, 1, 2)),
+                ]
+            };
+            let expected_cols = TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 2 };
+            let expected_rows = TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 0 };
+            placement_test_runner(explicit_col_count, explicit_row_count, children, expected_cols, expected_rows, flow);
         }
     }
 }
