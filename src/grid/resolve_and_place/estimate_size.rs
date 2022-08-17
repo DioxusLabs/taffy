@@ -7,14 +7,8 @@ use crate::tree::LayoutTree;
 use core::cmp::{max, min};
 
 use super::coordinates::into_origin_zero_coordinates;
+use super::explicit_grid::compute_explicit_grid_size;
 use super::TrackCounts;
-
-pub(crate) fn compute_explicit_grid_size(style: &Style) -> (u16, u16) {
-    let explicit_col_count = max(style.grid_template_columns.len(), 1) as u16;
-    let explicit_row_count = max(style.grid_template_rows.len(), 1) as u16;
-
-    (explicit_col_count, explicit_row_count)
-}
 
 /// Estimate the number of rows and columns in the grid
 /// This is used as a performance optimisation to pre-size vectors and reduce allocations
@@ -23,7 +17,8 @@ pub(crate) fn compute_explicit_grid_size(style: &Style) -> (u16, u16) {
 pub(crate) fn compute_grid_size_estimate(tree: &impl LayoutTree, node: Node) -> Size<TrackCounts> {
     let style = tree.style(node);
     let child_styles_iter = tree.children(node).into_iter().map(|child_node| tree.style(*child_node));
-    compute_grid_size_estimate_inner(style, child_styles_iter)
+    let (explicit_col_count, explicit_row_count) = compute_explicit_grid_size(style);
+    compute_grid_size_estimate_inner(explicit_col_count, explicit_row_count, child_styles_iter)
 }
 
 /// Estimate the number of rows and columns in the grid
@@ -33,15 +28,12 @@ pub(crate) fn compute_grid_size_estimate(tree: &impl LayoutTree, node: Node) -> 
 ///   - However, the estimates for the positive explicit track count is a lower bound as auto-placement can affect this
 ///     in ways which are impossible to predict until the auto-placement algorithm is run.
 pub(crate) fn compute_grid_size_estimate_inner<'a>(
-    style: &Style,
+    explicit_col_count: u16,
+    explicit_row_count: u16,
     child_styles_iter: impl Iterator<Item = &'a Style>,
 ) -> Size<TrackCounts> {
-    // Compute explicit track counts
-    let (explicit_col_count, explicit_row_count) = compute_explicit_grid_size(style);
-
     // Iterate over children, producing an estimate of the min and max grid lines (in origin-zero coordinates where)
     // along with the span of each itme
-
     let (col_min, col_max, col_max_span, row_min, row_max, row_max_span) =
         get_known_child_positions(child_styles_iter, explicit_col_count, explicit_row_count);
 
@@ -214,51 +206,44 @@ mod tests {
     }
 
     mod test_intial_grid_sizing {
-        use super::super::compute_explicit_grid_size;
         use super::super::compute_grid_size_estimate_inner;
         use crate::grid::test_helpers::*;
         use crate::prelude::*;
         use crate::style::GridPlacement::*;
 
         #[test]
-        fn explicit_grid_sizing() {
-            let grid_style = (600.0, 600.0, 2, 4).into_grid();
-            let (width, height) = compute_explicit_grid_size(&grid_style);
-            assert_eq!(width, 2);
-            assert_eq!(height, 4);
-        }
-
-        #[test]
         fn explicit_grid_sizing_with_children() {
-            let grid_style = (600.0, 600.0, 6, 8).into_grid();
+            let explicit_col_count = 6;
+            let explicit_row_count = 8;
             let child_styles = vec![
                 (Track(1), Span(2), Track(2), Auto).into_grid_child(),
                 (Track(-4), Auto, Track(-2), Auto).into_grid_child(),
             ];
             let Size { width: inline, height: block } =
-                compute_grid_size_estimate_inner(&grid_style, child_styles.iter());
+                compute_grid_size_estimate_inner(explicit_col_count, explicit_row_count, child_styles.iter());
             assert_eq!(inline.negative_implicit, 0);
-            assert_eq!(inline.explicit, 6);
+            assert_eq!(inline.explicit, explicit_col_count);
             assert_eq!(inline.positive_implicit, 0);
             assert_eq!(block.negative_implicit, 0);
-            assert_eq!(block.explicit, 8);
+            assert_eq!(block.explicit, explicit_row_count);
             assert_eq!(block.positive_implicit, 0);
         }
 
         #[test]
         fn negative_implicit_grid_sizing() {
-            let grid_style = (600.0, 600.0, 4, 4).into_grid();
+            let explicit_col_count = 4;
+            let explicit_row_count = 4;
             let child_styles = vec![
                 (Track(-6), Span(2), Track(-8), Auto).into_grid_child(),
                 (Track(4), Auto, Track(3), Auto).into_grid_child(),
             ];
             let Size { width: inline, height: block } =
-                compute_grid_size_estimate_inner(&grid_style, child_styles.iter());
+                compute_grid_size_estimate_inner(explicit_col_count, explicit_row_count, child_styles.iter());
             assert_eq!(inline.negative_implicit, 1);
-            assert_eq!(inline.explicit, 4);
+            assert_eq!(inline.explicit, explicit_col_count);
             assert_eq!(inline.positive_implicit, 0);
             assert_eq!(block.negative_implicit, 3);
-            assert_eq!(block.explicit, 4);
+            assert_eq!(block.explicit, explicit_row_count);
             assert_eq!(block.positive_implicit, 0);
         }
     }

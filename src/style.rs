@@ -385,7 +385,7 @@ impl Line<GridPlacement> {
             (Span(span), Auto) => span,
             (Auto, Span(span)) => span,
             (Span(span), Span(_)) => span,
-            (Track(track1), Track(track2)) => panic!("indefinite_span should only be called on indefinite grid tracks"),
+            (Track(_), Track(_)) => panic!("indefinite_span should only be called on indefinite grid tracks"),
         }
     }
 }

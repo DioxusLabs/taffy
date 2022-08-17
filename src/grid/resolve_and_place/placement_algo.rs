@@ -330,6 +330,7 @@ fn record_grid_placement(
 mod tests {
 
     mod test_placement_algorithm {
+        use crate::grid::resolve_and_place::estimate_size::compute_grid_size_estimate_inner;
         use crate::grid::resolve_and_place::TrackCounts;
         use crate::grid::test_helpers::*;
         use crate::grid::CellOccupancyMatrix;
@@ -339,13 +340,43 @@ mod tests {
 
         use super::super::place_grid_items_inner;
 
-        #[test]
-        fn explicit_grid_auto_placement() {
-            let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(
-                TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 0 },
-                TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 0 },
-            );
+        fn placement_test_runner(
+            explicit_col_count: u16,
+            explicit_row_count: u16,
+            children: Vec<(Node, Style, (i16, i16, i16, i16))>,
+        ) {
+            let children_iter = || children.iter().map(|(node, style, _)| (*node, style));
+            let child_styles_iter = children.iter().map(|(_, style, _)| style);
+
+            let estimated_sizes =
+                compute_grid_size_estimate_inner(explicit_col_count, explicit_row_count, child_styles_iter);
+
             let mut items = Vec::new();
+            let mut cell_occupancy_matrix =
+                CellOccupancyMatrix::with_track_counts(estimated_sizes.height, estimated_sizes.width);
+            place_grid_items_inner(&mut cell_occupancy_matrix, &mut items, children_iter, GridAutoFlow::Row);
+
+            assert_eq!(
+                *cell_occupancy_matrix.track_counts(crate::grid::AbsoluteAxis::Vertical),
+                TrackCounts::from_raw(0, 2, 2),
+                "row track counts"
+            );
+            assert_eq!(
+                *cell_occupancy_matrix.track_counts(crate::grid::AbsoluteAxis::Horizontal),
+                TrackCounts::from_raw(0, 2, 0),
+                "column track counts"
+            );
+            for (idx, ((node, _style, expected_placement), item)) in children.iter().zip(items.iter()).enumerate() {
+                assert_eq!(item.node, *node);
+                let actual_placement = (item.column.start, item.column.end, item.row.start, item.row.end);
+                assert_eq!(actual_placement, *expected_placement, "Item {idx} (0-indexed)");
+            }
+        }
+
+        #[test]
+        fn test_only_auto_placement() {
+            let explicit_col_count = 2;
+            let explicit_row_count = 2;
             let children = {
                 let mut sm = SlotMap::new();
                 let auto_child = (Auto, Auto, Auto, Auto).into_grid_child();
@@ -361,28 +392,7 @@ mod tests {
                     (sm.insert(()), auto_child.clone(), (3, 4, 1, 2)),
                 ]
             };
-            let children_iter = || children.iter().map(|(node, style, _)| (*node, style));
-
-            place_grid_items_inner(&mut cell_occupancy_matrix, &mut items, children_iter, GridAutoFlow::Row);
-
-            assert_eq!(
-                *cell_occupancy_matrix.track_counts(crate::grid::AbsoluteAxis::Vertical),
-                TrackCounts::from_raw(0, 2, 2),
-                "row track counts"
-            );
-            assert_eq!(
-                *cell_occupancy_matrix.track_counts(crate::grid::AbsoluteAxis::Horizontal),
-                TrackCounts::from_raw(0, 2, 0),
-                "column track counts"
-            );
-            for (idx, ((node, _style, expected_placement), item)) in children.iter().zip(items.iter()).enumerate() {
-                assert_eq!(item.node, *node);
-                assert_eq!(
-                    (item.column.start, item.column.end, item.row.start, item.row.end),
-                    *expected_placement,
-                    "Item {idx} (0-indexed)"
-                );
-            }
+            placement_test_runner(explicit_col_count, explicit_row_count, children);
         }
     }
 }
