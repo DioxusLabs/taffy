@@ -83,11 +83,11 @@ pub(in crate::grid) fn place_grid_items_inner<'a, ChildIter>(
             );
         });
 
-    // 2. Place remaining children with definite primary axis positions
+    // 2. Place remaining children with definite secondary axis positions
     children_iter()
         .filter(|(_, child_style)| {
-            child_style.grid_placement(primary_axis).is_definite()
-                && !child_style.grid_placement(secondary_axis).is_definite()
+            child_style.grid_placement(secondary_axis).is_definite()
+                && !child_style.grid_placement(primary_axis).is_definite()
         })
         .map(map_child_style_to_origin_zero_placement)
         .for_each(|(child_node, child_placement)| {
@@ -183,17 +183,17 @@ fn place_definite_primary_axis_item(
     let primary_axis = auto_flow.primary_axis();
     let secondary_axis = primary_axis.other_axis();
 
-    let primary_axis_placement = placement.get(primary_axis).resolve_definite_grid_tracks();
+    let secondary_axis_placement = placement.get(secondary_axis).resolve_definite_grid_tracks();
     let starting_position = match auto_flow.is_dense() {
-        true => 1,
+        true => 0,
         false => cell_occupancy_matrix
-            .last_of_type(primary_axis, primary_axis_placement.start as i16, CellOccupancyState::AutoPlaced)
-            .unwrap_or(1),
+            .last_of_type(primary_axis, secondary_axis_placement.start as i16, CellOccupancyState::AutoPlaced)
+            .unwrap_or(0),
     };
 
     let mut position: i16 = starting_position;
     loop {
-        let secondary_axis_placement = placement.get(secondary_axis).resolve_indefinite_grid_tracks(position);
+        let primary_axis_placement = placement.get(primary_axis).resolve_indefinite_grid_tracks(position);
 
         let does_fit = cell_occupancy_matrix.line_area_is_unoccupied(
             primary_axis,
@@ -343,14 +343,14 @@ mod tests {
         fn placement_test_runner(
             explicit_col_count: u16,
             explicit_row_count: u16,
-            children: Vec<(Node, Style, (i16, i16, i16, i16))>,
+            children: Vec<(u32, Node, Style, (i16, i16, i16, i16))>,
             expected_col_counts: TrackCounts,
             expected_row_counts: TrackCounts,
             flow: GridAutoFlow,
         ) {
             // Setup test
-            let children_iter = || children.iter().map(|(node, style, _)| (*node, style));
-            let child_styles_iter = children.iter().map(|(_, style, _)| style);
+            let children_iter = || children.iter().map(|(_, node, style, _)| (*node, style));
+            let child_styles_iter = children.iter().map(|(_, _, style, _)| style);
             let estimated_sizes =
                 compute_grid_size_estimate_inner(explicit_col_count, explicit_row_count, child_styles_iter);
             let mut items = Vec::new();
@@ -361,7 +361,11 @@ mod tests {
             place_grid_items_inner(&mut cell_occupancy_matrix, &mut items, children_iter, flow);
 
             // Assert that each item has been placed in the right location
-            for (idx, ((node, _style, expected_placement), item)) in children.iter().zip(items.iter()).enumerate() {
+            let mut sorted_children = children.clone();
+            sorted_children.sort_by_key(|child| child.0);
+            for (idx, ((_sort_order, node, _style, expected_placement), item)) in
+                sorted_children.iter().zip(items.iter()).enumerate()
+            {
                 assert_eq!(item.node, *node);
                 let actual_placement = (item.column.start, item.column.end, item.row.start, item.row.end);
                 assert_eq!(actual_placement, *expected_placement, "Item {idx} (0-indexed)");
@@ -383,10 +387,10 @@ mod tests {
                 let mut sm = SlotMap::new();
                 vec![
                     // node, style (grid coords), expected_placement (oz coords)
-                    (sm.insert(()), (Track(1), Auto, Track(1), Auto).into_grid_child(), (0, 1, 0, 1)),
-                    (sm.insert(()), (Track(-4), Auto, Track(-3), Auto).into_grid_child(), (-1, 0, 0, 1)),
-                    (sm.insert(()), (Track(-3), Auto, Track(-4), Auto).into_grid_child(), (0, 1, -1, 0)),
-                    (sm.insert(()), (Track(3), Span(2), Track(5), Auto).into_grid_child(), (2, 4, 4, 5)),
+                    (1, sm.insert(()), (Track(1), Auto, Track(1), Auto).into_grid_child(), (0, 1, 0, 1)),
+                    (2, sm.insert(()), (Track(-4), Auto, Track(-3), Auto).into_grid_child(), (-1, 0, 0, 1)),
+                    (3, sm.insert(()), (Track(-3), Auto, Track(-4), Auto).into_grid_child(), (0, 1, -1, 0)),
+                    (4, sm.insert(()), (Track(3), Span(2), Track(5), Auto).into_grid_child(), (2, 4, 4, 5)),
                 ]
             };
             let expected_cols = TrackCounts { negative_implicit: 1, explicit: 2, positive_implicit: 2 };
@@ -403,15 +407,15 @@ mod tests {
                 let mut sm = SlotMap::new();
                 let auto_child = (Auto, Auto, Auto, Auto).into_grid_child();
                 vec![
-                    // node, style (grid coords), expected_placement (oz coords)
-                    (sm.insert(()), auto_child.clone(), (0, 1, 0, 1)),
-                    (sm.insert(()), auto_child.clone(), (1, 2, 0, 1)),
-                    (sm.insert(()), auto_child.clone(), (0, 1, 1, 2)),
-                    (sm.insert(()), auto_child.clone(), (1, 2, 1, 2)),
-                    (sm.insert(()), auto_child.clone(), (0, 1, 2, 3)),
-                    (sm.insert(()), auto_child.clone(), (1, 2, 2, 3)),
-                    (sm.insert(()), auto_child.clone(), (0, 1, 3, 4)),
-                    (sm.insert(()), auto_child.clone(), (1, 2, 3, 4)),
+                    // output order, node, style (grid coords), expected_placement (oz coords)
+                    (1, sm.insert(()), auto_child.clone(), (0, 1, 0, 1)),
+                    (2, sm.insert(()), auto_child.clone(), (1, 2, 0, 1)),
+                    (3, sm.insert(()), auto_child.clone(), (0, 1, 1, 2)),
+                    (4, sm.insert(()), auto_child.clone(), (1, 2, 1, 2)),
+                    (5, sm.insert(()), auto_child.clone(), (0, 1, 2, 3)),
+                    (6, sm.insert(()), auto_child.clone(), (1, 2, 2, 3)),
+                    (7, sm.insert(()), auto_child.clone(), (0, 1, 3, 4)),
+                    (8, sm.insert(()), auto_child.clone(), (1, 2, 3, 4)),
                 ]
             };
             let expected_cols = TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 0 };
@@ -428,15 +432,15 @@ mod tests {
                 let mut sm = SlotMap::new();
                 let auto_child = (Auto, Auto, Auto, Auto).into_grid_child();
                 vec![
-                    // node, style (grid coords), expected_placement (oz coords)
-                    (sm.insert(()), auto_child.clone(), (0, 1, 0, 1)),
-                    (sm.insert(()), auto_child.clone(), (0, 1, 1, 2)),
-                    (sm.insert(()), auto_child.clone(), (1, 2, 0, 1)),
-                    (sm.insert(()), auto_child.clone(), (1, 2, 1, 2)),
-                    (sm.insert(()), auto_child.clone(), (2, 3, 0, 1)),
-                    (sm.insert(()), auto_child.clone(), (2, 3, 1, 2)),
-                    (sm.insert(()), auto_child.clone(), (3, 4, 0, 1)),
-                    (sm.insert(()), auto_child.clone(), (3, 4, 1, 2)),
+                    // output order, node, style (grid coords), expected_placement (oz coords)
+                    (1, sm.insert(()), auto_child.clone(), (0, 1, 0, 1)),
+                    (2, sm.insert(()), auto_child.clone(), (0, 1, 1, 2)),
+                    (3, sm.insert(()), auto_child.clone(), (1, 2, 0, 1)),
+                    (4, sm.insert(()), auto_child.clone(), (1, 2, 1, 2)),
+                    (5, sm.insert(()), auto_child.clone(), (2, 3, 0, 1)),
+                    (6, sm.insert(()), auto_child.clone(), (2, 3, 1, 2)),
+                    (7, sm.insert(()), auto_child.clone(), (3, 4, 0, 1)),
+                    (8, sm.insert(()), auto_child.clone(), (3, 4, 1, 2)),
                 ]
             };
             let expected_cols = TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 2 };
@@ -452,11 +456,50 @@ mod tests {
             let children = {
                 let mut sm = SlotMap::new();
                 vec![
-                    // node, style (grid coords), expected_placement (oz coords)
-                    (sm.insert(()), (Span(5), Auto, Auto, Auto).into_grid_child(), (0, 5, 0, 1)),
+                    // output order, node, style (grid coords), expected_placement (oz coords)
+                    (1, sm.insert(()), (Span(5), Auto, Auto, Auto).into_grid_child(), (0, 5, 0, 1)),
                 ]
             };
             let expected_cols = TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 3 };
+            let expected_rows = TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 0 };
+            placement_test_runner(explicit_col_count, explicit_row_count, children, expected_cols, expected_rows, flow);
+        }
+
+        #[test]
+        fn test_fixed_in_secondary_axis() {
+            let flow = GridAutoFlow::Row;
+            let explicit_col_count = 2;
+            let explicit_row_count = 2;
+            let children = {
+                let mut sm = SlotMap::new();
+                vec![
+                    // output order, node, style (grid coords), expected_placement (oz coords)
+                    (1, sm.insert(()), (Span(2), Auto, Track(1), Auto).into_grid_child(), (0, 2, 0, 1)),
+                    (2, sm.insert(()), (Auto, Auto, Track(2), Auto).into_grid_child(), (0, 1, 1, 2)),
+                    (3, sm.insert(()), (Auto, Auto, Track(1), Auto).into_grid_child(), (2, 3, 0, 1)),
+                    (4, sm.insert(()), (Auto, Auto, Track(4), Auto).into_grid_child(), (0, 1, 3, 4)),
+                ]
+            };
+            let expected_cols = TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 1 };
+            let expected_rows = TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 2 };
+            placement_test_runner(explicit_col_count, explicit_row_count, children, expected_cols, expected_rows, flow);
+        }
+
+        #[test]
+        fn test_definite_in_secondary_axis_with_fully_definite_negative() {
+            let flow = GridAutoFlow::Row;
+            let explicit_col_count = 2;
+            let explicit_row_count = 2;
+            let children = {
+                let mut sm = SlotMap::new();
+                vec![
+                    // output order, node, style (grid coords), expected_placement (oz coords)
+                    (2, sm.insert(()), (Auto, Auto, Track(2), Auto).into_grid_child(), (0, 1, 1, 2)),
+                    (1, sm.insert(()), (Track(-4), Auto, Track(2), Auto).into_grid_child(), (-1, 0, 1, 2)),
+                    (3, sm.insert(()), (Auto, Auto, Track(1), Auto).into_grid_child(), (0, 1, 0, 1)),
+                ]
+            };
+            let expected_cols = TrackCounts { negative_implicit: 1, explicit: 2, positive_implicit: 0 };
             let expected_rows = TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 0 };
             placement_test_runner(explicit_col_count, explicit_row_count, children, expected_cols, expected_rows, flow);
         }

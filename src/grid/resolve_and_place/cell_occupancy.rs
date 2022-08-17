@@ -246,15 +246,9 @@ impl CellOccupancyMatrix {
         primary_span: Line<i16>,
         secondary_span: Line<i16>,
     ) -> bool {
-        let (row_span, column_span) = match primary_axis {
-            AbsoluteAxis::Horizontal => (primary_span, secondary_span),
-            AbsoluteAxis::Vertical => (secondary_span, primary_span),
-        };
-
-        let row_range = self.rows.oz_line_range_to_track_range(row_span);
-        let col_range = self.columns.oz_line_range_to_track_range(column_span);
-
-        self.track_area_is_unoccupied(AbsoluteAxis::Horizontal, row_range, col_range)
+        let primary_range = self.track_counts(primary_axis).oz_line_range_to_track_range(primary_span);
+        let secondary_range = self.track_counts(primary_axis.other_axis()).oz_line_range_to_track_range(secondary_span);
+        self.track_area_is_unoccupied(primary_axis, primary_range, secondary_range)
     }
 
     pub fn track_area_is_unoccupied(
@@ -326,21 +320,16 @@ impl CellOccupancyMatrix {
         maybe_index.map(|idx| track_counts.track_to_prev_oz_line(idx as u16))
     }
 
-    pub fn last_of_type(
-        &self,
-        track_type: AbsoluteAxis,
-        primary_track_index: i16,
-        kind: CellOccupancyState,
-    ) -> Option<i16> {
-        let track_counts = self.track_counts(track_type);
-        let primary_track_computed_index = track_counts.oz_line_to_next_track(primary_track_index);
+    pub fn last_of_type(&self, track_type: AbsoluteAxis, track_index: i16, kind: CellOccupancyState) -> Option<i16> {
+        let track_counts = self.track_counts(track_type.other_axis());
+        let track_computed_index = track_counts.oz_line_to_next_track(track_index);
 
         let maybe_index = match track_type {
             AbsoluteAxis::Horizontal => {
-                self.inner.iter_row(primary_track_computed_index as usize).rposition(|item| *item == kind)
+                self.inner.iter_row(track_computed_index as usize).rposition(|item| *item == kind)
             }
             AbsoluteAxis::Vertical => {
-                self.inner.iter_col(primary_track_computed_index as usize).rposition(|item| *item == kind)
+                self.inner.iter_col(track_computed_index as usize).rposition(|item| *item == kind)
             }
         };
 
