@@ -1,25 +1,11 @@
 /// This module is not required for spec compliance, but is used as a performance optimisation
 /// to reduce the number of allocations required when creating a grid.
 use crate::geometry::{Line, Size};
-use crate::node::Node;
 use crate::style::{GridPlacement, Style};
-use crate::tree::LayoutTree;
 use core::cmp::{max, min};
 
 use super::coordinates::into_origin_zero_coordinates;
-use super::explicit_grid::compute_explicit_grid_size;
 use super::TrackCounts;
-
-/// Estimate the number of rows and columns in the grid
-/// This is used as a performance optimisation to pre-size vectors and reduce allocations
-///
-/// Note that this function internally mixes use of grid track numbers and grid line numbers
-pub(crate) fn compute_grid_size_estimate(tree: &impl LayoutTree, node: Node) -> Size<TrackCounts> {
-    let style = tree.style(node);
-    let child_styles_iter = tree.children(node).into_iter().map(|child_node| tree.style(*child_node));
-    let (explicit_col_count, explicit_row_count) = compute_explicit_grid_size(style);
-    compute_grid_size_estimate_inner(explicit_col_count, explicit_row_count, child_styles_iter)
-}
 
 /// Estimate the number of rows and columns in the grid
 /// This is used as a performance optimisation to pre-size vectors and reduce allocations. It also forms a necessary step
@@ -27,7 +13,9 @@ pub(crate) fn compute_grid_size_estimate(tree: &impl LayoutTree, node: Node) -> 
 ///   - The estimates for the explicit and negative implicit track counts are exact.
 ///   - However, the estimates for the positive explicit track count is a lower bound as auto-placement can affect this
 ///     in ways which are impossible to predict until the auto-placement algorithm is run.
-pub(crate) fn compute_grid_size_estimate_inner<'a>(
+///
+/// Note that this function internally mixes use of grid track numbers and grid line numbers
+pub(crate) fn compute_grid_size_estimate<'a>(
     explicit_col_count: u16,
     explicit_row_count: u16,
     child_styles_iter: impl Iterator<Item = &'a Style>,
@@ -205,7 +193,7 @@ mod tests {
     }
 
     mod test_intial_grid_sizing {
-        use super::super::compute_grid_size_estimate_inner;
+        use super::super::compute_grid_size_estimate;
         use crate::grid::test_helpers::*;
         use crate::prelude::*;
         use crate::style::GridPlacement::*;
@@ -219,7 +207,7 @@ mod tests {
                 (Track(-4), Auto, Track(-2), Auto).into_grid_child(),
             ];
             let Size { width: inline, height: block } =
-                compute_grid_size_estimate_inner(explicit_col_count, explicit_row_count, child_styles.iter());
+                compute_grid_size_estimate(explicit_col_count, explicit_row_count, child_styles.iter());
             assert_eq!(inline.negative_implicit, 0);
             assert_eq!(inline.explicit, explicit_col_count);
             assert_eq!(inline.positive_implicit, 0);
@@ -237,7 +225,7 @@ mod tests {
                 (Track(4), Auto, Track(3), Auto).into_grid_child(),
             ];
             let Size { width: inline, height: block } =
-                compute_grid_size_estimate_inner(explicit_col_count, explicit_row_count, child_styles.iter());
+                compute_grid_size_estimate(explicit_col_count, explicit_row_count, child_styles.iter());
             assert_eq!(inline.negative_implicit, 1);
             assert_eq!(inline.explicit, explicit_col_count);
             assert_eq!(inline.positive_implicit, 0);

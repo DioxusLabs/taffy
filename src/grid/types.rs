@@ -1,4 +1,4 @@
-use super::resolve_and_place::CellOccupancyMatrix;
+use super::placement::{CellOccupancyMatrix, TrackCounts};
 use crate::geometry::{Line, Size};
 use crate::layout::AvailableSpace;
 use crate::node::Node;
@@ -140,29 +140,19 @@ pub(super) trait GridAxisExt {
 pub(super) struct GridAxisTracks {
     pub tracks: GridTrackVec<GridTrack>,
     pub origin: u16,
-    pub explicit_track_count: u16,
-    pub negative_implicit_track_count: u16,
-    pub positive_implicit_track_count: u16,
+    pub track_counts: TrackCounts,
+    // pub explicit_track_count: u16,
+    // pub negative_implicit_track_count: u16,
+    // pub positive_implicit_track_count: u16,
 }
 
 impl GridAxisTracks {
-    pub fn new() -> GridAxisTracks {
-        Self::with_capacity(0)
-    }
-
     #[inline]
-    pub fn with_capacity(capacity: usize) -> GridAxisTracks {
-        Self::with_capacity_and_origin(capacity, 0)
-    }
-
-    #[inline]
-    pub fn with_capacity_and_origin(capacity: usize, origin: u16) -> GridAxisTracks {
+    pub fn with_counts(counts: TrackCounts) -> GridAxisTracks {
         GridAxisTracks {
-            tracks: GridTrackVec::with_capacity(capacity),
-            origin,
-            explicit_track_count: 0,
-            negative_implicit_track_count: 0,
-            positive_implicit_track_count: 0,
+            tracks: GridTrackVec::with_capacity((counts.len() * 2) + 1),
+            origin: counts.negative_implicit + 1,
+            track_counts: counts,
         }
     }
 
@@ -178,8 +168,8 @@ impl GridAxisTracks {
 
     /// The lowest index initialised track
     pub fn min_track(&self) -> i16 {
-        if self.negative_implicit_track_count > 1 {
-            -(self.negative_implicit_track_count as i16)
+        if self.track_counts.negative_implicit > 1 {
+            -(self.track_counts.negative_implicit as i16)
         } else {
             1
         }
@@ -187,7 +177,7 @@ impl GridAxisTracks {
 
     /// The highest index initialised track
     pub fn max_track(&self) -> i16 {
-        (self.explicit_track_count + self.positive_implicit_track_count) as i16
+        (self.track_counts.explicit + self.track_counts.positive_implicit) as i16
     }
 
     /// Amount of space allocated for negative tracks
@@ -214,7 +204,7 @@ impl GridAxisTracks {
         let computed_index: i16 = match index.cmp(&0) {
             Ordering::Equal => 0,
             Ordering::Less => {
-                max(0, (self.origin + self.explicit_track_count * 2) as i16 - (index.abs() as i16 * 2 - 1))
+                max(0, (self.origin + self.track_counts.explicit * 2) as i16 - (index.abs() as i16 * 2 - 1))
             }
             Ordering::Greater => (self.origin as i16) + (index * 2 - 1),
         };
@@ -240,7 +230,7 @@ impl GridAxisTracks {
 
     /// Check if is initialised (either as an explicit or implicit track) given its index as defined in CSS grid coordinates
     pub fn has_explicit_track(&self, index: i16) -> bool {
-        index > 0 && index <= self.explicit_track_count as i16
+        index > 0 && index <= self.track_counts.explicit as i16
     }
 
     /// Check if is initialised (as an explicit track) given its index as defined in CSS grid coordinates
@@ -297,7 +287,7 @@ impl GridAxisTracks {
 
         // Create new negative tracks
         let mut negative_auto_tracks_iter = auto_tracks.iter().rev().cycle();
-        let min_line_index = self.origin - self.negative_implicit_track_count;
+        let min_line_index = self.origin - self.track_counts.negative_implicit;
         for i in (min_line_index - 1..(min_line_index - 1 - new_negative_tracks)).into_iter().step_by(2) {
             let track_def = negative_auto_tracks_iter.next().unwrap_or(&TrackSizingFunction::Auto);
             self.tracks[i as usize] = GridTrack::new(track_def.min_sizing_function(), track_def.max_sizing_function());

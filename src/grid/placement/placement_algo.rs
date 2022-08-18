@@ -4,7 +4,7 @@ use super::{CellOccupancyMatrix, CellOccupancyState};
 use crate::geometry::Line;
 use crate::node::Node;
 use crate::style::{GridAutoFlow, GridPlacement, Style};
-use crate::tree::LayoutTree;
+use crate::sys::Vec;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct InBothAbsAxis<T> {
@@ -26,18 +26,7 @@ impl<T: Copy> InBothAbsAxis<T> {
 /// Place items into the grid, generating new rows/column into the implicit grid as required
 ///
 /// [Specification](https://www.w3.org/TR/css-grid-2/#auto-placement-algo)
-pub(in crate::grid) fn place_grid_items(grid: &mut CssGrid, tree: &impl LayoutTree, node: Node) {
-    let grid_auto_flow = tree.style(node).grid_auto_flow;
-    let children_iter =
-        || tree.children(node).into_iter().copied().map(|child_node| (child_node, tree.style(child_node)));
-    place_grid_items_inner(&mut grid.cell_occupancy_matrix, &mut grid.items, children_iter, grid_auto_flow)
-}
-
-/// 8.5. Grid Item Placement Algorithm
-/// Place items into the grid, generating new rows/column into the implicit grid as required
-///
-/// [Specification](https://www.w3.org/TR/css-grid-2/#auto-placement-algo)
-pub(in crate::grid) fn place_grid_items_inner<'a, ChildIter>(
+pub(in crate::grid) fn place_grid_items<'a, ChildIter>(
     cell_occupancy_matrix: &mut CellOccupancyMatrix,
     items: &mut Vec<GridItem>,
     children_iter: impl Fn() -> ChildIter,
@@ -316,15 +305,15 @@ fn record_grid_placement(
 mod tests {
 
     mod test_placement_algorithm {
-        use crate::grid::resolve_and_place::estimate_size::compute_grid_size_estimate_inner;
-        use crate::grid::resolve_and_place::TrackCounts;
+        use crate::grid::placement::estimate_size::compute_grid_size_estimate;
+        use crate::grid::placement::TrackCounts;
         use crate::grid::test_helpers::*;
         use crate::grid::CellOccupancyMatrix;
         use crate::prelude::*;
         use crate::style::{GridAutoFlow, GridPlacement::*};
         use slotmap::SlotMap;
 
-        use super::super::place_grid_items_inner;
+        use super::super::place_grid_items;
 
         fn placement_test_runner(
             explicit_col_count: u16,
@@ -337,14 +326,13 @@ mod tests {
             // Setup test
             let children_iter = || children.iter().map(|(_, node, style, _)| (*node, style));
             let child_styles_iter = children.iter().map(|(_, _, style, _)| style);
-            let estimated_sizes =
-                compute_grid_size_estimate_inner(explicit_col_count, explicit_row_count, child_styles_iter);
+            let estimated_sizes = compute_grid_size_estimate(explicit_col_count, explicit_row_count, child_styles_iter);
             let mut items = Vec::new();
             let mut cell_occupancy_matrix =
                 CellOccupancyMatrix::with_track_counts(estimated_sizes.height, estimated_sizes.width);
 
             // Run placement algorithm
-            place_grid_items_inner(&mut cell_occupancy_matrix, &mut items, children_iter, flow);
+            place_grid_items(&mut cell_occupancy_matrix, &mut items, children_iter, flow);
 
             // Assert that each item has been placed in the right location
             let mut sorted_children = children.clone();

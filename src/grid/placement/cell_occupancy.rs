@@ -1,5 +1,6 @@
 use super::super::types::AbsoluteAxis;
 use crate::geometry::Line;
+use crate::sys::Vec;
 use core::cmp::{max, min};
 use core::ops::Range;
 use grid::Grid;
@@ -53,6 +54,10 @@ impl Default for TrackCounts {
 // -2 =>
 
 impl TrackCounts {
+    pub fn from_explicit(count: u16) -> Self {
+        Self { negative_implicit: 0, explicit: count, positive_implicit: 0 }
+    }
+
     pub fn len(&self) -> usize {
         return (self.negative_implicit + self.explicit + self.positive_implicit) as usize;
     }
@@ -95,8 +100,8 @@ pub(crate) struct CellOccupancyMatrix {
     columns: TrackCounts,
 }
 
-impl std::fmt::Debug for CellOccupancyMatrix {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Debug for CellOccupancyMatrix {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         writeln!(
             f,
             "Rows: neg_implicit={} explicit={} pos_implicit={}",
@@ -126,12 +131,16 @@ impl std::fmt::Debug for CellOccupancyMatrix {
 }
 
 impl CellOccupancyMatrix {
-    pub fn new(rows: usize, columns: usize) -> Self {
-        Self { inner: Grid::new(rows, columns), rows: TrackCounts::default(), columns: TrackCounts::default() }
-    }
-
     pub fn with_track_counts(rows: TrackCounts, columns: TrackCounts) -> Self {
         Self { inner: Grid::new(rows.len(), columns.len()), rows, columns }
+    }
+
+    pub fn with_explicit_track_counts(rows: u16, columns: u16) -> Self {
+        Self {
+            inner: Grid::new(rows as usize, columns as usize),
+            rows: TrackCounts::from_explicit(rows),
+            columns: TrackCounts::from_explicit(columns),
+        }
     }
 
     pub fn is_area_in_range(
