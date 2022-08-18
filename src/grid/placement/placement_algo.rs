@@ -326,10 +326,10 @@ mod tests {
             // Setup test
             let children_iter = || children.iter().map(|(_, node, style, _)| (*node, style));
             let child_styles_iter = children.iter().map(|(_, _, style, _)| style);
-            let (est_col_counts, est_row_counts) =
-                compute_grid_size_estimate(explicit_col_count, explicit_row_count, child_styles_iter);
+            let estimated_sizes = compute_grid_size_estimate(explicit_col_count, explicit_row_count, child_styles_iter);
             let mut items = Vec::new();
-            let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(est_col_counts, est_row_counts);
+            let mut cell_occupancy_matrix =
+                CellOccupancyMatrix::with_track_counts(estimated_sizes.0, estimated_sizes.1);
 
             // Run placement algorithm
             place_grid_items(&mut cell_occupancy_matrix, &mut items, children_iter, flow);

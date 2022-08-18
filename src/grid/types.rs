@@ -61,7 +61,7 @@ impl GridAxis {
 pub(super) enum GridTrackKind {
     Uninit,
     Track,
-    Gutter { name: Option<u16> },
+    Gutter, // { name: Option<u16> },
 }
 
 /// Internal sizing information for a single grid track (row/column)
@@ -94,7 +94,7 @@ impl GridTrack {
 
     pub fn gutter(size: Dimension) -> GridTrack {
         GridTrack {
-            kind: GridTrackKind::Gutter { name: None },
+            kind: GridTrackKind::Gutter, // { name: None },
             min_track_sizing_function: MinTrackSizingFunction::Fixed(size),
             max_track_sizing_function: MaxTrackSizingFunction::Fixed(size),
             base_size: 0.0,
