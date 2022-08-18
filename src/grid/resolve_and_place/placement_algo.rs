@@ -1,5 +1,3 @@
-use slotmap::secondary;
-
 use super::super::types::{AbsoluteAxis, CssGrid, GridItem};
 use super::coordinates::into_origin_zero_coordinates;
 use super::{CellOccupancyMatrix, CellOccupancyState};
@@ -504,6 +502,25 @@ mod tests {
                     (1, sm.insert(()), (Track(2), Auto, Track(1), Auto).into_grid_child(), (1, 2, 0, 1)), // Definitely positioned in column 2
                     (2, sm.insert(()), (Span(2), Auto, Auto, Auto).into_grid_child(), (2, 4, 0, 1)), // Spans 2 columns, so positioned after item 1
                     (3, sm.insert(()), (Auto, Auto, Auto, Auto).into_grid_child(), (0, 1, 0, 1)), // Spans 1 column, so should be positioned before item 1
+                ]
+            };
+            let expected_cols = TrackCounts { negative_implicit: 0, explicit: 4, positive_implicit: 0 };
+            let expected_rows = TrackCounts { negative_implicit: 0, explicit: 4, positive_implicit: 0 };
+            placement_test_runner(explicit_col_count, explicit_row_count, children, expected_cols, expected_rows, flow);
+        }
+
+        #[test]
+        fn test_sparse_packing_algorithm() {
+            let flow = GridAutoFlow::Row;
+            let explicit_col_count = 4;
+            let explicit_row_count = 4;
+            let children = {
+                let mut sm = SlotMap::new();
+                vec![
+                    // output order, node, style (grid coords), expected_placement (oz coords)
+                    (1, sm.insert(()), (Auto, Span(3), Auto, Auto).into_grid_child(), (0, 3, 0, 1)), // Width 3
+                    (2, sm.insert(()), (Auto, Span(3), Auto, Auto).into_grid_child(), (0, 3, 1, 2)), // Width 3 (wraps to next row)
+                    (3, sm.insert(()), (Auto, Span(1), Auto, Auto).into_grid_child(), (3, 4, 1, 2)), // Width 1 (uses second row as we're already on it)
                 ]
             };
             let expected_cols = TrackCounts { negative_implicit: 0, explicit: 4, positive_implicit: 0 };
