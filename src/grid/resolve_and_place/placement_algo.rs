@@ -237,6 +237,7 @@ fn place_indefinitely_positioned_item(
         secondary_idx =
             cell_occupancy_matrix.lines_to_tracks(primary_axis.other_axis(), definite_secondary_placement).start as u16;
     }
+
     #[cfg(test)]
     dbg!(has_definite_secondary_axis_position);
     #[cfg(test)]
@@ -245,7 +246,6 @@ fn place_indefinitely_positioned_item(
     dbg!(primary_idx);
     #[cfg(test)]
     dbg!(secondary_idx);
-    // let mut loop_idx = 0;
 
     loop {
         let primary_range = (primary_idx as i16)..((primary_idx + primary_span) as i16);
@@ -274,13 +274,6 @@ fn place_indefinitely_positioned_item(
         } else {
             primary_idx += 1;
         }
-
-        // loop_idx += 1;
-        // if loop_idx > 4 {
-        //     let primary_span = tracks_to_lines(primary_range.clone());
-        //     let secondary_span = tracks_to_lines(secondary_range.clone());
-        //     return (primary_span, secondary_span);
-        // }
     }
 }
 
@@ -298,16 +291,9 @@ fn record_grid_placement(
     println!("BEFORE placement:");
     #[cfg(test)]
     println!("{:?}", cell_occupancy_matrix);
-    // #[cfg(test)] println!("{:?}", primary_span);
-    // #[cfg(test)] println!("{:?}", secondary_span);
 
     // Mark area of grid as occupied
     cell_occupancy_matrix.mark_area_as(primary_axis, primary_span, secondary_span, placement_type);
-
-    #[cfg(test)]
-    println!("AFTER placement:");
-    #[cfg(test)]
-    println!("{:?}", cell_occupancy_matrix);
 
     // Create grid item
     let (col_span, row_span) = primary_axis.into_column_row(primary_span, secondary_span);
@@ -320,9 +306,11 @@ fn record_grid_placement(
     });
 
     #[cfg(test)]
-    println!("");
+    println!("AFTER placement:");
     #[cfg(test)]
-    println!("");
+    println!("{:?}", cell_occupancy_matrix);
+    #[cfg(test)]
+    println!("\n");
 }
 
 #[allow(clippy::bool_assert_comparison)]
