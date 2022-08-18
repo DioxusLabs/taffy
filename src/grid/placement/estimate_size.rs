@@ -19,7 +19,7 @@ pub(crate) fn compute_grid_size_estimate<'a>(
     explicit_col_count: u16,
     explicit_row_count: u16,
     child_styles_iter: impl Iterator<Item = &'a Style>,
-) -> Size<TrackCounts> {
+) -> (TrackCounts, TrackCounts) {
     // Iterate over children, producing an estimate of the min and max grid lines (in origin-zero coordinates where)
     // along with the span of each itme
     let (col_min, col_max, col_max_span, row_min, row_max, row_max_span) =
@@ -47,18 +47,13 @@ pub(crate) fn compute_grid_size_estimate<'a>(
         positive_implicit_block_tracks = row_max_span - explicit_block_tracks - negative_implicit_block_tracks;
     }
 
-    Size {
-        width: TrackCounts::from_raw(
-            negative_implicit_inline_tracks,
-            explicit_inline_tracks,
-            positive_implicit_inline_tracks,
-        ),
-        height: TrackCounts::from_raw(
-            negative_implicit_block_tracks,
-            explicit_block_tracks,
-            positive_implicit_block_tracks,
-        ),
-    }
+    let column_counts =
+        TrackCounts::from_raw(negative_implicit_inline_tracks, explicit_inline_tracks, positive_implicit_inline_tracks);
+
+    let row_counts =
+        TrackCounts::from_raw(negative_implicit_block_tracks, explicit_block_tracks, positive_implicit_block_tracks);
+
+    (column_counts, row_counts)
 }
 
 /// Iterate over children, producing an estimate of the min and max grid *lines* along with the span of each item
@@ -206,7 +201,7 @@ mod tests {
                 (Track(1), Span(2), Track(2), Auto).into_grid_child(),
                 (Track(-4), Auto, Track(-2), Auto).into_grid_child(),
             ];
-            let Size { width: inline, height: block } =
+            let (inline, block) =
                 compute_grid_size_estimate(explicit_col_count, explicit_row_count, child_styles.iter());
             assert_eq!(inline.negative_implicit, 0);
             assert_eq!(inline.explicit, explicit_col_count);
@@ -224,7 +219,7 @@ mod tests {
                 (Track(-6), Span(2), Track(-8), Auto).into_grid_child(),
                 (Track(4), Auto, Track(3), Auto).into_grid_child(),
             ];
-            let Size { width: inline, height: block } =
+            let (inline, block) =
                 compute_grid_size_estimate(explicit_col_count, explicit_row_count, child_styles.iter());
             assert_eq!(inline.negative_implicit, 1);
             assert_eq!(inline.explicit, explicit_col_count);

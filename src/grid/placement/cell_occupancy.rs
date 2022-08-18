@@ -96,8 +96,8 @@ impl TrackCounts {
 
 pub(crate) struct CellOccupancyMatrix {
     inner: Grid<CellOccupancyState>,
-    rows: TrackCounts,
     columns: TrackCounts,
+    rows: TrackCounts,
 }
 
 impl core::fmt::Debug for CellOccupancyMatrix {
@@ -131,15 +131,15 @@ impl core::fmt::Debug for CellOccupancyMatrix {
 }
 
 impl CellOccupancyMatrix {
-    pub fn with_track_counts(rows: TrackCounts, columns: TrackCounts) -> Self {
+    pub fn with_track_counts(columns: TrackCounts, rows: TrackCounts) -> Self {
         Self { inner: Grid::new(rows.len(), columns.len()), rows, columns }
     }
 
-    pub fn with_explicit_track_counts(rows: u16, columns: u16) -> Self {
+    pub fn with_explicit_track_counts(columns: u16, rows: u16) -> Self {
         Self {
             inner: Grid::new(rows as usize, columns as usize),
-            rows: TrackCounts::from_explicit(rows),
             columns: TrackCounts::from_explicit(columns),
+            rows: TrackCounts::from_explicit(rows),
         }
     }
 

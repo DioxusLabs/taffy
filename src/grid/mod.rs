@@ -23,27 +23,29 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
     let style = tree.style(root);
     let child_styles_iter = get_child_styles_iter(root);
 
-    // Resolve the number of rows and columns in the explicit grid.
-    let (explicit_col_count, explicit_row_count) = compute_explicit_grid_size(style);
-
-    // Estimate the number of rows and columns in the grid
+    // 1. Size Computation
+    // Exactly compute the number of rows and columns in the explicit grid.
+    // Estimate the number of rows and columns in the implicit grid (= the entire grid)
     // This is necessary as part of placement. Doing it early here is a perf optimisation to reduce allocations.
-    let grid_size_est = compute_grid_size_estimate(explicit_col_count, explicit_row_count, child_styles_iter);
+    let (explicit_col_count, explicit_row_count) = compute_explicit_grid_size(style);
+    let (est_col_counts, est_row_counts) =
+        compute_grid_size_estimate(explicit_col_count, explicit_row_count, child_styles_iter);
 
-    // Place Grid Items
-    // Matches items to a definite grid position (row start/end and column start/end position)
-    // https://www.w3.org/TR/css-grid-1/#placement
+    // 2a. Grid Item Placement
+    // Match items (children) to a definite grid position (row start/end and column start/end position)
     let mut items = Vec::with_capacity(tree.child_count(root));
-    let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(grid_size_est.height, grid_size_est.width);
+    let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(est_col_counts, est_row_counts);
     let grid_auto_flow = style.grid_auto_flow;
     let children_iter =
         || tree.children(root).into_iter().copied().map(|child_node| (child_node, tree.style(child_node)));
     place_grid_items(&mut cell_occupancy_matrix, &mut items, children_iter, grid_auto_flow);
 
+    // 2b. Extract final track counts
     // Extract track counts from previous step (auto-placement can expand the number of tracks)
     let final_col_counts = *cell_occupancy_matrix.track_counts(AbsoluteAxis::Horizontal);
     let final_row_counts = *cell_occupancy_matrix.track_counts(AbsoluteAxis::Vertical);
 
+    // 3. Initialize Tracks
     // Initialize (explicit and implicit) grid tracks (and gutters)
     // This resolves the min and max track sizing functions for all tracks and gutters
     let mut columns = GridAxisTracks::with_counts(final_col_counts);
@@ -62,6 +64,8 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
         &style.grid_auto_rows,
         style.gap.height.into(),
     );
+
+    // 4. Track Sizing
 
     let named_areas = Vec::new();
     let grid = CssGrid { available_space, cell_occupancy_matrix, named_areas, items, columns, rows };
