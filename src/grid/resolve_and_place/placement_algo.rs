@@ -491,5 +491,24 @@ mod tests {
             let expected_rows = TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 0 };
             placement_test_runner(explicit_col_count, explicit_row_count, children, expected_cols, expected_rows, flow);
         }
+
+        #[test]
+        fn test_dense_packing_algorithm() {
+            let flow = GridAutoFlow::RowDense;
+            let explicit_col_count = 4;
+            let explicit_row_count = 4;
+            let children = {
+                let mut sm = SlotMap::new();
+                vec![
+                    // output order, node, style (grid coords), expected_placement (oz coords)
+                    (1, sm.insert(()), (Track(2), Auto, Track(1), Auto).into_grid_child(), (1, 2, 0, 1)), // Definitely positioned in column 2
+                    (2, sm.insert(()), (Span(2), Auto, Auto, Auto).into_grid_child(), (2, 4, 0, 1)), // Spans 2 columns, so positioned after item 1
+                    (3, sm.insert(()), (Auto, Auto, Auto, Auto).into_grid_child(), (0, 1, 0, 1)), // Spans 1 column, so should be positioned before item 1
+                ]
+            };
+            let expected_cols = TrackCounts { negative_implicit: 0, explicit: 4, positive_implicit: 0 };
+            let expected_rows = TrackCounts { negative_implicit: 0, explicit: 4, positive_implicit: 0 };
+            placement_test_runner(explicit_col_count, explicit_row_count, children, expected_cols, expected_rows, flow);
+        }
     }
 }
