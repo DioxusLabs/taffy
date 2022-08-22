@@ -66,18 +66,22 @@ impl Default for AlignSelf {
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum AlignContent {
-    /// Items are packed toward the start of the cross axis
+    /// Items are packed toward the start of the axis
     FlexStart,
-    /// Items are packed toward the end of the cross axis
+    /// Items are packed toward the end of the axis
     FlexEnd,
-    /// Items are packed along the center of the cross axis
+    /// Items are centered around the middle of the axis
     Center,
-    /// Distribute items evenly, but stretch them to fill the container
+    /// Items are stretched to fill the container
     Stretch,
-    /// Distribute items evenly, such that the first and last item are aligned with the edges
+    /// The first and last items are aligned flush with the edges of the container (no gap)
+    /// The gap between items is distributed evenly.
     SpaceBetween,
-    /// Distribute items evenly,
-    /// such that the space between items is the same as the space between the first and last item and the edges
+    /// The gap between the first and last items is exactly THE SAME as the gap between items.
+    /// The gap are distributed evenly
+    SpaceEvenly,
+    /// The gap between the first and last items is exactly HALF the gap between items.
+    /// The gap are distributed evenly in proportion to these ratios.
     SpaceAround,
 }
 
@@ -177,14 +181,15 @@ pub enum JustifyContent {
     FlexEnd,
     /// Items are packed along the center of the main axis
     Center,
-    /// Distribute items evenly, such that the first and last item are aligned with the edges
+    /// The first and last items are aligned flush with the edges of the container (no gap)
+    /// The gap between items is distributed evenly.
     SpaceBetween,
-    /// Distribute items evenly,
-    /// such that the space between items is twice same as the space between the first and last item and the edges
-    SpaceAround,
-    /// Distribute items evenly,
-    /// such that the space between items is the same as the space between the first and last item and the edges
+    /// The gap between the first and last items is exactly THE SAME as the gap between items.
+    /// The gap are distributed evenly
     SpaceEvenly,
+    /// The gap between the first and last items is exactly HALF the gap between items.
+    /// The gap are distributed evenly in proportion to these ratios.
+    SpaceAround,
 }
 
 impl Default for JustifyContent {
