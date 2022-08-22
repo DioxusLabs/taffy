@@ -6,7 +6,7 @@ authors = [
     "Johnathan Kelley <jkelleyrtp@gmail.com>",
 ]
 edition = "2021"
-include = ["src/**/*", "Cargo.toml"]
+include = ["src/**/*", "Cargo.toml", "README.md"]
 description = "A flexible UI layout library"
 repository = "https://github.com/DioxusLabs/taffy"
 keywords = ["cross-platform", "layout", "flexbox"]
