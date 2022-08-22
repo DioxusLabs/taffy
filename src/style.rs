@@ -78,10 +78,10 @@ pub enum AlignContent {
     /// The gap between items is distributed evenly.
     SpaceBetween,
     /// The gap between the first and last items is exactly THE SAME as the gap between items.
-    /// The gap are distributed evenly
+    /// The gaps are distributed evenly
     SpaceEvenly,
     /// The gap between the first and last items is exactly HALF the gap between items.
-    /// The gap are distributed evenly in proportion to these ratios.
+    /// The gaps are distributed evenly in proportion to these ratios.
     SpaceAround,
 }
 
@@ -182,13 +182,13 @@ pub enum JustifyContent {
     /// Items are packed along the center of the main axis
     Center,
     /// The first and last items are aligned flush with the edges of the container (no gap)
-    /// The gap between items is distributed evenly.
+    /// The gaps between items are distributed evenly.
     SpaceBetween,
     /// The gap between the first and last items is exactly THE SAME as the gap between items.
-    /// The gap are distributed evenly
+    /// The gaps are distributed evenly
     SpaceEvenly,
     /// The gap between the first and last items is exactly HALF the gap between items.
-    /// The gap are distributed evenly in proportion to these ratios.
+    /// The gaps are distributed evenly in proportion to these ratios.
     SpaceAround,
 }
 
