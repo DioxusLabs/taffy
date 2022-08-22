@@ -81,7 +81,6 @@ pub fn compute() {
     let node = taffy
         .new_with_children(
             taffy::style::FlexboxLayout {
-                flex_wrap: taffy::style::FlexWrap::Wrap,
                 align_content: taffy::style::AlignContent::SpaceAround,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
