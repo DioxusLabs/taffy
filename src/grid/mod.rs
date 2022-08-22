@@ -8,15 +8,17 @@ use crate::tree::LayoutTree;
 use explicit_grid::{compute_explicit_grid_size, initialize_grid_tracks};
 use placement::CellOccupancyMatrix;
 use placement::{compute_grid_size_estimate, place_grid_items};
+use track_sizing::{determine_if_item_crosses_flexible_tracks, resolve_item_track_indexes};
 use types::{CssGrid, GridAxisTracks, GridTrack};
 
 mod explicit_grid;
 mod placement;
 #[cfg(test)]
 mod test_helpers;
+mod track_sizing;
 mod types;
 
-pub use types::AbsoluteAxis;
+pub(crate) use types::{AbsoluteAxis, GridAxis};
 
 pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<AvailableSpace>) {
     let get_child_styles_iter = |node| tree.children(node).into_iter().map(|child_node: &Node| tree.style(*child_node));
@@ -66,6 +68,15 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
     );
 
     // 4. Track Sizing
+
+    // Convert grid placements in origin-zero coordinates to indexes into the GridTrack (rows and columns) vectors
+    // This computation is relatively trivial, but it requires the final number of negative (implicit) tracks in
+    // each axis, and doing it up-front here means we don't have to keep repeating that calculation
+    resolve_item_track_indexes(&mut items, final_col_counts, final_row_counts);
+
+    // For each item, and in each axis, determine whether the item crosses any flexible (fr) tracks
+    // Record this as a boolean (per-axis) on each item for later use in the track-sizing algorithm
+    determine_if_item_crosses_flexible_tracks(&mut items, &columns.tracks, &rows.tracks);
 
     let named_areas = Vec::new();
     let grid = CssGrid { available_space, cell_occupancy_matrix, named_areas, items, columns, rows };

@@ -2,6 +2,7 @@ use super::super::types::{AbsoluteAxis, CssGrid, GridItem};
 use super::coordinates::into_origin_zero_coordinates;
 use super::{CellOccupancyMatrix, CellOccupancyState};
 use crate::geometry::Line;
+use crate::layout::AvailableSpaceCache;
 use crate::node::Node;
 use crate::style::{GridAutoFlow, GridPlacement, Style};
 use crate::sys::Vec;
@@ -284,13 +285,7 @@ fn record_grid_placement(
 
     // Create grid item
     let (col_span, row_span) = primary_axis.into_column_row(primary_span, secondary_span);
-    items.push(GridItem {
-        node,
-        min_content_contribution: None,
-        max_content_contribution: None,
-        row: row_span,
-        column: col_span,
-    });
+    items.push(GridItem::new_with_placement(node, col_span, row_span));
 
     #[cfg(test)]
     println!("AFTER placement:");

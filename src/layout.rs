@@ -89,6 +89,15 @@ impl From<f32> for AvailableSpace {
     }
 }
 
+impl From<Option<f32>> for AvailableSpace {
+    fn from(option: Option<f32>) -> Self {
+        match option {
+            Some(value) => Self::Definite(value),
+            None => Self::MaxContent,
+        }
+    }
+}
+
 impl Size<AvailableSpace> {
     /// A Size<AvailableSpace> containing a MaxContent constraint in both dimensions
     pub const MAX_CONTENT: Size<AvailableSpace> =
@@ -151,4 +160,22 @@ pub struct Cache {
 
     /// The cached size of the item
     pub(crate) cached_size: Size<f32>,
+}
+
+/// Cached intermediate layout results
+#[derive(Debug, Clone, Copy)]
+pub struct AvailableSpaceCache {
+    /// The available space constraint passed in when measuring the node
+    pub(crate) constraint: Size<AvailableSpace>,
+    /// The cached size of the item
+    pub(crate) cached_size: Size<f32>,
+}
+
+impl AvailableSpaceCache {
+    pub fn empty() -> Self {
+        Self {
+            constraint: Size { width: AvailableSpace::ZERO, height: AvailableSpace::ZERO },
+            cached_size: Size { width: 0.0, height: 0.0 },
+        }
+    }
 }

@@ -1,5 +1,6 @@
 //! Geometric primitives useful for layout
 
+use crate::grid::GridAxis;
 use crate::style::{Dimension, FlexDirection};
 use core::ops::Add;
 
@@ -277,6 +278,16 @@ impl<T> Size<T> {
             self.height
         } else {
             self.width
+        }
+    }
+
+    /// Gets the extent of the cross layout axis
+    ///
+    /// Whether this is the width or height depends on the `direction` provided
+    pub(crate) fn get(self, axis: GridAxis) -> T {
+        match axis {
+            GridAxis::Inline => self.width,
+            GridAxis::Block => self.height,
         }
     }
 }

@@ -1,7 +1,8 @@
 //! A representation of [CSS layout properties](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust, used for flexbox layout
 
 use crate::geometry::{Line, Rect, Size};
-use crate::grid::AbsoluteAxis;
+use crate::grid::{AbsoluteAxis, GridAxis};
+use crate::layout::AvailableSpace;
 use crate::sys::GridTrackVec;
 use core::cmp::{max, min};
 
@@ -91,6 +92,32 @@ pub enum AlignContent {
 impl Default for AlignContent {
     fn default() -> Self {
         Self::Stretch
+    }
+}
+
+impl AlignContent {
+    pub(crate) fn outer_gutter_weight(self) -> u8 {
+        match self {
+            AlignContent::FlexStart => 1,
+            AlignContent::FlexEnd => 1,
+            AlignContent::Center => 1,
+            AlignContent::Stretch => 0,
+            AlignContent::SpaceBetween => 0,
+            AlignContent::SpaceAround => 1,
+            AlignContent::SpaceEvenly => 1,
+        }
+    }
+
+    pub(crate) fn inner_gutter_weight(self) -> u8 {
+        match self {
+            AlignContent::FlexStart => 0,
+            AlignContent::FlexEnd => 0,
+            AlignContent::Center => 0,
+            AlignContent::Stretch => 0,
+            AlignContent::SpaceBetween => 1,
+            AlignContent::SpaceAround => 2,
+            AlignContent::SpaceEvenly => 1,
+        }
     }
 }
 
@@ -200,6 +227,19 @@ pub enum JustifyContent {
 impl Default for JustifyContent {
     fn default() -> Self {
         Self::FlexStart
+    }
+}
+
+impl From<JustifyContent> for AlignContent {
+    fn from(justify: JustifyContent) -> Self {
+        match justify {
+            JustifyContent::FlexStart => AlignContent::FlexStart,
+            JustifyContent::FlexEnd => AlignContent::FlexEnd,
+            JustifyContent::Center => AlignContent::Center,
+            JustifyContent::SpaceBetween => AlignContent::SpaceBetween,
+            JustifyContent::SpaceAround => AlignContent::SpaceAround,
+            JustifyContent::SpaceEvenly => AlignContent::SpaceEvenly,
+        }
     }
 }
 
@@ -417,12 +457,62 @@ pub enum MaxTrackSizingFunction {
     Flex(f32),
 }
 
+impl MaxTrackSizingFunction {
+    #[inline(always)]
+    pub fn is_intrinsic(&self) -> bool {
+        use MaxTrackSizingFunction::*;
+        match self {
+            MinContent | MaxContent | Auto => true,
+            Fixed(_) | Flex(_) => false,
+        }
+    }
+
+    #[inline(always)]
+    pub fn definite_value(self, available_space: AvailableSpace) -> Option<f32> {
+        use Dimension::*;
+        use MaxTrackSizingFunction::{Auto, *};
+        match self {
+            Fixed(Dimension::Points(size)) => Some(size),
+            Fixed(Dimension::Percent(fraction)) => match available_space {
+                AvailableSpace::Definite(available_size) => Some(fraction * available_size),
+                _ => None,
+            },
+            Fixed(Dimension::Auto) | MinContent | MaxContent | Auto | Flex(_) => None,
+        }
+    }
+
+    #[inline(always)]
+    pub fn is_max_content(&self) -> bool {
+        use MaxTrackSizingFunction::*;
+        match self {
+            MaxContent => true,
+            Auto | MinContent | Fixed(_) | Flex(_) => false,
+        }
+    }
+}
+
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum MinTrackSizingFunction {
     Fixed(Dimension),
     MinContent,
     MaxContent,
     Auto,
+}
+
+impl MinTrackSizingFunction {
+    #[inline(always)]
+    pub fn definite_value(self, available_space: AvailableSpace) -> Option<f32> {
+        use Dimension::*;
+        use MinTrackSizingFunction::{Auto, *};
+        match self {
+            Fixed(Dimension::Points(size)) => Some(size),
+            Fixed(Dimension::Percent(fraction)) => match available_space {
+                AvailableSpace::Definite(available_size) => Some(fraction * available_size),
+                _ => None,
+            },
+            Fixed(Dimension::Auto) | MinContent | MaxContent | Auto => None,
+        }
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -545,6 +635,14 @@ impl Dimension {
     /// Is this value defined?
     pub(crate) fn is_defined(self) -> bool {
         matches!(self, Dimension::Points(_) | Dimension::Percent(_))
+    }
+
+    /// Get Points value if value is Points variant
+    pub(crate) fn get_absolute(self) -> Option<f32> {
+        match self {
+            Dimension::Points(value) => Some(value),
+            _ => None,
+        }
     }
 }
 
@@ -837,6 +935,13 @@ impl Style {
         match axis {
             AbsoluteAxis::Horizontal => self.grid_column,
             AbsoluteAxis::Vertical => self.grid_row,
+        }
+    }
+
+    pub(crate) fn grid_align_content(&self, axis: GridAxis) -> AlignContent {
+        match axis {
+            GridAxis::Inline => self.justify_content.into(),
+            GridAxis::Block => self.align_content,
         }
     }
 }

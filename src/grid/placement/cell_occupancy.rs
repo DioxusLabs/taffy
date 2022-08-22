@@ -62,22 +62,23 @@ impl TrackCounts {
         return (self.negative_implicit + self.explicit + self.positive_implicit) as usize;
     }
 
-    fn oz_line_to_next_track(&self, index: i16) -> i16 {
-        // use core::cmp::Ordering;
-        // match index.cmp(&0) {
-        //     Ordering::Equal => 0,
-        //     Ordering::Less => self.negative_implicit as i16 + self.explicit as i16 + index,
-        //     Ordering::Greater => self.negative_implicit as i16 + index,
-        // }
+    pub fn oz_line_to_next_track(&self, index: i16) -> i16 {
         index + (self.negative_implicit as i16)
     }
 
-    fn track_to_prev_oz_line(&self, index: u16) -> i16 {
-        // if index < self.negative_implicit {
-        //     -(self.negative_implicit as i16 + self.explicit as i16 + 1 - index as i16)
-        // } else {
-        //     (index - self.negative_implicit) as i16
-        // }
+    pub fn oz_line_to_grid_track_vec_index(&self, index: i16) -> u16 {
+        assert!(
+            index > -(self.negative_implicit as i16),
+            "origin-zero grid line cannot be less than the number of negative grid lines"
+        );
+        assert!(
+            index < (self.explicit + self.positive_implicit) as i16,
+            "origin-zero grid line cannot be more than the number of positive grid lines"
+        );
+        2 * ((index + self.negative_implicit as i16) as u16)
+    }
+
+    pub fn track_to_prev_oz_line(&self, index: u16) -> i16 {
         (index as i16) - (self.negative_implicit as i16)
     }
 

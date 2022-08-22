@@ -1,6 +1,6 @@
 use super::placement::{CellOccupancyMatrix, TrackCounts};
 use crate::geometry::{Line, Size};
-use crate::layout::AvailableSpace;
+use crate::layout::{AvailableSpace, AvailableSpaceCache};
 use crate::node::Node;
 use crate::style::{Dimension, MaxTrackSizingFunction, MinTrackSizingFunction, TrackSizingFunction};
 use crate::sys::GridTrackVec;
@@ -40,7 +40,7 @@ impl AbsoluteAxis {
 
 /// The abstract axis in CSS Grid
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub(super) enum GridAxis {
+pub(crate) enum GridAxis {
     /// The axis in the inline dimension, i.e. the horizontal axis in horizontal writing modes and the vertical axis in vertical writing modes.
     Inline,
     /// The axis in the block dimension, i.e. the vertical axis in horizontal writing modes and the horizontal axis in vertical writing modes.
@@ -73,7 +73,9 @@ pub(super) struct GridTrack {
     pub min_track_sizing_function: MinTrackSizingFunction,
     pub max_track_sizing_function: MaxTrackSizingFunction,
     pub base_size: f32,
-    pub growth_limit: f32,         // Note: can be infinity
+    pub growth_limit: f32, // Note: can be infinity
+    // pub base_size_planned_increase: f32,    // A temporary scratch value when "distributing space" to avoid clobbering the main variable
+    // pub growth_limit_planned_increase: f32, // A temporary scratch value when "distributing space" to avoid clobbering the main variable
     pub infinitely_growable: bool, // https://www.w3.org/TR/css3-grid-layout/#infinitely-growable
 }
 
@@ -88,6 +90,8 @@ impl GridTrack {
             max_track_sizing_function,
             base_size: 0.0,
             growth_limit: 0.0,
+            // base_size_planned_increase: 0.0,
+            // growth_limit_planned_increase: 0.0,
             infinitely_growable: false,
         }
     }
@@ -99,6 +103,8 @@ impl GridTrack {
             max_track_sizing_function: MaxTrackSizingFunction::Fixed(size),
             base_size: 0.0,
             growth_limit: 0.0,
+            // base_size_planned_increase: 0.0,
+            // growth_limit_planned_increase: 0.0,
             infinitely_growable: false,
         }
     }
@@ -110,6 +116,8 @@ impl GridTrack {
             max_track_sizing_function: MaxTrackSizingFunction::Auto,
             base_size: 0.0,
             growth_limit: 0.0,
+            // base_size_planned_increase: 0.0,
+            // growth_limit_planned_increase: 0.0,
             infinitely_growable: false,
         }
     }
@@ -337,23 +345,58 @@ pub(super) struct NamedArea {
 }
 
 pub(super) struct GridItem {
+    /// The id of the Node that this item represents
     pub node: Node,
-    pub min_content_contribution: Option<Size<f32>>,
-    pub max_content_contribution: Option<Size<f32>>,
+
+    /// The item's definite row-start and row-end, as resolved by the placement algorithm
+    /// (in origin-zero coordinates)
     pub row: Line<i16>,
+    /// The items definite column-start and column-end, as resolved by the placement algorithm
+    /// (in origin-zero coordinates)
     pub column: Line<i16>,
+
+    /// The item's definite row-start and row-end (same as `row` field, except in a different coordinate system)
+    /// (as indexes into the Vec<GridTrack> stored in a grid's GridAxisTracks)
+    pub row_indexes: Line<u16>,
+    /// The items definite column-start and column-end (same as `column` field, except in a different coordinate system)
+    /// (as indexes into the Vec<GridTrack> stored in a grid's GridAxisTracks)
+    pub column_indexes: Line<u16>,
+
+    /// Whether the item crosses a flexible row
+    pub crosses_flexible_row: bool,
+    /// Whether the item crosses a flexible column
+    pub crosses_flexible_column: bool,
+
+    /// The order of the item in the children array (this is significant for auto-placement!)
+    // pub source_order: u16,
+    // pub min_content_contribution_cache: Option<Size<f32>>,
+    // pub max_content_contribution_cache: Option<Size<f32>>,
+
+    /// Cache for intrinsic size computation
+    /// There is an entry for each combination of (min-content, max-content) and (height, width)
+    intrinsic_size_cache: [AvailableSpaceCache; 4],
 }
 
 impl GridItem {
-    // pub fn new(node: Node) -> Self {
-    //     GridItem {
-    //         node,
-    //         min_content_contribution: None,
-    //         max_content_contribution: None,
-    //         row: Line { start: GridPosition::Auto, end: GridPosition::Auto },
-    //         column: Line { start: GridPosition::Auto, end: GridPosition::Auto },
-    //     }
-    // }
+    pub fn new_with_placement(node: Node, col_span: Line<i16>, row_span: Line<i16>) -> Self {
+        GridItem {
+            node,
+            row: row_span,
+            column: col_span,
+            row_indexes: Line { start: 0, end: 0 }, // Properly initialised later
+            column_indexes: Line { start: 0, end: 0 }, // Properly initialised later
+            crosses_flexible_row: false,            // Properly initialised later
+            crosses_flexible_column: false,         // Properly initialised later
+            intrinsic_size_cache: [AvailableSpaceCache::empty(); 4], // source_order: 1,
+        }
+    }
+
+    pub fn placement(&self, axis: GridAxis) -> Line<i16> {
+        match axis {
+            GridAxis::Block => self.row,
+            GridAxis::Inline => self.column,
+        }
+    }
 
     pub fn span(&self, axis: GridAxis) -> u16 {
         match axis {
@@ -365,6 +408,59 @@ impl GridItem {
                 (start, end) => max(end - start, 0) as u16,
                 _ => 0,
             },
+        }
+    }
+
+    fn cache_entry_index(&self, constraint: Size<AvailableSpace>) -> Option<usize> {
+        use AvailableSpace::*;
+        match (constraint.width, constraint.height) {
+            (MinContent, Definite(_)) => Some(0),
+            (MaxContent, Definite(_)) => Some(1),
+            (Definite(_), MinContent) => Some(2),
+            (Definite(_), MaxContent) => Some(3),
+            _ => None,
+        }
+    }
+
+    fn get_cache(&self, constraint: Size<AvailableSpace>) -> Option<AvailableSpaceCache> {
+        self.cache_entry_index(constraint)
+            .map(|index| self.intrinsic_size_cache[index])
+            .filter(|cache| cache.constraint == constraint)
+    }
+
+    fn set_cache(&mut self, constraint: Size<AvailableSpace>, size: Size<f32>) {
+        if let Some(index) = self.cache_entry_index(constraint) {
+            self.intrinsic_size_cache[index] = AvailableSpaceCache { constraint, cached_size: size }
+        }
+    }
+
+    pub fn intrinsic_size_cached(
+        &mut self,
+        measure_node: impl Fn(Node, Size<AvailableSpace>) -> Size<f32>,
+        constraint: Size<AvailableSpace>,
+    ) -> Size<f32> {
+        if let Some(cache) = self.get_cache(constraint) {
+            cache.cached_size
+        } else {
+            let size = measure_node(self.node, constraint);
+            self.set_cache(constraint, size);
+            size
+        }
+    }
+
+    pub fn axis_agnostic_intrinsic_size_cached(
+        &mut self,
+        measure_node: impl Fn(Node, Size<AvailableSpace>) -> Size<f32>,
+        axis: GridAxis,
+        constraint: Size<AvailableSpace>,
+        other_axis_constraint: Size<AvailableSpace>,
+    ) -> Size<f32> {
+        if let Some(cache) = self.get_cache(constraint) {
+            cache.cached_size
+        } else {
+            let size = measure_node(self.node, constraint);
+            self.set_cache(constraint, size);
+            size
         }
     }
 }

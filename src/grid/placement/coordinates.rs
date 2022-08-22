@@ -6,6 +6,8 @@
 //!   - The next line to the right (or down) is 1, and so on
 //!   - The next line to the left (or up) is -1, and so on
 
+use super::TrackCounts;
+
 /// Convert from grid line coordinates to our custom origin-zero coordinates
 pub(crate) fn into_origin_zero_coordinates(grid_line: i16, explicit_track_count: u16) -> i16 {
     let explicit_line_count = explicit_track_count + 1;
