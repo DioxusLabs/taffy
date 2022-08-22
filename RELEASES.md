@@ -9,6 +9,7 @@
 - Builder methods are now `const` where possible
   - Several convenience constants have been defined: notably `FlexboxLayout::DEFAULT`
 - New `Layout` convenience constructor: `with_order(order: u32)`
+- Added support for `AlignContent::SpaceEvenly`
 
 ### 0.2.0 Changed
 
