@@ -12,6 +12,16 @@ pub(crate) use self::alloc::*;
 #[cfg(all(not(feature = "alloc"), not(feature = "std")))]
 pub(crate) use self::core::*;
 
+/// Returns the largest of two f32 values
+pub(crate) fn f32_max(a: f32, b: f32) -> f32 {
+    core::cmp::max_by(a, b, |a, b| a.total_cmp(b))
+}
+
+/// Returns the smallest of two f32 values
+pub(crate) fn f32_min(a: f32, b: f32) -> f32 {
+    core::cmp::min_by(a, b, |a, b| a.total_cmp(b))
+}
+
 /// For when `std` is enabled
 #[cfg(feature = "std")]
 mod std {
