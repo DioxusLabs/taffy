@@ -293,6 +293,7 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
             "center" => quote!(align_content: taffy::style::AlignContent::Center,),
             "space-between" => quote!(align_content: taffy::style::AlignContent::SpaceBetween,),
             "space-around" => quote!(align_content: taffy::style::AlignContent::SpaceAround,),
+            "space-evenly" => quote!(align_content: taffy::style::AlignContent::SpaceEvenly,),
             _ => quote!(),
         },
         _ => quote!(),
