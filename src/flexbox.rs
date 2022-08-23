@@ -1311,6 +1311,7 @@ impl Taffy {
                     }
                 }
                 AlignContent::Stretch => 0.0,
+                AlignContent::SpaceEvenly => free_space / (num_lines + 1) as f32,
                 AlignContent::SpaceBetween => {
                     if is_first {
                         0.0
