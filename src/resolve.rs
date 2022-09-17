@@ -31,6 +31,7 @@ impl MaybeResolve<Option<f32>> for Dimension {
             Dimension::Points(points) => Some(points),
             // parent_dim * percent
             Dimension::Percent(percent) => context.map(|dim| dim * percent),
+            Dimension::PercentPoints(percent, points) => Some(context.map_or(points, |dim| dim * percent + points)),
             _ => None,
         }
     }
@@ -130,6 +131,24 @@ mod tests {
         fn resolve_percent(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: Option<f32>) {
             assert_eq!(input.maybe_resolve(context), expected);
         }
+
+        /// `Dimension::PercentPoints` should return `None` if context is  `None`.
+        /// Otherwise it should return `Some(f32)`
+        /// where the f32 value is the inner value of the percent * context + points value.
+        ///
+        /// The parent / context __should__ affect the outcome.
+        #[rstest]
+        #[case(Dimension::PercentPoints(1.0, 1.0), None, Some(1.0))]
+        #[case(Dimension::PercentPoints(1.0, 1.0), Some(5.0), Some(6.0))]
+        #[case(Dimension::PercentPoints(1.0, 1.0), Some(-5.0), Some(-4.0))]
+        #[case(Dimension::PercentPoints(1.0, 1.0), Some(50.0), Some(51.0))]
+        fn resolve_percent_points(
+            #[case] input: Dimension,
+            #[case] context: Option<f32>,
+            #[case] expected: Option<f32>,
+        ) {
+            assert_eq!(input.maybe_resolve(context), expected);
+        }
     }
 
     mod maybe_resolve_size_dimension {
@@ -202,6 +221,24 @@ mod tests {
         ) {
             assert_eq!(input.maybe_resolve(context), expected);
         }
+
+        /// `Size<Dimension::PercentPoints>` should return `Size<None>` if context is `Size<None>`.
+        /// Otherwise it should return `Size<Some(f32)>`
+        /// where the f32 value is the inner value of the percent * context + points value.
+        ///
+        /// The context __should__ affect the outcome.
+        #[rstest]
+        #[case(Size::from_percent_points(5.0, 5.0, 5.0, 5.0), Size::NONE, Size::new(5.0, 5.0))]
+        #[case(Size::from_percent_points(5.0, 5.0, 5.0, 5.0), Size::new(5.0, 5.0), Size::new(30.0, 30.0))]
+        #[case(Size::from_percent_points(5.0, 5.0, 5.0, 5.0), Size::new(-5.0, -5.0), Size::new(-20.0, -20.0))]
+        #[case(Size::from_percent_points(5.0, 5.0, 5.0, 5.0), Size::new(0.0, 0.0), Size::new(5.0, 5.0))]
+        fn maybe_resolve_percent_points(
+            #[case] input: Size<Dimension>,
+            #[case] context: Size<Option<f32>>,
+            #[case] expected: Size<Option<f32>>,
+        ) {
+            assert_eq!(input.maybe_resolve(context), expected);
+        }
     }
 
     mod resolve_or_default_dimension_to_option_f32 {
@@ -239,6 +276,18 @@ mod tests {
         #[case(Dimension::Percent(5.0), Some(-5.0), -25.0)]
         #[case(Dimension::Percent(5.0), Some(0.0), 0.0)]
         fn resolve_or_default_percent(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: f32) {
+            assert_eq!(input.resolve_or_default(context), expected);
+        }
+        #[rstest]
+        #[case(Dimension::PercentPoints(5.0, 5.0), None, 5.0)]
+        #[case(Dimension::PercentPoints(5.0, 5.0), Some(5.0), 30.0)]
+        #[case(Dimension::PercentPoints(5.0, 5.0), Some(-5.0), -20.0)]
+        #[case(Dimension::PercentPoints(5.0, 5.0), Some(0.0), 5.0)]
+        fn resolve_or_default_percent_points(
+            #[case] input: Dimension,
+            #[case] context: Option<f32>,
+            #[case] expected: f32,
+        ) {
             assert_eq!(input.resolve_or_default(context), expected);
         }
     }
@@ -300,6 +349,31 @@ mod tests {
         ) {
             assert_eq!(input.resolve_or_default(context), expected);
         }
+
+        #[rstest]
+        #[case(
+            Rect::from_percent_points(5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0),
+            Size::NONE,
+            Rect::new(5.0, 5.0, 5.0, 5.0)
+        )]
+        #[case(
+            Rect::from_percent_points(5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0),
+            Size::new(5.0, 5.0),
+            Rect::new(30.0, 30.0, 30.0, 30.0)
+        )]
+        #[case(Rect::from_percent_points(5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0), Size::new(-5.0, -5.0), Rect::new(-20.0, -20.0, -20.0, -20.0))]
+        #[case(
+            Rect::from_percent_points(5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0),
+            Size::new(0.0, 0.0),
+            Rect::new(5.0, 5.0, 5.0, 5.0)
+        )]
+        fn resolve_or_default_percent_points(
+            #[case] input: Rect<Dimension>,
+            #[case] context: Size<Option<f32>>,
+            #[case] expected: Rect<f32>,
+        ) {
+            assert_eq!(input.resolve_or_default(context), expected);
+        }
     }
 
     mod resolve_or_default_rect_dimension_to_rect_f32_via_option {
@@ -353,6 +427,27 @@ mod tests {
         #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(-5.0), Rect::new(-25.0, -25.0, -25.0, -25.0))]
         #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(0.0), Rect::ZERO)]
         fn resolve_or_default_percent(
+            #[case] input: Rect<Dimension>,
+            #[case] context: Option<f32>,
+            #[case] expected: Rect<f32>,
+        ) {
+            assert_eq!(input.resolve_or_default(context), expected);
+        }
+
+        #[rstest]
+        #[case(Rect::from_percent_points(5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0), None, Rect::new(5.0, 5.0, 5.0, 5.0))]
+        #[case(
+            Rect::from_percent_points(5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0),
+            Some(5.0),
+            Rect::new(30.0, 30.0, 30.0, 30.0)
+        )]
+        #[case(Rect::from_percent_points(5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0), Some(-5.0), Rect::new(-20.0, -20.0, -20.0, -20.0))]
+        #[case(
+            Rect::from_percent_points(5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0),
+            Some(0.0),
+            Rect::new(5.0, 5.0, 5.0, 5.0)
+        )]
+        fn resolve_or_default_percent_points(
             #[case] input: Rect<Dimension>,
             #[case] context: Option<f32>,
             #[case] expected: Rect<f32>,

@@ -266,6 +266,8 @@ pub enum Dimension {
     Points(f32),
     /// The dimension is stored in percentage relative to the parent item.
     Percent(f32),
+    /// The dimension is stored as the sum of percentage relative to the parent item and point.
+    PercentPoints(f32, f32),
 }
 
 impl Default for Dimension {
@@ -277,7 +279,7 @@ impl Default for Dimension {
 impl Dimension {
     /// Is this value defined?
     pub(crate) fn is_defined(self) -> bool {
-        matches!(self, Dimension::Points(_) | Dimension::Percent(_))
+        matches!(self, Dimension::Points(_) | Dimension::Percent(_) | Dimension::PercentPoints(_, _))
     }
 }
 
@@ -312,6 +314,36 @@ impl Rect<Dimension> {
         Rect { end: Dimension::Percent(end), bottom: Dimension::Percent(bottom), ..Rect::AUTO }
     }
 
+    /// Generates a [`Rect<Dimension>`] using [`Dimension::PercentPoints`] values for `start` and `top`
+    #[must_use]
+    pub const fn top_from_percent_points(
+        start_percent: f32,
+        start_points: f32,
+        top_percent: f32,
+        top_points: f32,
+    ) -> Rect<Dimension> {
+        Rect {
+            start: Dimension::PercentPoints(start_percent, start_points),
+            top: Dimension::PercentPoints(top_points, top_percent),
+            ..Rect::AUTO
+        }
+    }
+
+    /// Generates a [`Rect<Dimension>`] using [`Dimension::PercentPoints`] values for `end` and `bottom`
+    #[must_use]
+    pub const fn bot_from_percent_points(
+        end_percent: f32,
+        end_points: f32,
+        bottom_percent: f32,
+        bottom_points: f32,
+    ) -> Rect<Dimension> {
+        Rect {
+            end: Dimension::PercentPoints(end_percent, end_points),
+            bottom: Dimension::PercentPoints(bottom_percent, bottom_points),
+            ..Rect::AUTO
+        }
+    }
+
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Undefined`] for all values
     pub const UNDEFINED: Rect<Dimension> = Self {
         start: Dimension::Undefined,
@@ -343,6 +375,26 @@ impl Rect<Dimension> {
             end: Dimension::Percent(end),
             top: Dimension::Percent(top),
             bottom: Dimension::Percent(bottom),
+        }
+    }
+
+    /// Create a new Rect with [`Dimension::Percent`]
+    #[must_use]
+    pub const fn from_percent_points(
+        start_percent: f32,
+        start_points: f32,
+        end_percent: f32,
+        end_points: f32,
+        top_percent: f32,
+        top_points: f32,
+        bottom_percent: f32,
+        bottom_points: f32,
+    ) -> Self {
+        Rect {
+            start: Dimension::PercentPoints(start_percent, start_points),
+            end: Dimension::PercentPoints(end_percent, end_points),
+            top: Dimension::PercentPoints(top_percent, top_points),
+            bottom: Dimension::PercentPoints(bottom_percent, bottom_points),
         }
     }
 }

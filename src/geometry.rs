@@ -245,6 +245,20 @@ impl Size<Dimension> {
         Size { width: Dimension::Percent(width), height: Dimension::Percent(height) }
     }
 
+    /// Generates a [`Size<Dimension>`] using [`Dimension::PercentPoints`] values
+    #[must_use]
+    pub const fn from_percent_points(
+        width_percent: f32,
+        height_percent: f32,
+        width_points: f32,
+        height_points: f32,
+    ) -> Self {
+        Size {
+            width: Dimension::PercentPoints(width_percent, width_points),
+            height: Dimension::PercentPoints(height_percent, height_points),
+        }
+    }
+
     /// Generates a [`Size<Dimension>`] using [`Dimension::Auto`] in both width and height
     pub const AUTO: Size<Dimension> = Self { width: Dimension::Auto, height: Dimension::Auto };
 
