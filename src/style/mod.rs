@@ -1,6 +1,10 @@
 //! A representation of [CSS layout properties](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust, used for flexbox layout
 
+mod calc_dimension;
+
 use crate::geometry::{Rect, Size};
+
+use self::calc_dimension::CalcDimension;
 
 /// How [`Nodes`](crate::node::Node) are aligned relative to the cross axis
 ///
@@ -258,14 +262,22 @@ impl Default for FlexWrap {
 pub enum Dimension {
     /// The dimension is not given
     Undefined,
+
     /// The dimension should be automatically computed
     Auto,
+
     /// The dimension is stored in [points](https://en.wikipedia.org/wiki/Point_(typography))
     ///
     /// Each point is about 0.353 mm in size.
     Points(f32),
+
     /// The dimension is stored in percentage relative to the parent item.
     Percent(f32),
+
+    /// A calculation of dimensions, similar to CSS's `calc()`.
+    ///
+    /// One use-case of this is to add a percentage value to a points value.
+    Calc(CalcDimension),
 }
 
 impl Default for Dimension {
