@@ -1,10 +1,12 @@
 //! A representation of [CSS layout properties](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust, used for flexbox layout
 
 mod calc_dimension;
+mod dimension;
 
 use crate::geometry::{Rect, Size};
 
-use self::calc_dimension::CalcDimension;
+pub use self::calc_dimension::CalcDimension;
+pub use self::dimension::Dimension;
 
 /// How [`Nodes`](crate::node::Node) are aligned relative to the cross axis
 ///
@@ -250,46 +252,6 @@ pub enum FlexWrap {
 impl Default for FlexWrap {
     fn default() -> Self {
         Self::NoWrap
-    }
-}
-
-/// A unit of linear measurement
-///
-/// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
-/// The default value is [`Dimension::Undefined`].
-#[derive(Clone, PartialEq, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum Dimension {
-    /// The dimension is not given
-    Undefined,
-
-    /// The dimension should be automatically computed
-    Auto,
-
-    /// The dimension is stored in [points](https://en.wikipedia.org/wiki/Point_(typography))
-    ///
-    /// Each point is about 0.353 mm in size.
-    Points(f32),
-
-    /// The dimension is stored in percentage relative to the parent item.
-    Percent(f32),
-
-    /// A calculation of dimensions, similar to CSS's `calc()`.
-    ///
-    /// One use-case of this is to add a percentage value to a points value.
-    Calc(CalcDimension),
-}
-
-impl Default for Dimension {
-    fn default() -> Self {
-        Self::Undefined
-    }
-}
-
-impl Dimension {
-    /// Is this value defined?
-    pub(crate) fn is_defined(&self) -> bool {
-        matches!(self, Dimension::Points(_) | Dimension::Percent(_))
     }
 }
 
