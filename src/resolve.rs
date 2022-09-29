@@ -31,7 +31,8 @@ impl MaybeResolve<Option<f32>> for Dimension {
             Dimension::Points(points) => Some(*points),
             // parent_dim * percent
             Dimension::Percent(percent) => context.map(|dim| dim * percent),
-            _ => None,
+            Dimension::Calc(calc) => calc.maybe_resolve(context),
+            Dimension::Auto | Dimension::Undefined => None,
         }
     }
 }

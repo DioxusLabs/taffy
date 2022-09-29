@@ -1,5 +1,7 @@
 //! Dimensions that are have to be calculated while resolving.
 
+use crate::resolve::MaybeResolve;
+
 use super::Dimension;
 
 /// A [`Dimension`] calculation.
@@ -18,4 +20,24 @@ pub enum CalcDimension {
 
     /// Divide a [`Dimension`] by a constant.
     Div(Box<Dimension>, f32),
+}
+
+impl MaybeResolve<Option<f32>> for CalcDimension {
+    fn maybe_resolve(&self, context: Option<f32>) -> Option<f32> {
+        match self {
+            CalcDimension::Add(lhs, rhs) => lhs
+                .maybe_resolve(context)
+                .zip(rhs.maybe_resolve(context))
+                .map(|(lhs_value, rhs_value)| lhs_value + rhs_value),
+
+            CalcDimension::Sub(lhs, rhs) => lhs
+                .maybe_resolve(context)
+                .zip(rhs.maybe_resolve(context))
+                .map(|(lhs_value, rhs_value)| lhs_value - rhs_value),
+
+            CalcDimension::Mul(lhs, factor) => lhs.maybe_resolve(context).map(|lhs_value| lhs_value * factor),
+
+            CalcDimension::Div(lhs, divisor) => lhs.maybe_resolve(context).map(|lhs_value| lhs_value / divisor),
+        }
+    }
 }
