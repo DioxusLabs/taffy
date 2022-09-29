@@ -1,5 +1,7 @@
 //! A unit of linear measurement.
 
+use core::ops::{Add, Div, Mul, Sub};
+
 use super::CalcDimension;
 
 /// A unit of linear measurement
@@ -39,5 +41,80 @@ impl Dimension {
     /// Is this value defined?
     pub(crate) fn is_defined(&self) -> bool {
         matches!(self, Dimension::Points(_) | Dimension::Percent(_))
+    }
+}
+
+impl Add<Dimension> for Dimension {
+    type Output = Dimension;
+
+    fn add(self, rhs: Dimension) -> Self::Output {
+        match (self, rhs) {
+            (Dimension::Undefined, _) | (_, Dimension::Undefined) => Dimension::Undefined,
+            (Dimension::Auto, _) | (_, Dimension::Auto) => Dimension::Auto,
+            (Dimension::Points(lhs), Dimension::Points(rhs)) => Dimension::Points(lhs + rhs),
+            (Dimension::Percent(lhs), Dimension::Percent(rhs)) => Dimension::Percent(lhs + rhs),
+            // Result can't be known in advance, defer calculation until resolving the actual values
+            (lhs, rhs) => Dimension::Calc(CalcDimension::Add(Box::new(lhs), Box::new(rhs))),
+        }
+    }
+}
+
+impl Sub<Dimension> for Dimension {
+    type Output = Dimension;
+
+    fn sub(self, rhs: Dimension) -> Self::Output {
+        match (self, rhs) {
+            (Dimension::Undefined, _) | (_, Dimension::Undefined) => Dimension::Undefined,
+            (Dimension::Auto, _) | (_, Dimension::Auto) => Dimension::Auto,
+            (Dimension::Points(lhs), Dimension::Points(rhs)) => Dimension::Points(lhs - rhs),
+            (Dimension::Percent(lhs), Dimension::Percent(rhs)) => Dimension::Percent(lhs - rhs),
+            // Result can't be known in advance, defer calculation until resolving the actual values
+            (lhs, rhs) => Dimension::Calc(CalcDimension::Sub(Box::new(lhs), Box::new(rhs))),
+        }
+    }
+}
+
+impl Mul<f32> for Dimension {
+    type Output = Dimension;
+
+    fn mul(self, factor: f32) -> Self::Output {
+        match (self, factor) {
+            (Dimension::Undefined, _) => Dimension::Undefined,
+            (Dimension::Auto, _) => Dimension::Auto,
+            (Dimension::Points(lhs), factor) => Dimension::Points(lhs * factor),
+            (Dimension::Percent(lhs), factor) => Dimension::Percent(lhs * factor),
+            // Result can't be known in advance, defer calculation until resolving the actual values
+            (lhs, factor) => Dimension::Calc(CalcDimension::Mul(Box::new(lhs), factor)),
+        }
+    }
+}
+
+impl Mul<Dimension> for f32 {
+    type Output = Dimension;
+
+    fn mul(self, rhs: Dimension) -> Self::Output {
+        match (self, rhs) {
+            (_, Dimension::Undefined) => Dimension::Undefined,
+            (_, Dimension::Auto) => Dimension::Auto,
+            (factor, Dimension::Points(lhs)) => Dimension::Points(lhs * factor),
+            (factor, Dimension::Percent(lhs)) => Dimension::Percent(lhs * factor),
+            // Result can't be known in advance, defer calculation until resolving the actual values
+            (factor, rhs) => Dimension::Calc(CalcDimension::Mul(Box::new(rhs), factor)),
+        }
+    }
+}
+
+impl Div<f32> for Dimension {
+    type Output = Dimension;
+
+    fn div(self, divisor: f32) -> Self::Output {
+        match (self, divisor) {
+            (Dimension::Undefined, _) => Dimension::Undefined,
+            (Dimension::Auto, _) => Dimension::Auto,
+            (Dimension::Points(lhs), divisor) => Dimension::Points(lhs / divisor),
+            (Dimension::Percent(lhs), divisor) => Dimension::Percent(lhs / divisor),
+            // Result can't be known in advance, defer calculation until resolving the actual values
+            (lhs, divisor) => Dimension::Calc(CalcDimension::Div(Box::new(lhs), divisor)),
+        }
     }
 }
