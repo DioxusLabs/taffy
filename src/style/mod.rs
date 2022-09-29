@@ -257,7 +257,7 @@ impl Default for FlexWrap {
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
 /// The default value is [`Dimension::Undefined`].
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Dimension {
     /// The dimension is not given
@@ -288,7 +288,7 @@ impl Default for Dimension {
 
 impl Dimension {
     /// Is this value defined?
-    pub(crate) fn is_defined(self) -> bool {
+    pub(crate) fn is_defined(&self) -> bool {
         matches!(self, Dimension::Points(_) | Dimension::Percent(_))
     }
 }
@@ -379,7 +379,7 @@ impl Default for Size<Dimension> {
 /// this [introduction to the box model](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Box_Model/Introduction_to_the_CSS_box_model).
 ///
 /// If the behavior does not match the flexbox layout algorithm on the web, please file a bug!
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 pub struct FlexboxLayout {
@@ -465,81 +465,81 @@ impl FlexboxLayout {
     /// If the `direction` is row-oriented, the min width. Otherwise the min height
     pub(crate) fn min_main_size(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
-            self.min_size.width
+            self.min_size.clone().width
         } else {
-            self.min_size.height
+            self.min_size.clone().height
         }
     }
 
     /// If the `direction` is row-oriented, the max width. Otherwise the max height
     pub(crate) fn max_main_size(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
-            self.max_size.width
+            self.max_size.clone().width
         } else {
-            self.max_size.height
+            self.max_size.clone().height
         }
     }
 
     /// If the `direction` is row-oriented, the margin start. Otherwise the margin top
     pub(crate) fn main_margin_start(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
-            self.margin.start
+            self.margin.clone().start
         } else {
-            self.margin.top
+            self.margin.clone().top
         }
     }
 
     /// If the `direction` is row-oriented, the margin end. Otherwise the margin bottom
     pub(crate) fn main_margin_end(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
-            self.margin.end
+            self.margin.clone().end
         } else {
-            self.margin.bottom
+            self.margin.clone().bottom
         }
     }
 
     /// If the `direction` is row-oriented, the height. Otherwise the width
     pub(crate) fn cross_size(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
-            self.size.height
+            self.size.clone().height
         } else {
-            self.size.width
+            self.size.clone().width
         }
     }
 
     /// If the `direction` is row-oriented, the min height. Otherwise the min width
     pub(crate) fn min_cross_size(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
-            self.min_size.height
+            self.min_size.clone().height
         } else {
-            self.min_size.width
+            self.min_size.clone().width
         }
     }
 
     /// If the `direction` is row-oriented, the max height. Otherwise the max width
     pub(crate) fn max_cross_size(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
-            self.max_size.height
+            self.max_size.clone().height
         } else {
-            self.max_size.width
+            self.max_size.clone().width
         }
     }
 
     /// If the `direction` is row-oriented, the margin top. Otherwise the margin start
     pub(crate) fn cross_margin_start(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
-            self.margin.top
+            self.margin.clone().top
         } else {
-            self.margin.start
+            self.margin.clone().start
         }
     }
 
     /// If the `direction` is row-oriented, the margin bottom. Otherwise the margin end
     pub(crate) fn cross_margin_end(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
-            self.margin.bottom
+            self.margin.clone().bottom
         } else {
-            self.margin.end
+            self.margin.clone().end
         }
     }
 

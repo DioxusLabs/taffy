@@ -1,9 +1,11 @@
+//! Dimensions that are have to be calculated while resolving.
+
 use super::Dimension;
 
 /// A [`Dimension`] calculation.
 ///
 /// The values are calulated when the point values are resolved.
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum CalcDimension {
     /// Add two [`Dimension`]s together.
     Add(Box<Dimension>, Box<Dimension>),

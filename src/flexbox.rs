@@ -109,7 +109,7 @@ struct AlgoConstants {
 impl Taffy {
     /// Computes the layout of [`Taffy`] according to the flexbox algorithm
     pub(crate) fn compute(&mut self, root: Node, size: Size<Option<f32>>) {
-        let style = self.nodes[root].style;
+        let style = self.nodes[root].style.clone();
         let has_root_min_max = style.min_size.width.is_defined()
             || style.min_size.height.is_defined()
             || style.max_size.width.is_defined()
@@ -277,7 +277,7 @@ impl Taffy {
                 min_size: child_style.min_size.maybe_resolve(constants.node_inner_size),
                 max_size: child_style.max_size.maybe_resolve(constants.node_inner_size),
 
-                position: child_style.position.zip_size(constants.node_inner_size, |p, s| p.maybe_resolve(s)),
+                position: child_style.position.clone().zip_size(constants.node_inner_size, |p, s| p.maybe_resolve(s)),
                 margin: child_style.margin.resolve_or_default(constants.node_inner_size.width),
                 padding: child_style.padding.resolve_or_default(constants.node_inner_size.width),
                 border: child_style.border.resolve_or_default(constants.node_inner_size.width),
@@ -372,11 +372,12 @@ impl Taffy {
     ) {
         // TODO - this does not follow spec. See the TODOs below
         for child in flex_items.iter_mut() {
-            let child_style = self.nodes[child.node].style;
+            let child_style = &self.nodes[child.node].style;
 
             // A. If the item has a definite used flex basis, that’s the flex base size.
 
-            let flex_basis = child_style.flex_basis.maybe_resolve(constants.node_inner_size.main(constants.dir));
+            let flex_basis =
+                child_style.flex_basis.clone().maybe_resolve(constants.node_inner_size.main(constants.dir));
             if flex_basis.is_some() {
                 child.flex_basis = flex_basis.unwrap_or(0.0);
                 continue;
@@ -1467,7 +1468,7 @@ impl Taffy {
             let container_width = constants.container_size.width.into();
             let container_height = constants.container_size.height.into();
 
-            let child_style = self.nodes[child].style;
+            let child_style = self.nodes[child].style.clone();
 
             // X-axis
             let child_position_start = child_style.position.start.maybe_resolve(container_width);
