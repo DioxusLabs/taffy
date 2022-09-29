@@ -78,13 +78,13 @@ impl Mul<f32> for Dimension {
     type Output = Dimension;
 
     fn mul(self, factor: f32) -> Self::Output {
-        match (self, factor) {
-            (Dimension::Undefined, _) => Dimension::Undefined,
-            (Dimension::Auto, _) => Dimension::Auto,
-            (Dimension::Points(lhs), factor) => Dimension::Points(lhs * factor),
-            (Dimension::Percent(lhs), factor) => Dimension::Percent(lhs * factor),
+        match self {
+            Dimension::Undefined => Dimension::Undefined,
+            Dimension::Auto => Dimension::Auto,
+            Dimension::Points(lhs) => Dimension::Points(lhs * factor),
+            Dimension::Percent(lhs) => Dimension::Percent(lhs * factor),
             // Result can't be known in advance, defer calculation until resolving the actual values
-            (lhs, factor) => Dimension::Calc(CalcDimension::Mul(Box::new(lhs), factor)),
+            lhs => Dimension::Calc(CalcDimension::Mul(Box::new(lhs), factor)),
         }
     }
 }
@@ -93,13 +93,13 @@ impl Mul<Dimension> for f32 {
     type Output = Dimension;
 
     fn mul(self, rhs: Dimension) -> Self::Output {
-        match (self, rhs) {
-            (_, Dimension::Undefined) => Dimension::Undefined,
-            (_, Dimension::Auto) => Dimension::Auto,
-            (factor, Dimension::Points(lhs)) => Dimension::Points(lhs * factor),
-            (factor, Dimension::Percent(lhs)) => Dimension::Percent(lhs * factor),
+        match rhs {
+            Dimension::Undefined => Dimension::Undefined,
+            Dimension::Auto => Dimension::Auto,
+            Dimension::Points(lhs) => Dimension::Points(lhs * self),
+            Dimension::Percent(lhs) => Dimension::Percent(lhs * self),
             // Result can't be known in advance, defer calculation until resolving the actual values
-            (factor, rhs) => Dimension::Calc(CalcDimension::Mul(Box::new(rhs), factor)),
+            rhs => Dimension::Calc(CalcDimension::Mul(Box::new(rhs), self)),
         }
     }
 }
@@ -108,13 +108,13 @@ impl Div<f32> for Dimension {
     type Output = Dimension;
 
     fn div(self, divisor: f32) -> Self::Output {
-        match (self, divisor) {
-            (Dimension::Undefined, _) => Dimension::Undefined,
-            (Dimension::Auto, _) => Dimension::Auto,
-            (Dimension::Points(lhs), divisor) => Dimension::Points(lhs / divisor),
-            (Dimension::Percent(lhs), divisor) => Dimension::Percent(lhs / divisor),
+        match self {
+            Dimension::Undefined => Dimension::Undefined,
+            Dimension::Auto => Dimension::Auto,
+            Dimension::Points(lhs) => Dimension::Points(lhs / divisor),
+            Dimension::Percent(lhs) => Dimension::Percent(lhs / divisor),
             // Result can't be known in advance, defer calculation until resolving the actual values
-            (lhs, divisor) => Dimension::Calc(CalcDimension::Div(Box::new(lhs), divisor)),
+            lhs => Dimension::Calc(CalcDimension::Div(Box::new(lhs), divisor)),
         }
     }
 }
