@@ -3,6 +3,7 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;
 use taffy::prelude::*;
+use taffy::randomizable::Randomizeable;
 use taffy::style::FlexboxLayout;
 
 /// The number of nodes to include in the trees
@@ -22,7 +23,7 @@ fn build_single_root_flat_hierarchy(taffy: &mut Taffy) -> Node {
     while node_count < NODE_COUNT {
         let sub_children_count = rng.gen_range(0..=3);
         let sub_children: Vec<Node> = (0..sub_children_count).map(|_| build_random_leaf(taffy, &mut rng)).collect();
-        let node = taffy.new_with_children(get_random_style(&mut rng), &sub_children).unwrap();
+        let node = taffy.new_with_children(FlexboxLayout::random(&mut rng), &sub_children).unwrap();
 
         children.push(node);
         node_count += 1 + sub_children_count;
@@ -36,7 +37,7 @@ fn taffy_benchmarks(c: &mut Criterion) {
         b.iter(|| {
             let mut taffy = Taffy::new();
             let root = build_single_root_flat_hierarchy(&mut taffy);
-            taffy.compute_layout(root, Size::undefined()).unwrap()
+            taffy.compute_layout(root, Size::NONE).unwrap()
         })
     });
 }
