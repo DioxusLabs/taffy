@@ -48,5 +48,10 @@ name = "complex"
 path = "benches/complex.rs"
 harness = false
 
+[[bench]]
+name = "big_tree"
+path = "benches/big_tree.rs"
+harness = false
+
 [workspace]
 members = ["scripts/gentest"]

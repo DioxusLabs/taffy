@@ -33,7 +33,11 @@ fn build_single_root_flat_hierarchy(taffy: &mut Taffy) -> Node {
 }
 
 fn taffy_benchmarks(c: &mut Criterion) {
-    c.bench_function("single root, flat hierarchy", |b| {
+    // Decrease sample size, because the tasks take longer
+    let mut group = c.benchmark_group("Big tree");
+    group.sample_size(10);
+
+    group.bench_function("single root, flat hierarchy", |b| {
         b.iter(|| {
             let mut taffy = Taffy::new();
             let root = build_single_root_flat_hierarchy(&mut taffy);
