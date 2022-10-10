@@ -8,32 +8,9 @@ use taffy::style::FlexboxLayout;
 /// The number of nodes to include in the trees
 const NODE_COUNT: u32 = 100_000;
 
-/// Get a randomly generated dimension
-fn get_random_dimension(rng: &mut ChaCha8Rng) -> Dimension {
-    let switch: f32 = rng.gen_range(0.0..=1.0);
-
-    match switch {
-        0.0..=0.2 => Dimension::Auto,
-        0.2..=0.4 => Dimension::Undefined,
-        0.4..=0.8 => Dimension::Points(rng.gen_range(0.0..500.0)),
-        _ => Dimension::Percent(rng.gen_range(0.0..1.0)),
-    }
-}
-
-/// Get a randomly generated size
-fn get_random_size(rng: &mut ChaCha8Rng) -> Size<Dimension> {
-    Size { width: get_random_dimension(rng), height: get_random_dimension(rng) }
-}
-
-/// Get a randomly generated style for a node
-fn get_random_style(rng: &mut ChaCha8Rng) -> FlexboxLayout {
-    // TODO: Add more attributes
-    FlexboxLayout { size: get_random_size(rng), ..Default::default() }
-}
-
 /// Build a random leaf node
 fn build_random_leaf(taffy: &mut Taffy, rng: &mut ChaCha8Rng) -> Node {
-    taffy.new_with_children(get_random_style(rng), &[]).unwrap()
+    taffy.new_with_children(FlexboxLayout::random(rng), &[]).unwrap()
 }
 
 /// A single root node with many children that have shallow depth
