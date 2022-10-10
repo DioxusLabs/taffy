@@ -183,14 +183,10 @@ fn generate_assertions(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let children = {
         let mut c = Vec::new();
-        match node["children"] {
-            json::JsonValue::Array(ref value) => {
-                for i in 0..value.len() {
-                    let child = &value[i];
-                    c.push(generate_assertions(&format!("{}{}", ident, i), child));
-                }
+        if let json::JsonValue::Array(ref value) = node["children"] {
+            for (idx, child) in value.iter().enumerate() {
+                c.push(generate_assertions(&format!("{}{}", ident, idx), child));
             }
-            _ => (),
         };
         c.into_iter().fold(quote!(), |a, b| quote!(#a #b))
     };
