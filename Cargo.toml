@@ -28,7 +28,7 @@ serde = ["dep:serde"]
 random = ["dep:rand"]
 
 [dev-dependencies]
-criterion = "0.3"
+criterion = "0.4"
 rstest = "0.15.0"
 rand = "0.8.5"
 rand_chacha = "0.3.1"
