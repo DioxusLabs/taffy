@@ -26,6 +26,9 @@ pub mod node;
 pub mod prelude;
 pub mod style;
 
+#[cfg(feature = "random")]
+pub mod randomizable;
+
 mod data;
 mod flexbox;
 mod resolve;
