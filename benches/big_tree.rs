@@ -62,7 +62,7 @@ fn build_deep_hierarchy(taffy: &mut Taffy) -> Node {
 
 fn taffy_benchmarks(c: &mut Criterion) {
     // Decrease sample size, because the tasks take longer
-    let mut group = c.benchmark_group("Big tree");
+    let mut group = c.benchmark_group("big tree (100_000 nodes)");
     group.sample_size(10);
 
     group.bench_function("flat hierarchy", |b| {

@@ -96,14 +96,18 @@ fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
 }
 
 fn taffy_benchmarks(c: &mut Criterion) {
-    c.bench_function("deep hierarchy - build", |b| {
+    // Increase sample size, because the examples are very small
+    let mut group = c.benchmark_group("deep hierarchy");
+    group.sample_size(200);
+
+    group.bench_function("build", |b| {
         b.iter(|| {
             let mut taffy = taffy::node::Taffy::new();
             build_deep_hierarchy(&mut taffy);
         })
     });
 
-    c.bench_function("deep hierarchy - single", |b| {
+    group.bench_function("single", |b| {
         b.iter(|| {
             let mut taffy = taffy::node::Taffy::new();
             let root = build_deep_hierarchy(&mut taffy);
@@ -111,7 +115,7 @@ fn taffy_benchmarks(c: &mut Criterion) {
         })
     });
 
-    c.bench_function("deep hierarchy - relayout", |b| {
+    group.bench_function("relayout", |b| {
         let mut taffy = taffy::node::Taffy::new();
         let root = build_deep_hierarchy(&mut taffy);
 
