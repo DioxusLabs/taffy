@@ -32,17 +32,49 @@ fn build_single_root_flat_hierarchy(taffy: &mut Taffy) -> Node {
     taffy.new_with_children(FlexboxLayout { ..Default::default() }, children.as_slice()).unwrap()
 }
 
+fn build_deep_tree(taffy: &mut Taffy, rng: &mut ChaCha8Rng, max_nodes: u32) -> Vec<Node> {
+    let branching_factor = 7;
+
+    if max_nodes <= branching_factor {
+        // Build leaf nodes
+        return (0..max_nodes).map(|_| build_random_leaf(taffy, rng)).collect();
+    }
+
+    // Add another layer to the tree
+    // Each child gets an equal amount of the remaining nodes
+    (0..branching_factor)
+        .map(|_| {
+            let sub_children = build_deep_tree(taffy, rng, (max_nodes - branching_factor) / branching_factor);
+            taffy.new_with_children(FlexboxLayout::random(rng), &sub_children).unwrap()
+        })
+        .collect()
+}
+
+fn build_single_root_deep_hierarchy(taffy: &mut Taffy) -> Node {
+    let mut rng = ChaCha8Rng::seed_from_u64(12345);
+
+    let tree = build_deep_tree(taffy, &mut rng, NODE_COUNT);
+
+    taffy.new_with_children(FlexboxLayout { ..Default::default() }, &tree).unwrap()
+}
+
 fn taffy_benchmarks(c: &mut Criterion) {
     // Decrease sample size, because the tasks take longer
     let mut group = c.benchmark_group("Big tree");
     group.sample_size(10);
 
     group.bench_function("single root, flat hierarchy", |b| {
-        b.iter(|| {
-            let mut taffy = Taffy::new();
-            let root = build_single_root_flat_hierarchy(&mut taffy);
-            taffy.compute_layout(root, Size::NONE).unwrap()
-        })
+        let mut taffy = Taffy::new();
+        let root = build_single_root_flat_hierarchy(&mut taffy);
+
+        b.iter(|| taffy.compute_layout(root, Size::NONE).unwrap())
+    });
+
+    group.bench_function("single root, deep hierarchy", |b| {
+        let mut taffy = Taffy::new();
+        let root = build_single_root_deep_hierarchy(&mut taffy);
+
+        b.iter(|| taffy.compute_layout(root, Size::NONE).unwrap())
     });
 }
 
