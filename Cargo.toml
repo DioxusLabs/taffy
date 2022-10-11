@@ -32,7 +32,9 @@ criterion = "0.3"
 rstest = "0.15.0"
 rand = "0.8.5"
 rand_chacha = "0.3.1"
-taffy = { path = ".", features = ["random"] }
+# We need to explicitly set a version here so that cargo deny doesn't complain
+# Don't forget to update this when bumping the version of taffy!
+taffy = { path = ".", version = "0.2.0", features = ["random"] }
 
 [profile.release]
 lto = true
