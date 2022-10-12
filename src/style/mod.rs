@@ -1,10 +1,14 @@
 //! A representation of [CSS layout properties](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust, used for flexbox layout
 
+#[cfg(feature = "std")]
 mod calc_dimension;
 mod dimension;
+#[cfg(feature = "std")]
+mod dimension_ops;
 
 use crate::geometry::{Rect, Size};
 
+#[cfg(feature = "std")]
 pub use self::calc_dimension::CalcDimension;
 pub use self::dimension::Dimension;
 
