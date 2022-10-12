@@ -4,9 +4,13 @@ use crate::resolve::MaybeResolve;
 
 use super::Dimension;
 
-/// A [`Dimension`] calculation.
+/// An addition, subtraction, multiplication or division between [`Dimension`]s.
 ///
 /// The values are calulated when the point values are resolved.
+///
+/// This type is needed, because not all calculations can be determined before resolving the actual values.
+/// For example, when adding [`Dimension::Points`] and [`Dimension::Percent`] together,
+/// the percentage first needs to be resolved to an absolute value to get the final result.
 #[derive(Clone, PartialEq, Debug)]
 pub enum CalcDimension {
     /// Add two [`Dimension`]s together.
