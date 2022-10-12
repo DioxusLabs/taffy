@@ -1,5 +1,14 @@
 # Release Notes
 
+## Unreleased
+
+### Unreleased Added
+
+- `taffy::style::Dimension` now implements the `+`, `-`, `*` and `/` operators.
+  - If both sides of the calculation have the same type (e.g. points), the result is calculated immediately.
+  - If both sides have different types (e.g. adding points and percentage), the new `Dimension::Calc` variant is constructed. The result will be calculated when the absolute value is resolved.
+  - If any side is `Dimension::Undefined`, the result will be `Dimension::Undefined`. The same happens for `Dimension::Auto`.
+
 ## 0.2.0
 
 ### 0.2.0 Added
@@ -14,7 +23,7 @@
 ### 0.2.0 Changed
 
 - `Size<f32>.zero()` is now `Size::<f32>::ZERO`
-- `Point<f32>.zero()` is now  `Point::<f32>::ZERO`
+- `Point<f32>.zero()` is now `Point::<f32>::ZERO`
 - renamed `taffy::node::Taffy.new_leaf()` -> `taffy::node::Taffy.new_leaf_with_measure()`
 - removed the public `Number` type; a more idiomatic `Option<f32>` is used instead
   - the associated public `MinMax` and `OrElse` traits have also been removed; these should never have been public
