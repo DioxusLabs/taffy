@@ -429,83 +429,83 @@ impl Default for FlexboxLayout {
 
 impl FlexboxLayout {
     /// If the `direction` is row-oriented, the min width. Otherwise the min height
-    pub(crate) fn min_main_size(&self, direction: FlexDirection) -> Dimension {
+    pub(crate) fn min_main_size(&self, direction: FlexDirection) -> &Dimension {
         if direction.is_row() {
-            self.min_size.clone().width
+            &self.min_size.width
         } else {
-            self.min_size.clone().height
+            &self.min_size.height
         }
     }
 
     /// If the `direction` is row-oriented, the max width. Otherwise the max height
-    pub(crate) fn max_main_size(&self, direction: FlexDirection) -> Dimension {
+    pub(crate) fn max_main_size(&self, direction: FlexDirection) -> &Dimension {
         if direction.is_row() {
-            self.max_size.clone().width
+            &self.max_size.width
         } else {
-            self.max_size.clone().height
+            &self.max_size.height
         }
     }
 
     /// If the `direction` is row-oriented, the margin start. Otherwise the margin top
-    pub(crate) fn main_margin_start(&self, direction: FlexDirection) -> Dimension {
+    pub(crate) fn main_margin_start(&self, direction: FlexDirection) -> &Dimension {
         if direction.is_row() {
-            self.margin.clone().start
+            &self.margin.start
         } else {
-            self.margin.clone().top
+            &self.margin.top
         }
     }
 
     /// If the `direction` is row-oriented, the margin end. Otherwise the margin bottom
-    pub(crate) fn main_margin_end(&self, direction: FlexDirection) -> Dimension {
+    pub(crate) fn main_margin_end(&self, direction: FlexDirection) -> &Dimension {
         if direction.is_row() {
-            self.margin.clone().end
+            &self.margin.end
         } else {
-            self.margin.clone().bottom
+            &self.margin.bottom
         }
     }
 
     /// If the `direction` is row-oriented, the height. Otherwise the width
-    pub(crate) fn cross_size(&self, direction: FlexDirection) -> Dimension {
+    pub(crate) fn cross_size(&self, direction: FlexDirection) -> &Dimension {
         if direction.is_row() {
-            self.size.clone().height
+            &self.size.height
         } else {
-            self.size.clone().width
+            &self.size.width
         }
     }
 
     /// If the `direction` is row-oriented, the min height. Otherwise the min width
-    pub(crate) fn min_cross_size(&self, direction: FlexDirection) -> Dimension {
+    pub(crate) fn min_cross_size(&self, direction: FlexDirection) -> &Dimension {
         if direction.is_row() {
-            self.min_size.clone().height
+            &self.min_size.height
         } else {
-            self.min_size.clone().width
+            &self.min_size.width
         }
     }
 
     /// If the `direction` is row-oriented, the max height. Otherwise the max width
-    pub(crate) fn max_cross_size(&self, direction: FlexDirection) -> Dimension {
+    pub(crate) fn max_cross_size(&self, direction: FlexDirection) -> &Dimension {
         if direction.is_row() {
-            self.max_size.clone().height
+            &self.max_size.height
         } else {
-            self.max_size.clone().width
+            &self.max_size.width
         }
     }
 
     /// If the `direction` is row-oriented, the margin top. Otherwise the margin start
-    pub(crate) fn cross_margin_start(&self, direction: FlexDirection) -> Dimension {
+    pub(crate) fn cross_margin_start(&self, direction: FlexDirection) -> &Dimension {
         if direction.is_row() {
-            self.margin.clone().top
+            &self.margin.top
         } else {
-            self.margin.clone().start
+            &self.margin.start
         }
     }
 
     /// If the `direction` is row-oriented, the margin bottom. Otherwise the margin end
-    pub(crate) fn cross_margin_end(&self, direction: FlexDirection) -> Dimension {
+    pub(crate) fn cross_margin_end(&self, direction: FlexDirection) -> &Dimension {
         if direction.is_row() {
-            self.margin.clone().bottom
+            &self.margin.bottom
         } else {
-            self.margin.clone().end
+            &self.margin.end
         }
     }
 
