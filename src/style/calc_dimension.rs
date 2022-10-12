@@ -14,16 +14,16 @@ use super::Dimension;
 #[derive(Clone, PartialEq, Debug)]
 pub enum CalcDimension {
     /// Add two [`Dimension`]s together.
-    Add(Box<Dimension>, Box<Dimension>),
+    Add(Dimension, Dimension),
 
     /// Subtract the right [`Dimension`] from the left one.
-    Sub(Box<Dimension>, Box<Dimension>),
+    Sub(Dimension, Dimension),
 
     /// Multiply a [`Dimension`] with a constant.
-    Mul(Box<Dimension>, f32),
+    Mul(Dimension, f32),
 
     /// Divide a [`Dimension`] by a constant.
-    Div(Box<Dimension>, f32),
+    Div(Dimension, f32),
 }
 
 impl MaybeResolve<Option<f32>> for CalcDimension {

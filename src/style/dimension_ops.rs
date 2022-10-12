@@ -42,9 +42,11 @@ impl Add<Dimension> for Dimension {
     /// #
     /// let result = Dimension::Points(5.0) + Dimension::Percent(80.0);
     /// let expected = Dimension::Calc(
-    ///     CalcDimension::Add(
-    ///         Box::new(Dimension::Points(5.0)),
-    ///         Box::new(Dimension::Percent(80.0))
+    ///     Box::new(
+    ///         CalcDimension::Add(
+    ///             Dimension::Points(5.0),
+    ///             Dimension::Percent(80.0)
+    ///         )
     ///     )
     /// );
     /// assert_eq!(result, expected);
@@ -56,7 +58,7 @@ impl Add<Dimension> for Dimension {
             (Dimension::Points(lhs), Dimension::Points(rhs)) => Dimension::Points(lhs + rhs),
             (Dimension::Percent(lhs), Dimension::Percent(rhs)) => Dimension::Percent(lhs + rhs),
             // Result can't be known in advance, defer calculation until resolving the actual values
-            (lhs, rhs) => Dimension::Calc(CalcDimension::Add(Box::new(lhs), Box::new(rhs))),
+            (lhs, rhs) => Dimension::Calc(Box::new(CalcDimension::Add(lhs, rhs))),
         }
     }
 }
@@ -99,9 +101,11 @@ impl Sub<Dimension> for Dimension {
     /// #
     /// let result = Dimension::Percent(80.0) - Dimension::Points(5.0);
     /// let expected = Dimension::Calc(
-    ///     CalcDimension::Sub(
-    ///         Box::new(Dimension::Percent(80.0)),
-    ///         Box::new(Dimension::Points(5.0))
+    ///     Box::new(
+    ///         CalcDimension::Sub(
+    ///             Dimension::Percent(80.0),
+    ///             Dimension::Points(5.0)
+    ///         )
     ///     )
     /// );
     /// assert_eq!(result, expected);
@@ -113,7 +117,7 @@ impl Sub<Dimension> for Dimension {
             (Dimension::Points(lhs), Dimension::Points(rhs)) => Dimension::Points(lhs - rhs),
             (Dimension::Percent(lhs), Dimension::Percent(rhs)) => Dimension::Percent(lhs - rhs),
             // Result can't be known in advance, defer calculation until resolving the actual values
-            (lhs, rhs) => Dimension::Calc(CalcDimension::Sub(Box::new(lhs), Box::new(rhs))),
+            (lhs, rhs) => Dimension::Calc(Box::new(CalcDimension::Sub(lhs, rhs))),
         }
     }
 }
@@ -155,23 +159,27 @@ impl Mul<f32> for Dimension {
     /// # use taffy::style::CalcDimension;
     /// #
     /// let lhs = Dimension::Calc(
-    ///     CalcDimension::Sub(
-    ///         Box::new(Dimension::Percent(80.0)),
-    ///         Box::new(Dimension::Points(5.0))
+    ///     Box::new(
+    ///         CalcDimension::Sub(
+    ///             Dimension::Percent(80.0),
+    ///             Dimension::Points(5.0)
+    ///         )
     ///     )
     /// );
     /// let result = lhs * 3.0;
     /// let expected = Dimension::Calc(
-    ///     CalcDimension::Mul(
-    ///         Box::new(
+    ///     Box::new(
+    ///         CalcDimension::Mul(
     ///             Dimension::Calc(
-    ///                 CalcDimension::Sub(
-    ///                     Box::new(Dimension::Percent(80.0)),
-    ///                     Box::new(Dimension::Points(5.0))
+    ///                 Box::new(
+    ///                     CalcDimension::Sub(
+    ///                         Dimension::Percent(80.0),
+    ///                         Dimension::Points(5.0)
+    ///                     )
     ///                 )
-    ///             )
-    ///         ),
-    ///         3.0
+    ///             ),
+    ///             3.0
+    ///         )
     ///     )
     /// );
     /// assert_eq!(result, expected);
@@ -183,7 +191,7 @@ impl Mul<f32> for Dimension {
             Dimension::Points(lhs) => Dimension::Points(lhs * factor),
             Dimension::Percent(lhs) => Dimension::Percent(lhs * factor),
             // Result can't be known in advance, defer calculation until resolving the actual values
-            lhs => Dimension::Calc(CalcDimension::Mul(Box::new(lhs), factor)),
+            lhs => Dimension::Calc(Box::new(CalcDimension::Mul(lhs, factor))),
         }
     }
 }
@@ -225,23 +233,27 @@ impl Mul<Dimension> for f32 {
     /// # use taffy::style::CalcDimension;
     /// #
     /// let lhs = Dimension::Calc(
-    ///     CalcDimension::Sub(
-    ///         Box::new(Dimension::Percent(80.0)),
-    ///         Box::new(Dimension::Points(5.0))
+    ///     Box::new(
+    ///         CalcDimension::Sub(
+    ///             Dimension::Percent(80.0),
+    ///             Dimension::Points(5.0)
+    ///         )
     ///     )
     /// );
     /// let result = 3.0 * lhs;
     /// let expected = Dimension::Calc(
-    ///     CalcDimension::Mul(
-    ///         Box::new(
+    ///     Box::new(
+    ///         CalcDimension::Mul(
     ///             Dimension::Calc(
-    ///                 CalcDimension::Sub(
-    ///                     Box::new(Dimension::Percent(80.0)),
-    ///                     Box::new(Dimension::Points(5.0))
+    ///                 Box::new(
+    ///                     CalcDimension::Sub(
+    ///                         Dimension::Percent(80.0),
+    ///                         Dimension::Points(5.0)
+    ///                     )
     ///                 )
-    ///             )
-    ///         ),
-    ///         3.0
+    ///             ),
+    ///             3.0
+    ///         )
     ///     )
     /// );
     /// assert_eq!(result, expected);
@@ -253,7 +265,7 @@ impl Mul<Dimension> for f32 {
             Dimension::Points(lhs) => Dimension::Points(lhs * self),
             Dimension::Percent(lhs) => Dimension::Percent(lhs * self),
             // Result can't be known in advance, defer calculation until resolving the actual values
-            rhs => Dimension::Calc(CalcDimension::Mul(Box::new(rhs), self)),
+            rhs => Dimension::Calc(Box::new(CalcDimension::Mul(rhs, self))),
         }
     }
 }
@@ -295,23 +307,27 @@ impl Div<f32> for Dimension {
     /// # use taffy::style::CalcDimension;
     /// #
     /// let lhs = Dimension::Calc(
-    ///     CalcDimension::Sub(
-    ///         Box::new(Dimension::Percent(80.0)),
-    ///         Box::new(Dimension::Points(5.0))
+    ///     Box::new(
+    ///         CalcDimension::Sub(
+    ///             Dimension::Percent(80.0),
+    ///             Dimension::Points(5.0)
+    ///         )
     ///     )
     /// );
     /// let result = lhs / 3.0;
     /// let expected = Dimension::Calc(
-    ///     CalcDimension::Div(
-    ///         Box::new(
+    ///     Box::new(
+    ///         CalcDimension::Div(
     ///             Dimension::Calc(
-    ///                 CalcDimension::Sub(
-    ///                     Box::new(Dimension::Percent(80.0)),
-    ///                     Box::new(Dimension::Points(5.0))
+    ///                 Box::new(
+    ///                     CalcDimension::Sub(
+    ///                         Dimension::Percent(80.0),
+    ///                         Dimension::Points(5.0)
+    ///                     )
     ///                 )
-    ///             )
-    ///         ),
-    ///         3.0
+    ///             ),
+    ///             3.0
+    ///         )
     ///     )
     /// );
     /// assert_eq!(result, expected);
@@ -323,7 +339,7 @@ impl Div<f32> for Dimension {
             Dimension::Points(lhs) => Dimension::Points(lhs / divisor),
             Dimension::Percent(lhs) => Dimension::Percent(lhs / divisor),
             // Result can't be known in advance, defer calculation until resolving the actual values
-            lhs => Dimension::Calc(CalcDimension::Div(Box::new(lhs), divisor)),
+            lhs => Dimension::Calc(Box::new(CalcDimension::Div(lhs, divisor))),
         }
     }
 }

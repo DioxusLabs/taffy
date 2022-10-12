@@ -39,9 +39,11 @@ pub enum Dimension {
     /// #
     /// let calc = Dimension::Points(10.0) + Dimension::Percent(50.0);
     /// let expected = Dimension::Calc(
-    ///     CalcDimension::Add(
-    ///         Box::new(Dimension::Points(10.0)),
-    ///         Box::new(Dimension::Percent(50.0))
+    ///     Box::new(
+    ///         CalcDimension::Add(
+    ///             Dimension::Points(10.0),
+    ///             Dimension::Percent(50.0)
+    ///         )
     ///     )
     /// );
     /// assert_eq!(calc, expected);
@@ -50,7 +52,7 @@ pub enum Dimension {
     /// The actual result is then calculated when resolving the absolute values.
     /// See [`Dimension::maybe_resolve`].
     #[cfg(feature = "std")]
-    Calc(CalcDimension),
+    Calc(Box<CalcDimension>),
 }
 
 impl Default for Dimension {
