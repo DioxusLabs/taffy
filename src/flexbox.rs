@@ -1820,25 +1820,25 @@ mod tests {
         let mut tree = Taffy::with_capacity(16);
 
         let style = FlexboxLayout::default();
-        let node_id = tree.new_leaf(style).unwrap();
+        let node_id = tree.new_leaf(style.clone()).unwrap();
 
         let node_size = Size::NONE;
         let parent_size = Size::NONE;
 
         let constants = Taffy::compute_constants(&tree.nodes[node_id], node_size, parent_size);
 
-        assert!(constants.dir == style.flex_direction);
-        assert!(constants.is_row == style.flex_direction.is_row());
-        assert!(constants.is_column == style.flex_direction.is_column());
-        assert!(constants.is_wrap_reverse == (style.flex_wrap == FlexWrap::WrapReverse));
+        assert!(constants.dir == style.clone().flex_direction);
+        assert!(constants.is_row == style.clone().flex_direction.is_row());
+        assert!(constants.is_column == style.clone().flex_direction.is_column());
+        assert!(constants.is_wrap_reverse == (style.clone().flex_wrap == FlexWrap::WrapReverse));
 
-        let margin = style.margin.resolve_or_default(parent_size);
+        let margin = style.clone().margin.resolve_or_default(parent_size);
         assert_eq!(constants.margin, margin);
 
-        let border = style.border.resolve_or_default(parent_size);
+        let border = style.clone().border.resolve_or_default(parent_size);
         assert_eq!(constants.border, border);
 
-        let padding = style.padding.resolve_or_default(parent_size);
+        let padding = style.clone().padding.resolve_or_default(parent_size);
 
         // TODO: Replace with something less hardcoded?
         let padding_border = Rect {
@@ -1868,15 +1868,15 @@ mod tests {
         let style: FlexboxLayout =
             FlexboxLayout { display: Flex, size: Size::from_points(50.0, 50.0), ..Default::default() };
 
-        let grandchild_00 = taffy.new_leaf(style).unwrap();
+        let grandchild_00 = taffy.new_leaf(style.clone()).unwrap();
 
-        let grandchild_01 = taffy.new_leaf(style).unwrap();
+        let grandchild_01 = taffy.new_leaf(style.clone()).unwrap();
 
-        let grandchild_02 = taffy.new_leaf(style).unwrap();
+        let grandchild_02 = taffy.new_leaf(style.clone()).unwrap();
 
-        let child_00 = taffy.new_with_children(style, &[grandchild_00, grandchild_01]).unwrap();
+        let child_00 = taffy.new_with_children(style.clone(), &[grandchild_00, grandchild_01]).unwrap();
 
-        let child_01 = taffy.new_with_children(style, &[grandchild_02]).unwrap();
+        let child_01 = taffy.new_with_children(style.clone(), &[grandchild_02]).unwrap();
 
         let root = taffy
             .new_with_children(
