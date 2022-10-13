@@ -140,6 +140,179 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, size: Size<Option<f32>>) 
     round_layout(tree, root, 0.0, 0.0);
 }
 
+/// Compute a preliminary size for an item
+fn compute_preliminary(
+    tree: &mut impl LayoutTree,
+    node: Node,
+    node_size: Size<Option<f32>>,
+    parent_size: Size<Option<f32>>,
+    perform_layout: bool,
+    main_size: bool,
+) -> Size<f32> {
+    // clear the dirtiness of the node now that we've computed it
+    tree.mark_dirty(node, false);
+
+    // First we check if we have a result for the given input
+    if let Some(cached_size) = compute_from_cache(tree, node, node_size, parent_size, perform_layout, main_size) {
+        return cached_size;
+    }
+
+    // Define some general constants we will need for the remainder of the algorithm.
+    let mut constants = compute_constants(tree.style(node), node_size, parent_size);
+
+    // If this is a leaf node we can skip a lot of this function in some cases
+    if tree.children(node).is_empty() {
+        if node_size.width.is_some() && node_size.height.is_some() {
+            return node_size.map(|s| s.unwrap_or(0.0));
+        }
+
+        if tree.needs_measure(node) {
+            let converted_size = tree.measure_node(node, node_size);
+            *cache(tree, node, main_size) =
+                Some(Cache { node_size, parent_size, perform_layout, size: converted_size });
+            return converted_size;
+        }
+
+        return Size {
+            width: node_size.width.unwrap_or(0.0) + constants.padding_border.horizontal_axis_sum(),
+            height: node_size.height.unwrap_or(0.0) + constants.padding_border.vertical_axis_sum(),
+        };
+    }
+
+    // 9. Flex Layout Algorithm
+
+    // 9.1. Initial Setup
+
+    // 1. Generate anonymous flex items as described in §4 Flex Items.
+    let mut flex_items = generate_anonymous_flex_items(tree, node, &constants);
+
+    // 9.2. Line Length Determination
+
+    // 2. Determine the available main and cross space for the flex items.
+    let available_space = determine_available_space(node_size, parent_size, &constants);
+
+    let has_baseline_child =
+        flex_items.iter().any(|child| tree.style(child.node).align_self(tree.style(node)) == AlignSelf::Baseline);
+
+    // 3. Determine the flex base size and hypothetical main size of each item.
+    determine_flex_base_size(tree, node, node_size, &constants, available_space, &mut flex_items);
+
+    // TODO: Add step 4 according to spec: https://www.w3.org/TR/css-flexbox-1/#algo-main-container
+    // 9.3. Main Size Determination
+
+    // 5. Collect flex items into flex lines.
+    let mut flex_lines = collect_flex_lines(tree, node, &constants, available_space, &mut flex_items);
+
+    // 6. Resolve the flexible lengths of all the flex items to find their used main size.
+    for line in &mut flex_lines {
+        resolve_flexible_lengths(tree, line, &constants, available_space);
+    }
+
+    // TODO: Cleanup and make according to spec
+    // Not part of the spec from what i can see but seems correct
+    constants.container_size.set_main(
+        constants.dir,
+        node_size.main(constants.dir).unwrap_or({
+            let longest_line = flex_lines.iter().fold(f32::MIN, |acc, line| {
+                let length: f32 = line.items.iter().map(|item| item.outer_target_size.main(constants.dir)).sum();
+                acc.max(length)
+            });
+
+            let size = longest_line + constants.padding_border.main_axis_sum(constants.dir);
+            match available_space.main(constants.dir) {
+                Some(val) if flex_lines.len() > 1 && size < val => val,
+                _ => size,
+            }
+        }),
+    );
+
+    constants.inner_container_size.set_main(
+        constants.dir,
+        constants.container_size.main(constants.dir) - constants.padding_border.main_axis_sum(constants.dir),
+    );
+
+    // 9.4. Cross Size Determination
+
+    // 7. Determine the hypothetical cross size of each item.
+    for line in &mut flex_lines {
+        determine_hypothetical_cross_size(tree, line, &constants, available_space);
+    }
+
+    // TODO - probably should move this somewhere else as it doesn't make a ton of sense here but we need it below
+    // TODO - This is expensive and should only be done if we really require a baseline. aka, make it lazy
+    if has_baseline_child {
+        calculate_children_base_lines(tree, node, node_size, &mut flex_lines, &constants);
+    }
+
+    // 8. Calculate the cross size of each flex line.
+    calculate_cross_size(tree, &mut flex_lines, node, node_size, &constants);
+
+    // 9. Handle 'align-content: stretch'.
+    handle_align_content_stretch(tree, &mut flex_lines, node, node_size, &constants);
+
+    // 10. Collapse visibility:collapse items. If any flex items have visibility: collapse,
+    //     note the cross size of the line they’re in as the item’s strut size, and restart
+    //     layout from the beginning.
+    //
+    //     In this second layout round, when collecting items into lines, treat the collapsed
+    //     items as having zero main size. For the rest of the algorithm following that step,
+    //     ignore the collapsed items entirely (as if they were display:none) except that after
+    //     calculating the cross size of the lines, if any line’s cross size is less than the
+    //     largest strut size among all the collapsed items in the line, set its cross size to
+    //     that strut size.
+    //
+    //     Skip this step in the second layout round.
+
+    // TODO implement once (if ever) we support visibility:collapse
+
+    // 11. Determine the used cross size of each flex item.
+    determine_used_cross_size(tree, &mut flex_lines, node, &constants);
+
+    // 9.5. Main-Axis Alignment
+
+    // 12. Distribute any remaining free space.
+    distribute_remaining_free_space(tree, &mut flex_lines, node, &constants);
+
+    // 9.6. Cross-Axis Alignment
+
+    // 13. Resolve cross-axis auto margins (also includes 14).
+    resolve_cross_axis_auto_margins(tree, &mut flex_lines, node, &constants);
+
+    // 15. Determine the flex container’s used cross size.
+    let total_cross_size = determine_container_cross_size(&mut flex_lines, node_size, &mut constants);
+
+    // We have the container size.
+    // If our caller does not care about performing layout we are done now.
+    if !perform_layout {
+        let container_size = constants.container_size;
+        *cache(tree, node, main_size) = Some(Cache { node_size, parent_size, perform_layout, size: container_size });
+        return container_size;
+    }
+
+    // 16. Align all flex lines per align-content.
+    align_flex_lines_per_align_content(tree, &mut flex_lines, node, &constants, total_cross_size);
+
+    // Do a final layout pass and gather the resulting layouts
+    final_layout_pass(tree, node, &mut flex_lines, &constants);
+
+    // Before returning we perform absolute layout on all absolutely positioned children
+    perform_absolute_layout_on_absolute_children(tree, node, &constants);
+
+    let len = tree.children(node).len();
+    for order in 0..len {
+        let child = tree.child(node, order);
+        if tree.style(child).display == Display::None {
+            // if self.nodes[*child].style.display == Display::None {
+            hidden_layout(tree, child, order as _);
+        }
+    }
+
+    let container_size = constants.container_size;
+    *cache(tree, node, main_size) = Some(Cache { node_size, parent_size, perform_layout, size: container_size });
+
+    container_size
+}
+
 /// Rounds the calculated [`NodeData`] according to the spec
 fn round_layout(tree: &mut impl LayoutTree, root: Node, abs_x: f32, abs_y: f32) {
     let layout = tree.layout_mut(root);
@@ -1620,179 +1793,6 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
             },
         };
     }
-}
-
-/// Compute a preliminary size for an item
-fn compute_preliminary(
-    tree: &mut impl LayoutTree,
-    node: Node,
-    node_size: Size<Option<f32>>,
-    parent_size: Size<Option<f32>>,
-    perform_layout: bool,
-    main_size: bool,
-) -> Size<f32> {
-    // clear the dirtiness of the node now that we've computed it
-    tree.mark_dirty(node, false);
-
-    // First we check if we have a result for the given input
-    if let Some(cached_size) = compute_from_cache(tree, node, node_size, parent_size, perform_layout, main_size) {
-        return cached_size;
-    }
-
-    // Define some general constants we will need for the remainder of the algorithm.
-    let mut constants = compute_constants(tree.style(node), node_size, parent_size);
-
-    // If this is a leaf node we can skip a lot of this function in some cases
-    if tree.children(node).is_empty() {
-        if node_size.width.is_some() && node_size.height.is_some() {
-            return node_size.map(|s| s.unwrap_or(0.0));
-        }
-
-        if tree.needs_measure(node) {
-            let converted_size = tree.measure_node(node, node_size);
-            *cache(tree, node, main_size) =
-                Some(Cache { node_size, parent_size, perform_layout, size: converted_size });
-            return converted_size;
-        }
-
-        return Size {
-            width: node_size.width.unwrap_or(0.0) + constants.padding_border.horizontal_axis_sum(),
-            height: node_size.height.unwrap_or(0.0) + constants.padding_border.vertical_axis_sum(),
-        };
-    }
-
-    // 9. Flex Layout Algorithm
-
-    // 9.1. Initial Setup
-
-    // 1. Generate anonymous flex items as described in §4 Flex Items.
-    let mut flex_items = generate_anonymous_flex_items(tree, node, &constants);
-
-    // 9.2. Line Length Determination
-
-    // 2. Determine the available main and cross space for the flex items.
-    let available_space = determine_available_space(node_size, parent_size, &constants);
-
-    let has_baseline_child =
-        flex_items.iter().any(|child| tree.style(child.node).align_self(tree.style(node)) == AlignSelf::Baseline);
-
-    // 3. Determine the flex base size and hypothetical main size of each item.
-    determine_flex_base_size(tree, node, node_size, &constants, available_space, &mut flex_items);
-
-    // TODO: Add step 4 according to spec: https://www.w3.org/TR/css-flexbox-1/#algo-main-container
-    // 9.3. Main Size Determination
-
-    // 5. Collect flex items into flex lines.
-    let mut flex_lines = collect_flex_lines(tree, node, &constants, available_space, &mut flex_items);
-
-    // 6. Resolve the flexible lengths of all the flex items to find their used main size.
-    for line in &mut flex_lines {
-        resolve_flexible_lengths(tree, line, &constants, available_space);
-    }
-
-    // TODO: Cleanup and make according to spec
-    // Not part of the spec from what i can see but seems correct
-    constants.container_size.set_main(
-        constants.dir,
-        node_size.main(constants.dir).unwrap_or({
-            let longest_line = flex_lines.iter().fold(f32::MIN, |acc, line| {
-                let length: f32 = line.items.iter().map(|item| item.outer_target_size.main(constants.dir)).sum();
-                acc.max(length)
-            });
-
-            let size = longest_line + constants.padding_border.main_axis_sum(constants.dir);
-            match available_space.main(constants.dir) {
-                Some(val) if flex_lines.len() > 1 && size < val => val,
-                _ => size,
-            }
-        }),
-    );
-
-    constants.inner_container_size.set_main(
-        constants.dir,
-        constants.container_size.main(constants.dir) - constants.padding_border.main_axis_sum(constants.dir),
-    );
-
-    // 9.4. Cross Size Determination
-
-    // 7. Determine the hypothetical cross size of each item.
-    for line in &mut flex_lines {
-        determine_hypothetical_cross_size(tree, line, &constants, available_space);
-    }
-
-    // TODO - probably should move this somewhere else as it doesn't make a ton of sense here but we need it below
-    // TODO - This is expensive and should only be done if we really require a baseline. aka, make it lazy
-    if has_baseline_child {
-        calculate_children_base_lines(tree, node, node_size, &mut flex_lines, &constants);
-    }
-
-    // 8. Calculate the cross size of each flex line.
-    calculate_cross_size(tree, &mut flex_lines, node, node_size, &constants);
-
-    // 9. Handle 'align-content: stretch'.
-    handle_align_content_stretch(tree, &mut flex_lines, node, node_size, &constants);
-
-    // 10. Collapse visibility:collapse items. If any flex items have visibility: collapse,
-    //     note the cross size of the line they’re in as the item’s strut size, and restart
-    //     layout from the beginning.
-    //
-    //     In this second layout round, when collecting items into lines, treat the collapsed
-    //     items as having zero main size. For the rest of the algorithm following that step,
-    //     ignore the collapsed items entirely (as if they were display:none) except that after
-    //     calculating the cross size of the lines, if any line’s cross size is less than the
-    //     largest strut size among all the collapsed items in the line, set its cross size to
-    //     that strut size.
-    //
-    //     Skip this step in the second layout round.
-
-    // TODO implement once (if ever) we support visibility:collapse
-
-    // 11. Determine the used cross size of each flex item.
-    determine_used_cross_size(tree, &mut flex_lines, node, &constants);
-
-    // 9.5. Main-Axis Alignment
-
-    // 12. Distribute any remaining free space.
-    distribute_remaining_free_space(tree, &mut flex_lines, node, &constants);
-
-    // 9.6. Cross-Axis Alignment
-
-    // 13. Resolve cross-axis auto margins (also includes 14).
-    resolve_cross_axis_auto_margins(tree, &mut flex_lines, node, &constants);
-
-    // 15. Determine the flex container’s used cross size.
-    let total_cross_size = determine_container_cross_size(&mut flex_lines, node_size, &mut constants);
-
-    // We have the container size.
-    // If our caller does not care about performing layout we are done now.
-    if !perform_layout {
-        let container_size = constants.container_size;
-        *cache(tree, node, main_size) = Some(Cache { node_size, parent_size, perform_layout, size: container_size });
-        return container_size;
-    }
-
-    // 16. Align all flex lines per align-content.
-    align_flex_lines_per_align_content(tree, &mut flex_lines, node, &constants, total_cross_size);
-
-    // Do a final layout pass and gather the resulting layouts
-    final_layout_pass(tree, node, &mut flex_lines, &constants);
-
-    // Before returning we perform absolute layout on all absolutely positioned children
-    perform_absolute_layout_on_absolute_children(tree, node, &constants);
-
-    let len = tree.children(node).len();
-    for order in 0..len {
-        let child = tree.child(node, order);
-        if tree.style(child).display == Display::None {
-            // if self.nodes[*child].style.display == Display::None {
-            hidden_layout(tree, child, order as _);
-        }
-    }
-
-    let container_size = constants.container_size;
-    *cache(tree, node, main_size) = Some(Cache { node_size, parent_size, perform_layout, size: container_size });
-
-    container_size
 }
 
 /// Creates a layout for this node and its children, recursively.
