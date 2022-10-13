@@ -1381,8 +1381,7 @@ fn calculate_flex_item(
         },
     };
 
-    *total_offset_main +=
-        item.offset_main + item.margin.main_axis_sum(direction) + preliminary_size.main(direction);
+    *total_offset_main += item.offset_main + item.margin.main_axis_sum(direction) + preliminary_size.main(direction);
 }
 
 /// Calculates the layout line
@@ -1798,13 +1797,9 @@ fn compute_preliminary(
 
 /// Creates a layout for this node and its children, recursively.
 /// Each hidden node has zero size and is placed at the origin
-fn hidden_layout(
-    tree: &mut impl LayoutTree,
-    node: Node,
-    order: u32,
-) {
+fn hidden_layout(tree: &mut impl LayoutTree, node: Node, order: u32) {
     *tree.layout_mut(node) = Layout::with_order(order);
-    
+
     let len = tree.children(node).len();
     for order in 0..len {
         hidden_layout(tree, tree.child(node, order), order as _);

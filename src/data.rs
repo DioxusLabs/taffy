@@ -26,7 +26,6 @@ pub(crate) struct NodeData {
 }
 
 impl NodeData {
-
     /// Create the data for a new node
     #[must_use]
     pub const fn new(style: FlexboxLayout) -> Self {
