@@ -79,7 +79,7 @@ struct FlexLine<'a> {
 
 /// Values that can be cached during the flexbox algorithm
 struct AlgoConstants {
-    /// The direction of the current segment being layed out
+    /// The direction of the current segment being laid out
     dir: FlexDirection,
     /// Is this segment a row
     is_row: bool,
@@ -451,7 +451,7 @@ fn determine_flex_base_size(
         // The following logic was developed not from the spec but by trail and error looking into how
         // webkit handled various scenarios. Can probably be solved better by passing in
         // min-content max-content constraints from the top
-        let min_main = compute_preliminary(tree, child.node, Size::undefined(), available_space, false, false)
+        let min_main = compute_preliminary(tree, child.node, Size::NONE, available_space, false, false)
             .main(constants.dir)
             .maybe_max(child.min_size.main(constants.dir))
             .maybe_min(child.size.main(constants.dir))
@@ -479,7 +479,7 @@ fn determine_flex_base_size(
 ///
 ///     - Otherwise, starting from the first uncollected item, collect consecutive items one by one until the first time that the next collected item would not fit into the flex container’s inner main size
 ///         (or until a forced break is encountered, see [§10 Fragmenting Flex Layout](https://www.w3.org/TR/css-flexbox-1/#pagination)).
-///         If the very first uncollected item wouldn’t fit, collect just it into the line.
+///         If the very first uncollected item wouldn't fit, collect just it into the line.
 ///
 ///         For this step, the size of a flex item is its outer hypothetical main size. (**Note: This can be negative**.)
 ///
@@ -706,7 +706,7 @@ fn resolve_flexible_lengths(
             // min-content max-content constraints from the top. Need to figure out correct thing to do here as
             // just piling on more conditionals.
             let min_main = if constants.is_row && !tree.needs_measure(child.node) {
-                compute_preliminary(tree, child.node, Size::undefined(), available_space, false, false)
+                compute_preliminary(tree, child.node, Size::NONE, available_space, false, false)
                     .width
                     .maybe_min(child.size.width)
                     .maybe_max(child.min_size.width)
@@ -1315,6 +1315,7 @@ fn align_flex_lines_per_align_content(
                 }
             }
             AlignContent::Stretch => 0.0,
+            AlignContent::SpaceEvenly => free_space / (num_lines + 1) as f32,
             AlignContent::SpaceBetween => {
                 if is_first {
                     0.0
@@ -1339,64 +1340,124 @@ fn align_flex_lines_per_align_content(
     }
 }
 
+/// Calculates the layout for a flex-item
+#[allow(clippy::too_many_arguments)]
+fn calculate_flex_item(
+    tree: &mut impl LayoutTree,
+    node: Node,
+    item: &mut FlexItem,
+    total_offset_main: &mut f32,
+    total_offset_cross: f32,
+    line_offset_cross: f32,
+    container_size: Size<f32>,
+    direction: FlexDirection,
+) {
+    let preliminary_size = compute_preliminary(
+        tree,
+        item.node,
+        item.target_size.map(|s| s.into()),
+        container_size.map(|s| s.into()),
+        true,
+        false,
+    );
+
+    let offset_main = *total_offset_main
+        + item.offset_main
+        + item.margin.main_start(direction)
+        + (item.position.main_start(direction).unwrap_or(0.0) - item.position.main_end(direction).unwrap_or(0.0));
+
+    let offset_cross = total_offset_cross
+        + item.offset_cross
+        + line_offset_cross
+        + item.margin.cross_start(direction)
+        + (item.position.cross_start(direction).unwrap_or(0.0) - item.position.cross_end(direction).unwrap_or(0.0));
+
+    *tree.layout_mut(item.node) = Layout {
+        order: tree.children(node).iter().position(|n| *n == item.node).unwrap() as u32,
+        size: preliminary_size,
+        location: Point {
+            x: if direction.is_row() { offset_main } else { offset_cross },
+            y: if direction.is_column() { offset_main } else { offset_cross },
+        },
+    };
+
+    *total_offset_main +=
+        item.offset_main + item.margin.main_axis_sum(direction) + preliminary_size.main(direction);
+}
+
+/// Calculates the layout line
+fn calculate_layout_line(
+    tree: &mut impl LayoutTree,
+    node: Node,
+    line: &mut FlexLine,
+    total_offset_cross: &mut f32,
+    container_size: Size<f32>,
+    padding_border: Rect<f32>,
+    direction: FlexDirection,
+) {
+    let mut total_offset_main = padding_border.main_start(direction);
+    let line_offset_cross = line.offset_cross;
+
+    if direction.is_reverse() {
+        for item in line.items.iter_mut().rev() {
+            calculate_flex_item(
+                tree,
+                node,
+                item,
+                &mut total_offset_main,
+                *total_offset_cross,
+                line_offset_cross,
+                container_size,
+                direction,
+            );
+        }
+    } else {
+        for item in line.items.iter_mut() {
+            calculate_flex_item(
+                tree,
+                node,
+                item,
+                &mut total_offset_main,
+                *total_offset_cross,
+                line_offset_cross,
+                container_size,
+                direction,
+            );
+        }
+    }
+
+    *total_offset_cross += line_offset_cross + line.cross_size;
+}
+
 /// Do a final layout pass and collect the resulting layouts.
 #[inline]
 fn final_layout_pass(tree: &mut impl LayoutTree, node: Node, flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
     let mut total_offset_cross = constants.padding_border.cross_start(constants.dir);
 
-    let layout_line = |line: &mut FlexLine| {
-        let mut total_offset_main = constants.padding_border.main_start(constants.dir);
-        let line_offset_cross = line.offset_cross;
-
-        let layout_item = |child: &mut FlexItem| {
-            let preliminary_size = compute_preliminary(
-                tree,
-                child.node,
-                child.target_size.map(|s| s.into()),
-                constants.container_size.map(|s| s.into()),
-                true,
-                false,
-            );
-
-            let offset_main = total_offset_main
-                + child.offset_main
-                + child.margin.main_start(constants.dir)
-                + (child.position.main_start(constants.dir).unwrap_or(0.0)
-                    - child.position.main_end(constants.dir).unwrap_or(0.0));
-
-            let offset_cross = total_offset_cross
-                + child.offset_cross
-                + line_offset_cross
-                + child.margin.cross_start(constants.dir)
-                + (child.position.cross_start(constants.dir).unwrap_or(0.0)
-                    - child.position.cross_end(constants.dir).unwrap_or(0.0));
-
-            *tree.layout_mut(child.node) = Layout {
-                order: tree.children(node).iter().position(|n| *n == child.node).unwrap() as u32,
-                size: preliminary_size,
-                location: Point {
-                    x: if constants.is_row { offset_main } else { offset_cross },
-                    y: if constants.is_column { offset_main } else { offset_cross },
-                },
-            };
-
-            total_offset_main +=
-                child.offset_main + child.margin.main_axis_sum(constants.dir) + preliminary_size.main(constants.dir);
-        };
-
-        if constants.dir.is_reverse() {
-            line.items.iter_mut().rev().for_each(layout_item);
-        } else {
-            line.items.iter_mut().for_each(layout_item);
-        }
-
-        total_offset_cross += line_offset_cross + line.cross_size;
-    };
-
     if constants.is_wrap_reverse {
-        flex_lines.iter_mut().rev().for_each(layout_line);
+        for line in flex_lines.iter_mut().rev() {
+            calculate_layout_line(
+                tree,
+                node,
+                line,
+                &mut total_offset_cross,
+                constants.container_size,
+                constants.padding_border,
+                constants.dir,
+            );
+        }
     } else {
-        flex_lines.iter_mut().for_each(layout_line);
+        for line in flex_lines.iter_mut() {
+            calculate_layout_line(
+                tree,
+                node,
+                line,
+                &mut total_offset_cross,
+                constants.container_size,
+                constants.padding_border,
+                constants.dir,
+            );
+        }
     }
 }
 
@@ -1720,29 +1781,6 @@ fn compute_preliminary(
     // Before returning we perform absolute layout on all absolutely positioned children
     perform_absolute_layout_on_absolute_children(tree, node, &constants);
 
-    /// Lay out all hidden nodes recursively
-    ///
-    /// Each hidden node has zero size and is placed at the origin
-    fn hidden_layout(
-        tree: &mut impl LayoutTree,
-        // nodes: &mut SlotMap<Node, NodeData>,
-        // children: &SlotMap<Node, ChildrenVec<Node>>,
-        node: Node,
-        order: u32,
-    ) {
-        *tree.layout_mut(node) = Layout { order, size: Size::ZERO, location: Point::ZERO };
-        // nodes[node].layout = Layout { order, size: Size::ZERO, location: Point::ZERO };
-
-        let len = tree.children(node).len();
-        for order in 0..len {
-            hidden_layout(tree, tree.child(node, order), order as _);
-        }
-
-        // for (order, child) in children[node].iter().enumerate() {
-        //     hidden_layout(nodes, children, *child, order as _);
-        // }
-    }
-
     let len = tree.children(node).len();
     for order in 0..len {
         let child = tree.child(node, order);
@@ -1758,8 +1796,27 @@ fn compute_preliminary(
     container_size
 }
 
+/// Creates a layout for this node and its children, recursively.
+/// Each hidden node has zero size and is placed at the origin
+fn hidden_layout(
+    tree: &mut impl LayoutTree,
+    node: Node,
+    order: u32,
+) {
+    *tree.layout_mut(node) = Layout::with_order(order);
+    
+    let len = tree.children(node).len();
+    for order in 0..len {
+        hidden_layout(tree, tree.child(node, order), order as _);
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::flexbox::hidden_layout;
+    use crate::geometry::Point;
+    use crate::style::Display;
+    use crate::style::Display::Flex;
     use crate::{
         math::MaybeMath,
         prelude::{Rect, Size},
@@ -1776,8 +1833,8 @@ mod tests {
         let style = FlexboxLayout::default();
         let node_id = tree.new_leaf(style).unwrap();
 
-        let node_size = Size::undefined();
-        let parent_size = Size::undefined();
+        let node_size = Size::NONE;
+        let parent_size = Size::NONE;
 
         let constants = super::compute_constants(tree.style(node_id).unwrap(), node_size, parent_size);
         // let constants = super::compute_constants(&tree.nodes[node_id], node_size, parent_size);
@@ -1814,5 +1871,41 @@ mod tests {
 
         assert_eq!(constants.container_size, Size::ZERO);
         assert_eq!(constants.inner_container_size, Size::ZERO);
+    }
+
+    #[test]
+    fn hidden_layout_should_hide_recursively() {
+        let mut taffy = Taffy::new();
+
+        let style: FlexboxLayout =
+            FlexboxLayout { display: Flex, size: Size::from_points(50.0, 50.0), ..Default::default() };
+
+        let grandchild_00 = taffy.new_leaf(style).unwrap();
+
+        let grandchild_01 = taffy.new_leaf(style).unwrap();
+
+        let grandchild_02 = taffy.new_leaf(style).unwrap();
+
+        let child_00 = taffy.new_with_children(style, &[grandchild_00, grandchild_01]).unwrap();
+
+        let child_01 = taffy.new_with_children(style, &[grandchild_02]).unwrap();
+
+        let root = taffy
+            .new_with_children(
+                FlexboxLayout { display: Display::None, size: Size::from_points(50.0, 50.0), ..Default::default() },
+                &[child_00, child_01],
+            )
+            .unwrap();
+
+        hidden_layout(&mut taffy, root, 0);
+
+        // Whatever size and display-mode the nodes had previously,
+        // all layouts should resolve to ZERO due to the root's DISPLAY::NONE
+        for (node, _) in &taffy.nodes {
+            if let Ok(layout) = taffy.layout(node) {
+                assert_eq!(layout.size, Size::ZERO);
+                assert_eq!(layout.location, Point::ZERO);
+            }
+        }
     }
 }

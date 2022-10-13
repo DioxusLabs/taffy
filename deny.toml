@@ -14,14 +14,9 @@ unlicensed = "deny"
 copyleft = "deny"
 allow = [
     "MIT",
-    "MIT-0",
+    "Unicode-DFS-2016",
     "Apache-2.0",
-    "BSD-3-Clause",
-    "ISC",
     "Zlib",
-    "0BSD",
-    "BSD-2-Clause",
-    "CC0-1.0",
 ]
 default = "deny"
 

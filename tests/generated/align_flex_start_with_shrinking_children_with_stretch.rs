@@ -32,7 +32,7 @@ fn align_flex_start_with_shrinking_children_with_stretch() {
             &[node0],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+    taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
     assert_eq!(taffy.layout(node).unwrap().size.width, 500f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 500f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

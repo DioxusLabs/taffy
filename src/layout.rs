@@ -17,10 +17,23 @@ pub struct Layout {
 }
 
 impl Layout {
-    /// Creates a new [`Layout`] struct with zero size positioned at the origin
+    /// Creates a new zero-[`Layout`].
+    ///
+    /// The Zero-layout has size and location set to ZERO.
+    /// The `order` value of this layout is set to the minimum value of 0.
+    /// This means it should be rendered below all other [`Layout`]s.
     #[must_use]
-    pub(crate) fn new() -> Self {
+    pub const fn new() -> Self {
         Self { order: 0, size: Size::ZERO, location: Point::ZERO }
+    }
+
+    /// Creates a new zero-[`Layout`] with the supplied `order` value.
+    ///
+    /// Nodes with a higher order should be rendered on top of those with a lower order.
+    /// The Zero-layout has size and location set to ZERO.
+    #[must_use]
+    pub const fn with_order(order: u32) -> Self {
+        Self { order, size: Size::ZERO, location: Point::ZERO }
     }
 }
 

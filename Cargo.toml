@@ -6,7 +6,7 @@ authors = [
     "Johnathan Kelley <jkelleyrtp@gmail.com>",
 ]
 edition = "2021"
-include = ["src/**/*", "Cargo.toml"]
+include = ["src/**/*", "Cargo.toml", "README.md"]
 description = "A flexible UI layout library"
 repository = "https://github.com/DioxusLabs/taffy"
 keywords = ["cross-platform", "layout", "flexbox"]
@@ -15,23 +15,26 @@ license = "MIT"
 
 [dependencies]
 arrayvec = { version = "0.7", default-features = false }
-hash32 = "0.2"
-hash32-derive = "0.1"
 num-traits = { version = "0.2", default-features = false }
-typenum = "1"
-hashbrown = { version = "0.12", optional = true }
+rand = { version = "0.8.5", optional = true }
 serde = { version = "1.0", optional = true, features = ["serde_derive"] }
 slotmap = "1.0.6"
 
 [features]
 default = ["std"]
-alloc = ["hashbrown"]
+alloc = []
 std = ["num-traits/std"]
 serde = ["dep:serde"]
+random = ["dep:rand"]
 
 [dev-dependencies]
-criterion = "0.3"
+criterion = "0.4"
 rstest = "0.15.0"
+rand = "0.8.5"
+rand_chacha = "0.3.1"
+# We need to explicitly set a version here so that cargo deny doesn't complain
+# Don't forget to update this when bumping the version of taffy!
+taffy = { path = ".", version = "0.2.0", features = ["random"] }
 
 [profile.release]
 lto = true
@@ -45,6 +48,11 @@ harness = false
 [[bench]]
 name = "complex"
 path = "benches/complex.rs"
+harness = false
+
+[[bench]]
+name = "big_tree"
+path = "benches/big_tree.rs"
 harness = false
 
 [workspace]

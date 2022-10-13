@@ -47,7 +47,7 @@ fn justify_content_min_width_with_padding_child_width_greater_than_parent() {
             &[node0],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::undefined()).unwrap();
+    taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
     assert_eq!(taffy.layout(node).unwrap().size.width, 1000f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 1584f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

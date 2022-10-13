@@ -53,7 +53,7 @@ pub struct Taffy {
 
 impl Default for Taffy {
     fn default() -> Self {
-        Self::with_capacity(16)
+        Taffy::new()
     }
 }
 
@@ -115,13 +115,15 @@ impl Taffy {
     /// The default capacity of a [`Taffy`] is 16 nodes.
     #[must_use]
     pub fn new() -> Self {
-        Taffy::default()
+        Self::with_capacity(16)
     }
 
     /// Creates a new [`Taffy`] that can store `capacity` nodes before reallocation
     #[must_use]
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
+            // TODO: make this method const upstream,
+            // so constructors here can be const
             nodes: SlotMap::with_capacity(capacity),
             children: SlotMap::with_capacity(capacity),
             parents: SlotMap::with_capacity(capacity),
@@ -470,11 +472,11 @@ mod tests {
         let node = taffy
             .new_leaf_with_measure(FlexboxLayout::default(), MeasureFunc::Raw(|_| Size { width: 200.0, height: 200.0 }))
             .unwrap();
-        taffy.compute_layout(node, Size::undefined()).unwrap();
+        taffy.compute_layout(node, Size::NONE).unwrap();
         assert_eq!(taffy.layout(node).unwrap().size.width, 200.0);
 
         taffy.set_measure(node, Some(MeasureFunc::Raw(|_| Size { width: 100.0, height: 100.0 }))).unwrap();
-        taffy.compute_layout(node, Size::undefined()).unwrap();
+        taffy.compute_layout(node, Size::NONE).unwrap();
         assert_eq!(taffy.layout(node).unwrap().size.width, 100.0);
     }
 
@@ -646,7 +648,7 @@ mod tests {
         let child1 = taffy.new_leaf(FlexboxLayout::default()).unwrap();
         let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]).unwrap();
 
-        taffy.compute_layout(node, Size::undefined()).unwrap();
+        taffy.compute_layout(node, Size::NONE).unwrap();
 
         assert_eq!(taffy.dirty(child0).unwrap(), false);
         assert_eq!(taffy.dirty(child1).unwrap(), false);
@@ -657,7 +659,7 @@ mod tests {
         assert_eq!(taffy.dirty(child1).unwrap(), false);
         assert_eq!(taffy.dirty(node).unwrap(), true);
 
-        taffy.compute_layout(node, Size::undefined()).unwrap();
+        taffy.compute_layout(node, Size::NONE).unwrap();
         taffy.mark_dirty(child0).unwrap();
         assert_eq!(taffy.dirty(child0).unwrap(), true);
         assert_eq!(taffy.dirty(child1).unwrap(), false);
