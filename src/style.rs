@@ -955,6 +955,9 @@ mod tests {
 
     #[test]
     fn defaults_match() {
+        use super::{Dimension, GridPlacement};
+        use crate::geometry::{Line, Size};
+
         let old_defaults = Style {
             display: Default::default(),
             position_type: Default::default(),
