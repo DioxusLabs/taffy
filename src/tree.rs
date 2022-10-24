@@ -7,7 +7,7 @@ use crate::{
 
 /// Any item that implements the LayoutTree can be layed out using Taffy's algorithms.
 ///
-/// Generally, Taffy expects your Node tree to be indexable by stable indicies. A "stable" index means that the Node's ID
+/// Generally, Taffy expects your Node tree to be indexable by stable indices. A "stable" index means that the Node's ID
 /// remains the same between re-layouts.
 pub trait LayoutTree {
     /// Get the list of children IDs for the given node

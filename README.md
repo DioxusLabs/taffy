@@ -17,7 +17,7 @@ Right now, it powers:
 
 ### Through the LayoutTree trait
 
-In order to be more flexible over the underlying storage, taffy provides the `LayoutTree` trait. This trait assumes that your implementation will be storing Taffy-specific data, like style and layout information. For the `Flexbox` algorithm, Taffy expects that your implementation of this trait will provide Flexbox-specific data, like its flex rules and specified dimensions.
+In order to be more flexible over the underlying storage, Taffy provides the `LayoutTree` trait. This trait assumes that your implementation will be storing Taffy-specific data, like style and layout information. For the `Flexbox` algorithm, Taffy expects that your implementation of this trait will provide Flexbox-specific data, like its flex rules and specified dimensions.
 
 ```rust, ignore
 struct MyTree {
