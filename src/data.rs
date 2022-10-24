@@ -3,7 +3,6 @@
 //! Used to compute layout for Taffy trees
 //!
 use crate::layout::{Cache, Layout};
-use crate::node::MeasureFunc;
 use crate::style::FlexboxLayout;
 
 /// Layout information for a given [`Node`](crate::node::Node)
@@ -12,10 +11,12 @@ use crate::style::FlexboxLayout;
 pub(crate) struct NodeData {
     /// The layout strategy used by this node
     pub(crate) style: FlexboxLayout,
-    /// The mapping from the Size<Option<f32>> (in real units) to Size<f32> (in points) for this node
-    pub(crate) measure: Option<MeasureFunc>,
     /// The results of the layout computation
     pub(crate) layout: Layout,
+
+    /// Should we try and measure this node?
+    pub(crate) needs_measure: bool,
+
     /// The primary cached results of the layout computation
     pub(crate) main_size_layout_cache: Option<Cache>,
     /// Secondary cached results of the layout computation
@@ -25,29 +26,16 @@ pub(crate) struct NodeData {
 }
 
 impl NodeData {
-    /// Create the data for a new node with a [`MeasureFunc`]
-    #[must_use]
-    pub const fn new_with_measure(style: FlexboxLayout, measure: MeasureFunc) -> Self {
-        Self {
-            style,
-            measure: Some(measure),
-            main_size_layout_cache: None,
-            other_layout_cache: None,
-            layout: Layout::new(),
-            is_dirty: true,
-        }
-    }
-
     /// Create the data for a new node
     #[must_use]
     pub const fn new(style: FlexboxLayout) -> Self {
         Self {
             style,
-            measure: None,
             main_size_layout_cache: None,
             other_layout_cache: None,
             layout: Layout::new(),
             is_dirty: true,
+            needs_measure: false,
         }
     }
 

@@ -1,6 +1,7 @@
 //! Commonly used types
 
 pub use crate::{
+    flexbox::compute as layout_flexbox,
     geometry::{Rect, Size},
     layout::Layout,
     node::{Node, Taffy},
@@ -8,4 +9,5 @@ pub use crate::{
         AlignContent, AlignItems, AlignSelf, Dimension, Display, FlexDirection, FlexWrap, FlexboxLayout,
         JustifyContent, PositionType,
     },
+    tree::LayoutTree,
 };

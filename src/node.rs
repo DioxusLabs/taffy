@@ -1,14 +1,15 @@
 //! UI [`Node`] types and related data structures.
 //!
 //! Layouts are composed of multiple nodes, which live in a tree-like data structure.
-use slotmap::SlotMap;
+use slotmap::{SlotMap, SparseSecondaryMap};
 
 /// A node in a layout.
 pub type Node = slotmap::DefaultKey;
 
 use crate::error::{TaffyError, TaffyResult};
 use crate::geometry::Size;
-use crate::layout::Layout;
+use crate::layout::{Cache, Layout};
+use crate::prelude::LayoutTree;
 use crate::style::FlexboxLayout;
 #[cfg(any(feature = "std", feature = "alloc"))]
 use crate::sys::Box;
@@ -36,6 +37,9 @@ pub struct Taffy {
     /// The [`NodeData`] for each node stored in this tree
     pub(crate) nodes: SlotMap<Node, NodeData>,
 
+    /// The mapping from the Size<Option<f32>> (in real units) to Size<f32> (in points) for this node
+    pub(crate) measure_funcs: SparseSecondaryMap<Node, MeasureFunc>,
+
     /// The children of each node
     ///
     /// The indexes in the outer vector correspond to the position of the parent [`NodeData`]
@@ -50,6 +54,57 @@ pub struct Taffy {
 impl Default for Taffy {
     fn default() -> Self {
         Taffy::new()
+    }
+}
+
+impl LayoutTree for Taffy {
+    fn children(&self, node: Node) -> &[Node] {
+        &self.children[node]
+    }
+
+    fn parent(&self, node: Node) -> Option<Node> {
+        self.parents.get(node).copied().flatten()
+    }
+
+    fn style(&self, node: Node) -> &FlexboxLayout {
+        &self.nodes[node].style
+    }
+
+    fn layout(&self, node: Node) -> &Layout {
+        &self.nodes[node].layout
+    }
+
+    fn layout_mut(&mut self, node: Node) -> &mut Layout {
+        &mut self.nodes[node].layout
+    }
+
+    fn mark_dirty(&mut self, node: Node, dirty: bool) {
+        self.nodes[node].is_dirty = dirty;
+    }
+
+    fn measure_node(&self, node: Node, node_size: Size<Option<f32>>) -> Size<f32> {
+        match &self.measure_funcs[node] {
+            MeasureFunc::Raw(measure) => measure(node_size),
+
+            #[cfg(any(feature = "std", feature = "alloc"))]
+            MeasureFunc::Boxed(measure) => (measure as &dyn Fn(_) -> _)(node_size),
+        }
+    }
+
+    fn needs_measure(&self, node: Node) -> bool {
+        self.nodes[node].needs_measure && self.measure_funcs.get(node).is_some()
+    }
+
+    fn primary_cache(&mut self, node: Node) -> &mut Option<Cache> {
+        &mut self.nodes[node].main_size_layout_cache
+    }
+
+    fn secondary_cache(&mut self, node: Node) -> &mut Option<Cache> {
+        &mut self.nodes[node].other_layout_cache
+    }
+
+    fn child(&self, node: Node, id: usize) -> Node {
+        self.children[node][id]
     }
 }
 
@@ -72,6 +127,7 @@ impl Taffy {
             nodes: SlotMap::with_capacity(capacity),
             children: SlotMap::with_capacity(capacity),
             parents: SlotMap::with_capacity(capacity),
+            measure_funcs: SparseSecondaryMap::with_capacity(capacity),
         }
     }
 
@@ -88,7 +144,12 @@ impl Taffy {
     ///
     /// Creates and adds a new leaf node with a supplied [`MeasureFunc`]
     pub fn new_leaf_with_measure(&mut self, layout: FlexboxLayout, measure: MeasureFunc) -> TaffyResult<Node> {
-        let id = self.nodes.insert(NodeData::new_with_measure(layout, measure));
+        let mut data = NodeData::new(layout);
+        data.needs_measure = true;
+
+        let id = self.nodes.insert(data);
+        self.measure_funcs.insert(id, measure);
+
         let _ = self.children.insert(new_vec_with_capacity(0));
         let _ = self.parents.insert(None);
 
@@ -137,7 +198,14 @@ impl Taffy {
 
     /// Sets the [`MeasureFunc`] of the associated node
     pub fn set_measure(&mut self, node: Node, measure: Option<MeasureFunc>) -> TaffyResult<()> {
-        self.nodes[node].measure = measure;
+        if let Some(measure) = measure {
+            self.nodes[node].needs_measure = true;
+            self.measure_funcs[node] = measure
+        } else {
+            self.nodes[node].needs_measure = false;
+            self.measure_funcs.remove(node);
+        }
+
         self.mark_dirty(node)?;
 
         Ok(())
@@ -282,13 +350,16 @@ impl Taffy {
 
     /// Updates the stored layout of the provided `node` and its children
     pub fn compute_layout(&mut self, node: Node, size: Size<Option<f32>>) -> Result<(), TaffyError> {
-        self.compute(node, size);
+        crate::flexbox::compute(self, node, size);
+        // self.compute(node, size);
         Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::bool_assert_comparison)]
+
     use super::*;
     use crate::{
         style::{Dimension, Display, FlexDirection},
@@ -519,6 +590,8 @@ mod tests {
         assert!(if let Ok(count) = taffy.child_count(child0) { count == 0 } else { false });
         assert!(if let Ok(count) = taffy.child_count(child1) { count == 0 } else { false });
     }
+
+    #[allow(clippy::vec_init_then_push)]
     #[test]
     fn test_children() {
         let mut taffy = Taffy::new();
