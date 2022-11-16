@@ -144,7 +144,7 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, size: Size<Option<f32>>) 
 fn compute_preliminary(
     tree: &mut impl LayoutTree,
     node: Node,
-    node_size: Size<Option<f32>>,
+    known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     run_mode: RunMode,
     main_size: bool,
@@ -153,29 +153,29 @@ fn compute_preliminary(
     tree.mark_dirty(node, false);
 
     // First we check if we have a result for the given input
-    if let Some(cached_size) = compute_from_cache(tree, node, node_size, parent_size, run_mode, main_size) {
+    if let Some(cached_size) = compute_from_cache(tree, node, known_dimensions, parent_size, run_mode, main_size) {
         return cached_size;
     }
 
     // Define some general constants we will need for the remainder of the algorithm.
-    let mut constants = compute_constants(tree.style(node), node_size, parent_size);
+    let mut constants = compute_constants(tree.style(node), known_dimensions, parent_size);
 
     // If this is a leaf node we can skip a lot of this function in some cases
     if tree.children(node).is_empty() {
-        if node_size.width.is_some() && node_size.height.is_some() {
-            return node_size.map(|s| s.unwrap_or(0.0));
+        if known_dimensions.width.is_some() && known_dimensions.height.is_some() {
+            return known_dimensions.map(|s| s.unwrap_or(0.0));
         }
 
         if tree.needs_measure(node) {
-            let converted_size = tree.measure_node(node, node_size);
+            let converted_size = tree.measure_node(node, known_dimensions);
             *cache(tree, node, main_size) =
-                Some(Cache { node_size, parent_size, run_mode, size: converted_size });
+                Some(Cache { node_size: known_dimensions, parent_size, run_mode, size: converted_size });
             return converted_size;
         }
 
         return Size {
-            width: node_size.width.unwrap_or(0.0) + constants.padding_border.horizontal_axis_sum(),
-            height: node_size.height.unwrap_or(0.0) + constants.padding_border.vertical_axis_sum(),
+            width: known_dimensions.width.unwrap_or(0.0) + constants.padding_border.horizontal_axis_sum(),
+            height: known_dimensions.height.unwrap_or(0.0) + constants.padding_border.vertical_axis_sum(),
         };
     }
 
@@ -189,13 +189,13 @@ fn compute_preliminary(
     // 9.2. Line Length Determination
 
     // 2. Determine the available main and cross space for the flex items.
-    let available_space = determine_available_space(node_size, parent_size, &constants);
+    let available_space = determine_available_space(known_dimensions, parent_size, &constants);
 
     let has_baseline_child =
         flex_items.iter().any(|child| tree.style(child.node).align_self(tree.style(node)) == AlignSelf::Baseline);
 
     // 3. Determine the flex base size and hypothetical main size of each item.
-    determine_flex_base_size(tree, node, node_size, &constants, available_space, &mut flex_items);
+    determine_flex_base_size(tree, node, known_dimensions, &constants, available_space, &mut flex_items);
 
     // TODO: Add step 4 according to spec: https://www.w3.org/TR/css-flexbox-1/#algo-main-container
     // 9.3. Main Size Determination
@@ -212,7 +212,7 @@ fn compute_preliminary(
     // Not part of the spec from what i can see but seems correct
     constants.container_size.set_main(
         constants.dir,
-        node_size.main(constants.dir).unwrap_or({
+        known_dimensions.main(constants.dir).unwrap_or({
             let longest_line = flex_lines.iter().fold(f32::MIN, |acc, line| {
                 let length: f32 = line.items.iter().map(|item| item.outer_target_size.main(constants.dir)).sum();
                 acc.max(length)
@@ -241,14 +241,14 @@ fn compute_preliminary(
     // TODO - probably should move this somewhere else as it doesn't make a ton of sense here but we need it below
     // TODO - This is expensive and should only be done if we really require a baseline. aka, make it lazy
     if has_baseline_child {
-        calculate_children_base_lines(tree, node, node_size, &mut flex_lines, &constants);
+        calculate_children_base_lines(tree, node, known_dimensions, &mut flex_lines, &constants);
     }
 
     // 8. Calculate the cross size of each flex line.
-    calculate_cross_size(tree, &mut flex_lines, node, node_size, &constants);
+    calculate_cross_size(tree, &mut flex_lines, node, known_dimensions, &constants);
 
     // 9. Handle 'align-content: stretch'.
-    handle_align_content_stretch(tree, &mut flex_lines, node, node_size, &constants);
+    handle_align_content_stretch(tree, &mut flex_lines, node, known_dimensions, &constants);
 
     // 10. Collapse visibility:collapse items. If any flex items have visibility: collapse,
     //     note the cross size of the line they’re in as the item’s strut size, and restart
@@ -279,13 +279,13 @@ fn compute_preliminary(
     resolve_cross_axis_auto_margins(tree, &mut flex_lines, node, &constants);
 
     // 15. Determine the flex container’s used cross size.
-    let total_cross_size = determine_container_cross_size(&mut flex_lines, node_size, &mut constants);
+    let total_cross_size = determine_container_cross_size(&mut flex_lines, known_dimensions, &mut constants);
 
     // We have the container size.
     // If our caller does not care about performing layout we are done now.
     if run_mode == RunMode::ComputeSize {
         let container_size = constants.container_size;
-        *cache(tree, node, main_size) = Some(Cache { node_size, parent_size, run_mode, size: container_size });
+        *cache(tree, node, main_size) = Some(Cache { node_size: known_dimensions, parent_size, run_mode, size: container_size });
         return container_size;
     }
 
@@ -308,7 +308,7 @@ fn compute_preliminary(
     }
 
     let container_size = constants.container_size;
-    *cache(tree, node, main_size) = Some(Cache { node_size, parent_size, run_mode, size: container_size });
+    *cache(tree, node, main_size) = Some(Cache { node_size: known_dimensions, parent_size, run_mode, size: container_size });
 
     container_size
 }
