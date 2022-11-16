@@ -4,7 +4,7 @@
 use core::f32;
 
 use crate::geometry::{Point, Rect, Size};
-use crate::layout::{Cache, Layout};
+use crate::layout::{Cache, Layout, RunMode};
 use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::resolve::{MaybeResolve, ResolveOrDefault};
@@ -118,7 +118,7 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, size: Size<Option<f32>>) 
     let height_maybe_min = style.max_size.height.maybe_resolve(size.height);
 
     let preliminary_size = if has_root_min_max {
-        let first_pass = compute_preliminary(tree, root, style.size.maybe_resolve(size), size, false, true);
+        let first_pass = compute_preliminary(tree, root, style.size.maybe_resolve(size), size, RunMode::ComputeSize, true);
 
         compute_preliminary(
             tree,
@@ -128,11 +128,11 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, size: Size<Option<f32>>) 
                 height: first_pass.height.maybe_max(height_maybe_max).maybe_min(height_maybe_min).into(),
             },
             size,
-            true,
+            RunMode::PeformLayout,
             true,
         )
     } else {
-        compute_preliminary(tree, root, style.size.maybe_resolve(size), size, true, true)
+        compute_preliminary(tree, root, style.size.maybe_resolve(size), size, RunMode::PeformLayout, true)
     };
 
     *tree.layout_mut(root) = Layout { order: 0, size: preliminary_size, location: Point::ZERO };
@@ -146,14 +146,14 @@ fn compute_preliminary(
     node: Node,
     node_size: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
-    perform_layout: bool,
+    run_mode: RunMode,
     main_size: bool,
 ) -> Size<f32> {
     // clear the dirtiness of the node now that we've computed it
     tree.mark_dirty(node, false);
 
     // First we check if we have a result for the given input
-    if let Some(cached_size) = compute_from_cache(tree, node, node_size, parent_size, perform_layout, main_size) {
+    if let Some(cached_size) = compute_from_cache(tree, node, node_size, parent_size, run_mode, main_size) {
         return cached_size;
     }
 
@@ -169,7 +169,7 @@ fn compute_preliminary(
         if tree.needs_measure(node) {
             let converted_size = tree.measure_node(node, node_size);
             *cache(tree, node, main_size) =
-                Some(Cache { node_size, parent_size, perform_layout, size: converted_size });
+                Some(Cache { node_size, parent_size, run_mode, size: converted_size });
             return converted_size;
         }
 
@@ -283,9 +283,9 @@ fn compute_preliminary(
 
     // We have the container size.
     // If our caller does not care about performing layout we are done now.
-    if !perform_layout {
+    if run_mode == RunMode::ComputeSize {
         let container_size = constants.container_size;
-        *cache(tree, node, main_size) = Some(Cache { node_size, parent_size, perform_layout, size: container_size });
+        *cache(tree, node, main_size) = Some(Cache { node_size, parent_size, run_mode, size: container_size });
         return container_size;
     }
 
@@ -308,7 +308,7 @@ fn compute_preliminary(
     }
 
     let container_size = constants.container_size;
-    *cache(tree, node, main_size) = Some(Cache { node_size, parent_size, perform_layout, size: container_size });
+    *cache(tree, node, main_size) = Some(Cache { node_size, parent_size, run_mode, size: container_size });
 
     container_size
 }
@@ -348,30 +348,33 @@ fn compute_from_cache(
     node: Node,
     node_size: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
-    perform_layout: bool,
+    run_mode: RunMode,
     main_size: bool,
 ) -> Option<Size<f32>> {
     if let Some(ref cache) = cache(tree, node, main_size) {
-        if cache.perform_layout || !perform_layout {
-            let width_compatible = if let Some(width) = node_size.width {
-                abs(width - cache.size.width) < f32::EPSILON
-            } else {
-                cache.node_size.width.is_none()
-            };
+        // Cached ComputeSize results are not valid if we are running in PerformLayout mode
+        if cache.run_mode == RunMode::ComputeSize && run_mode == RunMode::PeformLayout {
+            return None;
+        }
 
-            let height_compatible = if let Some(height) = node_size.height {
-                abs(height - cache.size.height) < f32::EPSILON
-            } else {
-                cache.node_size.height.is_none()
-            };
+        let width_compatible = if let Some(width) = node_size.width {
+            abs(width - cache.size.width) < f32::EPSILON
+        } else {
+            cache.node_size.width.is_none()
+        };
 
-            if width_compatible && height_compatible {
-                return Some(cache.size);
-            }
+        let height_compatible = if let Some(height) = node_size.height {
+            abs(height - cache.size.height) < f32::EPSILON
+        } else {
+            cache.node_size.height.is_none()
+        };
 
-            if cache.node_size == node_size && cache.parent_size == parent_size {
-                return Some(cache.size);
-            }
+        if width_compatible && height_compatible {
+            return Some(cache.size);
+        }
+
+        if cache.node_size == node_size && cache.parent_size == parent_size {
+            return Some(cache.size);
         }
     }
 
@@ -606,7 +609,7 @@ fn determine_flex_base_size(
             child.node,
             Size { width: width.maybe_min(child.max_size.width), height: height.maybe_min(child.max_size.height) },
             available_space,
-            false,
+            RunMode::ComputeSize,
             true,
         )
         .main(constants.dir)
@@ -624,7 +627,7 @@ fn determine_flex_base_size(
         // The following logic was developed not from the spec but by trail and error looking into how
         // webkit handled various scenarios. Can probably be solved better by passing in
         // min-content max-content constraints from the top
-        let min_main = compute_preliminary(tree, child.node, Size::NONE, available_space, false, false)
+        let min_main = compute_preliminary(tree, child.node, Size::NONE, available_space, RunMode::ComputeSize, false)
             .main(constants.dir)
             .maybe_max(child.min_size.main(constants.dir))
             .maybe_min(child.size.main(constants.dir))
@@ -739,7 +742,7 @@ fn resolve_flexible_lengths(
                         height: child.size.height.maybe_max(child.min_size.height).maybe_min(child.max_size.height),
                     },
                     available_space,
-                    false,
+                    RunMode::ComputeSize,
                     false,
                 )
                 .main(constants.dir)
@@ -879,7 +882,7 @@ fn resolve_flexible_lengths(
             // min-content max-content constraints from the top. Need to figure out correct thing to do here as
             // just piling on more conditionals.
             let min_main = if constants.is_row && !tree.needs_measure(child.node) {
-                compute_preliminary(tree, child.node, Size::NONE, available_space, false, false)
+                compute_preliminary(tree, child.node, Size::NONE, available_space, RunMode::ComputeSize, false)
                     .width
                     .maybe_min(child.size.width)
                     .maybe_max(child.min_size.width)
@@ -962,7 +965,7 @@ fn determine_hypothetical_cross_size(
                         constants.container_size.main(constants.dir).into()
                     },
                 },
-                false,
+                RunMode::ComputeSize,
                 false,
             )
             .cross(constants.dir)
@@ -1025,7 +1028,7 @@ fn calculate_children_base_lines(
                     width: if constants.is_row { constants.container_size.width.into() } else { node_size.width },
                     height: if constants.is_row { node_size.height } else { constants.container_size.height.into() },
                 },
-                true,
+                RunMode::PeformLayout,
                 false,
             );
 
@@ -1530,7 +1533,7 @@ fn calculate_flex_item(
         item.node,
         item.target_size.map(|s| s.into()),
         container_size.map(|s| s.into()),
-        true,
+        RunMode::PeformLayout,
         false,
     );
 
@@ -1699,7 +1702,7 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
             child,
             Size { width, height },
             Size { width: container_width, height: container_height },
-            true,
+            RunMode::PeformLayout,
             false,
         );
 
