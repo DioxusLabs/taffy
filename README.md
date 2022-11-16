@@ -4,7 +4,6 @@
 [![crates.io](https://img.shields.io/crates/v/taffy.svg)](https://crates.io/crates/taffy)
 [![docs.rs](https://img.shields.io/docsrs/taffy)](https://docs.rs/taffy)
 
-
 `taffy` is a flexible, high-performance, cross-platform UI layout library written in [Rust](https://www.rust-lang.org).
 
 Currently, we only support a [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) layout algorithm, but support for other paradigms [is planned](https://github.com/DioxusLabs/taffy/issues/28).
