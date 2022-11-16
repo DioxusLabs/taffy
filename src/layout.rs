@@ -3,6 +3,16 @@
 use crate::geometry::{Point, Size};
 use crate::sys::abs;
 
+/// Whether we are performing a full layout, or we merely need to size the node
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum RunMode {
+    /// A full layout for this node and all children should be computed
+    PeformLayout,
+    /// The layout algorithm should be executed such that an accurate container size for the node can be determined.
+    /// Layout steps that aren't necessary for determining the container size of the current node can be skipped.
+    ComputeSize,
+}
+
 /// The amount of space available to a node in a given axis
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum AvailableSpace {
@@ -125,7 +135,7 @@ pub struct Cache {
     /// The initial cached size of the parent's node
     pub(crate) parent_size: Size<Option<f32>>,
     /// Whether or not layout should be recomputed
-    pub(crate) perform_layout: bool,
+    pub(crate) run_mode: RunMode,
 
     /// The cached size of the item
     pub(crate) size: Size<f32>,
