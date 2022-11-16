@@ -1808,7 +1808,6 @@ fn hidden_layout(tree: &mut impl LayoutTree, node: Node, order: u32) {
 
 #[cfg(test)]
 mod tests {
-    use crate::flexbox::hidden_layout;
     use crate::geometry::Point;
     use crate::style::Display;
     use crate::style::Display::Flex;
@@ -1819,6 +1818,7 @@ mod tests {
         style::{FlexWrap, FlexboxLayout},
         Taffy,
     };
+    use super::hidden_layout;
 
     // Make sure we get correct constants
     #[test]

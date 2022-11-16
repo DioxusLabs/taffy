@@ -31,7 +31,7 @@ pub mod tree;
 pub mod randomizable;
 
 mod data;
-mod flexbox;
+mod compute;
 mod resolve;
 mod sys;
 
