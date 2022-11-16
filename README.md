@@ -2,6 +2,7 @@
 
 [![GitHub CI](https://github.com/DioxusLabs/taffy/actions/workflows/ci.yml/badge.svg)](https://github.com/DioxusLabs/taffy/actions/workflows/ci.yml)
 [![crates.io](https://img.shields.io/crates/v/taffy.svg)](https://crates.io/crates/taffy)
+[![docs.rs](https://img.shields.io/docsrs/taffy)](https://docs.rs/taffy)
 
 `taffy` is a flexible, high-performance, cross-platform UI layout library written in [Rust](https://www.rust-lang.org).
 
@@ -15,38 +16,54 @@ Right now, it powers:
 
 ## Usage
 
-### Through the LayoutTree trait
+```rust
+use taffy::prelude::*;
 
-In order to be more flexible over the underlying storage, Taffy provides the `LayoutTree` trait. This trait assumes that your implementation will be storing Taffy-specific data, like style and layout information. For the `Flexbox` algorithm, Taffy expects that your implementation of this trait will provide Flexbox-specific data, like its flex rules and specified dimensions.
-
-```rust, ignore
-struct MyTree {
-    specified_layouts: Vec<FlexboxLayout>,
-    final_layouts: Vec<Layout>
-}
-
-impl LayoutTree for MyTree {
-    // ...
-    fn measure_node(&self, node: Node) -> Option<Size<f32>> {
-        // custom node measuring technology goes here
-    }
-}
-```
-
-### TaffyECS directly
-
-Taffy also provides the `TaffyECS` struct which stores all the necessary layout data required to perform layout calculations. Internally, Taffy uses a set of SlotMaps with generational indicies. In this configuration, you would store `TaffyECS` alongside your UI tree and keep Taffy's NodeID attached to your own NodeID.
-
-```rust, ignore
-let my_tree = Tree::new();
+// First create an instance of Taffy
 let mut taffy = Taffy::new();
 
-let mut el = my_tree.createElement("div");
-let taffy_node = taffy.create_node();
+// Create a tree of nodes using `taffy.new_leaf` and `taffy.new_with_children`.
+// These functions both return a node id which can be used to refer to that node
+// The FlexboxLayout struct is used to specify styling information
+let header_node = taffy
+    .new_leaf(
+        FlexboxLayout {
+            size: Size { width: Dimension::Points(800.0), height: Dimension::Points(100.0) },
+            ..Default::default()
+        },
+    ).unwrap();
 
-el.taffy_node.set(taffy_node);
+let body_node = taffy
+    .new_leaf(
+        FlexboxLayout {
+            size: Size { width: Dimension::Points(800.0), height: Dimension::Undefined },
+            flex_grow: 1.0,
+            ..Default::default()
+        },
+    ).unwrap();
 
-taffy.compute_layout(el, Size(100, 100));
+let root_node = taffy
+    .new_with_children(
+        FlexboxLayout {
+            flex_direction: FlexDirection::Column,
+            size: Size { width: Dimension::Points(800.0), height: Dimension::Points(600.0) },
+            ..Default::default()
+        },
+        &[header_node, body_node],
+    )
+    .unwrap();
+
+// Call compute_layout on the root of your tree to run the layout algorithm
+taffy.compute_layout(root_node, Size::NONE).unwrap();
+
+// Inspect the computed layout using taffy.layout
+assert_eq!(taffy.layout(root_node).unwrap().size.width, 800.0);
+assert_eq!(taffy.layout(root_node).unwrap().size.height, 600.0);
+assert_eq!(taffy.layout(header_node).unwrap().size.width, 800.0);
+assert_eq!(taffy.layout(header_node).unwrap().size.height, 100.0);
+assert_eq!(taffy.layout(body_node).unwrap().size.width, 800.0);
+assert_eq!(taffy.layout(body_node).unwrap().size.height, 500.0); // This value was not set explicitly, but was computed by Taffy
+
 ```
 
 ## Contributions
