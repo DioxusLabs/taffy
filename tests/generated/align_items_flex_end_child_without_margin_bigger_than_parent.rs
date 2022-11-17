@@ -35,7 +35,7 @@ fn align_items_flex_end_child_without_margin_bigger_than_parent() {
             &[node0],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
     assert_eq!(taffy.layout(node).unwrap().size.width, 50f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 50f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

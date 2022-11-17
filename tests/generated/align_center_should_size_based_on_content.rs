@@ -45,7 +45,7 @@ fn align_center_should_size_based_on_content() {
             &[node0],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
     assert_eq!(taffy.layout(node).unwrap().size.width, 100f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 100f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

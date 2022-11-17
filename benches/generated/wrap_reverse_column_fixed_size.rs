@@ -81,5 +81,5 @@ pub fn compute() {
             &[node0, node1, node2, node3, node4],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
 }

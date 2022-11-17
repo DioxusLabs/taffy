@@ -44,7 +44,7 @@ fn flex_shrink_flex_grow_child_flex_shrink_other_child() {
             &[node0, node1],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
     assert_eq!(taffy.layout(node).unwrap().size.width, 500f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 500f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

@@ -74,7 +74,7 @@ fn rounding_total_fractial_nested() {
             &[node0, node1, node2],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
     assert_eq!(taffy.layout(node).unwrap().size.width, 87f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 113f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

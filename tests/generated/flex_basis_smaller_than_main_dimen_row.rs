@@ -24,7 +24,7 @@ fn flex_basis_smaller_than_main_dimen_row() {
             &[node0],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
     assert_eq!(taffy.layout(node).unwrap().size.width, 100f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 50f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

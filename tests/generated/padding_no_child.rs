@@ -16,7 +16,7 @@ fn padding_no_child() {
             &[],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
     assert_eq!(taffy.layout(node).unwrap().size.width, 20f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 20f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);
