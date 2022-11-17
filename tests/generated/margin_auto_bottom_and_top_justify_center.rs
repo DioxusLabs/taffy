@@ -46,7 +46,7 @@ fn margin_auto_bottom_and_top_justify_center() {
             &[node0, node1],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
     assert_eq!(taffy.layout(node).unwrap().size.width, 200f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 200f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

@@ -69,7 +69,7 @@ fn wrapped_column_max_height() {
             &[node0, node1, node2],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
     assert_eq!(taffy.layout(node).unwrap().size.width, 700f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 500f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);
