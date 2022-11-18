@@ -8,7 +8,7 @@ pub type Node = slotmap::DefaultKey;
 
 use crate::error::{TaffyError, TaffyResult};
 use crate::geometry::Size;
-use crate::layout::{Cache, Layout};
+use crate::layout::{AvailableSpace, Cache, Layout, RunMode};
 use crate::prelude::LayoutTree;
 use crate::style::FlexboxLayout;
 #[cfg(any(feature = "std", feature = "alloc"))]
@@ -19,13 +19,13 @@ use crate::{data::NodeData, error};
 /// A function type that can be used in a [`MeasureFunc`]
 ///
 /// This trait is automatically implemented for all types (including closures) that define a function with the appropriate type signature.
-pub trait Measurable: Send + Sync + Fn(Size<Option<f32>>) -> Size<f32> {}
-impl<F: Send + Sync + Fn(Size<Option<f32>>) -> Size<f32>> Measurable for F {}
+pub trait Measurable: Send + Sync + Fn(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32> {}
+impl<F: Send + Sync + Fn(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32>> Measurable for F {}
 
 /// A function that can be used to compute the intrinsic size of a node
 pub enum MeasureFunc {
     /// Stores an unboxed function
-    Raw(fn(Size<Option<f32>>) -> Size<f32>),
+    Raw(fn(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32>),
 
     /// Stores a boxed function
     #[cfg(any(feature = "std", feature = "alloc"))]
@@ -37,7 +37,7 @@ pub struct Taffy {
     /// The [`NodeData`] for each node stored in this tree
     pub(crate) nodes: SlotMap<Node, NodeData>,
 
-    /// The mapping from the Size<Option<f32>> (in real units) to Size<f32> (in points) for this node
+    /// The mapping from the Size<AvailableSpace> (in real units) to Size<f32> (in points) for this node
     pub(crate) measure_funcs: SparseSecondaryMap<Node, MeasureFunc>,
 
     /// The children of each node
@@ -80,14 +80,22 @@ impl LayoutTree for Taffy {
 
     fn mark_dirty(&mut self, node: Node, dirty: bool) {
         self.nodes[node].is_dirty = dirty;
+        if dirty {
+            self.nodes[node].size_cache = [None; 4];
+        }
     }
 
-    fn measure_node(&self, node: Node, node_size: Size<Option<f32>>) -> Size<f32> {
+    fn measure_node(
+        &self,
+        node: Node,
+        known_dimensions: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+    ) -> Size<f32> {
         match &self.measure_funcs[node] {
-            MeasureFunc::Raw(measure) => measure(node_size),
+            MeasureFunc::Raw(measure) => measure(known_dimensions, available_space),
 
             #[cfg(any(feature = "std", feature = "alloc"))]
-            MeasureFunc::Boxed(measure) => (measure as &dyn Fn(_) -> _)(node_size),
+            MeasureFunc::Boxed(measure) => (measure as &dyn Fn(_, _) -> _)(known_dimensions, available_space),
         }
     }
 
@@ -95,12 +103,8 @@ impl LayoutTree for Taffy {
         self.nodes[node].needs_measure && self.measure_funcs.get(node).is_some()
     }
 
-    fn primary_cache(&mut self, node: Node) -> &mut Option<Cache> {
-        &mut self.nodes[node].main_size_layout_cache
-    }
-
-    fn secondary_cache(&mut self, node: Node) -> &mut Option<Cache> {
-        &mut self.nodes[node].other_layout_cache
+    fn cache_mut(&mut self, node: Node, index: usize) -> &mut Option<Cache> {
+        &mut self.nodes[node].size_cache[index]
     }
 
     fn child(&self, node: Node, id: usize) -> Node {
@@ -349,10 +353,8 @@ impl Taffy {
     }
 
     /// Updates the stored layout of the provided `node` and its children
-    pub fn compute_layout(&mut self, node: Node, size: Size<Option<f32>>) -> Result<(), TaffyError> {
-        crate::compute::flexbox::compute(self, node, size);
-        // self.compute(node, size);
-        Ok(())
+    pub fn compute_layout(&mut self, node: Node, available_space: Size<AvailableSpace>) -> Result<(), TaffyError> {
+        crate::compute::compute_layout(self, node, available_space)
     }
 }
 
@@ -402,7 +404,7 @@ mod tests {
     fn new_leaf_with_measure() {
         let mut taffy = Taffy::new();
 
-        let res = taffy.new_leaf_with_measure(FlexboxLayout::default(), MeasureFunc::Raw(|_| Size::ZERO));
+        let res = taffy.new_leaf_with_measure(FlexboxLayout::default(), MeasureFunc::Raw(|_, _| Size::ZERO));
         assert!(res.is_ok());
         let node = res.unwrap();
 
@@ -470,13 +472,16 @@ mod tests {
     fn set_measure() {
         let mut taffy = Taffy::new();
         let node = taffy
-            .new_leaf_with_measure(FlexboxLayout::default(), MeasureFunc::Raw(|_| Size { width: 200.0, height: 200.0 }))
+            .new_leaf_with_measure(
+                FlexboxLayout::default(),
+                MeasureFunc::Raw(|_, _| Size { width: 200.0, height: 200.0 }),
+            )
             .unwrap();
-        taffy.compute_layout(node, Size::NONE).unwrap();
+        taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
         assert_eq!(taffy.layout(node).unwrap().size.width, 200.0);
 
-        taffy.set_measure(node, Some(MeasureFunc::Raw(|_| Size { width: 100.0, height: 100.0 }))).unwrap();
-        taffy.compute_layout(node, Size::NONE).unwrap();
+        taffy.set_measure(node, Some(MeasureFunc::Raw(|_, _| Size { width: 100.0, height: 100.0 }))).unwrap();
+        taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
         assert_eq!(taffy.layout(node).unwrap().size.width, 100.0);
     }
 
@@ -648,7 +653,7 @@ mod tests {
         let child1 = taffy.new_leaf(FlexboxLayout::default()).unwrap();
         let node = taffy.new_with_children(FlexboxLayout::default(), &[child0, child1]).unwrap();
 
-        taffy.compute_layout(node, Size::NONE).unwrap();
+        taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
 
         assert_eq!(taffy.dirty(child0).unwrap(), false);
         assert_eq!(taffy.dirty(child1).unwrap(), false);
@@ -659,7 +664,7 @@ mod tests {
         assert_eq!(taffy.dirty(child1).unwrap(), false);
         assert_eq!(taffy.dirty(node).unwrap(), true);
 
-        taffy.compute_layout(node, Size::NONE).unwrap();
+        taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
         taffy.mark_dirty(child0).unwrap();
         assert_eq!(taffy.dirty(child0).unwrap(), true);
         assert_eq!(taffy.dirty(child1).unwrap(), false);
@@ -675,7 +680,10 @@ mod tests {
         });
         assert!(node_result.is_ok());
         let node = node_result.unwrap();
-        let layout_result = taffy.compute_layout(node, Size { width: Some(100.), height: Some(100.) });
+        let layout_result = taffy.compute_layout(
+            node,
+            Size { width: AvailableSpace::Definite(100.), height: AvailableSpace::Definite(100.) },
+        );
         assert!(layout_result.is_ok());
     }
 

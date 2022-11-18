@@ -18,9 +18,7 @@ pub(crate) struct NodeData {
     pub(crate) needs_measure: bool,
 
     /// The primary cached results of the layout computation
-    pub(crate) main_size_layout_cache: Option<Cache>,
-    /// Secondary cached results of the layout computation
-    pub(crate) other_layout_cache: Option<Cache>,
+    pub(crate) size_cache: [Option<Cache>; 4],
     /// Does this node's layout need to be recomputed?
     pub(crate) is_dirty: bool,
 }
@@ -29,14 +27,7 @@ impl NodeData {
     /// Create the data for a new node
     #[must_use]
     pub const fn new(style: FlexboxLayout) -> Self {
-        Self {
-            style,
-            main_size_layout_cache: None,
-            other_layout_cache: None,
-            layout: Layout::new(),
-            is_dirty: true,
-            needs_measure: false,
-        }
+        Self { style, size_cache: [None; 4], layout: Layout::new(), is_dirty: true, needs_measure: false }
     }
 
     /// Marks a node and all of its parents (recursively) as dirty
@@ -44,8 +35,7 @@ impl NodeData {
     /// This clears any cached data and signals that the data must be recomputed.
     #[inline]
     pub fn mark_dirty(&mut self) {
-        self.main_size_layout_cache = None;
-        self.other_layout_cache = None;
+        self.size_cache = [None; 4];
         self.is_dirty = true;
     }
 }

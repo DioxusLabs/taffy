@@ -111,7 +111,7 @@ fn taffy_benchmarks(c: &mut Criterion) {
         b.iter(|| {
             let mut taffy = taffy::node::Taffy::new();
             let root = build_deep_hierarchy(&mut taffy);
-            taffy.compute_layout(root, taffy::geometry::Size::NONE).unwrap()
+            taffy.compute_layout(root, taffy::geometry::Size::MAX_CONTENT).unwrap()
         })
     });
 
@@ -121,7 +121,7 @@ fn taffy_benchmarks(c: &mut Criterion) {
 
         b.iter(|| {
             taffy.mark_dirty(root).unwrap();
-            taffy.compute_layout(root, taffy::geometry::Size::NONE).unwrap()
+            taffy.compute_layout(root, taffy::geometry::Size::MAX_CONTENT).unwrap()
         })
     });
 }
