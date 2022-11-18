@@ -121,10 +121,11 @@ pub fn compute(
         || style.max_size.height.is_defined();
 
     // Pull these out earlier to avoid borrowing issues
-    let width_maybe_max = style.min_size.width.maybe_resolve(known_dimensions.width);
-    let width_maybe_min = style.max_size.width.maybe_resolve(known_dimensions.width);
-    let height_maybe_max = style.min_size.height.maybe_resolve(known_dimensions.height);
-    let height_maybe_min = style.max_size.height.maybe_resolve(known_dimensions.height);
+    let min_size = style.min_size.maybe_resolve(known_dimensions);
+    let max_size = style.max_size.maybe_resolve(known_dimensions);
+    let clamped_style_size = style.size.maybe_resolve(known_dimensions)
+        .zip_map(min_size, |size, min| size.maybe_max(min))
+        .zip_map(max_size, |size, max| size.maybe_min(max));
 
     if has_min_max_sizes {
         NODE_LOGGER.log("FLEX: two-pass");
@@ -132,19 +133,20 @@ pub fn compute(
             tree,
             node,
             // style.size.maybe_resolve(known_dimensions),
-            known_dimensions.zip_map(style.size.maybe_resolve(known_dimensions), |known, style| known.or(style)),
+            known_dimensions.zip_map(clamped_style_size, |known, style| known.or(style)),
             available_space,
             RunMode::ComputeSize,
             cache_slot == 0,//true,
         );
 
+        let clamped_first_pass_size = first_pass
+            .zip_map(min_size, |size, min| size.maybe_max(min))
+            .zip_map(max_size, |size, max| size.maybe_min(max));
+
         compute_preliminary(
             tree,
             node,
-            Size {
-                width: known_dimensions.width.or(first_pass.width.maybe_max(width_maybe_max).maybe_min(width_maybe_min).into()),
-                height: known_dimensions.height.or(first_pass.height.maybe_max(height_maybe_max).maybe_min(height_maybe_min).into()),
-            },
+            known_dimensions.zip_map(clamped_first_pass_size, |known, first_pass| known.or(first_pass.into())),
             available_space,
             RunMode::PeformLayout,
             cache_slot == 0,//true,
@@ -154,7 +156,7 @@ pub fn compute(
         compute_preliminary(
             tree,
             node,
-            known_dimensions.zip_map(style.size.maybe_resolve(known_dimensions), |known, style| known.or(style)),
+            known_dimensions.zip_map(clamped_style_size, |known, style| known.or(style)),
             available_space,
             RunMode::PeformLayout,
             cache_slot == 0,//true,
