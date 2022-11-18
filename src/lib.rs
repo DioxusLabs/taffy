@@ -26,12 +26,14 @@ pub mod node;
 pub mod prelude;
 pub mod style;
 pub mod tree;
+#[doc(hidden)]
+pub mod debug;
 
 #[cfg(feature = "random")]
 pub mod randomizable;
 
-mod data;
 mod compute;
+mod data;
 mod resolve;
 mod sys;
 

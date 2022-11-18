@@ -1,4 +1,4 @@
-use taffy::{geometry::Point, style::Dimension};
+use taffy::{geometry::Point, layout::AvailableSpace, style::Dimension};
 
 #[test]
 fn simple_child() {
@@ -51,7 +51,12 @@ fn simple_child() {
             &[node0, node1],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size { width: Some(100.), height: Some(100.) }).unwrap();
+    taffy
+        .compute_layout(
+            node,
+            taffy::geometry::Size { width: AvailableSpace::Definite(100.), height: AvailableSpace::Definite(100.) },
+        )
+        .unwrap();
     assert_eq!(taffy.layout(node).unwrap().location, Point { x: 0.0, y: 0.0 });
     assert_eq!(taffy.layout(node0).unwrap().location, Point { x: 0.0, y: 0.0 });
     assert_eq!(taffy.layout(node1).unwrap().location, Point { x: 10.0, y: 0.0 });

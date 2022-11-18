@@ -1,5 +1,7 @@
 //! Contains numerical helper traits and functions
 
+use crate::layout::AvailableSpace;
+
 /// A trait to conveniently calculate minimums and maximums when some data may not be defined
 ///
 /// If the left-hand value is [`None`], these operations return [`None`].
@@ -100,6 +102,74 @@ impl MaybeMath<Option<f32>, f32> for f32 {
         match rhs {
             Some(val) => self - val,
             None => self,
+        }
+    }
+}
+
+impl MaybeMath<f32, AvailableSpace> for AvailableSpace {
+    fn maybe_min(self, rhs: f32) -> AvailableSpace {
+        match self {
+            AvailableSpace::Definite(val) => AvailableSpace::Definite(val.min(rhs)),
+            AvailableSpace::MinContent => AvailableSpace::Definite(rhs),
+            AvailableSpace::MaxContent => AvailableSpace::Definite(rhs),
+        }
+    }
+    fn maybe_max(self, rhs: f32) -> AvailableSpace {
+        match self {
+            AvailableSpace::Definite(val) => AvailableSpace::Definite(val.max(rhs)),
+            AvailableSpace::MinContent => AvailableSpace::MinContent,
+            AvailableSpace::MaxContent => AvailableSpace::MaxContent,
+        }
+    }
+    fn maybe_add(self, rhs: f32) -> AvailableSpace {
+        match self {
+            AvailableSpace::Definite(val) => AvailableSpace::Definite(val + rhs),
+            AvailableSpace::MinContent => AvailableSpace::MinContent,
+            AvailableSpace::MaxContent => AvailableSpace::MaxContent,
+        }
+    }
+    fn maybe_sub(self, rhs: f32) -> AvailableSpace {
+        match self {
+            AvailableSpace::Definite(val) => AvailableSpace::Definite(val - rhs),
+            AvailableSpace::MinContent => AvailableSpace::MinContent,
+            AvailableSpace::MaxContent => AvailableSpace::MaxContent,
+        }
+    }
+}
+
+impl MaybeMath<Option<f32>, AvailableSpace> for AvailableSpace {
+    fn maybe_min(self, rhs: Option<f32>) -> AvailableSpace {
+        match (self, rhs) {
+            (AvailableSpace::Definite(val), Some(rhs)) => AvailableSpace::Definite(val.min(rhs)),
+            (AvailableSpace::Definite(val), None) => AvailableSpace::Definite(val),
+            (AvailableSpace::MinContent, Some(rhs)) => AvailableSpace::Definite(rhs),
+            (AvailableSpace::MinContent, None) => AvailableSpace::MinContent,
+            (AvailableSpace::MaxContent, Some(rhs)) => AvailableSpace::Definite(rhs),
+            (AvailableSpace::MaxContent, None) => AvailableSpace::MaxContent,
+        }
+    }
+    fn maybe_max(self, rhs: Option<f32>) -> AvailableSpace {
+        match (self, rhs) {
+            (AvailableSpace::Definite(val), Some(rhs)) => AvailableSpace::Definite(val.max(rhs)),
+            (AvailableSpace::Definite(val), None) => AvailableSpace::Definite(val),
+            (AvailableSpace::MinContent, _) => AvailableSpace::MinContent,
+            (AvailableSpace::MaxContent, _) => AvailableSpace::MaxContent,
+        }
+    }
+    fn maybe_add(self, rhs: Option<f32>) -> AvailableSpace {
+        match (self, rhs) {
+            (AvailableSpace::Definite(val), Some(rhs)) => AvailableSpace::Definite(val + rhs),
+            (AvailableSpace::Definite(val), None) => AvailableSpace::Definite(val),
+            (AvailableSpace::MinContent, _) => AvailableSpace::MinContent,
+            (AvailableSpace::MaxContent, _) => AvailableSpace::MaxContent,
+        }
+    }
+    fn maybe_sub(self, rhs: Option<f32>) -> AvailableSpace {
+        match (self, rhs) {
+            (AvailableSpace::Definite(val), Some(rhs)) => AvailableSpace::Definite(val - rhs),
+            (AvailableSpace::Definite(val), None) => AvailableSpace::Definite(val),
+            (AvailableSpace::MinContent, _) => AvailableSpace::MinContent,
+            (AvailableSpace::MaxContent, _) => AvailableSpace::MaxContent,
         }
     }
 }

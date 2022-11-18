@@ -54,7 +54,7 @@ let root_node = taffy
     .unwrap();
 
 // Call compute_layout on the root of your tree to run the layout algorithm
-taffy.compute_layout(root_node, Size::NONE).unwrap();
+taffy.compute_layout(root_node, Size::MAX_CONTENT).unwrap();
 
 // Inspect the computed layout using taffy.layout
 assert_eq!(taffy.layout(root_node).unwrap().size.width, 800.0);

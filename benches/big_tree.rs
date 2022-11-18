@@ -65,14 +65,14 @@ fn taffy_benchmarks(c: &mut Criterion) {
         let mut taffy = Taffy::new();
         let root = build_flat_hierarchy(&mut taffy, 10_000);
 
-        b.iter(|| taffy.compute_layout(root, Size::NONE).unwrap())
+        b.iter(|| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap())
     });
 
     group.bench_function("100_000 nodes (2-level hierarchy)", |b| {
         let mut taffy = Taffy::new();
         let root = build_flat_hierarchy(&mut taffy, 100_000);
 
-        b.iter(|| taffy.compute_layout(root, Size::NONE).unwrap())
+        b.iter(|| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap())
     });
 
     group.bench_function("100_000 nodes (7-level hierarchy)", |b| {

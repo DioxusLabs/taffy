@@ -13,6 +13,15 @@ pub enum RunMode {
     ComputeSize,
 }
 
+/// Whether styles should be taken into account when computing size
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum SizingMode {
+    /// Only content contributions should be taken into account
+    ContentSize,
+    /// Inherent size styles should be taken into account in addition to content contributions
+    InherentSize,
+}
+
 /// The amount of space available to a node in a given axis
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum AvailableSpace {
@@ -81,10 +90,12 @@ impl From<f32> for AvailableSpace {
 
 impl Size<AvailableSpace> {
     /// A Size<AvailableSpace> containing a MaxContent constraint in both dimensions
-    const MAX_CONTENT : Size<AvailableSpace> = Size { width: AvailableSpace::MaxContent, height: AvailableSpace::MaxContent };
+    pub const MAX_CONTENT: Size<AvailableSpace> =
+        Size { width: AvailableSpace::MaxContent, height: AvailableSpace::MaxContent };
 
     /// A Size<AvailableSpace> containing a MinContent constraint in both dimensions
-    const MIN_CONTENT : Size<AvailableSpace> = Size { width: AvailableSpace::MinContent, height: AvailableSpace::MinContent };
+    pub const MIN_CONTENT: Size<AvailableSpace> =
+        Size { width: AvailableSpace::MinContent, height: AvailableSpace::MinContent };
 
     /// Convert Size<AvailableSpace> into Size<Option<f32>>
     pub fn as_options(self) -> Size<Option<f32>> {
@@ -128,15 +139,15 @@ impl Layout {
 }
 
 /// Cached intermediate layout results
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Cache {
     /// The initial cached size of the node itself
-    pub(crate) node_size: Size<Option<f32>>,
+    pub(crate) known_dimensions: Size<Option<f32>>,
     /// The initial cached size of the parent's node
-    pub(crate) parent_size: Size<Option<f32>>,
+    pub(crate) available_space: Size<AvailableSpace>,
     /// Whether or not layout should be recomputed
     pub(crate) run_mode: RunMode,
 
     /// The cached size of the item
-    pub(crate) size: Size<f32>,
+    pub(crate) cached_size: Size<f32>,
 }
