@@ -52,8 +52,13 @@ fn compute_node_layout(
     
 
     // First we check if we have a cached result for the given input
-    if let Some(cached_size) = compute_from_cache(tree, node, known_dimensions, available_space, run_mode) {
+    let cache_run_mode = if tree.children(node).is_empty() { RunMode::PeformLayout } else { run_mode };
+    if let Some(cached_size) = compute_from_cache(tree, node, known_dimensions, available_space, cache_run_mode, sizing_mode) {
         NODE_LOGGER.debug_llog("CACHE", cached_size);
+        NODE_LOGGER.debug_llog("run_mode", run_mode);
+        NODE_LOGGER.debug_llog("sizing_mode", sizing_mode);
+        NODE_LOGGER.debug_llog("known_dimensions", known_dimensions);
+        NODE_LOGGER.debug_llog("available_space", available_space);
         NODE_LOGGER.pop_node();
         return cached_size;
     }
@@ -108,7 +113,7 @@ fn compute_node_layout(
 
     // Cache result
     *tree.cache_mut(node, cache_slot) =
-        Some(Cache { known_dimensions, available_space, run_mode, cached_size: computed_size });
+        Some(Cache { known_dimensions, available_space, run_mode: cache_run_mode, cached_size: computed_size });
 
     NODE_LOGGER.debug_llog("RESULT", computed_size);
     NODE_LOGGER.pop_node();
@@ -124,6 +129,7 @@ fn compute_from_cache(
     known_dimensions: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
+    sizing_mode: SizingMode,
 ) -> Option<Size<f32>> {
     for idx in 0..4 {
         let entry = tree.cache_mut(node, idx);
@@ -135,14 +141,22 @@ fn compute_from_cache(
                 return None;
             }
 
-            if known_dimensions.width == entry.known_dimensions.width
-                && known_dimensions.height == entry.known_dimensions.height
-            // if (known_dimensions.width == entry.known_dimensions.width || known_dimensions.width == Some(entry.cached_size.width))
-                // && (known_dimensions.height == entry.known_dimensions.height || known_dimensions.height == Some(entry.cached_size.height))
-                && entry.available_space.width.is_roughly_equal(available_space.width)
-                && entry.available_space.height.is_roughly_equal(available_space.height)
-                // && (known_dimensions.width.is_some() || entry.available_space.width.is_roughly_equal(available_space.width))
-                // && (known_dimensions.height.is_some() || entry.available_space.height.is_roughly_equal(available_space.height))
+            // if known_dimensions.width == entry.known_dimensions.width
+                // && known_dimensions.height == entry.known_dimensions.height
+            if (known_dimensions.width == entry.known_dimensions.width || known_dimensions.width == Some(entry.cached_size.width))
+                && (known_dimensions.height == entry.known_dimensions.height || known_dimensions.height == Some(entry.cached_size.height))
+                // && entry.available_space.width.is_roughly_equal(available_space.width)
+                // && entry.available_space.height.is_roughly_equal(available_space.height)
+                && (
+                  known_dimensions.width.is_some()
+                  || entry.available_space.width.is_roughly_equal(available_space.width)
+                  || (sizing_mode == SizingMode::ContentSize && available_space.width.is_definite() && available_space.width.unwrap() >= entry.cached_size.width)
+                )
+                && (
+                  known_dimensions.height.is_some()
+                  || entry.available_space.height.is_roughly_equal(available_space.height)
+                  || (sizing_mode == SizingMode::ContentSize && available_space.height.is_definite() && available_space.height.unwrap() >= entry.cached_size.height)
+                )
                 // && (entry.available_space.width.is_roughly_equal(available_space.width) || (available_space.width.is_definite() && available_space.width.unwrap() >= entry.cached_size.width))
                 // && (entry.available_space.height.is_roughly_equal(available_space.height) || (available_space.height.is_definite() && available_space.height.unwrap() >= entry.cached_size.height))
             {
