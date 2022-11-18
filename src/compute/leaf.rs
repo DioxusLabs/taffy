@@ -81,14 +81,14 @@ pub(crate) fn compute(
     return Size {
         width: node_size
             .width
-            // .unwrap_or(0.0) + padding.horizontal_axis_sum() + border.horizontal_axis_sum(),
-            .unwrap_or(0.0 + padding.horizontal_axis_sum() + border.horizontal_axis_sum())
+            // .unwrap_or(0.0) + padding.horizontal_axis_sum() + border.horizontal_axis_sum(), // content-box
+            .unwrap_or(0.0 + padding.horizontal_axis_sum() + border.horizontal_axis_sum()) // border-box
             .maybe_max(node_min_size.width)
             .maybe_min(node_max_size.width),
         height: node_size
             .height
-            // .unwrap_or(0.0) + padding.horizontal_axis_sum() + border.horizontal_axis_sum(),
-            .unwrap_or(0.0 + padding.horizontal_axis_sum() + border.horizontal_axis_sum())
+            // .unwrap_or(0.0) + padding.horizontal_axis_sum() + border.horizontal_axis_sum(), // content-box
+            .unwrap_or(0.0 + padding.horizontal_axis_sum() + border.horizontal_axis_sum()) // border-box
             .maybe_max(node_min_size.height)
             .maybe_min(node_max_size.height),
     };
