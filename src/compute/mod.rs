@@ -52,7 +52,7 @@ fn compute_node_layout(
     
 
     // First we check if we have a cached result for the given input
-    if let Some(cached_size) = compute_from_cache(tree, node, known_dimensions, available_space) {
+    if let Some(cached_size) = compute_from_cache(tree, node, known_dimensions, available_space, run_mode) {
         NODE_LOGGER.debug_llog("CACHE", cached_size);
         NODE_LOGGER.pop_node();
         return cached_size;
@@ -123,11 +123,18 @@ fn compute_from_cache(
     node: Node,
     known_dimensions: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
+    run_mode: RunMode,
 ) -> Option<Size<f32>> {
     for idx in 0..4 {
         let entry = tree.cache_mut(node, idx);
         // NODE_LOGGER.debug_llog("cache_entry", &entry);
         if let Some(entry) = entry {
+
+            // Cached ComputeSize results are not valid if we are running in PerformLayout mode
+            if entry.run_mode == RunMode::ComputeSize && run_mode == RunMode::PeformLayout {
+                return None;
+            }
+
             if known_dimensions.width == entry.known_dimensions.width
                 && known_dimensions.height == entry.known_dimensions.height
             // if (known_dimensions.width == entry.known_dimensions.width || known_dimensions.width == Some(entry.cached_size.width))
