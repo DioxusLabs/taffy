@@ -47,27 +47,27 @@ fn compute_node_layout(
     // clear the dirtiness of the node now that we've computed it
     tree.mark_dirty(node, false);
 
-    NODE_LOGGER.push_node(node);
-    println!("");
+    // NODE_LOGGER.push_node(node);
+    // println!("");
     
 
     // First we check if we have a cached result for the given input
     let cache_run_mode = if tree.children(node).is_empty() { RunMode::PeformLayout } else { run_mode };
     if let Some(cached_size) = compute_from_cache(tree, node, known_dimensions, available_space, cache_run_mode, sizing_mode) {
-        NODE_LOGGER.debug_llog("CACHE", cached_size);
-        NODE_LOGGER.debug_llog("run_mode", run_mode);
-        NODE_LOGGER.debug_llog("sizing_mode", sizing_mode);
-        NODE_LOGGER.debug_llog("known_dimensions", known_dimensions);
-        NODE_LOGGER.debug_llog("available_space", available_space);
-        NODE_LOGGER.pop_node();
+        // NODE_LOGGER.debug_llog("CACHE", cached_size);
+        // NODE_LOGGER.debug_llog("run_mode", run_mode);
+        // NODE_LOGGER.debug_llog("sizing_mode", sizing_mode);
+        // NODE_LOGGER.debug_llog("known_dimensions", known_dimensions);
+        // NODE_LOGGER.debug_llog("available_space", available_space);
+        // NODE_LOGGER.pop_node();
         return cached_size;
     }
 
-    NODE_LOGGER.log("COMPUTE");
-    NODE_LOGGER.debug_llog("run_mode", run_mode);
-    NODE_LOGGER.debug_llog("sizing_mode", sizing_mode);
-    NODE_LOGGER.debug_llog("known_dimensions", known_dimensions);
-    NODE_LOGGER.debug_llog("available_space", available_space);
+    // NODE_LOGGER.log("COMPUTE");
+    // NODE_LOGGER.debug_llog("run_mode", run_mode);
+    // NODE_LOGGER.debug_llog("sizing_mode", sizing_mode);
+    // NODE_LOGGER.debug_llog("known_dimensions", known_dimensions);
+    // NODE_LOGGER.debug_llog("available_space", available_space);
 
     // Attempt to shortcut size computation based on
     //  - KnownSize sizing constraints
@@ -95,17 +95,17 @@ fn compute_node_layout(
 
     // If this is a leaf node we can skip a lot of this function in some cases
     let computed_size = if tree.children(node).is_empty() {
-        NODE_LOGGER.log("Algo: leaf");
+        // NODE_LOGGER.log("Algo: leaf");
         self::leaf::compute(tree, node, known_dimensions, available_space, run_mode, sizing_mode)
     } else {
         // println!("match {:?}", tree.style(node).display);
         match tree.style(node).display {
             Display::Flex => {
-              NODE_LOGGER.log("Algo: flexbox");
+              // NODE_LOGGER.log("Algo: flexbox");
               self::flexbox::compute(tree, node, known_dimensions, available_space, run_mode, cache_slot)
             },
             Display::None => {
-              NODE_LOGGER.log("Algo: none");
+              // NODE_LOGGER.log("Algo: none");
               Size { width: 0.0, height: 0.0 }
             },
         }
@@ -115,8 +115,8 @@ fn compute_node_layout(
     *tree.cache_mut(node, cache_slot) =
         Some(Cache { known_dimensions, available_space, run_mode: cache_run_mode, cached_size: computed_size });
 
-    NODE_LOGGER.debug_llog("RESULT", computed_size);
-    NODE_LOGGER.pop_node();
+    // NODE_LOGGER.debug_llog("RESULT", computed_size);
+    // NODE_LOGGER.pop_node();
 
     computed_size
 }
