@@ -38,10 +38,10 @@ pub(crate) fn compute(
         }
     };
 
-    NODE_LOGGER.log("LEAF");
-    NODE_LOGGER.debug_llog("node_size", node_size);
-    NODE_LOGGER.debug_llog("min_size ", node_min_size);
-    NODE_LOGGER.debug_llog("max_size ", node_max_size);
+    // NODE_LOGGER.log("LEAF");
+    // NODE_LOGGER.debug_llog("node_size", node_size);
+    // NODE_LOGGER.debug_llog("min_size ", node_min_size);
+    // NODE_LOGGER.debug_llog("max_size ", node_max_size);
 
     if node_size.width.is_some() && node_size.height.is_some() {
         return Size {
