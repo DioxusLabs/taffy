@@ -1,6 +1,7 @@
 //! Contains numerical helper traits and functions
 
 use crate::layout::AvailableSpace;
+use crate::geometry::Size;
 
 /// A trait to conveniently calculate minimums and maximums when some data may not be defined
 ///
@@ -217,6 +218,43 @@ impl MaybeMath<Option<f32>, AvailableSpace> for AvailableSpace {
             (AvailableSpace::Definite(val), None) => AvailableSpace::Definite(val),
             (AvailableSpace::MinContent, _) => AvailableSpace::MinContent,
             (AvailableSpace::MaxContent, _) => AvailableSpace::MaxContent,
+        }
+    }
+}
+
+impl<In, Out, T: MaybeMath<In, Out>> MaybeMath<Size<In>, Size<Out>> for Size<T> {
+    fn maybe_min(self, rhs: Size<In>) -> Size<Out> {
+        Size {
+            width: self.width.maybe_min(rhs.width),
+            height: self.height.maybe_min(rhs.height),
+        }
+    }
+
+    fn maybe_max(self, rhs: Size<In>) -> Size<Out> {
+        Size {
+            width: self.width.maybe_max(rhs.width),
+            height: self.height.maybe_max(rhs.height),
+        }
+    }
+
+    fn maybe_clamp(self, min: Size<In>, max: Size<In>) -> Size<Out> {
+        Size {
+            width: self.width.maybe_clamp(min.width, max.width),
+            height: self.height.maybe_clamp(min.height, max.height),
+        }
+    }
+
+    fn maybe_add(self, rhs: Size<In>) -> Size<Out> {
+        Size {
+            width: self.width.maybe_add(rhs.width),
+            height: self.height.maybe_add(rhs.height),
+        }
+    }
+
+    fn maybe_sub(self, rhs: Size<In>) -> Size<Out> {
+        Size {
+            width: self.width.maybe_sub(rhs.width),
+            height: self.height.maybe_sub(rhs.height),
         }
     }
 }
