@@ -112,6 +112,7 @@ fn compute_node_layout(
     };
 
     // Cache result
+    let cache_slot = (known_dimensions.width.is_some() as usize) + (known_dimensions.height.is_some() as usize * 2);
     *tree.cache_mut(node, cache_slot) =
         Some(Cache { known_dimensions, available_space, run_mode: cache_run_mode, cached_size: computed_size });
 
