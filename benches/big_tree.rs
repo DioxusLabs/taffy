@@ -31,6 +31,7 @@ fn build_flat_hierarchy(taffy: &mut Taffy, total_node_count: u32) -> Node {
 
 /// A helper function to recursively construct a deep tree
 fn build_deep_tree(taffy: &mut Taffy, rng: &mut ChaCha8Rng, max_nodes: u32, branching_factor: u32) -> Vec<Node> {
+
     if max_nodes <= branching_factor {
         // Build leaf nodes
         return (0..max_nodes).map(|_| build_random_leaf(taffy, rng)).collect();
