@@ -4,6 +4,7 @@
 use core::f32;
 
 use crate::compute::compute_node_layout;
+use crate::debug::NODE_LOGGER;
 use crate::geometry::{Point, Rect, Size};
 use crate::layout::{AvailableSpace, Cache, Layout, RunMode, SizingMode};
 use crate::math::MaybeMath;
@@ -13,7 +14,6 @@ use crate::style::{AlignContent, AlignSelf, Dimension, Display, FlexWrap, Justif
 use crate::style::{FlexDirection, FlexboxLayout};
 use crate::sys::{abs, round, Vec};
 use crate::tree::LayoutTree;
-use crate::debug::NODE_LOGGER;
 
 /// The intermediate results of a flexbox calculation for a single item
 struct FlexItem {
@@ -123,7 +123,9 @@ pub fn compute(
     // Pull these out earlier to avoid borrowing issues
     let min_size = style.min_size.maybe_resolve(known_dimensions);
     let max_size = style.max_size.maybe_resolve(known_dimensions);
-    let clamped_style_size = style.size.maybe_resolve(known_dimensions)
+    let clamped_style_size = style
+        .size
+        .maybe_resolve(known_dimensions)
         .zip_map(min_size, |size, min| size.maybe_max(min))
         .zip_map(max_size, |size, max| size.maybe_min(max));
 
@@ -136,7 +138,7 @@ pub fn compute(
             known_dimensions.zip_map(clamped_style_size, |known, style| known.or(style)),
             available_space,
             RunMode::ComputeSize,
-            cache_slot == 0,//true,
+            cache_slot == 0, //true,
         );
 
         let clamped_first_pass_size = first_pass
@@ -149,7 +151,7 @@ pub fn compute(
             known_dimensions.zip_map(clamped_first_pass_size, |known, first_pass| known.or(first_pass.into())),
             available_space,
             RunMode::PeformLayout,
-            cache_slot == 0,//true,
+            cache_slot == 0, //true,
         )
     } else {
         // NODE_LOGGER.log("FLEX: single-pass");
@@ -159,7 +161,7 @@ pub fn compute(
             known_dimensions.zip_map(clamped_style_size, |known, style| known.or(style)),
             available_space,
             RunMode::PeformLayout,
-            cache_slot == 0,//true,
+            cache_slot == 0, //true,
         )
     }
 
@@ -673,11 +675,19 @@ fn determine_flex_base_size(
         // The following logic was developed not from the spec but by trail and error looking into how
         // webkit handled various scenarios. Can probably be solved better by passing in
         // min-content max-content constraints from the top
-        let min_main = compute_node_layout(tree, child.node, Size::NONE, available_space, RunMode::ComputeSize, SizingMode::ContentSize, 1)
-            .main(constants.dir)
-            .maybe_max(child.min_size.main(constants.dir))
-            .maybe_min(child.size.main(constants.dir))
-            .into();
+        let min_main = compute_node_layout(
+            tree,
+            child.node,
+            Size::NONE,
+            available_space,
+            RunMode::ComputeSize,
+            SizingMode::ContentSize,
+            1,
+        )
+        .main(constants.dir)
+        .maybe_max(child.min_size.main(constants.dir))
+        .maybe_min(child.size.main(constants.dir))
+        .into();
 
         child.hypothetical_inner_size.set_main(
             constants.dir,
@@ -929,11 +939,19 @@ fn resolve_flexible_lengths(
             // min-content max-content constraints from the top. Need to figure out correct thing to do here as
             // just piling on more conditionals.
             let min_main = if constants.is_row && !tree.needs_measure(child.node) {
-                compute_node_layout(tree, child.node, Size::NONE, available_space, RunMode::ComputeSize, SizingMode::ContentSize, 1)
-                    .width
-                    .maybe_min(child.size.width)
-                    .maybe_max(child.min_size.width)
-                    .into()
+                compute_node_layout(
+                    tree,
+                    child.node,
+                    Size::NONE,
+                    available_space,
+                    RunMode::ComputeSize,
+                    SizingMode::ContentSize,
+                    1,
+                )
+                .width
+                .maybe_min(child.size.width)
+                .maybe_max(child.min_size.width)
+                .into()
             } else {
                 child.min_size.main(constants.dir)
             };

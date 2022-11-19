@@ -28,10 +28,11 @@ pub(crate) fn compute(
             let node_min_size = Size::NONE;
             let node_max_size = Size::NONE;
             (node_size, node_min_size, node_max_size)
-        },
+        }
         SizingMode::InherentSize => {
             let style_size = style.size.maybe_resolve(available_space.as_options());
-            let node_size = style_size.zip_map(known_dimensions, |style_size, known_dimensions| known_dimensions.or(style_size));
+            let node_size =
+                style_size.zip_map(known_dimensions, |style_size, known_dimensions| known_dimensions.or(style_size));
             let node_min_size = style.min_size.maybe_resolve(available_space.as_options());
             let node_max_size = style.max_size.maybe_resolve(available_space.as_options());
             (node_size, node_min_size, node_max_size)
@@ -94,20 +95,17 @@ pub(crate) fn compute(
     };
 }
 
-fn maybe_clamp(size: Size<Option<f32>>, min_size: Size<Option<f32>>, max_size: Size<Option<f32>>, sizing_mode: SizingMode) -> Size<Option<f32>> {
+fn maybe_clamp(
+    size: Size<Option<f32>>,
+    min_size: Size<Option<f32>>,
+    max_size: Size<Option<f32>>,
+    sizing_mode: SizingMode,
+) -> Size<Option<f32>> {
     match sizing_mode {
         SizingMode::ContentSize => size,
-        SizingMode::InherentSize => {
-             Size {
-                width: size.
-                    width
-                    .maybe_max(min_size.width)
-                    .maybe_min(max_size.width),
-                height:size
-                    .height
-                    .maybe_max(min_size.height)
-                    .maybe_min(max_size.height),
-            }
-        }
+        SizingMode::InherentSize => Size {
+            width: size.width.maybe_max(min_size.width).maybe_min(max_size.width),
+            height: size.height.maybe_max(min_size.height).maybe_min(max_size.height),
+        },
     }
 }

@@ -2,9 +2,10 @@ pub(crate) mod flexbox;
 pub(crate) mod leaf;
 
 use core::sync::atomic::AtomicU16;
-use std::env::consts;
 use slotmap::Key;
+use std::env::consts;
 
+use crate::debug::NODE_LOGGER;
 use crate::error::TaffyError;
 use crate::geometry::{Point, Size};
 use crate::layout::{AvailableSpace, Cache, Layout, RunMode, SizingMode};
@@ -14,7 +15,6 @@ use crate::resolve::MaybeResolve;
 use crate::style::Display;
 use crate::sys::round;
 use crate::tree::LayoutTree;
-use crate::debug::NODE_LOGGER;
 
 /// Updates the stored layout of the provided `node` and its children
 pub fn compute_layout(
@@ -23,7 +23,15 @@ pub fn compute_layout(
     available_space: Size<AvailableSpace>,
 ) -> Result<(), TaffyError> {
     // Recursively compute node layout
-    let size = compute_node_layout(tree, root, Size::NONE, available_space, RunMode::PeformLayout, SizingMode::InherentSize, 0);
+    let size = compute_node_layout(
+        tree,
+        root,
+        Size::NONE,
+        available_space,
+        RunMode::PeformLayout,
+        SizingMode::InherentSize,
+        0,
+    );
 
     let layout = Layout { order: 0, size, location: Point::ZERO };
     *tree.layout_mut(root) = layout;
@@ -49,11 +57,12 @@ fn compute_node_layout(
 
     // NODE_LOGGER.push_node(node);
     // println!("");
-    
 
     // First we check if we have a cached result for the given input
     let cache_run_mode = if tree.children(node).is_empty() { RunMode::PeformLayout } else { run_mode };
-    if let Some(cached_size) = compute_from_cache(tree, node, known_dimensions, available_space, cache_run_mode, sizing_mode) {
+    if let Some(cached_size) =
+        compute_from_cache(tree, node, known_dimensions, available_space, cache_run_mode, sizing_mode)
+    {
         // NODE_LOGGER.debug_llog("CACHE", cached_size);
         // NODE_LOGGER.debug_llog("run_mode", run_mode);
         // NODE_LOGGER.debug_llog("sizing_mode", sizing_mode);
@@ -101,13 +110,13 @@ fn compute_node_layout(
         // println!("match {:?}", tree.style(node).display);
         match tree.style(node).display {
             Display::Flex => {
-              // NODE_LOGGER.log("Algo: flexbox");
-              self::flexbox::compute(tree, node, known_dimensions, available_space, run_mode, cache_slot)
-            },
+                // NODE_LOGGER.log("Algo: flexbox");
+                self::flexbox::compute(tree, node, known_dimensions, available_space, run_mode, cache_slot)
+            }
             Display::None => {
-              // NODE_LOGGER.log("Algo: none");
-              Size { width: 0.0, height: 0.0 }
-            },
+                // NODE_LOGGER.log("Algo: none");
+                Size { width: 0.0, height: 0.0 }
+            }
         }
     };
 
@@ -136,14 +145,13 @@ fn compute_from_cache(
         let entry = tree.cache_mut(node, idx);
         // NODE_LOGGER.debug_llog("cache_entry", &entry);
         if let Some(entry) = entry {
-
             // Cached ComputeSize results are not valid if we are running in PerformLayout mode
             if entry.run_mode == RunMode::ComputeSize && run_mode == RunMode::PeformLayout {
                 return None;
             }
 
             // if known_dimensions.width == entry.known_dimensions.width
-                // && known_dimensions.height == entry.known_dimensions.height
+            // && known_dimensions.height == entry.known_dimensions.height
             if (known_dimensions.width == entry.known_dimensions.width || known_dimensions.width == Some(entry.cached_size.width))
                 && (known_dimensions.height == entry.known_dimensions.height || known_dimensions.height == Some(entry.cached_size.height))
                 // && entry.available_space.width.is_roughly_equal(available_space.width)
@@ -158,8 +166,8 @@ fn compute_from_cache(
                   || entry.available_space.height.is_roughly_equal(available_space.height)
                   || (sizing_mode == SizingMode::ContentSize && available_space.height.is_definite() && available_space.height.unwrap() >= entry.cached_size.height)
                 )
-                // && (entry.available_space.width.is_roughly_equal(available_space.width) || (available_space.width.is_definite() && available_space.width.unwrap() >= entry.cached_size.width))
-                // && (entry.available_space.height.is_roughly_equal(available_space.height) || (available_space.height.is_definite() && available_space.height.unwrap() >= entry.cached_size.height))
+            // && (entry.available_space.width.is_roughly_equal(available_space.width) || (available_space.width.is_definite() && available_space.width.unwrap() >= entry.cached_size.width))
+            // && (entry.available_space.height.is_roughly_equal(available_space.height) || (available_space.height.is_definite() && available_space.height.unwrap() >= entry.cached_size.height))
             {
                 return Some(entry.cached_size);
             }

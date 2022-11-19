@@ -1,7 +1,7 @@
 use core::fmt::{Debug, Display, Write};
-use core::sync::atomic::{Ordering, AtomicUsize};
-use std::sync::{Mutex, Arc};
+use core::sync::atomic::{AtomicUsize, Ordering};
 use slotmap::Key;
+use std::sync::{Arc, Mutex};
 
 use crate::node::Node;
 use crate::tree::LayoutTree;
@@ -21,76 +21,71 @@ fn print_node(tree: &impl LayoutTree, node: Node, level: usize) {
         leftpad = level * 4,
         key = node.data(),
         x = layout.location.x,
-        y = layout.location.y, 
+        y = layout.location.y,
         width = layout.size.width,
         height = layout.size.height,
     );
 
     // Recurse into children
     for child in tree.children(node) {
-      print_node(tree, *child, level + 1)
+        print_node(tree, *child, level + 1)
     }
 }
 
-
-
-pub (crate) struct DebugLogger {
-  stack: Mutex<Vec<String>>,
+pub(crate) struct DebugLogger {
+    stack: Mutex<Vec<String>>,
 }
 
-static EMPTY_STRING : String = String::new();
+static EMPTY_STRING: String = String::new();
 
 impl DebugLogger {
-
-  pub (crate) const fn new()  -> Self {
-    Self {
-      stack: Mutex::new(Vec::new())
+    pub(crate) const fn new() -> Self {
+        Self { stack: Mutex::new(Vec::new()) }
     }
-  }
 
-  pub (crate) fn push_node(&self, new_key: impl Key) {
-    let mut stack = self.stack.lock().unwrap();
-    let mut key_string = String::new();
-    write!(&mut key_string, "{:?}", new_key.data()).unwrap();
-    stack.push(key_string);
-  }
+    pub(crate) fn push_node(&self, new_key: impl Key) {
+        let mut stack = self.stack.lock().unwrap();
+        let mut key_string = String::new();
+        write!(&mut key_string, "{:?}", new_key.data()).unwrap();
+        stack.push(key_string);
+    }
 
-  pub (crate) fn pop_node(&self) {
-    let mut stack = self.stack.lock().unwrap();
-    stack.pop();
-  }
+    pub(crate) fn pop_node(&self) {
+        let mut stack = self.stack.lock().unwrap();
+        stack.pop();
+    }
 
-  pub (crate) fn log(&self, message: impl Display) {
-    let stack = self.stack.lock().unwrap();
-    let key = stack.last().unwrap_or(&EMPTY_STRING);
-    let level = stack.len() * 4;
-    let space = " ";
-    println!("{space:level$}{key}: {message}");
-  }
+    pub(crate) fn log(&self, message: impl Display) {
+        let stack = self.stack.lock().unwrap();
+        let key = stack.last().unwrap_or(&EMPTY_STRING);
+        let level = stack.len() * 4;
+        let space = " ";
+        println!("{space:level$}{key}: {message}");
+    }
 
-  pub (crate) fn llog(&self, label: &str, message: impl Display) {
-    let stack = self.stack.lock().unwrap();
-    let key = stack.last().unwrap_or(&EMPTY_STRING);
-    let level = stack.len() * 4;
-    let space = " ";
-    println!("{space:level$}{key}: {label} {message}");
-  }
+    pub(crate) fn llog(&self, label: &str, message: impl Display) {
+        let stack = self.stack.lock().unwrap();
+        let key = stack.last().unwrap_or(&EMPTY_STRING);
+        let level = stack.len() * 4;
+        let space = " ";
+        println!("{space:level$}{key}: {label} {message}");
+    }
 
-  pub (crate) fn debug_log(&self, message: impl Debug) {
-    let stack = self.stack.lock().unwrap();
-    let key = stack.last().unwrap_or(&EMPTY_STRING);
-    let level = stack.len() * 4;
-    let space = " ";
-    println!("{space:level$}{key}: {message:?}");
-  }
+    pub(crate) fn debug_log(&self, message: impl Debug) {
+        let stack = self.stack.lock().unwrap();
+        let key = stack.last().unwrap_or(&EMPTY_STRING);
+        let level = stack.len() * 4;
+        let space = " ";
+        println!("{space:level$}{key}: {message:?}");
+    }
 
-  pub (crate) fn debug_llog(&self, label: &str, message: impl Debug) {
-   let stack = self.stack.lock().unwrap();
-    let key = stack.last().unwrap_or(&EMPTY_STRING);
-    let level = stack.len() * 4;
-    let space = " ";
-    println!("{space:level$}{key}: {label} {message:?}");
-  }
+    pub(crate) fn debug_llog(&self, label: &str, message: impl Debug) {
+        let stack = self.stack.lock().unwrap();
+        let key = stack.last().unwrap_or(&EMPTY_STRING);
+        let level = stack.len() * 4;
+        let space = " ";
+        println!("{space:level$}{key}: {label} {message:?}");
+    }
 }
 
-pub (crate) static NODE_LOGGER : DebugLogger = DebugLogger::new();
+pub(crate) static NODE_LOGGER: DebugLogger = DebugLogger::new();
