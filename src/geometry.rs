@@ -255,6 +255,16 @@ impl Size<Option<f32>> {
     pub const fn new(width: f32, height: f32) -> Self {
         Size { width: Some(width), height: Some(height) }
     }
+
+    /// Performs Option::unwrap_or on each component separately
+    pub fn unwrap_or(self, alt: Size<f32>) -> Size<f32> {
+        Size { width: self.width.unwrap_or(alt.width), height: self.height.unwrap_or(alt.height) }
+    }
+
+    /// Performs Option::or on each component separately
+    pub fn or(self, alt: Size<Option<f32>>) -> Size<Option<f32>> {
+        Size { width: self.width.or(alt.width), height: self.height.or(alt.height) }
+    }
 }
 
 impl Size<Dimension> {
