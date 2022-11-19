@@ -44,10 +44,11 @@ pub(crate) fn compute(
     // NODE_LOGGER.debug_llog("min_size ", node_min_size);
     // NODE_LOGGER.debug_llog("max_size ", node_max_size);
 
-    if node_size.width.is_some() && node_size.height.is_some() {
+    // Return early if both width and height are known
+    if let Size { width: Some(width), height: Some(height) } = node_size {
         return Size {
-            width: node_size.width.maybe_max(node_min_size.width).maybe_min(node_max_size.width).unwrap_or(0.0),
-            height: node_size.height.maybe_max(node_min_size.height).maybe_min(node_max_size.height).unwrap_or(0.0),
+            width: width.maybe_max(node_min_size.width).maybe_min(node_max_size.width),
+            height: height.maybe_max(node_min_size.height).maybe_min(node_max_size.height),
         };
     };
 
