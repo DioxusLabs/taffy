@@ -96,13 +96,19 @@ fn taffy_benchmarks(c: &mut Criterion) {
         b.iter(|| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap())
     });
 
-    // Slow. To be enabled once performance improvements land.
-    // group.bench_function("100_000 nodes (17-level hierarchy)", |b| {
-    //     let mut taffy = Taffy::new();
-    //     let root = build_deep_hierarchy(&mut taffy, 100_000, 2);
+    group.bench_function("100_000 nodes (17-level hierarchy)", |b| {
+        let mut taffy = Taffy::new();
+        let root = build_deep_hierarchy(&mut taffy, 100_000, 2);
 
-    //     b.iter(|| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap())
-    // });
+        b.iter(|| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap())
+    });
+
+    group.bench_function("1_000_000 nodes (20-level hierarchy)", |b| {
+        let mut taffy = Taffy::new();
+        let root = build_deep_hierarchy(&mut taffy, 1_000_000, 2);
+
+        b.iter(|| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap())
+    });
 }
 
 criterion_group!(benches, taffy_benchmarks);
