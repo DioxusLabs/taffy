@@ -313,7 +313,7 @@ fn compute_preliminary(
     // Before returning we perform absolute layout on all absolutely positioned children
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("perform_absolute_layout_on_absolute_children");
-    perform_absolute_layout_on_absolute_children(tree, node, &constants, available_space);
+    perform_absolute_layout_on_absolute_children(tree, node, &constants);
 
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("hidden_layout");
@@ -1600,7 +1600,6 @@ fn perform_absolute_layout_on_absolute_children(
     tree: &mut impl LayoutTree,
     node: Node,
     constants: &AlgoConstants,
-    available_space: Size<AvailableSpace>,
 ) {
     // TODO: remove number of Vec<_> generated
     let candidates = tree

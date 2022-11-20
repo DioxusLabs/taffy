@@ -87,4 +87,5 @@ impl DebugLogger {
     }
 }
 
+#[cfg(feature = "debug")]
 pub(crate) static NODE_LOGGER: DebugLogger = DebugLogger::new();

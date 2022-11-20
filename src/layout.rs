@@ -34,7 +34,8 @@ pub enum AvailableSpace {
 }
 
 impl AvailableSpace {
-    const ZERO: AvailableSpace = AvailableSpace::Definite(0.0);
+    /// A definite available space of zero
+    pub const ZERO: AvailableSpace = AvailableSpace::Definite(0.0);
 
     /// Returns true for definite values, else false
     pub fn is_definite(self) -> bool {

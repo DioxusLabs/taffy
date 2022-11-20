@@ -8,7 +8,7 @@ pub type Node = slotmap::DefaultKey;
 
 use crate::error::{TaffyError, TaffyResult};
 use crate::geometry::Size;
-use crate::layout::{AvailableSpace, Cache, Layout, RunMode};
+use crate::layout::{AvailableSpace, Cache, Layout};
 use crate::prelude::LayoutTree;
 use crate::style::FlexboxLayout;
 #[cfg(any(feature = "std", feature = "alloc"))]
