@@ -26,6 +26,7 @@ alloc = []
 std = ["num-traits/std"]
 serde = ["dep:serde"]
 random = ["dep:rand"]
+debug = []
 
 [dev-dependencies]
 criterion = "0.4"

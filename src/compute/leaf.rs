@@ -1,11 +1,12 @@
-use crate::debug::NODE_LOGGER;
 use crate::geometry::Size;
-use crate::layout::{AvailableSpace, Cache, RunMode, SizingMode};
+use crate::layout::{AvailableSpace, RunMode, SizingMode};
 use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::resolve::{MaybeResolve, ResolveOrDefault};
-use crate::style::Dimension;
 use crate::tree::LayoutTree;
+
+#[cfg(feature = "debug")]
+use crate::debug::NODE_LOGGER;
 
 // Define some general constants we will need for the remainder of the algorithm.
 // let mut constants = compute_constants(tree.style(node), node_size, available_space);
@@ -38,10 +39,14 @@ pub(crate) fn compute(
         }
     };
 
-    // NODE_LOGGER.log("LEAF");
-    // NODE_LOGGER.debug_llog("node_size", node_size);
-    // NODE_LOGGER.debug_llog("min_size ", node_min_size);
-    // NODE_LOGGER.debug_llog("max_size ", node_max_size);
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.log("LEAF");
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.labelled_debug_log("node_size", node_size);
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.labelled_debug_log("min_size ", node_min_size);
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.labelled_debug_log("max_size ", node_max_size);
 
     // Return early if both width and height are known
     if let Size { width: Some(width), height: Some(height) } = node_size {

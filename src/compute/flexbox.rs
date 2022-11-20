@@ -4,7 +4,6 @@
 use core::f32;
 
 use crate::compute::compute_node_layout;
-use crate::debug::NODE_LOGGER;
 use crate::geometry::{Point, Rect, Size};
 use crate::layout::{AvailableSpace, Layout, RunMode, SizingMode};
 use crate::math::MaybeMath;
@@ -14,6 +13,9 @@ use crate::style::{AlignContent, AlignSelf, Dimension, Display, FlexWrap, Justif
 use crate::style::{FlexDirection, FlexboxLayout};
 use crate::sys::{round, Vec};
 use crate::tree::LayoutTree;
+
+#[cfg(feature = "debug")]
+use crate::debug::NODE_LOGGER;
 
 /// The intermediate results of a flexbox calculation for a single item
 struct FlexItem {
@@ -125,7 +127,8 @@ pub fn compute(
     let clamped_style_size = style.size.maybe_resolve(known_dimensions).maybe_clamp(min_size, max_size);
 
     if has_min_max_sizes {
-        // NODE_LOGGER.log("FLEX: two-pass");
+        #[cfg(feature = "debug")]
+        NODE_LOGGER.log("FLEX: two-pass");
         let first_pass = compute_preliminary(
             tree,
             node,
@@ -145,7 +148,8 @@ pub fn compute(
             RunMode::PeformLayout,
         )
     } else {
-        // NODE_LOGGER.log("FLEX: single-pass");
+        #[cfg(feature = "debug")]
+        NODE_LOGGER.log("FLEX: single-pass");
         compute_preliminary(tree, node, known_dimensions.or(clamped_style_size), available_space, RunMode::PeformLayout)
     }
 }
@@ -166,31 +170,36 @@ fn compute_preliminary(
     // 9.1. Initial Setup
 
     // 1. Generate anonymous flex items as described in §4 Flex Items.
-    // NODE_LOGGER.log("generate_anonymous_flex_items");
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.log("generate_anonymous_flex_items");
     let mut flex_items = generate_anonymous_flex_items(tree, node, &constants);
 
     // 9.2. Line Length Determination
 
     // 2. Determine the available main and cross space for the flex items
-    // NODE_LOGGER.log("determine_available_space");
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.log("determine_available_space");
     let available_space = determine_available_space(known_dimensions, parent_size, &constants);
 
     let has_baseline_child =
         flex_items.iter().any(|child| tree.style(child.node).align_self(tree.style(node)) == AlignSelf::Baseline);
 
     // 3. Determine the flex base size and hypothetical main size of each item.
-    // NODE_LOGGER.log("determine_flex_base_size");
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.log("determine_flex_base_size");
     determine_flex_base_size(tree, node, known_dimensions, &constants, available_space, &mut flex_items);
 
     // TODO: Add step 4 according to spec: https://www.w3.org/TR/css-flexbox-1/#algo-main-container
     // 9.3. Main Size Determination
 
     // 5. Collect flex items into flex lines.
-    // NODE_LOGGER.log("collect_flex_lines");
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.log("collect_flex_lines");
     let mut flex_lines = collect_flex_lines(tree, node, &constants, available_space, &mut flex_items);
 
     // 6. Resolve the flexible lengths of all the flex items to find their used main size.
-    // NODE_LOGGER.log("resolve_flexible_lengths");
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.log("resolve_flexible_lengths");
     for line in &mut flex_lines {
         resolve_flexible_lengths(tree, line, &constants, available_space);
     }
@@ -221,7 +230,8 @@ fn compute_preliminary(
     // 9.4. Cross Size Determination
 
     // 7. Determine the hypothetical cross size of each item.
-    // NODE_LOGGER.log("determine_hypothetical_cross_size");
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.log("determine_hypothetical_cross_size");
     for line in &mut flex_lines {
         determine_hypothetical_cross_size(tree, line, &constants, available_space);
     }
@@ -229,16 +239,19 @@ fn compute_preliminary(
     // TODO - probably should move this somewhere else as it doesn't make a ton of sense here but we need it below
     // TODO - This is expensive and should only be done if we really require a baseline. aka, make it lazy
     if has_baseline_child {
-        // NODE_LOGGER.log("calculate_children_base_lines");
+        #[cfg(feature = "debug")]
+        NODE_LOGGER.log("calculate_children_base_lines");
         calculate_children_base_lines(tree, node, known_dimensions, available_space, &mut flex_lines, &constants);
     }
 
     // 8. Calculate the cross size of each flex line.
-    // NODE_LOGGER.log("calculate_cross_size");
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.log("calculate_cross_size");
     calculate_cross_size(tree, &mut flex_lines, node, known_dimensions, &constants);
 
     // 9. Handle 'align-content: stretch'.
-    // NODE_LOGGER.log("handle_align_content_stretch");
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.log("handle_align_content_stretch");
     handle_align_content_stretch(tree, &mut flex_lines, node, known_dimensions, &constants);
 
     // 10. Collapse visibility:collapse items. If any flex items have visibility: collapse,
@@ -257,23 +270,27 @@ fn compute_preliminary(
     // TODO implement once (if ever) we support visibility:collapse
 
     // 11. Determine the used cross size of each flex item.
-    // NODE_LOGGER.log("determine_used_cross_size");
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.log("determine_used_cross_size");
     determine_used_cross_size(tree, &mut flex_lines, node, &constants);
 
     // 9.5. Main-Axis Alignment
 
     // 12. Distribute any remaining free space.
-    // NODE_LOGGER.log("distribute_remaining_free_space");
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.log("distribute_remaining_free_space");
     distribute_remaining_free_space(tree, &mut flex_lines, node, &constants);
 
     // 9.6. Cross-Axis Alignment
 
     // 13. Resolve cross-axis auto margins (also includes 14).
-    // NODE_LOGGER.log("resolve_cross_axis_auto_margins");
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.log("resolve_cross_axis_auto_margins");
     resolve_cross_axis_auto_margins(tree, &mut flex_lines, node, &constants);
 
     // 15. Determine the flex container’s used cross size.
-    // NODE_LOGGER.log("determine_container_cross_size");
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.log("determine_container_cross_size");
     let total_cross_size = determine_container_cross_size(&mut flex_lines, known_dimensions, &mut constants);
 
     // We have the container size.
@@ -284,18 +301,22 @@ fn compute_preliminary(
     }
 
     // 16. Align all flex lines per align-content.
-    // NODE_LOGGER.log("align_flex_lines_per_align_content");
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.log("align_flex_lines_per_align_content");
     align_flex_lines_per_align_content(tree, &mut flex_lines, node, &constants, total_cross_size);
 
     // Do a final layout pass and gather the resulting layouts
-    // NODE_LOGGER.log("final_layout_pass");
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.log("final_layout_pass");
     final_layout_pass(tree, node, &mut flex_lines, &constants);
 
     // Before returning we perform absolute layout on all absolutely positioned children
-    // NODE_LOGGER.log("perform_absolute_layout_on_absolute_children");
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.log("perform_absolute_layout_on_absolute_children");
     perform_absolute_layout_on_absolute_children(tree, node, &constants, available_space);
 
-    // NODE_LOGGER.log("hidden_layout");
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.log("hidden_layout");
     let len = tree.children(node).len();
     for order in 0..len {
         let child = tree.child(node, order);

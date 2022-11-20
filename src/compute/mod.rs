@@ -1,7 +1,6 @@
 pub(crate) mod flexbox;
 pub(crate) mod leaf;
 
-use crate::debug::NODE_LOGGER;
 use crate::error::TaffyError;
 use crate::geometry::{Point, Size};
 use crate::layout::{AvailableSpace, Cache, Layout, RunMode, SizingMode};
@@ -9,6 +8,9 @@ use crate::node::Node;
 use crate::style::Display;
 use crate::sys::round;
 use crate::tree::LayoutTree;
+
+#[cfg(feature = "debug")]
+use crate::debug::NODE_LOGGER;
 
 /// Updates the stored layout of the provided `node` and its children
 pub fn compute_layout(
@@ -41,28 +43,41 @@ fn compute_node_layout(
     // clear the dirtiness of the node now that we've computed it
     tree.mark_dirty(node, false);
 
-    // NODE_LOGGER.push_node(node);
-    // println!("");
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.push_node(node);
+    #[cfg(feature = "debug")]
+    println!("");
 
     // First we check if we have a cached result for the given input
     let cache_run_mode = if tree.children(node).is_empty() { RunMode::PeformLayout } else { run_mode };
     if let Some(cached_size) =
         compute_from_cache(tree, node, known_dimensions, available_space, cache_run_mode, sizing_mode)
     {
-        // NODE_LOGGER.debug_llog("CACHE", cached_size);
-        // NODE_LOGGER.debug_llog("run_mode", run_mode);
-        // NODE_LOGGER.debug_llog("sizing_mode", sizing_mode);
-        // NODE_LOGGER.debug_llog("known_dimensions", known_dimensions);
-        // NODE_LOGGER.debug_llog("available_space", available_space);
-        // NODE_LOGGER.pop_node();
+        #[cfg(feature = "debug")]
+        NODE_LOGGER.labelled_debug_log("CACHE", cached_size);
+        #[cfg(feature = "debug")]
+        NODE_LOGGER.labelled_debug_log("run_mode", run_mode);
+        #[cfg(feature = "debug")]
+        NODE_LOGGER.labelled_debug_log("sizing_mode", sizing_mode);
+        #[cfg(feature = "debug")]
+        NODE_LOGGER.labelled_debug_log("known_dimensions", known_dimensions);
+        #[cfg(feature = "debug")]
+        NODE_LOGGER.labelled_debug_log("available_space", available_space);
+        #[cfg(feature = "debug")]
+        NODE_LOGGER.pop_node();
         return cached_size;
     }
 
-    // NODE_LOGGER.log("COMPUTE");
-    // NODE_LOGGER.debug_llog("run_mode", run_mode);
-    // NODE_LOGGER.debug_llog("sizing_mode", sizing_mode);
-    // NODE_LOGGER.debug_llog("known_dimensions", known_dimensions);
-    // NODE_LOGGER.debug_llog("available_space", available_space);
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.log("COMPUTE");
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.labelled_debug_log("run_mode", run_mode);
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.labelled_debug_log("sizing_mode", sizing_mode);
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.labelled_debug_log("known_dimensions", known_dimensions);
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.labelled_debug_log("available_space", available_space);
 
     // Attempt to shortcut size computation based on
     //  - KnownSize sizing constraints
@@ -90,17 +105,20 @@ fn compute_node_layout(
 
     // If this is a leaf node we can skip a lot of this function in some cases
     let computed_size = if tree.children(node).is_empty() {
-        // NODE_LOGGER.log("Algo: leaf");
+        #[cfg(feature = "debug")]
+        NODE_LOGGER.log("Algo: leaf");
         self::leaf::compute(tree, node, known_dimensions, available_space, run_mode, sizing_mode)
     } else {
         // println!("match {:?}", tree.style(node).display);
         match tree.style(node).display {
             Display::Flex => {
-                // NODE_LOGGER.log("Algo: flexbox");
+                #[cfg(feature = "debug")]
+                NODE_LOGGER.log("Algo: flexbox");
                 self::flexbox::compute(tree, node, known_dimensions, available_space, run_mode)
             }
             Display::None => {
-                // NODE_LOGGER.log("Algo: none");
+                #[cfg(feature = "debug")]
+                NODE_LOGGER.log("Algo: none");
                 Size { width: 0.0, height: 0.0 }
             }
         }
@@ -111,8 +129,10 @@ fn compute_node_layout(
     *tree.cache_mut(node, cache_slot) =
         Some(Cache { known_dimensions, available_space, run_mode: cache_run_mode, cached_size: computed_size });
 
-    // NODE_LOGGER.debug_llog("RESULT", computed_size);
-    // NODE_LOGGER.pop_node();
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.labelled_debug_log("RESULT", computed_size);
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.pop_node();
 
     computed_size
 }
@@ -129,7 +149,8 @@ fn compute_from_cache(
 ) -> Option<Size<f32>> {
     for idx in 0..4 {
         let entry = tree.cache_mut(node, idx);
-        // NODE_LOGGER.debug_llog("cache_entry", &entry);
+        #[cfg(feature = "debug")]
+        NODE_LOGGER.labelled_debug_log("cache_entry", &entry);
         if let Some(entry) = entry {
             // Cached ComputeSize results are not valid if we are running in PerformLayout mode
             if entry.run_mode == RunMode::ComputeSize && run_mode == RunMode::PeformLayout {
