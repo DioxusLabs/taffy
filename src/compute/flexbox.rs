@@ -112,7 +112,6 @@ pub fn compute(
     known_dimensions: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
-    cache_slot: usize,
 ) -> Size<f32> {
     let style = tree.style(node);
     let has_min_max_sizes = style.min_size.width.is_defined()
@@ -134,7 +133,6 @@ pub fn compute(
             known_dimensions.zip_map(clamped_style_size, |known, style| known.or(style)),
             available_space,
             RunMode::ComputeSize,
-            cache_slot == 0, //true,
         );
 
         let clamped_first_pass_size = first_pass.maybe_clamp(min_size, max_size);
@@ -145,7 +143,6 @@ pub fn compute(
             known_dimensions.zip_map(clamped_first_pass_size, |known, first_pass| known.or(first_pass.into())),
             available_space,
             RunMode::PeformLayout,
-            cache_slot == 0, //true,
         )
     } else {
         // NODE_LOGGER.log("FLEX: single-pass");
@@ -155,7 +152,6 @@ pub fn compute(
             known_dimensions.or(clamped_style_size),
             available_space,
             RunMode::PeformLayout,
-            cache_slot == 0, //true,
         )
     }
 
@@ -171,7 +167,6 @@ fn compute_preliminary(
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<AvailableSpace>,
     run_mode: RunMode,
-    main_size: bool,
 ) -> Size<f32> {
     // clear the dirtiness of the node now that we've computed it
     tree.mark_dirty(node, false);
@@ -647,7 +642,6 @@ fn determine_flex_base_size(
             available_space,
             RunMode::ComputeSize,
             SizingMode::ContentSize,
-            0,
         )
         .main(constants.dir)
         .maybe_min(child.max_size.main(constants.dir));
@@ -671,7 +665,6 @@ fn determine_flex_base_size(
             available_space,
             RunMode::ComputeSize,
             SizingMode::ContentSize,
-            1,
         )
         .main(constants.dir)
         .maybe_clamp(child.min_size.main(constants.dir), child.size.main(constants.dir))
@@ -785,7 +778,6 @@ fn resolve_flexible_lengths(
                     available_space,
                     RunMode::ComputeSize,
                     SizingMode::ContentSize,
-                    1,
                 )
                 .main(constants.dir)
                 .maybe_clamp(child.min_size.main(constants.dir), child.max_size.main(constants.dir)),
@@ -930,7 +922,6 @@ fn resolve_flexible_lengths(
                     available_space,
                     RunMode::ComputeSize,
                     SizingMode::ContentSize,
-                    1,
                 )
                 .width
                 .maybe_clamp(child.min_size.width, child.size.width)
@@ -1014,7 +1005,6 @@ fn determine_hypothetical_cross_size(
                 },
                 RunMode::ComputeSize,
                 SizingMode::ContentSize,
-                1,
             )
             .cross(constants.dir)
             .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir)),
@@ -1086,7 +1076,6 @@ fn calculate_children_base_lines(
                 },
                 RunMode::PeformLayout,
                 SizingMode::ContentSize,
-                1,
             );
 
             child.baseline = calc_baseline(
@@ -1591,7 +1580,6 @@ fn calculate_flex_item(
         container_size.map(|s| s.into()),
         RunMode::PeformLayout,
         SizingMode::ContentSize,
-        1,
     );
 
     let offset_main = *total_offset_main
@@ -1761,7 +1749,6 @@ fn perform_absolute_layout_on_absolute_children(
             },
             RunMode::PeformLayout,
             SizingMode::ContentSize,
-            1,
         );
 
         // Satisfy the borrow checker by re-requesting the style from above.

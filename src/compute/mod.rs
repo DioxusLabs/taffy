@@ -30,7 +30,6 @@ pub fn compute_layout(
         available_space,
         RunMode::PeformLayout,
         SizingMode::InherentSize,
-        0,
     );
 
     let layout = Layout { order: 0, size, location: Point::ZERO };
@@ -50,7 +49,6 @@ fn compute_node_layout(
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
     sizing_mode: SizingMode,
-    cache_slot: usize,
 ) -> Size<f32> {
     // clear the dirtiness of the node now that we've computed it
     tree.mark_dirty(node, false);
@@ -111,7 +109,7 @@ fn compute_node_layout(
         match tree.style(node).display {
             Display::Flex => {
                 // NODE_LOGGER.log("Algo: flexbox");
-                self::flexbox::compute(tree, node, known_dimensions, available_space, run_mode, cache_slot)
+                self::flexbox::compute(tree, node, known_dimensions, available_space, run_mode)
             }
             Display::None => {
                 // NODE_LOGGER.log("Algo: none");
