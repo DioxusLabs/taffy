@@ -164,8 +164,6 @@ fn compute_preliminary(
     parent_size: Size<AvailableSpace>,
     run_mode: RunMode,
 ) -> Size<f32> {
-    // clear the dirtiness of the node now that we've computed it
-    tree.mark_dirty(node, false);
 
     // Define some general constants we will need for the remainder of the algorithm.
     let mut constants = compute_constants(tree.style(node), known_dimensions, parent_size);
