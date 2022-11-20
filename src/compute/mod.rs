@@ -1,17 +1,11 @@
 pub(crate) mod flexbox;
 pub(crate) mod leaf;
 
-use core::sync::atomic::AtomicU16;
-use slotmap::Key;
-use std::env::consts;
-
 use crate::debug::NODE_LOGGER;
 use crate::error::TaffyError;
 use crate::geometry::{Point, Size};
 use crate::layout::{AvailableSpace, Cache, Layout, RunMode, SizingMode};
-use crate::math::MaybeMath;
 use crate::node::Node;
-use crate::resolve::MaybeResolve;
 use crate::style::Display;
 use crate::sys::round;
 use crate::tree::LayoutTree;
