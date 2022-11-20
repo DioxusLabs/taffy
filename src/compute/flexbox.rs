@@ -627,28 +627,23 @@ fn determine_flex_base_size(
         //    is auto and not definite, in this calculation use fit-content as the
         //    flex item’s cross size. The flex base size is the item’s resulting main size.
 
-        let width: Option<f32> = if child.size.width.is_none()
-            && child_style.align_self(tree.style(node)) == AlignSelf::Stretch
-            && constants.is_column
-        {
-            available_space.width.as_option()
-        } else {
-            child.size.width
-        };
-
-        let height: Option<f32> = if child.size.height.is_none()
-            && child_style.align_self(tree.style(node)) == AlignSelf::Stretch
-            && constants.is_row
-        {
-            available_space.height.as_option()
-        } else {
-            child.size.height
+        let child_known_dimensions = {
+            let mut ckd = child.size;
+            if child_style.align_self(tree.style(node)) == AlignSelf::Stretch {
+                if constants.is_column && ckd.width.is_none() {
+                    ckd.width = available_space.width.as_option();
+                }
+                if constants.is_row && ckd.height.is_none() {
+                    ckd.height = available_space.height.as_option();
+                }
+            }
+            ckd
         };
 
         child.flex_basis = compute_node_layout(
             tree,
             child.node,
-            Size { width, height }.maybe_min(child.max_size),
+            child_known_dimensions.maybe_min(child.max_size),
             available_space,
             RunMode::ComputeSize,
             SizingMode::ContentSize,
