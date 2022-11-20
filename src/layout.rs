@@ -4,7 +4,7 @@ use crate::geometry::{Point, Size};
 use crate::sys::abs;
 
 /// Whether we are performing a full layout, or we merely need to size the node
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum RunMode {
     /// A full layout for this node and all children should be computed
     PeformLayout,
@@ -14,7 +14,7 @@ pub enum RunMode {
 }
 
 /// Whether styles should be taken into account when computing size
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum SizingMode {
     /// Only content contributions should be taken into account
     ContentSize,

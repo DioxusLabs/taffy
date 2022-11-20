@@ -7,7 +7,7 @@ use crate::tree::LayoutTree;
 
 #[doc(hidden)]
 pub fn print_tree(tree: &impl LayoutTree, root: Node) {
-    println!("");
+    println!();
     print_node(tree, root, 0);
 }
 

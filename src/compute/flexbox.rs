@@ -143,7 +143,7 @@ pub fn compute(
         compute_preliminary(
             tree,
             node,
-            known_dimensions.zip_map(clamped_first_pass_size, |known, first_pass| known.or(first_pass.into())),
+            known_dimensions.zip_map(clamped_first_pass_size, |known, first_pass| known.or_else(|| first_pass.into())),
             available_space,
             run_mode,
         )
@@ -326,9 +326,7 @@ fn compute_preliminary(
         }
     }
 
-    let container_size = constants.container_size;
-
-    container_size
+    constants.container_size
 }
 
 /// Compute constants that can be reused during the flexbox algorithm.

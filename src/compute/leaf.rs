@@ -1,3 +1,5 @@
+//! Computes size using styles and measure functions
+
 use crate::geometry::Size;
 use crate::layout::{AvailableSpace, RunMode, SizingMode};
 use crate::math::MaybeMath;
@@ -8,9 +10,7 @@ use crate::tree::LayoutTree;
 #[cfg(feature = "debug")]
 use crate::debug::NODE_LOGGER;
 
-// Define some general constants we will need for the remainder of the algorithm.
-// let mut constants = compute_constants(tree.style(node), node_size, available_space);
-
+/// Compute the size of a leaf node (node with no children)
 pub(crate) fn compute(
     tree: &mut impl LayoutTree,
     node: Node,

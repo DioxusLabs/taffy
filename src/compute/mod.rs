@@ -1,3 +1,5 @@
+//! The layout algorithms themselves
+
 pub(crate) mod flexbox;
 pub(crate) mod leaf;
 
@@ -46,7 +48,7 @@ fn compute_node_layout(
     #[cfg(feature = "debug")]
     NODE_LOGGER.push_node(node);
     #[cfg(feature = "debug")]
-    println!("");
+    println!();
 
     // First we check if we have a cached result for the given input
     let cache_run_mode = if tree.children(node).is_empty() { RunMode::PeformLayout } else { run_mode };
