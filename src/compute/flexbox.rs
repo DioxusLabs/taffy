@@ -6,13 +6,13 @@ use core::f32;
 use crate::compute::compute_node_layout;
 use crate::debug::NODE_LOGGER;
 use crate::geometry::{Point, Rect, Size};
-use crate::layout::{AvailableSpace, Cache, Layout, RunMode, SizingMode};
+use crate::layout::{AvailableSpace, Layout, RunMode, SizingMode};
 use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::resolve::{MaybeResolve, ResolveOrDefault};
 use crate::style::{AlignContent, AlignSelf, Dimension, Display, FlexWrap, JustifyContent, PositionType};
 use crate::style::{FlexDirection, FlexboxLayout};
-use crate::sys::{abs, round, Vec};
+use crate::sys::{round, Vec};
 use crate::tree::LayoutTree;
 
 /// The intermediate results of a flexbox calculation for a single item
@@ -154,10 +154,6 @@ pub fn compute(
             RunMode::PeformLayout,
         )
     }
-
-    // *tree.layout_mut(node) = Layout { order: 0, size: preliminary_size, location: Point::ZERO };
-
-    // round_layout(tree, node, 0.0, 0.0);
 }
 
 /// Compute a preliminary size for an item
@@ -171,32 +167,8 @@ fn compute_preliminary(
     // clear the dirtiness of the node now that we've computed it
     tree.mark_dirty(node, false);
 
-    // // First we check if we have a result for the given input
-    // if let Some(cached_size) = compute_from_cache(tree, node, known_dimensions, parent_size, run_mode, main_size) {
-    //     return cached_size;
-    // }
-
     // Define some general constants we will need for the remainder of the algorithm.
     let mut constants = compute_constants(tree.style(node), known_dimensions, parent_size);
-
-    // // If this is a leaf node we can skip a lot of this function in some cases
-    // if tree.children(node).is_empty() {
-    //     if known_dimensions.width.is_some() && known_dimensions.height.is_some() {
-    //         return known_dimensions.map(|s| s.unwrap_or(0.0));
-    //     }
-
-    //     if tree.needs_measure(node) {
-    //         let converted_size = tree.measure_node(node, known_dimensions);
-    //         *cache(tree, node, main_size) =
-    //             Some(Cache { node_size: known_dimensions, parent_size, run_mode, size: converted_size });
-    //         return converted_size;
-    //     }
-
-    //     return Size {
-    //         width: known_dimensions.width.unwrap_or(0.0) + constants.padding_border.horizontal_axis_sum(),
-    //         height: known_dimensions.height.unwrap_or(0.0) + constants.padding_border.vertical_axis_sum(),
-    //     };
-    // }
 
     // 9. Flex Layout Algorithm
 
@@ -317,7 +289,6 @@ fn compute_preliminary(
     // If our caller does not care about performing layout we are done now.
     if run_mode == RunMode::ComputeSize {
         let container_size = constants.container_size;
-        // *cache(tree, node, main_size) = Some(Cache { node_size: known_dimensions, parent_size, run_mode, size: container_size });
         return container_size;
     }
 
@@ -344,7 +315,6 @@ fn compute_preliminary(
     }
 
     let container_size = constants.container_size;
-    // *cache(tree, node, main_size) = Some(Cache { node_size: known_dimensions, parent_size, run_mode, size: container_size });
 
     container_size
 }
@@ -367,55 +337,6 @@ fn round_layout(tree: &mut impl LayoutTree, root: Node, abs_x: f32, abs_y: f32) 
         round_layout(tree, child, abs_x, abs_y);
     }
 }
-
-// /// Saves intermediate results to a [`Cache`]
-// fn cache(tree: &mut impl LayoutTree, node: Node, main_size: bool) -> &mut Option<Cache> {
-//     if main_size {
-//         tree.primary_cache(node)
-//     } else {
-//         tree.secondary_cache(node)
-//     }
-// }
-
-// /// Try to get the computation result from the cache.
-// #[inline]
-// fn compute_from_cache(
-//     tree: &mut impl LayoutTree,
-//     node: Node,
-//     node_size: Size<Option<f32>>,
-//     parent_size: Size<Option<f32>>,
-//     run_mode: RunMode,
-//     main_size: bool,
-// ) -> Option<Size<f32>> {
-//     if let Some(ref cache) = cache(tree, node, main_size) {
-//         // Cached ComputeSize results are not valid if we are running in PerformLayout mode
-//         if cache.run_mode == RunMode::ComputeSize && run_mode == RunMode::PeformLayout {
-//             return None;
-//         }
-
-//         let width_compatible = if let Some(width) = node_size.width {
-//             abs(width - cache.size.width) < f32::EPSILON
-//         } else {
-//             cache.node_size.width.is_none()
-//         };
-
-//         let height_compatible = if let Some(height) = node_size.height {
-//             abs(height - cache.size.height) < f32::EPSILON
-//         } else {
-//             cache.node_size.height.is_none()
-//         };
-
-//         if width_compatible && height_compatible {
-//             return Some(cache.size);
-//         }
-
-//         if cache.node_size == node_size && cache.parent_size == parent_size {
-//             return Some(cache.size);
-//         }
-//     }
-
-//     None
-// }
 
 /// Compute constants that can be reused during the flexbox algorithm.
 #[inline]
