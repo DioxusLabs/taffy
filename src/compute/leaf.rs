@@ -16,7 +16,7 @@ pub(crate) fn compute(
     node: Node,
     known_dimensions: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
-    run_mode: RunMode,
+    _run_mode: RunMode,
     sizing_mode: SizingMode,
 ) -> Size<f32> {
     let style = tree.style(node);
