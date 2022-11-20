@@ -11,7 +11,7 @@ use crate::node::Node;
 use crate::resolve::{MaybeResolve, ResolveOrDefault};
 use crate::style::{AlignContent, AlignSelf, Dimension, Display, FlexWrap, JustifyContent, PositionType};
 use crate::style::{FlexDirection, FlexboxLayout};
-use crate::sys::{round, Vec};
+use crate::sys::Vec;
 use crate::tree::LayoutTree;
 
 #[cfg(feature = "debug")]
@@ -145,12 +145,12 @@ pub fn compute(
             node,
             known_dimensions.zip_map(clamped_first_pass_size, |known, first_pass| known.or(first_pass.into())),
             available_space,
-            RunMode::PeformLayout,
+            run_mode,
         )
     } else {
         #[cfg(feature = "debug")]
         NODE_LOGGER.log("FLEX: single-pass");
-        compute_preliminary(tree, node, known_dimensions.or(clamped_style_size), available_space, RunMode::PeformLayout)
+        compute_preliminary(tree, node, known_dimensions.or(clamped_style_size), available_space, run_mode)
     }
 }
 
