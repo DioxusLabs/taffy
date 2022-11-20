@@ -1594,11 +1594,7 @@ fn final_layout_pass(tree: &mut impl LayoutTree, node: Node, flex_lines: &mut [F
 
 /// Perform absolute layout on all absolutely positioned children.
 #[inline]
-fn perform_absolute_layout_on_absolute_children(
-    tree: &mut impl LayoutTree,
-    node: Node,
-    constants: &AlgoConstants,
-) {
+fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node: Node, constants: &AlgoConstants) {
     // TODO: remove number of Vec<_> generated
     let candidates = tree
         .children(node)
