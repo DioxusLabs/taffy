@@ -331,25 +331,6 @@ fn compute_preliminary(
     container_size
 }
 
-/// Rounds the calculated [`NodeData`] according to the spec
-fn round_layout(tree: &mut impl LayoutTree, root: Node, abs_x: f32, abs_y: f32) {
-    let layout = tree.layout_mut(root);
-    let abs_x = abs_x + layout.location.x;
-    let abs_y = abs_y + layout.location.y;
-
-    layout.location.x = round(layout.location.x);
-    layout.location.y = round(layout.location.y);
-
-    layout.size.width = round(layout.size.width);
-    layout.size.height = round(layout.size.height);
-
-    // Satisfy the borrow checker here by re-indexing to shorten the lifetime to the loop scope
-    for x in 0..tree.children(root).len() {
-        let child = tree.child(root, x);
-        round_layout(tree, child, abs_x, abs_y);
-    }
-}
-
 /// Compute constants that can be reused during the flexbox algorithm.
 #[inline]
 fn compute_constants(
