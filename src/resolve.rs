@@ -58,7 +58,6 @@ impl<In, Out, T: MaybeResolve<In, Out>> MaybeResolve<Size<In>, Size<Out>> for Si
     }
 }
 
-
 impl ResolveOrDefault<Option<f32>, f32> for Dimension {
     /// Will return a default value of result is evaluated to `None`
     fn resolve_or_default(self, context: Option<f32>) -> f32 {

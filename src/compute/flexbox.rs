@@ -146,13 +146,7 @@ pub fn compute(
         )
     } else {
         // NODE_LOGGER.log("FLEX: single-pass");
-        compute_preliminary(
-            tree,
-            node,
-            known_dimensions.or(clamped_style_size),
-            available_space,
-            RunMode::PeformLayout,
-        )
+        compute_preliminary(tree, node, known_dimensions.or(clamped_style_size), available_space, RunMode::PeformLayout)
     }
 }
 
@@ -164,7 +158,6 @@ fn compute_preliminary(
     parent_size: Size<AvailableSpace>,
     run_mode: RunMode,
 ) -> Size<f32> {
-
     // Define some general constants we will need for the remainder of the algorithm.
     let mut constants = compute_constants(tree.style(node), known_dimensions, parent_size);
 
@@ -589,10 +582,9 @@ fn determine_flex_base_size(
         .maybe_clamp(child.min_size.main(constants.dir), child.size.main(constants.dir))
         .into();
 
-        child.hypothetical_inner_size.set_main(
-            constants.dir,
-            child.flex_basis.maybe_clamp(min_main, child.max_size.main(constants.dir)),
-        );
+        child
+            .hypothetical_inner_size
+            .set_main(constants.dir, child.flex_basis.maybe_clamp(min_main, child.max_size.main(constants.dir)));
 
         child.hypothetical_outer_size.set_main(
             constants.dir,

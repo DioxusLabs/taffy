@@ -23,14 +23,8 @@ pub fn compute_layout(
     available_space: Size<AvailableSpace>,
 ) -> Result<(), TaffyError> {
     // Recursively compute node layout
-    let size = compute_node_layout(
-        tree,
-        root,
-        Size::NONE,
-        available_space,
-        RunMode::PeformLayout,
-        SizingMode::InherentSize,
-    );
+    let size =
+        compute_node_layout(tree, root, Size::NONE, available_space, RunMode::PeformLayout, SizingMode::InherentSize);
 
     let layout = Layout { order: 0, size, location: Point::ZERO };
     *tree.layout_mut(root) = layout;
