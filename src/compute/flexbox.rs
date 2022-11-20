@@ -123,11 +123,7 @@ pub fn compute(
     // Pull these out earlier to avoid borrowing issues
     let min_size = style.min_size.maybe_resolve(known_dimensions);
     let max_size = style.max_size.maybe_resolve(known_dimensions);
-    let clamped_style_size = style
-        .size
-        .maybe_resolve(known_dimensions)
-        .zip_map(min_size, |size, min| size.maybe_max(min))
-        .zip_map(max_size, |size, max| size.maybe_min(max));
+    let clamped_style_size = style.size.maybe_resolve(known_dimensions).maybe_clamp(min_size, max_size);
 
     if has_min_max_sizes {
         // NODE_LOGGER.log("FLEX: two-pass");
@@ -141,9 +137,7 @@ pub fn compute(
             cache_slot == 0, //true,
         );
 
-        let clamped_first_pass_size = first_pass
-            .zip_map(min_size, |size, min| size.maybe_max(min))
-            .zip_map(max_size, |size, max| size.maybe_min(max));
+        let clamped_first_pass_size = first_pass.maybe_clamp(min_size, max_size);
 
         compute_preliminary(
             tree,
@@ -158,7 +152,7 @@ pub fn compute(
         compute_preliminary(
             tree,
             node,
-            known_dimensions.zip_map(clamped_style_size, |known, style| known.or(style)),
+            known_dimensions.or(clamped_style_size),
             available_space,
             RunMode::PeformLayout,
             cache_slot == 0, //true,
@@ -654,7 +648,7 @@ fn determine_flex_base_size(
         child.flex_basis = compute_node_layout(
             tree,
             child.node,
-            Size { width: width.maybe_min(child.max_size.width), height: height.maybe_min(child.max_size.height) },
+            Size { width, height }.maybe_min(child.max_size),
             available_space,
             RunMode::ComputeSize,
             SizingMode::ContentSize,
@@ -685,13 +679,12 @@ fn determine_flex_base_size(
             1,
         )
         .main(constants.dir)
-        .maybe_max(child.min_size.main(constants.dir))
-        .maybe_min(child.size.main(constants.dir))
+        .maybe_clamp(child.min_size.main(constants.dir), child.size.main(constants.dir))
         .into();
 
         child.hypothetical_inner_size.set_main(
             constants.dir,
-            child.flex_basis.maybe_max(min_main).maybe_min(child.max_size.main(constants.dir)),
+            child.flex_basis.maybe_clamp(min_main, child.max_size.main(constants.dir)),
         );
 
         child.hypothetical_outer_size.set_main(
@@ -793,18 +786,14 @@ fn resolve_flexible_lengths(
                 compute_node_layout(
                     tree,
                     child.node,
-                    Size {
-                        width: child.size.width.maybe_max(child.min_size.width).maybe_min(child.max_size.width),
-                        height: child.size.height.maybe_max(child.min_size.height).maybe_min(child.max_size.height),
-                    },
+                    child.size.maybe_clamp(child.min_size, child.max_size),
                     available_space,
                     RunMode::ComputeSize,
                     SizingMode::ContentSize,
                     1,
                 )
                 .main(constants.dir)
-                .maybe_max(child.min_size.main(constants.dir))
-                .maybe_min(child.max_size.main(constants.dir)),
+                .maybe_clamp(child.min_size.main(constants.dir), child.max_size.main(constants.dir)),
             );
         } else {
             child.target_size.set_main(constants.dir, child.hypothetical_inner_size.main(constants.dir));
@@ -949,15 +938,14 @@ fn resolve_flexible_lengths(
                     1,
                 )
                 .width
-                .maybe_min(child.size.width)
-                .maybe_max(child.min_size.width)
+                .maybe_clamp(child.min_size.width, child.size.width)
                 .into()
             } else {
                 child.min_size.main(constants.dir)
             };
 
             let max_main = child.max_size.main(constants.dir);
-            let clamped = child.target_size.main(constants.dir).maybe_min(max_main).maybe_max(min_main).max(0.0);
+            let clamped = child.target_size.main(constants.dir).maybe_clamp(min_main, max_main).max(0.0);
             child.violation = clamped - child.target_size.main(constants.dir);
             child.target_size.set_main(constants.dir, clamped);
             child.outer_target_size.set_main(
@@ -1006,8 +994,7 @@ fn determine_hypothetical_cross_size(
         let child_cross = child
             .size
             .cross(constants.dir)
-            .maybe_max(child.min_size.cross(constants.dir))
-            .maybe_min(child.max_size.cross(constants.dir));
+            .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir));
 
         child.hypothetical_inner_size.set_cross(
             constants.dir,
@@ -1035,8 +1022,7 @@ fn determine_hypothetical_cross_size(
                 1,
             )
             .cross(constants.dir)
-            .maybe_max(child.min_size.cross(constants.dir))
-            .maybe_min(child.max_size.cross(constants.dir)),
+            .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir)),
         );
 
         child.hypothetical_outer_size.set_cross(
@@ -1248,8 +1234,7 @@ fn determine_used_cross_size(
                     && child_style.cross_size(constants.dir) == Dimension::Auto
                 {
                     (line_cross_size - child.margin.cross_axis_sum(constants.dir))
-                        .maybe_max(child.min_size.cross(constants.dir))
-                        .maybe_min(child.max_size.cross(constants.dir))
+                        .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir))
                 } else {
                     child.hypothetical_inner_size.cross(constants.dir)
                 },
@@ -1731,8 +1716,8 @@ fn perform_absolute_layout_on_absolute_children(
         .collect::<Vec<_>>();
 
     for (order, child) in candidates {
-        let container_width = constants.container_size.width.into();
-        let container_height = constants.container_size.height.into();
+        let container_width = constants.container_size.width;
+        let container_height = constants.container_size.height;
 
         let child_style = tree.style(child);
 
@@ -1757,35 +1742,27 @@ fn perform_absolute_layout_on_absolute_children(
         let (start_main, end_main) = if constants.is_row { (start, end) } else { (top, bottom) };
         let (start_cross, end_cross) = if constants.is_row { (top, bottom) } else { (start, end) };
 
-        let mut width = child_style
-            .size
-            .width
-            .maybe_resolve(container_width)
-            .maybe_max(child_style.min_size.width.maybe_resolve(container_width))
-            .maybe_min(child_style.max_size.width.maybe_resolve(container_width));
+        // Compute known dimensions from min/max/inherent size styles
+        let style_size = child_style.size.maybe_resolve(constants.container_size);
+        let min_size = child_style.min_size.maybe_resolve(constants.container_size);
+        let max_size = child_style.max_size.maybe_resolve(constants.container_size);
+        let mut known_dimensions = style_size.maybe_clamp(min_size, max_size);
 
-        if width.is_none() && start.is_some() && end.is_some() {
-            width = container_width.maybe_sub(start).maybe_sub(end);
+        // Fill in width from left/right and height from top/bottom is appropriate
+        if known_dimensions.width.is_none() && start.is_some() && end.is_some() {
+            known_dimensions.width = Some(container_width.maybe_sub(start).maybe_sub(end));
         }
-
-        let mut height: Option<f32> = child_style
-            .size
-            .height
-            .maybe_resolve(container_height)
-            .maybe_max(child_style.min_size.height.maybe_resolve(container_height))
-            .maybe_min(child_style.max_size.height.maybe_resolve(container_height));
-
-        if height.is_none() && top.is_some() && bottom.is_some() {
-            height = container_height.maybe_sub(top).maybe_sub(bottom);
+        if known_dimensions.height.is_none() && top.is_some() && bottom.is_some() {
+            known_dimensions.height = Some(container_height.maybe_sub(top).maybe_sub(bottom));
         }
 
         let preliminary_size = compute_node_layout(
             tree,
             child,
-            Size { width, height },
+            known_dimensions,
             Size {
-                width: available_space.width.maybe_set(container_width),
-                height: available_space.height.maybe_set(container_height),
+                width: AvailableSpace::Definite(container_width),
+                height: AvailableSpace::Definite(container_height),
             },
             RunMode::PeformLayout,
             SizingMode::ContentSize,

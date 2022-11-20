@@ -31,8 +31,7 @@ pub(crate) fn compute(
         }
         SizingMode::InherentSize => {
             let style_size = style.size.maybe_resolve(available_space.as_options());
-            let node_size =
-                style_size.zip_map(known_dimensions, |style_size, known_dimensions| known_dimensions.or(style_size));
+            let node_size = known_dimensions.or(style_size);
             let node_min_size = style.min_size.maybe_resolve(available_space.as_options());
             let node_max_size = style.max_size.maybe_resolve(available_space.as_options());
             (node_size, node_min_size, node_max_size)
@@ -46,10 +45,7 @@ pub(crate) fn compute(
 
     // Return early if both width and height are known
     if let Size { width: Some(width), height: Some(height) } = node_size {
-        return Size {
-            width: width.maybe_max(node_min_size.width).maybe_min(node_max_size.width),
-            height: height.maybe_max(node_min_size.height).maybe_min(node_max_size.height),
-        };
+        return Size { width, height }.maybe_clamp(node_min_size, node_max_size);
     };
 
     if tree.needs_measure(node) {
@@ -62,51 +58,22 @@ pub(crate) fn compute(
         // Measure node
         let measured_size = tree.measure_node(node, known_dimensions, available_space);
 
-        let clamped_measured_size = Size {
-            width: node_size
-                .width
-                .unwrap_or(measured_size.width)
-                .maybe_max(node_min_size.width)
-                .maybe_min(node_max_size.width),
-            height: node_size
-                .height
-                .unwrap_or(measured_size.height)
-                .maybe_max(node_min_size.height)
-                .maybe_min(node_max_size.height),
-        };
-
-        return clamped_measured_size;
+        return node_size.unwrap_or(measured_size).maybe_clamp(node_min_size, node_max_size);
     }
 
     let padding = style.padding.resolve_or_default(available_space.width.as_option());
     let border = style.border.resolve_or_default(available_space.width.as_option());
-    return Size {
+
+    Size {
         width: node_size
             .width
             // .unwrap_or(0.0) + padding.horizontal_axis_sum() + border.horizontal_axis_sum(), // content-box
             .unwrap_or(0.0 + padding.horizontal_axis_sum() + border.horizontal_axis_sum()) // border-box
-            .maybe_max(node_min_size.width)
-            .maybe_min(node_max_size.width),
+            .maybe_clamp(node_min_size.width, node_max_size.width),
         height: node_size
             .height
             // .unwrap_or(0.0) + padding.horizontal_axis_sum() + border.horizontal_axis_sum(), // content-box
             .unwrap_or(0.0 + padding.horizontal_axis_sum() + border.horizontal_axis_sum()) // border-box
-            .maybe_max(node_min_size.height)
-            .maybe_min(node_max_size.height),
-    };
-}
-
-fn maybe_clamp(
-    size: Size<Option<f32>>,
-    min_size: Size<Option<f32>>,
-    max_size: Size<Option<f32>>,
-    sizing_mode: SizingMode,
-) -> Size<Option<f32>> {
-    match sizing_mode {
-        SizingMode::ContentSize => size,
-        SizingMode::InherentSize => Size {
-            width: size.width.maybe_max(min_size.width).maybe_min(max_size.width),
-            height: size.height.maybe_max(min_size.height).maybe_min(max_size.height),
-        },
+            .maybe_clamp(node_min_size.height, node_max_size.height),
     }
 }
