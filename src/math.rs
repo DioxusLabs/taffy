@@ -1,4 +1,5 @@
 //! Contains numerical helper traits and functions
+#![allow(clippy::manual_clamp)]
 
 use crate::geometry::Size;
 use crate::layout::AvailableSpace;
