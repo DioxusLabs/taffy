@@ -395,6 +395,9 @@ pub struct FlexboxLayout {
     pub padding: Rect<Dimension>,
     /// How large should the border be on each side?
     pub border: Rect<Dimension>,
+    // Gap
+    /// How large should the gaps between items in a grid or flex container be?
+    pub gap: Size<Dimension>,
     /// The relative rate at which this item grows when it is expanding to fill space
     ///
     /// 0.0 is the default value, and this value must not be negative.
@@ -433,6 +436,7 @@ impl FlexboxLayout {
         margin: Rect::UNDEFINED,
         padding: Rect::UNDEFINED,
         border: Rect::UNDEFINED,
+        gap: Size { width: Dimension::Points(0.0), height: Dimension::Points(0.0) },
         flex_grow: 0.0,
         flex_shrink: 1.0,
         flex_basis: Dimension::Auto,
@@ -553,7 +557,9 @@ impl FlexboxLayout {
 #[allow(clippy::bool_assert_comparison)]
 #[cfg(test)]
 mod tests {
+    use super::Dimension;
     use super::FlexboxLayout;
+    use crate::geometry::Size;
 
     #[test]
     fn defaults_match() {
@@ -570,6 +576,7 @@ mod tests {
             margin: Default::default(),
             padding: Default::default(),
             border: Default::default(),
+            gap: Size { width: Dimension::Points(0.0), height: Dimension::Points(0.0) },
             flex_grow: 0.0,
             flex_shrink: 1.0,
             flex_basis: super::Dimension::Auto,
