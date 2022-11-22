@@ -5,13 +5,12 @@ use std::sync::Mutex;
 use crate::node::Node;
 use crate::tree::LayoutTree;
 
-#[doc(hidden)]
+/// Prints a debug representation of the computed layout for a tree of nodes, starting with the passed root node.
 pub fn print_tree(tree: &impl LayoutTree, root: Node) {
     println!();
     print_node(tree, root, 0);
 }
 
-#[doc(hidden)]
 fn print_node(tree: &impl LayoutTree, node: Node, level: usize) {
     let layout = tree.layout(node);
     println!(

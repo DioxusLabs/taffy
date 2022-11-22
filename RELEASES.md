@@ -11,6 +11,7 @@
 - New `Layout` convenience constructor: `with_order(order: u32)`
 - Added support for `AlignContent::SpaceEvenly`
 - Added `AvailableSpace` enum
+- Added `debug` modules with a `print_tree` function, which prints a debug representation of the computed layout for a tree of nodes.
 
 ### 0.2.0 Changed
 
@@ -30,7 +31,7 @@
 - `taffy::error::InvalidNode` has been removed and is now just a branch on the `TaffyError` enum
 - `taffy::forest::Forest` has been merged into `taffy::node::Taffy` for a performance boost up to 90%
 - `Size::undefined()` has been removed, use `Size::NONE` instead.
-- `Taffy.compute_layout()` now takes `Size<AvailableSpace>` instead of `Size<Option<f32>>`
+- `Taffy.compute_layout()` now takes `Size<AvailableSpace>` instead of `Size<Option<f32>>`. If you were previously passing `Size::NONE` to this function, you will now need to pass `Size::MAX_CONTENT`
 - Measure functions now have an additional `available_space` parameter which indicates the size of the parent or a min/max-content sizing constraint.
 
 ### 0.2.0 Fixed
