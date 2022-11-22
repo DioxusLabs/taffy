@@ -87,6 +87,24 @@ fn taffy_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("yoga benchmarks");
     group.sample_size(10);
 
+    group.bench_function("10 nodes", |b| {
+        let mut taffy = Taffy::new();
+        let root = build_yoga_deep_hierarchy(&mut taffy, 10, 10);
+        b.iter(|| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap())
+    });
+
+    group.bench_function("100 nodes", |b| {
+        let mut taffy = Taffy::new();
+        let root = build_yoga_deep_hierarchy(&mut taffy, 100, 10);
+        b.iter(|| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap())
+    });
+
+    group.bench_function("1_000 nodes", |b| {
+        let mut taffy = Taffy::new();
+        let root = build_yoga_deep_hierarchy(&mut taffy, 1_000, 10);
+        b.iter(|| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap())
+    });
+
     group.bench_function("10_000 nodes", |b| {
         let mut taffy = Taffy::new();
         let root = build_yoga_deep_hierarchy(&mut taffy, 10_000, 10);
