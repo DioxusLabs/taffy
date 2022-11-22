@@ -58,7 +58,9 @@ fn build_deep_hierarchy(taffy: &mut Taffy, node_count: u32, branching_factor: u3
     let mut rng = ChaCha8Rng::seed_from_u64(12345);
     let mut build_leaf_node = |taffy: &mut Taffy| build_random_leaf(taffy, &mut rng);
     let mut rng = ChaCha8Rng::seed_from_u64(12345);
-    let mut build_flex_node = |taffy: &mut Taffy, children: Vec<Node>| taffy.new_with_children(FlexboxLayout::random(&mut rng), &children).unwrap();
+    let mut build_flex_node = |taffy: &mut Taffy, children: Vec<Node>| {
+        taffy.new_with_children(FlexboxLayout::random(&mut rng), &children).unwrap()
+    };
 
     let tree = build_deep_tree(taffy, node_count, branching_factor, &mut build_leaf_node, &mut build_flex_node);
 
@@ -67,13 +69,14 @@ fn build_deep_hierarchy(taffy: &mut Taffy, node_count: u32, branching_factor: u3
 
 /// A deep tree that matches the shape and styling that yoga use on their benchmarks
 fn build_yoga_deep_hierarchy(taffy: &mut Taffy, node_count: u32, branching_factor: u32) -> Node {
-   let style = FlexboxLayout {
+    let style = FlexboxLayout {
         size: Size { width: Dimension::Points(10.0), height: Dimension::Points(10.0) },
         flex_grow: 1.0,
         ..Default::default()
     };
     let mut build_leaf_node = |taffy: &mut Taffy| taffy.new_leaf(style.clone()).unwrap();
-    let mut build_flex_node = |taffy: &mut Taffy, children: Vec<Node>| taffy.new_with_children(style.clone(), &children).unwrap();
+    let mut build_flex_node =
+        |taffy: &mut Taffy, children: Vec<Node>| taffy.new_with_children(style.clone(), &children).unwrap();
 
     let tree = build_deep_tree(taffy, node_count, branching_factor, &mut build_leaf_node, &mut build_flex_node);
     let root = taffy.new_with_children(FlexboxLayout::DEFAULT, &tree).unwrap();
@@ -81,9 +84,7 @@ fn build_yoga_deep_hierarchy(taffy: &mut Taffy, node_count: u32, branching_facto
     root
 }
 
-
 fn taffy_benchmarks(c: &mut Criterion) {
-
     let mut group = c.benchmark_group("yoga benchmarks");
     group.sample_size(10);
 
