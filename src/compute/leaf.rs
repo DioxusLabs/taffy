@@ -66,8 +66,8 @@ pub(crate) fn compute(
         return node_size.unwrap_or(measured_size).maybe_clamp(node_min_size, node_max_size);
     }
 
-    let padding = style.padding.resolve_or_default(available_space.width.as_option());
-    let border = style.border.resolve_or_default(available_space.width.as_option());
+    let padding = style.padding.resolve_or_default(available_space.width.into_option());
+    let border = style.border.resolve_or_default(available_space.width.into_option());
 
     Size {
         width: node_size

@@ -44,7 +44,7 @@ impl AvailableSpace {
 
     /// Convert to Option
     /// Definite values become Some(value). Contraints become None.
-    pub fn as_option(self) -> Option<f32> {
+    pub fn into_option(self) -> Option<f32> {
         match self {
             AvailableSpace::Definite(value) => Some(value),
             _ => None,
@@ -53,13 +53,13 @@ impl AvailableSpace {
 
     /// Return the definite value or a default value
     pub fn unwrap_or(self, default: f32) -> f32 {
-        self.as_option().unwrap_or(default)
+        self.into_option().unwrap_or(default)
     }
 
     /// Return the definite value. Panic is the value is not definite.
     #[track_caller]
     pub fn unwrap(self) -> f32 {
-        self.as_option().unwrap()
+        self.into_option().unwrap()
     }
 
     /// If passed value is Some then return AvailableSpace::Definite containing that value, else return self
@@ -100,7 +100,7 @@ impl Size<AvailableSpace> {
 
     /// Convert Size<AvailableSpace> into Size<Option<f32>>
     pub fn as_options(self) -> Size<Option<f32>> {
-        Size { width: self.width.as_option(), height: self.height.as_option() }
+        Size { width: self.width.into_option(), height: self.height.into_option() }
     }
 }
 

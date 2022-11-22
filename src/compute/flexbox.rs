@@ -341,9 +341,9 @@ fn compute_constants(
     let is_column = dir.is_column();
     let is_wrap_reverse = style.flex_wrap == FlexWrap::WrapReverse;
 
-    let margin = style.margin.resolve_or_default(parent_size.width.as_option());
-    let padding = style.padding.resolve_or_default(parent_size.width.as_option());
-    let border = style.border.resolve_or_default(parent_size.width.as_option());
+    let margin = style.margin.resolve_or_default(parent_size.width.into_option());
+    let padding = style.padding.resolve_or_default(parent_size.width.into_option());
+    let border = style.border.resolve_or_default(parent_size.width.into_option());
 
     let padding_border = Rect {
         start: padding.start + border.start,
@@ -538,10 +538,10 @@ fn determine_flex_base_size(
             let mut ckd = child.size;
             if child_style.align_self(tree.style(node)) == AlignSelf::Stretch {
                 if constants.is_column && ckd.width.is_none() {
-                    ckd.width = available_space.width.as_option();
+                    ckd.width = available_space.width.into_option();
                 }
                 if constants.is_row && ckd.height.is_none() {
-                    ckd.height = available_space.height.as_option();
+                    ckd.height = available_space.height.into_option();
                 }
             }
             ckd
