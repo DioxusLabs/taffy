@@ -119,6 +119,8 @@ mod gap_column_gap_justify_space_around;
 mod gap_column_gap_justify_space_between;
 mod gap_column_gap_justify_space_evenly;
 mod gap_column_gap_mixed_flexible;
+mod gap_column_gap_percentage_flexible;
+mod gap_column_gap_percentage_inflexible;
 mod gap_column_gap_wrap_align_center;
 mod gap_column_gap_wrap_align_flex_end;
 mod gap_column_gap_wrap_align_flex_start;
@@ -387,6 +389,8 @@ fn benchmark(c: &mut Criterion) {
             gap_column_gap_justify_space_between::compute();
             gap_column_gap_justify_space_evenly::compute();
             gap_column_gap_mixed_flexible::compute();
+            gap_column_gap_percentage_flexible::compute();
+            gap_column_gap_percentage_inflexible::compute();
             gap_column_gap_wrap_align_center::compute();
             gap_column_gap_wrap_align_flex_end::compute();
             gap_column_gap_wrap_align_flex_start::compute();
