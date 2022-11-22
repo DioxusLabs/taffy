@@ -65,6 +65,15 @@ impl ResolveOrDefault<Option<f32>, f32> for Dimension {
     }
 }
 
+impl ResolveOrDefault<Size<Option<f32>>, Size<f32>> for Size<Dimension> {
+    fn resolve_or_default(self, context: Size<Option<f32>>) -> Size<f32> {
+        Size {
+            width: self.width.resolve_or_default(context.width),
+            height: self.height.resolve_or_default(context.height),
+        }
+    }
+}
+
 impl ResolveOrDefault<Size<Option<f32>>, Rect<f32>> for Rect<Dimension> {
     fn resolve_or_default(self, context: Size<Option<f32>>) -> Rect<f32> {
         Rect {

@@ -98,6 +98,8 @@ struct AlgoConstants {
     border: Rect<f32>,
     /// The padding of this section
     padding_border: Rect<f32>,
+    /// The gap of this section
+    gap: Size<f32>,
 
     /// The size of the internal node
     node_inner_size: Size<Option<f32>>,
@@ -211,7 +213,12 @@ fn compute_preliminary(
         known_dimensions.main(constants.dir).unwrap_or({
             let longest_line = flex_lines.iter().fold(f32::MIN, |acc, line| {
                 let length: f32 = line.items.iter().map(|item| item.outer_target_size.main(constants.dir)).sum();
-                acc.max(length)
+                let gap_contribution = if line.items.len() > 1 {
+                    constants.gap.main(constants.dir) * line.items.len() as f32
+                } else {
+                    0.0
+                };
+                acc.max(length + gap_contribution)
             });
 
             let size = longest_line + constants.padding_border.main_axis_sum(constants.dir);
@@ -291,7 +298,7 @@ fn compute_preliminary(
     // 15. Determine the flex container’s used cross size.
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("determine_container_cross_size");
-    let total_cross_size = determine_container_cross_size(&mut flex_lines, known_dimensions, &mut constants);
+    let total_line_cross_size = determine_container_cross_size(&mut flex_lines, known_dimensions, &mut constants);
 
     // We have the container size.
     // If our caller does not care about performing layout we are done now.
@@ -303,7 +310,7 @@ fn compute_preliminary(
     // 16. Align all flex lines per align-content.
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("align_flex_lines_per_align_content");
-    align_flex_lines_per_align_content(tree, &mut flex_lines, node, &constants, total_cross_size);
+    align_flex_lines_per_align_content(tree, &mut flex_lines, node, &constants, total_line_cross_size);
 
     // Do a final layout pass and gather the resulting layouts
     #[cfg(feature = "debug")]
@@ -356,6 +363,7 @@ fn compute_constants(
         width: node_size.width.maybe_sub(padding_border.horizontal_axis_sum()),
         height: node_size.height.maybe_sub(padding_border.vertical_axis_sum()),
     };
+    let gap = style.gap.resolve_or_default(node_inner_size.or(Size { width: Some(0.0), height: Some(0.0) }));
 
     let container_size = Size::ZERO;
     let inner_container_size = Size::ZERO;
@@ -367,6 +375,7 @@ fn compute_constants(
         is_wrap_reverse,
         margin,
         border,
+        gap,
         padding_border,
         node_inner_size,
         container_size,
@@ -624,6 +633,7 @@ fn collect_flex_lines<'a>(
         lines.push(FlexLine { items: flex_items.as_mut_slice(), cross_size: 0.0, offset_cross: 0.0 });
     } else {
         let mut flex_items = &mut flex_items[..];
+        let main_axis_gap = constants.gap.main(constants.dir);
 
         while !flex_items.is_empty() {
             let mut line_length = 0.0;
@@ -631,7 +641,8 @@ fn collect_flex_lines<'a>(
                 .iter()
                 .enumerate()
                 .find(|&(idx, child)| {
-                    line_length += child.hypothetical_outer_size.main(constants.dir);
+                    let gap_contribution = if idx == 0 { 0.0 } else { main_axis_gap };
+                    line_length += child.hypothetical_outer_size.main(constants.dir) + gap_contribution;
                     if let AvailableSpace::Definite(main) = available_space.main(constants.dir) {
                         line_length > main && idx != 0
                     } else {
@@ -660,12 +671,16 @@ fn resolve_flexible_lengths(
     constants: &AlgoConstants,
     available_space: Size<AvailableSpace>,
 ) {
+    let total_main_axis_gap =
+        if line.items.len() > 1 { constants.gap.main(constants.dir) * (line.items.len() - 1) as f32 } else { 0.0 };
+
     // 1. Determine the used flex factor. Sum the outer hypothetical main sizes of all
     //    items on the line. If the sum is less than the flex container’s inner main size,
     //    use the flex grow factor for the rest of this algorithm; otherwise, use the
     //    flex shrink factor.
 
-    let used_flex_factor: f32 = line.items.iter().map(|child| child.hypothetical_outer_size.main(constants.dir)).sum();
+    let used_flex_factor: f32 = total_main_axis_gap
+        + line.items.iter().map(|child| child.hypothetical_outer_size.main(constants.dir)).sum::<f32>();
     let growing = used_flex_factor < constants.node_inner_size.main(constants.dir).unwrap_or(0.0);
     let shrinking = !growing;
 
@@ -717,14 +732,15 @@ fn resolve_flexible_lengths(
     //    and subtract this from the flex container’s inner main size. For frozen items,
     //    use their outer target main size; for other items, use their outer flex base size.
 
-    let used_space: f32 = line
-        .items
-        .iter()
-        .map(|child| {
-            child.margin.main_axis_sum(constants.dir)
-                + if child.frozen { child.target_size.main(constants.dir) } else { child.flex_basis }
-        })
-        .sum();
+    let used_space: f32 = total_main_axis_gap
+        + line
+            .items
+            .iter()
+            .map(|child| {
+                child.margin.main_axis_sum(constants.dir)
+                    + if child.frozen { child.target_size.main(constants.dir) } else { child.flex_basis }
+            })
+            .sum::<f32>();
 
     let initial_free_space = constants.node_inner_size.main(constants.dir).maybe_sub(used_space).unwrap_or(0.0);
 
@@ -744,14 +760,15 @@ fn resolve_flexible_lengths(
         //    value is less than the magnitude of the remaining free space, use this
         //    as the remaining free space.
 
-        let used_space: f32 = line
-            .items
-            .iter()
-            .map(|child| {
-                child.margin.main_axis_sum(constants.dir)
-                    + if child.frozen { child.target_size.main(constants.dir) } else { child.flex_basis }
-            })
-            .sum();
+        let used_space: f32 = total_main_axis_gap
+            + line
+                .items
+                .iter()
+                .map(|child| {
+                    child.margin.main_axis_sum(constants.dir)
+                        + if child.frozen { child.target_size.main(constants.dir) } else { child.flex_basis }
+                })
+                .sum::<f32>();
 
         let mut unfrozen: Vec<&mut FlexItem> = line.items.iter_mut().filter(|child| !child.frozen).collect();
 
@@ -1085,7 +1102,10 @@ fn handle_align_content_stretch(
     constants: &AlgoConstants,
 ) {
     if tree.style(node).align_content == AlignContent::Stretch && node_size.cross(constants.dir).is_some() {
-        let total_cross: f32 = flex_lines.iter().map(|line| line.cross_size).sum();
+        let num_lines = flex_lines.len();
+        let cross_gap = constants.gap.cross(constants.dir);
+        let total_cross_axis_gap = if num_lines > 1 { cross_gap * (num_lines - 1) as f32 } else { 0.0 };
+        let total_cross: f32 = flex_lines.iter().map(|line| line.cross_size).sum::<f32>() + total_cross_axis_gap;
         let inner_cross =
             (node_size.cross(constants.dir).maybe_sub(constants.padding_border.cross_axis_sum(constants.dir)))
                 .unwrap_or(0.0);
@@ -1161,7 +1181,10 @@ fn distribute_remaining_free_space(
     constants: &AlgoConstants,
 ) {
     for line in flex_lines {
-        let used_space: f32 = line.items.iter().map(|child| child.outer_target_size.main(constants.dir)).sum();
+        let total_main_axis_gap =
+            if line.items.len() > 1 { constants.gap.main(constants.dir) * (line.items.len() - 1) as f32 } else { 0.0 };
+        let used_space: f32 = total_main_axis_gap
+            + line.items.iter().map(|child| child.outer_target_size.main(constants.dir)).sum::<f32>();
         let free_space = constants.inner_container_size.main(constants.dir) - used_space;
         let mut num_auto_margins = 0;
 
@@ -1198,47 +1221,62 @@ fn distribute_remaining_free_space(
         } else {
             let num_items = line.items.len();
             let layout_reverse = constants.dir.is_reverse();
+            let gap = constants.gap.main(constants.dir);
 
             let justify_item = |(i, child): (usize, &mut FlexItem)| {
                 let is_first = i == 0;
 
                 child.offset_main = match tree.style(node).justify_content {
                     JustifyContent::FlexStart => {
-                        if layout_reverse && is_first {
-                            free_space
+                        if is_first {
+                            if layout_reverse {
+                                free_space
+                            } else {
+                                0.0
+                            }
                         } else {
-                            0.0
+                            gap
                         }
                     }
                     JustifyContent::Center => {
                         if is_first {
                             free_space / 2.0
                         } else {
-                            0.0
+                            gap
                         }
                     }
                     JustifyContent::FlexEnd => {
-                        if is_first && !layout_reverse {
-                            free_space
+                        if is_first {
+                            if !layout_reverse {
+                                free_space
+                            } else {
+                                0.0
+                            }
                         } else {
-                            0.0
+                            gap
                         }
                     }
                     JustifyContent::SpaceBetween => {
                         if is_first {
                             0.0
                         } else {
-                            free_space / (num_items - 1) as f32
+                            gap + (free_space / (num_items - 1) as f32)
                         }
                     }
                     JustifyContent::SpaceAround => {
                         if is_first {
                             (free_space / num_items as f32) / 2.0
                         } else {
-                            free_space / num_items as f32
+                            gap + (free_space / num_items as f32)
                         }
                     }
-                    JustifyContent::SpaceEvenly => free_space / (num_items + 1) as f32,
+                    JustifyContent::SpaceEvenly => {
+                        if is_first {
+                            free_space / (num_items + 1) as f32
+                        } else {
+                            gap + (free_space / (num_items + 1) as f32)
+                        }
+                    }
                 };
             };
 
@@ -1388,13 +1426,15 @@ fn determine_container_cross_size(
     node_size: Size<Option<f32>>,
     constants: &mut AlgoConstants,
 ) -> f32 {
-    let total_cross_size: f32 = flex_lines.iter().map(|line| line.cross_size).sum();
+    let gap_contribution =
+        if flex_lines.len() > 1 { constants.gap.cross(constants.dir) * (flex_lines.len() - 1) as f32 } else { 0.0 };
+    let total_line_cross_size: f32 = flex_lines.iter().map(|line| line.cross_size).sum::<f32>();
 
     constants.container_size.set_cross(
         constants.dir,
-        node_size
-            .cross(constants.dir)
-            .unwrap_or(total_cross_size + constants.padding_border.cross_axis_sum(constants.dir)),
+        node_size.cross(constants.dir).unwrap_or(
+            total_line_cross_size + gap_contribution + constants.padding_border.cross_axis_sum(constants.dir),
+        ),
     );
 
     constants.inner_container_size.set_cross(
@@ -1402,7 +1442,7 @@ fn determine_container_cross_size(
         constants.container_size.cross(constants.dir) - constants.padding_border.cross_axis_sum(constants.dir),
     );
 
-    total_cross_size
+    total_line_cross_size
 }
 
 /// Align all flex lines per `align-content`.
@@ -1418,48 +1458,70 @@ fn align_flex_lines_per_align_content(
     constants: &AlgoConstants,
     total_cross_size: f32,
 ) {
-    let free_space = constants.inner_container_size.cross(constants.dir) - total_cross_size;
     let num_lines = flex_lines.len();
+    let gap = constants.gap.cross(constants.dir);
+    let total_cross_axis_gap = if num_lines > 1 { gap * (num_lines - 1) as f32 } else { 0.0 };
+    let free_space = constants.inner_container_size.cross(constants.dir) - total_cross_size - total_cross_axis_gap;
 
     let align_line = |(i, line): (usize, &mut FlexLine)| {
         let is_first = i == 0;
 
         line.offset_cross = match tree.style(node).align_content {
             AlignContent::FlexStart => {
-                if is_first && constants.is_wrap_reverse {
-                    free_space
+                if is_first {
+                    if constants.is_wrap_reverse {
+                        free_space
+                    } else {
+                        0.0
+                    }
                 } else {
-                    0.0
+                    gap
                 }
             }
             AlignContent::FlexEnd => {
-                if is_first && !constants.is_wrap_reverse {
-                    free_space
+                if is_first {
+                    if !constants.is_wrap_reverse {
+                        free_space
+                    } else {
+                        0.0
+                    }
                 } else {
-                    0.0
+                    gap
                 }
             }
             AlignContent::Center => {
                 if is_first {
                     free_space / 2.0
                 } else {
-                    0.0
+                    gap
                 }
             }
-            AlignContent::Stretch => 0.0,
-            AlignContent::SpaceEvenly => free_space / (num_lines + 1) as f32,
+            AlignContent::Stretch => {
+                if is_first {
+                    0.0
+                } else {
+                    gap
+                }
+            }
+            AlignContent::SpaceEvenly => {
+                if is_first {
+                    free_space / (num_lines + 1) as f32
+                } else {
+                    gap + (free_space / (num_lines + 1) as f32)
+                }
+            }
             AlignContent::SpaceBetween => {
                 if is_first {
                     0.0
                 } else {
-                    free_space / (num_lines - 1) as f32
+                    gap + (free_space / (num_lines - 1) as f32)
                 }
             }
             AlignContent::SpaceAround => {
                 if is_first {
                     (free_space / num_lines as f32) / 2.0
                 } else {
-                    free_space / num_lines as f32
+                    gap + (free_space / num_lines as f32)
                 }
             }
         };
