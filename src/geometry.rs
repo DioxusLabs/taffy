@@ -1,6 +1,6 @@
 //! Geometric primitives useful for layout
 
-use crate::grid::GridAxis;
+use crate::compute::grid::GridAxis;
 use crate::style::{Dimension, FlexDirection};
 use core::ops::Add;
 

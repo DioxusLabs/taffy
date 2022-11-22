@@ -9,7 +9,7 @@ use crate::sys::{f32_max, f32_min};
 use core::cmp::Ordering;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub(in crate::grid) enum AvailableSpaceMode {
+pub(in super::super) enum AvailableSpaceMode {
     Estimates,
     OtherAxisSizes,
 }
@@ -17,7 +17,7 @@ pub(in crate::grid) enum AvailableSpaceMode {
 /// To make track sizing efficient we want to order tracks
 /// Here a placement is either a Line<i16> representing a row-start/row-end or a column-start/column-end
 #[inline(always)]
-pub(in crate::grid) fn cmp_by_span_then_start(
+pub(in super::super) fn cmp_by_span_then_start(
     get_placement: impl Fn(&GridItem) -> Line<u16>,
 ) -> impl FnMut(&GridItem, &GridItem) -> Ordering {
     move |item_a: &GridItem, item_b: &GridItem| -> Ordering {
@@ -33,7 +33,7 @@ pub(in crate::grid) fn cmp_by_span_then_start(
     }
 }
 
-pub(in crate::grid) fn compute_alignment_gutter_adjustment(
+pub(in super::super) fn compute_alignment_gutter_adjustment(
     alignment: AlignContent,
     available_space: AvailableSpace,
     get_track_size_estimate: impl Fn(&GridTrack, AvailableSpace) -> Option<f32>,
@@ -57,7 +57,7 @@ pub(in crate::grid) fn compute_alignment_gutter_adjustment(
 }
 
 /// Convert origin-zero coordinates track placement in grid track vector indexes
-pub(in crate::grid) fn resolve_item_track_indexes(
+pub(in super::super) fn resolve_item_track_indexes(
     items: &mut Vec<GridItem>,
     column_counts: TrackCounts,
     row_counts: TrackCounts,
@@ -69,7 +69,7 @@ pub(in crate::grid) fn resolve_item_track_indexes(
 }
 
 /// Determine (in each axis) whether the item crosses any flexible tracks
-pub(in crate::grid) fn determine_if_item_crosses_flexible_tracks(
+pub(in super::super) fn determine_if_item_crosses_flexible_tracks(
     items: &mut Vec<GridItem>,
     columns: &Vec<GridTrack>,
     rows: &Vec<GridTrack>,
@@ -82,7 +82,7 @@ pub(in crate::grid) fn determine_if_item_crosses_flexible_tracks(
     }
 }
 
-pub(in crate::grid) fn track_sizing_algorithm(
+pub(in super::super) fn track_sizing_algorithm(
     available_space: Size<AvailableSpace>,
     available_space_mode: AvailableSpaceMode,
     axis: GridAxis,
@@ -160,7 +160,7 @@ pub(in crate::grid) fn track_sizing_algorithm(
 
 /// Track sizing algorithm
 /// Note: Gutters are treated as empty fixed-size tracks for the purpose of the track sizing algorithm.
-pub(in crate::grid) fn track_sizing_algorithm_inner(
+pub(in super::super) fn track_sizing_algorithm_inner(
     axis: GridAxis,
     available_space: Size<AvailableSpace>,
     axis_min_size: Option<f32>,

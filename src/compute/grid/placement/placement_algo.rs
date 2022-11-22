@@ -27,7 +27,7 @@ impl<T: Copy> InBothAbsAxis<T> {
 /// Place items into the grid, generating new rows/column into the implicit grid as required
 ///
 /// [Specification](https://www.w3.org/TR/css-grid-2/#auto-placement-algo)
-pub(in crate::grid) fn place_grid_items<'a, ChildIter>(
+pub(in super::super) fn place_grid_items<'a, ChildIter>(
     cell_occupancy_matrix: &mut CellOccupancyMatrix,
     items: &mut Vec<GridItem>,
     children_iter: impl Fn() -> ChildIter,
@@ -300,10 +300,10 @@ fn record_grid_placement(
 mod tests {
 
     mod test_placement_algorithm {
-        use crate::grid::placement::estimate_size::compute_grid_size_estimate;
-        use crate::grid::placement::TrackCounts;
-        use crate::grid::test_helpers::*;
-        use crate::grid::CellOccupancyMatrix;
+        use crate::compute::grid::placement::estimate_size::compute_grid_size_estimate;
+        use crate::compute::grid::placement::TrackCounts;
+        use crate::compute::grid::test_helpers::*;
+        use crate::compute::grid::CellOccupancyMatrix;
         use crate::prelude::*;
         use crate::style::{GridAutoFlow, GridPlacement::*};
         use slotmap::SlotMap;
@@ -341,9 +341,9 @@ mod tests {
             }
 
             // Assert that the correct number of implicit rows have been generated
-            let actual_row_counts = *cell_occupancy_matrix.track_counts(crate::grid::AbsoluteAxis::Vertical);
+            let actual_row_counts = *cell_occupancy_matrix.track_counts(crate::compute::grid::AbsoluteAxis::Vertical);
             assert_eq!(actual_row_counts, expected_row_counts, "row track counts");
-            let actual_col_counts = *cell_occupancy_matrix.track_counts(crate::grid::AbsoluteAxis::Horizontal);
+            let actual_col_counts = *cell_occupancy_matrix.track_counts(crate::compute::grid::AbsoluteAxis::Horizontal);
             assert_eq!(actual_col_counts, expected_col_counts, "column track counts");
         }
 

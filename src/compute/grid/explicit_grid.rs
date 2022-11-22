@@ -11,7 +11,7 @@ pub(crate) fn compute_explicit_grid_size(style: &Style) -> (u16, u16) {
     (explicit_col_count, explicit_row_count)
 }
 
-pub(in crate::grid) fn initialize_grid_tracks(
+pub(super) fn initialize_grid_tracks(
     tracks: &mut Vec<GridTrack>,
     counts: TrackCounts,
     track_template: &GridTrackVec<TrackSizingFunction>,
@@ -73,9 +73,9 @@ fn create_implicit_tracks(
 mod test {
     use super::compute_explicit_grid_size;
     use super::initialize_grid_tracks;
-    use crate::grid::placement::TrackCounts;
-    use crate::grid::test_helpers::*;
-    use crate::grid::types::GridTrackKind;
+    use crate::compute::grid::placement::TrackCounts;
+    use crate::compute::grid::test_helpers::*;
+    use crate::compute::grid::types::GridTrackKind;
     use crate::style::MaxTrackSizingFunction;
     use crate::style::MinTrackSizingFunction;
     use crate::style::{Dimension, TrackSizingFunction};

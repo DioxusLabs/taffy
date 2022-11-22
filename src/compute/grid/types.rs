@@ -58,7 +58,7 @@ impl GridAxis {
 
 /// Whether a GridTrack represents an actual track or a gutter.
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub(super) enum GridTrackKind {
+pub(in super::super) enum GridTrackKind {
     Uninit,
     Track,
     Gutter, // { name: Option<u16> },
@@ -68,7 +68,7 @@ pub(super) enum GridTrackKind {
 /// Gutters between tracks are sized similarly to actual tracks, so they
 /// are also represented by this struct
 #[derive(Debug, Clone)]
-pub(super) struct GridTrack {
+pub(in super::super) struct GridTrack {
     pub kind: GridTrackKind,
     pub min_track_sizing_function: MinTrackSizingFunction,
     pub max_track_sizing_function: MaxTrackSizingFunction,
@@ -344,7 +344,7 @@ pub(super) struct NamedArea {
     column_end: u16,
 }
 
-pub(super) struct GridItem {
+pub(in super::super) struct GridItem {
     /// The id of the Node that this item represents
     pub node: Node,
 

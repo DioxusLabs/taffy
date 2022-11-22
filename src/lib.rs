@@ -35,7 +35,6 @@ pub mod randomizable;
 
 mod compute;
 mod data;
-mod grid;
 mod resolve;
 mod sys;
 

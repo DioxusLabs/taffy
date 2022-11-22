@@ -1,6 +1,7 @@
 //! The layout algorithms themselves
 
 pub(crate) mod flexbox;
+pub(crate) mod grid;
 pub(crate) mod leaf;
 
 use crate::error::TaffyError;
@@ -116,7 +117,7 @@ fn compute_node_layout(
                 self::flexbox::compute(tree, node, known_dimensions, available_space, run_mode)
             }
             Display::Grid => {
-                // crate::grid::compute(tree, node, available_space)
+                // self::grid::compute(tree, node, available_space)
                 Size::ZERO // TODO proper size computation
             }
             Display::None => {

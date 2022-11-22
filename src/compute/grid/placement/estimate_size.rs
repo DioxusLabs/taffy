@@ -189,7 +189,7 @@ mod tests {
 
     mod test_intial_grid_sizing {
         use super::super::compute_grid_size_estimate;
-        use crate::grid::test_helpers::*;
+        use crate::compute::grid::test_helpers::*;
         use crate::prelude::*;
         use crate::style::GridPlacement::*;
 
