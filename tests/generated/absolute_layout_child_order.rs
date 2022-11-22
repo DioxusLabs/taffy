@@ -57,9 +57,6 @@ fn absolute_layout_child_order() {
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
-
-    taffy::debug::print_tree(&taffy, node);
-
     assert_eq!(taffy.layout(node).unwrap().size.width, 110f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 100f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);
