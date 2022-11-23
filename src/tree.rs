@@ -1,6 +1,7 @@
 //! The baseline requirements of any UI Tree so Taffy can efficiently calculate the layout
 
 use crate::{
+    error::TaffyResult,
     layout::{AvailableSpace, Cache, Layout},
     prelude::*,
 };
@@ -32,7 +33,7 @@ pub trait LayoutTree {
     fn layout_mut(&mut self, node: Node) -> &mut Layout;
 
     /// Mark a node as finished
-    fn mark_dirty(&mut self, node: Node, dirty: bool);
+    fn mark_dirty(&mut self, node: Node) -> TaffyResult<()>;
 
     /// Measure a node. Taffy uses this to force reflows of things like text and overflowing content.
     fn measure_node(

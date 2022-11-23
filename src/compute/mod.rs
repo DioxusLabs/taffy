@@ -42,9 +42,6 @@ fn compute_node_layout(
     run_mode: RunMode,
     sizing_mode: SizingMode,
 ) -> Size<f32> {
-    // clear the dirtiness of the node now that we've computed it
-    tree.mark_dirty(node, false);
-
     #[cfg(feature = "debug")]
     NODE_LOGGER.push_node(node);
     #[cfg(feature = "debug")]
