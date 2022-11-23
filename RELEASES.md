@@ -2,13 +2,13 @@
 
 ## 0.2.0
 
-### New Features & Improvements
+### New features
 
 #### Flexbox "gap" and `AlignContent::SpaceEvenly`
 
 The [gap](https://developer.mozilla.org/en-US/docs/Web/CSS/gap) property is now supported on flex containers. This can make it much easier to create even spacing or "gutters" between nodes.
 
-Additionally we support the `space-evenly` of the `align_content` property through the new `AlignContent::SpaceEvenly` variant.
+Additionally we have a `SpaceEvenly` variant to the `AlignContent` enum to support evenly spaced justification in the cross axis (equivalent to  `align-content: space-evenly` in CSS)
 
 #### Debug module and cargo feature
 
@@ -18,12 +18,12 @@ Two debugging features have been added:
 
 - A cargo feature `debug`. This enabled debug logging of the layout computation process itself (this is probably mainly useful for those working taffy itself).
 
-### Greatly improved performance
+### Performance improvements
 
 A number of performance improvements have landed since taffy 0.1:
 
 - Firstly, our custom `taffy::forest` storage implementation was ripped out and replaced with a much simpler implementation using the `slotmap` crate. This led to performance increases of up to 90%.
-- Secondly, the caching implementation was improved by upping the number of cache slots from 2 to 4 and tweaking how computed results are allocated to chache slots to better match the actual usage patterns of the flexbox layout algorithm. This had a particularly dramatic effect on deep hierachies (which often involve recomputing the same results repeatedly), fixing the  exponential blowup that was previously exhibited on these trees and improving performance by over 1000x in some cases!
+- Secondly, the caching implementation was improved by upping the number of cache slots from 2 to 4 and tweaking how computed results are allocated to chache slots to better match the actual usage patterns of the flexbox layout algorithm. This had a particularly dramatic effect on deep hierachies (which often involve recomputing the same results repeatedly), fixing the exponential blowup that was previously exhibited on these trees and improving performance by over 1000x in some cases!
 
 #### Benchmarks vs. Taffy 0.1:
 
@@ -59,7 +59,7 @@ Yoga benchmarks run via it's node.js bindings (the `yoga-layout-prebuilt` npm pa
 
 While we're trying not to get too excited (there could easily be an issue with our benchmarking methodology which make this an unfair comparison), we are pleased to see that we seem to be anywhere between 100x and 1000x times faster depending on the node count!
 
-### Breaking API Changes
+### Breaking API changes
 
 #### Node creation changes
 
