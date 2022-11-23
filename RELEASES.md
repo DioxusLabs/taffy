@@ -99,7 +99,6 @@ pub enum AvailableSpace {
 
 This enum is now used instead of `Option<f32>` when calling `Taffy.compute_layout` (if you previously passing `Size::NONE` to `compute_layout`, then you will need to change this to `Size::MAX_CONTENT`).
 
-
 And a different instance of it is passed as a new second parameter to `MeasureFunc`. `MeasureFunc`s may choose to use this parameter in their computation or ignore it as they see fit. The canonical example of when it makes sense to use it is when laying out text. If `MinContent` has been passed in the axis in which the text is flowing (i.e. the horizontal axis for left-to-right text), then you should line-break at every possible opportunity (e.g. all word boundaries), whereas if `MaxContent` has been passed then you shouldn't line break at all..
 
 #### Builder methods are now `const` where possible
@@ -115,11 +114,9 @@ And a different instance of it is passed as a new second parameter to `MeasureFu
 - Removed `taffy::number::Number`. Use `Option<f32>` is used instead
   - the associated public `MinMax` and `OrElse` traits have also been removed; these should never have been public
 
-#### Misc.
+#### Miscellaneous
 
 - `Taffy.mark_dirty()`  now takes a boolean parameter where `true` = dirty and `false` = clean.
-
-
 
 ### Fixes
 
