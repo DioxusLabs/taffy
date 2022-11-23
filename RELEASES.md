@@ -37,7 +37,7 @@ A number of performance improvements have landed since taffy 0.1:
 | deep/100_000 nodes (17-level hierarchy) | - | 2.7644 ms| - |
 | deep/1_000_000 nodes (20-level hierarchy) | - | 1.2130 s| - |
 
-(note that the table below contains multiple different units (milliseconds vs. microseconds vs. nanoseconds))
+(note that the table above contains multiple different units (milliseconds vs. microseconds vs. nanoseconds))
 
 As you can see, we have actually regressed slightly in the "wide" benchmarks (where all nodes are siblings of a single parent node). Although it should be noted our results in these benchmarks are still very fast, especially on the 10,000 node benchmark which we consider to be the most realistic size where the result is measured in microseconds.
 
@@ -55,7 +55,7 @@ Yoga benchmarks run via it's node.js bindings (the `yoga-layout-prebuilt` npm pa
 | yoga/10_000 nodes (4-level hierarchy) | 13.8672 ms | 36.162 µs |
 | yoga/100_000 nodes (5-level hierarchy) | 141.5307 ms | 1.6404 ms |
 
-(note that the table below contains multiple different units (milliseconds vs. microseconds vs. nanoseconds))
+(note that the table above contains multiple different units (milliseconds vs. microseconds vs. nanoseconds))
 
 While we're trying not to get too excited (there could easily be an issue with our benchmarking methodology which make this an unfair comparison), we are pleased to see that we seem to be anywhere between 100x and 1000x times faster depending on the node count!
 
