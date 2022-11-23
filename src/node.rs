@@ -485,7 +485,7 @@ mod tests {
     #[test]
     fn set_measure_of_previously_unmeasured_node() {
         let mut taffy = Taffy::new();
-        let node = taffy.new_leaf(FlexboxLayout::default()).unwrap();
+        let node = taffy.new_leaf(Style::default()).unwrap();
         taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
         assert_eq!(taffy.layout(node).unwrap().size.width, 0.0);
 
