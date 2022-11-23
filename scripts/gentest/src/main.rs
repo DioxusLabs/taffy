@@ -223,7 +223,7 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
         let prop_name_snake_case = prop_name.to_case(Case::Snake);
         let prop_name_camel_case = prop_name.to_case(Case::Camel);
         let prop_name_ident = format_ident!("{}", prop_name_snake_case);
-        match style[prop_name_camel_case.clone()] {
+        match style[prop_name_camel_case] {
             json::JsonValue::Object(ref value) => {
                 let prop_value = quoter(value);
                 quote!(#prop_name_ident: #prop_value,)
@@ -235,12 +235,12 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
     fn quote_array_prop(
         prop_name: &str,
         style: &json::JsonValue,
-        quoter: impl Fn(&Vec<json::JsonValue>) -> TokenStream,
+        quoter: impl Fn(&[json::JsonValue]) -> TokenStream,
     ) -> TokenStream {
         let prop_name_snake_case = prop_name.to_case(Case::Snake);
         let prop_name_camel_case = prop_name.to_case(Case::Camel);
         let prop_name_ident = format_ident!("{}", prop_name_snake_case);
-        match style[prop_name_camel_case.clone()] {
+        match style[prop_name_camel_case] {
             json::JsonValue::Array(ref value) => {
                 let prop_value = quoter(value);
                 quote!(#prop_name_ident: #prop_value,)
@@ -249,6 +249,8 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
         }
     }
 
+    // This is currently unused, but leaving for future use.
+    #[allow(dead_code)]
     fn quote_string_prop(
         prop_name: &str,
         style: &json::JsonValue,
@@ -257,7 +259,7 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
         let prop_name_snake_case = prop_name.to_case(Case::Snake);
         let prop_name_camel_case = prop_name.to_case(Case::Camel);
         let prop_name_ident = format_ident!("{}", prop_name_snake_case);
-        match style[prop_name_camel_case.clone()] {
+        match style[prop_name_camel_case] {
             json::JsonValue::Short(ref value) => {
                 let prop_value = quoter(value.as_ref());
                 quote!(#prop_name_ident: #prop_value,)
@@ -278,9 +280,9 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
         let prop_name_snake_case = prop_name.to_case(Case::Snake);
         let prop_name_camel_case = prop_name.to_case(Case::Camel);
         let prop_name_ident = format_ident!("{}", prop_name_snake_case);
-        match style[prop_name_camel_case.clone()] {
+        match style[prop_name_camel_case] {
             json::JsonValue::Number(ref value) => {
-                let prop_value = quoter(value.clone().into());
+                let prop_value = quoter((*value).into());
                 quote!(#prop_name_ident: #prop_value,)
             }
             _ => quote!(),
@@ -598,8 +600,8 @@ fn generate_grid_position(grid_position: &json::object::Object) -> TokenStream {
     }
 }
 
-fn generate_track_definition_list(raw_list: &Vec<json::JsonValue>) -> TokenStream {
-    let list = raw_list.into_iter().map(|obj| match obj {
+fn generate_track_definition_list(raw_list: &[json::JsonValue]) -> TokenStream {
+    let list = raw_list.iter().map(|obj| match obj {
         json::JsonValue::Object(inner) => generate_track_definition(inner),
         _ => unreachable!(),
     });
