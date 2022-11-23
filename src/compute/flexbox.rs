@@ -10,7 +10,7 @@ use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::resolve::{MaybeResolve, ResolveOrDefault};
 use crate::style::{AlignContent, AlignSelf, Dimension, Display, FlexWrap, JustifyContent, PositionType};
-use crate::style::{FlexDirection, FlexboxLayout};
+use crate::style::{FlexDirection, Style};
 use crate::sys::Vec;
 use crate::tree::LayoutTree;
 
@@ -346,11 +346,7 @@ fn compute_preliminary(
 
 /// Compute constants that can be reused during the flexbox algorithm.
 #[inline]
-fn compute_constants(
-    style: &FlexboxLayout,
-    node_size: Size<Option<f32>>,
-    parent_size: Size<AvailableSpace>,
-) -> AlgoConstants {
+fn compute_constants(style: &Style, node_size: Size<Option<f32>>, parent_size: Size<AvailableSpace>) -> AlgoConstants {
     let dir = style.flex_direction;
     let is_row = dir.is_row();
     let is_column = dir.is_column();
@@ -1383,7 +1379,7 @@ fn align_flex_items_along_cross_axis(
     tree: &impl LayoutTree,
     node: Node,
     child: &mut FlexItem,
-    child_style: &FlexboxLayout,
+    child_style: &Style,
     free_space: f32,
     max_baseline: f32,
     constants: &AlgoConstants,
@@ -1864,7 +1860,7 @@ mod tests {
         math::MaybeMath,
         prelude::{Rect, Size},
         resolve::ResolveOrDefault,
-        style::{FlexWrap, FlexboxLayout},
+        style::{FlexWrap, Style},
         Taffy,
     };
 
@@ -1873,7 +1869,7 @@ mod tests {
     fn correct_constants() {
         let mut tree = Taffy::with_capacity(16);
 
-        let style = FlexboxLayout::default();
+        let style = Style::default();
         let node_id = tree.new_leaf(style).unwrap();
 
         let node_size = Size::NONE;
@@ -1920,8 +1916,7 @@ mod tests {
     fn hidden_layout_should_hide_recursively() {
         let mut taffy = Taffy::new();
 
-        let style: FlexboxLayout =
-            FlexboxLayout { display: Flex, size: Size::from_points(50.0, 50.0), ..Default::default() };
+        let style: Style = Style { display: Flex, size: Size::from_points(50.0, 50.0), ..Default::default() };
 
         let grandchild_00 = taffy.new_leaf(style).unwrap();
 
@@ -1935,7 +1930,7 @@ mod tests {
 
         let root = taffy
             .new_with_children(
-                FlexboxLayout { display: Display::None, size: Size::from_points(50.0, 50.0), ..Default::default() },
+                Style { display: Display::None, size: Size::from_points(50.0, 50.0), ..Default::default() },
                 &[child_00, child_01],
             )
             .unwrap();

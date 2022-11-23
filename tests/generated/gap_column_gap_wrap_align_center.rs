@@ -3,7 +3,7 @@ fn gap_column_gap_wrap_align_center() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(20f32),
                     height: taffy::style::Dimension::Points(20f32),
@@ -16,7 +16,7 @@ fn gap_column_gap_wrap_align_center() {
         .unwrap();
     let node1 = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(20f32),
                     height: taffy::style::Dimension::Points(20f32),
@@ -29,7 +29,7 @@ fn gap_column_gap_wrap_align_center() {
         .unwrap();
     let node2 = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(20f32),
                     height: taffy::style::Dimension::Points(20f32),
@@ -42,7 +42,7 @@ fn gap_column_gap_wrap_align_center() {
         .unwrap();
     let node3 = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(20f32),
                     height: taffy::style::Dimension::Points(20f32),
@@ -55,7 +55,7 @@ fn gap_column_gap_wrap_align_center() {
         .unwrap();
     let node4 = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(20f32),
                     height: taffy::style::Dimension::Points(20f32),
@@ -68,7 +68,7 @@ fn gap_column_gap_wrap_align_center() {
         .unwrap();
     let node5 = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(20f32),
                     height: taffy::style::Dimension::Points(20f32),
@@ -81,7 +81,7 @@ fn gap_column_gap_wrap_align_center() {
         .unwrap();
     let node = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 align_content: taffy::style::AlignContent::Center,
                 gap: taffy::geometry::Size {

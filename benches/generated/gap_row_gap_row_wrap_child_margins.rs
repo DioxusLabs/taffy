@@ -2,7 +2,7 @@ pub fn compute() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), ..Default::default() },
                 margin: taffy::geometry::Rect {
                     top: taffy::style::Dimension::Points(2f32),
@@ -16,7 +16,7 @@ pub fn compute() {
         .unwrap();
     let node1 = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), ..Default::default() },
                 margin: taffy::geometry::Rect {
                     top: taffy::style::Dimension::Points(10f32),
@@ -30,7 +30,7 @@ pub fn compute() {
         .unwrap();
     let node2 = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), ..Default::default() },
                 margin: taffy::geometry::Rect {
                     top: taffy::style::Dimension::Points(15f32),
@@ -44,7 +44,7 @@ pub fn compute() {
         .unwrap();
     let node = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 gap: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Default::default() },
                 size: taffy::geometry::Size {

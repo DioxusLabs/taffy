@@ -3,7 +3,7 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
     let mut taffy = taffy::Taffy::new();
     let node000 = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.45f32), ..Default::default() },
                 margin: taffy::geometry::Rect {
                     start: taffy::style::Dimension::Percent(0.05f32),
@@ -26,7 +26,7 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
         .unwrap();
     let node00 = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.5f32), ..Default::default() },
                 margin: taffy::geometry::Rect {
@@ -50,7 +50,7 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
         .unwrap();
     let node0 = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 1f32,
                 flex_basis: taffy::style::Dimension::Percent(0.1f32),
@@ -79,7 +79,7 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
         .unwrap();
     let node1 = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 flex_grow: 4f32,
                 flex_basis: taffy::style::Dimension::Percent(0.15f32),
                 min_size: taffy::geometry::Size {
@@ -93,7 +93,7 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
         .unwrap();
     let node = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),

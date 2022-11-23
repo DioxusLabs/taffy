@@ -2,7 +2,7 @@ use criterion::{criterion_group, criterion_main, Criterion};
 
 fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
     let node111 = taffy
-        .new_leaf(taffy::style::FlexboxLayout {
+        .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(10.0),
                 height: taffy::style::Dimension::Points(10.0),
@@ -11,7 +11,7 @@ fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
         })
         .unwrap();
     let node112 = taffy
-        .new_leaf(taffy::style::FlexboxLayout {
+        .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(10.0),
                 height: taffy::style::Dimension::Points(10.0),
@@ -21,7 +21,7 @@ fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
         .unwrap();
 
     let node121 = taffy
-        .new_leaf(taffy::style::FlexboxLayout {
+        .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(10.0),
                 height: taffy::style::Dimension::Points(10.0),
@@ -30,7 +30,7 @@ fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
         })
         .unwrap();
     let node122 = taffy
-        .new_leaf(taffy::style::FlexboxLayout {
+        .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(10.0),
                 height: taffy::style::Dimension::Points(10.0),
@@ -39,15 +39,12 @@ fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
         })
         .unwrap();
 
-    let node11 =
-        taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[node111, node112]).unwrap();
-    let node12 =
-        taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[node121, node122]).unwrap();
-    let node1 =
-        taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[node11, node12]).unwrap();
+    let node11 = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[node111, node112]).unwrap();
+    let node12 = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[node121, node122]).unwrap();
+    let node1 = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[node11, node12]).unwrap();
 
     let node211 = taffy
-        .new_leaf(taffy::style::FlexboxLayout {
+        .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(10.0),
                 height: taffy::style::Dimension::Points(10.0),
@@ -56,7 +53,7 @@ fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
         })
         .unwrap();
     let node212 = taffy
-        .new_leaf(taffy::style::FlexboxLayout {
+        .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(10.0),
                 height: taffy::style::Dimension::Points(10.0),
@@ -66,7 +63,7 @@ fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
         .unwrap();
 
     let node221 = taffy
-        .new_leaf(taffy::style::FlexboxLayout {
+        .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(10.0),
                 height: taffy::style::Dimension::Points(10.0),
@@ -75,7 +72,7 @@ fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
         })
         .unwrap();
     let node222 = taffy
-        .new_leaf(taffy::style::FlexboxLayout {
+        .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(10.0),
                 height: taffy::style::Dimension::Points(10.0),
@@ -84,15 +81,12 @@ fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {
         })
         .unwrap();
 
-    let node21 =
-        taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[node211, node212]).unwrap();
-    let node22 =
-        taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[node221, node222]).unwrap();
+    let node21 = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[node211, node212]).unwrap();
+    let node22 = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[node221, node222]).unwrap();
 
-    let node2 =
-        taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[node21, node22]).unwrap();
+    let node2 = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[node21, node22]).unwrap();
 
-    taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[node1, node2]).unwrap()
+    taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[node1, node2]).unwrap()
 }
 
 fn taffy_benchmarks(c: &mut Criterion) {

@@ -3,7 +3,7 @@ fn absolute_layout_in_wrap_reverse_column_container() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 position_type: taffy::style::PositionType::Absolute,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(20f32),
@@ -17,7 +17,7 @@ fn absolute_layout_in_wrap_reverse_column_container() {
         .unwrap();
     let node = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_wrap: taffy::style::FlexWrap::WrapReverse,
                 size: taffy::geometry::Size {

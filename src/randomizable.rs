@@ -4,7 +4,7 @@ use rand::Rng;
 
 use crate::geometry::Size;
 use crate::style::Dimension;
-use crate::style::FlexboxLayout;
+use crate::style::Style;
 
 /// A trait for generating pseudo-random instances.
 pub trait Randomizeable {
@@ -44,12 +44,12 @@ impl Randomizeable for Size<Dimension> {
     }
 }
 
-impl Randomizeable for FlexboxLayout {
+impl Randomizeable for Style {
     fn random<R>(rng: &mut R) -> Self
     where
         R: Rng,
     {
         // TODO: Add more attributes
-        FlexboxLayout { size: Size::<Dimension>::random(rng), ..Default::default() }
+        Style { size: Size::<Dimension>::random(rng), ..Default::default() }
     }
 }
