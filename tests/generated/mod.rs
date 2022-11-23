@@ -130,6 +130,7 @@ mod gap_column_gap_wrap_align_space_around;
 mod gap_column_gap_wrap_align_space_between;
 mod gap_column_gap_wrap_align_stretch;
 mod gap_column_row_gap_wrapping;
+mod gap_percentage_row_gap_wrapping;
 mod gap_row_gap_align_items_end;
 mod gap_row_gap_align_items_stretch;
 mod gap_row_gap_column_child_margins;
