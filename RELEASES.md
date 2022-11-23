@@ -97,7 +97,7 @@ While we're trying not to get too excited (there could easily be an issue with o
 
 ### Fixes
 
-Miscelaneous correctness fixes which align our implementation with Chrome:
+Miscellaneous correctness fixes which align our implementation with Chrome:
 
 - nodes can only ever have one parent
 - fixed rounding of fractional values to follow latest Chrome - values are now rounded the same regardless of their position
