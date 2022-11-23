@@ -26,6 +26,9 @@ mod sys;
 
 pub use crate::node::Taffy;
 
+#[cfg(feature = "random")]
+pub mod randomizable;
+
 #[cfg(feature = "std")]
 use core::fmt::{Display, Formatter, Result};
 
