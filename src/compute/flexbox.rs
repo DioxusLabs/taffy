@@ -653,6 +653,8 @@ fn collect_flex_lines<'a>(
                 .iter()
                 .enumerate()
                 .find(|&(idx, child)| {
+                    // Gaps only occur between items (not before the first one or after the last one)
+                    // So first item in the line does not contribute a gap to the line length
                     let gap_contribution = if idx == 0 { 0.0 } else { main_axis_gap };
                     line_length += child.hypothetical_outer_size.main(constants.dir) + gap_contribution;
                     if let AvailableSpace::Definite(main) = available_space.main(constants.dir) {
@@ -683,8 +685,7 @@ fn resolve_flexible_lengths(
     constants: &AlgoConstants,
     available_space: Size<AvailableSpace>,
 ) {
-    let total_main_axis_gap =
-        if line.items.len() > 1 { constants.gap.main(constants.dir) * (line.items.len() - 1) as f32 } else { 0.0 };
+    let total_main_axis_gap = sum_axis_gaps(constants.gap.main(constants.dir), line.items.len());
 
     // 1. Determine the used flex factor. Sum the outer hypothetical main sizes of all
     //    items on the line. If the sum is less than the flex container’s inner main size,
@@ -1118,9 +1119,7 @@ fn handle_align_content_stretch(
     constants: &AlgoConstants,
 ) {
     if tree.style(node).align_content == AlignContent::Stretch && node_size.cross(constants.dir).is_some() {
-        let num_lines = flex_lines.len();
-        let cross_gap = constants.gap.cross(constants.dir);
-        let total_cross_axis_gap = if num_lines > 1 { cross_gap * (num_lines - 1) as f32 } else { 0.0 };
+        let total_cross_axis_gap = sum_axis_gaps(constants.gap.cross(constants.dir), flex_lines.len());
         let total_cross: f32 = flex_lines.iter().map(|line| line.cross_size).sum::<f32>() + total_cross_axis_gap;
         let inner_cross =
             (node_size.cross(constants.dir).maybe_sub(constants.padding_border.cross_axis_sum(constants.dir)))
@@ -1197,8 +1196,7 @@ fn distribute_remaining_free_space(
     constants: &AlgoConstants,
 ) {
     for line in flex_lines {
-        let total_main_axis_gap =
-            if line.items.len() > 1 { constants.gap.main(constants.dir) * (line.items.len() - 1) as f32 } else { 0.0 };
+        let total_main_axis_gap = sum_axis_gaps(constants.gap.main(constants.dir), line.items.len());
         let used_space: f32 = total_main_axis_gap
             + line.items.iter().map(|child| child.outer_target_size.main(constants.dir)).sum::<f32>();
         let free_space = constants.inner_container_size.main(constants.dir) - used_space;
@@ -1442,14 +1440,13 @@ fn determine_container_cross_size(
     node_size: Size<Option<f32>>,
     constants: &mut AlgoConstants,
 ) -> f32 {
-    let gap_contribution =
-        if flex_lines.len() > 1 { constants.gap.cross(constants.dir) * (flex_lines.len() - 1) as f32 } else { 0.0 };
+    let total_cross_axis_gap = sum_axis_gaps(constants.gap.cross(constants.dir), flex_lines.len());
     let total_line_cross_size: f32 = flex_lines.iter().map(|line| line.cross_size).sum::<f32>();
 
     constants.container_size.set_cross(
         constants.dir,
         node_size.cross(constants.dir).unwrap_or(
-            total_line_cross_size + gap_contribution + constants.padding_border.cross_axis_sum(constants.dir),
+            total_line_cross_size + total_cross_axis_gap + constants.padding_border.cross_axis_sum(constants.dir),
         ),
     );
 
@@ -1476,7 +1473,7 @@ fn align_flex_lines_per_align_content(
 ) {
     let num_lines = flex_lines.len();
     let gap = constants.gap.cross(constants.dir);
-    let total_cross_axis_gap = if num_lines > 1 { gap * (num_lines - 1) as f32 } else { 0.0 };
+    let total_cross_axis_gap = sum_axis_gaps(gap, num_lines);
     let free_space = constants.inner_container_size.cross(constants.dir) - total_cross_size - total_cross_axis_gap;
 
     let align_line = |(i, line): (usize, &mut FlexLine)| {
@@ -1835,6 +1832,21 @@ fn hidden_layout(tree: &mut impl LayoutTree, node: Node, order: u32) {
     let len = tree.children(node).len();
     for order in 0..len {
         hidden_layout(tree, tree.child(node, order), order as _);
+    }
+}
+
+/// Computes the total space taken up by gaps in an axis given:
+///   - The size of each gap
+///   - The number of items (children or flex-lines) between which there are gaps
+#[inline(always)]
+fn sum_axis_gaps(gap: f32, num_items: usize) -> f32 {
+    // Gaps only exist between items, so...
+    if num_items <= 1 {
+        // ...if there are less than 2 items then there are no gaps
+        0.0
+    } else {
+        // ...otherwise there are (num_items - 1) gaps
+        gap * (num_items - 1) as f32
     }
 }
 
