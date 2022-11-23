@@ -204,7 +204,7 @@ impl Taffy {
     pub fn set_measure(&mut self, node: Node, measure: Option<MeasureFunc>) -> TaffyResult<()> {
         if let Some(measure) = measure {
             self.nodes[node].needs_measure = true;
-            self.measure_funcs[node] = measure
+            self.measure_funcs.insert(node, measure);
         } else {
             self.nodes[node].needs_measure = false;
             self.measure_funcs.remove(node);
@@ -476,6 +476,18 @@ mod tests {
             .unwrap();
         taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
         assert_eq!(taffy.layout(node).unwrap().size.width, 200.0);
+
+        taffy.set_measure(node, Some(MeasureFunc::Raw(|_, _| Size { width: 100.0, height: 100.0 }))).unwrap();
+        taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
+        assert_eq!(taffy.layout(node).unwrap().size.width, 100.0);
+    }
+
+    #[test]
+    fn set_measure_of_previously_unmeasured_node() {
+        let mut taffy = Taffy::new();
+        let node = taffy.new_leaf(Style::default()).unwrap();
+        taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
+        assert_eq!(taffy.layout(node).unwrap().size.width, 0.0);
 
         taffy.set_measure(node, Some(MeasureFunc::Raw(|_, _| Size { width: 100.0, height: 100.0 }))).unwrap();
         taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
