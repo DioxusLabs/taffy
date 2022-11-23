@@ -111,6 +111,7 @@ mod flex_wrap_wrap_to_child_height;
 mod gap_column_gap_child_margins;
 mod gap_column_gap_flexible;
 mod gap_column_gap_inflexible;
+mod gap_column_gap_inflexible_undefined_parent;
 mod gap_column_gap_justify_center;
 mod gap_column_gap_justify_flex_end;
 mod gap_column_gap_justify_flex_start;
