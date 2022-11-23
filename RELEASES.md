@@ -17,7 +17,39 @@ A number of performance improvements have landed since taffy 0.1:
 - Firstly, our custom `taffy::forest` storage implementation was ripped out and replaced with a much simpler implementation using the `slotmap` crate. This led to performance increases of up to 90%.
 - Secondly, the caching implementation was improved by upping the number of cache slots from 2 to 4 and tweaking how computed results are allocated to chache slots to better match the actual usage patterns of the flexbox layout algorithm. This had a particularly dramatic effect on deep hierachies (which often involve recomputing the same results repeatedly), fixing the  exponential blowup that was previously exhibited on these trees and improving performance by over 1000x in some cases!
 
-**TODO: Include benchmarks against 0.1**
+Benchmarks vs. Taffy 0.1:
+
+| Benchmark | Taffy 0.1 | Taffy 0.2 | % change (0.1 -> 0.2) |
+| --- | --- | --- | --- |
+| wide/1_000 nodes (2-level hierarchy) | 3.5458 µs | 4.3571 µs | +23.333% |
+| wide/10_000 nodes (2-level hierarchy) | 36.418 µs | 42.967 µs | +17.357% |
+| wide/100_000 nodes (2-level hierarchy) | 1.8275 ms | 3.9096 ms | +112.26% |
+| deep/4000 nodes (12-level hierarchy)) | 5.1845 s | 15.318 µs | -100.000% |
+| deep/10_000 nodes (14-level hierarchy) | 75.978 s | 40.315 µs | -100.000% |
+| deep/100_000 nodes (17-level hierarchy) | - | 2.7644 ms| - |
+| deep/1_000_000 nodes (20-level hierarchy) | - | 1.2130 s| - |
+
+(note that the table below contains multiple different units (milliseconds vs. microseconds vs. nanoseconds))
+
+As you can see, we have actually regressed slightly in the "wide" benchmarks (where all nodes are siblings of a single parent node). Although it should be noted our results in these benchmarks are still very fast, especially on the 10,000 node benchmark which we consider to be the most realistic size where the result is measured in microseconds.
+
+However, in the "deep" benchmarks we see dramatic improvements. The previous version of Taffy suffered from exponential blowup in the case of deeply nested hierachies. This has resulted in somewhat silly improvements like the 10,000 node (14-level) hierachy where Taffy 0.2 is a full 1 million times faster than Taffy 0.1. We've also included results with larger numbers of nodes (although you're unlikely to need that many) to demonstrate that this scalability continues up to even deeper levels of nesting.
+
+Benchmarks vs. [Yoga](https://github.com/facebook/yoga)):
+
+Yoga benchmarks run via it's node.js bindings (the `yoga-layout-prebuilt` npm package), they were run a few times manually and it was verified that variance in the numbers of each run was minimal. It should be noted that this is using an old version of Yoga.
+
+| Benchmark | Yoga | Taffy 0.2 | % change (0.1 -> 0.2) |
+| --- | --- | --- |
+| yoga/10 nodes (1-level hierarchy) | 45.1670 µs | 33.297 ns |
+| yoga/100 nodes (2-level hierarchy) | 134.1250 µs | 336.53 ns |
+| yoga/1_000 nodes (3-level hierarchy) | 1.2221 ms | 3.8928 µs |
+| yoga/10_000 nodes (4-level hierarchy) | 13.8672 ms | 36.162 µs |
+| yoga/100_000 nodes (5-level hierarchy) | 141.5307 ms | 1.6404 ms |
+
+(note that the table below contains multiple different units (milliseconds vs. microseconds vs. nanoseconds))
+
+While we're trying not to get too excited (there could easily be an issue with our benchmarking methodology which make this an unfair comparison), we are pleased to see that we seem to be anywhere between 100x and 1000x times faster depending on the node count!
 
 #### Debug module and cargo feature
 
