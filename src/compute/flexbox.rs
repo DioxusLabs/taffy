@@ -691,7 +691,8 @@ fn resolve_flexible_lengths(
     //    use the flex grow factor for the rest of this algorithm; otherwise, use the
     //    flex shrink factor.
 
-    let used_flex_factor: f32 = line.items.iter().map(|child| child.hypothetical_outer_size.main(constants.dir)).sum::<f32>();
+    let used_flex_factor: f32 =
+        line.items.iter().map(|child| child.hypothetical_outer_size.main(constants.dir)).sum::<f32>();
     let growing = used_flex_factor < constants.node_inner_size.main(constants.dir).unwrap_or(0.0);
     let shrinking = !growing;
 
