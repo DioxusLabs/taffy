@@ -80,7 +80,7 @@ While we're trying not to get too excited (there could easily be an issue with o
 
 #### Builder methods are now `const` where possible
 
-- Several convenience constants have been defined: notably `FlexboxLayout::DEFAULT`
+- Several convenience constants have been defined: notably `Style::DEFAULT`
 - `Size<f32>.zero()` is now `Size::<f32>::ZERO`
 - `Point<f32>.zero()` is now  `Point::<f32>::ZERO`
 - `Size::undefined()` has been removed, use `Size::NONE` instead.
@@ -94,10 +94,6 @@ While we're trying not to get too excited (there could easily be an issue with o
 
 **^ TODO: Do we know *which* types these were?**
 
-
-- renamed `taffy::style::Style` -> `taffy::style::FlexboxLayout` to more precicely indicate its purpose
-
-**^ TODO: I suggest we undo this change. Calling it `*Layout` makes it confusable with the `Layout` struct which is the *output* of the layout computation process. And is inconsistent with CSS terminology where these properties are called styles.**
 
 ### Fixes
 
