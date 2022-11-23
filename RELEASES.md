@@ -47,7 +47,7 @@ However, in the "deep" benchmarks we see dramatic improvements. The previous ver
 
 Yoga benchmarks run via it's node.js bindings (the `yoga-layout-prebuilt` npm package), they were run a few times manually and it was verified that variance in the numbers of each run was minimal. It should be noted that this is using an old version of Yoga.
 
-| Benchmark | Yoga | Taffy 0.2 | % change (0.1 -> 0.2) |
+| Benchmark | Yoga | Taffy 0.2 | % change (Yoga vs Taffy 0.2) |
 | --- | --- | --- |
 | yoga/10 nodes (1-level hierarchy) | 45.1670 µs | 33.297 ns |
 | yoga/100 nodes (2-level hierarchy) | 134.1250 µs | 336.53 ns |
