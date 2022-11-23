@@ -31,27 +31,27 @@ Two debugging features have been added:
 
 #### Node creation changes
 
-  - `taffy::Node` is now unique only to the Taffy instance from which it was created.
-  - renamed `taffy::node::Taffy.new-node(..)` -> `taffy::node::Taffy.new_with_children(..)`
-  - renamed `taffy::node::Taffy.new_leaf()` -> `taffy::node::Taffy.new_leaf_with_measure()`
-  - `taffy::node::Taffy.new_leaf()` which allows the creation of new leaf-nodes without having to supply a measure function
+- `taffy::Node` is now unique only to the Taffy instance from which it was created.
+- renamed `taffy::node::Taffy.new-node(..)` -> `taffy::node::Taffy.new_with_children(..)`
+- renamed `taffy::node::Taffy.new_leaf()` -> `taffy::node::Taffy.new_leaf_with_measure()`
+- `taffy::node::Taffy.new_leaf()` which allows the creation of new leaf-nodes without having to supply a measure function
 
 #### Error handling/representation improvements
 
-  - renamed `taffy::Error` -> `taffy::error::TaffyError`
-  - `taffy::error::InvalidChild` is the `InvalidChild` variant of `taffy::error::TaffyError`
-  - `taffy::error::InvalidNode` has been removed and is now just a branch on the `TaffyError` enum
-  - `taffy::Taffy::remove_child_at_index`, `taffy::Taffy::replace_child_at_index`, and `taffy::Taffy::child_at_index` now return `taffy::InvalidChild::ChildIndexOutOfBounds` instead of panicing
-  - `Taffy::remove` now returns a `Result<usize, Error>`, to indicate if the operation was sucessful, and if it was, which ID was invalidated.
+- renamed `taffy::Error` -> `taffy::error::TaffyError`
+- `taffy::error::InvalidChild` is the `InvalidChild` variant of `taffy::error::TaffyError`
+- `taffy::error::InvalidNode` has been removed and is now just a branch on the `TaffyError` enum
+- `taffy::Taffy::remove_child_at_index`, `taffy::Taffy::replace_child_at_index`, and `taffy::Taffy::child_at_index` now return `taffy::InvalidChild::ChildIndexOutOfBounds` instead of panicing
+- `Taffy::remove` now returns a `Result<usize, Error>`, to indicate if the operation was sucessful, and if it was, which ID was invalidated.
 
 #### `AvailableSpace` enum
 
 #### Builder methods are now `const` where possible
 
-  - Several convenience constants have been defined: notably `FlexboxLayout::DEFAULT`
-  - `Size<f32>.zero()` is now `Size::<f32>::ZERO`
-  - `Point<f32>.zero()` is now  `Point::<f32>::ZERO`
-  - `Size::undefined()` has been removed, use `Size::NONE` instead.
+- Several convenience constants have been defined: notably `FlexboxLayout::DEFAULT`
+- `Size<f32>.zero()` is now `Size::<f32>::ZERO`
+- `Point<f32>.zero()` is now  `Point::<f32>::ZERO`
+- `Size::undefined()` has been removed, use `Size::NONE` instead.
 
 #### Removals
 
