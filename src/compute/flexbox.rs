@@ -203,6 +203,7 @@ fn compute_preliminary(
     let mut flex_lines = collect_flex_lines(tree, node, &constants, available_space, &mut flex_items);
 
     // If container size is undefined, re-resolve gap based on resolved base sizes
+    let original_gap = constants.gap;
     if constants.node_inner_size.main(constants.dir).is_none() {
         let longest_line_length = flex_lines.iter().fold(f32::MIN, |acc, line| {
             let length: f32 = line.items.iter().map(|item| item.hypothetical_outer_size.main(constants.dir)).sum();
@@ -218,7 +219,7 @@ fn compute_preliminary(
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("resolve_flexible_lengths");
     for line in &mut flex_lines {
-        resolve_flexible_lengths(tree, line, &constants, available_space);
+        resolve_flexible_lengths(tree, line, &constants, original_gap, available_space);
     }
 
     // TODO: Cleanup and make according to spec
@@ -683,8 +684,10 @@ fn resolve_flexible_lengths(
     tree: &mut impl LayoutTree,
     line: &mut FlexLine,
     constants: &AlgoConstants,
+    original_gap: Size<f32>,
     available_space: Size<AvailableSpace>,
 ) {
+    let total_original_main_axis_gap = sum_axis_gaps(original_gap.main(constants.dir), line.items.len());
     let total_main_axis_gap = sum_axis_gaps(constants.gap.main(constants.dir), line.items.len());
 
     // 1. Determine the used flex factor. Sum the outer hypothetical main sizes of all
@@ -692,8 +695,9 @@ fn resolve_flexible_lengths(
     //    use the flex grow factor for the rest of this algorithm; otherwise, use the
     //    flex shrink factor.
 
-    let used_flex_factor: f32 =
+    let total_hypothetical_outer_main_size =
         line.items.iter().map(|child| child.hypothetical_outer_size.main(constants.dir)).sum::<f32>();
+    let used_flex_factor: f32 = total_original_main_axis_gap + total_hypothetical_outer_main_size;
     let growing = used_flex_factor < constants.node_inner_size.main(constants.dir).unwrap_or(0.0);
     let shrinking = !growing;
 
@@ -742,7 +746,7 @@ fn resolve_flexible_lengths(
     }
 
     let total_target_size = line.items.iter().map(|child| child.outer_target_size.main(constants.dir)).sum::<f32>();
-    line.container_main_size_contribution = total_target_size;
+    line.container_main_size_contribution = total_target_size + total_original_main_axis_gap;
 
     // 3. Calculate initial free space. Sum the outer sizes of all items on the line,
     //    and subtract this from the flex container’s inner main size. For frozen items,
