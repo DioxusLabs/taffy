@@ -12,6 +12,7 @@
 - Added support for `AlignContent::SpaceEvenly`
 - Added `AvailableSpace` enum
 - Added `debug` modules with a `print_tree` function, which prints a debug representation of the computed layout for a tree of nodes.
+- Added support for `gap` property (shorthand form of `row-gap`/`column-gap`)
 
 ### 0.2.0 Changed
 
