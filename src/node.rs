@@ -78,11 +78,9 @@ impl LayoutTree for Taffy {
         &mut self.nodes[node].layout
     }
 
-    fn mark_dirty(&mut self, node: Node, dirty: bool) {
-        self.nodes[node].is_dirty = dirty;
-        if dirty {
-            self.nodes[node].size_cache = [None; 4];
-        }
+    #[inline(always)]
+    fn mark_dirty(&mut self, node: Node) -> TaffyResult<()> {
+        self.mark_dirty_internal(node)
     }
 
     fn measure_node(
@@ -210,7 +208,7 @@ impl Taffy {
             self.measure_funcs.remove(node);
         }
 
-        self.mark_dirty(node)?;
+        self.mark_dirty_internal(node)?;
 
         Ok(())
     }
@@ -219,7 +217,7 @@ impl Taffy {
     pub fn add_child(&mut self, parent: Node, child: Node) -> TaffyResult<()> {
         self.parents[child] = Some(parent);
         self.children[parent].push(child);
-        self.mark_dirty(parent)?;
+        self.mark_dirty_internal(parent)?;
 
         Ok(())
     }
@@ -238,7 +236,7 @@ impl Taffy {
 
         self.children[parent] = children.iter().copied().collect::<_>();
 
-        self.mark_dirty(parent)?;
+        self.mark_dirty_internal(parent)?;
 
         Ok(())
     }
@@ -263,7 +261,7 @@ impl Taffy {
         let child = self.children[parent].remove(child_index);
         self.parents[child] = None;
 
-        self.mark_dirty(parent)?;
+        self.mark_dirty_internal(parent)?;
 
         Ok(child)
     }
@@ -281,7 +279,7 @@ impl Taffy {
         let old_child = core::mem::replace(&mut self.children[parent][child_index], new_child);
         self.parents[old_child] = None;
 
-        self.mark_dirty(parent)?;
+        self.mark_dirty_internal(parent)?;
 
         Ok(old_child)
     }
@@ -309,7 +307,7 @@ impl Taffy {
     /// Sets the [`Style`] of the provided `node`
     pub fn set_style(&mut self, node: Node, style: Style) -> TaffyResult<()> {
         self.nodes[node].style = style;
-        self.mark_dirty(node)?;
+        self.mark_dirty_internal(node)?;
         Ok(())
     }
 
@@ -328,7 +326,7 @@ impl Taffy {
     /// Performs a recursive depth-first search up the tree until the root node is reached
     ///
     /// WARNING: this will stack-overflow if the tree contains a cycle
-    pub fn mark_dirty(&mut self, node: Node) -> TaffyResult<()> {
+    fn mark_dirty_internal(&mut self, node: Node) -> TaffyResult<()> {
         /// WARNING: this will stack-overflow if the tree contains a cycle
         fn mark_dirty_recursive(
             nodes: &mut SlotMap<Node, NodeData>,
@@ -349,7 +347,7 @@ impl Taffy {
 
     /// Indicates whether the layout of this node (and its children) need to be recomputed
     pub fn dirty(&self, node: Node) -> TaffyResult<bool> {
-        Ok(self.nodes[node].is_dirty)
+        Ok(self.nodes[node].size_cache.iter().all(|entry| entry.is_none()))
     }
 
     /// Updates the stored layout of the provided `node` and its children
