@@ -210,7 +210,6 @@ fn generate_assertions(ident: &str, node: &json::JsonValue) -> TokenStream {
     )
 }
 
-// type QuoteProp = Fn(prop_name: &str, quoter: impl Fn(&json::object::Object) -> TokenStream) -> TokenStream;
 
 fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
     let style = &node["style"];
