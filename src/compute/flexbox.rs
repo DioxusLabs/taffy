@@ -75,6 +75,9 @@ struct FlexItem {
 struct FlexLine<'a> {
     /// The slice of items to iterate over during computation of this line
     items: &'a mut [FlexItem],
+    /// The length in the main-axis that this line contributes to the overall main
+    /// main size of the container.
+    container_main_size_contribution: f32,
     /// The dimensions of the cross-axis
     cross_size: f32,
     /// The relative offset of the cross-axis
@@ -199,6 +202,18 @@ fn compute_preliminary(
     NODE_LOGGER.log("collect_flex_lines");
     let mut flex_lines = collect_flex_lines(tree, node, &constants, available_space, &mut flex_items);
 
+    // If container size is undefined, re-resolve gap based on resolved base sizes
+    if constants.node_inner_size.main(constants.dir).is_none() {
+        let longest_line_length = flex_lines.iter().fold(f32::MIN, |acc, line| {
+            let length: f32 = line.items.iter().map(|item| item.hypothetical_outer_size.main(constants.dir)).sum();
+            acc.max(length)
+        });
+
+        let style = tree.style(node);
+        let new_gap = style.gap.width.maybe_resolve(longest_line_length).unwrap_or(0.0);
+        constants.gap.set_main(constants.dir, new_gap);
+    }
+
     // 6. Resolve the flexible lengths of all the flex items to find their used main size.
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("resolve_flexible_lengths");
@@ -211,16 +226,8 @@ fn compute_preliminary(
     constants.container_size.set_main(
         constants.dir,
         known_dimensions.main(constants.dir).unwrap_or({
-            let longest_line = flex_lines.iter().fold(f32::MIN, |acc, line| {
-                let length: f32 = line.items.iter().map(|item| item.outer_target_size.main(constants.dir)).sum();
-                let gap_contribution = if line.items.len() > 1 {
-                    constants.gap.main(constants.dir) * line.items.len() as f32
-                } else {
-                    0.0
-                };
-                acc.max(length + gap_contribution)
-            });
-
+            let longest_line =
+                flex_lines.iter().fold(f32::MIN, |acc, line| acc.max(line.container_main_size_contribution));
             let size = longest_line + constants.padding_border.main_axis_sum(constants.dir);
             match available_space.main(constants.dir) {
                 AvailableSpace::Definite(val) if flex_lines.len() > 1 && size < val => val,
@@ -630,7 +637,12 @@ fn collect_flex_lines<'a>(
     let mut lines = crate::sys::new_vec_with_capacity(1);
 
     if tree.style(node).flex_wrap == FlexWrap::NoWrap {
-        lines.push(FlexLine { items: flex_items.as_mut_slice(), cross_size: 0.0, offset_cross: 0.0 });
+        lines.push(FlexLine {
+            items: flex_items.as_mut_slice(),
+            container_main_size_contribution: 0.0,
+            cross_size: 0.0,
+            offset_cross: 0.0,
+        });
     } else {
         let mut flex_items = &mut flex_items[..];
         let main_axis_gap = constants.gap.main(constants.dir);
@@ -653,7 +665,7 @@ fn collect_flex_lines<'a>(
                 .unwrap_or(flex_items.len());
 
             let (items, rest) = flex_items.split_at_mut(index);
-            lines.push(FlexLine { items, cross_size: 0.0, offset_cross: 0.0 });
+            lines.push(FlexLine { items, container_main_size_contribution: 0.0, cross_size: 0.0, offset_cross: 0.0 });
             flex_items = rest;
         }
     }
@@ -679,8 +691,7 @@ fn resolve_flexible_lengths(
     //    use the flex grow factor for the rest of this algorithm; otherwise, use the
     //    flex shrink factor.
 
-    let used_flex_factor: f32 = total_main_axis_gap
-        + line.items.iter().map(|child| child.hypothetical_outer_size.main(constants.dir)).sum::<f32>();
+    let used_flex_factor: f32 = line.items.iter().map(|child| child.hypothetical_outer_size.main(constants.dir)).sum::<f32>();
     let growing = used_flex_factor < constants.node_inner_size.main(constants.dir).unwrap_or(0.0);
     let shrinking = !growing;
 
@@ -727,6 +738,9 @@ fn resolve_flexible_lengths(
             child.frozen = true;
         }
     }
+
+    let total_target_size = line.items.iter().map(|child| child.outer_target_size.main(constants.dir)).sum::<f32>();
+    line.container_main_size_contribution = total_target_size;
 
     // 3. Calculate initial free space. Sum the outer sizes of all items on the line,
     //    and subtract this from the flex container’s inner main size. For frozen items,
@@ -779,13 +793,14 @@ fn resolve_flexible_lengths(
             });
 
         let free_space = if growing && sum_flex_grow < 1.0 {
-            (initial_free_space * sum_flex_grow)
+            (initial_free_space * sum_flex_grow - total_main_axis_gap)
                 .maybe_min(constants.node_inner_size.main(constants.dir).maybe_sub(used_space))
         } else if shrinking && sum_flex_shrink < 1.0 {
-            (initial_free_space * sum_flex_shrink)
+            (initial_free_space * sum_flex_shrink - total_main_axis_gap)
                 .maybe_max(constants.node_inner_size.main(constants.dir).maybe_sub(used_space))
         } else {
-            (constants.node_inner_size.main(constants.dir).maybe_sub(used_space)).unwrap_or(0.0)
+            (constants.node_inner_size.main(constants.dir).maybe_sub(used_space))
+                .unwrap_or(used_flex_factor - used_space)
         };
 
         // c. Distribute free space proportional to the flex factors.
