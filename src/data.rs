@@ -19,15 +19,13 @@ pub(crate) struct NodeData {
 
     /// The primary cached results of the layout computation
     pub(crate) size_cache: [Option<Cache>; 4],
-    /// Does this node's layout need to be recomputed?
-    pub(crate) is_dirty: bool,
 }
 
 impl NodeData {
     /// Create the data for a new node
     #[must_use]
     pub const fn new(style: Style) -> Self {
-        Self { style, size_cache: [None; 4], layout: Layout::new(), is_dirty: true, needs_measure: false }
+        Self { style, size_cache: [None; 4], layout: Layout::new(), needs_measure: false }
     }
 
     /// Marks a node and all of its parents (recursively) as dirty
@@ -36,6 +34,5 @@ impl NodeData {
     #[inline]
     pub fn mark_dirty(&mut self) {
         self.size_cache = [None; 4];
-        self.is_dirty = true;
     }
 }

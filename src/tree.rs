@@ -3,6 +3,7 @@
 use crate::{
     layout::{AvailableSpace, Cache, Layout},
     prelude::*,
+    error::TaffyResult
 };
 
 /// Any item that implements the LayoutTree can be layed out using Taffy's algorithms.
@@ -32,7 +33,7 @@ pub trait LayoutTree {
     fn layout_mut(&mut self, node: Node) -> &mut Layout;
 
     /// Mark a node as finished
-    fn mark_dirty(&mut self, node: Node, dirty: bool);
+    fn mark_dirty(&mut self, node: Node) -> TaffyResult<()>;
 
     /// Measure a node. Taffy uses this to force reflows of things like text and overflowing content.
     fn measure_node(
