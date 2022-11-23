@@ -76,7 +76,28 @@ While we're trying not to get too excited (there could easily be an issue with o
 - `taffy::Taffy::remove_child_at_index`, `taffy::Taffy::replace_child_at_index`, and `taffy::Taffy::child_at_index` now return `taffy::InvalidChild::ChildIndexOutOfBounds` instead of panicing
 - `Taffy::remove` now returns a `Result<usize, Error>`, to indicate if the operation was sucessful, and if it was, which ID was invalidated.
 
-#### `AvailableSpace` enum
+#### Some uses of `Option<f32>` replaced with a new `AvailableSpace` enum
+
+A new enum `Taffy::layout::AvailableSpace` has been added.
+
+The definition looks like this:
+
+```rust
+/// The amount of space available to a node in a given axis
+pub enum AvailableSpace {
+    /// The amount of space available is the specified number of pixels
+    Definite(f32),
+    /// The amount of space available is indefinite and the node should be laid out under a min-content constraint
+    MinContent,
+    /// The amount of space available is indefinite and the node should be laid out under a max-content constraint
+    MaxContent,
+}
+```
+
+This enum is now used instead of `Option<f32>` when calling `Taffy.compute_layout` (if you previously passing `Size::NONE` to `compute_layout`, then you will need to change this to `Size::MAX_CONTENT`).
+
+
+And a different instance of it is passed as a new second parameter to `MeasureFunc`. `MeasureFunc`s may choose to use this parameter in their computation or ignore it as they see fit. The canonical example of when it makes sense to use it is when laying out text. If `MinContent` has been passed in the axis in which the text is flowing (i.e. the horizontal axis for left-to-right text), then you should line-break at every possible opportunity (e.g. all word boundaries), whereas if `MaxContent` has been passed then you shouldn't line break at all..
 
 #### Builder methods are now `const` where possible
 
