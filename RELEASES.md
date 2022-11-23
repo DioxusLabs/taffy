@@ -64,17 +64,20 @@ While we're trying not to get too excited (there could easily be an issue with o
 #### Node creation changes
 
 - `taffy::Node` is now unique only to the Taffy instance from which it was created.
-- renamed `taffy::node::Taffy.new-node(..)` -> `taffy::node::Taffy.new_with_children(..)`
-- renamed `taffy::node::Taffy.new_leaf()` -> `taffy::node::Taffy.new_leaf_with_measure()`
-- `taffy::node::Taffy.new_leaf()` which allows the creation of new leaf-nodes without having to supply a measure function
+- Renamed `Taffy.new_node(..)` -> `Taffy.new_with_children(..)`
+- Renamed `Taffy.new_leaf()` -> `Taffy.new_leaf_with_measure()`
+- Added `taffy::node::Taffy.new_leaf()` which allows the creation of new leaf-nodes without having to supply a measure function
 
 #### Error handling/representation improvements
 
-- renamed `taffy::Error` -> `taffy::error::TaffyError`
-- `taffy::error::InvalidChild` is the `InvalidChild` variant of `taffy::error::TaffyError`
-- `taffy::error::InvalidNode` has been removed and is now just a branch on the `TaffyError` enum
-- `taffy::Taffy::remove_child_at_index`, `taffy::Taffy::replace_child_at_index`, and `taffy::Taffy::child_at_index` now return `taffy::InvalidChild::ChildIndexOutOfBounds` instead of panicing
-- `Taffy::remove` now returns a `Result<usize, Error>`, to indicate if the operation was sucessful, and if it was, which ID was invalidated.
+- Renamed `taffy::Error` -> `taffy::error::TaffyError`
+- Replaced `taffy::error::InvalidChild` with a new `InvalidChild` variant of `taffy::error::TaffyError`
+- Replaced `taffy::error::InvalidNode` with a new `InvalidNode` variant of `taffy::error::TaffyError`
+- The following method new return `Err(TaffyError::ChildIndexOutOfBounds)` instead of panicking:
+  - `taffy::Taffy::remove_child_at_index`
+  - `taffy::Taffy::replace_child_at_index`
+  - `taffy::Taffy::child_at_index`
+- `Taffy::remove` now returns a `Result<usize, Error>`, to indicate if the operation was sucessful (and if it was, which ID was invalidated).
 
 #### Some uses of `Option<f32>` replaced with a new `AvailableSpace` enum
 
@@ -104,16 +107,14 @@ And a different instance of it is passed as a new second parameter to `MeasureFu
 - Several convenience constants have been defined: notably `Style::DEFAULT`
 - `Size<f32>.zero()` is now `Size::<f32>::ZERO`
 - `Point<f32>.zero()` is now  `Point::<f32>::ZERO`
-- `Size::undefined()` has been removed, use `Size::NONE` instead.
+- `Size::undefined()` is now `Size::NONE`
 
 #### Removals
 
-- `taffy::forest::Forest` has been removed. `taffy::node::Taffy` now handles it's own storage using a slot map (performance boost up to 90%)
-- removed the public `Number` type; a more idiomatic `Option<f32>` is used instead
+- Removed `taffy::forest::Forest`. `taffy::node::Taffy` now handles it's own storage using a slotmap (which comes with a performance boost up to 90%).
+- Removed `taffy::number::Number`. Use `Option<f32>` is used instead
   - the associated public `MinMax` and `OrElse` traits have also been removed; these should never have been public
-- Various internal types are no longer public (if you needed one of these, please file an issue!)
 
-**^ TODO: Do we know *which* types these were?**
 #### Misc.
 
 - `Taffy.mark_dirty()`  now takes a boolean parameter where `true` = dirty and `false` = clean.
