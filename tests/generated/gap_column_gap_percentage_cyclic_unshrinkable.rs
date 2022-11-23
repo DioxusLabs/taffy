@@ -3,7 +3,7 @@ fn gap_column_gap_percentage_cyclic_unshrinkable() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 flex_shrink: 0f32,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(20f32),
@@ -17,7 +17,7 @@ fn gap_column_gap_percentage_cyclic_unshrinkable() {
         .unwrap();
     let node1 = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 flex_shrink: 0f32,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(20f32),
@@ -31,7 +31,7 @@ fn gap_column_gap_percentage_cyclic_unshrinkable() {
         .unwrap();
     let node2 = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 flex_shrink: 0f32,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(20f32),
@@ -45,7 +45,7 @@ fn gap_column_gap_percentage_cyclic_unshrinkable() {
         .unwrap();
     let node = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 gap: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.2f32), ..Default::default() },
                 ..Default::default()
             },

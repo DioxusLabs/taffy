@@ -22,8 +22,8 @@ pub trait LayoutTree {
     // todo: allow abstractions over this so we don't prescribe how layout works
     // for reference, CSS cascades require context, and storing a full flexbox layout for each node could be inefficient
     //
-    /// Get the [`FlexboxLayout`] for this Node.
-    fn style(&self, node: Node) -> &FlexboxLayout;
+    /// Get the [`Style`] for this Node.
+    fn style(&self, node: Node) -> &Style;
 
     /// Get the node's output "Final Layout"
     fn layout(&self, node: Node) -> &Layout;

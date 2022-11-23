@@ -24,10 +24,10 @@ let mut taffy = Taffy::new();
 
 // Create a tree of nodes using `taffy.new_leaf` and `taffy.new_with_children`.
 // These functions both return a node id which can be used to refer to that node
-// The FlexboxLayout struct is used to specify styling information
+// The Style struct is used to specify styling information
 let header_node = taffy
     .new_leaf(
-        FlexboxLayout {
+        Style {
             size: Size { width: Dimension::Points(800.0), height: Dimension::Points(100.0) },
             ..Default::default()
         },
@@ -35,7 +35,7 @@ let header_node = taffy
 
 let body_node = taffy
     .new_leaf(
-        FlexboxLayout {
+        Style {
             size: Size { width: Dimension::Points(800.0), height: Dimension::Undefined },
             flex_grow: 1.0,
             ..Default::default()
@@ -44,7 +44,7 @@ let body_node = taffy
 
 let root_node = taffy
     .new_with_children(
-        FlexboxLayout {
+        Style {
             flex_direction: FlexDirection::Column,
             size: Size { width: Dimension::Points(800.0), height: Dimension::Points(600.0) },
             ..Default::default()
