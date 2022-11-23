@@ -111,6 +111,7 @@ mod flex_wrap_children_with_min_main_overriding_flex_basis;
 mod flex_wrap_wrap_to_child_height;
 mod gap_column_gap_child_margins;
 mod gap_column_gap_flexible;
+mod gap_column_gap_flexible_undefined_parent;
 mod gap_column_gap_inflexible;
 mod gap_column_gap_inflexible_undefined_parent;
 mod gap_column_gap_justify_center;
@@ -386,6 +387,7 @@ fn benchmark(c: &mut Criterion) {
             flex_wrap_wrap_to_child_height::compute();
             gap_column_gap_child_margins::compute();
             gap_column_gap_flexible::compute();
+            gap_column_gap_flexible_undefined_parent::compute();
             gap_column_gap_inflexible::compute();
             gap_column_gap_inflexible_undefined_parent::compute();
             gap_column_gap_justify_center::compute();

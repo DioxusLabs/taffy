@@ -110,6 +110,7 @@ mod flex_wrap_children_with_min_main_overriding_flex_basis;
 mod flex_wrap_wrap_to_child_height;
 mod gap_column_gap_child_margins;
 mod gap_column_gap_flexible;
+mod gap_column_gap_flexible_undefined_parent;
 mod gap_column_gap_inflexible;
 mod gap_column_gap_inflexible_undefined_parent;
 mod gap_column_gap_justify_center;
