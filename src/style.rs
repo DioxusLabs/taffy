@@ -436,7 +436,7 @@ impl FlexboxLayout {
         margin: Rect::UNDEFINED,
         padding: Rect::UNDEFINED,
         border: Rect::UNDEFINED,
-        gap: Size { width: Dimension::Points(0.0), height: Dimension::Points(0.0) },
+        gap: Size::UNDEFINED,
         flex_grow: 0.0,
         flex_shrink: 1.0,
         flex_basis: Dimension::Auto,
@@ -557,7 +557,6 @@ impl FlexboxLayout {
 #[allow(clippy::bool_assert_comparison)]
 #[cfg(test)]
 mod tests {
-    use super::Dimension;
     use super::FlexboxLayout;
     use crate::geometry::Size;
 
@@ -576,7 +575,7 @@ mod tests {
             margin: Default::default(),
             padding: Default::default(),
             border: Default::default(),
-            gap: Size { width: Dimension::Points(0.0), height: Dimension::Points(0.0) },
+            gap: Size::UNDEFINED,
             flex_grow: 0.0,
             flex_shrink: 1.0,
             flex_basis: super::Dimension::Auto,
