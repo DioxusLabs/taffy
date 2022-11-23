@@ -3,14 +3,14 @@
 //! Used to compute layout for Taffy trees
 //!
 use crate::layout::{Cache, Layout};
-use crate::style::FlexboxLayout;
+use crate::style::Style;
 
 /// Layout information for a given [`Node`](crate::node::Node)
 ///
 /// Stored in a [`Taffy`].
 pub(crate) struct NodeData {
     /// The layout strategy used by this node
-    pub(crate) style: FlexboxLayout,
+    pub(crate) style: Style,
     /// The results of the layout computation
     pub(crate) layout: Layout,
 
@@ -26,7 +26,7 @@ pub(crate) struct NodeData {
 impl NodeData {
     /// Create the data for a new node
     #[must_use]
-    pub const fn new(style: FlexboxLayout) -> Self {
+    pub const fn new(style: Style) -> Self {
         Self { style, size_cache: [None; 4], layout: Layout::new(), is_dirty: true, needs_measure: false }
     }
 

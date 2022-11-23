@@ -2,19 +2,19 @@ pub fn compute() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout { flex_basis: taffy::style::Dimension::Points(100f32), ..Default::default() },
+            taffy::style::Style { flex_basis: taffy::style::Dimension::Points(100f32), ..Default::default() },
             &[],
         )
         .unwrap();
     let node1 = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout { flex_basis: taffy::style::Dimension::Points(50f32), ..Default::default() },
+            taffy::style::Style { flex_basis: taffy::style::Dimension::Points(50f32), ..Default::default() },
             &[],
         )
         .unwrap();
     let node = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),

@@ -6,7 +6,7 @@ mod root_constraints {
     fn root_with_percentage_size() {
         let mut taffy = taffy::node::Taffy::new();
         let node = taffy
-            .new_leaf(taffy::style::FlexboxLayout {
+            .new_leaf(taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Percent(1.0),
                     height: taffy::style::Dimension::Percent(1.0),
@@ -33,7 +33,7 @@ mod root_constraints {
     #[test]
     fn root_with_no_size() {
         let mut taffy = taffy::node::Taffy::new();
-        let node = taffy.new_leaf(taffy::style::FlexboxLayout { ..Default::default() }).unwrap();
+        let node = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
 
         taffy
             .compute_layout(
@@ -54,7 +54,7 @@ mod root_constraints {
     fn root_with_larger_size() {
         let mut taffy = taffy::node::Taffy::new();
         let node = taffy
-            .new_leaf(taffy::style::FlexboxLayout {
+            .new_leaf(taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200.0),
                     height: taffy::style::Dimension::Points(200.0),

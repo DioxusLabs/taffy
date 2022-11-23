@@ -3,7 +3,7 @@ fn margin_auto_bottom_and_top_justify_center() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
                     height: taffy::style::Dimension::Points(50f32),
@@ -21,7 +21,7 @@ fn margin_auto_bottom_and_top_justify_center() {
         .unwrap();
     let node1 = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
                     height: taffy::style::Dimension::Points(50f32),
@@ -34,7 +34,7 @@ fn margin_auto_bottom_and_top_justify_center() {
         .unwrap();
     let node = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 justify_content: taffy::style::JustifyContent::Center,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),

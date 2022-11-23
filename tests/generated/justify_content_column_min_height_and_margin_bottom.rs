@@ -3,7 +3,7 @@ fn justify_content_column_min_height_and_margin_bottom() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(20f32),
                     height: taffy::style::Dimension::Points(20f32),
@@ -17,7 +17,7 @@ fn justify_content_column_min_height_and_margin_bottom() {
         .unwrap();
     let node = taffy
         .new_with_children(
-            taffy::style::FlexboxLayout {
+            taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 justify_content: taffy::style::JustifyContent::Center,
                 min_size: taffy::geometry::Size {

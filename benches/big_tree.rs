@@ -4,11 +4,11 @@ use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;
 use taffy::prelude::*;
 use taffy::randomizable::Randomizeable;
-use taffy::style::FlexboxLayout;
+use taffy::style::Style;
 
 /// Build a random leaf node
 fn build_random_leaf(taffy: &mut Taffy, rng: &mut ChaCha8Rng) -> Node {
-    taffy.new_with_children(FlexboxLayout::random(rng), &[]).unwrap()
+    taffy.new_with_children(Style::random(rng), &[]).unwrap()
 }
 
 /// A tree with many children that have shallow depth
@@ -20,13 +20,13 @@ fn build_flat_hierarchy(taffy: &mut Taffy, total_node_count: u32) -> Node {
     while node_count < total_node_count {
         let sub_children_count = rng.gen_range(1..=4);
         let sub_children: Vec<Node> = (0..sub_children_count).map(|_| build_random_leaf(taffy, &mut rng)).collect();
-        let node = taffy.new_with_children(FlexboxLayout::random(&mut rng), &sub_children).unwrap();
+        let node = taffy.new_with_children(Style::random(&mut rng), &sub_children).unwrap();
 
         children.push(node);
         node_count += 1 + sub_children_count;
     }
 
-    taffy.new_with_children(FlexboxLayout { ..Default::default() }, children.as_slice()).unwrap()
+    taffy.new_with_children(Style { ..Default::default() }, children.as_slice()).unwrap()
 }
 
 /// A helper function to recursively construct a deep tree
@@ -58,18 +58,17 @@ fn build_deep_hierarchy(taffy: &mut Taffy, node_count: u32, branching_factor: u3
     let mut rng = ChaCha8Rng::seed_from_u64(12345);
     let mut build_leaf_node = |taffy: &mut Taffy| build_random_leaf(taffy, &mut rng);
     let mut rng = ChaCha8Rng::seed_from_u64(12345);
-    let mut build_flex_node = |taffy: &mut Taffy, children: Vec<Node>| {
-        taffy.new_with_children(FlexboxLayout::random(&mut rng), &children).unwrap()
-    };
+    let mut build_flex_node =
+        |taffy: &mut Taffy, children: Vec<Node>| taffy.new_with_children(Style::random(&mut rng), &children).unwrap();
 
     let tree = build_deep_tree(taffy, node_count, branching_factor, &mut build_leaf_node, &mut build_flex_node);
 
-    taffy.new_with_children(FlexboxLayout { ..Default::default() }, &tree).unwrap()
+    taffy.new_with_children(Style { ..Default::default() }, &tree).unwrap()
 }
 
 /// A deep tree that matches the shape and styling that yoga use on their benchmarks
 fn build_yoga_deep_hierarchy(taffy: &mut Taffy, node_count: u32, branching_factor: u32) -> Node {
-    let style = FlexboxLayout {
+    let style = Style {
         size: Size { width: Dimension::Points(10.0), height: Dimension::Points(10.0) },
         flex_grow: 1.0,
         ..Default::default()
@@ -79,7 +78,7 @@ fn build_yoga_deep_hierarchy(taffy: &mut Taffy, node_count: u32, branching_facto
         |taffy: &mut Taffy, children: Vec<Node>| taffy.new_with_children(style.clone(), &children).unwrap();
 
     let tree = build_deep_tree(taffy, node_count, branching_factor, &mut build_leaf_node, &mut build_flex_node);
-    let root = taffy.new_with_children(FlexboxLayout::DEFAULT, &tree).unwrap();
+    let root = taffy.new_with_children(Style::DEFAULT, &tree).unwrap();
 
     root
 }
