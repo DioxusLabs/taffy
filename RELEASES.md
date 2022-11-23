@@ -124,6 +124,7 @@ Miscellaneous correctness fixes which align our implementation with Chrome:
 - Fixed computing free space when using both `flex-grow` and a minimum size
 - Padding is now only subtracted when determining the available space if the node size is unspecified, following [section 9.2.2 of the flexbox spec](https://www.w3.org/TR/css-flexbox-1/#line-sizing)
 - `MeasureFunc` (and hence `NodeData` and hence `Forest` and hence the public `Taffy` type) are now `Send` and `Sync`, enabling their use in async and parallel applications
+- Taffy can now be vendored using `cargo-vendor` (README.md is now included in package).
 
 ## 0.1.0
 
