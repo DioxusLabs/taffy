@@ -113,15 +113,16 @@ And a different instance of it is passed as a new second parameter to `MeasureFu
 - Removed `taffy::forest::Forest`. `taffy::node::Taffy` now handles it's own storage using a slotmap (which comes with a performance boost up to 90%).
 - Removed `taffy::number::Number`. Use `Option<f32>` is used instead
   - the associated public `MinMax` and `OrElse` traits have also been removed; these should never have been public
+- Removed unused dependencies `hashbrown`, `hash32`, and `typenum`. `slotmap` is now the only required dependency (`num_traits` and `arrayvec` are also required if you wish to use taffy in a `no_std` environment).
 
 ### Fixes
 
 Miscellaneous correctness fixes which align our implementation with Chrome:
 
-- nodes can only ever have one parent
-- fixed rounding of fractional values to follow latest Chrome - values are now rounded the same regardless of their position
-- fixed computing free space when using both `flex-grow` and a minimum size
-- padding is now only subtracted when determining the available space if the node size is unspecified, following [section 9.2.2 of the flexbox spec](https://www.w3.org/TR/css-flexbox-1/#line-sizing)
+- Nodes can only ever have one parent
+- Fixed rounding of fractional values to follow latest Chrome - values are now rounded the same regardless of their position
+- Fixed computing free space when using both `flex-grow` and a minimum size
+- Padding is now only subtracted when determining the available space if the node size is unspecified, following [section 9.2.2 of the flexbox spec](https://www.w3.org/TR/css-flexbox-1/#line-sizing)
 - `MeasureFunc` (and hence `NodeData` and hence `Forest` and hence the public `Taffy` type) are now `Send` and `Sync`, enabling their use in async and parallel applications
 
 ## 0.1.0
