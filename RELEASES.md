@@ -114,10 +114,6 @@ And a different instance of it is passed as a new second parameter to `MeasureFu
 - Removed `taffy::number::Number`. Use `Option<f32>` is used instead
   - the associated public `MinMax` and `OrElse` traits have also been removed; these should never have been public
 
-#### Miscellaneous
-
-- `Taffy.mark_dirty()`  now takes a boolean parameter where `true` = dirty and `false` = clean.
-
 ### Fixes
 
 Miscellaneous correctness fixes which align our implementation with Chrome:
