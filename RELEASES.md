@@ -2,53 +2,80 @@
 
 ## 0.2.0
 
-### 0.2.0 Added
+### New Features & Improvements
 
-- Added `taffy::error::InvalidChild` Error type
-- `taffy::node::Taffy.new_leaf()` which allows the creation of new leaf-nodes without having to supply a measure function
-- Builder methods are now `const` where possible
+#### Flexbox "gap" and `AlignContent::SpaceEvenly`
+
+The [gap](https://developer.mozilla.org/en-US/docs/Web/CSS/gap) property is now supported on flex containers. This can make it much easier to create even spacing or "gutters" between nodes.
+
+Additionally we support the `space-evenly` of the `align_content` property through the new `AlignContent::SpaceEvenly` variant.
+
+#### Greatly improved performance
+
+A number of performance improvements have landed since taffy 0.1:
+
+- Firstly, our custom `taffy::forest` storage implementation was ripped out and replaced with a much simpler implementation using the `slotmap` crate. This led to performance increases of up to 90%.
+- Secondly, the caching implementation was improved by upping the number of cache slots from 2 to 4 and tweaking how computed results are allocated to chache slots to better match the actual usage patterns of the flexbox layout algorithm. This had a particularly dramatic effect on deep hierachies (which often involve recomputing the same results repeatedly), fixing the  exponential blowup that was previously exhibited on these trees and improving performance by over 1000x in some cases!
+
+**TODO: Include benchmarks against 0.1**
+
+#### Debug module and cargo feature
+
+Two debugging features have been added:
+
+- `taffy::debug::print_tree(&Taffy, root)` - This will print a debug representation of the computed layout of an entire node tree (starting at `root`), which can be useful for debugging layouts.
+
+- A cargo feature `debug`. This enabled debug logging of the layout computation process itself (this is probably mainly useful for those working taffy itself).
+
+### Breaking API Changes
+
+#### Node creation changes
+
+  - `taffy::Node` is now unique only to the Taffy instance from which it was created.
+  - renamed `taffy::node::Taffy.new-node(..)` -> `taffy::node::Taffy.new_with_children(..)`
+  - renamed `taffy::node::Taffy.new_leaf()` -> `taffy::node::Taffy.new_leaf_with_measure()`
+  - `taffy::node::Taffy.new_leaf()` which allows the creation of new leaf-nodes without having to supply a measure function
+
+#### Error handling/representation improvements
+
+  - renamed `taffy::Error` -> `taffy::error::TaffyError`
+  - `taffy::error::InvalidChild` is the `InvalidChild` variant of `taffy::error::TaffyError`
+  - `taffy::error::InvalidNode` has been removed and is now just a branch on the `TaffyError` enum
+  - `taffy::Taffy::remove_child_at_index`, `taffy::Taffy::replace_child_at_index`, and `taffy::Taffy::child_at_index` now return `taffy::InvalidChild::ChildIndexOutOfBounds` instead of panicing
+  - `Taffy::remove` now returns a `Result<usize, Error>`, to indicate if the operation was sucessful, and if it was, which ID was invalidated.
+
+#### `AvailableSpace` enum
+
+#### Builder methods are now `const` where possible
+
   - Several convenience constants have been defined: notably `FlexboxLayout::DEFAULT`
-- New `Layout` convenience constructor: `with_order(order: u32)`
-- Added support for `AlignContent::SpaceEvenly`
-- Added `AvailableSpace` enum
-- Added `debug` modules with a `print_tree` function, which prints a debug representation of the computed layout for a tree of nodes.
-- Added support for `gap` property (shorthand form of `row-gap`/`column-gap`)
+  - `Size<f32>.zero()` is now `Size::<f32>::ZERO`
+  - `Point<f32>.zero()` is now  `Point::<f32>::ZERO`
+  - `Size::undefined()` has been removed, use `Size::NONE` instead.
 
-### 0.2.0 Changed
+#### Removals
 
-- `Size<f32>.zero()` is now `Size::<f32>::ZERO`
-- `Point<f32>.zero()` is now  `Point::<f32>::ZERO`
-- renamed `taffy::node::Taffy.new_leaf()` -> `taffy::node::Taffy.new_leaf_with_measure()`
+- `taffy::forest::Forest` has been removed. `taffy::node::Taffy` now handles it's own storage using a slot map (performance boost up to 90%)
 - removed the public `Number` type; a more idiomatic `Option<f32>` is used instead
   - the associated public `MinMax` and `OrElse` traits have also been removed; these should never have been public
-- `Sprawl::remove` now returns a `Result<usize, Error>`, to indicate if the operation was sucessful, and if it was, which ID was invalidated.
-- renamed `taffy::forest::Forest.new-node(..)` `taffy::forest::Forest.new_with_children(..)`
-- renamed `taffy::node::Taffy.new-node(..)` -> `taffy::node::Taffy.new_with_children(..)`
+- Various internal types are no longer public (if you needed one of these, please file an issue!)
+
+**^ TODO: Do we know *which* types these were?**
+
+
 - renamed `taffy::style::Style` -> `taffy::style::FlexboxLayout` to more precicely indicate its purpose
-- renamed `taffy::Error` -> `taffy::error::TaffyError`
-- `taffy::Taffy::remove_child_at_index`, `taffy::Taffy::replace_child_at_index`, and `taffy::Taffy::child_at_index` now return `taffy::InvalidChild::ChildIndexOutOfBounds` instead of panicing
-- `taffy::Node` is now unique only to the Taffy instance from which it was created.
-- `taffy::error::InvalidChild` is now `taffy::error::TaffyError`
-- `taffy::error::InvalidNode` has been removed and is now just a branch on the `TaffyError` enum
-- `taffy::forest::Forest` has been merged into `taffy::node::Taffy` for a performance boost up to 90%
-- `Size::undefined()` has been removed, use `Size::NONE` instead.
-- `Taffy.compute_layout()` now takes `Size<AvailableSpace>` instead of `Size<Option<f32>>`. If you were previously passing `Size::NONE` to this function, you will now need to pass `Size::MAX_CONTENT`
-- Measure functions now have an additional `available_space` parameter which indicates the size of the parent or a min/max-content sizing constraint.
-- Added `Size::MIN_CONTENT` and `Size::MAX_CONTENT` constants. In many cases, you will want to replace `Size::NONE` with `Size::MAX_CONTENT`.
 
-### 0.2.0 Fixed
+**^ TODO: I suggest we undo this change. Calling it `*Layout` makes it confusable with the `Layout` struct which is the *output* of the layout computation process. And is inconsistent with CSS terminology where these properties are called styles.**
 
-- Performance with deep hierarchies is greatly improved. It is now comparable to that of shallow hierarchies with the same number of nodes.
+### Fixes
+
+Miscelaneous correctness fixes which align our implementation with Chrome:
+
 - nodes can only ever have one parent
 - fixed rounding of fractional values to follow latest Chrome - values are now rounded the same regardless of their position
 - fixed computing free space when using both `flex-grow` and a minimum size
 - padding is now only subtracted when determining the available space if the node size is unspecified, following [section 9.2.2 of the flexbox spec](https://www.w3.org/TR/css-flexbox-1/#line-sizing)
 - `MeasureFunc` (and hence `NodeData` and hence `Forest` and hence the public `Taffy` type) are now `Send` and `Sync`, enabling their use in async and parallel applications
-
-### 0.2.0 Removed
-
-- various internal types are no longer public
-  - if you needed one of these, please file an issue!
 
 ## 0.1.0
 
