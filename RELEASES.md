@@ -114,6 +114,10 @@ And a different instance of it is passed as a new second parameter to `MeasureFu
 - Various internal types are no longer public (if you needed one of these, please file an issue!)
 
 **^ TODO: Do we know *which* types these were?**
+#### Misc.
+
+- `Taffy.mark_dirty()`  now takes a boolean parameter where `true` = dirty and `false` = clean.
+
 
 
 ### Fixes
