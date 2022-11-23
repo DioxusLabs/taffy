@@ -33,6 +33,7 @@
 - `Size::undefined()` has been removed, use `Size::NONE` instead.
 - `Taffy.compute_layout()` now takes `Size<AvailableSpace>` instead of `Size<Option<f32>>`. If you were previously passing `Size::NONE` to this function, you will now need to pass `Size::MAX_CONTENT`
 - Measure functions now have an additional `available_space` parameter which indicates the size of the parent or a min/max-content sizing constraint.
+- Added `Size::MIN_CONTENT` and `Size::MAX_CONTENT` constants. In many cases, you will want to replace `Size::NONE` with `Size::MAX_CONTENT`.
 
 ### 0.2.0 Fixed
 
