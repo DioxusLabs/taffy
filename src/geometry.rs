@@ -163,12 +163,37 @@ pub struct Size<T> {
 impl<T> Size<T> {
     /// Applies the function `f` to both the width and height
     ///
-    /// This is used to transform a `Rect<T>` into a `Rect<R>`.
+    /// This is used to transform a `Size<T>` into a `Size<R>`.
     pub fn map<R, F>(self, f: F) -> Size<R>
     where
         F: Fn(T) -> R,
     {
         Size { width: f(self.width), height: f(self.height) }
+    }
+
+    /// Applies the function `f` to the width
+    pub fn map_width<F>(self, f: F) -> Size<T>
+    where
+        F: Fn(T) -> T,
+    {
+        Size { width: f(self.width), height: self.height }
+    }
+
+    /// Applies the function `f` to the height
+    pub fn map_height<F>(self, f: F) -> Size<T>
+    where
+        F: Fn(T) -> T,
+    {
+        Size { width: self.width, height: f(self.height) }
+    }
+
+    /// Applies the function `f` to both the width and height
+    /// of this value and another passed value
+    pub fn zip_map<Other, Ret, Func>(self, other: Size<Other>, f: Func) -> Size<Ret>
+    where
+        Func: Fn(T, Other) -> Ret,
+    {
+        Size { width: f(self.width, other.width), height: f(self.height, other.height) }
     }
 
     /// Sets the extent of the main layout axis
@@ -229,6 +254,16 @@ impl Size<Option<f32>> {
     #[must_use]
     pub const fn new(width: f32, height: f32) -> Self {
         Size { width: Some(width), height: Some(height) }
+    }
+
+    /// Performs Option::unwrap_or on each component separately
+    pub fn unwrap_or(self, alt: Size<f32>) -> Size<f32> {
+        Size { width: self.width.unwrap_or(alt.width), height: self.height.unwrap_or(alt.height) }
+    }
+
+    /// Performs Option::or on each component separately
+    pub fn or(self, alt: Size<Option<f32>>) -> Size<Option<f32>> {
+        Size { width: self.width.or(alt.width), height: self.height.or(alt.height) }
     }
 }
 

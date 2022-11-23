@@ -41,7 +41,10 @@ fn main() -> Result<(), taffy::error::TaffyError> {
         &[div1, div2],
     )?;
 
-    taffy.compute_layout(container, Size { height: Some(100.0), width: Some(100.0) })?;
+    taffy.compute_layout(
+        container,
+        Size { height: AvailableSpace::Definite(100.0), width: AvailableSpace::Definite(100.0) },
+    )?;
 
     println!("node: {:#?}", taffy.layout(container)?);
 

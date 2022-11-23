@@ -18,6 +18,8 @@ extern crate alloc;
 #[cfg(feature = "serde")]
 extern crate serde;
 
+#[doc(hidden)]
+pub mod debug;
 pub mod error;
 pub mod geometry;
 pub mod layout;
@@ -30,8 +32,8 @@ pub mod tree;
 #[cfg(feature = "random")]
 pub mod randomizable;
 
+mod compute;
 mod data;
-mod flexbox;
 mod resolve;
 mod sys;
 

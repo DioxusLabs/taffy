@@ -1,7 +1,7 @@
 //! The baseline requirements of any UI Tree so Taffy can efficiently calculate the layout
 
 use crate::{
-    layout::{Cache, Layout},
+    layout::{AvailableSpace, Cache, Layout},
     prelude::*,
 };
 
@@ -35,25 +35,16 @@ pub trait LayoutTree {
     fn mark_dirty(&mut self, node: Node, dirty: bool);
 
     /// Measure a node. Taffy uses this to force reflows of things like text and overflowing content.
-    fn measure_node(&self, node: Node, node_size: Size<Option<f32>>) -> Size<f32>;
+    fn measure_node(
+        &self,
+        node: Node,
+        known_dimensions: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+    ) -> Size<f32>;
 
     /// Node needs to be measured
     fn needs_measure(&self, node: Node) -> bool;
 
-    /// Get the primary cache for this Node.
-    ///
-    /// Taffy caches results of computations for nodes to not need re-caculating nodes it already knows
-    ///
-    /// When a node does not have a cache, Taffy will layout that node appropriately.
-    fn primary_cache(&mut self, node: Node) -> &mut Option<Cache>;
-
-    /// Get the secondary cache for this Node.
-    ///
-    /// Taffy caches results of computations for nodes to not need re-caculating nodes it already knows
-    ///
-    /// When a node does not have a cache, Taffy will layout that node appropriately.
-    ///
-    /// The secondary cache is for nodes who have a main size already calculated, but need to calculate a secondary size.
-    /// This typically happens due to conflicting constraints.
-    fn secondary_cache(&mut self, node: Node) -> &mut Option<Cache>;
+    /// Get a cache entry for this Node by index
+    fn cache_mut(&mut self, node: Node, index: usize) -> &mut Option<Cache>;
 }

@@ -10,6 +10,8 @@
   - Several convenience constants have been defined: notably `FlexboxLayout::DEFAULT`
 - New `Layout` convenience constructor: `with_order(order: u32)`
 - Added support for `AlignContent::SpaceEvenly`
+- Added `AvailableSpace` enum
+- Added `debug` modules with a `print_tree` function, which prints a debug representation of the computed layout for a tree of nodes.
 
 ### 0.2.0 Changed
 
@@ -29,9 +31,13 @@
 - `taffy::error::InvalidNode` has been removed and is now just a branch on the `TaffyError` enum
 - `taffy::forest::Forest` has been merged into `taffy::node::Taffy` for a performance boost up to 90%
 - `Size::undefined()` has been removed, use `Size::NONE` instead.
+- `Taffy.compute_layout()` now takes `Size<AvailableSpace>` instead of `Size<Option<f32>>`. If you were previously passing `Size::NONE` to this function, you will now need to pass `Size::MAX_CONTENT`
+- Measure functions now have an additional `available_space` parameter which indicates the size of the parent or a min/max-content sizing constraint.
+- Added `Size::MIN_CONTENT` and `Size::MAX_CONTENT` constants. In many cases, you will want to replace `Size::NONE` with `Size::MAX_CONTENT`.
 
 ### 0.2.0 Fixed
 
+- Performance with deep hierarchies is greatly improved. It is now comparable to that of shallow hierarchies with the same number of nodes.
 - nodes can only ever have one parent
 - fixed rounding of fractional values to follow latest Chrome - values are now rounded the same regardless of their position
 - fixed computing free space when using both `flex-grow` and a minimum size

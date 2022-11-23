@@ -8,14 +8,14 @@ mod measure {
         let node = taffy
             .new_leaf_with_measure(
                 taffy::style::FlexboxLayout { ..Default::default() },
-                MeasureFunc::Raw(|constraint| taffy::geometry::Size {
-                    width: constraint.width.unwrap_or(100.0),
-                    height: constraint.height.unwrap_or(100.0),
+                MeasureFunc::Raw(|known_dimensions, _available_space| taffy::geometry::Size {
+                    width: known_dimensions.width.unwrap_or(100.0),
+                    height: known_dimensions.height.unwrap_or(100.0),
                 }),
             )
             .unwrap();
 
-        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
 
         assert_eq!(taffy.layout(node).unwrap().size.width, 100.0);
         assert_eq!(taffy.layout(node).unwrap().size.height, 100.0);
@@ -28,15 +28,15 @@ mod measure {
         let child = taffy
             .new_leaf_with_measure(
                 taffy::style::FlexboxLayout { ..Default::default() },
-                MeasureFunc::Raw(|constraint| taffy::geometry::Size {
-                    width: constraint.width.unwrap_or(100.0),
-                    height: constraint.height.unwrap_or(100.0),
+                MeasureFunc::Raw(|known_dimensions, _available_space| taffy::geometry::Size {
+                    width: known_dimensions.width.unwrap_or(100.0),
+                    height: known_dimensions.height.unwrap_or(100.0),
                 }),
             )
             .unwrap();
 
         let node = taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[child]).unwrap();
-        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
 
         assert_eq!(taffy.layout(node).unwrap().size.width, 100.0);
         assert_eq!(taffy.layout(node).unwrap().size.height, 100.0);
@@ -51,9 +51,9 @@ mod measure {
         let child = taffy
             .new_leaf_with_measure(
                 taffy::style::FlexboxLayout { ..Default::default() },
-                MeasureFunc::Raw(|constraint| taffy::geometry::Size {
-                    width: constraint.width.unwrap_or(100.0),
-                    height: constraint.height.unwrap_or(100.0),
+                MeasureFunc::Raw(|known_dimensions, _available_space| taffy::geometry::Size {
+                    width: known_dimensions.width.unwrap_or(100.0),
+                    height: known_dimensions.height.unwrap_or(100.0),
                 }),
             )
             .unwrap();
@@ -68,7 +68,7 @@ mod measure {
             )
             .unwrap();
 
-        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
 
         assert_eq!(taffy.layout(node).unwrap().size.width, 50.0);
         assert_eq!(taffy.layout(node).unwrap().size.height, 100.0);
@@ -83,9 +83,9 @@ mod measure {
         let child = taffy
             .new_leaf_with_measure(
                 taffy::style::FlexboxLayout { ..Default::default() },
-                MeasureFunc::Raw(|constraint| taffy::geometry::Size {
-                    width: constraint.width.unwrap_or(100.0),
-                    height: constraint.height.unwrap_or(100.0),
+                MeasureFunc::Raw(|known_dimensions, _available_space| taffy::geometry::Size {
+                    width: known_dimensions.width.unwrap_or(100.0),
+                    height: known_dimensions.height.unwrap_or(100.0),
                 }),
             )
             .unwrap();
@@ -105,7 +105,7 @@ mod measure {
                 &[child],
             )
             .unwrap();
-        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
 
         assert_eq!(taffy.layout(node).unwrap().size.width, 50.0);
         assert_eq!(taffy.layout(node).unwrap().size.height, 120.0);
@@ -130,9 +130,9 @@ mod measure {
         let child1 = taffy
             .new_leaf_with_measure(
                 taffy::style::FlexboxLayout { flex_grow: 1.0, ..Default::default() },
-                MeasureFunc::Raw(|constraint| taffy::geometry::Size {
-                    width: constraint.width.unwrap_or(10.0),
-                    height: constraint.height.unwrap_or(50.0),
+                MeasureFunc::Raw(|known_dimensions, _available_space| taffy::geometry::Size {
+                    width: known_dimensions.width.unwrap_or(10.0),
+                    height: known_dimensions.height.unwrap_or(50.0),
                 }),
             )
             .unwrap();
@@ -147,7 +147,7 @@ mod measure {
             )
             .unwrap();
 
-        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
 
         assert_eq!(taffy.layout(child1).unwrap().size.width, 50.0);
         assert_eq!(taffy.layout(child1).unwrap().size.height, 50.0);
@@ -170,9 +170,9 @@ mod measure {
         let child1 = taffy
             .new_leaf_with_measure(
                 taffy::style::FlexboxLayout { ..Default::default() },
-                MeasureFunc::Raw(|constraint| taffy::geometry::Size {
-                    width: constraint.width.unwrap_or(100.0),
-                    height: constraint.height.unwrap_or(50.0),
+                MeasureFunc::Raw(|known_dimensions, _available_space| taffy::geometry::Size {
+                    width: known_dimensions.width.unwrap_or(100.0),
+                    height: known_dimensions.height.unwrap_or(50.0),
                 }),
             )
             .unwrap();
@@ -187,7 +187,7 @@ mod measure {
             )
             .unwrap();
 
-        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
 
         assert_eq!(taffy.layout(child1).unwrap().size.width, 50.0);
         assert_eq!(taffy.layout(child1).unwrap().size.height, 50.0);
@@ -209,9 +209,9 @@ mod measure {
         let child1 = taffy
             .new_leaf_with_measure(
                 taffy::style::FlexboxLayout { flex_grow: 1.0, ..Default::default() },
-                MeasureFunc::Raw(|constraint| {
-                    let width = constraint.width.unwrap_or(10.0);
-                    let height = constraint.height.unwrap_or(width * 2.0);
+                MeasureFunc::Raw(|known_dimensions, _available_space| {
+                    let width = known_dimensions.width.unwrap_or(10.0);
+                    let height = known_dimensions.height.unwrap_or(width * 2.0);
                     taffy::geometry::Size { width, height }
                 }),
             )
@@ -228,7 +228,7 @@ mod measure {
             )
             .unwrap();
 
-        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
 
         assert_eq!(taffy.layout(child1).unwrap().size.width, 50.0);
         assert_eq!(taffy.layout(child1).unwrap().size.height, 100.0);
@@ -252,9 +252,9 @@ mod measure {
         let child1 = taffy
             .new_leaf_with_measure(
                 taffy::style::FlexboxLayout { ..Default::default() },
-                MeasureFunc::Raw(|constraint| {
-                    let width = constraint.width.unwrap_or(100.0);
-                    let height = constraint.height.unwrap_or(width * 2.0);
+                MeasureFunc::Raw(|known_dimensions, _available_space| {
+                    let width = known_dimensions.width.unwrap_or(100.0);
+                    let height = known_dimensions.height.unwrap_or(width * 2.0);
                     taffy::geometry::Size { width, height }
                 }),
             )
@@ -271,7 +271,7 @@ mod measure {
             )
             .unwrap();
 
-        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
 
         assert_eq!(taffy.layout(child1).unwrap().size.width, 50.0);
         assert_eq!(taffy.layout(child1).unwrap().size.height, 100.0);
@@ -284,9 +284,9 @@ mod measure {
         let child = taffy
             .new_leaf_with_measure(
                 taffy::style::FlexboxLayout { ..Default::default() },
-                MeasureFunc::Raw(|constraint| {
-                    let height = constraint.height.unwrap_or(50.0);
-                    let width = constraint.width.unwrap_or(height);
+                MeasureFunc::Raw(|known_dimensions, _available_space| {
+                    let height = known_dimensions.height.unwrap_or(50.0);
+                    let width = known_dimensions.width.unwrap_or(height);
                     taffy::geometry::Size { width, height }
                 }),
             )
@@ -305,7 +305,7 @@ mod measure {
             )
             .unwrap();
 
-        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
 
         assert_eq!(taffy.layout(child).unwrap().size.width, 100.0);
         assert_eq!(taffy.layout(child).unwrap().size.height, 100.0);
@@ -320,15 +320,15 @@ mod measure {
                     size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50.0), ..Default::default() },
                     ..Default::default()
                 },
-                MeasureFunc::Raw(|constraint| taffy::geometry::Size {
-                    width: constraint.width.unwrap_or(100.0),
-                    height: constraint.height.unwrap_or(100.0),
+                MeasureFunc::Raw(|known_dimensions, _available_space| taffy::geometry::Size {
+                    width: known_dimensions.width.unwrap_or(100.0),
+                    height: known_dimensions.height.unwrap_or(100.0),
                 }),
             )
             .unwrap();
 
         let node = taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[child]).unwrap();
-        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
 
         assert_eq!(taffy.layout(child).unwrap().size.width, 50.0);
         assert_eq!(taffy.layout(child).unwrap().size.height, 100.0);
@@ -343,15 +343,15 @@ mod measure {
                     size: taffy::geometry::Size { height: taffy::style::Dimension::Points(50.0), ..Default::default() },
                     ..Default::default()
                 },
-                MeasureFunc::Raw(|constraint| taffy::geometry::Size {
-                    width: constraint.width.unwrap_or(100.0),
-                    height: constraint.height.unwrap_or(100.0),
+                MeasureFunc::Raw(|known_dimensions, _available_space| taffy::geometry::Size {
+                    width: known_dimensions.width.unwrap_or(100.0),
+                    height: known_dimensions.height.unwrap_or(100.0),
                 }),
             )
             .unwrap();
 
         let node = taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[child]).unwrap();
-        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
 
         assert_eq!(taffy.layout(child).unwrap().size.width, 100.0);
         assert_eq!(taffy.layout(child).unwrap().size.height, 50.0);
@@ -375,9 +375,9 @@ mod measure {
                     flex_grow: 1.0,
                     ..Default::default()
                 },
-                MeasureFunc::Raw(|constraint| taffy::geometry::Size {
-                    width: constraint.width.unwrap_or(100.0),
-                    height: constraint.height.unwrap_or(100.0),
+                MeasureFunc::Raw(|known_dimensions, _available_space| taffy::geometry::Size {
+                    width: known_dimensions.width.unwrap_or(100.0),
+                    height: known_dimensions.height.unwrap_or(100.0),
                 }),
             )
             .unwrap();
@@ -395,7 +395,7 @@ mod measure {
             )
             .unwrap();
 
-        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
 
         assert_eq!(taffy.layout(child0).unwrap().size.width, 100.0);
         assert_eq!(taffy.layout(child0).unwrap().size.height, 100.0);
@@ -409,9 +409,9 @@ mod measure {
         let child = taffy
             .new_leaf_with_measure(
                 taffy::style::FlexboxLayout { ..Default::default() },
-                MeasureFunc::Raw(|constraint| taffy::geometry::Size {
-                    width: constraint.width.unwrap_or(50.0),
-                    height: constraint.height.unwrap_or(50.0),
+                MeasureFunc::Raw(|known_dimensions, _available_space| taffy::geometry::Size {
+                    width: known_dimensions.width.unwrap_or(50.0),
+                    height: known_dimensions.height.unwrap_or(50.0),
                 }),
             )
             .unwrap();
@@ -429,7 +429,7 @@ mod measure {
             )
             .unwrap();
 
-        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
 
         assert_eq!(taffy.layout(child).unwrap().size.width, 50.0);
         assert_eq!(taffy.layout(child).unwrap().size.height, 100.0);
@@ -444,9 +444,9 @@ mod measure {
                     position_type: taffy::style::PositionType::Absolute,
                     ..Default::default()
                 },
-                MeasureFunc::Raw(|constraint| taffy::geometry::Size {
-                    width: constraint.width.unwrap_or(50.0),
-                    height: constraint.height.unwrap_or(50.0),
+                MeasureFunc::Raw(|known_dimensions, _available_space| taffy::geometry::Size {
+                    width: known_dimensions.width.unwrap_or(50.0),
+                    height: known_dimensions.height.unwrap_or(50.0),
                 }),
             )
             .unwrap();
@@ -464,7 +464,7 @@ mod measure {
             )
             .unwrap();
 
-        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
 
         assert_eq!(taffy.layout(child).unwrap().size.width, 50.0);
         assert_eq!(taffy.layout(child).unwrap().size.height, 50.0);
@@ -488,7 +488,7 @@ mod measure {
             )
             .unwrap();
 
-        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
 
         assert_eq!(taffy.layout(child).unwrap().size.width, 100.0);
         assert_eq!(taffy.layout(child).unwrap().size.height, 100.0);
@@ -504,11 +504,11 @@ mod measure {
         let grandchild = taffy
             .new_leaf_with_measure(
                 taffy::style::FlexboxLayout { ..Default::default() },
-                MeasureFunc::Raw(|constraint| {
-                    NUM_MEASURES.fetch_add(1, atomic::Ordering::Relaxed);
+                MeasureFunc::Raw(|known_dimensions, _available_space| {
+                    NUM_MEASURES.fetch_add(1, atomic::Ordering::SeqCst);
                     taffy::geometry::Size {
-                        width: constraint.width.unwrap_or(50.0),
-                        height: constraint.height.unwrap_or(50.0),
+                        width: known_dimensions.width.unwrap_or(50.0),
+                        height: known_dimensions.height.unwrap_or(50.0),
                     }
                 }),
             )
@@ -518,8 +518,8 @@ mod measure {
             taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[grandchild]).unwrap();
 
         let node = taffy.new_with_children(taffy::style::FlexboxLayout { ..Default::default() }, &[child]).unwrap();
-        taffy.compute_layout(node, taffy::geometry::Size::NONE).unwrap();
+        taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
 
-        assert_eq!(NUM_MEASURES.load(atomic::Ordering::Relaxed), 2);
+        assert_eq!(NUM_MEASURES.load(atomic::Ordering::SeqCst), 1);
     }
 }

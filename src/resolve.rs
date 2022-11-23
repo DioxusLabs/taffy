@@ -17,12 +17,12 @@ pub(crate) trait ResolveOrDefault<TContext, TOutput> {
 /// a context-independent size or dimension.
 ///
 /// Will return a `None` if it unable to resolve.
-pub(crate) trait MaybeResolve<T> {
+pub(crate) trait MaybeResolve<In, Out> {
     /// Resolve a dimension that might be dependent on a context, with `None` as fallback value
-    fn maybe_resolve(self, context: T) -> T;
+    fn maybe_resolve(self, context: In) -> Out;
 }
 
-impl MaybeResolve<Option<f32>> for Dimension {
+impl MaybeResolve<Option<f32>, Option<f32>> for Dimension {
     /// Converts the given [`Dimension`] into a concrete value of points
     ///
     /// Can return `None`
@@ -36,9 +36,24 @@ impl MaybeResolve<Option<f32>> for Dimension {
     }
 }
 
-impl MaybeResolve<Size<Option<f32>>> for Size<Dimension> {
+impl MaybeResolve<f32, Option<f32>> for Dimension {
+    /// Converts the given [`Dimension`] into a concrete value of points
+    ///
+    /// Can return `None`
+    fn maybe_resolve(self, context: f32) -> Option<f32> {
+        match self {
+            Dimension::Points(points) => Some(points),
+            // parent_dim * percent
+            Dimension::Percent(percent) => Some(context * percent),
+            _ => None,
+        }
+    }
+}
+
+// Generic MaybeResolve for Size
+impl<In, Out, T: MaybeResolve<In, Out>> MaybeResolve<Size<In>, Size<Out>> for Size<T> {
     /// Converts any `parent`-relative values for size into an absolute size
-    fn maybe_resolve(self, context: Size<Option<f32>>) -> Size<Option<f32>> {
+    fn maybe_resolve(self, context: Size<In>) -> Size<Out> {
         Size { width: self.width.maybe_resolve(context.width), height: self.height.maybe_resolve(context.height) }
     }
 }
