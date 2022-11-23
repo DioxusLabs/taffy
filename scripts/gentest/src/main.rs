@@ -92,20 +92,6 @@ async fn main() {
         })
         .fold(quote!(), |a, b| quote!(#a #b));
 
-    for (name, bench_body) in bench_descs {
-        let mut bench_filename = repo_root.join("benches").join("generated").join(&name);
-        bench_filename.set_extension("rs");
-        debug!("writing {} to disk...", &name);
-        fs::write(bench_filename, bench_body.to_string()).unwrap();
-    }
-
-    for (name, test_body) in test_descs {
-        let mut test_filename = repo_root.join("tests").join("generated").join(&name);
-        test_filename.set_extension("rs");
-        debug!("writing {} to disk...", &name);
-        fs::write(test_filename, test_body.to_string()).unwrap();
-    }
-
     let bench_mods = quote!(
         use criterion::{criterion_group, criterion_main, Criterion};
 
@@ -121,9 +107,29 @@ async fn main() {
         criterion_main!(benches);
     );
 
+    info!("writing generated benchmarks file to disk...");
+    let benches_base_path = repo_root.join("benches").join("generated");
+    fs::remove_dir_all(&benches_base_path).unwrap();
+    fs::create_dir(&benches_base_path).unwrap();
+    for (name, bench_body) in bench_descs {
+        let mut bench_filename = benches_base_path.join(&name);
+        bench_filename.set_extension("rs");
+        debug!("writing {} to disk...", &name);
+        fs::write(bench_filename, bench_body.to_string()).unwrap();
+    }
+    fs::write(benches_base_path.join("mod.rs"), bench_mods.to_string()).unwrap();
+
     info!("writing generated test file to disk...");
-    fs::write(repo_root.join("benches").join("generated").join("mod.rs"), bench_mods.to_string()).unwrap();
-    fs::write(repo_root.join("tests").join("generated").join("mod.rs"), test_mods.to_string()).unwrap();
+    let tests_base_path = repo_root.join("tests").join("generated");
+    fs::remove_dir_all(&tests_base_path).unwrap();
+    fs::create_dir(&tests_base_path).unwrap();
+    for (name, test_body) in test_descs {
+        let mut test_filename = tests_base_path.join(&name);
+        test_filename.set_extension("rs");
+        debug!("writing {} to disk...", &name);
+        fs::write(test_filename, test_body.to_string()).unwrap();
+    }
+    fs::write(tests_base_path.join("mod.rs"), test_mods.to_string()).unwrap();
 
     info!("formatting the source directory");
     Command::new("cargo").arg("fmt").current_dir(repo_root).status().unwrap();
