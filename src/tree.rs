@@ -1,9 +1,9 @@
 //! The baseline requirements of any UI Tree so Taffy can efficiently calculate the layout
 
 use crate::{
+    error::TaffyResult,
     layout::{AvailableSpace, Cache, Layout},
     prelude::*,
-    error::TaffyResult
 };
 
 /// Any item that implements the LayoutTree can be layed out using Taffy's algorithms.
