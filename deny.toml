@@ -6,7 +6,7 @@ unmaintained = "deny"
 yanked = "deny"
 notice = "deny"
 ignore = [
-    "RUSTSEC-2021-0127" # from serde_cbor
+    "RUSTSEC-2021-0145" # from criterion, used only for benchmarking
 ]
 
 [licenses]
