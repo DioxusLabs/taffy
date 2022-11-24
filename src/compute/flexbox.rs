@@ -332,7 +332,7 @@ fn compute_preliminary(
 
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("hidden_layout");
-    let len = tree.children(node).len();
+    let len = tree.num_children(node);
     for order in 0..len {
         let child = tree.child(node, order);
         if tree.style(child).display == Display::None {
@@ -395,7 +395,6 @@ fn compute_constants(style: &Style, node_size: Size<Option<f32>>, parent_size: S
 #[inline]
 fn generate_anonymous_flex_items(tree: &impl LayoutTree, node: Node, constants: &AlgoConstants) -> Vec<FlexItem> {
     tree.children(node)
-        .iter()
         .map(|child| (child, tree.style(*child)))
         .filter(|(_, style)| style.position_type != PositionType::Absolute)
         .filter(|(_, style)| style.display != Display::None)
@@ -974,13 +973,13 @@ fn calculate_children_base_lines(
 ) {
     /// Recursively calculates the baseline for children
     fn calc_baseline(db: &impl LayoutTree, node: Node, layout: &Layout) -> f32 {
-        let children = db.children(node);
-        if children.is_empty() {
+        if db.num_children(node) == 0 {
             layout.size.height
         } else {
-            let child = children[0];
-            let layout = db.layout(child);
-            calc_baseline(db, child, layout)
+            // Safe to unwrap because we already checked that the num_children > 0
+            let first_child = db.children(node).nth(0).unwrap();
+            let layout = db.layout(*first_child);
+            calc_baseline(db, *first_child, layout)
         }
         // if db.children[node].is_empty() {
         //     layout.size.height
@@ -1027,7 +1026,7 @@ fn calculate_children_base_lines(
                 tree,
                 child.node,
                 &Layout {
-                    order: tree.children(node).iter().position(|n| *n == child.node).unwrap() as u32,
+                    order: tree.children(node).position(|n| *n == child.node).unwrap() as u32,
                     size: preliminary_size,
                     location: Point::ZERO,
                 },
@@ -1579,8 +1578,10 @@ fn calculate_flex_item(
         + item.margin.cross_start(direction)
         + (item.position.cross_start(direction).unwrap_or(0.0) - item.position.cross_end(direction).unwrap_or(0.0));
 
+    let order = tree.children(node).position(|n| *n == item.node).unwrap() as u32;
+
     *tree.layout_mut(item.node) = Layout {
-        order: tree.children(node).iter().position(|n| *n == item.node).unwrap() as u32,
+        order,
         size: preliminary_size,
         location: Point {
             x: if direction.is_row() { offset_main } else { offset_cross },
@@ -1673,7 +1674,6 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
     // TODO: remove number of Vec<_> generated
     let candidates = tree
         .children(node)
-        .iter()
         .cloned()
         .enumerate()
         .filter(|(_, child)| tree.style(*child).position_type == PositionType::Absolute)
@@ -1829,7 +1829,7 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
 fn hidden_layout(tree: &mut impl LayoutTree, node: Node, order: u32) {
     *tree.layout_mut(node) = Layout::with_order(order);
 
-    let len = tree.children(node).len();
+    let len = tree.num_children(node);
     for order in 0..len {
         hidden_layout(tree, tree.child(node, order), order as _);
     }
