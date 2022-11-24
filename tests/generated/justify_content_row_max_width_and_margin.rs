@@ -9,7 +9,7 @@ fn justify_content_row_max_width_and_margin() {
                     height: taffy::style::Dimension::Points(20f32),
                     ..Default::default()
                 },
-                margin: taffy::geometry::Rect { start: taffy::style::Dimension::Points(100f32), ..Default::default() },
+                margin: taffy::geometry::Rect { left: taffy::style::Dimension::Points(100f32), ..Default::default() },
                 ..Default::default()
             },
             &[],

@@ -13,13 +13,13 @@ pub struct Rect<T> {
     ///
     /// The starting edge is the left edge when working with LTR text,
     /// and the right edge when working with RTL text.
-    pub start: T,
+    pub left: T,
     /// This can represent either the x-coordinate of the ending edge,
     /// or the amount of padding on the ending side.
     ///
     /// The ending edge is the right edge when working with LTR text,
     /// and the left edge when working with RTL text.
-    pub end: T,
+    pub right: T,
     /// This can represent either the y-coordinate of the top edge,
     /// or the amount of padding on the top side.
     pub top: T,
@@ -40,8 +40,8 @@ impl<T> Rect<T> {
         U: Copy,
     {
         Rect {
-            start: f(self.start, size.width),
-            end: f(self.end, size.width),
+            left: f(self.left, size.width),
+            right: f(self.right, size.width),
             top: f(self.top, size.height),
             bottom: f(self.bottom, size.height),
         }
@@ -58,7 +58,7 @@ where
     ///
     /// **NOTE:** this is *not* the width of the rectangle.
     pub(crate) fn horizontal_axis_sum(&self) -> T {
-        self.start + self.end
+        self.left + self.right
     }
 
     /// The sum of [`Rect.top`](Rect) and [`Rect.bottom`](Rect)
@@ -104,7 +104,7 @@ where
     /// The `start` or `top` value of the [`Rect`], from the perspective of the main layout axis
     pub(crate) fn main_start(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
-            self.start
+            self.left
         } else {
             self.top
         }
@@ -113,7 +113,7 @@ where
     /// The `end` or `bottom` value of the [`Rect`], from the perspective of the main layout axis
     pub(crate) fn main_end(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
-            self.end
+            self.right
         } else {
             self.bottom
         }
@@ -124,7 +124,7 @@ where
         if direction.is_row() {
             self.top
         } else {
-            self.start
+            self.left
         }
     }
 
@@ -133,19 +133,19 @@ where
         if direction.is_row() {
             self.bottom
         } else {
-            self.end
+            self.right
         }
     }
 }
 
 impl Rect<f32> {
     /// Creates a new Rect with `0.0` as all parameters
-    pub const ZERO: Rect<f32> = Self { start: 0.0, end: 0.0, top: 0.0, bottom: 0.0 };
+    pub const ZERO: Rect<f32> = Self { left: 0.0, right: 0.0, top: 0.0, bottom: 0.0 };
 
     /// Creates a new Rect
     #[must_use]
     pub const fn new(start: f32, end: f32, top: f32, bottom: f32) -> Self {
-        Self { start, end, top, bottom }
+        Self { left: start, right: end, top, bottom }
     }
 }
 

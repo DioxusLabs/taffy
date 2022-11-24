@@ -5,7 +5,7 @@ fn margin_left() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), ..Default::default() },
-                margin: taffy::geometry::Rect { start: taffy::style::Dimension::Points(10f32), ..Default::default() },
+                margin: taffy::geometry::Rect { left: taffy::style::Dimension::Points(10f32), ..Default::default() },
                 ..Default::default()
             },
             &[],

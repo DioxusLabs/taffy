@@ -10,7 +10,7 @@ fn percentage_position_bottom_right() {
                     ..Default::default()
                 },
                 position: taffy::geometry::Rect {
-                    end: taffy::style::Dimension::Percent(0.2f32),
+                    right: taffy::style::Dimension::Percent(0.2f32),
                     bottom: taffy::style::Dimension::Percent(0.1f32),
                     ..Default::default()
                 },

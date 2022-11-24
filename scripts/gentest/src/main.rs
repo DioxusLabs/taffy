@@ -553,13 +553,13 @@ fn generate_dimension(dimen: &json::object::Object) -> TokenStream {
 }
 
 fn generate_edges(dimen: &json::object::Object) -> TokenStream {
-    dim_quoted!(dimen, start);
-    dim_quoted!(dimen, end);
+    dim_quoted!(dimen, left);
+    dim_quoted!(dimen, right);
     dim_quoted!(dimen, top);
     dim_quoted!(dimen, bottom);
 
     quote!(taffy::geometry::Rect {
-        #start #end #top #bottom
+        #left #right #top #bottom
         ..Default::default()
     })
 }

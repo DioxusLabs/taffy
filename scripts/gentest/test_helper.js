@@ -102,13 +102,13 @@ function parseEnum(input) {
 }
 
 function parseEdges(edges) {
-  const start = parseDimension(edges.start);
-  const end = parseDimension(edges.end);
+  const left = parseDimension(edges.left);
+  const right = parseDimension(edges.right);
   const top = parseDimension(edges.top);
   const bottom = parseDimension(edges.bottom);
   
-  if (!start && !end && !top && !bottom) return undefined;
-  return { start, end, top, bottom };
+  if (!left && !right && !top && !bottom) return undefined;
+  return { left, right, top, bottom };
 }
 
 function parseSize(size) {
@@ -190,29 +190,29 @@ function describeElement(e) {
       maxSize: parseSize({width: e.style.maxWidth, height: e.style.maxHeight}),
 
       margin: parseEdges({
-        start: e.style.marginLeft,
-        end: e.style.marginRight,
+        left: e.style.marginLeft,
+        right: e.style.marginRight,
         top: e.style.marginTop,
         bottom: e.style.marginBottom,
       }),
 
       padding: parseEdges({
-        start: e.style.paddingLeft,
-        end: e.style.paddingRight,
+        left: e.style.paddingLeft,
+        right: e.style.paddingRight,
         top: e.style.paddingTop,
         bottom: e.style.paddingBottom,
       }),
 
       border: parseEdges({
-        start: e.style.borderLeftWidth,
-        end: e.style.borderRightWidth,
+        left: e.style.borderLeftWidth,
+        right: e.style.borderRightWidth,
         top: e.style.borderTopWidth,
         bottom: e.style.borderBottomWidth,
       }),
 
       position: parseEdges({
-        start: e.style.left,
-        end: e.style.right,
+        left: e.style.left,
+        right: e.style.right,
         top: e.style.top,
         bottom: e.style.bottom,
       }),

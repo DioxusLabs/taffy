@@ -13,7 +13,7 @@ fn margin_should_not_be_part_of_max_width() {
                     width: taffy::style::Dimension::Points(100f32),
                     ..Default::default()
                 },
-                margin: taffy::geometry::Rect { start: taffy::style::Dimension::Points(20f32), ..Default::default() },
+                margin: taffy::geometry::Rect { left: taffy::style::Dimension::Points(20f32), ..Default::default() },
                 ..Default::default()
             },
             &[],

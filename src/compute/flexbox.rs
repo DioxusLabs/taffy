@@ -357,8 +357,8 @@ fn compute_constants(style: &Style, node_size: Size<Option<f32>>, parent_size: S
     let border = style.border.resolve_or_default(parent_size.width.into_option());
 
     let padding_border = Rect {
-        start: padding.start + border.start,
-        end: padding.end + border.end,
+        left: padding.left + border.left,
+        right: padding.right + border.right,
         top: padding.top + border.top,
         bottom: padding.bottom + border.bottom,
     };
@@ -1219,14 +1219,14 @@ fn distribute_remaining_free_space(
                 let child_style = tree.style(child.node);
                 if child_style.main_margin_start(constants.dir) == Dimension::Auto {
                     if constants.is_row {
-                        child.margin.start = margin;
+                        child.margin.left = margin;
                     } else {
                         child.margin.top = margin;
                     }
                 }
                 if child_style.main_margin_end(constants.dir) == Dimension::Auto {
                     if constants.is_row {
-                        child.margin.end = margin;
+                        child.margin.right = margin;
                     } else {
                         child.margin.bottom = margin;
                     }
@@ -1337,20 +1337,20 @@ fn resolve_cross_axis_auto_margins(
                     child.margin.top = free_space / 2.0;
                     child.margin.bottom = free_space / 2.0;
                 } else {
-                    child.margin.start = free_space / 2.0;
-                    child.margin.end = free_space / 2.0;
+                    child.margin.left = free_space / 2.0;
+                    child.margin.right = free_space / 2.0;
                 }
             } else if child_style.cross_margin_start(constants.dir) == Dimension::Auto {
                 if constants.is_row {
                     child.margin.top = free_space;
                 } else {
-                    child.margin.start = free_space;
+                    child.margin.left = free_space;
                 }
             } else if child_style.cross_margin_end(constants.dir) == Dimension::Auto {
                 if constants.is_row {
                     child.margin.bottom = free_space;
                 } else {
-                    child.margin.end = free_space;
+                    child.margin.right = free_space;
                 }
             } else {
                 // 14. Align all flex items along the cross-axis.
@@ -1686,12 +1686,12 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
         let child_style = tree.style(child);
 
         // X-axis
-        let child_position_start = child_style.position.start.maybe_resolve(container_width);
-        let child_margin_start = child_style.margin.start.maybe_resolve(container_width);
+        let child_position_start = child_style.position.left.maybe_resolve(container_width);
+        let child_margin_start = child_style.margin.left.maybe_resolve(container_width);
         let start = child_position_start.maybe_add(child_margin_start);
 
-        let child_position_end = child_style.position.end.maybe_resolve(container_width);
-        let child_margin_end = child_style.margin.end.maybe_resolve(container_width);
+        let child_position_end = child_style.position.right.maybe_resolve(container_width);
+        let child_margin_end = child_style.margin.right.maybe_resolve(container_width);
         let end = child_position_end.maybe_add(child_margin_end);
 
         // Y-axis
@@ -1893,8 +1893,8 @@ mod tests {
 
         // TODO: Replace with something less hardcoded?
         let padding_border = Rect {
-            start: padding.start + border.start,
-            end: padding.end + border.end,
+            left: padding.left + border.left,
+            right: padding.right + border.right,
             top: padding.top + border.top,
             bottom: padding.bottom + border.bottom,
         };

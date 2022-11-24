@@ -23,8 +23,8 @@ fn justify_content_min_width_with_padding_child_width_greater_than_parent() {
                     ..Default::default()
                 },
                 padding: taffy::geometry::Rect {
-                    start: taffy::style::Dimension::Points(100f32),
-                    end: taffy::style::Dimension::Points(100f32),
+                    left: taffy::style::Dimension::Points(100f32),
+                    right: taffy::style::Dimension::Points(100f32),
                     ..Default::default()
                 },
                 ..Default::default()
