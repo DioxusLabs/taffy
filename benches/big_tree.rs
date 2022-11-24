@@ -84,6 +84,7 @@ fn build_yoga_deep_hierarchy(taffy: &mut Taffy, node_count: u32, branching_facto
 }
 
 fn taffy_benchmarks(c: &mut Criterion) {
+
     let mut group = c.benchmark_group("yoga benchmarks");
     group.sample_size(10);
 
@@ -201,6 +202,24 @@ fn taffy_benchmarks(c: &mut Criterion) {
         let mut taffy = Taffy::new();
         let root = build_deep_hierarchy(&mut taffy, 1_000_000, 2);
 
+        b.iter(|| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap())
+    });
+
+
+    drop(group);
+
+    let mut group = c.benchmark_group("super deep trees");
+    group.sample_size(10);
+
+    group.bench_function("100 nodes (100-level hierarchy)", |b| {
+        let mut taffy = Taffy::new();
+        let root = build_yoga_deep_hierarchy(&mut taffy, 100, 1);
+        b.iter(|| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap())
+    });
+
+    group.bench_function("1_000 nodes (1000-level hierarchy)", |b| {
+        let mut taffy = Taffy::new();
+        let root = build_yoga_deep_hierarchy(&mut taffy, 1_000, 1);
         b.iter(|| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap())
     });
 }
