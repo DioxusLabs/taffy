@@ -9,7 +9,7 @@ fn margin_auto_mutiple_children_row() {
                     height: taffy::style::Dimension::Points(50f32),
                     ..Default::default()
                 },
-                margin: taffy::geometry::Rect { end: taffy::style::Dimension::Auto, ..Default::default() },
+                margin: taffy::geometry::Rect { right: taffy::style::Dimension::Auto, ..Default::default() },
                 ..Default::default()
             },
             &[],
@@ -23,7 +23,7 @@ fn margin_auto_mutiple_children_row() {
                     height: taffy::style::Dimension::Points(50f32),
                     ..Default::default()
                 },
-                margin: taffy::geometry::Rect { end: taffy::style::Dimension::Auto, ..Default::default() },
+                margin: taffy::geometry::Rect { right: taffy::style::Dimension::Auto, ..Default::default() },
                 ..Default::default()
             },
             &[],
