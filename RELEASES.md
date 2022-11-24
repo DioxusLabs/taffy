@@ -43,7 +43,7 @@ As you can see, we have actually regressed slightly in the "wide" benchmarks (wh
 
 However, in the "deep" benchmarks we see dramatic improvements. The previous version of Taffy suffered from exponential blowup in the case of deeply nested hierachies. This has resulted in somewhat silly improvements like the 10,000 node (14-level) hierachy where Taffy 0.2 is a full 1 million times faster than Taffy 0.1. We've also included results with larger numbers of nodes (although you're unlikely to need that many) to demonstrate that this scalability continues up to even deeper levels of nesting.
 
-#### Benchmarks vs. [Yoga](https://github.com/facebook/yoga))
+#### Benchmarks vs. [Yoga](https://github.com/facebook/yoga)
 
 Yoga benchmarks run via it's node.js bindings (the `yoga-layout-prebuilt` npm package), they were run a few times manually and it was verified that variance in the numbers of each run was minimal. It should be noted that this is using an old version of Yoga.
 
