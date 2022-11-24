@@ -77,8 +77,8 @@ impl ResolveOrDefault<Size<Option<f32>>, Size<f32>> for Size<Dimension> {
 impl ResolveOrDefault<Size<Option<f32>>, Rect<f32>> for Rect<Dimension> {
     fn resolve_or_default(self, context: Size<Option<f32>>) -> Rect<f32> {
         Rect {
-            start: self.start.resolve_or_default(context.width),
-            end: self.end.resolve_or_default(context.width),
+            left: self.left.resolve_or_default(context.width),
+            right: self.right.resolve_or_default(context.width),
             top: self.top.resolve_or_default(context.height),
             bottom: self.bottom.resolve_or_default(context.height),
         }
@@ -88,8 +88,8 @@ impl ResolveOrDefault<Size<Option<f32>>, Rect<f32>> for Rect<Dimension> {
 impl ResolveOrDefault<Option<f32>, Rect<f32>> for Rect<Dimension> {
     fn resolve_or_default(self, context: Option<f32>) -> Rect<f32> {
         Rect {
-            start: self.start.resolve_or_default(context),
-            end: self.end.resolve_or_default(context),
+            left: self.left.resolve_or_default(context),
+            right: self.right.resolve_or_default(context),
             top: self.top.resolve_or_default(context),
             bottom: self.bottom.resolve_or_default(context),
         }

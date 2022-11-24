@@ -9,7 +9,7 @@ pub fn compute() {
                     height: taffy::style::Dimension::Points(40f32),
                     ..Default::default()
                 },
-                position: taffy::geometry::Rect { end: taffy::style::Dimension::Points(5f32), ..Default::default() },
+                position: taffy::geometry::Rect { right: taffy::style::Dimension::Points(5f32), ..Default::default() },
                 ..Default::default()
             },
             &[],

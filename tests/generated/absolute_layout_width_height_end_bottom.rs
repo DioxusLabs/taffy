@@ -11,7 +11,7 @@ fn absolute_layout_width_height_end_bottom() {
                     ..Default::default()
                 },
                 position: taffy::geometry::Rect {
-                    end: taffy::style::Dimension::Points(10f32),
+                    right: taffy::style::Dimension::Points(10f32),
                     bottom: taffy::style::Dimension::Points(10f32),
                     ..Default::default()
                 },

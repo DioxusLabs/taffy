@@ -283,7 +283,12 @@ impl Dimension {
 
 impl Default for Rect<Dimension> {
     fn default() -> Self {
-        Self { start: Default::default(), end: Default::default(), top: Default::default(), bottom: Default::default() }
+        Self {
+            left: Default::default(),
+            right: Default::default(),
+            top: Default::default(),
+            bottom: Default::default(),
+        }
     }
 }
 
@@ -291,45 +296,45 @@ impl Rect<Dimension> {
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Points`] values for `start` and `top`
     #[must_use]
     pub const fn top_from_points(start: f32, top: f32) -> Rect<Dimension> {
-        Rect { start: Dimension::Points(start), top: Dimension::Points(top), ..Rect::AUTO }
+        Rect { left: Dimension::Points(start), top: Dimension::Points(top), ..Rect::AUTO }
     }
 
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Points`] values for `end` and `bottom`
     #[must_use]
     pub const fn bot_from_points(end: f32, bottom: f32) -> Rect<Dimension> {
-        Rect { end: Dimension::Points(end), bottom: Dimension::Points(bottom), ..Rect::AUTO }
+        Rect { right: Dimension::Points(end), bottom: Dimension::Points(bottom), ..Rect::AUTO }
     }
 
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Percent`] values for `start` and `top`
     #[must_use]
     pub const fn top_from_percent(start: f32, top: f32) -> Rect<Dimension> {
-        Rect { start: Dimension::Percent(start), top: Dimension::Percent(top), ..Rect::AUTO }
+        Rect { left: Dimension::Percent(start), top: Dimension::Percent(top), ..Rect::AUTO }
     }
 
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Percent`] values for `end` and `bottom`
     #[must_use]
     pub const fn bot_from_percent(end: f32, bottom: f32) -> Rect<Dimension> {
-        Rect { end: Dimension::Percent(end), bottom: Dimension::Percent(bottom), ..Rect::AUTO }
+        Rect { right: Dimension::Percent(end), bottom: Dimension::Percent(bottom), ..Rect::AUTO }
     }
 
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Undefined`] for all values
     pub const UNDEFINED: Rect<Dimension> = Self {
-        start: Dimension::Undefined,
-        end: Dimension::Undefined,
+        left: Dimension::Undefined,
+        right: Dimension::Undefined,
         top: Dimension::Undefined,
         bottom: Dimension::Undefined,
     };
 
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Auto`] for all values
     pub const AUTO: Rect<Dimension> =
-        Self { start: Dimension::Auto, end: Dimension::Auto, top: Dimension::Auto, bottom: Dimension::Auto };
+        Self { left: Dimension::Auto, right: Dimension::Auto, top: Dimension::Auto, bottom: Dimension::Auto };
 
     /// Create a new Rect with [`Dimension::Points`]
     #[must_use]
     pub const fn from_points(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Rect {
-            start: Dimension::Points(start),
-            end: Dimension::Points(end),
+            left: Dimension::Points(start),
+            right: Dimension::Points(end),
             top: Dimension::Points(top),
             bottom: Dimension::Points(bottom),
         }
@@ -339,8 +344,8 @@ impl Rect<Dimension> {
     #[must_use]
     pub const fn from_percent(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Rect {
-            start: Dimension::Percent(start),
-            end: Dimension::Percent(end),
+            left: Dimension::Percent(start),
+            right: Dimension::Percent(end),
             top: Dimension::Percent(top),
             bottom: Dimension::Percent(bottom),
         }
@@ -475,7 +480,7 @@ impl Style {
     /// If the `direction` is row-oriented, the margin start. Otherwise the margin top
     pub(crate) fn main_margin_start(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
-            self.margin.start
+            self.margin.left
         } else {
             self.margin.top
         }
@@ -484,7 +489,7 @@ impl Style {
     /// If the `direction` is row-oriented, the margin end. Otherwise the margin bottom
     pub(crate) fn main_margin_end(&self, direction: FlexDirection) -> Dimension {
         if direction.is_row() {
-            self.margin.end
+            self.margin.right
         } else {
             self.margin.bottom
         }
@@ -522,7 +527,7 @@ impl Style {
         if direction.is_row() {
             self.margin.top
         } else {
-            self.margin.start
+            self.margin.left
         }
     }
 
@@ -531,7 +536,7 @@ impl Style {
         if direction.is_row() {
             self.margin.bottom
         } else {
-            self.margin.end
+            self.margin.right
         }
     }
 

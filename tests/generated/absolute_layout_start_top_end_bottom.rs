@@ -6,8 +6,8 @@ fn absolute_layout_start_top_end_bottom() {
             taffy::style::Style {
                 position_type: taffy::style::PositionType::Absolute,
                 position: taffy::geometry::Rect {
-                    start: taffy::style::Dimension::Points(10f32),
-                    end: taffy::style::Dimension::Points(10f32),
+                    left: taffy::style::Dimension::Points(10f32),
+                    right: taffy::style::Dimension::Points(10f32),
                     top: taffy::style::Dimension::Points(10f32),
                     bottom: taffy::style::Dimension::Points(10f32),
                     ..Default::default()

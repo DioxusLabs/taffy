@@ -11,7 +11,7 @@ fn absolute_layout_within_border() {
                     ..Default::default()
                 },
                 position: taffy::geometry::Rect {
-                    start: taffy::style::Dimension::Points(0f32),
+                    left: taffy::style::Dimension::Points(0f32),
                     top: taffy::style::Dimension::Points(0f32),
                     ..Default::default()
                 },
@@ -30,7 +30,7 @@ fn absolute_layout_within_border() {
                     ..Default::default()
                 },
                 position: taffy::geometry::Rect {
-                    end: taffy::style::Dimension::Points(0f32),
+                    right: taffy::style::Dimension::Points(0f32),
                     bottom: taffy::style::Dimension::Points(0f32),
                     ..Default::default()
                 },
@@ -49,14 +49,14 @@ fn absolute_layout_within_border() {
                     ..Default::default()
                 },
                 margin: taffy::geometry::Rect {
-                    start: taffy::style::Dimension::Points(10f32),
-                    end: taffy::style::Dimension::Points(10f32),
+                    left: taffy::style::Dimension::Points(10f32),
+                    right: taffy::style::Dimension::Points(10f32),
                     top: taffy::style::Dimension::Points(10f32),
                     bottom: taffy::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 position: taffy::geometry::Rect {
-                    start: taffy::style::Dimension::Points(0f32),
+                    left: taffy::style::Dimension::Points(0f32),
                     top: taffy::style::Dimension::Points(0f32),
                     ..Default::default()
                 },
@@ -75,14 +75,14 @@ fn absolute_layout_within_border() {
                     ..Default::default()
                 },
                 margin: taffy::geometry::Rect {
-                    start: taffy::style::Dimension::Points(10f32),
-                    end: taffy::style::Dimension::Points(10f32),
+                    left: taffy::style::Dimension::Points(10f32),
+                    right: taffy::style::Dimension::Points(10f32),
                     top: taffy::style::Dimension::Points(10f32),
                     bottom: taffy::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 position: taffy::geometry::Rect {
-                    end: taffy::style::Dimension::Points(0f32),
+                    right: taffy::style::Dimension::Points(0f32),
                     bottom: taffy::style::Dimension::Points(0f32),
                     ..Default::default()
                 },
@@ -100,15 +100,15 @@ fn absolute_layout_within_border() {
                     ..Default::default()
                 },
                 padding: taffy::geometry::Rect {
-                    start: taffy::style::Dimension::Points(10f32),
-                    end: taffy::style::Dimension::Points(10f32),
+                    left: taffy::style::Dimension::Points(10f32),
+                    right: taffy::style::Dimension::Points(10f32),
                     top: taffy::style::Dimension::Points(10f32),
                     bottom: taffy::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 border: taffy::geometry::Rect {
-                    start: taffy::style::Dimension::Points(10f32),
-                    end: taffy::style::Dimension::Points(10f32),
+                    left: taffy::style::Dimension::Points(10f32),
+                    right: taffy::style::Dimension::Points(10f32),
                     top: taffy::style::Dimension::Points(10f32),
                     bottom: taffy::style::Dimension::Points(10f32),
                     ..Default::default()

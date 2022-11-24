@@ -7,8 +7,8 @@ pub fn compute() {
                 flex_shrink: 1f32,
                 flex_basis: taffy::style::Dimension::Percent(0f32),
                 margin: taffy::geometry::Rect {
-                    start: taffy::style::Dimension::Points(2f32),
-                    end: taffy::style::Dimension::Points(2f32),
+                    left: taffy::style::Dimension::Points(2f32),
+                    right: taffy::style::Dimension::Points(2f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -23,8 +23,8 @@ pub fn compute() {
                 flex_shrink: 1f32,
                 flex_basis: taffy::style::Dimension::Percent(0f32),
                 margin: taffy::geometry::Rect {
-                    start: taffy::style::Dimension::Points(10f32),
-                    end: taffy::style::Dimension::Points(10f32),
+                    left: taffy::style::Dimension::Points(10f32),
+                    right: taffy::style::Dimension::Points(10f32),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -39,8 +39,8 @@ pub fn compute() {
                 flex_shrink: 1f32,
                 flex_basis: taffy::style::Dimension::Percent(0f32),
                 margin: taffy::geometry::Rect {
-                    start: taffy::style::Dimension::Points(15f32),
-                    end: taffy::style::Dimension::Points(15f32),
+                    left: taffy::style::Dimension::Points(15f32),
+                    right: taffy::style::Dimension::Points(15f32),
                     ..Default::default()
                 },
                 ..Default::default()
