@@ -26,7 +26,10 @@ wildcards = "deny"
 highlight = "all"
 # Certain crates/versions that will be skipped when doing duplicate detection.
 skip = [
-    { name = "itoa", version = "1.0.2" }
+    { name = "itoa", version = "1.0.2" },
+    # Bypass problems with wildcard dependencies for dev-dependncies.
+    # Proper fix requires https://github.com/EmbarkStudios/cargo-deny/issues/448
+    { name = "taffy" }
 ]
 
 [sources]
