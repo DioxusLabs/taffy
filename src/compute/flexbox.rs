@@ -332,7 +332,7 @@ fn compute_preliminary(
 
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("hidden_layout");
-    let len = tree.num_children(node);
+    let len = tree.child_count(node);
     for order in 0..len {
         let child = tree.child(node, order);
         if tree.style(child).display == Display::None {
@@ -973,20 +973,12 @@ fn calculate_children_base_lines(
 ) {
     /// Recursively calculates the baseline for children
     fn calc_baseline(db: &impl LayoutTree, node: Node, layout: &Layout) -> f32 {
-        if db.num_children(node) == 0 {
-            layout.size.height
-        } else {
-            // Safe to unwrap because we already checked that the num_children > 0
-            let first_child = db.children(node).nth(0).unwrap();
+        if let Some(first_child) = db.children(node).next() {
             let layout = db.layout(*first_child);
             calc_baseline(db, *first_child, layout)
+        } else {
+            layout.size.height
         }
-        // if db.children[node].is_empty() {
-        //     layout.size.height
-        // } else {
-        //     let child = db.children[node][0];
-        //     calc_baseline(db, child, &db.nodes[child].layout)
-        // }
     }
 
     for line in flex_lines {
@@ -1829,7 +1821,7 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
 fn hidden_layout(tree: &mut impl LayoutTree, node: Node, order: u32) {
     *tree.layout_mut(node) = Layout::with_order(order);
 
-    let len = tree.num_children(node);
+    let len = tree.child_count(node);
     for order in 0..len {
         hidden_layout(tree, tree.child(node, order), order as _);
     }

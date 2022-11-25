@@ -64,8 +64,12 @@ impl LayoutTree for Taffy {
         self.children[node].iter()
     }
 
-    fn num_children(&self, node: Node) -> usize {
+    fn child_count(&self, node: Node) -> usize {
         self.children[node].len()
+    }
+
+    fn is_childless(&self, node: Node) -> bool {
+        self.children[node].len() == 0
     }
 
     fn parent(&self, node: Node) -> Option<Node> {

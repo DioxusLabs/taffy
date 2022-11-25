@@ -21,7 +21,10 @@ pub trait LayoutTree {
     fn children<'a>(&'a self, node: Node) -> Self::ChildIter<'a>;
 
     /// Get the number of children for the given node
-    fn num_children(&self, node: Node) -> usize;
+    fn child_count(&self, node: Node) -> usize;
+
+    /// Returns true if the node has no children
+    fn is_childless(&self, node: Node) -> bool;
 
     /// Get a specific child of a node, where the index represents the nth child
     fn child(&self, node: Node, index: usize) -> Node;
