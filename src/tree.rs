@@ -13,12 +13,13 @@ use crate::{
 /// Generally, Taffy expects your Node tree to be indexable by stable indices. A "stable" index means that the Node's ID
 /// remains the same between re-layouts.
 pub trait LayoutTree {
+    /// Type representing an iterator of the children of a node
     type ChildIter<'a>: Iterator<Item = &'a DefaultKey>
     where
         Self: 'a;
 
     /// Get the list of children IDs for the given node
-    fn children<'a>(&'a self, node: Node) -> Self::ChildIter<'a>;
+    fn children(&self, node: Node) -> Self::ChildIter<'_>;
 
     /// Get the number of children for the given node
     fn child_count(&self, node: Node) -> usize;

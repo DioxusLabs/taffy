@@ -60,7 +60,7 @@ impl Default for Taffy {
 impl LayoutTree for Taffy {
     type ChildIter<'a> = std::slice::Iter<'a, DefaultKey>;
 
-    fn children<'a>(&'a self, node: Node) -> Self::ChildIter<'a> {
+    fn children(&self, node: Node) -> Self::ChildIter<'_> {
         self.children[node].iter()
     }
 
@@ -69,7 +69,7 @@ impl LayoutTree for Taffy {
     }
 
     fn is_childless(&self, node: Node) -> bool {
-        self.children[node].len() == 0
+        self.children[node].is_empty()
     }
 
     fn parent(&self, node: Node) -> Option<Node> {
