@@ -1,6 +1,6 @@
 # Release Notes
 
-## 0.3.0
+## 0.3.0 (Unreleased)
 
 ### Breaking API changes
 
