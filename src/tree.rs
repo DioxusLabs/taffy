@@ -1,5 +1,7 @@
 //! The baseline requirements of any UI Tree so Taffy can efficiently calculate the layout
 
+use slotmap::DefaultKey;
+
 use crate::{
     error::TaffyResult,
     layout::{AvailableSpace, Cache, Layout},
@@ -11,8 +13,19 @@ use crate::{
 /// Generally, Taffy expects your Node tree to be indexable by stable indices. A "stable" index means that the Node's ID
 /// remains the same between re-layouts.
 pub trait LayoutTree {
+    /// Type representing an iterator of the children of a node
+    type ChildIter<'a>: Iterator<Item = &'a DefaultKey>
+    where
+        Self: 'a;
+
     /// Get the list of children IDs for the given node
-    fn children(&self, node: Node) -> &[Node];
+    fn children(&self, node: Node) -> Self::ChildIter<'_>;
+
+    /// Get the number of children for the given node
+    fn child_count(&self, node: Node) -> usize;
+
+    /// Returns true if the node has no children
+    fn is_childless(&self, node: Node) -> bool;
 
     /// Get a specific child of a node, where the index represents the nth child
     fn child(&self, node: Node, index: usize) -> Node;

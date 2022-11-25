@@ -1,7 +1,7 @@
 //! UI [`Node`] types and related data structures.
 //!
 //! Layouts are composed of multiple nodes, which live in a tree-like data structure.
-use slotmap::{SlotMap, SparseSecondaryMap};
+use slotmap::{DefaultKey, SlotMap, SparseSecondaryMap};
 
 /// A node in a layout.
 pub type Node = slotmap::DefaultKey;
@@ -58,8 +58,18 @@ impl Default for Taffy {
 }
 
 impl LayoutTree for Taffy {
-    fn children(&self, node: Node) -> &[Node] {
-        &self.children[node]
+    type ChildIter<'a> = std::slice::Iter<'a, DefaultKey>;
+
+    fn children(&self, node: Node) -> Self::ChildIter<'_> {
+        self.children[node].iter()
+    }
+
+    fn child_count(&self, node: Node) -> usize {
+        self.children[node].len()
+    }
+
+    fn is_childless(&self, node: Node) -> bool {
+        self.children[node].is_empty()
     }
 
     fn parent(&self, node: Node) -> Option<Node> {

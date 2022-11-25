@@ -48,7 +48,7 @@ fn compute_node_layout(
     println!();
 
     // First we check if we have a cached result for the given input
-    let cache_run_mode = if tree.children(node).is_empty() { RunMode::PeformLayout } else { run_mode };
+    let cache_run_mode = if tree.is_childless(node) { RunMode::PeformLayout } else { run_mode };
     if let Some(cached_size) =
         compute_from_cache(tree, node, known_dimensions, available_space, cache_run_mode, sizing_mode)
     {
@@ -103,7 +103,7 @@ fn compute_node_layout(
     // }
 
     // If this is a leaf node we can skip a lot of this function in some cases
-    let computed_size = if tree.children(node).is_empty() {
+    let computed_size = if tree.is_childless(node) {
         #[cfg(feature = "debug")]
         NODE_LOGGER.log("Algo: leaf");
         self::leaf::compute(tree, node, known_dimensions, available_space, run_mode, sizing_mode)
@@ -196,7 +196,7 @@ fn round_layout(tree: &mut impl LayoutTree, root: Node, abs_x: f32, abs_y: f32) 
     layout.size.height = round(layout.size.height);
 
     // Satisfy the borrow checker here by re-indexing to shorten the lifetime to the loop scope
-    for x in 0..tree.children(root).len() {
+    for x in 0..tree.child_count(root) {
         let child = tree.child(root, x);
         round_layout(tree, child, abs_x, abs_y);
     }
