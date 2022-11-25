@@ -1,5 +1,10 @@
 # Release Notes
 
+## 0.2.1 (unreleased)
+
+### Fixes
+- `taffy::compute_layout` has been made public allowing Taffy to be used with custom storage (#263)
+
 ## 0.2.0
 
 ### New features
