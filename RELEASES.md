@@ -5,7 +5,6 @@
 ### Fixes
 
 - `taffy::compute_layout` has been made public allowing Taffy to be used with custom storage (#263)
-
 - In case of conflicts, `min_size` now overrides `max_size` which overrides `size` (#261)
 
 ## 0.2.0
@@ -23,7 +22,6 @@ Additionally we have a `SpaceEvenly` variant to the `AlignContent` enum to suppo
 Two debugging features have been added:
 
 - `taffy::debug::print_tree(&Taffy, root)` - This will print a debug representation of the computed layout of an entire node tree (starting at `root`), which can be useful for debugging layouts.
-
 - A cargo feature `debug`. This enabled debug logging of the layout computation process itself (this is probably mainly useful for those working taffy itself).
 
 ### Performance improvements
