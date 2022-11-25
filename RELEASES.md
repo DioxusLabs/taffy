@@ -5,6 +5,10 @@
 ### Fixes
 - `taffy::compute_layout` has been made public allowing Taffy to be used with custom storage (#263)
 
+### Fixes
+
+- `min_size` now overrides `max_size` which overrides `size` #261
+
 ## 0.2.0
 
 ### New features
