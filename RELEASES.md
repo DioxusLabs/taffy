@@ -7,7 +7,7 @@
 
 ### Fixes
 
-- `min_size` now overrides `max_size` which overrides `size` #261
+- In case of conflicts, `min_size` now overrides `max_size` which overrides `size` #261
 
 ## 0.2.0
 
