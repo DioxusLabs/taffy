@@ -46,7 +46,7 @@ impl MaybeMath<Option<f32>, Option<f32>> for Option<f32> {
 
     fn maybe_clamp(self, min: Option<f32>, max: Option<f32>) -> Option<f32> {
         match (self, min, max) {
-            (Some(base), Some(min), Some(max)) => Some(base.max(min).min(max)),
+            (Some(base), Some(min), Some(max)) => Some(base.min(max).max(min)),
             (Some(base), None, Some(max)) => Some(base.min(max)),
             (Some(base), Some(min), None) => Some(base.max(min)),
             (Some(_), None, None) => self,
@@ -83,7 +83,7 @@ impl MaybeMath<f32, Option<f32>> for Option<f32> {
     }
 
     fn maybe_clamp(self, min: f32, max: f32) -> Option<f32> {
-        self.map(|val| val.max(min).min(max))
+        self.map(|val| val.min(max).max(min))
     }
 
     fn maybe_add(self, rhs: f32) -> Option<f32> {
@@ -112,7 +112,7 @@ impl MaybeMath<Option<f32>, f32> for f32 {
 
     fn maybe_clamp(self, min: Option<f32>, max: Option<f32>) -> f32 {
         match (min, max) {
-            (Some(min), Some(max)) => self.max(min).min(max),
+            (Some(min), Some(max)) => self.min(max).max(min),
             (None, Some(max)) => self.min(max),
             (Some(min), None) => self.max(min),
             (None, None) => self,
@@ -152,7 +152,7 @@ impl MaybeMath<f32, AvailableSpace> for AvailableSpace {
 
     fn maybe_clamp(self, min: f32, max: f32) -> AvailableSpace {
         match self {
-            AvailableSpace::Definite(val) => AvailableSpace::Definite(val.max(min).min(max)),
+            AvailableSpace::Definite(val) => AvailableSpace::Definite(val.min(max).max(min)),
             AvailableSpace::MinContent => AvailableSpace::MinContent,
             AvailableSpace::MaxContent => AvailableSpace::MaxContent,
         }
@@ -196,7 +196,7 @@ impl MaybeMath<Option<f32>, AvailableSpace> for AvailableSpace {
 
     fn maybe_clamp(self, min: Option<f32>, max: Option<f32>) -> AvailableSpace {
         match (self, min, max) {
-            (AvailableSpace::Definite(val), Some(min), Some(max)) => AvailableSpace::Definite(val.max(min).min(max)),
+            (AvailableSpace::Definite(val), Some(min), Some(max)) => AvailableSpace::Definite(val.min(max).max(min)),
             (AvailableSpace::Definite(val), None, Some(max)) => AvailableSpace::Definite(val.min(max)),
             (AvailableSpace::Definite(val), Some(min), None) => AvailableSpace::Definite(val.max(min)),
             (AvailableSpace::Definite(val), None, None) => AvailableSpace::Definite(val),
