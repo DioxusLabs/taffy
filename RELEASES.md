@@ -1,5 +1,15 @@
 # Release Notes
 
+## 0.3.0
+
+### Breaking API changes
+
+#### Changes to `LayoutTree`
+- Added generic associated type to `LayoutTree` for a `ChildIter`, an iterator on the children of a given node.
+- Changed the `children` method of `LayoutTree` to return the `ChildIter` generic associated type to allow for custom tree storage implementations which do not store the children of a node contiguously.
+- Added `child_count`  method to `LayoutTree` for querying the number of children of a node. Required because the `children` method now returns an iterator instead of an array.
+- Added `is_childless` method to `LayoutTree` for querying whether a node has no children.
+
 ## 0.2.0
 
 ### New features
