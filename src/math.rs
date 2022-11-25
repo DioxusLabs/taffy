@@ -112,7 +112,7 @@ impl MaybeMath<Option<f32>, f32> for f32 {
 
     fn maybe_clamp(self, min: Option<f32>, max: Option<f32>) -> f32 {
         match (min, max) {
-            (Some(min), Some(max)) => self.max(min).min(max),
+            (Some(min), Some(max)) => self.min(max).max(min),
             (None, Some(max)) => self.min(max),
             (Some(min), None) => self.max(min),
             (None, None) => self,
