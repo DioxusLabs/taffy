@@ -14,7 +14,7 @@ pub enum AbsoluteAxis {
 
 impl AbsoluteAxis {
     #[inline]
-    pub fn other_axis(&self) -> Self {
+    pub const fn other_axis(&self) -> Self {
         match *self {
             AbsoluteAxis::Horizontal => AbsoluteAxis::Vertical,
             AbsoluteAxis::Vertical => AbsoluteAxis::Horizontal,
@@ -34,6 +34,24 @@ impl AbsoluteAxis {
         match *self {
             AbsoluteAxis::Horizontal => (row, column),
             AbsoluteAxis::Vertical => (column, row),
+        }
+    }
+}
+
+impl<T> Size<T> {
+    #[inline(always)]
+    pub fn get_abs(self, axis: AbsoluteAxis) -> T {
+        match axis {
+            AbsoluteAxis::Horizontal => self.width,
+            AbsoluteAxis::Vertical => self.height,
+        }
+    }
+
+    #[inline(always)]
+    pub fn get_abs_other(self, axis: AbsoluteAxis) -> T {
+        match axis {
+            AbsoluteAxis::Horizontal => self.height,
+            AbsoluteAxis::Vertical => self.width,
         }
     }
 }

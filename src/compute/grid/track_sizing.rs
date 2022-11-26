@@ -1,6 +1,6 @@
 use super::placement::TrackCounts;
 use crate::geometry::{Line, Size};
-use crate::layout::AvailableSpace;
+use crate::layout::{AvailableSpace, SizingMode};
 use crate::node::Node;
 use crate::style::{AlignContent, Dimension, MaxTrackSizingFunction, MinTrackSizingFunction, Style};
 // use super::AbsoluteAxis;
@@ -91,7 +91,7 @@ pub(in super::super) fn track_sizing_algorithm(
     rows: &mut [GridTrack],
     items: &mut [GridItem],
     style: &Style,
-    measure_node: impl Fn(Node, Size<AvailableSpace>) -> Size<f32>,
+    measure_node: impl Fn(Node, Size<Option<f32>>, Size<AvailableSpace>, SizingMode) -> Size<f32>,
 ) {
     let get_track_size_estimate = match available_space_mode {
         AvailableSpaceMode::Estimates => |track: &GridTrack, available_space: AvailableSpace| {
@@ -173,7 +173,7 @@ pub(in super::super) fn track_sizing_algorithm_inner(
     get_item_placement: impl Fn(&GridItem) -> Line<u16>,
     get_other_axis_placement: impl Fn(&GridItem) -> Line<u16>,
     get_crosses_flex_track: impl Fn(&GridItem) -> bool,
-    measure_node: impl Fn(Node, Size<AvailableSpace>) -> Size<f32>,
+    measure_node: impl Fn(Node, Size<Option<f32>>, Size<AvailableSpace>, SizingMode) -> Size<f32>,
 ) {
     // 11.4 Initialise Track sizes
     // Initialize each track’s base size and growth limit.
@@ -202,6 +202,8 @@ pub(in super::super) fn track_sizing_algorithm_inner(
         }
     }
 
+    // Pre-computations for 11.5 Resolve Intrinsic Track Sizes
+
     // The track sizing algorithm requires us to iterate through the items in ascendeding order of the number of
     // tracks they span (first items that span 1 track, then items that span 2 tracks, etc).
     // To avoid having to do multiple iterations of the items, we pre-sort them into this order.
@@ -209,29 +211,61 @@ pub(in super::super) fn track_sizing_algorithm_inner(
 
     // Compute an additional amount to add to each spanned gutter when computing item's estimated size in the
     // in the opposite axis based on the alignment, container size, and estimated track sizes in that axis
-    let gutter_aligment_adjustment = compute_alignment_gutter_adjustment(
+    let gutter_alignment_adjustment = compute_alignment_gutter_adjustment(
         style.grid_align_content(axis.other()),
         available_space.get(axis.other()),
         &get_track_size_estimate,
         &other_axis_tracks,
     );
 
+    // 11.5b Resolve Intrinsic Track Sizes
+
+    // Step 1. Shim baseline-aligned items so their intrinsic size contributions reflect their baseline alignment.
+    // TODO: we do not yet support baseline alignment for CSS Grid
+
+    // Step 2. We skip Step 2 as it is noted that:
+    //
+    //    This step is a simplification of the steps below for handling spanning items, and should yield
+    //    the same behavior as running those instructions on items with a span of 1.
+    //
+    // We choose this alternative of running Step 3 on items with a span of 1 as we need to write the code for this anyway.
+
+    // Step 3.
     // Iterate over items that don't cross a flex track. Items should have already been sorted in ascending order
     // of the number of tracks they cross.
     for item in items.iter_mut().filter(|item| !get_crosses_flex_track(item)) {
-        let item_other_axis_size: AvailableSpace = {
+        let item_other_axis_size: Option<f32> = {
             let available_space = available_space.get(axis.other());
             let placement = get_other_axis_placement(item);
             (&other_axis_tracks)[(placement.start as usize + 1)..(placement.end as usize)]
                 .iter()
                 .map(|track| get_track_size_estimate(track, available_space))
                 .sum::<Option<f32>>()
-                .into()
         };
 
-        let min_content_size = item.intrinsic_size_cached(
-            &measure_node,
-            Size { width: AvailableSpace::MaxContent, height: item_other_axis_size },
+        // TODO: be smarter about only computing these when they are required
+        let min_content_size = measure_node(
+            item.node,
+            Size { width: None, height: item_other_axis_size },
+            Size::MIN_CONTENT,
+            SizingMode::ContentSize,
+        );
+
+        // TODO: resolve styles here
+        // let minimum_contributions =
+
+        let max_content_size = measure_node(
+            item.node,
+            Size { width: None, height: item_other_axis_size },
+            Size::MAX_CONTENT,
+            SizingMode::ContentSize,
+        );
+
+        let placement = get_other_axis_placement(item);
+        distribute_space_to_base_size(
+            min_content_size.get(axis),
+            &mut other_axis_tracks[(placement.start as usize + 1)..(placement.end as usize)],
+            IntrinsicContributionType::Minimum,
         );
     }
 }
