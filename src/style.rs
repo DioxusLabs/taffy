@@ -445,9 +445,9 @@ impl Style {
         flex_grow: 0.0,
         flex_shrink: 1.0,
         flex_basis: Dimension::Auto,
-        size: Size::AUTO,
-        min_size: Size::AUTO,
-        max_size: Size::AUTO,
+        size: Size::auto(),
+        min_size: Size::auto(),
+        max_size: Size::auto(),
         aspect_ratio: None,
     };
 }

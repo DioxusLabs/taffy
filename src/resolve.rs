@@ -180,10 +180,10 @@ mod tests {
         ///
         /// The parent / context should not affect the outcome.
         #[rstest]
-        #[case(Size::AUTO, Size::NONE, Size::NONE)]
-        #[case(Size::AUTO, Size::new(5.0, 5.0), Size::NONE)]
-        #[case(Size::AUTO, Size::new(-5.0, -5.0), Size::NONE)]
-        #[case(Size::AUTO, Size::new(0.0, 0.0), Size::NONE)]
+        #[case(Size::auto(), Size::NONE, Size::NONE)]
+        #[case(Size::auto(), Size::new(5.0, 5.0), Size::NONE)]
+        #[case(Size::auto(), Size::new(-5.0, -5.0), Size::NONE)]
+        #[case(Size::auto(), Size::new(0.0, 0.0), Size::NONE)]
         fn maybe_resolve_auto(
             #[case] input: Size<Dimension>,
             #[case] context: Size<Option<f32>>,
@@ -274,10 +274,10 @@ mod tests {
         use rstest::rstest;
 
         #[rstest]
-        #[case(Rect::UNDEFINED, Size::NONE, Rect::ZERO)]
-        #[case(Rect::UNDEFINED, Size::new(5.0, 5.0), Rect::ZERO)]
-        #[case(Rect::UNDEFINED, Size::new(-5.0, -5.0), Rect::ZERO)]
-        #[case(Rect::UNDEFINED, Size::new(0.0, 0.0), Rect::ZERO)]
+        #[case(Rect::UNDEFINED, Size::NONE, Rect::zero())]
+        #[case(Rect::UNDEFINED, Size::new(5.0, 5.0), Rect::zero())]
+        #[case(Rect::UNDEFINED, Size::new(-5.0, -5.0), Rect::zero())]
+        #[case(Rect::UNDEFINED, Size::new(0.0, 0.0), Rect::zero())]
         fn resolve_or_default_undefined(
             #[case] input: Rect<Dimension>,
             #[case] context: Size<Option<f32>>,
@@ -287,10 +287,10 @@ mod tests {
         }
 
         #[rstest]
-        #[case(Rect::AUTO, Size::NONE, Rect::ZERO)]
-        #[case(Rect::AUTO, Size::new(5.0, 5.0), Rect::ZERO)]
-        #[case(Rect::AUTO, Size::new(-5.0, -5.0), Rect::ZERO)]
-        #[case(Rect::AUTO, Size::new(0.0, 0.0), Rect::ZERO)]
+        #[case(Rect::auto(), Size::NONE, Rect::zero())]
+        #[case(Rect::auto(), Size::new(5.0, 5.0), Rect::zero())]
+        #[case(Rect::auto(), Size::new(-5.0, -5.0), Rect::zero())]
+        #[case(Rect::auto(), Size::new(0.0, 0.0), Rect::zero())]
         fn resolve_or_default_auto(
             #[case] input: Rect<Dimension>,
             #[case] context: Size<Option<f32>>,
@@ -313,10 +313,10 @@ mod tests {
         }
 
         #[rstest]
-        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::NONE, Rect::ZERO)]
+        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::NONE, Rect::zero())]
         #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::new(5.0, 5.0), Rect::new(25.0, 25.0, 25.0, 25.0))]
         #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::new(-5.0, -5.0), Rect::new(-25.0, -25.0, -25.0, -25.0))]
-        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::new(0.0, 0.0), Rect::ZERO)]
+        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::new(0.0, 0.0), Rect::zero())]
         fn resolve_or_default_percent(
             #[case] input: Rect<Dimension>,
             #[case] context: Size<Option<f32>>,
@@ -333,10 +333,10 @@ mod tests {
         use rstest::rstest;
 
         #[rstest]
-        #[case(Rect::UNDEFINED, None, Rect::ZERO)]
-        #[case(Rect::UNDEFINED, Some(5.0), Rect::ZERO)]
-        #[case(Rect::UNDEFINED, Some(-5.0), Rect::ZERO)]
-        #[case(Rect::UNDEFINED, Some(0.0), Rect::ZERO)]
+        #[case(Rect::UNDEFINED, None, Rect::zero())]
+        #[case(Rect::UNDEFINED, Some(5.0), Rect::zero())]
+        #[case(Rect::UNDEFINED, Some(-5.0), Rect::zero())]
+        #[case(Rect::UNDEFINED, Some(0.0), Rect::zero())]
         fn resolve_or_default_undefined(
             #[case] input: Rect<Dimension>,
             #[case] context: Option<f32>,
@@ -346,10 +346,10 @@ mod tests {
         }
 
         #[rstest]
-        #[case(Rect::AUTO, None, Rect::ZERO)]
-        #[case(Rect::AUTO, Some(5.0), Rect::ZERO)]
-        #[case(Rect::AUTO, Some(-5.0), Rect::ZERO)]
-        #[case(Rect::AUTO, Some(0.0), Rect::ZERO)]
+        #[case(Rect::auto(), None, Rect::zero())]
+        #[case(Rect::auto(), Some(5.0), Rect::zero())]
+        #[case(Rect::auto(), Some(-5.0), Rect::zero())]
+        #[case(Rect::auto(), Some(0.0), Rect::zero())]
         fn resolve_or_default_auto(
             #[case] input: Rect<Dimension>,
             #[case] context: Option<f32>,
@@ -372,10 +372,10 @@ mod tests {
         }
 
         #[rstest]
-        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), None, Rect::ZERO)]
+        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), None, Rect::zero())]
         #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(5.0), Rect::new(25.0, 25.0, 25.0, 25.0))]
         #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(-5.0), Rect::new(-25.0, -25.0, -25.0, -25.0))]
-        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(0.0), Rect::ZERO)]
+        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(0.0), Rect::zero())]
         fn resolve_or_default_percent(
             #[case] input: Rect<Dimension>,
             #[case] context: Option<f32>,

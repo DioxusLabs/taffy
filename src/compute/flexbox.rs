@@ -367,10 +367,10 @@ fn compute_constants(style: &Style, node_size: Size<Option<f32>>, parent_size: S
         width: node_size.width.maybe_sub(padding_border.horizontal_axis_sum()),
         height: node_size.height.maybe_sub(padding_border.vertical_axis_sum()),
     };
-    let gap = style.gap.resolve_or_default(node_inner_size.or(Size { width: Some(0.0), height: Some(0.0) }));
+    let gap = style.gap.resolve_or_default(node_inner_size.or(Size::zero()));
 
-    let container_size = Size::ZERO;
-    let inner_container_size = Size::ZERO;
+    let container_size = Size::zero();
+    let inner_container_size = Size::zero();
 
     AlgoConstants {
         dir,
@@ -413,10 +413,10 @@ fn generate_anonymous_flex_items(tree: &impl LayoutTree, node: Node, constants: 
             violation: 0.0,
             frozen: false,
 
-            hypothetical_inner_size: Size::ZERO,
-            hypothetical_outer_size: Size::ZERO,
-            target_size: Size::ZERO,
-            outer_target_size: Size::ZERO,
+            hypothetical_inner_size: Size::zero(),
+            hypothetical_outer_size: Size::zero(),
+            target_size: Size::zero(),
+            outer_target_size: Size::zero(),
 
             baseline: 0.0,
 
@@ -1020,7 +1020,7 @@ fn calculate_children_base_lines(
                 &Layout {
                     order: tree.children(node).position(|n| *n == child.node).unwrap() as u32,
                     size: preliminary_size,
-                    location: Point::ZERO,
+                    location: Point::zero(),
                 },
             );
         }
@@ -1900,8 +1900,8 @@ mod tests {
         };
         assert_eq!(constants.node_inner_size, inner_size);
 
-        assert_eq!(constants.container_size, Size::ZERO);
-        assert_eq!(constants.inner_container_size, Size::ZERO);
+        assert_eq!(constants.container_size, Size::zero());
+        assert_eq!(constants.inner_container_size, Size::zero());
     }
 
     #[test]
@@ -1933,8 +1933,8 @@ mod tests {
         // all layouts should resolve to ZERO due to the root's DISPLAY::NONE
         for (node, _) in &taffy.nodes {
             if let Ok(layout) = taffy.layout(node) {
-                assert_eq!(layout.size, Size::ZERO);
-                assert_eq!(layout.location, Point::ZERO);
+                assert_eq!(layout.size, Size::zero());
+                assert_eq!(layout.location, Point::zero());
             }
         }
     }

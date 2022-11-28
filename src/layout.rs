@@ -126,7 +126,7 @@ impl Layout {
     /// This means it should be rendered below all other [`Layout`]s.
     #[must_use]
     pub const fn new() -> Self {
-        Self { order: 0, size: Size::ZERO, location: Point::ZERO }
+        Self { order: 0, size: Size::zero(), location: Point::ZERO }
     }
 
     /// Creates a new zero-[`Layout`] with the supplied `order` value.
@@ -135,7 +135,7 @@ impl Layout {
     /// The Zero-layout has size and location set to ZERO.
     #[must_use]
     pub const fn with_order(order: u32) -> Self {
-        Self { order, size: Size::ZERO, location: Point::ZERO }
+        Self { order, size: Size::zero(), location: Point::ZERO }
     }
 }
 
