@@ -28,6 +28,17 @@ pub struct Rect<T> {
     pub bottom: T,
 }
 
+impl<T: Default> Default for Rect<T> {
+    fn default() -> Self {
+        Rect {
+            left: Default::default(),
+            right: Default::default(),
+            top: Default::default(),
+            bottom: Default::default(),
+        }
+    }
+}
+
 impl<T> Rect<T> {
     /// Applies the function `f` to all four sides of the rect
     ///
@@ -158,6 +169,12 @@ pub struct Size<T> {
     pub width: T,
     /// The y extent of the rectangle
     pub height: T,
+}
+
+impl<T: Default> Default for Size<T> {
+    fn default() -> Self {
+        Size { width: Default::default(), height: Default::default() }
+    }
 }
 
 impl<T> Size<T> {

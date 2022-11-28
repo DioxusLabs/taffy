@@ -278,17 +278,6 @@ impl Dimension {
     }
 }
 
-impl Default for Rect<Dimension> {
-    fn default() -> Self {
-        Self {
-            left: Default::default(),
-            right: Default::default(),
-            top: Default::default(),
-            bottom: Default::default(),
-        }
-    }
-}
-
 impl Rect<Dimension> {
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Points`] values for `start` and `top`
     #[must_use]
@@ -338,12 +327,6 @@ impl Rect<Dimension> {
             top: Dimension::Percent(top),
             bottom: Dimension::Percent(bottom),
         }
-    }
-}
-
-impl Default for Size<Dimension> {
-    fn default() -> Self {
-        Self { width: Dimension::Auto, height: Dimension::Auto }
     }
 }
 
