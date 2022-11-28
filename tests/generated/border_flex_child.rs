@@ -1,5 +1,7 @@
 #[test]
 fn border_flex_child() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -24,7 +26,7 @@ fn border_flex_child() {
                     right: taffy::style::Dimension::Points(10f32),
                     top: taffy::style::Dimension::Points(10f32),
                     bottom: taffy::style::Dimension::Points(10f32),
-                    ..Default::default()
+                    ..Rect::zero()
                 },
                 ..Default::default()
             },

@@ -1,5 +1,7 @@
 #[test]
 fn flex_shrink_flex_grow_child_flex_shrink_other_child() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(

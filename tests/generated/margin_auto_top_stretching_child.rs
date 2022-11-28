@@ -1,5 +1,7 @@
 #[test]
 fn margin_auto_top_stretching_child() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -7,7 +9,7 @@ fn margin_auto_top_stretching_child() {
                 flex_grow: 1f32,
                 flex_shrink: 1f32,
                 flex_basis: taffy::style::Dimension::Percent(0f32),
-                margin: taffy::geometry::Rect { top: taffy::style::Dimension::Auto, ..Default::default() },
+                margin: taffy::geometry::Rect { top: taffy::style::Dimension::Auto, ..Rect::zero() },
                 ..Default::default()
             },
             &[],

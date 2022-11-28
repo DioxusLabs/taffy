@@ -1,11 +1,13 @@
 #[test]
 fn margin_with_sibling_row() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
                 flex_grow: 1f32,
-                margin: taffy::geometry::Rect { right: taffy::style::Dimension::Points(10f32), ..Default::default() },
+                margin: taffy::geometry::Rect { right: taffy::style::Dimension::Points(10f32), ..Rect::zero() },
                 ..Default::default()
             },
             &[],

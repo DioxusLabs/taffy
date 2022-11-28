@@ -1,5 +1,7 @@
 #[test]
 fn percentage_position_left_top() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -12,7 +14,7 @@ fn percentage_position_left_top() {
                 position: taffy::geometry::Rect {
                     left: taffy::style::Dimension::Percent(0.1f32),
                     top: taffy::style::Dimension::Percent(0.2f32),
-                    ..Default::default()
+                    ..Rect::auto()
                 },
                 ..Default::default()
             },

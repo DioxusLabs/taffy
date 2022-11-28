@@ -1,5 +1,7 @@
 #[test]
 fn rounding_flex_basis_flex_shrink_row() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(

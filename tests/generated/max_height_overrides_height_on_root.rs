@@ -1,5 +1,7 @@
 #[test]
 fn max_height_overrides_height_on_root() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node = taffy
         .new_with_children(

@@ -1,5 +1,7 @@
 #[test]
 fn flex_grow_within_max_width() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
         .new_with_children(

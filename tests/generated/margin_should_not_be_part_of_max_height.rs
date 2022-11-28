@@ -1,5 +1,7 @@
 #[test]
 fn margin_should_not_be_part_of_max_height() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -13,7 +15,7 @@ fn margin_should_not_be_part_of_max_height() {
                     height: taffy::style::Dimension::Points(100f32),
                     ..Default::default()
                 },
-                margin: taffy::geometry::Rect { top: taffy::style::Dimension::Points(20f32), ..Default::default() },
+                margin: taffy::geometry::Rect { top: taffy::style::Dimension::Points(20f32), ..Rect::zero() },
                 ..Default::default()
             },
             &[],

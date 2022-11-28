@@ -1,5 +1,7 @@
 #[test]
 fn justify_content_row_min_width_and_margin() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -9,7 +11,7 @@ fn justify_content_row_min_width_and_margin() {
                     height: taffy::style::Dimension::Points(20f32),
                     ..Default::default()
                 },
-                margin: taffy::geometry::Rect { left: taffy::style::Dimension::Points(10f32), ..Default::default() },
+                margin: taffy::geometry::Rect { left: taffy::style::Dimension::Points(10f32), ..Rect::zero() },
                 ..Default::default()
             },
             &[],

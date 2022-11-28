@@ -1,5 +1,7 @@
 #[test]
 fn percentage_container_in_wrapping_container() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node000 = taffy
         .new_with_children(

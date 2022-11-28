@@ -1,5 +1,7 @@
 #[test]
 fn width_smaller_then_content_with_flex_grow_large_size() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
         .new_with_children(

@@ -1,5 +1,7 @@
 #[test]
 fn flex_direction_row_no_width() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(

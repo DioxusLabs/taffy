@@ -1,5 +1,7 @@
 #[test]
 fn percentage_width_height_undefined_parent_size() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(

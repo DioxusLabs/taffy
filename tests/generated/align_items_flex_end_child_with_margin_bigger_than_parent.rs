@@ -1,5 +1,7 @@
 #[test]
 fn align_items_flex_end_child_with_margin_bigger_than_parent() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
         .new_with_children(
@@ -12,7 +14,7 @@ fn align_items_flex_end_child_with_margin_bigger_than_parent() {
                 margin: taffy::geometry::Rect {
                     left: taffy::style::Dimension::Points(10f32),
                     right: taffy::style::Dimension::Points(10f32),
-                    ..Default::default()
+                    ..Rect::zero()
                 },
                 ..Default::default()
             },

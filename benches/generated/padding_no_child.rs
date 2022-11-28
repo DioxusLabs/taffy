@@ -1,4 +1,6 @@
 pub fn compute() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node = taffy
         .new_with_children(
@@ -8,7 +10,7 @@ pub fn compute() {
                     right: taffy::style::Dimension::Points(10f32),
                     top: taffy::style::Dimension::Points(10f32),
                     bottom: taffy::style::Dimension::Points(10f32),
-                    ..Default::default()
+                    ..Rect::zero()
                 },
                 ..Default::default()
             },

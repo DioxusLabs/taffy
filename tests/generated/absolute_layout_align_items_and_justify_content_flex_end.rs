@@ -1,5 +1,7 @@
 #[test]
 fn absolute_layout_align_items_and_justify_content_flex_end() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(

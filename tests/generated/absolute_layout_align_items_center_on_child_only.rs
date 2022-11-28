@@ -1,5 +1,7 @@
 #[test]
 fn absolute_layout_align_items_center_on_child_only() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(

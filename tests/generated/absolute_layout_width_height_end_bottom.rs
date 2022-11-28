@@ -1,5 +1,7 @@
 #[test]
 fn absolute_layout_width_height_end_bottom() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -13,7 +15,7 @@ fn absolute_layout_width_height_end_bottom() {
                 position: taffy::geometry::Rect {
                     right: taffy::style::Dimension::Points(10f32),
                     bottom: taffy::style::Dimension::Points(10f32),
-                    ..Default::default()
+                    ..Rect::auto()
                 },
                 ..Default::default()
             },

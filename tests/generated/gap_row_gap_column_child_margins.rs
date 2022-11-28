@@ -1,5 +1,7 @@
 #[test]
 fn gap_row_gap_column_child_margins() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -10,7 +12,7 @@ fn gap_row_gap_column_child_margins() {
                 margin: taffy::geometry::Rect {
                     top: taffy::style::Dimension::Points(2f32),
                     bottom: taffy::style::Dimension::Points(2f32),
-                    ..Default::default()
+                    ..Rect::zero()
                 },
                 ..Default::default()
             },
@@ -26,7 +28,7 @@ fn gap_row_gap_column_child_margins() {
                 margin: taffy::geometry::Rect {
                     top: taffy::style::Dimension::Points(10f32),
                     bottom: taffy::style::Dimension::Points(10f32),
-                    ..Default::default()
+                    ..Rect::zero()
                 },
                 ..Default::default()
             },
@@ -42,7 +44,7 @@ fn gap_row_gap_column_child_margins() {
                 margin: taffy::geometry::Rect {
                     top: taffy::style::Dimension::Points(15f32),
                     bottom: taffy::style::Dimension::Points(15f32),
-                    ..Default::default()
+                    ..Rect::zero()
                 },
                 ..Default::default()
             },

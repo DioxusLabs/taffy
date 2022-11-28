@@ -1,5 +1,7 @@
 #[test]
 fn margin_auto_top_and_bottom_strech() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -12,7 +14,7 @@ fn margin_auto_top_and_bottom_strech() {
                 margin: taffy::geometry::Rect {
                     top: taffy::style::Dimension::Auto,
                     bottom: taffy::style::Dimension::Auto,
-                    ..Default::default()
+                    ..Rect::zero()
                 },
                 ..Default::default()
             },

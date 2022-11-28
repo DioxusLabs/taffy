@@ -1,5 +1,7 @@
 #[test]
 fn flex_wrap_wrap_to_child_height() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node000 = taffy
         .new_with_children(

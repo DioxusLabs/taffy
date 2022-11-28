@@ -1,5 +1,7 @@
 #[test]
 fn child_min_max_width_flexing() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(

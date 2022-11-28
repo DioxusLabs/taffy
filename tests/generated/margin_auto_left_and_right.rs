@@ -1,5 +1,7 @@
 #[test]
 fn margin_auto_left_and_right() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -12,7 +14,7 @@ fn margin_auto_left_and_right() {
                 margin: taffy::geometry::Rect {
                     left: taffy::style::Dimension::Auto,
                     right: taffy::style::Dimension::Auto,
-                    ..Default::default()
+                    ..Rect::zero()
                 },
                 ..Default::default()
             },

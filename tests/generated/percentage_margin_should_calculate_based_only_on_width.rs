@@ -1,5 +1,7 @@
 #[test]
 fn percentage_margin_should_calculate_based_only_on_width() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
         .new_with_children(
@@ -24,7 +26,7 @@ fn percentage_margin_should_calculate_based_only_on_width() {
                     right: taffy::style::Dimension::Percent(0.1f32),
                     top: taffy::style::Dimension::Percent(0.1f32),
                     bottom: taffy::style::Dimension::Percent(0.1f32),
-                    ..Default::default()
+                    ..Rect::zero()
                 },
                 ..Default::default()
             },

@@ -155,6 +155,8 @@ fn generate_bench(description: &json::JsonValue) -> TokenStream {
 
     quote!(
         pub fn compute() {
+            #[allow(unused_imports)]
+            use taffy::prelude::*;
             let mut taffy = taffy::Taffy::new();
             #node_description
             taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
@@ -171,6 +173,8 @@ fn generate_test(name: impl AsRef<str>, description: &json::JsonValue) -> TokenS
     quote!(
         #[test]
         fn #name() {
+            #[allow(unused_imports)]
+            use taffy::prelude::*;
             let mut taffy = taffy::Taffy::new();
             #node_description
             taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
@@ -416,10 +420,10 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
     let grid_column_end = quote_object_prop("grid_column_end", style, generate_grid_position);
 
     macro_rules! edges_quoted {
-        ($style:ident, $val:ident) => {
+        ($style:ident, $val:ident, $default_value: expr) => {
             let $val = match $style[stringify!($val)] {
                 json::JsonValue::Object(ref value) => {
-                    let edges = generate_edges(value);
+                    let edges = generate_edges(value, $default_value);
                     quote!($val: #edges,)
                 },
                 _ => quote!(),
@@ -427,10 +431,10 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
         };
     }
 
-    edges_quoted!(style, margin);
-    edges_quoted!(style, padding);
-    edges_quoted!(style, position);
-    edges_quoted!(style, border);
+    edges_quoted!(style, margin, quote!(Rect::zero()));
+    edges_quoted!(style, padding, quote!(Rect::zero()));
+    edges_quoted!(style, border, quote!(Rect::zero()));
+    edges_quoted!(style, position, quote!(Rect::auto()));
 
     let (children_body, children) = match node["children"] {
         json::JsonValue::Array(ref value) => {
@@ -557,7 +561,7 @@ fn generate_dimension(dimen: &json::object::Object) -> TokenStream {
     }
 }
 
-fn generate_edges(dimen: &json::object::Object) -> TokenStream {
+fn generate_edges(dimen: &json::object::Object, default: TokenStream) -> TokenStream {
     dim_quoted!(dimen, left);
     dim_quoted!(dimen, right);
     dim_quoted!(dimen, top);
@@ -565,7 +569,7 @@ fn generate_edges(dimen: &json::object::Object) -> TokenStream {
 
     quote!(taffy::geometry::Rect {
         #left #right #top #bottom
-        ..Default::default()
+        ..#default
     })
 }
 

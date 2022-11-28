@@ -1,5 +1,7 @@
 #[test]
 fn wrapped_column_max_height_flex() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -37,7 +39,7 @@ fn wrapped_column_max_height_flex() {
                     right: taffy::style::Dimension::Points(20f32),
                     top: taffy::style::Dimension::Points(20f32),
                     bottom: taffy::style::Dimension::Points(20f32),
-                    ..Default::default()
+                    ..Rect::zero()
                 },
                 ..Default::default()
             },

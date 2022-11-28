@@ -1,5 +1,7 @@
 #[test]
 fn justify_content_row_center() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(

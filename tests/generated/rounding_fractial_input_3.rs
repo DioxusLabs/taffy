@@ -1,5 +1,7 @@
 #[test]
 fn rounding_fractial_input_3() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(

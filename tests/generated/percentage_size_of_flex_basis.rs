@@ -1,5 +1,7 @@
 #[test]
 fn percentage_size_of_flex_basis() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
         .new_with_children(

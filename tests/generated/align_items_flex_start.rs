@@ -1,5 +1,7 @@
 #[test]
 fn align_items_flex_start() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(

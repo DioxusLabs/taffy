@@ -1,5 +1,7 @@
 #[test]
 fn align_center_should_size_based_on_content() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node000 = taffy
         .new_with_children(

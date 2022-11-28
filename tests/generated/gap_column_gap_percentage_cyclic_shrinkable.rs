@@ -1,5 +1,7 @@
 #[test]
 fn gap_column_gap_percentage_cyclic_shrinkable() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(

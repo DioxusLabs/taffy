@@ -1,5 +1,7 @@
 #[test]
 fn flex_grow_within_constrained_max_column() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(

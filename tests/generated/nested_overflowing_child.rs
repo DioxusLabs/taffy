@@ -1,5 +1,7 @@
 #[test]
 fn nested_overflowing_child() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
         .new_with_children(

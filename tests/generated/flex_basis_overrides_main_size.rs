@@ -1,5 +1,7 @@
 #[test]
 fn flex_basis_overrides_main_size() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(

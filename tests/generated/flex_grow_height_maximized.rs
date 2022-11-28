@@ -1,5 +1,7 @@
 #[test]
 fn flex_grow_height_maximized() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
         .new_with_children(

@@ -1,5 +1,7 @@
 #[test]
 fn rounding_total_fractial_nested() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
         .new_with_children(
@@ -7,10 +9,7 @@ fn rounding_total_fractial_nested() {
                 flex_grow: 1f32,
                 flex_basis: taffy::style::Dimension::Points(0.3f32),
                 size: taffy::geometry::Size { height: taffy::style::Dimension::Points(9.9f32), ..Default::default() },
-                position: taffy::geometry::Rect {
-                    bottom: taffy::style::Dimension::Points(13.3f32),
-                    ..Default::default()
-                },
+                position: taffy::geometry::Rect { bottom: taffy::style::Dimension::Points(13.3f32), ..Rect::auto() },
                 ..Default::default()
             },
             &[],
@@ -22,7 +21,7 @@ fn rounding_total_fractial_nested() {
                 flex_grow: 4f32,
                 flex_basis: taffy::style::Dimension::Points(0.3f32),
                 size: taffy::geometry::Size { height: taffy::style::Dimension::Points(1.1f32), ..Default::default() },
-                position: taffy::geometry::Rect { top: taffy::style::Dimension::Points(13.3f32), ..Default::default() },
+                position: taffy::geometry::Rect { top: taffy::style::Dimension::Points(13.3f32), ..Rect::auto() },
                 ..Default::default()
             },
             &[],

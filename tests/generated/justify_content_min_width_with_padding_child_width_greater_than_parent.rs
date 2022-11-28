@@ -1,5 +1,7 @@
 #[test]
 fn justify_content_min_width_with_padding_child_width_greater_than_parent() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node000 = taffy
         .new_with_children(
@@ -25,7 +27,7 @@ fn justify_content_min_width_with_padding_child_width_greater_than_parent() {
                 padding: taffy::geometry::Rect {
                     left: taffy::style::Dimension::Points(100f32),
                     right: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Rect::zero()
                 },
                 ..Default::default()
             },

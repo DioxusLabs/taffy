@@ -1,5 +1,7 @@
 #[test]
 fn flex_wrap_children_with_min_main_overriding_flex_basis() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(

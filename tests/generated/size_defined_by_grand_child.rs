@@ -1,5 +1,7 @@
 #[test]
 fn size_defined_by_grand_child() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
         .new_with_children(

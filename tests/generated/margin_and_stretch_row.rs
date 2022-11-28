@@ -1,5 +1,7 @@
 #[test]
 fn margin_and_stretch_row() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -8,7 +10,7 @@ fn margin_and_stretch_row() {
                 margin: taffy::geometry::Rect {
                     top: taffy::style::Dimension::Points(10f32),
                     bottom: taffy::style::Dimension::Points(10f32),
-                    ..Default::default()
+                    ..Rect::zero()
                 },
                 ..Default::default()
             },

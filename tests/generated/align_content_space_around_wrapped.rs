@@ -1,5 +1,7 @@
 #[test]
 fn align_content_space_around_wrapped() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(

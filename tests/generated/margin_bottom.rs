@@ -1,11 +1,13 @@
 #[test]
 fn margin_bottom() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Default::default() },
-                margin: taffy::geometry::Rect { bottom: taffy::style::Dimension::Points(10f32), ..Default::default() },
+                margin: taffy::geometry::Rect { bottom: taffy::style::Dimension::Points(10f32), ..Rect::zero() },
                 ..Default::default()
             },
             &[],
