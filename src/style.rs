@@ -260,9 +260,8 @@ pub enum Dimension {
     Undefined,
     /// The dimension should be automatically computed
     Auto,
-    /// The dimension is stored in [points](https://en.wikipedia.org/wiki/Point_(typography))
-    ///
-    /// Each point is about 0.353 mm in size.
+    /// Points are abstract absolute units. Users of Taffy may define what they correspond
+    /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
     Points(f32),
     /// The dimension is stored in percentage relative to the parent item.
     Percent(f32),
