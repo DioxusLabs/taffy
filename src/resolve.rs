@@ -1,6 +1,17 @@
 //! Helper trait to calculate dimensions during layout resolution
 
 use crate::prelude::{Dimension, Rect, Size};
+use crate::style_helpers::TaffyZero;
+
+/// Trait to encapsulate behaviour where we need to resolve from a
+/// potentially context-dependent size or dimension into
+/// a context-independent size or dimension.
+///
+/// Will return a `None` if it unable to resolve.
+pub(crate) trait MaybeResolve<In, Out> {
+    /// Resolve a dimension that might be dependent on a context, with `None` as fallback value
+    fn maybe_resolve(self, context: In) -> Out;
+}
 
 /// Trait to encapsulate behaviour where we need to resolve from a
 /// potentially context-dependent size or dimension into
@@ -16,10 +27,10 @@ pub(crate) trait ResolveOrDefault<TContext, TOutput> {
 /// potentially context-dependent size or dimension into
 /// a context-independent size or dimension.
 ///
-/// Will return a `None` if it unable to resolve.
-pub(crate) trait MaybeResolve<In, Out> {
-    /// Resolve a dimension that might be dependent on a context, with `None` as fallback value
-    fn maybe_resolve(self, context: In) -> Out;
+/// Will return a default value if it unable to resolve.
+pub(crate) trait ResolveOrZero<TContext, TOutput: TaffyZero> {
+    /// Resolve a dimension that might be dependent on a context, with a default fallback value
+    fn resolve_or_zero(self, context: TContext) -> TOutput;
 }
 
 impl MaybeResolve<Option<f32>, Option<f32>> for Dimension {
@@ -92,6 +103,41 @@ impl ResolveOrDefault<Option<f32>, Rect<f32>> for Rect<Dimension> {
             right: self.right.resolve_or_default(context),
             top: self.top.resolve_or_default(context),
             bottom: self.bottom.resolve_or_default(context),
+        }
+    }
+}
+
+impl ResolveOrZero<Option<f32>, f32> for Dimension {
+    /// Will return a default value of result is evaluated to `None`
+    fn resolve_or_zero(self, context: Option<f32>) -> f32 {
+        self.maybe_resolve(context).unwrap_or(0.0)
+    }
+}
+
+impl ResolveOrZero<Size<Option<f32>>, Size<f32>> for Size<Dimension> {
+    fn resolve_or_zero(self, context: Size<Option<f32>>) -> Size<f32> {
+        Size { width: self.width.resolve_or_zero(context.width), height: self.height.resolve_or_zero(context.height) }
+    }
+}
+
+impl ResolveOrZero<Size<Option<f32>>, Rect<f32>> for Rect<Dimension> {
+    fn resolve_or_zero(self, context: Size<Option<f32>>) -> Rect<f32> {
+        Rect {
+            left: self.left.resolve_or_zero(context.width),
+            right: self.right.resolve_or_zero(context.width),
+            top: self.top.resolve_or_zero(context.height),
+            bottom: self.bottom.resolve_or_zero(context.height),
+        }
+    }
+}
+
+impl ResolveOrZero<Option<f32>, Rect<f32>> for Rect<Dimension> {
+    fn resolve_or_zero(self, context: Option<f32>) -> Rect<f32> {
+        Rect {
+            left: self.left.resolve_or_zero(context),
+            right: self.right.resolve_or_zero(context),
+            top: self.top.resolve_or_zero(context),
+            bottom: self.bottom.resolve_or_zero(context),
         }
     }
 }
