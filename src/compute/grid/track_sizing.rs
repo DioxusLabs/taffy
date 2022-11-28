@@ -2,6 +2,7 @@ use super::placement::TrackCounts;
 use crate::geometry::{Line, Size};
 use crate::layout::{AvailableSpace, SizingMode};
 use crate::node::Node;
+use crate::prelude::LayoutTree;
 use crate::style::{AlignContent, Dimension, MaxTrackSizingFunction, MinTrackSizingFunction, Style};
 // use super::AbsoluteAxis;
 use super::types::{GridAxis, GridItem, GridTrack};
@@ -83,6 +84,7 @@ pub(in super::super) fn determine_if_item_crosses_flexible_tracks(
 }
 
 pub(in super::super) fn track_sizing_algorithm(
+    tree: &mut impl LayoutTree,
     available_space: Size<AvailableSpace>,
     available_space_mode: AvailableSpaceMode,
     axis: GridAxis,
@@ -119,6 +121,7 @@ pub(in super::super) fn track_sizing_algorithm(
                 item.crosses_flexible_column
             }
             track_sizing_algorithm_inner(
+                tree,
                 axis,
                 available_space,
                 container_style.min_size.width.get_absolute(),
@@ -140,6 +143,7 @@ pub(in super::super) fn track_sizing_algorithm(
                 item.crosses_flexible_row
             }
             track_sizing_algorithm_inner(
+                tree,
                 axis,
                 available_space,
                 container_style.min_size.height.get_absolute(),
@@ -161,6 +165,7 @@ pub(in super::super) fn track_sizing_algorithm(
 /// Track sizing algorithm
 /// Note: Gutters are treated as empty fixed-size tracks for the purpose of the track sizing algorithm.
 pub(in super::super) fn track_sizing_algorithm_inner(
+    tree: &mut impl LayoutTree,
     axis: GridAxis,
     available_space: Size<AvailableSpace>,
     axis_min_size: Option<f32>,
@@ -177,7 +182,7 @@ pub(in super::super) fn track_sizing_algorithm_inner(
 ) {
     // 11.4 Initialise Track sizes
     // Initialize each track’s base size and growth limit.
-    for track in axis_tracks {
+    for track in axis_tracks.iter_mut() {
         // For each track, if the track’s min track sizing function is:
         // - A fixed sizing function
         //     Resolve to an absolute length and use that size as the track’s initial base size.
@@ -207,7 +212,7 @@ pub(in super::super) fn track_sizing_algorithm_inner(
     // The track sizing algorithm requires us to iterate through the items in ascendeding order of the number of
     // tracks they span (first items that span 1 track, then items that span 2 tracks, etc).
     // To avoid having to do multiple iterations of the items, we pre-sort them into this order.
-    items.sort_by(cmp_by_span_then_start(get_item_placement));
+    items.sort_by(cmp_by_span_then_start(&get_item_placement));
 
     // Compute an additional amount to add to each spanned gutter when computing item's estimated size in the
     // in the opposite axis based on the alignment, container size, and estimated track sizes in that axis
@@ -233,11 +238,19 @@ pub(in super::super) fn track_sizing_algorithm_inner(
     // Step 3.
     // Iterate over items that don't cross a flex track. Items should have already been sorted in ascending order
     // of the number of tracks they cross.
+    let mut current_span = 0;
     for item in items.iter_mut().filter(|item| !get_crosses_flex_track(item)) {
+        let placement = get_item_placement(item);
+
+        // After each set of items with the same span we flush the planned increases
+        // to the main base_size and growth_limit variables
+        let span = placement.end - placement.start;
+        if span > current_span {}
+
         let item_other_axis_size: Option<f32> = {
             let available_space = available_space.get(axis.other());
-            let placement = get_other_axis_placement(item);
-            (&other_axis_tracks)[(placement.start as usize + 1)..(placement.end as usize)]
+            let other_axis_placement = get_other_axis_placement(item);
+            (&other_axis_tracks)[(other_axis_placement.start as usize + 1)..(other_axis_placement.end as usize)]
                 .iter()
                 .map(|track| get_track_size_estimate(track, available_space))
                 .sum::<Option<f32>>()
@@ -261,10 +274,10 @@ pub(in super::super) fn track_sizing_algorithm_inner(
             SizingMode::ContentSize,
         );
 
-        let placement = get_other_axis_placement(item);
         distribute_space_to_base_size(
             min_content_size.get(axis),
-            &mut other_axis_tracks[(placement.start as usize + 1)..(placement.end as usize)],
+            &mut axis_tracks[(placement.start as usize + 1)..(placement.end as usize)],
+            move |track| track.min_track_sizing_function.definite_value(available_space.get(axis)).is_none(),
             IntrinsicContributionType::Minimum,
         );
     }
@@ -278,12 +291,21 @@ enum IntrinsicContributionType {
     // MaxContent,
 }
 
+fn flush_planned_increases(tracks: &mut [GridTrack]) {
+    for track in tracks {
+        if (track.base_size_planned_increase > track.base_size) {
+            track.base_size = track.base_size + track.base_size_planned_increase;
+        }
+    }
+}
+
 /// 11.5.1. Distributing Extra Space Across Spanned Tracks
 /// https://www.w3.org/TR/css-grid-1/#extra-space
 // TODO: Actually add planned increase to base size
 fn distribute_space_to_base_size(
     space: f32,
     tracks: &mut [GridTrack],
+    track_is_affected: impl Fn(&GridTrack) -> bool,
     intrinsic_contribution_type: IntrinsicContributionType,
 ) {
     // Define a small constant to avoid infinite loops due to rounding errors. Rather than stopping distributing

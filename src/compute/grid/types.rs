@@ -91,10 +91,10 @@ pub(in super::super) struct GridTrack {
     pub min_track_sizing_function: MinTrackSizingFunction,
     pub max_track_sizing_function: MaxTrackSizingFunction,
     pub base_size: f32,
-    pub growth_limit: f32, // Note: can be infinity
-    // pub base_size_planned_increase: f32,    // A temporary scratch value when "distributing space" to avoid clobbering the main variable
-    // pub growth_limit_planned_increase: f32, // A temporary scratch value when "distributing space" to avoid clobbering the main variable
-    pub infinitely_growable: bool, // https://www.w3.org/TR/css3-grid-layout/#infinitely-growable
+    pub growth_limit: f32,                  // Note: can be infinity
+    pub base_size_planned_increase: f32, // A temporary scratch value when "distributing space" to avoid clobbering the main variable
+    pub growth_limit_planned_increase: f32, // A temporary scratch value when "distributing space" to avoid clobbering the main variable
+    pub infinitely_growable: bool,          // https://www.w3.org/TR/css3-grid-layout/#infinitely-growable
 }
 
 impl GridTrack {
@@ -108,8 +108,8 @@ impl GridTrack {
             max_track_sizing_function,
             base_size: 0.0,
             growth_limit: 0.0,
-            // base_size_planned_increase: 0.0,
-            // growth_limit_planned_increase: 0.0,
+            base_size_planned_increase: 0.0,
+            growth_limit_planned_increase: 0.0,
             infinitely_growable: false,
         }
     }
@@ -121,8 +121,8 @@ impl GridTrack {
             max_track_sizing_function: MaxTrackSizingFunction::Fixed(size),
             base_size: 0.0,
             growth_limit: 0.0,
-            // base_size_planned_increase: 0.0,
-            // growth_limit_planned_increase: 0.0,
+            base_size_planned_increase: 0.0,
+            growth_limit_planned_increase: 0.0,
             infinitely_growable: false,
         }
     }
@@ -134,8 +134,8 @@ impl GridTrack {
             max_track_sizing_function: MaxTrackSizingFunction::Auto,
             base_size: 0.0,
             growth_limit: 0.0,
-            // base_size_planned_increase: 0.0,
-            // growth_limit_planned_increase: 0.0,
+            base_size_planned_increase: 0.0,
+            growth_limit_planned_increase: 0.0,
             infinitely_growable: false,
         }
     }
