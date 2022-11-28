@@ -9,7 +9,7 @@ fn parent_wrap_child_size_overflowing_parent() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(200f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -19,7 +19,7 @@ fn parent_wrap_child_size_overflowing_parent() {
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Size::auto() },
                 ..Default::default()
             },
             &[node00],
@@ -31,7 +31,7 @@ fn parent_wrap_child_size_overflowing_parent() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

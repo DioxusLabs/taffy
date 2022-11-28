@@ -8,7 +8,7 @@ pub fn compute() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(199f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -19,10 +19,7 @@ pub fn compute() {
         .new_with_children(
             taffy::style::Style {
                 justify_content: taffy::style::JustifyContent::Center,
-                min_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(400f32),
-                    ..Default::default()
-                },
+                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(400f32), ..Size::auto() },
                 padding: taffy::geometry::Rect {
                     left: taffy::style::LengthPercentage::Points(100f32),
                     right: taffy::style::LengthPercentage::Points(100f32),
@@ -41,7 +38,7 @@ pub fn compute() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(1080f32),
                     height: taffy::style::Dimension::Points(1584f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

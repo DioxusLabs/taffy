@@ -6,7 +6,7 @@ fn relative_position_should_not_nudge_siblings() {
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Default::default() },
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Size::auto() },
                 position: taffy::geometry::Rect { top: taffy::style::Dimension::Points(15f32), ..Rect::auto() },
                 ..Default::default()
             },
@@ -16,7 +16,7 @@ fn relative_position_should_not_nudge_siblings() {
     let node1 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Default::default() },
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Size::auto() },
                 position: taffy::geometry::Rect { top: taffy::style::Dimension::Points(15f32), ..Rect::auto() },
                 ..Default::default()
             },
@@ -30,7 +30,7 @@ fn relative_position_should_not_nudge_siblings() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

@@ -16,7 +16,7 @@ fn flex_grow_root_minimized() {
     let node01 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Default::default() },
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -27,14 +27,8 @@ fn flex_grow_root_minimized() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 1f32,
-                min_size: taffy::geometry::Size {
-                    height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
-                },
-                max_size: taffy::geometry::Size {
-                    height: taffy::style::Dimension::Points(500f32),
-                    ..Default::default()
-                },
+                min_size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Size::auto() },
+                max_size: taffy::geometry::Size { height: taffy::style::Dimension::Points(500f32), ..Size::auto() },
                 ..Default::default()
             },
             &[node00, node01],
@@ -44,15 +38,9 @@ fn flex_grow_root_minimized() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Default::default() },
-                min_size: taffy::geometry::Size {
-                    height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
-                },
-                max_size: taffy::geometry::Size {
-                    height: taffy::style::Dimension::Points(500f32),
-                    ..Default::default()
-                },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Size::auto() },
+                min_size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Size::auto() },
+                max_size: taffy::geometry::Size { height: taffy::style::Dimension::Points(500f32), ..Size::auto() },
                 ..Default::default()
             },
             &[node0],

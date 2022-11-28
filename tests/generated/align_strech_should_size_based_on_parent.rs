@@ -9,7 +9,7 @@ fn align_strech_should_size_based_on_parent() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(20f32),
                     height: taffy::style::Dimension::Points(20f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -36,7 +36,7 @@ fn align_strech_should_size_based_on_parent() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

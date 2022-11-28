@@ -7,7 +7,7 @@ fn padding_flex_child() {
         .new_with_children(
             taffy::style::Style {
                 flex_grow: 1f32,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -19,7 +19,7 @@ fn padding_flex_child() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 padding: taffy::geometry::Rect {
                     left: taffy::style::LengthPercentage::Points(10f32),

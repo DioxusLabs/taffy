@@ -9,7 +9,7 @@ fn margin_auto_mutiple_children_column() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
                     height: taffy::style::Dimension::Points(50f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 margin: taffy::geometry::Rect { top: taffy::style::Dimension::Auto, ..Rect::zero() },
                 ..Default::default()
@@ -23,7 +23,7 @@ fn margin_auto_mutiple_children_column() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
                     height: taffy::style::Dimension::Points(50f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 margin: taffy::geometry::Rect { top: taffy::style::Dimension::Auto, ..Rect::zero() },
                 ..Default::default()
@@ -37,7 +37,7 @@ fn margin_auto_mutiple_children_column() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
                     height: taffy::style::Dimension::Points(50f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -52,7 +52,7 @@ fn margin_auto_mutiple_children_column() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(200f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

@@ -7,7 +7,7 @@ pub fn compute() {
             taffy::style::Style {
                 flex_grow: 1f32,
                 flex_basis: taffy::style::Dimension::Points(0.3f32),
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(9.9f32), ..Default::default() },
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(9.9f32), ..Size::auto() },
                 position: taffy::geometry::Rect { bottom: taffy::style::Dimension::Points(13.3f32), ..Rect::auto() },
                 ..Default::default()
             },
@@ -19,7 +19,7 @@ pub fn compute() {
             taffy::style::Style {
                 flex_grow: 4f32,
                 flex_basis: taffy::style::Dimension::Points(0.3f32),
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(1.1f32), ..Default::default() },
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(1.1f32), ..Size::auto() },
                 position: taffy::geometry::Rect { top: taffy::style::Dimension::Points(13.3f32), ..Rect::auto() },
                 ..Default::default()
             },
@@ -32,7 +32,7 @@ pub fn compute() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 0.7f32,
                 flex_basis: taffy::style::Dimension::Points(50.3f32),
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(20.3f32), ..Default::default() },
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(20.3f32), ..Size::auto() },
                 ..Default::default()
             },
             &[node00, node01],
@@ -42,7 +42,7 @@ pub fn compute() {
         .new_with_children(
             taffy::style::Style {
                 flex_grow: 1.6f32,
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Default::default() },
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -52,7 +52,7 @@ pub fn compute() {
         .new_with_children(
             taffy::style::Style {
                 flex_grow: 1.1f32,
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10.7f32), ..Default::default() },
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10.7f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -65,7 +65,7 @@ pub fn compute() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(87.4f32),
                     height: taffy::style::Dimension::Points(113.4f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

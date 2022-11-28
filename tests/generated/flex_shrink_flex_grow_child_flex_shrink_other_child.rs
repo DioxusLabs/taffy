@@ -11,7 +11,7 @@ fn flex_shrink_flex_grow_child_flex_shrink_other_child() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(500f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -26,7 +26,7 @@ fn flex_shrink_flex_grow_child_flex_shrink_other_child() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(500f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -39,7 +39,7 @@ fn flex_shrink_flex_grow_child_flex_shrink_other_child() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(500f32),
                     height: taffy::style::Dimension::Points(500f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

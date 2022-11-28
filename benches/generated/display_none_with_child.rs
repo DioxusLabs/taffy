@@ -19,7 +19,7 @@ pub fn compute() {
                 flex_grow: 1f32,
                 flex_shrink: 1f32,
                 flex_basis: taffy::style::Dimension::Percent(0f32),
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -55,7 +55,7 @@ pub fn compute() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

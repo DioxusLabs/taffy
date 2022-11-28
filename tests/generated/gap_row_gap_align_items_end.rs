@@ -6,7 +6,7 @@ fn gap_row_gap_align_items_end() {
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -15,7 +15,7 @@ fn gap_row_gap_align_items_end() {
     let node1 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -24,7 +24,7 @@ fn gap_row_gap_align_items_end() {
     let node2 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -33,7 +33,7 @@ fn gap_row_gap_align_items_end() {
     let node3 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -42,7 +42,7 @@ fn gap_row_gap_align_items_end() {
     let node4 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -51,7 +51,7 @@ fn gap_row_gap_align_items_end() {
     let node5 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -65,12 +65,12 @@ fn gap_row_gap_align_items_end() {
                 gap: taffy::geometry::Size {
                     width: taffy::style::LengthPercentage::Points(10f32),
                     height: taffy::style::LengthPercentage::Points(20f32),
-                    ..Default::default()
+                    ..Size::zero()
                 },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(200f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

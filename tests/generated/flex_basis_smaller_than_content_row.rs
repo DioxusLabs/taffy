@@ -9,7 +9,7 @@ fn flex_basis_smaller_than_content_row() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -29,7 +29,7 @@ fn flex_basis_smaller_than_content_row() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Size::auto() },
                 ..Default::default()
             },
             &[node0],

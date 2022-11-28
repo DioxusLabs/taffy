@@ -9,7 +9,7 @@ fn child_min_max_width_flexing() {
                 flex_grow: 1f32,
                 flex_shrink: 0f32,
                 flex_basis: taffy::style::Dimension::Points(0f32),
-                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), ..Default::default() },
+                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -21,7 +21,7 @@ fn child_min_max_width_flexing() {
                 flex_grow: 1f32,
                 flex_shrink: 0f32,
                 flex_basis: taffy::style::Dimension::Percent(0.5f32),
-                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Default::default() },
+                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -33,7 +33,7 @@ fn child_min_max_width_flexing() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(120f32),
                     height: taffy::style::Dimension::Points(50f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

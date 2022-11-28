@@ -16,7 +16,7 @@ fn align_flex_start_with_stretching_children() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(500f32),
                     height: taffy::style::Dimension::Points(500f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

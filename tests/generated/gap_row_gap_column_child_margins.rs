@@ -55,14 +55,11 @@ fn gap_row_gap_column_child_margins() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                gap: taffy::geometry::Size {
-                    height: taffy::style::LengthPercentage::Points(10f32),
-                    ..Default::default()
-                },
+                gap: taffy::geometry::Size { height: taffy::style::LengthPercentage::Points(10f32), ..Size::zero() },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(200f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

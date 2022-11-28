@@ -8,12 +8,9 @@ pub fn compute() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(500f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
-                max_size: taffy::geometry::Size {
-                    height: taffy::style::Dimension::Points(200f32),
-                    ..Default::default()
-                },
+                max_size: taffy::geometry::Size { height: taffy::style::Dimension::Points(200f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -25,7 +22,7 @@ pub fn compute() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(200f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 margin: taffy::geometry::Rect {
                     left: taffy::style::Dimension::Points(20f32),
@@ -45,7 +42,7 @@ pub fn compute() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -63,7 +60,7 @@ pub fn compute() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(700f32),
                     height: taffy::style::Dimension::Points(500f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

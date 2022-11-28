@@ -6,7 +6,7 @@ pub fn compute() {
         .new_with_children(
             taffy::style::Style {
                 flex_basis: taffy::style::Dimension::Points(50f32),
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],

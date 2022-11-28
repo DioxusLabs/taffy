@@ -9,7 +9,7 @@ fn percentage_position_bottom_right() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Percent(0.55f32),
                     height: taffy::style::Dimension::Percent(0.15f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 position: taffy::geometry::Rect {
                     right: taffy::style::Dimension::Percent(0.2f32),
@@ -27,7 +27,7 @@ fn percentage_position_bottom_right() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(500f32),
                     height: taffy::style::Dimension::Points(500f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

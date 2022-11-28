@@ -5,7 +5,7 @@ pub fn compute() {
     let node000 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.45f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.45f32), ..Size::auto() },
                 margin: taffy::geometry::Rect {
                     left: taffy::style::Dimension::Percent(0.05f32),
                     right: taffy::style::Dimension::Percent(0.05f32),
@@ -29,7 +29,7 @@ pub fn compute() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.5f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.5f32), ..Size::auto() },
                 margin: taffy::geometry::Rect {
                     left: taffy::style::Dimension::Points(5f32),
                     right: taffy::style::Dimension::Points(5f32),
@@ -55,10 +55,7 @@ pub fn compute() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 1f32,
                 flex_basis: taffy::style::Dimension::Percent(0.1f32),
-                min_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(0.6f32),
-                    ..Default::default()
-                },
+                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.6f32), ..Size::auto() },
                 margin: taffy::geometry::Rect {
                     left: taffy::style::Dimension::Points(5f32),
                     right: taffy::style::Dimension::Points(5f32),
@@ -83,10 +80,7 @@ pub fn compute() {
             taffy::style::Style {
                 flex_grow: 4f32,
                 flex_basis: taffy::style::Dimension::Percent(0.15f32),
-                min_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(0.2f32),
-                    ..Default::default()
-                },
+                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.2f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -99,7 +93,7 @@ pub fn compute() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(200f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

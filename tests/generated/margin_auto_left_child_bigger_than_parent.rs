@@ -9,7 +9,7 @@ fn margin_auto_left_child_bigger_than_parent() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(72f32),
                     height: taffy::style::Dimension::Points(72f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 margin: taffy::geometry::Rect { left: taffy::style::Dimension::Auto, ..Rect::zero() },
                 ..Default::default()
@@ -24,7 +24,7 @@ fn margin_auto_left_child_bigger_than_parent() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(52f32),
                     height: taffy::style::Dimension::Points(52f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

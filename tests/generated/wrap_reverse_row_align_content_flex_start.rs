@@ -9,7 +9,7 @@ fn wrap_reverse_row_align_content_flex_start() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
                     height: taffy::style::Dimension::Points(10f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -22,7 +22,7 @@ fn wrap_reverse_row_align_content_flex_start() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
                     height: taffy::style::Dimension::Points(20f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -35,7 +35,7 @@ fn wrap_reverse_row_align_content_flex_start() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
                     height: taffy::style::Dimension::Points(30f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -48,7 +48,7 @@ fn wrap_reverse_row_align_content_flex_start() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
                     height: taffy::style::Dimension::Points(40f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -61,7 +61,7 @@ fn wrap_reverse_row_align_content_flex_start() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
                     height: taffy::style::Dimension::Points(50f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -73,7 +73,7 @@ fn wrap_reverse_row_align_content_flex_start() {
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::WrapReverse,
                 align_content: taffy::style::AlignContent::FlexStart,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Size::auto() },
                 ..Default::default()
             },
             &[node0, node1, node2, node3, node4],

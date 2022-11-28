@@ -535,7 +535,7 @@ fn generate_size(size: &json::object::Object) -> TokenStream {
     quote!(
         taffy::geometry::Size {
             #width #height
-            ..Default::default()
+            ..Size::auto()
         }
     )
 }
@@ -546,7 +546,7 @@ fn generate_gap(size: &json::object::Object) -> TokenStream {
     quote!(
         taffy::geometry::Size {
             #width #height
-            ..Default::default()
+            ..Size::zero()
         }
     )
 }

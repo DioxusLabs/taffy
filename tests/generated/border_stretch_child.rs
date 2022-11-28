@@ -6,7 +6,7 @@ fn border_stretch_child() {
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -18,7 +18,7 @@ fn border_stretch_child() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 border: taffy::geometry::Rect {
                     left: taffy::style::LengthPercentage::Points(10f32),

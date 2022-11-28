@@ -10,7 +10,7 @@ fn display_none_with_margin() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(20f32),
                     height: taffy::style::Dimension::Points(20f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 margin: taffy::geometry::Rect {
                     left: taffy::style::Dimension::Points(10f32),
@@ -31,7 +31,7 @@ fn display_none_with_margin() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

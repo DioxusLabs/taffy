@@ -9,7 +9,7 @@ fn wrapped_row_within_align_items_flex_end() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(150f32),
                     height: taffy::style::Dimension::Points(80f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -22,7 +22,7 @@ fn wrapped_row_within_align_items_flex_end() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(80f32),
                     height: taffy::style::Dimension::Points(80f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -43,7 +43,7 @@ fn wrapped_row_within_align_items_flex_end() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(200f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

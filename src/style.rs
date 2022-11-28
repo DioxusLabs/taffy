@@ -252,7 +252,6 @@ impl Default for FlexWrap {
 /// A unit of linear measurement
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
-/// The default value is [`LengthPercentage::Points(0.0)`].
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum LengthPercentage {
@@ -263,16 +262,9 @@ pub enum LengthPercentage {
     Percent(f32),
 }
 
-impl Default for LengthPercentage {
-    fn default() -> Self {
-        Self::Points(0.0)
-    }
-}
-
 /// A unit of linear measurement
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
-/// The default value is [`Dimension::Auto`].
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Dimension {
@@ -283,12 +275,6 @@ pub enum Dimension {
     Percent(f32),
     /// The dimension should be automatically computed
     Auto,
-}
-
-impl Default for Dimension {
-    fn default() -> Self {
-        Self::Auto
-    }
 }
 
 impl Dimension {
@@ -568,7 +554,7 @@ mod tests {
             align_self: Default::default(),
             align_content: Default::default(),
             justify_content: Default::default(),
-            position: Default::default(),
+            position: Rect::auto(),
             margin: Rect::zero(),
             padding: Rect::zero(),
             border: Rect::zero(),
@@ -576,9 +562,9 @@ mod tests {
             flex_grow: 0.0,
             flex_shrink: 1.0,
             flex_basis: super::Dimension::Auto,
-            size: Default::default(),
-            min_size: Default::default(),
-            max_size: Default::default(),
+            size: Size::auto(),
+            min_size: Size::auto(),
+            max_size: Size::auto(),
             aspect_ratio: Default::default(),
         };
 

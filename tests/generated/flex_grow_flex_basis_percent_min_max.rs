@@ -9,8 +9,8 @@ fn flex_grow_flex_basis_percent_min_max() {
                 flex_grow: 1f32,
                 flex_shrink: 0f32,
                 flex_basis: taffy::style::Dimension::Points(0f32),
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(20f32), ..Default::default() },
-                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), ..Default::default() },
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(20f32), ..Size::auto() },
+                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -25,9 +25,9 @@ fn flex_grow_flex_basis_percent_min_max() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(20f32),
                     height: taffy::style::Dimension::Points(20f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
-                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Default::default() },
+                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -36,7 +36,7 @@ fn flex_grow_flex_basis_percent_min_max() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(120f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(120f32), ..Size::auto() },
                 ..Default::default()
             },
             &[node0, node1],

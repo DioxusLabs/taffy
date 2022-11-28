@@ -9,7 +9,7 @@ fn flex_basis_smaller_then_content_with_flex_grow_unconstraint_size() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(70f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -33,7 +33,7 @@ fn flex_basis_smaller_then_content_with_flex_grow_unconstraint_size() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(20f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

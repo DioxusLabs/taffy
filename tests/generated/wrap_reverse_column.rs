@@ -9,7 +9,7 @@ fn wrap_reverse_column() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
                     height: taffy::style::Dimension::Points(31f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -22,7 +22,7 @@ fn wrap_reverse_column() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
                     height: taffy::style::Dimension::Points(32f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -35,7 +35,7 @@ fn wrap_reverse_column() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
                     height: taffy::style::Dimension::Points(33f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -48,7 +48,7 @@ fn wrap_reverse_column() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
                     height: taffy::style::Dimension::Points(34f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -63,7 +63,7 @@ fn wrap_reverse_column() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

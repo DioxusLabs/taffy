@@ -9,7 +9,7 @@ fn padding_align_end_child() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 padding: taffy::geometry::Rect {
                     left: taffy::style::LengthPercentage::Points(20f32),
@@ -31,7 +31,7 @@ fn padding_align_end_child() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(200f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

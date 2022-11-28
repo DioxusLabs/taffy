@@ -9,7 +9,7 @@ fn percentage_size_based_on_parent_inner_size() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Percent(0.5f32),
                     height: taffy::style::Dimension::Percent(0.5f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -23,7 +23,7 @@ fn percentage_size_based_on_parent_inner_size() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(400f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 padding: taffy::geometry::Rect {
                     left: taffy::style::LengthPercentage::Points(20f32),

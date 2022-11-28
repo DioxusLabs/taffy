@@ -9,12 +9,12 @@ fn min_max_percent_no_width_height() {
                 min_size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Percent(0.1f32),
                     height: taffy::style::Dimension::Percent(0.1f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 max_size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Percent(0.1f32),
                     height: taffy::style::Dimension::Percent(0.1f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -29,7 +29,7 @@ fn min_max_percent_no_width_height() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

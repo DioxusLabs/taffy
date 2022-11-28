@@ -7,7 +7,7 @@ fn flex_basis_unconstraint_row() {
         .new_with_children(
             taffy::style::Style {
                 flex_basis: taffy::style::Dimension::Points(50f32),
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Default::default() },
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],

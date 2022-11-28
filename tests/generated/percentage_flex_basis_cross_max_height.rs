@@ -8,10 +8,7 @@ fn percentage_flex_basis_cross_max_height() {
             taffy::style::Style {
                 flex_grow: 1f32,
                 flex_basis: taffy::style::Dimension::Percent(0.1f32),
-                max_size: taffy::geometry::Size {
-                    height: taffy::style::Dimension::Percent(0.6f32),
-                    ..Default::default()
-                },
+                max_size: taffy::geometry::Size { height: taffy::style::Dimension::Percent(0.6f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -22,10 +19,7 @@ fn percentage_flex_basis_cross_max_height() {
             taffy::style::Style {
                 flex_grow: 4f32,
                 flex_basis: taffy::style::Dimension::Percent(0.1f32),
-                max_size: taffy::geometry::Size {
-                    height: taffy::style::Dimension::Percent(0.2f32),
-                    ..Default::default()
-                },
+                max_size: taffy::geometry::Size { height: taffy::style::Dimension::Percent(0.2f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -38,7 +32,7 @@ fn percentage_flex_basis_cross_max_height() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(400f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

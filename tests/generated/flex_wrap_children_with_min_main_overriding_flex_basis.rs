@@ -7,8 +7,8 @@ fn flex_wrap_children_with_min_main_overriding_flex_basis() {
         .new_with_children(
             taffy::style::Style {
                 flex_basis: taffy::style::Dimension::Points(50f32),
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(50f32), ..Default::default() },
-                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(55f32), ..Default::default() },
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(50f32), ..Size::auto() },
+                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(55f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -18,8 +18,8 @@ fn flex_wrap_children_with_min_main_overriding_flex_basis() {
         .new_with_children(
             taffy::style::Style {
                 flex_basis: taffy::style::Dimension::Points(50f32),
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(50f32), ..Default::default() },
-                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(55f32), ..Default::default() },
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(50f32), ..Size::auto() },
+                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(55f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -29,7 +29,7 @@ fn flex_wrap_children_with_min_main_overriding_flex_basis() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Size::auto() },
                 ..Default::default()
             },
             &[node0, node1],

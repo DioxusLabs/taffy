@@ -9,7 +9,7 @@ fn percentage_container_in_wrapping_container() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
                     height: taffy::style::Dimension::Points(50f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -22,7 +22,7 @@ fn percentage_container_in_wrapping_container() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
                     height: taffy::style::Dimension::Points(50f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -33,7 +33,7 @@ fn percentage_container_in_wrapping_container() {
         .new_with_children(
             taffy::style::Style {
                 justify_content: taffy::style::JustifyContent::Center,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), ..Size::auto() },
                 ..Default::default()
             },
             &[node000, node001],
@@ -54,7 +54,7 @@ fn percentage_container_in_wrapping_container() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(200f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

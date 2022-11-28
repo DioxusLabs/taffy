@@ -9,7 +9,7 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(40f32),
                     height: taffy::style::Dimension::Points(40f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -28,7 +28,7 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(40f32),
                     height: taffy::style::Dimension::Points(40f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -49,7 +49,7 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(85f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(85f32), ..Size::auto() },
                 ..Default::default()
             },
             &[node00, node01],
@@ -62,7 +62,7 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(500f32),
                     height: taffy::style::Dimension::Points(500f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

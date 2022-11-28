@@ -9,7 +9,7 @@ fn align_items_min_max() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(60f32),
                     height: taffy::style::Dimension::Points(60f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -21,15 +21,9 @@ fn align_items_min_max() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_items: taffy::style::AlignItems::Center,
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Default::default() },
-                min_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
-                },
-                max_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(200f32),
-                    ..Default::default()
-                },
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Size::auto() },
+                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Size::auto() },
+                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(200f32), ..Size::auto() },
                 ..Default::default()
             },
             &[node0],

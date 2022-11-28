@@ -9,7 +9,7 @@ fn percentage_width_height() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Percent(0.3f32),
                     height: taffy::style::Dimension::Percent(0.3f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -22,7 +22,7 @@ fn percentage_width_height() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(400f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

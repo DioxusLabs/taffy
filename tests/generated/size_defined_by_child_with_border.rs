@@ -9,7 +9,7 @@ fn size_defined_by_child_with_border() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(10f32),
                     height: taffy::style::Dimension::Points(10f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

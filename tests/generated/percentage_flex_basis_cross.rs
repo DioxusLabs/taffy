@@ -30,7 +30,7 @@ fn percentage_flex_basis_cross() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(400f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

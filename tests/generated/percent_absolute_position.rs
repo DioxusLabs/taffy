@@ -6,7 +6,7 @@ fn percent_absolute_position() {
     let node00 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -15,7 +15,7 @@ fn percent_absolute_position() {
     let node01 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -28,7 +28,7 @@ fn percent_absolute_position() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Percent(1f32),
                     height: taffy::style::Dimension::Points(50f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 position: taffy::geometry::Rect { left: taffy::style::Dimension::Percent(0.5f32), ..Rect::auto() },
                 ..Default::default()
@@ -43,7 +43,7 @@ fn percent_absolute_position() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(60f32),
                     height: taffy::style::Dimension::Points(50f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

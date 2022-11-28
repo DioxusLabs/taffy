@@ -6,7 +6,7 @@ fn gap_column_gap_justify_space_evenly() {
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -15,7 +15,7 @@ fn gap_column_gap_justify_space_evenly() {
     let node1 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -24,7 +24,7 @@ fn gap_column_gap_justify_space_evenly() {
     let node2 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -34,14 +34,11 @@ fn gap_column_gap_justify_space_evenly() {
         .new_with_children(
             taffy::style::Style {
                 justify_content: taffy::style::JustifyContent::SpaceEvenly,
-                gap: taffy::geometry::Size {
-                    width: taffy::style::LengthPercentage::Points(10f32),
-                    ..Default::default()
-                },
+                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::Points(10f32), ..Size::zero() },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },

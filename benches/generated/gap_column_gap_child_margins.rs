@@ -53,14 +53,11 @@ pub fn compute() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                gap: taffy::geometry::Size {
-                    width: taffy::style::LengthPercentage::Points(10f32),
-                    ..Default::default()
-                },
+                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::Points(10f32), ..Size::zero() },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(80f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
