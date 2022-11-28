@@ -8,7 +8,7 @@ use crate::geometry::{Point, Rect, Size};
 use crate::layout::{AvailableSpace, Layout, RunMode, SizingMode};
 use crate::math::MaybeMath;
 use crate::node::Node;
-use crate::resolve::{MaybeResolve, ResolveOrDefault};
+use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::{AlignContent, AlignSelf, Dimension, Display, FlexWrap, JustifyContent, PositionType};
 use crate::style::{FlexDirection, Style};
 use crate::sys::Vec;
@@ -352,9 +352,9 @@ fn compute_constants(style: &Style, node_size: Size<Option<f32>>, parent_size: S
     let is_column = dir.is_column();
     let is_wrap_reverse = style.flex_wrap == FlexWrap::WrapReverse;
 
-    let margin = style.margin.resolve_or_default(parent_size.width.into_option());
-    let padding = style.padding.resolve_or_default(parent_size.width.into_option());
-    let border = style.border.resolve_or_default(parent_size.width.into_option());
+    let margin = style.margin.resolve_or_zero(parent_size.width.into_option());
+    let padding = style.padding.resolve_or_zero(parent_size.width.into_option());
+    let border = style.border.resolve_or_zero(parent_size.width.into_option());
 
     let padding_border = Rect {
         left: padding.left + border.left,
@@ -367,7 +367,7 @@ fn compute_constants(style: &Style, node_size: Size<Option<f32>>, parent_size: S
         width: node_size.width.maybe_sub(padding_border.horizontal_axis_sum()),
         height: node_size.height.maybe_sub(padding_border.vertical_axis_sum()),
     };
-    let gap = style.gap.resolve_or_default(node_inner_size.or(Size::zero()));
+    let gap = style.gap.resolve_or_zero(node_inner_size.or(Size::zero()));
 
     let container_size = Size::zero();
     let inner_container_size = Size::zero();
@@ -405,9 +405,9 @@ fn generate_anonymous_flex_items(tree: &impl LayoutTree, node: Node, constants: 
             max_size: child_style.max_size.maybe_resolve(constants.node_inner_size),
 
             position: child_style.position.zip_size(constants.node_inner_size, |p, s| p.maybe_resolve(s)),
-            margin: child_style.margin.resolve_or_default(constants.node_inner_size.width),
-            padding: child_style.padding.resolve_or_default(constants.node_inner_size.width),
-            border: child_style.border.resolve_or_default(constants.node_inner_size.width),
+            margin: child_style.margin.resolve_or_zero(constants.node_inner_size.width),
+            padding: child_style.padding.resolve_or_zero(constants.node_inner_size.width),
+            border: child_style.border.resolve_or_zero(constants.node_inner_size.width),
             flex_basis: 0.0,
             inner_flex_basis: 0.0,
             violation: 0.0,
@@ -1851,7 +1851,7 @@ mod tests {
     use crate::{
         math::MaybeMath,
         prelude::{Rect, Size},
-        resolve::ResolveOrDefault,
+        resolve::ResolveOrZero,
         style::{FlexWrap, Style},
         Taffy,
     };
@@ -1875,13 +1875,13 @@ mod tests {
         assert!(constants.is_column == style.flex_direction.is_column());
         assert!(constants.is_wrap_reverse == (style.flex_wrap == FlexWrap::WrapReverse));
 
-        let margin = style.margin.resolve_or_default(parent_size.as_options());
+        let margin = style.margin.resolve_or_zero(parent_size.as_options());
         assert_eq!(constants.margin, margin);
 
-        let border = style.border.resolve_or_default(parent_size.as_options());
+        let border = style.border.resolve_or_zero(parent_size.as_options());
         assert_eq!(constants.border, border);
 
-        let padding = style.padding.resolve_or_default(parent_size.as_options());
+        let padding = style.padding.resolve_or_zero(parent_size.as_options());
 
         // TODO: Replace with something less hardcoded?
         let padding_border = Rect {

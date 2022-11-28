@@ -35,10 +35,7 @@ fn simple_child() {
         .unwrap();
     let node1 = taffy
         .new_with_children(
-            taffy::style::Style {
-                size: taffy::geometry::Size { width: Dimension::Undefined, height: Dimension::Undefined },
-                ..Default::default()
-            },
+            taffy::style::Style { size: taffy::geometry::Size::auto(), ..Default::default() },
             &[node1_0, node1_1],
         )
         .unwrap();

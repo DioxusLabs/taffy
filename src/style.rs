@@ -252,24 +252,22 @@ impl Default for FlexWrap {
 /// A unit of linear measurement
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
-/// The default value is [`Dimension::Undefined`].
+/// The default value is [`Dimension::Auto`].
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Dimension {
-    /// The dimension is not given
-    Undefined,
-    /// The dimension should be automatically computed
-    Auto,
     /// Points are abstract absolute units. Users of Taffy may define what they correspond
     /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
     Points(f32),
     /// The dimension is stored in percentage relative to the parent item.
     Percent(f32),
+    /// The dimension should be automatically computed
+    Auto,
 }
 
 impl Default for Dimension {
     fn default() -> Self {
-        Self::Undefined
+        Self::Auto
     }
 }
 
@@ -315,14 +313,6 @@ impl Rect<Dimension> {
     pub const fn bot_from_percent(end: f32, bottom: f32) -> Rect<Dimension> {
         Rect { right: Dimension::Percent(end), bottom: Dimension::Percent(bottom), ..Rect::AUTO }
     }
-
-    /// Generates a [`Rect<Dimension>`] using [`Dimension::Undefined`] for all values
-    pub const UNDEFINED: Rect<Dimension> = Self {
-        left: Dimension::Undefined,
-        right: Dimension::Undefined,
-        top: Dimension::Undefined,
-        bottom: Dimension::Undefined,
-    };
 
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Auto`] for all values
     pub const AUTO: Rect<Dimension> =
@@ -436,11 +426,11 @@ impl Style {
         align_self: AlignSelf::Auto,
         align_content: AlignContent::Stretch,
         justify_content: JustifyContent::FlexStart,
-        position: Rect::UNDEFINED,
-        margin: Rect::UNDEFINED,
-        padding: Rect::UNDEFINED,
-        border: Rect::UNDEFINED,
-        gap: Size::UNDEFINED,
+        position: Rect::auto(),
+        margin: Rect::zero(),
+        padding: Rect::zero(),
+        border: Rect::zero(),
+        gap: Size::zero(),
         flex_grow: 0.0,
         flex_shrink: 1.0,
         flex_basis: Dimension::Auto,
@@ -562,7 +552,7 @@ impl Style {
 #[cfg(test)]
 mod tests {
     use super::Style;
-    use crate::geometry::Size;
+    use crate::geometry::{Rect, Size};
 
     #[test]
     fn defaults_match() {
@@ -576,10 +566,10 @@ mod tests {
             align_content: Default::default(),
             justify_content: Default::default(),
             position: Default::default(),
-            margin: Default::default(),
-            padding: Default::default(),
-            border: Default::default(),
-            gap: Size::UNDEFINED,
+            margin: Rect::zero(),
+            padding: Rect::zero(),
+            border: Rect::zero(),
+            gap: Size::zero(),
             flex_grow: 0.0,
             flex_shrink: 1.0,
             flex_basis: super::Dimension::Auto,

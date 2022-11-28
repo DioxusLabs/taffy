@@ -150,18 +150,6 @@ mod tests {
         use crate::style::Dimension;
         use rstest::rstest;
 
-        /// `Dimension::Undefined` should always return `None`
-        ///
-        /// The parent / context should not affect the outcome.
-        #[rstest]
-        #[case(Dimension::Undefined, None, None)]
-        #[case(Dimension::Undefined, Some(5.0), None)]
-        #[case(Dimension::Undefined, Some(-5.0), None)]
-        #[case(Dimension::Undefined, Some(0.), None)]
-        fn resolve_undefined(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: Option<f32>) {
-            assert_eq!(input.maybe_resolve(context), expected);
-        }
-
         /// `Dimension::Auto` should always return `None`
         ///
         /// The parent / context should not affect the outcome.
@@ -205,22 +193,6 @@ mod tests {
     mod maybe_resolve_size_dimension {
         use crate::{prelude::Size, resolve::MaybeResolve, style::Dimension};
         use rstest::rstest;
-
-        /// Size<Dimension::Undefined> should always return Size<None>
-        ///
-        /// The parent / context should not affect the outcome.
-        #[rstest]
-        #[case(Size::UNDEFINED, Size::NONE, Size::NONE)]
-        #[case(Size::UNDEFINED, Size::new(5.0, 5.0), Size::NONE)]
-        #[case(Size::UNDEFINED, Size::new(-5.0, -5.0), Size::NONE)]
-        #[case(Size::UNDEFINED, Size::new(0.0, 0.0), Size::NONE)]
-        fn maybe_resolve_undefined(
-            #[case] input: Size<Dimension>,
-            #[case] context: Size<Option<f32>>,
-            #[case] expected: Size<Option<f32>>,
-        ) {
-            assert_eq!(input.maybe_resolve(context), expected);
-        }
 
         /// Size<Dimension::Auto> should always return Size<None>
         ///
@@ -280,14 +252,6 @@ mod tests {
         use rstest::rstest;
 
         #[rstest]
-        #[case(Dimension::Undefined, None, 0.0)]
-        #[case(Dimension::Undefined, Some(5.0), 0.0)]
-        #[case(Dimension::Undefined, Some(-5.0), 0.0)]
-        #[case(Dimension::Undefined, Some(0.0), 0.0)]
-        fn resolve_or_default_undefined(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: f32) {
-            assert_eq!(input.resolve_or_default(context), expected);
-        }
-        #[rstest]
         #[case(Dimension::Auto, None, 0.0)]
         #[case(Dimension::Auto, Some(5.0), 0.0)]
         #[case(Dimension::Auto, Some(-5.0), 0.0)]
@@ -318,19 +282,6 @@ mod tests {
         use crate::resolve::ResolveOrDefault;
         use crate::style::Dimension;
         use rstest::rstest;
-
-        #[rstest]
-        #[case(Rect::UNDEFINED, Size::NONE, Rect::zero())]
-        #[case(Rect::UNDEFINED, Size::new(5.0, 5.0), Rect::zero())]
-        #[case(Rect::UNDEFINED, Size::new(-5.0, -5.0), Rect::zero())]
-        #[case(Rect::UNDEFINED, Size::new(0.0, 0.0), Rect::zero())]
-        fn resolve_or_default_undefined(
-            #[case] input: Rect<Dimension>,
-            #[case] context: Size<Option<f32>>,
-            #[case] expected: Rect<f32>,
-        ) {
-            assert_eq!(input.resolve_or_default(context), expected);
-        }
 
         #[rstest]
         #[case(Rect::auto(), Size::NONE, Rect::zero())]
@@ -377,19 +328,6 @@ mod tests {
         use crate::resolve::ResolveOrDefault;
         use crate::style::Dimension;
         use rstest::rstest;
-
-        #[rstest]
-        #[case(Rect::UNDEFINED, None, Rect::zero())]
-        #[case(Rect::UNDEFINED, Some(5.0), Rect::zero())]
-        #[case(Rect::UNDEFINED, Some(-5.0), Rect::zero())]
-        #[case(Rect::UNDEFINED, Some(0.0), Rect::zero())]
-        fn resolve_or_default_undefined(
-            #[case] input: Rect<Dimension>,
-            #[case] context: Option<f32>,
-            #[case] expected: Rect<f32>,
-        ) {
-            assert_eq!(input.resolve_or_default(context), expected);
-        }
 
         #[rstest]
         #[case(Rect::auto(), None, Rect::zero())]
