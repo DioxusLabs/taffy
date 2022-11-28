@@ -22,10 +22,10 @@ fn percentage_margin_should_calculate_based_only_on_width() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 1f32,
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Percent(0.1f32),
-                    right: taffy::style::Dimension::Percent(0.1f32),
-                    top: taffy::style::Dimension::Percent(0.1f32),
-                    bottom: taffy::style::Dimension::Percent(0.1f32),
+                    left: taffy::style::LengthPercentageAuto::Percent(0.1f32),
+                    right: taffy::style::LengthPercentageAuto::Percent(0.1f32),
+                    top: taffy::style::LengthPercentageAuto::Percent(0.1f32),
+                    bottom: taffy::style::LengthPercentageAuto::Percent(0.1f32),
                     ..Rect::zero()
                 },
                 ..Default::default()

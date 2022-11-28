@@ -7,7 +7,10 @@ fn margin_with_sibling_column() {
         .new_with_children(
             taffy::style::Style {
                 flex_grow: 1f32,
-                margin: taffy::geometry::Rect { bottom: taffy::style::Dimension::Points(10f32), ..Rect::zero() },
+                margin: taffy::geometry::Rect {
+                    bottom: taffy::style::LengthPercentageAuto::Points(10f32),
+                    ..Rect::zero()
+                },
                 ..Default::default()
             },
             &[],

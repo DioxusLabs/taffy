@@ -7,7 +7,7 @@ pub use crate::{
     node::{Node, Taffy},
     style::{
         AlignContent, AlignItems, AlignSelf, Dimension, Display, FlexDirection, FlexWrap, JustifyContent,
-        LengthPercentage, PositionType, Style,
+        LengthPercentage, LengthPercentageAuto, PositionType, Style,
     },
     style_helpers::{auto, points, zero},
     tree::LayoutTree,

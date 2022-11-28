@@ -12,8 +12,8 @@ fn margin_auto_left_and_right_column_and_center() {
                     ..Size::auto()
                 },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Auto,
-                    right: taffy::style::Dimension::Auto,
+                    left: taffy::style::LengthPercentageAuto::Auto,
+                    right: taffy::style::LengthPercentageAuto::Auto,
                     ..Rect::zero()
                 },
                 ..Default::default()

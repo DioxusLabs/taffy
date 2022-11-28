@@ -10,8 +10,8 @@ fn gap_column_gap_child_margins() {
                 flex_shrink: 1f32,
                 flex_basis: taffy::style::Dimension::Percent(0f32),
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Points(2f32),
-                    right: taffy::style::Dimension::Points(2f32),
+                    left: taffy::style::LengthPercentageAuto::Points(2f32),
+                    right: taffy::style::LengthPercentageAuto::Points(2f32),
                     ..Rect::zero()
                 },
                 ..Default::default()
@@ -26,8 +26,8 @@ fn gap_column_gap_child_margins() {
                 flex_shrink: 1f32,
                 flex_basis: taffy::style::Dimension::Percent(0f32),
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Points(10f32),
-                    right: taffy::style::Dimension::Points(10f32),
+                    left: taffy::style::LengthPercentageAuto::Points(10f32),
+                    right: taffy::style::LengthPercentageAuto::Points(10f32),
                     ..Rect::zero()
                 },
                 ..Default::default()
@@ -42,8 +42,8 @@ fn gap_column_gap_child_margins() {
                 flex_shrink: 1f32,
                 flex_basis: taffy::style::Dimension::Percent(0f32),
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Points(15f32),
-                    right: taffy::style::Dimension::Points(15f32),
+                    left: taffy::style::LengthPercentageAuto::Points(15f32),
+                    right: taffy::style::LengthPercentageAuto::Points(15f32),
                     ..Rect::zero()
                 },
                 ..Default::default()

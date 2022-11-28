@@ -8,10 +8,10 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
             taffy::style::Style {
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.45f32), ..Size::auto() },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Percent(0.05f32),
-                    right: taffy::style::Dimension::Percent(0.05f32),
-                    top: taffy::style::Dimension::Percent(0.05f32),
-                    bottom: taffy::style::Dimension::Percent(0.05f32),
+                    left: taffy::style::LengthPercentageAuto::Percent(0.05f32),
+                    right: taffy::style::LengthPercentageAuto::Percent(0.05f32),
+                    top: taffy::style::LengthPercentageAuto::Percent(0.05f32),
+                    bottom: taffy::style::LengthPercentageAuto::Percent(0.05f32),
                     ..Rect::zero()
                 },
                 padding: taffy::geometry::Rect {
@@ -32,10 +32,10 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.5f32), ..Size::auto() },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Points(5f32),
-                    right: taffy::style::Dimension::Points(5f32),
-                    top: taffy::style::Dimension::Points(5f32),
-                    bottom: taffy::style::Dimension::Points(5f32),
+                    left: taffy::style::LengthPercentageAuto::Points(5f32),
+                    right: taffy::style::LengthPercentageAuto::Points(5f32),
+                    top: taffy::style::LengthPercentageAuto::Points(5f32),
+                    bottom: taffy::style::LengthPercentageAuto::Points(5f32),
                     ..Rect::zero()
                 },
                 padding: taffy::geometry::Rect {
@@ -58,10 +58,10 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
                 flex_basis: taffy::style::Dimension::Percent(0.1f32),
                 min_size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.6f32), ..Size::auto() },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Points(5f32),
-                    right: taffy::style::Dimension::Points(5f32),
-                    top: taffy::style::Dimension::Points(5f32),
-                    bottom: taffy::style::Dimension::Points(5f32),
+                    left: taffy::style::LengthPercentageAuto::Points(5f32),
+                    right: taffy::style::LengthPercentageAuto::Points(5f32),
+                    top: taffy::style::LengthPercentageAuto::Points(5f32),
+                    bottom: taffy::style::LengthPercentageAuto::Points(5f32),
                     ..Rect::zero()
                 },
                 padding: taffy::geometry::Rect {

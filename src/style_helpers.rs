@@ -1,7 +1,7 @@
 //! Helper functions which it make it easier to create instances of types in the `style` and `geometry` modules.
 
 use crate::geometry::{Point, Rect, Size};
-use crate::style::{Dimension, LengthPercentage};
+use crate::style::{Dimension, LengthPercentage, LengthPercentageAuto};
 
 /// Returns the zero value for that type
 pub const fn zero<T: TaffyZero>() -> T {
@@ -18,6 +18,9 @@ impl TaffyZero for f32 {
 }
 impl TaffyZero for LengthPercentage {
     const ZERO: LengthPercentage = LengthPercentage::Points(0.0);
+}
+impl TaffyZero for LengthPercentageAuto {
+    const ZERO: LengthPercentageAuto = LengthPercentageAuto::Points(0.0);
 }
 impl TaffyZero for Dimension {
     const ZERO: Dimension = Dimension::Points(0.0);
@@ -65,6 +68,9 @@ pub const fn auto<T: TaffyAuto>() -> T {
 pub trait TaffyAuto {
     /// The auto value for type implementing TaffyZero
     const AUTO: Self;
+}
+impl TaffyAuto for LengthPercentageAuto {
+    const AUTO: LengthPercentageAuto = LengthPercentageAuto::Auto;
 }
 impl TaffyAuto for Dimension {
     const AUTO: Dimension = Dimension::Auto;
@@ -126,6 +132,11 @@ impl FromPoints for Option<f32> {
 impl FromPoints for LengthPercentage {
     fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
         LengthPercentage::Points(points.into())
+    }
+}
+impl FromPoints for LengthPercentageAuto {
+    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
+        LengthPercentageAuto::Points(points.into())
     }
 }
 impl FromPoints for Dimension {

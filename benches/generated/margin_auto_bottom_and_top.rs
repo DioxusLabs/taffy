@@ -11,8 +11,8 @@ pub fn compute() {
                     ..Size::auto()
                 },
                 margin: taffy::geometry::Rect {
-                    top: taffy::style::Dimension::Auto,
-                    bottom: taffy::style::Dimension::Auto,
+                    top: taffy::style::LengthPercentageAuto::Auto,
+                    bottom: taffy::style::LengthPercentageAuto::Auto,
                     ..Rect::zero()
                 },
                 ..Default::default()

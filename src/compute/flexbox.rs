@@ -9,7 +9,9 @@ use crate::layout::{AvailableSpace, Layout, RunMode, SizingMode};
 use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
-use crate::style::{AlignContent, AlignSelf, Dimension, Display, FlexWrap, JustifyContent, PositionType};
+use crate::style::{
+    AlignContent, AlignSelf, Dimension, Display, FlexWrap, JustifyContent, LengthPercentageAuto, PositionType,
+};
 use crate::style::{FlexDirection, Style};
 use crate::sys::Vec;
 use crate::tree::LayoutTree;
@@ -1080,8 +1082,8 @@ fn calculate_cross_size(
                 .map(|child| {
                     let child_style = tree.style(child.node);
                     if child_style.align_self(tree.style(node)) == AlignSelf::Baseline
-                        && child_style.cross_margin_start(constants.dir) != Dimension::Auto
-                        && child_style.cross_margin_end(constants.dir) != Dimension::Auto
+                        && child_style.cross_margin_start(constants.dir) != LengthPercentageAuto::Auto
+                        && child_style.cross_margin_end(constants.dir) != LengthPercentageAuto::Auto
                         && child_style.cross_size(constants.dir) == Dimension::Auto
                     {
                         max_baseline - child.baseline + child.hypothetical_outer_size.cross(constants.dir)
@@ -1150,8 +1152,8 @@ fn determine_used_cross_size(
             child.target_size.set_cross(
                 constants.dir,
                 if child_style.align_self(tree.style(node)) == AlignSelf::Stretch
-                    && child_style.cross_margin_start(constants.dir) != Dimension::Auto
-                    && child_style.cross_margin_end(constants.dir) != Dimension::Auto
+                    && child_style.cross_margin_start(constants.dir) != LengthPercentageAuto::Auto
+                    && child_style.cross_margin_end(constants.dir) != LengthPercentageAuto::Auto
                     && child_style.cross_size(constants.dir) == Dimension::Auto
                 {
                     (line_cross_size - child.margin.cross_axis_sum(constants.dir))
@@ -1195,10 +1197,10 @@ fn distribute_remaining_free_space(
 
         for child in line.items.iter_mut() {
             let child_style = tree.style(child.node);
-            if child_style.main_margin_start(constants.dir) == Dimension::Auto {
+            if child_style.main_margin_start(constants.dir) == LengthPercentageAuto::Auto {
                 num_auto_margins += 1;
             }
-            if child_style.main_margin_end(constants.dir) == Dimension::Auto {
+            if child_style.main_margin_end(constants.dir) == LengthPercentageAuto::Auto {
                 num_auto_margins += 1;
             }
         }
@@ -1208,14 +1210,14 @@ fn distribute_remaining_free_space(
 
             for child in line.items.iter_mut() {
                 let child_style = tree.style(child.node);
-                if child_style.main_margin_start(constants.dir) == Dimension::Auto {
+                if child_style.main_margin_start(constants.dir) == LengthPercentageAuto::Auto {
                     if constants.is_row {
                         child.margin.left = margin;
                     } else {
                         child.margin.top = margin;
                     }
                 }
-                if child_style.main_margin_end(constants.dir) == Dimension::Auto {
+                if child_style.main_margin_end(constants.dir) == LengthPercentageAuto::Auto {
                     if constants.is_row {
                         child.margin.right = margin;
                     } else {
@@ -1321,8 +1323,8 @@ fn resolve_cross_axis_auto_margins(
             let free_space = line_cross_size - child.outer_target_size.cross(constants.dir);
             let child_style = tree.style(child.node);
 
-            if child_style.cross_margin_start(constants.dir) == Dimension::Auto
-                && child_style.cross_margin_end(constants.dir) == Dimension::Auto
+            if child_style.cross_margin_start(constants.dir) == LengthPercentageAuto::Auto
+                && child_style.cross_margin_end(constants.dir) == LengthPercentageAuto::Auto
             {
                 if constants.is_row {
                     child.margin.top = free_space / 2.0;
@@ -1331,13 +1333,13 @@ fn resolve_cross_axis_auto_margins(
                     child.margin.left = free_space / 2.0;
                     child.margin.right = free_space / 2.0;
                 }
-            } else if child_style.cross_margin_start(constants.dir) == Dimension::Auto {
+            } else if child_style.cross_margin_start(constants.dir) == LengthPercentageAuto::Auto {
                 if constants.is_row {
                     child.margin.top = free_space;
                 } else {
                     child.margin.left = free_space;
                 }
-            } else if child_style.cross_margin_end(constants.dir) == Dimension::Auto {
+            } else if child_style.cross_margin_end(constants.dir) == LengthPercentageAuto::Auto {
                 if constants.is_row {
                     child.margin.bottom = free_space;
                 } else {

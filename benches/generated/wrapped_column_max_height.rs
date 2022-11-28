@@ -25,10 +25,10 @@ pub fn compute() {
                     ..Size::auto()
                 },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Points(20f32),
-                    right: taffy::style::Dimension::Points(20f32),
-                    top: taffy::style::Dimension::Points(20f32),
-                    bottom: taffy::style::Dimension::Points(20f32),
+                    left: taffy::style::LengthPercentageAuto::Points(20f32),
+                    right: taffy::style::LengthPercentageAuto::Points(20f32),
+                    top: taffy::style::LengthPercentageAuto::Points(20f32),
+                    bottom: taffy::style::LengthPercentageAuto::Points(20f32),
                     ..Rect::zero()
                 },
                 ..Default::default()

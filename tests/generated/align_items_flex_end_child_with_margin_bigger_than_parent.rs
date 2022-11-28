@@ -12,8 +12,8 @@ fn align_items_flex_end_child_with_margin_bigger_than_parent() {
                     ..Size::auto()
                 },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Points(10f32),
-                    right: taffy::style::Dimension::Points(10f32),
+                    left: taffy::style::LengthPercentageAuto::Points(10f32),
+                    right: taffy::style::LengthPercentageAuto::Points(10f32),
                     ..Rect::zero()
                 },
                 ..Default::default()

@@ -11,7 +11,7 @@ fn margin_auto_left() {
                     height: taffy::style::Dimension::Points(50f32),
                     ..Size::auto()
                 },
-                margin: taffy::geometry::Rect { left: taffy::style::Dimension::Auto, ..Rect::zero() },
+                margin: taffy::geometry::Rect { left: taffy::style::LengthPercentageAuto::Auto, ..Rect::zero() },
                 ..Default::default()
             },
             &[],

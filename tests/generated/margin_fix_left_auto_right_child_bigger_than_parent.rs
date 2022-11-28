@@ -12,8 +12,8 @@ fn margin_fix_left_auto_right_child_bigger_than_parent() {
                     ..Size::auto()
                 },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Points(10f32),
-                    right: taffy::style::Dimension::Auto,
+                    left: taffy::style::LengthPercentageAuto::Points(10f32),
+                    right: taffy::style::LengthPercentageAuto::Auto,
                     ..Rect::zero()
                 },
                 ..Default::default()

@@ -12,8 +12,8 @@ fn margin_auto_top_and_bottom_strech() {
                     ..Size::auto()
                 },
                 margin: taffy::geometry::Rect {
-                    top: taffy::style::Dimension::Auto,
-                    bottom: taffy::style::Dimension::Auto,
+                    top: taffy::style::LengthPercentageAuto::Auto,
+                    bottom: taffy::style::LengthPercentageAuto::Auto,
                     ..Rect::zero()
                 },
                 ..Default::default()

@@ -11,7 +11,10 @@ pub fn compute() {
                     ..Size::auto()
                 },
                 max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Size::auto() },
-                margin: taffy::geometry::Rect { left: taffy::style::Dimension::Points(20f32), ..Rect::zero() },
+                margin: taffy::geometry::Rect {
+                    left: taffy::style::LengthPercentageAuto::Points(20f32),
+                    ..Rect::zero()
+                },
                 ..Default::default()
             },
             &[],

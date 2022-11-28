@@ -1,7 +1,6 @@
 //! Helper trait to calculate dimensions during layout resolution
 
-use crate::prelude::{Dimension, Rect, Size};
-use crate::style::LengthPercentage;
+use crate::prelude::{Dimension, LengthPercentage, LengthPercentageAuto, Rect, Size};
 use crate::style_helpers::TaffyZero;
 
 /// Trait to encapsulate behaviour where we need to resolve from a
@@ -45,6 +44,18 @@ impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentage {
     }
 }
 
+impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentageAuto {
+    /// Converts the given [`LengthPercentageAuto`] into a concrete value of points
+    /// Can return `None`
+    fn maybe_resolve(self, context: Option<f32>) -> Option<f32> {
+        match self {
+            LengthPercentageAuto::Points(points) => Some(points),
+            LengthPercentageAuto::Percent(percent) => context.map(|dim| dim * percent),
+            LengthPercentageAuto::Auto => None,
+        }
+    }
+}
+
 impl MaybeResolve<Option<f32>, Option<f32>> for Dimension {
     /// Converts the given [`Dimension`] into a concrete value of points
     ///
@@ -53,7 +64,7 @@ impl MaybeResolve<Option<f32>, Option<f32>> for Dimension {
         match self {
             Dimension::Points(points) => Some(points),
             Dimension::Percent(percent) => context.map(|dim| dim * percent),
-            _ => None,
+            Dimension::Auto => None,
         }
     }
 }
@@ -114,14 +125,21 @@ impl ResolveOrDefault<Option<f32>, Rect<f32>> for Rect<Dimension> {
     }
 }
 
-impl ResolveOrZero<Option<f32>, f32> for Dimension {
+impl ResolveOrZero<Option<f32>, f32> for LengthPercentage {
     /// Will return a default value of result is evaluated to `None`
     fn resolve_or_zero(self, context: Option<f32>) -> f32 {
         self.maybe_resolve(context).unwrap_or(0.0)
     }
 }
 
-impl ResolveOrZero<Option<f32>, f32> for LengthPercentage {
+impl ResolveOrZero<Option<f32>, f32> for LengthPercentageAuto {
+    /// Will return a default value of result is evaluated to `None`
+    fn resolve_or_zero(self, context: Option<f32>) -> f32 {
+        self.maybe_resolve(context).unwrap_or(0.0)
+    }
+}
+
+impl ResolveOrZero<Option<f32>, f32> for Dimension {
     /// Will return a default value of result is evaluated to `None`
     fn resolve_or_zero(self, context: Option<f32>) -> f32 {
         self.maybe_resolve(context).unwrap_or(0.0)

@@ -11,7 +11,10 @@ fn justify_content_column_min_height_and_margin_bottom() {
                     height: taffy::style::Dimension::Points(20f32),
                     ..Size::auto()
                 },
-                margin: taffy::geometry::Rect { bottom: taffy::style::Dimension::Points(10f32), ..Rect::zero() },
+                margin: taffy::geometry::Rect {
+                    bottom: taffy::style::LengthPercentageAuto::Points(10f32),
+                    ..Rect::zero()
+                },
                 ..Default::default()
             },
             &[],

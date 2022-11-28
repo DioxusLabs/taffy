@@ -13,10 +13,10 @@ fn absolute_layout_width_height_start_top_end_bottom() {
                     ..Size::auto()
                 },
                 position: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Points(10f32),
-                    right: taffy::style::Dimension::Points(10f32),
-                    top: taffy::style::Dimension::Points(10f32),
-                    bottom: taffy::style::Dimension::Points(10f32),
+                    left: taffy::style::LengthPercentageAuto::Points(10f32),
+                    right: taffy::style::LengthPercentageAuto::Points(10f32),
+                    top: taffy::style::LengthPercentageAuto::Points(10f32),
+                    bottom: taffy::style::LengthPercentageAuto::Points(10f32),
                     ..Rect::auto()
                 },
                 ..Default::default()

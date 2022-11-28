@@ -7,7 +7,10 @@ fn margin_bottom() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Size::auto() },
-                margin: taffy::geometry::Rect { bottom: taffy::style::Dimension::Points(10f32), ..Rect::zero() },
+                margin: taffy::geometry::Rect {
+                    bottom: taffy::style::LengthPercentageAuto::Points(10f32),
+                    ..Rect::zero()
+                },
                 ..Default::default()
             },
             &[],

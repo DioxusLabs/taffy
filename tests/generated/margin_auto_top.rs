@@ -11,7 +11,7 @@ fn margin_auto_top() {
                     height: taffy::style::Dimension::Points(50f32),
                     ..Size::auto()
                 },
-                margin: taffy::geometry::Rect { top: taffy::style::Dimension::Auto, ..Rect::zero() },
+                margin: taffy::geometry::Rect { top: taffy::style::LengthPercentageAuto::Auto, ..Rect::zero() },
                 ..Default::default()
             },
             &[],

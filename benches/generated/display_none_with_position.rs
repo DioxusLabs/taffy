@@ -8,7 +8,10 @@ pub fn compute() {
             taffy::style::Style {
                 display: taffy::style::Display::None,
                 flex_grow: 1f32,
-                position: taffy::geometry::Rect { top: taffy::style::Dimension::Points(10f32), ..Rect::auto() },
+                position: taffy::geometry::Rect {
+                    top: taffy::style::LengthPercentageAuto::Points(10f32),
+                    ..Rect::auto()
+                },
                 ..Default::default()
             },
             &[],

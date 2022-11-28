@@ -8,8 +8,8 @@ fn gap_row_gap_row_wrap_child_margins() {
             taffy::style::Style {
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), ..Size::auto() },
                 margin: taffy::geometry::Rect {
-                    top: taffy::style::Dimension::Points(2f32),
-                    bottom: taffy::style::Dimension::Points(2f32),
+                    top: taffy::style::LengthPercentageAuto::Points(2f32),
+                    bottom: taffy::style::LengthPercentageAuto::Points(2f32),
                     ..Rect::zero()
                 },
                 ..Default::default()
@@ -22,8 +22,8 @@ fn gap_row_gap_row_wrap_child_margins() {
             taffy::style::Style {
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), ..Size::auto() },
                 margin: taffy::geometry::Rect {
-                    top: taffy::style::Dimension::Points(10f32),
-                    bottom: taffy::style::Dimension::Points(10f32),
+                    top: taffy::style::LengthPercentageAuto::Points(10f32),
+                    bottom: taffy::style::LengthPercentageAuto::Points(10f32),
                     ..Rect::zero()
                 },
                 ..Default::default()
@@ -36,8 +36,8 @@ fn gap_row_gap_row_wrap_child_margins() {
             taffy::style::Style {
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), ..Size::auto() },
                 margin: taffy::geometry::Rect {
-                    top: taffy::style::Dimension::Points(15f32),
-                    bottom: taffy::style::Dimension::Points(15f32),
+                    top: taffy::style::LengthPercentageAuto::Points(15f32),
+                    bottom: taffy::style::LengthPercentageAuto::Points(15f32),
                     ..Rect::zero()
                 },
                 ..Default::default()

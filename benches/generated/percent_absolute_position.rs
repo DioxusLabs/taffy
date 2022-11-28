@@ -29,7 +29,10 @@ pub fn compute() {
                     height: taffy::style::Dimension::Points(50f32),
                     ..Size::auto()
                 },
-                position: taffy::geometry::Rect { left: taffy::style::Dimension::Percent(0.5f32), ..Rect::auto() },
+                position: taffy::geometry::Rect {
+                    left: taffy::style::LengthPercentageAuto::Percent(0.5f32),
+                    ..Rect::auto()
+                },
                 ..Default::default()
             },
             &[node00, node01],

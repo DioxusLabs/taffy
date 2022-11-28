@@ -8,7 +8,7 @@ pub fn compute() {
                 flex_grow: 1f32,
                 flex_shrink: 1f32,
                 flex_basis: taffy::style::Dimension::Percent(0f32),
-                margin: taffy::geometry::Rect { top: taffy::style::Dimension::Auto, ..Rect::zero() },
+                margin: taffy::geometry::Rect { top: taffy::style::LengthPercentageAuto::Auto, ..Rect::zero() },
                 ..Default::default()
             },
             &[],

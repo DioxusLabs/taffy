@@ -9,7 +9,7 @@ fn margin_auto_left_stretching_child() {
                 flex_grow: 1f32,
                 flex_shrink: 1f32,
                 flex_basis: taffy::style::Dimension::Percent(0f32),
-                margin: taffy::geometry::Rect { left: taffy::style::Dimension::Auto, ..Rect::zero() },
+                margin: taffy::geometry::Rect { left: taffy::style::LengthPercentageAuto::Auto, ..Rect::zero() },
                 ..Default::default()
             },
             &[],

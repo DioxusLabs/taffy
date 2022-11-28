@@ -460,10 +460,10 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
     let grid_column_start = quote_object_prop("grid_column_start", style, generate_grid_position);
     let grid_column_end = quote_object_prop("grid_column_end", style, generate_grid_position);
 
-    edges_quoted!(style, margin, generate_dimension, quote!(Rect::zero()));
+    edges_quoted!(style, margin, generate_length_percentage_auto, quote!(Rect::zero()));
     edges_quoted!(style, padding, generate_length_percentage, quote!(Rect::zero()));
     edges_quoted!(style, border, generate_length_percentage, quote!(Rect::zero()));
-    edges_quoted!(style, position, generate_dimension, quote!(Rect::auto()));
+    edges_quoted!(style, position, generate_length_percentage_auto, quote!(Rect::auto()));
 
     let (children_body, children) = match node["children"] {
         json::JsonValue::Array(ref value) => {
@@ -564,6 +564,27 @@ fn generate_length_percentage(dimen: &json::object::Object) -> TokenStream {
             "percent" => {
                 let value = value();
                 quote!(taffy::style::LengthPercentage::Percent(#value))
+            }
+            _ => unreachable!(),
+        },
+        _ => unreachable!(),
+    }
+}
+
+fn generate_length_percentage_auto(dimen: &json::object::Object) -> TokenStream {
+    let unit = dimen.get("unit").unwrap();
+    let value = || dimen.get("value").unwrap().as_f32().unwrap();
+
+    match unit {
+        json::JsonValue::Short(ref unit) => match unit.as_ref() {
+            "auto" => quote!(taffy::style::LengthPercentageAuto::Auto),
+            "points" => {
+                let value = value();
+                quote!(taffy::style::LengthPercentageAuto::Points(#value))
+            }
+            "percent" => {
+                let value = value();
+                quote!(taffy::style::LengthPercentageAuto::Percent(#value))
             }
             _ => unreachable!(),
         },

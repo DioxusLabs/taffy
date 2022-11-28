@@ -12,8 +12,8 @@ fn percentage_position_left_top() {
                     ..Size::auto()
                 },
                 position: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Percent(0.1f32),
-                    top: taffy::style::Dimension::Percent(0.2f32),
+                    left: taffy::style::LengthPercentageAuto::Percent(0.1f32),
+                    top: taffy::style::LengthPercentageAuto::Percent(0.2f32),
                     ..Rect::auto()
                 },
                 ..Default::default()

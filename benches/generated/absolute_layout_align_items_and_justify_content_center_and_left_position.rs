@@ -11,7 +11,10 @@ pub fn compute() {
                     height: taffy::style::Dimension::Points(40f32),
                     ..Size::auto()
                 },
-                position: taffy::geometry::Rect { left: taffy::style::Dimension::Points(5f32), ..Rect::auto() },
+                position: taffy::geometry::Rect {
+                    left: taffy::style::LengthPercentageAuto::Points(5f32),
+                    ..Rect::auto()
+                },
                 ..Default::default()
             },
             &[],

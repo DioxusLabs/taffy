@@ -12,7 +12,10 @@ fn absolute_layout_percentage_bottom_based_on_parent_height() {
                     height: taffy::style::Dimension::Points(10f32),
                     ..Size::auto()
                 },
-                position: taffy::geometry::Rect { top: taffy::style::Dimension::Percent(0.5f32), ..Rect::auto() },
+                position: taffy::geometry::Rect {
+                    top: taffy::style::LengthPercentageAuto::Percent(0.5f32),
+                    ..Rect::auto()
+                },
                 ..Default::default()
             },
             &[],
@@ -27,7 +30,10 @@ fn absolute_layout_percentage_bottom_based_on_parent_height() {
                     height: taffy::style::Dimension::Points(10f32),
                     ..Size::auto()
                 },
-                position: taffy::geometry::Rect { bottom: taffy::style::Dimension::Percent(0.5f32), ..Rect::auto() },
+                position: taffy::geometry::Rect {
+                    bottom: taffy::style::LengthPercentageAuto::Percent(0.5f32),
+                    ..Rect::auto()
+                },
                 ..Default::default()
             },
             &[],
@@ -39,8 +45,8 @@ fn absolute_layout_percentage_bottom_based_on_parent_height() {
                 position_type: taffy::style::PositionType::Absolute,
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), ..Size::auto() },
                 position: taffy::geometry::Rect {
-                    top: taffy::style::Dimension::Percent(0.1f32),
-                    bottom: taffy::style::Dimension::Percent(0.1f32),
+                    top: taffy::style::LengthPercentageAuto::Percent(0.1f32),
+                    bottom: taffy::style::LengthPercentageAuto::Percent(0.1f32),
                     ..Rect::auto()
                 },
                 ..Default::default()

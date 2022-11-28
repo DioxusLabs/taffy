@@ -39,7 +39,10 @@ fn wrap_nodes_with_content_sizing_margin_cross() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                margin: taffy::geometry::Rect { top: taffy::style::Dimension::Points(10f32), ..Rect::zero() },
+                margin: taffy::geometry::Rect {
+                    top: taffy::style::LengthPercentageAuto::Points(10f32),
+                    ..Rect::zero()
+                },
                 ..Default::default()
             },
             &[node010],
