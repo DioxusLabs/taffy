@@ -134,6 +134,9 @@ fn gap_percentage_row_gap_wrapping() {
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 80f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 60f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

@@ -174,6 +174,11 @@ fn generate_test(name: impl AsRef<str>, description: &json::JsonValue) -> TokenS
             let mut taffy = taffy::Taffy::new();
             #node_description
             taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+
+            println!("\nComputed tree:");
+            taffy::debug::print_tree(&taffy, node);
+            println!();
+
             #assertions
         }
     )

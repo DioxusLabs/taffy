@@ -33,6 +33,9 @@ fn percentage_position_left_top() {
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 400f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 400f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

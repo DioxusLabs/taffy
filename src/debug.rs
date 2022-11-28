@@ -7,7 +7,6 @@ use crate::tree::LayoutTree;
 
 /// Prints a debug representation of the computed layout for a tree of nodes, starting with the passed root node.
 pub fn print_tree(tree: &impl LayoutTree, root: Node) {
-    println!();
     print_node(tree, root, 0);
 }
 

@@ -48,6 +48,9 @@ fn justify_content_min_width_with_padding_child_width_greater_than_parent() {
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 1000f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 1584f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

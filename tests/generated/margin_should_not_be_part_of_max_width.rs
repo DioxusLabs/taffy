@@ -33,6 +33,9 @@ fn margin_should_not_be_part_of_max_width() {
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 250f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 250f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);
