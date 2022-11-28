@@ -219,6 +219,47 @@ fn generate_assertions(ident: &str, node: &json::JsonValue) -> TokenStream {
     )
 }
 
+macro_rules! dim_quoted_renamed {
+    ($obj:ident, $in_name:ident, $out_name:ident, $value_mapper:ident) => {
+        let $out_name = match $obj.get(stringify!($in_name)) {
+            Some(json::JsonValue::Object(ref value)) => {
+                let dim = $value_mapper(value);
+                quote!($out_name: #dim,)
+            }
+            _ => quote!(),
+        };
+    };
+}
+
+macro_rules! dim_quoted {
+    ($obj:ident, $dim_name:ident, $value_mapper: ident) => {
+        dim_quoted_renamed!($obj, $dim_name, $dim_name, $value_mapper)
+    };
+}
+
+macro_rules! edges_quoted {
+    ($style:ident, $val:ident, $value_mapper:ident, $default_value: expr) => {
+        let $val = match $style[stringify!($val)] {
+            json::JsonValue::Object(ref value) => {
+                dim_quoted!(value, left, $value_mapper);
+                dim_quoted!(value, right, $value_mapper);
+                dim_quoted!(value, top, $value_mapper);
+                dim_quoted!(value, bottom, $value_mapper);
+
+                let def = $default_value;
+
+                let edges = quote!(taffy::geometry::Rect {
+                    #left #right #top #bottom
+                    ..#def
+                });
+
+                quote!($val: #edges,)
+            },
+            _ => quote!(),
+        };
+    };
+}
+
 fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
     let style = &node["style"];
 
@@ -419,22 +460,10 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
     let grid_column_start = quote_object_prop("grid_column_start", style, generate_grid_position);
     let grid_column_end = quote_object_prop("grid_column_end", style, generate_grid_position);
 
-    macro_rules! edges_quoted {
-        ($style:ident, $val:ident, $default_value: expr) => {
-            let $val = match $style[stringify!($val)] {
-                json::JsonValue::Object(ref value) => {
-                    let edges = generate_edges(value, $default_value);
-                    quote!($val: #edges,)
-                },
-                _ => quote!(),
-            };
-        };
-    }
-
-    edges_quoted!(style, margin, quote!(Rect::zero()));
-    edges_quoted!(style, padding, quote!(Rect::zero()));
-    edges_quoted!(style, border, quote!(Rect::zero()));
-    edges_quoted!(style, position, quote!(Rect::auto()));
+    edges_quoted!(style, margin, generate_dimension, quote!(Rect::zero()));
+    edges_quoted!(style, padding, generate_length_percentage, quote!(Rect::zero()));
+    edges_quoted!(style, border, generate_length_percentage, quote!(Rect::zero()));
+    edges_quoted!(style, position, generate_dimension, quote!(Rect::auto()));
 
     let (children_body, children) = match node["children"] {
         json::JsonValue::Array(ref value) => {
@@ -500,39 +529,9 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
     ).unwrap();)
 }
 
-macro_rules! dim_quoted_renamed {
-    ($obj:ident, $in_name:ident, $out_name:ident) => {
-        let $out_name = match $obj.get(stringify!($in_name)) {
-            Some(json::JsonValue::Object(ref value)) => {
-                let dim = generate_dimension(value);
-                quote!($out_name: #dim,)
-            }
-            _ => quote!(),
-        };
-    };
-}
-
-macro_rules! length_percentage_quoted_renamed {
-    ($obj:ident, $in_name:ident, $out_name:ident) => {
-        let $out_name = match $obj.get(stringify!($in_name)) {
-            Some(json::JsonValue::Object(ref value)) => {
-                let dim = generate_length_percentage(value);
-                quote!($out_name: #dim,)
-            }
-            _ => quote!(),
-        };
-    };
-}
-
-macro_rules! dim_quoted {
-    ($obj:ident, $dim_name:ident) => {
-        dim_quoted_renamed!($obj, $dim_name, $dim_name)
-    };
-}
-
 fn generate_size(size: &json::object::Object) -> TokenStream {
-    dim_quoted!(size, width);
-    dim_quoted!(size, height);
+    dim_quoted!(size, width, generate_dimension);
+    dim_quoted!(size, height, generate_dimension);
     quote!(
         taffy::geometry::Size {
             #width #height
@@ -542,8 +541,8 @@ fn generate_size(size: &json::object::Object) -> TokenStream {
 }
 
 fn generate_gap(size: &json::object::Object) -> TokenStream {
-    length_percentage_quoted_renamed!(size, column, width);
-    length_percentage_quoted_renamed!(size, row, height);
+    dim_quoted_renamed!(size, column, width, generate_length_percentage);
+    dim_quoted_renamed!(size, row, height, generate_length_percentage);
     quote!(
         taffy::geometry::Size {
             #width #height
@@ -591,18 +590,6 @@ fn generate_dimension(dimen: &json::object::Object) -> TokenStream {
         },
         _ => unreachable!(),
     }
-}
-
-fn generate_edges(dimen: &json::object::Object, default: TokenStream) -> TokenStream {
-    dim_quoted!(dimen, left);
-    dim_quoted!(dimen, right);
-    dim_quoted!(dimen, top);
-    dim_quoted!(dimen, bottom);
-
-    quote!(taffy::geometry::Rect {
-        #left #right #top #bottom
-        ..#default
-    })
 }
 
 fn generate_grid_auto_flow(auto_flow: &json::object::Object) -> TokenStream {

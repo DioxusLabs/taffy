@@ -14,10 +14,10 @@ pub fn compute() {
                     ..Rect::zero()
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Points(3f32),
-                    right: taffy::style::Dimension::Points(3f32),
-                    top: taffy::style::Dimension::Points(3f32),
-                    bottom: taffy::style::Dimension::Points(3f32),
+                    left: taffy::style::LengthPercentage::Points(3f32),
+                    right: taffy::style::LengthPercentage::Points(3f32),
+                    top: taffy::style::LengthPercentage::Points(3f32),
+                    bottom: taffy::style::LengthPercentage::Points(3f32),
                     ..Rect::zero()
                 },
                 ..Default::default()
@@ -38,10 +38,10 @@ pub fn compute() {
                     ..Rect::zero()
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Percent(0.03f32),
-                    right: taffy::style::Dimension::Percent(0.03f32),
-                    top: taffy::style::Dimension::Percent(0.03f32),
-                    bottom: taffy::style::Dimension::Percent(0.03f32),
+                    left: taffy::style::LengthPercentage::Percent(0.03f32),
+                    right: taffy::style::LengthPercentage::Percent(0.03f32),
+                    top: taffy::style::LengthPercentage::Percent(0.03f32),
+                    bottom: taffy::style::LengthPercentage::Percent(0.03f32),
                     ..Rect::zero()
                 },
                 ..Default::default()
@@ -67,10 +67,10 @@ pub fn compute() {
                     ..Rect::zero()
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Points(3f32),
-                    right: taffy::style::Dimension::Points(3f32),
-                    top: taffy::style::Dimension::Points(3f32),
-                    bottom: taffy::style::Dimension::Points(3f32),
+                    left: taffy::style::LengthPercentage::Points(3f32),
+                    right: taffy::style::LengthPercentage::Points(3f32),
+                    top: taffy::style::LengthPercentage::Points(3f32),
+                    bottom: taffy::style::LengthPercentage::Points(3f32),
                     ..Rect::zero()
                 },
                 ..Default::default()

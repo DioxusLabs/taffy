@@ -25,8 +25,8 @@ fn justify_content_min_width_with_padding_child_width_lower_than_parent() {
                     ..Default::default()
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Points(100f32),
-                    right: taffy::style::Dimension::Points(100f32),
+                    left: taffy::style::LengthPercentage::Points(100f32),
+                    right: taffy::style::LengthPercentage::Points(100f32),
                     ..Rect::zero()
                 },
                 ..Default::default()

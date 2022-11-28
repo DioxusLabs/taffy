@@ -22,10 +22,10 @@ fn percentage_padding_should_calculate_based_only_on_width() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 1f32,
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Percent(0.1f32),
-                    right: taffy::style::Dimension::Percent(0.1f32),
-                    top: taffy::style::Dimension::Percent(0.1f32),
-                    bottom: taffy::style::Dimension::Percent(0.1f32),
+                    left: taffy::style::LengthPercentage::Percent(0.1f32),
+                    right: taffy::style::LengthPercentage::Percent(0.1f32),
+                    top: taffy::style::LengthPercentage::Percent(0.1f32),
+                    bottom: taffy::style::LengthPercentage::Percent(0.1f32),
                     ..Rect::zero()
                 },
                 ..Default::default()

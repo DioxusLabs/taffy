@@ -389,9 +389,9 @@ pub struct Style {
     /// How large should the margin be on each side?
     pub margin: Rect<Dimension>,
     /// How large should the padding be on each side?
-    pub padding: Rect<Dimension>,
+    pub padding: Rect<LengthPercentage>,
     /// How large should the border be on each side?
-    pub border: Rect<Dimension>,
+    pub border: Rect<LengthPercentage>,
     // Gap
     /// How large should the gaps between items in a grid or flex container be?
     pub gap: Size<LengthPercentage>,

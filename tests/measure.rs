@@ -95,10 +95,10 @@ mod measure {
                 taffy::style::Style {
                     size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50.0), ..Default::default() },
                     padding: taffy::geometry::Rect {
-                        left: taffy::style::Dimension::Points(10.0),
-                        right: taffy::style::Dimension::Points(10.0),
-                        top: taffy::style::Dimension::Points(10.0),
-                        bottom: taffy::style::Dimension::Points(10.0),
+                        left: taffy::style::LengthPercentage::Points(10.0),
+                        right: taffy::style::LengthPercentage::Points(10.0),
+                        top: taffy::style::LengthPercentage::Points(10.0),
+                        bottom: taffy::style::LengthPercentage::Points(10.0),
                     },
                     ..Default::default()
                 },

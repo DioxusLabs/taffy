@@ -26,8 +26,8 @@ pub fn compute() {
                     ..Default::default()
                 },
                 border: taffy::geometry::Rect {
-                    top: taffy::style::Dimension::Points(10f32),
-                    bottom: taffy::style::Dimension::Points(20f32),
+                    top: taffy::style::LengthPercentage::Points(10f32),
+                    bottom: taffy::style::LengthPercentage::Points(20f32),
                     ..Rect::zero()
                 },
                 ..Default::default()

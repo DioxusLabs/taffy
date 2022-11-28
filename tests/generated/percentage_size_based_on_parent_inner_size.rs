@@ -26,10 +26,10 @@ fn percentage_size_based_on_parent_inner_size() {
                     ..Default::default()
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Points(20f32),
-                    right: taffy::style::Dimension::Points(20f32),
-                    top: taffy::style::Dimension::Points(20f32),
-                    bottom: taffy::style::Dimension::Points(20f32),
+                    left: taffy::style::LengthPercentage::Points(20f32),
+                    right: taffy::style::LengthPercentage::Points(20f32),
+                    top: taffy::style::LengthPercentage::Points(20f32),
+                    bottom: taffy::style::LengthPercentage::Points(20f32),
                     ..Rect::zero()
                 },
                 ..Default::default()
