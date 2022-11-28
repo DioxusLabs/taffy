@@ -512,6 +512,18 @@ macro_rules! dim_quoted_renamed {
     };
 }
 
+macro_rules! length_percentage_quoted_renamed {
+    ($obj:ident, $in_name:ident, $out_name:ident) => {
+        let $out_name = match $obj.get(stringify!($in_name)) {
+            Some(json::JsonValue::Object(ref value)) => {
+                let dim = generate_length_percentage(value);
+                quote!($out_name: #dim,)
+            }
+            _ => quote!(),
+        };
+    };
+}
+
 macro_rules! dim_quoted {
     ($obj:ident, $dim_name:ident) => {
         dim_quoted_renamed!($obj, $dim_name, $dim_name)
@@ -530,14 +542,34 @@ fn generate_size(size: &json::object::Object) -> TokenStream {
 }
 
 fn generate_gap(size: &json::object::Object) -> TokenStream {
-    dim_quoted_renamed!(size, column, width);
-    dim_quoted_renamed!(size, row, height);
+    length_percentage_quoted_renamed!(size, column, width);
+    length_percentage_quoted_renamed!(size, row, height);
     quote!(
         taffy::geometry::Size {
             #width #height
             ..Default::default()
         }
     )
+}
+
+fn generate_length_percentage(dimen: &json::object::Object) -> TokenStream {
+    let unit = dimen.get("unit").unwrap();
+    let value = || dimen.get("value").unwrap().as_f32().unwrap();
+
+    match unit {
+        json::JsonValue::Short(ref unit) => match unit.as_ref() {
+            "points" => {
+                let value = value();
+                quote!(taffy::style::LengthPercentage::Points(#value))
+            }
+            "percent" => {
+                let value = value();
+                quote!(taffy::style::LengthPercentage::Percent(#value))
+            }
+            _ => unreachable!(),
+        },
+        _ => unreachable!(),
+    }
 }
 
 fn generate_dimension(dimen: &json::object::Object) -> TokenStream {

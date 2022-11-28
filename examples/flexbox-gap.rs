@@ -12,7 +12,7 @@ fn main() -> Result<(), taffy::error::TaffyError> {
     let child2 = taffy.new_leaf(child_style.clone())?;
 
     let root = taffy.new_with_children(
-        Style { gap: Size { width: points(10.0), height: auto() }, ..Default::default() },
+        Style { gap: Size { width: points(10.0), height: zero() }, ..Default::default() },
         &[child0, child1, child2],
     )?;
 

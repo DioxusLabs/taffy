@@ -394,7 +394,7 @@ pub struct Style {
     pub border: Rect<Dimension>,
     // Gap
     /// How large should the gaps between items in a grid or flex container be?
-    pub gap: Size<Dimension>,
+    pub gap: Size<LengthPercentage>,
     /// The relative rate at which this item grows when it is expanding to fill space
     ///
     /// 0.0 is the default value, and this value must not be negative.

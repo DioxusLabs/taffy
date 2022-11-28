@@ -124,8 +124,8 @@ pub fn compute() {
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 gap: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(10f32),
-                    height: taffy::style::Dimension::Percent(0.1f32),
+                    width: taffy::style::LengthPercentage::Points(10f32),
+                    height: taffy::style::LengthPercentage::Percent(0.1f32),
                     ..Default::default()
                 },
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(80f32), ..Default::default() },

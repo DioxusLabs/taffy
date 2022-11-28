@@ -57,7 +57,10 @@ fn gap_column_gap_wrap_align_stretch() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                gap: taffy::geometry::Size { width: taffy::style::Dimension::Points(5f32), ..Default::default() },
+                gap: taffy::geometry::Size {
+                    width: taffy::style::LengthPercentage::Points(5f32),
+                    ..Default::default()
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(300f32),
                     height: taffy::style::Dimension::Points(300f32),

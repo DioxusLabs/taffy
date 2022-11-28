@@ -32,7 +32,10 @@ pub fn compute() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                gap: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.2f32), ..Default::default() },
+                gap: taffy::geometry::Size {
+                    width: taffy::style::LengthPercentage::Percent(0.2f32),
+                    ..Default::default()
+                },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
