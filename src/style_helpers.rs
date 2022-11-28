@@ -1,7 +1,7 @@
 //! Helper functions which it make it easier to create instances of types in the `style` and `geometry` modules.
 
 use crate::geometry::{Point, Rect, Size};
-use crate::style::Dimension;
+use crate::style::{Dimension, LengthPercentage};
 
 /// Returns the zero value for that type
 pub const fn zero<T: TaffyZero>() -> T {
@@ -15,6 +15,9 @@ pub trait TaffyZero {
 }
 impl TaffyZero for f32 {
     const ZERO: f32 = 0.0;
+}
+impl TaffyZero for LengthPercentage {
+    const ZERO: LengthPercentage = LengthPercentage::Points(0.0);
 }
 impl TaffyZero for Dimension {
     const ZERO: Dimension = Dimension::Points(0.0);
@@ -118,6 +121,11 @@ impl FromPoints for f32 {
 impl FromPoints for Option<f32> {
     fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
         Some(points.into())
+    }
+}
+impl FromPoints for LengthPercentage {
+    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
+        LengthPercentage::Points(points.into())
     }
 }
 impl FromPoints for Dimension {
