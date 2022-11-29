@@ -1,5 +1,7 @@
 #[test]
 fn flex_basis_slightly_smaller_then_content_with_flex_grow_large_size() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
         .new_with_children(
@@ -7,7 +9,7 @@ fn flex_basis_slightly_smaller_then_content_with_flex_grow_large_size() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(70f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -31,7 +33,7 @@ fn flex_basis_slightly_smaller_then_content_with_flex_grow_large_size() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(20f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -52,13 +54,16 @@ fn flex_basis_slightly_smaller_then_content_with_flex_grow_large_size() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Size::auto() },
                 ..Default::default()
             },
             &[node0, node1],
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 100f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 100f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

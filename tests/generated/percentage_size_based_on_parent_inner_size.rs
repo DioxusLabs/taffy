@@ -1,5 +1,7 @@
 #[test]
 fn percentage_size_based_on_parent_inner_size() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -7,7 +9,7 @@ fn percentage_size_based_on_parent_inner_size() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Percent(0.5f32),
                     height: taffy::style::Dimension::Percent(0.5f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -21,14 +23,14 @@ fn percentage_size_based_on_parent_inner_size() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(400f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Points(20f32),
-                    right: taffy::style::Dimension::Points(20f32),
-                    top: taffy::style::Dimension::Points(20f32),
-                    bottom: taffy::style::Dimension::Points(20f32),
-                    ..Default::default()
+                    left: taffy::style::LengthPercentage::Points(20f32),
+                    right: taffy::style::LengthPercentage::Points(20f32),
+                    top: taffy::style::LengthPercentage::Points(20f32),
+                    bottom: taffy::style::LengthPercentage::Points(20f32),
+                    ..Rect::zero()
                 },
                 ..Default::default()
             },
@@ -36,6 +38,9 @@ fn percentage_size_based_on_parent_inner_size() {
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 200f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 400f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

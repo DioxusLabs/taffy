@@ -8,8 +8,10 @@ use crate::geometry::{Point, Rect, Size};
 use crate::layout::{AvailableSpace, Layout, RunMode, SizingMode};
 use crate::math::MaybeMath;
 use crate::node::Node;
-use crate::resolve::{MaybeResolve, ResolveOrDefault};
-use crate::style::{AlignContent, AlignSelf, Dimension, Display, FlexWrap, JustifyContent, PositionType};
+use crate::resolve::{MaybeResolve, ResolveOrZero};
+use crate::style::{
+    AlignContent, AlignSelf, Dimension, Display, FlexWrap, JustifyContent, LengthPercentageAuto, PositionType,
+};
 use crate::style::{FlexDirection, Style};
 use crate::sys::Vec;
 use crate::tree::LayoutTree;
@@ -352,9 +354,9 @@ fn compute_constants(style: &Style, node_size: Size<Option<f32>>, parent_size: S
     let is_column = dir.is_column();
     let is_wrap_reverse = style.flex_wrap == FlexWrap::WrapReverse;
 
-    let margin = style.margin.resolve_or_default(parent_size.width.into_option());
-    let padding = style.padding.resolve_or_default(parent_size.width.into_option());
-    let border = style.border.resolve_or_default(parent_size.width.into_option());
+    let margin = style.margin.resolve_or_zero(parent_size.width.into_option());
+    let padding = style.padding.resolve_or_zero(parent_size.width.into_option());
+    let border = style.border.resolve_or_zero(parent_size.width.into_option());
 
     let padding_border = Rect {
         left: padding.left + border.left,
@@ -367,10 +369,10 @@ fn compute_constants(style: &Style, node_size: Size<Option<f32>>, parent_size: S
         width: node_size.width.maybe_sub(padding_border.horizontal_axis_sum()),
         height: node_size.height.maybe_sub(padding_border.vertical_axis_sum()),
     };
-    let gap = style.gap.resolve_or_default(node_inner_size.or(Size { width: Some(0.0), height: Some(0.0) }));
+    let gap = style.gap.resolve_or_zero(node_inner_size.or(Size::zero()));
 
-    let container_size = Size::ZERO;
-    let inner_container_size = Size::ZERO;
+    let container_size = Size::zero();
+    let inner_container_size = Size::zero();
 
     AlgoConstants {
         dir,
@@ -405,18 +407,18 @@ fn generate_anonymous_flex_items(tree: &impl LayoutTree, node: Node, constants: 
             max_size: child_style.max_size.maybe_resolve(constants.node_inner_size),
 
             position: child_style.position.zip_size(constants.node_inner_size, |p, s| p.maybe_resolve(s)),
-            margin: child_style.margin.resolve_or_default(constants.node_inner_size.width),
-            padding: child_style.padding.resolve_or_default(constants.node_inner_size.width),
-            border: child_style.border.resolve_or_default(constants.node_inner_size.width),
+            margin: child_style.margin.resolve_or_zero(constants.node_inner_size.width),
+            padding: child_style.padding.resolve_or_zero(constants.node_inner_size.width),
+            border: child_style.border.resolve_or_zero(constants.node_inner_size.width),
             flex_basis: 0.0,
             inner_flex_basis: 0.0,
             violation: 0.0,
             frozen: false,
 
-            hypothetical_inner_size: Size::ZERO,
-            hypothetical_outer_size: Size::ZERO,
-            target_size: Size::ZERO,
-            outer_target_size: Size::ZERO,
+            hypothetical_inner_size: Size::zero(),
+            hypothetical_outer_size: Size::zero(),
+            target_size: Size::zero(),
+            outer_target_size: Size::zero(),
 
             baseline: 0.0,
 
@@ -1020,7 +1022,7 @@ fn calculate_children_base_lines(
                 &Layout {
                     order: tree.children(node).position(|n| *n == child.node).unwrap() as u32,
                     size: preliminary_size,
-                    location: Point::ZERO,
+                    location: Point::zero(),
                 },
             );
         }
@@ -1080,8 +1082,8 @@ fn calculate_cross_size(
                 .map(|child| {
                     let child_style = tree.style(child.node);
                     if child_style.align_self(tree.style(node)) == AlignSelf::Baseline
-                        && child_style.cross_margin_start(constants.dir) != Dimension::Auto
-                        && child_style.cross_margin_end(constants.dir) != Dimension::Auto
+                        && child_style.cross_margin_start(constants.dir) != LengthPercentageAuto::Auto
+                        && child_style.cross_margin_end(constants.dir) != LengthPercentageAuto::Auto
                         && child_style.cross_size(constants.dir) == Dimension::Auto
                     {
                         max_baseline - child.baseline + child.hypothetical_outer_size.cross(constants.dir)
@@ -1150,8 +1152,8 @@ fn determine_used_cross_size(
             child.target_size.set_cross(
                 constants.dir,
                 if child_style.align_self(tree.style(node)) == AlignSelf::Stretch
-                    && child_style.cross_margin_start(constants.dir) != Dimension::Auto
-                    && child_style.cross_margin_end(constants.dir) != Dimension::Auto
+                    && child_style.cross_margin_start(constants.dir) != LengthPercentageAuto::Auto
+                    && child_style.cross_margin_end(constants.dir) != LengthPercentageAuto::Auto
                     && child_style.cross_size(constants.dir) == Dimension::Auto
                 {
                     (line_cross_size - child.margin.cross_axis_sum(constants.dir))
@@ -1195,10 +1197,10 @@ fn distribute_remaining_free_space(
 
         for child in line.items.iter_mut() {
             let child_style = tree.style(child.node);
-            if child_style.main_margin_start(constants.dir) == Dimension::Auto {
+            if child_style.main_margin_start(constants.dir) == LengthPercentageAuto::Auto {
                 num_auto_margins += 1;
             }
-            if child_style.main_margin_end(constants.dir) == Dimension::Auto {
+            if child_style.main_margin_end(constants.dir) == LengthPercentageAuto::Auto {
                 num_auto_margins += 1;
             }
         }
@@ -1208,14 +1210,14 @@ fn distribute_remaining_free_space(
 
             for child in line.items.iter_mut() {
                 let child_style = tree.style(child.node);
-                if child_style.main_margin_start(constants.dir) == Dimension::Auto {
+                if child_style.main_margin_start(constants.dir) == LengthPercentageAuto::Auto {
                     if constants.is_row {
                         child.margin.left = margin;
                     } else {
                         child.margin.top = margin;
                     }
                 }
-                if child_style.main_margin_end(constants.dir) == Dimension::Auto {
+                if child_style.main_margin_end(constants.dir) == LengthPercentageAuto::Auto {
                     if constants.is_row {
                         child.margin.right = margin;
                     } else {
@@ -1321,8 +1323,8 @@ fn resolve_cross_axis_auto_margins(
             let free_space = line_cross_size - child.outer_target_size.cross(constants.dir);
             let child_style = tree.style(child.node);
 
-            if child_style.cross_margin_start(constants.dir) == Dimension::Auto
-                && child_style.cross_margin_end(constants.dir) == Dimension::Auto
+            if child_style.cross_margin_start(constants.dir) == LengthPercentageAuto::Auto
+                && child_style.cross_margin_end(constants.dir) == LengthPercentageAuto::Auto
             {
                 if constants.is_row {
                     child.margin.top = free_space / 2.0;
@@ -1331,13 +1333,13 @@ fn resolve_cross_axis_auto_margins(
                     child.margin.left = free_space / 2.0;
                     child.margin.right = free_space / 2.0;
                 }
-            } else if child_style.cross_margin_start(constants.dir) == Dimension::Auto {
+            } else if child_style.cross_margin_start(constants.dir) == LengthPercentageAuto::Auto {
                 if constants.is_row {
                     child.margin.top = free_space;
                 } else {
                     child.margin.left = free_space;
                 }
-            } else if child_style.cross_margin_end(constants.dir) == Dimension::Auto {
+            } else if child_style.cross_margin_end(constants.dir) == LengthPercentageAuto::Auto {
                 if constants.is_row {
                     child.margin.bottom = free_space;
                 } else {
@@ -1851,7 +1853,7 @@ mod tests {
     use crate::{
         math::MaybeMath,
         prelude::{Rect, Size},
-        resolve::ResolveOrDefault,
+        resolve::ResolveOrZero,
         style::{FlexWrap, Style},
         Taffy,
     };
@@ -1875,13 +1877,13 @@ mod tests {
         assert!(constants.is_column == style.flex_direction.is_column());
         assert!(constants.is_wrap_reverse == (style.flex_wrap == FlexWrap::WrapReverse));
 
-        let margin = style.margin.resolve_or_default(parent_size.as_options());
+        let margin = style.margin.resolve_or_zero(parent_size.as_options());
         assert_eq!(constants.margin, margin);
 
-        let border = style.border.resolve_or_default(parent_size.as_options());
+        let border = style.border.resolve_or_zero(parent_size.as_options());
         assert_eq!(constants.border, border);
 
-        let padding = style.padding.resolve_or_default(parent_size.as_options());
+        let padding = style.padding.resolve_or_zero(parent_size.as_options());
 
         // TODO: Replace with something less hardcoded?
         let padding_border = Rect {
@@ -1900,8 +1902,8 @@ mod tests {
         };
         assert_eq!(constants.node_inner_size, inner_size);
 
-        assert_eq!(constants.container_size, Size::ZERO);
-        assert_eq!(constants.inner_container_size, Size::ZERO);
+        assert_eq!(constants.container_size, Size::zero());
+        assert_eq!(constants.inner_container_size, Size::zero());
     }
 
     #[test]
@@ -1933,8 +1935,8 @@ mod tests {
         // all layouts should resolve to ZERO due to the root's DISPLAY::NONE
         for (node, _) in &taffy.nodes {
             if let Ok(layout) = taffy.layout(node) {
-                assert_eq!(layout.size, Size::ZERO);
-                assert_eq!(layout.location, Point::ZERO);
+                assert_eq!(layout.size, Size::zero());
+                assert_eq!(layout.location, Point::zero());
             }
         }
     }

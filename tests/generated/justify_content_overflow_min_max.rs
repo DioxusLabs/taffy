@@ -1,5 +1,7 @@
 #[test]
 fn justify_content_overflow_min_max() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -8,7 +10,7 @@ fn justify_content_overflow_min_max() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
                     height: taffy::style::Dimension::Points(50f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -22,7 +24,7 @@ fn justify_content_overflow_min_max() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
                     height: taffy::style::Dimension::Points(50f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -36,7 +38,7 @@ fn justify_content_overflow_min_max() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
                     height: taffy::style::Dimension::Points(50f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -48,20 +50,17 @@ fn justify_content_overflow_min_max() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 justify_content: taffy::style::JustifyContent::Center,
-                min_size: taffy::geometry::Size {
-                    height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
-                },
-                max_size: taffy::geometry::Size {
-                    height: taffy::style::Dimension::Points(110f32),
-                    ..Default::default()
-                },
+                min_size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Size::auto() },
+                max_size: taffy::geometry::Size { height: taffy::style::Dimension::Points(110f32), ..Size::auto() },
                 ..Default::default()
             },
             &[node0, node1, node2],
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 50f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 110f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

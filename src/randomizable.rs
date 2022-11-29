@@ -25,8 +25,6 @@ impl Randomizeable for Dimension {
 
         if switch < 0.2 {
             Dimension::Auto
-        } else if switch < 0.4 {
-            Dimension::Undefined
         } else if switch < 0.8 {
             Dimension::Points(rng.gen_range(0.0..500.0))
         } else {

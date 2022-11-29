@@ -28,6 +28,17 @@ pub struct Rect<T> {
     pub bottom: T,
 }
 
+impl<T: Default> Default for Rect<T> {
+    fn default() -> Self {
+        Rect {
+            left: Default::default(),
+            right: Default::default(),
+            top: Default::default(),
+            bottom: Default::default(),
+        }
+    }
+}
+
 impl<T> Rect<T> {
     /// Applies the function `f` to all four sides of the rect
     ///
@@ -160,6 +171,12 @@ pub struct Size<T> {
     pub height: T,
 }
 
+impl<T: Default> Default for Size<T> {
+    fn default() -> Self {
+        Size { width: Default::default(), height: Default::default() }
+    }
+}
+
 impl<T> Size<T> {
     /// Applies the function `f` to both the width and height
     ///
@@ -279,12 +296,6 @@ impl Size<Dimension> {
     pub const fn from_percent(width: f32, height: f32) -> Self {
         Size { width: Dimension::Percent(width), height: Dimension::Percent(height) }
     }
-
-    /// Generates a [`Size<Dimension>`] using [`Dimension::Auto`] in both width and height
-    pub const AUTO: Size<Dimension> = Self { width: Dimension::Auto, height: Dimension::Auto };
-
-    /// Generates a [`Size<Dimension>`] using [`Dimension::Undefined`] in both width and height
-    pub const UNDEFINED: Size<Dimension> = Self { width: Dimension::Undefined, height: Dimension::Undefined };
 }
 
 /// A 2-dimensional coordinate.

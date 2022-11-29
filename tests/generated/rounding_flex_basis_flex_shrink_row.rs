@@ -1,5 +1,7 @@
 #[test]
 fn rounding_flex_basis_flex_shrink_row() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -29,7 +31,7 @@ fn rounding_flex_basis_flex_shrink_row() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(101f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -37,6 +39,9 @@ fn rounding_flex_basis_flex_shrink_row() {
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 101f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 100f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

@@ -1,5 +1,7 @@
 #[test]
 fn percentage_padding_should_calculate_based_only_on_width() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
         .new_with_children(
@@ -7,7 +9,7 @@ fn percentage_padding_should_calculate_based_only_on_width() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(10f32),
                     height: taffy::style::Dimension::Points(10f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -20,11 +22,11 @@ fn percentage_padding_should_calculate_based_only_on_width() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 1f32,
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Percent(0.1f32),
-                    right: taffy::style::Dimension::Percent(0.1f32),
-                    top: taffy::style::Dimension::Percent(0.1f32),
-                    bottom: taffy::style::Dimension::Percent(0.1f32),
-                    ..Default::default()
+                    left: taffy::style::LengthPercentage::Percent(0.1f32),
+                    right: taffy::style::LengthPercentage::Percent(0.1f32),
+                    top: taffy::style::LengthPercentage::Percent(0.1f32),
+                    bottom: taffy::style::LengthPercentage::Percent(0.1f32),
+                    ..Rect::zero()
                 },
                 ..Default::default()
             },
@@ -38,7 +40,7 @@ fn percentage_padding_should_calculate_based_only_on_width() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -46,6 +48,9 @@ fn percentage_padding_should_calculate_based_only_on_width() {
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 200f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 100f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

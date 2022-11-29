@@ -1,10 +1,12 @@
 #[test]
 fn flex_direction_column() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Default::default() },
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -13,7 +15,7 @@ fn flex_direction_column() {
     let node1 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Default::default() },
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -22,7 +24,7 @@ fn flex_direction_column() {
     let node2 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Default::default() },
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -35,7 +37,7 @@ fn flex_direction_column() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -43,6 +45,9 @@ fn flex_direction_column() {
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 100f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 100f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

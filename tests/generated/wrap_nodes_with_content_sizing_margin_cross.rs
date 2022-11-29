@@ -1,5 +1,7 @@
 #[test]
 fn wrap_nodes_with_content_sizing_margin_cross() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node000 = taffy
         .new_with_children(
@@ -7,7 +9,7 @@ fn wrap_nodes_with_content_sizing_margin_cross() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(40f32),
                     height: taffy::style::Dimension::Points(40f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -26,7 +28,7 @@ fn wrap_nodes_with_content_sizing_margin_cross() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(40f32),
                     height: taffy::style::Dimension::Points(40f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -37,7 +39,10 @@ fn wrap_nodes_with_content_sizing_margin_cross() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                margin: taffy::geometry::Rect { top: taffy::style::Dimension::Points(10f32), ..Default::default() },
+                margin: taffy::geometry::Rect {
+                    top: taffy::style::LengthPercentageAuto::Points(10f32),
+                    ..Rect::zero()
+                },
                 ..Default::default()
             },
             &[node010],
@@ -47,7 +52,7 @@ fn wrap_nodes_with_content_sizing_margin_cross() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(70f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(70f32), ..Size::auto() },
                 ..Default::default()
             },
             &[node00, node01],
@@ -60,7 +65,7 @@ fn wrap_nodes_with_content_sizing_margin_cross() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(500f32),
                     height: taffy::style::Dimension::Points(500f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -68,6 +73,9 @@ fn wrap_nodes_with_content_sizing_margin_cross() {
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 500f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 500f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

@@ -1,5 +1,7 @@
 #[test]
 fn min_max_percent_no_width_height() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -7,12 +9,12 @@ fn min_max_percent_no_width_height() {
                 min_size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Percent(0.1f32),
                     height: taffy::style::Dimension::Percent(0.1f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 max_size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Percent(0.1f32),
                     height: taffy::style::Dimension::Percent(0.1f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -27,7 +29,7 @@ fn min_max_percent_no_width_height() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -35,6 +37,9 @@ fn min_max_percent_no_width_height() {
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 100f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 100f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

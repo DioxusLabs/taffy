@@ -1,16 +1,7 @@
 //! Helper trait to calculate dimensions during layout resolution
 
-use crate::prelude::{Dimension, Rect, Size};
-
-/// Trait to encapsulate behaviour where we need to resolve from a
-/// potentially context-dependent size or dimension into
-/// a context-independent size or dimension.
-///
-/// Will return a default value if it unable to resolve.
-pub(crate) trait ResolveOrDefault<TContext, TOutput> {
-    /// Resolve a dimension that might be dependent on a context, with a default fallback value
-    fn resolve_or_default(self, context: TContext) -> TOutput;
-}
+use crate::prelude::{Dimension, LengthPercentage, LengthPercentageAuto, Rect, Size};
+use crate::style_helpers::TaffyZero;
 
 /// Trait to encapsulate behaviour where we need to resolve from a
 /// potentially context-dependent size or dimension into
@@ -22,6 +13,39 @@ pub(crate) trait MaybeResolve<In, Out> {
     fn maybe_resolve(self, context: In) -> Out;
 }
 
+/// Trait to encapsulate behaviour where we need to resolve from a
+/// potentially context-dependent size or dimension into
+/// a context-independent size or dimension.
+///
+/// Will return a default value if it unable to resolve.
+pub(crate) trait ResolveOrZero<TContext, TOutput: TaffyZero> {
+    /// Resolve a dimension that might be dependent on a context, with a default fallback value
+    fn resolve_or_zero(self, context: TContext) -> TOutput;
+}
+
+impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentage {
+    /// Converts the given [`LengthPercentage`] into a concrete value of points
+    /// Can return `None`
+    fn maybe_resolve(self, context: Option<f32>) -> Option<f32> {
+        match self {
+            LengthPercentage::Points(points) => Some(points),
+            LengthPercentage::Percent(percent) => context.map(|dim| dim * percent),
+        }
+    }
+}
+
+impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentageAuto {
+    /// Converts the given [`LengthPercentageAuto`] into a concrete value of points
+    /// Can return `None`
+    fn maybe_resolve(self, context: Option<f32>) -> Option<f32> {
+        match self {
+            LengthPercentageAuto::Points(points) => Some(points),
+            LengthPercentageAuto::Percent(percent) => context.map(|dim| dim * percent),
+            LengthPercentageAuto::Auto => None,
+        }
+    }
+}
+
 impl MaybeResolve<Option<f32>, Option<f32>> for Dimension {
     /// Converts the given [`Dimension`] into a concrete value of points
     ///
@@ -29,24 +53,19 @@ impl MaybeResolve<Option<f32>, Option<f32>> for Dimension {
     fn maybe_resolve(self, context: Option<f32>) -> Option<f32> {
         match self {
             Dimension::Points(points) => Some(points),
-            // parent_dim * percent
             Dimension::Percent(percent) => context.map(|dim| dim * percent),
-            _ => None,
+            Dimension::Auto => None,
         }
     }
 }
 
-impl MaybeResolve<f32, Option<f32>> for Dimension {
-    /// Converts the given [`Dimension`] into a concrete value of points
-    ///
+// Generic implementation of MaybeResolve for f32 context where MaybeResolve is implemented
+// for Option<f32> context
+impl<T: MaybeResolve<Option<f32>, Option<f32>>> MaybeResolve<f32, Option<f32>> for T {
+    /// Converts the given MaybeResolve value into a concrete value of points
     /// Can return `None`
     fn maybe_resolve(self, context: f32) -> Option<f32> {
-        match self {
-            Dimension::Points(points) => Some(points),
-            // parent_dim * percent
-            Dimension::Percent(percent) => Some(context * percent),
-            _ => None,
-        }
+        self.maybe_resolve(Some(context))
     }
 }
 
@@ -58,40 +77,57 @@ impl<In, Out, T: MaybeResolve<In, Out>> MaybeResolve<Size<In>, Size<Out>> for Si
     }
 }
 
-impl ResolveOrDefault<Option<f32>, f32> for Dimension {
+impl ResolveOrZero<Option<f32>, f32> for LengthPercentage {
     /// Will return a default value of result is evaluated to `None`
-    fn resolve_or_default(self, context: Option<f32>) -> f32 {
+    fn resolve_or_zero(self, context: Option<f32>) -> f32 {
         self.maybe_resolve(context).unwrap_or(0.0)
     }
 }
 
-impl ResolveOrDefault<Size<Option<f32>>, Size<f32>> for Size<Dimension> {
-    fn resolve_or_default(self, context: Size<Option<f32>>) -> Size<f32> {
-        Size {
-            width: self.width.resolve_or_default(context.width),
-            height: self.height.resolve_or_default(context.height),
+impl ResolveOrZero<Option<f32>, f32> for LengthPercentageAuto {
+    /// Will return a default value of result is evaluated to `None`
+    fn resolve_or_zero(self, context: Option<f32>) -> f32 {
+        self.maybe_resolve(context).unwrap_or(0.0)
+    }
+}
+
+impl ResolveOrZero<Option<f32>, f32> for Dimension {
+    /// Will return a default value of result is evaluated to `None`
+    fn resolve_or_zero(self, context: Option<f32>) -> f32 {
+        self.maybe_resolve(context).unwrap_or(0.0)
+    }
+}
+
+// Generic ResolveOrZero for Size
+impl<In, Out: TaffyZero, T: ResolveOrZero<In, Out>> ResolveOrZero<Size<In>, Size<Out>> for Size<T> {
+    /// Converts any `parent`-relative values for size into an absolute size
+    fn resolve_or_zero(self, context: Size<In>) -> Size<Out> {
+        Size { width: self.width.resolve_or_zero(context.width), height: self.height.resolve_or_zero(context.height) }
+    }
+}
+
+// Generic ResolveOrZero for resolving Rect against Size
+impl<In: Copy, Out: TaffyZero, T: ResolveOrZero<In, Out>> ResolveOrZero<Size<In>, Rect<Out>> for Rect<T> {
+    /// Converts any `parent`-relative values for Rect into an absolute Rect
+    fn resolve_or_zero(self, context: Size<In>) -> Rect<Out> {
+        Rect {
+            left: self.left.resolve_or_zero(context.width),
+            right: self.right.resolve_or_zero(context.width),
+            top: self.top.resolve_or_zero(context.height),
+            bottom: self.bottom.resolve_or_zero(context.height),
         }
     }
 }
 
-impl ResolveOrDefault<Size<Option<f32>>, Rect<f32>> for Rect<Dimension> {
-    fn resolve_or_default(self, context: Size<Option<f32>>) -> Rect<f32> {
+// Generic ResolveOrZero for resolving Rect against Option
+impl<Out: TaffyZero, T: ResolveOrZero<Option<f32>, Out>> ResolveOrZero<Option<f32>, Rect<Out>> for Rect<T> {
+    /// Converts any `parent`-relative values for Rect into an absolute Rect
+    fn resolve_or_zero(self, context: Option<f32>) -> Rect<Out> {
         Rect {
-            left: self.left.resolve_or_default(context.width),
-            right: self.right.resolve_or_default(context.width),
-            top: self.top.resolve_or_default(context.height),
-            bottom: self.bottom.resolve_or_default(context.height),
-        }
-    }
-}
-
-impl ResolveOrDefault<Option<f32>, Rect<f32>> for Rect<Dimension> {
-    fn resolve_or_default(self, context: Option<f32>) -> Rect<f32> {
-        Rect {
-            left: self.left.resolve_or_default(context),
-            right: self.right.resolve_or_default(context),
-            top: self.top.resolve_or_default(context),
-            bottom: self.bottom.resolve_or_default(context),
+            left: self.left.resolve_or_zero(context),
+            right: self.right.resolve_or_zero(context),
+            top: self.top.resolve_or_zero(context),
+            bottom: self.bottom.resolve_or_zero(context),
         }
     }
 }
@@ -103,18 +139,6 @@ mod tests {
         use crate::resolve::MaybeResolve;
         use crate::style::Dimension;
         use rstest::rstest;
-
-        /// `Dimension::Undefined` should always return `None`
-        ///
-        /// The parent / context should not affect the outcome.
-        #[rstest]
-        #[case(Dimension::Undefined, None, None)]
-        #[case(Dimension::Undefined, Some(5.0), None)]
-        #[case(Dimension::Undefined, Some(-5.0), None)]
-        #[case(Dimension::Undefined, Some(0.), None)]
-        fn resolve_undefined(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: Option<f32>) {
-            assert_eq!(input.maybe_resolve(context), expected);
-        }
 
         /// `Dimension::Auto` should always return `None`
         ///
@@ -160,30 +184,14 @@ mod tests {
         use crate::{prelude::Size, resolve::MaybeResolve, style::Dimension};
         use rstest::rstest;
 
-        /// Size<Dimension::Undefined> should always return Size<None>
-        ///
-        /// The parent / context should not affect the outcome.
-        #[rstest]
-        #[case(Size::UNDEFINED, Size::NONE, Size::NONE)]
-        #[case(Size::UNDEFINED, Size::new(5.0, 5.0), Size::NONE)]
-        #[case(Size::UNDEFINED, Size::new(-5.0, -5.0), Size::NONE)]
-        #[case(Size::UNDEFINED, Size::new(0.0, 0.0), Size::NONE)]
-        fn maybe_resolve_undefined(
-            #[case] input: Size<Dimension>,
-            #[case] context: Size<Option<f32>>,
-            #[case] expected: Size<Option<f32>>,
-        ) {
-            assert_eq!(input.maybe_resolve(context), expected);
-        }
-
         /// Size<Dimension::Auto> should always return Size<None>
         ///
         /// The parent / context should not affect the outcome.
         #[rstest]
-        #[case(Size::AUTO, Size::NONE, Size::NONE)]
-        #[case(Size::AUTO, Size::new(5.0, 5.0), Size::NONE)]
-        #[case(Size::AUTO, Size::new(-5.0, -5.0), Size::NONE)]
-        #[case(Size::AUTO, Size::new(0.0, 0.0), Size::NONE)]
+        #[case(Size::auto(), Size::NONE, Size::NONE)]
+        #[case(Size::auto(), Size::new(5.0, 5.0), Size::NONE)]
+        #[case(Size::auto(), Size::new(-5.0, -5.0), Size::NONE)]
+        #[case(Size::auto(), Size::new(0.0, 0.0), Size::NONE)]
         fn maybe_resolve_auto(
             #[case] input: Size<Dimension>,
             #[case] context: Size<Option<f32>>,
@@ -228,75 +236,54 @@ mod tests {
         }
     }
 
-    mod resolve_or_default_dimension_to_option_f32 {
-        use crate::resolve::ResolveOrDefault;
+    mod resolve_or_zero_dimension_to_option_f32 {
+        use crate::resolve::ResolveOrZero;
         use crate::style::Dimension;
         use rstest::rstest;
 
-        #[rstest]
-        #[case(Dimension::Undefined, None, 0.0)]
-        #[case(Dimension::Undefined, Some(5.0), 0.0)]
-        #[case(Dimension::Undefined, Some(-5.0), 0.0)]
-        #[case(Dimension::Undefined, Some(0.0), 0.0)]
-        fn resolve_or_default_undefined(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: f32) {
-            assert_eq!(input.resolve_or_default(context), expected);
-        }
         #[rstest]
         #[case(Dimension::Auto, None, 0.0)]
         #[case(Dimension::Auto, Some(5.0), 0.0)]
         #[case(Dimension::Auto, Some(-5.0), 0.0)]
         #[case(Dimension::Auto, Some(0.0), 0.0)]
-        fn resolve_or_default_auto(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: f32) {
-            assert_eq!(input.resolve_or_default(context), expected);
+        fn resolve_or_zero_auto(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: f32) {
+            assert_eq!(input.resolve_or_zero(context), expected);
         }
         #[rstest]
         #[case(Dimension::Points(5.0), None, 5.0)]
         #[case(Dimension::Points(5.0), Some(5.0), 5.0)]
         #[case(Dimension::Points(5.0), Some(-5.0), 5.0)]
         #[case(Dimension::Points(5.0), Some(0.0), 5.0)]
-        fn resolve_or_default_points(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: f32) {
-            assert_eq!(input.resolve_or_default(context), expected);
+        fn resolve_or_zero_points(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: f32) {
+            assert_eq!(input.resolve_or_zero(context), expected);
         }
         #[rstest]
         #[case(Dimension::Percent(5.0), None, 0.0)]
         #[case(Dimension::Percent(5.0), Some(5.0), 25.0)]
         #[case(Dimension::Percent(5.0), Some(-5.0), -25.0)]
         #[case(Dimension::Percent(5.0), Some(0.0), 0.0)]
-        fn resolve_or_default_percent(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: f32) {
-            assert_eq!(input.resolve_or_default(context), expected);
+        fn resolve_or_zero_percent(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: f32) {
+            assert_eq!(input.resolve_or_zero(context), expected);
         }
     }
 
-    mod resolve_or_default_rect_dimension_to_rect {
+    mod resolve_or_zero_rect_dimension_to_rect {
         use crate::geometry::{Rect, Size};
-        use crate::resolve::ResolveOrDefault;
+        use crate::resolve::ResolveOrZero;
         use crate::style::Dimension;
         use rstest::rstest;
 
         #[rstest]
-        #[case(Rect::UNDEFINED, Size::NONE, Rect::ZERO)]
-        #[case(Rect::UNDEFINED, Size::new(5.0, 5.0), Rect::ZERO)]
-        #[case(Rect::UNDEFINED, Size::new(-5.0, -5.0), Rect::ZERO)]
-        #[case(Rect::UNDEFINED, Size::new(0.0, 0.0), Rect::ZERO)]
-        fn resolve_or_default_undefined(
+        #[case(Rect::auto(), Size::NONE, Rect::zero())]
+        #[case(Rect::auto(), Size::new(5.0, 5.0), Rect::zero())]
+        #[case(Rect::auto(), Size::new(-5.0, -5.0), Rect::zero())]
+        #[case(Rect::auto(), Size::new(0.0, 0.0), Rect::zero())]
+        fn resolve_or_zero_auto(
             #[case] input: Rect<Dimension>,
             #[case] context: Size<Option<f32>>,
             #[case] expected: Rect<f32>,
         ) {
-            assert_eq!(input.resolve_or_default(context), expected);
-        }
-
-        #[rstest]
-        #[case(Rect::AUTO, Size::NONE, Rect::ZERO)]
-        #[case(Rect::AUTO, Size::new(5.0, 5.0), Rect::ZERO)]
-        #[case(Rect::AUTO, Size::new(-5.0, -5.0), Rect::ZERO)]
-        #[case(Rect::AUTO, Size::new(0.0, 0.0), Rect::ZERO)]
-        fn resolve_or_default_auto(
-            #[case] input: Rect<Dimension>,
-            #[case] context: Size<Option<f32>>,
-            #[case] expected: Rect<f32>,
-        ) {
-            assert_eq!(input.resolve_or_default(context), expected);
+            assert_eq!(input.resolve_or_zero(context), expected);
         }
 
         #[rstest]
@@ -304,58 +291,45 @@ mod tests {
         #[case(Rect::from_points(5.0, 5.0, 5.0, 5.0), Size::new(5.0, 5.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
         #[case(Rect::from_points(5.0, 5.0, 5.0, 5.0), Size::new(-5.0, -5.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
         #[case(Rect::from_points(5.0, 5.0, 5.0, 5.0), Size::new(0.0, 0.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
-        fn resolve_or_default_points(
+        fn resolve_or_zero_points(
             #[case] input: Rect<Dimension>,
             #[case] context: Size<Option<f32>>,
             #[case] expected: Rect<f32>,
         ) {
-            assert_eq!(input.resolve_or_default(context), expected);
+            assert_eq!(input.resolve_or_zero(context), expected);
         }
 
         #[rstest]
-        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::NONE, Rect::ZERO)]
+        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::NONE, Rect::zero())]
         #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::new(5.0, 5.0), Rect::new(25.0, 25.0, 25.0, 25.0))]
         #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::new(-5.0, -5.0), Rect::new(-25.0, -25.0, -25.0, -25.0))]
-        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::new(0.0, 0.0), Rect::ZERO)]
-        fn resolve_or_default_percent(
+        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::new(0.0, 0.0), Rect::zero())]
+        fn resolve_or_zero_percent(
             #[case] input: Rect<Dimension>,
             #[case] context: Size<Option<f32>>,
             #[case] expected: Rect<f32>,
         ) {
-            assert_eq!(input.resolve_or_default(context), expected);
+            assert_eq!(input.resolve_or_zero(context), expected);
         }
     }
 
-    mod resolve_or_default_rect_dimension_to_rect_f32_via_option {
+    mod resolve_or_zero_rect_dimension_to_rect_f32_via_option {
         use crate::geometry::Rect;
-        use crate::resolve::ResolveOrDefault;
+        use crate::resolve::ResolveOrZero;
         use crate::style::Dimension;
         use rstest::rstest;
 
         #[rstest]
-        #[case(Rect::UNDEFINED, None, Rect::ZERO)]
-        #[case(Rect::UNDEFINED, Some(5.0), Rect::ZERO)]
-        #[case(Rect::UNDEFINED, Some(-5.0), Rect::ZERO)]
-        #[case(Rect::UNDEFINED, Some(0.0), Rect::ZERO)]
-        fn resolve_or_default_undefined(
+        #[case(Rect::auto(), None, Rect::zero())]
+        #[case(Rect::auto(), Some(5.0), Rect::zero())]
+        #[case(Rect::auto(), Some(-5.0), Rect::zero())]
+        #[case(Rect::auto(), Some(0.0), Rect::zero())]
+        fn resolve_or_zero_auto(
             #[case] input: Rect<Dimension>,
             #[case] context: Option<f32>,
             #[case] expected: Rect<f32>,
         ) {
-            assert_eq!(input.resolve_or_default(context), expected);
-        }
-
-        #[rstest]
-        #[case(Rect::AUTO, None, Rect::ZERO)]
-        #[case(Rect::AUTO, Some(5.0), Rect::ZERO)]
-        #[case(Rect::AUTO, Some(-5.0), Rect::ZERO)]
-        #[case(Rect::AUTO, Some(0.0), Rect::ZERO)]
-        fn resolve_or_default_auto(
-            #[case] input: Rect<Dimension>,
-            #[case] context: Option<f32>,
-            #[case] expected: Rect<f32>,
-        ) {
-            assert_eq!(input.resolve_or_default(context), expected);
+            assert_eq!(input.resolve_or_zero(context), expected);
         }
 
         #[rstest]
@@ -363,25 +337,25 @@ mod tests {
         #[case(Rect::from_points(5.0, 5.0, 5.0, 5.0), Some(5.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
         #[case(Rect::from_points(5.0, 5.0, 5.0, 5.0), Some(-5.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
         #[case(Rect::from_points(5.0, 5.0, 5.0, 5.0), Some(0.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
-        fn resolve_or_default_points(
+        fn resolve_or_zero_points(
             #[case] input: Rect<Dimension>,
             #[case] context: Option<f32>,
             #[case] expected: Rect<f32>,
         ) {
-            assert_eq!(input.resolve_or_default(context), expected);
+            assert_eq!(input.resolve_or_zero(context), expected);
         }
 
         #[rstest]
-        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), None, Rect::ZERO)]
+        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), None, Rect::zero())]
         #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(5.0), Rect::new(25.0, 25.0, 25.0, 25.0))]
         #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(-5.0), Rect::new(-25.0, -25.0, -25.0, -25.0))]
-        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(0.0), Rect::ZERO)]
-        fn resolve_or_default_percent(
+        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(0.0), Rect::zero())]
+        fn resolve_or_zero_percent(
             #[case] input: Rect<Dimension>,
             #[case] context: Option<f32>,
             #[case] expected: Rect<f32>,
         ) {
-            assert_eq!(input.resolve_or_default(context), expected);
+            assert_eq!(input.resolve_or_zero(context), expected);
         }
     }
 }

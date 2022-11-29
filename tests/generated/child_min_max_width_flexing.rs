@@ -1,5 +1,7 @@
 #[test]
 fn child_min_max_width_flexing() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -7,7 +9,7 @@ fn child_min_max_width_flexing() {
                 flex_grow: 1f32,
                 flex_shrink: 0f32,
                 flex_basis: taffy::style::Dimension::Points(0f32),
-                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), ..Default::default() },
+                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -19,7 +21,7 @@ fn child_min_max_width_flexing() {
                 flex_grow: 1f32,
                 flex_shrink: 0f32,
                 flex_basis: taffy::style::Dimension::Percent(0.5f32),
-                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Default::default() },
+                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -31,7 +33,7 @@ fn child_min_max_width_flexing() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(120f32),
                     height: taffy::style::Dimension::Points(50f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -39,6 +41,9 @@ fn child_min_max_width_flexing() {
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 120f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 50f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

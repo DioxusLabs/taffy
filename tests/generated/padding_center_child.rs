@@ -1,5 +1,7 @@
 #[test]
 fn padding_center_child() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -7,7 +9,7 @@ fn padding_center_child() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(10f32),
                     height: taffy::style::Dimension::Points(10f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -22,14 +24,14 @@ fn padding_center_child() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Points(10f32),
-                    right: taffy::style::Dimension::Points(20f32),
-                    top: taffy::style::Dimension::Points(10f32),
-                    bottom: taffy::style::Dimension::Points(20f32),
-                    ..Default::default()
+                    left: taffy::style::LengthPercentage::Points(10f32),
+                    right: taffy::style::LengthPercentage::Points(20f32),
+                    top: taffy::style::LengthPercentage::Points(10f32),
+                    bottom: taffy::style::LengthPercentage::Points(20f32),
+                    ..Rect::zero()
                 },
                 ..Default::default()
             },
@@ -37,6 +39,9 @@ fn padding_center_child() {
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 100f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 100f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

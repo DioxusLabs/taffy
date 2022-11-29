@@ -1,5 +1,7 @@
 #[test]
 fn wrap_column() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -7,7 +9,7 @@ fn wrap_column() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
                     height: taffy::style::Dimension::Points(31f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -20,7 +22,7 @@ fn wrap_column() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
                     height: taffy::style::Dimension::Points(32f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -33,7 +35,7 @@ fn wrap_column() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
                     height: taffy::style::Dimension::Points(33f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -46,7 +48,7 @@ fn wrap_column() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(30f32),
                     height: taffy::style::Dimension::Points(34f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -61,7 +63,7 @@ fn wrap_column() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -69,6 +71,9 @@ fn wrap_column() {
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 100f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 100f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

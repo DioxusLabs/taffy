@@ -1,12 +1,14 @@
 #[test]
 fn rounding_fractial_input_2() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
                 flex_grow: 1f32,
                 flex_basis: taffy::style::Dimension::Points(50f32),
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(20f32), ..Default::default() },
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(20f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -16,7 +18,7 @@ fn rounding_fractial_input_2() {
         .new_with_children(
             taffy::style::Style {
                 flex_grow: 1f32,
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Default::default() },
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -26,7 +28,7 @@ fn rounding_fractial_input_2() {
         .new_with_children(
             taffy::style::Style {
                 flex_grow: 1f32,
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Default::default() },
+                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -39,7 +41,7 @@ fn rounding_fractial_input_2() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(113.6f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -47,6 +49,9 @@ fn rounding_fractial_input_2() {
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 100f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 114f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

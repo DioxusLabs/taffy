@@ -1,5 +1,7 @@
 #[test]
 fn justify_content_min_width_with_padding_child_width_lower_than_parent() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node000 = taffy
         .new_with_children(
@@ -7,7 +9,7 @@ fn justify_content_min_width_with_padding_child_width_lower_than_parent() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(199f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -18,14 +20,11 @@ fn justify_content_min_width_with_padding_child_width_lower_than_parent() {
         .new_with_children(
             taffy::style::Style {
                 justify_content: taffy::style::JustifyContent::Center,
-                min_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(400f32),
-                    ..Default::default()
-                },
+                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(400f32), ..Size::auto() },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Points(100f32),
-                    right: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    left: taffy::style::LengthPercentage::Points(100f32),
+                    right: taffy::style::LengthPercentage::Points(100f32),
+                    ..Rect::zero()
                 },
                 ..Default::default()
             },
@@ -40,7 +39,7 @@ fn justify_content_min_width_with_padding_child_width_lower_than_parent() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(1080f32),
                     height: taffy::style::Dimension::Points(1584f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -48,6 +47,9 @@ fn justify_content_min_width_with_padding_child_width_lower_than_parent() {
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 1080f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 1584f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

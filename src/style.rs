@@ -252,43 +252,50 @@ impl Default for FlexWrap {
 /// A unit of linear measurement
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
-/// The default value is [`Dimension::Undefined`].
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum Dimension {
-    /// The dimension is not given
-    Undefined,
-    /// The dimension should be automatically computed
-    Auto,
-    /// The dimension is stored in [points](https://en.wikipedia.org/wiki/Point_(typography))
-    ///
-    /// Each point is about 0.353 mm in size.
+pub enum LengthPercentage {
+    /// Points are abstract absolute units. Users of Taffy may define what they correspond
+    /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
     Points(f32),
     /// The dimension is stored in percentage relative to the parent item.
     Percent(f32),
 }
 
-impl Default for Dimension {
-    fn default() -> Self {
-        Self::Undefined
-    }
+/// A unit of linear measurement
+///
+/// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
+#[derive(Copy, Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum LengthPercentageAuto {
+    /// Points are abstract absolute units. Users of Taffy may define what they correspond
+    /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
+    Points(f32),
+    /// The dimension is stored in percentage relative to the parent item.
+    Percent(f32),
+    /// The dimension should be automatically computed
+    Auto,
+}
+
+/// A unit of linear measurement
+///
+/// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
+#[derive(Copy, Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum Dimension {
+    /// Points are abstract absolute units. Users of Taffy may define what they correspond
+    /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
+    Points(f32),
+    /// The dimension is stored in percentage relative to the parent item.
+    Percent(f32),
+    /// The dimension should be automatically computed
+    Auto,
 }
 
 impl Dimension {
     /// Is this value defined?
     pub(crate) fn is_defined(self) -> bool {
         matches!(self, Dimension::Points(_) | Dimension::Percent(_))
-    }
-}
-
-impl Default for Rect<Dimension> {
-    fn default() -> Self {
-        Self {
-            left: Default::default(),
-            right: Default::default(),
-            top: Default::default(),
-            bottom: Default::default(),
-        }
     }
 }
 
@@ -317,14 +324,6 @@ impl Rect<Dimension> {
         Rect { right: Dimension::Percent(end), bottom: Dimension::Percent(bottom), ..Rect::AUTO }
     }
 
-    /// Generates a [`Rect<Dimension>`] using [`Dimension::Undefined`] for all values
-    pub const UNDEFINED: Rect<Dimension> = Self {
-        left: Dimension::Undefined,
-        right: Dimension::Undefined,
-        top: Dimension::Undefined,
-        bottom: Dimension::Undefined,
-    };
-
     /// Generates a [`Rect<Dimension>`] using [`Dimension::Auto`] for all values
     pub const AUTO: Rect<Dimension> =
         Self { left: Dimension::Auto, right: Dimension::Auto, top: Dimension::Auto, bottom: Dimension::Auto };
@@ -349,12 +348,6 @@ impl Rect<Dimension> {
             top: Dimension::Percent(top),
             bottom: Dimension::Percent(bottom),
         }
-    }
-}
-
-impl Default for Size<Dimension> {
-    fn default() -> Self {
-        Self { width: Dimension::Auto, height: Dimension::Auto }
     }
 }
 
@@ -393,16 +386,16 @@ pub struct Style {
     /// How should items be aligned relative to the main axis?
     pub justify_content: JustifyContent,
     /// How should the position of this element be tweaked relative to the layout defined?
-    pub position: Rect<Dimension>,
+    pub position: Rect<LengthPercentageAuto>,
     /// How large should the margin be on each side?
-    pub margin: Rect<Dimension>,
+    pub margin: Rect<LengthPercentageAuto>,
     /// How large should the padding be on each side?
-    pub padding: Rect<Dimension>,
+    pub padding: Rect<LengthPercentage>,
     /// How large should the border be on each side?
-    pub border: Rect<Dimension>,
+    pub border: Rect<LengthPercentage>,
     // Gap
     /// How large should the gaps between items in a grid or flex container be?
-    pub gap: Size<Dimension>,
+    pub gap: Size<LengthPercentage>,
     /// The relative rate at which this item grows when it is expanding to fill space
     ///
     /// 0.0 is the default value, and this value must not be negative.
@@ -437,17 +430,17 @@ impl Style {
         align_self: AlignSelf::Auto,
         align_content: AlignContent::Stretch,
         justify_content: JustifyContent::FlexStart,
-        position: Rect::UNDEFINED,
-        margin: Rect::UNDEFINED,
-        padding: Rect::UNDEFINED,
-        border: Rect::UNDEFINED,
-        gap: Size::UNDEFINED,
+        position: Rect::auto(),
+        margin: Rect::zero(),
+        padding: Rect::zero(),
+        border: Rect::zero(),
+        gap: Size::zero(),
         flex_grow: 0.0,
         flex_shrink: 1.0,
         flex_basis: Dimension::Auto,
-        size: Size::AUTO,
-        min_size: Size::AUTO,
-        max_size: Size::AUTO,
+        size: Size::auto(),
+        min_size: Size::auto(),
+        max_size: Size::auto(),
         aspect_ratio: None,
     };
 }
@@ -478,7 +471,7 @@ impl Style {
     }
 
     /// If the `direction` is row-oriented, the margin start. Otherwise the margin top
-    pub(crate) fn main_margin_start(&self, direction: FlexDirection) -> Dimension {
+    pub(crate) fn main_margin_start(&self, direction: FlexDirection) -> LengthPercentageAuto {
         if direction.is_row() {
             self.margin.left
         } else {
@@ -487,7 +480,7 @@ impl Style {
     }
 
     /// If the `direction` is row-oriented, the margin end. Otherwise the margin bottom
-    pub(crate) fn main_margin_end(&self, direction: FlexDirection) -> Dimension {
+    pub(crate) fn main_margin_end(&self, direction: FlexDirection) -> LengthPercentageAuto {
         if direction.is_row() {
             self.margin.right
         } else {
@@ -523,7 +516,7 @@ impl Style {
     }
 
     /// If the `direction` is row-oriented, the margin top. Otherwise the margin start
-    pub(crate) fn cross_margin_start(&self, direction: FlexDirection) -> Dimension {
+    pub(crate) fn cross_margin_start(&self, direction: FlexDirection) -> LengthPercentageAuto {
         if direction.is_row() {
             self.margin.top
         } else {
@@ -532,7 +525,7 @@ impl Style {
     }
 
     /// If the `direction` is row-oriented, the margin bottom. Otherwise the margin end
-    pub(crate) fn cross_margin_end(&self, direction: FlexDirection) -> Dimension {
+    pub(crate) fn cross_margin_end(&self, direction: FlexDirection) -> LengthPercentageAuto {
         if direction.is_row() {
             self.margin.bottom
         } else {
@@ -563,7 +556,7 @@ impl Style {
 #[cfg(test)]
 mod tests {
     use super::Style;
-    use crate::geometry::Size;
+    use crate::geometry::{Rect, Size};
 
     #[test]
     fn defaults_match() {
@@ -576,17 +569,17 @@ mod tests {
             align_self: Default::default(),
             align_content: Default::default(),
             justify_content: Default::default(),
-            position: Default::default(),
-            margin: Default::default(),
-            padding: Default::default(),
-            border: Default::default(),
-            gap: Size::UNDEFINED,
+            position: Rect::auto(),
+            margin: Rect::zero(),
+            padding: Rect::zero(),
+            border: Rect::zero(),
+            gap: Size::zero(),
             flex_grow: 0.0,
             flex_shrink: 1.0,
             flex_basis: super::Dimension::Auto,
-            size: Default::default(),
-            min_size: Default::default(),
-            max_size: Default::default(),
+            size: Size::auto(),
+            min_size: Size::auto(),
+            max_size: Size::auto(),
             aspect_ratio: Default::default(),
         };
 
@@ -624,6 +617,7 @@ mod tests {
 
     mod test_flexbox_layout {
         use crate::style::*;
+        use crate::style_helpers::*;
 
         fn layout_from_align_items(align: AlignItems) -> Style {
             Style { align_items: align, ..Default::default() }
@@ -649,16 +643,22 @@ mod tests {
 
         #[test]
         fn flexbox_layout_main_margin_start() {
-            let layout = Style { margin: Rect::top_from_points(2.0, 1.0), ..Default::default() };
-            assert_eq!(layout.main_margin_start(FlexDirection::Row), Dimension::Points(2.0));
-            assert_eq!(layout.main_margin_start(FlexDirection::Column), Dimension::Points(1.0));
+            let layout = Style {
+                margin: Rect { top: points(1.0), bottom: auto(), left: points(2.0), right: auto() },
+                ..Default::default()
+            };
+            assert_eq!(layout.main_margin_start(FlexDirection::Row), points(2.0));
+            assert_eq!(layout.main_margin_start(FlexDirection::Column), points(1.0));
         }
 
         #[test]
         fn flexbox_layout_main_margin_end() {
-            let layout = Style { margin: Rect::bot_from_points(2.0, 1.0), ..Default::default() };
-            assert_eq!(layout.main_margin_end(FlexDirection::Row), Dimension::Points(2.0));
-            assert_eq!(layout.main_margin_end(FlexDirection::Column), Dimension::Points(1.0));
+            let layout = Style {
+                margin: Rect { top: auto(), bottom: points(1.0), left: auto(), right: points(2.0) },
+                ..Default::default()
+            };
+            assert_eq!(layout.main_margin_end(FlexDirection::Row), points(2.0));
+            assert_eq!(layout.main_margin_end(FlexDirection::Column), points(1.0));
         }
 
         #[test]
@@ -684,16 +684,22 @@ mod tests {
 
         #[test]
         fn flexbox_layout_cross_margin_start() {
-            let layout = Style { margin: Rect::top_from_points(2.0, 1.0), ..Default::default() };
-            assert_eq!(layout.cross_margin_start(FlexDirection::Row), Dimension::Points(1.0));
-            assert_eq!(layout.cross_margin_start(FlexDirection::Column), Dimension::Points(2.0));
+            let layout = Style {
+                margin: Rect { top: points(1.0), bottom: auto(), left: points(2.0), right: auto() },
+                ..Default::default()
+            };
+            assert_eq!(layout.cross_margin_start(FlexDirection::Row), points(1.0));
+            assert_eq!(layout.cross_margin_start(FlexDirection::Column), points(2.0));
         }
 
         #[test]
         fn flexbox_layout_cross_margin_end() {
-            let layout = Style { margin: Rect::bot_from_points(2.0, 1.0), ..Default::default() };
-            assert_eq!(layout.cross_margin_end(FlexDirection::Row), Dimension::Points(1.0));
-            assert_eq!(layout.cross_margin_end(FlexDirection::Column), Dimension::Points(2.0));
+            let layout = Style {
+                margin: Rect { top: auto(), bottom: points(1.0), left: auto(), right: points(2.0) },
+                ..Default::default()
+            };
+            assert_eq!(layout.cross_margin_end(FlexDirection::Row), points(1.0));
+            assert_eq!(layout.cross_margin_end(FlexDirection::Column), points(2.0));
         }
 
         #[test]

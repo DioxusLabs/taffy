@@ -1,5 +1,7 @@
 #[test]
 fn percentage_width_height_undefined_parent_size() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -7,7 +9,7 @@ fn percentage_width_height_undefined_parent_size() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Percent(0.5f32),
                     height: taffy::style::Dimension::Percent(0.5f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -21,6 +23,9 @@ fn percentage_width_height_undefined_parent_size() {
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 0f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 0f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

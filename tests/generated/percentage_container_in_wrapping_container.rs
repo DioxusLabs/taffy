@@ -1,5 +1,7 @@
 #[test]
 fn percentage_container_in_wrapping_container() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node000 = taffy
         .new_with_children(
@@ -7,7 +9,7 @@ fn percentage_container_in_wrapping_container() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
                     height: taffy::style::Dimension::Points(50f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -20,7 +22,7 @@ fn percentage_container_in_wrapping_container() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
                     height: taffy::style::Dimension::Points(50f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -31,7 +33,7 @@ fn percentage_container_in_wrapping_container() {
         .new_with_children(
             taffy::style::Style {
                 justify_content: taffy::style::JustifyContent::Center,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), ..Size::auto() },
                 ..Default::default()
             },
             &[node000, node001],
@@ -52,7 +54,7 @@ fn percentage_container_in_wrapping_container() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(200f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -60,6 +62,9 @@ fn percentage_container_in_wrapping_container() {
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 200f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 200f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

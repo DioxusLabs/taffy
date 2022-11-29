@@ -1,5 +1,7 @@
 #[test]
 fn wrapped_column_max_height_flex() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -10,12 +12,9 @@ fn wrapped_column_max_height_flex() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(500f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
-                max_size: taffy::geometry::Size {
-                    height: taffy::style::Dimension::Points(200f32),
-                    ..Default::default()
-                },
+                max_size: taffy::geometry::Size { height: taffy::style::Dimension::Points(200f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -30,14 +29,14 @@ fn wrapped_column_max_height_flex() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(200f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Points(20f32),
-                    right: taffy::style::Dimension::Points(20f32),
-                    top: taffy::style::Dimension::Points(20f32),
-                    bottom: taffy::style::Dimension::Points(20f32),
-                    ..Default::default()
+                    left: taffy::style::LengthPercentageAuto::Points(20f32),
+                    right: taffy::style::LengthPercentageAuto::Points(20f32),
+                    top: taffy::style::LengthPercentageAuto::Points(20f32),
+                    bottom: taffy::style::LengthPercentageAuto::Points(20f32),
+                    ..Rect::zero()
                 },
                 ..Default::default()
             },
@@ -50,7 +49,7 @@ fn wrapped_column_max_height_flex() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -68,7 +67,7 @@ fn wrapped_column_max_height_flex() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(700f32),
                     height: taffy::style::Dimension::Points(500f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -76,6 +75,9 @@ fn wrapped_column_max_height_flex() {
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 700f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 500f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

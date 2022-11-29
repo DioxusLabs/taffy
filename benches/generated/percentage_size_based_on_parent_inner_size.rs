@@ -1,4 +1,6 @@
 pub fn compute() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -6,7 +8,7 @@ pub fn compute() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Percent(0.5f32),
                     height: taffy::style::Dimension::Percent(0.5f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -20,14 +22,14 @@ pub fn compute() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(400f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Points(20f32),
-                    right: taffy::style::Dimension::Points(20f32),
-                    top: taffy::style::Dimension::Points(20f32),
-                    bottom: taffy::style::Dimension::Points(20f32),
-                    ..Default::default()
+                    left: taffy::style::LengthPercentage::Points(20f32),
+                    right: taffy::style::LengthPercentage::Points(20f32),
+                    top: taffy::style::LengthPercentage::Points(20f32),
+                    bottom: taffy::style::LengthPercentage::Points(20f32),
+                    ..Rect::zero()
                 },
                 ..Default::default()
             },

@@ -1,5 +1,7 @@
 #[test]
 fn gap_column_gap_percentage_cyclic_unshrinkable() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -8,7 +10,7 @@ fn gap_column_gap_percentage_cyclic_unshrinkable() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(20f32),
                     height: taffy::style::Dimension::Points(40f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -22,7 +24,7 @@ fn gap_column_gap_percentage_cyclic_unshrinkable() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(20f32),
                     height: taffy::style::Dimension::Points(40f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -36,7 +38,7 @@ fn gap_column_gap_percentage_cyclic_unshrinkable() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(20f32),
                     height: taffy::style::Dimension::Points(40f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -46,13 +48,16 @@ fn gap_column_gap_percentage_cyclic_unshrinkable() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                gap: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.2f32), ..Default::default() },
+                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::Percent(0.2f32), ..Size::zero() },
                 ..Default::default()
             },
             &[node0, node1, node2],
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 60f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 40f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

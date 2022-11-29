@@ -1,5 +1,7 @@
 #[test]
 fn size_defined_by_child_with_border() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -7,7 +9,7 @@ fn size_defined_by_child_with_border() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(10f32),
                     height: taffy::style::Dimension::Points(10f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -18,11 +20,11 @@ fn size_defined_by_child_with_border() {
         .new_with_children(
             taffy::style::Style {
                 border: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Points(10f32),
-                    right: taffy::style::Dimension::Points(10f32),
-                    top: taffy::style::Dimension::Points(10f32),
-                    bottom: taffy::style::Dimension::Points(10f32),
-                    ..Default::default()
+                    left: taffy::style::LengthPercentage::Points(10f32),
+                    right: taffy::style::LengthPercentage::Points(10f32),
+                    top: taffy::style::LengthPercentage::Points(10f32),
+                    bottom: taffy::style::LengthPercentage::Points(10f32),
+                    ..Rect::zero()
                 },
                 ..Default::default()
             },
@@ -30,6 +32,9 @@ fn size_defined_by_child_with_border() {
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 30f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 30f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

@@ -1,10 +1,12 @@
 #[test]
 fn percent_absolute_position() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -13,7 +15,7 @@ fn percent_absolute_position() {
     let node01 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), ..Default::default() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), ..Size::auto() },
                 ..Default::default()
             },
             &[],
@@ -26,11 +28,11 @@ fn percent_absolute_position() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Percent(1f32),
                     height: taffy::style::Dimension::Points(50f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 position: taffy::geometry::Rect {
-                    left: taffy::style::Dimension::Percent(0.5f32),
-                    ..Default::default()
+                    left: taffy::style::LengthPercentageAuto::Percent(0.5f32),
+                    ..Rect::auto()
                 },
                 ..Default::default()
             },
@@ -44,7 +46,7 @@ fn percent_absolute_position() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(60f32),
                     height: taffy::style::Dimension::Points(50f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -52,6 +54,9 @@ fn percent_absolute_position() {
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 60f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 50f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

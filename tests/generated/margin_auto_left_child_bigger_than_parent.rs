@@ -1,5 +1,7 @@
 #[test]
 fn margin_auto_left_child_bigger_than_parent() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_with_children(
@@ -7,9 +9,9 @@ fn margin_auto_left_child_bigger_than_parent() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(72f32),
                     height: taffy::style::Dimension::Points(72f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
-                margin: taffy::geometry::Rect { left: taffy::style::Dimension::Auto, ..Default::default() },
+                margin: taffy::geometry::Rect { left: taffy::style::LengthPercentageAuto::Auto, ..Rect::zero() },
                 ..Default::default()
             },
             &[],
@@ -22,7 +24,7 @@ fn margin_auto_left_child_bigger_than_parent() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(52f32),
                     height: taffy::style::Dimension::Points(52f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -30,6 +32,9 @@ fn margin_auto_left_child_bigger_than_parent() {
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 52f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 52f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);

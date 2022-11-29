@@ -1,5 +1,7 @@
 #[test]
 fn wrapped_row_within_align_items_center() {
+    #[allow(unused_imports)]
+    use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
         .new_with_children(
@@ -7,7 +9,7 @@ fn wrapped_row_within_align_items_center() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(150f32),
                     height: taffy::style::Dimension::Points(80f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -20,7 +22,7 @@ fn wrapped_row_within_align_items_center() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(80f32),
                     height: taffy::style::Dimension::Points(80f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -41,7 +43,7 @@ fn wrapped_row_within_align_items_center() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(200f32),
-                    ..Default::default()
+                    ..Size::auto()
                 },
                 ..Default::default()
             },
@@ -49,6 +51,9 @@ fn wrapped_row_within_align_items_center() {
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    println!("\nComputed tree:");
+    taffy::debug::print_tree(&taffy, node);
+    println!();
     assert_eq!(taffy.layout(node).unwrap().size.width, 200f32);
     assert_eq!(taffy.layout(node).unwrap().size.height, 200f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);
