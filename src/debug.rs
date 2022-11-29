@@ -7,26 +7,32 @@ use crate::tree::LayoutTree;
 
 /// Prints a debug representation of the computed layout for a tree of nodes, starting with the passed root node.
 pub fn print_tree(tree: &impl LayoutTree, root: Node) {
-    println!();
-    print_node(tree, root, 0);
+    println!("TREE");
+    print_node(tree, root, 0, false, String::new());
 }
 
-fn print_node(tree: &impl LayoutTree, node: Node, level: usize) {
+fn print_node(tree: &impl LayoutTree, node: Node, level: usize, has_sibling: bool, lines_string: String) {
     let layout = tree.layout(node);
+
+    let num_children = tree.child_count(node);
+
+    let fork_string = if has_sibling { "├── " } else { "└── " };
     println!(
-        "{space:leftpad$}{key:?} (x:{x}, y: {y}, width: {width}, height: {height})",
-        space = " ",
-        leftpad = level * 4,
-        key = node.data(),
+        "{lines}{fork}[x: {x}, y: {y}, width: {width}, height: {height}]",
+        lines = lines_string,
+        fork = fork_string,
         x = layout.location.x,
         y = layout.location.y,
         width = layout.size.width,
         height = layout.size.height,
     );
+    let bar = if has_sibling { "│   " } else { "    " };
+    let new_string = lines_string + bar;
 
     // Recurse into children
-    for child in tree.children(node) {
-        print_node(tree, *child, level + 1)
+    for (index, child) in tree.children(node).enumerate() {
+        let has_sibling = index < num_children - 1;
+        print_node(tree, *child, level + 1, has_sibling, new_string.clone());
     }
 }
 
