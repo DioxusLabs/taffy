@@ -8,10 +8,10 @@ use crate::tree::LayoutTree;
 /// Prints a debug representation of the computed layout for a tree of nodes, starting with the passed root node.
 pub fn print_tree(tree: &impl LayoutTree, root: Node) {
     println!("TREE");
-    print_node(tree, root, 0, false, String::new());
+    print_node(tree, root, false, String::new());
 }
 
-fn print_node(tree: &impl LayoutTree, node: Node, level: usize, has_sibling: bool, lines_string: String) {
+fn print_node(tree: &impl LayoutTree, node: Node, has_sibling: bool, lines_string: String) {
     let layout = tree.layout(node);
 
     let num_children = tree.child_count(node);
@@ -32,7 +32,7 @@ fn print_node(tree: &impl LayoutTree, node: Node, level: usize, has_sibling: boo
     // Recurse into children
     for (index, child) in tree.children(node).enumerate() {
         let has_sibling = index < num_children - 1;
-        print_node(tree, *child, level + 1, has_sibling, new_string.clone());
+        print_node(tree, *child, has_sibling, new_string.clone());
     }
 }
 
