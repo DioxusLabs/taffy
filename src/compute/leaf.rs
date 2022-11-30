@@ -78,7 +78,7 @@ pub(crate) fn compute(
         height: node_size
             .height
             // .unwrap_or(0.0) + padding.horizontal_axis_sum() + border.horizontal_axis_sum(), // content-box
-            .unwrap_or(0.0 + padding.horizontal_axis_sum() + border.horizontal_axis_sum()) // border-box
+            .unwrap_or(0.0 + padding.vertical_axis_sum() + border.vertical_axis_sum()) // border-box
             .maybe_clamp(node_min_size.height, node_max_size.height),
     }
 }
