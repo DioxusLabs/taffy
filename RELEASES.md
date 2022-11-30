@@ -11,6 +11,10 @@
 - Added `child_count`  method to `LayoutTree` for querying the number of children of a node. Required because the `children` method now returns an iterator instead of an array.
 - Added `is_childless` method to `LayoutTree` for querying whether a node has no children.
 
+### Fixes
+
+- Border or padding on the horizontal axis could, in some cases, increase the height of nodes.
+
 ## 0.2.1
 
 ### Fixes
