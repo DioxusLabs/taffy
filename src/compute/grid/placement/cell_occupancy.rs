@@ -68,11 +68,11 @@ impl TrackCounts {
 
     pub fn oz_line_to_grid_track_vec_index(&self, index: i16) -> u16 {
         assert!(
-            index > -(self.negative_implicit as i16),
+            index >= -(self.negative_implicit as i16),
             "origin-zero grid line cannot be less than the number of negative grid lines"
         );
         assert!(
-            index < (self.explicit + self.positive_implicit) as i16,
+            index <= (self.explicit + self.positive_implicit) as i16,
             "origin-zero grid line cannot be more than the number of positive grid lines"
         );
         2 * ((index + self.negative_implicit as i16) as u16)
