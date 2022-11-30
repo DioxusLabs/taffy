@@ -5,6 +5,7 @@ use crate::node::Node;
 use crate::style::{Dimension, MaxTrackSizingFunction, MinTrackSizingFunction, TrackSizingFunction};
 use crate::sys::GridTrackVec;
 use core::cmp::max;
+use core::ops::Range;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum AbsoluteAxis {
@@ -387,6 +388,8 @@ pub(in super::super) struct GridItem {
 
     /// The order of the item in the children array (this is significant for auto-placement!)
     // pub source_order: u16,
+
+    // Caches for intrinsic size computation
     // pub min_content_contribution_cache: Option<Size<f32>>,
     // pub max_content_contribution_cache: Option<Size<f32>>,
 
@@ -416,6 +419,18 @@ impl GridItem {
         }
     }
 
+    pub fn placement_indexes(&self, axis: GridAxis) -> Line<u16> {
+        match axis {
+            GridAxis::Block => self.row_indexes,
+            GridAxis::Inline => self.column_indexes,
+        }
+    }
+
+    pub fn track_range_excluding_lines(&self, axis: GridAxis) -> Range<usize> {
+        let indexes = self.placement_indexes(axis);
+        (indexes.start as usize + 1)..(indexes.end as usize)
+    }
+
     pub fn span(&self, axis: GridAxis) -> u16 {
         match axis {
             GridAxis::Block => match (&self.row.start, &self.row.end) {
@@ -426,6 +441,13 @@ impl GridItem {
                 (start, end) => max(end - start, 0) as u16,
                 _ => 0,
             },
+        }
+    }
+
+    pub fn crosses_flexible_track(&self, axis: GridAxis) -> bool {
+        match axis {
+            GridAxis::Block => self.crosses_flexible_column,
+            GridAxis::Inline => self.crosses_flexible_row,
         }
     }
 
