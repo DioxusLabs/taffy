@@ -393,8 +393,8 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let align_items = match style["alignItems"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "flex-start" => quote!(align_items: taffy::style::AlignItems::FlexStart,),
-            "flex-end" => quote!(align_items: taffy::style::AlignItems::FlexEnd,),
+            "flex-start" | "start" => quote!(align_items: taffy::style::AlignItems::FlexStart,),
+            "flex-end" | "end" => quote!(align_items: taffy::style::AlignItems::FlexEnd,),
             "center" => quote!(align_items: taffy::style::AlignItems::Center,),
             "baseline" => quote!(align_items: taffy::style::AlignItems::Baseline,),
             _ => quote!(),
@@ -404,8 +404,8 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let align_self = match style["alignSelf"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "flex-start" => quote!(align_self: taffy::style::AlignSelf::FlexStart,),
-            "flex-end" => quote!(align_self: taffy::style::AlignSelf::FlexEnd,),
+            "flex-start" | "start" => quote!(align_self: taffy::style::AlignSelf::FlexStart,),
+            "flex-end" | "end" => quote!(align_self: taffy::style::AlignSelf::FlexEnd,),
             "center" => quote!(align_self: taffy::style::AlignSelf::Center,),
             "baseline" => quote!(align_self: taffy::style::AlignSelf::Baseline,),
             "stretch" => quote!(align_self: taffy::style::AlignSelf::Stretch,),
@@ -416,9 +416,10 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let align_content = match style["alignContent"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "flex-start" => quote!(align_content: Some(taffy::style::AlignContent::FlexStart),),
-            "flex-end" => quote!(align_content: Some(taffy::style::AlignContent::FlexEnd),),
+            "flex-start" | "start" => quote!(align_content: Some(taffy::style::AlignContent::FlexStart),),
+            "flex-end" | "end" => quote!(align_content: Some(taffy::style::AlignContent::FlexEnd),),
             "center" => quote!(align_content: Some(taffy::style::AlignContent::Center),),
+            "stretch" => quote!(align_content: Some(taffy::style::AlignContent::Stretch),),
             "space-between" => quote!(align_content: Some(taffy::style::AlignContent::SpaceBetween),),
             "space-around" => quote!(align_content: Some(taffy::style::AlignContent::SpaceAround),),
             "space-evenly" => quote!(align_content: Some(taffy::style::AlignContent::SpaceEvenly),),
@@ -429,8 +430,10 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let justify_content = match style["justifyContent"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "flex-end" => quote!(justify_content: Some(taffy::style::JustifyContent::FlexEnd),),
+            "flex-start" | "start" => quote!(justify_content: Some(taffy::style::JustifyContent::FlexStart),),
+            "flex-end" | "end" => quote!(justify_content: Some(taffy::style::JustifyContent::FlexEnd),),
             "center" => quote!(justify_content: Some(taffy::style::JustifyContent::Center),),
+            "stretch" => quote!(align_content: Some(taffy::style::AlignContent::Stretch),),
             "space-between" => quote!(justify_content: Some(taffy::style::JustifyContent::SpaceBetween),),
             "space-around" => quote!(justify_content: Some(taffy::style::JustifyContent::SpaceAround),),
             "space-evenly" => quote!(justify_content: Some(taffy::style::JustifyContent::SpaceEvenly),),

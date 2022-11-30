@@ -6,6 +6,7 @@ fn justify_content_min_width_with_padding_child_width_greater_than_parent() {
     let node000 = taffy
         .new_with_children(
             taffy::style::Style {
+                align_content: Some(taffy::style::AlignContent::Stretch),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(300f32),
                     height: taffy::style::Dimension::Points(100f32),
@@ -19,6 +20,7 @@ fn justify_content_min_width_with_padding_child_width_greater_than_parent() {
     let node00 = taffy
         .new_with_children(
             taffy::style::Style {
+                align_content: Some(taffy::style::AlignContent::Stretch),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(400f32), ..Size::auto() },
                 padding: taffy::geometry::Rect {
@@ -31,11 +33,17 @@ fn justify_content_min_width_with_padding_child_width_greater_than_parent() {
             &[node000],
         )
         .unwrap();
-    let node0 = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[node00]).unwrap();
+    let node0 = taffy
+        .new_with_children(
+            taffy::style::Style { align_content: Some(taffy::style::AlignContent::Stretch), ..Default::default() },
+            &[node00],
+        )
+        .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
+                align_content: Some(taffy::style::AlignContent::Stretch),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(1000f32),
                     height: taffy::style::Dimension::Points(1584f32),

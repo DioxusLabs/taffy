@@ -72,6 +72,7 @@ fn wrap_reverse_row_align_content_stretch() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::WrapReverse,
+                align_content: Some(taffy::style::AlignContent::Stretch),
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Size::auto() },
                 ..Default::default()
             },
