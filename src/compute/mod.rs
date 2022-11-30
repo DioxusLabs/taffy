@@ -1,5 +1,6 @@
 //! The layout algorithms themselves
 
+pub(crate) mod common;
 pub(crate) mod flexbox;
 pub(crate) mod grid;
 pub(crate) mod leaf;

@@ -3,6 +3,7 @@
 //! Note that some minor steps appear to be missing: see https://github.com/DioxusLabs/taffy/issues for more information.
 use core::f32;
 
+use crate::compute::common::alignment::compute_alignment_offset;
 use crate::compute::compute_node_layout;
 use crate::geometry::{Point, Rect, Size};
 use crate::layout::{AvailableSpace, Layout, RunMode, SizingMode};
@@ -1229,62 +1230,11 @@ fn distribute_remaining_free_space(
             let num_items = line.items.len();
             let layout_reverse = constants.dir.is_reverse();
             let gap = constants.gap.main(constants.dir);
+            let justify_content_mode: AlignContent = tree.style(node).justify_content.into();
 
             let justify_item = |(i, child): (usize, &mut FlexItem)| {
-                let is_first = i == 0;
-
-                child.offset_main = match tree.style(node).justify_content {
-                    JustifyContent::FlexStart => {
-                        if is_first {
-                            if layout_reverse {
-                                free_space
-                            } else {
-                                0.0
-                            }
-                        } else {
-                            gap
-                        }
-                    }
-                    JustifyContent::Center => {
-                        if is_first {
-                            free_space / 2.0
-                        } else {
-                            gap
-                        }
-                    }
-                    JustifyContent::FlexEnd => {
-                        if is_first {
-                            if !layout_reverse {
-                                free_space
-                            } else {
-                                0.0
-                            }
-                        } else {
-                            gap
-                        }
-                    }
-                    JustifyContent::SpaceBetween => {
-                        if is_first {
-                            0.0
-                        } else {
-                            gap + (free_space / (num_items - 1) as f32)
-                        }
-                    }
-                    JustifyContent::SpaceAround => {
-                        if is_first {
-                            (free_space / num_items as f32) / 2.0
-                        } else {
-                            gap + (free_space / num_items as f32)
-                        }
-                    }
-                    JustifyContent::SpaceEvenly => {
-                        if is_first {
-                            free_space / (num_items + 1) as f32
-                        } else {
-                            gap + (free_space / (num_items + 1) as f32)
-                        }
-                    }
-                };
+                child.offset_main =
+                    compute_alignment_offset(free_space, num_items, gap, justify_content_mode, layout_reverse, i == 0);
             };
 
             if layout_reverse {
@@ -1466,71 +1416,13 @@ fn align_flex_lines_per_align_content(
 ) {
     let num_lines = flex_lines.len();
     let gap = constants.gap.cross(constants.dir);
+    let align_content_mode = tree.style(node).align_content;
     let total_cross_axis_gap = sum_axis_gaps(gap, num_lines);
     let free_space = constants.inner_container_size.cross(constants.dir) - total_cross_size - total_cross_axis_gap;
 
     let align_line = |(i, line): (usize, &mut FlexLine)| {
-        let is_first = i == 0;
-
-        line.offset_cross = match tree.style(node).align_content {
-            AlignContent::FlexStart => {
-                if is_first {
-                    if constants.is_wrap_reverse {
-                        free_space
-                    } else {
-                        0.0
-                    }
-                } else {
-                    gap
-                }
-            }
-            AlignContent::FlexEnd => {
-                if is_first {
-                    if !constants.is_wrap_reverse {
-                        free_space
-                    } else {
-                        0.0
-                    }
-                } else {
-                    gap
-                }
-            }
-            AlignContent::Center => {
-                if is_first {
-                    free_space / 2.0
-                } else {
-                    gap
-                }
-            }
-            AlignContent::Stretch => {
-                if is_first {
-                    0.0
-                } else {
-                    gap
-                }
-            }
-            AlignContent::SpaceEvenly => {
-                if is_first {
-                    free_space / (num_lines + 1) as f32
-                } else {
-                    gap + (free_space / (num_lines + 1) as f32)
-                }
-            }
-            AlignContent::SpaceBetween => {
-                if is_first {
-                    0.0
-                } else {
-                    gap + (free_space / (num_lines - 1) as f32)
-                }
-            }
-            AlignContent::SpaceAround => {
-                if is_first {
-                    (free_space / num_lines as f32) / 2.0
-                } else {
-                    gap + (free_space / num_lines as f32)
-                }
-            }
-        };
+        line.offset_cross =
+            compute_alignment_offset(free_space, num_lines, gap, align_content_mode, constants.is_wrap_reverse, i == 0);
     };
 
     if constants.is_wrap_reverse {
