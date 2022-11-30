@@ -88,14 +88,31 @@ pub(in super::super) enum GridTrackKind {
 /// are also represented by this struct
 #[derive(Debug, Clone)]
 pub(in super::super) struct GridTrack {
+    /// Whether the track is a full track, a gutter, or a placeholder that has not yet been initialised
     pub kind: GridTrackKind,
+
+    /// The minimum track sizing function of the track
     pub min_track_sizing_function: MinTrackSizingFunction,
+
+    /// The maximum track sizing function of the track
     pub max_track_sizing_function: MaxTrackSizingFunction,
+
+    /// The distance of the start of the track from the start of the grid container
+    pub offset: f32,
+
+    /// The size (width/height as applicable) of the track
     pub base_size: f32,
-    pub growth_limit: f32,                  // Note: can be infinity
-    pub base_size_planned_increase: f32, // A temporary scratch value when "distributing space" to avoid clobbering the main variable
-    pub growth_limit_planned_increase: f32, // A temporary scratch value when "distributing space" to avoid clobbering the main variable
-    pub infinitely_growable: bool,          // https://www.w3.org/TR/css3-grid-layout/#infinitely-growable
+
+    /// A temporary scratch value when sizing tracks
+    /// Note: can be infinity
+    pub growth_limit: f32,
+    /// A temporary scratch value when "distributing space" to avoid clobbering the main variable
+    pub base_size_planned_increase: f32,
+    /// A temporary scratch value when "distributing space" to avoid clobbering the main variable
+    pub growth_limit_planned_increase: f32,
+    /// A temporary scratch value when "distributing space"
+    /// See: https://www.w3.org/TR/css3-grid-layout/#infinitely-growable
+    pub infinitely_growable: bool,
 }
 
 impl GridTrack {
@@ -107,6 +124,7 @@ impl GridTrack {
             kind: GridTrackKind::Track,
             min_track_sizing_function,
             max_track_sizing_function,
+            offset: 0.0,
             base_size: 0.0,
             growth_limit: 0.0,
             base_size_planned_increase: 0.0,
@@ -120,6 +138,7 @@ impl GridTrack {
             kind: GridTrackKind::Gutter, // { name: None },
             min_track_sizing_function: MinTrackSizingFunction::Fixed(size),
             max_track_sizing_function: MaxTrackSizingFunction::Fixed(size),
+            offset: 0.0,
             base_size: 0.0,
             growth_limit: 0.0,
             base_size_planned_increase: 0.0,
@@ -133,6 +152,7 @@ impl GridTrack {
             kind: GridTrackKind::Uninit,
             min_track_sizing_function: MinTrackSizingFunction::Auto,
             max_track_sizing_function: MaxTrackSizingFunction::Auto,
+            offset: 0.0,
             base_size: 0.0,
             growth_limit: 0.0,
             base_size_planned_increase: 0.0,
@@ -363,6 +383,7 @@ pub(super) struct NamedArea {
     column_end: u16,
 }
 
+#[derive(Debug)]
 pub(in super::super) struct GridItem {
     /// The id of the Node that this item represents
     pub node: Node,

@@ -1,6 +1,6 @@
 use super::placement::TrackCounts;
 use crate::geometry::{Line, Size};
-use crate::layout::{AvailableSpace, SizingMode};
+use crate::layout::{AvailableSpace, RunMode, SizingMode};
 use crate::node::Node;
 use crate::prelude::LayoutTree;
 use crate::style::{AlignContent, Dimension, MaxTrackSizingFunction, MinTrackSizingFunction, Style};
@@ -128,8 +128,8 @@ pub(in super::super) fn determine_if_item_crosses_flexible_tracks(
     }
 }
 
-pub(in super::super) fn track_sizing_algorithm(
-    tree: &mut impl LayoutTree,
+pub(in super::super) fn track_sizing_algorithm<Tree, MeasureFunc>(
+    tree: &mut Tree,
     available_space: Size<AvailableSpace>,
     available_space_mode: AvailableSpaceMode,
     axis: GridAxis,
@@ -137,9 +137,11 @@ pub(in super::super) fn track_sizing_algorithm(
     container_style: &Style,
     rows: &mut [GridTrack],
     items: &mut [GridItem],
-    style: &Style,
-    measure_node: impl Fn(Node, Size<Option<f32>>, Size<AvailableSpace>, SizingMode) -> Size<f32>,
-) {
+    measure_node: MeasureFunc,
+) where
+    Tree: LayoutTree,
+    MeasureFunc: Fn(&mut Tree, Node, Size<Option<f32>>, Size<AvailableSpace>, RunMode, SizingMode) -> Size<f32>,
+{
     let get_track_size_estimate = match available_space_mode {
         AvailableSpaceMode::Estimates => |track: &GridTrack, available_space: AvailableSpace| {
             track.max_track_sizing_function.definite_value(available_space)
@@ -174,7 +176,7 @@ pub(in super::super) fn track_sizing_algorithm(
                 columns,
                 rows,
                 items,
-                style,
+                container_style,
                 get_track_size_estimate,
                 get_column_placement,
                 get_row_placement,
@@ -193,10 +195,10 @@ pub(in super::super) fn track_sizing_algorithm(
                 available_space,
                 container_style.min_size.height.get_absolute(),
                 container_style.max_size.height.get_absolute(),
-                columns,
                 rows,
+                columns,
                 items,
-                style,
+                container_style,
                 get_track_size_estimate,
                 get_row_placement,
                 get_column_placement,
@@ -209,8 +211,8 @@ pub(in super::super) fn track_sizing_algorithm(
 
 /// Track sizing algorithm
 /// Note: Gutters are treated as empty fixed-size tracks for the purpose of the track sizing algorithm.
-pub(in super::super) fn track_sizing_algorithm_inner(
-    tree: &mut impl LayoutTree,
+pub(in super::super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
+    tree: &mut Tree,
     axis: GridAxis,
     available_space: Size<AvailableSpace>,
     axis_min_size: Option<f32>,
@@ -223,11 +225,24 @@ pub(in super::super) fn track_sizing_algorithm_inner(
     get_item_placement: impl Fn(&GridItem) -> Line<u16>,
     get_other_axis_placement: impl Fn(&GridItem) -> Line<u16>,
     get_crosses_flex_track: impl Fn(&GridItem) -> bool,
-    measure_node: impl Fn(Node, Size<Option<f32>>, Size<AvailableSpace>, SizingMode) -> Size<f32>,
-) {
+    measure_node: MeasureFunc,
+) where
+    Tree: LayoutTree,
+    MeasureFunc: Fn(&mut Tree, Node, Size<Option<f32>>, Size<AvailableSpace>, RunMode, SizingMode) -> Size<f32>,
+{
     // 11.4 Initialise Track sizes
     // Initialize each track’s base size and growth limit.
-    for track in axis_tracks.iter_mut() {
+
+    let last_track_idx = axis_tracks.len() - 1;
+
+    // First and last grid lines are always zero-sized.
+    axis_tracks[0].base_size = 0.0;
+    axis_tracks[0].growth_limit = 0.0;
+    axis_tracks[last_track_idx].base_size = 0.0;
+    axis_tracks[last_track_idx].growth_limit = 0.0;
+
+    let all_but_first_and_last = 1..last_track_idx;
+    for track in axis_tracks[all_but_first_and_last].iter_mut() {
         // For each track, if the track’s min track sizing function is:
         // - A fixed sizing function
         //     Resolve to an absolute length and use that size as the track’s initial base size.
@@ -303,9 +318,11 @@ pub(in super::super) fn track_sizing_algorithm_inner(
         };
 
         let min_content_size = measure_node(
+            tree,
             item.node,
             Size { width: None, height: item_other_axis_size },
             Size::MIN_CONTENT,
+            RunMode::ComputeSize,
             SizingMode::ContentSize,
         );
 
@@ -314,9 +331,11 @@ pub(in super::super) fn track_sizing_algorithm_inner(
         let minimum_contributions = style.size.width;
 
         let max_content_size = measure_node(
+            tree,
             item.node,
             Size { width: None, height: item_other_axis_size },
             Size::MAX_CONTENT,
+            RunMode::ComputeSize,
             SizingMode::ContentSize,
         );
 
@@ -326,7 +345,7 @@ pub(in super::super) fn track_sizing_algorithm_inner(
     let batched_item_iterator = ItemBatcher::new(items, axis);
     for (items, is_flex) in batched_item_iterator {
         for item in items.iter() {
-            let placement = get_item_placement(item);
+            // let placement = get_item_placement(item);
 
             // distribute_item_space_to_base_size(
             //     min_content_size.get(axis),
