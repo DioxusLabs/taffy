@@ -1,3 +1,18 @@
+
+/* The font "silkscreen" subsetted to only contain the"H" (capital h) glyph
+   The "H" glyph in this font happens to be exactly 10 pixels wide by 14 high
+   Furthermore, we can use a line-height of 0.71428571428 to scale the height to 10 pixels
+
+   By combining H's with zero-width space characters (&#8203;) we can reliably set an elements
+   min-content and max-content sizes.
+*/
+@font-face {
+    font-family: 'silkscreen-h';
+    src: url(data:application/font-woff2;charset=utf-8;base64,d09GMgABAAAAAAOAABAAAAAAB7wAAAMkAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP0ZGVE0cGh4GVgCCWggoCWQRCAqBZIFjCw4AATYCJAMYBCAFhAgHRQxTG5IGAC4GnDLLNaI4Ih4+4mqyRg9HHA8fX6MqHp72+9+vvWfOXEdEkkaIJglvYpJJhEbI4o0QLSQ8tJ/ez/fn9/eeN4h3Sl/w0L7uB5CWVVeaGMPcBJ633fsTGVBiIcZj6bwqRjr/xwv9r0t5/9KdBfjyxtcttVqp2BpQ5igTsIwHKEClWemU7qWRJxTUvMlUEGFYTu6MiB4KAT+fp/dg+5v9Fv69218CBMZYBKQQOqEiEXk09nVq/s6XeKGtjZ/YGaTvuOsU8iDXv/GnFcEbKGugCQSgoGAFApzQKrBCmx3AUF9KE2vo188/xL88/d//tz8HAgCiEYBIJJqaQGH+cAUj836+xIwmiKdguu3lmr40xRRttVIHO9vba0mbR4MOy0bNii8ytRLxqinknInaInQ5/fyRo50El0++w51kOyRDQbdLiMP9JaQ7ndb6ImiT0iv8w9zYdBmYv0UBQkyZDRoYo2IJsAKAiqdaACFqHddRN6mnHNuQ1xoZxagOY6ibXWetv11yO7O8lNrMNr/YtP2GLBIM+xS27eNenffMPGrd71AqqStRoU7XEGjzf4SiWL7W1joeDmyy35U6kk1Hw1JyFFqXJYz6vaKF/UPjTYGsxZIgaOLfZSQfyPCjxejHY90mIBDM3vrQeXa2+LVrsW3mZzN9onlv0ZcgKGv+G/lfRwME063FM+sBMbP03UqzskBpxvIcqW+nHpxmAGDshSLqAEdAjLCAHWnsEopVMqjW2UVnh0M0C9zhiwk/+IqeEXzTFbu13w3E4Yl+FMuyKQ9LCUL8csB9bl9eLPMpwHKJgjRmMTEvLUUufpyCgjiMKi0nzCUqIS4vIAfDUqz1cJKPTefqCrvV87VoxnEZqOgQF58CRKEoDGFiQBg4hNjYhJj4l0Ng1adXbsD8Qm8ULUC3oeIOPrmyBGGh1yt5hDi40xlH52nomGIchmVkdMjyhaI87eSvdMkqisrJwRJagGndGDN+IzKKYlPa2tVb1UyE0Vm8E6WDQ+0fisnRquQDfePRqLVMer19ufM5pj3RRNRTJ2E/0i2NeZW75H150GioP1GlAAA=) format('woff2');
+    font-weight: normal;
+    font-style: normal;
+}
+
 body {
   padding: 0;
   margin: 0;
@@ -14,6 +29,13 @@ div, span, img {
 
 body > * {
   position: absolute;
+}
+
+#test-root {
+  font-family: silkscreen-h;
+  line-height: 0.71428571428;
+  font-size: 14px;
+  color: white;
 }
 
 div {

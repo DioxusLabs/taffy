@@ -150,7 +150,32 @@ function parseGridPosition(input) {
   return undefined;
 }
 
+// This depends on the particular font, font-size and line-height used
+// It also depends on measured divs containing only "H" and zero-width space (\u200b) characters.
+function parseContentSizes(childElementCount, textContent) {
+  
+  // If the node has children then don't bother measuring it as won't
+  // get an accurate measurement anyway
+  if (childElementCount > 0) {
+    return undefined;
+  }
+
+  // If the node has no text content then d
+  if (textContent.replace(/\u200b/g, '').length === 0) {
+    return undefined;
+  }
+
+  let lines = textContent.split("\u200b");
+  return {
+    minContentWidth: lines.reduce((memo, line) => Math.min(line.length), 0) * 10,
+    maxContentWidth: textContent.length * 10,
+    minContentHeight: 1 * 10,
+    maxContentHeight: lines.length * 10,
+  }
+}
+
 function describeElement(e) {
+
   return {
     style: {
       display: parseEnum(e.style.display),
@@ -219,6 +244,8 @@ function describeElement(e) {
         bottom: e.style.bottom,
       }),
     },
+
+    contentSizes: parseContentSizes(e.childElementCount, e.textContent),
 
     layout: {
       width: e.offsetWidth,
