@@ -33,7 +33,7 @@ fn gap_column_gap_justify_space_evenly() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                justify_content: taffy::style::JustifyContent::SpaceEvenly,
+                justify_content: Some(taffy::style::JustifyContent::SpaceEvenly),
                 gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::Points(10f32), ..Size::zero() },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),

@@ -416,12 +416,12 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let align_content = match style["alignContent"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "flex-start" => quote!(align_content: taffy::style::AlignContent::FlexStart,),
-            "flex-end" => quote!(align_content: taffy::style::AlignContent::FlexEnd,),
-            "center" => quote!(align_content: taffy::style::AlignContent::Center,),
-            "space-between" => quote!(align_content: taffy::style::AlignContent::SpaceBetween,),
-            "space-around" => quote!(align_content: taffy::style::AlignContent::SpaceAround,),
-            "space-evenly" => quote!(align_content: taffy::style::AlignContent::SpaceEvenly,),
+            "flex-start" => quote!(align_content: Some(taffy::style::AlignContent::FlexStart),),
+            "flex-end" => quote!(align_content: Some(taffy::style::AlignContent::FlexEnd),),
+            "center" => quote!(align_content: Some(taffy::style::AlignContent::Center),),
+            "space-between" => quote!(align_content: Some(taffy::style::AlignContent::SpaceBetween),),
+            "space-around" => quote!(align_content: Some(taffy::style::AlignContent::SpaceAround),),
+            "space-evenly" => quote!(align_content: Some(taffy::style::AlignContent::SpaceEvenly),),
             _ => quote!(),
         },
         _ => quote!(),
@@ -429,11 +429,11 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let justify_content = match style["justifyContent"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "flex-end" => quote!(justify_content: taffy::style::JustifyContent::FlexEnd,),
-            "center" => quote!(justify_content: taffy::style::JustifyContent::Center,),
-            "space-between" => quote!(justify_content: taffy::style::JustifyContent::SpaceBetween,),
-            "space-around" => quote!(justify_content: taffy::style::JustifyContent::SpaceAround,),
-            "space-evenly" => quote!(justify_content: taffy::style::JustifyContent::SpaceEvenly,),
+            "flex-end" => quote!(justify_content: Some(taffy::style::JustifyContent::FlexEnd),),
+            "center" => quote!(justify_content: Some(taffy::style::JustifyContent::Center),),
+            "space-between" => quote!(justify_content: Some(taffy::style::JustifyContent::SpaceBetween),),
+            "space-around" => quote!(justify_content: Some(taffy::style::JustifyContent::SpaceAround),),
+            "space-evenly" => quote!(justify_content: Some(taffy::style::JustifyContent::SpaceEvenly),),
             _ => quote!(),
         },
         _ => quote!(),

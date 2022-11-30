@@ -5,6 +5,7 @@ use crate::geometry::{Point, Size};
 use crate::layout::{AvailableSpace, Layout};
 use crate::node::Node;
 use crate::resolve::MaybeResolve;
+use crate::style::AlignContent;
 use crate::sys::Vec;
 use crate::tree::LayoutTree;
 use alignment::align_tracks;
@@ -113,8 +114,16 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
 
     // Align tracks
     let resolved_style_size = style.size.maybe_resolve(available_space.as_options());
-    align_tracks(resolved_style_size.get(GridAxis::Inline), &mut columns.tracks, style.justify_content.into());
-    align_tracks(resolved_style_size.get(GridAxis::Block), &mut rows.tracks, style.align_content.into());
+    align_tracks(
+        resolved_style_size.get(GridAxis::Inline),
+        &mut columns.tracks,
+        style.justify_content.unwrap_or(AlignContent::Stretch),
+    );
+    align_tracks(
+        resolved_style_size.get(GridAxis::Block),
+        &mut rows.tracks,
+        style.align_content.unwrap_or(AlignContent::Stretch),
+    );
 
     let container_size = Size {
         width: resolved_style_size

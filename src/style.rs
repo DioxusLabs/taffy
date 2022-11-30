@@ -62,11 +62,11 @@ impl Default for AlignSelf {
     }
 }
 
-/// Sets the distribution of space between and around content items along the cross-axis
-///
-/// The default value is [`AlignContent::Stretch`].
+/// Sets the distribution of space between and around content items
+/// This type is used for both align_content and justify_content as the values are the same
 ///
 /// [Specification](https://www.w3.org/TR/css-flexbox-1/#align-content-property)
+/// [Specification](https://www.w3.org/TR/css-flexbox-1/#justify-content-property)
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum AlignContent {
@@ -89,11 +89,8 @@ pub enum AlignContent {
     SpaceAround,
 }
 
-impl Default for AlignContent {
-    fn default() -> Self {
-        Self::Stretch
-    }
-}
+/// Sets the distribution of space between and around content items along the main-axis
+pub type JustifyContent = AlignContent;
 
 impl AlignContent {
     pub(crate) fn outer_gutter_weight(self) -> u8 {
@@ -196,50 +193,6 @@ impl FlexDirection {
     /// Is the direction [`FlexDirection::RowReverse`] or [`FlexDirection::ColumnReverse`]?
     pub(crate) fn is_reverse(self) -> bool {
         matches!(self, Self::RowReverse | Self::ColumnReverse)
-    }
-}
-
-/// Sets the distribution of space between and around content items along the main-axis
-///
-/// The default value is [`JustifyContent::FlexStart`].
-///
-/// [Specification](https://www.w3.org/TR/css-flexbox-1/#justify-content-property)
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum JustifyContent {
-    /// Items are packed toward the start of the main axis
-    FlexStart,
-    /// Items are packed toward the end of the main axis
-    FlexEnd,
-    /// Items are packed along the center of the main axis
-    Center,
-    /// The first and last items are aligned flush with the edges of the container (no gap)
-    /// The gaps between items are distributed evenly.
-    SpaceBetween,
-    /// The gap between the first and last items is exactly THE SAME as the gap between items.
-    /// The gaps are distributed evenly
-    SpaceEvenly,
-    /// The gap between the first and last items is exactly HALF the gap between items.
-    /// The gaps are distributed evenly in proportion to these ratios.
-    SpaceAround,
-}
-
-impl Default for JustifyContent {
-    fn default() -> Self {
-        Self::FlexStart
-    }
-}
-
-impl From<JustifyContent> for AlignContent {
-    fn from(justify: JustifyContent) -> Self {
-        match justify {
-            JustifyContent::FlexStart => AlignContent::FlexStart,
-            JustifyContent::FlexEnd => AlignContent::FlexEnd,
-            JustifyContent::Center => AlignContent::Center,
-            JustifyContent::SpaceBetween => AlignContent::SpaceBetween,
-            JustifyContent::SpaceAround => AlignContent::SpaceAround,
-            JustifyContent::SpaceEvenly => AlignContent::SpaceEvenly,
-        }
     }
 }
 
@@ -751,9 +704,9 @@ pub struct Style {
     /// Should this item violate the cross axis alignment specified by its parent's [`AlignItems`]?
     pub align_self: AlignSelf,
     /// How should content contained within this item be aligned relative to the cross axis?
-    pub align_content: AlignContent,
+    pub align_content: Option<AlignContent>,
     /// How should items be aligned relative to the main axis?
-    pub justify_content: JustifyContent,
+    pub justify_content: Option<JustifyContent>,
     /// How large should the gaps between items in a grid or flex container be?
     pub gap: Size<LengthPercentage>,
 
@@ -801,8 +754,8 @@ impl Style {
         flex_wrap: FlexWrap::NoWrap,
         align_items: AlignItems::Stretch,
         align_self: AlignSelf::Auto,
-        align_content: AlignContent::Stretch,
-        justify_content: JustifyContent::FlexStart,
+        align_content: None,
+        justify_content: None,
         position: Rect::auto(),
         margin: Rect::zero(),
         padding: Rect::zero(),
@@ -940,8 +893,8 @@ impl Style {
 
     pub(crate) fn grid_align_content(&self, axis: GridAxis) -> AlignContent {
         match axis {
-            GridAxis::Inline => self.justify_content.into(),
-            GridAxis::Block => self.align_content,
+            GridAxis::Inline => self.justify_content.unwrap_or(AlignContent::Stretch),
+            GridAxis::Block => self.align_content.unwrap_or(AlignContent::Stretch),
         }
     }
 }

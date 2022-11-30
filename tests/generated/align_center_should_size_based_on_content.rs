@@ -22,7 +22,7 @@ fn align_center_should_size_based_on_content() {
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
-                justify_content: taffy::style::JustifyContent::Center,
+                justify_content: Some(taffy::style::JustifyContent::Center),
                 flex_grow: 0f32,
                 flex_shrink: 1f32,
                 ..Default::default()

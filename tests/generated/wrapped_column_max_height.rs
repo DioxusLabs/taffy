@@ -56,8 +56,8 @@ fn wrapped_column_max_height() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 align_items: taffy::style::AlignItems::Center,
-                align_content: taffy::style::AlignContent::Center,
-                justify_content: taffy::style::JustifyContent::Center,
+                align_content: Some(taffy::style::AlignContent::Center),
+                justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(700f32),
                     height: taffy::style::Dimension::Points(500f32),

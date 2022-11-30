@@ -140,6 +140,8 @@ mod gap_row_gap_align_items_stretch;
 mod gap_row_gap_column_child_margins;
 mod gap_row_gap_determines_parent_height;
 mod gap_row_gap_row_wrap_child_margins;
+mod grid_basic;
+mod grid_gap;
 mod justify_content_column_center;
 mod justify_content_column_flex_end;
 mod justify_content_column_flex_start;
@@ -420,6 +422,8 @@ fn benchmark(c: &mut Criterion) {
             gap_row_gap_column_child_margins::compute();
             gap_row_gap_determines_parent_height::compute();
             gap_row_gap_row_wrap_child_margins::compute();
+            grid_basic::compute();
+            grid_gap::compute();
             justify_content_column_center::compute();
             justify_content_column_flex_end::compute();
             justify_content_column_flex_start::compute();

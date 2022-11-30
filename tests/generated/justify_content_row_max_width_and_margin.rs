@@ -23,7 +23,7 @@ fn justify_content_row_max_width_and_margin() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                justify_content: taffy::style::JustifyContent::Center,
+                justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Size::auto() },
                 max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(80f32), ..Size::auto() },
                 ..Default::default()

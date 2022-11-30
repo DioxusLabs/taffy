@@ -84,7 +84,7 @@ fn align_content_space_between_single_line() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                align_content: taffy::style::AlignContent::SpaceBetween,
+                align_content: Some(taffy::style::AlignContent::SpaceBetween),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),

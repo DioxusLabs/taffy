@@ -33,7 +33,7 @@ fn justify_content_row_space_evenly() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                justify_content: taffy::style::JustifyContent::SpaceEvenly,
+                justify_content: Some(taffy::style::JustifyContent::SpaceEvenly),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),

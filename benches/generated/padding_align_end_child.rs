@@ -26,7 +26,7 @@ pub fn compute() {
         .new_with_children(
             taffy::style::Style {
                 align_items: taffy::style::AlignItems::FlexEnd,
-                justify_content: taffy::style::JustifyContent::FlexEnd,
+                justify_content: Some(taffy::style::JustifyContent::FlexEnd),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(200f32),

@@ -139,6 +139,8 @@ mod gap_row_gap_align_items_stretch;
 mod gap_row_gap_column_child_margins;
 mod gap_row_gap_determines_parent_height;
 mod gap_row_gap_row_wrap_child_margins;
+mod grid_basic;
+mod grid_gap;
 mod justify_content_column_center;
 mod justify_content_column_flex_end;
 mod justify_content_column_flex_start;

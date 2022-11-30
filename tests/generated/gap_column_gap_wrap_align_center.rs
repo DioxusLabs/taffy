@@ -85,7 +85,7 @@ fn gap_column_gap_wrap_align_center() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                align_content: taffy::style::AlignContent::Center,
+                align_content: Some(taffy::style::AlignContent::Center),
                 gap: taffy::geometry::Size {
                     width: taffy::style::LengthPercentage::Points(10f32),
                     height: taffy::style::LengthPercentage::Points(20f32),

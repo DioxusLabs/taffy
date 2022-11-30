@@ -24,7 +24,7 @@ fn justify_content_column_min_height_and_margin_top() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                justify_content: taffy::style::JustifyContent::Center,
+                justify_content: Some(taffy::style::JustifyContent::Center),
                 min_size: taffy::geometry::Size { height: taffy::style::Dimension::Points(50f32), ..Size::auto() },
                 ..Default::default()
             },

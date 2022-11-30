@@ -84,7 +84,7 @@ fn align_content_space_around_single_line() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                align_content: taffy::style::AlignContent::SpaceAround,
+                align_content: Some(taffy::style::AlignContent::SpaceAround),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),

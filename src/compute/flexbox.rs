@@ -1112,7 +1112,8 @@ fn handle_align_content_stretch(
     node_size: Size<Option<f32>>,
     constants: &AlgoConstants,
 ) {
-    if tree.style(node).align_content == AlignContent::Stretch && node_size.cross(constants.dir).is_some() {
+    let align_content = tree.style(node).align_content.unwrap_or(AlignContent::Stretch);
+    if align_content == AlignContent::Stretch && node_size.cross(constants.dir).is_some() {
         let total_cross_axis_gap = sum_axis_gaps(constants.gap.cross(constants.dir), flex_lines.len());
         let total_cross: f32 = flex_lines.iter().map(|line| line.cross_size).sum::<f32>() + total_cross_axis_gap;
         let inner_cross =
@@ -1230,7 +1231,8 @@ fn distribute_remaining_free_space(
             let num_items = line.items.len();
             let layout_reverse = constants.dir.is_reverse();
             let gap = constants.gap.main(constants.dir);
-            let justify_content_mode: AlignContent = tree.style(node).justify_content.into();
+            let justify_content_mode: JustifyContent =
+                tree.style(node).justify_content.unwrap_or(JustifyContent::FlexStart);
 
             let justify_item = |(i, child): (usize, &mut FlexItem)| {
                 child.offset_main =
@@ -1416,7 +1418,7 @@ fn align_flex_lines_per_align_content(
 ) {
     let num_lines = flex_lines.len();
     let gap = constants.gap.cross(constants.dir);
-    let align_content_mode = tree.style(node).align_content;
+    let align_content_mode = tree.style(node).align_content.unwrap_or(AlignContent::Stretch);
     let total_cross_axis_gap = sum_axis_gaps(gap, num_lines);
     let free_space = constants.inner_container_size.cross(constants.dir) - total_cross_size - total_cross_axis_gap;
 
@@ -1655,8 +1657,10 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
         } else if end_main.is_some() {
             free_main_space - end_main.unwrap_or(0.0) - constants.border.main_end(constants.dir)
         } else {
-            match tree.style(node).justify_content {
-                JustifyContent::SpaceBetween | JustifyContent::FlexStart => {
+            match tree.style(node).justify_content.unwrap_or(JustifyContent::FlexStart) {
+                // Stretch is an invalid value for justify_content in the flexbox algorithm, so we
+                // treat it as if it wasn't set (and thus we default to FlexStart behaviour)
+                JustifyContent::SpaceBetween | JustifyContent::FlexStart | JustifyContent::Stretch => {
                     constants.padding_border.main_start(constants.dir)
                 }
                 JustifyContent::FlexEnd => free_main_space - constants.padding_border.main_end(constants.dir),
