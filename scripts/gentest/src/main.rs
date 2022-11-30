@@ -673,7 +673,7 @@ fn generate_track_definition(track_definition: &json::object::Object) -> TokenSt
                     json::JsonValue::Object(ref arg) => generate_scalar_definition(arg),
                     _ => unreachable!(),
                 };
-                quote!(taffy::style::GridTrackSizingFunction::MinMax{ min: #min, max: #max })
+                quote!(taffy::style::TrackSizingFunction::MinMax{ min: #min, max: #max })
             }
             // TODO: Add support for fit-content
             _ => unreachable!(),
@@ -687,16 +687,16 @@ fn generate_scalar_definition(track_definition: &json::object::Object) -> TokenS
     let value = || track_definition.get("value").unwrap().as_f32().unwrap();
 
     match unit() {
-        "auto" => quote!(taffy::style::GridTrackSizingFunction::Auto),
-        "min-content" => quote!(taffy::style::GridTrackSizingFunction::MinContent),
-        "max-content" => quote!(taffy::style::GridTrackSizingFunction::MaxContent),
+        "auto" => quote!(taffy::style::TrackSizingFunction::Auto),
+        "min-content" => quote!(taffy::style::TrackSizingFunction::MinContent),
+        "max-content" => quote!(taffy::style::TrackSizingFunction::MaxContent),
         "points" | "percent" => {
             let value = generate_dimension(track_definition);
-            quote!(taffy::style::GridTrackSizingFunction::Fixed(#value))
+            quote!(taffy::style::TrackSizingFunction::Fixed(#value))
         }
         "fraction" => {
             let value: f32 = value();
-            quote!(taffy::style::GridTrackSizingFunction::Flex(#value))
+            quote!(taffy::style::TrackSizingFunction::Flex(#value))
         }
         _ => unreachable!(),
     }
