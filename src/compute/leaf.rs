@@ -66,8 +66,8 @@ pub(crate) fn compute(
         return node_size.unwrap_or(measured_size).maybe_clamp(node_min_size, node_max_size);
     }
 
-    let padding = style.padding.resolve_or_zero(available_space.width.into_option());
-    let border = style.border.resolve_or_zero(available_space.width.into_option());
+    let padding = style.padding.resolve_or_zero(available_space.as_options());
+    let border = style.border.resolve_or_zero(available_space.as_options());
 
     Size {
         width: node_size
@@ -78,7 +78,7 @@ pub(crate) fn compute(
         height: node_size
             .height
             // .unwrap_or(0.0) + padding.horizontal_axis_sum() + border.horizontal_axis_sum(), // content-box
-            .unwrap_or(0.0 + padding.horizontal_axis_sum() + border.horizontal_axis_sum()) // border-box
+            .unwrap_or(0.0 + padding.vertical_axis_sum() + border.vertical_axis_sum()) // border-box
             .maybe_clamp(node_min_size.height, node_max_size.height),
     }
 }
