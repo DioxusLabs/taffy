@@ -263,6 +263,27 @@ macro_rules! edges_quoted {
 fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
     let style = &node["style"];
 
+    fn snake_case_ident(ident_name: &str) -> Ident {
+        let name_snake_case = ident_name.to_case(Case::Snake);
+        format_ident!("{}", name_snake_case)
+    }
+
+    fn quote_object_value(
+        prop_name: &str,
+        style: &json::JsonValue,
+        quoter: impl Fn(&json::object::Object) -> TokenStream,
+    ) -> Option<TokenStream> {
+        match style[prop_name.to_case(Case::Camel)] {
+            json::JsonValue::Object(ref value) => Some(quoter(value)),
+            _ => None,
+        }
+    }
+
+    fn quote_prop(prop_name: &str, value: TokenStream) -> TokenStream {
+        let ident = snake_case_ident(prop_name);
+        quote!(#ident: #value)
+    }
+
     fn quote_object_prop(
         prop_name: &str,
         style: &json::JsonValue,
@@ -483,10 +504,35 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
     let grid_auto_columns = quote_array_prop("grid_auto_columns", style, generate_track_definition_list);
     let grid_auto_flow = quote_object_prop("grid_auto_flow", style, generate_grid_auto_flow);
 
-    let grid_row_start = quote_object_prop("grid_row_start", style, generate_grid_position);
-    let grid_row_end = quote_object_prop("grid_row_end", style, generate_grid_position);
-    let grid_column_start = quote_object_prop("grid_column_start", style, generate_grid_position);
-    let grid_column_end = quote_object_prop("grid_column_end", style, generate_grid_position);
+    let default_grid_placement = quote!(taffy::style::GridPlacement::Auto);
+
+    let grid_row_start = quote_object_value("grid_row_start", style, generate_grid_position);
+    let grid_row_end = quote_object_value("grid_row_end", style, generate_grid_position);
+    let grid_row = if grid_row_start.is_some() || grid_row_end.is_some() {
+        quote_prop(
+            "grid_row",
+            generate_line(
+                grid_row_start.unwrap_or(default_grid_placement.clone()),
+                grid_row_end.unwrap_or(default_grid_placement.clone()),
+            ),
+        )
+    } else {
+        quote!()
+    };
+
+    let grid_column_start = quote_object_value("grid_column_start", style, generate_grid_position);
+    let grid_column_end = quote_object_value("grid_column_end", style, generate_grid_position);
+    let grid_column = if grid_column_start.is_some() || grid_column_end.is_some() {
+        quote_prop(
+            "grid_column",
+            generate_line(
+                grid_column_start.unwrap_or(default_grid_placement.clone()),
+                grid_column_end.unwrap_or(default_grid_placement.clone()),
+            ),
+        )
+    } else {
+        quote!()
+    };
 
     edges_quoted!(style, margin, generate_length_percentage_auto, quote!(Rect::zero()));
     edges_quoted!(style, padding, generate_length_percentage, quote!(Rect::zero()));
@@ -538,10 +584,8 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
             #grid_auto_rows
             #grid_auto_columns
             #grid_auto_flow
-            #grid_row_start
-            #grid_row_end
-            #grid_column_start
-            #grid_column_end
+            #grid_row
+            #grid_column
             #size
             #min_size
             #max_size
@@ -653,20 +697,24 @@ fn generate_grid_auto_flow(auto_flow: &json::object::Object) -> TokenStream {
     }
 }
 
+fn generate_line(start: TokenStream, end: TokenStream) -> TokenStream {
+    quote!(taffy::geometry::Line { start:#start, end:#end },)
+}
+
 fn generate_grid_position(grid_position: &json::object::Object) -> TokenStream {
     let kind = grid_position.get("kind").unwrap();
     let value = || grid_position.get("value").unwrap().as_f32().unwrap();
 
     match kind {
         json::JsonValue::Short(ref kind) => match kind.as_ref() {
-            "auto" => quote!(taffy::style::GridLine::Auto),
+            "auto" => quote!(taffy::style::GridPlacement::Auto),
             "span" => {
                 let value = value() as u16;
-                quote!(taffy::style::GridLine::Span(#value))
+                quote!(taffy::style::GridPlacement::Span(#value))
             }
             "track" => {
                 let value = value() as i16;
-                quote!(taffy::style::GridLine::Track(#value))
+                quote!(taffy::style::GridPlacement::Track(#value))
             }
             _ => unreachable!(),
         },
