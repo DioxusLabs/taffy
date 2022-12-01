@@ -16,8 +16,8 @@ pub(super) fn align_tracks(
     // If the used_size > grid> container_size then the tracks must overflow their container
     // The direction in which they do so is determined by the alignment style
     let origin = match track_alignment_style {
-        AlignContent::FlexStart => 0.0,
-        AlignContent::FlexEnd => overflow,
+        AlignContent::Start => 0.0,
+        AlignContent::End => overflow,
         AlignContent::Center => overflow / 2.0,
         AlignContent::Stretch => 0.0,
         AlignContent::SpaceBetween => 0.0,

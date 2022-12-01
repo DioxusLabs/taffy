@@ -16,9 +16,9 @@ use core::cmp::{max, min};
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum AlignItems {
     /// Items are packed toward the start of the cross axis
-    FlexStart,
+    Start,
     /// Items are packed toward the end of the cross axis
-    FlexEnd,
+    End,
     /// Items are packed along the center of the cross axis
     Center,
     /// Items are aligned such as their baselines align
@@ -39,9 +39,9 @@ pub type JustifySelf = AlignItems;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum AlignContent {
     /// Items are packed toward the start of the axis
-    FlexStart,
+    Start,
     /// Items are packed toward the end of the axis
-    FlexEnd,
+    End,
     /// Items are centered around the middle of the axis
     Center,
     /// Items are stretched to fill the container
@@ -63,8 +63,8 @@ pub type JustifyContent = AlignContent;
 impl AlignContent {
     pub(crate) fn outer_gutter_weight(self) -> u8 {
         match self {
-            AlignContent::FlexStart => 1,
-            AlignContent::FlexEnd => 1,
+            AlignContent::Start => 1,
+            AlignContent::End => 1,
             AlignContent::Center => 1,
             AlignContent::Stretch => 0,
             AlignContent::SpaceBetween => 0,
@@ -75,8 +75,8 @@ impl AlignContent {
 
     pub(crate) fn inner_gutter_weight(self) -> u8 {
         match self {
-            AlignContent::FlexStart => 0,
-            AlignContent::FlexEnd => 0,
+            AlignContent::Start => 0,
+            AlignContent::End => 0,
             AlignContent::Center => 0,
             AlignContent::Stretch => 0,
             AlignContent::SpaceBetween => 1,

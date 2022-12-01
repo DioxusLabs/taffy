@@ -9,7 +9,7 @@ pub(crate) fn compute_alignment_offset(
     is_first: bool,
 ) -> f32 {
     match alignment_mode {
-        AlignContent::FlexStart => {
+        AlignContent::Start => {
             if is_first {
                 if layout_is_reversed {
                     free_space
@@ -20,7 +20,7 @@ pub(crate) fn compute_alignment_offset(
                 gap
             }
         }
-        AlignContent::FlexEnd => {
+        AlignContent::End => {
             if is_first {
                 if !layout_is_reversed {
                     free_space

@@ -15,7 +15,7 @@ pub fn compute() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                justify_content: Some(taffy::style::JustifyContent::FlexEnd),
+                justify_content: Some(taffy::style::JustifyContent::End),
                 grid_template_rows: vec![
                     taffy::style::TrackSizingFunction::Fixed(taffy::style::Dimension::Points(40f32)),
                     taffy::style::TrackSizingFunction::Fixed(taffy::style::Dimension::Points(40f32)),

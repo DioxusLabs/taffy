@@ -16,7 +16,7 @@ fn grid_align_content_end() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                align_content: Some(taffy::style::AlignContent::FlexEnd),
+                align_content: Some(taffy::style::AlignContent::End),
                 grid_template_rows: vec![
                     taffy::style::TrackSizingFunction::Fixed(taffy::style::Dimension::Points(40f32)),
                     taffy::style::TrackSizingFunction::Fixed(taffy::style::Dimension::Points(40f32)),

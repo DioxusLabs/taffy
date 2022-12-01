@@ -7,7 +7,7 @@ fn absolute_layout_in_wrap_reverse_row_container_flex_end() {
         .new_with_children(
             taffy::style::Style {
                 position_type: taffy::style::PositionType::Absolute,
-                align_self: Some(taffy::style::AlignSelf::FlexEnd),
+                align_self: Some(taffy::style::AlignSelf::End),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(20f32),
                     height: taffy::style::Dimension::Points(20f32),

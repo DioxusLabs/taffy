@@ -1239,7 +1239,7 @@ fn distribute_remaining_free_space(
             let layout_reverse = constants.dir.is_reverse();
             let gap = constants.gap.main(constants.dir);
             let justify_content_mode: JustifyContent =
-                tree.style(node).justify_content.unwrap_or(JustifyContent::FlexStart);
+                tree.style(node).justify_content.unwrap_or(JustifyContent::Start);
 
             let justify_item = |(i, child): (usize, &mut FlexItem)| {
                 child.offset_main =
@@ -1329,14 +1329,14 @@ fn align_flex_items_along_cross_axis(
     constants: &AlgoConstants,
 ) -> f32 {
     match child.align_self {
-        AlignSelf::FlexStart => {
+        AlignSelf::Start => {
             if constants.is_wrap_reverse {
                 free_space
             } else {
                 0.0
             }
         }
-        AlignSelf::FlexEnd => {
+        AlignSelf::End => {
             if constants.is_wrap_reverse {
                 0.0
             } else {
@@ -1655,13 +1655,13 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
         } else if end_main.is_some() {
             free_main_space - end_main.unwrap_or(0.0) - constants.border.main_end(constants.dir)
         } else {
-            match tree.style(node).justify_content.unwrap_or(JustifyContent::FlexStart) {
+            match tree.style(node).justify_content.unwrap_or(JustifyContent::Start) {
                 // Stretch is an invalid value for justify_content in the flexbox algorithm, so we
                 // treat it as if it wasn't set (and thus we default to FlexStart behaviour)
-                JustifyContent::SpaceBetween | JustifyContent::FlexStart | JustifyContent::Stretch => {
+                JustifyContent::SpaceBetween | JustifyContent::Start | JustifyContent::Stretch => {
                     constants.padding_border.main_start(constants.dir)
                 }
-                JustifyContent::FlexEnd => free_main_space - constants.padding_border.main_end(constants.dir),
+                JustifyContent::End => free_main_space - constants.padding_border.main_end(constants.dir),
                 JustifyContent::SpaceEvenly | JustifyContent::SpaceAround | JustifyContent::Center => {
                     free_main_space / 2.0
                 }
@@ -1674,14 +1674,14 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
             free_cross_space - end_cross.unwrap_or(0.0) - constants.border.cross_end(constants.dir)
         } else {
             match child_style.align_self.unwrap_or(constants.align_items) {
-                AlignSelf::FlexStart => {
+                AlignSelf::Start => {
                     if constants.is_wrap_reverse {
                         free_cross_space - constants.padding_border.cross_end(constants.dir)
                     } else {
                         constants.padding_border.cross_start(constants.dir)
                     }
                 }
-                AlignSelf::FlexEnd => {
+                AlignSelf::End => {
                     if constants.is_wrap_reverse {
                         constants.padding_border.cross_start(constants.dir)
                     } else {

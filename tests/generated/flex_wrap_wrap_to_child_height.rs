@@ -30,7 +30,7 @@ fn flex_wrap_wrap_to_child_height() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                align_items: Some(taffy::style::AlignItems::FlexStart),
+                align_items: Some(taffy::style::AlignItems::Start),
                 ..Default::default()
             },
             &[node00],

@@ -26,8 +26,8 @@ fn padding_align_end_child() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                align_items: Some(taffy::style::AlignItems::FlexEnd),
-                justify_content: Some(taffy::style::JustifyContent::FlexEnd),
+                align_items: Some(taffy::style::AlignItems::End),
+                justify_content: Some(taffy::style::JustifyContent::End),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(200f32),
