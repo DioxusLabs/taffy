@@ -2,7 +2,7 @@
 //! https://www.w3.org/TR/css-grid-2/
 use crate::compute::compute_node_layout;
 use crate::geometry::{Line, Point, Size};
-use crate::layout::{AvailableSpace, Layout};
+use crate::layout::{AvailableSpace, Layout, RunMode, SizingMode};
 use crate::node::Node;
 use crate::resolve::MaybeResolve;
 use crate::style::{AlignContent, AlignItems, AlignSelf, JustifyItems};
@@ -164,22 +164,49 @@ fn perform_final_layout(
 
     items.iter().enumerate().for_each(|(i, item)| {
         let style = tree.style(item.node);
+        let aspect_ratio = style.aspect_ratio;
+        let justify_self = style.justify_self;
+        let align_self = style.align_self;
         let inherent_size = style.size.maybe_resolve(available_space.as_options());
 
+        let mut measure_node = |axis_available_space| {
+            compute_node_layout(
+                tree,
+                item.node,
+                Size::NONE,
+                Size { width: AvailableSpace::Definite(axis_available_space), height: AvailableSpace::MaxContent },
+                RunMode::ComputeSize,
+                SizingMode::InherentSize,
+            )
+            .width
+        };
         let (x, width) = align_and_size_item_within_area(
             columns,
             item.column_indexes,
-            style.justify_self.or(justify_items),
+            justify_self.or(justify_items),
             inherent_size.height,
-            style.aspect_ratio,
+            aspect_ratio,
+            &mut measure_node,
         );
 
+        let mut measure_node = |axis_available_space| {
+            compute_node_layout(
+                tree,
+                item.node,
+                Size { width: Some(width), height: None },
+                Size { width: AvailableSpace::MaxContent, height: AvailableSpace::Definite(axis_available_space) },
+                RunMode::ComputeSize,
+                SizingMode::InherentSize,
+            )
+            .height
+        };
         let (y, height) = align_and_size_item_within_area(
             rows,
             item.row_indexes,
-            style.align_self.or(align_items),
-            inherent_size.width,
-            style.aspect_ratio,
+            align_self.or(align_items),
+            inherent_size.height,
+            aspect_ratio,
+            &mut measure_node,
         );
 
         *tree.layout_mut(item.node) =
@@ -193,6 +220,7 @@ fn align_and_size_item_within_area(
     alignment_style: Option<AlignSelf>,
     size: Option<f32>,
     aspect_ratio: Option<f32>,
+    mut measure_node: impl FnMut(f32) -> f32,
 ) -> (f32, f32) {
     // Calculate grid area dimension in the axis
     let area_start = tracks[(indexes.start + 1) as usize].offset;
@@ -215,10 +243,7 @@ fn align_and_size_item_within_area(
     // Compute size in the axis
     let size = size.unwrap_or_else(|| match alignment_style {
         AlignItems::Stretch => free_space,
-        _ => {
-            // Todo: measure node
-            0.0
-        }
+        _ => measure_node(free_space),
     });
 
     // Compute offset in the axis
