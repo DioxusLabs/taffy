@@ -23,6 +23,7 @@ pub enum SizingMode {
 }
 
 /// The amount of space available to a node in a given axis
+/// https://www.w3.org/TR/css-sizing-3/#available
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum AvailableSpace {
     /// The amount of space available is the specified number of pixels

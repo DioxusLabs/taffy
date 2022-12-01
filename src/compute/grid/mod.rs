@@ -1,12 +1,12 @@
 //! This module is a partial implementation of the CSS Grid Level 2 specification
 //! https://www.w3.org/TR/css-grid-2/
 use crate::compute::compute_node_layout;
-use crate::geometry::{Point, Size};
+use crate::geometry::{Line, Point, Size};
 use crate::layout::{AvailableSpace, Layout};
 use crate::node::Node;
 use crate::resolve::MaybeResolve;
-use crate::style::AlignContent;
-use crate::sys::Vec;
+use crate::style::{AlignContent, AlignItems, AlignSelf, JustifyItems};
+use crate::sys::{f32_max, Vec};
 use crate::tree::LayoutTree;
 use alignment::align_tracks;
 use explicit_grid::{compute_explicit_grid_size, initialize_grid_tracks};
@@ -134,7 +134,15 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
             .unwrap_or_else(|| rows.tracks.iter().map(|track| track.base_size).sum()),
     };
 
-    perform_final_layout(tree, &mut items, &mut rows.tracks, &mut columns.tracks);
+    perform_final_layout(
+        tree,
+        &mut items,
+        &mut rows.tracks,
+        &mut columns.tracks,
+        available_space,
+        style.align_items,
+        style.justify_items,
+    );
 
     let named_areas = Vec::new();
     let grid = CssGrid { available_space, cell_occupancy_matrix, named_areas, items, columns, rows };
@@ -142,26 +150,90 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
     container_size
 }
 
-fn perform_final_layout(tree: &mut impl LayoutTree, items: &[GridItem], rows: &[GridTrack], columns: &[GridTrack]) {
+fn perform_final_layout(
+    tree: &mut impl LayoutTree,
+    items: &[GridItem],
+    rows: &[GridTrack],
+    columns: &[GridTrack],
+    available_space: Size<AvailableSpace>,
+    align_items: Option<AlignItems>,
+    justify_items: Option<JustifyItems>,
+) {
+    let align_items = align_items;
+    let justify_items = justify_items;
+
     items.iter().enumerate().for_each(|(i, item)| {
-        let row_start = rows[(item.row_indexes.start + 1) as usize].offset;
-        let row_end = {
-            let row = &rows[(item.row_indexes.end - 1) as usize];
-            row.offset + row.base_size
-        };
+        let style = tree.style(item.node);
+        let inherent_size = style.size.maybe_resolve(available_space.as_options());
 
-        let column_start = columns[(item.column_indexes.start + 1) as usize].offset;
-        let column_end = {
-            let column = &columns[(item.column_indexes.end - 1) as usize];
-            column.offset + column.base_size
-        };
+        let (x, width) = align_and_size_item_within_area(
+            columns,
+            item.column_indexes,
+            style.justify_self.or(justify_items),
+            inherent_size.height,
+            style.aspect_ratio,
+        );
 
-        *tree.layout_mut(item.node) = Layout {
-            order: i as u32,
-            size: Size { width: column_end - column_start, height: row_end - row_start },
-            location: Point { x: column_start, y: row_start },
-        };
+        let (y, height) = align_and_size_item_within_area(
+            rows,
+            item.row_indexes,
+            style.align_self.or(align_items),
+            inherent_size.width,
+            style.aspect_ratio,
+        );
+
+        *tree.layout_mut(item.node) =
+            Layout { order: i as u32, size: Size { width, height }, location: Point { x, y } };
     });
+}
+
+fn align_and_size_item_within_area(
+    tracks: &[GridTrack],
+    indexes: Line<u16>,
+    alignment_style: Option<AlignSelf>,
+    size: Option<f32>,
+    aspect_ratio: Option<f32>,
+) -> (f32, f32) {
+    // Calculate grid area dimension in the axis
+    let area_start = tracks[(indexes.start + 1) as usize].offset;
+    let area_end = {
+        let row = &tracks[(indexes.end - 1) as usize];
+        row.offset + row.base_size
+    };
+    let free_space = area_end - area_start;
+    let origin = f32_max(free_space, 0.0);
+
+    // Compute default alignment style if it set on neither the parent or the node itself
+    let alignment_style = alignment_style.unwrap_or_else(|| {
+        if size.is_some() || aspect_ratio.is_some() {
+            AlignSelf::Start
+        } else {
+            AlignSelf::Stretch
+        }
+    });
+
+    // Compute size in the axis
+    let size = match alignment_style {
+        AlignItems::Stretch => free_space,
+        _ => {
+            size.unwrap_or_else(|| {
+                // Todo: measure node
+                0.0
+            })
+        }
+    };
+
+    // Compute offset in the axis
+    let offset_within_area = match alignment_style {
+        AlignSelf::Start => 0.0,
+        AlignSelf::End => origin - size,
+        AlignSelf::Center => (origin - size) / 2.0,
+        // TODO: Add support for baseline alignment. For now we treat it as "start".
+        AlignSelf::Baseline => 0.0,
+        AlignSelf::Stretch => 0.0,
+    };
+
+    (area_start + offset_within_area, size)
 }
 
 fn populate_negative_grid_tracks(axis: &mut GridAxisTracks) {
