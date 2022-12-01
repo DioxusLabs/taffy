@@ -6,7 +6,8 @@ use crate::layout::AvailableSpace;
 use crate::sys::GridTrackVec;
 use core::cmp::{max, min};
 
-/// How [`Nodes`](crate::node::Node) are aligned relative to the cross axis
+/// Used to control how [`Nodes`](crate::node::Node) are aligned.
+/// It's used for `align-items, justify-items, align-self, and justify-self
 ///
 /// The default behavior is [`AlignItems::Stretch`].
 ///
@@ -25,42 +26,9 @@ pub enum AlignItems {
     /// Stretch to fill the container
     Stretch,
 }
-
-impl Default for AlignItems {
-    fn default() -> Self {
-        Self::Stretch
-    }
-}
-
-/// Overrides the inherited [`AlignItems`] behavior for this node.
-///
-/// The behavior of any child nodes will be controlled by this node's [`AlignItems`] value.
-///
-/// The default behavior is [`AlignSelf::Auto`].
-///
-/// [Specification](https://www.w3.org/TR/css-flexbox-1/#align-items-property)
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum AlignSelf {
-    /// Inherits the [`AlignItems`] behavior of the parent
-    Auto,
-    /// Items are packed toward the start of the cross axis
-    FlexStart,
-    /// Items are packed toward the end of the cross axis
-    FlexEnd,
-    /// Items are packed along the center of the cross axis
-    Center,
-    /// Items are aligned such as their baselines align
-    Baseline,
-    /// Distribute items evenly, but stretch them to fill the container
-    Stretch,
-}
-
-impl Default for AlignSelf {
-    fn default() -> Self {
-        Self::Auto
-    }
-}
+pub type JustifyItems = AlignItems;
+pub type AlignSelf = AlignItems;
+pub type JustifySelf = AlignItems;
 
 /// Sets the distribution of space between and around content items
 /// This type is used for both align_content and justify_content as the values are the same
@@ -702,7 +670,7 @@ pub struct Style {
     /// How should items be aligned relative to the cross axis?
     pub align_items: AlignItems,
     /// Should this item violate the cross axis alignment specified by its parent's [`AlignItems`]?
-    pub align_self: AlignSelf,
+    pub align_self: Option<AlignSelf>,
     /// How should content contained within this item be aligned relative to the cross axis?
     pub align_content: Option<AlignContent>,
     /// How should items be aligned relative to the main axis?
@@ -753,7 +721,7 @@ impl Style {
         flex_direction: FlexDirection::Row,
         flex_wrap: FlexWrap::NoWrap,
         align_items: AlignItems::Stretch,
-        align_self: AlignSelf::Auto,
+        align_self: None,
         align_content: None,
         justify_content: None,
         position: Rect::auto(),
@@ -868,20 +836,7 @@ impl Style {
 
     /// Computes the final alignment of this item based on the parent's [`AlignItems`] and this item's [`AlignSelf`]
     pub(crate) fn align_self(&self, parent: &Style) -> AlignSelf {
-        // FUTURE WARNING: This function should never return AlignSelf::Auto
-        // See #169 https://github.com/DioxusLabs/taffy/pull/169#issuecomment-1157698840
-
-        if self.align_self == AlignSelf::Auto {
-            match parent.align_items {
-                AlignItems::FlexStart => AlignSelf::FlexStart,
-                AlignItems::FlexEnd => AlignSelf::FlexEnd,
-                AlignItems::Center => AlignSelf::Center,
-                AlignItems::Baseline => AlignSelf::Baseline,
-                AlignItems::Stretch => AlignSelf::Stretch,
-            }
-        } else {
-            self.align_self
-        }
+        self.align_self.unwrap_or(parent.align_items)
     }
 
     pub(crate) fn grid_placement(&self, axis: AbsoluteAxis) -> Line<GridPlacement> {
@@ -903,7 +858,7 @@ impl Style {
 #[cfg(test)]
 mod tests {
     use super::GridPlacement;
-    use super::Style;
+    use super::{AlignItems, Style};
     use crate::geometry::{Line, Rect, Size};
 
     #[test]
@@ -916,7 +871,7 @@ mod tests {
             position_type: Default::default(),
             flex_direction: Default::default(),
             flex_wrap: Default::default(),
-            align_items: Default::default(),
+            align_items: AlignItems::Stretch,
             align_self: Default::default(),
             align_content: Default::default(),
             justify_content: Default::default(),
@@ -981,7 +936,7 @@ mod tests {
             Style { align_items: align, ..Default::default() }
         }
 
-        fn layout_from_align_self(align: AlignSelf) -> Style {
+        fn layout_from_align_self(align: Option<AlignSelf>) -> Style {
             Style { align_self: align, ..Default::default() }
         }
 
@@ -1063,46 +1018,46 @@ mod tests {
         #[test]
         fn flexbox_layout_align_self_auto() {
             let parent = layout_from_align_items(AlignItems::FlexStart);
-            let layout = layout_from_align_self(AlignSelf::Auto);
+            let layout = layout_from_align_self(None);
             assert_eq!(layout.align_self(&parent), AlignSelf::FlexStart);
 
             let parent = layout_from_align_items(AlignItems::FlexEnd);
-            let layout = layout_from_align_self(AlignSelf::Auto);
+            let layout = layout_from_align_self(None);
             assert_eq!(layout.align_self(&parent), AlignSelf::FlexEnd);
 
             let parent = layout_from_align_items(AlignItems::Center);
-            let layout = layout_from_align_self(AlignSelf::Auto);
+            let layout = layout_from_align_self(None);
             assert_eq!(layout.align_self(&parent), AlignSelf::Center);
 
             let parent = layout_from_align_items(AlignItems::Baseline);
-            let layout = layout_from_align_self(AlignSelf::Auto);
+            let layout = layout_from_align_self(None);
             assert_eq!(layout.align_self(&parent), AlignSelf::Baseline);
 
             let parent = layout_from_align_items(AlignItems::Stretch);
-            let layout = layout_from_align_self(AlignSelf::Auto);
+            let layout = layout_from_align_self(None);
             assert_eq!(layout.align_self(&parent), AlignSelf::Stretch);
         }
 
         #[test]
         fn align_self() {
             let parent = layout_from_align_items(AlignItems::FlexEnd);
-            let layout = layout_from_align_self(AlignSelf::FlexStart);
+            let layout = layout_from_align_self(Some(AlignSelf::FlexStart));
             assert_eq!(layout.align_self(&parent), AlignSelf::FlexStart);
 
             let parent = layout_from_align_items(AlignItems::FlexStart);
-            let layout = layout_from_align_self(AlignSelf::FlexEnd);
+            let layout = layout_from_align_self(Some(AlignSelf::FlexEnd));
             assert_eq!(layout.align_self(&parent), AlignSelf::FlexEnd);
 
             let parent = layout_from_align_items(AlignItems::FlexStart);
-            let layout = layout_from_align_self(AlignSelf::Center);
+            let layout = layout_from_align_self(Some(AlignSelf::Center));
             assert_eq!(layout.align_self(&parent), AlignSelf::Center);
 
             let parent = layout_from_align_items(AlignItems::FlexStart);
-            let layout = layout_from_align_self(AlignSelf::Baseline);
+            let layout = layout_from_align_self(Some(AlignSelf::Baseline));
             assert_eq!(layout.align_self(&parent), AlignSelf::Baseline);
 
             let parent = layout_from_align_items(AlignItems::FlexStart);
-            let layout = layout_from_align_self(AlignSelf::Stretch);
+            let layout = layout_from_align_self(Some(AlignSelf::Stretch));
             assert_eq!(layout.align_self(&parent), AlignSelf::Stretch);
         }
     }

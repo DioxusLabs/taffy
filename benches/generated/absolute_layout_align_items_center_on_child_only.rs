@@ -6,7 +6,7 @@ pub fn compute() {
         .new_with_children(
             taffy::style::Style {
                 position_type: taffy::style::PositionType::Absolute,
-                align_self: taffy::style::AlignSelf::Center,
+                align_self: Some(taffy::style::AlignSelf::Center),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(60f32),
                     height: taffy::style::Dimension::Points(40f32),

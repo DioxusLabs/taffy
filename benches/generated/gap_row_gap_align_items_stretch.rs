@@ -60,6 +60,7 @@ pub fn compute() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
+                align_items: taffy::style::AlignItems::Stretch,
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 gap: taffy::geometry::Size {
                     width: taffy::style::LengthPercentage::Points(10f32),

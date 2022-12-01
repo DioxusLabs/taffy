@@ -6,7 +6,15 @@ pub fn compute() {
         .new_with_children(taffy::style::Style { flex_grow: 1f32, flex_shrink: 1f32, ..Default::default() }, &[])
         .unwrap();
     let node00 = taffy
-        .new_with_children(taffy::style::Style { flex_grow: 1f32, flex_shrink: 1f32, ..Default::default() }, &[node000])
+        .new_with_children(
+            taffy::style::Style {
+                align_items: taffy::style::AlignItems::Stretch,
+                flex_grow: 1f32,
+                flex_shrink: 1f32,
+                ..Default::default()
+            },
+            &[node000],
+        )
         .unwrap();
     let node0 = taffy
         .new_with_children(

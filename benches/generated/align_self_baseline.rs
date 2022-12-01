@@ -5,7 +5,7 @@ pub fn compute() {
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
-                align_self: taffy::style::AlignSelf::Baseline,
+                align_self: Some(taffy::style::AlignSelf::Baseline),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
                     height: taffy::style::Dimension::Points(50f32),
@@ -32,7 +32,7 @@ pub fn compute() {
     let node1 = taffy
         .new_with_children(
             taffy::style::Style {
-                align_self: taffy::style::AlignSelf::Baseline,
+                align_self: Some(taffy::style::AlignSelf::Baseline),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
                     height: taffy::style::Dimension::Points(20f32),

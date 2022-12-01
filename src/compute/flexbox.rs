@@ -1330,7 +1330,6 @@ fn align_flex_items_along_cross_axis(
     constants: &AlgoConstants,
 ) -> f32 {
     match child_style.align_self(tree.style(node)) {
-        AlignSelf::Auto => unreachable!(),
         AlignSelf::FlexStart => {
             if constants.is_wrap_reverse {
                 free_space
@@ -1676,7 +1675,6 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
             free_cross_space - end_cross.unwrap_or(0.0) - constants.border.cross_end(constants.dir)
         } else {
             match child_style.align_self(tree.style(node)) {
-                AlignSelf::Auto => unreachable!(),
                 AlignSelf::FlexStart => {
                     if constants.is_wrap_reverse {
                         free_cross_space - constants.padding_border.cross_end(constants.dir)
