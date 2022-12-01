@@ -72,7 +72,7 @@ pub fn compute() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_wrap: taffy::style::FlexWrap::WrapReverse,
-                align_items: taffy::style::AlignItems::Center,
+                align_items: Some(taffy::style::AlignItems::Center),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(100f32),

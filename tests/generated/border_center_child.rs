@@ -19,7 +19,7 @@ fn border_center_child() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                align_items: taffy::style::AlignItems::Center,
+                align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),

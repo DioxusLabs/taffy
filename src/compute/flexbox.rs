@@ -11,7 +11,8 @@ use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::{
-    AlignContent, AlignSelf, Dimension, Display, FlexWrap, JustifyContent, LengthPercentageAuto, PositionType,
+    AlignContent, AlignItems, AlignSelf, Dimension, Display, FlexWrap, JustifyContent, LengthPercentageAuto,
+    PositionType,
 };
 use crate::style::{FlexDirection, Style};
 use crate::sys::Vec;
@@ -31,6 +32,8 @@ struct FlexItem {
     min_size: Size<Option<f32>>,
     /// The maximum allowable size of this item
     max_size: Size<Option<f32>>,
+    /// The cross-alignment of this item
+    align_self: AlignSelf,
 
     /// The final offset of this item
     position: Rect<Option<f32>>,
@@ -106,6 +109,8 @@ struct AlgoConstants {
     padding_border: Rect<f32>,
     /// The gap of this section
     gap: Size<f32>,
+    /// The align_items property of this node
+    align_items: AlignItems,
 
     /// The size of the internal node
     node_inner_size: Size<Option<f32>>,
@@ -189,8 +194,7 @@ fn compute_preliminary(
     NODE_LOGGER.log("determine_available_space");
     let available_space = determine_available_space(known_dimensions, parent_size, &constants);
 
-    let has_baseline_child =
-        flex_items.iter().any(|child| tree.style(child.node).align_self(tree.style(node)) == AlignSelf::Baseline);
+    let has_baseline_child = flex_items.iter().any(|child| child.align_self == AlignSelf::Baseline);
 
     // 3. Determine the flex base size and hypothetical main size of each item.
     #[cfg(feature = "debug")]
@@ -358,6 +362,7 @@ fn compute_constants(style: &Style, node_size: Size<Option<f32>>, parent_size: S
     let margin = style.margin.resolve_or_zero(parent_size.width.into_option());
     let padding = style.padding.resolve_or_zero(parent_size.width.into_option());
     let border = style.border.resolve_or_zero(parent_size.width.into_option());
+    let align_items = style.align_items.unwrap_or(crate::style::AlignItems::Stretch);
 
     let padding_border = Rect {
         left: padding.left + border.left,
@@ -384,6 +389,7 @@ fn compute_constants(style: &Style, node_size: Size<Option<f32>>, parent_size: S
         border,
         gap,
         padding_border,
+        align_items,
         node_inner_size,
         container_size,
         inner_container_size,
@@ -411,6 +417,7 @@ fn generate_anonymous_flex_items(tree: &impl LayoutTree, node: Node, constants: 
             margin: child_style.margin.resolve_or_zero(constants.node_inner_size.width),
             padding: child_style.padding.resolve_or_zero(constants.node_inner_size.width),
             border: child_style.border.resolve_or_zero(constants.node_inner_size.width),
+            align_self: child_style.align_self.unwrap_or(constants.align_items),
             flex_basis: 0.0,
             inner_flex_basis: 0.0,
             violation: 0.0,
@@ -551,7 +558,7 @@ fn determine_flex_base_size(
 
         let child_known_dimensions = {
             let mut ckd = child.size;
-            if child_style.align_self(tree.style(node)) == AlignSelf::Stretch {
+            if child.align_self == AlignSelf::Stretch {
                 if constants.is_column && ckd.width.is_none() {
                     ckd.width = available_space.width.into_option();
                 }
@@ -1082,7 +1089,7 @@ fn calculate_cross_size(
                 .iter()
                 .map(|child| {
                     let child_style = tree.style(child.node);
-                    if child_style.align_self(tree.style(node)) == AlignSelf::Baseline
+                    if child.align_self == AlignSelf::Baseline
                         && child_style.cross_margin_start(constants.dir) != LengthPercentageAuto::Auto
                         && child_style.cross_margin_end(constants.dir) != LengthPercentageAuto::Auto
                         && child_style.cross_size(constants.dir) == Dimension::Auto
@@ -1153,7 +1160,7 @@ fn determine_used_cross_size(
             let child_style = tree.style(child.node);
             child.target_size.set_cross(
                 constants.dir,
-                if child_style.align_self(tree.style(node)) == AlignSelf::Stretch
+                if child.align_self == AlignSelf::Stretch
                     && child_style.cross_margin_start(constants.dir) != LengthPercentageAuto::Auto
                     && child_style.cross_margin_end(constants.dir) != LengthPercentageAuto::Auto
                     && child_style.cross_size(constants.dir) == Dimension::Auto
@@ -1299,15 +1306,8 @@ fn resolve_cross_axis_auto_margins(
                 }
             } else {
                 // 14. Align all flex items along the cross-axis.
-                child.offset_cross = align_flex_items_along_cross_axis(
-                    tree,
-                    node,
-                    child,
-                    child_style,
-                    free_space,
-                    max_baseline,
-                    constants,
-                );
+                child.offset_cross =
+                    align_flex_items_along_cross_axis(tree, node, child, free_space, max_baseline, constants);
             }
         }
     }
@@ -1324,12 +1324,11 @@ fn align_flex_items_along_cross_axis(
     tree: &impl LayoutTree,
     node: Node,
     child: &mut FlexItem,
-    child_style: &Style,
     free_space: f32,
     max_baseline: f32,
     constants: &AlgoConstants,
 ) -> f32 {
-    match child_style.align_self(tree.style(node)) {
+    match child.align_self {
         AlignSelf::FlexStart => {
             if constants.is_wrap_reverse {
                 free_space
@@ -1674,7 +1673,7 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
         } else if end_cross.is_some() {
             free_cross_space - end_cross.unwrap_or(0.0) - constants.border.cross_end(constants.dir)
         } else {
-            match child_style.align_self(tree.style(node)) {
+            match child_style.align_self.unwrap_or(constants.align_items) {
                 AlignSelf::FlexStart => {
                     if constants.is_wrap_reverse {
                         free_cross_space - constants.padding_border.cross_end(constants.dir)

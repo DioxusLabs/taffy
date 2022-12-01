@@ -393,11 +393,11 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let align_items = match style["alignItems"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
-            "flex-start" | "start" => quote!(align_items: taffy::style::AlignItems::FlexStart,),
-            "flex-end" | "end" => quote!(align_items: taffy::style::AlignItems::FlexEnd,),
-            "center" => quote!(align_items: taffy::style::AlignItems::Center,),
-            "baseline" => quote!(align_items: taffy::style::AlignItems::Baseline,),
-            "stretch" => quote!(align_items: taffy::style::AlignItems::Stretch,),
+            "flex-start" | "start" => quote!(align_items: Some(taffy::style::AlignItems::FlexStart),),
+            "flex-end" | "end" => quote!(align_items: Some(taffy::style::AlignItems::FlexEnd),),
+            "center" => quote!(align_items: Some(taffy::style::AlignItems::Center),),
+            "baseline" => quote!(align_items: Some(taffy::style::AlignItems::Baseline),),
+            "stretch" => quote!(align_items: Some(taffy::style::AlignItems::Stretch),),
             _ => quote!(),
         },
         _ => quote!(),

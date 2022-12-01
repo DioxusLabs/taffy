@@ -9,7 +9,7 @@ fn align_flex_start_with_shrinking_children_with_stretch() {
     let node00 = taffy
         .new_with_children(
             taffy::style::Style {
-                align_items: taffy::style::AlignItems::Stretch,
+                align_items: Some(taffy::style::AlignItems::Stretch),
                 flex_grow: 1f32,
                 flex_shrink: 1f32,
                 ..Default::default()
@@ -19,7 +19,7 @@ fn align_flex_start_with_shrinking_children_with_stretch() {
         .unwrap();
     let node0 = taffy
         .new_with_children(
-            taffy::style::Style { align_items: taffy::style::AlignItems::FlexStart, ..Default::default() },
+            taffy::style::Style { align_items: Some(taffy::style::AlignItems::FlexStart), ..Default::default() },
             &[node00],
         )
         .unwrap();

@@ -25,7 +25,7 @@ pub fn compute() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                align_items: taffy::style::AlignItems::FlexEnd,
+                align_items: Some(taffy::style::AlignItems::FlexEnd),
                 justify_content: Some(taffy::style::JustifyContent::FlexEnd),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),

@@ -81,7 +81,7 @@ fn align_baseline_child_multiline() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                align_items: taffy::style::AlignItems::Baseline,
+                align_items: Some(taffy::style::AlignItems::Baseline),
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Size::auto() },
                 ..Default::default()
             },

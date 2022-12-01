@@ -38,7 +38,7 @@ fn margin_auto_top_and_bottom_strech() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                align_items: taffy::style::AlignItems::Stretch,
+                align_items: Some(taffy::style::AlignItems::Stretch),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(200f32),
