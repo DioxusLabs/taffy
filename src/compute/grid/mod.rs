@@ -213,15 +213,13 @@ fn align_and_size_item_within_area(
     });
 
     // Compute size in the axis
-    let size = match alignment_style {
+    let size = size.unwrap_or_else(|| match alignment_style {
         AlignItems::Stretch => free_space,
         _ => {
-            size.unwrap_or_else(|| {
-                // Todo: measure node
-                0.0
-            })
+            // Todo: measure node
+            0.0
         }
-    };
+    });
 
     // Compute offset in the axis
     let offset_within_area = match alignment_style {
