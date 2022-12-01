@@ -4,17 +4,14 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
     use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node000 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(40f32),
-                    height: taffy::style::Dimension::Points(40f32),
-                    ..Size::auto()
-                },
-                ..Default::default()
+        .new_leaf(taffy::style::Style {
+            size: taffy::geometry::Size {
+                width: taffy::style::Dimension::Points(40f32),
+                height: taffy::style::Dimension::Points(40f32),
+                ..Size::auto()
             },
-            &[],
-        )
+            ..Default::default()
+        })
         .unwrap();
     let node00 = taffy
         .new_with_children(
@@ -23,17 +20,14 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
         )
         .unwrap();
     let node010 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(40f32),
-                    height: taffy::style::Dimension::Points(40f32),
-                    ..Size::auto()
-                },
-                ..Default::default()
+        .new_leaf(taffy::style::Style {
+            size: taffy::geometry::Size {
+                width: taffy::style::Dimension::Points(40f32),
+                height: taffy::style::Dimension::Points(40f32),
+                ..Size::auto()
             },
-            &[],
-        )
+            ..Default::default()
+        })
         .unwrap();
     let node01 = taffy
         .new_with_children(

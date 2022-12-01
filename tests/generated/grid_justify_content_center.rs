@@ -3,15 +3,15 @@ fn grid_justify_content_center() {
     #[allow(unused_imports)]
     use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
-    let node0 = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[]).unwrap();
-    let node1 = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[]).unwrap();
-    let node2 = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[]).unwrap();
-    let node3 = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[]).unwrap();
-    let node4 = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[]).unwrap();
-    let node5 = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[]).unwrap();
-    let node6 = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[]).unwrap();
-    let node7 = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[]).unwrap();
-    let node8 = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[]).unwrap();
+    let node0 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
+    let node1 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
+    let node2 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
+    let node3 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
+    let node4 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
+    let node5 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
+    let node6 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
+    let node7 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
+    let node8 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {

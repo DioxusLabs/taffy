@@ -4,31 +4,22 @@ fn justify_content_row_space_evenly() {
     use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Size::auto() },
-                ..Default::default()
-            },
-            &[],
-        )
+        .new_leaf(taffy::style::Style {
+            size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Size::auto() },
+            ..Default::default()
+        })
         .unwrap();
     let node1 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Size::auto() },
-                ..Default::default()
-            },
-            &[],
-        )
+        .new_leaf(taffy::style::Style {
+            size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Size::auto() },
+            ..Default::default()
+        })
         .unwrap();
     let node2 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Size::auto() },
-                ..Default::default()
-            },
-            &[],
-        )
+        .new_leaf(taffy::style::Style {
+            size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Size::auto() },
+            ..Default::default()
+        })
         .unwrap();
     let node = taffy
         .new_with_children(

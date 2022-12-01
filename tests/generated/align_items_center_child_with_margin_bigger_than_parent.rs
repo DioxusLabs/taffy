@@ -4,22 +4,19 @@ fn align_items_center_child_with_margin_bigger_than_parent() {
     use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(50f32),
-                    height: taffy::style::Dimension::Points(50f32),
-                    ..Size::auto()
-                },
-                margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Points(10f32),
-                    right: taffy::style::LengthPercentageAuto::Points(10f32),
-                    ..Rect::zero()
-                },
-                ..Default::default()
+        .new_leaf(taffy::style::Style {
+            size: taffy::geometry::Size {
+                width: taffy::style::Dimension::Points(50f32),
+                height: taffy::style::Dimension::Points(50f32),
+                ..Size::auto()
             },
-            &[],
-        )
+            margin: taffy::geometry::Rect {
+                left: taffy::style::LengthPercentageAuto::Points(10f32),
+                right: taffy::style::LengthPercentageAuto::Points(10f32),
+                ..Rect::zero()
+            },
+            ..Default::default()
+        })
         .unwrap();
     let node0 = taffy
         .new_with_children(

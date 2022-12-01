@@ -4,19 +4,13 @@ fn margin_with_sibling_column() {
     use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                flex_grow: 1f32,
-                margin: taffy::geometry::Rect {
-                    bottom: taffy::style::LengthPercentageAuto::Points(10f32),
-                    ..Rect::zero()
-                },
-                ..Default::default()
-            },
-            &[],
-        )
+        .new_leaf(taffy::style::Style {
+            flex_grow: 1f32,
+            margin: taffy::geometry::Rect { bottom: taffy::style::LengthPercentageAuto::Points(10f32), ..Rect::zero() },
+            ..Default::default()
+        })
         .unwrap();
-    let node1 = taffy.new_with_children(taffy::style::Style { flex_grow: 1f32, ..Default::default() }, &[]).unwrap();
+    let node1 = taffy.new_leaf(taffy::style::Style { flex_grow: 1f32, ..Default::default() }).unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {

@@ -2,7 +2,7 @@ pub fn compute() {
     #[allow(unused_imports)]
     use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
-    let node0 = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[]).unwrap();
+    let node0 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {

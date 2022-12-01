@@ -4,52 +4,43 @@ fn gap_column_gap_child_margins() {
     use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                flex_grow: 1f32,
-                flex_shrink: 1f32,
-                flex_basis: taffy::style::Dimension::Percent(0f32),
-                margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Points(2f32),
-                    right: taffy::style::LengthPercentageAuto::Points(2f32),
-                    ..Rect::zero()
-                },
-                ..Default::default()
+        .new_leaf(taffy::style::Style {
+            flex_grow: 1f32,
+            flex_shrink: 1f32,
+            flex_basis: taffy::style::Dimension::Percent(0f32),
+            margin: taffy::geometry::Rect {
+                left: taffy::style::LengthPercentageAuto::Points(2f32),
+                right: taffy::style::LengthPercentageAuto::Points(2f32),
+                ..Rect::zero()
             },
-            &[],
-        )
+            ..Default::default()
+        })
         .unwrap();
     let node1 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                flex_grow: 1f32,
-                flex_shrink: 1f32,
-                flex_basis: taffy::style::Dimension::Percent(0f32),
-                margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Points(10f32),
-                    right: taffy::style::LengthPercentageAuto::Points(10f32),
-                    ..Rect::zero()
-                },
-                ..Default::default()
+        .new_leaf(taffy::style::Style {
+            flex_grow: 1f32,
+            flex_shrink: 1f32,
+            flex_basis: taffy::style::Dimension::Percent(0f32),
+            margin: taffy::geometry::Rect {
+                left: taffy::style::LengthPercentageAuto::Points(10f32),
+                right: taffy::style::LengthPercentageAuto::Points(10f32),
+                ..Rect::zero()
             },
-            &[],
-        )
+            ..Default::default()
+        })
         .unwrap();
     let node2 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                flex_grow: 1f32,
-                flex_shrink: 1f32,
-                flex_basis: taffy::style::Dimension::Percent(0f32),
-                margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Points(15f32),
-                    right: taffy::style::LengthPercentageAuto::Points(15f32),
-                    ..Rect::zero()
-                },
-                ..Default::default()
+        .new_leaf(taffy::style::Style {
+            flex_grow: 1f32,
+            flex_shrink: 1f32,
+            flex_basis: taffy::style::Dimension::Percent(0f32),
+            margin: taffy::geometry::Rect {
+                left: taffy::style::LengthPercentageAuto::Points(15f32),
+                right: taffy::style::LengthPercentageAuto::Points(15f32),
+                ..Rect::zero()
             },
-            &[],
-        )
+            ..Default::default()
+        })
         .unwrap();
     let node = taffy
         .new_with_children(

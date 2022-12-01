@@ -84,18 +84,26 @@ async fn main() {
         })
         .collect();
 
-    let test_mods = test_descs
+    let mod_statemnts = test_descs
         .iter()
         .map(|(name, _)| {
             let name = Ident::new(name, Span::call_site());
             quote!(mod #name;)
         })
         .fold(quote!(), |a, b| quote!(#a #b));
+    let generic_measure_function = generate_generic_measure_function();
 
-    let bench_mods = quote!(
+    let test_mod_file = quote!(
+        #generic_measure_function
+        #mod_statemnts
+    );
+
+    let bench_mod_file = quote!(
         use criterion::{criterion_group, criterion_main, Criterion};
 
-        #test_mods
+        #generic_measure_function
+
+        #mod_statemnts
 
         fn benchmark(c: &mut Criterion) {
             c.bench_function("generated benchmarks", |b| {
@@ -117,7 +125,7 @@ async fn main() {
         debug!("writing {} to disk...", &name);
         fs::write(bench_filename, bench_body.to_string()).unwrap();
     }
-    fs::write(benches_base_path.join("mod.rs"), bench_mods.to_string()).unwrap();
+    fs::write(benches_base_path.join("mod.rs"), bench_mod_file.to_string()).unwrap();
 
     info!("writing generated test file to disk...");
     let tests_base_path = repo_root.join("tests").join("generated");
@@ -129,7 +137,7 @@ async fn main() {
         debug!("writing {} to disk...", &name);
         fs::write(test_filename, test_body.to_string()).unwrap();
     }
-    fs::write(tests_base_path.join("mod.rs"), test_mods.to_string()).unwrap();
+    fs::write(tests_base_path.join("mod.rs"), test_mod_file.to_string()).unwrap();
 
     info!("formatting the source directory");
     Command::new("cargo").arg("fmt").current_dir(repo_root).status().unwrap();
@@ -281,7 +289,7 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     fn quote_prop(prop_name: &str, value: TokenStream) -> TokenStream {
         let ident = snake_case_ident(prop_name);
-        quote!(#ident: #value)
+        quote!(#ident: #value,)
     }
 
     fn quote_object_prop(
@@ -289,15 +297,9 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
         style: &json::JsonValue,
         quoter: impl Fn(&json::object::Object) -> TokenStream,
     ) -> TokenStream {
-        let prop_name_snake_case = prop_name.to_case(Case::Snake);
-        let prop_name_camel_case = prop_name.to_case(Case::Camel);
-        let prop_name_ident = format_ident!("{}", prop_name_snake_case);
-        match style[prop_name_camel_case] {
-            json::JsonValue::Object(ref value) => {
-                let prop_value = quoter(value);
-                quote!(#prop_name_ident: #prop_value,)
-            }
-            _ => quote!(),
+        match quote_object_value(prop_name, style, quoter) {
+            Some(prop_value) => quote_prop(prop_name, prop_value),
+            None => quote!(),
         }
     }
 
@@ -318,26 +320,11 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
         }
     }
 
-    // This is currently unused, but leaving for future use.
-    #[allow(dead_code)]
-    fn quote_string_prop(
-        prop_name: &str,
-        style: &json::JsonValue,
-        quoter: impl Fn(&str) -> TokenStream,
-    ) -> TokenStream {
-        let prop_name_snake_case = prop_name.to_case(Case::Snake);
-        let prop_name_camel_case = prop_name.to_case(Case::Camel);
-        let prop_name_ident = format_ident!("{}", prop_name_snake_case);
-        match style[prop_name_camel_case] {
-            json::JsonValue::Short(ref value) => {
-                let prop_value = quoter(value.as_ref());
-                quote!(#prop_name_ident: #prop_value,)
-            }
-            json::JsonValue::String(ref value) => {
-                let prop_value = quoter(value.as_ref());
-                quote!(#prop_name_ident: #prop_value,)
-            }
-            _ => quote!(),
+    fn get_string_value<'a, 'b, 'c: 'b>(prop_name: &'a str, style: &'c json::JsonValue) -> Option<&'b str> {
+        match style[prop_name.to_case(Case::Camel)] {
+            json::JsonValue::Short(ref value) => Some(value),
+            json::JsonValue::String(ref value) => Some(value),
+            _ => None,
         }
     }
 
@@ -534,70 +521,83 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
         quote!()
     };
 
+    let measure_func: Option<_> = get_string_value("text_content", node).map(generate_measure_function);
+
     edges_quoted!(style, margin, generate_length_percentage_auto, quote!(Rect::zero()));
     edges_quoted!(style, padding, generate_length_percentage, quote!(Rect::zero()));
     edges_quoted!(style, border, generate_length_percentage, quote!(Rect::zero()));
     edges_quoted!(style, position, generate_length_percentage_auto, quote!(Rect::auto()));
 
-    let (children_body, children) = match node["children"] {
-        json::JsonValue::Array(ref value) => {
-            if !value.is_empty() {
-                let body =
-                    value.iter().enumerate().map(|(i, child)| generate_node(&format!("{ident}{i}"), child)).collect();
-                let idents = value
-                    .iter()
-                    .enumerate()
-                    .map(|(i, _)| Ident::new(&format!("{ident}{i}"), Span::call_site()))
-                    .collect::<Vec<_>>();
-                (body, quote!(&[#(#idents),*]))
-            } else {
-                (quote!(), quote!(&[]))
-            }
-        }
-        _ => (quote!(), quote!()),
+    // Quote children
+    let child_descriptions: Vec<json::JsonValue> = match node["children"] {
+        json::JsonValue::Array(ref value) => value.clone(),
+        _ => vec![],
+    };
+    let has_children = child_descriptions.len() > 0;
+    let (children_body, children) = if has_children {
+        let body = child_descriptions
+            .iter()
+            .enumerate()
+            .map(|(i, child)| generate_node(&format!("{}{}", ident, i), child))
+            .collect();
+        let idents = child_descriptions
+            .iter()
+            .enumerate()
+            .map(|(i, _)| Ident::new(&format!("{}{}", ident, i), Span::call_site()))
+            .collect::<Vec<_>>();
+        (body, quote!(&[#(#idents),*]))
+    } else {
+        (quote!(), quote!())
     };
 
     let ident = Ident::new(ident, Span::call_site());
 
-    quote!(
-        #children_body
-        let #ident = taffy.new_with_children(
-        taffy::style::Style {
-            #display
-            #direction
-            #position_type
-            #flex_direction
-            #flex_wrap
-            #overflow
-            #align_items
-            #align_self
-            #justify_items
-            #justify_self
-            #align_content
-            #justify_content
-            #flex_grow
-            #flex_shrink
-            #flex_basis
-            #gap
-            #grid_template_rows
-            #grid_template_columns
-            #grid_auto_rows
-            #grid_auto_columns
-            #grid_auto_flow
-            #grid_row
-            #grid_column
-            #size
-            #min_size
-            #max_size
-            #margin
-            #padding
-            #position
-            #border
-            ..Default::default()
-        },
-        #children
-        // TODO: Only add children if they exist
-    ).unwrap();)
+    let style = quote!(taffy::style::Style {
+        #display
+        #direction
+        #position_type
+        #flex_direction
+        #flex_wrap
+        #overflow
+        #align_items
+        #align_self
+        #justify_items
+        #justify_self
+        #align_content
+        #justify_content
+        #flex_grow
+        #flex_shrink
+        #flex_basis
+        #gap
+        #grid_template_rows
+        #grid_template_columns
+        #grid_auto_rows
+        #grid_auto_columns
+        #grid_auto_flow
+        #grid_row
+        #grid_column
+        #size
+        #min_size
+        #max_size
+        #margin
+        #padding
+        #position
+        #border
+        ..Default::default()
+    });
+
+    if has_children {
+        quote!(
+            #children_body
+            let #ident = taffy.new_with_children(#style,#children).unwrap();
+        )
+    } else {
+        if measure_func.is_some() {
+            quote!(let #ident = taffy.new_leaf_with_measure(#style,#measure_func,).unwrap();)
+        } else {
+            quote!(let #ident = taffy.new_leaf(#style).unwrap();)
+        }
+    }
 }
 
 fn generate_size(size: &json::object::Object) -> TokenStream {
@@ -698,7 +698,7 @@ fn generate_grid_auto_flow(auto_flow: &json::object::Object) -> TokenStream {
 }
 
 fn generate_line(start: TokenStream, end: TokenStream) -> TokenStream {
-    quote!(taffy::geometry::Line { start:#start, end:#end },)
+    quote!(taffy::geometry::Line { start:#start, end:#end })
 }
 
 fn generate_grid_position(grid_position: &json::object::Object) -> TokenStream {
@@ -778,4 +778,64 @@ fn generate_scalar_definition(track_definition: &json::object::Object) -> TokenS
         }
         _ => unreachable!(),
     }
+}
+
+fn generate_generic_measure_function() -> TokenStream {
+    quote!(
+        // WARNING: This function is generated by the gentest script. Do not edit directly
+        fn measure_standard_text(
+            known_dimensions: taffy::geometry::Size<Option<f32>>,
+            available_space: taffy::geometry::Size<taffy::layout::AvailableSpace>,
+            text_content: &str,
+        ) -> taffy::geometry::Size<f32> {
+            use taffy::prelude::*;
+            const ZWS: char = '\u{200B}';
+            const H_WIDTH: f32 = 10.0;
+            const H_HEIGHT: f32 = 10.0;
+
+            if let Size { width: Some(width), height: Some(height) } = known_dimensions {
+                return Size { width, height };
+            }
+
+            let lines: Vec<&str> = text_content.split(ZWS).collect();
+            if lines.len() == 0 {
+                return Size::ZERO;
+            }
+
+            let min_line_length: usize = lines.iter().map(|line| line.len()).max().unwrap_or(0);
+            let max_line_length: usize = lines.iter().map(|line| line.len()).sum();
+            let width = known_dimensions.width.unwrap_or_else(|| match available_space.width {
+                AvailableSpace::MinContent => min_line_length as f32 * H_WIDTH,
+                AvailableSpace::MaxContent => max_line_length as f32 * H_WIDTH,
+                AvailableSpace::Definite(width) => {
+                    width.min(max_line_length as f32 * H_WIDTH).max(min_line_length as f32 * H_WIDTH)
+                }
+            });
+            let height = known_dimensions.height.unwrap_or_else(|| {
+                let width_line_length = (width / H_WIDTH).floor() as usize;
+                let mut line_count = 1;
+                let mut current_line_length = 0;
+                for line in &lines {
+                    if current_line_length + line.len() > width_line_length {
+                        line_count += 1;
+                        current_line_length = line.len();
+                    } else {
+                        current_line_length += line.len();
+                    };
+                }
+                (line_count as f32) * H_HEIGHT
+            });
+
+            Size { width, height }
+        }
+    )
+}
+
+fn generate_measure_function(text_content: &str) -> TokenStream {
+    quote!(
+        taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
+            const TEXT : &'static str = #text_content;
+            super::measure_standard_text(known_dimensions, available_space, TEXT)
+        })
+    )
 }

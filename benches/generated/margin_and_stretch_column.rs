@@ -3,18 +3,15 @@ pub fn compute() {
     use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                flex_grow: 1f32,
-                margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Points(10f32),
-                    right: taffy::style::LengthPercentageAuto::Points(10f32),
-                    ..Rect::zero()
-                },
-                ..Default::default()
+        .new_leaf(taffy::style::Style {
+            flex_grow: 1f32,
+            margin: taffy::geometry::Rect {
+                left: taffy::style::LengthPercentageAuto::Points(10f32),
+                right: taffy::style::LengthPercentageAuto::Points(10f32),
+                ..Rect::zero()
             },
-            &[],
-        )
+            ..Default::default()
+        })
         .unwrap();
     let node = taffy
         .new_with_children(

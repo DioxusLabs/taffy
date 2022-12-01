@@ -4,23 +4,17 @@ fn flex_grow_height_maximized() {
     use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                flex_grow: 1f32,
-                flex_basis: taffy::style::Dimension::Points(200f32),
-                ..Default::default()
-            },
-            &[],
-        )
+        .new_leaf(taffy::style::Style {
+            flex_grow: 1f32,
+            flex_basis: taffy::style::Dimension::Points(200f32),
+            ..Default::default()
+        })
         .unwrap();
     let node01 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Size::auto() },
-                ..Default::default()
-            },
-            &[],
-        )
+        .new_leaf(taffy::style::Style {
+            size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Size::auto() },
+            ..Default::default()
+        })
         .unwrap();
     let node0 = taffy
         .new_with_children(
