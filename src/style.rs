@@ -667,13 +667,19 @@ pub struct Style {
     pub border: Rect<LengthPercentage>,
 
     // Alignment properties
-    /// How should items be aligned relative to the cross axis?
+    /// How this node's children aligned in the cross/block axis?
     pub align_items: Option<AlignItems>,
-    /// Should this item violate the cross axis alignment specified by its parent's [`AlignItems`]?
+    /// How this node should be aligned in the cross/block axis
+    /// Falls back to the parents [`AlignItems`] if not set
     pub align_self: Option<AlignSelf>,
-    /// How should content contained within this item be aligned relative to the cross axis?
+    /// How this node's children should be aligned in the inline axis
+    pub justify_items: Option<AlignItems>,
+    /// How this node should be aligned in the inline axis
+    /// Falls back to the parents [`JustifyItems`] if not set
+    pub justify_self: Option<AlignSelf>,
+    /// How should content contained within this item be aligned in the cross/block axis
     pub align_content: Option<AlignContent>,
-    /// How should items be aligned relative to the main axis?
+    /// How should contained within this item be aligned in the main/inline axis
     pub justify_content: Option<JustifyContent>,
     /// How large should the gaps between items in a grid or flex container be?
     pub gap: Size<LengthPercentage>,
@@ -722,6 +728,8 @@ impl Style {
         flex_wrap: FlexWrap::NoWrap,
         align_items: None,
         align_self: None,
+        justify_items: None,
+        justify_self: None,
         align_content: None,
         justify_content: None,
         position: Rect::auto(),
@@ -868,6 +876,8 @@ mod tests {
             flex_wrap: Default::default(),
             align_items: Default::default(),
             align_self: Default::default(),
+            justify_items: Default::default(),
+            justify_self: Default::default(),
             align_content: Default::default(),
             justify_content: Default::default(),
             position: Rect::auto(),

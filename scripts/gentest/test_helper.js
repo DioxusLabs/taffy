@@ -164,8 +164,10 @@ function describeElement(e) {
 
       alignItems: parseEnum(e.style.alignItems),
       alignSelf: parseEnum(e.style.alignSelf),
+      justifyItems: parseEnum(e.style.justifyItems),
+      justifySelf: parseEnum(e.style.justifySelf),
+
       alignContent: parseEnum(e.style.alignContent),
-      
       justifyContent: parseEnum(e.style.justifyContent),
 
       flexGrow: parseNumber(e.style.flexGrow),

@@ -415,6 +415,30 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
         _ => quote!(),
     };
 
+    let justify_items = match style["justifyItems"] {
+        json::JsonValue::Short(ref value) => match value.as_ref() {
+            "flex-start" | "start" => quote!(justify_items: Some(taffy::style::JustifyItems::FlexStart),),
+            "flex-end" | "end" => quote!(justify_items: Some(taffy::style::JustifyItems::FlexEnd),),
+            "center" => quote!(justify_items: Some(taffy::style::JustifyItems::Center),),
+            "baseline" => quote!(justify_items: Some(taffy::style::JustifyItems::Baseline),),
+            "stretch" => quote!(justify_items: Some(taffy::style::JustifyItems::Stretch),),
+            _ => quote!(),
+        },
+        _ => quote!(),
+    };
+
+    let justify_self = match style["justifySelf"] {
+        json::JsonValue::Short(ref value) => match value.as_ref() {
+            "flex-start" | "start" => quote!(justify_self: Some(taffy::style::JustifySelf::FlexStart),),
+            "flex-end" | "end" => quote!(justify_self: Some(taffy::style::JustifySelf::FlexEnd),),
+            "center" => quote!(justify_self: Some(taffy::style::JustifySelf::Center),),
+            "baseline" => quote!(justify_self: Some(taffy::style::JustifySelf::Baseline),),
+            "stretch" => quote!(justify_self: Some(taffy::style::JustifySelf::Stretch),),
+            _ => quote!(),
+        },
+        _ => quote!(),
+    };
+
     let align_content = match style["alignContent"] {
         json::JsonValue::Short(ref value) => match value.as_ref() {
             "flex-start" | "start" => quote!(align_content: Some(taffy::style::AlignContent::FlexStart),),
@@ -501,6 +525,8 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
             #overflow
             #align_items
             #align_self
+            #justify_items
+            #justify_self
             #align_content
             #justify_content
             #flex_grow
