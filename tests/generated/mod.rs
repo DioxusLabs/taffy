@@ -191,6 +191,7 @@ mod grid_align_items_sized_end;
 mod grid_align_items_sized_start;
 mod grid_align_items_sized_stretch;
 mod grid_align_self_sized_all;
+mod grid_auto_columns_fixed_width;
 mod grid_basic;
 mod grid_gap;
 mod grid_justify_content_center;
