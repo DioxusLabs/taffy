@@ -204,6 +204,7 @@ mod grid_justify_items_sized_end;
 mod grid_justify_items_sized_start;
 mod grid_justify_items_sized_stretch;
 mod grid_justify_self_sized_all;
+mod grid_size_child_fixed_tracks;
 mod justify_content_column_center;
 mod justify_content_column_flex_end;
 mod justify_content_column_flex_start;

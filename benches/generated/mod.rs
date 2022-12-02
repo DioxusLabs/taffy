@@ -205,6 +205,7 @@ mod grid_justify_items_sized_end;
 mod grid_justify_items_sized_start;
 mod grid_justify_items_sized_stretch;
 mod grid_justify_self_sized_all;
+mod grid_size_child_fixed_tracks;
 mod justify_content_column_center;
 mod justify_content_column_flex_end;
 mod justify_content_column_flex_start;
@@ -509,6 +510,7 @@ fn benchmark(c: &mut Criterion) {
             grid_justify_items_sized_start::compute();
             grid_justify_items_sized_stretch::compute();
             grid_justify_self_sized_all::compute();
+            grid_size_child_fixed_tracks::compute();
             justify_content_column_center::compute();
             justify_content_column_flex_end::compute();
             justify_content_column_flex_start::compute();
