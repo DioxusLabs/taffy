@@ -1,8 +1,10 @@
 use super::placement::TrackCounts;
 use crate::geometry::{Line, Size};
 use crate::layout::{AvailableSpace, RunMode, SizingMode};
+use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::prelude::LayoutTree;
+use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::{AlignContent, Dimension, MaxTrackSizingFunction, MinTrackSizingFunction, Style};
 // use super::AbsoluteAxis;
 use super::types::{GridAxis, GridItem, GridTrack};
@@ -131,6 +133,7 @@ pub(in super::super) fn determine_if_item_crosses_flexible_tracks(
 pub(in super::super) fn track_sizing_algorithm<Tree, MeasureFunc>(
     tree: &mut Tree,
     available_space: Size<AvailableSpace>,
+    available_grid_space: Size<AvailableSpace>,
     available_space_mode: AvailableSpaceMode,
     axis: GridAxis,
     columns: &mut [GridTrack],
@@ -171,6 +174,7 @@ pub(in super::super) fn track_sizing_algorithm<Tree, MeasureFunc>(
                 tree,
                 axis,
                 available_space,
+                available_grid_space,
                 container_style.min_size.width.get_absolute(),
                 container_style.max_size.width.get_absolute(),
                 columns,
@@ -193,6 +197,7 @@ pub(in super::super) fn track_sizing_algorithm<Tree, MeasureFunc>(
                 tree,
                 axis,
                 available_space,
+                available_grid_space,
                 container_style.min_size.height.get_absolute(),
                 container_style.max_size.height.get_absolute(),
                 rows,
@@ -215,6 +220,7 @@ pub(in super::super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
     tree: &mut Tree,
     axis: GridAxis,
     available_space: Size<AvailableSpace>,
+    available_grid_space: Size<AvailableSpace>,
     axis_min_size: Option<f32>,
     axis_max_size: Option<f32>,
     axis_tracks: &mut [GridTrack],
@@ -267,10 +273,9 @@ pub(in super::super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
         }
     }
 
-    if axis_tracks
-        .iter()
-        .all(|track| track.max_track_sizing_function.definite_value(available_space.get(axis)).is_some())
-    {
+    // If all tracks have base_size = growth_limit, then skip the rest of this function.
+    // Note: this can only happen both track sizing function have the same fixed track sizing function
+    if axis_tracks.iter().all(|track| track.base_size == track.growth_limit) {
         return;
     }
 
@@ -309,51 +314,69 @@ pub(in super::super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
     // that do span a track with a flexible sizing function while
 
     // TODO: be smarter about only computing these when they are required
-    let compute_item_sizes = |item: &GridItem| {
-        let item_other_axis_size: Option<f32> = {
-            (&other_axis_tracks)[item.track_range_excluding_lines(axis)]
-                .iter()
-                .map(|track| get_track_size_estimate(track, available_space.get(axis.other())))
-                .sum::<Option<f32>>()
-        };
+    // let compute_item_sizes = |item: &GridItem| {
+    //     let item_other_axis_size: Option<f32> = {
+    //         (&other_axis_tracks)[item.track_range_excluding_lines(axis)]
+    //             .iter()
+    //             .map(|track| get_track_size_estimate(track, available_space.get(axis.other())))
+    //             .sum::<Option<f32>>()
+    //     };
 
-        let min_content_size = measure_node(
-            tree,
-            item.node,
-            Size { width: None, height: item_other_axis_size },
-            Size::MIN_CONTENT,
-            RunMode::ComputeSize,
-            SizingMode::ContentSize,
-        );
+    //     let min_content_size = measure_node(
+    //         tree,
+    //         item.node,
+    //         Size { width: None, height: item_other_axis_size },
+    //         Size::MIN_CONTENT,
+    //         RunMode::ComputeSize,
+    //         SizingMode::ContentSize,
+    //     );
 
-        // TODO: resolve styles here
-        let style = tree.style(item.node);
-        let minimum_contributions = style.size.width;
+    //     // TODO: resolve styles here
+    //     let style = tree.style(item.node);
+    //     let minimum_contributions = style.size.width;
 
-        let max_content_size = measure_node(
-            tree,
-            item.node,
-            Size { width: None, height: item_other_axis_size },
-            Size::MAX_CONTENT,
-            RunMode::ComputeSize,
-            SizingMode::ContentSize,
-        );
+    //     let max_content_size = measure_node(
+    //         tree,
+    //         item.node,
+    //         Size { width: None, height: item_other_axis_size },
+    //         Size::MAX_CONTENT,
+    //         RunMode::ComputeSize,
+    //         SizingMode::ContentSize,
+    //     );
 
-        (min_content_size, max_content_size)
-    };
+    //     (min_content_size, max_content_size)
+    // };
 
-    let batched_item_iterator = ItemBatcher::new(items, axis);
-    for (items, is_flex) in batched_item_iterator {
-        for item in items.iter() {
-            // let placement = get_item_placement(item);
+    // let batched_item_iterator = ItemBatcher::new(items, axis);
+    // for (items, is_flex) in batched_item_iterator {
+    //     for item in items.iter() {
+    //         // let placement = get_item_placement(item);
 
-            // distribute_item_space_to_base_size(
-            //     min_content_size.get(axis),
-            //     &mut axis_tracks[item.track_range_excluding_lines(axis)],
-            //     move |track| track.min_track_sizing_function.definite_value(available_space.get(axis)).is_none(),
-            //     IntrinsicContributionType::Minimum,
-            // );
-        }
+    //         // distribute_item_space_to_base_size(
+    //         //     min_content_size.get(axis),
+    //         //     &mut axis_tracks[item.track_range_excluding_lines(axis)],
+    //         //     move |track| track.min_track_sizing_function.definite_value(available_space.get(axis)).is_none(),
+    //         //     IntrinsicContributionType::Minimum,
+    //         // );
+    //     }
+    // }
+
+    // Step 5.
+    // If any track still has an infinite growth limit (because, for example, it had no items placed in it or it is a flexible track),
+    // set its growth limit to its base size. (NOTE: this step is super-important to ensure that the "Maximise Tracks" step doesn't affect flexible tracks
+    axis_tracks
+        .iter_mut()
+        .filter(|track| track.growth_limit == f32::INFINITY)
+        .for_each(|track| track.growth_limit = track.base_size);
+
+    // 11.6 Maximise Tracks
+    // Distributes free space (if any) to tracks with FINITE growth limits, up to their limits.
+    let used_space: f32 = axis_tracks.iter().map(|track| track.base_size).sum();
+    let free_space = available_grid_space.get(axis).compute_free_space(used_space);
+    if free_space == f32::INFINITY {
+        axis_tracks.iter_mut().for_each(|track| track.base_size = track.growth_limit);
+    } else if free_space > 0.0 {
+        distribute_space_up_to_limits(free_space, axis_tracks, |_| true);
     }
 }
 
@@ -370,6 +393,49 @@ fn flush_planned_increases(tracks: &mut [GridTrack]) {
         if track.base_size_planned_increase > track.base_size {
             track.base_size = track.base_size + track.base_size_planned_increase;
         }
+    }
+}
+
+fn distribute_space_up_to_limits(
+    space_to_distribute: f32,
+    tracks: &mut [GridTrack],
+    track_is_affected: impl Fn(&GridTrack) -> bool,
+) {
+    // Define a small constant to avoid infinite loops due to rounding errors. Rather than stopping distributing
+    // extra space when it gets to exactly zero, we will stop when it falls below this amount
+    const THRESHOLD: f32 = 0.000001;
+
+    let mut space_to_distribute = space_to_distribute;
+    while space_to_distribute > THRESHOLD {
+        let number_of_growable_tracks = tracks
+            .iter()
+            .filter(|track| track.base_size < track.growth_limit)
+            .filter(|track| track_is_affected(track))
+            .count();
+        if number_of_growable_tracks == 0 {
+            break;
+        }
+
+        // Compute item-incurred increase for this iteration
+        let min_increase_limit = tracks
+            .iter()
+            .filter(|track| track.base_size < track.growth_limit)
+            .filter(|track| track_is_affected(track))
+            .map(|track| track.growth_limit - track.base_size)
+            .min_by(|a, b| a.total_cmp(b))
+            .unwrap(); // We will never pass an empty track list to this function
+        let item_incurred_increase =
+            f32_min(min_increase_limit, space_to_distribute / number_of_growable_tracks as f32);
+
+        for track in tracks
+            .iter_mut()
+            .filter(|track| track_is_affected(track))
+            .filter(|track| track.base_size < track.growth_limit)
+        {
+            track.base_size += item_incurred_increase;
+        }
+
+        space_to_distribute -= item_incurred_increase * number_of_growable_tracks as f32;
     }
 }
 
@@ -415,7 +481,7 @@ fn distribute_item_space_to_base_size(
         let min_increase_limit = tracks
             .iter()
             .filter(|track| track_is_affected(track))
-            .map(|track| track.growth_limit - (track.base_size/*+ track.base_size_planned_increase*/))
+            .map(|track| track.growth_limit - track.base_size)
             .min_by(|a, b| a.total_cmp(b))
             .unwrap(); // We will never pass an empty track list to this function
         let item_incurred_increase = f32_min(min_increase_limit, extra_space / number_of_growable_tracks as f32);

@@ -3,8 +3,9 @@
 use crate::compute::compute_node_layout;
 use crate::geometry::{Line, Point, Size};
 use crate::layout::{AvailableSpace, Layout, RunMode, SizingMode};
+use crate::math::MaybeMath;
 use crate::node::Node;
-use crate::resolve::MaybeResolve;
+use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::{AlignContent, AlignItems, AlignSelf, JustifyItems};
 use crate::sys::{f32_max, Vec};
 use crate::tree::LayoutTree;
@@ -85,10 +86,33 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
     // Record this as a boolean (per-axis) on each item for later use in the track-sizing algorithm
     determine_if_item_crosses_flexible_tracks(&mut items, &columns.tracks, &rows.tracks);
 
+    // Compute "available grid space"
+    // https://www.w3.org/TR/css-grid-1/#available-grid-space
+    let padding = style.padding.resolve_or_zero(available_space.width.into_option());
+    let border = style.border.resolve_or_zero(available_space.width.into_option());
+    let min_size = style.min_size.maybe_resolve(available_space.as_options());
+    let max_size = style.max_size.maybe_resolve(available_space.as_options());
+    let size = style.size.maybe_resolve(available_space.as_options());
+
+    let constrained_available_space = size
+        .maybe_clamp(min_size, max_size)
+        .map(|size| size.map(|size| AvailableSpace::Definite(size)))
+        .unwrap_or(available_space.maybe_clamp(min_size, max_size));
+
+    let available_grid_space = Size {
+        width: constrained_available_space
+            .width
+            .map_definite_value(|space| space - padding.horizontal_axis_sum() - border.horizontal_axis_sum()),
+        height: constrained_available_space
+            .height
+            .map_definite_value(|space| space - padding.vertical_axis_sum() - border.vertical_axis_sum()),
+    };
+
     // Run track sizing algorithm for Inline axis
     track_sizing_algorithm(
         tree,
         available_space,
+        available_grid_space,
         AvailableSpaceMode::Estimates,
         GridAxis::Inline,
         &mut columns.tracks,
@@ -101,6 +125,7 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
     track_sizing_algorithm(
         tree,
         available_space,
+        available_grid_space,
         AvailableSpaceMode::Estimates,
         GridAxis::Block,
         &mut columns.tracks,

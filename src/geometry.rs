@@ -85,6 +85,16 @@ where
     /// The sum of the two fields of the [`Rect`] representing the main axis.
     ///
     /// This is typically used when computing total padding.
+    pub(crate) fn grid_axis_sum(&self, axis: GridAxis) -> T {
+        match axis {
+            GridAxis::Inline => self.horizontal_axis_sum(),
+            GridAxis::Block => self.vertical_axis_sum(),
+        }
+    }
+
+    /// The sum of the two fields of the [`Rect`] representing the main axis.
+    ///
+    /// This is typically used when computing total padding.
     ///
     /// If the [`FlexDirection`] is [`FlexDirection::Row`] or [`FlexDirection::RowReverse`], this is [`Rect::horizontal`].
     /// Otherwise, this is [`Rect::vertical`].
@@ -306,14 +316,16 @@ impl Size<Option<f32>> {
     pub const fn new(width: f32, height: f32) -> Self {
         Size { width: Some(width), height: Some(height) }
     }
+}
 
+impl<T> Size<Option<T>> {
     /// Performs Option::unwrap_or on each component separately
-    pub fn unwrap_or(self, alt: Size<f32>) -> Size<f32> {
+    pub fn unwrap_or(self, alt: Size<T>) -> Size<T> {
         Size { width: self.width.unwrap_or(alt.width), height: self.height.unwrap_or(alt.height) }
     }
 
     /// Performs Option::or on each component separately
-    pub fn or(self, alt: Size<Option<f32>>) -> Size<Option<f32>> {
+    pub fn or(self, alt: Size<Option<T>>) -> Size<Option<T>> {
         Size { width: self.width.or(alt.width), height: self.height.or(alt.height) }
     }
 }
