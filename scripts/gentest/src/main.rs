@@ -24,6 +24,7 @@ async fn main() {
     let mut fixtures: Vec<_> = fixtures
         .into_iter()
         .filter_map(|a| a.ok())
+        .filter(|f| !f.file_name().to_string_lossy().starts_with("x")) // ignore tests beginning with x
         .filter(|f| f.path().is_file() && f.path().extension().map(|p| p == "html").unwrap_or(false))
         .map(|f| {
             let fixture_path = f.path();
