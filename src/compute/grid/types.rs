@@ -467,8 +467,8 @@ impl GridItem {
 
     pub fn crosses_flexible_track(&self, axis: GridAxis) -> bool {
         match axis {
-            GridAxis::Block => self.crosses_flexible_column,
-            GridAxis::Inline => self.crosses_flexible_row,
+            GridAxis::Inline => self.crosses_flexible_column,
+            GridAxis::Block => self.crosses_flexible_row,
         }
     }
 

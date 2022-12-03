@@ -389,6 +389,11 @@ impl MaxTrackSizingFunction {
     }
 
     #[inline(always)]
+    pub fn is_flexible(&self) -> bool {
+        matches!(self, MaxTrackSizingFunction::Flex(_))
+    }
+
+    #[inline(always)]
     pub fn definite_value(self, available_space: AvailableSpace) -> Option<f32> {
         use Dimension::*;
         use MaxTrackSizingFunction::{Auto, *};
