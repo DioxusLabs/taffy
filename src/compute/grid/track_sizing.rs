@@ -417,6 +417,54 @@ pub(in super::super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
             }
         }
         flush_planned_base_size_increases(axis_tracks);
+
+        // 3. For max-content minimums:
+
+        // If the grid container is being sized under a max-content constraint, continue to increase the base size of tracks with
+        // a min track sizing function of auto or max-content by distributing extra space as needed to account for these items'
+        // limited max-content contributions.
+        if axis_available_space == AvailableSpace::MaxContent {
+            let has_auto_or_max_content_min_track_sizing_function = move |track: &GridTrack| {
+                use MinTrackSizingFunction::{Auto, MaxContent};
+                matches!(track.min_track_sizing_function, Auto | MaxContent)
+            };
+            for (i, mut item) in batch.iter_mut().enumerate() {
+                let (axis_minimum_size, axis_min_content_size, axis_max_content_size) =
+                    compute_item_sizes(&mut item, &axis_tracks);
+                let limit = item.spanned_fixed_track_limit(axis, axis_tracks, axis_available_space);
+                let space = axis_max_content_size.maybe_min(limit);
+                let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
+                if space > 0.0 {
+                    distribute_item_space_to_base_size(
+                        space,
+                        tracks,
+                        has_auto_or_max_content_min_track_sizing_function,
+                        IntrinsicContributionType::Minimum,
+                    );
+                }
+            }
+            flush_planned_base_size_increases(axis_tracks);
+        }
+
+        // In all cases, continue to increase the base size of tracks with a min track sizing function of max-content by distributing
+        // extra space as needed to account for these items' max-content contributions.
+        let has_max_content_min_track_sizing_function =
+            move |track: &GridTrack| matches!(track.min_track_sizing_function, MinTrackSizingFunction::MaxContent);
+        for (i, mut item) in batch.iter_mut().enumerate() {
+            let (axis_minimum_size, axis_min_content_size, axis_max_content_size) =
+                compute_item_sizes(&mut item, &axis_tracks);
+            let space = axis_max_content_size;
+            let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
+            if space > 0.0 {
+                distribute_item_space_to_base_size(
+                    space,
+                    tracks,
+                    has_max_content_min_track_sizing_function,
+                    IntrinsicContributionType::Minimum,
+                );
+            }
+        }
+        flush_planned_base_size_increases(axis_tracks);
     }
 
     // Step 5.
