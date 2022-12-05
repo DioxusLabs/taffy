@@ -569,7 +569,7 @@ impl GridItem {
                 RunMode::ComputeSize,
                 SizingMode::InherentSize,
             );
-            self.min_content_contribution_cache = Some(size);
+            self.max_content_contribution_cache = Some(size);
             size
         })
     }

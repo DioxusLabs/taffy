@@ -339,18 +339,23 @@ pub(in super::super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
         let axis_minimum_size =
             item.minimum_contribution_cached(tree, axis, axis_tracks, available_space, known_dimensions);
 
-        (axis_minimum_size, min_content_size, max_content_size)
+        (axis_minimum_size, min_content_size.get(axis), max_content_size.get(axis))
     };
 
     let axis_available_space = available_space.get(axis);
 
-    &items.iter().enumerate().for_each(|(i, item)| {
+    &items.iter_mut().enumerate().for_each(|(i, mut item)| {
+        let (axis_minimum_size, axis_min_content_size, axis_max_content_size) =
+            compute_item_sizes(&mut item, &axis_tracks);
         println!(
-            "{}: span={} ({:?}) flex={}",
+            "{}: span={} ({:?}) flex={} minimum: {} min_content: {} max_content: {}",
             i,
             item.span(axis),
             item.track_range_excluding_lines(axis),
-            item.crosses_flexible_track(axis)
+            item.crosses_flexible_track(axis),
+            axis_minimum_size,
+            axis_min_content_size,
+            axis_max_content_size,
         )
     });
 
@@ -381,9 +386,8 @@ pub(in super::super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
             }
         };
         for (i, mut item) in batch.iter_mut().enumerate() {
-            // println!("\n Batch Item {}", i);
-
-            let (axis_minimum_size, min_content_size, max_content_size) = compute_item_sizes(&mut item, &axis_tracks);
+            let (axis_minimum_size, axis_min_content_size, axis_max_content_size) =
+                compute_item_sizes(&mut item, &axis_tracks);
             let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
 
             // ...by distributing extra space as needed to accommodate these items’ minimum contributions.
@@ -392,21 +396,38 @@ pub(in super::super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
             let space = match axis_available_space {
                 AvailableSpace::MinContent | AvailableSpace::MaxContent => {
                     let limit = compute_fixed_track_limit(&tracks);
-                    min_content_size.get(axis).maybe_min(limit)
+                    axis_min_content_size.maybe_min(limit).max(axis_minimum_size)
                 }
                 AvailableSpace::Definite(_) => axis_minimum_size,
             };
-
-            // dbg!(axis_minimum_size);
-            // dbg!(min_content_size.get(axis));
-            // dbg!(max_content_size.get(axis));
-            // dbg!(space);
-
             if space > 0.0 {
                 distribute_item_space_to_base_size(
                     space,
                     tracks,
                     has_intrinsic_min_track_sizing_function,
+                    IntrinsicContributionType::Minimum,
+                );
+            }
+        }
+        flush_planned_base_size_increases(axis_tracks);
+
+        // 2. For content-based minimums:
+        // Next continue to increase the base size of tracks with a min track sizing function of min-content or max-content
+        // by distributing extra space as needed to account for these items' min-content contributions.
+        let has_min_or_max_content_min_track_sizing_function = move |track: &GridTrack| {
+            use MinTrackSizingFunction::{MaxContent, MinContent};
+            matches!(track.min_track_sizing_function, MinContent | MaxContent)
+        };
+        for (i, mut item) in batch.iter_mut().enumerate() {
+            let (axis_minimum_size, axis_min_content_size, axis_max_content_size) =
+                compute_item_sizes(&mut item, &axis_tracks);
+            let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
+            let space = axis_min_content_size;
+            if space > 0.0 {
+                distribute_item_space_to_base_size(
+                    space,
+                    tracks,
+                    has_min_or_max_content_min_track_sizing_function,
                     IntrinsicContributionType::Minimum,
                 );
             }
