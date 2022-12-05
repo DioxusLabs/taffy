@@ -33,7 +33,7 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
     let style = tree.style(root).clone();
     let child_styles_iter = get_child_styles_iter(root);
 
-    // 1. Size Computation
+    // 1. Estimate Track Counts
     // Exactly compute the number of rows and columns in the explicit grid.
     // Estimate the number of rows and columns in the implicit grid (= the entire grid)
     // This is necessary as part of placement. Doing it early here is a perf optimisation to reduce allocations.
@@ -41,7 +41,7 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
     let (est_col_counts, est_row_counts) =
         compute_grid_size_estimate(explicit_col_count, explicit_row_count, child_styles_iter);
 
-    // 2a. Grid Item Placement
+    // 2. Grid Item Placement
     // Match items (children) to a definite grid position (row start/end and column start/end position)
     let mut items = Vec::with_capacity(tree.child_count(root));
     let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(est_col_counts, est_row_counts);
@@ -50,7 +50,6 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
         || tree.children(root).into_iter().copied().map(|child_node| (child_node, tree.style(child_node)));
     place_grid_items(&mut cell_occupancy_matrix, &mut items, children_iter, grid_auto_flow);
 
-    // 2b. Extract final track counts
     // Extract track counts from previous step (auto-placement can expand the number of tracks)
     let final_col_counts = *cell_occupancy_matrix.track_counts(AbsoluteAxis::Horizontal);
     let final_row_counts = *cell_occupancy_matrix.track_counts(AbsoluteAxis::Vertical);
@@ -135,10 +134,20 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
         compute_node_layout,
     );
 
+    // Compute container size
+    let resolved_style_size = style.size.maybe_resolve(available_space.as_options());
+    let container_size = Size {
+        width: resolved_style_size
+            .get(GridAxis::Inline)
+            .unwrap_or_else(|| columns.tracks.iter().map(|track| track.base_size).sum()),
+        height: resolved_style_size
+            .get(GridAxis::Block)
+            .unwrap_or_else(|| rows.tracks.iter().map(|track| track.base_size).sum()),
+    };
+
     // 5. Alignment
 
     // Align tracks
-    let resolved_style_size = style.size.maybe_resolve(available_space.as_options());
     align_tracks(
         resolved_style_size.get(GridAxis::Inline),
         &mut columns.tracks,
@@ -149,15 +158,6 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
         &mut rows.tracks,
         style.align_content.unwrap_or(AlignContent::Stretch),
     );
-
-    let container_size = Size {
-        width: resolved_style_size
-            .get(GridAxis::Inline)
-            .unwrap_or_else(|| columns.tracks.iter().map(|track| track.base_size).sum()),
-        height: resolved_style_size
-            .get(GridAxis::Block)
-            .unwrap_or_else(|| rows.tracks.iter().map(|track| track.base_size).sum()),
-    };
 
     perform_final_layout(
         tree,
