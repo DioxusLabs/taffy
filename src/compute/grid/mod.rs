@@ -134,6 +134,33 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
         compute_node_layout,
     );
 
+    // // Re-run track sizing algorithm for Inline axis
+    // track_sizing_algorithm(
+    //     tree,
+    //     available_space,
+    //     available_grid_space,
+    //     AvailableSpaceMode::OtherAxisSizes,
+    //     GridAxis::Inline,
+    //     &mut columns.tracks,
+    //     &style,
+    //     &mut rows.tracks,
+    //     &mut items,
+    //     compute_node_layout,
+    // );
+    // // Re-run track sizing algorithm for Block axis
+    // track_sizing_algorithm(
+    //     tree,
+    //     available_space,
+    //     available_grid_space,
+    //     AvailableSpaceMode::OtherAxisSizes,
+    //     GridAxis::Block,
+    //     &mut columns.tracks,
+    //     &style,
+    //     &mut rows.tracks,
+    //     &mut items,
+    //     compute_node_layout,
+    // );
+
     // Compute container size
     let resolved_style_size = style.size.maybe_resolve(available_space.as_options());
     let container_size = Size {
