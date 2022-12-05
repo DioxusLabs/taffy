@@ -192,6 +192,8 @@ mod grid_align_items_sized_start;
 mod grid_align_items_sized_stretch;
 mod grid_align_self_sized_all;
 mod grid_auto_columns_fixed_width;
+mod grid_auto_single_item;
+mod grid_auto_single_item_fixed_width;
 mod grid_basic;
 mod grid_fr_auto;
 mod grid_fr_auto_single_item;
