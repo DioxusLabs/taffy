@@ -291,13 +291,21 @@ impl<T> Size<T> {
         }
     }
 
-    /// Gets the extent of the cross layout axis
-    ///
-    /// Whether this is the width or height depends on the `direction` provided
+    /// Gets the extent of the specified layout axis
+    /// Whether this is the width or height depends on the `GridAxis` provided
     pub(crate) fn get(self, axis: GridAxis) -> T {
         match axis {
             GridAxis::Inline => self.width,
             GridAxis::Block => self.height,
+        }
+    }
+
+    /// Sets the extent of the specified layout axis
+    /// Whether this is the width or height depends on the `GridAxis` provided
+    pub(crate) fn set(&mut self, axis: GridAxis, value: T) {
+        match axis {
+            GridAxis::Inline => self.width = value,
+            GridAxis::Block => self.height = value,
         }
     }
 }
