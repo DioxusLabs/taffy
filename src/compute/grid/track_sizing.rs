@@ -369,37 +369,21 @@ pub(in super::super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
         let has_intrinsic_min_track_sizing_function = move |track: &GridTrack| {
             track.min_track_sizing_function.definite_value(available_space.get(axis)).is_none()
         };
-        // For an item spanning multiple tracks, the upper limit used to calculate its limited min-/max-content contribution is the
-        // sum of the fixed max track sizing functions of any tracks it spans, and is applied if it only spans such tracks.
-        let compute_fixed_track_limit = |tracks: &[GridTrack]| -> Option<f32> {
-            let tracks_all_fixed = tracks
-                .iter()
-                .all(|track| track.max_track_sizing_function.definite_value(axis_available_space).is_some());
-            if tracks_all_fixed {
-                let limit: f32 = tracks
-                    .iter()
-                    .map(|track| track.max_track_sizing_function.definite_value(axis_available_space).unwrap())
-                    .sum();
-                Some(limit)
-            } else {
-                None
-            }
-        };
         for (i, mut item) in batch.iter_mut().enumerate() {
             let (axis_minimum_size, axis_min_content_size, axis_max_content_size) =
                 compute_item_sizes(&mut item, &axis_tracks);
-            let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
 
             // ...by distributing extra space as needed to accommodate these items’ minimum contributions.
             // If the grid container is being sized under a min- or max-content constraint, use the items’ limited min-content contributions
             // in place of their minimum contributions here.
             let space = match axis_available_space {
                 AvailableSpace::MinContent | AvailableSpace::MaxContent => {
-                    let limit = compute_fixed_track_limit(&tracks);
+                    let limit = item.spanned_fixed_track_limit(axis, axis_tracks, axis_available_space);
                     axis_min_content_size.maybe_min(limit).max(axis_minimum_size)
                 }
                 AvailableSpace::Definite(_) => axis_minimum_size,
             };
+            let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
             if space > 0.0 {
                 distribute_item_space_to_base_size(
                     space,

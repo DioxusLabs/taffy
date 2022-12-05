@@ -536,6 +536,29 @@ impl GridItem {
         })
     }
 
+    // For an item spanning multiple tracks, the upper limit used to calculate its limited min-/max-content contribution is the
+    // sum of the fixed max track sizing functions of any tracks it spans, and is applied if it only spans such tracks.
+    pub fn spanned_fixed_track_limit(
+        &mut self,
+        axis: GridAxis,
+        axis_tracks: &[GridTrack],
+        axis_available_space: AvailableSpace,
+    ) -> Option<f32> {
+        let spanned_tracks = &axis_tracks[self.track_range_excluding_lines(axis)];
+        let tracks_all_fixed = spanned_tracks
+            .iter()
+            .all(|track| track.max_track_sizing_function.definite_value(axis_available_space).is_some());
+        if tracks_all_fixed {
+            let limit: f32 = spanned_tracks
+                .iter()
+                .map(|track| track.max_track_sizing_function.definite_value(axis_available_space).unwrap())
+                .sum();
+            Some(limit)
+        } else {
+            None
+        }
+    }
+
     pub fn min_content_contribution_cached(
         &mut self,
         tree: &mut impl LayoutTree,
