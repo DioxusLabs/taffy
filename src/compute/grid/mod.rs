@@ -236,7 +236,7 @@ fn perform_final_layout(
             columns,
             item.column_indexes,
             justify_self.or(justify_items),
-            inherent_size.height,
+            inherent_size.width,
             aspect_ratio,
             &mut measure_node,
         );
