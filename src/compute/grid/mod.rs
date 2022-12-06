@@ -72,18 +72,7 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
         style.gap.height.into(),
     );
 
-    // 4. Track Sizing
-
-    // Convert grid placements in origin-zero coordinates to indexes into the GridTrack (rows and columns) vectors
-    // This computation is relatively trivial, but it requires the final number of negative (implicit) tracks in
-    // each axis, and doing it up-front here means we don't have to keep repeating that calculation
-    resolve_item_track_indexes(&mut items, final_col_counts, final_row_counts);
-
-    // For each item, and in each axis, determine whether the item crosses any flexible (fr) tracks
-    // Record this as a boolean (per-axis) on each item for later use in the track-sizing algorithm
-    determine_if_item_crosses_flexible_tracks(&mut items, &columns.tracks, &rows.tracks);
-
-    // Compute "available grid space"
+    // 4. Compute "available grid space"
     // https://www.w3.org/TR/css-grid-1/#available-grid-space
     let padding = style.padding.resolve_or_zero(available_space.width.into_option());
     let border = style.border.resolve_or_zero(available_space.width.into_option());
@@ -104,6 +93,17 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
             .height
             .map_definite_value(|space| space - padding.vertical_axis_sum() - border.vertical_axis_sum()),
     };
+
+    // 5. Track Sizing
+
+    // Convert grid placements in origin-zero coordinates to indexes into the GridTrack (rows and columns) vectors
+    // This computation is relatively trivial, but it requires the final number of negative (implicit) tracks in
+    // each axis, and doing it up-front here means we don't have to keep repeating that calculation
+    resolve_item_track_indexes(&mut items, final_col_counts, final_row_counts);
+
+    // For each item, and in each axis, determine whether the item crosses any flexible (fr) tracks
+    // Record this as a boolean (per-axis) on each item for later use in the track-sizing algorithm
+    determine_if_item_crosses_flexible_tracks(&mut items, &columns.tracks, &rows.tracks);
 
     // Run track sizing algorithm for Inline axis
     track_sizing_algorithm(
@@ -135,8 +135,7 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
         },
         compute_node_layout,
     );
-
-    // // Run track sizing algorithm for Inline axis
+    // // Re-run track sizing algorithm for Inline axis
     // track_sizing_algorithm(
     //     tree,
     //     GridAxis::Inline,
@@ -149,7 +148,7 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
     //     |track: &GridTrack, _| Some(track.base_size),
     //     compute_node_layout,
     // );
-    // // Run track sizing algorithm for Block axis
+    // // Re-run track sizing algorithm for Block axis
     // track_sizing_algorithm(
     //     tree,
     //     GridAxis::Block,
@@ -163,7 +162,7 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
     //     compute_node_layout,
     // );
 
-    // Compute container size
+    // 6. Compute container size
     let resolved_style_size = style.size.maybe_resolve(available_space.as_options());
     let container_size = Size {
         width: resolved_style_size
@@ -174,9 +173,7 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
             .unwrap_or_else(|| rows.tracks.iter().map(|track| track.base_size).sum()),
     };
 
-    // 5. Alignment
-
-    // Align tracks
+    // 7. Track Alignment
     align_tracks(
         resolved_style_size.get(GridAxis::Inline),
         &mut columns.tracks,
@@ -188,6 +185,7 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
         style.align_content.unwrap_or(AlignContent::Stretch),
     );
 
+    // 8. Size, Align, and Position Grid Items
     perform_final_layout(
         tree,
         &mut items,
