@@ -10,12 +10,6 @@ use crate::style::{AlignContent, MaxTrackSizingFunction, MinTrackSizingFunction,
 use crate::sys::{f32_max, f32_min};
 use core::cmp::Ordering;
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub(super) enum AvailableSpaceMode {
-    Estimates,
-    OtherAxisSizes,
-}
-
 /// Takes an axis, and a list of grid items sorted firstly by whether they cross a flex track
 /// in the specified axis (items that don't cross a flex track first) and then by the number
 /// of tracks they cross in specified axis (ascending order).

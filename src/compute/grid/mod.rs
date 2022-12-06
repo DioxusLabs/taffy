@@ -13,9 +13,7 @@ use alignment::align_tracks;
 use estimate_size::compute_grid_size_estimate;
 use explicit_grid::{compute_explicit_grid_size, initialize_grid_tracks};
 use placement::place_grid_items;
-use track_sizing::{
-    determine_if_item_crosses_flexible_tracks, resolve_item_track_indexes, track_sizing_algorithm, AvailableSpaceMode,
-};
+use track_sizing::{determine_if_item_crosses_flexible_tracks, resolve_item_track_indexes, track_sizing_algorithm};
 use types::{CellOccupancyMatrix, GridAxisTracks, GridItem, GridTrack};
 
 mod alignment;
