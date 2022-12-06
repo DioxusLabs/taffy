@@ -697,7 +697,12 @@ fn flush_planned_base_size_increases(tracks: &mut [GridTrack]) {
 fn flush_planned_growth_limit_increases(tracks: &mut [GridTrack], set_infinitely_growable: bool) {
     for track in tracks {
         if track.growth_limit_planned_increase > 0.0 {
-            track.growth_limit = track.base_size + track.growth_limit_planned_increase;
+            track.growth_limit = if track.growth_limit == f32::INFINITY {
+                track.base_size + track.growth_limit_planned_increase
+            } else {
+                track.growth_limit + track.growth_limit_planned_increase
+            };
+            // track.growth_limit = track.base_size + track.growth_limit_planned_increase;
             track.infinitely_growable = set_infinitely_growable;
         } else {
             track.infinitely_growable = false;
@@ -861,10 +866,8 @@ fn distribute_item_space_to_growth_limit(
         for track in
             tracks.iter_mut().filter(|track| track_is_affected(track)).filter(|track| track.infinitely_growable)
         {
-            track.growth_limit = if track.growth_limit == f32::INFINITY {
-                track.base_size + item_incurred_increase
-            } else {
-                track.growth_limit + item_incurred_increase
+            if item_incurred_increase > track.growth_limit_planned_increase {
+                track.growth_limit_planned_increase = item_incurred_increase;
             }
         }
     } else {
@@ -872,10 +875,8 @@ fn distribute_item_space_to_growth_limit(
         if number_of_affected_tracks > 0 {
             let item_incurred_increase = extra_space / number_of_affected_tracks as f32;
             for track in tracks.iter_mut().filter(|track| track_is_affected(track)) {
-                track.growth_limit = if track.growth_limit == f32::INFINITY {
-                    track.base_size + item_incurred_increase
-                } else {
-                    track.growth_limit + item_incurred_increase
+                if item_incurred_increase > track.growth_limit_planned_increase {
+                    track.growth_limit_planned_increase = item_incurred_increase;
                 }
             }
         }
