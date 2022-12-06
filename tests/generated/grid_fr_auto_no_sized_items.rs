@@ -1,5 +1,5 @@
 #[test]
-fn grid_fr_auto() {
+fn grid_fr_auto_no_sized_items() {
     #[allow(unused_imports)]
     use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();

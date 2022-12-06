@@ -196,7 +196,7 @@ mod grid_auto_columns_fixed_width;
 mod grid_auto_single_item;
 mod grid_auto_single_item_fixed_width;
 mod grid_basic;
-mod grid_fr_auto;
+mod grid_fr_auto_no_sized_items;
 mod grid_fr_auto_single_item;
 mod grid_fr_fixed_size_no_content;
 mod grid_gap;
@@ -515,7 +515,7 @@ fn benchmark(c: &mut Criterion) {
             grid_auto_single_item::compute();
             grid_auto_single_item_fixed_width::compute();
             grid_basic::compute();
-            grid_fr_auto::compute();
+            grid_fr_auto_no_sized_items::compute();
             grid_fr_auto_single_item::compute();
             grid_fr_fixed_size_no_content::compute();
             grid_gap::compute();
