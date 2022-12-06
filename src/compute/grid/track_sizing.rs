@@ -1,6 +1,5 @@
 use super::types::{GridAxis, GridItem, GridTrack, TrackCounts};
-use crate::compute::compute_node_layout;
-use crate::geometry::{Line, Size};
+use crate::geometry::Size;
 use crate::layout::{AvailableSpace, RunMode, SizingMode};
 use crate::math::MaybeMath;
 use crate::node::Node;
