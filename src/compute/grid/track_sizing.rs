@@ -140,112 +140,26 @@ pub(super) fn determine_if_item_crosses_flexible_tracks(
     }
 }
 
-pub(super) fn track_sizing_algorithm<Tree, MeasureFunc>(
-    tree: &mut Tree,
-    available_space: Size<AvailableSpace>,
-    available_grid_space: Size<AvailableSpace>,
-    available_space_mode: AvailableSpaceMode,
-    axis: GridAxis,
-    columns: &mut [GridTrack],
-    container_style: &Style,
-    rows: &mut [GridTrack],
-    items: &mut [GridItem],
-    measure_node: MeasureFunc,
-) where
-    Tree: LayoutTree,
-    MeasureFunc: Fn(&mut Tree, Node, Size<Option<f32>>, Size<AvailableSpace>, RunMode, SizingMode) -> Size<f32>,
-{
-    let get_track_size_estimate = match available_space_mode {
-        AvailableSpaceMode::Estimates => |track: &GridTrack, available_space: AvailableSpace| {
-            track.max_track_sizing_function.definite_value(available_space)
-        },
-        AvailableSpaceMode::OtherAxisSizes => |track: &GridTrack, _| Some(track.base_size),
-    };
-
-    #[inline(always)]
-    fn get_column_placement(item: &GridItem) -> Line<u16> {
-        item.column_indexes
-    }
-    #[inline(always)]
-    fn get_row_placement(item: &GridItem) -> Line<u16> {
-        item.row_indexes
-    }
-
-    // The track sizing algorithm is generic over which axis it operates over, but it is performance sensitive
-    // we don't want to perform a dynamic lookup every time we access a property, so we instead pass in getter functions
-    // under the assumption that the inner function will be monomorphised, and they'll be inlined
-    match axis {
-        GridAxis::Inline => {
-            #[inline(always)]
-            fn get_column_cross_flex_track(item: &GridItem) -> bool {
-                item.crosses_flexible_column
-            }
-            track_sizing_algorithm_inner(
-                tree,
-                axis,
-                available_space,
-                available_grid_space,
-                container_style.min_size.width.get_absolute(),
-                container_style.max_size.width.get_absolute(),
-                columns,
-                rows,
-                items,
-                container_style,
-                get_track_size_estimate,
-                get_column_placement,
-                get_row_placement,
-                get_column_cross_flex_track,
-                measure_node,
-            );
-        }
-        GridAxis::Block => {
-            #[inline(always)]
-            fn get_row_crosses_flex_track(item: &GridItem) -> bool {
-                item.crosses_flexible_row
-            }
-            track_sizing_algorithm_inner(
-                tree,
-                axis,
-                available_space,
-                available_grid_space,
-                container_style.min_size.height.get_absolute(),
-                container_style.max_size.height.get_absolute(),
-                rows,
-                columns,
-                items,
-                container_style,
-                get_track_size_estimate,
-                get_row_placement,
-                get_column_placement,
-                get_row_crosses_flex_track,
-                measure_node,
-            );
-        }
-    }
-}
-
 /// Track sizing algorithm
 /// Note: Gutters are treated as empty fixed-size tracks for the purpose of the track sizing algorithm.
-pub(super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
+pub(super) fn track_sizing_algorithm<Tree, MeasureFunc>(
     tree: &mut Tree,
     axis: GridAxis,
     available_space: Size<AvailableSpace>,
     available_grid_space: Size<AvailableSpace>,
-    axis_min_size: Option<f32>,
-    axis_max_size: Option<f32>,
+    container_style: &Style,
     axis_tracks: &mut [GridTrack],
     other_axis_tracks: &mut [GridTrack],
     items: &mut [GridItem],
-    style: &Style,
     get_track_size_estimate: impl Fn(&GridTrack, AvailableSpace) -> Option<f32>,
-    get_item_placement: impl Fn(&GridItem) -> Line<u16>,
-    get_other_axis_placement: impl Fn(&GridItem) -> Line<u16>,
-    get_crosses_flex_track: impl Fn(&GridItem) -> bool,
     measure_node: MeasureFunc,
 ) where
     Tree: LayoutTree,
     MeasureFunc: Fn(&mut Tree, Node, Size<Option<f32>>, Size<AvailableSpace>, RunMode, SizingMode) -> Size<f32>,
 {
+    let axis_min_size = container_style.min_size.get(axis).get_absolute();
+    let axis_max_size = container_style.max_size.get(axis).get_absolute();
+
     // 11.4 Initialise Track sizes
     // Initialize each track’s base size and growth limit.
 
@@ -299,7 +213,7 @@ pub(super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
     // Compute an additional amount to add to each spanned gutter when computing item's estimated size in the
     // in the opposite axis based on the alignment, container size, and estimated track sizes in that axis
     let gutter_alignment_adjustment = compute_alignment_gutter_adjustment(
-        style.grid_align_content(axis.other()),
+        container_style.grid_align_content(axis.other()),
         available_space.get(axis.other()),
         &get_track_size_estimate,
         &other_axis_tracks,
@@ -629,7 +543,7 @@ pub(super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
         let free_space = if available_grid_space.get(axis).is_definite() {
             available_grid_space.get(axis).compute_free_space(used_space)
         } else {
-            match style.min_size.maybe_resolve(available_space.as_options()).get(axis) {
+            match container_style.min_size.maybe_resolve(available_space.as_options()).get(axis) {
                 Some(size) => size - used_space,
                 None => 0.0,
             }

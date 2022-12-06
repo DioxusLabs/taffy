@@ -110,54 +110,58 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
     // Run track sizing algorithm for Inline axis
     track_sizing_algorithm(
         tree,
+        GridAxis::Inline,
         available_space,
         available_grid_space,
-        AvailableSpaceMode::Estimates,
-        GridAxis::Inline,
-        &mut columns.tracks,
         &style,
+        &mut columns.tracks,
         &mut rows.tracks,
         &mut items,
+        |track: &GridTrack, available_space: AvailableSpace| {
+            track.max_track_sizing_function.definite_value(available_space)
+        },
         compute_node_layout,
     );
     // Run track sizing algorithm for Block axis
     track_sizing_algorithm(
         tree,
+        GridAxis::Block,
         available_space,
         available_grid_space,
-        AvailableSpaceMode::Estimates,
-        GridAxis::Block,
-        &mut columns.tracks,
         &style,
         &mut rows.tracks,
+        &mut columns.tracks,
         &mut items,
+        |track: &GridTrack, available_space: AvailableSpace| {
+            track.max_track_sizing_function.definite_value(available_space)
+        },
         compute_node_layout,
     );
 
-    // // Re-run track sizing algorithm for Inline axis
+    // // Run track sizing algorithm for Inline axis
     // track_sizing_algorithm(
     //     tree,
+    //     GridAxis::Inline,
     //     available_space,
     //     available_grid_space,
-    //     AvailableSpaceMode::OtherAxisSizes,
-    //     GridAxis::Inline,
-    //     &mut columns.tracks,
     //     &style,
+    //     &mut columns.tracks,
     //     &mut rows.tracks,
     //     &mut items,
+    //     |track: &GridTrack, _| Some(track.base_size),
     //     compute_node_layout,
     // );
-    // // Re-run track sizing algorithm for Block axis
+    // // Run track sizing algorithm for Block axis
     // track_sizing_algorithm(
     //     tree,
+    //     GridAxis::Block,
     //     available_space,
     //     available_grid_space,
-    //     AvailableSpaceMode::OtherAxisSizes,
-    //     GridAxis::Block,
-    //     &mut columns.tracks,
     //     &style,
     //     &mut rows.tracks,
+    //     &mut columns.tracks,
     //     &mut items,
+    //     |track: &GridTrack, _| Some(track.base_size),
     //     compute_node_layout,
     // );
 
