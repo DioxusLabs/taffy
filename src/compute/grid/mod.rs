@@ -10,21 +10,21 @@ use crate::style::{AlignContent, AlignItems, AlignSelf, JustifyItems};
 use crate::sys::{f32_max, Vec};
 use crate::tree::LayoutTree;
 use alignment::align_tracks;
+use estimate_size::compute_grid_size_estimate;
 use explicit_grid::{compute_explicit_grid_size, initialize_grid_tracks};
-use placement::CellOccupancyMatrix;
-use placement::{compute_grid_size_estimate, place_grid_items};
+use placement::place_grid_items;
 use track_sizing::{
     determine_if_item_crosses_flexible_tracks, resolve_item_track_indexes, track_sizing_algorithm, AvailableSpaceMode,
 };
-use types::{CssGrid, GridAxisTracks, GridItem, GridTrack};
+use types::{CellOccupancyMatrix, GridAxisTracks, GridItem, GridTrack};
 
 mod alignment;
+mod estimate_size;
 mod explicit_grid;
 mod placement;
-#[cfg(test)]
-mod test_helpers;
 mod track_sizing;
 mod types;
+mod util;
 
 pub(crate) use types::{AbsoluteAxis, GridAxis};
 
@@ -196,8 +196,8 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
         style.justify_items,
     );
 
-    let named_areas = Vec::new();
-    let grid = CssGrid { available_space, cell_occupancy_matrix, named_areas, items, columns, rows };
+    // let named_areas = Vec::new();
+    // let grid = CssGrid { available_space, cell_occupancy_matrix, named_areas, items, columns, rows };
 
     container_size
 }

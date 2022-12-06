@@ -1,6 +1,5 @@
-use super::super::types::{AbsoluteAxis, CssGrid, GridItem};
-use super::coordinates::into_origin_zero_coordinates;
-use super::{CellOccupancyMatrix, CellOccupancyState};
+use super::types::{AbsoluteAxis, CellOccupancyMatrix, CellOccupancyState, GridItem};
+use super::util::into_origin_zero_coordinates;
 use crate::geometry::Line;
 use crate::layout::AvailableSpaceCache;
 use crate::node::Node;
@@ -27,7 +26,7 @@ impl<T: Copy> InBothAbsAxis<T> {
 /// Place items into the grid, generating new rows/column into the implicit grid as required
 ///
 /// [Specification](https://www.w3.org/TR/css-grid-2/#auto-placement-algo)
-pub(in super::super) fn place_grid_items<'a, ChildIter>(
+pub(super) fn place_grid_items<'a, ChildIter>(
     cell_occupancy_matrix: &mut CellOccupancyMatrix,
     items: &mut Vec<GridItem>,
     children_iter: impl Fn() -> ChildIter,
@@ -300,9 +299,9 @@ fn record_grid_placement(
 mod tests {
 
     mod test_placement_algorithm {
-        use crate::compute::grid::placement::estimate_size::compute_grid_size_estimate;
-        use crate::compute::grid::placement::TrackCounts;
-        use crate::compute::grid::test_helpers::*;
+        use crate::compute::grid::estimate_size::compute_grid_size_estimate;
+        use crate::compute::grid::types::TrackCounts;
+        use crate::compute::grid::util::*;
         use crate::compute::grid::CellOccupancyMatrix;
         use crate::prelude::*;
         use crate::style::{GridAutoFlow, GridPlacement::*};

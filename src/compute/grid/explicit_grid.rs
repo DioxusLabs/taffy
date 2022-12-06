@@ -1,5 +1,4 @@
-use super::placement::TrackCounts;
-use super::types::GridTrack;
+use super::types::{GridTrack, TrackCounts};
 use crate::style::{Dimension, Style, TrackSizingFunction};
 use crate::sys::{GridTrackVec, Vec};
 use core::cmp::{max, min};
@@ -73,9 +72,9 @@ fn create_implicit_tracks(
 mod test {
     use super::compute_explicit_grid_size;
     use super::initialize_grid_tracks;
-    use crate::compute::grid::placement::TrackCounts;
-    use crate::compute::grid::test_helpers::*;
     use crate::compute::grid::types::GridTrackKind;
+    use crate::compute::grid::types::TrackCounts;
+    use crate::compute::grid::util::*;
     use crate::style::MaxTrackSizingFunction;
     use crate::style::MinTrackSizingFunction;
     use crate::style::{Dimension, TrackSizingFunction};

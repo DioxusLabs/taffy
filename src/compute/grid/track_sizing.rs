@@ -1,20 +1,18 @@
-use super::placement::TrackCounts;
+use super::types::{GridAxis, GridItem, GridTrack, TrackCounts};
 use crate::compute::compute_node_layout;
 use crate::geometry::{Line, Size};
 use crate::layout::{AvailableSpace, RunMode, SizingMode};
 use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::prelude::LayoutTree;
-use crate::resolve::{MaybeResolve, ResolveOrZero};
-use crate::style::{AlignContent, Dimension, MaxTrackSizingFunction, MinTrackSizingFunction, Style};
-// use super::AbsoluteAxis;
-use super::types::{GridAxis, GridItem, GridTrack};
+use crate::resolve::MaybeResolve;
+use crate::style::{AlignContent, MaxTrackSizingFunction, MinTrackSizingFunction, Style};
 use crate::sys::{f32_max, f32_min};
 use core::cmp::Ordering;
 use slotmap::Key;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub(in super::super) enum AvailableSpaceMode {
+pub(super) enum AvailableSpaceMode {
     Estimates,
     OtherAxisSizes,
 }
@@ -76,9 +74,7 @@ impl ItemBatcher {
 /// To make track sizing efficient we want to order tracks
 /// Here a placement is either a Line<i16> representing a row-start/row-end or a column-start/column-end
 #[inline(always)]
-pub(in super::super) fn cmp_by_cross_flex_then_span_then_start(
-    axis: GridAxis,
-) -> impl FnMut(&GridItem, &GridItem) -> Ordering {
+pub(super) fn cmp_by_cross_flex_then_span_then_start(axis: GridAxis) -> impl FnMut(&GridItem, &GridItem) -> Ordering {
     move |item_a: &GridItem, item_b: &GridItem| -> Ordering {
         match (item_a.crosses_flexible_track(axis), item_b.crosses_flexible_track(axis)) {
             (false, true) => Ordering::Less,
@@ -98,7 +94,7 @@ pub(in super::super) fn cmp_by_cross_flex_then_span_then_start(
     }
 }
 
-pub(in super::super) fn compute_alignment_gutter_adjustment(
+pub(super) fn compute_alignment_gutter_adjustment(
     alignment: AlignContent,
     available_space: AvailableSpace,
     get_track_size_estimate: impl Fn(&GridTrack, AvailableSpace) -> Option<f32>,
@@ -122,7 +118,7 @@ pub(in super::super) fn compute_alignment_gutter_adjustment(
 }
 
 /// Convert origin-zero coordinates track placement in grid track vector indexes
-pub(in super::super) fn resolve_item_track_indexes(
+pub(super) fn resolve_item_track_indexes(
     items: &mut Vec<GridItem>,
     column_counts: TrackCounts,
     row_counts: TrackCounts,
@@ -134,7 +130,7 @@ pub(in super::super) fn resolve_item_track_indexes(
 }
 
 /// Determine (in each axis) whether the item crosses any flexible tracks
-pub(in super::super) fn determine_if_item_crosses_flexible_tracks(
+pub(super) fn determine_if_item_crosses_flexible_tracks(
     items: &mut Vec<GridItem>,
     columns: &Vec<GridTrack>,
     rows: &Vec<GridTrack>,
@@ -147,7 +143,7 @@ pub(in super::super) fn determine_if_item_crosses_flexible_tracks(
     }
 }
 
-pub(in super::super) fn track_sizing_algorithm<Tree, MeasureFunc>(
+pub(super) fn track_sizing_algorithm<Tree, MeasureFunc>(
     tree: &mut Tree,
     available_space: Size<AvailableSpace>,
     available_grid_space: Size<AvailableSpace>,
@@ -233,7 +229,7 @@ pub(in super::super) fn track_sizing_algorithm<Tree, MeasureFunc>(
 
 /// Track sizing algorithm
 /// Note: Gutters are treated as empty fixed-size tracks for the purpose of the track sizing algorithm.
-pub(in super::super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
+pub(super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
     tree: &mut Tree,
     axis: GridAxis,
     available_space: Size<AvailableSpace>,

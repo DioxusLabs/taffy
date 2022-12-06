@@ -1,11 +1,11 @@
 /// This module is not required for spec compliance, but is used as a performance optimisation
 /// to reduce the number of allocations required when creating a grid.
-use crate::geometry::{Line, Size};
+use crate::geometry::Line;
 use crate::style::{GridPlacement, Style};
 use core::cmp::{max, min};
 
-use super::coordinates::into_origin_zero_coordinates;
-use super::TrackCounts;
+use super::types::TrackCounts;
+use super::util::into_origin_zero_coordinates;
 
 /// Estimate the number of rows and columns in the grid
 /// This is used as a performance optimisation to pre-size vectors and reduce allocations. It also forms a necessary step
@@ -189,7 +189,7 @@ mod tests {
 
     mod test_intial_grid_sizing {
         use super::super::compute_grid_size_estimate;
-        use crate::compute::grid::test_helpers::*;
+        use crate::compute::grid::util::test_helpers::*;
         use crate::prelude::*;
         use crate::style::GridPlacement::*;
 
