@@ -26,15 +26,3 @@ pub(crate) fn into_grid_coordinates(origin_zero_line: i16, explicit_track_count:
         -(origin_zero_line + explicit_line_count as i16)
     }
 }
-
-// #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-// struct CssGridCoords;
-// #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-// struct OriginZeroCoords;
-
-// trait GridLineCoords: Clone + Copy {}
-// impl GridLineCoords for CssGridCoords {}
-// impl GridLineCoords for OriginZeroCoords {}
-
-// #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-// struct GridLine<Coords: GridLineCoords = CssGridCoords>(i16, std::marker::PhantomData<Coords>);

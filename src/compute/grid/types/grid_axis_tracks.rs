@@ -3,19 +3,11 @@ use crate::style::{Dimension, TrackSizingFunction};
 use crate::sys::GridTrackVec;
 use core::cmp::max;
 
-// pub(crate) trait GridAxisExt {
-//     fn flex_factor_sum(&self) -> f32;
-//     fn leftover_space(&self) -> f32;
-// }
-
 #[derive(Debug, Clone)]
 pub(in super::super) struct GridAxisTracks {
     pub tracks: GridTrackVec<GridTrack>,
     pub origin: u16,
     pub track_counts: TrackCounts,
-    // pub explicit_track_count: u16,
-    // pub negative_implicit_track_count: u16,
-    // pub positive_implicit_track_count: u16,
 }
 
 impl GridAxisTracks {

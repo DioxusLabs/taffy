@@ -196,9 +196,6 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
         style.justify_items,
     );
 
-    // let named_areas = Vec::new();
-    // let grid = CssGrid { available_space, cell_occupancy_matrix, named_areas, items, columns, rows };
-
     container_size
 }
 
