@@ -465,6 +465,23 @@ pub(in super::super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
             }
         }
         flush_planned_base_size_increases(axis_tracks);
+
+        // 5. For intrinsic maximums: Next increase the growth limit of tracks with an intrinsic max track sizing function by
+        // distributing extra space as needed to account for these items' min-content contributions.
+        let has_intrinsic_max_track_sizing_function = move |track: &GridTrack| {
+            track.max_track_sizing_function.definite_value(available_space.get(axis)).is_none()
+        };
+        for (i, mut item) in batch.iter_mut().enumerate() {
+            let (axis_minimum_size, axis_min_content_size, axis_max_content_size) =
+                compute_item_sizes(&mut item, &axis_tracks);
+            let space = axis_min_content_size;
+            let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
+            if space > 0.0 {
+                distribute_item_space_to_growth_limit(space, tracks, has_intrinsic_max_track_sizing_function);
+            }
+        }
+        // Mark any tracks whose growth limit changed from infinite to finite in this step as infinitely growable for the next step.
+        flush_planned_growth_limit_increases(axis_tracks, true);
     }
 
     // Step 5.
@@ -794,7 +811,7 @@ fn distribute_item_space_to_base_size(
 /// This is simplified (and faster) version of the algorithm for growth limits
 /// https://www.w3.org/TR/css-grid-1/#extra-space
 // TODO: Actually add planned increase to growth limit
-fn distribute_space_to_growth_limit(
+fn distribute_item_space_to_growth_limit(
     space: f32,
     tracks: &mut [GridTrack],
     track_is_affected: impl Fn(&GridTrack) -> bool,
