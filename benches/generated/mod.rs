@@ -212,6 +212,7 @@ mod grid_justify_items_sized_start;
 mod grid_justify_items_sized_stretch;
 mod grid_justify_self_sized_all;
 mod grid_max_content_single_item;
+mod grid_min_content_maximum_single_item;
 mod grid_min_content_single_item;
 mod grid_min_max_column_auto;
 mod grid_min_max_column_fixed_width_above_range;
@@ -529,6 +530,7 @@ fn benchmark(c: &mut Criterion) {
             grid_justify_items_sized_stretch::compute();
             grid_justify_self_sized_all::compute();
             grid_max_content_single_item::compute();
+            grid_min_content_maximum_single_item::compute();
             grid_min_content_single_item::compute();
             grid_min_max_column_auto::compute();
             grid_min_max_column_fixed_width_above_range::compute();
