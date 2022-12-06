@@ -162,40 +162,7 @@ pub(super) fn track_sizing_algorithm<Tree, MeasureFunc>(
 
     // 11.4 Initialise Track sizes
     // Initialize each track’s base size and growth limit.
-
-    let last_track_idx = axis_tracks.len() - 1;
-
-    // First and last grid lines are always zero-sized.
-    axis_tracks[0].base_size = 0.0;
-    axis_tracks[0].growth_limit = 0.0;
-    axis_tracks[last_track_idx].base_size = 0.0;
-    axis_tracks[last_track_idx].growth_limit = 0.0;
-
-    let all_but_first_and_last = 1..last_track_idx;
-    for track in axis_tracks[all_but_first_and_last].iter_mut() {
-        // For each track, if the track’s min track sizing function is:
-        // - A fixed sizing function
-        //     Resolve to an absolute length and use that size as the track’s initial base size.
-        //     Note: Indefinite lengths cannot occur, as they’re treated as auto.
-        // - An intrinsic sizing function
-        //     Use an initial base size of zero.
-        track.base_size = track.min_track_sizing_function.definite_value(available_space.get(axis)).unwrap_or(0.0);
-
-        // For each track, if the track’s max track sizing function is:
-        // - A fixed sizing function
-        //     Resolve to an absolute length and use that size as the track’s initial growth limit.
-        // - An intrinsic sizing function
-        //     Use an initial growth limit of infinity.
-        // - A flexible sizing function
-        //     Use an initial growth limit of infinity.
-        track.growth_limit =
-            track.max_track_sizing_function.definite_value(available_space.get(axis)).unwrap_or(f32::INFINITY);
-
-        // In all cases, if the growth limit is less than the base size, increase the growth limit to match the base size.
-        if track.growth_limit < track.base_size {
-            track.growth_limit = track.base_size;
-        }
-    }
+    initialize_track_sizes(axis_tracks, available_space.get(axis));
 
     // If all tracks have base_size = growth_limit, then skip the rest of this function.
     // Note: this can only happen both track sizing function have the same fixed track sizing function
@@ -465,6 +432,44 @@ fn flush_planned_growth_limit_increases(tracks: &mut [GridTrack], set_infinitely
             track.infinitely_growable = false;
         }
         track.growth_limit_planned_increase = 0.0
+    }
+}
+
+// 11.4 Initialise Track sizes
+// Initialize each track’s base size and growth limit.
+fn initialize_track_sizes(axis_tracks: &mut [GridTrack], axis_available_space: AvailableSpace) {
+    let last_track_idx = axis_tracks.len() - 1;
+
+    // First and last grid lines are always zero-sized.
+    axis_tracks[0].base_size = 0.0;
+    axis_tracks[0].growth_limit = 0.0;
+    axis_tracks[last_track_idx].base_size = 0.0;
+    axis_tracks[last_track_idx].growth_limit = 0.0;
+
+    let all_but_first_and_last = 1..last_track_idx;
+    for track in axis_tracks[all_but_first_and_last].iter_mut() {
+        // For each track, if the track’s min track sizing function is:
+        // - A fixed sizing function
+        //     Resolve to an absolute length and use that size as the track’s initial base size.
+        //     Note: Indefinite lengths cannot occur, as they’re treated as auto.
+        // - An intrinsic sizing function
+        //     Use an initial base size of zero.
+        track.base_size = track.min_track_sizing_function.definite_value(axis_available_space).unwrap_or(0.0);
+
+        // For each track, if the track’s max track sizing function is:
+        // - A fixed sizing function
+        //     Resolve to an absolute length and use that size as the track’s initial growth limit.
+        // - An intrinsic sizing function
+        //     Use an initial growth limit of infinity.
+        // - A flexible sizing function
+        //     Use an initial growth limit of infinity.
+        track.growth_limit =
+            track.max_track_sizing_function.definite_value(axis_available_space).unwrap_or(f32::INFINITY);
+
+        // In all cases, if the growth limit is less than the base size, increase the growth limit to match the base size.
+        if track.growth_limit < track.base_size {
+            track.growth_limit = track.base_size;
+        }
     }
 }
 
