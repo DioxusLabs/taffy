@@ -443,29 +443,7 @@ pub(super) fn track_sizing_algorithm<Tree, MeasureFunc>(
 
     // 11.8. Stretch auto Tracks
     // This step expands tracks that have an auto max track sizing function by dividing any remaining positive, definite free space equally amongst them.
-    let num_auto_tracks =
-        axis_tracks.iter().filter(|track| track.max_track_sizing_function == MaxTrackSizingFunction::Auto).count();
-    if num_auto_tracks > 0 {
-        let used_space: f32 = axis_tracks.iter().map(|track| track.base_size).sum();
-
-        // If the free space is indefinite, but the grid container has a definite min-width/height
-        // use that size to calculate the free space for this step instead.
-        let free_space = if available_grid_space.get(axis).is_definite() {
-            available_grid_space.get(axis).compute_free_space(used_space)
-        } else {
-            match container_style.min_size.maybe_resolve(available_space.as_options()).get(axis) {
-                Some(size) => size - used_space,
-                None => 0.0,
-            }
-        };
-        if free_space > 0.0 {
-            let extra_space_per_auto_track = free_space / num_auto_tracks as f32;
-            axis_tracks
-                .iter_mut()
-                .filter(|track| track.max_track_sizing_function == MaxTrackSizingFunction::Auto)
-                .for_each(|track| track.base_size += extra_space_per_auto_track);
-        }
-    }
+    stretch_auto_tracks(axis, axis_tracks, container_style, available_space, available_grid_space);
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -593,6 +571,40 @@ fn expand_flexible_tracks(
     for track in axis_tracks.iter_mut() {
         if let MaxTrackSizingFunction::Flex(track_flex_factor) = track.max_track_sizing_function {
             track.base_size = f32_max(track.base_size, track_flex_factor * flex_fraction);
+        }
+    }
+}
+
+// 11.8. Stretch auto Tracks
+// This step expands tracks that have an auto max track sizing function by dividing any remaining positive, definite free space equally amongst them.
+fn stretch_auto_tracks(
+    axis: GridAxis,
+    axis_tracks: &mut [GridTrack],
+    container_style: &Style,
+    available_space: Size<AvailableSpace>,
+    available_grid_space: Size<AvailableSpace>,
+) {
+    let num_auto_tracks =
+        axis_tracks.iter().filter(|track| track.max_track_sizing_function == MaxTrackSizingFunction::Auto).count();
+    if num_auto_tracks > 0 {
+        let used_space: f32 = axis_tracks.iter().map(|track| track.base_size).sum();
+
+        // If the free space is indefinite, but the grid container has a definite min-width/height
+        // use that size to calculate the free space for this step instead.
+        let free_space = if available_grid_space.get(axis).is_definite() {
+            available_grid_space.get(axis).compute_free_space(used_space)
+        } else {
+            match container_style.min_size.maybe_resolve(available_space.as_options()).get(axis) {
+                Some(size) => size - used_space,
+                None => 0.0,
+            }
+        };
+        if free_space > 0.0 {
+            let extra_space_per_auto_track = free_space / num_auto_tracks as f32;
+            axis_tracks
+                .iter_mut()
+                .filter(|track| track.max_track_sizing_function == MaxTrackSizingFunction::Auto)
+                .for_each(|track| track.base_size += extra_space_per_auto_track);
         }
     }
 }
