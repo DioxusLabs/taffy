@@ -6,12 +6,11 @@ use crate::layout::AvailableSpace;
 use crate::sys::GridTrackVec;
 use core::cmp::{max, min};
 
-/// Used to control how [`Nodes`](crate::node::Node) are aligned.
-/// It's used for `align-items, justify-items, align-self, and justify-self
+/// Used to control how child [`Nodes`](crate::node::Node) are aligned.
+/// For Flexbox it controls alignment in the cross axis
+/// For Grid it controls alignment in the block axis
 ///
-/// The default behavior is [`AlignItems::Stretch`].
-///
-/// [Specification](https://www.w3.org/TR/css-flexbox-1/#align-items-property)
+/// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/align-items)
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum AlignItems {
@@ -26,15 +25,32 @@ pub enum AlignItems {
     /// Stretch to fill the container
     Stretch,
 }
+/// Used to control how child [`Nodes`](crate::node::Node) are aligned.
+/// Does not apply to Flexbox, and will be ignored if specified on a flex container
+/// For Grid it controls alignment in the inline axis
+///
+/// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/justify-items)
 pub type JustifyItems = AlignItems;
+/// Used to control how the specified [`Nodes`](crate::node::Node) is aligned.
+/// Overrides the parent Node's `AlignItems` property.
+/// For Flexbox it controls alignment in the cross axis
+/// For Grid it controls alignment in the block axis
+///
+/// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/align-self)
 pub type AlignSelf = AlignItems;
+/// Used to control how the specified [`Nodes`](crate::node::Node) is aligned.
+/// Overrides the parent Node's `JustifyItems` property.
+/// Does not apply to Flexbox, and will be ignored if specified on a flex child
+/// For Grid it controls alignment in the inline axis
+///
+/// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/justify-self)
 pub type JustifySelf = AlignItems;
 
 /// Sets the distribution of space between and around content items
-/// This type is used for both align_content and justify_content as the values are the same
+/// For Flexbox it controls alignment in the cross axis
+/// For Grid it controls alignment in the block axis
 ///
-/// [Specification](https://www.w3.org/TR/css-flexbox-1/#align-content-property)
-/// [Specification](https://www.w3.org/TR/css-flexbox-1/#justify-content-property)
+/// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/align-content)
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum AlignContent {
@@ -57,7 +73,11 @@ pub enum AlignContent {
     SpaceAround,
 }
 
-/// Sets the distribution of space between and around content items along the main-axis
+/// Sets the distribution of space between and around content items
+/// For Flexbox it controls alignment in the main axis
+/// For Grid it controls alignment in the inline axis
+///
+/// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content)
 pub type JustifyContent = AlignContent;
 
 impl AlignContent {
@@ -241,6 +261,8 @@ impl Default for GridAutoFlow {
 }
 
 impl GridAutoFlow {
+    /// Whether grid auto placement uses the sparse placement algorithm or the dense placement algorithm
+    /// See: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-flow#values
     pub fn is_dense(&self) -> bool {
         match self {
             Self::Row | Self::Column => false,
@@ -248,6 +270,8 @@ impl GridAutoFlow {
         }
     }
 
+    /// Whether grid auto placement fills areas row-wise or column-wise
+    /// See: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-flow#values
     pub fn primary_axis(&self) -> AbsoluteAxis {
         match self {
             Self::Row | Self::RowDense => AbsoluteAxis::Horizontal,
@@ -279,6 +303,7 @@ impl Default for GridPlacement {
 }
 
 impl GridPlacement {
+    /// Apply a mapping function if the GridPlacement is a Track. Otherwise return `self` unmodified.
     pub fn map_track(&self, map_fn: impl FnOnce(i16) -> i16) -> Self {
         use GridPlacement::*;
         match *self {
@@ -335,6 +360,8 @@ impl Line<GridPlacement> {
         }
     }
 
+    /// Resolves the span for an indefinite placement (a placement that does not consist of two `Track`s).
+    /// Panics if called on a definite placement
     pub fn indefinite_span(&self) -> u16 {
         use GridPlacement::*;
         match (self.start, self.end) {
@@ -358,19 +385,18 @@ impl Default for Line<GridPlacement> {
     }
 }
 
-/// Track sizing function
-///
-/// Each function is either
-///   - A FIXED sizing function (<length> or resolvable <percentage>).
-///   - An INTRINSIC sizing function (min-content, max-content, auto, fit-content()).
-///   - A FLEXIBLE sizing function (<flex>).
-///
-/// [Specification](https://www.w3.org/TR/css3-grid-layout/#layout-algorithm)
+/// Minimum track sizing function
+/// Specifies the maximum size of a grid track
+/// See https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum MaxTrackSizingFunction {
+    /// Track maximum size should be a fixed points or percentage value
     Fixed(Dimension),
+    /// Track maximum size should be content sized under a min-content constraint
     MinContent,
+    /// Track maximum size should be content sized under a max-content constraint
     MaxContent,
+    /// Track maximum size should be automatically sized
     Auto,
     /// The dimension as a fraction of the total available grid space.
     /// Specified value is the numerator of the fraction. Denominator is the sum of all fraction specified in that grid dimension
@@ -379,6 +405,7 @@ pub enum MaxTrackSizingFunction {
 }
 
 impl MaxTrackSizingFunction {
+    /// Returns true if the max track sizing function is `MinContent`, `MaxContent` or `Auto`, else false.
     #[inline(always)]
     pub fn is_intrinsic(&self) -> bool {
         use MaxTrackSizingFunction::*;
@@ -388,14 +415,27 @@ impl MaxTrackSizingFunction {
         }
     }
 
+    /// Returns true if the max track sizing function is `MaxContent`, else false.
+    #[inline(always)]
+    pub fn is_max_content(&self) -> bool {
+        use MaxTrackSizingFunction::*;
+        match self {
+            MaxContent => true,
+            Auto | MinContent | Fixed(_) | Flex(_) => false,
+        }
+    }
+
+    /// Returns true if the max track sizing function is `Flex`, else false.
     #[inline(always)]
     pub fn is_flexible(&self) -> bool {
         matches!(self, MaxTrackSizingFunction::Flex(_))
     }
 
+    /// Returns fixed point values directly. Attempts to resolve percentage values against
+    /// the passed available_space and returns if this results in a concrete value (which it
+    /// will if the available_space is `Some`). Otherwise returns None.
     #[inline(always)]
     pub fn definite_value(self, available_space: AvailableSpace) -> Option<f32> {
-        use Dimension::*;
         use MaxTrackSizingFunction::{Auto, *};
         match self {
             Fixed(Dimension::Points(size)) => Some(size),
@@ -406,29 +446,29 @@ impl MaxTrackSizingFunction {
             Fixed(Dimension::Auto) | MinContent | MaxContent | Auto | Flex(_) => None,
         }
     }
-
-    #[inline(always)]
-    pub fn is_max_content(&self) -> bool {
-        use MaxTrackSizingFunction::*;
-        match self {
-            MaxContent => true,
-            Auto | MinContent | Fixed(_) | Flex(_) => false,
-        }
-    }
 }
 
+/// Minimum track sizing function
+/// Specifies the minimum size of a grid track
+/// See https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum MinTrackSizingFunction {
+    /// Track minimum size should be a fixed points or percentage value
     Fixed(Dimension),
+    /// Track minimum size should be content sized under a min-content constraint
     MinContent,
+    /// Track minimum size should be content sized under a max-content constraint
     MaxContent,
+    /// Track minimum size should be automatically sized
     Auto,
 }
 
 impl MinTrackSizingFunction {
+    /// Returns fixed point values directly. Attempts to resolve percentage values against
+    /// the passed available_space and returns if this results in a concrete value (which it
+    /// will if the available_space is `Some`). Otherwise returns None.
     #[inline(always)]
     pub fn definite_value(self, available_space: AvailableSpace) -> Option<f32> {
-        use Dimension::*;
         use MinTrackSizingFunction::{Auto, *};
         match self {
             Fixed(Dimension::Points(size)) => Some(size),
@@ -441,18 +481,29 @@ impl MinTrackSizingFunction {
     }
 }
 
+/// The sizing function for a grid track (row/column).
+/// May either a MinMax variant which specifies separate values for the min-/max- track sizing functions
+/// or a scalar value which applies to both track sizing functions.
+/// See https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum TrackSizingFunction {
+    /// Track should be a fixed points or percentage value
     Fixed(Dimension),
+    /// Track should be content sized under a min-content constraint
     MinContent,
+    /// Track should be content sized under a max-content constraint
     MaxContent,
+    /// Track should be automatically sized
     Auto,
     /// The dimension as a fraction of the total available grid space.
     /// Specified value is the numerator of the fraction. Denominator is the sum of all fraction specified in that grid dimension
     /// Spec: https://www.w3.org/TR/css3-grid-layout/#fr-unit
     Flex(f32),
+    /// Specify the min tracking sizing function and the max sizing function separately
     MinMax {
+        /// The min tracking sizing function
         min: MinTrackSizingFunction,
+        /// The max tracking sizing function
         max: MaxTrackSizingFunction,
     },
 }
@@ -460,7 +511,7 @@ pub enum TrackSizingFunction {
 impl TrackSizingFunction {
     /// Getter for the min_track_sizing_function. This is either the `min` property of the MinMax Variant,
     /// or else another variant converted to the same variant in the MinTrackSizingFunction enum
-    /// Flex is not valid MinTrackingSizingFunction, and thus get converted to Auto
+    /// Flex is not valid MinTrackingSizingFunction, and thus gets converted to Auto
     pub fn min_sizing_function(&self) -> MinTrackSizingFunction {
         match self {
             Self::MinMax { min, .. } => *min,
@@ -468,7 +519,7 @@ impl TrackSizingFunction {
             Self::MinContent => MinTrackSizingFunction::MinContent,
             Self::MaxContent => MinTrackSizingFunction::MaxContent,
             Self::Auto => MinTrackSizingFunction::Auto,
-            Self::Flex(value) => MinTrackSizingFunction::Auto,
+            Self::Flex(_) => MinTrackSizingFunction::Auto,
         }
     }
 
@@ -865,13 +916,12 @@ impl Style {
 #[allow(clippy::bool_assert_comparison)]
 #[cfg(test)]
 mod tests {
-    use super::GridPlacement;
-    use super::{AlignItems, Style};
-    use crate::geometry::{Line, Rect, Size};
+    use super::Style;
+    use crate::geometry::Rect;
 
     #[test]
     fn defaults_match() {
-        use super::{Dimension, GridPlacement};
+        use super::GridPlacement;
         use crate::geometry::{Line, Size};
 
         let old_defaults = Style {
