@@ -483,6 +483,10 @@ pub(in super::super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
         axis_tracks.iter_mut().for_each(|track| track.base_size = track.growth_limit);
     } else if free_space > 0.0 {
         distribute_space_up_to_limits(free_space, axis_tracks, |_| true);
+        for track in axis_tracks.iter_mut() {
+            track.base_size += track.item_incurred_increase;
+            track.item_incurred_increase = 0.0;
+        }
     }
 
     // 11.7. Expand Flexible Tracks
@@ -661,82 +665,14 @@ fn distribute_space_up_to_limits(
     space_to_distribute: f32,
     tracks: &mut [GridTrack],
     track_is_affected: impl Fn(&GridTrack) -> bool,
-) {
+) -> f32 {
     // Define a small constant to avoid infinite loops due to rounding errors. Rather than stopping distributing
     // extra space when it gets to exactly zero, we will stop when it falls below this amount
     const THRESHOLD: f32 = 0.000001;
 
     let mut space_to_distribute = space_to_distribute;
     while space_to_distribute > THRESHOLD {
-        let number_of_growable_tracks = tracks
-            .iter()
-            .filter(|track| track.base_size < track.growth_limit)
-            .filter(|track| track_is_affected(track))
-            .count();
-        if number_of_growable_tracks == 0 {
-            break;
-        }
-
-        // Compute item-incurred increase for this iteration
-        let min_increase_limit = tracks
-            .iter()
-            .filter(|track| track.base_size < track.growth_limit)
-            .filter(|track| track_is_affected(track))
-            .map(|track| track.growth_limit - track.base_size)
-            .min_by(|a, b| a.total_cmp(b))
-            .unwrap(); // We will never pass an empty track list to this function
-        let item_incurred_increase =
-            f32_min(min_increase_limit, space_to_distribute / number_of_growable_tracks as f32);
-
-        for track in tracks
-            .iter_mut()
-            .filter(|track| track_is_affected(track))
-            .filter(|track| track.base_size < track.growth_limit)
-        {
-            track.base_size += item_incurred_increase;
-        }
-
-        space_to_distribute -= item_incurred_increase * number_of_growable_tracks as f32;
-    }
-}
-
-/// 11.5.1. Distributing Extra Space Across Spanned Tracks
-/// https://www.w3.org/TR/css-grid-1/#extra-space
-// TODO: Actually add planned increase to base size
-fn distribute_item_space_to_base_size(
-    space: f32,
-    tracks: &mut [GridTrack],
-    track_is_affected: impl Fn(&GridTrack) -> bool,
-    intrinsic_contribution_type: IntrinsicContributionType,
-) {
-    // Skip this distribution if there is either
-    //   - no space to distribute
-    //   - no affected tracks to distribute space to
-    if space == 0.0 || tracks.iter().filter(|track| track_is_affected(track)).count() == 0 {
-        return;
-    }
-
-    // 1. Find the space to distribute
-    let track_sizes: f32 = tracks.iter().map(|track| track.base_size).sum();
-    let mut extra_space: f32 = f32_max(0.0, space - track_sizes);
-
-    // 2. Distribute space up to limits:
-    // Note: there are two exit conditions to this loop:
-    //   - We run out of space to distribute (extra_space falls below THRESHOLD)
-    //   - We run out of growable tracks to distribute to
-
-    // Define a small constant to avoid infinite loops due to rounding errors. Rather than stopping distributing
-    // extra space when it gets to exactly zero, we will stop when it falls below this amount
-    const THRESHOLD: f32 = 0.000001;
-
-    // dbg!(space);
-    // dbg!(track_sizes);
-    // dbg!(extra_space);
-    // dbg!(THRESHOLD);
-    // dbg!(extra_space > THRESHOLD);
-
-    while extra_space > THRESHOLD {
-        // dbg!(extra_space);
+        // dbg!(space_to_distribute);
 
         let number_of_growable_tracks = tracks
             .iter()
@@ -758,7 +694,7 @@ fn distribute_item_space_to_base_size(
             .min_by(|a, b| a.total_cmp(b))
             .unwrap(); // We will never pass an empty track list to this function
         let iteration_item_incurred_increase =
-            f32_min(min_increase_limit, extra_space / number_of_growable_tracks as f32);
+            f32_min(min_increase_limit, space_to_distribute / number_of_growable_tracks as f32);
         // dbg!(iteration_item_incurred_increase);
 
         for track in tracks
@@ -769,8 +705,48 @@ fn distribute_item_space_to_base_size(
             track.item_incurred_increase += iteration_item_incurred_increase;
         }
 
-        extra_space -= iteration_item_incurred_increase * number_of_growable_tracks as f32;
+        space_to_distribute -= iteration_item_incurred_increase * number_of_growable_tracks as f32;
     }
+
+    space_to_distribute
+}
+
+/// 11.5.1. Distributing Extra Space Across Spanned Tracks
+/// https://www.w3.org/TR/css-grid-1/#extra-space
+// TODO: Actually add planned increase to base size
+fn distribute_item_space_to_base_size(
+    space: f32,
+    tracks: &mut [GridTrack],
+    track_is_affected: impl Fn(&GridTrack) -> bool,
+    intrinsic_contribution_type: IntrinsicContributionType,
+) {
+    // Skip this distribution if there is either
+    //   - no space to distribute
+    //   - no affected tracks to distribute space to
+    if space == 0.0 || tracks.iter().filter(|track| track_is_affected(track)).count() == 0 {
+        return;
+    }
+
+    // 1. Find the space to distribute
+    let track_sizes: f32 = tracks.iter().map(|track| track.base_size).sum();
+    let extra_space: f32 = f32_max(0.0, space - track_sizes);
+
+    // 2. Distribute space up to limits:
+    // Note: there are two exit conditions to this loop:
+    //   - We run out of space to distribute (extra_space falls below THRESHOLD)
+    //   - We run out of growable tracks to distribute to
+
+    // Define a small constant to avoid infinite loops due to rounding errors. Rather than stopping distributing
+    // extra space when it gets to exactly zero, we will stop when it falls below this amount
+    const THRESHOLD: f32 = 0.000001;
+
+    // dbg!(space);
+    // dbg!(track_sizes);
+    // dbg!(extra_space);
+    // dbg!(THRESHOLD);
+    // dbg!(extra_space > THRESHOLD);
+
+    let extra_space = distribute_space_up_to_limits(extra_space, tracks, &track_is_affected);
 
     // 3. Distribute remaining span beyond limits (if any)
     if extra_space > THRESHOLD {
