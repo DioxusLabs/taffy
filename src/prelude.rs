@@ -6,8 +6,9 @@ pub use crate::{
     layout::{AvailableSpace, Layout},
     node::{Node, Taffy},
     style::{
-        AlignContent, AlignItems, AlignSelf, Dimension, Display, FlexDirection, FlexWrap, JustifyContent,
-        LengthPercentage, LengthPercentageAuto, PositionType, Style,
+        AlignContent, AlignItems, AlignSelf, Dimension, Display, FlexDirection, FlexWrap, GridAutoFlow, GridPlacement,
+        JustifyContent, JustifyItems, JustifySelf, LengthPercentage, LengthPercentageAuto, MaxTrackSizingFunction,
+        MinTrackSizingFunction, PositionType, Style, TrackSizingFunction,
     },
     style_helpers::{auto, points, zero},
     tree::LayoutTree,
