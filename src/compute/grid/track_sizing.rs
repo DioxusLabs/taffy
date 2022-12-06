@@ -415,7 +415,7 @@ pub(super) fn track_sizing_algorithm<Tree, MeasureFunc>(
         flush_planned_growth_limit_increases(axis_tracks, false);
     }
 
-    // Step 5.
+    // 11.5. Resolve Intrinsic Track Sizes (Step 5.)
     // If any track still has an infinite growth limit (because, for example, it had no items placed in it or it is a flexible track),
     // set its growth limit to its base size. (NOTE: this step is super-important to ensure that the "Maximise Tracks" step doesn't affect flexible tracks
     axis_tracks
@@ -423,19 +423,9 @@ pub(super) fn track_sizing_algorithm<Tree, MeasureFunc>(
         .filter(|track| track.growth_limit == f32::INFINITY)
         .for_each(|track| track.growth_limit = track.base_size);
 
-    // 11.6 Maximise Tracks
+    // 11.6. Maximise Tracks
     // Distributes free space (if any) to tracks with FINITE growth limits, up to their limits.
-    let used_space: f32 = axis_tracks.iter().map(|track| track.base_size).sum();
-    let free_space = available_grid_space.get(axis).compute_free_space(used_space);
-    if free_space == f32::INFINITY {
-        axis_tracks.iter_mut().for_each(|track| track.base_size = track.growth_limit);
-    } else if free_space > 0.0 {
-        distribute_space_up_to_limits(free_space, axis_tracks, |_| true);
-        for track in axis_tracks.iter_mut() {
-            track.base_size += track.item_incurred_increase;
-            track.item_incurred_increase = 0.0;
-        }
-    }
+    maximise_tracks(axis, axis_tracks, available_grid_space);
 
     // 11.7. Expand Flexible Tracks
     // This step sizes flexible tracks using the largest value it can assign to an fr without exceeding the available space.
@@ -475,6 +465,22 @@ fn flush_planned_growth_limit_increases(tracks: &mut [GridTrack], set_infinitely
             track.infinitely_growable = false;
         }
         track.growth_limit_planned_increase = 0.0
+    }
+}
+
+// 11.6 Maximise Tracks
+// Distributes free space (if any) to tracks with FINITE growth limits, up to their limits.
+fn maximise_tracks(axis: GridAxis, axis_tracks: &mut [GridTrack], available_grid_space: Size<AvailableSpace>) {
+    let used_space: f32 = axis_tracks.iter().map(|track| track.base_size).sum();
+    let free_space = available_grid_space.get(axis).compute_free_space(used_space);
+    if free_space == f32::INFINITY {
+        axis_tracks.iter_mut().for_each(|track| track.base_size = track.growth_limit);
+    } else if free_space > 0.0 {
+        distribute_space_up_to_limits(free_space, axis_tracks, |_| true);
+        for track in axis_tracks.iter_mut() {
+            track.base_size += track.item_incurred_increase;
+            track.item_incurred_increase = 0.0;
+        }
     }
 }
 
