@@ -1,7 +1,7 @@
 use super::{GridAxis, GridTrack};
 use crate::compute::compute_node_layout;
 use crate::geometry::{Line, Size};
-use crate::layout::{AvailableSpace, AvailableSpaceCache, RunMode, SizingMode};
+use crate::layout::{AvailableSpace, RunMode, SizingMode};
 use crate::node::Node;
 use crate::prelude::LayoutTree;
 use crate::resolve::MaybeResolve;
@@ -41,10 +41,6 @@ pub(in super::super) struct GridItem {
     pub min_content_contribution_cache: Option<Size<f32>>,
     pub minimum_contribution_cache: Option<f32>,
     pub max_content_contribution_cache: Option<Size<f32>>,
-
-    /// Cache for intrinsic size computation
-    /// There is an entry for each combination of (min-content, max-content) and (height, width)
-    intrinsic_size_cache: [AvailableSpaceCache; 4],
 }
 
 impl GridItem {
@@ -61,7 +57,6 @@ impl GridItem {
             min_content_contribution_cache: None,
             max_content_contribution_cache: None,
             minimum_contribution_cache: None,
-            intrinsic_size_cache: [AvailableSpaceCache::empty(); 4], // source_order: 1,
         }
     }
 
@@ -101,29 +96,6 @@ impl GridItem {
         match axis {
             GridAxis::Inline => self.crosses_flexible_column,
             GridAxis::Block => self.crosses_flexible_row,
-        }
-    }
-
-    fn cache_entry_index(&self, constraint: Size<AvailableSpace>) -> Option<usize> {
-        use AvailableSpace::*;
-        match (constraint.width, constraint.height) {
-            (MinContent, Definite(_)) => Some(0),
-            (MaxContent, Definite(_)) => Some(1),
-            (Definite(_), MinContent) => Some(2),
-            (Definite(_), MaxContent) => Some(3),
-            _ => None,
-        }
-    }
-
-    fn get_cache(&self, constraint: Size<AvailableSpace>) -> Option<AvailableSpaceCache> {
-        self.cache_entry_index(constraint)
-            .map(|index| self.intrinsic_size_cache[index])
-            .filter(|cache| cache.constraint == constraint)
-    }
-
-    fn set_cache(&mut self, constraint: Size<AvailableSpace>, size: Size<f32>) {
-        if let Some(index) = self.cache_entry_index(constraint) {
-            self.intrinsic_size_cache[index] = AvailableSpaceCache { constraint, cached_size: size }
         }
     }
 
@@ -276,35 +248,5 @@ impl GridItem {
         self.min_content_contribution_cache = None;
         self.max_content_contribution_cache = None;
         self.minimum_contribution_cache = None;
-    }
-
-    pub fn intrinsic_size_cached(
-        &mut self,
-        measure_node: impl Fn(Node, Size<AvailableSpace>) -> Size<f32>,
-        constraint: Size<AvailableSpace>,
-    ) -> Size<f32> {
-        if let Some(cache) = self.get_cache(constraint) {
-            cache.cached_size
-        } else {
-            let size = measure_node(self.node, constraint);
-            self.set_cache(constraint, size);
-            size
-        }
-    }
-
-    pub fn axis_agnostic_intrinsic_size_cached(
-        &mut self,
-        measure_node: impl Fn(Node, Size<AvailableSpace>) -> Size<f32>,
-        axis: GridAxis,
-        constraint: Size<AvailableSpace>,
-        other_axis_constraint: Size<AvailableSpace>,
-    ) -> Size<f32> {
-        if let Some(cache) = self.get_cache(constraint) {
-            cache.cached_size
-        } else {
-            let size = measure_node(self.node, constraint);
-            self.set_cache(constraint, size);
-            size
-        }
     }
 }

@@ -1,7 +1,6 @@
 use super::types::{AbsoluteAxis, CellOccupancyMatrix, CellOccupancyState, GridItem};
 use super::util::into_origin_zero_coordinates;
 use crate::geometry::Line;
-use crate::layout::AvailableSpaceCache;
 use crate::node::Node;
 use crate::style::{GridAutoFlow, GridPlacement, Style};
 use crate::sys::Vec;
