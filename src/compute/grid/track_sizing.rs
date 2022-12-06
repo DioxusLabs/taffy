@@ -466,6 +466,13 @@ pub(in super::super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
         }
         flush_planned_base_size_increases(axis_tracks);
 
+        // 4. If at this point any track’s growth limit is now less than its base size, increase its growth limit to match its base size.
+        for track in axis_tracks.iter_mut() {
+            if track.growth_limit < track.base_size {
+                track.growth_limit = track.base_size;
+            }
+        }
+
         // 5. For intrinsic maximums: Next increase the growth limit of tracks with an intrinsic max track sizing function by
         // distributing extra space as needed to account for these items' min-content contributions.
         let has_intrinsic_max_track_sizing_function = move |track: &GridTrack| {
