@@ -9,7 +9,6 @@ use crate::resolve::MaybeResolve;
 use crate::style::{AlignContent, MaxTrackSizingFunction, MinTrackSizingFunction, Style};
 use crate::sys::{f32_max, f32_min};
 use core::cmp::Ordering;
-use slotmap::Key;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub(super) enum AvailableSpaceMode {
@@ -63,8 +62,6 @@ impl ItemBatcher {
         if next_index_offset >= items.len() {
             self.done = true;
         }
-
-        dbg!(self.index_offset, next_index_offset, self.current_span, self.current_is_flex, items.len());
 
         let batch = &mut items[batch_range];
         Some((batch, self.current_is_flex))
@@ -339,8 +336,6 @@ pub(super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
             &get_track_size_estimate,
         );
 
-        // dbg!(tree.style(item.node).size);
-
         let min_content_size = item.min_content_contribution_cached(tree, known_dimensions);
         let max_content_size = item.max_content_contribution_cached(tree, known_dimensions);
         let axis_minimum_size =
@@ -351,26 +346,8 @@ pub(super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
 
     let axis_available_space = available_space.get(axis);
 
-    &items.iter_mut().enumerate().for_each(|(i, mut item)| {
-        let (axis_minimum_size, axis_min_content_size, axis_max_content_size) =
-            compute_item_sizes(&mut item, &axis_tracks);
-        println!(
-            "{}: span={} ({:?}) flex={} minimum: {} min_content: {} max_content: {}",
-            i,
-            item.span(axis),
-            item.track_range_excluding_lines(axis),
-            item.crosses_flexible_track(axis),
-            axis_minimum_size,
-            axis_min_content_size,
-            axis_max_content_size,
-        )
-    });
-
     let mut batched_item_iterator = ItemBatcher::new(axis);
     while let Some((batch, is_flex)) = batched_item_iterator.next(items) {
-        dbg!(is_flex);
-        dbg!(&batch.iter().map(|item| item.track_range_excluding_lines(axis)).collect::<Vec<_>>());
-
         // 1. For intrinsic minimums:
         // First increase the base size of tracks with an intrinsic min track sizing function
         let has_intrinsic_min_track_sizing_function = move |track: &GridTrack| {
@@ -522,10 +499,6 @@ pub(super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
         }
         // Mark any tracks whose growth limit changed from infinite to finite in this step as infinitely growable for the next step.
         flush_planned_growth_limit_increases(axis_tracks, false);
-
-        &axis_tracks.iter_mut().enumerate().for_each(|(i, mut item)| {
-            println!("{}: base_size: {}, growth_limit: {}", i, item.base_size, item.growth_limit,)
-        });
     }
 
     // Step 5.
@@ -553,19 +526,6 @@ pub(super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
     // 11.7. Expand Flexible Tracks
     // This step sizes flexible tracks using the largest value it can assign to an fr without exceeding the available space.
 
-    println!();
-    dbg!(axis);
-    dbg!(available_grid_space.get(axis));
-    axis_tracks.iter().enumerate().for_each(|(i, track)| {
-        println!(
-            "T{}: size:{} limit:{} {}",
-            i,
-            track.base_size,
-            track.growth_limit,
-            if track.is_flexible() { "FLEX" } else { "" }
-        )
-    });
-
     // First, find the grid’s used flex fraction:
     let flex_fraction = match available_grid_space.get(axis) {
         // If the free space is zero:
@@ -576,9 +536,6 @@ pub(super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
         AvailableSpace::Definite(available_space) => {
             let used_space: f32 = axis_tracks.iter().map(|track| track.base_size).sum();
             let free_space = available_space - used_space;
-
-            dbg!("DEFINITE");
-            dbg!(free_space);
             if free_space == 0.0 {
                 0.0
             } else {
@@ -621,14 +578,6 @@ pub(super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
                             RunMode::ComputeSize,
                             SizingMode::InherentSize,
                         );
-                        println!();
-                        dbg!(axis);
-                        dbg!(item.node.data());
-                        dbg!(tree.style(item.node).size.get(axis));
-                        dbg!(tree.style(item.node).size.width);
-                        dbg!(tree.style(item.node).size);
-                        dbg!(max_content_contribution.get(axis));
-                        dbg!(item.track_range_excluding_lines(axis));
                         find_size_of_fr(tracks, max_content_contribution.get(axis))
                     })
                     .max_by(|a, b| a.total_cmp(b))
@@ -738,15 +687,12 @@ fn distribute_space_up_to_limits(
 
     let mut space_to_distribute = space_to_distribute;
     while space_to_distribute > THRESHOLD {
-        // dbg!(space_to_distribute);
-
         let number_of_growable_tracks = tracks
             .iter()
             .filter(|track| track.base_size + track.item_incurred_increase < track.growth_limit)
             .filter(|track| track_is_affected(track))
             .count();
 
-        // dbg!(number_of_growable_tracks);
         if number_of_growable_tracks == 0 {
             break;
         }
@@ -761,7 +707,6 @@ fn distribute_space_up_to_limits(
             .unwrap(); // We will never pass an empty track list to this function
         let iteration_item_incurred_increase =
             f32_min(min_increase_limit, space_to_distribute / number_of_growable_tracks as f32);
-        // dbg!(iteration_item_incurred_increase);
 
         for track in tracks
             .iter_mut()
@@ -819,12 +764,6 @@ fn distribute_item_space_to_base_size(
         // Define a small constant to avoid infinite loops due to rounding errors. Rather than stopping distributing
         // extra space when it gets to exactly zero, we will stop when it falls below this amount
         const THRESHOLD: f32 = 0.000001;
-
-        // dbg!(space);
-        // dbg!(track_sizes);
-        // dbg!(extra_space);
-        // dbg!(THRESHOLD);
-        // dbg!(extra_space > THRESHOLD);
 
         let extra_space = distribute_space_up_to_limits(extra_space, tracks, &track_is_affected);
 
@@ -959,19 +898,12 @@ fn find_size_of_fr(tracks: &[GridTrack], space_to_fill: f32) -> f32 {
                 _ => used_space += track.base_size,
             };
         }
-        dbg!(used_space);
-        dbg!(naive_flex_factor_sum);
         let leftover_space = space_to_fill - used_space;
         let flex_factor = f32_max(naive_flex_factor_sum, 1.0);
-
-        dbg!(leftover_space);
-        dbg!(flex_factor);
 
         // Let the hypothetical fr size be the leftover space divided by the flex factor sum.
         previous_iter_hypothetical_fr_size = hypothetical_fr_size;
         hypothetical_fr_size = leftover_space / flex_factor;
-
-        dbg!(hypothetical_fr_size);
 
         // If the product of the hypothetical fr size and a flexible track’s flex factor is less than the track’s base size,
         // restart this algorithm treating all such tracks as inflexible.
