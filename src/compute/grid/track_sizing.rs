@@ -439,97 +439,7 @@ pub(super) fn track_sizing_algorithm<Tree, MeasureFunc>(
 
     // 11.7. Expand Flexible Tracks
     // This step sizes flexible tracks using the largest value it can assign to an fr without exceeding the available space.
-
-    // First, find the grid’s used flex fraction:
-    let flex_fraction = match available_grid_space.get(axis) {
-        // If the free space is zero:
-        //    The used flex fraction is zero.
-        // Otherwise, if the free space is a definite length:
-        //   The used flex fraction is the result of finding the size of an fr using all of the grid tracks and
-        //   a space to fill of the available grid space.
-        AvailableSpace::Definite(available_space) => {
-            let used_space: f32 = axis_tracks.iter().map(|track| track.base_size).sum();
-            let free_space = available_space - used_space;
-            if free_space == 0.0 {
-                0.0
-            } else {
-                find_size_of_fr(axis_tracks, available_space)
-            }
-        }
-        // If ... sizing the grid container under a min-content constraint the used flex fraction is zero.
-        AvailableSpace::MinContent => 0.0,
-        // Otherwise, if the free space is an indefinite length:
-        AvailableSpace::MaxContent => {
-            // The used flex fraction is the maximum of:
-            let flex_fraction = f32_max(
-                // For each flexible track, if the flexible track’s flex factor is greater than one,
-                // the result of dividing the track’s base size by its flex factor; otherwise, the track’s base size.
-                axis_tracks
-                    .iter()
-                    .filter(|track| track.max_track_sizing_function.is_flexible())
-                    .map(|track| {
-                        let flex_factor = track.flex_factor();
-                        if flex_factor > 1.0 {
-                            track.base_size * flex_factor
-                        } else {
-                            track.base_size
-                        }
-                    })
-                    .max_by(|a, b| a.total_cmp(b))
-                    .unwrap_or(0.0),
-                // For each grid item that crosses a flexible track, the result of finding the size of an fr using all the grid tracks
-                // that the item crosses and a space to fill of the item’s max-content contribution.
-                items
-                    .iter()
-                    .filter(|item| item.crosses_flexible_track(axis))
-                    .map(|item| {
-                        let tracks = &axis_tracks[item.track_range_excluding_lines(axis)];
-                        let max_content_contribution = compute_node_layout(
-                            tree,
-                            item.node,
-                            Size::NONE,
-                            Size::MAX_CONTENT,
-                            RunMode::ComputeSize,
-                            SizingMode::InherentSize,
-                        );
-                        find_size_of_fr(tracks, max_content_contribution.get(axis))
-                    })
-                    .max_by(|a, b| a.total_cmp(b))
-                    .unwrap_or(0.0),
-            );
-
-            // If using this flex fraction would cause the grid to be smaller than the grid container’s min-width/height (or larger than the
-            // grid container’s max-width/height), then redo this step, treating the free space as definite and the available grid space as equal
-            // to the grid container’s inner size when it’s sized to its min-width/height (max-width/height).
-            // (Note: min_size takes precedence over max_size)
-            let hypothetical_grid_size: f32 = axis_tracks
-                .iter()
-                .map(|track| match track.max_track_sizing_function {
-                    MaxTrackSizingFunction::Flex(track_flex_factor) => {
-                        f32_max(track.base_size, track_flex_factor * flex_fraction)
-                    }
-                    _ => track.base_size,
-                })
-                .sum();
-            let axis_min_size = axis_min_size.unwrap_or(0.0);
-            let axis_max_size = axis_max_size.unwrap_or(f32::INFINITY);
-            if hypothetical_grid_size < axis_min_size {
-                find_size_of_fr(axis_tracks, axis_min_size)
-            } else if hypothetical_grid_size > axis_max_size {
-                find_size_of_fr(axis_tracks, axis_max_size)
-            } else {
-                flex_fraction
-            }
-        }
-    };
-
-    // For each flexible track, if the product of the used flex fraction and the track’s flex factor is greater
-    // than the track’s base size, set its base size to that product.
-    for track in axis_tracks.iter_mut() {
-        if let MaxTrackSizingFunction::Flex(track_flex_factor) = track.max_track_sizing_function {
-            track.base_size = f32_max(track.base_size, track_flex_factor * flex_fraction);
-        }
-    }
+    expand_flexible_tracks(tree, axis, axis_tracks, items, axis_min_size, axis_max_size, available_grid_space);
 
     // 11.8. Stretch auto Tracks
     // This step expands tracks that have an auto max track sizing function by dividing any remaining positive, definite free space equally amongst them.
@@ -587,6 +497,103 @@ fn flush_planned_growth_limit_increases(tracks: &mut [GridTrack], set_infinitely
             track.infinitely_growable = false;
         }
         track.growth_limit_planned_increase = 0.0
+    }
+}
+
+// 11.7. Expand Flexible Tracks
+// This step sizes flexible tracks using the largest value it can assign to an fr without exceeding the available space.
+fn expand_flexible_tracks(
+    tree: &mut impl LayoutTree,
+    axis: GridAxis,
+    axis_tracks: &mut [GridTrack],
+    items: &mut [GridItem],
+    axis_min_size: Option<f32>,
+    axis_max_size: Option<f32>,
+    available_grid_space: Size<AvailableSpace>,
+) {
+    // First, find the grid’s used flex fraction:
+    let flex_fraction = match available_grid_space.get(axis) {
+        // If the free space is zero:
+        //    The used flex fraction is zero.
+        // Otherwise, if the free space is a definite length:
+        //   The used flex fraction is the result of finding the size of an fr using all of the grid tracks and
+        //   a space to fill of the available grid space.
+        AvailableSpace::Definite(available_space) => {
+            let used_space: f32 = axis_tracks.iter().map(|track| track.base_size).sum();
+            let free_space = available_space - used_space;
+            if free_space == 0.0 {
+                0.0
+            } else {
+                find_size_of_fr(axis_tracks, available_space)
+            }
+        }
+        // If ... sizing the grid container under a min-content constraint the used flex fraction is zero.
+        AvailableSpace::MinContent => 0.0,
+        // Otherwise, if the free space is an indefinite length:
+        AvailableSpace::MaxContent => {
+            // The used flex fraction is the maximum of:
+            let flex_fraction = f32_max(
+                // For each flexible track, if the flexible track’s flex factor is greater than one,
+                // the result of dividing the track’s base size by its flex factor; otherwise, the track’s base size.
+                axis_tracks
+                    .iter()
+                    .filter(|track| track.max_track_sizing_function.is_flexible())
+                    .map(|track| {
+                        let flex_factor = track.flex_factor();
+                        if flex_factor > 1.0 {
+                            track.base_size * flex_factor
+                        } else {
+                            track.base_size
+                        }
+                    })
+                    .max_by(|a, b| a.total_cmp(b))
+                    .unwrap_or(0.0),
+                // For each grid item that crosses a flexible track, the result of finding the size of an fr using all the grid tracks
+                // that the item crosses and a space to fill of the item’s max-content contribution.
+                items
+                    .iter_mut()
+                    .filter(|item| item.crosses_flexible_track(axis))
+                    .map(|item| {
+                        let tracks = &axis_tracks[item.track_range_excluding_lines(axis)];
+                        // TODO: plumb estimate of other axis size (known_dimensions) in here rather than just passing Size::NONE?
+                        let max_content_contribution = item.max_content_contribution_cached(tree, Size::NONE);
+                        find_size_of_fr(tracks, max_content_contribution.get(axis))
+                    })
+                    .max_by(|a, b| a.total_cmp(b))
+                    .unwrap_or(0.0),
+            );
+
+            // If using this flex fraction would cause the grid to be smaller than the grid container’s min-width/height (or larger than the
+            // grid container’s max-width/height), then redo this step, treating the free space as definite and the available grid space as equal
+            // to the grid container’s inner size when it’s sized to its min-width/height (max-width/height).
+            // (Note: min_size takes precedence over max_size)
+            let hypothetical_grid_size: f32 = axis_tracks
+                .iter()
+                .map(|track| match track.max_track_sizing_function {
+                    MaxTrackSizingFunction::Flex(track_flex_factor) => {
+                        f32_max(track.base_size, track_flex_factor * flex_fraction)
+                    }
+                    _ => track.base_size,
+                })
+                .sum();
+            let axis_min_size = axis_min_size.unwrap_or(0.0);
+            let axis_max_size = axis_max_size.unwrap_or(f32::INFINITY);
+            if hypothetical_grid_size < axis_min_size {
+                find_size_of_fr(axis_tracks, axis_min_size)
+            } else if hypothetical_grid_size > axis_max_size {
+                find_size_of_fr(axis_tracks, axis_max_size)
+            } else {
+                flex_fraction
+            }
+        }
+    };
+
+    // For each flexible track, if the product of the used flex fraction and the track’s flex factor is greater
+    // than the track’s base size, set its base size to that product.
+    for track in axis_tracks.iter_mut() {
+        if let MaxTrackSizingFunction::Flex(track_flex_factor) = track.max_track_sizing_function {
+            track.base_size = f32_max(track.base_size, track_flex_factor * flex_fraction);
+        }
     }
 }
 
