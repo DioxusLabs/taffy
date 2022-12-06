@@ -157,9 +157,6 @@ pub(super) fn track_sizing_algorithm<Tree, MeasureFunc>(
     Tree: LayoutTree,
     MeasureFunc: Fn(&mut Tree, Node, Size<Option<f32>>, Size<AvailableSpace>, RunMode, SizingMode) -> Size<f32>,
 {
-    let axis_min_size = container_style.min_size.get(axis).get_absolute();
-    let axis_max_size = container_style.max_size.get(axis).get_absolute();
-
     // 11.4 Initialise Track sizes
     // Initialize each track’s base size and growth limit.
     initialize_track_sizes(axis_tracks, available_space.get(axis));
@@ -186,8 +183,112 @@ pub(super) fn track_sizing_algorithm<Tree, MeasureFunc>(
         &other_axis_tracks,
     );
 
-    // 11.5b Resolve Intrinsic Track Sizes
+    // 11.5 Resolve Intrinsic Track Sizes
+    resolve_intrinsic_track_sizes(
+        tree,
+        axis,
+        axis_tracks,
+        other_axis_tracks,
+        items,
+        available_space,
+        get_track_size_estimate,
+    );
 
+    // 11.6. Maximise Tracks
+    // Distributes free space (if any) to tracks with FINITE growth limits, up to their limits.
+    maximise_tracks(axis, axis_tracks, available_grid_space);
+
+    // 11.7. Expand Flexible Tracks
+    // This step sizes flexible tracks using the largest value it can assign to an fr without exceeding the available space.
+    let axis_min_size = container_style.min_size.get(axis).get_absolute();
+    let axis_max_size = container_style.max_size.get(axis).get_absolute();
+    expand_flexible_tracks(tree, axis, axis_tracks, items, axis_min_size, axis_max_size, available_grid_space);
+
+    // 11.8. Stretch auto Tracks
+    // This step expands tracks that have an auto max track sizing function by dividing any remaining positive, definite free space equally amongst them.
+    stretch_auto_tracks(axis, axis_tracks, container_style, available_space, available_grid_space);
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+enum IntrinsicContributionType {
+    Minimum,
+    // MinContent,
+    Maximum,
+    // MaxContent,
+}
+
+fn flush_planned_base_size_increases(tracks: &mut [GridTrack]) {
+    for track in tracks {
+        track.base_size += track.base_size_planned_increase;
+        track.base_size_planned_increase = 0.0;
+    }
+}
+
+fn flush_planned_growth_limit_increases(tracks: &mut [GridTrack], set_infinitely_growable: bool) {
+    for track in tracks {
+        if track.growth_limit_planned_increase > 0.0 {
+            track.growth_limit = if track.growth_limit == f32::INFINITY {
+                track.base_size + track.growth_limit_planned_increase
+            } else {
+                track.growth_limit + track.growth_limit_planned_increase
+            };
+            // track.growth_limit = track.base_size + track.growth_limit_planned_increase;
+            track.infinitely_growable = set_infinitely_growable;
+        } else {
+            track.infinitely_growable = false;
+        }
+        track.growth_limit_planned_increase = 0.0
+    }
+}
+
+// 11.4 Initialise Track sizes
+// Initialize each track’s base size and growth limit.
+fn initialize_track_sizes(axis_tracks: &mut [GridTrack], axis_available_space: AvailableSpace) {
+    let last_track_idx = axis_tracks.len() - 1;
+
+    // First and last grid lines are always zero-sized.
+    axis_tracks[0].base_size = 0.0;
+    axis_tracks[0].growth_limit = 0.0;
+    axis_tracks[last_track_idx].base_size = 0.0;
+    axis_tracks[last_track_idx].growth_limit = 0.0;
+
+    let all_but_first_and_last = 1..last_track_idx;
+    for track in axis_tracks[all_but_first_and_last].iter_mut() {
+        // For each track, if the track’s min track sizing function is:
+        // - A fixed sizing function
+        //     Resolve to an absolute length and use that size as the track’s initial base size.
+        //     Note: Indefinite lengths cannot occur, as they’re treated as auto.
+        // - An intrinsic sizing function
+        //     Use an initial base size of zero.
+        track.base_size = track.min_track_sizing_function.definite_value(axis_available_space).unwrap_or(0.0);
+
+        // For each track, if the track’s max track sizing function is:
+        // - A fixed sizing function
+        //     Resolve to an absolute length and use that size as the track’s initial growth limit.
+        // - An intrinsic sizing function
+        //     Use an initial growth limit of infinity.
+        // - A flexible sizing function
+        //     Use an initial growth limit of infinity.
+        track.growth_limit =
+            track.max_track_sizing_function.definite_value(axis_available_space).unwrap_or(f32::INFINITY);
+
+        // In all cases, if the growth limit is less than the base size, increase the growth limit to match the base size.
+        if track.growth_limit < track.base_size {
+            track.growth_limit = track.base_size;
+        }
+    }
+}
+
+// 11.5 Resolve Intrinsic Track Sizes
+fn resolve_intrinsic_track_sizes(
+    tree: &mut impl LayoutTree,
+    axis: GridAxis,
+    axis_tracks: &mut [GridTrack],
+    other_axis_tracks: &mut [GridTrack],
+    items: &mut [GridItem],
+    available_space: Size<AvailableSpace>,
+    get_track_size_estimate: impl Fn(&GridTrack, AvailableSpace) -> Option<f32>,
+) {
     // Step 1. Shim baseline-aligned items so their intrinsic size contributions reflect their baseline alignment.
     // TODO: we do not yet support baseline alignment for CSS Grid
 
@@ -382,95 +483,13 @@ pub(super) fn track_sizing_algorithm<Tree, MeasureFunc>(
         flush_planned_growth_limit_increases(axis_tracks, false);
     }
 
-    // 11.5. Resolve Intrinsic Track Sizes (Step 5.)
-    // If any track still has an infinite growth limit (because, for example, it had no items placed in it or it is a flexible track),
-    // set its growth limit to its base size. (NOTE: this step is super-important to ensure that the "Maximise Tracks" step doesn't affect flexible tracks
+    // Step 5. If any track still has an infinite growth limit (because, for example, it had no items placed
+    // in it or it is a flexible track), set its growth limit to its base size.
+    // NOTE: this step is super-important to ensure that the "Maximise Tracks" step doesn't affect flexible tracks
     axis_tracks
         .iter_mut()
         .filter(|track| track.growth_limit == f32::INFINITY)
         .for_each(|track| track.growth_limit = track.base_size);
-
-    // 11.6. Maximise Tracks
-    // Distributes free space (if any) to tracks with FINITE growth limits, up to their limits.
-    maximise_tracks(axis, axis_tracks, available_grid_space);
-
-    // 11.7. Expand Flexible Tracks
-    // This step sizes flexible tracks using the largest value it can assign to an fr without exceeding the available space.
-    expand_flexible_tracks(tree, axis, axis_tracks, items, axis_min_size, axis_max_size, available_grid_space);
-
-    // 11.8. Stretch auto Tracks
-    // This step expands tracks that have an auto max track sizing function by dividing any remaining positive, definite free space equally amongst them.
-    stretch_auto_tracks(axis, axis_tracks, container_style, available_space, available_grid_space);
-}
-
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
-enum IntrinsicContributionType {
-    Minimum,
-    // MinContent,
-    Maximum,
-    // MaxContent,
-}
-
-fn flush_planned_base_size_increases(tracks: &mut [GridTrack]) {
-    for track in tracks {
-        track.base_size += track.base_size_planned_increase;
-        track.base_size_planned_increase = 0.0;
-    }
-}
-
-fn flush_planned_growth_limit_increases(tracks: &mut [GridTrack], set_infinitely_growable: bool) {
-    for track in tracks {
-        if track.growth_limit_planned_increase > 0.0 {
-            track.growth_limit = if track.growth_limit == f32::INFINITY {
-                track.base_size + track.growth_limit_planned_increase
-            } else {
-                track.growth_limit + track.growth_limit_planned_increase
-            };
-            // track.growth_limit = track.base_size + track.growth_limit_planned_increase;
-            track.infinitely_growable = set_infinitely_growable;
-        } else {
-            track.infinitely_growable = false;
-        }
-        track.growth_limit_planned_increase = 0.0
-    }
-}
-
-// 11.4 Initialise Track sizes
-// Initialize each track’s base size and growth limit.
-fn initialize_track_sizes(axis_tracks: &mut [GridTrack], axis_available_space: AvailableSpace) {
-    let last_track_idx = axis_tracks.len() - 1;
-
-    // First and last grid lines are always zero-sized.
-    axis_tracks[0].base_size = 0.0;
-    axis_tracks[0].growth_limit = 0.0;
-    axis_tracks[last_track_idx].base_size = 0.0;
-    axis_tracks[last_track_idx].growth_limit = 0.0;
-
-    let all_but_first_and_last = 1..last_track_idx;
-    for track in axis_tracks[all_but_first_and_last].iter_mut() {
-        // For each track, if the track’s min track sizing function is:
-        // - A fixed sizing function
-        //     Resolve to an absolute length and use that size as the track’s initial base size.
-        //     Note: Indefinite lengths cannot occur, as they’re treated as auto.
-        // - An intrinsic sizing function
-        //     Use an initial base size of zero.
-        track.base_size = track.min_track_sizing_function.definite_value(axis_available_space).unwrap_or(0.0);
-
-        // For each track, if the track’s max track sizing function is:
-        // - A fixed sizing function
-        //     Resolve to an absolute length and use that size as the track’s initial growth limit.
-        // - An intrinsic sizing function
-        //     Use an initial growth limit of infinity.
-        // - A flexible sizing function
-        //     Use an initial growth limit of infinity.
-        track.growth_limit =
-            track.max_track_sizing_function.definite_value(axis_available_space).unwrap_or(f32::INFINITY);
-
-        // In all cases, if the growth limit is less than the base size, increase the growth limit to match the base size.
-        if track.growth_limit < track.base_size {
-            track.growth_limit = track.base_size;
-        }
-    }
 }
 
 // 11.6 Maximise Tracks
