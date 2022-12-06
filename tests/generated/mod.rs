@@ -212,6 +212,7 @@ mod grid_justify_items_sized_stretch;
 mod grid_justify_self_sized_all;
 mod grid_max_content_maximum_single_item;
 mod grid_max_content_single_item;
+mod grid_min_content_flex_single_item;
 mod grid_min_content_maximum_single_item;
 mod grid_min_content_single_item;
 mod grid_min_max_column_auto;

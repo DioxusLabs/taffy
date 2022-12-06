@@ -37,7 +37,7 @@ impl ItemBatcher {
     // This is basically a manual version of Iterator::next which passes `items`
     // in as a parameter on each iteration to work around borrow checker rules
     fn next<'items>(&mut self, items: &'items mut [GridItem]) -> Option<(&'items mut [GridItem], bool)> {
-        if self.index_offset >= items.len() {
+        if self.current_is_flex || self.index_offset >= items.len() {
             return None;
         }
 
@@ -47,14 +47,15 @@ impl ItemBatcher {
             .position(|item: &GridItem| {
                 item.crosses_flexible_track(self.axis) || item.span(self.axis) > self.current_span
             })
-            .map(|next_index_local_offset| self.index_offset + next_index_local_offset)
+            // .map(|next_index_local_offset| self.index_offset + next_index_local_offset)
+            .map(|next_index_local_offset| next_index_local_offset)
             .unwrap_or_else(|| items.len());
 
         let item = &items[self.index_offset];
         self.current_span = item.span(self.axis);
         self.current_is_flex = item.crosses_flexible_track(self.axis);
 
-        dbg!(self.index_offset, next_index_offset);
+        dbg!(self.index_offset, next_index_offset, self.current_span, self.current_is_flex);
         let batch = &mut items[self.index_offset..next_index_offset];
         self.index_offset = next_index_offset;
 
