@@ -461,7 +461,7 @@ pub(in super::super) fn track_sizing_algorithm_inner<Tree, MeasureFunc>(
                     space,
                     tracks,
                     has_max_content_min_track_sizing_function,
-                    IntrinsicContributionType::Minimum,
+                    IntrinsicContributionType::Maximum,
                 );
             }
         }
