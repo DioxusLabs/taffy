@@ -307,20 +307,3 @@ fn align_and_size_item_within_area(
 
     (area_start + offset_within_area, size)
 }
-
-fn populate_negative_grid_tracks(axis: &mut GridAxisTracks) {
-    debug_assert!(
-        axis.tracks.len() != 0,
-        "populate_negative_grid_tracks should only ever be called on an empty grid axis"
-    );
-    debug_assert!(axis.origin % 2 != 0, "axis.origin should always be even");
-
-    // If origin is zero then there are no negative grid tracks
-    if axis.origin == 0 {
-        return;
-    }
-
-    for _ in 0..axis.origin {
-        axis.push(GridTrack::uninit());
-    }
-}
