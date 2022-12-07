@@ -16,15 +16,6 @@ pub(crate) enum CellOccupancyState {
     AutoPlaced,
 }
 
-impl CellOccupancyState {
-    pub fn is_occupied(&self) -> bool {
-        match self {
-            Self::Unoccupied => false,
-            _ => true,
-        }
-    }
-}
-
 pub(crate) struct CellOccupancyMatrix {
     inner: Grid<CellOccupancyState>,
     columns: TrackCounts,
@@ -214,44 +205,6 @@ impl CellOccupancyMatrix {
         }
     }
 
-    pub fn get(
-        &self,
-        track_type: AbsoluteAxis,
-        primary_index: u16,
-        secondary_index: u16,
-    ) -> Option<&CellOccupancyState> {
-        match track_type {
-            AbsoluteAxis::Horizontal => self.inner.get(secondary_index as usize, primary_index as usize),
-            AbsoluteAxis::Vertical => self.inner.get(primary_index as usize, secondary_index as usize),
-        }
-    }
-
-    pub fn next_of_type(
-        &self,
-        track_type: AbsoluteAxis,
-        primary_track_index: i16,
-        kind: CellOccupancyState,
-        start_after: i16,
-    ) -> Option<i16> {
-        let track_counts = self.track_counts(track_type);
-        let primary_track_computed_index = track_counts.oz_line_to_next_track(primary_track_index);
-
-        let maybe_index = match track_type {
-            AbsoluteAxis::Horizontal => self
-                .inner
-                .iter_row(primary_track_computed_index as usize)
-                .skip(start_after as usize)
-                .position(|item| *item == kind),
-            AbsoluteAxis::Vertical => self
-                .inner
-                .iter_col(primary_track_computed_index as usize)
-                .skip(start_after as usize)
-                .position(|item| *item == kind),
-        };
-
-        maybe_index.map(|idx| track_counts.track_to_prev_oz_line(idx as u16))
-    }
-
     pub fn last_of_type(&self, track_type: AbsoluteAxis, track_index: i16, kind: CellOccupancyState) -> Option<i16> {
         let track_counts = self.track_counts(track_type.other_axis());
         let track_computed_index = track_counts.oz_line_to_next_track(track_index);
@@ -266,12 +219,5 @@ impl CellOccupancyMatrix {
         };
 
         maybe_index.map(|idx| track_counts.track_to_prev_oz_line(idx as u16))
-    }
-
-    pub fn next_unoccupied(&self, track_type: AbsoluteAxis, index: i16, start_after: i16) -> Option<i16> {
-        self.next_of_type(track_type, index, CellOccupancyState::Unoccupied, start_after)
-    }
-    pub fn first_unoccupied(&self, track_type: AbsoluteAxis, index: i16) -> Option<i16> {
-        self.next_of_type(track_type, index, CellOccupancyState::Unoccupied, 0)
     }
 }
