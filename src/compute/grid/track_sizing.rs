@@ -156,6 +156,10 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
         return;
     }
 
+    // Clear caches
+    // These caches are only valid for a single run of the track sizing algorithm, so ensure that they are clear.
+    items.iter_mut().for_each(|item| item.clear_contribution_caches());
+
     // Pre-computations for 11.5 Resolve Intrinsic Track Sizes
 
     // The track sizing algorithm requires us to iterate through the items in ascendeding order of the number of

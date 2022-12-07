@@ -81,14 +81,8 @@ impl GridItem {
 
     pub fn span(&self, axis: GridAxis) -> u16 {
         match axis {
-            GridAxis::Block => match (&self.row.start, &self.row.end) {
-                (start, end) => max(end - start, 0) as u16,
-                _ => 0,
-            },
-            GridAxis::Inline => match (&self.column.start, &self.column.end) {
-                (start, end) => max(end - start, 0) as u16,
-                _ => 0,
-            },
+            GridAxis::Block => max(self.row.end - self.row.start, 0) as u16,
+            GridAxis::Inline => max(self.column.end - self.column.start, 0) as u16,
         }
     }
 
