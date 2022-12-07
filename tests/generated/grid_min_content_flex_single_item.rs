@@ -22,7 +22,7 @@ fn grid_min_content_flex_single_item() {
                 ..Default::default()
             },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
-                const TEXT: &'static str = "HH\u{200b}HH";
+                const TEXT: &str = "HH\u{200b}HH";
                 super::measure_standard_text(known_dimensions, available_space, TEXT)
             }),
         )

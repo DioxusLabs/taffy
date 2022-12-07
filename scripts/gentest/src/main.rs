@@ -835,7 +835,7 @@ fn generate_generic_measure_function() -> TokenStream {
 fn generate_measure_function(text_content: &str) -> TokenStream {
     quote!(
         taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
-            const TEXT : &'static str = #text_content;
+            const TEXT : &str = #text_content;
             super::measure_standard_text(known_dimensions, available_space, TEXT)
         })
     )

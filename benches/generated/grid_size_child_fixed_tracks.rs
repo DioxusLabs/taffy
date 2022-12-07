@@ -10,7 +10,7 @@ pub fn compute() {
                 ..Default::default()
             },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
-                const TEXT: &'static str = "HH\u{200b}HH\u{200b}HH\u{200b}HH";
+                const TEXT: &str = "HH\u{200b}HH\u{200b}HH\u{200b}HH";
                 super::measure_standard_text(known_dimensions, available_space, TEXT)
             }),
         )
@@ -23,7 +23,7 @@ pub fn compute() {
                 ..Default::default()
             },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
-                const TEXT: &'static str = "HHH\u{200b}HHH";
+                const TEXT: &str = "HHH\u{200b}HHH";
                 super::measure_standard_text(known_dimensions, available_space, TEXT)
             }),
         )
@@ -36,7 +36,7 @@ pub fn compute() {
                 ..Default::default()
             },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
-                const TEXT: &'static str = "HH\u{200b}HHHH";
+                const TEXT: &str = "HH\u{200b}HHHH";
                 super::measure_standard_text(known_dimensions, available_space, TEXT)
             }),
         )
@@ -50,7 +50,7 @@ pub fn compute() {
                 ..Default::default()
             },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
-                const TEXT: &'static str = "HH\u{200b}HH\u{200b}HH\u{200b}HH";
+                const TEXT: &str = "HH\u{200b}HH\u{200b}HH\u{200b}HH";
                 super::measure_standard_text(known_dimensions, available_space, TEXT)
             }),
         )
@@ -64,7 +64,7 @@ pub fn compute() {
                 ..Default::default()
             },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
-                const TEXT: &'static str = "HH\u{200b}HH\u{200b}HH\u{200b}HH";
+                const TEXT: &str = "HH\u{200b}HH\u{200b}HH\u{200b}HH";
                 super::measure_standard_text(known_dimensions, available_space, TEXT)
             }),
         )
