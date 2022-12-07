@@ -34,6 +34,7 @@ impl AbsoluteAxis {
 
 impl<T> Size<T> {
     #[inline(always)]
+    /// Get either the width or height depending on the AbsoluteAxis passed in
     pub fn get_abs(self, axis: AbsoluteAxis) -> T {
         match axis {
             AbsoluteAxis::Horizontal => self.width,
@@ -42,6 +43,7 @@ impl<T> Size<T> {
     }
 
     #[inline(always)]
+    /// Get either the width or height depending on the AbsoluteAxis passed in
     pub fn get_abs_other(self, axis: AbsoluteAxis) -> T {
         match axis {
             AbsoluteAxis::Horizontal => self.height,
