@@ -135,7 +135,7 @@ pub(super) fn determine_if_item_crosses_flexible_tracks(
 
 /// Track sizing algorithm
 /// Note: Gutters are treated as empty fixed-size tracks for the purpose of the track sizing algorithm.
-pub(super) fn track_sizing_algorithm<Tree, MeasureFunc>(
+pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
     tree: &mut Tree,
     axis: GridAxis,
     available_space: Size<AvailableSpace>,
@@ -145,11 +145,7 @@ pub(super) fn track_sizing_algorithm<Tree, MeasureFunc>(
     other_axis_tracks: &mut [GridTrack],
     items: &mut [GridItem],
     get_track_size_estimate: impl Fn(&GridTrack, AvailableSpace) -> Option<f32>,
-    measure_node: MeasureFunc,
-) where
-    Tree: LayoutTree,
-    MeasureFunc: Fn(&mut Tree, Node, Size<Option<f32>>, Size<AvailableSpace>, RunMode, SizingMode) -> Size<f32>,
-{
+) {
     // 11.4 Initialise Track sizes
     // Initialize each track’s base size and growth limit.
     initialize_track_sizes(axis_tracks, available_space.get(axis));
@@ -169,12 +165,12 @@ pub(super) fn track_sizing_algorithm<Tree, MeasureFunc>(
 
     // Compute an additional amount to add to each spanned gutter when computing item's estimated size in the
     // in the opposite axis based on the alignment, container size, and estimated track sizes in that axis
-    let gutter_alignment_adjustment = compute_alignment_gutter_adjustment(
-        container_style.grid_align_content(axis.other()),
-        available_space.get(axis.other()),
-        &get_track_size_estimate,
-        &other_axis_tracks,
-    );
+    // let gutter_alignment_adjustment = compute_alignment_gutter_adjustment(
+    //     container_style.grid_align_content(axis.other()),
+    //     available_space.get(axis.other()),
+    //     &get_track_size_estimate,
+    //     &other_axis_tracks,
+    // );
 
     // 11.5 Resolve Intrinsic Track Sizes
     resolve_intrinsic_track_sizes(

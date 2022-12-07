@@ -1,6 +1,5 @@
 //! This module is a partial implementation of the CSS Grid Level 2 specification
 //! https://www.w3.org/TR/css-grid-2/
-use crate::compute::compute_node_layout;
 use crate::geometry::Size;
 use crate::layout::AvailableSpace;
 use crate::math::MaybeMath;
@@ -118,7 +117,6 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
         |track: &GridTrack, available_space: AvailableSpace| {
             track.max_track_sizing_function.definite_value(available_space)
         },
-        compute_node_layout,
     );
     // Run track sizing algorithm for Block axis
     track_sizing_algorithm(
@@ -133,7 +131,6 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
         |track: &GridTrack, available_space: AvailableSpace| {
             track.max_track_sizing_function.definite_value(available_space)
         },
-        compute_node_layout,
     );
     // // Re-run track sizing algorithm for Inline axis
     // track_sizing_algorithm(
@@ -146,7 +143,6 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
     //     &mut rows.tracks,
     //     &mut items,
     //     |track: &GridTrack, _| Some(track.base_size),
-    //     compute_node_layout,
     // );
     // // Re-run track sizing algorithm for Block axis
     // track_sizing_algorithm(
@@ -159,7 +155,6 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
     //     &mut columns.tracks,
     //     &mut items,
     //     |track: &GridTrack, _| Some(track.base_size),
-    //     compute_node_layout,
     // );
 
     // 6. Compute container size

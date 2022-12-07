@@ -176,7 +176,7 @@ impl Rect<f32> {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 pub struct Line<T> {
-    // The start position of a line
+    /// The start position of a line
     pub start: T,
     /// The end position of a line
     pub end: T,
