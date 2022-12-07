@@ -468,11 +468,8 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
     let (children_body, children) = match node["children"] {
         json::JsonValue::Array(ref value) => {
             if !value.is_empty() {
-                let body = value
-                    .iter()
-                    .enumerate()
-                    .map(|(i, child)| generate_node(&format!("{ident}{i}"), child))
-                    .collect();
+                let body =
+                    value.iter().enumerate().map(|(i, child)| generate_node(&format!("{ident}{i}"), child)).collect();
                 let idents = value
                     .iter()
                     .enumerate()
