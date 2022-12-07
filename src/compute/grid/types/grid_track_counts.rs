@@ -8,30 +8,15 @@ pub(crate) struct TrackCounts {
     pub positive_implicit: u16,
 }
 
-impl TrackCounts {
-    pub fn from_raw(negative_implicit: u16, explicit: u16, positive_implicit: u16) -> Self {
-        Self { negative_implicit, explicit, positive_implicit }
-    }
-}
-
 impl Default for TrackCounts {
     fn default() -> Self {
         Self { explicit: 0, negative_implicit: 0, positive_implicit: 0 }
     }
 }
 
-//  0  1  2  3  4  5  6  7  8  9
-// [I, I, I, E, E, E, E, I, I, I]
-
-// negative_implicit_track_count=3;
-// explicit_track_count=4;
-// positive_implicit_track_count=3
-
-// -2 =>
-
 impl TrackCounts {
-    pub fn from_explicit(count: u16) -> Self {
-        Self { negative_implicit: 0, explicit: count, positive_implicit: 0 }
+    pub fn from_raw(negative_implicit: u16, explicit: u16, positive_implicit: u16) -> Self {
+        Self { negative_implicit, explicit, positive_implicit }
     }
 
     pub fn len(&self) -> usize {

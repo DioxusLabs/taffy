@@ -12,8 +12,11 @@ pub use axis::{AbsoluteAxis, GridAxis};
 pub(super) use cell_occupancy::{CellOccupancyMatrix, CellOccupancyState};
 pub(super) use grid_axis_tracks::GridAxisTracks;
 pub(super) use grid_item::GridItem;
-pub(super) use grid_track::{GridTrack, GridTrackKind};
+pub(super) use grid_track::GridTrack;
 pub(super) use grid_track_counts::TrackCounts;
+
+#[allow(unused_imports)]
+pub(super) use grid_track::GridTrackKind;
 
 // pub(super) enum GridPosition {
 //     Auto,

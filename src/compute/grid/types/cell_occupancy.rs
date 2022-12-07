@@ -66,14 +66,6 @@ impl CellOccupancyMatrix {
         Self { inner: Grid::new(rows.len(), columns.len()), rows, columns }
     }
 
-    pub fn with_explicit_track_counts(columns: u16, rows: u16) -> Self {
-        Self {
-            inner: Grid::new(rows as usize, columns as usize),
-            columns: TrackCounts::from_explicit(columns),
-            rows: TrackCounts::from_explicit(rows),
-        }
-    }
-
     pub fn is_area_in_range(
         &mut self,
         primary_axis: AbsoluteAxis,
