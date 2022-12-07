@@ -3,7 +3,6 @@ use crate::style::{Dimension, MaxTrackSizingFunction, MinTrackSizingFunction};
 /// Whether a GridTrack represents an actual track or a gutter.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub(in super::super) enum GridTrackKind {
-    Uninit,
     Track,
     Gutter, // { name: Option<u16> },
 }
@@ -13,6 +12,7 @@ pub(in super::super) enum GridTrackKind {
 /// are also represented by this struct
 #[derive(Debug, Clone)]
 pub(in super::super) struct GridTrack {
+    #[allow(dead_code)] // Used in tests + may be useful in future
     /// Whether the track is a full track, a gutter, or a placeholder that has not yet been initialised
     pub kind: GridTrackKind,
 
@@ -67,21 +67,6 @@ impl GridTrack {
             kind: GridTrackKind::Gutter, // { name: None },
             min_track_sizing_function: MinTrackSizingFunction::Fixed(size),
             max_track_sizing_function: MaxTrackSizingFunction::Fixed(size),
-            offset: 0.0,
-            base_size: 0.0,
-            growth_limit: 0.0,
-            item_incurred_increase: 0.0,
-            base_size_planned_increase: 0.0,
-            growth_limit_planned_increase: 0.0,
-            infinitely_growable: false,
-        }
-    }
-
-    pub fn uninit() -> GridTrack {
-        GridTrack {
-            kind: GridTrackKind::Uninit,
-            min_track_sizing_function: MinTrackSizingFunction::Auto,
-            max_track_sizing_function: MaxTrackSizingFunction::Auto,
             offset: 0.0,
             base_size: 0.0,
             growth_limit: 0.0,
