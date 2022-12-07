@@ -293,32 +293,32 @@ fn taffy_benchmarks(c: &mut Criterion) {
 
     drop(group);
 
-    let mut group = c.benchmark_group("super deep trees");
-    group.sample_size(10);
+    // let mut group = c.benchmark_group("super deep trees");
+    // group.sample_size(10);
 
-    group.bench_function("100 nodes (100-level hierarchy)", |b| {
-         b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_deep_hierarchy(&mut taffy, 100, 1);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::undefined()).unwrap(),
-            criterion::BatchSize::SmallInput,
-        )
-    });
+    // group.bench_function("100 nodes (100-level hierarchy)", |b| {
+    //      b.iter_batched(
+    //         || {
+    //             let mut taffy = Taffy::new();
+    //             let root = build_deep_hierarchy(&mut taffy, 100, 1);
+    //             (taffy, root)
+    //         },
+    //         |(mut taffy, root)| taffy.compute_layout(root, Size::undefined()).unwrap(),
+    //         criterion::BatchSize::SmallInput,
+    //     )
+    // });
 
-    group.bench_function("1_000 nodes (1000-level hierarchy)", |b| {
-         b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_deep_hierarchy(&mut taffy, 1_000, 1);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::undefined()).unwrap(),
-            criterion::BatchSize::SmallInput,
-        )
-    });
+    // group.bench_function("1_000 nodes (1000-level hierarchy)", |b| {
+    //      b.iter_batched(
+    //         || {
+    //             let mut taffy = Taffy::new();
+    //             let root = build_deep_hierarchy(&mut taffy, 1_000, 1);
+    //             (taffy, root)
+    //         },
+    //         |(mut taffy, root)| taffy.compute_layout(root, Size::undefined()).unwrap(),
+    //         criterion::BatchSize::SmallInput,
+    //     )
+    // });
 }
 
 criterion_group!(benches, taffy_benchmarks);
