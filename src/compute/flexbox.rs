@@ -199,7 +199,7 @@ fn compute_preliminary(
     // 3. Determine the flex base size and hypothetical main size of each item.
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("determine_flex_base_size");
-    determine_flex_base_size(tree, node, known_dimensions, &constants, available_space, &mut flex_items);
+    determine_flex_base_size(tree, known_dimensions, &constants, available_space, &mut flex_items);
 
     // TODO: Add step 4 according to spec: https://www.w3.org/TR/css-flexbox-1/#algo-main-container
     // 9.3. Main Size Determination
@@ -269,7 +269,7 @@ fn compute_preliminary(
     // 8. Calculate the cross size of each flex line.
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("calculate_cross_size");
-    calculate_cross_size(tree, &mut flex_lines, node, known_dimensions, &constants);
+    calculate_cross_size(tree, &mut flex_lines, known_dimensions, &constants);
 
     // 9. Handle 'align-content: stretch'.
     #[cfg(feature = "debug")]
@@ -294,7 +294,7 @@ fn compute_preliminary(
     // 11. Determine the used cross size of each flex item.
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("determine_used_cross_size");
-    determine_used_cross_size(tree, &mut flex_lines, node, &constants);
+    determine_used_cross_size(tree, &mut flex_lines, &constants);
 
     // 9.5. Main-Axis Alignment
 
@@ -308,7 +308,7 @@ fn compute_preliminary(
     // 13. Resolve cross-axis auto margins (also includes 14).
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("resolve_cross_axis_auto_margins");
-    resolve_cross_axis_auto_margins(tree, &mut flex_lines, node, &constants);
+    resolve_cross_axis_auto_margins(tree, &mut flex_lines, &constants);
 
     // 15. Determine the flex container’s used cross size.
     #[cfg(feature = "debug")]
@@ -501,7 +501,6 @@ fn determine_available_space(
 #[inline]
 fn determine_flex_base_size(
     tree: &mut impl LayoutTree,
-    node: Node,
     node_size: Size<Option<f32>>,
     constants: &AlgoConstants,
     available_space: Size<AvailableSpace>,
@@ -1061,7 +1060,6 @@ fn calculate_children_base_lines(
 fn calculate_cross_size(
     tree: &mut impl LayoutTree,
     flex_lines: &mut [FlexLine],
-    node: Node,
     node_size: Size<Option<f32>>,
     constants: &AlgoConstants,
 ) {
@@ -1147,12 +1145,7 @@ fn handle_align_content_stretch(
 ///
 ///     **Note that this step does not affect the main size of the flex item, even if it has an intrinsic aspect ratio**.
 #[inline]
-fn determine_used_cross_size(
-    tree: &mut impl LayoutTree,
-    flex_lines: &mut [FlexLine],
-    node: Node,
-    constants: &AlgoConstants,
-) {
+fn determine_used_cross_size(tree: &mut impl LayoutTree, flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
     for line in flex_lines {
         let line_cross_size = line.cross_size;
 
@@ -1268,12 +1261,7 @@ fn distribute_remaining_free_space(
 ///     - Otherwise, if the block-start or inline-start margin (whichever is in the cross axis) is auto, set it to zero.
 ///         Set the opposite margin so that the outer cross size of the item equals the cross size of its flex line.
 #[inline]
-fn resolve_cross_axis_auto_margins(
-    tree: &mut impl LayoutTree,
-    flex_lines: &mut [FlexLine],
-    node: Node,
-    constants: &AlgoConstants,
-) {
+fn resolve_cross_axis_auto_margins(tree: &mut impl LayoutTree, flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
     for line in flex_lines {
         let line_cross_size = line.cross_size;
         let max_baseline: f32 = line.items.iter_mut().map(|child| child.baseline).fold(0.0, |acc, x| acc.max(x));
@@ -1306,8 +1294,7 @@ fn resolve_cross_axis_auto_margins(
                 }
             } else {
                 // 14. Align all flex items along the cross-axis.
-                child.offset_cross =
-                    align_flex_items_along_cross_axis(tree, node, child, free_space, max_baseline, constants);
+                child.offset_cross = align_flex_items_along_cross_axis(child, free_space, max_baseline, constants);
             }
         }
     }
@@ -1321,8 +1308,6 @@ fn resolve_cross_axis_auto_margins(
 ///     if neither of the item's cross-axis margins are `auto`.
 #[inline]
 fn align_flex_items_along_cross_axis(
-    tree: &impl LayoutTree,
-    node: Node,
     child: &mut FlexItem,
     free_space: f32,
     max_baseline: f32,
