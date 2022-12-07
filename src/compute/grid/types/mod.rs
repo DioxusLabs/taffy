@@ -1,6 +1,5 @@
 mod axis;
 mod cell_occupancy;
-mod grid_axis_tracks;
 mod grid_item;
 mod grid_track;
 mod grid_track_counts;
@@ -10,7 +9,6 @@ pub use axis::{AbsoluteAxis, GridAxis};
 
 // Publish only locally in the grid module
 pub(super) use cell_occupancy::{CellOccupancyMatrix, CellOccupancyState};
-pub(super) use grid_axis_tracks::GridAxisTracks;
 pub(super) use grid_item::GridItem;
 pub(super) use grid_track::GridTrack;
 pub(super) use grid_track_counts::TrackCounts;
