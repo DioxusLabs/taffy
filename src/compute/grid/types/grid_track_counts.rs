@@ -1,17 +1,11 @@
 use crate::geometry::Line;
 use core::ops::Range;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Default)]
 pub(crate) struct TrackCounts {
     pub negative_implicit: u16,
     pub explicit: u16,
     pub positive_implicit: u16,
-}
-
-impl Default for TrackCounts {
-    fn default() -> Self {
-        Self { explicit: 0, negative_implicit: 0, positive_implicit: 0 }
-    }
 }
 
 impl TrackCounts {
@@ -20,7 +14,7 @@ impl TrackCounts {
     }
 
     pub fn len(&self) -> usize {
-        return (self.negative_implicit + self.explicit + self.positive_implicit) as usize;
+        (self.negative_implicit + self.explicit + self.positive_implicit) as usize
     }
 
     pub fn oz_line_to_next_track(&self, index: i16) -> i16 {

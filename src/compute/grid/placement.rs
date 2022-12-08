@@ -173,7 +173,7 @@ fn place_definite_primary_axis_item(
     let starting_position = match auto_flow.is_dense() {
         true => 0,
         false => cell_occupancy_matrix
-            .last_of_type(primary_axis, secondary_axis_placement.start as i16, CellOccupancyState::AutoPlaced)
+            .last_of_type(primary_axis, secondary_axis_placement.start, CellOccupancyState::AutoPlaced)
             .unwrap_or(0),
     };
 
@@ -243,13 +243,12 @@ fn place_indefinitely_positioned_item(
         dbg!(&secondary_range);
 
         // Check if item fits in it's current position, and if so place it there
-        let primary_out_of_bounds =
-            !has_definite_secondary_axis_position && primary_range.end >= primary_axis_length + 1;
+        let primary_out_of_bounds = !has_definite_secondary_axis_position && primary_range.end > primary_axis_length;
         let place_here =
             !primary_out_of_bounds && track_area_is_unoccupied(primary_range.clone(), secondary_range.clone());
         if place_here {
-            let primary_span = tracks_to_lines(primary_range.clone());
-            let secondary_span = tracks_to_lines(secondary_range.clone());
+            let primary_span = tracks_to_lines(primary_range);
+            let secondary_span = tracks_to_lines(secondary_range);
             return (primary_span, secondary_span);
         }
 
@@ -276,7 +275,7 @@ fn record_grid_placement(
     #[cfg(test)]
     println!("BEFORE placement:");
     #[cfg(test)]
-    println!("{:?}", cell_occupancy_matrix);
+    println!("{cell_occupancy_matrix:?}");
 
     // Mark area of grid as occupied
     cell_occupancy_matrix.mark_area_as(primary_axis, primary_span, secondary_span, placement_type);
@@ -288,7 +287,7 @@ fn record_grid_placement(
     #[cfg(test)]
     println!("AFTER placement:");
     #[cfg(test)]
-    println!("{:?}", cell_occupancy_matrix);
+    println!("{cell_occupancy_matrix:?}");
     #[cfg(test)]
     println!("\n");
 }

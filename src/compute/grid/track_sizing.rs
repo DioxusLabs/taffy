@@ -44,9 +44,7 @@ impl ItemBatcher {
                 .position(|item: &GridItem| {
                     item.crosses_flexible_track(self.axis) || item.span(self.axis) > self.current_span
                 })
-                // .map(|next_index_local_offset| self.index_offset + next_index_local_offset)
-                .map(|next_index_local_offset| next_index_local_offset)
-                .unwrap_or_else(|| items.len())
+                .unwrap_or(items.len())
         };
 
         let batch_range = self.index_offset..next_index_offset;
@@ -126,9 +124,8 @@ pub(super) fn determine_if_item_crosses_flexible_tracks(
 ) {
     for item in items {
         item.crosses_flexible_column =
-            item.track_range_excluding_lines(GridAxis::Inline).any(|i| columns[i as usize].is_flexible());
-        item.crosses_flexible_row =
-            item.track_range_excluding_lines(GridAxis::Block).any(|i| rows[i as usize].is_flexible());
+            item.track_range_excluding_lines(GridAxis::Inline).any(|i| columns[i].is_flexible());
+        item.crosses_flexible_row = item.track_range_excluding_lines(GridAxis::Block).any(|i| rows[i].is_flexible());
     }
 }
 
@@ -173,7 +170,7 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
         container_style.grid_align_content(axis.other()),
         available_space.get(axis.other()),
         &get_track_size_estimate,
-        &other_axis_tracks,
+        other_axis_tracks,
     );
 
     // 11.5 Resolve Intrinsic Track Sizes
@@ -329,7 +326,7 @@ fn resolve_intrinsic_track_sizes(
             track.min_track_sizing_function.definite_value(available_space.get(axis)).is_none()
         };
         for item in batch.iter_mut() {
-            let (axis_minimum_size, axis_min_content_size, _) = compute_item_sizes(item, &axis_tracks);
+            let (axis_minimum_size, axis_min_content_size, _) = compute_item_sizes(item, axis_tracks);
 
             // ...by distributing extra space as needed to accommodate these items’ minimum contributions.
             // If the grid container is being sized under a min- or max-content constraint, use the items’ limited min-content contributions
@@ -362,7 +359,7 @@ fn resolve_intrinsic_track_sizes(
             matches!(track.min_track_sizing_function, MinContent | MaxContent)
         };
         for item in batch.iter_mut() {
-            let (_, axis_min_content_size, _) = compute_item_sizes(item, &axis_tracks);
+            let (_, axis_min_content_size, _) = compute_item_sizes(item, axis_tracks);
             let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
             let space = axis_min_content_size;
             if space > 0.0 {
@@ -388,7 +385,7 @@ fn resolve_intrinsic_track_sizes(
                 matches!(track.min_track_sizing_function, Auto | MaxContent)
             };
             for item in batch.iter_mut() {
-                let (_, _, axis_max_content_size) = compute_item_sizes(item, &axis_tracks);
+                let (_, _, axis_max_content_size) = compute_item_sizes(item, axis_tracks);
                 let limit = item.spanned_fixed_track_limit(axis, axis_tracks, axis_available_space);
                 let space = axis_max_content_size.maybe_min(limit);
                 let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
@@ -410,7 +407,7 @@ fn resolve_intrinsic_track_sizes(
         let has_max_content_min_track_sizing_function =
             move |track: &GridTrack| matches!(track.min_track_sizing_function, MinTrackSizingFunction::MaxContent);
         for item in batch.iter_mut() {
-            let (_, _, axis_max_content_size) = compute_item_sizes(item, &axis_tracks);
+            let (_, _, axis_max_content_size) = compute_item_sizes(item, axis_tracks);
             let space = axis_max_content_size;
             let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
             if space > 0.0 {
@@ -438,7 +435,7 @@ fn resolve_intrinsic_track_sizes(
             track.max_track_sizing_function.definite_value(available_space.get(axis)).is_none()
         };
         for item in batch.iter_mut() {
-            let (_, axis_min_content_size, _) = compute_item_sizes(item, &axis_tracks);
+            let (_, axis_min_content_size, _) = compute_item_sizes(item, axis_tracks);
             let space = axis_min_content_size;
             let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
             if space > 0.0 {
@@ -454,7 +451,7 @@ fn resolve_intrinsic_track_sizes(
         let has_max_content_max_track_sizing_function =
             move |track: &GridTrack| track.max_track_sizing_function == MaxTrackSizingFunction::MaxContent;
         for item in batch.iter_mut() {
-            let (_, _, axis_max_content_size) = compute_item_sizes(item, &axis_tracks);
+            let (_, _, axis_max_content_size) = compute_item_sizes(item, axis_tracks);
             let space = axis_max_content_size;
             let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
             if space > 0.0 {

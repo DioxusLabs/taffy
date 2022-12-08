@@ -81,7 +81,7 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
 
     let constrained_available_space = size
         .maybe_clamp(min_size, max_size)
-        .map(|size| size.map(|size| AvailableSpace::Definite(size)))
+        .map(|size| size.map(AvailableSpace::Definite))
         .unwrap_or(available_space.maybe_clamp(min_size, max_size));
 
     let available_grid_space = Size {

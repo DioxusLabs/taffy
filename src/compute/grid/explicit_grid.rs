@@ -30,7 +30,7 @@ pub(super) fn initialize_grid_tracks(
     } else {
         let max_count = max(auto_tracks.len(), counts.negative_implicit as usize);
         let min_count = min(auto_tracks.len(), counts.negative_implicit as usize);
-        let offset = max_count % min_count as usize;
+        let offset = max_count % min_count;
         let iter = auto_tracks.iter().copied().cycle().skip(offset);
         create_implicit_tracks(tracks, counts.negative_implicit, iter, gap)
     }

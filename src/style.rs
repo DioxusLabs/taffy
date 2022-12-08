@@ -340,9 +340,9 @@ impl Line<GridPlacement> {
                 }
             }
             (Track(track), Span(span)) => Line { start: track, end: track + span as i16 },
-            (Track(track), Auto) => Line { start: track, end: track + 1 as i16 },
+            (Track(track), Auto) => Line { start: track, end: track + 1_i16 },
             (Span(span), Track(track)) => Line { start: track - span as i16, end: track },
-            (Auto, Track(track)) => Line { start: track - 1 as i16, end: track },
+            (Auto, Track(track)) => Line { start: track - 1_i16, end: track },
             _ => panic!("resolve_definite_grid_tracks should only be called on definite grid tracks"),
         }
     }

@@ -45,7 +45,7 @@ impl core::fmt::Debug for CellOccupancyMatrix {
                 };
                 write!(f, "{letter}")?;
             }
-            writeln!(f, "")?;
+            writeln!(f)?;
         }
 
         Ok(())
@@ -102,7 +102,7 @@ impl CellOccupancyMatrix {
             }
             // Push existing columns
             for col in 0..old_col_count {
-                data.push(*self.inner.get(row as usize, col as usize).unwrap());
+                data.push(*self.inner.get(row, col).unwrap());
             }
             // Push new positive columns
             for _ in 0..req_positive_cols {

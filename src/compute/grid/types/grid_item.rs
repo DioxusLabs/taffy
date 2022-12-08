@@ -102,7 +102,7 @@ impl GridItem {
     ) -> Size<Option<f32>> {
         self.known_dimensions_cache.unwrap_or_else(|| {
             let item_other_axis_size: Option<f32> = {
-                (&other_axis_tracks)[self.track_range_excluding_lines(axis.other())]
+                other_axis_tracks[self.track_range_excluding_lines(axis.other())]
                     .iter()
                     .map(|track| get_track_size_estimate(track, other_axis_available_space))
                     .sum::<Option<f32>>()
