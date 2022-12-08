@@ -5,8 +5,13 @@ fn margin_right() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), ..Size::auto() },
-            margin: taffy::geometry::Rect { right: taffy::style::LengthPercentageAuto::Points(10f32), ..Rect::zero() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), height: auto() },
+            margin: taffy::geometry::Rect {
+                left: zero(),
+                right: taffy::style::LengthPercentageAuto::Points(10f32),
+                top: zero(),
+                bottom: zero(),
+            },
             ..Default::default()
         })
         .unwrap();
@@ -17,7 +22,6 @@ fn margin_right() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

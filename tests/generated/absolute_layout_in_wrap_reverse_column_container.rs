@@ -9,7 +9,6 @@ fn absolute_layout_in_wrap_reverse_column_container() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
                 height: taffy::style::Dimension::Points(20f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -22,7 +21,6 @@ fn absolute_layout_in_wrap_reverse_column_container() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

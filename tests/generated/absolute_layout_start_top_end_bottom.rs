@@ -11,7 +11,6 @@ fn absolute_layout_start_top_end_bottom() {
                 right: taffy::style::LengthPercentageAuto::Points(10f32),
                 top: taffy::style::LengthPercentageAuto::Points(10f32),
                 bottom: taffy::style::LengthPercentageAuto::Points(10f32),
-                ..Rect::auto()
             },
             ..Default::default()
         })
@@ -22,7 +21,6 @@ fn absolute_layout_start_top_end_bottom() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

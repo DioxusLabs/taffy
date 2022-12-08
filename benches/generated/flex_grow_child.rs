@@ -6,7 +6,7 @@ pub fn compute() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_basis: taffy::style::Dimension::Points(0f32),
-            size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Size::auto() },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(100f32) },
             ..Default::default()
         })
         .unwrap();

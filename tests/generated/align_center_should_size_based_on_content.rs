@@ -8,7 +8,6 @@ fn align_center_should_size_based_on_content() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
                 height: taffy::style::Dimension::Points(20f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -34,7 +33,6 @@ fn align_center_should_size_based_on_content() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

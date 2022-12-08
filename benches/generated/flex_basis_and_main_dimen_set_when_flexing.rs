@@ -9,7 +9,6 @@ pub fn compute() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(50f32),
                 height: taffy::style::Dimension::Points(50f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -21,7 +20,6 @@ pub fn compute() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(0f32),
                 height: taffy::style::Dimension::Points(50f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -29,7 +27,7 @@ pub fn compute() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Size::auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1],

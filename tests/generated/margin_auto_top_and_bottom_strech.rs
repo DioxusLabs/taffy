@@ -8,12 +8,12 @@ fn margin_auto_top_and_bottom_strech() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(50f32),
                 height: taffy::style::Dimension::Points(50f32),
-                ..Size::auto()
             },
             margin: taffy::geometry::Rect {
+                left: zero(),
+                right: zero(),
                 top: taffy::style::LengthPercentageAuto::Auto,
                 bottom: taffy::style::LengthPercentageAuto::Auto,
-                ..Rect::zero()
             },
             ..Default::default()
         })
@@ -23,7 +23,6 @@ fn margin_auto_top_and_bottom_strech() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(50f32),
                 height: taffy::style::Dimension::Points(50f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -36,7 +35,6 @@ fn margin_auto_top_and_bottom_strech() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(200f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

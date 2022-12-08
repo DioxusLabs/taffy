@@ -9,12 +9,12 @@ fn absolute_layout_width_height_end_bottom() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(10f32),
                 height: taffy::style::Dimension::Points(10f32),
-                ..Size::auto()
             },
             position: taffy::geometry::Rect {
+                left: auto(),
                 right: taffy::style::LengthPercentageAuto::Points(10f32),
+                top: auto(),
                 bottom: taffy::style::LengthPercentageAuto::Points(10f32),
-                ..Rect::auto()
             },
             ..Default::default()
         })
@@ -25,7 +25,6 @@ fn absolute_layout_width_height_end_bottom() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

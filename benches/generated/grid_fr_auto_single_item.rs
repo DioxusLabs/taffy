@@ -5,7 +5,7 @@ pub fn compute() {
     let node0 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Size::auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -33,7 +33,6 @@ pub fn compute() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Auto,
                     height: taffy::style::Dimension::Auto,
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

@@ -12,7 +12,7 @@ fn measure_standard_text(
         return Size { width, height };
     }
     let lines: Vec<&str> = text_content.split(ZWS).collect();
-    if lines.len() == 0 {
+    if lines.is_empty() {
         return Size::ZERO;
     }
     let min_line_length: usize = lines.iter().map(|line| line.len()).max().unwrap_or(0);

@@ -14,7 +14,6 @@ fn rounding_flex_basis_flex_grow_row_prime_number_width() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(113f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

@@ -5,13 +5,13 @@ fn flex_wrap_align_stretch_fits_one_row() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), ..Size::auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), ..Size::auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -22,7 +22,6 @@ fn flex_wrap_align_stretch_fits_one_row() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(150f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

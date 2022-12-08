@@ -7,9 +7,13 @@ pub fn compute() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
                 height: taffy::style::Dimension::Points(20f32),
-                ..Size::auto()
             },
-            margin: taffy::geometry::Rect { top: taffy::style::LengthPercentageAuto::Points(100f32), ..Rect::zero() },
+            margin: taffy::geometry::Rect {
+                left: zero(),
+                right: zero(),
+                top: taffy::style::LengthPercentageAuto::Points(100f32),
+                bottom: zero(),
+            },
             ..Default::default()
         })
         .unwrap();
@@ -17,8 +21,8 @@ pub fn compute() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Size::auto() },
-                max_size: taffy::geometry::Size { height: taffy::style::Dimension::Points(80f32), ..Size::auto() },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(100f32) },
+                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(80f32) },
                 ..Default::default()
             },
             &[node0],

@@ -8,9 +8,8 @@ fn wrapped_column_max_height() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(100f32),
                 height: taffy::style::Dimension::Points(500f32),
-                ..Size::auto()
             },
-            max_size: taffy::geometry::Size { height: taffy::style::Dimension::Points(200f32), ..Size::auto() },
+            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(200f32) },
             ..Default::default()
         })
         .unwrap();
@@ -19,14 +18,12 @@ fn wrapped_column_max_height() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(200f32),
                 height: taffy::style::Dimension::Points(200f32),
-                ..Size::auto()
             },
             margin: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::Points(20f32),
                 right: taffy::style::LengthPercentageAuto::Points(20f32),
                 top: taffy::style::LengthPercentageAuto::Points(20f32),
                 bottom: taffy::style::LengthPercentageAuto::Points(20f32),
-                ..Rect::zero()
             },
             ..Default::default()
         })
@@ -36,7 +33,6 @@ fn wrapped_column_max_height() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(100f32),
                 height: taffy::style::Dimension::Points(100f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -52,7 +48,6 @@ fn wrapped_column_max_height() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(700f32),
                     height: taffy::style::Dimension::Points(500f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

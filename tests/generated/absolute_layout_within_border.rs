@@ -9,12 +9,12 @@ fn absolute_layout_within_border() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(50f32),
                 height: taffy::style::Dimension::Points(50f32),
-                ..Size::auto()
             },
             position: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::Points(0f32),
+                right: auto(),
                 top: taffy::style::LengthPercentageAuto::Points(0f32),
-                ..Rect::auto()
+                bottom: auto(),
             },
             ..Default::default()
         })
@@ -25,12 +25,12 @@ fn absolute_layout_within_border() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(50f32),
                 height: taffy::style::Dimension::Points(50f32),
-                ..Size::auto()
             },
             position: taffy::geometry::Rect {
+                left: auto(),
                 right: taffy::style::LengthPercentageAuto::Points(0f32),
+                top: auto(),
                 bottom: taffy::style::LengthPercentageAuto::Points(0f32),
-                ..Rect::auto()
             },
             ..Default::default()
         })
@@ -41,19 +41,18 @@ fn absolute_layout_within_border() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(50f32),
                 height: taffy::style::Dimension::Points(50f32),
-                ..Size::auto()
             },
             margin: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::Points(10f32),
                 right: taffy::style::LengthPercentageAuto::Points(10f32),
                 top: taffy::style::LengthPercentageAuto::Points(10f32),
                 bottom: taffy::style::LengthPercentageAuto::Points(10f32),
-                ..Rect::zero()
             },
             position: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::Points(0f32),
+                right: auto(),
                 top: taffy::style::LengthPercentageAuto::Points(0f32),
-                ..Rect::auto()
+                bottom: auto(),
             },
             ..Default::default()
         })
@@ -64,19 +63,18 @@ fn absolute_layout_within_border() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(50f32),
                 height: taffy::style::Dimension::Points(50f32),
-                ..Size::auto()
             },
             margin: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::Points(10f32),
                 right: taffy::style::LengthPercentageAuto::Points(10f32),
                 top: taffy::style::LengthPercentageAuto::Points(10f32),
                 bottom: taffy::style::LengthPercentageAuto::Points(10f32),
-                ..Rect::zero()
             },
             position: taffy::geometry::Rect {
+                left: auto(),
                 right: taffy::style::LengthPercentageAuto::Points(0f32),
+                top: auto(),
                 bottom: taffy::style::LengthPercentageAuto::Points(0f32),
-                ..Rect::auto()
             },
             ..Default::default()
         })
@@ -87,21 +85,18 @@ fn absolute_layout_within_border() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 padding: taffy::geometry::Rect {
                     left: taffy::style::LengthPercentage::Points(10f32),
                     right: taffy::style::LengthPercentage::Points(10f32),
                     top: taffy::style::LengthPercentage::Points(10f32),
                     bottom: taffy::style::LengthPercentage::Points(10f32),
-                    ..Rect::zero()
                 },
                 border: taffy::geometry::Rect {
                     left: taffy::style::LengthPercentage::Points(10f32),
                     right: taffy::style::LengthPercentage::Points(10f32),
                     top: taffy::style::LengthPercentage::Points(10f32),
                     bottom: taffy::style::LengthPercentage::Points(10f32),
-                    ..Rect::zero()
                 },
                 ..Default::default()
             },

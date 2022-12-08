@@ -28,7 +28,6 @@ pub fn compute() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Auto,
                     height: taffy::style::Dimension::Auto,
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

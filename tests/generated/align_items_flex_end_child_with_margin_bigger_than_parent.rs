@@ -8,12 +8,12 @@ fn align_items_flex_end_child_with_margin_bigger_than_parent() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(50f32),
                 height: taffy::style::Dimension::Points(50f32),
-                ..Size::auto()
             },
             margin: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::Points(10f32),
                 right: taffy::style::LengthPercentageAuto::Points(10f32),
-                ..Rect::zero()
+                top: zero(),
+                bottom: zero(),
             },
             ..Default::default()
         })
@@ -32,7 +32,6 @@ fn align_items_flex_end_child_with_margin_bigger_than_parent() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
                     height: taffy::style::Dimension::Points(50f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

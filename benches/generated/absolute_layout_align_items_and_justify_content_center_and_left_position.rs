@@ -8,9 +8,13 @@ pub fn compute() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(60f32),
                 height: taffy::style::Dimension::Points(40f32),
-                ..Size::auto()
             },
-            position: taffy::geometry::Rect { left: taffy::style::LengthPercentageAuto::Points(5f32), ..Rect::auto() },
+            position: taffy::geometry::Rect {
+                left: taffy::style::LengthPercentageAuto::Points(5f32),
+                right: auto(),
+                top: auto(),
+                bottom: auto(),
+            },
             ..Default::default()
         })
         .unwrap();
@@ -22,7 +26,6 @@ pub fn compute() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(110f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

@@ -7,7 +7,7 @@ fn percentage_flex_basis_cross_max_width() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_basis: taffy::style::Dimension::Percent(0.1f32),
-            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.6f32), ..Size::auto() },
+            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.6f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -15,7 +15,7 @@ fn percentage_flex_basis_cross_max_width() {
         .new_leaf(taffy::style::Style {
             flex_grow: 4f32,
             flex_basis: taffy::style::Dimension::Percent(0.15f32),
-            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.2f32), ..Size::auto() },
+            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.2f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -26,7 +26,6 @@ fn percentage_flex_basis_cross_max_width() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(400f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

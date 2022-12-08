@@ -5,35 +5,35 @@ pub fn compute() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), ..Size::auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), ..Size::auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), ..Size::auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node3 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), ..Size::auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node4 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), ..Size::auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -42,11 +42,10 @@ pub fn compute() {
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 align_content: Some(taffy::style::AlignContent::Stretch),
-                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::Points(5f32), ..Size::zero() },
+                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::Points(5f32), height: zero() },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(300f32),
                     height: taffy::style::Dimension::Points(300f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

@@ -8,7 +8,12 @@ fn margin_auto_left_stretching_child() {
             flex_grow: 1f32,
             flex_shrink: 1f32,
             flex_basis: taffy::style::Dimension::Percent(0f32),
-            margin: taffy::geometry::Rect { left: taffy::style::LengthPercentageAuto::Auto, ..Rect::zero() },
+            margin: taffy::geometry::Rect {
+                left: taffy::style::LengthPercentageAuto::Auto,
+                right: zero(),
+                top: zero(),
+                bottom: zero(),
+            },
             ..Default::default()
         })
         .unwrap();
@@ -17,7 +22,6 @@ fn margin_auto_left_stretching_child() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(50f32),
                 height: taffy::style::Dimension::Points(50f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -29,7 +33,6 @@ fn margin_auto_left_stretching_child() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(200f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

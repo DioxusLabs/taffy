@@ -8,7 +8,6 @@ fn flex_wrap_wrap_to_child_height() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(100f32),
                 height: taffy::style::Dimension::Points(100f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -17,7 +16,7 @@ fn flex_wrap_wrap_to_child_height() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Size::auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), height: auto() },
                 ..Default::default()
             },
             &[node000],
@@ -38,7 +37,6 @@ fn flex_wrap_wrap_to_child_height() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(100f32),
                 height: taffy::style::Dimension::Points(100f32),
-                ..Size::auto()
             },
             ..Default::default()
         })

@@ -8,7 +8,8 @@ pub fn compute() {
             margin: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::Points(10f32),
                 right: taffy::style::LengthPercentageAuto::Points(10f32),
-                ..Rect::zero()
+                top: zero(),
+                bottom: zero(),
             },
             ..Default::default()
         })
@@ -20,7 +21,6 @@ pub fn compute() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

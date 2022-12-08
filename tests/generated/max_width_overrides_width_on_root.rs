@@ -5,8 +5,8 @@ fn max_width_overrides_width_on_root() {
     let mut taffy = taffy::Taffy::new();
     let node = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(200f32), ..Size::auto() },
-            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Size::auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(200f32), height: auto() },
+            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), height: auto() },
             ..Default::default()
         })
         .unwrap();

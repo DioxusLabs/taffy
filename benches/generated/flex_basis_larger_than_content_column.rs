@@ -7,7 +7,6 @@ pub fn compute() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(100f32),
                 height: taffy::style::Dimension::Points(10f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -26,7 +25,7 @@ pub fn compute() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Size::auto() },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(100f32) },
                 ..Default::default()
             },
             &[node0],

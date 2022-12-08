@@ -9,11 +9,12 @@ fn absolute_layout_align_items_and_justify_content_center_and_bottom_position() 
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(60f32),
                 height: taffy::style::Dimension::Points(40f32),
-                ..Size::auto()
             },
             position: taffy::geometry::Rect {
+                left: auto(),
+                right: auto(),
+                top: auto(),
                 bottom: taffy::style::LengthPercentageAuto::Points(10f32),
-                ..Rect::auto()
             },
             ..Default::default()
         })
@@ -26,7 +27,6 @@ fn absolute_layout_align_items_and_justify_content_center_and_bottom_position() 
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(110f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

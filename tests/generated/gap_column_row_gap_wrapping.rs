@@ -8,7 +8,6 @@ fn gap_column_row_gap_wrapping() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
                 height: taffy::style::Dimension::Points(20f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -18,7 +17,6 @@ fn gap_column_row_gap_wrapping() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
                 height: taffy::style::Dimension::Points(20f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -28,7 +26,6 @@ fn gap_column_row_gap_wrapping() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
                 height: taffy::style::Dimension::Points(20f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -38,7 +35,6 @@ fn gap_column_row_gap_wrapping() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
                 height: taffy::style::Dimension::Points(20f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -48,7 +44,6 @@ fn gap_column_row_gap_wrapping() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
                 height: taffy::style::Dimension::Points(20f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -58,7 +53,6 @@ fn gap_column_row_gap_wrapping() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
                 height: taffy::style::Dimension::Points(20f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -68,7 +62,6 @@ fn gap_column_row_gap_wrapping() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
                 height: taffy::style::Dimension::Points(20f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -78,7 +71,6 @@ fn gap_column_row_gap_wrapping() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
                 height: taffy::style::Dimension::Points(20f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -88,7 +80,6 @@ fn gap_column_row_gap_wrapping() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
                 height: taffy::style::Dimension::Points(20f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -100,9 +91,8 @@ fn gap_column_row_gap_wrapping() {
                 gap: taffy::geometry::Size {
                     width: taffy::style::LengthPercentage::Points(10f32),
                     height: taffy::style::LengthPercentage::Points(20f32),
-                    ..Size::zero()
                 },
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(80f32), ..Size::auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(80f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2, node3, node4, node5, node6, node7, node8],

@@ -229,20 +229,23 @@ fn generate_assertions(ident: &str, node: &json::JsonValue) -> TokenStream {
 }
 
 macro_rules! dim_quoted_renamed {
-    ($obj:ident, $in_name:ident, $out_name:ident, $value_mapper:ident) => {
+    ($obj:ident, $in_name:ident, $out_name:ident, $value_mapper:ident, $default:expr) => {
         let $out_name = match $obj.get(stringify!($in_name)) {
             Some(json::JsonValue::Object(ref value)) => {
                 let dim = $value_mapper(value);
                 quote!($out_name: #dim,)
             }
-            _ => quote!(),
+            _ => {
+                let dim = $default;
+                quote!($out_name: #dim,)
+            }
         };
     };
 }
 
 macro_rules! dim_quoted {
-    ($obj:ident, $dim_name:ident, $value_mapper: ident) => {
-        dim_quoted_renamed!($obj, $dim_name, $dim_name, $value_mapper)
+    ($obj:ident, $dim_name:ident, $value_mapper: ident, $default:expr) => {
+        dim_quoted_renamed!($obj, $dim_name, $dim_name, $value_mapper, $default)
     };
 }
 
@@ -250,16 +253,13 @@ macro_rules! edges_quoted {
     ($style:ident, $val:ident, $value_mapper:ident, $default_value: expr) => {
         let $val = match $style[stringify!($val)] {
             json::JsonValue::Object(ref value) => {
-                dim_quoted!(value, left, $value_mapper);
-                dim_quoted!(value, right, $value_mapper);
-                dim_quoted!(value, top, $value_mapper);
-                dim_quoted!(value, bottom, $value_mapper);
-
-                let def = $default_value;
+                dim_quoted!(value, left, $value_mapper, $default_value);
+                dim_quoted!(value, right, $value_mapper, $default_value);
+                dim_quoted!(value, top, $value_mapper, $default_value);
+                dim_quoted!(value, bottom, $value_mapper, $default_value);
 
                 let edges = quote!(taffy::geometry::Rect {
                     #left #right #top #bottom
-                    ..#def
                 });
 
                 quote!($val: #edges,)
@@ -524,10 +524,10 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 
     let measure_func: Option<_> = get_string_value("text_content", node).map(generate_measure_function);
 
-    edges_quoted!(style, margin, generate_length_percentage_auto, quote!(Rect::zero()));
-    edges_quoted!(style, padding, generate_length_percentage, quote!(Rect::zero()));
-    edges_quoted!(style, border, generate_length_percentage, quote!(Rect::zero()));
-    edges_quoted!(style, position, generate_length_percentage_auto, quote!(Rect::auto()));
+    edges_quoted!(style, margin, generate_length_percentage_auto, quote!(zero()));
+    edges_quoted!(style, padding, generate_length_percentage, quote!(zero()));
+    edges_quoted!(style, border, generate_length_percentage, quote!(zero()));
+    edges_quoted!(style, position, generate_length_percentage_auto, quote!(auto()));
 
     // Quote children
     let child_descriptions: Vec<json::JsonValue> = match node["children"] {
@@ -602,23 +602,21 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
 }
 
 fn generate_size(size: &json::object::Object) -> TokenStream {
-    dim_quoted!(size, width, generate_dimension);
-    dim_quoted!(size, height, generate_dimension);
+    dim_quoted!(size, width, generate_dimension, quote!(auto()));
+    dim_quoted!(size, height, generate_dimension, quote!(auto()));
     quote!(
         taffy::geometry::Size {
             #width #height
-            ..Size::auto()
         }
     )
 }
 
 fn generate_gap(size: &json::object::Object) -> TokenStream {
-    dim_quoted_renamed!(size, column, width, generate_length_percentage);
-    dim_quoted_renamed!(size, row, height, generate_length_percentage);
+    dim_quoted_renamed!(size, column, width, generate_length_percentage, quote!(zero()));
+    dim_quoted_renamed!(size, row, height, generate_length_percentage, quote!(zero()));
     quote!(
         taffy::geometry::Size {
             #width #height
-            ..Size::zero()
         }
     )
 }
@@ -799,7 +797,7 @@ fn generate_generic_measure_function() -> TokenStream {
             }
 
             let lines: Vec<&str> = text_content.split(ZWS).collect();
-            if lines.len() == 0 {
+            if lines.is_empty() {
                 return Size::ZERO;
             }
 

@@ -8,9 +8,13 @@ fn margin_auto_right() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(50f32),
                 height: taffy::style::Dimension::Points(50f32),
-                ..Size::auto()
             },
-            margin: taffy::geometry::Rect { right: taffy::style::LengthPercentageAuto::Auto, ..Rect::zero() },
+            margin: taffy::geometry::Rect {
+                left: zero(),
+                right: taffy::style::LengthPercentageAuto::Auto,
+                top: zero(),
+                bottom: zero(),
+            },
             ..Default::default()
         })
         .unwrap();
@@ -19,7 +23,6 @@ fn margin_auto_right() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(50f32),
                 height: taffy::style::Dimension::Points(50f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -31,7 +34,6 @@ fn margin_auto_right() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(200f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

@@ -6,10 +6,12 @@ pub fn compute() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_basis: taffy::style::Dimension::Points(0.3f32),
-            size: taffy::geometry::Size { height: taffy::style::Dimension::Points(9.9f32), ..Size::auto() },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(9.9f32) },
             position: taffy::geometry::Rect {
+                left: auto(),
+                right: auto(),
+                top: auto(),
                 bottom: taffy::style::LengthPercentageAuto::Points(13.3f32),
-                ..Rect::auto()
             },
             ..Default::default()
         })
@@ -18,10 +20,12 @@ pub fn compute() {
         .new_leaf(taffy::style::Style {
             flex_grow: 4f32,
             flex_basis: taffy::style::Dimension::Points(0.3f32),
-            size: taffy::geometry::Size { height: taffy::style::Dimension::Points(1.1f32), ..Size::auto() },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(1.1f32) },
             position: taffy::geometry::Rect {
+                left: auto(),
+                right: auto(),
                 top: taffy::style::LengthPercentageAuto::Points(13.3f32),
-                ..Rect::auto()
+                bottom: auto(),
             },
             ..Default::default()
         })
@@ -32,7 +36,7 @@ pub fn compute() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 0.7f32,
                 flex_basis: taffy::style::Dimension::Points(50.3f32),
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(20.3f32), ..Size::auto() },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(20.3f32) },
                 ..Default::default()
             },
             &[node00, node01],
@@ -41,14 +45,14 @@ pub fn compute() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1.6f32,
-            size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Size::auto() },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(10f32) },
             ..Default::default()
         })
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1.1f32,
-            size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10.7f32), ..Size::auto() },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(10.7f32) },
             ..Default::default()
         })
         .unwrap();
@@ -59,7 +63,6 @@ pub fn compute() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(87.4f32),
                     height: taffy::style::Dimension::Points(113.4f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

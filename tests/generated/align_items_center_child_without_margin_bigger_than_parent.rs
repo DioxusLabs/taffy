@@ -8,7 +8,6 @@ fn align_items_center_child_without_margin_bigger_than_parent() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(70f32),
                 height: taffy::style::Dimension::Points(70f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -27,7 +26,6 @@ fn align_items_center_child_without_margin_bigger_than_parent() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
                     height: taffy::style::Dimension::Points(50f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

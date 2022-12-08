@@ -7,7 +7,7 @@ pub fn compute() {
             flex_grow: 1f32,
             flex_shrink: 0f32,
             flex_basis: taffy::style::Dimension::Points(0f32),
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), ..Size::auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -16,7 +16,7 @@ pub fn compute() {
             flex_grow: 1f32,
             flex_shrink: 0f32,
             flex_basis: taffy::style::Dimension::Percent(0.5f32),
-            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Size::auto() },
+            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -27,7 +27,6 @@ pub fn compute() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(120f32),
                     height: taffy::style::Dimension::Points(50f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

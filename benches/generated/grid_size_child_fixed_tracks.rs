@@ -46,7 +46,7 @@ pub fn compute() {
             taffy::style::Style {
                 align_self: Some(taffy::style::AlignSelf::Start),
                 justify_self: Some(taffy::style::JustifySelf::Start),
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Size::auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), height: auto() },
                 ..Default::default()
             },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
@@ -60,7 +60,7 @@ pub fn compute() {
             taffy::style::Style {
                 align_self: Some(taffy::style::AlignSelf::Start),
                 justify_self: Some(taffy::style::JustifySelf::Start),
-                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(30f32), ..Size::auto() },
+                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(30f32), height: auto() },
                 ..Default::default()
             },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
@@ -86,7 +86,6 @@ pub fn compute() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(120f32),
                     height: taffy::style::Dimension::Points(120f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

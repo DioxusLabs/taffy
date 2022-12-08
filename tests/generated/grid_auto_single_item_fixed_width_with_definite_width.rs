@@ -6,7 +6,7 @@ fn grid_auto_single_item_fixed_width_with_definite_width() {
     let node0 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Size::auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -31,7 +31,7 @@ fn grid_auto_single_item_fixed_width_with_definite_width() {
                     taffy::style::TrackSizingFunction::Auto,
                     taffy::style::TrackSizingFunction::Auto,
                 ],
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(200f32), ..Size::auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(200f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2, node3, node4, node5, node6, node7, node8],

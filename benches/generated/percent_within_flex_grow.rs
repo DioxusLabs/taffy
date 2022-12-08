@@ -4,13 +4,13 @@ pub fn compute() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Size::auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node10 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), ..Size::auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -26,7 +26,7 @@ pub fn compute() {
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Size::auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -36,7 +36,6 @@ pub fn compute() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(350f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

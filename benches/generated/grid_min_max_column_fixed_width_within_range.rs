@@ -28,7 +28,7 @@ pub fn compute() {
                     },
                     taffy::style::TrackSizingFunction::Fixed(taffy::style::Dimension::Points(40f32)),
                 ],
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(110f32), ..Size::auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(110f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2, node3, node4, node5, node6, node7, node8],

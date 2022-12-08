@@ -6,7 +6,7 @@ fn overflow_main_axis() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(200f32), ..Size::auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(200f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -16,7 +16,6 @@ fn overflow_main_axis() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

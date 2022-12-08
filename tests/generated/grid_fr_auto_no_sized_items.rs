@@ -29,7 +29,6 @@ fn grid_fr_auto_no_sized_items() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Auto,
                     height: taffy::style::Dimension::Auto,
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

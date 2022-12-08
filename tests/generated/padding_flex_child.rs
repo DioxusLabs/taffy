@@ -6,7 +6,7 @@ fn padding_flex_child() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), ..Size::auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -16,14 +16,12 @@ fn padding_flex_child() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 padding: taffy::geometry::Rect {
                     left: taffy::style::LengthPercentage::Points(10f32),
                     right: taffy::style::LengthPercentage::Points(10f32),
                     top: taffy::style::LengthPercentage::Points(10f32),
                     bottom: taffy::style::LengthPercentage::Points(10f32),
-                    ..Rect::zero()
                 },
                 ..Default::default()
             },

@@ -8,7 +8,6 @@ fn border_center_child() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(10f32),
                 height: taffy::style::Dimension::Points(10f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -21,12 +20,12 @@ fn border_center_child() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 border: taffy::geometry::Rect {
+                    left: zero(),
+                    right: zero(),
                     top: taffy::style::LengthPercentage::Points(10f32),
                     bottom: taffy::style::LengthPercentage::Points(20f32),
-                    ..Rect::zero()
                 },
                 ..Default::default()
             },

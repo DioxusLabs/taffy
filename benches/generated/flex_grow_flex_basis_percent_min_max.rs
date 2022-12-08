@@ -7,8 +7,8 @@ pub fn compute() {
             flex_grow: 1f32,
             flex_shrink: 0f32,
             flex_basis: taffy::style::Dimension::Points(0f32),
-            size: taffy::geometry::Size { height: taffy::style::Dimension::Points(20f32), ..Size::auto() },
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), ..Size::auto() },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(20f32) },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -20,16 +20,15 @@ pub fn compute() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
                 height: taffy::style::Dimension::Points(20f32),
-                ..Size::auto()
             },
-            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Size::auto() },
+            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(120f32), ..Size::auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(120f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1],

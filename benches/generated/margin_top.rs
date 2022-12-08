@@ -4,8 +4,13 @@ pub fn compute() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { height: taffy::style::Dimension::Points(10f32), ..Size::auto() },
-            margin: taffy::geometry::Rect { top: taffy::style::LengthPercentageAuto::Points(10f32), ..Rect::zero() },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(10f32) },
+            margin: taffy::geometry::Rect {
+                left: zero(),
+                right: zero(),
+                top: taffy::style::LengthPercentageAuto::Points(10f32),
+                bottom: zero(),
+            },
             ..Default::default()
         })
         .unwrap();
@@ -16,7 +21,6 @@ pub fn compute() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

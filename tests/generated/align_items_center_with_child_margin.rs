@@ -8,9 +8,13 @@ fn align_items_center_with_child_margin() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(10f32),
                 height: taffy::style::Dimension::Points(10f32),
-                ..Size::auto()
             },
-            margin: taffy::geometry::Rect { top: taffy::style::LengthPercentageAuto::Points(10f32), ..Rect::zero() },
+            margin: taffy::geometry::Rect {
+                left: zero(),
+                right: zero(),
+                top: taffy::style::LengthPercentageAuto::Points(10f32),
+                bottom: zero(),
+            },
             ..Default::default()
         })
         .unwrap();
@@ -21,7 +25,6 @@ fn align_items_center_with_child_margin() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

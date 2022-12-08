@@ -7,7 +7,6 @@ pub fn compute() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Percent(0.5f32),
                 height: taffy::style::Dimension::Percent(0.5f32),
-                ..Size::auto()
             },
             ..Default::default()
         })

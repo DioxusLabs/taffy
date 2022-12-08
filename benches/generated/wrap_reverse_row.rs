@@ -7,7 +7,6 @@ pub fn compute() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(31f32),
                 height: taffy::style::Dimension::Points(30f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -17,7 +16,6 @@ pub fn compute() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(32f32),
                 height: taffy::style::Dimension::Points(30f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -27,7 +25,6 @@ pub fn compute() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(33f32),
                 height: taffy::style::Dimension::Points(30f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -37,7 +34,6 @@ pub fn compute() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(34f32),
                 height: taffy::style::Dimension::Points(30f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -46,7 +42,7 @@ pub fn compute() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::WrapReverse,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Size::auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2, node3],

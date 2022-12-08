@@ -7,7 +7,12 @@ pub fn compute() {
             flex_grow: 1f32,
             flex_shrink: 1f32,
             flex_basis: taffy::style::Dimension::Percent(0f32),
-            margin: taffy::geometry::Rect { top: taffy::style::LengthPercentageAuto::Auto, ..Rect::zero() },
+            margin: taffy::geometry::Rect {
+                left: zero(),
+                right: zero(),
+                top: taffy::style::LengthPercentageAuto::Auto,
+                bottom: zero(),
+            },
             ..Default::default()
         })
         .unwrap();
@@ -16,7 +21,6 @@ pub fn compute() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(50f32),
                 height: taffy::style::Dimension::Points(50f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -28,7 +32,6 @@ pub fn compute() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(200f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

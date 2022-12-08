@@ -8,9 +8,13 @@ fn justify_content_row_min_width_and_margin() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
                 height: taffy::style::Dimension::Points(20f32),
-                ..Size::auto()
             },
-            margin: taffy::geometry::Rect { left: taffy::style::LengthPercentageAuto::Points(10f32), ..Rect::zero() },
+            margin: taffy::geometry::Rect {
+                left: taffy::style::LengthPercentageAuto::Points(10f32),
+                right: zero(),
+                top: zero(),
+                bottom: zero(),
+            },
             ..Default::default()
         })
         .unwrap();
@@ -18,7 +22,7 @@ fn justify_content_row_min_width_and_margin() {
         .new_with_children(
             taffy::style::Style {
                 justify_content: Some(taffy::style::JustifyContent::Center),
-                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), ..Size::auto() },
+                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

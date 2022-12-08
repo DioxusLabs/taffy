@@ -8,7 +8,6 @@ fn wrap_nodes_with_content_sizing_margin_cross() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(40f32),
                 height: taffy::style::Dimension::Points(40f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -24,7 +23,6 @@ fn wrap_nodes_with_content_sizing_margin_cross() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(40f32),
                 height: taffy::style::Dimension::Points(40f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -34,8 +32,10 @@ fn wrap_nodes_with_content_sizing_margin_cross() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 margin: taffy::geometry::Rect {
+                    left: zero(),
+                    right: zero(),
                     top: taffy::style::LengthPercentageAuto::Points(10f32),
-                    ..Rect::zero()
+                    bottom: zero(),
                 },
                 ..Default::default()
             },
@@ -46,7 +46,7 @@ fn wrap_nodes_with_content_sizing_margin_cross() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(70f32), ..Size::auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(70f32), height: auto() },
                 ..Default::default()
             },
             &[node00, node01],
@@ -59,7 +59,6 @@ fn wrap_nodes_with_content_sizing_margin_cross() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(500f32),
                     height: taffy::style::Dimension::Points(500f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

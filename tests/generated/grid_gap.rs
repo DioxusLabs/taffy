@@ -19,7 +19,6 @@ fn grid_gap() {
                 gap: taffy::geometry::Size {
                     width: taffy::style::LengthPercentage::Points(40f32),
                     height: taffy::style::LengthPercentage::Points(40f32),
-                    ..Size::zero()
                 },
                 grid_template_rows: vec![
                     taffy::style::TrackSizingFunction::Fixed(taffy::style::Dimension::Points(40f32)),
@@ -34,7 +33,6 @@ fn grid_gap() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(200f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

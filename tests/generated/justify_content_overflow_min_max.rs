@@ -9,7 +9,6 @@ fn justify_content_overflow_min_max() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(50f32),
                 height: taffy::style::Dimension::Points(50f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -20,7 +19,6 @@ fn justify_content_overflow_min_max() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(50f32),
                 height: taffy::style::Dimension::Points(50f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -31,7 +29,6 @@ fn justify_content_overflow_min_max() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(50f32),
                 height: taffy::style::Dimension::Points(50f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -41,8 +38,8 @@ fn justify_content_overflow_min_max() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 justify_content: Some(taffy::style::JustifyContent::Center),
-                min_size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Size::auto() },
-                max_size: taffy::geometry::Size { height: taffy::style::Dimension::Points(110f32), ..Size::auto() },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(100f32) },
+                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(110f32) },
                 ..Default::default()
             },
             &[node0, node1, node2],

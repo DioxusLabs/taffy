@@ -10,7 +10,6 @@ fn padding_no_child() {
                 right: taffy::style::LengthPercentage::Points(10f32),
                 top: taffy::style::LengthPercentage::Points(10f32),
                 bottom: taffy::style::LengthPercentage::Points(10f32),
-                ..Rect::zero()
             },
             ..Default::default()
         })

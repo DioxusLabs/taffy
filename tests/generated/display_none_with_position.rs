@@ -8,7 +8,12 @@ fn display_none_with_position() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::None,
             flex_grow: 1f32,
-            position: taffy::geometry::Rect { top: taffy::style::LengthPercentageAuto::Points(10f32), ..Rect::auto() },
+            position: taffy::geometry::Rect {
+                left: auto(),
+                right: auto(),
+                top: taffy::style::LengthPercentageAuto::Points(10f32),
+                bottom: auto(),
+            },
             ..Default::default()
         })
         .unwrap();
@@ -18,7 +23,6 @@ fn display_none_with_position() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

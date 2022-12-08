@@ -16,7 +16,7 @@ fn display_none_with_child() {
             flex_grow: 1f32,
             flex_shrink: 1f32,
             flex_basis: taffy::style::Dimension::Percent(0f32),
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Size::auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -47,7 +47,6 @@ fn display_none_with_child() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

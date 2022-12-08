@@ -10,7 +10,8 @@ pub fn compute() {
             margin: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::Points(2f32),
                 right: taffy::style::LengthPercentageAuto::Points(2f32),
-                ..Rect::zero()
+                top: zero(),
+                bottom: zero(),
             },
             ..Default::default()
         })
@@ -23,7 +24,8 @@ pub fn compute() {
             margin: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::Points(10f32),
                 right: taffy::style::LengthPercentageAuto::Points(10f32),
-                ..Rect::zero()
+                top: zero(),
+                bottom: zero(),
             },
             ..Default::default()
         })
@@ -36,7 +38,8 @@ pub fn compute() {
             margin: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::Points(15f32),
                 right: taffy::style::LengthPercentageAuto::Points(15f32),
-                ..Rect::zero()
+                top: zero(),
+                bottom: zero(),
             },
             ..Default::default()
         })
@@ -44,11 +47,10 @@ pub fn compute() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::Points(10f32), ..Size::zero() },
+                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::Points(10f32), height: zero() },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(80f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

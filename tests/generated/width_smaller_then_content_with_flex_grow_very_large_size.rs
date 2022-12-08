@@ -8,7 +8,6 @@ fn width_smaller_then_content_with_flex_grow_very_large_size() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(70f32),
                 height: taffy::style::Dimension::Points(100f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -18,7 +17,7 @@ fn width_smaller_then_content_with_flex_grow_very_large_size() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 1f32,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(0f32), ..Size::auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(0f32), height: auto() },
                 ..Default::default()
             },
             &[node00],
@@ -29,7 +28,6 @@ fn width_smaller_then_content_with_flex_grow_very_large_size() {
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
                 height: taffy::style::Dimension::Points(100f32),
-                ..Size::auto()
             },
             ..Default::default()
         })
@@ -39,7 +37,7 @@ fn width_smaller_then_content_with_flex_grow_very_large_size() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 1f32,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(0f32), ..Size::auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(0f32), height: auto() },
                 ..Default::default()
             },
             &[node10],
@@ -48,7 +46,7 @@ fn width_smaller_then_content_with_flex_grow_very_large_size() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(200f32), ..Size::auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(200f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1],
