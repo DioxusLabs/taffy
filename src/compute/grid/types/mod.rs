@@ -6,7 +6,7 @@ mod grid_track;
 mod grid_track_counts;
 
 // Publish publicly
-pub use axis::{AbsoluteAxis, GridAxis};
+pub use axis::{AbsoluteAxis, AbstractAxis};
 
 // Publish only locally in the grid module
 pub(super) use cell_occupancy::{CellOccupancyMatrix, CellOccupancyState};

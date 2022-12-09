@@ -1,6 +1,6 @@
 //! Geometric primitives useful for layout
 
-use crate::compute::grid::GridAxis;
+use crate::compute::grid::AbstractAxis;
 use crate::style::{Dimension, FlexDirection};
 use core::ops::Add;
 
@@ -85,10 +85,10 @@ where
     /// The sum of the two fields of the [`Rect`] representing the main axis.
     ///
     /// This is typically used when computing total padding.
-    pub(crate) fn grid_axis_sum(&self, axis: GridAxis) -> T {
+    pub(crate) fn grid_axis_sum(&self, axis: AbstractAxis) -> T {
         match axis {
-            GridAxis::Inline => self.horizontal_axis_sum(),
-            GridAxis::Block => self.vertical_axis_sum(),
+            AbstractAxis::Inline => self.horizontal_axis_sum(),
+            AbstractAxis::Block => self.vertical_axis_sum(),
         }
     }
 
@@ -293,19 +293,19 @@ impl<T> Size<T> {
 
     /// Gets the extent of the specified layout axis
     /// Whether this is the width or height depends on the `GridAxis` provided
-    pub(crate) fn get(self, axis: GridAxis) -> T {
+    pub(crate) fn get(self, axis: AbstractAxis) -> T {
         match axis {
-            GridAxis::Inline => self.width,
-            GridAxis::Block => self.height,
+            AbstractAxis::Inline => self.width,
+            AbstractAxis::Block => self.height,
         }
     }
 
     /// Sets the extent of the specified layout axis
     /// Whether this is the width or height depends on the `GridAxis` provided
-    pub(crate) fn set(&mut self, axis: GridAxis, value: T) {
+    pub(crate) fn set(&mut self, axis: AbstractAxis, value: T) {
         match axis {
-            GridAxis::Inline => self.width = value,
-            GridAxis::Block => self.height = value,
+            AbstractAxis::Inline => self.width = value,
+            AbstractAxis::Block => self.height = value,
         }
     }
 }

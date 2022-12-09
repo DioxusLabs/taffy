@@ -23,7 +23,7 @@ mod track_sizing;
 mod types;
 mod util;
 
-pub(crate) use types::{AbsoluteAxis, GridAxis};
+pub(crate) use types::{AbsoluteAxis, AbstractAxis};
 
 /// Grid layout algorithm
 /// This consists of a few phases:
@@ -113,7 +113,7 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
     // Run track sizing algorithm for Inline axis
     track_sizing_algorithm(
         tree,
-        GridAxis::Inline,
+        AbstractAxis::Inline,
         available_space,
         available_grid_space,
         &style,
@@ -127,7 +127,7 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
     // Run track sizing algorithm for Block axis
     track_sizing_algorithm(
         tree,
-        GridAxis::Block,
+        AbstractAxis::Block,
         available_space,
         available_grid_space,
         &style,
@@ -167,10 +167,10 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
     let resolved_style_size = style.size.maybe_resolve(available_space.as_options());
     let container_size = Size {
         width: resolved_style_size
-            .get(GridAxis::Inline)
+            .get(AbstractAxis::Inline)
             .unwrap_or_else(|| columns.iter().map(|track| track.base_size).sum()),
         height: resolved_style_size
-            .get(GridAxis::Block)
+            .get(AbstractAxis::Block)
             .unwrap_or_else(|| rows.iter().map(|track| track.base_size).sum()),
     };
 
@@ -178,13 +178,13 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
 
     // Align columns
     align_tracks(
-        resolved_style_size.get(GridAxis::Inline),
+        resolved_style_size.get(AbstractAxis::Inline),
         &mut columns,
         style.justify_content.unwrap_or(AlignContent::Stretch),
     );
     // Align rows
     align_tracks(
-        resolved_style_size.get(GridAxis::Block),
+        resolved_style_size.get(AbstractAxis::Block),
         &mut rows,
         style.align_content.unwrap_or(AlignContent::Stretch),
     );

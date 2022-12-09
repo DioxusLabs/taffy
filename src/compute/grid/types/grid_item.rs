@@ -1,5 +1,5 @@
 //! Contains GridItem used to represent a single grid item during layout
-use super::{GridAxis, GridTrack};
+use super::{AbstractAxis, GridTrack};
 use crate::compute::compute_node_layout;
 use crate::geometry::{Line, Size};
 use crate::layout::{AvailableSpace, RunMode, SizingMode};
@@ -61,42 +61,42 @@ impl GridItem {
         }
     }
 
-    pub fn placement(&self, axis: GridAxis) -> Line<i16> {
+    pub fn placement(&self, axis: AbstractAxis) -> Line<i16> {
         match axis {
-            GridAxis::Block => self.row,
-            GridAxis::Inline => self.column,
+            AbstractAxis::Block => self.row,
+            AbstractAxis::Inline => self.column,
         }
     }
 
-    pub fn placement_indexes(&self, axis: GridAxis) -> Line<u16> {
+    pub fn placement_indexes(&self, axis: AbstractAxis) -> Line<u16> {
         match axis {
-            GridAxis::Block => self.row_indexes,
-            GridAxis::Inline => self.column_indexes,
+            AbstractAxis::Block => self.row_indexes,
+            AbstractAxis::Inline => self.column_indexes,
         }
     }
 
-    pub fn track_range_excluding_lines(&self, axis: GridAxis) -> Range<usize> {
+    pub fn track_range_excluding_lines(&self, axis: AbstractAxis) -> Range<usize> {
         let indexes = self.placement_indexes(axis);
         (indexes.start as usize + 1)..(indexes.end as usize)
     }
 
-    pub fn span(&self, axis: GridAxis) -> u16 {
+    pub fn span(&self, axis: AbstractAxis) -> u16 {
         match axis {
-            GridAxis::Block => max(self.row.end - self.row.start, 0) as u16,
-            GridAxis::Inline => max(self.column.end - self.column.start, 0) as u16,
+            AbstractAxis::Block => max(self.row.end - self.row.start, 0) as u16,
+            AbstractAxis::Inline => max(self.column.end - self.column.start, 0) as u16,
         }
     }
 
-    pub fn crosses_flexible_track(&self, axis: GridAxis) -> bool {
+    pub fn crosses_flexible_track(&self, axis: AbstractAxis) -> bool {
         match axis {
-            GridAxis::Inline => self.crosses_flexible_column,
-            GridAxis::Block => self.crosses_flexible_row,
+            AbstractAxis::Inline => self.crosses_flexible_column,
+            AbstractAxis::Block => self.crosses_flexible_row,
         }
     }
 
     pub fn known_dimensions_cached(
         &mut self,
-        axis: GridAxis,
+        axis: AbstractAxis,
         other_axis_tracks: &[GridTrack],
         other_axis_available_space: AvailableSpace,
         get_track_size_estimate: impl Fn(&GridTrack, AvailableSpace) -> Option<f32>,
@@ -124,7 +124,7 @@ impl GridItem {
     // sum of the fixed max track sizing functions of any tracks it spans, and is applied if it only spans such tracks.
     pub fn spanned_fixed_track_limit(
         &mut self,
-        axis: GridAxis,
+        axis: AbstractAxis,
         axis_tracks: &[GridTrack],
         axis_available_space: AvailableSpace,
     ) -> Option<f32> {
@@ -190,7 +190,7 @@ impl GridItem {
     pub fn minimum_contribution_cached(
         &mut self,
         tree: &mut impl LayoutTree,
-        axis: GridAxis,
+        axis: AbstractAxis,
         axis_tracks: &[GridTrack],
         available_space: Size<AvailableSpace>,
         known_dimensions: Size<Option<f32>>,

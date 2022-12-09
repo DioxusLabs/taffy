@@ -1,6 +1,6 @@
 //! A representation of [CSS layout properties](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust, used for flexbox layout
 
-use crate::compute::grid::{AbsoluteAxis, GridAxis};
+use crate::compute::grid::{AbsoluteAxis, AbstractAxis};
 use crate::geometry::{Line, Rect, Size};
 use crate::layout::AvailableSpace;
 use crate::sys::GridTrackVec;
@@ -878,10 +878,10 @@ impl Style {
     }
 
     /// Get a grid container's align-content or justify-content alignment depending on the axis passed
-    pub(crate) fn grid_align_content(&self, axis: GridAxis) -> AlignContent {
+    pub(crate) fn grid_align_content(&self, axis: AbstractAxis) -> AlignContent {
         match axis {
-            GridAxis::Inline => self.justify_content.unwrap_or(AlignContent::Stretch),
-            GridAxis::Block => self.align_content.unwrap_or(AlignContent::Stretch),
+            AbstractAxis::Inline => self.justify_content.unwrap_or(AlignContent::Stretch),
+            AbstractAxis::Block => self.align_content.unwrap_or(AlignContent::Stretch),
         }
     }
 }

@@ -35,19 +35,19 @@ impl<T> Size<T> {
 /// The CSS abstract axis
 /// https://www.w3.org/TR/css-writing-modes-3/#abstract-axes
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum GridAxis {
+pub enum AbstractAxis {
     /// The axis in the inline dimension, i.e. the horizontal axis in horizontal writing modes and the vertical axis in vertical writing modes.
     Inline,
     /// The axis in the block dimension, i.e. the vertical axis in horizontal writing modes and the horizontal axis in vertical writing modes.
     Block,
 }
 
-impl GridAxis {
+impl AbstractAxis {
     /// Returns the other variant of the enum
-    pub fn other(&self) -> GridAxis {
+    pub fn other(&self) -> AbstractAxis {
         match *self {
-            GridAxis::Inline => GridAxis::Block,
-            GridAxis::Block => GridAxis::Inline,
+            AbstractAxis::Inline => AbstractAxis::Block,
+            AbstractAxis::Block => AbstractAxis::Inline,
         }
     }
 }

@@ -1,6 +1,6 @@
 //! Implements the track sizing algorithm
 //! https://www.w3.org/TR/css-grid-1/#layout-algorithm
-use super::types::{GridAxis, GridItem, GridTrack, TrackCounts};
+use super::types::{AbstractAxis, GridItem, GridTrack, TrackCounts};
 use crate::geometry::Size;
 use crate::layout::AvailableSpace;
 use crate::math::MaybeMath;
@@ -15,14 +15,14 @@ use core::cmp::Ordering;
 /// of tracks they cross in specified axis (ascending order).
 struct ItemBatcher {
     index_offset: usize,
-    axis: GridAxis,
+    axis: AbstractAxis,
     done: bool,
     current_span: u16,
     current_is_flex: bool,
 }
 
 impl ItemBatcher {
-    fn new(axis: GridAxis) -> Self {
+    fn new(axis: AbstractAxis) -> Self {
         ItemBatcher { index_offset: 0, axis, current_span: 1, current_is_flex: false, done: false }
     }
 
@@ -63,7 +63,9 @@ impl ItemBatcher {
 /// To make track sizing efficient we want to order tracks
 /// Here a placement is either a Line<i16> representing a row-start/row-end or a column-start/column-end
 #[inline(always)]
-pub(super) fn cmp_by_cross_flex_then_span_then_start(axis: GridAxis) -> impl FnMut(&GridItem, &GridItem) -> Ordering {
+pub(super) fn cmp_by_cross_flex_then_span_then_start(
+    axis: AbstractAxis,
+) -> impl FnMut(&GridItem, &GridItem) -> Ordering {
     move |item_a: &GridItem, item_b: &GridItem| -> Ordering {
         match (item_a.crosses_flexible_track(axis), item_b.crosses_flexible_track(axis)) {
             (false, true) => Ordering::Less,
@@ -151,8 +153,9 @@ pub(super) fn determine_if_item_crosses_flexible_tracks(
 ) {
     for item in items {
         item.crosses_flexible_column =
-            item.track_range_excluding_lines(GridAxis::Inline).any(|i| columns[i].is_flexible());
-        item.crosses_flexible_row = item.track_range_excluding_lines(GridAxis::Block).any(|i| rows[i].is_flexible());
+            item.track_range_excluding_lines(AbstractAxis::Inline).any(|i| columns[i].is_flexible());
+        item.crosses_flexible_row =
+            item.track_range_excluding_lines(AbstractAxis::Block).any(|i| rows[i].is_flexible());
     }
 }
 
@@ -160,7 +163,7 @@ pub(super) fn determine_if_item_crosses_flexible_tracks(
 /// Note: Gutters are treated as empty fixed-size tracks for the purpose of the track sizing algorithm.
 pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
     tree: &mut Tree,
-    axis: GridAxis,
+    axis: AbstractAxis,
     available_space: Size<AvailableSpace>,
     available_grid_space: Size<AvailableSpace>,
     container_style: &Style,
@@ -299,7 +302,7 @@ fn initialize_track_sizes(axis_tracks: &mut [GridTrack], axis_available_space: A
 // 11.5 Resolve Intrinsic Track Sizes
 fn resolve_intrinsic_track_sizes(
     tree: &mut impl LayoutTree,
-    axis: GridAxis,
+    axis: AbstractAxis,
     axis_tracks: &mut [GridTrack],
     other_axis_tracks: &mut [GridTrack],
     items: &mut [GridItem],
@@ -649,7 +652,7 @@ fn distribute_item_space_to_growth_limit(
 
 // 11.6 Maximise Tracks
 // Distributes free space (if any) to tracks with FINITE growth limits, up to their limits.
-fn maximise_tracks(axis: GridAxis, axis_tracks: &mut [GridTrack], available_grid_space: Size<AvailableSpace>) {
+fn maximise_tracks(axis: AbstractAxis, axis_tracks: &mut [GridTrack], available_grid_space: Size<AvailableSpace>) {
     let used_space: f32 = axis_tracks.iter().map(|track| track.base_size).sum();
     let free_space = available_grid_space.get(axis).compute_free_space(used_space);
     if free_space == f32::INFINITY {
@@ -667,7 +670,7 @@ fn maximise_tracks(axis: GridAxis, axis_tracks: &mut [GridTrack], available_grid
 // This step sizes flexible tracks using the largest value it can assign to an fr without exceeding the available space.
 fn expand_flexible_tracks(
     tree: &mut impl LayoutTree,
-    axis: GridAxis,
+    axis: AbstractAxis,
     axis_tracks: &mut [GridTrack],
     items: &mut [GridItem],
     axis_min_size: Option<f32>,
@@ -820,7 +823,7 @@ fn find_size_of_fr(tracks: &[GridTrack], space_to_fill: f32) -> f32 {
 // 11.8. Stretch auto Tracks
 // This step expands tracks that have an auto max track sizing function by dividing any remaining positive, definite free space equally amongst them.
 fn stretch_auto_tracks(
-    axis: GridAxis,
+    axis: AbstractAxis,
     axis_tracks: &mut [GridTrack],
     container_style: &Style,
     available_space: Size<AvailableSpace>,
