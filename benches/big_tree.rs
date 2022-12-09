@@ -58,9 +58,8 @@ fn build_deep_hierarchy(taffy: &mut Taffy, node_count: u32, branching_factor: u3
     let mut rng = ChaCha8Rng::seed_from_u64(12345);
     let mut build_leaf_node = |taffy: &mut Taffy| build_random_leaf(taffy, &mut rng);
     let mut rng = ChaCha8Rng::seed_from_u64(12345);
-    let mut build_flex_node = |taffy: &mut Taffy, children: Vec<Node>| {
-        taffy.new_node(Style::random(&mut rng), &children).unwrap()
-    };
+    let mut build_flex_node =
+        |taffy: &mut Taffy, children: Vec<Node>| taffy.new_node(Style::random(&mut rng), &children).unwrap();
 
     let tree = build_deep_tree(taffy, node_count, branching_factor, &mut build_leaf_node, &mut build_flex_node);
 
@@ -125,7 +124,7 @@ fn taffy_benchmarks(c: &mut Criterion) {
     });
 
     group.bench_function("10_000 nodes", |b| {
-       b.iter_batched(
+        b.iter_batched(
             || {
                 let mut taffy = Taffy::new();
                 let root = build_yoga_deep_hierarchy(&mut taffy, 10_000, 10);
@@ -178,7 +177,7 @@ fn taffy_benchmarks(c: &mut Criterion) {
     });
 
     group.bench_function("100 nodes (2-level hierarchy)", |b| {
-         b.iter_batched(
+        b.iter_batched(
             || {
                 let mut taffy = Taffy::new();
                 let root = build_flat_hierarchy(&mut taffy, 100);
@@ -190,7 +189,7 @@ fn taffy_benchmarks(c: &mut Criterion) {
     });
 
     group.bench_function("1_000 nodes (2-level hierarchy)", |b| {
-         b.iter_batched(
+        b.iter_batched(
             || {
                 let mut taffy = Taffy::new();
                 let root = build_flat_hierarchy(&mut taffy, 1_000);
@@ -202,7 +201,7 @@ fn taffy_benchmarks(c: &mut Criterion) {
     });
 
     group.bench_function("10_000 nodes (2-level hierarchy)", |b| {
-       b.iter_batched(
+        b.iter_batched(
             || {
                 let mut taffy = Taffy::new();
                 let root = build_flat_hierarchy(&mut taffy, 10_000);
