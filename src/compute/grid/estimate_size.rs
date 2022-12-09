@@ -5,7 +5,7 @@ use crate::style::{GridPlacement, Style};
 use core::cmp::{max, min};
 
 use super::types::TrackCounts;
-use super::util::into_origin_zero_coordinates;
+use super::util::css_grid_line_into_origin_zero_coords;
 
 /// Estimate the number of rows and columns in the grid
 /// This is used as a performance optimisation to pre-size vectors and reduce allocations. It also forms a necessary step
@@ -98,7 +98,7 @@ fn child_min_line_max_line_span(line: Line<GridPlacement>, explicit_track_count:
     // C. If the placement contains two spans, remove the one contributed by the end grid-placement property.
     // D. If the placement contains only a span for a named line, replace it with a span of 1.
 
-    let into_oz = |grid_line: i16| into_origin_zero_coordinates(grid_line, explicit_track_count);
+    let into_oz = |grid_line: i16| css_grid_line_into_origin_zero_coords(grid_line, explicit_track_count);
 
     let min = match (line.start, line.end) {
         // Both tracks specified

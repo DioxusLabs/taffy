@@ -1,7 +1,7 @@
 //! Implements placing items in the grid and resolving the implicit grid.
 //! https://www.w3.org/TR/css-grid-1/#placement
 use super::types::{CellOccupancyMatrix, CellOccupancyState, GridItem};
-use super::util::into_origin_zero_coordinates;
+use super::util::css_grid_line_into_origin_zero_coords;
 use crate::axis::{AbsoluteAxis, InBothAbsAxis};
 use crate::geometry::Line;
 use crate::node::Node;
@@ -29,10 +29,10 @@ pub(super) fn place_grid_items<'a, ChildIter>(
         move |(node, style): (Node, &Style)| {
             let origin_zero_placement = InBothAbsAxis {
                 horizontal: style.grid_column.map(|placement| {
-                    placement.map_track(|track| into_origin_zero_coordinates(track, explicit_col_count))
+                    placement.map_track(|track| css_grid_line_into_origin_zero_coords(track, explicit_col_count))
                 }),
                 vertical: style.grid_row.map(|placement| {
-                    placement.map_track(|track| into_origin_zero_coordinates(track, explicit_row_count))
+                    placement.map_track(|track| css_grid_line_into_origin_zero_coords(track, explicit_row_count))
                 }),
             };
             (node, origin_zero_placement)
