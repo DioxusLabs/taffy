@@ -1,34 +1,22 @@
 //! Axis enums representing CSS Grid axis
 use crate::geometry::Size;
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+/// The simple absolute horizontal and vertical axis
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum AbsoluteAxis {
+    /// The horizontal axis
     Horizontal,
+    /// The vertical axis
     Vertical,
 }
 
 impl AbsoluteAxis {
+    /// Returns the other variant of the enum
     #[inline]
     pub const fn other_axis(&self) -> Self {
         match *self {
             AbsoluteAxis::Horizontal => AbsoluteAxis::Vertical,
             AbsoluteAxis::Vertical => AbsoluteAxis::Horizontal,
-        }
-    }
-
-    #[inline]
-    pub fn into_column_row<T>(&self, primary: T, secondary: T) -> (T, T) {
-        match *self {
-            AbsoluteAxis::Horizontal => (primary, secondary),
-            AbsoluteAxis::Vertical => (secondary, primary),
-        }
-    }
-
-    #[inline]
-    pub fn into_primary_secondary<T>(&self, row: T, column: T) -> (T, T) {
-        match *self {
-            AbsoluteAxis::Horizontal => (row, column),
-            AbsoluteAxis::Vertical => (column, row),
         }
     }
 }
@@ -42,19 +30,11 @@ impl<T> Size<T> {
             AbsoluteAxis::Vertical => self.height,
         }
     }
-
-    #[inline(always)]
-    /// Get either the width or height depending on the AbsoluteAxis passed in
-    pub fn get_abs_other(self, axis: AbsoluteAxis) -> T {
-        match axis {
-            AbsoluteAxis::Horizontal => self.height,
-            AbsoluteAxis::Vertical => self.width,
-        }
-    }
 }
 
-/// The abstract axis in CSS Grid
-#[derive(Copy, Clone, Debug, PartialEq)]
+/// The CSS abstract axis
+/// https://www.w3.org/TR/css-writing-modes-3/#abstract-axes
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum GridAxis {
     /// The axis in the inline dimension, i.e. the horizontal axis in horizontal writing modes and the vertical axis in vertical writing modes.
     Inline,
@@ -63,6 +43,7 @@ pub enum GridAxis {
 }
 
 impl GridAxis {
+    /// Returns the other variant of the enum
     pub fn other(&self) -> GridAxis {
         match *self {
             GridAxis::Inline => GridAxis::Block,

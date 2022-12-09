@@ -283,7 +283,10 @@ fn record_grid_placement(
     cell_occupancy_matrix.mark_area_as(primary_axis, primary_span, secondary_span, placement_type);
 
     // Create grid item
-    let (col_span, row_span) = primary_axis.into_column_row(primary_span, secondary_span);
+    let (col_span, row_span) = match primary_axis {
+        AbsoluteAxis::Horizontal => (primary_span, secondary_span),
+        AbsoluteAxis::Vertical => (secondary_span, primary_span),
+    };
     items.push(GridItem::new_with_placement(node, col_span, row_span));
 
     #[cfg(test)]
