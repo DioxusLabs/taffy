@@ -43,7 +43,7 @@ pub enum Error {
 impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> Result {
         match *self {
-            Error::InvalidNode(ref node) => write!(f, "Invalid node {:?}", node),
+            Error::InvalidNode(ref node) => write!(f, "Invalid node {node:?}"),
         }
     }
 }
