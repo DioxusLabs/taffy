@@ -24,7 +24,7 @@ async fn main() {
     let mut fixtures: Vec<_> = fixtures
         .into_iter()
         .filter_map(|a| a.ok())
-        .filter(|f| !f.file_name().to_string_lossy().starts_with("x")) // ignore tests beginning with x
+        .filter(|f| !f.file_name().to_string_lossy().starts_with('x')) // ignore tests beginning with x
         .filter(|f| f.path().is_file() && f.path().extension().map(|p| p == "html").unwrap_or(false))
         .map(|f| {
             let fixture_path = f.path();
@@ -283,7 +283,7 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
         quoter: impl Fn(&serde_json::Map<String, Value>) -> TokenStream,
     ) -> Option<TokenStream> {
         match style[prop_name.to_case(Case::Camel)] {
-            Value::Object(ref value) => Some(quoter(&value)),
+            Value::Object(ref value) => Some(quoter(value)),
             _ => None,
         }
     }
@@ -310,7 +310,7 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
         let prop_name_ident = format_ident!("{}", prop_name_snake_case);
         match style[prop_name_camel_case] {
             Value::Array(ref value) => {
-                let prop_value = quoter(&value);
+                let prop_value = quoter(value);
                 quote!(#prop_name_ident: #prop_value,)
             }
             _ => quote!(),
@@ -319,7 +319,7 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
 
     fn get_string_value<'a, 'b, 'c: 'b>(prop_name: &'a str, style: &'c Value) -> Option<&'b str> {
         match style[prop_name.to_case(Case::Camel)] {
-            Value::String(ref value) => Some(&value),
+            Value::String(ref value) => Some(value),
             _ => None,
         }
     }
@@ -506,7 +506,7 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
             "grid_column",
             generate_line(
                 grid_column_start.unwrap_or(default_grid_placement.clone()),
-                grid_column_end.unwrap_or(default_grid_placement.clone()),
+                grid_column_end.unwrap_or(default_grid_placement),
             ),
         )
     } else {
@@ -525,17 +525,17 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
         Value::Array(ref value) => value.clone(),
         _ => vec![],
     };
-    let has_children = child_descriptions.len() > 0;
+    let has_children = !child_descriptions.is_empty();
     let (children_body, children) = if has_children {
         let body = child_descriptions
             .iter()
             .enumerate()
-            .map(|(i, child)| generate_node(&format!("{}{}", ident, i), child))
+            .map(|(i, child)| generate_node(&format!("{ident}{i}"), child))
             .collect();
         let idents = child_descriptions
             .iter()
             .enumerate()
-            .map(|(i, _)| Ident::new(&format!("{}{}", ident, i), Span::call_site()))
+            .map(|(i, _)| Ident::new(&format!("{ident}{i}"), Span::call_site()))
             .collect::<Vec<_>>();
         (body, quote!(&[#(#idents),*]))
     } else {
@@ -583,12 +583,10 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
             #children_body
             let #ident = taffy.new_with_children(#style,#children).unwrap();
         )
+    } else if measure_func.is_some() {
+        quote!(let #ident = taffy.new_leaf_with_measure(#style,#measure_func,).unwrap();)
     } else {
-        if measure_func.is_some() {
-            quote!(let #ident = taffy.new_leaf_with_measure(#style,#measure_func,).unwrap();)
-        } else {
-            quote!(let #ident = taffy.new_leaf(#style).unwrap();)
-        }
+        quote!(let #ident = taffy.new_leaf(#style).unwrap();)
     }
 }
 
