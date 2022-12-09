@@ -83,13 +83,38 @@ pub(super) fn cmp_by_cross_flex_then_span_then_start(axis: GridAxis) -> impl FnM
     }
 }
 
+/// When applying the track sizing algorithm and estimating the size in the other axis for content sizing items
+/// we should take into account align-content/justify-content if both the grid container and all items in the
+/// other axis have definite sizes. This function computes such a per-gutter additional size adjustment.
 pub(super) fn compute_alignment_gutter_adjustment(
     alignment: AlignContent,
     available_space: AvailableSpace,
     get_track_size_estimate: impl Fn(&GridTrack, AvailableSpace) -> Option<f32>,
     tracks: &[GridTrack],
 ) -> f32 {
-    if alignment.inner_gutter_weight() > 0 && available_space.is_definite() && tracks.len() > 1 {
+    // As items never cross the outermost gutters in a grid, we can simplify our calculations by treating
+    // AlignContent::Start and AlignContent::End the same
+    let outer_gutter_weight = match alignment {
+        AlignContent::Start => 1,
+        AlignContent::End => 1,
+        AlignContent::Center => 1,
+        AlignContent::Stretch => 0,
+        AlignContent::SpaceBetween => 0,
+        AlignContent::SpaceAround => 1,
+        AlignContent::SpaceEvenly => 1,
+    };
+
+    let inner_gutter_weight = match alignment {
+        AlignContent::Start => 0,
+        AlignContent::End => 0,
+        AlignContent::Center => 0,
+        AlignContent::Stretch => 0,
+        AlignContent::SpaceBetween => 1,
+        AlignContent::SpaceAround => 2,
+        AlignContent::SpaceEvenly => 1,
+    };
+
+    if inner_gutter_weight > 0 && available_space.is_definite() && tracks.len() > 1 {
         let inner_available_space = tracks
             .iter()
             .map(|track| get_track_size_estimate(track, available_space))
@@ -97,10 +122,10 @@ pub(super) fn compute_alignment_gutter_adjustment(
             .map(|track_size_sum| f32_max(0.0, available_space.unwrap() - track_size_sum))
             .unwrap_or(0.0);
 
-        let weighted_track_count = (((tracks.len() - 3) / 2) * alignment.inner_gutter_weight() as usize)
-            + (2 * alignment.outer_gutter_weight() as usize);
+        let weighted_track_count =
+            (((tracks.len() - 3) / 2) * inner_gutter_weight as usize) + (2 * outer_gutter_weight as usize);
 
-        (inner_available_space / weighted_track_count as f32) * alignment.inner_gutter_weight() as f32
+        (inner_available_space / weighted_track_count as f32) * inner_gutter_weight as f32
     } else {
         0.0
     }

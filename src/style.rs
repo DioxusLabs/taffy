@@ -80,32 +80,6 @@ pub enum AlignContent {
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content)
 pub type JustifyContent = AlignContent;
 
-impl AlignContent {
-    pub(crate) fn outer_gutter_weight(self) -> u8 {
-        match self {
-            AlignContent::Start => 1,
-            AlignContent::End => 1,
-            AlignContent::Center => 1,
-            AlignContent::Stretch => 0,
-            AlignContent::SpaceBetween => 0,
-            AlignContent::SpaceAround => 1,
-            AlignContent::SpaceEvenly => 1,
-        }
-    }
-
-    pub(crate) fn inner_gutter_weight(self) -> u8 {
-        match self {
-            AlignContent::Start => 0,
-            AlignContent::End => 0,
-            AlignContent::Center => 0,
-            AlignContent::Stretch => 0,
-            AlignContent::SpaceBetween => 1,
-            AlignContent::SpaceAround => 2,
-            AlignContent::SpaceEvenly => 1,
-        }
-    }
-}
-
 /// Sets the layout used for the children of this node
 ///
 /// [`Display::Flex`] is the default value.
@@ -321,10 +295,7 @@ impl Line<GridPlacement> {
     /// The track position is definite if least one of the start and end positions is a track index
     pub fn is_definite(&self) -> bool {
         use GridPlacement::*;
-        match (self.start, self.end) {
-            (Track(_), _) | (_, Track(_)) => true,
-            _ => false,
-        }
+        matches!((self.start, self.end), (Track(_), _) | (_, Track(_)))
     }
 
     /// If at least one of the of the start and end positions is a track index then the other end can be resolved
@@ -898,6 +869,7 @@ impl Style {
         }
     }
 
+    /// Get a grid item's row or column placement depending on the axis passed
     pub(crate) fn grid_placement(&self, axis: AbsoluteAxis) -> Line<GridPlacement> {
         match axis {
             AbsoluteAxis::Horizontal => self.grid_column,
@@ -905,6 +877,7 @@ impl Style {
         }
     }
 
+    /// Get a grid container's align-content or justify-content alignment depending on the axis passed
     pub(crate) fn grid_align_content(&self, axis: GridAxis) -> AlignContent {
         match axis {
             GridAxis::Inline => self.justify_content.unwrap_or(AlignContent::Stretch),
