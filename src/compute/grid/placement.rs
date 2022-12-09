@@ -1,7 +1,8 @@
 //! Implements placing items in the grid and resolving the implicit grid.
 //! https://www.w3.org/TR/css-grid-1/#placement
-use super::types::{AbsoluteAxis, CellOccupancyMatrix, CellOccupancyState, GridItem};
+use super::types::{CellOccupancyMatrix, CellOccupancyState, GridItem};
 use super::util::into_origin_zero_coordinates;
+use crate::axis::AbsoluteAxis;
 use crate::geometry::Line;
 use crate::node::Node;
 use crate::style::{GridAutoFlow, GridPlacement, Style};

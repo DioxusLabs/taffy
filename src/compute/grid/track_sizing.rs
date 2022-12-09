@@ -1,6 +1,7 @@
 //! Implements the track sizing algorithm
 //! https://www.w3.org/TR/css-grid-1/#layout-algorithm
-use super::types::{AbstractAxis, GridItem, GridTrack, TrackCounts};
+use super::types::{GridItem, GridTrack, TrackCounts};
+use crate::axis::AbstractAxis;
 use crate::geometry::Size;
 use crate::layout::AvailableSpace;
 use crate::math::MaybeMath;

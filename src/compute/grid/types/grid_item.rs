@@ -1,5 +1,6 @@
 //! Contains GridItem used to represent a single grid item during layout
-use super::{AbstractAxis, GridTrack};
+use super::GridTrack;
+use crate::axis::AbstractAxis;
 use crate::compute::compute_node_layout;
 use crate::geometry::{Line, Size};
 use crate::layout::{AvailableSpace, RunMode, SizingMode};
@@ -23,10 +24,10 @@ pub(in super::super) struct GridItem {
     pub column: Line<i16>,
 
     /// The item's definite row-start and row-end (same as `row` field, except in a different coordinate system)
-    /// (as indexes into the Vec<GridTrack> stored in a grid's GridAxisTracks)
+    /// (as indexes into the Vec<GridTrack> stored in a grid's AbstractAxisTracks)
     pub row_indexes: Line<u16>,
     /// The items definite column-start and column-end (same as `column` field, except in a different coordinate system)
-    /// (as indexes into the Vec<GridTrack> stored in a grid's GridAxisTracks)
+    /// (as indexes into the Vec<GridTrack> stored in a grid's AbstractAxisTracks)
     pub column_indexes: Line<u16>,
 
     /// Whether the item crosses a flexible row

@@ -1,12 +1,8 @@
 //! Structs and enums that are used within the grid module
-mod axis;
 mod cell_occupancy;
 mod grid_item;
 mod grid_track;
 mod grid_track_counts;
-
-// Publish publicly
-pub use axis::{AbsoluteAxis, AbstractAxis};
 
 // Publish only locally in the grid module
 pub(super) use cell_occupancy::{CellOccupancyMatrix, CellOccupancyState};

@@ -33,6 +33,7 @@ pub mod tree;
 #[cfg(feature = "random")]
 pub mod randomizable;
 
+mod axis;
 mod compute;
 mod data;
 mod resolve;

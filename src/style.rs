@@ -1,6 +1,6 @@
 //! A representation of [CSS layout properties](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust, used for flexbox layout
 
-use crate::compute::grid::{AbsoluteAxis, AbstractAxis};
+use crate::axis::{AbsoluteAxis, AbstractAxis};
 use crate::geometry::{Line, Rect, Size};
 use crate::layout::AvailableSpace;
 use crate::sys::GridTrackVec;
