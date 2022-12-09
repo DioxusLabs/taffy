@@ -2,27 +2,11 @@
 //! https://www.w3.org/TR/css-grid-1/#placement
 use super::types::{CellOccupancyMatrix, CellOccupancyState, GridItem};
 use super::util::into_origin_zero_coordinates;
-use crate::axis::AbsoluteAxis;
+use crate::axis::{AbsoluteAxis, InBothAbsAxis};
 use crate::geometry::Line;
 use crate::node::Node;
 use crate::style::{GridAutoFlow, GridPlacement, Style};
 use crate::sys::Vec;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-struct InBothAbsAxis<T> {
-    inline: T,
-    block: T,
-}
-
-impl<T: Copy> InBothAbsAxis<T> {
-    // Bit of a hack to mix absolute axis with grid axis like this, but it'll do for now
-    pub fn get(&self, axis: AbsoluteAxis) -> T {
-        match axis {
-            AbsoluteAxis::Horizontal => self.inline,
-            AbsoluteAxis::Vertical => self.block,
-        }
-    }
-}
 
 /// 8.5. Grid Item Placement Algorithm
 /// Place items into the grid, generating new rows/column into the implicit grid as required
@@ -44,10 +28,10 @@ pub(super) fn place_grid_items<'a, ChildIter>(
         let explicit_row_count = cell_occupancy_matrix.track_counts(AbsoluteAxis::Vertical).explicit;
         move |(node, style): (Node, &Style)| {
             let origin_zero_placement = InBothAbsAxis {
-                inline: style.grid_column.map(|placement| {
+                horizontal: style.grid_column.map(|placement| {
                     placement.map_track(|track| into_origin_zero_coordinates(track, explicit_col_count))
                 }),
-                block: style.grid_row.map(|placement| {
+                vertical: style.grid_row.map(|placement| {
                     placement.map_track(|track| into_origin_zero_coordinates(track, explicit_row_count))
                 }),
             };
@@ -81,7 +65,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
         .map(map_child_style_to_origin_zero_placement)
         .for_each(|(child_node, child_placement)| {
             let (primary_span, secondary_span) =
-                place_definite_primary_axis_item(&*cell_occupancy_matrix, child_placement, grid_auto_flow);
+                place_definite_secondary_axis_item(&*cell_occupancy_matrix, child_placement, grid_auto_flow);
 
             record_grid_placement(
                 cell_occupancy_matrix,
@@ -164,7 +148,9 @@ fn place_definite_grid_item(
     (primary_span, secondary_span)
 }
 
-fn place_definite_primary_axis_item(
+/// 8.5. Grid Item Placement Algorithm
+/// Step 2. Place remaining children with definite secondary axis positions
+fn place_definite_secondary_axis_item(
     cell_occupancy_matrix: &CellOccupancyMatrix,
     placement: InBothAbsAxis<Line<GridPlacement>>,
     auto_flow: GridAutoFlow,
@@ -198,6 +184,8 @@ fn place_definite_primary_axis_item(
     }
 }
 
+/// 8.5. Grid Item Placement Algorithm
+/// Step 4. Position the remaining grid items.
 fn place_indefinitely_positioned_item(
     cell_occupancy_matrix: &CellOccupancyMatrix,
     placement: InBothAbsAxis<Line<GridPlacement>>,
@@ -265,7 +253,8 @@ fn place_indefinitely_positioned_item(
     }
 }
 
-/// Record a grid item once the definite placement has been determined
+/// Record the grid item in both CellOccupancyMatric and the GridItems list
+/// once a definite placement has been determined
 fn record_grid_placement(
     cell_occupancy_matrix: &mut CellOccupancyMatrix,
     items: &mut Vec<GridItem>,
@@ -301,6 +290,8 @@ fn record_grid_placement(
 #[allow(clippy::bool_assert_comparison)]
 #[cfg(test)]
 mod tests {
+    // It's more readable if the test code is uniform, so we tolerate unnecessary clones in tests
+    #![allow(clippy::redundant_clone)]
 
     mod test_placement_algorithm {
         use crate::compute::grid::estimate_size::compute_grid_size_estimate;
@@ -313,10 +304,12 @@ mod tests {
 
         use super::super::place_grid_items;
 
+        type ExpectedPlacement = (i16, i16, i16, i16);
+
         fn placement_test_runner(
             explicit_col_count: u16,
             explicit_row_count: u16,
-            children: Vec<(u32, Node, Style, (i16, i16, i16, i16))>,
+            children: Vec<(u32, Node, Style, ExpectedPlacement)>,
             expected_col_counts: TrackCounts,
             expected_row_counts: TrackCounts,
             flow: GridAutoFlow,

@@ -51,3 +51,23 @@ impl AbstractAxis {
         }
     }
 }
+
+/// Container that holds an item in each absolute axis without specifying
+/// what kind of item it is.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct InBothAbsAxis<T> {
+    /// The item in the horizontal axis
+    pub horizontal: T,
+    /// The item in the vertical axis
+    pub vertical: T,
+}
+
+impl<T: Copy> InBothAbsAxis<T> {
+    /// Get the contained item based on the AbsoluteAxis passed
+    pub fn get(&self, axis: AbsoluteAxis) -> T {
+        match axis {
+            AbsoluteAxis::Horizontal => self.horizontal,
+            AbsoluteAxis::Vertical => self.vertical,
+        }
+    }
+}
