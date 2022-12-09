@@ -1,5 +1,5 @@
-/// This module is not required for spec compliance, but is used as a performance optimisation
-/// to reduce the number of allocations required when creating a grid.
+//! This module is not required for spec compliance, but is used as a performance optimisation
+//! to reduce the number of allocations required when creating a grid.
 use crate::geometry::Line;
 use crate::style::{GridPlacement, Style};
 use core::cmp::{max, min};

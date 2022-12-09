@@ -1,3 +1,4 @@
+//! Utility functions used within the grid module
 pub(super) mod coordinates;
 pub(super) use coordinates::{into_grid_coordinates, into_origin_zero_coordinates};
 

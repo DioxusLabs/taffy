@@ -1,5 +1,11 @@
+//! Generic CSS alignment code that is shared between both the Flexbox and CSS Grid algorithms.
 use crate::style::AlignContent;
 
+/// Generic alignment function that is used:
+///   - For both align-content and justify-content alignment
+///   - For both the Flexbox and CSS Grid algorithms
+/// CSS Grid does not apply gaps as part of alignment, so the gap parameter should
+/// always be set to zero for CSS Grid.
 pub(crate) fn compute_alignment_offset(
     free_space: f32,
     num_items: usize,

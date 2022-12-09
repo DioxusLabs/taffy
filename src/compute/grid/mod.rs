@@ -1,5 +1,5 @@
-//! This module is a partial implementation of the CSS Grid Level 2 specification
-//! https://www.w3.org/TR/css-grid-2/
+//! This module is a partial implementation of the CSS Grid Level 1 specification
+//! https://www.w3.org/TR/css-grid-1/
 use crate::geometry::Size;
 use crate::layout::AvailableSpace;
 use crate::math::MaybeMath;
@@ -25,6 +25,12 @@ mod util;
 
 pub(crate) use types::{AbsoluteAxis, GridAxis};
 
+/// Grid layout algorithm
+/// This consists of a few phases:
+///   - Resolving the explicit grid
+///   - Placing items (which also resolves the implicit grid)
+///   - Track (row/column) sizing
+///   - Alignment & Final item placement
 pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<AvailableSpace>) -> Size<f32> {
     let get_child_styles_iter = |node| tree.children(node).into_iter().map(|child_node: &Node| tree.style(*child_node));
     let style = tree.style(root).clone();

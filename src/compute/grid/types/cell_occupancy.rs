@@ -1,3 +1,4 @@
+//! Contains CellOccupancyMatrix used to track occupied cells during grid placement
 use super::{AbsoluteAxis, TrackCounts};
 use crate::geometry::Line;
 use crate::sys::Vec;

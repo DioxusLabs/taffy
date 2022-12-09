@@ -1,5 +1,10 @@
 //!
-//! Grid line coordinates are those used in grid-row/grid-column in the CSS grid spec
+//! Grid line coordinates are those used in grid-row/grid-column in the CSS grid spec:
+//!   - The line at left hand (or top) edge of the explicit grid is line 1
+//!     (and counts up from there)
+//!   - The line at the right hand (or bottom) edge of the explicit grid in -1
+//!     (and counts down from there)
+//!   - 0 is not a valid index
 //!
 //! In origin-zero coordinates:
 //!   - The line at left hand (or top) edge of the explicit grid is line 0

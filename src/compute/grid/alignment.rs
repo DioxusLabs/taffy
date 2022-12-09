@@ -1,3 +1,4 @@
+//! Alignment of tracks and final positioning of items
 use super::types::{GridItem, GridTrack};
 use crate::compute::common::alignment::compute_alignment_offset;
 use crate::compute::compute_node_layout;

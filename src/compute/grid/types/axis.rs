@@ -1,3 +1,4 @@
+//! Axis enums representing CSS Grid axis
 use crate::geometry::Size;
 
 #[derive(Copy, Clone, Debug, PartialEq)]

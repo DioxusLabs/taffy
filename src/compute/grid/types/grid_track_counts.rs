@@ -1,3 +1,5 @@
+//! Contains TrackCounts used to keep track of the number of tracks in the explicit and implicit grids.
+//! Also contains coordinate conversion functions which depend on those counts
 use crate::geometry::Line;
 use core::ops::Range;
 

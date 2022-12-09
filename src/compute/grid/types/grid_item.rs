@@ -1,3 +1,4 @@
+//! Contains GridItem used to represent a single grid item during layout
 use super::{GridAxis, GridTrack};
 use crate::compute::compute_node_layout;
 use crate::geometry::{Line, Size};

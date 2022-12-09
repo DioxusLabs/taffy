@@ -1724,6 +1724,8 @@ fn sum_axis_gaps(gap: f32, num_items: usize) -> f32 {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::redundant_clone)]
+
     use super::hidden_layout;
     use crate::geometry::Point;
     use crate::style::Display;
@@ -1791,13 +1793,10 @@ mod tests {
         let style: Style = Style { display: Flex, size: Size::from_points(50.0, 50.0), ..Default::default() };
 
         let grandchild_00 = taffy.new_leaf(style.clone()).unwrap();
-
         let grandchild_01 = taffy.new_leaf(style.clone()).unwrap();
-
-        let grandchild_02 = taffy.new_leaf(style.clone()).unwrap();
-
         let child_00 = taffy.new_with_children(style.clone(), &[grandchild_00, grandchild_01]).unwrap();
 
+        let grandchild_02 = taffy.new_leaf(style.clone()).unwrap();
         let child_01 = taffy.new_with_children(style.clone(), &[grandchild_02]).unwrap();
 
         let root = taffy

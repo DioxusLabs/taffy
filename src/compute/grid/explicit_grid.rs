@@ -1,3 +1,5 @@
+//! Helper functions for intialising GridTrack's from styles
+//! This mainly consists of evaluating GridAutoTracks
 use super::types::{GridTrack, TrackCounts};
 use crate::style::{Dimension, Style, TrackSizingFunction};
 use crate::sys::{GridTrackVec, Vec};

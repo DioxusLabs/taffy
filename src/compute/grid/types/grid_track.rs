@@ -1,3 +1,4 @@
+//! Contains GridTrack used to represent a single grid track (row/column) during layout
 use crate::style::{Dimension, MaxTrackSizingFunction, MinTrackSizingFunction};
 
 /// Whether a GridTrack represents an actual track or a gutter.

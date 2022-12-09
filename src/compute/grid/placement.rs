@@ -1,3 +1,5 @@
+//! Implements placing items in the grid and resolving the implicit grid.
+//! https://www.w3.org/TR/css-grid-1/#placement
 use super::types::{AbsoluteAxis, CellOccupancyMatrix, CellOccupancyState, GridItem};
 use super::util::into_origin_zero_coordinates;
 use crate::geometry::Line;

@@ -1,3 +1,4 @@
+//! Structs and enums that are used within the grid module
 mod axis;
 mod cell_occupancy;
 mod grid_item;
