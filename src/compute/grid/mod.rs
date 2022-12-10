@@ -66,14 +66,14 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
         final_col_counts,
         &style.grid_template_columns,
         &style.grid_auto_columns,
-        style.gap.width.into(),
+        style.gap.width,
     );
     initialize_grid_tracks(
         &mut rows,
         final_row_counts,
         &style.grid_template_rows,
         &style.grid_auto_rows,
-        style.gap.height.into(),
+        style.gap.height,
     );
 
     // 4. Compute "available grid space"
