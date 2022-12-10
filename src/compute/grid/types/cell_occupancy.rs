@@ -4,27 +4,35 @@ use crate::axis::AbsoluteAxis;
 use crate::geometry::Line;
 use crate::sys::Vec;
 use core::cmp::{max, min};
+use core::fmt::Debug;
 use core::ops::Range;
 use grid::Grid;
 
+/// The occupancy state of a single grid cell
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Default)]
 pub(crate) enum CellOccupancyState {
     #[default]
     /// Indicates that a grid cell is unoccupied
     Unoccupied,
-    // Indicates that a grid cell is occupied by a definitely placed item
+    /// Indicates that a grid cell is occupied by a definitely placed item
     DefinitelyPlaced,
-    // Indicates that a grid cell is occupied by an item that was placed by the auto placement algorithm
+    /// Indicates that a grid cell is occupied by an item that was placed by the auto placement algorithm
     AutoPlaced,
 }
 
+/// A dynamically sized matrix (2d grid) which tracks the occupancy of each grid cell during auto-placement
+/// It also keeps tabs on how many tracks there are and which tracks are implicit and which are explicit.
 pub(crate) struct CellOccupancyMatrix {
+    /// The grid of occupancy states
     inner: Grid<CellOccupancyState>,
+    /// The counts of implicit and explicit columns
     columns: TrackCounts,
+    /// The counts of implicit and explicit rows
     rows: TrackCounts,
 }
 
-impl core::fmt::Debug for CellOccupancyMatrix {
+/// Debug impl that represents the matrix in a compact 2d text format
+impl Debug for CellOccupancyMatrix {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         writeln!(
             f,
@@ -55,10 +63,13 @@ impl core::fmt::Debug for CellOccupancyMatrix {
 }
 
 impl CellOccupancyMatrix {
+    /// Create a CellOccupancyMatrix given a set of provisional track counts. The grid can expand as needed to fit more tracks,
+    /// the provisional track counts represent a best effort attempt to avoid the extra allocations this requires.
     pub fn with_track_counts(columns: TrackCounts, rows: TrackCounts) -> Self {
         Self { inner: Grid::new(rows.len(), columns.len()), rows, columns }
     }
 
+    /// Determines whether the specified area fits within the tracks currently represented by the matrix
     pub fn is_area_in_range(
         &mut self,
         primary_axis: AbsoluteAxis,
@@ -157,14 +168,20 @@ impl CellOccupancyMatrix {
         }
     }
 
+    /// Converts a span of grid lines in OriginZero coordinates into a range a tracks suitable
+    /// for indexing into this CellOccupancyMatrix
     pub fn lines_to_tracks(&self, axis: AbsoluteAxis, span: Line<i16>) -> Range<i16> {
         self.track_counts(axis).oz_line_range_to_track_range(span)
     }
 
+    /// Converts a range a tracks indexes from this CellOccupancyMatrix into a span of grid lines
+    /// in OriginZero coordinates
     pub fn tracks_to_lines(&self, axis: AbsoluteAxis, span: Range<i16>) -> Line<i16> {
         self.track_counts(axis).track_range_to_oz_line_range(span)
     }
 
+    /// Determines whether a grid area specified by the bounding grid lines in OriginZero coordinates
+    /// is entirely unnocupied. Returns true if all grid cells within the grid area are unnocupied, else false.
     pub fn line_area_is_unoccupied(
         &self,
         primary_axis: AbsoluteAxis,
@@ -176,6 +193,8 @@ impl CellOccupancyMatrix {
         self.track_area_is_unoccupied(primary_axis, primary_range, secondary_range)
     }
 
+    /// Determines whether a grid area specified by a range of indexes into this CellOccupancyMatrix
+    /// is entirely unnocupied. Returns true if all grid cells within the grid area are unnocupied, else false.
     pub fn track_area_is_unoccupied(
         &self,
         primary_axis: AbsoluteAxis,
@@ -200,6 +219,7 @@ impl CellOccupancyMatrix {
         true
     }
 
+    /// Returns the track counts of this CellOccunpancyMatrix in the relevant axis
     pub fn track_counts(&self, track_type: AbsoluteAxis) -> &TrackCounts {
         match track_type {
             AbsoluteAxis::Horizontal => &self.columns,
@@ -207,6 +227,9 @@ impl CellOccupancyMatrix {
         }
     }
 
+    /// Given an axis and a track index
+    /// Search backwards from the end of the track and find the last grid cell matching the specified state (if any)
+    /// Return the index of that cell or None.
     pub fn last_of_type(&self, track_type: AbsoluteAxis, track_index: i16, kind: CellOccupancyState) -> Option<i16> {
         let track_counts = self.track_counts(track_type.other_axis());
         let track_computed_index = track_counts.oz_line_to_next_track(track_index);
