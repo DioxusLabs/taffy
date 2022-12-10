@@ -25,14 +25,14 @@ fn grid_min_content_single_item() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 grid_template_rows: vec![
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::Dimension::Points(40f32)),
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::Dimension::Points(40f32)),
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::Dimension::Points(40f32)),
+                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
+                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
+                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
                 ],
                 grid_template_columns: vec![
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::Dimension::Points(40f32)),
+                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
                     taffy::style::TrackSizingFunction::MinContent,
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::Dimension::Points(40f32)),
+                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
                 ],
                 ..Default::default()
             },

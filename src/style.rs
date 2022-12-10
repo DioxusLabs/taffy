@@ -362,7 +362,7 @@ impl Default for Line<GridPlacement> {
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum MaxTrackSizingFunction {
     /// Track maximum size should be a fixed points or percentage value
-    Fixed(Dimension),
+    Fixed(LengthPercentage),
     /// Track maximum size should be content sized under a min-content constraint
     MinContent,
     /// Track maximum size should be content sized under a max-content constraint
@@ -409,12 +409,12 @@ impl MaxTrackSizingFunction {
     pub fn definite_value(self, available_space: AvailableSpace) -> Option<f32> {
         use MaxTrackSizingFunction::{Auto, *};
         match self {
-            Fixed(Dimension::Points(size)) => Some(size),
-            Fixed(Dimension::Percent(fraction)) => match available_space {
+            Fixed(LengthPercentage::Points(size)) => Some(size),
+            Fixed(LengthPercentage::Percent(fraction)) => match available_space {
                 AvailableSpace::Definite(available_size) => Some(fraction * available_size),
                 _ => None,
             },
-            Fixed(Dimension::Auto) | MinContent | MaxContent | Auto | Flex(_) => None,
+            MinContent | MaxContent | Auto | Flex(_) => None,
         }
     }
 }
@@ -425,7 +425,7 @@ impl MaxTrackSizingFunction {
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum MinTrackSizingFunction {
     /// Track minimum size should be a fixed points or percentage value
-    Fixed(Dimension),
+    Fixed(LengthPercentage),
     /// Track minimum size should be content sized under a min-content constraint
     MinContent,
     /// Track minimum size should be content sized under a max-content constraint
@@ -442,12 +442,12 @@ impl MinTrackSizingFunction {
     pub fn definite_value(self, available_space: AvailableSpace) -> Option<f32> {
         use MinTrackSizingFunction::{Auto, *};
         match self {
-            Fixed(Dimension::Points(size)) => Some(size),
-            Fixed(Dimension::Percent(fraction)) => match available_space {
+            Fixed(LengthPercentage::Points(size)) => Some(size),
+            Fixed(LengthPercentage::Percent(fraction)) => match available_space {
                 AvailableSpace::Definite(available_size) => Some(fraction * available_size),
                 _ => None,
             },
-            Fixed(Dimension::Auto) | MinContent | MaxContent | Auto => None,
+            MinContent | MaxContent | Auto => None,
         }
     }
 }
@@ -459,7 +459,7 @@ impl MinTrackSizingFunction {
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum TrackSizingFunction {
     /// Track should be a fixed points or percentage value
-    Fixed(Dimension),
+    Fixed(LengthPercentage),
     /// Track should be content sized under a min-content constraint
     MinContent,
     /// Track should be content sized under a max-content constraint

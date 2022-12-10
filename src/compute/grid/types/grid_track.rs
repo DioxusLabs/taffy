@@ -1,5 +1,5 @@
 //! Contains GridTrack used to represent a single grid track (row/column) during layout
-use crate::style::{Dimension, MaxTrackSizingFunction, MinTrackSizingFunction};
+use crate::style::{LengthPercentage, MaxTrackSizingFunction, MinTrackSizingFunction};
 
 /// Whether a GridTrack represents an actual track or a gutter.
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -67,7 +67,7 @@ impl GridTrack {
     }
 
     /// Create a new GridTrack representing a gutter
-    pub fn gutter(size: Dimension) -> GridTrack {
+    pub fn gutter(size: LengthPercentage) -> GridTrack {
         GridTrack {
             kind: GridTrackKind::Gutter, // { name: None },
             min_track_sizing_function: MinTrackSizingFunction::Fixed(size),

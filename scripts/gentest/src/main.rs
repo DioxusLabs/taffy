@@ -760,7 +760,7 @@ fn generate_scalar_definition(
         "min-content" => quote!(taffy::style::#sizing_function::MinContent),
         "max-content" => quote!(taffy::style::#sizing_function::MaxContent),
         "points" | "percent" => {
-            let value = generate_dimension(track_definition);
+            let value = generate_length_percentage(track_definition);
             quote!(taffy::style::#sizing_function::Fixed(#value))
         }
         "fraction" => {

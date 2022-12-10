@@ -1,7 +1,7 @@
 //! Helper functions for intialising GridTrack's from styles
 //! This mainly consists of evaluating GridAutoTracks
 use super::types::{GridTrack, TrackCounts};
-use crate::style::{Dimension, Style, TrackSizingFunction};
+use crate::style::{LengthPercentage, Style, TrackSizingFunction};
 use crate::sys::{GridTrackVec, Vec};
 use core::cmp::{max, min};
 
@@ -20,7 +20,7 @@ pub(super) fn initialize_grid_tracks(
     counts: TrackCounts,
     track_template: &GridTrackVec<TrackSizingFunction>,
     auto_tracks: &Vec<TrackSizingFunction>,
-    gap: Dimension,
+    gap: LengthPercentage,
 ) {
     // Clear vector (in case this is a re-layout), reserve space for all tracks ahead of time to reduce allocations,
     // and push the initial gutter
@@ -64,7 +64,7 @@ fn create_implicit_tracks(
     tracks: &mut Vec<GridTrack>,
     count: u16,
     mut auto_tracks_iter: impl Iterator<Item = TrackSizingFunction>,
-    gap: Dimension,
+    gap: LengthPercentage,
 ) {
     for _ in 0..count {
         let track_def = auto_tracks_iter.next().unwrap();
@@ -82,7 +82,7 @@ mod test {
     use crate::compute::grid::util::*;
     use crate::style::MaxTrackSizingFunction;
     use crate::style::MinTrackSizingFunction;
-    use crate::style::{Dimension, TrackSizingFunction};
+    use crate::style::{LengthPercentage, TrackSizingFunction};
 
     #[test]
     fn explicit_grid_sizing() {
@@ -94,8 +94,8 @@ mod test {
 
     #[test]
     fn test_initialize_grid_tracks() {
-        let px20 = Dimension::Points(20.0);
-        let px100 = Dimension::Points(100.0);
+        let px20 = LengthPercentage::Points(20.0);
+        let px100 = LengthPercentage::Points(100.0);
 
         // Setup test
         let track_template = vec![

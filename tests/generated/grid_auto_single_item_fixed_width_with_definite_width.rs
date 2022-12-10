@@ -22,12 +22,12 @@ fn grid_auto_single_item_fixed_width_with_definite_width() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 grid_template_rows: vec![
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::Dimension::Points(40f32)),
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::Dimension::Points(40f32)),
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::Dimension::Points(40f32)),
+                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
+                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
+                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
                 ],
                 grid_template_columns: vec![
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::Dimension::Points(40f32)),
+                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
                     taffy::style::TrackSizingFunction::Auto,
                     taffy::style::TrackSizingFunction::Auto,
                 ],

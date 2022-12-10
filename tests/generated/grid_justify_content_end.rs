@@ -18,14 +18,14 @@ fn grid_justify_content_end() {
                 display: taffy::style::Display::Grid,
                 justify_content: Some(taffy::style::JustifyContent::End),
                 grid_template_rows: vec![
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::Dimension::Points(40f32)),
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::Dimension::Points(40f32)),
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::Dimension::Points(40f32)),
+                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
+                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
+                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
                 ],
                 grid_template_columns: vec![
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::Dimension::Points(40f32)),
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::Dimension::Points(40f32)),
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::Dimension::Points(40f32)),
+                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
+                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
+                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
                 ],
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
