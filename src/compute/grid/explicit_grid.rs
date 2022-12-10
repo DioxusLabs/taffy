@@ -5,6 +5,7 @@ use crate::style::{Dimension, Style, TrackSizingFunction};
 use crate::sys::{GridTrackVec, Vec};
 use core::cmp::{max, min};
 
+/// Compute the number of rows and columns in the explicit grid
 pub(crate) fn compute_explicit_grid_size(style: &Style) -> (u16, u16) {
     let explicit_col_count = max(style.grid_template_columns.len(), 1) as u16;
     let explicit_row_count = max(style.grid_template_rows.len(), 1) as u16;
@@ -12,6 +13,8 @@ pub(crate) fn compute_explicit_grid_size(style: &Style) -> (u16, u16) {
     (explicit_col_count, explicit_row_count)
 }
 
+/// Resolve the track sizing functions of explicit tracks, automatically created tracks, and gutters
+/// given a set of track counts and all of the relevant styles
 pub(super) fn initialize_grid_tracks(
     tracks: &mut Vec<GridTrack>,
     counts: TrackCounts,
@@ -56,7 +59,7 @@ pub(super) fn initialize_grid_tracks(
     }
 }
 
-// Utility function for repeating logic of creating implicit tracks
+/// Utility function for repeating logic of creating implicit tracks
 fn create_implicit_tracks(
     tracks: &mut Vec<GridTrack>,
     count: u16,
