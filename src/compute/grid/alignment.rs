@@ -1,14 +1,18 @@
 //! Alignment of tracks and final positioning of items
 use super::types::{GridItem, GridTrack};
+use crate::axis::InBothAbsAxis;
 use crate::compute::common::alignment::compute_alignment_offset;
 use crate::compute::compute_node_layout;
 use crate::geometry::{Line, Point, Size};
 use crate::layout::{AvailableSpace, Layout, RunMode, SizingMode};
 use crate::resolve::MaybeResolve;
-use crate::style::{AlignContent, AlignItems, AlignSelf, JustifyItems};
+use crate::style::{AlignContent, AlignItems, AlignSelf};
 use crate::sys::{f32_max, f32_min};
 use crate::tree::LayoutTree;
 
+/// Align the grid tracks within the grid according to the align-content (rows) or
+/// justify-content (columns) property. This only does anything if the size of the
+/// grid is not equal to the size of the grid container in the axis being aligned.
 pub(super) fn align_tracks(
     grid_container_size: Option<f32>,
     tracks: &mut [GridTrack],
@@ -59,15 +63,14 @@ pub(super) fn align_tracks(
     });
 }
 
+/// Align and size a grid item into it's final position
 pub(super) fn align_and_position_item(
     tree: &mut impl LayoutTree,
     order: u32,
     item: &GridItem,
-    rows: &[GridTrack],
-    columns: &[GridTrack],
+    tracks: InBothAbsAxis<&[GridTrack]>,
     available_space: Size<AvailableSpace>,
-    align_items: Option<AlignItems>,
-    justify_items: Option<JustifyItems>,
+    alignment_styles: InBothAbsAxis<Option<AlignItems>>,
 ) {
     let style = tree.style(item.node);
     let aspect_ratio = style.aspect_ratio;
@@ -87,9 +90,9 @@ pub(super) fn align_and_position_item(
         .width
     };
     let (x, width) = align_and_size_item_within_area(
-        columns,
+        tracks.horizontal,
         item.column_indexes,
-        justify_self.or(justify_items),
+        justify_self.or(alignment_styles.horizontal),
         inherent_size.width,
         aspect_ratio,
         &mut measure_node,
@@ -107,9 +110,9 @@ pub(super) fn align_and_position_item(
         .height
     };
     let (y, height) = align_and_size_item_within_area(
-        rows,
+        tracks.vertical,
         item.row_indexes,
-        align_self.or(align_items),
+        align_self.or(alignment_styles.vertical),
         inherent_size.height,
         aspect_ratio,
         &mut measure_node,
@@ -118,6 +121,7 @@ pub(super) fn align_and_position_item(
     *tree.layout_mut(item.node) = Layout { order, size: Size { width, height }, location: Point { x, y } };
 }
 
+/// Align and size a grid item along a single axis
 pub(super) fn align_and_size_item_within_area(
     tracks: &[GridTrack],
     indexes: Line<u16>,

@@ -1,6 +1,6 @@
 //! This module is a partial implementation of the CSS Grid Level 1 specification
 //! https://www.w3.org/TR/css-grid-1/
-use crate::axis::{AbsoluteAxis, AbstractAxis};
+use crate::axis::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::Size;
 use crate::layout::AvailableSpace;
 use crate::math::MaybeMath;
@@ -189,17 +189,10 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
     );
 
     // 8. Size, Align, and Position Grid Items
+    let tracks = InBothAbsAxis { horizontal: &*columns, vertical: &*rows };
+    let alignment_styles = InBothAbsAxis { horizontal: style.justify_items, vertical: style.align_items };
     items.iter().enumerate().for_each(|(i, item)| {
-        align_and_position_item(
-            tree,
-            i as u32,
-            item,
-            &rows,
-            &columns,
-            available_space,
-            style.align_items,
-            style.justify_items,
-        );
+        align_and_position_item(tree, i as u32, item, tracks, available_space, alignment_styles);
     });
 
     container_size
