@@ -85,16 +85,6 @@ where
     /// The sum of the two fields of the [`Rect`] representing the main axis.
     ///
     /// This is typically used when computing total padding.
-    pub(crate) fn grid_axis_sum(&self, axis: AbstractAxis) -> T {
-        match axis {
-            AbstractAxis::Inline => self.horizontal_axis_sum(),
-            AbstractAxis::Block => self.vertical_axis_sum(),
-        }
-    }
-
-    /// The sum of the two fields of the [`Rect`] representing the main axis.
-    ///
-    /// This is typically used when computing total padding.
     ///
     /// If the [`FlexDirection`] is [`FlexDirection::Row`] or [`FlexDirection::RowReverse`], this is [`Rect::horizontal`].
     /// Otherwise, this is [`Rect::vertical`].
