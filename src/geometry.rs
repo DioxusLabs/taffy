@@ -1,8 +1,10 @@
 //! Geometric primitives useful for layout
 
-use crate::axis::AbstractAxis;
 use crate::style::{Dimension, FlexDirection};
 use core::ops::Add;
+
+#[cfg(feature = "experimental_grid")]
+use crate::axis::AbstractAxis;
 
 /// An axis-aligned UI rectangle
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -283,6 +285,7 @@ impl<T> Size<T> {
 
     /// Gets the extent of the specified layout axis
     /// Whether this is the width or height depends on the `GridAxis` provided
+    #[cfg(feature = "experimental_grid")]
     pub(crate) fn get(self, axis: AbstractAxis) -> T {
         match axis {
             AbstractAxis::Inline => self.width,
@@ -292,6 +295,7 @@ impl<T> Size<T> {
 
     /// Sets the extent of the specified layout axis
     /// Whether this is the width or height depends on the `GridAxis` provided
+    #[cfg(feature = "experimental_grid")]
     pub(crate) fn set(&mut self, axis: AbstractAxis, value: T) {
         match axis {
             AbstractAxis::Inline => self.width = value,

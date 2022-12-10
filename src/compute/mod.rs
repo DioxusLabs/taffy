@@ -2,8 +2,10 @@
 
 pub(crate) mod common;
 pub(crate) mod flexbox;
-pub(crate) mod grid;
 pub(crate) mod leaf;
+
+#[cfg(feature = "experimental_grid")]
+pub(crate) mod grid;
 
 use crate::error::TaffyError;
 use crate::geometry::{Point, Size};
@@ -117,6 +119,7 @@ fn compute_node_layout(
                 NODE_LOGGER.log("Algo: flexbox");
                 self::flexbox::compute(tree, node, known_dimensions, available_space, run_mode)
             }
+            #[cfg(feature = "experimental_grid")]
             Display::Grid => self::grid::compute(tree, node, available_space),
             Display::None => {
                 #[cfg(feature = "debug")]
