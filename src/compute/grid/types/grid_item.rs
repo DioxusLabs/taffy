@@ -124,7 +124,10 @@ impl GridItem {
             let item_other_axis_size: Option<f32> = {
                 other_axis_tracks[self.track_range_excluding_lines(axis.other())]
                     .iter()
-                    .map(|track| get_track_size_estimate(track, other_axis_available_space))
+                    .map(|track| {
+                        get_track_size_estimate(track, other_axis_available_space)
+                            .map(|size| size + track.content_alignment_adjustment)
+                    })
                     .sum::<Option<f32>>()
             };
             let known_dimensions = {

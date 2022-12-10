@@ -194,12 +194,19 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
     // Compute an additional amount to add to each spanned gutter when computing item's estimated size in the
     // in the opposite axis based on the alignment, container size, and estimated track sizes in that axis
     // TODO: determine what is required to make gutter alignment work properly
-    let _gutter_alignment_adjustment = compute_alignment_gutter_adjustment(
+    let gutter_alignment_adjustment = compute_alignment_gutter_adjustment(
         container_style.grid_align_content(axis.other()),
         available_space.get(axis.other()),
         &get_track_size_estimate,
         other_axis_tracks,
     );
+    if other_axis_tracks.len() > 3 {
+        let len = other_axis_tracks.len();
+        let inner_gutter_tracks = other_axis_tracks[2..len].iter_mut().step_by(2);
+        for track in inner_gutter_tracks {
+            track.content_alignment_adjustment = gutter_alignment_adjustment;
+        }
+    }
 
     // 11.5 Resolve Intrinsic Track Sizes
     resolve_intrinsic_track_sizes(
