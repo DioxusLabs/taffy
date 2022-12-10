@@ -4,7 +4,9 @@ use crate::style::{Dimension, MaxTrackSizingFunction, MinTrackSizingFunction};
 /// Whether a GridTrack represents an actual track or a gutter.
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub(in super::super) enum GridTrackKind {
+    /// Track is an actual track
     Track,
+    /// Track is a gutter (aka grid line) (aka gap)
     Gutter, // { name: Option<u16> },
 }
 
@@ -45,6 +47,7 @@ pub(in super::super) struct GridTrack {
 }
 
 impl GridTrack {
+    /// Create new GridTrack representing an actual track (not a gutter)
     pub fn new(
         min_track_sizing_function: MinTrackSizingFunction,
         max_track_sizing_function: MaxTrackSizingFunction,
@@ -63,6 +66,7 @@ impl GridTrack {
         }
     }
 
+    /// Create a new GridTrack representing a gutter
     pub fn gutter(size: Dimension) -> GridTrack {
         GridTrack {
             kind: GridTrackKind::Gutter, // { name: None },
@@ -79,14 +83,13 @@ impl GridTrack {
     }
 
     #[inline]
+    /// Returns true if the track is flexible (has a Flex MaxTrackSizingFunction), else false.
     pub fn is_flexible(&self) -> bool {
-        match self.max_track_sizing_function {
-            MaxTrackSizingFunction::Flex(_) => true,
-            _ => false,
-        }
+        matches!(self.max_track_sizing_function, MaxTrackSizingFunction::Flex(_))
     }
 
     #[inline]
+    /// Returns the track's flex factor if it is a flex track, else 0.
     pub fn flex_factor(&self) -> f32 {
         match self.max_track_sizing_function {
             MaxTrackSizingFunction::Flex(flex_factor) => flex_factor,
