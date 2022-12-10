@@ -15,20 +15,24 @@ use core::cmp::Ordering;
 /// in the specified axis (items that don't cross a flex track first) and then by the number
 /// of tracks they cross in specified axis (ascending order).
 struct ItemBatcher {
-    index_offset: usize,
+    /// The axis in which the ItemBatcher is operating. Used when querying properties from items.
     axis: AbstractAxis,
-    done: bool,
+    /// The starting index of the current batch
+    index_offset: usize,
+    /// The span of the items in the current batch
     current_span: u16,
+    /// Whether the current batch of items cross a flexible track
     current_is_flex: bool,
 }
 
 impl ItemBatcher {
+    /// Create a new ItemBatcher for the specified axis
     fn new(axis: AbstractAxis) -> Self {
-        ItemBatcher { index_offset: 0, axis, current_span: 1, current_is_flex: false, done: false }
+        ItemBatcher { index_offset: 0, axis, current_span: 1, current_is_flex: false }
     }
 
-    // This is basically a manual version of Iterator::next which passes `items`
-    // in as a parameter on each iteration to work around borrow checker rules
+    /// This is basically a manual version of Iterator::next which passes `items`
+    /// in as a parameter on each iteration to work around borrow checker rules
     fn next<'items>(&mut self, items: &'items mut [GridItem]) -> Option<(&'items mut [GridItem], bool)> {
         if self.current_is_flex || self.index_offset >= items.len() {
             return None;
@@ -43,7 +47,6 @@ impl ItemBatcher {
         } else {
             items
                 .iter()
-                // .skip(self.index_offset)
                 .position(|item: &GridItem| {
                     item.crosses_flexible_track(self.axis) || item.span(self.axis) > self.current_span
                 })
@@ -52,9 +55,6 @@ impl ItemBatcher {
 
         let batch_range = self.index_offset..next_index_offset;
         self.index_offset = next_index_offset;
-        if next_index_offset >= items.len() {
-            self.done = true;
-        }
 
         let batch = &mut items[batch_range];
         Some((batch, self.current_is_flex))
@@ -135,11 +135,7 @@ pub(super) fn compute_alignment_gutter_adjustment(
 }
 
 /// Convert origin-zero coordinates track placement in grid track vector indexes
-pub(super) fn resolve_item_track_indexes(
-    items: &mut Vec<GridItem>,
-    column_counts: TrackCounts,
-    row_counts: TrackCounts,
-) {
+pub(super) fn resolve_item_track_indexes(items: &mut [GridItem], column_counts: TrackCounts, row_counts: TrackCounts) {
     for item in items {
         item.column_indexes = item.column.map(|oz_index| column_counts.oz_line_to_grid_track_vec_index(oz_index));
         item.row_indexes = item.row.map(|oz_index| row_counts.oz_line_to_grid_track_vec_index(oz_index));
@@ -149,8 +145,8 @@ pub(super) fn resolve_item_track_indexes(
 /// Determine (in each axis) whether the item crosses any flexible tracks
 pub(super) fn determine_if_item_crosses_flexible_tracks(
     items: &mut Vec<GridItem>,
-    columns: &Vec<GridTrack>,
-    rows: &Vec<GridTrack>,
+    columns: &[GridTrack],
+    rows: &[GridTrack],
 ) {
     for item in items {
         item.crosses_flexible_column =
@@ -162,6 +158,7 @@ pub(super) fn determine_if_item_crosses_flexible_tracks(
 
 /// Track sizing algorithm
 /// Note: Gutters are treated as empty fixed-size tracks for the purpose of the track sizing algorithm.
+#[allow(clippy::too_many_arguments)]
 pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
     tree: &mut Tree,
     axis: AbstractAxis,
@@ -230,14 +227,19 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
     stretch_auto_tracks(axis, axis_tracks, container_style, available_space, available_grid_space);
 }
 
+/// Whether it is a minimum or maximum size's space being distributed
+/// This controls behaviour of the space distribution algorithm when distributing beyond limits
+/// See "distributing space beyond limits" at https://www.w3.org/TR/css-grid-1/#extra-space
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 enum IntrinsicContributionType {
+    /// It's a minimum size's space being distributed
     Minimum,
-    // MinContent,
+    /// It's a maximum size's space being distributed
     Maximum,
-    // MaxContent,
 }
 
+/// Add any planned base size increases to the base size after a round of distributing space to base sizes
+/// Reset the planed base size increase to zero ready for the next round.
 fn flush_planned_base_size_increases(tracks: &mut [GridTrack]) {
     for track in tracks {
         track.base_size += track.base_size_planned_increase;
@@ -245,6 +247,8 @@ fn flush_planned_base_size_increases(tracks: &mut [GridTrack]) {
     }
 }
 
+/// Add any planned growth limit increases to the growth limit after a round of distributing space to growth limits
+/// Reset the planed growth limit increase to zero ready for the next round.
 fn flush_planned_growth_limit_increases(tracks: &mut [GridTrack], set_infinitely_growable: bool) {
     for track in tracks {
         if track.growth_limit_planned_increase > 0.0 {
@@ -253,7 +257,6 @@ fn flush_planned_growth_limit_increases(tracks: &mut [GridTrack], set_infinitely
             } else {
                 track.growth_limit + track.growth_limit_planned_increase
             };
-            // track.growth_limit = track.base_size + track.growth_limit_planned_increase;
             track.infinitely_growable = set_infinitely_growable;
         } else {
             track.infinitely_growable = false;
@@ -262,8 +265,8 @@ fn flush_planned_growth_limit_increases(tracks: &mut [GridTrack], set_infinitely
     }
 }
 
-// 11.4 Initialise Track sizes
-// Initialize each track’s base size and growth limit.
+/// 11.4 Initialise Track sizes
+/// Initialize each track’s base size and growth limit.
 fn initialize_track_sizes(axis_tracks: &mut [GridTrack], axis_available_space: AvailableSpace) {
     let last_track_idx = axis_tracks.len() - 1;
 
@@ -300,7 +303,7 @@ fn initialize_track_sizes(axis_tracks: &mut [GridTrack], axis_available_space: A
     }
 }
 
-// 11.5 Resolve Intrinsic Track Sizes
+/// 11.5 Resolve Intrinsic Track Sizes
 fn resolve_intrinsic_track_sizes(
     tree: &mut impl LayoutTree,
     axis: AbstractAxis,
@@ -523,6 +526,8 @@ fn distribute_item_space_to_base_size(
         distribute_item_space_to_base_size_inner(space, tracks, track_is_affected, intrinsic_contribution_type)
     }
 
+    /// Inner function that doesn't account for differences due to distributing to flex items
+    /// This difference is handled by the closure passed in above
     fn distribute_item_space_to_base_size_inner(
         space: f32,
         tracks: &mut [GridTrack],
@@ -545,8 +550,8 @@ fn distribute_item_space_to_base_size(
         //   - We run out of space to distribute (extra_space falls below THRESHOLD)
         //   - We run out of growable tracks to distribute to
 
-        // Define a small constant to avoid infinite loops due to rounding errors. Rather than stopping distributing
-        // extra space when it gets to exactly zero, we will stop when it falls below this amount
+        /// Define a small constant to avoid infinite loops due to rounding errors. Rather than stopping distributing
+        /// extra space when it gets to exactly zero, we will stop when it falls below this amount
         const THRESHOLD: f32 = 0.000001;
 
         let extra_space = distribute_space_up_to_limits(extra_space, tracks, &track_is_affected);
@@ -610,6 +615,8 @@ fn distribute_item_space_to_growth_limit(
         distribute_item_space_to_growth_limit_inner(space, tracks, track_is_affected)
     }
 
+    /// Inner function that doesn't account for differences due to distributing to flex items
+    /// This difference is handled by the closure passed in above
     fn distribute_item_space_to_growth_limit_inner(
         space: f32,
         tracks: &mut [GridTrack],
@@ -651,8 +658,8 @@ fn distribute_item_space_to_growth_limit(
     }
 }
 
-// 11.6 Maximise Tracks
-// Distributes free space (if any) to tracks with FINITE growth limits, up to their limits.
+/// 11.6 Maximise Tracks
+/// Distributes free space (if any) to tracks with FINITE growth limits, up to their limits.
 fn maximise_tracks(axis: AbstractAxis, axis_tracks: &mut [GridTrack], available_grid_space: Size<AvailableSpace>) {
     let used_space: f32 = axis_tracks.iter().map(|track| track.base_size).sum();
     let free_space = available_grid_space.get(axis).compute_free_space(used_space);
@@ -667,8 +674,8 @@ fn maximise_tracks(axis: AbstractAxis, axis_tracks: &mut [GridTrack], available_
     }
 }
 
-// 11.7. Expand Flexible Tracks
-// This step sizes flexible tracks using the largest value it can assign to an fr without exceeding the available space.
+/// 11.7. Expand Flexible Tracks
+/// This step sizes flexible tracks using the largest value it can assign to an fr without exceeding the available space.
 fn expand_flexible_tracks(
     tree: &mut impl LayoutTree,
     axis: AbstractAxis,
@@ -764,9 +771,9 @@ fn expand_flexible_tracks(
     }
 }
 
-// 11.7.1. Find the Size of an fr
-// This algorithm finds the largest size that an fr unit can be without exceeding the target size.
-// It must be called with a set of grid tracks and some quantity of space to fill.
+/// 11.7.1. Find the Size of an fr
+/// This algorithm finds the largest size that an fr unit can be without exceeding the target size.
+/// It must be called with a set of grid tracks and some quantity of space to fill.
 fn find_size_of_fr(tracks: &[GridTrack], space_to_fill: f32) -> f32 {
     // Handle the trivial case where there is no space to fill
     // Do not remove as otherwise the loop below will loop infinitely
@@ -821,8 +828,8 @@ fn find_size_of_fr(tracks: &[GridTrack], space_to_fill: f32) -> f32 {
     hypothetical_fr_size
 }
 
-// 11.8. Stretch auto Tracks
-// This step expands tracks that have an auto max track sizing function by dividing any remaining positive, definite free space equally amongst them.
+/// 11.8. Stretch auto Tracks
+/// This step expands tracks that have an auto max track sizing function by dividing any remaining positive, definite free space equally amongst them.
 fn stretch_auto_tracks(
     axis: AbstractAxis,
     axis_tracks: &mut [GridTrack],
@@ -862,8 +869,8 @@ fn distribute_space_up_to_limits(
     tracks: &mut [GridTrack],
     track_is_affected: impl Fn(&GridTrack) -> bool,
 ) -> f32 {
-    // Define a small constant to avoid infinite loops due to rounding errors. Rather than stopping distributing
-    // extra space when it gets to exactly zero, we will stop when it falls below this amount
+    /// Define a small constant to avoid infinite loops due to rounding errors. Rather than stopping distributing
+    /// extra space when it gets to exactly zero, we will stop when it falls below this amount
     const THRESHOLD: f32 = 0.000001;
 
     let mut space_to_distribute = space_to_distribute;
