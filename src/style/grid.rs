@@ -1,8 +1,9 @@
 //! Style types for CSS Grid layout
 use super::LengthPercentage;
-use crate::axis::AbsoluteAxis;
 use crate::geometry::Line;
 use crate::layout::AvailableSpace;
+use crate::style_helpers::{FromPoints, TaffyZero};
+use crate::{axis::AbsoluteAxis, style_helpers::TaffyAuto};
 use core::cmp::{max, min};
 
 /// Controls whether grid items are placed row-wise or column-wise. And whether the sparse or dense packing algorithm is used.
@@ -170,32 +171,35 @@ pub enum MaxTrackSizingFunction {
     /// Spec: https://www.w3.org/TR/css3-grid-layout/#fr-unit
     Flex(f32),
 }
+impl TaffyAuto for MaxTrackSizingFunction {
+    const AUTO: Self = Self::Auto;
+}
+impl TaffyZero for MaxTrackSizingFunction {
+    const ZERO: Self = Self::Fixed(LengthPercentage::ZERO);
+}
+impl FromPoints for MaxTrackSizingFunction {
+    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
+        Self::Fixed(LengthPercentage::from_points(points))
+    }
+}
 
 impl MaxTrackSizingFunction {
     /// Returns true if the max track sizing function is `MinContent`, `MaxContent` or `Auto`, else false.
     #[inline(always)]
     pub fn is_intrinsic(&self) -> bool {
-        use MaxTrackSizingFunction::*;
-        match self {
-            MinContent | MaxContent | Auto => true,
-            Fixed(_) | Flex(_) => false,
-        }
+        matches!(self, Self::MinContent | Self::MaxContent | Self::Auto)
     }
 
     /// Returns true if the max track sizing function is `MaxContent`, else false.
     #[inline(always)]
     pub fn is_max_content(&self) -> bool {
-        use MaxTrackSizingFunction::*;
-        match self {
-            MaxContent => true,
-            Auto | MinContent | Fixed(_) | Flex(_) => false,
-        }
+        matches!(self, Self::MaxContent)
     }
 
     /// Returns true if the max track sizing function is `Flex`, else false.
     #[inline(always)]
     pub fn is_flexible(&self) -> bool {
-        matches!(self, MaxTrackSizingFunction::Flex(_))
+        matches!(self, Self::Flex(_))
     }
 
     /// Returns fixed point values directly. Attempts to resolve percentage values against
@@ -228,6 +232,17 @@ pub enum MinTrackSizingFunction {
     MaxContent,
     /// Track minimum size should be automatically sized
     Auto,
+}
+impl TaffyAuto for MinTrackSizingFunction {
+    const AUTO: Self = Self::Auto;
+}
+impl TaffyZero for MinTrackSizingFunction {
+    const ZERO: Self = Self::Fixed(LengthPercentage::ZERO);
+}
+impl FromPoints for MinTrackSizingFunction {
+    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
+        Self::Fixed(LengthPercentage::from_points(points))
+    }
 }
 
 impl MinTrackSizingFunction {
@@ -273,6 +288,17 @@ pub enum TrackSizingFunction {
         /// The max tracking sizing function
         max: MaxTrackSizingFunction,
     },
+}
+impl TaffyAuto for TrackSizingFunction {
+    const AUTO: Self = Self::Auto;
+}
+impl TaffyZero for TrackSizingFunction {
+    const ZERO: Self = Self::Fixed(LengthPercentage::ZERO);
+}
+impl FromPoints for TrackSizingFunction {
+    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
+        Self::Fixed(LengthPercentage::from_points(points))
+    }
 }
 
 impl TrackSizingFunction {
