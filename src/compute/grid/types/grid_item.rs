@@ -11,6 +11,7 @@ use crate::style::{MaxTrackSizingFunction, MinTrackSizingFunction};
 use core::cmp::max;
 use core::ops::Range;
 
+/// Represents a single grid item
 #[derive(Debug)]
 pub(in super::super) struct GridItem {
     /// The id of the Node that this item represents
@@ -35,17 +36,22 @@ pub(in super::super) struct GridItem {
     /// Whether the item crosses a flexible column
     pub crosses_flexible_column: bool,
 
-    /// The order of the item in the children array (this is significant for auto-placement!)
+    // The order of the item in the children array (this is significant for auto-placement!)
     // pub source_order: u16,
 
-    // Caches for intrinsic size computation
+    // Caches for intrinsic size computation. These caches are only valid for a single run of the track-sizing algorithm.
+    /// Cache for the known_dimensions input to intrinsic sizing computation
     pub known_dimensions_cache: Option<Size<Option<f32>>>,
+    /// Cache for the min-content size
     pub min_content_contribution_cache: Option<Size<f32>>,
+    /// Cache for the minimum contribution
     pub minimum_contribution_cache: Option<f32>,
+    /// Cache for the max-content size
     pub max_content_contribution_cache: Option<Size<f32>>,
 }
 
 impl GridItem {
+    /// Create a new item given a concrete placement in both axes
     pub fn new_with_placement(node: Node, col_span: Line<i16>, row_span: Line<i16>) -> Self {
         GridItem {
             node,
@@ -62,6 +68,7 @@ impl GridItem {
         }
     }
 
+    /// This item's placement in the specified axis in OriginZero coordinates
     pub fn placement(&self, axis: AbstractAxis) -> Line<i16> {
         match axis {
             AbstractAxis::Block => self.row,
@@ -69,6 +76,7 @@ impl GridItem {
         }
     }
 
+    /// This item's placement in the specified axis as GridTrackVec indices
     pub fn placement_indexes(&self, axis: AbstractAxis) -> Line<u16> {
         match axis {
             AbstractAxis::Block => self.row_indexes,
@@ -76,11 +84,15 @@ impl GridItem {
         }
     }
 
+    /// Returns a range which can be used as an index into the GridTrackVec in the specified axis
+    /// which will produce a sub-slice of covering all the tracks and lines that this item spans
+    /// excluding the lines that bound it.
     pub fn track_range_excluding_lines(&self, axis: AbstractAxis) -> Range<usize> {
         let indexes = self.placement_indexes(axis);
         (indexes.start as usize + 1)..(indexes.end as usize)
     }
 
+    /// Returns the number of tracks that this item spans in the specified axis
     pub fn span(&self, axis: AbstractAxis) -> u16 {
         match axis {
             AbstractAxis::Block => max(self.row.end - self.row.start, 0) as u16,
@@ -88,6 +100,8 @@ impl GridItem {
         }
     }
 
+    /// Returns the pre-computed value indicating whether the grid item crosses a flexible track in
+    /// the specified axis
     pub fn crosses_flexible_track(&self, axis: AbstractAxis) -> bool {
         match axis {
             AbstractAxis::Inline => self.crosses_flexible_column,
@@ -95,6 +109,10 @@ impl GridItem {
         }
     }
 
+    /// Compute the known_dimensions to be passed to the child sizing functions
+    /// These are estimates based on either the max track sizing function on the provisional base size in the opposite
+    /// axis to the one currently being sized.
+    /// https://www.w3.org/TR/css-grid-1/#algo-overview
     pub fn known_dimensions_cached(
         &mut self,
         axis: AbstractAxis,
@@ -121,8 +139,8 @@ impl GridItem {
         })
     }
 
-    // For an item spanning multiple tracks, the upper limit used to calculate its limited min-/max-content contribution is the
-    // sum of the fixed max track sizing functions of any tracks it spans, and is applied if it only spans such tracks.
+    /// For an item spanning multiple tracks, the upper limit used to calculate its limited min-/max-content contribution is the
+    /// sum of the fixed max track sizing functions of any tracks it spans, and is applied if it only spans such tracks.
     pub fn spanned_fixed_track_limit(
         &mut self,
         axis: AbstractAxis,
@@ -144,6 +162,7 @@ impl GridItem {
         }
     }
 
+    /// Retrieve the item's min content contribution from the cache or compute it using the provided parameters
     pub fn min_content_contribution_cached(
         &mut self,
         tree: &mut impl LayoutTree,
@@ -163,6 +182,7 @@ impl GridItem {
         })
     }
 
+    /// Retrieve the item's max content contribution from the cache or compute it using the provided parameters
     pub fn max_content_contribution_cached(
         &mut self,
         tree: &mut impl LayoutTree,
@@ -182,12 +202,12 @@ impl GridItem {
         })
     }
 
-    // The minimum contribution of an item is the smallest outer size it can have.
-    // Specifically:
-    //   - If the item’s computed preferred size behaves as auto or depends on the size of its containing block in the relevant axis:
-    //     Its minimum contribution is the outer size that would result from assuming the item’s used minimum size as its preferred size;
-    //   - Else the item’s minimum contribution is its min-content contribution.
-    // Because the minimum contribution often depends on the size of the item’s content, it is considered a type of intrinsic size contribution.
+    /// The minimum contribution of an item is the smallest outer size it can have.
+    /// Specifically:
+    ///   - If the item’s computed preferred size behaves as auto or depends on the size of its containing block in the relevant axis:
+    ///     Its minimum contribution is the outer size that would result from assuming the item’s used minimum size as its preferred size;
+    ///   - Else the item’s minimum contribution is its min-content contribution.
+    /// Because the minimum contribution often depends on the size of the item’s content, it is considered a type of intrinsic size contribution.
     pub fn minimum_contribution_cached(
         &mut self,
         tree: &mut impl LayoutTree,
@@ -239,6 +259,7 @@ impl GridItem {
         })
     }
 
+    /// Clears the per-track-sizing-alogrithm-run caches
     pub fn clear_contribution_caches(&mut self) {
         self.known_dimensions_cache = None;
         self.min_content_contribution_cache = None;
