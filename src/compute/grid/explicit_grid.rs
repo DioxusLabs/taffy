@@ -366,6 +366,23 @@ mod test {
     }
 
     #[test]
+    fn explicit_grid_sizing_mix_with_padding() {
+        use GridTrackRepetition::AutoFill;
+        let grid_style = Style {
+            display: Display::Grid,
+            size: Size { width: points(120.0), height: points(120.0) },
+            padding: Rect { left: points(10.0), right: points(10.0), top: points(20.0), bottom: points(20.0) },
+            grid_template_columns: vec![repeat(AutoFill, vec![points(20.0)])],
+            grid_template_rows: vec![repeat(AutoFill, vec![points(20.0)])],
+            ..Default::default()
+        };
+        let width = compute_explicit_grid_size_in_axis(&grid_style, AbsoluteAxis::Horizontal);
+        let height = compute_explicit_grid_size_in_axis(&grid_style, AbsoluteAxis::Vertical);
+        assert_eq!(width, 5); // 40px horizontal padding
+        assert_eq!(height, 4); // 20px vertical padding
+    }
+
+    #[test]
     fn test_initialize_grid_tracks() {
         let px20 = LengthPercentage::Points(20.0);
         let px100 = LengthPercentage::Points(100.0);
