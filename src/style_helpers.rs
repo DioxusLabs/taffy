@@ -1,7 +1,9 @@
 //! Helper functions which it make it easier to create instances of types in the `style` and `geometry` modules.
-
 use crate::geometry::{MinMax, Point, Rect, Size};
 use crate::style::{Dimension, LengthPercentage, LengthPercentageAuto};
+
+#[cfg(feature = "experimental_grid")]
+use crate::style::{GridTrackRepetition, NonRepeatedTrackSizingFunction, TrackSizingFunction};
 
 /// Returns the zero value for that type
 pub const fn zero<T: TaffyZero>() -> T {
@@ -365,6 +367,15 @@ pub trait FromFlex {
 }
 
 /// Returns a MinMax with min value of min and max value of max
-pub fn minmax<Min, Max>(min: Min, max: Max) -> MinMax<Min, Max> {
-    MinMax { min, max }
+pub fn minmax<Min, Max, Output: From<MinMax<Min, Max>>>(min: Min, max: Max) -> Output {
+    MinMax { min, max }.into()
+}
+
+/// Returns an auto-repeated track definition
+#[cfg(feature = "experimental_grid")]
+pub fn repeat(
+    repetition_kind: GridTrackRepetition,
+    track_list: Vec<NonRepeatedTrackSizingFunction>,
+) -> TrackSizingFunction {
+    TrackSizingFunction::AutoRepeat(repetition_kind, track_list)
 }

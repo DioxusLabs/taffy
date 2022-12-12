@@ -1,5 +1,6 @@
 //! Axis enums representing CSS Grid axis
-use crate::geometry::Size;
+use crate::geometry::{Rect, Size};
+use core::ops::Add;
 
 /// The simple absolute horizontal and vertical axis
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -28,6 +29,17 @@ impl<T> Size<T> {
         match axis {
             AbsoluteAxis::Horizontal => self.width,
             AbsoluteAxis::Vertical => self.height,
+        }
+    }
+}
+
+impl<T: Add> Rect<T> {
+    #[inline(always)]
+    /// Get either the width or height depending on the AbsoluteAxis passed in
+    pub fn grid_axis_sum(self, axis: AbsoluteAxis) -> <T as Add>::Output {
+        match axis {
+            AbsoluteAxis::Horizontal => self.left + self.right,
+            AbsoluteAxis::Vertical => self.top + self.bottom,
         }
     }
 }

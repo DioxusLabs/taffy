@@ -18,5 +18,8 @@ pub use crate::{
 
 #[cfg(feature = "experimental_grid")]
 pub use crate::style::{
-    GridAutoFlow, GridPlacement, MaxTrackSizingFunction, MinTrackSizingFunction, TrackSizingFunction,
+    GridAutoFlow, GridPlacement, GridTrackRepetition, MaxTrackSizingFunction, MinTrackSizingFunction,
+    NonRepeatedTrackSizingFunction, TrackSizingFunction,
 };
+#[cfg(feature = "experimental_grid")]
+pub use crate::style_helpers::repeat;

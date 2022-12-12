@@ -11,8 +11,8 @@ pub use self::flex::{FlexDirection, FlexWrap};
 mod grid;
 #[cfg(feature = "experimental_grid")]
 pub use self::grid::{
-    GridAutoFlow, GridPlacement, MaxTrackSizingFunction, MinTrackSizingFunction, NonRepeatedTrackSizingFunction,
-    TrackSizingFunction,
+    GridAutoFlow, GridPlacement, GridTrackRepetition, MaxTrackSizingFunction, MinTrackSizingFunction,
+    NonRepeatedTrackSizingFunction, TrackSizingFunction,
 };
 use crate::geometry::{Rect, Size};
 

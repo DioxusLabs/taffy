@@ -10,7 +10,7 @@ use crate::style::AlignContent;
 use crate::sys::{GridTrackVec, Vec};
 use crate::tree::LayoutTree;
 use alignment::{align_and_position_item, align_tracks};
-use explicit_grid::{compute_explicit_grid_size, initialize_grid_tracks};
+use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks};
 use implicit_grid::compute_grid_size_estimate;
 use placement::place_grid_items;
 use track_sizing::{determine_if_item_crosses_flexible_tracks, resolve_item_track_indexes, track_sizing_algorithm};
@@ -37,7 +37,8 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
 
     // 1. Resolve the explicit grid
     // Exactly compute the number of rows and columns in the explicit grid.
-    let (explicit_col_count, explicit_row_count) = compute_explicit_grid_size(&style);
+    let explicit_col_count = compute_explicit_grid_size_in_axis(&style, AbsoluteAxis::Horizontal);
+    let explicit_row_count = compute_explicit_grid_size_in_axis(&style, AbsoluteAxis::Vertical);
 
     // 2. Implicit Grid: Estimate Track Counts
     // Estimate the number of rows and columns in the implicit grid (= the entire grid)
