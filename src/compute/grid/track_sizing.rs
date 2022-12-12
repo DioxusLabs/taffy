@@ -225,8 +225,8 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
 
     // 11.7. Expand Flexible Tracks
     // This step sizes flexible tracks using the largest value it can assign to an fr without exceeding the available space.
-    let axis_min_size = container_style.min_size.get(axis).get_absolute();
-    let axis_max_size = container_style.max_size.get(axis).get_absolute();
+    let axis_min_size = container_style.min_size.get(axis).into_option();
+    let axis_max_size = container_style.max_size.get(axis).into_option();
     expand_flexible_tracks(tree, axis, axis_tracks, items, axis_min_size, axis_max_size, available_grid_space);
 
     // 11.8. Stretch auto Tracks
