@@ -1,9 +1,9 @@
 //! Style types for CSS Grid layout
-use super::LengthPercentage;
-use crate::geometry::Line;
+use super::{AlignContent, LengthPercentage, Style};
+use crate::axis::{AbsoluteAxis, AbstractAxis};
+use crate::geometry::{Line, MinMax};
 use crate::layout::AvailableSpace;
-use crate::style_helpers::{FromPoints, TaffyZero};
-use crate::{axis::AbsoluteAxis, style_helpers::TaffyAuto};
+use crate::style_helpers::{FromFlex, FromPercent, FromPoints, TaffyAuto, TaffyMaxContent, TaffyMinContent, TaffyZero};
 use core::cmp::{max, min};
 
 /// Controls whether grid items are placed row-wise or column-wise. And whether the sparse or dense packing algorithm is used.
@@ -174,12 +174,28 @@ pub enum MaxTrackSizingFunction {
 impl TaffyAuto for MaxTrackSizingFunction {
     const AUTO: Self = Self::Auto;
 }
+impl TaffyMinContent for MaxTrackSizingFunction {
+    const MIN_CONTENT: Self = Self::MinContent;
+}
+impl TaffyMaxContent for MaxTrackSizingFunction {
+    const MAX_CONTENT: Self = Self::MaxContent;
+}
 impl TaffyZero for MaxTrackSizingFunction {
     const ZERO: Self = Self::Fixed(LengthPercentage::ZERO);
 }
 impl FromPoints for MaxTrackSizingFunction {
     fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
         Self::Fixed(LengthPercentage::from_points(points))
+    }
+}
+impl FromPercent for MaxTrackSizingFunction {
+    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
+        Self::Fixed(LengthPercentage::from_percent(percent))
+    }
+}
+impl FromFlex for MaxTrackSizingFunction {
+    fn from_flex<Input: Into<f32> + Copy>(flex: Input) -> Self {
+        Self::Flex(flex.into())
     }
 }
 
@@ -236,12 +252,23 @@ pub enum MinTrackSizingFunction {
 impl TaffyAuto for MinTrackSizingFunction {
     const AUTO: Self = Self::Auto;
 }
+impl TaffyMinContent for MinTrackSizingFunction {
+    const MIN_CONTENT: Self = Self::MinContent;
+}
+impl TaffyMaxContent for MinTrackSizingFunction {
+    const MAX_CONTENT: Self = Self::MaxContent;
+}
 impl TaffyZero for MinTrackSizingFunction {
     const ZERO: Self = Self::Fixed(LengthPercentage::ZERO);
 }
 impl FromPoints for MinTrackSizingFunction {
     fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
         Self::Fixed(LengthPercentage::from_points(points))
+    }
+}
+impl FromPercent for MinTrackSizingFunction {
+    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
+        Self::Fixed(LengthPercentage::from_percent(percent))
     }
 }
 
@@ -263,69 +290,120 @@ impl MinTrackSizingFunction {
     }
 }
 
-/// The sizing function for a grid track (row/column).
-/// May either a MinMax variant which specifies separate values for the min-/max- track sizing functions
-/// or a scalar value which applies to both track sizing functions.
-/// See https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns
-#[derive(Copy, Clone, PartialEq, Debug)]
-pub enum TrackSizingFunction {
-    /// Track should be a fixed points or percentage value
-    Fixed(LengthPercentage),
-    /// Track should be content sized under a min-content constraint
-    MinContent,
-    /// Track should be content sized under a max-content constraint
-    MaxContent,
-    /// Track should be automatically sized
-    Auto,
-    /// The dimension as a fraction of the total available grid space.
-    /// Specified value is the numerator of the fraction. Denominator is the sum of all fraction specified in that grid dimension
-    /// Spec: https://www.w3.org/TR/css3-grid-layout/#fr-unit
-    Flex(f32),
-    /// Specify the min tracking sizing function and the max sizing function separately
-    MinMax {
-        /// The min tracking sizing function
-        min: MinTrackSizingFunction,
-        /// The max tracking sizing function
-        max: MaxTrackSizingFunction,
-    },
+/// A track sizing function representing a single track (so not a repetition)
+pub type NonRepeatedTrackSizingFunction = MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>;
+impl NonRepeatedTrackSizingFunction {
+    /// Extract the min track sizing function
+    pub fn min_sizing_function(&self) -> MinTrackSizingFunction {
+        self.min
+    }
+    /// Extract the max track sizing function
+    pub fn max_sizing_function(&self) -> MaxTrackSizingFunction {
+        self.max
+    }
 }
-impl TaffyAuto for TrackSizingFunction {
-    const AUTO: Self = Self::Auto;
+impl TaffyAuto for NonRepeatedTrackSizingFunction {
+    const AUTO: Self = Self { min: MinTrackSizingFunction::AUTO, max: MaxTrackSizingFunction::AUTO };
 }
-impl TaffyZero for TrackSizingFunction {
-    const ZERO: Self = Self::Fixed(LengthPercentage::ZERO);
+impl TaffyMinContent for NonRepeatedTrackSizingFunction {
+    const MIN_CONTENT: Self =
+        Self { min: MinTrackSizingFunction::MIN_CONTENT, max: MaxTrackSizingFunction::MIN_CONTENT };
 }
-impl FromPoints for TrackSizingFunction {
+impl TaffyMaxContent for NonRepeatedTrackSizingFunction {
+    const MAX_CONTENT: Self =
+        Self { min: MinTrackSizingFunction::MAX_CONTENT, max: MaxTrackSizingFunction::MAX_CONTENT };
+}
+impl TaffyZero for NonRepeatedTrackSizingFunction {
+    const ZERO: Self = Self { min: MinTrackSizingFunction::ZERO, max: MaxTrackSizingFunction::ZERO };
+}
+impl FromPoints for NonRepeatedTrackSizingFunction {
     fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
-        Self::Fixed(LengthPercentage::from_points(points))
+        Self { min: MinTrackSizingFunction::from_points(points), max: MaxTrackSizingFunction::from_points(points) }
+    }
+}
+impl FromPercent for NonRepeatedTrackSizingFunction {
+    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
+        Self { min: MinTrackSizingFunction::from_percent(percent), max: MaxTrackSizingFunction::from_percent(percent) }
+    }
+}
+impl FromFlex for NonRepeatedTrackSizingFunction {
+    fn from_flex<Input: Into<f32> + Copy>(flex: Input) -> Self {
+        Self { min: MinTrackSizingFunction::AUTO, max: MaxTrackSizingFunction::from_flex(flex) }
     }
 }
 
-impl TrackSizingFunction {
-    /// Getter for the min_track_sizing_function. This is either the `min` property of the MinMax Variant,
-    /// or else another variant converted to the same variant in the MinTrackSizingFunction enum
-    /// Flex is not valid MinTrackingSizingFunction, and thus gets converted to Auto
-    pub fn min_sizing_function(&self) -> MinTrackSizingFunction {
-        match self {
-            Self::MinMax { min, .. } => *min,
-            Self::Fixed(value) => MinTrackSizingFunction::Fixed(*value),
-            Self::MinContent => MinTrackSizingFunction::MinContent,
-            Self::MaxContent => MinTrackSizingFunction::MaxContent,
-            Self::Auto => MinTrackSizingFunction::Auto,
-            Self::Flex(_) => MinTrackSizingFunction::Auto,
+/// A track sizing function that may represent a single track or be a repetition representing multiple tracks
+pub type TrackSizingFunction = NonRepeatedTrackSizingFunction;
+
+// /// Represents the type of automatic reprepetition to perform
+// #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+// enum GridTrackRepetition {
+//     AutoFill,
+// }
+
+// /// The sizing function for a grid track (row/column).
+// /// May either a MinMax variant which specifies separate values for the min-/max- track sizing functions
+// /// or a scalar value which applies to both track sizing functions.
+// /// See https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns
+// #[derive(Clone, PartialEq, Debug)]
+// pub enum TrackSizingFunction {
+//     // A single non-repeated
+//     Single(NonRepeatedTrackSizingFunction),
+//     /// Automatically generate grid tracks to fit the available space using the specified definite track lengths
+//     /// Only valid if every track in template (not just the repitition) has a fixed size.
+//     AutoRepeat(GridTrackRepetition, GridTrackVec<MinMax<LengthPercentage, LengthPercentage>>),
+// }
+// impl TaffyAuto for TrackSizingFunction {
+//     const AUTO: Self = Self::Single(NonRepeatedTrackSizingFunction::AUTO);
+// }
+// impl TaffyMinContent for TrackSizingFunction {
+//     const MIN_CONTENT: Self = Self::Single(NonRepeatedTrackSizingFunction::MIN_CONTENT);
+// }
+// impl TaffyMaxContent for TrackSizingFunction {
+//     const MAX_CONTENT: Self = Self::Single(NonRepeatedTrackSizingFunction::MAX_CONTENT);
+// }
+// impl TaffyZero for TrackSizingFunction {
+//     const ZERO: Self = Self::Single(NonRepeatedTrackSizingFunction::ZERO);
+// }
+// impl FromPoints for TrackSizingFunction {
+//     fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
+//         Self::Single(NonRepeatedTrackSizingFunction::from_points(points))
+//     }
+// }
+// impl FromPercent for TrackSizingFunction {
+//     fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
+//         Self::Single(NonRepeatedTrackSizingFunction::from_percent(percent))
+//     }
+// }
+// impl FromFlex for TrackSizingFunction {
+//     fn from_flex<Input: Into<f32> + Copy>(flex: Input) -> Self {
+//         Self::Single(NonRepeatedTrackSizingFunction::from_flex(flex))
+//     }
+// }
+
+// Grid extensions to the Style struct
+impl Style {
+    // /// Get a grid item's row or column placement depending on the axis passed
+    // pub(crate) fn grid_template_tracks(&self, axis: AbsoluteAxis) -> &GridTrackVec<TrackSizingFunction> {
+    //     match axis {
+    //         AbsoluteAxis::Horizontal => &self.grid_template_columns,
+    //         AbsoluteAxis::Vertical => &self.grid_template_rows,
+    //     }
+    // }
+
+    /// Get a grid item's row or column placement depending on the axis passed
+    pub(crate) fn grid_placement(&self, axis: AbsoluteAxis) -> Line<GridPlacement> {
+        match axis {
+            AbsoluteAxis::Horizontal => self.grid_column,
+            AbsoluteAxis::Vertical => self.grid_row,
         }
     }
 
-    /// Getter for the max_track_sizing_function. This is either the `max` property of the MinMax Variant,
-    /// or else another variant converted to the same variant in the MaxTrackSizingFunction enum
-    pub fn max_sizing_function(&self) -> MaxTrackSizingFunction {
-        match self {
-            Self::MinMax { max, .. } => *max,
-            Self::Fixed(value) => MaxTrackSizingFunction::Fixed(*value),
-            Self::MinContent => MaxTrackSizingFunction::MinContent,
-            Self::MaxContent => MaxTrackSizingFunction::MaxContent,
-            Self::Auto => MaxTrackSizingFunction::Auto,
-            Self::Flex(value) => MaxTrackSizingFunction::Flex(*value),
+    /// Get a grid container's align-content or justify-content alignment depending on the axis passed
+    pub(crate) fn grid_align_content(&self, axis: AbstractAxis) -> AlignContent {
+        match axis {
+            AbstractAxis::Inline => self.justify_content.unwrap_or(AlignContent::Stretch),
+            AbstractAxis::Block => self.align_content.unwrap_or(AlignContent::Stretch),
         }
     }
 }

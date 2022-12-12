@@ -1,6 +1,6 @@
 //! Helper functions which it make it easier to create instances of types in the `style` and `geometry` modules.
 
-use crate::geometry::{Point, Rect, Size};
+use crate::geometry::{MinMax, Point, Rect, Size};
 use crate::style::{Dimension, LengthPercentage, LengthPercentageAuto};
 
 /// Returns the zero value for that type
@@ -109,6 +109,96 @@ impl<T: TaffyAuto> Rect<T> {
     }
 }
 
+/// Returns the auto value for that type
+pub const fn min_content<T: TaffyMinContent>() -> T {
+    T::MIN_CONTENT
+}
+
+/// Trait to abstract over min_content values
+pub trait TaffyMinContent {
+    /// The min_content value for type implementing TaffyZero
+    const MIN_CONTENT: Self;
+}
+impl<T: TaffyMinContent> TaffyMinContent for Option<T> {
+    const MIN_CONTENT: Option<T> = Some(T::MIN_CONTENT);
+}
+impl<T: TaffyMinContent> TaffyMinContent for Point<T> {
+    const MIN_CONTENT: Point<T> = Point { x: T::MIN_CONTENT, y: T::MIN_CONTENT };
+}
+impl<T: TaffyMinContent> Point<T> {
+    /// Returns a Point where both the x and y values are the min_content value of the contained type
+    /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
+    pub const fn min_content() -> Self {
+        min_content::<Self>()
+    }
+}
+impl<T: TaffyMinContent> TaffyMinContent for Size<T> {
+    const MIN_CONTENT: Size<T> = Size { width: T::MIN_CONTENT, height: T::MIN_CONTENT };
+}
+impl<T: TaffyMinContent> Size<T> {
+    /// Returns a Size where both the width and height values are the min_content value of the contained type
+    /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
+    pub const fn min_content() -> Self {
+        min_content::<Self>()
+    }
+}
+impl<T: TaffyMinContent> TaffyMinContent for Rect<T> {
+    const MIN_CONTENT: Rect<T> =
+        Rect { left: T::MIN_CONTENT, right: T::MIN_CONTENT, top: T::MIN_CONTENT, bottom: T::MIN_CONTENT };
+}
+impl<T: TaffyMinContent> Rect<T> {
+    /// Returns a Size where the left, right, top, and bottom values are all the min_content value of the contained type
+    /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
+    pub const fn min_content() -> Self {
+        min_content::<Self>()
+    }
+}
+
+/// Returns the auto value for that type
+pub const fn max_content<T: TaffyMaxContent>() -> T {
+    T::MAX_CONTENT
+}
+
+/// Trait to abstract over max_content values
+pub trait TaffyMaxContent {
+    /// The max_content value for type implementing TaffyZero
+    const MAX_CONTENT: Self;
+}
+impl<T: TaffyMaxContent> TaffyMaxContent for Option<T> {
+    const MAX_CONTENT: Option<T> = Some(T::MAX_CONTENT);
+}
+impl<T: TaffyMaxContent> TaffyMaxContent for Point<T> {
+    const MAX_CONTENT: Point<T> = Point { x: T::MAX_CONTENT, y: T::MAX_CONTENT };
+}
+impl<T: TaffyMaxContent> Point<T> {
+    /// Returns a Point where both the x and y values are the max_content value of the contained type
+    /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
+    pub const fn max_content() -> Self {
+        max_content::<Self>()
+    }
+}
+impl<T: TaffyMaxContent> TaffyMaxContent for Size<T> {
+    const MAX_CONTENT: Size<T> = Size { width: T::MAX_CONTENT, height: T::MAX_CONTENT };
+}
+impl<T: TaffyMaxContent> Size<T> {
+    /// Returns a Size where both the width and height values are the max_content value of the contained type
+    /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
+    pub const fn max_content() -> Self {
+        max_content::<Self>()
+    }
+}
+impl<T: TaffyMaxContent> TaffyMaxContent for Rect<T> {
+    const MAX_CONTENT: Rect<T> =
+        Rect { left: T::MAX_CONTENT, right: T::MAX_CONTENT, top: T::MAX_CONTENT, bottom: T::MAX_CONTENT };
+}
+impl<T: TaffyMaxContent> Rect<T> {
+    /// Returns a Size where the left, right, top, and bottom values are all the max_content value of the contained type
+    /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
+    pub const fn max_content() -> Self {
+        max_content::<Self>()
+    }
+}
+
 /// Returns a value of the inferred type which represent a constant of points
 pub fn points<Input: Into<f32> + Copy, T: FromPoints>(points: Input) -> T {
     T::from_points(points)
@@ -184,4 +274,97 @@ impl<T: FromPoints> Rect<T> {
     pub fn points<Input: Into<f32> + Copy>(points_value: Input) -> Self {
         points::<Input, Self>(points_value)
     }
+}
+
+/// Returns a value of the inferred type which represent a constant of points
+pub fn percent<Input: Into<f32> + Copy, T: FromPercent>(percent: Input) -> T {
+    T::from_percent(percent)
+}
+
+/// Trait to create constant percent values from plain numbers
+pub trait FromPercent {
+    /// Converts into an Into<f32> into Self
+    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self;
+}
+impl FromPercent for f32 {
+    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
+        percent.into()
+    }
+}
+impl FromPercent for Option<f32> {
+    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
+        Some(percent.into())
+    }
+}
+impl FromPercent for LengthPercentage {
+    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
+        LengthPercentage::Points(percent.into())
+    }
+}
+impl FromPercent for LengthPercentageAuto {
+    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
+        LengthPercentageAuto::Points(percent.into())
+    }
+}
+impl FromPercent for Dimension {
+    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
+        Dimension::Points(percent.into())
+    }
+}
+impl<T: FromPercent> FromPercent for Point<T> {
+    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
+        Point { x: T::from_percent(percent.into()), y: T::from_percent(percent.into()) }
+    }
+}
+impl<T: FromPercent> Point<T> {
+    /// Returns a Point where both the x and y values are the constant percent value of the contained type
+    /// (e.g. 2.1, Some(2.1), or Dimension::Points(2.1))
+    pub fn percent<Input: Into<f32> + Copy>(percent_value: Input) -> Self {
+        percent::<Input, Self>(percent_value)
+    }
+}
+impl<T: FromPercent> FromPercent for Size<T> {
+    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
+        Size { width: T::from_percent(percent.into()), height: T::from_percent(percent.into()) }
+    }
+}
+impl<T: FromPercent> Size<T> {
+    /// Returns a Size where both the width and height values are the constant percent value of the contained type
+    /// (e.g. 2.1, Some(2.1), or Dimension::Points(2.1))
+    pub fn percent<Input: Into<f32> + Copy>(percent_value: Input) -> Self {
+        percent::<Input, Self>(percent_value)
+    }
+}
+impl<T: FromPercent> FromPercent for Rect<T> {
+    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
+        Rect {
+            left: T::from_percent(percent.into()),
+            right: T::from_percent(percent.into()),
+            top: T::from_percent(percent.into()),
+            bottom: T::from_percent(percent.into()),
+        }
+    }
+}
+impl<T: FromPercent> Rect<T> {
+    /// Returns a Rect where the left, right, top and bottom values are all constant percent value of the contained type
+    /// (e.g. 2.1, Some(2.1), or Dimension::Points(2.1))
+    pub fn percent<Input: Into<f32> + Copy>(percent_value: Input) -> Self {
+        percent::<Input, Self>(percent_value)
+    }
+}
+
+/// Returns a value of the inferred type which represents a flex fraction
+pub fn flex<Input: Into<f32> + Copy, T: FromFlex>(flex: Input) -> T {
+    T::from_flex(flex)
+}
+
+/// Trait to create constant percent values from plain numbers
+pub trait FromFlex {
+    /// Converts into an Into<f32> into Self
+    fn from_flex<Input: Into<f32> + Copy>(flex: Input) -> Self;
+}
+
+/// Returns a MinMax with min value of min and max value of max
+pub fn minmax<Min, Max>(min: Min, max: Max) -> MinMax<Min, Max> {
+    MinMax { min, max }
 }

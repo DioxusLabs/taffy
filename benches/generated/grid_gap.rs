@@ -19,16 +19,8 @@ pub fn compute() {
                     width: taffy::style::LengthPercentage::Points(40f32),
                     height: taffy::style::LengthPercentage::Points(40f32),
                 },
-                grid_template_rows: vec![
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
-                ],
-                grid_template_columns: vec![
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
-                ],
+                grid_template_rows: vec![points(40f32), points(40f32), points(40f32)],
+                grid_template_columns: vec![points(40f32), points(40f32), points(40f32)],
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(200f32),

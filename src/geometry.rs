@@ -361,3 +361,12 @@ impl Point<f32> {
     /// A [`Point`] with values (0,0), representing the origin
     pub const ZERO: Point<f32> = Self { x: 0.0, y: 0.0 };
 }
+
+/// Generic struct which holds a "min" value and a "max" value
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct MinMax<Min, Max> {
+    /// The value representing the minimum
+    pub min: Min,
+    /// The value representing the maximum
+    pub max: Max,
+}

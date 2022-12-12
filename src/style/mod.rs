@@ -11,12 +11,11 @@ pub use self::flex::{FlexDirection, FlexWrap};
 mod grid;
 #[cfg(feature = "experimental_grid")]
 pub use self::grid::{
-    GridAutoFlow, GridPlacement, MaxTrackSizingFunction, MinTrackSizingFunction, TrackSizingFunction,
+    GridAutoFlow, GridPlacement, MaxTrackSizingFunction, MinTrackSizingFunction, NonRepeatedTrackSizingFunction,
+    TrackSizingFunction,
 };
 use crate::geometry::{Rect, Size};
 
-#[cfg(feature = "experimental_grid")]
-use crate::axis::{AbsoluteAxis, AbstractAxis};
 #[cfg(feature = "experimental_grid")]
 use crate::geometry::Line;
 #[cfg(feature = "experimental_grid")]
@@ -163,10 +162,10 @@ pub struct Style {
     pub grid_template_columns: GridTrackVec<TrackSizingFunction>,
     /// Defines the size of implicitly created rows
     #[cfg(feature = "experimental_grid")]
-    pub grid_auto_rows: GridTrackVec<TrackSizingFunction>,
+    pub grid_auto_rows: GridTrackVec<NonRepeatedTrackSizingFunction>,
     /// Defined the size of implicitly created columns
     #[cfg(feature = "experimental_grid")]
-    pub grid_auto_columns: GridTrackVec<TrackSizingFunction>,
+    pub grid_auto_columns: GridTrackVec<NonRepeatedTrackSizingFunction>,
     /// Controls how items get placed into the grid for auto-placed items
     #[cfg(feature = "experimental_grid")]
     pub grid_auto_flow: GridAutoFlow,
@@ -207,13 +206,13 @@ impl Style {
         max_size: Size::auto(),
         aspect_ratio: None,
         #[cfg(feature = "experimental_grid")]
-        grid_template_rows: Vec::new(),
+        grid_template_rows: GridTrackVec::new(),
         #[cfg(feature = "experimental_grid")]
-        grid_template_columns: Vec::new(),
+        grid_template_columns: GridTrackVec::new(),
         #[cfg(feature = "experimental_grid")]
-        grid_auto_rows: Vec::new(),
+        grid_auto_rows: GridTrackVec::new(),
         #[cfg(feature = "experimental_grid")]
-        grid_auto_columns: Vec::new(),
+        grid_auto_columns: GridTrackVec::new(),
         #[cfg(feature = "experimental_grid")]
         grid_auto_flow: GridAutoFlow::Row,
         #[cfg(feature = "experimental_grid")]
@@ -308,24 +307,6 @@ impl Style {
             self.margin.bottom
         } else {
             self.margin.right
-        }
-    }
-
-    /// Get a grid item's row or column placement depending on the axis passed
-    #[cfg(feature = "experimental_grid")]
-    pub(crate) fn grid_placement(&self, axis: AbsoluteAxis) -> Line<GridPlacement> {
-        match axis {
-            AbsoluteAxis::Horizontal => self.grid_column,
-            AbsoluteAxis::Vertical => self.grid_row,
-        }
-    }
-
-    /// Get a grid container's align-content or justify-content alignment depending on the axis passed
-    #[cfg(feature = "experimental_grid")]
-    pub(crate) fn grid_align_content(&self, axis: AbstractAxis) -> AlignContent {
-        match axis {
-            AbstractAxis::Inline => self.justify_content.unwrap_or(AlignContent::Stretch),
-            AbstractAxis::Block => self.align_content.unwrap_or(AlignContent::Stretch),
         }
     }
 }

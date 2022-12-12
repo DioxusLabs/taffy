@@ -23,18 +23,8 @@ fn grid_auto_columns_fixed_width() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                grid_template_rows: vec![
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
-                    taffy::style::TrackSizingFunction::Auto,
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
-                    taffy::style::TrackSizingFunction::Auto,
-                ],
-                grid_template_columns: vec![
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
-                    taffy::style::TrackSizingFunction::Auto,
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
-                    taffy::style::TrackSizingFunction::Auto,
-                ],
+                grid_template_rows: vec![points(40f32), auto(), points(40f32), auto()],
+                grid_template_columns: vec![points(40f32), auto(), points(40f32), auto()],
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(200f32),

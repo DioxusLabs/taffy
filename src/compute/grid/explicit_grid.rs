@@ -2,6 +2,7 @@
 //! This mainly consists of evaluating GridAutoTracks
 use super::types::{GridTrack, TrackCounts};
 use crate::style::{LengthPercentage, Style, TrackSizingFunction};
+use crate::style_helpers::TaffyAuto;
 use crate::sys::{GridTrackVec, Vec};
 use core::cmp::{max, min};
 
@@ -30,7 +31,7 @@ pub(super) fn initialize_grid_tracks(
 
     // Create negative implicit tracks
     if auto_tracks.is_empty() {
-        let iter = core::iter::repeat(TrackSizingFunction::Auto);
+        let iter = core::iter::repeat(TrackSizingFunction::AUTO);
         create_implicit_tracks(tracks, counts.negative_implicit, iter, gap)
     } else {
         let max_count = max(auto_tracks.len(), counts.negative_implicit as usize);
@@ -51,7 +52,7 @@ pub(super) fn initialize_grid_tracks(
 
     // Create positive implicit tracks
     if auto_tracks.is_empty() {
-        let iter = core::iter::repeat(TrackSizingFunction::Auto);
+        let iter = core::iter::repeat(TrackSizingFunction::AUTO);
         create_implicit_tracks(tracks, counts.negative_implicit, iter, gap)
     } else {
         let iter = auto_tracks.iter().copied().cycle();
@@ -80,9 +81,10 @@ mod test {
     use crate::compute::grid::types::GridTrackKind;
     use crate::compute::grid::types::TrackCounts;
     use crate::compute::grid::util::*;
+    use crate::style::LengthPercentage;
     use crate::style::MaxTrackSizingFunction;
     use crate::style::MinTrackSizingFunction;
-    use crate::style::{LengthPercentage, TrackSizingFunction};
+    use crate::style_helpers::*;
 
     #[test]
     fn explicit_grid_sizing() {
@@ -98,17 +100,10 @@ mod test {
         let px100 = LengthPercentage::Points(100.0);
 
         // Setup test
-        let track_template = vec![
-            TrackSizingFunction::Fixed(px100),
-            TrackSizingFunction::MinMax {
-                min: MinTrackSizingFunction::Fixed(px100),
-                max: MaxTrackSizingFunction::Flex(2.0),
-            },
-            TrackSizingFunction::Flex(1.0),
-        ];
+        let track_template = vec![points(100.0), minmax(points(100.0), flex(2.0)), flex(1.0)];
         let track_counts =
             TrackCounts { negative_implicit: 3, explicit: track_template.len() as u16, positive_implicit: 3 };
-        let auto_tracks = vec![TrackSizingFunction::Auto, TrackSizingFunction::Fixed(px100)];
+        let auto_tracks = vec![auto(), points(100.0)];
         let gap = px20;
 
         // Call function

@@ -21,16 +21,8 @@ fn grid_fr_auto_single_item() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                grid_template_rows: vec![
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
-                    taffy::style::TrackSizingFunction::Flex(1f32),
-                    taffy::style::TrackSizingFunction::Flex(1f32),
-                ],
-                grid_template_columns: vec![
-                    taffy::style::TrackSizingFunction::Fixed(taffy::style::LengthPercentage::Points(40f32)),
-                    taffy::style::TrackSizingFunction::Flex(1f32),
-                    taffy::style::TrackSizingFunction::Flex(1f32),
-                ],
+                grid_template_rows: vec![points(40f32), flex(1f32), flex(1f32)],
+                grid_template_columns: vec![points(40f32), flex(1f32), flex(1f32)],
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Auto,
                     height: taffy::style::Dimension::Auto,

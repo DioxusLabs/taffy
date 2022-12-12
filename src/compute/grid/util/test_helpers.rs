@@ -1,6 +1,6 @@
 //! Helpers for use in unit tests within the grid module
 use crate::prelude::*;
-use crate::style::{Dimension, GridPlacement, Style, TrackSizingFunction};
+use crate::style::{Dimension, GridPlacement, Style};
 
 pub(crate) trait CreateParentTestNode {
     fn into_grid(self) -> Style;
@@ -10,8 +10,8 @@ impl CreateParentTestNode for (f32, f32, i32, i32) {
         Style {
             display: Display::Grid,
             size: Size { width: Dimension::Points(self.0), height: Dimension::Points(self.1) },
-            grid_template_columns: vec![TrackSizingFunction::Flex(1f32); self.2 as usize],
-            grid_template_rows: vec![TrackSizingFunction::Flex(1f32); self.3 as usize],
+            grid_template_columns: vec![flex(1f32); self.2 as usize],
+            grid_template_rows: vec![flex(1f32); self.3 as usize],
             ..Default::default()
         }
     }

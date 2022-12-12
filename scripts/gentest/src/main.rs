@@ -725,21 +725,21 @@ fn generate_track_definition(track_definition: &serde_json::Map<String, Value>) 
     let arguments = || track_definition.get("arguments").unwrap();
 
     match kind {
-        "scalar" => generate_scalar_definition(track_definition, quote!(TrackSizingFunction)),
+        "scalar" => generate_scalar_definition(track_definition),
         "function" => match (name(), arguments()) {
             ("minmax", Value::Array(arguments)) => {
                 if arguments.len() != 2 {
                     panic!("minmax function with the wrong number of arguments");
                 }
                 let min = match arguments[0] {
-                    Value::Object(ref arg) => generate_scalar_definition(arg, quote!(MinTrackSizingFunction)),
+                    Value::Object(ref arg) => generate_scalar_definition(arg),
                     _ => unreachable!(),
                 };
                 let max = match arguments[1] {
-                    Value::Object(ref arg) => generate_scalar_definition(arg, quote!(MaxTrackSizingFunction)),
+                    Value::Object(ref arg) => generate_scalar_definition(arg),
                     _ => unreachable!(),
                 };
-                quote!(taffy::style::TrackSizingFunction::MinMax{ min: #min, max: #max })
+                quote!(minmax(#min, #max))
             }
             // TODO: Add support for fit-content
             _ => unreachable!(),
@@ -748,24 +748,22 @@ fn generate_track_definition(track_definition: &serde_json::Map<String, Value>) 
     }
 }
 
-fn generate_scalar_definition(
-    track_definition: &serde_json::Map<String, Value>,
-    sizing_function: TokenStream,
-) -> TokenStream {
+fn generate_scalar_definition(track_definition: &serde_json::Map<String, Value>) -> TokenStream {
     let unit = || track_definition.get("unit").unwrap().as_str().unwrap();
     let value = || track_definition.get("value").unwrap().as_f64().unwrap() as f32;
 
     match unit() {
-        "auto" => quote!(taffy::style::#sizing_function::Auto),
-        "min-content" => quote!(taffy::style::#sizing_function::MinContent),
-        "max-content" => quote!(taffy::style::#sizing_function::MaxContent),
-        "points" | "percent" => {
-            let value = generate_length_percentage(track_definition);
-            quote!(taffy::style::#sizing_function::Fixed(#value))
-        }
-        "fraction" => {
-            let value: f32 = value();
-            quote!(taffy::style::#sizing_function::Flex(#value))
+        "auto" => quote!(auto()),
+        "min-content" => quote!(min_content()),
+        "max-content" => quote!(max_content()),
+        "points" | "percent" | "fraction" => {
+            let value = value();
+            match unit() {
+                "points" => quote!(points(#value)),
+                "percent" => quote!(percent(#value)),
+                "fraction" => quote!(flex(#value)),
+                _ => unreachable!(),
+            }
         }
         _ => unreachable!(),
     }
