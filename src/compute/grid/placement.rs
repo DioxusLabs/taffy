@@ -294,7 +294,7 @@ mod tests {
     #![allow(clippy::redundant_clone)]
 
     mod test_placement_algorithm {
-        use crate::compute::grid::estimate_size::compute_grid_size_estimate;
+        use crate::compute::grid::implicit_grid::compute_grid_size_estimate;
         use crate::compute::grid::types::TrackCounts;
         use crate::compute::grid::util::*;
         use crate::compute::grid::CellOccupancyMatrix;
