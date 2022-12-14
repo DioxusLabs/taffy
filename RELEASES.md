@@ -5,7 +5,6 @@
 ### Fixes
 
 - Border or padding on the horizontal axis could, in some cases, increase the height of nodes.
-- Vertical `border` and `padding` percentage values incorrectly multiplied by `available_space.width` instead of `height`.
 
 ## 0.2.1
 
