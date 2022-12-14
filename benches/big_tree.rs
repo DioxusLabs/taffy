@@ -73,14 +73,13 @@ fn build_yoga_deep_hierarchy(taffy: &mut Taffy, node_count: u32, branching_facto
         flex_grow: 1.0,
         ..Default::default()
     };
-    let mut build_leaf_node = |taffy: &mut Taffy| taffy.new_leaf(style.clone()).unwrap();
+    let mut build_leaf_node = |taffy: &mut Taffy| taffy.new_leaf(style).unwrap();
     let mut build_flex_node =
-        |taffy: &mut Taffy, children: Vec<Node>| taffy.new_with_children(style.clone(), &children).unwrap();
+        |taffy: &mut Taffy, children: Vec<Node>| taffy.new_with_children(style, &children).unwrap();
 
     let tree = build_deep_tree(taffy, node_count, branching_factor, &mut build_leaf_node, &mut build_flex_node);
-    let root = taffy.new_with_children(Style::DEFAULT, &tree).unwrap();
 
-    root
+    taffy.new_with_children(Style::DEFAULT, &tree).unwrap()
 }
 
 fn taffy_benchmarks(c: &mut Criterion) {

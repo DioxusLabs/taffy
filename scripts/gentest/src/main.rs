@@ -192,7 +192,7 @@ fn generate_assertions(ident: &str, node: &json::JsonValue) -> TokenStream {
         let mut c = Vec::new();
         if let json::JsonValue::Array(ref value) = node["children"] {
             for (idx, child) in value.iter().enumerate() {
-                c.push(generate_assertions(&format!("{}{}", ident, idx), child));
+                c.push(generate_assertions(&format!("{ident}{idx}"), child));
             }
         };
         c.into_iter().fold(quote!(), |a, b| quote!(#a #b))
@@ -430,15 +430,12 @@ fn generate_node(ident: &str, node: &json::JsonValue) -> TokenStream {
     let (children_body, children) = match node["children"] {
         json::JsonValue::Array(ref value) => {
             if !value.is_empty() {
-                let body = value
-                    .iter()
-                    .enumerate()
-                    .map(|(i, child)| generate_node(&format!("{}{}", ident, i), child))
-                    .collect();
+                let body =
+                    value.iter().enumerate().map(|(i, child)| generate_node(&format!("{ident}{i}"), child)).collect();
                 let idents = value
                     .iter()
                     .enumerate()
-                    .map(|(i, _)| Ident::new(&format!("{}{}", ident, i), Span::call_site()))
+                    .map(|(i, _)| Ident::new(&format!("{ident}{i}"), Span::call_site()))
                     .collect::<Vec<_>>();
                 (body, quote!(&[#(#idents),*]))
             } else {

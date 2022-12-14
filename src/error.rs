@@ -31,16 +31,14 @@ pub enum TaffyError {
 impl Display for TaffyError {
     fn fmt(&self, f: &mut Formatter) -> Result {
         match self {
-            TaffyError::ChildIndexOutOfBounds { parent, child_index, child_count } => write!(
-                f,
-                "Index (is {}) should be < child_count ({}) for parent node {:?}",
-                child_index, child_count, parent
-            ),
-            TaffyError::InvalidParentNode(parent) => {
-                write!(f, "Parent Node {:?} is not in the Taffy instance", parent)
+            TaffyError::ChildIndexOutOfBounds { parent, child_index, child_count } => {
+                write!(f, "Index (is {child_index}) should be < child_count ({child_count}) for parent node {parent:?}")
             }
-            TaffyError::InvalidChildNode(child) => write!(f, "Child Node {:?} is not in the Taffy instance", child),
-            TaffyError::InvalidInputNode(node) => write!(f, "Supplied Node {:?} is not in the Taffy instance", node),
+            TaffyError::InvalidParentNode(parent) => {
+                write!(f, "Parent Node {parent:?} is not in the Taffy instance")
+            }
+            TaffyError::InvalidChildNode(child) => write!(f, "Child Node {child:?} is not in the Taffy instance"),
+            TaffyError::InvalidInputNode(node) => write!(f, "Supplied Node {node:?} is not in the Taffy instance"),
         }
     }
 }

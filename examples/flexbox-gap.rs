@@ -8,9 +8,9 @@ fn main() -> Result<(), taffy::error::TaffyError> {
 
     let child_style =
         Style { size: Size { width: Dimension::Points(20.0), height: Dimension::Points(20.0) }, ..Default::default() };
-    let child0 = taffy.new_leaf(child_style.clone())?;
-    let child1 = taffy.new_leaf(child_style.clone())?;
-    let child2 = taffy.new_leaf(child_style.clone())?;
+    let child0 = taffy.new_leaf(child_style)?;
+    let child1 = taffy.new_leaf(child_style)?;
+    let child2 = taffy.new_leaf(child_style)?;
 
     let root = taffy.new_with_children(
         Style { gap: Size { width: Dimension::Points(10.0), height: Dimension::Undefined }, ..Default::default() },
