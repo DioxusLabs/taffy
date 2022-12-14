@@ -741,6 +741,32 @@ fn generate_track_definition(track_definition: &serde_json::Map<String, Value>) 
                 };
                 quote!(minmax(#min, #max))
             }
+            ("repeat", Value::Array(arguments)) => {
+                if arguments.len() < 2 {
+                    panic!("repeat function with the wrong number of arguments");
+                }
+                let repetition = match arguments[0] {
+                    Value::Object(ref arg) => {
+                        let unit = arg.get("unit").unwrap().as_str().unwrap();
+                        let value = || arg.get("value").unwrap().as_u64().unwrap() as u16;
+
+                        match unit {
+                            "auto-fill" => quote!(GridTrackRepetition::AutoFill),
+                            // Not yet implemented in taffy
+                            "auto-fit" => quote!(GridTrackRepetition::AutoFit),
+                            // Not yet implemented in taffy
+                            "integer" => {
+                                let repetition_count = value();
+                                quote!(GridTrackRepetition::Count(#repetition_count))
+                            }
+                            _ => unreachable!(),
+                        }
+                    }
+                    _ => unreachable!(),
+                };
+                let track_list = generate_track_definition_list(&arguments[1..]);
+                quote!(repeat(#repetition, #track_list))
+            }
             // TODO: Add support for fit-content
             _ => unreachable!(),
         },
