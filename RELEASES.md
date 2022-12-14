@@ -1,5 +1,11 @@
 # Release Notes
 
+## 0.2.2
+
+### Fixes
+
+- Border or padding on the horizontal axis could, in some cases, increase the height of nodes.
+
 ## 0.2.1
 
 ### Fixes
