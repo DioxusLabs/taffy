@@ -98,5 +98,5 @@ fn vertical_border_and_padding_percentage_values_use_available_space_correctly()
 
     let layout = taffy.layout(node).unwrap();
     assert_eq!(layout.size.width, 200.0);
-    assert_eq!(layout.size.height, 100.0);
+    assert_eq!(layout.size.height, 200.0);
 }
