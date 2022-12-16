@@ -32,10 +32,10 @@ pub(crate) fn compute(
             (node_size, node_min_size, node_max_size)
         }
         SizingMode::InherentSize => {
-            let style_size = style.size.maybe_resolve(available_space.as_options());
+            let style_size = style.size.maybe_resolve(available_space.into_options());
             let node_size = known_dimensions.or(style_size);
-            let node_min_size = style.min_size.maybe_resolve(available_space.as_options());
-            let node_max_size = style.max_size.maybe_resolve(available_space.as_options());
+            let node_min_size = style.min_size.maybe_resolve(available_space.into_options());
+            let node_max_size = style.max_size.maybe_resolve(available_space.into_options());
             (node_size, node_min_size, node_max_size)
         }
     };

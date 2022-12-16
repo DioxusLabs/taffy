@@ -836,7 +836,7 @@ fn stretch_auto_tracks(
         let free_space = if available_grid_space.get(axis).is_definite() {
             available_grid_space.get(axis).compute_free_space(used_space)
         } else {
-            match container_style.min_size.maybe_resolve(available_space.as_options()).get(axis) {
+            match container_style.min_size.maybe_resolve(available_space.into_options()).get(axis) {
                 Some(size) => size - used_space,
                 None => 0.0,
             }

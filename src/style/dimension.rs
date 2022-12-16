@@ -295,7 +295,7 @@ impl From<Option<f32>> for AvailableSpace {
 
 impl Size<AvailableSpace> {
     /// Convert Size<AvailableSpace> into Size<Option<f32>>
-    pub fn as_options(self) -> Size<Option<f32>> {
+    pub fn into_options(self) -> Size<Option<f32>> {
         Size { width: self.width.into_option(), height: self.height.into_option() }
     }
 

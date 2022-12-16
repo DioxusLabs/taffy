@@ -76,7 +76,7 @@ pub(super) fn align_and_position_item(
     let aspect_ratio = style.aspect_ratio;
     let justify_self = style.justify_self;
     let align_self = style.align_self;
-    let inherent_size = style.size.maybe_resolve(available_space.as_options());
+    let inherent_size = style.size.maybe_resolve(available_space.into_options());
 
     let mut measure_node = |axis_available_space| {
         compute_node_layout(

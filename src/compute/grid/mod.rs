@@ -82,9 +82,9 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
     // https://www.w3.org/TR/css-grid-1/#available-grid-space
     let padding = style.padding.resolve_or_zero(available_space.width.into_option());
     let border = style.border.resolve_or_zero(available_space.width.into_option());
-    let min_size = style.min_size.maybe_resolve(available_space.as_options());
-    let max_size = style.max_size.maybe_resolve(available_space.as_options());
-    let size = style.size.maybe_resolve(available_space.as_options());
+    let min_size = style.min_size.maybe_resolve(available_space.into_options());
+    let max_size = style.max_size.maybe_resolve(available_space.into_options());
+    let size = style.size.maybe_resolve(available_space.into_options());
 
     let constrained_available_space = size
         .maybe_clamp(min_size, max_size)
@@ -165,7 +165,7 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
     // );
 
     // 6. Compute container size
-    let resolved_style_size = style.size.maybe_resolve(available_space.as_options());
+    let resolved_style_size = style.size.maybe_resolve(available_space.into_options());
     let container_size = Size {
         width: resolved_style_size
             .get(AbstractAxis::Inline)

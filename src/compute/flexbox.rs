@@ -1758,13 +1758,13 @@ mod tests {
         assert!(constants.is_column == style.flex_direction.is_column());
         assert!(constants.is_wrap_reverse == (style.flex_wrap == FlexWrap::WrapReverse));
 
-        let margin = style.margin.resolve_or_zero(parent_size.as_options());
+        let margin = style.margin.resolve_or_zero(parent_size.into_options());
         assert_eq!(constants.margin, margin);
 
-        let border = style.border.resolve_or_zero(parent_size.as_options());
+        let border = style.border.resolve_or_zero(parent_size.into_options());
         assert_eq!(constants.border, border);
 
-        let padding = style.padding.resolve_or_zero(parent_size.as_options());
+        let padding = style.padding.resolve_or_zero(parent_size.into_options());
 
         // TODO: Replace with something less hardcoded?
         let padding_border = Rect {
