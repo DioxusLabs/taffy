@@ -1,4 +1,4 @@
-use taffy::{geometry::Point, layout::AvailableSpace, style::Dimension};
+use taffy::{geometry::Point, style::AvailableSpace, style::Dimension};
 
 #[test]
 fn simple_child() {

@@ -6,13 +6,13 @@ use core::f32;
 use crate::compute::common::alignment::compute_alignment_offset;
 use crate::compute::compute_node_layout;
 use crate::geometry::{Point, Rect, Size};
-use crate::layout::{AvailableSpace, Layout, RunMode, SizingMode};
+use crate::layout::{Layout, RunMode, SizingMode};
 use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::{
-    AlignContent, AlignItems, AlignSelf, Dimension, Display, FlexWrap, JustifyContent, LengthPercentageAuto,
-    PositionType,
+    AlignContent, AlignItems, AlignSelf, AvailableSpace, Dimension, Display, FlexWrap, JustifyContent,
+    LengthPercentageAuto, PositionType,
 };
 use crate::style::{FlexDirection, Style};
 use crate::sys::Vec;
@@ -1730,6 +1730,7 @@ mod tests {
     use crate::geometry::Point;
     use crate::style::Display;
     use crate::style::Display::Flex;
+    use crate::style_helpers::*;
     use crate::{
         math::MaybeMath,
         prelude::{Rect, Size},

@@ -3,11 +3,11 @@
 pub use crate::{
     compute::flexbox::compute as layout_flexbox,
     geometry::{Line, Rect, Size},
-    layout::{AvailableSpace, Layout},
+    layout::Layout,
     node::{Node, Taffy},
     style::{
-        AlignContent, AlignItems, AlignSelf, Dimension, Display, FlexDirection, FlexWrap, JustifyContent, JustifyItems,
-        JustifySelf, LengthPercentage, LengthPercentageAuto, PositionType, Style,
+        AlignContent, AlignItems, AlignSelf, AvailableSpace, Dimension, Display, FlexDirection, FlexWrap,
+        JustifyContent, JustifyItems, JustifySelf, LengthPercentage, LengthPercentageAuto, PositionType, Style,
     },
     style_helpers::{
         auto, flex, max_content, min_content, minmax, percent, points, zero, FromFlex, FromPercent, FromPoints,

@@ -2,10 +2,9 @@
 //! This mainly consists of evaluating GridAutoTracks
 use super::types::{GridTrack, TrackCounts};
 use crate::axis::AbsoluteAxis;
-use crate::layout::AvailableSpace;
 use crate::math::MaybeMath;
 use crate::resolve::ResolveOrZero;
-use crate::style::{LengthPercentage, NonRepeatedTrackSizingFunction, Style, TrackSizingFunction};
+use crate::style::{AvailableSpace, LengthPercentage, NonRepeatedTrackSizingFunction, Style, TrackSizingFunction};
 use crate::style_helpers::TaffyAuto;
 use crate::sys::{GridTrackVec, Vec};
 use core::cmp::{max, min};

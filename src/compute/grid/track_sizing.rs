@@ -3,11 +3,10 @@
 use super::types::{GridItem, GridTrack, TrackCounts};
 use crate::axis::AbstractAxis;
 use crate::geometry::Size;
-use crate::layout::AvailableSpace;
 use crate::math::MaybeMath;
 use crate::prelude::LayoutTree;
 use crate::resolve::MaybeResolve;
-use crate::style::{AlignContent, MaxTrackSizingFunction, MinTrackSizingFunction, Style};
+use crate::style::{AlignContent, AvailableSpace, MaxTrackSizingFunction, MinTrackSizingFunction, Style};
 use crate::sys::{f32_max, f32_min};
 use core::cmp::Ordering;
 

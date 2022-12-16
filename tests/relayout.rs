@@ -1,5 +1,4 @@
-use taffy::layout::AvailableSpace;
-use taffy::style::Dimension;
+use taffy::style::{AvailableSpace, Dimension};
 
 #[test]
 fn relayout() {

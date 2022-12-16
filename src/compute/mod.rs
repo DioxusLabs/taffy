@@ -9,9 +9,9 @@ pub(crate) mod grid;
 
 use crate::error::TaffyError;
 use crate::geometry::{Point, Size};
-use crate::layout::{AvailableSpace, Cache, Layout, RunMode, SizingMode};
+use crate::layout::{Cache, Layout, RunMode, SizingMode};
 use crate::node::Node;
-use crate::style::Display;
+use crate::style::{AvailableSpace, Display};
 use crate::sys::round;
 use crate::tree::LayoutTree;
 

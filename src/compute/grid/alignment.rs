@@ -4,9 +4,9 @@ use crate::axis::InBothAbsAxis;
 use crate::compute::common::alignment::compute_alignment_offset;
 use crate::compute::compute_node_layout;
 use crate::geometry::{Line, Point, Size};
-use crate::layout::{AvailableSpace, Layout, RunMode, SizingMode};
+use crate::layout::{Layout, RunMode, SizingMode};
 use crate::resolve::MaybeResolve;
-use crate::style::{AlignContent, AlignItems, AlignSelf};
+use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace};
 use crate::sys::{f32_max, f32_min};
 use crate::tree::LayoutTree;
 

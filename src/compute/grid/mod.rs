@@ -2,11 +2,10 @@
 //! https://www.w3.org/TR/css-grid-1/
 use crate::axis::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::Size;
-use crate::layout::AvailableSpace;
 use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
-use crate::style::AlignContent;
+use crate::style::{AlignContent, AvailableSpace};
 use crate::sys::{GridTrackVec, Vec};
 use crate::tree::LayoutTree;
 use alignment::{align_and_position_item, align_tracks};

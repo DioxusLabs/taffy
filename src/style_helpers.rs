@@ -1,9 +1,17 @@
 //! Helper functions which it make it easier to create instances of types in the `style` and `geometry` modules.
 use crate::geometry::{MinMax, Point, Rect, Size};
-use crate::style::{Dimension, LengthPercentage, LengthPercentageAuto};
 
 #[cfg(feature = "experimental_grid")]
 use crate::style::{GridTrackRepetition, NonRepeatedTrackSizingFunction, TrackSizingFunction};
+
+/// Returns an auto-repeated track definition
+#[cfg(feature = "experimental_grid")]
+pub fn repeat(
+    repetition_kind: GridTrackRepetition,
+    track_list: Vec<NonRepeatedTrackSizingFunction>,
+) -> TrackSizingFunction {
+    TrackSizingFunction::AutoRepeat(repetition_kind, track_list)
+}
 
 /// Returns the zero value for that type
 pub const fn zero<T: TaffyZero>() -> T {
@@ -17,15 +25,6 @@ pub trait TaffyZero {
 }
 impl TaffyZero for f32 {
     const ZERO: f32 = 0.0;
-}
-impl TaffyZero for LengthPercentage {
-    const ZERO: LengthPercentage = LengthPercentage::Points(0.0);
-}
-impl TaffyZero for LengthPercentageAuto {
-    const ZERO: LengthPercentageAuto = LengthPercentageAuto::Points(0.0);
-}
-impl TaffyZero for Dimension {
-    const ZERO: Dimension = Dimension::Points(0.0);
 }
 impl<T: TaffyZero> TaffyZero for Option<T> {
     const ZERO: Option<T> = Some(T::ZERO);
@@ -70,12 +69,6 @@ pub const fn auto<T: TaffyAuto>() -> T {
 pub trait TaffyAuto {
     /// The auto value for type implementing TaffyZero
     const AUTO: Self;
-}
-impl TaffyAuto for LengthPercentageAuto {
-    const AUTO: LengthPercentageAuto = LengthPercentageAuto::Auto;
-}
-impl TaffyAuto for Dimension {
-    const AUTO: Dimension = Dimension::Auto;
 }
 impl<T: TaffyAuto> TaffyAuto for Option<T> {
     const AUTO: Option<T> = Some(T::AUTO);
@@ -221,21 +214,6 @@ impl FromPoints for Option<f32> {
         Some(points.into())
     }
 }
-impl FromPoints for LengthPercentage {
-    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
-        LengthPercentage::Points(points.into())
-    }
-}
-impl FromPoints for LengthPercentageAuto {
-    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
-        LengthPercentageAuto::Points(points.into())
-    }
-}
-impl FromPoints for Dimension {
-    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
-        Dimension::Points(points.into())
-    }
-}
 impl<T: FromPoints> FromPoints for Point<T> {
     fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
         Point { x: T::from_points(points.into()), y: T::from_points(points.into()) }
@@ -298,21 +276,6 @@ impl FromPercent for Option<f32> {
         Some(percent.into())
     }
 }
-impl FromPercent for LengthPercentage {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        LengthPercentage::Points(percent.into())
-    }
-}
-impl FromPercent for LengthPercentageAuto {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        LengthPercentageAuto::Points(percent.into())
-    }
-}
-impl FromPercent for Dimension {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Dimension::Points(percent.into())
-    }
-}
 impl<T: FromPercent> FromPercent for Point<T> {
     fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
         Point { x: T::from_percent(percent.into()), y: T::from_percent(percent.into()) }
@@ -369,13 +332,4 @@ pub trait FromFlex {
 /// Returns a MinMax with min value of min and max value of max
 pub fn minmax<Min, Max, Output: From<MinMax<Min, Max>>>(min: Min, max: Max) -> Output {
     MinMax { min, max }.into()
-}
-
-/// Returns an auto-repeated track definition
-#[cfg(feature = "experimental_grid")]
-pub fn repeat(
-    repetition_kind: GridTrackRepetition,
-    track_list: Vec<NonRepeatedTrackSizingFunction>,
-) -> TrackSizingFunction {
-    TrackSizingFunction::AutoRepeat(repetition_kind, track_list)
 }

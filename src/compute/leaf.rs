@@ -1,10 +1,11 @@
 //! Computes size using styles and measure functions
 
 use crate::geometry::Size;
-use crate::layout::{AvailableSpace, RunMode, SizingMode};
+use crate::layout::{RunMode, SizingMode};
 use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
+use crate::style::AvailableSpace;
 use crate::tree::LayoutTree;
 
 #[cfg(feature = "debug")]

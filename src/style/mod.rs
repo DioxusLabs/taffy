@@ -4,7 +4,7 @@ mod dimension;
 mod flex;
 
 pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, JustifyItems, JustifySelf};
-pub use self::dimension::{Dimension, LengthPercentage, LengthPercentageAuto};
+pub use self::dimension::{AvailableSpace, Dimension, LengthPercentage, LengthPercentageAuto};
 pub use self::flex::{FlexDirection, FlexWrap};
 
 #[cfg(feature = "experimental_grid")]

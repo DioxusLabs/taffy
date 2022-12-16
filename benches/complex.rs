@@ -1,4 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
+use taffy::style_helpers::*;
 use taffy::tree::LayoutTree;
 
 fn build_deep_hierarchy(taffy: &mut taffy::node::Taffy) -> taffy::node::Node {

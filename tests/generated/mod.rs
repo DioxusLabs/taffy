@@ -1,6 +1,6 @@
 fn measure_standard_text(
     known_dimensions: taffy::geometry::Size<Option<f32>>,
-    available_space: taffy::geometry::Size<taffy::layout::AvailableSpace>,
+    available_space: taffy::geometry::Size<taffy::style::AvailableSpace>,
     text_content: &str,
 ) -> taffy::geometry::Size<f32> {
     use taffy::prelude::*;
