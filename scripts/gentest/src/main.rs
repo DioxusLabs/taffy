@@ -727,6 +727,16 @@ fn generate_track_definition(track_definition: &serde_json::Map<String, Value>) 
     match kind {
         "scalar" => generate_scalar_definition(track_definition),
         "function" => match (name(), arguments()) {
+            ("fit-content", Value::Array(arguments)) => {
+                if arguments.len() != 1 {
+                    panic!("fit-content function with the wrong number of arguments");
+                }
+                let argument = match arguments[0] {
+                    Value::Object(ref arg) => generate_scalar_definition(arg),
+                    _ => unreachable!(),
+                };
+                quote!(fit_content(#argument))
+            }
             ("minmax", Value::Array(arguments)) => {
                 if arguments.len() != 2 {
                     panic!("minmax function with the wrong number of arguments");

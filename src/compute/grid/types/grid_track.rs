@@ -1,5 +1,8 @@
 //! Contains GridTrack used to represent a single grid track (row/column) during layout
-use crate::style::{LengthPercentage, MaxTrackSizingFunction, MinTrackSizingFunction};
+use crate::{
+    style::{LengthPercentage, MaxTrackSizingFunction, MinTrackSizingFunction},
+    sys::f32_min,
+};
 
 /// Whether a GridTrack represents an actual track or a gutter.
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -106,6 +109,23 @@ impl GridTrack {
     /// Returns true if the track is flexible (has a Flex MaxTrackSizingFunction), else false.
     pub fn is_flexible(&self) -> bool {
         matches!(self.max_track_sizing_function, MaxTrackSizingFunction::Flex(_))
+    }
+
+    #[inline]
+    /// Returns true if the track is flexible (has a Flex MaxTrackSizingFunction), else false.
+    pub fn fit_content_limit(&self) -> f32 {
+        match self.max_track_sizing_function {
+            MaxTrackSizingFunction::FitContent(LengthPercentage::Points(limit)) => limit,
+            // TODO: properly support percentage fit-content values
+            MaxTrackSizingFunction::FitContent(LengthPercentage::Percent(_)) => f32::INFINITY,
+            _ => f32::INFINITY,
+        }
+    }
+
+    #[inline]
+    /// Returns true if the track is flexible (has a Flex MaxTrackSizingFunction), else false.
+    pub fn fit_content_limited_growth_limit(&self) -> f32 {
+        f32_min(self.growth_limit, self.fit_content_limit())
     }
 
     #[inline]

@@ -141,30 +141,30 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
             track.max_track_sizing_function.definite_value(available_space)
         },
     );
-    // // Re-run track sizing algorithm for Inline axis
-    // track_sizing_algorithm(
-    //     tree,
-    //     GridAxis::Inline,
-    //     available_space,
-    //     available_grid_space,
-    //     &style,
-    //     &mut columns,
-    //     &mut rows,
-    //     &mut items,
-    //     |track: &GridTrack, _| Some(track.base_size),
-    // );
-    // // Re-run track sizing algorithm for Block axis
-    // track_sizing_algorithm(
-    //     tree,
-    //     GridAxis::Block,
-    //     available_space,
-    //     available_grid_space,
-    //     &style,
-    //     &mut rows,
-    //     &mut columns,
-    //     &mut items,
-    //     |track: &GridTrack, _| Some(track.base_size),
-    // );
+    // Re-run track sizing algorithm for Inline axis
+    track_sizing_algorithm(
+        tree,
+        AbstractAxis::Inline,
+        available_space,
+        available_grid_space,
+        &style,
+        &mut columns,
+        &mut rows,
+        &mut items,
+        |track: &GridTrack, _| Some(track.base_size),
+    );
+    // Re-run track sizing algorithm for Block axis
+    track_sizing_algorithm(
+        tree,
+        AbstractAxis::Block,
+        available_space,
+        available_grid_space,
+        &style,
+        &mut rows,
+        &mut columns,
+        &mut items,
+        |track: &GridTrack, _| Some(track.base_size),
+    );
 
     // 6. Compute container size
     let resolved_style_size = style.size.maybe_resolve(available_space.into_options());

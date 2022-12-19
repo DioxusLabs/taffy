@@ -165,6 +165,8 @@ pub enum MaxTrackSizingFunction {
     MinContent,
     /// Track maximum size should be content sized under a max-content constraint
     MaxContent,
+    /// Track maximum size should be sized according to the fit-content formula
+    FitContent(LengthPercentage),
     /// Track maximum size should be automatically sized
     Auto,
     /// The dimension as a fraction of the total available grid space.
@@ -180,6 +182,11 @@ impl TaffyMinContent for MaxTrackSizingFunction {
 }
 impl TaffyMaxContent for MaxTrackSizingFunction {
     const MAX_CONTENT: Self = Self::MaxContent;
+}
+impl TaffyFitContent for MaxTrackSizingFunction {
+    fn fit_content(argument: LengthPercentage) -> Self {
+        Self::FitContent(argument)
+    }
 }
 impl TaffyZero for MaxTrackSizingFunction {
     const ZERO: Self = Self::Fixed(LengthPercentage::ZERO);
@@ -204,13 +211,15 @@ impl MaxTrackSizingFunction {
     /// Returns true if the max track sizing function is `MinContent`, `MaxContent` or `Auto`, else false.
     #[inline(always)]
     pub fn is_intrinsic(&self) -> bool {
-        matches!(self, Self::MinContent | Self::MaxContent | Self::Auto)
+        matches!(self, Self::MinContent | Self::MaxContent | Self::FitContent(_) | Self::Auto)
     }
 
-    /// Returns true if the max track sizing function is `MaxContent`, else false.
+    /// Returns true if the max track sizing function is `MaxContent`, `FitContent` or `Auto` else false.
+    /// "In all cases, treat auto and fit-content() as max-content, except where specified otherwise for fit-content()."
+    /// See: https://www.w3.org/TR/css-grid-1/#algo-terms
     #[inline(always)]
-    pub fn is_max_content(&self) -> bool {
-        matches!(self, Self::MaxContent)
+    pub fn is_max_content_alike(&self) -> bool {
+        matches!(self, Self::MaxContent | Self::FitContent(_) | Self::Auto)
     }
 
     /// Returns true if the max track sizing function is `Flex`, else false.
@@ -231,7 +240,7 @@ impl MaxTrackSizingFunction {
                 AvailableSpace::Definite(available_size) => Some(fraction * available_size),
                 _ => None,
             },
-            MinContent | MaxContent | Auto | Flex(_) => None,
+            MinContent | MaxContent | FitContent(_) | Auto | Flex(_) => None,
         }
     }
 }
@@ -320,6 +329,11 @@ impl TaffyMaxContent for NonRepeatedTrackSizingFunction {
     const MAX_CONTENT: Self =
         Self { min: MinTrackSizingFunction::MAX_CONTENT, max: MaxTrackSizingFunction::MAX_CONTENT };
 }
+impl TaffyFitContent for NonRepeatedTrackSizingFunction {
+    fn fit_content(argument: LengthPercentage) -> Self {
+        Self { min: MinTrackSizingFunction::AUTO, max: MaxTrackSizingFunction::FitContent(argument) }
+    }
+}
 impl TaffyZero for NonRepeatedTrackSizingFunction {
     const ZERO: Self = Self { min: MinTrackSizingFunction::ZERO, max: MaxTrackSizingFunction::ZERO };
 }
@@ -374,6 +388,11 @@ impl TaffyMinContent for TrackSizingFunction {
 }
 impl TaffyMaxContent for TrackSizingFunction {
     const MAX_CONTENT: Self = Self::Single(NonRepeatedTrackSizingFunction::MAX_CONTENT);
+}
+impl TaffyFitContent for TrackSizingFunction {
+    fn fit_content(argument: LengthPercentage) -> Self {
+        Self::Single(NonRepeatedTrackSizingFunction::fit_content(argument))
+    }
 }
 impl TaffyZero for TrackSizingFunction {
     const ZERO: Self = Self::Single(NonRepeatedTrackSizingFunction::ZERO);

@@ -10,8 +10,8 @@ pub use crate::{
         JustifyContent, JustifyItems, JustifySelf, LengthPercentage, LengthPercentageAuto, PositionType, Style,
     },
     style_helpers::{
-        auto, flex, max_content, min_content, minmax, percent, points, zero, FromFlex, FromPercent, FromPoints,
-        TaffyAuto, TaffyMaxContent, TaffyMinContent, TaffyZero,
+        auto, fit_content, flex, max_content, min_content, minmax, percent, points, zero, FromFlex, FromPercent,
+        FromPoints, TaffyAuto, TaffyFitContent, TaffyMaxContent, TaffyMinContent, TaffyZero,
     },
     tree::LayoutTree,
 };

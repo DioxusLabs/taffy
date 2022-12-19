@@ -1,5 +1,8 @@
 //! Helper functions which it make it easier to create instances of types in the `style` and `geometry` modules.
-use crate::geometry::{MinMax, Point, Rect, Size};
+use crate::{
+    geometry::{MinMax, Point, Rect, Size},
+    style::LengthPercentage,
+};
 
 #[cfg(feature = "experimental_grid")]
 use crate::style::{GridTrackRepetition, NonRepeatedTrackSizingFunction, TrackSizingFunction};
@@ -191,6 +194,58 @@ impl<T: TaffyMaxContent> Rect<T> {
     /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
     pub const fn max_content() -> Self {
         max_content::<Self>()
+    }
+}
+
+/// Returns a value of the inferred type which represent a constant of points
+pub fn fit_content<T: TaffyFitContent>(argument: LengthPercentage) -> T {
+    T::fit_content(argument)
+}
+
+/// Trait to create constant points values from plain numbers
+pub trait TaffyFitContent {
+    /// Converts into a LengthPercentage into Self
+    fn fit_content(argument: LengthPercentage) -> Self;
+}
+impl<T: TaffyFitContent> TaffyFitContent for Point<T> {
+    fn fit_content(argument: LengthPercentage) -> Self {
+        Point { x: T::fit_content(argument), y: T::fit_content(argument) }
+    }
+}
+impl<T: TaffyFitContent> Point<T> {
+    /// Returns a Point where both the x and y values are the constant points value of the contained type
+    /// (e.g. 2.1, Some(2.1), or Dimension::Points(2.1))
+    pub fn fit_content(argument: LengthPercentage) -> Self {
+        fit_content(argument)
+    }
+}
+impl<T: TaffyFitContent> TaffyFitContent for Size<T> {
+    fn fit_content(argument: LengthPercentage) -> Self {
+        Size { width: T::fit_content(argument), height: T::fit_content(argument) }
+    }
+}
+impl<T: TaffyFitContent> Size<T> {
+    /// Returns a Size where both the width and height values are the constant fit_content value of the contained type
+    /// (e.g. 2.1, Some(2.1), or Dimension::Points(2.1))
+    pub fn fit_content(argument: LengthPercentage) -> Self {
+        fit_content(argument)
+    }
+}
+impl<T: TaffyFitContent> TaffyFitContent for Rect<T> {
+    fn fit_content(argument: LengthPercentage) -> Self {
+        Rect {
+            left: T::fit_content(argument),
+            right: T::fit_content(argument),
+            top: T::fit_content(argument),
+            bottom: T::fit_content(argument),
+        }
+    }
+}
+impl<T: TaffyFitContent> Rect<T> {
+    /// Returns a Rect where the left, right, top and bottom values are all constant fit_content value of the contained type
+    /// (e.g. 2.1, Some(2.1), or Dimension::Points(2.1))
+    pub fn fit_content(argument: LengthPercentage) -> Self {
+        fit_content(argument)
     }
 }
 
