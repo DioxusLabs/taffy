@@ -213,7 +213,7 @@ fn compute_preliminary(
         });
 
         let style = tree.style(node);
-        let new_gap = style.gap.width.maybe_resolve(longest_line_length).unwrap_or(0.0);
+        let new_gap = style.gap.main(constants.dir).maybe_resolve(longest_line_length).unwrap_or(0.0);
         constants.gap.set_main(constants.dir, new_gap);
     }
 
