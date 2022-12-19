@@ -4,7 +4,9 @@ use super::types::{GridTrack, TrackCounts};
 use crate::axis::AbsoluteAxis;
 use crate::math::MaybeMath;
 use crate::resolve::ResolveOrZero;
-use crate::style::{AvailableSpace, LengthPercentage, NonRepeatedTrackSizingFunction, Style, TrackSizingFunction};
+use crate::style::{
+    AvailableSpace, GridTrackRepetition, LengthPercentage, NonRepeatedTrackSizingFunction, Style, TrackSizingFunction,
+};
 use crate::style_helpers::TaffyAuto;
 use crate::sys::{GridTrackVec, Vec};
 use core::cmp::{max, min};
@@ -154,6 +156,7 @@ pub(super) fn initialize_grid_tracks(
     track_template: &GridTrackVec<TrackSizingFunction>,
     auto_tracks: &Vec<NonRepeatedTrackSizingFunction>,
     gap: LengthPercentage,
+    track_has_items: impl Fn(usize) -> bool,
 ) {
     // Clear vector (in case this is a re-layout), reserve space for all tracks ahead of time to reduce allocations,
     // and push the initial gutter
@@ -173,6 +176,8 @@ pub(super) fn initialize_grid_tracks(
         create_implicit_tracks(tracks, counts.negative_implicit, iter, gap)
     }
 
+    let mut current_track_index = (counts.negative_implicit) as usize;
+
     // Create explicit tracks
     // An explicit check against the count (rather than just relying on track_template being empty) is required here
     // because a count of zero can result from the track_template being invalid, in which case it should be ignored.
@@ -181,12 +186,27 @@ pub(super) fn initialize_grid_tracks(
             TrackSizingFunction::Single(sizing_function) => {
                 tracks
                     .push(GridTrack::new(sizing_function.min_sizing_function(), sizing_function.max_sizing_function()));
-                tracks.push(GridTrack::gutter(gap))
+                tracks.push(GridTrack::gutter(gap));
+                current_track_index += 1;
             }
-            TrackSizingFunction::AutoRepeat(_, repeated_tracks) => {
-                let auto_repeated_track_count = counts.explicit - (track_template.len() as u16 - 1);
+            TrackSizingFunction::AutoRepeat(repetition_kind, repeated_tracks) => {
+                let auto_repeated_track_count = (counts.explicit - (track_template.len() as u16 - 1)) as usize;
                 let iter = repeated_tracks.iter().copied().cycle();
-                create_implicit_tracks(tracks, auto_repeated_track_count, iter, gap)
+                for track_def in iter.take(auto_repeated_track_count) {
+                    let mut track = GridTrack::new(track_def.min_sizing_function(), track_def.max_sizing_function());
+                    let mut gutter = GridTrack::gutter(gap);
+
+                    // Auto-fit tracks that don't contain should be collapsed.
+                    if *repetition_kind == GridTrackRepetition::AutoFit && !track_has_items(current_track_index) {
+                        track.collapse();
+                        gutter.collapse();
+                    }
+
+                    tracks.push(track);
+                    tracks.push(gutter);
+
+                    current_track_index += 1;
+                }
             }
         });
     }
@@ -400,7 +420,7 @@ mod test {
 
         // Call function
         let mut tracks = Vec::new();
-        initialize_grid_tracks(&mut tracks, track_counts, &track_template, &auto_tracks, gap);
+        initialize_grid_tracks(&mut tracks, track_counts, &track_template, &auto_tracks, gap, |_| false);
 
         // Assertions
         let expected = vec![

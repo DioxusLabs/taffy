@@ -23,7 +23,7 @@ pub(super) fn align_tracks(
     let free_space = f32_max(size_diff, 0.0);
     let overflow = f32_min(size_diff, 0.0);
 
-    // If the used_size > grid> container_size then the tracks must overflow their container
+    // If the used_size > grid_container_size then the tracks must overflow their container
     // The direction in which they do so is determined by the alignment style
     let origin = match track_alignment_style {
         AlignContent::Start => 0.0,
@@ -35,8 +35,8 @@ pub(super) fn align_tracks(
         AlignContent::SpaceAround => 0.0,
     };
 
-    // Count the number of tracks (not counting gutters)
-    let num_tracks = (tracks.len() - 1) / 2;
+    // Count the number of non-collapsed tracks (not counting gutters)
+    let num_tracks = tracks.iter().skip(1).step_by(2).filter(|track| !track.is_collapsed).count();
 
     // Grid layout treats gaps as full tracks rather than applying them at alignment so we
     // simply pass zero here. Grid layout is never reversed.

@@ -345,6 +345,9 @@ pub enum GridTrackRepetition {
     /// Auto-repeating track should be generated to fit the container
     /// See: https://developer.mozilla.org/en-US/docs/Web/CSS/repeat#auto-fill
     AutoFill,
+    /// Auto-repeating track should be generated to fit the container
+    /// See: https://developer.mozilla.org/en-US/docs/Web/CSS/repeat#auto-fit
+    AutoFit,
 }
 
 /// The sizing function for a grid track (row/column)

@@ -20,7 +20,7 @@ pub(in super::super) struct GridTrack {
     pub kind: GridTrackKind,
 
     /// Whether the track is a collapsed track/gutter. Collapsed tracks are effectively treated as if
-    /// they don't exist for the purposes of grid sizing. And gaps between collapsed tracks are also collapsed.
+    /// they don't exist for the purposes of grid sizing. Gutters between collapsed tracks are also collapsed.
     pub is_collapsed: bool,
 
     /// The minimum track sizing function of the track
@@ -55,13 +55,14 @@ pub(in super::super) struct GridTrack {
 }
 
 impl GridTrack {
-    /// Create new GridTrack representing an actual track (not a gutter)
-    pub fn new(
+    /// GridTrack constructor with all configuration parameters for the other constructors exposed
+    fn new_with_kind(
+        kind: GridTrackKind,
         min_track_sizing_function: MinTrackSizingFunction,
         max_track_sizing_function: MaxTrackSizingFunction,
     ) -> GridTrack {
         GridTrack {
-            kind: GridTrackKind::Track,
+            kind,
             is_collapsed: false,
             min_track_sizing_function,
             max_track_sizing_function,
@@ -76,26 +77,25 @@ impl GridTrack {
         }
     }
 
+    /// Create new GridTrack representing an actual track (not a gutter)
+    pub fn new(
+        min_track_sizing_function: MinTrackSizingFunction,
+        max_track_sizing_function: MaxTrackSizingFunction,
+    ) -> GridTrack {
+        Self::new_with_kind(GridTrackKind::Track, min_track_sizing_function, max_track_sizing_function)
+    }
+
     /// Create a new GridTrack representing a gutter
     pub fn gutter(size: LengthPercentage) -> GridTrack {
-        GridTrack {
-            kind: GridTrackKind::Gutter, // { name: None },
-            is_collapsed: false,
-            min_track_sizing_function: MinTrackSizingFunction::Fixed(size),
-            max_track_sizing_function: MaxTrackSizingFunction::Fixed(size),
-            offset: 0.0,
-            base_size: 0.0,
-            growth_limit: 0.0,
-            content_alignment_adjustment: 0.0,
-            item_incurred_increase: 0.0,
-            base_size_planned_increase: 0.0,
-            growth_limit_planned_increase: 0.0,
-            infinitely_growable: false,
-        }
+        Self::new_with_kind(
+            GridTrackKind::Gutter,
+            MinTrackSizingFunction::Fixed(size),
+            MaxTrackSizingFunction::Fixed(size),
+        )
     }
 
     /// Mark a GridTrack as collapsed. Also sets both of the track's sizing functions
-    /// to fixed zero-sized sizing functions. 
+    /// to fixed zero-sized sizing functions.
     pub fn collapse(&mut self) {
         self.is_collapsed = true;
         self.min_track_sizing_function = MinTrackSizingFunction::Fixed(LengthPercentage::Points(0.0));

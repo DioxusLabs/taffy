@@ -219,6 +219,16 @@ impl CellOccupancyMatrix {
         true
     }
 
+    /// Determines whether the specified row contains any items
+    pub fn row_is_occupied(&self, row_index: usize) -> bool {
+        self.inner.iter_row(row_index).any(|cell| !matches!(cell, CellOccupancyState::Unoccupied))
+    }
+
+    /// Determines whether the specified column contains any items
+    pub fn column_is_occupied(&self, column_index: usize) -> bool {
+        self.inner.iter_col(column_index).any(|cell| !matches!(cell, CellOccupancyState::Unoccupied))
+    }
+
     /// Returns the track counts of this CellOccunpancyMatrix in the relevant axis
     pub fn track_counts(&self, track_type: AbsoluteAxis) -> &TrackCounts {
         match track_type {

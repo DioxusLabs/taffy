@@ -69,6 +69,7 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
         &style.grid_template_columns,
         &style.grid_auto_columns,
         style.gap.width,
+        |column_index| cell_occupancy_matrix.column_is_occupied(column_index),
     );
     initialize_grid_tracks(
         &mut rows,
@@ -76,6 +77,7 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
         &style.grid_template_rows,
         &style.grid_auto_rows,
         style.gap.height,
+        |row_index| cell_occupancy_matrix.row_is_occupied(row_index),
     );
 
     // 4. Compute "available grid space"

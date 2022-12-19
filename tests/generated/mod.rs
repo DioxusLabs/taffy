@@ -193,6 +193,8 @@ mod grid_align_items_sized_stretch;
 mod grid_align_self_sized_all;
 mod grid_auto_columns_fixed_width;
 mod grid_auto_fill_fixed_size;
+mod grid_auto_fill_with_empty_auto_track;
+mod grid_auto_fit_with_empty_auto_track;
 mod grid_auto_single_item;
 mod grid_auto_single_item_fixed_width;
 mod grid_auto_single_item_fixed_width_with_definite_width;
