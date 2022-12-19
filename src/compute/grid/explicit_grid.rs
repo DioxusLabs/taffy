@@ -199,6 +199,10 @@ pub(super) fn initialize_grid_tracks(
         let iter = auto_tracks.iter().copied().cycle();
         create_implicit_tracks(tracks, counts.negative_implicit, iter, gap)
     }
+
+    // Mark first and last grid lines as collapsed
+    tracks.first_mut().unwrap().collapse();
+    tracks.last_mut().unwrap().collapse();
 }
 
 /// Utility function for repeating logic of creating implicit tracks
@@ -383,6 +387,7 @@ mod test {
 
     #[test]
     fn test_initialize_grid_tracks() {
+        let px0 = LengthPercentage::Points(0.0);
         let px20 = LengthPercentage::Points(20.0);
         let px100 = LengthPercentage::Points(100.0);
 
@@ -400,7 +405,7 @@ mod test {
         // Assertions
         let expected = vec![
             // Gutter
-            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
+            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px0), MaxTrackSizingFunction::Fixed(px0)),
             // Negative implict tracks
             (GridTrackKind::Track, MinTrackSizingFunction::Fixed(px100), MaxTrackSizingFunction::Fixed(px100)),
             (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
@@ -421,7 +426,7 @@ mod test {
             (GridTrackKind::Track, MinTrackSizingFunction::Fixed(px100), MaxTrackSizingFunction::Fixed(px100)),
             (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
             (GridTrackKind::Track, MinTrackSizingFunction::Auto, MaxTrackSizingFunction::Auto),
-            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
+            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px0), MaxTrackSizingFunction::Fixed(px0)),
         ];
 
         assert_eq!(tracks.len(), expected.len(), "Number of tracks doesn't match");
