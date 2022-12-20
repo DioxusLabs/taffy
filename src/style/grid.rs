@@ -353,7 +353,7 @@ impl FromFlex for NonRepeatedTrackSizingFunction {
     }
 }
 
-/// Represents the type of automatic reprepetition to perform
+/// Represents the type of automatic repetition to perform
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum GridTrackRepetition {
     /// Auto-repeating track should be generated to fit the container
