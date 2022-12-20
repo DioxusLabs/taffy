@@ -87,7 +87,6 @@ impl GridPlacement {
     }
 }
 
-/// Represents the start and end points of a GridItem within a given axis
 impl Line<GridPlacement> {
     #[inline]
     /// Whether the track position is definite in this axis (or the item will need auto placement)
@@ -155,7 +154,7 @@ impl Default for Line<GridPlacement> {
     }
 }
 
-/// Minimum track sizing function
+/// Maximum track sizing function
 /// Specifies the maximum size of a grid track
 /// See https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns
 #[derive(Copy, Clone, PartialEq, Debug)]
