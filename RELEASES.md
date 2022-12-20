@@ -1,8 +1,63 @@
 # Release Notes
 
-## 0.3.0 (Unreleased)
+## 0.3.0-alpha1 (Unreleased)
+
+### New Features
+
+#### CSS Grid
+
+
+#### Style Helpers
+
+Ten new helper functions have added to the taffy prelude. These helper functions have short, intuitive names, and have generic return types which allow them to magically return the correct type depending on context. They make defining styles much easier, and means you won't typically need to use types like `Dimension` or `TrackSizingFunction` directly.
+
+For example, instead of:
+
+```rust
+let size : Size<Dimension> = Size { width: Dimension::Points(100.0), height: Dimension::Percent(50.0) };
+```
+
+you can now write
+
+```rust
+let size : Size<Dimension> = Size { width: points(100.0), height: percent(50.0) };
+```
+
+And that same helper function will work other types like `LengthPercentage` and `MinTrackSizingFunction` that also have a `Points` variant. There are also generic impl's for `Size<T>`, `Rect<T>` and `Line<T>` which means if your node is the same size in all dimensions you can even write
+
+```rust
+let size : Size<Dimension> = points(100.0);
+```
+
+The following functions work for `Dimension`, `LengthPercentageAuto`, `LengthPercentage`, `AvailableSpace` and for Grid track sizing functions
+
+- `points(f32)` - Generates a `Points` variant with the specified value
+- `zero()` - Generates a `Points` variant with the value `0.0`.
+
+The following functions work for `Dimension`, `LengthPercentageAuto`, `LengthPercentage` and for Grid track sizing functions
+
+- `percent(f32)` - Generates a `Percent` value
+- `auto()` - Generates an `Auto` variant
+
+The following functions work for `AvailableSpace` and grid track sizing functions:
+- `min_content()` - Generates an `MinContent` variant
+- `max_content()` - Generates an `MaxContent` variant
+
+
+The following functions currently work only for grid track sizing functions:
+- `flex(f32)` - Genrates a `Flex` variant with the specified flex fraction
+- `fit_content(LengthPercentage)` - Generates a `FitContent` variant with the specified limit. Nest `points` or `percent` inside this function to specified the limit.
+- `minmax(MinTrackSizingFunction, MaxTrackSizingFunction)` - Generates a track sizing function with different min and max sizing functions. Nest `points`, `percent`, `auto`, `min_content`, `max_content`, or `flex` to specify the min and max functions.
+- `repeat(GridTrackRepetition, Vec<TrackSizingFunction>)` - Genereate an auto-repeating track definition.
 
 ### Breaking API changes
+
+#### Strict style types
+
+- New types `LengthPercentage` and `LengthPercentageAuto` have been added.
+  - `LengthPercentage` is like `Dimension` but only contains the `Points` and `Percent` variants, which allows us to increase type safety for properties that don't support the `Auto` value.
+  - `LengthPercentageAuto` is currently identical to `Dimension` but will allow us to expand dimension in future to support values like `MinContent`, `MaxContent` and `FitContent`.
+- Some style properties have been updated to use either `LengthPercentage` or `LengthPercentageAuto` instead of `Dimension`. You will need to update your code, but it is recommended that you use the new style helpers (see above) rather than using the new types directly (although you certainly can use them directly if you want to).
 
 #### Changes to `LayoutTree`
 
