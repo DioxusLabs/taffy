@@ -52,7 +52,7 @@ impl GridAutoFlow {
     }
 }
 
-/// A track placement specicification. Used for grid-[row/column]-[start/end]. Named tracks are not implemented.
+/// A track placement specification. Used for grid-[row/column]-[start/end]. Named tracks are not implemented.
 ///
 /// Defaults to [`GridLine::Auto`]
 ///
