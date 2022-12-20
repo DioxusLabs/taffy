@@ -285,7 +285,7 @@ impl FromPercent for MinTrackSizingFunction {
 impl MinTrackSizingFunction {
     /// Returns fixed point values directly. Attempts to resolve percentage values against
     /// the passed available_space and returns if this results in a concrete value (which it
-    /// will if the available_space is `Some`). Otherwise returns None.
+    /// will if the available_space is `Some`). Otherwise returns `None`.
     #[inline(always)]
     pub fn definite_value(self, available_space: AvailableSpace) -> Option<f32> {
         use MinTrackSizingFunction::{Auto, *};
