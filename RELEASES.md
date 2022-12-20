@@ -6,7 +6,6 @@
 
 #### CSS Grid
 
-
 #### Style Helpers
 
 Ten new helper functions have added to the taffy prelude. These helper functions have short, intuitive names, and have generic return types which allow them to magically return the correct type depending on context. They make defining styles much easier, and means you won't typically need to use types like `Dimension` or `TrackSizingFunction` directly.
@@ -42,7 +41,6 @@ The following functions work for `Dimension`, `LengthPercentageAuto`, `LengthPer
 The following functions work for `AvailableSpace` and grid track sizing functions:
 - `min_content()` - Generates an `MinContent` variant
 - `max_content()` - Generates an `MaxContent` variant
-
 
 The following functions currently work only for grid track sizing functions:
 - `flex(f32)` - Genrates a `Flex` variant with the specified flex fraction
