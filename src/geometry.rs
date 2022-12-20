@@ -186,6 +186,13 @@ impl<T> Line<T> {
     }
 }
 
+impl<T: Add + Copy> Line<T> {
+    /// Adds the start and end values together and returns the result
+    pub fn sum(&self) -> <T as Add>::Output {
+        self.start + self.end
+    }
+}
+
 /// The width and height of a [`Rect`]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]

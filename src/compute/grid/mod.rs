@@ -4,6 +4,7 @@ use crate::axis::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::Size;
 use crate::math::MaybeMath;
 use crate::node::Node;
+use crate::prelude::Line;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::{AlignContent, AvailableSpace};
 use crate::sys::{GridTrackVec, Vec};
@@ -168,26 +169,38 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
 
     // 6. Compute container size
     let resolved_style_size = style.size.maybe_resolve(available_space.into_options());
-    let container_size = Size {
-        width: resolved_style_size
-            .get(AbstractAxis::Inline)
-            .unwrap_or_else(|| columns.iter().map(|track| track.base_size).sum()),
-        height: resolved_style_size
-            .get(AbstractAxis::Block)
-            .unwrap_or_else(|| rows.iter().map(|track| track.base_size).sum()),
+    let container_border_box = Size {
+        width: resolved_style_size.get(AbstractAxis::Inline).unwrap_or_else(|| {
+            columns.iter().map(|track| track.base_size).sum::<f32>()
+                + padding.horizontal_axis_sum()
+                + border.horizontal_axis_sum()
+        }),
+        height: resolved_style_size.get(AbstractAxis::Block).unwrap_or_else(|| {
+            rows.iter().map(|track| track.base_size).sum::<f32>()
+                + padding.vertical_axis_sum()
+                + border.vertical_axis_sum()
+        }),
+    };
+    let container_content_box = Size {
+        width: container_border_box.width - padding.horizontal_axis_sum() - border.horizontal_axis_sum(),
+        height: container_border_box.height - padding.vertical_axis_sum() - border.vertical_axis_sum(),
     };
 
     // 7. Track Alignment
 
     // Align columns
     align_tracks(
-        resolved_style_size.get(AbstractAxis::Inline),
+        container_content_box.get(AbstractAxis::Inline),
+        Line { start: padding.left, end: padding.right },
+        Line { start: border.left, end: border.right },
         &mut columns,
         style.justify_content.unwrap_or(AlignContent::Stretch),
     );
     // Align rows
     align_tracks(
-        resolved_style_size.get(AbstractAxis::Block),
+        container_content_box.get(AbstractAxis::Block),
+        Line { start: padding.top, end: padding.bottom },
+        Line { start: border.top, end: border.bottom },
         &mut rows,
         style.align_content.unwrap_or(AlignContent::Stretch),
     );
@@ -199,5 +212,5 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
         align_and_position_item(tree, i as u32, item, tracks, available_space, alignment_styles);
     });
 
-    container_size
+    container_border_box
 }

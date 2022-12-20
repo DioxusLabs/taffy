@@ -14,26 +14,30 @@ use crate::tree::LayoutTree;
 /// justify-content (columns) property. This only does anything if the size of the
 /// grid is not equal to the size of the grid container in the axis being aligned.
 pub(super) fn align_tracks(
-    grid_container_size: Option<f32>,
+    grid_container_content_box_size: f32,
+    padding: Line<f32>,
+    border: Line<f32>,
     tracks: &mut [GridTrack],
     track_alignment_style: AlignContent,
 ) {
     let used_size: f32 = tracks.iter().map(|track| track.base_size).sum();
-    let size_diff = grid_container_size.map(|container_size| container_size - used_size).unwrap_or(0.0);
+    let size_diff = grid_container_content_box_size - used_size;
     let free_space = f32_max(size_diff, 0.0);
     let overflow = f32_min(size_diff, 0.0);
 
     // If the used_size > grid_container_size then the tracks must overflow their container
     // The direction in which they do so is determined by the alignment style
-    let origin = match track_alignment_style {
-        AlignContent::Start => 0.0,
-        AlignContent::End => overflow,
-        AlignContent::Center => overflow / 2.0,
-        AlignContent::Stretch => 0.0,
-        AlignContent::SpaceBetween => 0.0,
-        AlignContent::SpaceEvenly => 0.0,
-        AlignContent::SpaceAround => 0.0,
-    };
+    let origin = padding.start
+        + border.start
+        + match track_alignment_style {
+            AlignContent::Start => 0.0,
+            AlignContent::End => overflow,
+            AlignContent::Center => overflow / 2.0,
+            AlignContent::Stretch => 0.0,
+            AlignContent::SpaceBetween => 0.0,
+            AlignContent::SpaceEvenly => 0.0,
+            AlignContent::SpaceAround => 0.0,
+        };
 
     // Count the number of non-collapsed tracks (not counting gutters)
     let num_tracks = tracks.iter().skip(1).step_by(2).filter(|track| !track.is_collapsed).count();

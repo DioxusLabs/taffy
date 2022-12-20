@@ -21,7 +21,7 @@ body {
 div, span, img {
   box-sizing: border-box;
   position: relative;
-  border: 0 solid black;
+  border: 0 solid red;
   margin: 0;
   padding: 0;
   display: flex;
@@ -29,6 +29,7 @@ div, span, img {
 
 body > * {
   position: absolute;
+  border-color: red;
 }
 
 #test-root {
