@@ -75,7 +75,7 @@ impl Default for GridPlacement {
 }
 
 impl GridPlacement {
-    /// Apply a mapping function if the GridPlacement is a Track. Otherwise return `self` unmodified.
+    /// Apply a mapping function if the [`GridPlacement`] is a `Track`. Otherwise return `self` unmodified.
     pub fn map_track(&self, map_fn: impl FnOnce(i16) -> i16) -> Self {
         use GridPlacement::*;
         match *self {
