@@ -39,10 +39,12 @@ The following functions work for `Dimension`, `LengthPercentageAuto`, `LengthPer
 - `auto()` - Generates an `Auto` variant
 
 The following functions work for `AvailableSpace` and grid track sizing functions:
+
 - `min_content()` - Generates an `MinContent` variant
 - `max_content()` - Generates an `MaxContent` variant
 
 The following functions currently work only for grid track sizing functions:
+
 - `flex(f32)` - Genrates a `Flex` variant with the specified flex fraction
 - `fit_content(LengthPercentage)` - Generates a `FitContent` variant with the specified limit. Nest `points` or `percent` inside this function to specified the limit.
 - `minmax(MinTrackSizingFunction, MaxTrackSizingFunction)` - Generates a track sizing function with different min and max sizing functions. Nest `points`, `percent`, `auto`, `min_content`, `max_content`, or `flex` to specify the min and max functions.
