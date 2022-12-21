@@ -1,12 +1,13 @@
 //! This module is a partial implementation of the CSS Grid Level 1 specification
 //! https://www.w3.org/TR/css-grid-1/
 use crate::axis::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
-use crate::geometry::Size;
+use crate::geometry::{Line, Rect, Size};
+use crate::layout::{Layout, RunMode, SizingMode};
 use crate::math::MaybeMath;
 use crate::node::Node;
-use crate::prelude::Line;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
-use crate::style::{AlignContent, AvailableSpace};
+use crate::style::{AlignContent, AvailableSpace, Display, PositionType};
+use crate::style_helpers::*;
 use crate::sys::{GridTrackVec, Vec};
 use crate::tree::LayoutTree;
 use alignment::{align_and_position_item, align_tracks};
@@ -15,6 +16,9 @@ use implicit_grid::compute_grid_size_estimate;
 use placement::place_grid_items;
 use track_sizing::{determine_if_item_crosses_flexible_tracks, resolve_item_track_indexes, track_sizing_algorithm};
 use types::{CellOccupancyMatrix, GridTrack};
+use util::coordinates::css_grid_line_into_origin_zero_coords;
+
+use super::compute_node_layout;
 
 mod alignment;
 mod explicit_grid;
@@ -30,10 +34,10 @@ mod util;
 ///   - Placing items (which also resolves the implicit grid)
 ///   - Track (row/column) sizing
 ///   - Alignment & Final item placement
-pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<AvailableSpace>) -> Size<f32> {
+pub fn compute(tree: &mut impl LayoutTree, node: Node, available_space: Size<AvailableSpace>) -> Size<f32> {
     let get_child_styles_iter = |node| tree.children(node).into_iter().map(|child_node: &Node| tree.style(*child_node));
-    let style = tree.style(root).clone();
-    let child_styles_iter = get_child_styles_iter(root);
+    let style = tree.style(node).clone();
+    let child_styles_iter = get_child_styles_iter(node);
 
     // 1. Resolve the explicit grid
     // Exactly compute the number of rows and columns in the explicit grid.
@@ -48,12 +52,17 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
 
     // 2. Grid Item Placement
     // Match items (children) to a definite grid position (row start/end and column start/end position)
-    let mut items = Vec::with_capacity(tree.child_count(root));
+    let mut items = Vec::with_capacity(tree.child_count(node));
     let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(est_col_counts, est_row_counts);
     let grid_auto_flow = style.grid_auto_flow;
-    let children_iter =
-        || tree.children(root).into_iter().copied().map(|child_node| (child_node, tree.style(child_node)));
-    place_grid_items(&mut cell_occupancy_matrix, &mut items, children_iter, grid_auto_flow);
+    let in_flow_children_iter = || {
+        tree.children(node)
+            .into_iter()
+            .copied()
+            .map(|child_node| (child_node, tree.style(child_node)))
+            .filter(|(_, style)| style.display != Display::None && style.position_type != PositionType::Absolute)
+    };
+    place_grid_items(&mut cell_occupancy_matrix, &mut items, in_flow_children_iter, grid_auto_flow);
 
     // Extract track counts from previous step (auto-placement can expand the number of tracks)
     let final_col_counts = *cell_occupancy_matrix.track_counts(AbsoluteAxis::Horizontal);
@@ -206,10 +215,87 @@ pub fn compute(tree: &mut impl LayoutTree, root: Node, available_space: Size<Ava
     );
 
     // 8. Size, Align, and Position Grid Items
-    let tracks = InBothAbsAxis { horizontal: &*columns, vertical: &*rows };
-    let alignment_styles = InBothAbsAxis { horizontal: style.justify_items, vertical: style.align_items };
-    items.iter().enumerate().for_each(|(i, item)| {
-        align_and_position_item(tree, i as u32, item, tracks, available_space, alignment_styles);
+
+    // Sort items back into original order to allow them to be matched up with styles
+    items.sort_by_key(|item| item.source_order);
+
+    let container_alignment_styles = InBothAbsAxis { horizontal: style.justify_items, vertical: style.align_items };
+
+    // Iterate over all children
+    let mut in_flow_child_index = 0;
+    (0..tree.child_count(node)).for_each(|index| {
+        let child = tree.child(node, index);
+        let child_style = tree.style(child);
+
+        // Position hidden child
+        if child_style.display == Display::None {
+            *tree.layout_mut(node) = Layout::with_order(index as u32);
+            compute_node_layout(
+                tree,
+                child,
+                Size::NONE,
+                Size::MAX_CONTENT,
+                RunMode::PeformLayout,
+                SizingMode::InherentSize,
+            );
+            return;
+        }
+
+        // Position absolutely positioned child
+        if child_style.position_type == PositionType::Absolute {
+            // Convert grid-col-{start/end} into Option's of indexes into the columns vector
+            // The Option is None if the style property is Auto and an unresolvable Span
+            let maybe_grid_cols = child_style.grid_column.resolve_absolutely_positioned_grid_tracks();
+            let maybe_col_indexes = maybe_grid_cols.map(|maybe_grid_line| {
+                maybe_grid_line.map(|grid_line| {
+                    let oz_line = css_grid_line_into_origin_zero_coords(grid_line, final_col_counts.explicit);
+                    final_col_counts.oz_line_to_grid_track_vec_index(oz_line) as usize
+                })
+            });
+            // Convert grid-row-{start/end} into Option's of indexes into the row vector
+            // The Option is None if the style property is Auto and an unresolvable Span
+            let maybe_grid_rows = child_style.grid_row.resolve_absolutely_positioned_grid_tracks();
+            let maybe_row_indexes = maybe_grid_rows.map(|maybe_grid_line| {
+                maybe_grid_line.map(|grid_line| {
+                    let oz_line = css_grid_line_into_origin_zero_coords(grid_line, final_row_counts.explicit);
+                    final_row_counts.oz_line_to_grid_track_vec_index(oz_line) as usize
+                })
+            });
+
+            let grid_area = Rect {
+                top: maybe_row_indexes.start.map(|index| rows[index].offset).unwrap_or(0.0),
+                bottom: maybe_row_indexes.end.map(|index| rows[index].offset).unwrap_or(container_border_box.height),
+                left: maybe_col_indexes.start.map(|index| columns[index].offset).unwrap_or(0.0),
+                right: maybe_col_indexes.end.map(|index| columns[index].offset).unwrap_or(container_border_box.width),
+            };
+            align_and_position_item(
+                tree,
+                child,
+                index as u32,
+                grid_area,
+                container_content_box,
+                container_alignment_styles,
+            );
+            return;
+        }
+
+        // Position in-flow child
+        let item = &items[in_flow_child_index];
+        let grid_area = Rect {
+            top: rows[item.row_indexes.start as usize + 1].offset,
+            bottom: rows[item.row_indexes.end as usize].offset,
+            left: columns[item.column_indexes.start as usize + 1].offset,
+            right: columns[item.column_indexes.end as usize].offset,
+        };
+        align_and_position_item(
+            tree,
+            child,
+            index as u32,
+            grid_area,
+            container_content_box,
+            container_alignment_styles,
+        );
+        in_flow_child_index += 1;
     });
 
     container_border_box

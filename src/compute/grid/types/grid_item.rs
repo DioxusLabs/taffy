@@ -18,6 +18,12 @@ pub(in super::super) struct GridItem {
     /// The id of the Node that this item represents
     pub node: Node,
 
+    /// The order of the item in the children array
+    ///
+    /// We sort the list of grid items during track sizing. This field allows us to sort back the original order
+    /// for final positioning
+    pub source_order: u16,
+
     /// The item's definite row-start and row-end, as resolved by the placement algorithm
     /// (in origin-zero coordinates)
     pub row: Line<i16>,
@@ -37,9 +43,6 @@ pub(in super::super) struct GridItem {
     /// Whether the item crosses a flexible column
     pub crosses_flexible_column: bool,
 
-    // The order of the item in the children array (this is significant for auto-placement!)
-    // pub source_order: u16,
-
     // Caches for intrinsic size computation. These caches are only valid for a single run of the track-sizing algorithm.
     /// Cache for the known_dimensions input to intrinsic sizing computation
     pub known_dimensions_cache: Option<Size<Option<f32>>>,
@@ -53,9 +56,15 @@ pub(in super::super) struct GridItem {
 
 impl GridItem {
     /// Create a new item given a concrete placement in both axes
-    pub fn new_with_placement(node: Node, col_span: Line<i16>, row_span: Line<i16>) -> Self {
+    pub fn new_with_placement_and_order(
+        node: Node,
+        col_span: Line<i16>,
+        row_span: Line<i16>,
+        source_order: u16,
+    ) -> Self {
         GridItem {
             node,
+            source_order,
             row: row_span,
             column: col_span,
             row_indexes: Line { start: 0, end: 0 }, // Properly initialised later

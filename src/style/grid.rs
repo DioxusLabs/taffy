@@ -101,7 +101,7 @@ impl Line<GridPlacement> {
     pub fn resolve_definite_grid_tracks(&self) -> Line<i16> {
         use GridPlacement::*;
         match (self.start, self.end) {
-            (Track(track1), Track(track2)) => {
+            (Track(track1), Track(track2)) if track1 != 0 && track2 != 0 => {
                 if track1 == track2 {
                     Line { start: track1, end: track1 + 1 }
                 } else {
@@ -109,10 +109,37 @@ impl Line<GridPlacement> {
                 }
             }
             (Track(track), Span(span)) => Line { start: track, end: track + span as i16 },
-            (Track(track), Auto) => Line { start: track, end: track + 1_i16 },
+            (Track(track), Auto | Track(0)) => Line { start: track, end: track + 1_i16 },
             (Span(span), Track(track)) => Line { start: track - span as i16, end: track },
-            (Auto, Track(track)) => Line { start: track - 1_i16, end: track },
+            (Auto | Track(0), Track(track)) => Line { start: track - 1_i16, end: track },
             _ => panic!("resolve_definite_grid_tracks should only be called on definite grid tracks"),
+        }
+    }
+
+    /// For absolutely positioned items:
+    ///   - Tracks resolve to definite tracks
+    ///   - For Spans:
+    ///      - If the other position is a Track, they resolve to a definite track relative to the other track
+    ///      - Else resolve to None
+    ///   - Auto resolves to None
+    ///
+    /// When finally positioning the item, a value of None means that the item's grid area is bounded by the grid
+    /// container's border box on that side.
+    pub fn resolve_absolutely_positioned_grid_tracks(&self) -> Line<Option<i16>> {
+        use GridPlacement::*;
+        match (self.start, self.end) {
+            (Track(track1), Track(track2)) if track1 != 0 && track2 != 0 => {
+                if track1 == track2 {
+                    Line { start: Some(track1), end: Some(track1 + 1) }
+                } else {
+                    Line { start: Some(min(track1, track2)), end: Some(max(track1, track2)) }
+                }
+            }
+            (Track(track), Span(span)) => Line { start: Some(track), end: Some(track + span as i16) },
+            (Track(track), Auto | Track(0)) => Line { start: Some(track), end: None },
+            (Span(span), Track(track)) => Line { start: Some(track - span as i16), end: Some(track) },
+            (Auto | Track(0), Track(track)) => Line { start: None, end: Some(track) },
+            _ => Line { start: None, end: None },
         }
     }
 

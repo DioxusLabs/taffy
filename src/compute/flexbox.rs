@@ -9,6 +9,7 @@ use crate::geometry::{Point, Rect, Size};
 use crate::layout::{Layout, RunMode, SizingMode};
 use crate::math::MaybeMath;
 use crate::node::Node;
+use crate::prelude::TaffyMaxContent;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::{
     AlignContent, AlignItems, AlignSelf, AvailableSpace, Dimension, Display, FlexWrap, JustifyContent,
@@ -343,8 +344,15 @@ fn compute_preliminary(
     for order in 0..len {
         let child = tree.child(node, order);
         if tree.style(child).display == Display::None {
-            // if self.nodes[*child].style.display == Display::None {
-            hidden_layout(tree, child, order as _);
+            *tree.layout_mut(node) = Layout::with_order(order as u32);
+            compute_node_layout(
+                tree,
+                child,
+                Size::NONE,
+                Size::MAX_CONTENT,
+                RunMode::PeformLayout,
+                SizingMode::InherentSize,
+            );
         }
     }
 
@@ -1696,17 +1704,6 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
     }
 }
 
-/// Creates a layout for this node and its children, recursively.
-/// Each hidden node has zero size and is placed at the origin
-fn hidden_layout(tree: &mut impl LayoutTree, node: Node, order: u32) {
-    *tree.layout_mut(node) = Layout::with_order(order);
-
-    let len = tree.child_count(node);
-    for order in 0..len {
-        hidden_layout(tree, tree.child(node, order), order as _);
-    }
-}
-
 /// Computes the total space taken up by gaps in an axis given:
 ///   - The size of each gap
 ///   - The number of items (children or flex-lines) between which there are gaps
@@ -1726,10 +1723,6 @@ fn sum_axis_gaps(gap: f32, num_items: usize) -> f32 {
 mod tests {
     #![allow(clippy::redundant_clone)]
 
-    use super::hidden_layout;
-    use crate::geometry::Point;
-    use crate::style::Display;
-    use crate::style::Display::Flex;
     use crate::style_helpers::*;
     use crate::{
         math::MaybeMath,
@@ -1785,37 +1778,5 @@ mod tests {
 
         assert_eq!(constants.container_size, Size::zero());
         assert_eq!(constants.inner_container_size, Size::zero());
-    }
-
-    #[test]
-    fn hidden_layout_should_hide_recursively() {
-        let mut taffy = Taffy::new();
-
-        let style: Style = Style { display: Flex, size: Size::from_points(50.0, 50.0), ..Default::default() };
-
-        let grandchild_00 = taffy.new_leaf(style.clone()).unwrap();
-        let grandchild_01 = taffy.new_leaf(style.clone()).unwrap();
-        let child_00 = taffy.new_with_children(style.clone(), &[grandchild_00, grandchild_01]).unwrap();
-
-        let grandchild_02 = taffy.new_leaf(style.clone()).unwrap();
-        let child_01 = taffy.new_with_children(style.clone(), &[grandchild_02]).unwrap();
-
-        let root = taffy
-            .new_with_children(
-                Style { display: Display::None, size: Size::from_points(50.0, 50.0), ..Default::default() },
-                &[child_00, child_01],
-            )
-            .unwrap();
-
-        hidden_layout(&mut taffy, root, 0);
-
-        // Whatever size and display-mode the nodes had previously,
-        // all layouts should resolve to ZERO due to the root's DISPLAY::NONE
-        for (node, _) in &taffy.nodes {
-            if let Ok(layout) = taffy.layout(node) {
-                assert_eq!(layout.size, Size::zero());
-                assert_eq!(layout.location, Point::zero());
-            }
-        }
     }
 }

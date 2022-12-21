@@ -70,6 +70,20 @@ impl From<LengthPercentage> for LengthPercentageAuto {
     }
 }
 
+impl LengthPercentageAuto {
+    /// Returns:
+    ///   - Some(points) for Points variants
+    ///   - Some(resolved) using the provided context for Percent variants
+    ///   - None for Auto variants
+    pub fn resolve_to_option(self, context: f32) -> Option<f32> {
+        match self {
+            Self::Points(points) => Some(points),
+            Self::Percent(percent) => Some(context * percent),
+            Self::Auto => None,
+        }
+    }
+}
+
 /// A unit of linear measurement
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
@@ -160,10 +174,6 @@ impl Rect<Dimension> {
     pub const fn bot_from_percent(end: f32, bottom: f32) -> Rect<Dimension> {
         Rect { right: Dimension::Percent(end), bottom: Dimension::Percent(bottom), ..Rect::AUTO }
     }
-
-    /// Generates a [`Rect<Dimension>`] using [`Dimension::Auto`] for all values
-    pub const AUTO: Rect<Dimension> =
-        Self { left: Dimension::Auto, right: Dimension::Auto, top: Dimension::Auto, bottom: Dimension::Auto };
 
     /// Create a new Rect with [`Dimension::Points`]
     #[must_use]

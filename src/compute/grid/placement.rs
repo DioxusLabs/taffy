@@ -277,7 +277,8 @@ fn record_grid_placement(
         AbsoluteAxis::Horizontal => (primary_span, secondary_span),
         AbsoluteAxis::Vertical => (secondary_span, primary_span),
     };
-    items.push(GridItem::new_with_placement(node, col_span, row_span));
+    let source_order = items.len() as u16;
+    items.push(GridItem::new_with_placement_and_order(node, col_span, row_span, source_order));
 
     #[cfg(test)]
     println!("AFTER placement:");

@@ -1,12 +1,13 @@
 //! Alignment of tracks and final positioning of items
-use super::types::{GridItem, GridTrack};
+use super::types::GridTrack;
 use crate::axis::InBothAbsAxis;
 use crate::compute::common::alignment::compute_alignment_offset;
 use crate::compute::compute_node_layout;
-use crate::geometry::{Line, Point, Size};
+use crate::geometry::{Line, Point, Rect, Size};
 use crate::layout::{Layout, RunMode, SizingMode};
+use crate::node::Node;
 use crate::resolve::MaybeResolve;
-use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace};
+use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, PositionType};
 use crate::sys::{f32_max, f32_min};
 use crate::tree::LayoutTree;
 
@@ -70,82 +71,94 @@ pub(super) fn align_tracks(
 /// Align and size a grid item into it's final position
 pub(super) fn align_and_position_item(
     tree: &mut impl LayoutTree,
+    node: Node,
     order: u32,
-    item: &GridItem,
-    tracks: InBothAbsAxis<&[GridTrack]>,
-    available_space: Size<AvailableSpace>,
+    grid_area: Rect<f32>,
+    container_content_box: Size<f32>,
     alignment_styles: InBothAbsAxis<Option<AlignItems>>,
 ) {
-    let style = tree.style(item.node);
+    let style = tree.style(node);
     let aspect_ratio = style.aspect_ratio;
     let justify_self = style.justify_self;
     let align_self = style.align_self;
-    let inherent_size = style.size.maybe_resolve(available_space.into_options());
+    let position_type = style.position_type;
+    let inset_raw = style.position;
+    let inset_horizontal = Line { start: inset_raw.left, end: inset_raw.right }
+        .map(|size| size.resolve_to_option(container_content_box.width));
+    let inset_vertical = Line { start: inset_raw.top, end: inset_raw.bottom }
+        .map(|size| size.resolve_to_option(container_content_box.height));
+    let inherent_size = style.size.maybe_resolve(container_content_box);
 
-    let mut measure_node = |axis_available_space| {
-        compute_node_layout(
-            tree,
-            item.node,
-            Size::NONE,
-            Size { width: AvailableSpace::Definite(axis_available_space), height: AvailableSpace::MaxContent },
-            RunMode::ComputeSize,
-            SizingMode::InherentSize,
-        )
-        .width
-    };
+    let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
+
+    // If node is absolutely positioned and width is not set explicitly, then deduce it
+    // from left, right and container_content_box if both are set.
+    let width = inherent_size.width.or_else(|| {
+        if position_type == PositionType::Absolute {
+            if let (Some(left), Some(right)) = (inset_horizontal.start, inset_horizontal.end) {
+                return Some(f32_max(grid_area_size.width - left - right, 0.0));
+            }
+        }
+        None
+    });
+    let height = inherent_size.height.or_else(|| {
+        if position_type == PositionType::Absolute {
+            if let (Some(top), Some(bottom)) = (inset_vertical.start, inset_vertical.end) {
+                return Some(f32_max(grid_area_size.height - top - bottom, 0.0));
+            }
+        }
+        None
+    });
+
+    // Layout node
+    let measured_size = compute_node_layout(
+        tree,
+        node,
+        Size { width, height },
+        grid_area_size.map(|size| AvailableSpace::Definite(size)),
+        RunMode::PeformLayout,
+        SizingMode::InherentSize,
+    );
+
     let (x, width) = align_and_size_item_within_area(
-        tracks.horizontal,
-        item.column_indexes,
+        Line { start: grid_area.left, end: grid_area.right },
         justify_self.or(alignment_styles.horizontal),
-        inherent_size.width,
+        width,
+        measured_size.width,
+        position_type,
+        inset_horizontal,
         aspect_ratio,
-        &mut measure_node,
     );
-
-    let mut measure_node = |axis_available_space| {
-        compute_node_layout(
-            tree,
-            item.node,
-            Size { width: Some(width), height: None },
-            Size { width: AvailableSpace::MaxContent, height: AvailableSpace::Definite(axis_available_space) },
-            RunMode::ComputeSize,
-            SizingMode::InherentSize,
-        )
-        .height
-    };
     let (y, height) = align_and_size_item_within_area(
-        tracks.vertical,
-        item.row_indexes,
+        Line { start: grid_area.top, end: grid_area.bottom },
         align_self.or(alignment_styles.vertical),
-        inherent_size.height,
+        height,
+        measured_size.height,
+        position_type,
+        inset_vertical,
         aspect_ratio,
-        &mut measure_node,
     );
 
-    *tree.layout_mut(item.node) = Layout { order, size: Size { width, height }, location: Point { x, y } };
+    *tree.layout_mut(node) = Layout { order, size: Size { width, height }, location: Point { x, y } };
 }
 
 /// Align and size a grid item along a single axis
 pub(super) fn align_and_size_item_within_area(
-    tracks: &[GridTrack],
-    indexes: Line<u16>,
+    grid_area: Line<f32>,
     alignment_style: Option<AlignSelf>,
-    size: Option<f32>,
+    style_size: Option<f32>,
+    measured_size: f32,
+    position_type: PositionType,
+    inset: Line<Option<f32>>,
     aspect_ratio: Option<f32>,
-    mut measure_node: impl FnMut(f32) -> f32,
 ) -> (f32, f32) {
     // Calculate grid area dimension in the axis
-    let area_start = tracks[(indexes.start + 1) as usize].offset;
-    let area_end = {
-        let row = &tracks[(indexes.end - 1) as usize];
-        row.offset + row.base_size
-    };
-    let free_space = area_end - area_start;
+    let free_space = grid_area.end - grid_area.start;
     let origin = f32_max(free_space, 0.0);
 
     // Compute default alignment style if it set on neither the parent or the node itself
     let alignment_style = alignment_style.unwrap_or_else(|| {
-        if size.is_some() || aspect_ratio.is_some() {
+        if style_size.is_some() || aspect_ratio.is_some() {
             AlignSelf::Start
         } else {
             AlignSelf::Stretch
@@ -153,13 +166,16 @@ pub(super) fn align_and_size_item_within_area(
     });
 
     // Compute size in the axis
-    let size = size.unwrap_or_else(|| match alignment_style {
-        AlignItems::Stretch => free_space,
-        _ => measure_node(free_space),
+    let size = style_size.unwrap_or_else(|| {
+        if alignment_style == AlignItems::Stretch && position_type != PositionType::Absolute {
+            f32_max(free_space, measured_size)
+        } else {
+            measured_size
+        }
     });
 
     // Compute offset in the axis
-    let offset_within_area = match alignment_style {
+    let alignment_based_offset = match alignment_style {
         AlignSelf::Start => 0.0,
         AlignSelf::End => origin - size,
         AlignSelf::Center => (origin - size) / 2.0,
@@ -168,5 +184,22 @@ pub(super) fn align_and_size_item_within_area(
         AlignSelf::Stretch => 0.0,
     };
 
-    (area_start + offset_within_area, size)
+    let offset_within_area = if position_type == PositionType::Absolute {
+        if let Some(start) = inset.start {
+            start
+        } else if let Some(end) = inset.end {
+            free_space - end - size
+        } else {
+            alignment_based_offset
+        }
+    } else {
+        alignment_based_offset
+    };
+
+    let mut start = grid_area.start + offset_within_area;
+    if position_type == PositionType::Relative {
+        start += inset.start.or(inset.end.map(|pos| -pos)).unwrap_or(0.0);
+    }
+
+    (start, size)
 }
