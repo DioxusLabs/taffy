@@ -28,7 +28,12 @@ highlight = "all"
 skip = [
     # Bypass problems with wildcard dependencies for dev-dependncies.
     # Proper fix requires https://github.com/EmbarkStudios/cargo-deny/issues/448
-    { name = "taffy" }
+    { name = "taffy" },
+
+    # This dependency won't actually end up in the final binary anyway as it a sub-dependency
+    # of num-cpus and atty only when targetted the hermit unikernel OS
+    # (https://github.com/hermitcore/rusty-hermit)
+    { name = "hermit-abi" }
 ]
 
 [sources]
