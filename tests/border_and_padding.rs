@@ -38,7 +38,7 @@ fn padding_on_a_single_axis_doesnt_increase_size() {
         let mut taffy = Taffy::new();
         let node = taffy
             .new_leaf(Style {
-                border: {
+                padding: {
                     let mut lengths = [LengthPercentage::ZERO; 4];
                     lengths[i] = LengthPercentage::Points(10.);
                     arr_to_rect(lengths)
