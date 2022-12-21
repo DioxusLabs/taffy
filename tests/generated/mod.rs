@@ -227,6 +227,7 @@ mod grid_fr_auto_single_item;
 mod grid_fr_fixed_size_no_content;
 mod grid_fr_fixed_size_single_item;
 mod grid_gap;
+mod grid_hidden;
 mod grid_justify_content_center;
 mod grid_justify_content_center_with_padding_border;
 mod grid_justify_content_end;
