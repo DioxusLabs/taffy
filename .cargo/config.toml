@@ -1,0 +1,2 @@
+[alias]
+gentest = "run --package gentest --"
