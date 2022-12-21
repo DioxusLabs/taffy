@@ -57,8 +57,16 @@ pub(crate) fn compute(
     if tree.needs_measure(node) {
         // Compute available space
         let available_space = Size {
-            width: available_space.width.maybe_set(node_size.width),
-            height: available_space.height.maybe_set(node_size.height),
+            width: available_space
+                .width
+                .maybe_set(node_size.width)
+                .maybe_set(node_max_size.width)
+                .map_definite_value(|size| size.maybe_clamp(node_min_size.width, node_max_size.width)),
+            height: available_space
+                .height
+                .maybe_set(node_size.height)
+                .maybe_set(node_max_size.height)
+                .map_definite_value(|size| size.maybe_clamp(node_min_size.height, node_max_size.height)),
         };
 
         // Measure node
