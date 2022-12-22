@@ -112,7 +112,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --workspace -- -D warnings
+          args: --workspace --features experimental_grid -- -D warnings
 
   markdownlint:
     name: Markdown Lint
