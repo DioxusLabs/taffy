@@ -1,5 +1,5 @@
 #[test]
-fn grid_absolute_top_bottom() {
+fn grid_absolute_container_left_right_margin() {
     #[allow(unused_imports)]
     use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
@@ -7,10 +7,10 @@ fn grid_absolute_top_bottom() {
         .new_leaf(taffy::style::Style {
             position_type: taffy::style::PositionType::Absolute,
             position: taffy::geometry::Rect {
-                left: auto(),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Points(2f32),
-                bottom: taffy::style::LengthPercentageAuto::Points(5f32),
+                left: taffy::style::LengthPercentageAuto::Points(5f32),
+                right: taffy::style::LengthPercentageAuto::Points(2f32),
+                top: auto(),
+                bottom: auto(),
             },
             ..Default::default()
         })
@@ -48,10 +48,10 @@ fn grid_absolute_top_bottom() {
     assert_eq!(taffy.layout(node).unwrap().size.height, 160f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);
     assert_eq!(taffy.layout(node).unwrap().location.y, 0f32);
-    assert_eq!(taffy.layout(node0).unwrap().size.width, 0f32);
-    assert_eq!(taffy.layout(node0).unwrap().size.height, 153f32);
-    assert_eq!(taffy.layout(node0).unwrap().location.x, 0f32);
-    assert_eq!(taffy.layout(node0).unwrap().location.y, 2f32);
+    assert_eq!(taffy.layout(node0).unwrap().size.width, 173f32);
+    assert_eq!(taffy.layout(node0).unwrap().size.height, 0f32);
+    assert_eq!(taffy.layout(node0).unwrap().location.x, 5f32);
+    assert_eq!(taffy.layout(node0).unwrap().location.y, 0f32);
     assert_eq!(taffy.layout(node1).unwrap().size.width, 40f32);
     assert_eq!(taffy.layout(node1).unwrap().size.height, 40f32);
     assert_eq!(taffy.layout(node1).unwrap().location.x, 40f32);

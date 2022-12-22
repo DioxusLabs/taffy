@@ -1,16 +1,21 @@
 #[test]
-fn grid_absolute_bottom_left() {
+fn grid_margins_fixed_end() {
     #[allow(unused_imports)]
     use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
-            position: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Points(0f32),
-                right: auto(),
-                top: auto(),
-                bottom: taffy::style::LengthPercentageAuto::Points(0f32),
+            align_self: Some(taffy::style::AlignSelf::End),
+            justify_self: Some(taffy::style::JustifySelf::End),
+            size: taffy::geometry::Size {
+                width: taffy::style::Dimension::Points(20f32),
+                height: taffy::style::Dimension::Points(20f32),
+            },
+            margin: taffy::geometry::Rect {
+                left: taffy::style::LengthPercentageAuto::Points(4f32),
+                right: taffy::style::LengthPercentageAuto::Points(2f32),
+                top: taffy::style::LengthPercentageAuto::Points(1f32),
+                bottom: taffy::style::LengthPercentageAuto::Points(3f32),
             },
             ..Default::default()
         })
@@ -20,9 +25,6 @@ fn grid_absolute_bottom_left() {
     let node3 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node4 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node5 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
-    let node6 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
-    let node7 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
-    let node8 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
@@ -37,7 +39,7 @@ fn grid_absolute_bottom_left() {
                 },
                 ..Default::default()
             },
-            &[node0, node1, node2, node3, node4, node5, node6, node7, node8],
+            &[node0, node1, node2, node3, node4, node5],
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
@@ -48,40 +50,28 @@ fn grid_absolute_bottom_left() {
     assert_eq!(taffy.layout(node).unwrap().size.height, 160f32);
     assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);
     assert_eq!(taffy.layout(node).unwrap().location.y, 0f32);
-    assert_eq!(taffy.layout(node0).unwrap().size.width, 0f32);
-    assert_eq!(taffy.layout(node0).unwrap().size.height, 0f32);
-    assert_eq!(taffy.layout(node0).unwrap().location.x, 0f32);
-    assert_eq!(taffy.layout(node0).unwrap().location.y, 160f32);
+    assert_eq!(taffy.layout(node0).unwrap().size.width, 20f32);
+    assert_eq!(taffy.layout(node0).unwrap().size.height, 20f32);
+    assert_eq!(taffy.layout(node0).unwrap().location.x, 58f32);
+    assert_eq!(taffy.layout(node0).unwrap().location.y, 27f32);
     assert_eq!(taffy.layout(node1).unwrap().size.width, 40f32);
     assert_eq!(taffy.layout(node1).unwrap().size.height, 40f32);
-    assert_eq!(taffy.layout(node1).unwrap().location.x, 40f32);
+    assert_eq!(taffy.layout(node1).unwrap().location.x, 80f32);
     assert_eq!(taffy.layout(node1).unwrap().location.y, 10f32);
     assert_eq!(taffy.layout(node2).unwrap().size.width, 40f32);
     assert_eq!(taffy.layout(node2).unwrap().size.height, 40f32);
-    assert_eq!(taffy.layout(node2).unwrap().location.x, 80f32);
+    assert_eq!(taffy.layout(node2).unwrap().location.x, 120f32);
     assert_eq!(taffy.layout(node2).unwrap().location.y, 10f32);
     assert_eq!(taffy.layout(node3).unwrap().size.width, 40f32);
     assert_eq!(taffy.layout(node3).unwrap().size.height, 40f32);
-    assert_eq!(taffy.layout(node3).unwrap().location.x, 120f32);
-    assert_eq!(taffy.layout(node3).unwrap().location.y, 10f32);
+    assert_eq!(taffy.layout(node3).unwrap().location.x, 40f32);
+    assert_eq!(taffy.layout(node3).unwrap().location.y, 50f32);
     assert_eq!(taffy.layout(node4).unwrap().size.width, 40f32);
     assert_eq!(taffy.layout(node4).unwrap().size.height, 40f32);
-    assert_eq!(taffy.layout(node4).unwrap().location.x, 40f32);
+    assert_eq!(taffy.layout(node4).unwrap().location.x, 80f32);
     assert_eq!(taffy.layout(node4).unwrap().location.y, 50f32);
     assert_eq!(taffy.layout(node5).unwrap().size.width, 40f32);
     assert_eq!(taffy.layout(node5).unwrap().size.height, 40f32);
-    assert_eq!(taffy.layout(node5).unwrap().location.x, 80f32);
+    assert_eq!(taffy.layout(node5).unwrap().location.x, 120f32);
     assert_eq!(taffy.layout(node5).unwrap().location.y, 50f32);
-    assert_eq!(taffy.layout(node6).unwrap().size.width, 40f32);
-    assert_eq!(taffy.layout(node6).unwrap().size.height, 40f32);
-    assert_eq!(taffy.layout(node6).unwrap().location.x, 120f32);
-    assert_eq!(taffy.layout(node6).unwrap().location.y, 50f32);
-    assert_eq!(taffy.layout(node7).unwrap().size.width, 40f32);
-    assert_eq!(taffy.layout(node7).unwrap().size.height, 40f32);
-    assert_eq!(taffy.layout(node7).unwrap().location.x, 40f32);
-    assert_eq!(taffy.layout(node7).unwrap().location.y, 90f32);
-    assert_eq!(taffy.layout(node8).unwrap().size.width, 40f32);
-    assert_eq!(taffy.layout(node8).unwrap().size.height, 40f32);
-    assert_eq!(taffy.layout(node8).unwrap().location.x, 80f32);
-    assert_eq!(taffy.layout(node8).unwrap().location.y, 90f32);
 }
