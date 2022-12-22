@@ -75,7 +75,7 @@ pub(super) fn align_and_position_item(
     order: u32,
     grid_area: Rect<f32>,
     container_content_box: Size<f32>,
-    alignment_styles: InBothAbsAxis<Option<AlignItems>>,
+    container_alignment_styles: InBothAbsAxis<Option<AlignItems>>,
 ) {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
 
@@ -90,6 +90,26 @@ pub(super) fn align_and_position_item(
     let inset_vertical =
         style.position.vertical_components().map(|size| size.resolve_to_option(container_content_box.height));
     let inherent_size = style.size.maybe_resolve(container_content_box);
+    let min_size = style.min_size.maybe_resolve(container_content_box);
+    let max_size = style.max_size.maybe_resolve(container_content_box);
+
+    // Resolve default alignment styles if they are set on neither the parent or the node itself
+    let alignment_styles = InBothAbsAxis {
+        horizontal: container_alignment_styles.horizontal.or(justify_self).unwrap_or_else(|| {
+            if inherent_size.width.is_some() || aspect_ratio.is_some() {
+                AlignSelf::Start
+            } else {
+                AlignSelf::Stretch
+            }
+        }),
+        vertical: container_alignment_styles.vertical.or(align_self).unwrap_or_else(|| {
+            if inherent_size.height.is_some() || aspect_ratio.is_some() {
+                AlignSelf::Start
+            } else {
+                AlignSelf::Stretch
+            }
+        }),
+    };
 
     // Note: This is not a bug. It is part of the CSS spec that both horizontal and vertical margins
     // resolve against the WIDTH of the grid area.
@@ -102,11 +122,31 @@ pub(super) fn align_and_position_item(
     // If node is absolutely positioned and width is not set explicitly, then deduce it
     // from left, right and container_content_box if both are set.
     let width = inherent_size.width.or_else(|| {
+        // Apply width derived from both the left and right properties of an absolutely
+        // positioned element being set
         if position_type == PositionType::Absolute {
             if let (Some(left), Some(right)) = (inset_horizontal.start, inset_horizontal.end) {
                 return Some(f32_max(grid_area_size.width - left - right, 0.0));
             }
         }
+
+        // Apply width based on stretch alignment (clamped by max size) if:
+        //  - Alignment style is "stretch"
+        //  - The node is not absolutely positioned
+        //  - The node does not have auto margins in this axis.
+        if margin.left.is_some()
+            && margin.right.is_some()
+            && alignment_styles.horizontal == AlignSelf::Stretch
+            && position_type != PositionType::Absolute
+        {
+            return Some(
+                grid_area_minus_item_margins_size
+                    .width
+                    .min(max_size.width.unwrap_or(f32::INFINITY))
+                    .max(min_size.width.unwrap_or(0.0)),
+            );
+        }
+
         None
     });
     let height = inherent_size.height.or_else(|| {
@@ -115,6 +155,24 @@ pub(super) fn align_and_position_item(
                 return Some(f32_max(grid_area_size.height - top - bottom, 0.0));
             }
         }
+
+        // Apply height based on stretch alignment (clamped by max size) if:
+        //  - Alignment style is "stretch"
+        //  - The node is not absolutely positioned
+        //  - The node does not have auto margins in this axis.
+        if margin.top.is_some()
+            && margin.bottom.is_some()
+            && alignment_styles.vertical == AlignSelf::Stretch
+            && position_type != PositionType::Absolute
+        {
+            return Some(
+                grid_area_minus_item_margins_size
+                    .height
+                    .min(max_size.height.unwrap_or(f32::INFINITY))
+                    .max(min_size.height.unwrap_or(0.0)),
+            );
+        }
+
         None
     });
 
@@ -130,23 +188,21 @@ pub(super) fn align_and_position_item(
 
     let (x, width) = align_and_size_item_within_area(
         Line { start: grid_area.left, end: grid_area.right },
-        justify_self.or(alignment_styles.horizontal),
+        justify_self.unwrap_or(alignment_styles.horizontal),
         width,
         measured_size.width,
         position_type,
         inset_horizontal,
         margin.horizontal_components(),
-        aspect_ratio,
     );
     let (y, height) = align_and_size_item_within_area(
         Line { start: grid_area.top, end: grid_area.bottom },
-        align_self.or(alignment_styles.vertical),
+        align_self.unwrap_or(alignment_styles.vertical),
         height,
         measured_size.height,
         position_type,
         inset_vertical,
         margin.vertical_components(),
-        aspect_ratio,
     );
 
     *tree.layout_mut(node) = Layout { order, size: Size { width, height }, location: Point { x, y } };
@@ -155,13 +211,12 @@ pub(super) fn align_and_position_item(
 /// Align and size a grid item along a single axis
 pub(super) fn align_and_size_item_within_area(
     grid_area: Line<f32>,
-    alignment_style: Option<AlignSelf>,
+    alignment_style: AlignSelf,
     style_size: Option<f32>,
     measured_size: f32,
     position_type: PositionType,
     inset: Line<Option<f32>>,
     margin: Line<Option<f32>>,
-    aspect_ratio: Option<f32>,
 ) -> (f32, f32) {
     // Calculate grid area dimension in the axis
     let non_auto_margin = Line { start: margin.start.unwrap_or(0.0), end: margin.end.unwrap_or(0.0) };
@@ -173,15 +228,6 @@ pub(super) fn align_and_size_item_within_area(
     let auto_margin_size = if auto_margin_count > 0 { free_space / auto_margin_count as f32 } else { 0.0 };
     let resolved_margin =
         Line { start: margin.start.unwrap_or(auto_margin_size), end: margin.end.unwrap_or(auto_margin_size) };
-
-    // Compute default alignment style if it set on neither the parent or the node itself
-    let alignment_style = alignment_style.unwrap_or_else(|| {
-        if style_size.is_some() || aspect_ratio.is_some() {
-            AlignSelf::Start
-        } else {
-            AlignSelf::Stretch
-        }
-    });
 
     // Compute size in the axis
     let size = style_size.unwrap_or_else(|| {
