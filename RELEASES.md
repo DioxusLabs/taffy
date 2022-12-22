@@ -1,6 +1,6 @@
 # Release Notes
 
-## 0.3.0-alpha1 (Unreleased)
+## 0.3.0-alpha1
 
 This is the first in a series of planned alpha releases to allow users of Taffy to try out the new CSS Grid layout mode in advance of a stable release. We hope that by marking this is alpha release we are clearly communicating that this a pre-release and that the implementation is not yet of production quality. But we never-the-less encourage you to try it out. Feedback is welcome, and bug reports for the Grid implementation are being accepted as of this release.
 
