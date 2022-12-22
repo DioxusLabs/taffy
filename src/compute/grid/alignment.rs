@@ -5,6 +5,7 @@ use crate::compute::common::alignment::compute_alignment_offset;
 use crate::compute::compute_node_layout;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::layout::{Layout, RunMode, SizingMode};
+use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::resolve::MaybeResolve;
 use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, PositionType};
@@ -115,8 +116,8 @@ pub(super) fn align_and_position_item(
     // resolve against the WIDTH of the grid area.
     let margin = style.margin.map(|margin| margin.resolve_to_option(grid_area_size.width));
     let grid_area_minus_item_margins_size = Size {
-        width: grid_area_size.width - margin.left.unwrap_or(0.0) - margin.right.unwrap_or(0.0),
-        height: grid_area_size.height - margin.top.unwrap_or(0.0) - margin.bottom.unwrap_or(0.0),
+        width: grid_area_size.width.maybe_sub(margin.left).maybe_sub(margin.right),
+        height: grid_area_size.height.maybe_sub(margin.top).maybe_sub(margin.bottom),
     };
 
     // If node is absolutely positioned and width is not set explicitly, then deduce it
@@ -139,12 +140,7 @@ pub(super) fn align_and_position_item(
             && alignment_styles.horizontal == AlignSelf::Stretch
             && position_type != PositionType::Absolute
         {
-            return Some(
-                grid_area_minus_item_margins_size
-                    .width
-                    .min(max_size.width.unwrap_or(f32::INFINITY))
-                    .max(min_size.width.unwrap_or(0.0)),
-            );
+            return Some(grid_area_minus_item_margins_size.width.maybe_min(max_size.width).maybe_max(min_size.width));
         }
 
         None
@@ -166,10 +162,7 @@ pub(super) fn align_and_position_item(
             && position_type != PositionType::Absolute
         {
             return Some(
-                grid_area_minus_item_margins_size
-                    .height
-                    .min(max_size.height.unwrap_or(f32::INFINITY))
-                    .max(min_size.height.unwrap_or(0.0)),
+                grid_area_minus_item_margins_size.height.maybe_min(max_size.height).maybe_max(min_size.height),
             );
         }
 
