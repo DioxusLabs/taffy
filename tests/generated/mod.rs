@@ -270,6 +270,10 @@ mod grid_auto_single_item_fixed_width_with_definite_width;
 #[cfg(feature = "experimental_grid")]
 mod grid_basic;
 #[cfg(feature = "experimental_grid")]
+mod grid_basic_out_of_order_items;
+#[cfg(feature = "experimental_grid")]
+mod grid_basic_with_overflow;
+#[cfg(feature = "experimental_grid")]
 mod grid_basic_with_padding;
 #[cfg(feature = "experimental_grid")]
 mod grid_fit_content_points_argument;
