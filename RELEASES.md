@@ -10,7 +10,63 @@ This is the first in a series of planned alpha releases to allow users of Taffy 
 
 #### CSS Grid (Experimental)
 
-We very excited to report that we have an initial version
+We very excited to report that we have an initial version of the CSS Grid layout available. This is in addition to the existing Flexbox layout support, and the two modes interoperate (although this interaction has not been extensively tested). You can set a node to use Grid layout by setting the `display` property to `Display::Grid`
+
+In addition to the usual sizing/spacing proerties (size, min_size, padding, margin, etc), the following Grid style properties are supported on Grid Containers:
+
+| Property                  | Explanation                                                                                    |
+| ---                       | ---                                                                                            |
+| [`grid-template-columns`] | The track sizing functions of the grid's explicit columns                                      |
+| [`grid-template-rows`]    | The track sizing functions of the grid's explicit rows                                         |
+| [`grid-template-areas`]   | Defines named grid areas                                                                       |
+| [`grid-auto-rows`]        | Track sizing functions for the grid's implicitly generated rows                                |
+| [`grid-auto-columns`]     | Track sizing functions for the grid's implicitly generated columns                             |
+| [`grid-auto-flow`]        | Whether auto-placed items are placed row-wise or column-wise. And sparsely or densely.         |
+| [`gap`]                   | The size of the vertical and horizontal gaps between grid rows/columns                         |
+| [`align_content`]         | Align grid tracks within the container in the inline (horizontal) axis                         |
+| [`justify_content`]       | Align grid tracks within the container in the block (vertical) axis                            |
+| [`align_items`]           | Align the child items within their grid areas in the inline (horizontal) axis                  |
+| [`justify_items`]         | Align the child items within their grid areas in the block (vertical) axis                     |
+
+And the following Grid style properties are supported on Grid Items (children): 
+
+| [`grid-row`]              | The (row) grid line the item starts at (or a span)                                             |
+| [`grid-row`]              | The (row) grid line the item ends at (or a span)                                               |
+| [`grid-column`]           | The (column) grid line the item starts at (or a span)                                          |
+| [`grid-column`]           | The (column) grid line the item end at (or a span)                                             |
+| [`align_self`]            | Align the item within it's grid area in the inline (horizontal) axis. Overrides `align_items`. |
+| [`justify_self`]          | Align the item within it's grid area in the block (vertical) axis. Overrides `justify_items`.  |
+
+
+[`grid-template-columns`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns
+[`grid-template-rows`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-rows
+[`grid-template-areas`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-areas
+[`grid-auto-rows`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-rows
+[`grid-auto-columns`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-columns
+[`grid-auto-flow`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-flow
+[`gap`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/gap
+[`align_content`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/align_content
+[`justify_content`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/justify_content
+[`align-items`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/align-items
+[`justify-items`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/justify-items
+[`grid-row`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-row
+[`grid-row`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-row
+[`grid-column`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-column
+[`grid-column`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-column
+[`align-self`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/align-self
+[`justify-self`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/justify-self
+
+
+The following properties and features are *not* yet supported:
+
+- Baseline alignment
+- Subgrids
+- Named grid lines
+- Named areas: `grid-template-areas` and `grid-area`
+- `grid-template` or `grid` shorthand
+- `repeat()` with integer repetition (but users of Taffy can just expand these definition manually)
+- `fit-content()` with a percentage argument.
+
 
 ##### Example
 
