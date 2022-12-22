@@ -8,9 +8,9 @@ pub type Node = slotmap::DefaultKey;
 
 use crate::error::{TaffyError, TaffyResult};
 use crate::geometry::Size;
-use crate::layout::{AvailableSpace, Cache, Layout};
+use crate::layout::{Cache, Layout};
 use crate::prelude::LayoutTree;
-use crate::style::Style;
+use crate::style::{AvailableSpace, Style};
 #[cfg(any(feature = "std", feature = "alloc"))]
 use crate::sys::Box;
 use crate::sys::{new_vec_with_capacity, ChildrenVec, Vec};
@@ -371,10 +371,9 @@ mod tests {
     #![allow(clippy::bool_assert_comparison)]
 
     use super::*;
-    use crate::{
-        style::{Dimension, Display, FlexDirection},
-        sys,
-    };
+    use crate::style::{Dimension, Display, FlexDirection};
+    use crate::style_helpers::*;
+    use crate::sys;
 
     #[test]
     fn new_should_allocate_default_capacity() {
@@ -646,7 +645,7 @@ mod tests {
 
         let style = Style { display: Display::None, flex_direction: FlexDirection::RowReverse, ..Default::default() };
 
-        let node = taffy.new_leaf(style).unwrap();
+        let node = taffy.new_leaf(style.clone()).unwrap();
 
         let res = taffy.style(node);
         assert!(res.is_ok());

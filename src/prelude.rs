@@ -2,13 +2,24 @@
 
 pub use crate::{
     compute::flexbox::compute as layout_flexbox,
-    geometry::{Rect, Size},
-    layout::{AvailableSpace, Layout},
+    geometry::{Line, Rect, Size},
+    layout::Layout,
     node::{Node, Taffy},
     style::{
-        AlignContent, AlignItems, AlignSelf, Dimension, Display, FlexDirection, FlexWrap, JustifyContent,
-        LengthPercentage, LengthPercentageAuto, PositionType, Style,
+        AlignContent, AlignItems, AlignSelf, AvailableSpace, Dimension, Display, FlexDirection, FlexWrap,
+        JustifyContent, JustifyItems, JustifySelf, LengthPercentage, LengthPercentageAuto, PositionType, Style,
     },
-    style_helpers::{auto, points, zero},
+    style_helpers::{
+        auto, fit_content, flex, max_content, min_content, minmax, percent, points, zero, FromFlex, FromPercent,
+        FromPoints, TaffyAuto, TaffyFitContent, TaffyMaxContent, TaffyMinContent, TaffyZero,
+    },
     tree::LayoutTree,
 };
+
+#[cfg(feature = "experimental_grid")]
+pub use crate::style::{
+    GridAutoFlow, GridPlacement, GridTrackRepetition, MaxTrackSizingFunction, MinTrackSizingFunction,
+    NonRepeatedTrackSizingFunction, TrackSizingFunction,
+};
+#[cfg(feature = "experimental_grid")]
+pub use crate::style_helpers::{line, repeat, span, TaffyGridLine, TaffyGridSpan};

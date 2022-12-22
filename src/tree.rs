@@ -4,7 +4,7 @@ use slotmap::DefaultKey;
 
 use crate::{
     error::TaffyResult,
-    layout::{AvailableSpace, Cache, Layout},
+    layout::{Cache, Layout},
     prelude::*,
 };
 

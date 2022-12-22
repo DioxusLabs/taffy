@@ -1,10 +1,11 @@
 //! Computes size using styles and measure functions
 
 use crate::geometry::Size;
-use crate::layout::{AvailableSpace, RunMode, SizingMode};
+use crate::layout::{RunMode, SizingMode};
 use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
+use crate::style::AvailableSpace;
 use crate::tree::LayoutTree;
 
 #[cfg(feature = "debug")]
@@ -31,10 +32,10 @@ pub(crate) fn compute(
             (node_size, node_min_size, node_max_size)
         }
         SizingMode::InherentSize => {
-            let style_size = style.size.maybe_resolve(available_space.as_options());
+            let style_size = style.size.maybe_resolve(available_space.into_options());
             let node_size = known_dimensions.or(style_size);
-            let node_min_size = style.min_size.maybe_resolve(available_space.as_options());
-            let node_max_size = style.max_size.maybe_resolve(available_space.as_options());
+            let node_min_size = style.min_size.maybe_resolve(available_space.into_options());
+            let node_max_size = style.max_size.maybe_resolve(available_space.into_options());
             (node_size, node_min_size, node_max_size)
         }
     };
@@ -56,8 +57,16 @@ pub(crate) fn compute(
     if tree.needs_measure(node) {
         // Compute available space
         let available_space = Size {
-            width: available_space.width.maybe_set(node_size.width),
-            height: available_space.height.maybe_set(node_size.height),
+            width: available_space
+                .width
+                .maybe_set(node_size.width)
+                .maybe_set(node_max_size.width)
+                .map_definite_value(|size| size.maybe_clamp(node_min_size.width, node_max_size.width)),
+            height: available_space
+                .height
+                .maybe_set(node_size.height)
+                .maybe_set(node_max_size.height)
+                .map_definite_value(|size| size.maybe_clamp(node_min_size.height, node_max_size.height)),
         };
 
         // Measure node

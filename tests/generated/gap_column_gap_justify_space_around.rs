@@ -4,41 +4,31 @@ fn gap_column_gap_justify_space_around() {
     use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Size::auto() },
-                ..Default::default()
-            },
-            &[],
-        )
+        .new_leaf(taffy::style::Style {
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), height: auto() },
+            ..Default::default()
+        })
         .unwrap();
     let node1 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Size::auto() },
-                ..Default::default()
-            },
-            &[],
-        )
+        .new_leaf(taffy::style::Style {
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), height: auto() },
+            ..Default::default()
+        })
         .unwrap();
     let node2 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), ..Size::auto() },
-                ..Default::default()
-            },
-            &[],
-        )
+        .new_leaf(taffy::style::Style {
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), height: auto() },
+            ..Default::default()
+        })
         .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                justify_content: taffy::style::JustifyContent::SpaceAround,
-                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::Points(10f32), ..Size::zero() },
+                justify_content: Some(taffy::style::JustifyContent::SpaceAround),
+                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::Points(10f32), height: zero() },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod root_constraints {
-    use taffy::layout::AvailableSpace;
+    use taffy::style::AvailableSpace;
 
     #[test]
     fn root_with_percentage_size() {

@@ -4,18 +4,14 @@ fn align_self_center() {
     use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                align_self: taffy::style::AlignSelf::Center,
-                size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(10f32),
-                    height: taffy::style::Dimension::Points(10f32),
-                    ..Size::auto()
-                },
-                ..Default::default()
+        .new_leaf(taffy::style::Style {
+            align_self: Some(taffy::style::AlignSelf::Center),
+            size: taffy::geometry::Size {
+                width: taffy::style::Dimension::Points(10f32),
+                height: taffy::style::Dimension::Points(10f32),
             },
-            &[],
-        )
+            ..Default::default()
+        })
         .unwrap();
     let node = taffy
         .new_with_children(
@@ -23,7 +19,6 @@ fn align_self_center() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

@@ -3,26 +3,22 @@ pub fn compute() {
     use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(60f32),
-                    height: taffy::style::Dimension::Points(60f32),
-                    ..Size::auto()
-                },
-                ..Default::default()
+        .new_leaf(taffy::style::Style {
+            size: taffy::geometry::Size {
+                width: taffy::style::Dimension::Points(60f32),
+                height: taffy::style::Dimension::Points(60f32),
             },
-            &[],
-        )
+            ..Default::default()
+        })
         .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                justify_content: taffy::style::JustifyContent::Center,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), ..Size::auto() },
-                min_size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Size::auto() },
-                max_size: taffy::geometry::Size { height: taffy::style::Dimension::Points(200f32), ..Size::auto() },
+                justify_content: Some(taffy::style::JustifyContent::Center),
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), height: auto() },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(100f32) },
+                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(200f32) },
                 ..Default::default()
             },
             &[node0],

@@ -1,13 +1,17 @@
 //! The layout algorithms themselves
 
+pub(crate) mod common;
 pub(crate) mod flexbox;
 pub(crate) mod leaf;
 
+#[cfg(feature = "experimental_grid")]
+pub(crate) mod grid;
+
 use crate::error::TaffyError;
 use crate::geometry::{Point, Size};
-use crate::layout::{AvailableSpace, Cache, Layout, RunMode, SizingMode};
+use crate::layout::{Cache, Layout, RunMode, SizingMode};
 use crate::node::Node;
-use crate::style::Display;
+use crate::style::{AvailableSpace, Display};
 use crate::sys::round;
 use crate::tree::LayoutTree;
 
@@ -115,10 +119,12 @@ fn compute_node_layout(
                 NODE_LOGGER.log("Algo: flexbox");
                 self::flexbox::compute(tree, node, known_dimensions, available_space, run_mode)
             }
+            #[cfg(feature = "experimental_grid")]
+            Display::Grid => self::grid::compute(tree, node, available_space),
             Display::None => {
                 #[cfg(feature = "debug")]
                 NODE_LOGGER.log("Algo: none");
-                Size { width: 0.0, height: 0.0 }
+                perform_hidden_layout(tree, node)
             }
         }
     };
@@ -183,6 +189,24 @@ fn compute_from_cache(
     None
 }
 
+/// Creates a layout for this node and its children, recursively.
+/// Each hidden node has zero size and is placed at the origin
+fn perform_hidden_layout(tree: &mut impl LayoutTree, node: Node) -> Size<f32> {
+    /// Recursive function to apply hidden layout to all descendents
+    fn perform_hidden_layout_inner(tree: &mut impl LayoutTree, node: Node, order: u32) {
+        *tree.layout_mut(node) = Layout::with_order(order);
+        for order in 0..tree.child_count(node) {
+            perform_hidden_layout_inner(tree, tree.child(node, order), order as _);
+        }
+    }
+
+    for order in 0..tree.child_count(node) {
+        perform_hidden_layout_inner(tree, tree.child(node, order), order as _);
+    }
+
+    Size::ZERO
+}
+
 /// Rounds the calculated [`NodeData`] according to the spec
 fn round_layout(tree: &mut impl LayoutTree, root: Node, abs_x: f32, abs_y: f32) {
     let layout = tree.layout_mut(root);
@@ -199,5 +223,45 @@ fn round_layout(tree: &mut impl LayoutTree, root: Node, abs_x: f32, abs_y: f32) 
     for x in 0..tree.child_count(root) {
         let child = tree.child(root, x);
         round_layout(tree, child, abs_x, abs_y);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::perform_hidden_layout;
+    use crate::geometry::{Point, Size};
+    use crate::style::{Display, Style};
+    use crate::Taffy;
+
+    #[test]
+    fn hidden_layout_should_hide_recursively() {
+        let mut taffy = Taffy::new();
+
+        let style: Style = Style { display: Display::Flex, size: Size::from_points(50.0, 50.0), ..Default::default() };
+
+        let grandchild_00 = taffy.new_leaf(style.clone()).unwrap();
+        let grandchild_01 = taffy.new_leaf(style.clone()).unwrap();
+        let child_00 = taffy.new_with_children(style.clone(), &[grandchild_00, grandchild_01]).unwrap();
+
+        let grandchild_02 = taffy.new_leaf(style.clone()).unwrap();
+        let child_01 = taffy.new_with_children(style.clone(), &[grandchild_02]).unwrap();
+
+        let root = taffy
+            .new_with_children(
+                Style { display: Display::None, size: Size::from_points(50.0, 50.0), ..Default::default() },
+                &[child_00, child_01],
+            )
+            .unwrap();
+
+        perform_hidden_layout(&mut taffy, root);
+
+        // Whatever size and display-mode the nodes had previously,
+        // all layouts should resolve to ZERO due to the root's DISPLAY::NONE
+        for (node, _) in taffy.nodes.iter().filter(|(node, _)| *node != root) {
+            if let Ok(layout) = taffy.layout(node) {
+                assert_eq!(layout.size, Size::zero());
+                assert_eq!(layout.location, Point::zero());
+            }
+        }
     }
 }

@@ -4,17 +4,13 @@ fn flex_basis_smaller_than_content_column() {
     use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
-                },
-                ..Default::default()
+        .new_leaf(taffy::style::Style {
+            size: taffy::geometry::Size {
+                width: taffy::style::Dimension::Points(100f32),
+                height: taffy::style::Dimension::Points(100f32),
             },
-            &[],
-        )
+            ..Default::default()
+        })
         .unwrap();
     let node0 = taffy
         .new_with_children(
@@ -30,7 +26,7 @@ fn flex_basis_smaller_than_content_column() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { height: taffy::style::Dimension::Points(100f32), ..Size::auto() },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(100f32) },
                 ..Default::default()
             },
             &[node0],

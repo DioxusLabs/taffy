@@ -2,7 +2,7 @@
 #![allow(clippy::manual_clamp)]
 
 use crate::geometry::Size;
-use crate::layout::AvailableSpace;
+use crate::style::AvailableSpace;
 
 /// A trait to conveniently calculate minimums and maximums when some data may not be defined
 ///

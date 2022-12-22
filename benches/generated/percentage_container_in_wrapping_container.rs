@@ -3,36 +3,28 @@ pub fn compute() {
     use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node000 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(50f32),
-                    height: taffy::style::Dimension::Points(50f32),
-                    ..Size::auto()
-                },
-                ..Default::default()
+        .new_leaf(taffy::style::Style {
+            size: taffy::geometry::Size {
+                width: taffy::style::Dimension::Points(50f32),
+                height: taffy::style::Dimension::Points(50f32),
             },
-            &[],
-        )
+            ..Default::default()
+        })
         .unwrap();
     let node001 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(50f32),
-                    height: taffy::style::Dimension::Points(50f32),
-                    ..Size::auto()
-                },
-                ..Default::default()
+        .new_leaf(taffy::style::Style {
+            size: taffy::geometry::Size {
+                width: taffy::style::Dimension::Points(50f32),
+                height: taffy::style::Dimension::Points(50f32),
             },
-            &[],
-        )
+            ..Default::default()
+        })
         .unwrap();
     let node00 = taffy
         .new_with_children(
             taffy::style::Style {
-                justify_content: taffy::style::JustifyContent::Center,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), ..Size::auto() },
+                justify_content: Some(taffy::style::JustifyContent::Center),
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), height: auto() },
                 ..Default::default()
             },
             &[node000, node001],
@@ -48,12 +40,11 @@ pub fn compute() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                align_items: taffy::style::AlignItems::Center,
-                justify_content: taffy::style::JustifyContent::Center,
+                align_items: Some(taffy::style::AlignItems::Center),
+                justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(200f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

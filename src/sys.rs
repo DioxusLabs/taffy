@@ -12,6 +12,18 @@ pub(crate) use self::alloc::*;
 #[cfg(all(not(feature = "alloc"), not(feature = "std")))]
 pub(crate) use self::core::*;
 
+/// Returns the largest of two f32 values
+#[cfg(feature = "experimental_grid")]
+pub(crate) fn f32_max(a: f32, b: f32) -> f32 {
+    core::cmp::max_by(a, b, |a, b| a.total_cmp(b))
+}
+
+/// Returns the smallest of two f32 values
+#[cfg(feature = "experimental_grid")]
+pub(crate) fn f32_min(a: f32, b: f32) -> f32 {
+    core::cmp::min_by(a, b, |a, b| a.total_cmp(b))
+}
+
 /// For when `std` is enabled
 #[cfg(feature = "std")]
 mod std {
@@ -21,6 +33,9 @@ mod std {
     pub(crate) type Vec<A> = std::vec::Vec<A>;
     /// A vector of child nodes
     pub(crate) type ChildrenVec<A> = std::vec::Vec<A>;
+    /// A vector of grid tracks
+    #[cfg(feature = "experimental_grid")]
+    pub(crate) type GridTrackVec<A> = std::vec::Vec<A>;
 
     /// Creates a new vector with the capacity for the specified number of items before it must be resized
     #[must_use]
@@ -52,6 +67,8 @@ mod alloc {
     pub(crate) type Vec<A> = alloc::vec::Vec<A>;
     /// A vector of child nodes
     pub(crate) type ChildrenVec<A> = alloc::vec::Vec<A>;
+    /// A vector of grid tracks
+    pub(crate) type GridTrackVec<A> = alloc::vec::Vec<A>;
 
     /// Creates a new vector with the capacity for the specified number of items before it must be resized
     #[must_use]
@@ -79,11 +96,15 @@ mod core {
     pub const MAX_NODE_COUNT: usize = 256;
     /// The maximum number of children of any given node
     pub const MAX_CHILD_COUNT: usize = 16;
+    /// The maximum number of children of any given node
+    pub const MAX_GRID_TRACKS: usize = 16;
 
     /// An allocation-backend agnostic vector type
     pub(crate) type Vec<A> = arrayvec::ArrayVec<A, MAX_NODE_COUNT>;
     /// A vector of child nodes, whose length cannot exceed [`MAX_CHILD_COUNT`]
     pub(crate) type ChildrenVec<A> = arrayvec::ArrayVec<A, MAX_CHILD_COUNT>;
+    /// A vector of grid tracks
+    pub(crate) type GridTrackVec<A> = arrayvec::ArrayVec<A, MAX_GRID_TRACKS>;
 
     /// Creates a new map with the capacity for the specified number of items before it must be resized
     ///

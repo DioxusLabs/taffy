@@ -4,17 +4,13 @@ fn percentage_width_height_undefined_parent_size() {
     use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(0.5f32),
-                    height: taffy::style::Dimension::Percent(0.5f32),
-                    ..Size::auto()
-                },
-                ..Default::default()
+        .new_leaf(taffy::style::Style {
+            size: taffy::geometry::Size {
+                width: taffy::style::Dimension::Percent(0.5f32),
+                height: taffy::style::Dimension::Percent(0.5f32),
             },
-            &[],
-        )
+            ..Default::default()
+        })
         .unwrap();
     let node = taffy
         .new_with_children(

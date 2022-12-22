@@ -204,7 +204,7 @@ mod measure {
             .new_with_children(
                 Style {
                     size: Size { width: Dimension::Points(100.0), height: auto() },
-                    align_items: AlignItems::FlexStart,
+                    align_items: Some(AlignItems::Start),
                     ..Default::default()
                 },
                 &[child0, child1],
@@ -244,7 +244,7 @@ mod measure {
             .new_with_children(
                 Style {
                     size: Size { width: Dimension::Points(100.0), height: auto() },
-                    align_items: AlignItems::FlexStart,
+                    align_items: Some(AlignItems::Start),
                     ..Default::default()
                 },
                 &[child0, child1],

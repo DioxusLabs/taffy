@@ -4,19 +4,15 @@ fn absolute_layout_in_wrap_reverse_row_container_flex_end() {
     use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                position_type: taffy::style::PositionType::Absolute,
-                align_self: taffy::style::AlignSelf::FlexEnd,
-                size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(20f32),
-                    height: taffy::style::Dimension::Points(20f32),
-                    ..Size::auto()
-                },
-                ..Default::default()
+        .new_leaf(taffy::style::Style {
+            position_type: taffy::style::PositionType::Absolute,
+            align_self: Some(taffy::style::AlignSelf::End),
+            size: taffy::geometry::Size {
+                width: taffy::style::Dimension::Points(20f32),
+                height: taffy::style::Dimension::Points(20f32),
             },
-            &[],
-        )
+            ..Default::default()
+        })
         .unwrap();
     let node = taffy
         .new_with_children(
@@ -25,7 +21,6 @@ fn absolute_layout_in_wrap_reverse_row_container_flex_end() {
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

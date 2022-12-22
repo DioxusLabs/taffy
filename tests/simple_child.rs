@@ -1,11 +1,11 @@
-use taffy::{geometry::Point, layout::AvailableSpace, style::Dimension};
+use taffy::{geometry::Point, style::AvailableSpace, style::Dimension};
 
 #[test]
 fn simple_child() {
     let mut taffy = taffy::Taffy::new();
     let node0_0 = taffy
         .new_leaf(taffy::style::Style {
-            align_self: taffy::prelude::AlignSelf::Center,
+            align_self: Some(taffy::prelude::AlignSelf::Center),
             size: taffy::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
             ..Default::default()
         })
@@ -21,14 +21,14 @@ fn simple_child() {
         .unwrap();
     let node1_0 = taffy
         .new_leaf(taffy::style::Style {
-            align_self: taffy::prelude::AlignSelf::Center,
+            align_self: Some(taffy::prelude::AlignSelf::Center),
             size: taffy::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
             ..Default::default()
         })
         .unwrap();
     let node1_1 = taffy
         .new_leaf(taffy::style::Style {
-            align_self: taffy::prelude::AlignSelf::Center,
+            align_self: Some(taffy::prelude::AlignSelf::Center),
             size: taffy::geometry::Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
             ..Default::default()
         })

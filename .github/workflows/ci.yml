@@ -52,6 +52,36 @@ jobs:
           command: test
           args: --no-default-features --features alloc
 
+  test-features-default-with-grid:
+    name: "Test Suite [Features: default + experimental_grid]"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --features experimental_grid
+
+  test-features-alloc-with-grid:
+    name: "Test Suite [Features: alloc + experimental_grid]"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --no-default-features --features alloc,experimental_grid
+
   fmt:
     name: Rustfmt
     runs-on: ubuntu-latest
@@ -82,7 +112,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --workspace -- -D warnings
+          args: --workspace --features experimental_grid -- -D warnings
 
   markdownlint:
     name: Markdown Lint

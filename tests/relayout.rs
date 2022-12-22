@@ -1,5 +1,4 @@
-use taffy::layout::AvailableSpace;
-use taffy::style::Dimension;
+use taffy::style::{AvailableSpace, Dimension};
 
 #[test]
 fn relayout() {
@@ -13,7 +12,7 @@ fn relayout() {
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
-                align_self: taffy::prelude::AlignSelf::Center,
+                align_self: Some(taffy::prelude::AlignSelf::Center),
                 size: taffy::geometry::Size { width: Dimension::Auto, height: Dimension::Auto },
                 // size: taffy::geometry::Size { width: Dimension::Percent(1.0), height: Dimension::Percent(1.0) },
                 ..Default::default()

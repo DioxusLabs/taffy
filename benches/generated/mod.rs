@@ -1,4 +1,46 @@
 use criterion::{criterion_group, criterion_main, Criterion};
+#[allow(dead_code)]
+fn measure_standard_text(
+    known_dimensions: taffy::geometry::Size<Option<f32>>,
+    available_space: taffy::geometry::Size<taffy::style::AvailableSpace>,
+    text_content: &str,
+) -> taffy::geometry::Size<f32> {
+    use taffy::prelude::*;
+    const ZWS: char = '\u{200B}';
+    const H_WIDTH: f32 = 10.0;
+    const H_HEIGHT: f32 = 10.0;
+    if let Size { width: Some(width), height: Some(height) } = known_dimensions {
+        return Size { width, height };
+    }
+    let lines: Vec<&str> = text_content.split(ZWS).collect();
+    if lines.is_empty() {
+        return Size::ZERO;
+    }
+    let min_line_length: usize = lines.iter().map(|line| line.len()).max().unwrap_or(0);
+    let max_line_length: usize = lines.iter().map(|line| line.len()).sum();
+    let width = known_dimensions.width.unwrap_or_else(|| match available_space.width {
+        AvailableSpace::MinContent => min_line_length as f32 * H_WIDTH,
+        AvailableSpace::MaxContent => max_line_length as f32 * H_WIDTH,
+        AvailableSpace::Definite(width) => {
+            width.min(max_line_length as f32 * H_WIDTH).max(min_line_length as f32 * H_WIDTH)
+        }
+    });
+    let height = known_dimensions.height.unwrap_or_else(|| {
+        let width_line_length = (width / H_WIDTH).floor() as usize;
+        let mut line_count = 1;
+        let mut current_line_length = 0;
+        for line in &lines {
+            if current_line_length + line.len() > width_line_length {
+                line_count += 1;
+                current_line_length = line.len();
+            } else {
+                current_line_length += line.len();
+            };
+        }
+        (line_count as f32) * H_HEIGHT
+    });
+    Size { width, height }
+}
 mod absolute_layout_align_items_and_justify_content_center;
 mod absolute_layout_align_items_and_justify_content_center_and_bottom_position;
 mod absolute_layout_align_items_and_justify_content_center_and_left_position;
@@ -140,6 +182,206 @@ mod gap_row_gap_align_items_stretch;
 mod gap_row_gap_column_child_margins;
 mod gap_row_gap_determines_parent_height;
 mod gap_row_gap_row_wrap_child_margins;
+#[cfg(feature = "experimental_grid")]
+mod grid_absolute_align_self_sized_all;
+#[cfg(feature = "experimental_grid")]
+mod grid_absolute_column_end;
+#[cfg(feature = "experimental_grid")]
+mod grid_absolute_column_start;
+#[cfg(feature = "experimental_grid")]
+mod grid_absolute_container_bottom_left;
+#[cfg(feature = "experimental_grid")]
+mod grid_absolute_container_bottom_left_margin;
+#[cfg(feature = "experimental_grid")]
+mod grid_absolute_container_left_overrides_right;
+#[cfg(feature = "experimental_grid")]
+mod grid_absolute_container_left_right;
+#[cfg(feature = "experimental_grid")]
+mod grid_absolute_container_left_right_margin;
+#[cfg(feature = "experimental_grid")]
+mod grid_absolute_container_negative_position;
+#[cfg(feature = "experimental_grid")]
+mod grid_absolute_container_negative_position_margin;
+#[cfg(feature = "experimental_grid")]
+mod grid_absolute_container_top_bottom;
+#[cfg(feature = "experimental_grid")]
+mod grid_absolute_container_top_bottom_margin;
+#[cfg(feature = "experimental_grid")]
+mod grid_absolute_container_top_right;
+#[cfg(feature = "experimental_grid")]
+mod grid_absolute_container_top_right_margin;
+#[cfg(feature = "experimental_grid")]
+mod grid_absolute_justify_self_sized_all;
+#[cfg(feature = "experimental_grid")]
+mod grid_absolute_row_end;
+#[cfg(feature = "experimental_grid")]
+mod grid_absolute_row_start;
+#[cfg(feature = "experimental_grid")]
+mod grid_absolute_top_overrides_bottom;
+#[cfg(feature = "experimental_grid")]
+mod grid_absolute_with_padding;
+#[cfg(feature = "experimental_grid")]
+mod grid_absolute_with_padding_and_margin;
+#[cfg(feature = "experimental_grid")]
+mod grid_align_content_center;
+#[cfg(feature = "experimental_grid")]
+mod grid_align_content_end;
+#[cfg(feature = "experimental_grid")]
+mod grid_align_content_end_with_padding_border;
+#[cfg(feature = "experimental_grid")]
+mod grid_align_content_space_around;
+#[cfg(feature = "experimental_grid")]
+mod grid_align_content_space_around_with_padding_border;
+#[cfg(feature = "experimental_grid")]
+mod grid_align_content_space_between;
+#[cfg(feature = "experimental_grid")]
+mod grid_align_content_space_between_with_padding_border;
+#[cfg(feature = "experimental_grid")]
+mod grid_align_content_space_evenly;
+#[cfg(feature = "experimental_grid")]
+mod grid_align_content_space_evenly_with_padding_border;
+#[cfg(feature = "experimental_grid")]
+mod grid_align_content_start;
+#[cfg(feature = "experimental_grid")]
+mod grid_align_content_start_with_padding_border;
+#[cfg(feature = "experimental_grid")]
+mod grid_align_items_sized_center;
+#[cfg(feature = "experimental_grid")]
+mod grid_align_items_sized_end;
+#[cfg(feature = "experimental_grid")]
+mod grid_align_items_sized_start;
+#[cfg(feature = "experimental_grid")]
+mod grid_align_items_sized_stretch;
+#[cfg(feature = "experimental_grid")]
+mod grid_align_self_sized_all;
+#[cfg(feature = "experimental_grid")]
+mod grid_auto_columns_fixed_width;
+#[cfg(feature = "experimental_grid")]
+mod grid_auto_fill_fixed_size;
+#[cfg(feature = "experimental_grid")]
+mod grid_auto_fill_with_empty_auto_track;
+#[cfg(feature = "experimental_grid")]
+mod grid_auto_fit_with_empty_auto_track;
+#[cfg(feature = "experimental_grid")]
+mod grid_auto_single_item;
+#[cfg(feature = "experimental_grid")]
+mod grid_auto_single_item_fixed_width;
+#[cfg(feature = "experimental_grid")]
+mod grid_auto_single_item_fixed_width_with_definite_width;
+#[cfg(feature = "experimental_grid")]
+mod grid_basic;
+#[cfg(feature = "experimental_grid")]
+mod grid_basic_implicit_tracks;
+#[cfg(feature = "experimental_grid")]
+mod grid_basic_with_overflow;
+#[cfg(feature = "experimental_grid")]
+mod grid_basic_with_padding;
+#[cfg(feature = "experimental_grid")]
+mod grid_fit_content_points_argument;
+#[cfg(feature = "experimental_grid")]
+mod grid_fit_content_points_max_content;
+#[cfg(feature = "experimental_grid")]
+mod grid_fit_content_points_min_content;
+#[cfg(feature = "experimental_grid")]
+mod grid_fr_auto_no_sized_items;
+#[cfg(feature = "experimental_grid")]
+mod grid_fr_auto_single_item;
+#[cfg(feature = "experimental_grid")]
+mod grid_fr_fixed_size_no_content;
+#[cfg(feature = "experimental_grid")]
+mod grid_fr_fixed_size_single_item;
+#[cfg(feature = "experimental_grid")]
+mod grid_gap;
+#[cfg(feature = "experimental_grid")]
+mod grid_hidden;
+#[cfg(feature = "experimental_grid")]
+mod grid_justify_content_center;
+#[cfg(feature = "experimental_grid")]
+mod grid_justify_content_center_with_padding_border;
+#[cfg(feature = "experimental_grid")]
+mod grid_justify_content_end;
+#[cfg(feature = "experimental_grid")]
+mod grid_justify_content_end_with_padding_border;
+#[cfg(feature = "experimental_grid")]
+mod grid_justify_content_space_around;
+#[cfg(feature = "experimental_grid")]
+mod grid_justify_content_space_around_with_padding_border;
+#[cfg(feature = "experimental_grid")]
+mod grid_justify_content_space_between;
+#[cfg(feature = "experimental_grid")]
+mod grid_justify_content_space_between_with_padding_border;
+#[cfg(feature = "experimental_grid")]
+mod grid_justify_content_space_evenly;
+#[cfg(feature = "experimental_grid")]
+mod grid_justify_content_space_evenly_with_padding_border;
+#[cfg(feature = "experimental_grid")]
+mod grid_justify_content_start;
+#[cfg(feature = "experimental_grid")]
+mod grid_justify_content_start_with_padding_border;
+#[cfg(feature = "experimental_grid")]
+mod grid_justify_items_sized_center;
+#[cfg(feature = "experimental_grid")]
+mod grid_justify_items_sized_end;
+#[cfg(feature = "experimental_grid")]
+mod grid_justify_items_sized_start;
+#[cfg(feature = "experimental_grid")]
+mod grid_justify_items_sized_stretch;
+#[cfg(feature = "experimental_grid")]
+mod grid_justify_self_sized_all;
+#[cfg(feature = "experimental_grid")]
+mod grid_margins_auto_margins;
+#[cfg(feature = "experimental_grid")]
+mod grid_margins_auto_margins_override_stretch;
+#[cfg(feature = "experimental_grid")]
+mod grid_margins_fixed_center;
+#[cfg(feature = "experimental_grid")]
+mod grid_margins_fixed_end;
+#[cfg(feature = "experimental_grid")]
+mod grid_margins_fixed_start;
+#[cfg(feature = "experimental_grid")]
+mod grid_margins_fixed_stretch;
+#[cfg(feature = "experimental_grid")]
+mod grid_margins_percent_center;
+#[cfg(feature = "experimental_grid")]
+mod grid_margins_percent_end;
+#[cfg(feature = "experimental_grid")]
+mod grid_margins_percent_start;
+#[cfg(feature = "experimental_grid")]
+mod grid_margins_percent_stretch;
+#[cfg(feature = "experimental_grid")]
+mod grid_max_content_maximum_single_item;
+#[cfg(feature = "experimental_grid")]
+mod grid_max_content_single_item;
+#[cfg(feature = "experimental_grid")]
+mod grid_max_content_single_item_margin_auto;
+#[cfg(feature = "experimental_grid")]
+mod grid_max_content_single_item_margin_fixed;
+#[cfg(feature = "experimental_grid")]
+mod grid_max_content_single_item_margin_percent;
+#[cfg(feature = "experimental_grid")]
+mod grid_min_content_flex_single_item;
+#[cfg(feature = "experimental_grid")]
+mod grid_min_content_flex_single_item_margin_auto;
+#[cfg(feature = "experimental_grid")]
+mod grid_min_content_flex_single_item_margin_fixed;
+#[cfg(feature = "experimental_grid")]
+mod grid_min_content_flex_single_item_margin_percent;
+#[cfg(feature = "experimental_grid")]
+mod grid_min_content_maximum_single_item;
+#[cfg(feature = "experimental_grid")]
+mod grid_min_content_single_item;
+#[cfg(feature = "experimental_grid")]
+mod grid_min_max_column_auto;
+#[cfg(feature = "experimental_grid")]
+mod grid_min_max_column_fixed_width_above_range;
+#[cfg(feature = "experimental_grid")]
+mod grid_min_max_column_fixed_width_below_range;
+#[cfg(feature = "experimental_grid")]
+mod grid_min_max_column_fixed_width_within_range;
+#[cfg(feature = "experimental_grid")]
+mod grid_out_of_order_items;
+#[cfg(feature = "experimental_grid")]
+mod grid_size_child_fixed_tracks;
 mod justify_content_column_center;
 mod justify_content_column_flex_end;
 mod justify_content_column_flex_start;
@@ -420,6 +662,206 @@ fn benchmark(c: &mut Criterion) {
             gap_row_gap_column_child_margins::compute();
             gap_row_gap_determines_parent_height::compute();
             gap_row_gap_row_wrap_child_margins::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_absolute_align_self_sized_all::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_absolute_column_end::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_absolute_column_start::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_absolute_container_bottom_left::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_absolute_container_bottom_left_margin::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_absolute_container_left_overrides_right::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_absolute_container_left_right::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_absolute_container_left_right_margin::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_absolute_container_negative_position::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_absolute_container_negative_position_margin::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_absolute_container_top_bottom::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_absolute_container_top_bottom_margin::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_absolute_container_top_right::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_absolute_container_top_right_margin::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_absolute_justify_self_sized_all::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_absolute_row_end::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_absolute_row_start::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_absolute_top_overrides_bottom::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_absolute_with_padding::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_absolute_with_padding_and_margin::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_align_content_center::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_align_content_end::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_align_content_end_with_padding_border::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_align_content_space_around::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_align_content_space_around_with_padding_border::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_align_content_space_between::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_align_content_space_between_with_padding_border::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_align_content_space_evenly::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_align_content_space_evenly_with_padding_border::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_align_content_start::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_align_content_start_with_padding_border::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_align_items_sized_center::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_align_items_sized_end::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_align_items_sized_start::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_align_items_sized_stretch::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_align_self_sized_all::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_auto_columns_fixed_width::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_auto_fill_fixed_size::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_auto_fill_with_empty_auto_track::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_auto_fit_with_empty_auto_track::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_auto_single_item::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_auto_single_item_fixed_width::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_auto_single_item_fixed_width_with_definite_width::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_basic::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_basic_implicit_tracks::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_basic_with_overflow::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_basic_with_padding::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_fit_content_points_argument::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_fit_content_points_max_content::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_fit_content_points_min_content::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_fr_auto_no_sized_items::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_fr_auto_single_item::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_fr_fixed_size_no_content::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_fr_fixed_size_single_item::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_gap::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_hidden::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_justify_content_center::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_justify_content_center_with_padding_border::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_justify_content_end::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_justify_content_end_with_padding_border::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_justify_content_space_around::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_justify_content_space_around_with_padding_border::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_justify_content_space_between::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_justify_content_space_between_with_padding_border::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_justify_content_space_evenly::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_justify_content_space_evenly_with_padding_border::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_justify_content_start::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_justify_content_start_with_padding_border::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_justify_items_sized_center::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_justify_items_sized_end::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_justify_items_sized_start::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_justify_items_sized_stretch::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_justify_self_sized_all::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_margins_auto_margins::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_margins_auto_margins_override_stretch::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_margins_fixed_center::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_margins_fixed_end::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_margins_fixed_start::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_margins_fixed_stretch::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_margins_percent_center::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_margins_percent_end::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_margins_percent_start::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_margins_percent_stretch::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_max_content_maximum_single_item::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_max_content_single_item::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_max_content_single_item_margin_auto::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_max_content_single_item_margin_fixed::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_max_content_single_item_margin_percent::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_min_content_flex_single_item::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_min_content_flex_single_item_margin_auto::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_min_content_flex_single_item_margin_fixed::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_min_content_flex_single_item_margin_percent::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_min_content_maximum_single_item::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_min_content_single_item::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_min_max_column_auto::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_min_max_column_fixed_width_above_range::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_min_max_column_fixed_width_below_range::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_min_max_column_fixed_width_within_range::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_out_of_order_items::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_size_child_fixed_tracks::compute();
             justify_content_column_center::compute();
             justify_content_column_flex_end::compute();
             justify_content_column_flex_start::compute();

@@ -18,13 +18,14 @@ fn print_node(tree: &impl LayoutTree, node: Node, has_sibling: bool, lines_strin
 
     let fork_string = if has_sibling { "├── " } else { "└── " };
     println!(
-        "{lines}{fork}[x: {x}, y: {y}, width: {width}, height: {height}]",
+        "{lines}{fork}[x: {x:<4} y: {y:<4} width: {width:<4} height: {height:<4}] ({key:?})",
         lines = lines_string,
         fork = fork_string,
         x = layout.location.x,
         y = layout.location.y,
         width = layout.size.width,
         height = layout.size.height,
+        key = node.data(),
     );
     let bar = if has_sibling { "│   " } else { "    " };
     let new_string = lines_string + bar;

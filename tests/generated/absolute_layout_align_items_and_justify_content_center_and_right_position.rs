@@ -4,32 +4,29 @@ fn absolute_layout_align_items_and_justify_content_center_and_right_position() {
     use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_with_children(
-            taffy::style::Style {
-                position_type: taffy::style::PositionType::Absolute,
-                size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(60f32),
-                    height: taffy::style::Dimension::Points(40f32),
-                    ..Size::auto()
-                },
-                position: taffy::geometry::Rect {
-                    right: taffy::style::LengthPercentageAuto::Points(5f32),
-                    ..Rect::auto()
-                },
-                ..Default::default()
+        .new_leaf(taffy::style::Style {
+            position_type: taffy::style::PositionType::Absolute,
+            size: taffy::geometry::Size {
+                width: taffy::style::Dimension::Points(60f32),
+                height: taffy::style::Dimension::Points(40f32),
             },
-            &[],
-        )
+            position: taffy::geometry::Rect {
+                left: auto(),
+                right: taffy::style::LengthPercentageAuto::Points(5f32),
+                top: auto(),
+                bottom: auto(),
+            },
+            ..Default::default()
+        })
         .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                align_items: taffy::style::AlignItems::Center,
-                justify_content: taffy::style::JustifyContent::Center,
+                align_items: Some(taffy::style::AlignItems::Center),
+                justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(110f32),
                     height: taffy::style::Dimension::Points(100f32),
-                    ..Size::auto()
                 },
                 ..Default::default()
             },

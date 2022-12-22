@@ -74,20 +74,27 @@ class TrackSizingParser {
   }
 
   _parseScalarItem(item) {
-    const res = parseDimension(item, { allowFrUnits: this.options.allowFrUnits });
+    const res = parseRepetition(item) || parseDimension(item, { allowFrUnits: this.options.allowFrUnits });
     if (!res) throw new Error(`Invalid scalar grid track sizing function ${item}`);
     return res;
   }
 
 }
 
+function parseRepetition(input) {
+  if (input === "auto-fill") return { unit: 'auto-fill' };
+  if (input === "auto-fit") return { unit: 'auto-fit' };
+  if (/^[0-9]*$/.test(input)) return { 'unit': 'integer', value: parseInt(input, 10) };
+  return undefined;
+}
+
 function parseDimension(input, options = { allowFrUnits: false }) {
   if (options.allowFrUnits && input.endsWith('fr')) return { unit: 'fraction', value: parseFloat(input.replace('fr','')) };
   if (input.endsWith('px')) return { unit: 'points',   value: parseFloat(input.replace('px','')) };
-  if (input.endsWith('%'))  return { unit: 'percent',  value: parseFloat(input.replace('%','')) / 100 };
-  if (input === 'auto')     return { unit: 'auto' };
-  if (input === 'min-content')     return { unit: 'min-content' };
-  if (input === 'max-content')     return { unit: 'max-content' };
+  if (input.endsWith('%')) return { unit: 'percent',  value: parseFloat(input.replace('%','')) / 100 };
+  if (input === 'auto') return { unit: 'auto' };
+  if (input === 'min-content') return { unit: 'min-content' };
+  if (input === 'max-content') return { unit: 'max-content' };
   return undefined;
 }
 
@@ -146,11 +153,12 @@ function parseGridAutoFlow(input) {
 function parseGridPosition(input) {
   if (input === 'auto') return { kind: 'auto' }
   if (/^span +\d+$/.test(input)) return { kind: 'span', value: parseInt(input.replace(/[^\d]/g, ''), 10)}
-  if (/^-?\d+$/.test(input)) return { kind: 'track', value: parseInt(input, 10)}
+  if (/^-?\d+$/.test(input)) return { kind: 'line', value: parseInt(input, 10)}
   return undefined;
 }
 
 function describeElement(e) {
+
   return {
     style: {
       display: parseEnum(e.style.display),
@@ -164,8 +172,10 @@ function describeElement(e) {
 
       alignItems: parseEnum(e.style.alignItems),
       alignSelf: parseEnum(e.style.alignSelf),
+      justifyItems: parseEnum(e.style.justifyItems),
+      justifySelf: parseEnum(e.style.justifySelf),
+
       alignContent: parseEnum(e.style.alignContent),
-      
       justifyContent: parseEnum(e.style.justifyContent),
 
       flexGrow: parseNumber(e.style.flexGrow),
@@ -217,6 +227,10 @@ function describeElement(e) {
         bottom: e.style.bottom,
       }),
     },
+
+    // The textContent is used for generating intrinsic sizing measure funcs
+    // So we're only interested in the text content of leaf nodes
+    textContent: e.childElementCount === 0 && e.textContent.length && e.textContent !== "\n" ? e.textContent : undefined,
 
     layout: {
       width: e.offsetWidth,

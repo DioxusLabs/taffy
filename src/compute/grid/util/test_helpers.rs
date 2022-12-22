@@ -1,0 +1,31 @@
+//! Helpers for use in unit tests within the grid module
+use crate::prelude::*;
+use crate::style::{Dimension, GridPlacement, Style};
+
+pub(crate) trait CreateParentTestNode {
+    fn into_grid(self) -> Style;
+}
+impl CreateParentTestNode for (f32, f32, i32, i32) {
+    fn into_grid(self) -> Style {
+        Style {
+            display: Display::Grid,
+            size: Size { width: Dimension::Points(self.0), height: Dimension::Points(self.1) },
+            grid_template_columns: vec![flex(1f32); self.2 as usize],
+            grid_template_rows: vec![flex(1f32); self.3 as usize],
+            ..Default::default()
+        }
+    }
+}
+pub(crate) trait CreateChildTestNode {
+    fn into_grid_child(self) -> Style;
+}
+impl CreateChildTestNode for (GridPlacement, GridPlacement, GridPlacement, GridPlacement) {
+    fn into_grid_child(self) -> Style {
+        Style {
+            display: Display::Grid,
+            grid_column: Line { start: self.0, end: self.1 },
+            grid_row: Line { start: self.2, end: self.3 },
+            ..Default::default()
+        }
+    }
+}

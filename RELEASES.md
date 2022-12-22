@@ -1,8 +1,149 @@
 # Release Notes
 
-## 0.3.0 (Unreleased)
+## 0.3.0-alpha1 (Unreleased)
+
+This is the first in a series of planned alpha releases to allow users of Taffy to try out the new CSS Grid layout mode in advance of a stable release. We hope that by marking this is alpha release we are clearly communicating that this a pre-release and that the implementation is not yet of production quality. But we never-the-less encourage you to try it out. Feedback is welcome, and bug reports for the Grid implementation are being accepted as of this release.
+
+**Note: CSS Grid support must be enabled using the `experimental_grid` feature. For the time being this feature is not enabled by default.**
+
+### New Feature: CSS Grid (Experimental)
+
+We very excited to report that we have an initial version of the CSS Grid layout available. This is in addition to the existing Flexbox layout support, and the two modes interoperate (although this interaction has not been extensively tested). You can set a node to use Grid layout by setting the `display` property to `Display::Grid`.
+
+#### Learning Resources
+
+Taffy implements the CSS Grid specification faithfully, so documentation designed for the web should translate cleanly to Taffy's implementation. If you are interested in learning how to use CSS Grid, we would recommend the following resources:
+
+- [CSS Grid Garden](https://cssgridgarden.com/). This is an interactive tutorial/game that allows you to learn the essential parts of CSS Grid in a fun engaging way.
+- [A Complete Guide To CSS Grid](https://css-tricks.com/snippets/css/complete-guide-grid/) by CSS Tricks. This is detailed guide with illustrations and comphrehensive written explanation of the different Grid propertie and how they work.
+
+#### Supported Features & Properties
+
+In addition to the usual sizing/spacing proerties (size, min_size, padding, margin, etc), the following Grid style properties are supported on Grid Containers:
+
+| Property                  | Explanation                                                                                    |
+| ---                       | ---                                                                                            |
+| [`grid-template-columns`] | The track sizing functions of the grid's explicit columns                                      |
+| [`grid-template-rows`]    | The track sizing functions of the grid's explicit rows                                         |
+| [`grid-template-areas`]   | Defines named grid areas                                                                       |
+| [`grid-auto-rows`]        | Track sizing functions for the grid's implicitly generated rows                                |
+| [`grid-auto-columns`]     | Track sizing functions for the grid's implicitly generated columns                             |
+| [`grid-auto-flow`]        | Whether auto-placed items are placed row-wise or column-wise. And sparsely or densely.         |
+| [`gap`]                   | The size of the vertical and horizontal gaps between grid rows/columns                         |
+| [`align-content`]         | Align grid tracks within the container in the inline (horizontal) axis                         |
+| [`justify-content`]       | Align grid tracks within the container in the block (vertical) axis                            |
+| [`align-items`]           | Align the child items within their grid areas in the inline (horizontal) axis                  |
+| [`justify-items`]         | Align the child items within their grid areas in the block (vertical) axis                     |
+
+And the following Grid style properties are supported on Grid Items (children):
+
+| Property                  | Explanation                                                                                    |
+| ---                       | ---                                                                                            |
+| [`grid-row`]              | The (row) grid line the item starts at (or a span)                                             |
+| [`grid-column`]           | The (column) grid line the item end at (or a span)                                             |
+| [`align-self`]            | Align the item within it's grid area in the inline (horizontal) axis. Overrides `align-items`. |
+| [`justify-self`]          | Align the item within it's grid area in the block (vertical) axis. Overrides `justify-items`.  |
+
+[`grid-template-columns`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns
+[`grid-template-rows`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-rows
+[`grid-template-areas`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-areas
+[`grid-auto-rows`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-rows
+[`grid-auto-columns`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-columns
+[`grid-auto-flow`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-flow
+[`gap`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/gap
+[`align-content`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/align_content
+[`justify-content`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/justify_content
+[`align-items`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/align-items
+[`justify-items`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/justify-items
+[`grid-row`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-row
+[`grid-column`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-column
+[`align-self`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/align-self
+[`justify-self`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/justify-self
+
+The following properties and features are not yet supported, but are planned for the near future:
+
+- Baseline alignment
+- `fit-content()` with a percentage argument.
+- `repeat()` with integer repetition (but users of Taffy can just expand these definition manually)
+
+The following properties and features are not supported, and there are no immediate plans to implement them:
+
+- Subgrids
+- Named grid lines
+- Named areas: `grid-template-areas` and `grid-area`
+- `grid-template` or `grid` shorthand
+
+#### Example
+
+See [examples/grid_holy_grail.rs](https://github.com/DioxusLabs/taffy/blob/main/examples/grid_holy_grail.rs) for an example using Taffy to implement the so-called [Holy Grail Layout](https://en.wikipedia.org/wiki/Holy_grail_(web_design)). If you want to run this example, the don't forget the enable the CSS Grid cargo feature:
+
+```bash
+cargo run --example grid_holy_grail --features experimental_grid
+```
+
+### New Feature: Style Helpers
+
+Ten new helper functions have added to the taffy prelude. These helper functions have short, intuitive names, and have generic return types which allow them to magically return the correct type depending on context. They make defining styles much easier, and means you won't typically need to use types like `Dimension` or `TrackSizingFunction` directly.
+
+For example, instead of:
+
+```rust
+let size : Size<Dimension> = Size { width: Dimension::Points(100.0), height: Dimension::Percent(50.0) };
+```
+
+you can now write
+
+```rust
+let size : Size<Dimension> = Size { width: points(100.0), height: percent(50.0) };
+```
+
+And that same helper function will work other types like `LengthPercentage` and `MinTrackSizingFunction` that also have a `Points` variant. There are also generic impl's for `Size<T>`, `Rect<T>` and `Line<T>` which means if your node is the same size in all dimensions you can even write
+
+```rust
+let size : Size<Dimension> = points(100.0);
+```
+
+The following functions work for `Dimension`, `LengthPercentageAuto`, `LengthPercentage`, `AvailableSpace` and for Grid track sizing functions
+
+- `points(f32)` - Generates a `Points` variant with the specified value
+- `zero()` - Generates a `Points` variant with the value `0.0`.
+
+The following functions work for `Dimension`, `LengthPercentageAuto`, `LengthPercentage` and for Grid track sizing functions
+
+- `percent(f32)` - Generates a `Percent` value
+- `auto()` - Generates an `Auto` variant
+
+The following functions work for `AvailableSpace` and grid track sizing functions:
+
+- `min_content()` - Generates an `MinContent` variant
+- `max_content()` - Generates an `MaxContent` variant
+
+The following functions currently work only for grid track sizing functions:
+
+- `flex(f32)` - Genrates a `Flex` variant with the specified flex fraction
+- `fit_content(LengthPercentage)` - Generates a `FitContent` variant with the specified limit. Nest `points` or `percent` inside this function to specified the limit.
+- `minmax(MinTrackSizingFunction, MaxTrackSizingFunction)` - Generates a track sizing function with different min and max sizing functions. Nest `points`, `percent`, `auto`, `min_content`, `max_content`, or `flex` to specify the min and max functions.
+- `repeat(GridTrackRepetition, Vec<TrackSizingFunction>)` - Genereate an auto-repeating track definition.
 
 ### Breaking API changes
+
+#### Changes to alignment style types
+
+- `AlignContent` and `JustifyContent` has been merged.
+  - `JustifyContent` is now an alias of `AlignContent` and contains the `Stretch` variant.
+  - This variant will be *ignored* (falling back to `Start`) when applied Flexbox containers. It is valid value for Grid containers.
+- `AlignItems` and `AlignSelf` have been merged.
+  - The `Auto` variant of `AlignSelf` has been removed. You should now use `Option::None` if you wish to specify `AlignSelf::Auto`.
+  - `AlignSelf` is now an alias of `AlignItems`.
+  - `JustifyItems` and `JustifySelf` aliases have been added. These properties have no affect on Flexbox containers, but apply to Grid containers.
+- `Default` impls have been removed from all alignment types. This is because the correct default varies by property, and the types are now shared between multiple properties. The `Style` struct still has a default for each alignment property, so this is considered unlikely to affect you in practice.
+
+#### Strict style types
+
+- New types `LengthPercentage` and `LengthPercentageAuto` have been added.
+  - `LengthPercentage` is like `Dimension` but only contains the `Points` and `Percent` variants, which allows us to increase type safety for properties that don't support the `Auto` value.
+  - `LengthPercentageAuto` is currently identical to `Dimension` but will allow us to expand dimension in future to support values like `MinContent`, `MaxContent` and `FitContent`.
+- Some style properties have been updated to use either `LengthPercentage` or `LengthPercentageAuto` instead of `Dimension`. You will need to update your code, but it is recommended that you use the new style helpers (see above) rather than using the new types directly (although you certainly can use them directly if you want to).
 
 #### Changes to `LayoutTree`
 
@@ -10,6 +151,10 @@
 - Changed the `children` method of `LayoutTree` to return the `ChildIter` generic associated type to allow for custom tree storage implementations which do not store the children of a node contiguously.
 - Added `child_count`  method to `LayoutTree` for querying the number of children of a node. Required because the `children` method now returns an iterator instead of an array.
 - Added `is_childless` method to `LayoutTree` for querying whether a node has no children.
+
+#### `AvailableSpace` has been moved
+
+The `AvailableSpace` enum has been moved from the `layout` module to the `style` module. If you are importing it via the prelude then you will unaffected by the change.
 
 ### Fixes
 
