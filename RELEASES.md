@@ -6,20 +6,18 @@ This is the first in a series of planned alpha releases to allow users of Taffy 
 
 **Note: CSS Grid support must be enabled using the `experimental_grid` feature. For the time being this feature is not enabled by default.**
 
-### New Features
-
-#### CSS Grid (Experimental)
+### New Feature: CSS Grid (Experimental)
 
 We very excited to report that we have an initial version of the CSS Grid layout available. This is in addition to the existing Flexbox layout support, and the two modes interoperate (although this interaction has not been extensively tested). You can set a node to use Grid layout by setting the `display` property to `Display::Grid`.
 
-##### Learning Resources
+#### Learning Resources
 
 Taffy implements the CSS Grid specification faithfully, so documentation designed for the web should translate cleanly to Taffy's implementation. If you are interested in learning how to use CSS Grid, we would recommend the following resources:
 
 - [CSS Grid Garden](https://cssgridgarden.com/). This is an interactive tutorial/game that allows you to learn the essential parts of CSS Grid in a fun engaging way.
 - [A Complete Guide To CSS Grid](https://css-tricks.com/snippets/css/complete-guide-grid/) by CSS Tricks. This is detailed guide with illustrations and comphrehensive written explanation of the different Grid propertie and how they work.
 
-##### Supported Features & Properties
+#### Supported Features & Properties
 
 In addition to the usual sizing/spacing proerties (size, min_size, padding, margin, etc), the following Grid style properties are supported on Grid Containers:
 
@@ -75,7 +73,7 @@ The following properties and features are not supported, and there are no immedi
 - Named areas: `grid-template-areas` and `grid-area`
 - `grid-template` or `grid` shorthand
 
-##### Example
+#### Example
 
 See [examples/grid_holy_grail.rs](https://github.com/DioxusLabs/taffy/blob/main/examples/grid_holy_grail.rs) for an example using Taffy to implement the so-called [Holy Grail Layout](https://en.wikipedia.org/wiki/Holy_grail_(web_design)). If you want to run this example, the don't forget the enable the CSS Grid cargo feature:
 
@@ -83,7 +81,7 @@ See [examples/grid_holy_grail.rs](https://github.com/DioxusLabs/taffy/blob/main/
 cargo run --example grid_holy_grail --features experimental_grid
 ```
 
-#### Style Helpers
+### New Feature: Style Helpers
 
 Ten new helper functions have added to the taffy prelude. These helper functions have short, intuitive names, and have generic return types which allow them to magically return the correct type depending on context. They make defining styles much easier, and means you won't typically need to use types like `Dimension` or `TrackSizingFunction` directly.
 
