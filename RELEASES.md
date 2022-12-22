@@ -152,6 +152,10 @@ The following functions currently work only for grid track sizing functions:
 - Added `child_count`  method to `LayoutTree` for querying the number of children of a node. Required because the `children` method now returns an iterator instead of an array.
 - Added `is_childless` method to `LayoutTree` for querying whether a node has no children.
 
+#### `AvailableSpace` has been moved
+
+The `AvailableSpace` enum has been moved from the `layout` module to the `style` module. If you are importing it via the prelude then you will unaffected by the change.
+
 ### Fixes
 
 - Fix case where column-gap style could be used in place of row-gap style (when using a percentage gap with an indefinite container size)
