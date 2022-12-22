@@ -37,7 +37,7 @@ rand = "0.8.5"
 rand_chacha = "0.3.1"
 
 # Enable example and test-specific features
-taffy = { path = ".", features = ["random", "experimental_grid"] }
+taffy = { path = ".", features = ["random"] }
 
 [profile.release]
 lto = true
