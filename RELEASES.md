@@ -4,7 +4,9 @@
 
 ### New Features
 
-#### CSS Grid
+#### CSS Grid (Experimental)
+
+CSS Grid support must be enabled using the `experimental_grid` feature. For the time being this feature is not enabled by default.
 
 #### Style Helpers
 
@@ -51,6 +53,17 @@ The following functions currently work only for grid track sizing functions:
 - `repeat(GridTrackRepetition, Vec<TrackSizingFunction>)` - Genereate an auto-repeating track definition.
 
 ### Breaking API changes
+
+#### Changes to alignment style types
+
+- `AlignContent` and `JustifyContent` has been merged.
+  - `JustifyContent` is now an alias of `AlignContent` and contains the `Stretch` variant.
+  - This variant will be *ignored* (falling back to `Start`) when applied Flexbox containers. It is valid value for Grid containers.
+- `AlignItems` and `AlignSelf` have been merged.
+  - The `Auto` variant of `AlignSelf` has been removed. You should now use `Option::None` if you wish to specify `AlignSelf::Auto`.
+  - `AlignSelf` is now an alias of `AlignItems`.
+  - `JustifyItems` and `JustifySelf` aliases have been added. These properties have no affect on Flexbox containers, but apply to Grid containers.
+- `Default` impls have been removed from all alignment types. This is because the correct default varies by property, and the types are now shared between multiple properties. The `Style` struct still has a default for each alignment property, so this is considered unlikely to affect you in practice.
 
 #### Strict style types
 
