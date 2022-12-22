@@ -53,15 +53,18 @@ And the following Grid style properties are supported on Grid Items (children):
 [`align-self`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/align-self
 [`justify-self`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/justify-self
 
-The following properties and features are *not* yet supported:
+The following properties and features are not yet supported, but are planned for the near future:
 
 - Baseline alignment
+- `fit-content()` with a percentage argument.
+- `repeat()` with integer repetition (but users of Taffy can just expand these definition manually)
+
+The following properties and features are not supported, and there are no immediate plans to implement them:
+
 - Subgrids
 - Named grid lines
 - Named areas: `grid-template-areas` and `grid-area`
 - `grid-template` or `grid` shorthand
-- `repeat()` with integer repetition (but users of Taffy can just expand these definition manually)
-- `fit-content()` with a percentage argument.
 
 ##### Example
 
