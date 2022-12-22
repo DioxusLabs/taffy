@@ -26,7 +26,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
     let map_child_style_to_origin_zero_placement = {
         let explicit_col_count = cell_occupancy_matrix.track_counts(AbsoluteAxis::Horizontal).explicit;
         let explicit_row_count = cell_occupancy_matrix.track_counts(AbsoluteAxis::Vertical).explicit;
-        move |(node, style): (Node, &Style)| {
+        move |(node, style): (Node, &'a Style)| -> (_, _, &'a Style) {
             let origin_zero_placement = InBothAbsAxis {
                 horizontal: style.grid_column.map(|placement| {
                     placement.map_track(|track| css_grid_line_into_origin_zero_coords(track, explicit_col_count))
@@ -35,7 +35,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
                     placement.map_track(|track| css_grid_line_into_origin_zero_coords(track, explicit_row_count))
                 }),
             };
-            (node, origin_zero_placement)
+            (node, origin_zero_placement, style)
         }
     };
 
@@ -43,12 +43,13 @@ pub(super) fn place_grid_items<'a, ChildIter>(
     children_iter()
         .filter(|(_, child_style)| child_style.grid_row.is_definite() && child_style.grid_column.is_definite())
         .map(map_child_style_to_origin_zero_placement)
-        .for_each(|(child_node, child_placement)| {
+        .for_each(|(child_node, child_placement, style)| {
             let (row_span, col_span) = place_definite_grid_item(child_placement, primary_axis);
             record_grid_placement(
                 cell_occupancy_matrix,
                 items,
                 child_node,
+                style,
                 primary_axis,
                 row_span,
                 col_span,
@@ -63,7 +64,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
                 && !child_style.grid_placement(primary_axis).is_definite()
         })
         .map(map_child_style_to_origin_zero_placement)
-        .for_each(|(child_node, child_placement)| {
+        .for_each(|(child_node, child_placement, style)| {
             let (primary_span, secondary_span) =
                 place_definite_secondary_axis_item(&*cell_occupancy_matrix, child_placement, grid_auto_flow);
 
@@ -71,6 +72,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
                 cell_occupancy_matrix,
                 items,
                 child_node,
+                style,
                 primary_axis,
                 primary_span,
                 secondary_span,
@@ -102,7 +104,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
     children_iter()
         .filter(|(_, child_style)| !child_style.grid_row.is_definite() && !child_style.grid_column.is_definite())
         .map(map_child_style_to_origin_zero_placement)
-        .for_each(|(child_node, child_placement)| {
+        .for_each(|(child_node, child_placement, style)| {
             idx += 1;
             #[cfg(test)]
             println!("Item {idx}\n==============");
@@ -120,6 +122,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
                 cell_occupancy_matrix,
                 items,
                 child_node,
+                style,
                 primary_axis,
                 primary_span,
                 secondary_span,
@@ -259,6 +262,7 @@ fn record_grid_placement(
     cell_occupancy_matrix: &mut CellOccupancyMatrix,
     items: &mut Vec<GridItem>,
     node: Node,
+    style: &Style,
     primary_axis: AbsoluteAxis,
     primary_span: Line<i16>,
     secondary_span: Line<i16>,
@@ -278,7 +282,7 @@ fn record_grid_placement(
         AbsoluteAxis::Vertical => (secondary_span, primary_span),
     };
     let source_order = items.len() as u16;
-    items.push(GridItem::new_with_placement_and_order(node, col_span, row_span, source_order));
+    items.push(GridItem::new_with_placement_style_and_order(node, col_span, row_span, style, source_order));
 
     #[cfg(test)]
     println!("AFTER placement:");

@@ -82,16 +82,17 @@ impl<T> Rect<T> {
     }
 }
 
-impl<T> Rect<T>
+impl<T, U> Rect<T>
 where
-    T: Add<Output = T> + Copy + Clone,
+    T: Add<Output = U> + Copy + Clone,
 {
     /// The sum of [`Rect.start`](Rect) and [`Rect.end`](Rect)
     ///
     /// This is typically used when computing total padding.
     ///
     /// **NOTE:** this is *not* the width of the rectangle.
-    pub(crate) fn horizontal_axis_sum(&self) -> T {
+    #[inline(always)]
+    pub(crate) fn horizontal_axis_sum(&self) -> U {
         self.left + self.right
     }
 
@@ -100,8 +101,18 @@ where
     /// This is typically used when computing total padding.
     ///
     /// **NOTE:** this is *not* the height of the rectangle.
-    pub(crate) fn vertical_axis_sum(&self) -> T {
+    #[inline(always)]
+    pub(crate) fn vertical_axis_sum(&self) -> U {
         self.top + self.bottom
+    }
+
+    /// Both horizontal_axis_sum and vertical_axis_sum as a Size<T>
+    ///
+    /// **NOTE:** this is *not* the width/height of the rectangle.
+    #[inline(always)]
+    #[allow(dead_code)] // Fixes spurious clippy warning: this function is used!
+    pub(crate) fn sum_axes(&self) -> Size<U> {
+        Size { width: self.horizontal_axis_sum(), height: self.vertical_axis_sum() }
     }
 
     /// The sum of the two fields of the [`Rect`] representing the main axis.
@@ -110,7 +121,7 @@ where
     ///
     /// If the [`FlexDirection`] is [`FlexDirection::Row`] or [`FlexDirection::RowReverse`], this is [`Rect::horizontal`].
     /// Otherwise, this is [`Rect::vertical`].
-    pub(crate) fn main_axis_sum(&self, direction: FlexDirection) -> T {
+    pub(crate) fn main_axis_sum(&self, direction: FlexDirection) -> U {
         if direction.is_row() {
             self.horizontal_axis_sum()
         } else {
@@ -122,7 +133,7 @@ where
     ///
     /// If the [`FlexDirection`] is [`FlexDirection::Row`] or [`FlexDirection::RowReverse`], this is [`Rect::vertical`].
     /// Otherwise, this is [`Rect::horizontal`].
-    pub(crate) fn cross_axis_sum(&self, direction: FlexDirection) -> T {
+    pub(crate) fn cross_axis_sum(&self, direction: FlexDirection) -> U {
         if direction.is_row() {
             self.vertical_axis_sum()
         } else {
@@ -227,6 +238,15 @@ pub struct Size<T> {
 impl<T: Default> Default for Size<T> {
     fn default() -> Self {
         Size { width: Default::default(), height: Default::default() }
+    }
+}
+
+// Generic Add impl for Size<T> + Size<U> where T + U has an Add impl
+impl<U, T: Add<U>> Add<Size<U>> for Size<T> {
+    type Output = Size<<T as Add<U>>::Output>;
+
+    fn add(self, rhs: Size<U>) -> Self::Output {
+        Size { width: self.width + rhs.width, height: self.height + rhs.height }
     }
 }
 

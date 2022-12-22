@@ -5,7 +5,7 @@ use crate::axis::AbstractAxis;
 use crate::geometry::Size;
 use crate::math::MaybeMath;
 use crate::prelude::LayoutTree;
-use crate::resolve::MaybeResolve;
+use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::{AlignContent, AvailableSpace, MaxTrackSizingFunction, MinTrackSizingFunction, Style};
 use crate::sys::{f32_max, f32_min};
 use core::cmp::Ordering;
@@ -348,10 +348,13 @@ fn resolve_intrinsic_track_sizes(
             &get_track_size_estimate,
         );
 
-        let min_content_size = item.min_content_contribution_cached(tree, known_dimensions);
-        let max_content_size = item.max_content_contribution_cached(tree, known_dimensions);
+        let margin = item.margin.map(|m| m.resolve_or_zero(available_space.width.into_option())).sum_axes();
+
+        let min_content_size = item.min_content_contribution_cached(tree, known_dimensions) + margin;
+        let max_content_size = item.max_content_contribution_cached(tree, known_dimensions) + margin;
         let axis_minimum_size =
-            item.minimum_contribution_cached(tree, axis, axis_tracks, available_space, known_dimensions);
+            item.minimum_contribution_cached(tree, axis, axis_tracks, available_space, known_dimensions)
+                + margin.get(axis);
 
         (axis_minimum_size, min_content_size.get(axis), max_content_size.get(axis))
     };

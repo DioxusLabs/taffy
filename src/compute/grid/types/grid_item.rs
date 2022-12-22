@@ -2,12 +2,12 @@
 use super::GridTrack;
 use crate::axis::AbstractAxis;
 use crate::compute::compute_node_layout;
-use crate::geometry::{Line, Size};
+use crate::geometry::{Line, Rect, Size};
 use crate::layout::{RunMode, SizingMode};
 use crate::node::Node;
 use crate::prelude::LayoutTree;
 use crate::resolve::MaybeResolve;
-use crate::style::{AvailableSpace, MaxTrackSizingFunction, MinTrackSizingFunction};
+use crate::style::{AvailableSpace, LengthPercentageAuto, MaxTrackSizingFunction, MinTrackSizingFunction, Style};
 use crate::style_helpers::*;
 use core::cmp::max;
 use core::ops::Range;
@@ -30,6 +30,9 @@ pub(in super::super) struct GridItem {
     /// The items definite column-start and column-end, as resolved by the placement algorithm
     /// (in origin-zero coordinates)
     pub column: Line<i16>,
+
+    /// The item's margin style
+    pub margin: Rect<LengthPercentageAuto>,
 
     /// The item's definite row-start and row-end (same as `row` field, except in a different coordinate system)
     /// (as indexes into the Vec<GridTrack> stored in a grid's AbstractAxisTracks)
@@ -56,10 +59,11 @@ pub(in super::super) struct GridItem {
 
 impl GridItem {
     /// Create a new item given a concrete placement in both axes
-    pub fn new_with_placement_and_order(
+    pub fn new_with_placement_style_and_order(
         node: Node,
         col_span: Line<i16>,
         row_span: Line<i16>,
+        style: &Style,
         source_order: u16,
     ) -> Self {
         GridItem {
@@ -67,6 +71,7 @@ impl GridItem {
             source_order,
             row: row_span,
             column: col_span,
+            margin: style.margin,
             row_indexes: Line { start: 0, end: 0 }, // Properly initialised later
             column_indexes: Line { start: 0, end: 0 }, // Properly initialised later
             crosses_flexible_row: false,            // Properly initialised later
