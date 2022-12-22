@@ -214,10 +214,10 @@ pub(super) fn initialize_grid_tracks(
     // Create positive implicit tracks
     if auto_tracks.is_empty() {
         let iter = core::iter::repeat(NonRepeatedTrackSizingFunction::AUTO);
-        create_implicit_tracks(tracks, counts.negative_implicit, iter, gap)
+        create_implicit_tracks(tracks, counts.positive_implicit, iter, gap)
     } else {
         let iter = auto_tracks.iter().copied().cycle();
-        create_implicit_tracks(tracks, counts.negative_implicit, iter, gap)
+        create_implicit_tracks(tracks, counts.positive_implicit, iter, gap)
     }
 
     // Mark first and last grid lines as collapsed
