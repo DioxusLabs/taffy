@@ -25,8 +25,8 @@ In addition to the usual sizing/spacing proerties (size, min_size, padding, marg
 | [`gap`]                   | The size of the vertical and horizontal gaps between grid rows/columns                         |
 | [`align_content`]         | Align grid tracks within the container in the inline (horizontal) axis                         |
 | [`justify_content`]       | Align grid tracks within the container in the block (vertical) axis                            |
-| [`align_items`]           | Align the child items within their grid areas in the inline (horizontal) axis                  |
-| [`justify_items`]         | Align the child items within their grid areas in the block (vertical) axis                     |
+| [`align-items`]           | Align the child items within their grid areas in the inline (horizontal) axis                  |
+| [`justify-items`]         | Align the child items within their grid areas in the block (vertical) axis                     |
 
 And the following Grid style properties are supported on Grid Items (children): 
 
@@ -34,8 +34,8 @@ And the following Grid style properties are supported on Grid Items (children):
 | [`grid-row`]              | The (row) grid line the item ends at (or a span)                                               |
 | [`grid-column`]           | The (column) grid line the item starts at (or a span)                                          |
 | [`grid-column`]           | The (column) grid line the item end at (or a span)                                             |
-| [`align_self`]            | Align the item within it's grid area in the inline (horizontal) axis. Overrides `align_items`. |
-| [`justify_self`]          | Align the item within it's grid area in the block (vertical) axis. Overrides `justify_items`.  |
+| [`align-self`]            | Align the item within it's grid area in the inline (horizontal) axis. Overrides `align-items`. |
+| [`justify-self`]          | Align the item within it's grid area in the block (vertical) axis. Overrides `justify-items`.  |
 
 
 [`grid-template-columns`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns
