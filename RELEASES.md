@@ -10,7 +10,14 @@ This is the first in a series of planned alpha releases to allow users of Taffy 
 
 #### CSS Grid (Experimental)
 
-We very excited to report that we have an initial version of the CSS Grid layout available. This is in addition to the existing Flexbox layout support, and the two modes interoperate (although this interaction has not been extensively tested). You can set a node to use Grid layout by setting the `display` property to `Display::Grid`
+We very excited to report that we have an initial version of the CSS Grid layout available. This is in addition to the existing Flexbox layout support, and the two modes interoperate (although this interaction has not been extensively tested). You can set a node to use Grid layout by setting the `display` property to `Display::Grid`.
+
+Taffy implements the CSS Grid specification faithfully, so documentation designed for the web should translate cleanly to Taffy's implementation. If you are interested in learning how to use CSS Grid, we would recommend the following resources:
+
+- [CSS Grid Garden](https://cssgridgarden.com/). This is an interactive tutorial/game that allows you to learn the essential parts of CSS Grid in a fun engaging way.
+- [A Complete Guide To CSS Grid](https://css-tricks.com/snippets/css/complete-guide-grid/) by CSS Tricks. This is detailed guide with illustrations and comphrehensive written explanation of the different Grid propertie and how they work.
+
+##### Supported Features & Properties
 
 In addition to the usual sizing/spacing proerties (size, min_size, padding, margin, etc), the following Grid style properties are supported on Grid Containers:
 
@@ -23,8 +30,8 @@ In addition to the usual sizing/spacing proerties (size, min_size, padding, marg
 | [`grid-auto-columns`]     | Track sizing functions for the grid's implicitly generated columns                             |
 | [`grid-auto-flow`]        | Whether auto-placed items are placed row-wise or column-wise. And sparsely or densely.         |
 | [`gap`]                   | The size of the vertical and horizontal gaps between grid rows/columns                         |
-| [`align_content`]         | Align grid tracks within the container in the inline (horizontal) axis                         |
-| [`justify_content`]       | Align grid tracks within the container in the block (vertical) axis                            |
+| [`align-content`]         | Align grid tracks within the container in the inline (horizontal) axis                         |
+| [`justify-content`]       | Align grid tracks within the container in the block (vertical) axis                            |
 | [`align-items`]           | Align the child items within their grid areas in the inline (horizontal) axis                  |
 | [`justify-items`]         | Align the child items within their grid areas in the block (vertical) axis                     |
 
@@ -44,8 +51,8 @@ And the following Grid style properties are supported on Grid Items (children):
 [`grid-auto-columns`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-columns
 [`grid-auto-flow`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-flow
 [`gap`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/gap
-[`align_content`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/align_content
-[`justify_content`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/justify_content
+[`align-content`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/align_content
+[`justify-content`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/justify_content
 [`align-items`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/align-items
 [`justify-items`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/justify-items
 [`grid-row`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-row
