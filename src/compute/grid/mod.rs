@@ -59,8 +59,9 @@ pub fn compute(tree: &mut impl LayoutTree, node: Node, available_space: Size<Ava
         tree.children(node)
             .into_iter()
             .copied()
-            .map(|child_node| (child_node, tree.style(child_node)))
-            .filter(|(_, style)| style.display != Display::None && style.position_type != PositionType::Absolute)
+            .enumerate()
+            .map(|(index, child_node)| (index, child_node, tree.style(child_node)))
+            .filter(|(_, _, style)| style.display != Display::None && style.position_type != PositionType::Absolute)
     };
     place_grid_items(&mut cell_occupancy_matrix, &mut items, in_flow_children_iter, grid_auto_flow);
 

@@ -18,7 +18,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
     children_iter: impl Fn() -> ChildIter,
     grid_auto_flow: GridAutoFlow,
 ) where
-    ChildIter: Iterator<Item = (Node, &'a Style)>,
+    ChildIter: Iterator<Item = (usize, Node, &'a Style)>,
 {
     let primary_axis = grid_auto_flow.primary_axis();
     let secondary_axis = primary_axis.other_axis();
@@ -26,7 +26,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
     let map_child_style_to_origin_zero_placement = {
         let explicit_col_count = cell_occupancy_matrix.track_counts(AbsoluteAxis::Horizontal).explicit;
         let explicit_row_count = cell_occupancy_matrix.track_counts(AbsoluteAxis::Vertical).explicit;
-        move |(node, style): (Node, &'a Style)| -> (_, _, &'a Style) {
+        move |(index, node, style): (usize, Node, &'a Style)| -> (_, _, _, &'a Style) {
             let origin_zero_placement = InBothAbsAxis {
                 horizontal: style.grid_column.map(|placement| {
                     placement.map_track(|track| css_grid_line_into_origin_zero_coords(track, explicit_col_count))
@@ -35,20 +35,21 @@ pub(super) fn place_grid_items<'a, ChildIter>(
                     placement.map_track(|track| css_grid_line_into_origin_zero_coords(track, explicit_row_count))
                 }),
             };
-            (node, origin_zero_placement, style)
+            (index, node, origin_zero_placement, style)
         }
     };
 
     // 1. Place children with definite positions
     children_iter()
-        .filter(|(_, child_style)| child_style.grid_row.is_definite() && child_style.grid_column.is_definite())
+        .filter(|(_, _, child_style)| child_style.grid_row.is_definite() && child_style.grid_column.is_definite())
         .map(map_child_style_to_origin_zero_placement)
-        .for_each(|(child_node, child_placement, style)| {
+        .for_each(|(index, child_node, child_placement, style)| {
             let (row_span, col_span) = place_definite_grid_item(child_placement, primary_axis);
             record_grid_placement(
                 cell_occupancy_matrix,
                 items,
                 child_node,
+                index,
                 style,
                 primary_axis,
                 row_span,
@@ -59,12 +60,12 @@ pub(super) fn place_grid_items<'a, ChildIter>(
 
     // 2. Place remaining children with definite secondary axis positions
     children_iter()
-        .filter(|(_, child_style)| {
+        .filter(|(_, _, child_style)| {
             child_style.grid_placement(secondary_axis).is_definite()
                 && !child_style.grid_placement(primary_axis).is_definite()
         })
         .map(map_child_style_to_origin_zero_placement)
-        .for_each(|(child_node, child_placement, style)| {
+        .for_each(|(index, child_node, child_placement, style)| {
             let (primary_span, secondary_span) =
                 place_definite_secondary_axis_item(&*cell_occupancy_matrix, child_placement, grid_auto_flow);
 
@@ -72,6 +73,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
                 cell_occupancy_matrix,
                 items,
                 child_node,
+                index,
                 style,
                 primary_axis,
                 primary_span,
@@ -102,12 +104,12 @@ pub(super) fn place_grid_items<'a, ChildIter>(
     let mut grid_position: (u16, u16) = (0, 0);
     let mut idx = 0;
     children_iter()
-        .filter(|(_, child_style)| !child_style.grid_row.is_definite() && !child_style.grid_column.is_definite())
+        .filter(|(_, _, child_style)| !child_style.grid_placement(secondary_axis).is_definite())
         .map(map_child_style_to_origin_zero_placement)
-        .for_each(|(child_node, child_placement, style)| {
+        .for_each(|(index, child_node, child_placement, style)| {
             idx += 1;
             #[cfg(test)]
-            println!("Item {idx}\n==============");
+            println!("\nItem {idx}\n==============");
 
             // Compute placement
             let (primary_span, secondary_span) = place_indefinitely_positioned_item(
@@ -122,6 +124,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
                 cell_occupancy_matrix,
                 items,
                 child_node,
+                index,
                 style,
                 primary_axis,
                 primary_span,
@@ -202,7 +205,7 @@ fn place_indefinitely_positioned_item(
 
     let primary_span = primary_placement_style.indefinite_span();
     let secondary_span = secondary_placement_style.indefinite_span();
-    let has_definite_secondary_axis_position = secondary_placement_style.is_definite();
+    let has_definite_primary_axis_position = primary_placement_style.is_definite();
     let primary_axis_length = cell_occupancy_matrix.track_counts(primary_axis).len() as i16;
 
     let track_area_is_unoccupied = |primary_range, secondary_range| {
@@ -212,46 +215,59 @@ fn place_indefinitely_positioned_item(
 
     let (mut primary_idx, mut secondary_idx) = grid_position;
 
-    if has_definite_secondary_axis_position {
-        let definite_secondary_placement = secondary_placement_style.resolve_definite_grid_tracks();
-        secondary_idx =
-            cell_occupancy_matrix.lines_to_tracks(primary_axis.other_axis(), definite_secondary_placement).start as u16;
-    }
+    if has_definite_primary_axis_position {
+        let definite_primary_placement = primary_placement_style.resolve_definite_grid_tracks();
+        let defined_primary_idx =
+            cell_occupancy_matrix.lines_to_tracks(primary_axis.other_axis(), definite_primary_placement).start as u16;
 
-    #[cfg(test)]
-    dbg!(has_definite_secondary_axis_position);
-    #[cfg(test)]
-    dbg!(primary_axis, primary_axis_length);
-    #[cfg(test)]
-    dbg!(primary_idx);
-    #[cfg(test)]
-    dbg!(secondary_idx);
-
-    loop {
-        let primary_range = (primary_idx as i16)..((primary_idx + primary_span) as i16);
-        let secondary_range = (secondary_idx as i16)..((secondary_idx + secondary_span) as i16);
-
-        #[cfg(test)]
-        dbg!(&primary_range);
-        #[cfg(test)]
-        dbg!(&secondary_range);
-
-        // Check if item fits in it's current position, and if so place it there
-        let primary_out_of_bounds = !has_definite_secondary_axis_position && primary_range.end > primary_axis_length;
-        let place_here =
-            !primary_out_of_bounds && track_area_is_unoccupied(primary_range.clone(), secondary_range.clone());
-        if place_here {
-            let primary_span = tracks_to_lines(primary_range);
-            let secondary_span = tracks_to_lines(secondary_range);
-            return (primary_span, secondary_span);
+        // Compute starting position for search
+        if defined_primary_idx < primary_idx && secondary_idx != 0 {
+            secondary_idx = 0;
+            primary_idx = defined_primary_idx + 1;
+        } else {
+            primary_idx = defined_primary_idx;
         }
 
-        // Else check the next position
-        if primary_out_of_bounds && !has_definite_secondary_axis_position {
+        // Item has fixed primary axis position: so we simply increment the secondary axis position
+        // until we find a space that the item fits in
+        loop {
+            let primary_range = (primary_idx as i16)..((primary_idx + primary_span) as i16);
+            let secondary_range = (secondary_idx as i16)..((secondary_idx + secondary_span) as i16);
+
+            let place_here = track_area_is_unoccupied(primary_range.clone(), secondary_range.clone());
+            if place_here {
+                let primary_span = tracks_to_lines(primary_range);
+                let secondary_span = tracks_to_lines(secondary_range);
+                return (primary_span, secondary_span);
+            }
+
             secondary_idx += 1;
-            primary_idx = 0;
-        } else {
-            primary_idx += 1;
+        }
+    } else {
+        // Item does not have any fixed axis, so we search along the primary axis until we hit the end of the already
+        // existent tracks, and then we reset the primary axis back to zero and increment the secondary axis index.
+        // We continue in this vein until we find a space that the item fits in.
+        loop {
+            let primary_range = (primary_idx as i16)..((primary_idx + primary_span) as i16);
+            let secondary_range = (secondary_idx as i16)..((secondary_idx + secondary_span) as i16);
+
+            // Check if item fits in it's current position, and if so place it there
+            let primary_out_of_bounds = primary_range.end > primary_axis_length;
+            let place_here =
+                !primary_out_of_bounds && track_area_is_unoccupied(primary_range.clone(), secondary_range.clone());
+            if place_here {
+                let primary_span = tracks_to_lines(primary_range);
+                let secondary_span = tracks_to_lines(secondary_range);
+                return (primary_span, secondary_span);
+            }
+
+            // Else check the next position
+            if primary_out_of_bounds {
+                secondary_idx += 1;
+                primary_idx = 0;
+            } else {
+                primary_idx += 1;
+            }
         }
     }
 }
@@ -262,6 +278,7 @@ fn record_grid_placement(
     cell_occupancy_matrix: &mut CellOccupancyMatrix,
     items: &mut Vec<GridItem>,
     node: Node,
+    index: usize,
     style: &Style,
     primary_axis: AbsoluteAxis,
     primary_span: Line<i16>,
@@ -281,8 +298,7 @@ fn record_grid_placement(
         AbsoluteAxis::Horizontal => (primary_span, secondary_span),
         AbsoluteAxis::Vertical => (secondary_span, primary_span),
     };
-    let source_order = items.len() as u16;
-    items.push(GridItem::new_with_placement_style_and_order(node, col_span, row_span, style, source_order));
+    items.push(GridItem::new_with_placement_style_and_order(node, col_span, row_span, style, index as u16));
 
     #[cfg(test)]
     println!("AFTER placement:");
@@ -314,13 +330,13 @@ mod tests {
         fn placement_test_runner(
             explicit_col_count: u16,
             explicit_row_count: u16,
-            children: Vec<(u32, Node, Style, ExpectedPlacement)>,
+            children: Vec<(usize, Node, Style, ExpectedPlacement)>,
             expected_col_counts: TrackCounts,
             expected_row_counts: TrackCounts,
             flow: GridAutoFlow,
         ) {
             // Setup test
-            let children_iter = || children.iter().map(|(_, node, style, _)| (*node, style));
+            let children_iter = || children.iter().map(|(index, node, style, _)| (*index, *node, style));
             let child_styles_iter = children.iter().map(|(_, _, style, _)| style);
             let estimated_sizes = compute_grid_size_estimate(explicit_col_count, explicit_row_count, child_styles_iter);
             let mut items = Vec::new();
