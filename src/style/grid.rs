@@ -64,7 +64,7 @@ pub enum GridPlacement {
     /// Place item according to the auto-placement algorithm, and the parent's grid_auto_flow property
     Auto,
     /// Place item at specified track (column or row) index
-    Track(i16),
+    Line(i16),
     /// Item should span specified number of tracks (columns or rows)
     Span(u16),
 }
@@ -75,7 +75,7 @@ impl TaffyGridLine for GridPlacement {
     fn from_line_index(index: i16) -> Self {
         match index {
             0 => GridPlacement::Auto,
-            _ => GridPlacement::Track(index),
+            _ => GridPlacement::Line(index),
         }
     }
 }
@@ -108,7 +108,7 @@ impl GridPlacement {
         match *self {
             Auto => Auto,
             Span(span) => Span(span),
-            Track(track) => Track(map_fn(track)),
+            Line(track) => Line(map_fn(track)),
         }
     }
 }
@@ -119,25 +119,25 @@ impl Line<GridPlacement> {
     /// The track position is definite if least one of the start and end positions is a track index
     pub fn is_definite(&self) -> bool {
         use GridPlacement::*;
-        matches!((self.start, self.end), (Track(_), _) | (_, Track(_)))
+        matches!((self.start, self.end), (Line(_), _) | (_, Line(_)))
     }
 
     /// If at least one of the of the start and end positions is a track index then the other end can be resolved
     /// into a track index purely based on the information contained with the placement specification
     pub fn resolve_definite_grid_tracks(&self) -> Line<i16> {
-        use GridPlacement::*;
+        use GridPlacement as GP;
         match (self.start, self.end) {
-            (Track(track1), Track(track2)) if track1 != 0 && track2 != 0 => {
+            (GP::Line(track1), GP::Line(track2)) if track1 != 0 && track2 != 0 => {
                 if track1 == track2 {
                     Line { start: track1, end: track1 + 1 }
                 } else {
                     Line { start: min(track1, track2), end: max(track1, track2) }
                 }
             }
-            (Track(track), Span(span)) => Line { start: track, end: track + span as i16 },
-            (Track(track), Auto | Track(0)) => Line { start: track, end: track + 1_i16 },
-            (Span(span), Track(track)) => Line { start: track - span as i16, end: track },
-            (Auto | Track(0), Track(track)) => Line { start: track - 1_i16, end: track },
+            (GP::Line(track), GP::Span(span)) => Line { start: track, end: track + span as i16 },
+            (GP::Line(track), GP::Auto | GP::Line(0)) => Line { start: track, end: track + 1_i16 },
+            (GP::Span(span), GP::Line(track)) => Line { start: track - span as i16, end: track },
+            (GP::Auto | GP::Line(0), GP::Line(track)) => Line { start: track - 1_i16, end: track },
             _ => panic!("resolve_definite_grid_tracks should only be called on definite grid tracks"),
         }
     }
@@ -152,19 +152,19 @@ impl Line<GridPlacement> {
     /// When finally positioning the item, a value of None means that the item's grid area is bounded by the grid
     /// container's border box on that side.
     pub fn resolve_absolutely_positioned_grid_tracks(&self) -> Line<Option<i16>> {
-        use GridPlacement::*;
+        use GridPlacement as GP;
         match (self.start, self.end) {
-            (Track(track1), Track(track2)) if track1 != 0 && track2 != 0 => {
+            (GP::Line(track1), GP::Line(track2)) if track1 != 0 && track2 != 0 => {
                 if track1 == track2 {
                     Line { start: Some(track1), end: Some(track1 + 1) }
                 } else {
                     Line { start: Some(min(track1, track2)), end: Some(max(track1, track2)) }
                 }
             }
-            (Track(track), Span(span)) => Line { start: Some(track), end: Some(track + span as i16) },
-            (Track(track), Auto | Track(0)) => Line { start: Some(track), end: None },
-            (Span(span), Track(track)) => Line { start: Some(track - span as i16), end: Some(track) },
-            (Auto | Track(0), Track(track)) => Line { start: None, end: Some(track) },
+            (GP::Line(track), GP::Span(span)) => Line { start: Some(track), end: Some(track + span as i16) },
+            (GP::Line(track), GP::Auto | GP::Line(0)) => Line { start: Some(track), end: None },
+            (GP::Span(span), GP::Line(track)) => Line { start: Some(track - span as i16), end: Some(track) },
+            (GP::Auto | GP::Line(0), GP::Line(track)) => Line { start: None, end: Some(track) },
             _ => Line { start: None, end: None },
         }
     }
@@ -172,12 +172,12 @@ impl Line<GridPlacement> {
     /// If neither of the start and end positions is a track index then the other end can be resolved
     /// into a track index if a definite start position is supplied externally
     pub fn resolve_indefinite_grid_tracks(&self, start: i16) -> Line<i16> {
-        use GridPlacement::*;
+        use GridPlacement as GP;
         match (self.start, self.end) {
-            (Auto, Auto) => Line { start, end: start + 1 },
-            (Span(span), Auto) => Line { start, end: start + span as i16 },
-            (Auto, Span(span)) => Line { start, end: start + span as i16 },
-            (Span(span), Span(_)) => Line { start, end: start + span as i16 },
+            (GP::Auto, GP::Auto) => Line { start, end: start + 1 },
+            (GP::Span(span), GP::Auto) => Line { start, end: start + span as i16 },
+            (GP::Auto, GP::Span(span)) => Line { start, end: start + span as i16 },
+            (GP::Span(span), GP::Span(_)) => Line { start, end: start + span as i16 },
             _ => panic!("resolve_indefinite_grid_tracks should only be called on indefinite grid tracks"),
         }
     }
@@ -185,17 +185,17 @@ impl Line<GridPlacement> {
     /// Resolves the span for an indefinite placement (a placement that does not consist of two `Track`s).
     /// Panics if called on a definite placement
     pub fn indefinite_span(&self) -> u16 {
-        use GridPlacement::*;
+        use GridPlacement as GP;
         match (self.start, self.end) {
-            (Track(_), Auto) => 1,
-            (Auto, Track(_)) => 1,
-            (Auto, Auto) => 1,
-            (Track(_), Span(span)) => span,
-            (Span(span), Track(_)) => span,
-            (Span(span), Auto) => span,
-            (Auto, Span(span)) => span,
-            (Span(span), Span(_)) => span,
-            (Track(_), Track(_)) => panic!("indefinite_span should only be called on indefinite grid tracks"),
+            (GP::Line(_), GP::Auto) => 1,
+            (GP::Auto, GP::Line(_)) => 1,
+            (GP::Auto, GP::Auto) => 1,
+            (GP::Line(_), GP::Span(span)) => span,
+            (GP::Span(span), GP::Line(_)) => span,
+            (GP::Span(span), GP::Auto) => span,
+            (GP::Auto, GP::Span(span)) => span,
+            (GP::Span(span), GP::Span(_)) => span,
+            (GP::Line(_), GP::Line(_)) => panic!("indefinite_span should only be called on indefinite grid tracks"),
         }
     }
 }

@@ -6,7 +6,7 @@ pub fn compute() {
         .new_leaf(taffy::style::Style {
             position_type: taffy::style::PositionType::Absolute,
             grid_column: taffy::geometry::Line {
-                start: taffy::style::GridPlacement::Track(1i16),
+                start: taffy::style::GridPlacement::Line(1i16),
                 end: taffy::style::GridPlacement::Auto,
             },
             position: taffy::geometry::Rect {

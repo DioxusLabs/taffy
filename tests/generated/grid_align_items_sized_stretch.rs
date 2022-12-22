@@ -6,11 +6,11 @@ fn grid_align_items_sized_stretch() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             grid_row: taffy::geometry::Line {
-                start: taffy::style::GridPlacement::Track(1i16),
+                start: taffy::style::GridPlacement::Line(1i16),
                 end: taffy::style::GridPlacement::Auto,
             },
             grid_column: taffy::geometry::Line {
-                start: taffy::style::GridPlacement::Track(1i16),
+                start: taffy::style::GridPlacement::Line(1i16),
                 end: taffy::style::GridPlacement::Auto,
             },
             size: taffy::geometry::Size {
@@ -23,11 +23,11 @@ fn grid_align_items_sized_stretch() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             grid_row: taffy::geometry::Line {
-                start: taffy::style::GridPlacement::Track(3i16),
+                start: taffy::style::GridPlacement::Line(3i16),
                 end: taffy::style::GridPlacement::Auto,
             },
             grid_column: taffy::geometry::Line {
-                start: taffy::style::GridPlacement::Track(3i16),
+                start: taffy::style::GridPlacement::Line(3i16),
                 end: taffy::style::GridPlacement::Auto,
             },
             size: taffy::geometry::Size {

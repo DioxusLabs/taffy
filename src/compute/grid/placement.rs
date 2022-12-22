@@ -357,10 +357,10 @@ mod tests {
                 let mut sm = SlotMap::new();
                 vec![
                     // node, style (grid coords), expected_placement (oz coords)
-                    (1, sm.insert(()), (Track(1), Auto, Track(1), Auto).into_grid_child(), (0, 1, 0, 1)),
-                    (2, sm.insert(()), (Track(-4), Auto, Track(-3), Auto).into_grid_child(), (-1, 0, 0, 1)),
-                    (3, sm.insert(()), (Track(-3), Auto, Track(-4), Auto).into_grid_child(), (0, 1, -1, 0)),
-                    (4, sm.insert(()), (Track(3), Span(2), Track(5), Auto).into_grid_child(), (2, 4, 4, 5)),
+                    (1, sm.insert(()), (Line(1), Auto, Line(1), Auto).into_grid_child(), (0, 1, 0, 1)),
+                    (2, sm.insert(()), (Line(-4), Auto, Line(-3), Auto).into_grid_child(), (-1, 0, 0, 1)),
+                    (3, sm.insert(()), (Line(-3), Auto, Line(-4), Auto).into_grid_child(), (0, 1, -1, 0)),
+                    (4, sm.insert(()), (Line(3), Span(2), Line(5), Auto).into_grid_child(), (2, 4, 4, 5)),
                 ]
             };
             let expected_cols = TrackCounts { negative_implicit: 1, explicit: 2, positive_implicit: 2 };
@@ -444,10 +444,10 @@ mod tests {
                 let mut sm = SlotMap::new();
                 vec![
                     // output order, node, style (grid coords), expected_placement (oz coords)
-                    (1, sm.insert(()), (Span(2), Auto, Track(1), Auto).into_grid_child(), (0, 2, 0, 1)),
-                    (2, sm.insert(()), (Auto, Auto, Track(2), Auto).into_grid_child(), (0, 1, 1, 2)),
-                    (3, sm.insert(()), (Auto, Auto, Track(1), Auto).into_grid_child(), (2, 3, 0, 1)),
-                    (4, sm.insert(()), (Auto, Auto, Track(4), Auto).into_grid_child(), (0, 1, 3, 4)),
+                    (1, sm.insert(()), (Span(2), Auto, Line(1), Auto).into_grid_child(), (0, 2, 0, 1)),
+                    (2, sm.insert(()), (Auto, Auto, Line(2), Auto).into_grid_child(), (0, 1, 1, 2)),
+                    (3, sm.insert(()), (Auto, Auto, Line(1), Auto).into_grid_child(), (2, 3, 0, 1)),
+                    (4, sm.insert(()), (Auto, Auto, Line(4), Auto).into_grid_child(), (0, 1, 3, 4)),
                 ]
             };
             let expected_cols = TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 1 };
@@ -464,9 +464,9 @@ mod tests {
                 let mut sm = SlotMap::new();
                 vec![
                     // output order, node, style (grid coords), expected_placement (oz coords)
-                    (2, sm.insert(()), (Auto, Auto, Track(2), Auto).into_grid_child(), (0, 1, 1, 2)),
-                    (1, sm.insert(()), (Track(-4), Auto, Track(2), Auto).into_grid_child(), (-1, 0, 1, 2)),
-                    (3, sm.insert(()), (Auto, Auto, Track(1), Auto).into_grid_child(), (0, 1, 0, 1)),
+                    (2, sm.insert(()), (Auto, Auto, Line(2), Auto).into_grid_child(), (0, 1, 1, 2)),
+                    (1, sm.insert(()), (Line(-4), Auto, Line(2), Auto).into_grid_child(), (-1, 0, 1, 2)),
+                    (3, sm.insert(()), (Auto, Auto, Line(1), Auto).into_grid_child(), (0, 1, 0, 1)),
                 ]
             };
             let expected_cols = TrackCounts { negative_implicit: 1, explicit: 2, positive_implicit: 0 };
@@ -483,7 +483,7 @@ mod tests {
                 let mut sm = SlotMap::new();
                 vec![
                     // output order, node, style (grid coords), expected_placement (oz coords)
-                    (1, sm.insert(()), (Track(2), Auto, Track(1), Auto).into_grid_child(), (1, 2, 0, 1)), // Definitely positioned in column 2
+                    (1, sm.insert(()), (Line(2), Auto, Line(1), Auto).into_grid_child(), (1, 2, 0, 1)), // Definitely positioned in column 2
                     (2, sm.insert(()), (Span(2), Auto, Auto, Auto).into_grid_child(), (2, 4, 0, 1)), // Spans 2 columns, so positioned after item 1
                     (3, sm.insert(()), (Auto, Auto, Auto, Auto).into_grid_child(), (0, 1, 0, 1)), // Spans 1 column, so should be positioned before item 1
                 ]

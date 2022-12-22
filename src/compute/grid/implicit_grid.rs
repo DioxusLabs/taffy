@@ -102,7 +102,7 @@ fn child_min_line_max_line_span(line: Line<GridPlacement>, explicit_track_count:
 
     let min = match (line.start, line.end) {
         // Both tracks specified
-        (Track(track1), Track(track2)) => {
+        (Line(track1), Line(track2)) => {
             let track1_oz = into_oz(track1);
             let track2_oz = into_oz(track2);
             // See rules A and B above
@@ -114,12 +114,12 @@ fn child_min_line_max_line_span(line: Line<GridPlacement>, explicit_track_count:
         }
 
         // Start track specified
-        (Track(track), Auto) => into_oz(track),
-        (Track(track), Span(_)) => into_oz(track),
+        (Line(track), Auto) => into_oz(track),
+        (Line(track), Span(_)) => into_oz(track),
 
         // End track specified
-        (Auto, Track(track)) => into_oz(track),
-        (Span(span), Track(track)) => into_oz(track) - (span as i16),
+        (Auto, Line(track)) => into_oz(track),
+        (Span(span), Line(track)) => into_oz(track) - (span as i16),
 
         // Only spans or autos
         // We ignore spans here by returning 1 which never effect the estimate as these are accounted for separately
@@ -128,7 +128,7 @@ fn child_min_line_max_line_span(line: Line<GridPlacement>, explicit_track_count:
 
     let max = match (line.start, line.end) {
         // Both tracks specified
-        (Track(track1), Track(track2)) => {
+        (Line(track1), Line(track2)) => {
             let track1_oz = into_oz(track1);
             let track2_oz = into_oz(track2);
             // See rules A and B above
@@ -140,12 +140,12 @@ fn child_min_line_max_line_span(line: Line<GridPlacement>, explicit_track_count:
         }
 
         // Start track specified
-        (Track(track), Auto) => into_oz(track) + 1,
-        (Track(track), Span(span)) => into_oz(track) + (span as i16),
+        (Line(track), Auto) => into_oz(track) + 1,
+        (Line(track), Span(span)) => into_oz(track) + (span as i16),
 
         // End track specified
-        (Auto, Track(track)) => into_oz(track),
-        (Span(_), Track(track)) => into_oz(track),
+        (Auto, Line(track)) => into_oz(track),
+        (Span(_), Line(track)) => into_oz(track),
 
         // Only spans or autos
         // We ignore spans here by returning 1 which never effect the estimate as these are accounted for separately
@@ -172,7 +172,7 @@ mod tests {
 
         #[test]
         fn child_min_max_line_auto() {
-            let (min_col, max_col, span) = child_min_line_max_line_span(Line { start: Track(5), end: Span(6) }, 6);
+            let (min_col, max_col, span) = child_min_line_max_line_span(Line { start: Line(5), end: Span(6) }, 6);
             assert_eq!(min_col, 4);
             assert_eq!(max_col, 10);
             assert_eq!(span, 1);
@@ -180,7 +180,7 @@ mod tests {
 
         #[test]
         fn child_min_max_line_negative_track() {
-            let (min_col, max_col, span) = child_min_line_max_line_span(Line { start: Track(-5), end: Span(3) }, 6);
+            let (min_col, max_col, span) = child_min_line_max_line_span(Line { start: Line(-5), end: Span(3) }, 6);
             assert_eq!(min_col, 2);
             assert_eq!(max_col, 5);
             assert_eq!(span, 1);
@@ -197,8 +197,8 @@ mod tests {
             let explicit_col_count = 6;
             let explicit_row_count = 8;
             let child_styles = vec![
-                (Track(1), Span(2), Track(2), Auto).into_grid_child(),
-                (Track(-4), Auto, Track(-2), Auto).into_grid_child(),
+                (Line(1), Span(2), Line(2), Auto).into_grid_child(),
+                (Line(-4), Auto, Line(-2), Auto).into_grid_child(),
             ];
             let (inline, block) =
                 compute_grid_size_estimate(explicit_col_count, explicit_row_count, child_styles.iter());
@@ -215,8 +215,8 @@ mod tests {
             let explicit_col_count = 4;
             let explicit_row_count = 4;
             let child_styles = vec![
-                (Track(-6), Span(2), Track(-8), Auto).into_grid_child(),
-                (Track(4), Auto, Track(3), Auto).into_grid_child(),
+                (Line(-6), Span(2), Line(-8), Auto).into_grid_child(),
+                (Line(4), Auto, Line(3), Auto).into_grid_child(),
             ];
             let (inline, block) =
                 compute_grid_size_estimate(explicit_col_count, explicit_row_count, child_styles.iter());

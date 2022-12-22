@@ -16,7 +16,7 @@ pub fn repeat(
     TrackSizingFunction::AutoRepeat(repetition_kind, track_list)
 }
 
-/// Returns a GridPlacement::Track
+/// Returns a GridPlacement::Line
 pub fn line<T: TaffyGridLine>(index: i16) -> T {
     T::from_line_index(index)
 }

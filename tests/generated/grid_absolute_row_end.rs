@@ -8,7 +8,7 @@ fn grid_absolute_row_end() {
             position_type: taffy::style::PositionType::Absolute,
             grid_row: taffy::geometry::Line {
                 start: taffy::style::GridPlacement::Auto,
-                end: taffy::style::GridPlacement::Track(1i16),
+                end: taffy::style::GridPlacement::Line(1i16),
             },
             position: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::Points(4f32),
