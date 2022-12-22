@@ -77,19 +77,27 @@ pub(super) fn align_and_position_item(
     container_content_box: Size<f32>,
     alignment_styles: InBothAbsAxis<Option<AlignItems>>,
 ) {
+    let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
+
     let style = tree.style(node);
     let aspect_ratio = style.aspect_ratio;
     let justify_self = style.justify_self;
     let align_self = style.align_self;
+
     let position_type = style.position_type;
-    let inset_raw = style.position;
-    let inset_horizontal = Line { start: inset_raw.left, end: inset_raw.right }
-        .map(|size| size.resolve_to_option(container_content_box.width));
-    let inset_vertical = Line { start: inset_raw.top, end: inset_raw.bottom }
-        .map(|size| size.resolve_to_option(container_content_box.height));
+    let inset_horizontal =
+        style.position.horizontal_components().map(|size| size.resolve_to_option(container_content_box.width));
+    let inset_vertical =
+        style.position.vertical_components().map(|size| size.resolve_to_option(container_content_box.height));
     let inherent_size = style.size.maybe_resolve(container_content_box);
 
-    let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
+    // Note: This is not a bug. It is part of the CSS spec that both horizontal and vertical margins
+    // resolve against the WIDTH of the grid area.
+    let margin = style.margin.map(|margin| margin.resolve_to_option(grid_area_size.width));
+    let grid_area_minus_item_margins_size = Size {
+        width: grid_area_size.width - margin.left.unwrap_or(0.0) - margin.right.unwrap_or(0.0),
+        height: grid_area_size.height - margin.top.unwrap_or(0.0) - margin.bottom.unwrap_or(0.0),
+    };
 
     // If node is absolutely positioned and width is not set explicitly, then deduce it
     // from left, right and container_content_box if both are set.
@@ -115,7 +123,7 @@ pub(super) fn align_and_position_item(
         tree,
         node,
         Size { width, height },
-        grid_area_size.map(|size| AvailableSpace::Definite(size)),
+        grid_area_minus_item_margins_size.map(|size| AvailableSpace::Definite(size)),
         RunMode::PeformLayout,
         SizingMode::InherentSize,
     );
@@ -127,6 +135,7 @@ pub(super) fn align_and_position_item(
         measured_size.width,
         position_type,
         inset_horizontal,
+        margin.horizontal_components(),
         aspect_ratio,
     );
     let (y, height) = align_and_size_item_within_area(
@@ -136,6 +145,7 @@ pub(super) fn align_and_position_item(
         measured_size.height,
         position_type,
         inset_vertical,
+        margin.vertical_components(),
         aspect_ratio,
     );
 
@@ -150,11 +160,19 @@ pub(super) fn align_and_size_item_within_area(
     measured_size: f32,
     position_type: PositionType,
     inset: Line<Option<f32>>,
+    margin: Line<Option<f32>>,
     aspect_ratio: Option<f32>,
 ) -> (f32, f32) {
     // Calculate grid area dimension in the axis
-    let free_space = grid_area.end - grid_area.start;
-    let origin = f32_max(free_space, 0.0);
+    let non_auto_margin = Line { start: margin.start.unwrap_or(0.0), end: margin.end.unwrap_or(0.0) };
+    let grid_area_size = f32_max(grid_area.end - grid_area.start, 0.0);
+    let free_space = f32_max(grid_area_size - style_size.unwrap_or(measured_size) - non_auto_margin.sum(), 0.0);
+
+    // Expand auto margins to fill available space
+    let auto_margin_count = margin.start.is_none() as u8 + margin.end.is_none() as u8;
+    let auto_margin_size = if auto_margin_count > 0 { free_space / auto_margin_count as f32 } else { 0.0 };
+    let resolved_margin =
+        Line { start: margin.start.unwrap_or(auto_margin_size), end: margin.end.unwrap_or(auto_margin_size) };
 
     // Compute default alignment style if it set on neither the parent or the node itself
     let alignment_style = alignment_style.unwrap_or_else(|| {
@@ -168,7 +186,7 @@ pub(super) fn align_and_size_item_within_area(
     // Compute size in the axis
     let size = style_size.unwrap_or_else(|| {
         if alignment_style == AlignItems::Stretch && position_type != PositionType::Absolute {
-            f32_max(free_space, measured_size)
+            f32_max(grid_area_size - resolved_margin.sum(), measured_size)
         } else {
             measured_size
         }
@@ -176,19 +194,19 @@ pub(super) fn align_and_size_item_within_area(
 
     // Compute offset in the axis
     let alignment_based_offset = match alignment_style {
-        AlignSelf::Start => 0.0,
-        AlignSelf::End => origin - size,
-        AlignSelf::Center => (origin - size) / 2.0,
+        AlignSelf::Start => resolved_margin.start,
+        AlignSelf::End => grid_area_size - size - resolved_margin.end,
+        AlignSelf::Center => (grid_area_size - size + resolved_margin.start - resolved_margin.end) / 2.0,
         // TODO: Add support for baseline alignment. For now we treat it as "start".
-        AlignSelf::Baseline => 0.0,
-        AlignSelf::Stretch => 0.0,
+        AlignSelf::Baseline => resolved_margin.start,
+        AlignSelf::Stretch => resolved_margin.start,
     };
 
     let offset_within_area = if position_type == PositionType::Absolute {
         if let Some(start) = inset.start {
-            start
+            start + non_auto_margin.start
         } else if let Some(end) = inset.end {
-            free_space - end - size
+            grid_area_size - end - size - non_auto_margin.end
         } else {
             alignment_based_offset
         }

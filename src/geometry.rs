@@ -60,6 +60,26 @@ impl<T> Rect<T> {
             bottom: f(self.bottom, size.height),
         }
     }
+
+    /// Applies the function `f` to the left, right, top, and bottom properties
+    ///
+    /// This is used to transform a `Rect<T>` into a `Rect<R>`.
+    pub fn map<R, F>(self, f: F) -> Rect<R>
+    where
+        F: Fn(T) -> R,
+    {
+        Rect { top: f(self.top), bottom: f(self.bottom), left: f(self.left), right: f(self.right) }
+    }
+
+    /// Returns a Line<T> representing the left and right properties of the Rect
+    pub fn horizontal_components(self) -> Line<T> {
+        Line { start: self.left, end: self.right }
+    }
+
+    /// Returns a Line<T> containing the top and bottom properties of the Rect
+    pub fn vertical_components(self) -> Line<T> {
+        Line { start: self.top, end: self.bottom }
+    }
 }
 
 impl<T> Rect<T>
