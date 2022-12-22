@@ -221,15 +221,33 @@ pub fn compute(tree: &mut impl LayoutTree, node: Node, available_space: Size<Ava
 
     let container_alignment_styles = InBothAbsAxis { horizontal: style.justify_items, vertical: style.align_items };
 
-    // Iterate over all children
-    let mut in_flow_child_index = 0;
+    // Position in-flow children (stored in items vector)
+    for (index, item) in items.iter().enumerate() {
+        let grid_area = Rect {
+            top: rows[item.row_indexes.start as usize + 1].offset,
+            bottom: rows[item.row_indexes.end as usize].offset,
+            left: columns[item.column_indexes.start as usize + 1].offset,
+            right: columns[item.column_indexes.end as usize].offset,
+        };
+        align_and_position_item(
+            tree,
+            item.node,
+            index as u32,
+            grid_area,
+            container_content_box,
+            container_alignment_styles,
+        );
+    }
+
+    // Position hidden and absolutely positioned children
+    let mut order = items.len() as u32;
     (0..tree.child_count(node)).for_each(|index| {
         let child = tree.child(node, index);
         let child_style = tree.style(child);
 
         // Position hidden child
         if child_style.display == Display::None {
-            *tree.layout_mut(node) = Layout::with_order(index as u32);
+            *tree.layout_mut(node) = Layout::with_order(order);
             compute_node_layout(
                 tree,
                 child,
@@ -238,6 +256,7 @@ pub fn compute(tree: &mut impl LayoutTree, node: Node, available_space: Size<Ava
                 RunMode::PeformLayout,
                 SizingMode::InherentSize,
             );
+            order += 1;
             return;
         }
 
@@ -268,34 +287,10 @@ pub fn compute(tree: &mut impl LayoutTree, node: Node, available_space: Size<Ava
                 left: maybe_col_indexes.start.map(|index| columns[index].offset).unwrap_or(0.0),
                 right: maybe_col_indexes.end.map(|index| columns[index].offset).unwrap_or(container_border_box.width),
             };
-            align_and_position_item(
-                tree,
-                child,
-                index as u32,
-                grid_area,
-                container_content_box,
-                container_alignment_styles,
-            );
+            align_and_position_item(tree, child, order, grid_area, container_content_box, container_alignment_styles);
+            order += 1;
             return;
         }
-
-        // Position in-flow child
-        let item = &items[in_flow_child_index];
-        let grid_area = Rect {
-            top: rows[item.row_indexes.start as usize + 1].offset,
-            bottom: rows[item.row_indexes.end as usize].offset,
-            left: columns[item.column_indexes.start as usize + 1].offset,
-            right: columns[item.column_indexes.end as usize].offset,
-        };
-        align_and_position_item(
-            tree,
-            child,
-            index as u32,
-            grid_area,
-            container_content_box,
-            container_alignment_styles,
-        );
-        in_flow_child_index += 1;
     });
 
     container_border_box
