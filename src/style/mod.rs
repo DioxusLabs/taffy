@@ -315,12 +315,12 @@ impl Style {
 #[cfg(test)]
 mod tests {
     use super::Style;
-    use crate::geometry::Rect;
+    use crate::geometry::*;
 
     #[test]
     fn defaults_match() {
+        #[cfg(feature = "experimental_grid")]
         use super::GridPlacement;
-        use crate::geometry::{Line, Size};
 
         let old_defaults = Style {
             display: Default::default(),
@@ -329,10 +329,10 @@ mod tests {
             flex_wrap: Default::default(),
             align_items: Default::default(),
             align_self: Default::default(),
+            #[cfg(feature = "experimental_grid")]
             justify_items: Default::default(),
             justify_self: Default::default(),
             align_content: Default::default(),
-            #[cfg(feature = "experimental_grid")]
             justify_content: Default::default(),
             position: Rect::auto(),
             margin: Rect::zero(),
