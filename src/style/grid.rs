@@ -68,6 +68,32 @@ pub enum GridPlacement {
     /// Item should span specified number of tracks (columns or rows)
     Span(u16),
 }
+impl TaffyAuto for GridPlacement {
+    const AUTO: Self = Self::Auto;
+}
+impl TaffyGridLine for GridPlacement {
+    fn from_line_index(index: i16) -> Self {
+        match index {
+            0 => GridPlacement::Auto,
+            _ => GridPlacement::Track(index),
+        }
+    }
+}
+impl TaffyGridLine for Line<GridPlacement> {
+    fn from_line_index(index: i16) -> Self {
+        Line { start: GridPlacement::from_line_index(index), end: GridPlacement::Auto }
+    }
+}
+impl TaffyGridSpan for GridPlacement {
+    fn from_span(span: u16) -> Self {
+        GridPlacement::Span(span)
+    }
+}
+impl TaffyGridSpan for Line<GridPlacement> {
+    fn from_span(span: u16) -> Self {
+        Line { start: GridPlacement::from_span(span), end: GridPlacement::Auto }
+    }
+}
 
 impl Default for GridPlacement {
     fn default() -> Self {

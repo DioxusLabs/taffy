@@ -16,6 +16,31 @@ pub fn repeat(
     TrackSizingFunction::AutoRepeat(repetition_kind, track_list)
 }
 
+/// Returns a GridPlacement::Track
+pub fn line<T: TaffyGridLine>(index: i16) -> T {
+    T::from_line_index(index)
+}
+/// Trait to abstract over grid line values
+pub trait TaffyGridLine {
+    /// Converts an i16 into Self
+    fn from_line_index(index: i16) -> Self;
+}
+
+/// Returns a GridPlacement::Span
+pub fn span<T: TaffyGridSpan>(span: u16) -> T {
+    T::from_span(span)
+}
+/// Trait to abstract over grid span values
+pub trait TaffyGridSpan {
+    /// Converts an iu6 into Self
+    fn from_span(span: u16) -> Self;
+}
+
+/// Returns a MinMax with min value of min and max value of max
+pub fn minmax<Min, Max, Output: From<MinMax<Min, Max>>>(min: Min, max: Max) -> Output {
+    MinMax { min, max }.into()
+}
+
 /// Returns the zero value for that type
 pub const fn zero<T: TaffyZero>() -> T {
     T::ZERO
@@ -382,9 +407,4 @@ pub fn flex<Input: Into<f32> + Copy, T: FromFlex>(flex: Input) -> T {
 pub trait FromFlex {
     /// Converts into an Into<f32> into Self
     fn from_flex<Input: Into<f32> + Copy>(flex: Input) -> Self;
-}
-
-/// Returns a MinMax with min value of min and max value of max
-pub fn minmax<Min, Max, Output: From<MinMax<Min, Max>>>(min: Min, max: Max) -> Output {
-    MinMax { min, max }.into()
 }

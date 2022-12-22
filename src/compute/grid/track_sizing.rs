@@ -148,6 +148,8 @@ pub(super) fn determine_if_item_crosses_flexible_tracks(
     rows: &[GridTrack],
 ) {
     for item in items {
+        dbg!(item.track_range_excluding_lines(AbstractAxis::Inline));
+        dbg!(item.track_range_excluding_lines(AbstractAxis::Block));
         item.crosses_flexible_column =
             item.track_range_excluding_lines(AbstractAxis::Inline).any(|i| columns[i].is_flexible());
         item.crosses_flexible_row =

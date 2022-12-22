@@ -22,4 +22,4 @@ pub use crate::style::{
     NonRepeatedTrackSizingFunction, TrackSizingFunction,
 };
 #[cfg(feature = "experimental_grid")]
-pub use crate::style_helpers::repeat;
+pub use crate::style_helpers::{line, repeat, span, TaffyGridLine, TaffyGridSpan};
