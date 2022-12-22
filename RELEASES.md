@@ -12,6 +12,8 @@ This is the first in a series of planned alpha releases to allow users of Taffy 
 
 We very excited to report that we have an initial version of the CSS Grid layout available. This is in addition to the existing Flexbox layout support, and the two modes interoperate (although this interaction has not been extensively tested). You can set a node to use Grid layout by setting the `display` property to `Display::Grid`.
 
+##### Learning Resources
+
 Taffy implements the CSS Grid specification faithfully, so documentation designed for the web should translate cleanly to Taffy's implementation. If you are interested in learning how to use CSS Grid, we would recommend the following resources:
 
 - [CSS Grid Garden](https://cssgridgarden.com/). This is an interactive tutorial/game that allows you to learn the essential parts of CSS Grid in a fun engaging way.
@@ -75,59 +77,10 @@ The following properties and features are not supported, and there are no immedi
 
 ##### Example
 
-This example is based on the so-called [Holy Grail Layout](https://en.wikipedia.org/wiki/Holy_grail_(web_design)). The HTML we will be recreating with Taffy is as follows:
+See [examples/grid_holy_grail.rs](https://github.com/DioxusLabs/taffy/blob/main/examples/grid_holy_grail.rs) for an example using Taffy to implement the so-called [Holy Grail Layout](https://en.wikipedia.org/wiki/Holy_grail_(web_design)). If you want to run this example, the don't forget the enable the CSS Grid cargo feature:
 
-```html
-<div style="display: grid;grid-template-columns: 250px 1fr 250px;grid-template-rows: 150px 1fr 150px">
-  <div id="header" style="grid-row: 1;grid-column: span 3"></div>
-  <div id="left_sidebar" style="grid-row: 2;grid-column: 1"></div>
-  <div id="content_area" style="grid-row: 2;grid-column: 2"></div>
-  <div id="right_sidebar" style="grid-row: 2;grid-column: 3"></div>
-  <div id="footer" style="grid-row: 3;grid-column: span 3"></div>
-</div>
-
-```
-
-The equivalent taffy code is:
-
-```rust
-/// Small helper function to make the rest of the examples less verbose
-fn default<T: Default>() -> T {
-    Default::default()
-}
-
-fn main() -> Result<(), taffy::error::TaffyError> {
-    // The taffy prelude contains most of Taffy's user-facing types and lots of helper functions to help make defining style less verbose
-    use taffy::prelude::*;
-
-    // Create an instance of Taffy
-    let mut taffy = Taffy::new();
-
-    // Setup the grid
-    let root_style = Style {
-        display: Display::Grid,
-        size: Size { width: points(800.0), height: points(600.0) },
-        grid_template_columns: vec![points(250.0), flex(1.0), points(250.0)],
-        grid_template_rows: vec![points(150.0), flex(1.0), points(150.0)],
-        ..default()
-    };
-
-    // Define the child nodes
-    let header = taffy.new_leaf(Style { grid_row: line(1), grid_column: span(3), ..default() })?;
-    let left_sidebar = taffy.new_leaf(Style { grid_row: line(2), grid_column: line(1), ..default() })?;
-    let content_area = taffy.new_leaf(Style { grid_row: line(2), grid_column: line(2), ..default() })?;
-    let right_sidebar = taffy.new_leaf(Style { grid_row: line(2), grid_column: line(3), ..default() })?;
-    let footer = taffy.new_leaf(Style { grid_row: line(3), grid_column: span(3), ..default() })?;
-
-    // Create the container with the children
-    let root = taffy.new_with_children(root_style, &[header, left_sidebar, content_area, right_sidebar, footer])?;
-
-    // Compute layout and print result
-    taffy.compute_layout(root, Size { width: points(800.0), height: points(600.0) })?;
-    taffy::debug::print_tree(&taffy, root);
-
-    Ok(())
-}
+```bash
+cargo run --example grid_holy_grail --features experimental_grid
 ```
 
 #### Style Helpers
