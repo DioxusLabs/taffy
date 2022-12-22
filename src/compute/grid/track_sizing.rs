@@ -192,7 +192,6 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
 
     // Compute an additional amount to add to each spanned gutter when computing item's estimated size in the
     // in the opposite axis based on the alignment, container size, and estimated track sizes in that axis
-    // TODO: determine what is required to make gutter alignment work properly
     let gutter_alignment_adjustment = compute_alignment_gutter_adjustment(
         container_style.grid_align_content(axis.other()),
         available_space.get(axis.other()),
