@@ -28,15 +28,14 @@ In addition to the usual sizing/spacing proerties (size, min_size, padding, marg
 | [`align-items`]           | Align the child items within their grid areas in the inline (horizontal) axis                  |
 | [`justify-items`]         | Align the child items within their grid areas in the block (vertical) axis                     |
 
-And the following Grid style properties are supported on Grid Items (children): 
+And the following Grid style properties are supported on Grid Items (children):
 
+| Property                  | Explanation                                                                                    |
+| ---                       | ---                                                                                            |
 | [`grid-row`]              | The (row) grid line the item starts at (or a span)                                             |
-| [`grid-row`]              | The (row) grid line the item ends at (or a span)                                               |
-| [`grid-column`]           | The (column) grid line the item starts at (or a span)                                          |
 | [`grid-column`]           | The (column) grid line the item end at (or a span)                                             |
 | [`align-self`]            | Align the item within it's grid area in the inline (horizontal) axis. Overrides `align-items`. |
 | [`justify-self`]          | Align the item within it's grid area in the block (vertical) axis. Overrides `justify-items`.  |
-
 
 [`grid-template-columns`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns
 [`grid-template-rows`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-rows
@@ -50,12 +49,9 @@ And the following Grid style properties are supported on Grid Items (children):
 [`align-items`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/align-items
 [`justify-items`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/justify-items
 [`grid-row`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-row
-[`grid-row`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-row
-[`grid-column`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-column
 [`grid-column`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-column
 [`align-self`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/align-self
 [`justify-self`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/justify-self
-
 
 The following properties and features are *not* yet supported:
 
@@ -66,7 +62,6 @@ The following properties and features are *not* yet supported:
 - `grid-template` or `grid` shorthand
 - `repeat()` with integer repetition (but users of Taffy can just expand these definition manually)
 - `fit-content()` with a percentage argument.
-
 
 ##### Example
 
