@@ -64,7 +64,8 @@ jobs:
           override: true
       - uses: actions-rs/cargo@v1
         with:
-          command: test --features experimental_grid
+          command: test
+          args: --features experimental_grid
 
   test-features-alloc-with-grid:
     name: "Test Suite [Features: alloc + experimental_grid]"
@@ -79,7 +80,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --no-default-features --features alloc
+          args: --no-default-features --features alloc,experimental_grid
 
   fmt:
     name: Rustfmt
