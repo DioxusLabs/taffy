@@ -9,7 +9,7 @@ name: Continuous integration
 
 jobs:
   test-features-none:
-    name: "Test Suite [Features: None]"
+    name: "Test Suite [Features: none]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -24,7 +24,7 @@ jobs:
           args: --no-default-features
 
   test-features-default:
-    name: "Test Suite [Features: Default]"
+    name: "Test Suite [Features: default]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -39,6 +39,35 @@ jobs:
 
   test-features-alloc:
     name: "Test Suite [Features: alloc]"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --no-default-features --features alloc
+
+  test-features-default-with-grid:
+    name: "Test Suite [Features: default + experimental_grid]"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test --features experimental_grid
+
+  test-features-alloc-with-grid:
+    name: "Test Suite [Features: alloc + experimental_grid]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
