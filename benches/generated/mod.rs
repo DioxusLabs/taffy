@@ -271,7 +271,7 @@ mod grid_auto_single_item_fixed_width_with_definite_width;
 #[cfg(feature = "experimental_grid")]
 mod grid_basic;
 #[cfg(feature = "experimental_grid")]
-mod grid_basic_out_of_order_items;
+mod grid_basic_implicit_tracks;
 #[cfg(feature = "experimental_grid")]
 mod grid_basic_with_overflow;
 #[cfg(feature = "experimental_grid")]
@@ -378,6 +378,8 @@ mod grid_min_max_column_fixed_width_above_range;
 mod grid_min_max_column_fixed_width_below_range;
 #[cfg(feature = "experimental_grid")]
 mod grid_min_max_column_fixed_width_within_range;
+#[cfg(feature = "experimental_grid")]
+mod grid_out_of_order_items;
 #[cfg(feature = "experimental_grid")]
 mod grid_size_child_fixed_tracks;
 mod justify_content_column_center;
@@ -749,7 +751,7 @@ fn benchmark(c: &mut Criterion) {
             #[cfg(feature = "experimental_grid")]
             grid_basic::compute();
             #[cfg(feature = "experimental_grid")]
-            grid_basic_out_of_order_items::compute();
+            grid_basic_implicit_tracks::compute();
             #[cfg(feature = "experimental_grid")]
             grid_basic_with_overflow::compute();
             #[cfg(feature = "experimental_grid")]
@@ -856,6 +858,8 @@ fn benchmark(c: &mut Criterion) {
             grid_min_max_column_fixed_width_below_range::compute();
             #[cfg(feature = "experimental_grid")]
             grid_min_max_column_fixed_width_within_range::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_out_of_order_items::compute();
             #[cfg(feature = "experimental_grid")]
             grid_size_child_fixed_tracks::compute();
             justify_content_column_center::compute();

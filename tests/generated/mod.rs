@@ -270,7 +270,7 @@ mod grid_auto_single_item_fixed_width_with_definite_width;
 #[cfg(feature = "experimental_grid")]
 mod grid_basic;
 #[cfg(feature = "experimental_grid")]
-mod grid_basic_out_of_order_items;
+mod grid_basic_implicit_tracks;
 #[cfg(feature = "experimental_grid")]
 mod grid_basic_with_overflow;
 #[cfg(feature = "experimental_grid")]
@@ -377,6 +377,8 @@ mod grid_min_max_column_fixed_width_above_range;
 mod grid_min_max_column_fixed_width_below_range;
 #[cfg(feature = "experimental_grid")]
 mod grid_min_max_column_fixed_width_within_range;
+#[cfg(feature = "experimental_grid")]
+mod grid_out_of_order_items;
 #[cfg(feature = "experimental_grid")]
 mod grid_size_child_fixed_tracks;
 mod justify_content_column_center;

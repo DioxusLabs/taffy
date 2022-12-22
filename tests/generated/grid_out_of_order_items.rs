@@ -1,5 +1,5 @@
 #[test]
-fn grid_basic_out_of_order_items() {
+fn grid_out_of_order_items() {
     #[allow(unused_imports)]
     use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
