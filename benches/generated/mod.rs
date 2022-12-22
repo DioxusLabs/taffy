@@ -359,6 +359,10 @@ mod grid_max_content_single_item_margin_fixed;
 #[cfg(feature = "experimental_grid")]
 mod grid_max_content_single_item_margin_percent;
 #[cfg(feature = "experimental_grid")]
+mod grid_min_content_flex_column;
+#[cfg(feature = "experimental_grid")]
+mod grid_min_content_flex_row;
+#[cfg(feature = "experimental_grid")]
 mod grid_min_content_flex_single_item;
 #[cfg(feature = "experimental_grid")]
 mod grid_min_content_flex_single_item_margin_auto;
@@ -838,6 +842,10 @@ fn benchmark(c: &mut Criterion) {
             grid_max_content_single_item_margin_fixed::compute();
             #[cfg(feature = "experimental_grid")]
             grid_max_content_single_item_margin_percent::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_min_content_flex_column::compute();
+            #[cfg(feature = "experimental_grid")]
+            grid_min_content_flex_row::compute();
             #[cfg(feature = "experimental_grid")]
             grid_min_content_flex_single_item::compute();
             #[cfg(feature = "experimental_grid")]
