@@ -17,7 +17,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis(style: &Style, axis: AbsoluteAx
     let template = style.grid_template_tracks(axis);
 
     // If template contains no tracks, then there are trivially zero explcit tracks
-    if template.len() == 0 {
+    if template.is_empty() {
         return 0;
     }
 
@@ -85,8 +85,8 @@ pub(crate) fn compute_explicit_grid_size_in_axis(style: &Style, axis: AbsoluteAx
         Some(inner_container_size) => {
             let available_space = AvailableSpace::Definite(inner_container_size);
 
-            // ...treating each track as its max track sizing function if that is definite or as its minimum track sizing function
-            // otherwise, flooring the max track sizing function by the min track sizing function if both are definite
+            /// ...treating each track as its max track sizing function if that is definite or as its minimum track sizing function
+            /// otherwise, flooring the max track sizing function by the min track sizing function if both are definite
             fn track_definite_value(
                 sizing_function: &NonRepeatedTrackSizingFunction,
                 available_space: AvailableSpace,

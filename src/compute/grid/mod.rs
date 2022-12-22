@@ -290,7 +290,6 @@ pub fn compute(tree: &mut impl LayoutTree, node: Node, available_space: Size<Ava
             };
             align_and_position_item(tree, child, order, grid_area, container_content_box, container_alignment_styles);
             order += 1;
-            return;
         }
     });
 

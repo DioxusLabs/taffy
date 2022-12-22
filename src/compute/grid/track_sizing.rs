@@ -591,7 +591,7 @@ fn distribute_item_space_to_base_size(
                 filter = (|_| true) as fn(&GridTrack) -> bool;
             }
 
-            distribute_space_up_to_limits(extra_space, tracks, &filter, GridTrack::fit_content_limit);
+            distribute_space_up_to_limits(extra_space, tracks, filter, GridTrack::fit_content_limit);
         }
 
         // 4. For each affected track, if the track’s item-incurred increase is larger than the track’s planned increase

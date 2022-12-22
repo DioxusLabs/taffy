@@ -274,6 +274,7 @@ fn place_indefinitely_positioned_item(
 
 /// Record the grid item in both CellOccupancyMatric and the GridItems list
 /// once a definite placement has been determined
+#[allow(clippy::too_many_arguments)]
 fn record_grid_placement(
     cell_occupancy_matrix: &mut CellOccupancyMatrix,
     items: &mut Vec<GridItem>,

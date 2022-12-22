@@ -174,7 +174,7 @@ pub(super) fn align_and_position_item(
         tree,
         node,
         Size { width, height },
-        grid_area_minus_item_margins_size.map(|size| AvailableSpace::Definite(size)),
+        grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
         RunMode::PeformLayout,
         SizingMode::InherentSize,
     );
