@@ -1,4 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
+#[allow(dead_code)]
 fn measure_standard_text(
     known_dimensions: taffy::geometry::Size<Option<f32>>,
     available_space: taffy::geometry::Size<taffy::style::AvailableSpace>,
