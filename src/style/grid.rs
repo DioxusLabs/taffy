@@ -53,7 +53,7 @@ impl GridAutoFlow {
     }
 }
 
-/// A track placement specification. Used for grid-[row/column]-[start/end]. Named tracks are not implemented.
+/// A grid line placement specification. Used for grid-[row/column]-[start/end]. Named tracks are not implemented.
 ///
 /// Defaults to [`GridLine::Auto`]
 ///
@@ -63,7 +63,7 @@ impl GridAutoFlow {
 pub enum GridPlacement {
     /// Place item according to the auto-placement algorithm, and the parent's grid_auto_flow property
     Auto,
-    /// Place item at specified track (column or row) index
+    /// Place item at specified line (column or row) index
     Line(i16),
     /// Item should span specified number of tracks (columns or rows)
     Span(u16),
@@ -208,7 +208,9 @@ impl Default for Line<GridPlacement> {
 }
 
 /// Maximum track sizing function
-/// Specifies the maximum size of a grid track
+///
+/// Specifies the maximum size of a grid track. A grid track will automatically size between it's minimum and maximum size based
+/// on the size of it's contents, the amount of available space, and the sizing constraint the grid is being size under.
 /// See https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum MaxTrackSizingFunction {
@@ -299,7 +301,9 @@ impl MaxTrackSizingFunction {
 }
 
 /// Minimum track sizing function
-/// Specifies the minimum size of a grid track
+///
+/// Specifies the minimum size of a grid track. A grid track will automatically size between it's minimum and maximum size based
+/// on the size of it's contents, the amount of available space, and the sizing constraint the grid is being size under.
 /// See https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum MinTrackSizingFunction {
@@ -406,7 +410,10 @@ impl FromFlex for NonRepeatedTrackSizingFunction {
     }
 }
 
-/// Represents the type of automatic repetition to perform
+/// The first argument to a repeated track definition. This type represents the type of automatic repetition to perform.
+///
+/// See https://www.w3.org/TR/css-grid-1/#auto-repeat for an explanation of how auto-repeated track definitions work
+/// and the difference between AutoFit and AutoFill.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum GridTrackRepetition {
     /// Auto-repeating track should be generated to fit the container
