@@ -30,7 +30,9 @@ fn measure_standard_text(
         let mut current_line_length = 0;
         for line in &lines {
             if current_line_length + line.len() > width_line_length {
-                line_count += 1;
+                if current_line_length > 0 {
+                    line_count += 1
+                };
                 current_line_length = line.len();
             } else {
                 current_line_length += line.len();
