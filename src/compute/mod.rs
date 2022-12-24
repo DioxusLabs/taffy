@@ -143,7 +143,6 @@ fn compute_node_layout(
     computed_size
 }
 
-
 /// Return the cache slot to cache the current computed result in
 ///
 /// ## Caching Strategy
@@ -208,18 +207,20 @@ fn compute_from_cache(
                 return None;
             }
 
-            if (known_dimensions.width == entry.known_dimensions.width || known_dimensions.width == Some(entry.cached_size.width))
-                && (known_dimensions.height == entry.known_dimensions.height || known_dimensions.height == Some(entry.cached_size.height))
-                && (
-                  known_dimensions.width.is_some()
-                  || entry.available_space.width.is_roughly_equal(available_space.width)
-                  || (sizing_mode == SizingMode::ContentSize && available_space.width.is_definite() && available_space.width.unwrap() >= entry.cached_size.width)
-                )
-                && (
-                  known_dimensions.height.is_some()
-                  || entry.available_space.height.is_roughly_equal(available_space.height)
-                  || (sizing_mode == SizingMode::ContentSize && available_space.height.is_definite() && available_space.height.unwrap() >= entry.cached_size.height)
-                )
+            if (known_dimensions.width == entry.known_dimensions.width
+                || known_dimensions.width == Some(entry.cached_size.width))
+                && (known_dimensions.height == entry.known_dimensions.height
+                    || known_dimensions.height == Some(entry.cached_size.height))
+                && (known_dimensions.width.is_some()
+                    || entry.available_space.width.is_roughly_equal(available_space.width)
+                    || (sizing_mode == SizingMode::ContentSize
+                        && available_space.width.is_definite()
+                        && available_space.width.unwrap() >= entry.cached_size.width))
+                && (known_dimensions.height.is_some()
+                    || entry.available_space.height.is_roughly_equal(available_space.height)
+                    || (sizing_mode == SizingMode::ContentSize
+                        && available_space.height.is_definite()
+                        && available_space.height.unwrap() >= entry.cached_size.height))
             {
                 return Some(entry.cached_size);
             }
