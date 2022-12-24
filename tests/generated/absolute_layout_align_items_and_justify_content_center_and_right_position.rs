@@ -1,7 +1,8 @@
 #[test]
 fn absolute_layout_align_items_and_justify_content_center_and_right_position() {
+    use slotmap::Key;
     #[allow(unused_imports)]
-    use taffy::prelude::*;
+    use taffy::{layout::Layout, prelude::*};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
@@ -37,12 +38,14 @@ fn absolute_layout_align_items_and_justify_content_center_and_right_position() {
     println!("\nComputed tree:");
     taffy::debug::print_tree(&taffy, node);
     println!();
-    assert_eq!(taffy.layout(node).unwrap().size.width, 110f32);
-    assert_eq!(taffy.layout(node).unwrap().size.height, 100f32);
-    assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);
-    assert_eq!(taffy.layout(node).unwrap().location.y, 0f32);
-    assert_eq!(taffy.layout(node0).unwrap().size.width, 60f32);
-    assert_eq!(taffy.layout(node0).unwrap().size.height, 40f32);
-    assert_eq!(taffy.layout(node0).unwrap().location.x, 45f32);
-    assert_eq!(taffy.layout(node0).unwrap().location.y, 30f32);
+    let Layout { size, location, .. } = taffy.layout(node).unwrap();
+    assert_eq!(size.width, 110f32, "width of node {:?}. Expected {}. Actual {}", node.data(), 110f32, size.width);
+    assert_eq!(size.height, 100f32, "height of node {:?}. Expected {}. Actual {}", node.data(), 100f32, size.height);
+    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.x);
+    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.y);
+    let Layout { size, location, .. } = taffy.layout(node0).unwrap();
+    assert_eq!(size.width, 60f32, "width of node {:?}. Expected {}. Actual {}", node0.data(), 60f32, size.width);
+    assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node0.data(), 40f32, size.height);
+    assert_eq!(location.x, 45f32, "x of node {:?}. Expected {}. Actual {}", node0.data(), 45f32, location.x);
+    assert_eq!(location.y, 30f32, "y of node {:?}. Expected {}. Actual {}", node0.data(), 30f32, location.y);
 }

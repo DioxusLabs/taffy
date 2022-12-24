@@ -1,7 +1,8 @@
 #[test]
 fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
+    use slotmap::Key;
     #[allow(unused_imports)]
-    use taffy::prelude::*;
+    use taffy::{layout::Layout, prelude::*};
     let mut taffy = taffy::Taffy::new();
     let node000 = taffy
         .new_leaf(taffy::style::Style {
@@ -92,24 +93,29 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
     println!("\nComputed tree:");
     taffy::debug::print_tree(&taffy, node);
     println!();
-    assert_eq!(taffy.layout(node).unwrap().size.width, 200f32);
-    assert_eq!(taffy.layout(node).unwrap().size.height, 200f32);
-    assert_eq!(taffy.layout(node).unwrap().location.x, 0f32);
-    assert_eq!(taffy.layout(node).unwrap().location.y, 0f32);
-    assert_eq!(taffy.layout(node0).unwrap().size.width, 190f32);
-    assert_eq!(taffy.layout(node0).unwrap().size.height, 48f32);
-    assert_eq!(taffy.layout(node0).unwrap().location.x, 5f32);
-    assert_eq!(taffy.layout(node0).unwrap().location.y, 5f32);
-    assert_eq!(taffy.layout(node00).unwrap().size.width, 92f32);
-    assert_eq!(taffy.layout(node00).unwrap().size.height, 25f32);
-    assert_eq!(taffy.layout(node00).unwrap().location.x, 8f32);
-    assert_eq!(taffy.layout(node00).unwrap().location.y, 8f32);
-    assert_eq!(taffy.layout(node000).unwrap().size.width, 36f32);
-    assert_eq!(taffy.layout(node000).unwrap().size.height, 6f32);
-    assert_eq!(taffy.layout(node000).unwrap().location.x, 10f32);
-    assert_eq!(taffy.layout(node000).unwrap().location.y, 10f32);
-    assert_eq!(taffy.layout(node1).unwrap().size.width, 200f32);
-    assert_eq!(taffy.layout(node1).unwrap().size.height, 142f32);
-    assert_eq!(taffy.layout(node1).unwrap().location.x, 0f32);
-    assert_eq!(taffy.layout(node1).unwrap().location.y, 58f32);
+    let Layout { size, location, .. } = taffy.layout(node).unwrap();
+    assert_eq!(size.width, 200f32, "width of node {:?}. Expected {}. Actual {}", node.data(), 200f32, size.width);
+    assert_eq!(size.height, 200f32, "height of node {:?}. Expected {}. Actual {}", node.data(), 200f32, size.height);
+    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.x);
+    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.y);
+    let Layout { size, location, .. } = taffy.layout(node0).unwrap();
+    assert_eq!(size.width, 190f32, "width of node {:?}. Expected {}. Actual {}", node0.data(), 190f32, size.width);
+    assert_eq!(size.height, 48f32, "height of node {:?}. Expected {}. Actual {}", node0.data(), 48f32, size.height);
+    assert_eq!(location.x, 5f32, "x of node {:?}. Expected {}. Actual {}", node0.data(), 5f32, location.x);
+    assert_eq!(location.y, 5f32, "y of node {:?}. Expected {}. Actual {}", node0.data(), 5f32, location.y);
+    let Layout { size, location, .. } = taffy.layout(node00).unwrap();
+    assert_eq!(size.width, 92f32, "width of node {:?}. Expected {}. Actual {}", node00.data(), 92f32, size.width);
+    assert_eq!(size.height, 25f32, "height of node {:?}. Expected {}. Actual {}", node00.data(), 25f32, size.height);
+    assert_eq!(location.x, 8f32, "x of node {:?}. Expected {}. Actual {}", node00.data(), 8f32, location.x);
+    assert_eq!(location.y, 8f32, "y of node {:?}. Expected {}. Actual {}", node00.data(), 8f32, location.y);
+    let Layout { size, location, .. } = taffy.layout(node000).unwrap();
+    assert_eq!(size.width, 36f32, "width of node {:?}. Expected {}. Actual {}", node000.data(), 36f32, size.width);
+    assert_eq!(size.height, 6f32, "height of node {:?}. Expected {}. Actual {}", node000.data(), 6f32, size.height);
+    assert_eq!(location.x, 10f32, "x of node {:?}. Expected {}. Actual {}", node000.data(), 10f32, location.x);
+    assert_eq!(location.y, 10f32, "y of node {:?}. Expected {}. Actual {}", node000.data(), 10f32, location.y);
+    let Layout { size, location, .. } = taffy.layout(node1).unwrap();
+    assert_eq!(size.width, 200f32, "width of node {:?}. Expected {}. Actual {}", node1.data(), 200f32, size.width);
+    assert_eq!(size.height, 142f32, "height of node {:?}. Expected {}. Actual {}", node1.data(), 142f32, size.height);
+    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node1.data(), 0f32, location.x);
+    assert_eq!(location.y, 58f32, "y of node {:?}. Expected {}. Actual {}", node1.data(), 58f32, location.y);
 }

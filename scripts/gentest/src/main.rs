@@ -191,7 +191,8 @@ fn generate_test(name: impl AsRef<str>, description: &Value) -> TokenStream {
         #[test]
         fn #name() {
             #[allow(unused_imports)]
-            use taffy::prelude::*;
+            use taffy::{layout::Layout, prelude::*};
+            use slotmap::Key;
             let mut taffy = taffy::Taffy::new();
             #node_description
             taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
@@ -227,10 +228,11 @@ fn generate_assertions(ident: &str, node: &Value) -> TokenStream {
     let ident = Ident::new(ident, Span::call_site());
 
     quote!(
-        assert_eq!(taffy.layout(#ident).unwrap().size.width, #width);
-        assert_eq!(taffy.layout(#ident).unwrap().size.height, #height);
-        assert_eq!(taffy.layout(#ident).unwrap().location.x, #x);
-        assert_eq!(taffy.layout(#ident).unwrap().location.y, #y);
+        let Layout { size, location, .. } = taffy.layout(#ident).unwrap();
+        assert_eq!(size.width, #width, "width of node {:?}. Expected {}. Actual {}", #ident.data(),  #width, size.width);
+        assert_eq!(size.height, #height, "height of node {:?}. Expected {}. Actual {}", #ident.data(),  #height, size.height);
+        assert_eq!(location.x, #x, "x of node {:?}. Expected {}. Actual {}", #ident.data(),  #x, location.x);
+        assert_eq!(location.y, #y, "y of node {:?}. Expected {}. Actual {}", #ident.data(),  #y, location.y);
 
         #children
     )
