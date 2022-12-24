@@ -358,6 +358,10 @@ mod grid_max_content_single_item_margin_fixed;
 #[cfg(feature = "experimental_grid")]
 mod grid_max_content_single_item_margin_percent;
 #[cfg(feature = "experimental_grid")]
+mod grid_min_content_flex_column;
+#[cfg(feature = "experimental_grid")]
+mod grid_min_content_flex_row;
+#[cfg(feature = "experimental_grid")]
 mod grid_min_content_flex_single_item;
 #[cfg(feature = "experimental_grid")]
 mod grid_min_content_flex_single_item_margin_auto;

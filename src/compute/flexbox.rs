@@ -9,7 +9,7 @@ use crate::geometry::{Point, Rect, Size};
 use crate::layout::{Layout, RunMode, SizingMode};
 use crate::math::MaybeMath;
 use crate::node::Node;
-use crate::prelude::TaffyMaxContent;
+use crate::prelude::{TaffyMaxContent, TaffyMinContent};
 use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::{
     AlignContent, AlignItems, AlignSelf, AvailableSpace, Dimension, Display, FlexWrap, JustifyContent,
@@ -35,6 +35,10 @@ struct FlexItem {
     max_size: Size<Option<f32>>,
     /// The cross-alignment of this item
     align_self: AlignSelf,
+
+    /// The minimum size of the item. This differs from min_size above because it also
+    /// takes into account content based automatic minimum sizes
+    resolved_minimum_size: Size<f32>,
 
     /// The final offset of this item
     position: Rect<Option<f32>>,
@@ -201,6 +205,15 @@ fn compute_preliminary(
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("determine_flex_base_size");
     determine_flex_base_size(tree, known_dimensions, &constants, available_space, &mut flex_items);
+
+    #[cfg(feature = "debug")]
+    for item in flex_items.iter() {
+        NODE_LOGGER.labelled_log("item.flex_basis", item.flex_basis);
+        NODE_LOGGER.labelled_log("item.inner_flex_basis", item.inner_flex_basis);
+        NODE_LOGGER.labelled_debug_log("item.hypothetical_outer_size", item.hypothetical_outer_size);
+        NODE_LOGGER.labelled_debug_log("item.hypothetical_inner_size", item.hypothetical_inner_size);
+        NODE_LOGGER.labelled_debug_log("item.resolved_minimum_size", item.resolved_minimum_size);
+    }
 
     // TODO: Add step 4 according to spec: https://www.w3.org/TR/css-flexbox-1/#algo-main-container
     // 9.3. Main Size Determination
@@ -431,6 +444,7 @@ fn generate_anonymous_flex_items(tree: &impl LayoutTree, node: Node, constants: 
             violation: 0.0,
             frozen: false,
 
+            resolved_minimum_size: Size::zero(),
             hypothetical_inner_size: Size::zero(),
             hypothetical_outer_size: Size::zero(),
             target_size: Size::zero(),
@@ -565,13 +579,8 @@ fn determine_flex_base_size(
 
         let child_known_dimensions = {
             let mut ckd = child.size;
-            if child.align_self == AlignSelf::Stretch {
-                if constants.is_column && ckd.width.is_none() {
-                    ckd.width = available_space.width.into_option();
-                }
-                if constants.is_row && ckd.height.is_none() {
-                    ckd.height = available_space.height.into_option();
-                }
+            if child.align_self == AlignSelf::Stretch && ckd.cross(constants.dir).is_none() {
+                ckd.set_cross(constants.dir, available_space.cross(constants.dir).into_option());
             }
             ckd
         };
@@ -579,13 +588,12 @@ fn determine_flex_base_size(
         child.flex_basis = compute_node_layout(
             tree,
             child.node,
-            child_known_dimensions.maybe_min(child.max_size),
+            child_known_dimensions,
             available_space,
             RunMode::ComputeSize,
             SizingMode::ContentSize,
         )
-        .main(constants.dir)
-        .maybe_min(child.max_size.main(constants.dir));
+        .main(constants.dir);
     }
 
     // The hypothetical main size is the item’s flex base size clamped according to its
@@ -595,26 +603,36 @@ fn determine_flex_base_size(
         child.inner_flex_basis =
             child.flex_basis - child.padding.main_axis_sum(constants.dir) - child.border.main_axis_sum(constants.dir);
 
-        // TODO - not really spec abiding but needs to be done somewhere. probably somewhere else though.
-        // The following logic was developed not from the spec but by trail and error looking into how
-        // webkit handled various scenarios. Can probably be solved better by passing in
-        // min-content max-content constraints from the top
-        let min_main = compute_node_layout(
+        let child_known_dimensions = {
+            let mut ckd = Size::NONE;
+            if child.align_self == AlignSelf::Stretch && ckd.cross(constants.dir).is_none() {
+                ckd.set_cross(constants.dir, available_space.cross(constants.dir).into_option());
+            }
+            ckd
+        };
+
+        let min_content_size = compute_node_layout(
             tree,
             child.node,
-            Size::NONE,
-            available_space,
+            child_known_dimensions, // Should possibly also be Size::NONE
+            Size::MIN_CONTENT,
             RunMode::ComputeSize,
             SizingMode::ContentSize,
-        )
-        .main(constants.dir)
-        .maybe_clamp(child.min_size.main(constants.dir), child.size.main(constants.dir))
-        .into();
+        );
 
-        child
-            .hypothetical_inner_size
-            .set_main(constants.dir, child.flex_basis.maybe_clamp(min_main, child.max_size.main(constants.dir)));
+        // 4.5. Automatic Minimum Size of Flex Items
+        // https://www.w3.org/TR/css-flexbox-1/#min-size-auto
+        let specified = child.size.maybe_min(child.max_size);
+        child.resolved_minimum_size = child.min_size.unwrap_or(min_content_size.maybe_min(specified));
 
+        let hypothetical_inner_min_main = min_content_size
+            .main(constants.dir)
+            .maybe_clamp(child.resolved_minimum_size.main(constants.dir).into(), child.size.main(constants.dir))
+            .into();
+        child.hypothetical_inner_size.set_main(
+            constants.dir,
+            child.flex_basis.maybe_clamp(hypothetical_inner_min_main, child.max_size.main(constants.dir)),
+        );
         child.hypothetical_outer_size.set_main(
             constants.dir,
             child.hypothetical_inner_size.main(constants.dir) + child.margin.main_axis_sum(constants.dir),
@@ -770,7 +788,7 @@ fn resolve_flexible_lengths(
             .iter()
             .map(|child| {
                 child.margin.main_axis_sum(constants.dir)
-                    + if child.frozen { child.target_size.main(constants.dir) } else { child.flex_basis }
+                    + if child.frozen { child.outer_target_size.main(constants.dir) } else { child.flex_basis }
             })
             .sum::<f32>();
 
@@ -798,7 +816,7 @@ fn resolve_flexible_lengths(
                 .iter()
                 .map(|child| {
                     child.margin.main_axis_sum(constants.dir)
-                        + if child.frozen { child.target_size.main(constants.dir) } else { child.flex_basis }
+                        + if child.frozen { child.outer_target_size.main(constants.dir) } else { child.flex_basis }
                 })
                 .sum::<f32>();
 
@@ -870,29 +888,9 @@ fn resolve_flexible_lengths(
         //    If the item’s target main size was made larger by this, it’s a min violation.
 
         let total_violation = unfrozen.iter_mut().fold(0.0, |acc, child| -> f32 {
-            // TODO - not really spec abiding but needs to be done somewhere. probably somewhere else though.
-            // The following logic was developed not from the spec but by trial and error looking into how
-            // webkit handled various scenarios. Can probably be solved better by passing in
-            // min-content max-content constraints from the top. Need to figure out correct thing to do here as
-            // just piling on more conditionals.
-            let min_main = if constants.is_row && !tree.needs_measure(child.node) {
-                compute_node_layout(
-                    tree,
-                    child.node,
-                    Size::NONE,
-                    available_space,
-                    RunMode::ComputeSize,
-                    SizingMode::ContentSize,
-                )
-                .width
-                .maybe_clamp(child.min_size.width, child.size.width)
-                .into()
-            } else {
-                child.min_size.main(constants.dir)
-            };
-
+            let resolved_min_main: Option<f32> = child.resolved_minimum_size.main(constants.dir).into();
             let max_main = child.max_size.main(constants.dir);
-            let clamped = child.target_size.main(constants.dir).maybe_clamp(min_main, max_main).max(0.0);
+            let clamped = child.target_size.main(constants.dir).maybe_clamp(resolved_min_main, max_main).max(0.0);
             child.violation = clamped - child.target_size.main(constants.dir);
             child.target_size.set_main(constants.dir, clamped);
             child.outer_target_size.set_main(
