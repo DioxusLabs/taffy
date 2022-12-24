@@ -444,16 +444,20 @@ mod measure {
 
     #[test]
     fn only_measure_once() {
-        use std::sync::atomic;
+        use std::sync::atomic::{AtomicU32, Ordering};
 
         let mut taffy = Taffy::new();
-        static NUM_MEASURES: atomic::AtomicU32 = atomic::AtomicU32::new(0);
+        static NUM_MEASURES: AtomicU32 = AtomicU32::new(0);
 
         let grandchild = taffy
             .new_leaf_with_measure(
                 Style { ..Default::default() },
                 MeasureFunc::Raw(|known_dimensions, _available_space| {
-                    NUM_MEASURES.fetch_add(1, atomic::Ordering::SeqCst);
+                    NUM_MEASURES.fetch_add(1, Ordering::SeqCst);
+
+                    println!("\n{}", NUM_MEASURES.load(Ordering::SeqCst));
+                    dbg!(known_dimensions);
+                    dbg!(_available_space);
                     Size {
                         width: known_dimensions.width.unwrap_or(50.0),
                         height: known_dimensions.height.unwrap_or(50.0),
@@ -467,6 +471,6 @@ mod measure {
         let node = taffy.new_with_children(Style { ..Default::default() }, &[child]).unwrap();
         taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
 
-        assert_eq!(NUM_MEASURES.load(atomic::Ordering::SeqCst), 1);
+        assert_eq!(NUM_MEASURES.load(Ordering::SeqCst), 2);
     }
 }

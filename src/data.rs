@@ -5,6 +5,8 @@
 use crate::layout::{Cache, Layout};
 use crate::style::Style;
 
+pub(crate) const CACHE_SIZE: usize = 5;
+
 /// Layout information for a given [`Node`](crate::node::Node)
 ///
 /// Stored in a [`Taffy`].
@@ -18,14 +20,14 @@ pub(crate) struct NodeData {
     pub(crate) needs_measure: bool,
 
     /// The primary cached results of the layout computation
-    pub(crate) size_cache: [Option<Cache>; 4],
+    pub(crate) size_cache: [Option<Cache>; CACHE_SIZE],
 }
 
 impl NodeData {
     /// Create the data for a new node
     #[must_use]
     pub const fn new(style: Style) -> Self {
-        Self { style, size_cache: [None; 4], layout: Layout::new(), needs_measure: false }
+        Self { style, size_cache: [None; CACHE_SIZE], layout: Layout::new(), needs_measure: false }
     }
 
     /// Marks a node and all of its parents (recursively) as dirty
@@ -33,6 +35,6 @@ impl NodeData {
     /// This clears any cached data and signals that the data must be recomputed.
     #[inline]
     pub fn mark_dirty(&mut self) {
-        self.size_cache = [None; 4];
+        self.size_cache = [None; CACHE_SIZE];
     }
 }

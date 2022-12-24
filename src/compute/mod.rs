@@ -7,6 +7,7 @@ pub(crate) mod leaf;
 #[cfg(feature = "experimental_grid")]
 pub(crate) mod grid;
 
+use crate::data::CACHE_SIZE;
 use crate::error::TaffyError;
 use crate::geometry::{Point, Size};
 use crate::layout::{Cache, Layout, RunMode, SizingMode};
@@ -129,8 +130,22 @@ fn compute_node_layout(
         }
     };
 
+    // Compute cache slot
+    let has_known_width = known_dimensions.width.is_some();
+    let has_known_height = known_dimensions.height.is_some();
+    let cache_slot = if has_known_width && has_known_height {
+        0
+    } else {
+        if has_known_width {
+            1 + (available_space.height == AvailableSpace::MinContent) as usize
+        } else if has_known_height {
+            1 + (available_space.width == AvailableSpace::MinContent) as usize
+        } else {
+            3 + (available_space.width == AvailableSpace::MinContent) as usize
+        }
+    };
+
     // Cache result
-    let cache_slot = (known_dimensions.width.is_some() as usize) + (known_dimensions.height.is_some() as usize * 2);
     *tree.cache_mut(node, cache_slot) =
         Some(Cache { known_dimensions, available_space, run_mode: cache_run_mode, cached_size: computed_size });
 
@@ -152,7 +167,7 @@ fn compute_from_cache(
     run_mode: RunMode,
     sizing_mode: SizingMode,
 ) -> Option<Size<f32>> {
-    for idx in 0..4 {
+    for idx in 0..CACHE_SIZE {
         let entry = tree.cache_mut(node, idx);
         #[cfg(feature = "debug")]
         NODE_LOGGER.labelled_debug_log("cache_entry", &entry);
