@@ -240,7 +240,7 @@ fn compute_preliminary(
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("resolve_flexible_lengths");
     for line in &mut flex_lines {
-        resolve_flexible_lengths(tree, line, &constants, original_gap, available_space);
+        resolve_flexible_lengths(tree, line, &constants, original_gap);
     }
 
     // TODO: Cleanup and make according to spec
@@ -715,7 +715,6 @@ fn resolve_flexible_lengths(
     line: &mut FlexLine,
     constants: &AlgoConstants,
     original_gap: Size<f32>,
-    available_space: Size<AvailableSpace>,
 ) {
     let total_original_main_axis_gap = sum_axis_gaps(original_gap.main(constants.dir), line.items.len());
     let total_main_axis_gap = sum_axis_gaps(constants.gap.main(constants.dir), line.items.len());
@@ -738,22 +737,26 @@ fn resolve_flexible_lengths(
     //    - If using the flex shrink factor: any item that has a flex base size
     //      smaller than its hypothetical main size
 
-    for child in line.items.iter_mut() {
-        // TODO - This is not found by reading the spec. Maybe this can be done in some other place
-        // instead. This was found by trail and error fixing tests to align with webkit output.
+    for child in line.items.iter_mut() {   
+        // This is somewhat bizarre in that it's asymetrical depending whether the flex container is a column or a row.
+        //
+        // I *think* this might relate to https://drafts.csswg.org/css-flexbox-1/#algo-main-container:
+        //
+        //    "The automatic block size of a block-level flex container is its max-content size."
+        // 
+        // Which could suggest that flex-basis defining a vertical size does not shrink because it is in the block axis, and the automatic size
+        // in the block axis is a MAX content size. Whereas a flex-basis defining a horizontal size does shrink because the automatic size in 
+        // inline axis is MIN content size (although I don't have a reference for that).
+        //
+        // Ultimately, this was not found by reading the spec, but by trial and error fixing tests to align with Webkit/Firefox output.
+        // (see the `flex_basis_unconstraint_row` and `flex_basis_uncontraint_column` generated tests which demonstrate this)
         if constants.node_inner_size.main(constants.dir).is_none() && constants.is_row {
             child.target_size.set_main(
                 constants.dir,
-                compute_node_layout(
-                    tree,
-                    child.node,
-                    child.size.maybe_clamp(child.min_size, child.max_size),
-                    available_space,
-                    RunMode::ComputeSize,
-                    SizingMode::ContentSize,
-                )
-                .main(constants.dir)
-                .maybe_clamp(child.min_size.main(constants.dir), child.max_size.main(constants.dir)),
+                child.size.main(constants.dir).unwrap_or(0.0).maybe_clamp(
+                    child.resolved_minimum_size.main(constants.dir).into(),
+                    child.max_size.main(constants.dir),
+                ),
             );
         } else {
             child.target_size.set_main(constants.dir, child.hypothetical_inner_size.main(constants.dir));
