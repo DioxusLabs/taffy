@@ -135,14 +135,12 @@ fn compute_node_layout(
     let has_known_height = known_dimensions.height.is_some();
     let cache_slot = if has_known_width && has_known_height {
         0
+    } else if has_known_width {
+        1 + (available_space.height == AvailableSpace::MinContent) as usize
+    } else if has_known_height {
+        1 + (available_space.width == AvailableSpace::MinContent) as usize
     } else {
-        if has_known_width {
-            1 + (available_space.height == AvailableSpace::MinContent) as usize
-        } else if has_known_height {
-            1 + (available_space.width == AvailableSpace::MinContent) as usize
-        } else {
-            3 + (available_space.width == AvailableSpace::MinContent) as usize
-        }
+        3 + (available_space.width == AvailableSpace::MinContent) as usize
     };
 
     // Cache result
