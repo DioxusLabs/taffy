@@ -31,7 +31,9 @@ fn measure_standard_text(
         let mut current_line_length = 0;
         for line in &lines {
             if current_line_length + line.len() > width_line_length {
-                line_count += 1;
+                if current_line_length > 0 {
+                    line_count += 1
+                };
                 current_line_length = line.len();
             } else {
                 current_line_length += line.len();
@@ -443,6 +445,20 @@ mod max_height_overrides_height_on_root;
 mod max_width;
 mod max_width_overrides_width;
 mod max_width_overrides_width_on_root;
+mod measure_child;
+mod measure_child_absolute;
+mod measure_child_constraint;
+mod measure_child_constraint_padding_parent;
+mod measure_child_with_flex_grow;
+mod measure_child_with_flex_shrink;
+mod measure_flex_basis_overrides_measure;
+mod measure_height_overrides_measure;
+mod measure_remeasure_child_after_growing;
+mod measure_remeasure_child_after_shrinking;
+mod measure_remeasure_child_after_stretching;
+mod measure_root;
+mod measure_stretch_overrides_measure;
+mod measure_width_overrides_measure;
 mod min_height;
 mod min_height_overrides_height;
 mod min_height_overrides_height_on_root;
@@ -927,6 +943,20 @@ fn benchmark(c: &mut Criterion) {
             max_width::compute();
             max_width_overrides_width::compute();
             max_width_overrides_width_on_root::compute();
+            measure_child::compute();
+            measure_child_absolute::compute();
+            measure_child_constraint::compute();
+            measure_child_constraint_padding_parent::compute();
+            measure_child_with_flex_grow::compute();
+            measure_child_with_flex_shrink::compute();
+            measure_flex_basis_overrides_measure::compute();
+            measure_height_overrides_measure::compute();
+            measure_remeasure_child_after_growing::compute();
+            measure_remeasure_child_after_shrinking::compute();
+            measure_remeasure_child_after_stretching::compute();
+            measure_root::compute();
+            measure_stretch_overrides_measure::compute();
+            measure_width_overrides_measure::compute();
             min_height::compute();
             min_height_overrides_height::compute();
             min_height_overrides_height_on_root::compute();
