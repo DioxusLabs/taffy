@@ -130,20 +130,8 @@ fn compute_node_layout(
         }
     };
 
-    // Compute cache slot
-    let has_known_width = known_dimensions.width.is_some();
-    let has_known_height = known_dimensions.height.is_some();
-    let cache_slot = if has_known_width && has_known_height {
-        0
-    } else if has_known_width {
-        1 + (available_space.height == AvailableSpace::MinContent) as usize
-    } else if has_known_height {
-        1 + (available_space.width == AvailableSpace::MinContent) as usize
-    } else {
-        3 + (available_space.width == AvailableSpace::MinContent) as usize
-    };
-
     // Cache result
+    let cache_slot = compute_cache_slot(known_dimensions, available_space);
     *tree.cache_mut(node, cache_slot) =
         Some(Cache { known_dimensions, available_space, run_mode: cache_run_mode, cached_size: computed_size });
 
@@ -153,6 +141,51 @@ fn compute_node_layout(
     NODE_LOGGER.pop_node();
 
     computed_size
+}
+
+
+/// Return the cache slot to cache the current computed result in
+///
+/// ## Caching Strategy
+///
+/// We need multiple cache slots, because a node's size is often queried by it's parent multiple times in the course of the layout
+/// process, and we don't want later results to clobber earlier ones.
+///
+/// The two variables that we care about when determining cache slot are:
+///
+///   - How many "known_dimensions" are set. In the worst case, a node may be called first with neither dimensions known known_dimensions,
+///     then with one dimension known (either width of height - which doesn't matter for our purposes here), and then with both dimensions
+///     known.
+///   - Whether unknown dimensions are being sized under a min-content or a max-content available space constraint (definite available space
+///     shares a cache slot with max-content because a node will generally be sized under one or the other but not both).
+///
+/// ## Cache slots:
+///
+/// - Slot 0: Both known_dimensions were set
+/// - Slot 1: 1 of 2 known_dimensions were set and the other dimension was either a MaxContent or Definite available space constraint
+/// - Slot 2: 1 of 2 known_dimensions were set and the other dimension was a MinContent constraint
+/// - Slot 3: Neither known_dimensions were set and we are sizing under a MaxContent or Definite available space constraint
+/// - Slot 4: Neither known_dimensions were set and we are sizing under a MinContent constraint
+#[inline]
+fn compute_cache_slot(known_dimensions: Size<Option<f32>>, available_space: Size<AvailableSpace>) -> usize {
+    let has_known_width = known_dimensions.width.is_some();
+    let has_known_height = known_dimensions.height.is_some();
+
+    // Slot 0: Both known_dimensions were set
+    if has_known_width && has_known_height {
+        return 0;
+    }
+
+    // Slot 1: 1 of 2 known_dimensions were set and the other dimension was either a MaxContent or Definite available space constraint
+    // Slot 2: 1 of 2 known_dimensions were set and the other dimension was a MinContent constraint
+    if has_known_width || has_known_height {
+        let other_dim_available_space = if has_known_width { available_space.height } else { available_space.width };
+        return 1 + (other_dim_available_space == AvailableSpace::MinContent) as usize;
+    }
+
+    // Slot 3: Neither known_dimensions were set and we are sizing under a MaxContent or Definite available space constraint
+    // Slot 4: Neither known_dimensions were set and we are sizing under a MinContent constraint
+    3 + (available_space.width == AvailableSpace::MinContent) as usize
 }
 
 /// Try to get the computation result from the cache.
@@ -175,12 +208,8 @@ fn compute_from_cache(
                 return None;
             }
 
-            // if known_dimensions.width == entry.known_dimensions.width
-            // && known_dimensions.height == entry.known_dimensions.height
             if (known_dimensions.width == entry.known_dimensions.width || known_dimensions.width == Some(entry.cached_size.width))
                 && (known_dimensions.height == entry.known_dimensions.height || known_dimensions.height == Some(entry.cached_size.height))
-                // && entry.available_space.width.is_roughly_equal(available_space.width)
-                // && entry.available_space.height.is_roughly_equal(available_space.height)
                 && (
                   known_dimensions.width.is_some()
                   || entry.available_space.width.is_roughly_equal(available_space.width)
@@ -191,8 +220,6 @@ fn compute_from_cache(
                   || entry.available_space.height.is_roughly_equal(available_space.height)
                   || (sizing_mode == SizingMode::ContentSize && available_space.height.is_definite() && available_space.height.unwrap() >= entry.cached_size.height)
                 )
-            // && (entry.available_space.width.is_roughly_equal(available_space.width) || (available_space.width.is_definite() && available_space.width.unwrap() >= entry.cached_size.width))
-            // && (entry.available_space.height.is_roughly_equal(available_space.height) || (available_space.height.is_definite() && available_space.height.unwrap() >= entry.cached_size.height))
             {
                 return Some(entry.cached_size);
             }
