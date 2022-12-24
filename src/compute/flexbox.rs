@@ -594,7 +594,6 @@ fn determine_flex_base_size(
             SizingMode::ContentSize,
         )
         .main(constants.dir);
-        // .maybe_min(child.max_size.main(constants.dir))
     }
 
     // The hypothetical main size is the item’s flex base size clamped according to its
