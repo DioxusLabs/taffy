@@ -459,10 +459,6 @@ mod measure {
                 Style { ..Default::default() },
                 MeasureFunc::Raw(|known_dimensions, _available_space| {
                     NUM_MEASURES.fetch_add(1, Ordering::SeqCst);
-
-                    println!("\n{}", NUM_MEASURES.load(Ordering::SeqCst));
-                    dbg!(known_dimensions);
-                    dbg!(_available_space);
                     Size {
                         width: known_dimensions.width.unwrap_or(50.0),
                         height: known_dimensions.height.unwrap_or(50.0),
