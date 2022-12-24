@@ -3,6 +3,7 @@ use slotmap::Key;
 use std::sync::Mutex;
 
 use crate::node::Node;
+use crate::style;
 use crate::tree::LayoutTree;
 
 /// Prints a debug representation of the computed layout for a tree of nodes, starting with the passed root node.
@@ -13,14 +14,24 @@ pub fn print_tree(tree: &impl LayoutTree, root: Node) {
 
 fn print_node(tree: &impl LayoutTree, node: Node, has_sibling: bool, lines_string: String) {
     let layout = tree.layout(node);
+    let style = tree.style(node);
 
     let num_children = tree.child_count(node);
 
+    let display = match (num_children, style.display) {
+        (_, style::Display::None) => "NONE",
+        (0, _) => "LEAF",
+        (_, style::Display::Flex) => "FLEX",
+        #[cfg(feature = "experimental_grid")]
+        (_, style::Display::Grid) => "GRID",
+    };
+
     let fork_string = if has_sibling { "├── " } else { "└── " };
     println!(
-        "{lines}{fork}[x: {x:<4} y: {y:<4} width: {width:<4} height: {height:<4}] ({key:?})",
+        "{lines}{fork} {display} [x: {x:<4} y: {y:<4} width: {width:<4} height: {height:<4}] ({key:?})",
         lines = lines_string,
         fork = fork_string,
+        display = display,
         x = layout.location.x,
         y = layout.location.y,
         width = layout.size.width,
