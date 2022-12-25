@@ -8,7 +8,9 @@
 
 ### Removed
 
-- `top_from_points`, `bot_from_points`, `top_from_percent`, and `bot_from_percent` methods removed from `Rect<Dimension>`. These functions were incredibly specific for an unusual use case, so we would be surprised if anyone was using them. Please use the new style helpers instead.
+- Removed `top_from_points`, `bot_from_points`, `top_from_percent`, and `bot_from_percent` methods removed from `Rect<Dimension>`. These functions were incredibly specific for an unusual use case, so we would be surprised if anyone was using them. Please use the new style helpers instead.
+- Removed `min_main_size`, `max_main_size`, `min_cross_size`, `max_cross_size`, and `cross_size` methods from `Style`. Use the more general `cross` and `main` methods directly on the `size`, `min_size`, and `max_size` properties instead.
+- Removed `main_margin_start`, `main_margin_end`, `cross_margin_start`, `cross_margin_end` from `Style`. Use the more general `main_start`, `main_end`, `cross_start`, and `cross_end` on the `margin` property instead.
 
 ## 0.3.0-alpha1
 
