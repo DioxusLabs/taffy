@@ -6,6 +6,10 @@
 
 - Flexbox nodes sized under a min-content constraint now size correctly (#291)
 
+### Removed
+
+- `top_from_points`, `bot_from_points`, `top_from_percent`, and `bot_from_percent` methods removed from `Rect<Dimension>`. These functions were incredibly specific for an unusual use case, so we would be surprised if anyone was using them. Please use the new style helpers instead.
+
 ## 0.3.0-alpha1
 
 This is the first in a series of planned alpha releases to allow users of Taffy to try out the new CSS Grid layout mode in advance of a stable release. We hope that by marking this is alpha release we are clearly communicating that this a pre-release and that the implementation is not yet of production quality. But we never-the-less encourage you to try it out. Feedback is welcome, and bug reports for the Grid implementation are being accepted as of this release.
