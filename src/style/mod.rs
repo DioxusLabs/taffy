@@ -228,7 +228,6 @@ impl Default for Style {
     }
 }
 
-#[allow(clippy::bool_assert_comparison)]
 #[cfg(test)]
 mod tests {
     use super::Style;
@@ -281,33 +280,5 @@ mod tests {
 
         assert_eq!(Style::DEFAULT, Style::default());
         assert_eq!(Style::DEFAULT, old_defaults);
-    }
-
-    mod test_flex_direction {
-        use crate::style::*;
-
-        #[test]
-        fn flex_direction_is_row() {
-            assert_eq!(FlexDirection::Row.is_row(), true);
-            assert_eq!(FlexDirection::RowReverse.is_row(), true);
-            assert_eq!(FlexDirection::Column.is_row(), false);
-            assert_eq!(FlexDirection::ColumnReverse.is_row(), false);
-        }
-
-        #[test]
-        fn flex_direction_is_column() {
-            assert_eq!(FlexDirection::Row.is_column(), false);
-            assert_eq!(FlexDirection::RowReverse.is_column(), false);
-            assert_eq!(FlexDirection::Column.is_column(), true);
-            assert_eq!(FlexDirection::ColumnReverse.is_column(), true);
-        }
-
-        #[test]
-        fn flex_direction_is_reverse() {
-            assert_eq!(FlexDirection::Row.is_reverse(), false);
-            assert_eq!(FlexDirection::RowReverse.is_reverse(), true);
-            assert_eq!(FlexDirection::Column.is_reverse(), false);
-            assert_eq!(FlexDirection::ColumnReverse.is_reverse(), true);
-        }
     }
 }
