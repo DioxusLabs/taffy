@@ -13,13 +13,13 @@ pub(crate) use self::alloc::*;
 pub(crate) use self::core::*;
 
 /// Returns the largest of two f32 values
-#[cfg(feature = "experimental_grid")]
+#[cfg(feature = "grid")]
 pub(crate) fn f32_max(a: f32, b: f32) -> f32 {
     core::cmp::max_by(a, b, |a, b| a.total_cmp(b))
 }
 
 /// Returns the smallest of two f32 values
-#[cfg(feature = "experimental_grid")]
+#[cfg(feature = "grid")]
 pub(crate) fn f32_min(a: f32, b: f32) -> f32 {
     core::cmp::min_by(a, b, |a, b| a.total_cmp(b))
 }
@@ -34,7 +34,7 @@ mod std {
     /// A vector of child nodes
     pub(crate) type ChildrenVec<A> = std::vec::Vec<A>;
     /// A vector of grid tracks
-    #[cfg(feature = "experimental_grid")]
+    #[cfg(feature = "grid")]
     pub(crate) type GridTrackVec<A> = std::vec::Vec<A>;
 
     /// Creates a new vector with the capacity for the specified number of items before it must be resized

@@ -4,7 +4,7 @@ pub(crate) mod common;
 pub(crate) mod flexbox;
 pub(crate) mod leaf;
 
-#[cfg(feature = "experimental_grid")]
+#[cfg(feature = "grid")]
 pub(crate) mod grid;
 
 use crate::data::CACHE_SIZE;
@@ -120,7 +120,7 @@ fn compute_node_layout(
                 NODE_LOGGER.log("Algo: flexbox");
                 self::flexbox::compute(tree, node, known_dimensions, available_space, run_mode)
             }
-            #[cfg(feature = "experimental_grid")]
+            #[cfg(feature = "grid")]
             Display::Grid => self::grid::compute(tree, node, available_space),
             Display::None => {
                 #[cfg(feature = "debug")]

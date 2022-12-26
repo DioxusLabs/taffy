@@ -1,21 +1,21 @@
 // This creates a so-called "holy grail" layout using the CSS Grid layout algorithm
 // See: https://en.wikipedia.org/wiki/Holy_grail_(web_design)
 
-// NOTE: This example requires the `experimental_grid` feature flag to be enabled.
+// NOTE: This example requires the `grid` feature flag to be enabled.
 
-#[cfg(not(feature = "experimental_grid"))]
+#[cfg(not(feature = "grid"))]
 fn main() {
-    println!("Error: this example requires the 'experimental_grid' feature to be enabled");
+    println!("Error: this example requires the 'grid' feature to be enabled");
     println!("Try:");
-    println!("    cargo run --example grid_holy_grail --features experimental_grid")
+    println!("    cargo run --example grid_holy_grail --features grid")
 }
 
-#[cfg(feature = "experimental_grid")]
+#[cfg(feature = "grid")]
 fn default<T: Default>() -> T {
     Default::default()
 }
 
-#[cfg(feature = "experimental_grid")]
+#[cfg(feature = "grid")]
 fn main() -> Result<(), taffy::error::TaffyError> {
     use taffy::prelude::*;
 

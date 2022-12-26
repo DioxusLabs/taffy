@@ -141,7 +141,7 @@ impl Dimension {
     }
 
     /// Get Points value if value is Points variant
-    #[cfg(feature = "experimental_grid")]
+    #[cfg(feature = "grid")]
     pub(crate) fn into_option(self) -> Option<f32> {
         match self {
             Dimension::Points(value) => Some(value),

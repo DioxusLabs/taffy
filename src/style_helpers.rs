@@ -4,11 +4,11 @@ use crate::{
     style::LengthPercentage,
 };
 
-#[cfg(feature = "experimental_grid")]
+#[cfg(feature = "grid")]
 use crate::style::{GridTrackRepetition, NonRepeatedTrackSizingFunction, TrackSizingFunction};
 
 /// Returns an auto-repeated track definition
-#[cfg(feature = "experimental_grid")]
+#[cfg(feature = "grid")]
 pub fn repeat(
     repetition_kind: GridTrackRepetition,
     track_list: Vec<NonRepeatedTrackSizingFunction>,
