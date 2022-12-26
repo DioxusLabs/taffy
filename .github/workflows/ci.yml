@@ -52,7 +52,7 @@ jobs:
           command: test
           args: --no-default-features --features alloc,grid
 
-  test-features-alloc-no-grod:
+  test-features-alloc-no-grid:
     name: "Test Suite [Features: alloc (no grid)]"
     runs-on: ubuntu-latest
     steps:
