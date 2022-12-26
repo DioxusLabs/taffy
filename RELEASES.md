@@ -10,6 +10,8 @@
 ### Fixes
 
 - Flexbox nodes sized under a min-content constraint now size correctly (#291)
+- *BREAKING:* `Position` is now renamed to `Inset` and is now in line with [CSS inset specs](https://developer.mozilla.org/en-US/docs/Web/CSS/inset)
+- *BREAKING:* `PositionType` is now renamed to `Position` and is now in line with [CSS position specs](https://developer.mozilla.org/en-US/docs/Web/CSS/position)
 
 ### Removed
 
