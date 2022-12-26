@@ -53,7 +53,7 @@ impl Default for Display {
 /// [`PositionType::Relative`] is the default value, in contrast to the default behavior in CSS.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum PositionType {
+pub enum Position {
     /// The offset is computed relative to the final position given by the layout algorithm.
     /// Offsets do not affect the position of any other items; they are effectively a correction factor applied at the end.
     Relative,
@@ -65,7 +65,7 @@ pub enum PositionType {
     Absolute,
 }
 
-impl Default for PositionType {
+impl Default for Position {
     fn default() -> Self {
         Self::Relative
     }
@@ -94,7 +94,7 @@ pub struct Style {
 
     // Position properties
     /// What should the `position` value of this struct use as a base offset?
-    pub position_type: PositionType,
+    pub position: Position,
     /// How should the position of this element be tweaked relative to the layout defined?
     pub inset: Rect<LengthPercentageAuto>,
 
@@ -183,7 +183,7 @@ impl Style {
     /// The [`Default`] layout, in a form that can be used in const functions
     pub const DEFAULT: Style = Style {
         display: Display::Flex,
-        position_type: PositionType::Relative,
+        position: Position::Relative,
         flex_direction: FlexDirection::Row,
         flex_wrap: FlexWrap::NoWrap,
         align_items: None,
@@ -240,7 +240,7 @@ mod tests {
 
         let old_defaults = Style {
             display: Default::default(),
-            position_type: Default::default(),
+            position: Default::default(),
             flex_direction: Default::default(),
             flex_wrap: Default::default(),
             align_items: Default::default(),

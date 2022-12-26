@@ -13,7 +13,7 @@ use crate::prelude::{TaffyMaxContent, TaffyMinContent};
 use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::{
     AlignContent, AlignItems, AlignSelf, AvailableSpace, Dimension, Display, FlexWrap, JustifyContent,
-    LengthPercentageAuto, PositionType,
+    LengthPercentageAuto, Position,
 };
 use crate::style::{FlexDirection, Style};
 use crate::sys::Vec;
@@ -426,7 +426,7 @@ fn compute_constants(style: &Style, node_size: Size<Option<f32>>, parent_size: S
 fn generate_anonymous_flex_items(tree: &impl LayoutTree, node: Node, constants: &AlgoConstants) -> Vec<FlexItem> {
     tree.children(node)
         .map(|child| (child, tree.style(*child)))
-        .filter(|(_, style)| style.position_type != PositionType::Absolute)
+        .filter(|(_, style)| style.position != Position::Absolute)
         .filter(|(_, style)| style.display != Display::None)
         .map(|(child, child_style)| FlexItem {
             node: *child,
@@ -1556,7 +1556,7 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
         .children(node)
         .cloned()
         .enumerate()
-        .filter(|(_, child)| tree.style(*child).position_type == PositionType::Absolute)
+        .filter(|(_, child)| tree.style(*child).position == Position::Absolute)
         .collect::<Vec<_>>();
 
     for (order, child) in candidates {
