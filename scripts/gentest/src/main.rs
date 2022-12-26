@@ -356,9 +356,9 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
         _ => quote!(),
     };
 
-    let position_type = match style["positionType"] {
+    let position = match style["position"] {
         Value::String(ref value) => match value.as_ref() {
-            "absolute" => quote!(position_type: taffy::style::PositionType::Absolute,),
+            "absolute" => quote!(position: taffy::style::Position::Absolute,),
             _ => quote!(),
         },
         _ => quote!(),
@@ -528,7 +528,7 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
     edges_quoted!(style, margin, generate_length_percentage_auto, quote!(zero()));
     edges_quoted!(style, padding, generate_length_percentage, quote!(zero()));
     edges_quoted!(style, border, generate_length_percentage, quote!(zero()));
-    edges_quoted!(style, position, generate_length_percentage_auto, quote!(auto()));
+    edges_quoted!(style, inset, generate_length_percentage_auto, quote!(auto()));
 
     // Quote children
     let child_descriptions: Vec<Value> = match node["children"] {
@@ -557,7 +557,7 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
     let style = quote!(taffy::style::Style {
         #display
         #direction
-        #position_type
+        #position
         #flex_direction
         #flex_wrap
         #overflow
@@ -583,7 +583,7 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
         #max_size
         #margin
         #padding
-        #position
+        #inset
         #border
         ..Default::default()
     });
