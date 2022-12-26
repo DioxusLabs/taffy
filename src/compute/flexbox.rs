@@ -737,15 +737,15 @@ fn resolve_flexible_lengths(
     //    - If using the flex shrink factor: any item that has a flex base size
     //      smaller than its hypothetical main size
 
-    for child in line.items.iter_mut() {   
+    for child in line.items.iter_mut() {
         // This is somewhat bizarre in that it's asymetrical depending whether the flex container is a column or a row.
         //
         // I *think* this might relate to https://drafts.csswg.org/css-flexbox-1/#algo-main-container:
         //
         //    "The automatic block size of a block-level flex container is its max-content size."
-        // 
+        //
         // Which could suggest that flex-basis defining a vertical size does not shrink because it is in the block axis, and the automatic size
-        // in the block axis is a MAX content size. Whereas a flex-basis defining a horizontal size does shrink because the automatic size in 
+        // in the block axis is a MAX content size. Whereas a flex-basis defining a horizontal size does shrink because the automatic size in
         // inline axis is MIN content size (although I don't have a reference for that).
         //
         // Ultimately, this was not found by reading the spec, but by trial and error fixing tests to align with Webkit/Firefox output.
