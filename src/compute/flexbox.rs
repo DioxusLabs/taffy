@@ -41,7 +41,7 @@ struct FlexItem {
     resolved_minimum_size: Size<f32>,
 
     /// The final offset of this item
-    position: Rect<Option<f32>>,
+    inset: Rect<Option<f32>>,
     /// The margin of this item
     margin: Rect<f32>,
     /// The padding of this item
@@ -434,7 +434,7 @@ fn generate_anonymous_flex_items(tree: &impl LayoutTree, node: Node, constants: 
             min_size: child_style.min_size.maybe_resolve(constants.node_inner_size),
             max_size: child_style.max_size.maybe_resolve(constants.node_inner_size),
 
-            position: child_style.position.zip_size(constants.node_inner_size, |p, s| p.maybe_resolve(s)),
+            inset: child_style.inset.zip_size(constants.node_inner_size, |p, s| p.maybe_resolve(s)),
             margin: child_style.margin.resolve_or_zero(constants.node_inner_size.width),
             padding: child_style.padding.resolve_or_zero(constants.node_inner_size.width),
             border: child_style.border.resolve_or_zero(constants.node_inner_size.width),
@@ -1450,13 +1450,13 @@ fn calculate_flex_item(
     let offset_main = *total_offset_main
         + item.offset_main
         + item.margin.main_start(direction)
-        + (item.position.main_start(direction).unwrap_or(0.0) - item.position.main_end(direction).unwrap_or(0.0));
+        + (item.inset.main_start(direction).unwrap_or(0.0) - item.inset.main_end(direction).unwrap_or(0.0));
 
     let offset_cross = total_offset_cross
         + item.offset_cross
         + line_offset_cross
         + item.margin.cross_start(direction)
-        + (item.position.cross_start(direction).unwrap_or(0.0) - item.position.cross_end(direction).unwrap_or(0.0));
+        + (item.inset.cross_start(direction).unwrap_or(0.0) - item.inset.cross_end(direction).unwrap_or(0.0));
 
     let order = tree.children(node).position(|n| *n == item.node).unwrap() as u32;
 
@@ -1566,20 +1566,20 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
         let child_style = tree.style(child);
 
         // X-axis
-        let child_position_start = child_style.position.left.maybe_resolve(container_width);
+        let child_position_start = child_style.inset.left.maybe_resolve(container_width);
         let child_margin_start = child_style.margin.left.maybe_resolve(container_width);
         let start = child_position_start.maybe_add(child_margin_start);
 
-        let child_position_end = child_style.position.right.maybe_resolve(container_width);
+        let child_position_end = child_style.inset.right.maybe_resolve(container_width);
         let child_margin_end = child_style.margin.right.maybe_resolve(container_width);
         let end = child_position_end.maybe_add(child_margin_end);
 
         // Y-axis
-        let child_position_top = child_style.position.top.maybe_resolve(container_height);
+        let child_position_top = child_style.inset.top.maybe_resolve(container_height);
         let child_margin_top = child_style.margin.top.maybe_resolve(container_height);
         let top = child_position_top.maybe_add(child_margin_top);
 
-        let child_position_bottom = child_style.position.bottom.maybe_resolve(container_height);
+        let child_position_bottom = child_style.inset.bottom.maybe_resolve(container_height);
         let child_margin_bottom = child_style.margin.bottom.maybe_resolve(container_height);
         let bottom = child_position_bottom.maybe_add(child_margin_bottom);
 

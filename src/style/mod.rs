@@ -96,7 +96,7 @@ pub struct Style {
     /// What should the `position` value of this struct use as a base offset?
     pub position_type: PositionType,
     /// How should the position of this element be tweaked relative to the layout defined?
-    pub position: Rect<LengthPercentageAuto>,
+    pub inset: Rect<LengthPercentageAuto>,
 
     // Size properies
     /// Sets the initial size of the item
@@ -193,7 +193,7 @@ impl Style {
         justify_self: None,
         align_content: None,
         justify_content: None,
-        position: Rect::auto(),
+        inset: Rect::auto(),
         margin: Rect::zero(),
         padding: Rect::zero(),
         border: Rect::zero(),
@@ -250,7 +250,7 @@ mod tests {
             justify_self: Default::default(),
             align_content: Default::default(),
             justify_content: Default::default(),
-            position: Rect::auto(),
+            inset: Rect::auto(),
             margin: Rect::zero(),
             padding: Rect::zero(),
             border: Rect::zero(),
