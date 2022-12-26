@@ -695,7 +695,7 @@ fn expand_flexible_tracks(
         AvailableSpace::Definite(available_space) => {
             let used_space: f32 = axis_tracks.iter().map(|track| track.base_size).sum();
             let free_space = available_space - used_space;
-            if free_space == 0.0 {
+            if free_space <= 0.0 {
                 0.0
             } else {
                 find_size_of_fr(axis_tracks, available_space)
