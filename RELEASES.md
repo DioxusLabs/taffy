@@ -2,6 +2,11 @@
 
 ## 0.3.0-alpha2 (unreleased)
 
+### Changed
+
+- `experimental_grid` feature named to just `grid`
+- `grid` feature enabled by default
+
 ### Fixes
 
 - Flexbox nodes sized under a min-content constraint now size correctly (#291)
@@ -16,7 +21,7 @@
 
 This is the first in a series of planned alpha releases to allow users of Taffy to try out the new CSS Grid layout mode in advance of a stable release. We hope that by marking this is alpha release we are clearly communicating that this a pre-release and that the implementation is not yet of production quality. But we never-the-less encourage you to try it out. Feedback is welcome, and bug reports for the Grid implementation are being accepted as of this release.
 
-**Note: CSS Grid support must be enabled using the `experimental_grid` feature. For the time being this feature is not enabled by default.**
+<del>**Note: CSS Grid support must be enabled using the `experimental_grid` feature. For the time being this feature is not enabled by default.**</del> From `0.3.0-alpha2`, the CSS Grid feature is now enabled by default.
 
 ### New Feature: CSS Grid (Experimental)
 
@@ -90,7 +95,7 @@ The following properties and features are not supported, and there are no immedi
 See [examples/grid_holy_grail.rs](https://github.com/DioxusLabs/taffy/blob/main/examples/grid_holy_grail.rs) for an example using Taffy to implement the so-called [Holy Grail Layout](https://en.wikipedia.org/wiki/Holy_grail_(web_design)). If you want to run this example, the don't forget the enable the CSS Grid cargo feature:
 
 ```bash
-cargo run --example grid_holy_grail --features experimental_grid
+cargo run --example grid_holy_grail --features grid
 ```
 
 ### New Feature: Style Helpers
