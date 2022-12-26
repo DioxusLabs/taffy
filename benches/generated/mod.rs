@@ -405,9 +405,13 @@ mod grid_min_max_column_fixed_width_within_range;
 #[cfg(feature = "grid")]
 mod grid_out_of_order_items;
 #[cfg(feature = "grid")]
+mod grid_percent_nested_moderate;
+#[cfg(feature = "grid")]
 mod grid_percent_nested_with_padding_margin;
 #[cfg(feature = "grid")]
-mod grid_percent_simple;
+mod grid_percent_width_and_margin;
+#[cfg(feature = "grid")]
+mod grid_percent_width_and_padding;
 #[cfg(feature = "grid")]
 mod grid_relayout_vertical_text;
 #[cfg(feature = "grid")]
@@ -910,9 +914,13 @@ fn benchmark(c: &mut Criterion) {
             #[cfg(feature = "grid")]
             grid_out_of_order_items::compute();
             #[cfg(feature = "grid")]
+            grid_percent_nested_moderate::compute();
+            #[cfg(feature = "grid")]
             grid_percent_nested_with_padding_margin::compute();
             #[cfg(feature = "grid")]
-            grid_percent_simple::compute();
+            grid_percent_width_and_margin::compute();
+            #[cfg(feature = "grid")]
+            grid_percent_width_and_padding::compute();
             #[cfg(feature = "grid")]
             grid_relayout_vertical_text::compute();
             #[cfg(feature = "grid")]
