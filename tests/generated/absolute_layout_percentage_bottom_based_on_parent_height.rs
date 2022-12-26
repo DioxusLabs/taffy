@@ -6,12 +6,12 @@ fn absolute_layout_percentage_bottom_based_on_parent_height() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
+            position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(10f32),
                 height: taffy::style::Dimension::Points(10f32),
             },
-            position: taffy::geometry::Rect {
+            inset: taffy::geometry::Rect {
                 left: auto(),
                 right: auto(),
                 top: taffy::style::LengthPercentageAuto::Percent(0.5f32),
@@ -22,12 +22,12 @@ fn absolute_layout_percentage_bottom_based_on_parent_height() {
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
+            position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(10f32),
                 height: taffy::style::Dimension::Points(10f32),
             },
-            position: taffy::geometry::Rect {
+            inset: taffy::geometry::Rect {
                 left: auto(),
                 right: auto(),
                 top: auto(),
@@ -38,9 +38,9 @@ fn absolute_layout_percentage_bottom_based_on_parent_height() {
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
+            position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), height: auto() },
-            position: taffy::geometry::Rect {
+            inset: taffy::geometry::Rect {
                 left: auto(),
                 right: auto(),
                 top: taffy::style::LengthPercentageAuto::Percent(0.1f32),

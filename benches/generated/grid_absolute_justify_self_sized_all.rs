@@ -4,7 +4,7 @@ pub fn compute() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
+            position: taffy::style::Position::Absolute,
             justify_self: Some(taffy::style::JustifySelf::Start),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
@@ -15,7 +15,7 @@ pub fn compute() {
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
+            position: taffy::style::Position::Absolute,
             justify_self: Some(taffy::style::JustifySelf::Start),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(60f32),
@@ -26,7 +26,7 @@ pub fn compute() {
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
+            position: taffy::style::Position::Absolute,
             justify_self: Some(taffy::style::JustifySelf::End),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
@@ -37,7 +37,7 @@ pub fn compute() {
         .unwrap();
     let node3 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
+            position: taffy::style::Position::Absolute,
             justify_self: Some(taffy::style::JustifySelf::End),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(60f32),
@@ -48,7 +48,7 @@ pub fn compute() {
         .unwrap();
     let node4 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
+            position: taffy::style::Position::Absolute,
             justify_self: Some(taffy::style::JustifySelf::Center),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
@@ -59,7 +59,7 @@ pub fn compute() {
         .unwrap();
     let node5 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
+            position: taffy::style::Position::Absolute,
             justify_self: Some(taffy::style::JustifySelf::Center),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(60f32),
@@ -70,7 +70,7 @@ pub fn compute() {
         .unwrap();
     let node6 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
+            position: taffy::style::Position::Absolute,
             justify_self: Some(taffy::style::JustifySelf::Stretch),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
@@ -81,7 +81,7 @@ pub fn compute() {
         .unwrap();
     let node7 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
+            position: taffy::style::Position::Absolute,
             justify_self: Some(taffy::style::JustifySelf::Stretch),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(60f32),

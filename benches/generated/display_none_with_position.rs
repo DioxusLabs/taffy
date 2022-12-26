@@ -7,7 +7,7 @@ pub fn compute() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::None,
             flex_grow: 1f32,
-            position: taffy::geometry::Rect {
+            inset: taffy::geometry::Rect {
                 left: auto(),
                 right: auto(),
                 top: taffy::style::LengthPercentageAuto::Points(10f32),

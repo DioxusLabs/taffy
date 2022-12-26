@@ -8,7 +8,7 @@ pub fn compute() {
                 width: taffy::style::Dimension::Percent(0.45f32),
                 height: taffy::style::Dimension::Percent(0.55f32),
             },
-            position: taffy::geometry::Rect {
+            inset: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::Percent(0.1f32),
                 right: auto(),
                 top: taffy::style::LengthPercentageAuto::Percent(0.2f32),

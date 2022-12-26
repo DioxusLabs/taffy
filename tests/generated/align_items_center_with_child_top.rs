@@ -10,7 +10,7 @@ fn align_items_center_with_child_top() {
                 width: taffy::style::Dimension::Points(10f32),
                 height: taffy::style::Dimension::Points(10f32),
             },
-            position: taffy::geometry::Rect {
+            inset: taffy::geometry::Rect {
                 left: auto(),
                 right: auto(),
                 top: taffy::style::LengthPercentageAuto::Points(10f32),
