@@ -199,8 +199,8 @@ fn compute_from_cache(
 ) -> Option<Size<f32>> {
     for idx in 0..CACHE_SIZE {
         let entry = tree.cache_mut(node, idx);
-        #[cfg(feature = "debug")]
-        NODE_LOGGER.labelled_debug_log("cache_entry", &entry);
+        // #[cfg(feature = "debug")]
+        // NODE_LOGGER.labelled_debug_log("cache_entry", &entry);
         if let Some(entry) = entry {
             // Cached ComputeSize results are not valid if we are running in PerformLayout mode
             if entry.run_mode == RunMode::ComputeSize && run_mode == RunMode::PeformLayout {
