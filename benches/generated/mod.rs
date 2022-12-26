@@ -285,6 +285,8 @@ mod grid_fit_content_points_max_content;
 #[cfg(feature = "grid")]
 mod grid_fit_content_points_min_content;
 #[cfg(feature = "grid")]
+mod grid_flex_column_child;
+#[cfg(feature = "grid")]
 mod grid_fr_auto_no_sized_items;
 #[cfg(feature = "grid")]
 mod grid_fr_auto_single_item;
@@ -782,6 +784,8 @@ fn benchmark(c: &mut Criterion) {
             grid_fit_content_points_max_content::compute();
             #[cfg(feature = "grid")]
             grid_fit_content_points_min_content::compute();
+            #[cfg(feature = "grid")]
+            grid_flex_column_child::compute();
             #[cfg(feature = "grid")]
             grid_fr_auto_no_sized_items::compute();
             #[cfg(feature = "grid")]

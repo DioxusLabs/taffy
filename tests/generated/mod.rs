@@ -284,6 +284,8 @@ mod grid_fit_content_points_max_content;
 #[cfg(feature = "grid")]
 mod grid_fit_content_points_min_content;
 #[cfg(feature = "grid")]
+mod grid_flex_column_child;
+#[cfg(feature = "grid")]
 mod grid_fr_auto_no_sized_items;
 #[cfg(feature = "grid")]
 mod grid_fr_auto_single_item;
