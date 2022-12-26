@@ -21,7 +21,7 @@
 
 This is the first in a series of planned alpha releases to allow users of Taffy to try out the new CSS Grid layout mode in advance of a stable release. We hope that by marking this is alpha release we are clearly communicating that this a pre-release and that the implementation is not yet of production quality. But we never-the-less encourage you to try it out. Feedback is welcome, and bug reports for the Grid implementation are being accepted as of this release.
 
-<del>**Note: CSS Grid support must be enabled using the `experimental_grid` feature. For the time being this feature is not enabled by default.**</del> From `0.3.0-alpha2`, the CSS Grid feature is now enabled by default.
+~**Note: CSS Grid support must be enabled using the `experimental_grid` feature. For the time being this feature is not enabled by default.**~ From `0.3.0-alpha2`, the CSS Grid feature is now enabled by default.
 
 ### New Feature: CSS Grid (Experimental)
 
