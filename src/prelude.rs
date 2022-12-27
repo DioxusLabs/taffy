@@ -16,10 +16,10 @@ pub use crate::{
     tree::LayoutTree,
 };
 
-#[cfg(feature = "experimental_grid")]
+#[cfg(feature = "grid")]
 pub use crate::style::{
     GridAutoFlow, GridPlacement, GridTrackRepetition, MaxTrackSizingFunction, MinTrackSizingFunction,
     NonRepeatedTrackSizingFunction, TrackSizingFunction,
 };
-#[cfg(feature = "experimental_grid")]
+#[cfg(feature = "grid")]
 pub use crate::style_helpers::{line, repeat, span, TaffyGridLine, TaffyGridSpan};

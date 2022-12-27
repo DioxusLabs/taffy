@@ -9,7 +9,7 @@
 Currently Taffy implements only CSS based layout algorithms:
 
 - The stable `0.2.x` releases of Taffy implements the [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) layout algorithm.
-- Support for [CSS Grid](https://css-tricks.com/snippets/css/complete-guide-grid/) is in preview. If you wish to try this out then you should use the `0.3.x` alpha releases and enable the `experimental_grid` cargo feature. For information, see the [release notes](https://github.com/DioxusLabs/taffy/blob/main/RELEASES.md) and the [tracking issue](https://github.com/DioxusLabs/taffy/issues/204). Experimentation with the CSS Grid implementation is encouraged, and feedback and bug reports are welcomed.
+- Support for [CSS Grid](https://css-tricks.com/snippets/css/complete-guide-grid/) is in preview. If you wish to try this out then you should use the `0.3.x` alpha releases ~and enable the `experimental_grid` cargo feature~ (from `0.3.0-alpha2` the CSS Grid feature is enabled by default). For information, see the [release notes](https://github.com/DioxusLabs/taffy/blob/main/RELEASES.md) and the [tracking issue](https://github.com/DioxusLabs/taffy/issues/204). Experimentation with the CSS Grid implementation is encouraged, and feedback and bug reports are welcomed.
 
 Support for other paradigms [is planned](https://github.com/DioxusLabs/taffy/issues/28).
 

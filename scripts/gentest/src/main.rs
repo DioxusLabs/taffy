@@ -82,7 +82,7 @@ async fn main() {
         .map(|(name, _)| {
             let bench_mod = Ident::new(name, Span::call_site());
             if name.starts_with("grid") {
-                quote!(#[cfg(feature = "experimental_grid")] #bench_mod::compute())
+                quote!(#[cfg(feature = "grid")] #bench_mod::compute())
             } else {
                 quote!(#bench_mod::compute())
             }
@@ -94,7 +94,7 @@ async fn main() {
         .map(|(name, _)| {
             let name_ident = Ident::new(name, Span::call_site());
             if name.starts_with("grid") {
-                quote!(#[cfg(feature = "experimental_grid")] mod #name_ident;)
+                quote!(#[cfg(feature = "grid")] mod #name_ident;)
             } else {
                 quote!(mod #name_ident;)
             }

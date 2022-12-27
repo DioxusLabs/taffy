@@ -30,7 +30,7 @@ pub mod style;
 pub mod style_helpers;
 pub mod tree;
 
-#[cfg(feature = "experimental_grid")]
+#[cfg(feature = "grid")]
 mod axis;
 #[cfg(feature = "random")]
 pub mod randomizable;

@@ -3,7 +3,7 @@
 use crate::style::{Dimension, FlexDirection};
 use core::ops::Add;
 
-#[cfg(feature = "experimental_grid")]
+#[cfg(feature = "grid")]
 use crate::axis::AbstractAxis;
 
 /// An axis-aligned UI rectangle
@@ -332,7 +332,7 @@ impl<T> Size<T> {
 
     /// Gets the extent of the specified layout axis
     /// Whether this is the width or height depends on the `GridAxis` provided
-    #[cfg(feature = "experimental_grid")]
+    #[cfg(feature = "grid")]
     pub(crate) fn get(self, axis: AbstractAxis) -> T {
         match axis {
             AbstractAxis::Inline => self.width,
@@ -342,7 +342,7 @@ impl<T> Size<T> {
 
     /// Sets the extent of the specified layout axis
     /// Whether this is the width or height depends on the `GridAxis` provided
-    #[cfg(feature = "experimental_grid")]
+    #[cfg(feature = "grid")]
     pub(crate) fn set(&mut self, axis: AbstractAxis, value: T) {
         match axis {
             AbstractAxis::Inline => self.width = value,

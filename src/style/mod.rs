@@ -7,18 +7,18 @@ pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, J
 pub use self::dimension::{AvailableSpace, Dimension, LengthPercentage, LengthPercentageAuto};
 pub use self::flex::{FlexDirection, FlexWrap};
 
-#[cfg(feature = "experimental_grid")]
+#[cfg(feature = "grid")]
 mod grid;
-#[cfg(feature = "experimental_grid")]
+#[cfg(feature = "grid")]
 pub use self::grid::{
     GridAutoFlow, GridPlacement, GridTrackRepetition, MaxTrackSizingFunction, MinTrackSizingFunction,
     NonRepeatedTrackSizingFunction, TrackSizingFunction,
 };
 use crate::geometry::{Rect, Size};
 
-#[cfg(feature = "experimental_grid")]
+#[cfg(feature = "grid")]
 use crate::geometry::Line;
-#[cfg(feature = "experimental_grid")]
+#[cfg(feature = "grid")]
 use crate::sys::GridTrackVec;
 
 /// Sets the layout used for the children of this node
@@ -30,7 +30,7 @@ pub enum Display {
     /// The children will follow the flexbox layout algorithm
     Flex,
     /// The children will follow the CSS Grid layout algorithm
-    #[cfg(feature = "experimental_grid")]
+    #[cfg(feature = "grid")]
     Grid,
     /// The children will not be laid out, and will follow absolute positioning
     None,
@@ -125,7 +125,7 @@ pub struct Style {
     /// Falls back to the parents [`AlignItems`] if not set
     pub align_self: Option<AlignSelf>,
     /// How this node's children should be aligned in the inline axis
-    #[cfg(feature = "experimental_grid")]
+    #[cfg(feature = "grid")]
     pub justify_items: Option<AlignItems>,
     /// How this node should be aligned in the inline axis
     /// Falls back to the parents [`JustifyItems`] if not set
@@ -155,27 +155,27 @@ pub struct Style {
 
     // Grid container properies
     /// Defines the track sizing functions (widths) of the grid rows
-    #[cfg(feature = "experimental_grid")]
+    #[cfg(feature = "grid")]
     pub grid_template_rows: GridTrackVec<TrackSizingFunction>,
     /// Defines the track sizing functions (heights) of the grid columns
-    #[cfg(feature = "experimental_grid")]
+    #[cfg(feature = "grid")]
     pub grid_template_columns: GridTrackVec<TrackSizingFunction>,
     /// Defines the size of implicitly created rows
-    #[cfg(feature = "experimental_grid")]
+    #[cfg(feature = "grid")]
     pub grid_auto_rows: GridTrackVec<NonRepeatedTrackSizingFunction>,
     /// Defined the size of implicitly created columns
-    #[cfg(feature = "experimental_grid")]
+    #[cfg(feature = "grid")]
     pub grid_auto_columns: GridTrackVec<NonRepeatedTrackSizingFunction>,
     /// Controls how items get placed into the grid for auto-placed items
-    #[cfg(feature = "experimental_grid")]
+    #[cfg(feature = "grid")]
     pub grid_auto_flow: GridAutoFlow,
 
     // Grid child properties
     /// Defines which row in the grid the item should start and end at
-    #[cfg(feature = "experimental_grid")]
+    #[cfg(feature = "grid")]
     pub grid_row: Line<GridPlacement>,
     /// Defines which column in the grid the item should start and end at
-    #[cfg(feature = "experimental_grid")]
+    #[cfg(feature = "grid")]
     pub grid_column: Line<GridPlacement>,
 }
 
@@ -188,7 +188,7 @@ impl Style {
         flex_wrap: FlexWrap::NoWrap,
         align_items: None,
         align_self: None,
-        #[cfg(feature = "experimental_grid")]
+        #[cfg(feature = "grid")]
         justify_items: None,
         justify_self: None,
         align_content: None,
@@ -205,19 +205,19 @@ impl Style {
         min_size: Size::auto(),
         max_size: Size::auto(),
         aspect_ratio: None,
-        #[cfg(feature = "experimental_grid")]
+        #[cfg(feature = "grid")]
         grid_template_rows: GridTrackVec::new(),
-        #[cfg(feature = "experimental_grid")]
+        #[cfg(feature = "grid")]
         grid_template_columns: GridTrackVec::new(),
-        #[cfg(feature = "experimental_grid")]
+        #[cfg(feature = "grid")]
         grid_auto_rows: GridTrackVec::new(),
-        #[cfg(feature = "experimental_grid")]
+        #[cfg(feature = "grid")]
         grid_auto_columns: GridTrackVec::new(),
-        #[cfg(feature = "experimental_grid")]
+        #[cfg(feature = "grid")]
         grid_auto_flow: GridAutoFlow::Row,
-        #[cfg(feature = "experimental_grid")]
+        #[cfg(feature = "grid")]
         grid_row: Line { start: GridPlacement::Auto, end: GridPlacement::Auto },
-        #[cfg(feature = "experimental_grid")]
+        #[cfg(feature = "grid")]
         grid_column: Line { start: GridPlacement::Auto, end: GridPlacement::Auto },
     };
 }
@@ -235,7 +235,7 @@ mod tests {
 
     #[test]
     fn defaults_match() {
-        #[cfg(feature = "experimental_grid")]
+        #[cfg(feature = "grid")]
         use super::GridPlacement;
 
         let old_defaults = Style {
@@ -245,7 +245,7 @@ mod tests {
             flex_wrap: Default::default(),
             align_items: Default::default(),
             align_self: Default::default(),
-            #[cfg(feature = "experimental_grid")]
+            #[cfg(feature = "grid")]
             justify_items: Default::default(),
             justify_self: Default::default(),
             align_content: Default::default(),
@@ -262,19 +262,19 @@ mod tests {
             min_size: Size::auto(),
             max_size: Size::auto(),
             aspect_ratio: Default::default(),
-            #[cfg(feature = "experimental_grid")]
+            #[cfg(feature = "grid")]
             grid_template_rows: Default::default(),
-            #[cfg(feature = "experimental_grid")]
+            #[cfg(feature = "grid")]
             grid_template_columns: Default::default(),
-            #[cfg(feature = "experimental_grid")]
+            #[cfg(feature = "grid")]
             grid_auto_rows: Default::default(),
-            #[cfg(feature = "experimental_grid")]
+            #[cfg(feature = "grid")]
             grid_auto_columns: Default::default(),
-            #[cfg(feature = "experimental_grid")]
+            #[cfg(feature = "grid")]
             grid_auto_flow: Default::default(),
-            #[cfg(feature = "experimental_grid")]
+            #[cfg(feature = "grid")]
             grid_row: Line { start: GridPlacement::Auto, end: GridPlacement::Auto },
-            #[cfg(feature = "experimental_grid")]
+            #[cfg(feature = "grid")]
             grid_column: Line { start: GridPlacement::Auto, end: GridPlacement::Auto },
         };
 

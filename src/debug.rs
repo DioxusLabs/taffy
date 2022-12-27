@@ -22,7 +22,7 @@ fn print_node(tree: &impl LayoutTree, node: Node, has_sibling: bool, lines_strin
         (_, style::Display::None) => "NONE",
         (0, _) => "LEAF",
         (_, style::Display::Flex) => "FLEX",
-        #[cfg(feature = "experimental_grid")]
+        #[cfg(feature = "grid")]
         (_, style::Display::Grid) => "GRID",
     };
 
