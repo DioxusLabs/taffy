@@ -402,7 +402,7 @@ mod measure {
         let mut taffy = Taffy::new();
         let child = taffy
             .new_leaf_with_measure(
-                Style { position_type: PositionType::Absolute, ..Default::default() },
+                Style { position: Position::Absolute, ..Default::default() },
                 MeasureFunc::Raw(|known_dimensions, _available_space| Size {
                     width: known_dimensions.width.unwrap_or(50.0),
                     height: known_dimensions.height.unwrap_or(50.0),

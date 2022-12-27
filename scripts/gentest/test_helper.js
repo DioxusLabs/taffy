@@ -163,7 +163,7 @@ function describeElement(e) {
     style: {
       display: parseEnum(e.style.display),
 
-      positionType: parseEnum(e.style.position),
+      position: parseEnum(e.style.position),
       direction: parseEnum(e.style.direction),
       flexDirection: parseEnum(e.style.flexDirection),
 
@@ -220,7 +220,7 @@ function describeElement(e) {
         bottom: e.style.borderBottomWidth,
       }),
 
-      position: parseEdges({
+      inset: parseEdges({
         left: e.style.left,
         right: e.style.right,
         top: e.style.top,

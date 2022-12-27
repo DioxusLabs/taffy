@@ -6,7 +6,7 @@ fn grid_absolute_align_self_sized_all() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
+            position: taffy::style::Position::Absolute,
             align_self: Some(taffy::style::AlignSelf::Start),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
@@ -17,7 +17,7 @@ fn grid_absolute_align_self_sized_all() {
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
+            position: taffy::style::Position::Absolute,
             align_self: Some(taffy::style::AlignSelf::Start),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(60f32),
@@ -28,7 +28,7 @@ fn grid_absolute_align_self_sized_all() {
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
+            position: taffy::style::Position::Absolute,
             align_self: Some(taffy::style::AlignSelf::End),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
@@ -39,7 +39,7 @@ fn grid_absolute_align_self_sized_all() {
         .unwrap();
     let node3 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
+            position: taffy::style::Position::Absolute,
             align_self: Some(taffy::style::AlignSelf::End),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(60f32),
@@ -50,7 +50,7 @@ fn grid_absolute_align_self_sized_all() {
         .unwrap();
     let node4 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
+            position: taffy::style::Position::Absolute,
             align_self: Some(taffy::style::AlignSelf::Center),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
@@ -61,7 +61,7 @@ fn grid_absolute_align_self_sized_all() {
         .unwrap();
     let node5 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
+            position: taffy::style::Position::Absolute,
             align_self: Some(taffy::style::AlignSelf::Center),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(60f32),
@@ -72,7 +72,7 @@ fn grid_absolute_align_self_sized_all() {
         .unwrap();
     let node6 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
+            position: taffy::style::Position::Absolute,
             align_self: Some(taffy::style::AlignSelf::Stretch),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
@@ -83,7 +83,7 @@ fn grid_absolute_align_self_sized_all() {
         .unwrap();
     let node7 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
+            position: taffy::style::Position::Absolute,
             align_self: Some(taffy::style::AlignSelf::Stretch),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(60f32),

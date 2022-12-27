@@ -6,12 +6,12 @@ fn absolute_layout_width_height_start_top_end_bottom() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
+            position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(10f32),
                 height: taffy::style::Dimension::Points(10f32),
             },
-            position: taffy::geometry::Rect {
+            inset: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::Points(10f32),
                 right: taffy::style::LengthPercentageAuto::Points(10f32),
                 top: taffy::style::LengthPercentageAuto::Points(10f32),

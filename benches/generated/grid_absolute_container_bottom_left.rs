@@ -4,8 +4,8 @@ pub fn compute() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
-            position: taffy::geometry::Rect {
+            position: taffy::style::Position::Absolute,
+            inset: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::Points(0f32),
                 right: auto(),
                 top: auto(),

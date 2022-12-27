@@ -6,8 +6,8 @@ fn grid_absolute_with_padding() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
-            position: taffy::geometry::Rect {
+            position: taffy::style::Position::Absolute,
+            inset: taffy::geometry::Rect {
                 left: auto(),
                 right: taffy::style::LengthPercentageAuto::Points(0f32),
                 top: taffy::style::LengthPercentageAuto::Points(0f32),
@@ -18,8 +18,8 @@ fn grid_absolute_with_padding() {
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
-            position: taffy::geometry::Rect {
+            position: taffy::style::Position::Absolute,
+            inset: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::Points(10f32),
                 right: auto(),
                 top: auto(),

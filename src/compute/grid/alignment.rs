@@ -8,7 +8,7 @@ use crate::layout::{Layout, RunMode, SizingMode};
 use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::resolve::MaybeResolve;
-use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, PositionType};
+use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Position};
 use crate::sys::{f32_max, f32_min};
 use crate::tree::LayoutTree;
 
@@ -85,11 +85,11 @@ pub(super) fn align_and_position_item(
     let justify_self = style.justify_self;
     let align_self = style.align_self;
 
-    let position_type = style.position_type;
+    let position = style.position;
     let inset_horizontal =
-        style.position.horizontal_components().map(|size| size.resolve_to_option(container_content_box.width));
+        style.inset.horizontal_components().map(|size| size.resolve_to_option(container_content_box.width));
     let inset_vertical =
-        style.position.vertical_components().map(|size| size.resolve_to_option(container_content_box.height));
+        style.inset.vertical_components().map(|size| size.resolve_to_option(container_content_box.height));
     let inherent_size = style.size.maybe_resolve(container_content_box);
     let min_size = style.min_size.maybe_resolve(container_content_box);
     let max_size = style.max_size.maybe_resolve(container_content_box);
@@ -125,7 +125,7 @@ pub(super) fn align_and_position_item(
     let width = inherent_size.width.or_else(|| {
         // Apply width derived from both the left and right properties of an absolutely
         // positioned element being set
-        if position_type == PositionType::Absolute {
+        if position == Position::Absolute {
             if let (Some(left), Some(right)) = (inset_horizontal.start, inset_horizontal.end) {
                 return Some(f32_max(grid_area_size.width - left - right, 0.0));
             }
@@ -138,7 +138,7 @@ pub(super) fn align_and_position_item(
         if margin.left.is_some()
             && margin.right.is_some()
             && alignment_styles.horizontal == AlignSelf::Stretch
-            && position_type != PositionType::Absolute
+            && position != Position::Absolute
         {
             return Some(grid_area_minus_item_margins_size.width.maybe_min(max_size.width).maybe_max(min_size.width));
         }
@@ -146,7 +146,7 @@ pub(super) fn align_and_position_item(
         None
     });
     let height = inherent_size.height.or_else(|| {
-        if position_type == PositionType::Absolute {
+        if position == Position::Absolute {
             if let (Some(top), Some(bottom)) = (inset_vertical.start, inset_vertical.end) {
                 return Some(f32_max(grid_area_size.height - top - bottom, 0.0));
             }
@@ -159,7 +159,7 @@ pub(super) fn align_and_position_item(
         if margin.top.is_some()
             && margin.bottom.is_some()
             && alignment_styles.vertical == AlignSelf::Stretch
-            && position_type != PositionType::Absolute
+            && position != Position::Absolute
         {
             return Some(
                 grid_area_minus_item_margins_size.height.maybe_min(max_size.height).maybe_max(min_size.height),
@@ -184,7 +184,7 @@ pub(super) fn align_and_position_item(
         justify_self.unwrap_or(alignment_styles.horizontal),
         width,
         measured_size.width,
-        position_type,
+        position,
         inset_horizontal,
         margin.horizontal_components(),
     );
@@ -193,7 +193,7 @@ pub(super) fn align_and_position_item(
         align_self.unwrap_or(alignment_styles.vertical),
         height,
         measured_size.height,
-        position_type,
+        position,
         inset_vertical,
         margin.vertical_components(),
     );
@@ -207,7 +207,7 @@ pub(super) fn align_and_size_item_within_area(
     alignment_style: AlignSelf,
     style_size: Option<f32>,
     measured_size: f32,
-    position_type: PositionType,
+    position: Position,
     inset: Line<Option<f32>>,
     margin: Line<Option<f32>>,
 ) -> (f32, f32) {
@@ -224,7 +224,7 @@ pub(super) fn align_and_size_item_within_area(
 
     // Compute size in the axis
     let size = style_size.unwrap_or_else(|| {
-        if alignment_style == AlignItems::Stretch && position_type != PositionType::Absolute {
+        if alignment_style == AlignItems::Stretch && position != Position::Absolute {
             f32_max(grid_area_size - resolved_margin.sum(), measured_size)
         } else {
             measured_size
@@ -241,7 +241,7 @@ pub(super) fn align_and_size_item_within_area(
         AlignSelf::Stretch => resolved_margin.start,
     };
 
-    let offset_within_area = if position_type == PositionType::Absolute {
+    let offset_within_area = if position == Position::Absolute {
         if let Some(start) = inset.start {
             start + non_auto_margin.start
         } else if let Some(end) = inset.end {
@@ -254,7 +254,7 @@ pub(super) fn align_and_size_item_within_area(
     };
 
     let mut start = grid_area.start + offset_within_area;
-    if position_type == PositionType::Relative {
+    if position == Position::Relative {
         start += inset.start.or(inset.end.map(|pos| -pos)).unwrap_or(0.0);
     }
 

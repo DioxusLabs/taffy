@@ -13,7 +13,7 @@ pub fn compute() {
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
+            position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(60f32),
                 height: taffy::style::Dimension::Points(40f32),

@@ -6,9 +6,9 @@ fn grid_absolute_container_left_overrides_right() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
+            position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), height: auto() },
-            position: taffy::geometry::Rect {
+            inset: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::Points(5f32),
                 right: taffy::style::LengthPercentageAuto::Points(2f32),
                 top: auto(),

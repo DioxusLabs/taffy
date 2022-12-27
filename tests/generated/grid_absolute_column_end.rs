@@ -6,12 +6,12 @@ fn grid_absolute_column_end() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            position_type: taffy::style::PositionType::Absolute,
+            position: taffy::style::Position::Absolute,
             grid_column: taffy::geometry::Line {
                 start: taffy::style::GridPlacement::Auto,
                 end: taffy::style::GridPlacement::Line(1i16),
             },
-            position: taffy::geometry::Rect {
+            inset: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::Points(4f32),
                 right: taffy::style::LengthPercentageAuto::Points(3f32),
                 top: taffy::style::LengthPercentageAuto::Points(1f32),

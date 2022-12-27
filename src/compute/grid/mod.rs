@@ -6,7 +6,7 @@ use crate::layout::{Layout, RunMode, SizingMode};
 use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
-use crate::style::{AlignContent, AvailableSpace, Display, PositionType};
+use crate::style::{AlignContent, AvailableSpace, Display, Position};
 use crate::style_helpers::*;
 use crate::sys::{GridTrackVec, Vec};
 use crate::tree::LayoutTree;
@@ -61,7 +61,7 @@ pub fn compute(tree: &mut impl LayoutTree, node: Node, available_space: Size<Ava
             .copied()
             .enumerate()
             .map(|(index, child_node)| (index, child_node, tree.style(child_node)))
-            .filter(|(_, _, style)| style.display != Display::None && style.position_type != PositionType::Absolute)
+            .filter(|(_, _, style)| style.display != Display::None && style.position != Position::Absolute)
     };
     place_grid_items(&mut cell_occupancy_matrix, &mut items, in_flow_children_iter, grid_auto_flow);
 
@@ -262,7 +262,7 @@ pub fn compute(tree: &mut impl LayoutTree, node: Node, available_space: Size<Ava
         }
 
         // Position absolutely positioned child
-        if child_style.position_type == PositionType::Absolute {
+        if child_style.position == Position::Absolute {
             // Convert grid-col-{start/end} into Option's of indexes into the columns vector
             // The Option is None if the style property is Auto and an unresolvable Span
             let maybe_grid_cols = child_style.grid_column.resolve_absolutely_positioned_grid_tracks();

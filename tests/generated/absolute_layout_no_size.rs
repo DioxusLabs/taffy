@@ -5,7 +5,7 @@ fn absolute_layout_no_size() {
     use taffy::{layout::Layout, prelude::*};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_leaf(taffy::style::Style { position_type: taffy::style::PositionType::Absolute, ..Default::default() })
+        .new_leaf(taffy::style::Style { position: taffy::style::Position::Absolute, ..Default::default() })
         .unwrap();
     let node = taffy
         .new_with_children(
