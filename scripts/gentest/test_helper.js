@@ -167,6 +167,8 @@ function describeElement(e) {
       direction: parseEnum(e.style.direction),
       flexDirection: parseEnum(e.style.flexDirection),
 
+      writingMode: parseEnum(e.style.writingMode),
+
       flexWrap: parseEnum(e.style.flexWrap),
       overflow: parseEnum(e.style.overflow),
 

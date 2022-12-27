@@ -18,7 +18,7 @@ fn measure_child_with_flex_grow() {
             taffy::style::Style { ..Default::default() },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "H\u{200b}H\u{200b}H\u{200b}H\u{200b}H";
-                super::measure_standard_text(known_dimensions, available_space, TEXT)
+                super::measure_standard_text(known_dimensions, available_space, TEXT, super::WritingMode::Horizontal)
             }),
         )
         .unwrap();

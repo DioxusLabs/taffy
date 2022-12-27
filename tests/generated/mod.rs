@@ -1,9 +1,17 @@
 #[allow(dead_code)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum WritingMode {
+    Horizontal,
+    Vertical,
+}
+#[allow(dead_code)]
 fn measure_standard_text(
     known_dimensions: taffy::geometry::Size<Option<f32>>,
     available_space: taffy::geometry::Size<taffy::style::AvailableSpace>,
     text_content: &str,
+    writing_mode: WritingMode,
 ) -> taffy::geometry::Size<f32> {
+    use taffy::axis::AbsoluteAxis;
     use taffy::prelude::*;
     const ZWS: char = '\u{200B}';
     const H_WIDTH: f32 = 10.0;
@@ -11,25 +19,31 @@ fn measure_standard_text(
     if let Size { width: Some(width), height: Some(height) } = known_dimensions {
         return Size { width, height };
     }
+    let inline_axis = match writing_mode {
+        WritingMode::Horizontal => AbsoluteAxis::Horizontal,
+        WritingMode::Vertical => AbsoluteAxis::Vertical,
+    };
+    let block_axis = inline_axis.other_axis();
     let lines: Vec<&str> = text_content.split(ZWS).collect();
     if lines.is_empty() {
         return Size::ZERO;
     }
     let min_line_length: usize = lines.iter().map(|line| line.len()).max().unwrap_or(0);
     let max_line_length: usize = lines.iter().map(|line| line.len()).sum();
-    let width = known_dimensions.width.unwrap_or_else(|| match available_space.width {
-        AvailableSpace::MinContent => min_line_length as f32 * H_WIDTH,
-        AvailableSpace::MaxContent => max_line_length as f32 * H_WIDTH,
-        AvailableSpace::Definite(width) => {
-            width.min(max_line_length as f32 * H_WIDTH).max(min_line_length as f32 * H_WIDTH)
-        }
-    });
-    let height = known_dimensions.height.unwrap_or_else(|| {
-        let width_line_length = (width / H_WIDTH).floor() as usize;
+    let inline_size =
+        known_dimensions.get_abs(inline_axis).unwrap_or_else(|| match available_space.get_abs(inline_axis) {
+            AvailableSpace::MinContent => min_line_length as f32 * H_WIDTH,
+            AvailableSpace::MaxContent => max_line_length as f32 * H_WIDTH,
+            AvailableSpace::Definite(inline_size) => {
+                inline_size.min(max_line_length as f32 * H_WIDTH).max(min_line_length as f32 * H_WIDTH)
+            }
+        });
+    let block_size = known_dimensions.get_abs(block_axis).unwrap_or_else(|| {
+        let inline_line_length = (inline_size / H_WIDTH).floor() as usize;
         let mut line_count = 1;
         let mut current_line_length = 0;
         for line in &lines {
-            if current_line_length + line.len() > width_line_length {
+            if current_line_length + line.len() > inline_line_length {
                 if current_line_length > 0 {
                     line_count += 1
                 };
@@ -40,7 +54,10 @@ fn measure_standard_text(
         }
         (line_count as f32) * H_HEIGHT
     });
-    Size { width, height }
+    match writing_mode {
+        WritingMode::Horizontal => Size { width: inline_size, height: block_size },
+        WritingMode::Vertical => Size { width: block_size, height: inline_size },
+    }
 }
 mod absolute_layout_align_items_and_justify_content_center;
 mod absolute_layout_align_items_and_justify_content_center_and_bottom_position;
@@ -385,6 +402,8 @@ mod grid_min_max_column_fixed_width_below_range;
 mod grid_min_max_column_fixed_width_within_range;
 #[cfg(feature = "grid")]
 mod grid_out_of_order_items;
+#[cfg(feature = "grid")]
+mod grid_relayout_vertical_text;
 #[cfg(feature = "grid")]
 mod grid_size_child_fixed_tracks;
 mod justify_content_column_center;

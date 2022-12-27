@@ -3,21 +3,19 @@ pub fn compute() {
     use taffy::prelude::*;
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_leaf(taffy::style::Style {
-            flex_grow: 1f32,
-            flex_basis: taffy::style::Dimension::Points(5f32),
-            ..Default::default()
-        })
+        .new_leaf_with_measure(
+            taffy::style::Style { ..Default::default() },
+            taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
+                const TEXT: &str = "HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH";
+                super::measure_standard_text(known_dimensions, available_space, TEXT, super::WritingMode::Vertical)
+            }),
+        )
         .unwrap();
     let node1 = taffy
         .new_leaf_with_measure(
-            taffy::style::Style {
-                flex_grow: 1f32,
-                flex_basis: taffy::style::Dimension::Points(5f32),
-                ..Default::default()
-            },
+            taffy::style::Style { ..Default::default() },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
-                const TEXT: &str = "H";
+                const TEXT: &str = "HH\u{200b}HH\u{200b}HH";
                 super::measure_standard_text(known_dimensions, available_space, TEXT, super::WritingMode::Horizontal)
             }),
         )
@@ -25,10 +23,9 @@ pub fn compute() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(20f32),
-                    height: taffy::style::Dimension::Points(10f32),
-                },
+                display: taffy::style::Display::Grid,
+                grid_template_rows: vec![points(40f32)],
+                grid_template_columns: vec![min_content()],
                 ..Default::default()
             },
             &[node0, node1],
