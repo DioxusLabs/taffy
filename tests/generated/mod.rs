@@ -403,8 +403,6 @@ mod grid_min_max_column_fixed_width_within_range;
 #[cfg(feature = "grid")]
 mod grid_out_of_order_items;
 #[cfg(feature = "grid")]
-mod grid_relayout_flex_column_child;
-#[cfg(feature = "grid")]
 mod grid_relayout_vertical_text;
 #[cfg(feature = "grid")]
 mod grid_size_child_fixed_tracks;
