@@ -10,7 +10,7 @@ fn grid_fit_content_points_max_content() {
             taffy::style::Style { ..Default::default() },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HH";
-                super::measure_standard_text(known_dimensions, available_space, TEXT)
+                super::measure_standard_text(known_dimensions, available_space, TEXT, super::WritingMode::Horizontal)
             }),
         )
         .unwrap();

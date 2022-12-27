@@ -1,5 +1,5 @@
 #[test]
-fn grid_flex_column_child() {
+fn grid_relayout_flex_column_child() {
     use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};
@@ -74,7 +74,7 @@ fn grid_flex_column_child() {
             taffy::style::Style { ..Default::default() },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HH\u{200b}HH\u{200b}HH";
-                super::measure_standard_text(known_dimensions, available_space, TEXT)
+                super::measure_standard_text(known_dimensions, available_space, TEXT, super::WritingMode::Horizontal)
             }),
         )
         .unwrap();

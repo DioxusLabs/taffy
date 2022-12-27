@@ -18,7 +18,7 @@ fn measure_child_with_flex_shrink() {
             taffy::style::Style { ..Default::default() },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH";
-                super::measure_standard_text(known_dimensions, available_space, TEXT)
+                super::measure_standard_text(known_dimensions, available_space, TEXT, super::WritingMode::Horizontal)
             }),
         )
         .unwrap();
