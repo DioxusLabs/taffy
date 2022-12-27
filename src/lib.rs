@@ -18,6 +18,7 @@ extern crate alloc;
 #[cfg(feature = "serde")]
 extern crate serde;
 
+pub mod axis;
 #[doc(hidden)]
 pub mod debug;
 pub mod error;
@@ -30,8 +31,6 @@ pub mod style;
 pub mod style_helpers;
 pub mod tree;
 
-#[cfg(feature = "grid")]
-mod axis;
 #[cfg(feature = "random")]
 pub mod randomizable;
 
