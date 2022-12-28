@@ -2,6 +2,7 @@
 use super::GridTrack;
 use crate::axis::AbstractAxis;
 use crate::compute::compute_node_layout;
+use crate::compute::grid::OriginZeroLine;
 use crate::geometry::{Line, Rect, Size};
 use crate::layout::{RunMode, SizingMode};
 use crate::node::Node;
@@ -26,10 +27,10 @@ pub(in super::super) struct GridItem {
 
     /// The item's definite row-start and row-end, as resolved by the placement algorithm
     /// (in origin-zero coordinates)
-    pub row: Line<i16>,
+    pub row: Line<OriginZeroLine>,
     /// The items definite column-start and column-end, as resolved by the placement algorithm
     /// (in origin-zero coordinates)
-    pub column: Line<i16>,
+    pub column: Line<OriginZeroLine>,
 
     /// The item's margin style
     pub margin: Rect<LengthPercentageAuto>,
@@ -61,8 +62,8 @@ impl GridItem {
     /// Create a new item given a concrete placement in both axes
     pub fn new_with_placement_style_and_order(
         node: Node,
-        col_span: Line<i16>,
-        row_span: Line<i16>,
+        col_span: Line<OriginZeroLine>,
+        row_span: Line<OriginZeroLine>,
         style: &Style,
         source_order: u16,
     ) -> Self {
@@ -84,7 +85,7 @@ impl GridItem {
     }
 
     /// This item's placement in the specified axis in OriginZero coordinates
-    pub fn placement(&self, axis: AbstractAxis) -> Line<i16> {
+    pub fn placement(&self, axis: AbstractAxis) -> Line<OriginZeroLine> {
         match axis {
             AbstractAxis::Block => self.row,
             AbstractAxis::Inline => self.column,
@@ -110,8 +111,8 @@ impl GridItem {
     /// Returns the number of tracks that this item spans in the specified axis
     pub fn span(&self, axis: AbstractAxis) -> u16 {
         match axis {
-            AbstractAxis::Block => max(self.row.end - self.row.start, 0) as u16,
-            AbstractAxis::Inline => max(self.column.end - self.column.start, 0) as u16,
+            AbstractAxis::Block => max(self.row.end.0 - self.row.start.0, 0) as u16,
+            AbstractAxis::Inline => max(self.column.end.0 - self.column.start.0, 0) as u16,
         }
     }
 

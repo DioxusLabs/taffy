@@ -10,6 +10,8 @@ pub use self::flex::{FlexDirection, FlexWrap};
 #[cfg(feature = "grid")]
 mod grid;
 #[cfg(feature = "grid")]
+pub(crate) use self::grid::{GenericGridPlacement, OriginZeroGridPlacement};
+#[cfg(feature = "grid")]
 pub use self::grid::{
     GridAutoFlow, GridPlacement, GridTrackRepetition, MaxTrackSizingFunction, MinTrackSizingFunction,
     NonRepeatedTrackSizingFunction, TrackSizingFunction,

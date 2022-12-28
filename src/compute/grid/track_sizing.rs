@@ -136,8 +136,8 @@ pub(super) fn compute_alignment_gutter_adjustment(
 /// Convert origin-zero coordinates track placement in grid track vector indexes
 pub(super) fn resolve_item_track_indexes(items: &mut [GridItem], column_counts: TrackCounts, row_counts: TrackCounts) {
     for item in items {
-        item.column_indexes = item.column.map(|oz_index| column_counts.oz_line_to_grid_track_vec_index(oz_index));
-        item.row_indexes = item.row.map(|oz_index| row_counts.oz_line_to_grid_track_vec_index(oz_index));
+        item.column_indexes = item.column.map(|line| line.into_track_vec_index(column_counts) as u16);
+        item.row_indexes = item.row.map(|line| line.into_track_vec_index(row_counts) as u16);
     }
 }
 

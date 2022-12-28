@@ -32,7 +32,7 @@
 //!       - Index 1 is the leftmost track of the implict grid. Index 3 is the second leftmost track, etc.
 //!       - Index 0 is the leftmost grid line. Index 2 is the second leftmost line, etc.
 //!
-use crate::geometry::Line;
+use crate::{compute::grid::OriginZeroLine, geometry::Line};
 use core::ops::Range;
 
 /// Stores the number of tracks in a given dimension.
@@ -59,33 +59,17 @@ impl TrackCounts {
     }
 }
 
-/// Conversion functions between OriginZero coordinates and GridTrackVec indexes
-impl TrackCounts {
-    /// Converts a grid line in OriginZero coordinates into the index of that same grid line in the GridTrackVec.
-    pub fn oz_line_to_grid_track_vec_index(&self, index: i16) -> u16 {
-        assert!(
-            index >= -(self.negative_implicit as i16),
-            "OriginZero grid line cannot be less than the number of negative grid lines"
-        );
-        assert!(
-            index <= (self.explicit + self.positive_implicit) as i16,
-            "OriginZero grid line cannot be more than the number of positive grid lines"
-        );
-        2 * ((index + self.negative_implicit as i16) as u16)
-    }
-}
-
 /// Conversion functions between OriginZero coordinates and CellOccupancyMatrix track indexes
 impl TrackCounts {
     /// Converts a grid line in OriginZero coordinates into the track immediately
     /// following that grid line as an index into the CellOccupancyMatrix.
-    pub fn oz_line_to_next_track(&self, index: i16) -> i16 {
-        index + (self.negative_implicit as i16)
+    pub fn oz_line_to_next_track(&self, index: OriginZeroLine) -> i16 {
+        index.0 + (self.negative_implicit as i16)
     }
 
     /// Converts start and end grid lines in OriginZero coordinates into a range of tracks
     /// as indexes into the CellOccupancyMatrix
-    pub fn oz_line_range_to_track_range(&self, input: Line<i16>) -> Range<i16> {
+    pub fn oz_line_range_to_track_range(&self, input: Line<OriginZeroLine>) -> Range<i16> {
         let start = self.oz_line_to_next_track(input.start);
         let end = self.oz_line_to_next_track(input.end); // Don't subtract 1 as output range is exclusive
         start..end
@@ -93,13 +77,13 @@ impl TrackCounts {
 
     /// Converts a track as an index into the CellOccupancyMatrix into the grid line immediately
     /// preceeding that track in OriginZero coordinates.
-    pub fn track_to_prev_oz_line(&self, index: u16) -> i16 {
-        (index as i16) - (self.negative_implicit as i16)
+    pub fn track_to_prev_oz_line(&self, index: u16) -> OriginZeroLine {
+        OriginZeroLine((index as i16) - (self.negative_implicit as i16))
     }
 
     /// Converts a range of tracks as indexes into the CellOccupancyMatrix into
     /// start and end grid lines in OriginZero coordinates
-    pub fn track_range_to_oz_line_range(&self, input: Range<i16>) -> Line<i16> {
+    pub fn track_range_to_oz_line_range(&self, input: Range<i16>) -> Line<OriginZeroLine> {
         let start = self.track_to_prev_oz_line(input.start as u16);
         let end = self.track_to_prev_oz_line(input.end as u16); // Don't add 1 as input range is exclusive
         Line { start, end }
