@@ -7,10 +7,7 @@ fn grid_absolute_column_end() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
-            grid_column: taffy::geometry::Line {
-                start: taffy::style::GridPlacement::Auto,
-                end: taffy::style::GridPlacement::Line(1i16),
-            },
+            grid_column: taffy::geometry::Line { start: taffy::style::GridPlacement::Auto, end: line(1i16) },
             inset: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::Points(4f32),
                 right: taffy::style::LengthPercentageAuto::Points(3f32),
