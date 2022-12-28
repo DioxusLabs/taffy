@@ -86,10 +86,7 @@ impl TaffyAuto for GridPlacement {
 }
 impl TaffyGridLine for GridPlacement {
     fn from_line_index(index: i16) -> Self {
-        match GridLine::try_from(index) {
-            Ok(line) => GridPlacement::Line(line),
-            Err(_) => GridPlacement::Auto,
-        }
+        GridPlacement::Line(GridLine::from(index))
     }
 }
 impl TaffyGridLine for Line<GridPlacement> {
@@ -120,7 +117,12 @@ impl GridPlacement {
         match self {
             Self::Auto => OriginZeroGridPlacement::Auto,
             Self::Span(span) => OriginZeroGridPlacement::Span(span),
-            Self::Line(line) => OriginZeroGridPlacement::Line(line.into_origin_zero_line(explicit_track_count)),
+            // Grid line zero is an invalid index, so it gets treated as Auto
+            // See: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row-start#values
+            Self::Line(line) => match line.as_i16() {
+                0 => OriginZeroGridPlacement::Auto,
+                _ => OriginZeroGridPlacement::Line(line.into_origin_zero_line(explicit_track_count)),
+            },
         }
     }
 }

@@ -1,7 +1,7 @@
 //! Taffy uses two coordinate systems to refer to grid lines (the gaps/gutters between rows/columns):
 use super::super::types::TrackCounts;
-use core::num::NonZeroI16;
 use core::ops::{Add, AddAssign, Sub};
+use std::cmp::Ordering;
 
 /// Represents a grid line position in "CSS Grid Line" coordinates
 ///
@@ -13,38 +13,28 @@ use core::ops::{Add, AddAssign, Sub};
 ///   - 0 is not a valid index
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(transparent)]
-pub struct GridLine(pub NonZeroI16);
+pub struct GridLine(i16);
 
-impl From<NonZeroI16> for GridLine {
-    fn from(value: NonZeroI16) -> Self {
+impl From<i16> for GridLine {
+    fn from(value: i16) -> Self {
         Self(value)
-    }
-}
-impl TryFrom<i16> for GridLine {
-    type Error = ();
-    fn try_from(value: i16) -> Result<Self, Self::Error> {
-        NonZeroI16::new(value).map(GridLine).ok_or(())
     }
 }
 
 impl GridLine {
     /// Returns the underlying i16
     pub fn as_i16(self) -> i16 {
-        self.0.get()
+        self.0
     }
 
     /// Convert into OriginZero coordinates using the specified explicit track count
     pub(crate) fn into_origin_zero_line(self, explicit_track_count: u16) -> OriginZeroLine {
-        let grid_line = self.as_i16();
-
-        // Note: grid_line cannot be zero because it comes from a NonZeroI16
-        let oz_line = if grid_line > 0 {
-            grid_line - 1
-        } else {
-            let explicit_line_count = explicit_track_count + 1;
-            grid_line + explicit_line_count as i16
+        let explicit_line_count = explicit_track_count + 1;
+        let oz_line = match self.0.cmp(&0) {
+            Ordering::Greater => self.0 - 1,
+            Ordering::Less => self.0 + explicit_line_count as i16,
+            Ordering::Equal => panic!("Grid line of zero is invalid"),
         };
-
         OriginZeroLine(oz_line)
     }
 }
