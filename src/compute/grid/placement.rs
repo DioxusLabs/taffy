@@ -382,6 +382,26 @@ mod tests {
         }
 
         #[test]
+        fn test_placement_spanning_origin() {
+            let flow = GridAutoFlow::Row;
+            let explicit_col_count = 2;
+            let explicit_row_count = 2;
+            let children = {
+                let mut sm = SlotMap::new();
+                vec![
+                    // node, style (grid coords), expected_placement (oz coords)
+                    (1, sm.insert(()), (line(-1), line(-1), line(-1), line(-1)).into_grid_child(), (2, 3, 2, 3)),
+                    (2, sm.insert(()), (line(-1), span(2), line(-1), span(2)).into_grid_child(), (2, 4, 2, 4)),
+                    (3, sm.insert(()), (line(-4), line(-4), line(-4), line(-4)).into_grid_child(), (-1, 0, -1, 0)),
+                    (4, sm.insert(()), (line(-4), span(2), line(-4), span(2)).into_grid_child(), (-1, 1, -1, 1)),
+                ]
+            };
+            let expected_cols = TrackCounts { negative_implicit: 1, explicit: 2, positive_implicit: 2 };
+            let expected_rows = TrackCounts { negative_implicit: 1, explicit: 2, positive_implicit: 2 };
+            placement_test_runner(explicit_col_count, explicit_row_count, children, expected_cols, expected_rows, flow);
+        }
+
+        #[test]
         fn test_only_auto_placement_row_flow() {
             let flow = GridAutoFlow::Row;
             let explicit_col_count = 2;
