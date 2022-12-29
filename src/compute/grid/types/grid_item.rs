@@ -185,12 +185,14 @@ impl GridItem {
         &mut self,
         tree: &mut impl LayoutTree,
         known_dimensions: Size<Option<f32>>,
+        inner_node_size: Size<Option<f32>>,
     ) -> Size<f32> {
         self.min_content_contribution_cache.unwrap_or_else(|| {
             let size = compute_node_layout(
                 tree,
                 self.node,
                 known_dimensions,
+                inner_node_size,
                 Size::MIN_CONTENT,
                 RunMode::ComputeSize,
                 SizingMode::InherentSize,
@@ -205,12 +207,14 @@ impl GridItem {
         &mut self,
         tree: &mut impl LayoutTree,
         known_dimensions: Size<Option<f32>>,
+        inner_node_size: Size<Option<f32>>,
     ) -> Size<f32> {
         self.max_content_contribution_cache.unwrap_or_else(|| {
             let size = compute_node_layout(
                 tree,
                 self.node,
                 known_dimensions,
+                inner_node_size,
                 Size::MAX_CONTENT,
                 RunMode::ComputeSize,
                 SizingMode::InherentSize,
@@ -233,6 +237,7 @@ impl GridItem {
         axis_tracks: &[GridTrack],
         available_space: Size<AvailableSpace>,
         known_dimensions: Size<Option<f32>>,
+        inner_node_size: Size<Option<f32>>,
     ) -> f32 {
         self.minimum_contribution_cache.unwrap_or_else(|| {
             let style = tree.style(self.node);
@@ -269,7 +274,7 @@ impl GridItem {
 
                     // Otherwise, the automatic minimum size is zero, as usual.
                     if use_content_based_minimum {
-                        self.min_content_contribution_cached(tree, known_dimensions).get(axis)
+                        self.min_content_contribution_cached(tree, known_dimensions, inner_node_size).get(axis)
                     } else {
                         0.0
                     }

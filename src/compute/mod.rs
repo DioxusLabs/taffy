@@ -26,8 +26,15 @@ pub fn compute_layout(
     available_space: Size<AvailableSpace>,
 ) -> Result<(), TaffyError> {
     // Recursively compute node layout
-    let size =
-        compute_node_layout(tree, root, Size::NONE, available_space, RunMode::PeformLayout, SizingMode::InherentSize);
+    let size = compute_node_layout(
+        tree,
+        root,
+        Size::NONE,
+        available_space.into_options(),
+        available_space,
+        RunMode::PeformLayout,
+        SizingMode::InherentSize,
+    );
 
     let layout = Layout { order: 0, size, location: Point::ZERO };
     *tree.layout_mut(root) = layout;
@@ -43,6 +50,7 @@ fn compute_node_layout(
     tree: &mut impl LayoutTree,
     node: Node,
     known_dimensions: Size<Option<f32>>,
+    parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
     sizing_mode: SizingMode,
@@ -111,17 +119,17 @@ fn compute_node_layout(
     let computed_size = if tree.is_childless(node) {
         #[cfg(feature = "debug")]
         NODE_LOGGER.log("Algo: leaf");
-        self::leaf::compute(tree, node, known_dimensions, available_space, run_mode, sizing_mode)
+        self::leaf::compute(tree, node, known_dimensions, parent_size, available_space, run_mode, sizing_mode)
     } else {
         // println!("match {:?}", tree.style(node).display);
         match tree.style(node).display {
             Display::Flex => {
                 #[cfg(feature = "debug")]
                 NODE_LOGGER.log("Algo: flexbox");
-                self::flexbox::compute(tree, node, known_dimensions, available_space, run_mode)
+                self::flexbox::compute(tree, node, known_dimensions, parent_size, available_space, run_mode)
             }
             #[cfg(feature = "grid")]
-            Display::Grid => self::grid::compute(tree, node, available_space),
+            Display::Grid => self::grid::compute(tree, node, known_dimensions, parent_size, available_space),
             Display::None => {
                 #[cfg(feature = "debug")]
                 NODE_LOGGER.log("Algo: none");

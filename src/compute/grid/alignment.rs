@@ -12,6 +12,9 @@ use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Position
 use crate::sys::{f32_max, f32_min};
 use crate::tree::LayoutTree;
 
+#[cfg(feature = "debug")]
+use crate::debug::NODE_LOGGER;
+
 /// Align the grid tracks within the grid according to the align-content (rows) or
 /// justify-content (columns) property. This only does anything if the size of the
 /// grid is not equal to the size of the grid container in the axis being aligned.
@@ -75,10 +78,12 @@ pub(super) fn align_and_position_item(
     node: Node,
     order: u32,
     grid_area: Rect<f32>,
-    container_content_box: Size<f32>,
     container_alignment_styles: InBothAbsAxis<Option<AlignItems>>,
 ) {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
+
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.labelled_debug_log("grid_area_size", grid_area_size);
 
     let style = tree.style(node);
     let aspect_ratio = style.aspect_ratio;
@@ -86,13 +91,11 @@ pub(super) fn align_and_position_item(
     let align_self = style.align_self;
 
     let position = style.position;
-    let inset_horizontal =
-        style.inset.horizontal_components().map(|size| size.resolve_to_option(container_content_box.width));
-    let inset_vertical =
-        style.inset.vertical_components().map(|size| size.resolve_to_option(container_content_box.height));
-    let inherent_size = style.size.maybe_resolve(container_content_box);
-    let min_size = style.min_size.maybe_resolve(container_content_box);
-    let max_size = style.max_size.maybe_resolve(container_content_box);
+    let inset_horizontal = style.inset.horizontal_components().map(|size| size.resolve_to_option(grid_area_size.width));
+    let inset_vertical = style.inset.vertical_components().map(|size| size.resolve_to_option(grid_area_size.height));
+    let inherent_size = style.size.maybe_resolve(grid_area_size);
+    let min_size = style.min_size.maybe_resolve(grid_area_size);
+    let max_size = style.max_size.maybe_resolve(grid_area_size);
 
     // Resolve default alignment styles if they are set on neither the parent or the node itself
     let alignment_styles = InBothAbsAxis {
@@ -119,6 +122,9 @@ pub(super) fn align_and_position_item(
         width: grid_area_size.width.maybe_sub(margin.left).maybe_sub(margin.right),
         height: grid_area_size.height.maybe_sub(margin.top).maybe_sub(margin.bottom),
     };
+
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.labelled_debug_log("grid_area_size", grid_area_minus_item_margins_size);
 
     // If node is absolutely positioned and width is not set explicitly, then deduce it
     // from left, right and container_content_box if both are set.
@@ -174,6 +180,7 @@ pub(super) fn align_and_position_item(
         tree,
         node,
         Size { width, height },
+        grid_area_size.map(|s| Some(s)),
         grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
         RunMode::PeformLayout,
         SizingMode::InherentSize,

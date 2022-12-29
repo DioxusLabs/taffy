@@ -163,6 +163,7 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
     axis: AbstractAxis,
     available_space: Size<AvailableSpace>,
     available_grid_space: Size<AvailableSpace>,
+    inner_node_size: Size<Option<f32>>,
     container_style: &Style,
     axis_tracks: &mut [GridTrack],
     other_axis_tracks: &mut [GridTrack],
@@ -214,6 +215,7 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
         other_axis_tracks,
         items,
         available_grid_space,
+        inner_node_size,
         get_track_size_estimate,
     );
 
@@ -225,7 +227,16 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
     // This step sizes flexible tracks using the largest value it can assign to an fr without exceeding the available space.
     let axis_min_size = container_style.min_size.get(axis).into_option();
     let axis_max_size = container_style.max_size.get(axis).into_option();
-    expand_flexible_tracks(tree, axis, axis_tracks, items, axis_min_size, axis_max_size, available_grid_space);
+    expand_flexible_tracks(
+        tree,
+        axis,
+        axis_tracks,
+        items,
+        axis_min_size,
+        axis_max_size,
+        available_grid_space,
+        inner_node_size,
+    );
 
     // 11.8. Stretch auto Tracks
     // This step expands tracks that have an auto max track sizing function by dividing any remaining positive, definite free space equally amongst them.
@@ -316,6 +327,7 @@ fn resolve_intrinsic_track_sizes(
     other_axis_tracks: &mut [GridTrack],
     items: &mut [GridItem],
     available_grid_space: Size<AvailableSpace>,
+    inner_node_size: Size<Option<f32>>,
     get_track_size_estimate: impl Fn(&GridTrack, AvailableSpace) -> Option<f32>,
 ) {
     // Step 1. Shim baseline-aligned items so their intrinsic size contributions reflect their baseline alignment.
@@ -349,19 +361,16 @@ fn resolve_intrinsic_track_sizes(
 
         let margin = item.margin.map(|m| m.resolve_or_zero(available_grid_space.width.into_option())).sum_axes();
 
-        dbg!(known_dimensions);
-        dbg!(available_grid_space.width);
-        dbg!(margin);
-
-        let min_content_size = item.min_content_contribution_cached(tree, known_dimensions) + margin;
-        let max_content_size = item.max_content_contribution_cached(tree, known_dimensions) + margin;
-        let axis_minimum_size =
-            item.minimum_contribution_cached(tree, axis, axis_tracks, available_grid_space, known_dimensions)
-                + margin.get(axis);
-
-        dbg!(axis_minimum_size);
-        dbg!(min_content_size.get(axis));
-        dbg!(max_content_size.get(axis));
+        let min_content_size = item.min_content_contribution_cached(tree, known_dimensions, inner_node_size) + margin;
+        let max_content_size = item.max_content_contribution_cached(tree, known_dimensions, inner_node_size) + margin;
+        let axis_minimum_size = item.minimum_contribution_cached(
+            tree,
+            axis,
+            axis_tracks,
+            available_grid_space,
+            known_dimensions,
+            inner_node_size,
+        ) + margin.get(axis);
 
         (axis_minimum_size, min_content_size.get(axis), max_content_size.get(axis))
     };
@@ -684,6 +693,7 @@ fn expand_flexible_tracks(
     axis_min_size: Option<f32>,
     axis_max_size: Option<f32>,
     available_grid_space: Size<AvailableSpace>,
+    inner_node_size: Size<Option<f32>>,
 ) {
     // First, find the grid’s used flex fraction:
     let flex_fraction = match available_grid_space.get(axis) {
@@ -730,7 +740,8 @@ fn expand_flexible_tracks(
                     .map(|item| {
                         let tracks = &axis_tracks[item.track_range_excluding_lines(axis)];
                         // TODO: plumb estimate of other axis size (known_dimensions) in here rather than just passing Size::NONE?
-                        let max_content_contribution = item.max_content_contribution_cached(tree, Size::NONE);
+                        let max_content_contribution =
+                            item.max_content_contribution_cached(tree, Size::NONE, inner_node_size);
                         find_size_of_fr(tracks, max_content_contribution.get(axis))
                     })
                     .max_by(|a, b| a.total_cmp(b))
