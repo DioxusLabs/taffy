@@ -281,4 +281,72 @@ mod tests {
         assert_eq!(Style::DEFAULT, Style::default());
         assert_eq!(Style::DEFAULT, old_defaults);
     }
+
+    // NOTE: Please feel free the update the sizes in this test as required. This test is here to prevent unintentional size changes
+    // and to serve as accurate up-to-date documentation on the sizes.
+    #[test]
+    fn style_sizes() {
+        use super::*;
+
+        fn assert_type_size<T>(expected_size: usize) {
+
+            let name = ::core::any::type_name::<T>();
+            let name = name.replace("taffy::geometry::", "");
+            let name = name.replace("taffy::style::dimension::", "");
+            let name = name.replace("taffy::style::alignment::", "");
+            let name = name.replace("taffy::style::flex::", "");
+            let name = name.replace("taffy::style::grid::", "");
+
+            assert_eq!(
+                ::core::mem::size_of::<T>(),
+                expected_size,
+                "Expected {} for be {} byte(s) but it was {} byte(s)",
+                name,
+                expected_size,
+                ::core::mem::size_of::<T>(),
+            );
+        }
+
+        // Display and Position
+        assert_type_size::<Display>(1);
+        assert_type_size::<Position>(1);
+
+        // Dimensions and aggregations of Dimensions
+        assert_type_size::<f32>(4);
+        assert_type_size::<LengthPercentage>(8);
+        assert_type_size::<LengthPercentageAuto>(8);
+        assert_type_size::<Dimension>(8);
+        assert_type_size::<Size<LengthPercentage>>(16);
+        assert_type_size::<Size<LengthPercentageAuto>>(16);
+        assert_type_size::<Size<Dimension>>(16);
+        assert_type_size::<Rect<LengthPercentage>>(32);
+        assert_type_size::<Rect<LengthPercentageAuto>>(32);
+        assert_type_size::<Rect<Dimension>>(32);
+
+        // Alignment
+        assert_type_size::<AlignContent>(1);
+        assert_type_size::<AlignItems>(1);
+        assert_type_size::<Option<AlignItems>>(1);
+
+        // Flexbox Container
+        assert_type_size::<FlexDirection>(1);
+        assert_type_size::<FlexWrap>(1);
+
+        // CSS Grid Container
+        assert_type_size::<GridAutoFlow>(1);
+        assert_type_size::<MinTrackSizingFunction>(8);
+        assert_type_size::<MaxTrackSizingFunction>(12);
+        assert_type_size::<NonRepeatedTrackSizingFunction>(20);
+        assert_type_size::<TrackSizingFunction>(32);
+        assert_type_size::<Vec<NonRepeatedTrackSizingFunction>>(24);
+        assert_type_size::<Vec<TrackSizingFunction>>(24);
+
+        // CSS Grid Item
+        assert_type_size::<GridPlacement>(4);
+        assert_type_size::<Line<GridPlacement>>(8);
+
+        // Overall
+        assert_type_size::<Style>(344);
+
+    }
 }
