@@ -9,7 +9,7 @@ N = Supported in spec but not implemented in Taffy
 | Property                 | Flex | Grid | Type                                  | Stack | Heap   | Description                                                                                 |
 | ---                      | ---  | ---  | ---                                   | ---   | -      | ---                                                                                         |
 | **Layout Mode**          |      |      |                                       |       |        |                                                                                             |
-| `display`                | Y    | Y    | Display                               | 1     | -      | What layout strategy should be used?                                                        |
+| `display`                | Y    | Y    | `Display`                             | 1     | -      | What layout strategy should be used?                                                        |
 | **Position**             |      |      |                                       |       | -      |                                                                                             |
 | `position`               | Y    | Y    | `Position`                            | 1     | -      | Absolute vs. in-flow position                                                               |
 | `inset`                  | Y    | Y    | `Rect<LengthPercentageAuto>`          | 32    | -      | How should the position of this element be tweaked relative to the layout defined?          |
