@@ -320,6 +320,7 @@ fn initialize_track_sizes(axis_tracks: &mut [GridTrack], axis_available_grid_spa
 }
 
 /// 11.5 Resolve Intrinsic Track Sizes
+#[allow(clippy::too_many_arguments)]
 fn resolve_intrinsic_track_sizes(
     tree: &mut impl LayoutTree,
     axis: AbstractAxis,
@@ -685,6 +686,7 @@ fn maximise_tracks(axis: AbstractAxis, axis_tracks: &mut [GridTrack], available_
 
 /// 11.7. Expand Flexible Tracks
 /// This step sizes flexible tracks using the largest value it can assign to an fr without exceeding the available space.
+#[allow(clippy::too_many_arguments)]
 fn expand_flexible_tracks(
     tree: &mut impl LayoutTree,
     axis: AbstractAxis,

@@ -117,8 +117,6 @@ struct AlgoConstants {
     /// The align_items property of this node
     align_items: AlignItems,
 
-    /// The border-box size of the node being laid out (if known)
-    node_outer_size: Size<Option<f32>>,
     /// The content-box size of the node being laid out (if known)
     node_inner_size: Size<Option<f32>>,
 
@@ -431,7 +429,6 @@ fn compute_constants(
         gap,
         padding_border,
         align_items,
-        node_outer_size,
         node_inner_size,
         container_size,
         inner_container_size,
@@ -1492,6 +1489,7 @@ fn calculate_flex_item(
 }
 
 /// Calculates the layout line
+#[allow(clippy::too_many_arguments)]
 fn calculate_layout_line(
     tree: &mut impl LayoutTree,
     node: Node,
@@ -1753,7 +1751,6 @@ fn sum_axis_gaps(gap: f32, num_items: usize) -> f32 {
 mod tests {
     #![allow(clippy::redundant_clone)]
 
-    use crate::style_helpers::*;
     use crate::{
         math::MaybeMath,
         prelude::{Rect, Size},

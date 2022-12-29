@@ -180,7 +180,7 @@ pub(super) fn align_and_position_item(
         tree,
         node,
         Size { width, height },
-        grid_area_size.map(|s| Some(s)),
+        grid_area_size.map(Option::Some),
         grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
         RunMode::PeformLayout,
         SizingMode::InherentSize,
