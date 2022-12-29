@@ -44,7 +44,6 @@ In addition to the usual sizing/spacing proerties (size, min_size, padding, marg
 | ---                       | ---                                                                                            |
 | [`grid-template-columns`] | The track sizing functions of the grid's explicit columns                                      |
 | [`grid-template-rows`]    | The track sizing functions of the grid's explicit rows                                         |
-| [`grid-template-areas`]   | Defines named grid areas                                                                       |
 | [`grid-auto-rows`]        | Track sizing functions for the grid's implicitly generated rows                                |
 | [`grid-auto-columns`]     | Track sizing functions for the grid's implicitly generated columns                             |
 | [`grid-auto-flow`]        | Whether auto-placed items are placed row-wise or column-wise. And sparsely or densely.         |
@@ -63,21 +62,20 @@ And the following Grid style properties are supported on Grid Items (children):
 | [`align-self`]            | Align the item within it's grid area in the inline (horizontal) axis. Overrides `align-items`. |
 | [`justify-self`]          | Align the item within it's grid area in the block (vertical) axis. Overrides `justify-items`.  |
 
-[`grid-template-columns`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns
-[`grid-template-rows`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-rows
-[`grid-template-areas`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-areas
-[`grid-auto-rows`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-rows
-[`grid-auto-columns`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-columns
-[`grid-auto-flow`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-flow
-[`gap`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/gap
-[`align-content`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/align_content
-[`justify-content`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/justify_content
-[`align-items`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/align-items
-[`justify-items`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/justify-items
-[`grid-row`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-row
-[`grid-column`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/grid-column
-[`align-self`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/align-self
-[`justify-self`]: https:://developer.mozilla.org/en-US/docs/Web/CSS/justify-self
+[`grid-template-columns`]: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns
+[`grid-template-rows`]: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-rows
+[`grid-auto-rows`]: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-rows
+[`grid-auto-columns`]: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-columns
+[`grid-auto-flow`]: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-flow
+[`gap`]: https://developer.mozilla.org/en-US/docs/Web/CSS/gap
+[`align-content`]: https://developer.mozilla.org/en-US/docs/Web/CSS/align_content
+[`justify-content`]: https://developer.mozilla.org/en-US/docs/Web/CSS/justify_content
+[`align-items`]: https://developer.mozilla.org/en-US/docs/Web/CSS/align-items
+[`justify-items`]: https://developer.mozilla.org/en-US/docs/Web/CSS/justify-items
+[`grid-row`]: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row
+[`grid-column`]: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-column
+[`align-self`]: https://developer.mozilla.org/en-US/docs/Web/CSS/align-self
+[`justify-self`]: https://developer.mozilla.org/en-US/docs/Web/CSS/justify-self
 
 The following properties and features are not yet supported, but are planned for the near future:
 
