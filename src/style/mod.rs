@@ -289,7 +289,6 @@ mod tests {
         use super::*;
 
         fn assert_type_size<T>(expected_size: usize) {
-
             let name = ::core::any::type_name::<T>();
             let name = name.replace("taffy::geometry::", "");
             let name = name.replace("taffy::style::dimension::", "");
@@ -347,6 +346,5 @@ mod tests {
 
         // Overall
         assert_type_size::<Style>(344);
-
     }
 }
