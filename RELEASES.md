@@ -64,7 +64,6 @@ And the following Grid style properties are supported on Grid Items (children):
 
 [`grid-template-columns`]: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns
 [`grid-template-rows`]: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-rows
-[`grid-template-areas`]: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-areas
 [`grid-auto-rows`]: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-rows
 [`grid-auto-columns`]: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-columns
 [`grid-auto-flow`]: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-flow
