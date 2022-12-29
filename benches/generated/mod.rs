@@ -187,6 +187,7 @@ mod gap_column_gap_percentage_cyclic_partially_shrinkable;
 mod gap_column_gap_percentage_cyclic_shrinkable;
 mod gap_column_gap_percentage_cyclic_unshrinkable;
 mod gap_column_gap_percentage_flexible;
+mod gap_column_gap_percentage_flexible_with_padding;
 mod gap_column_gap_percentage_inflexible;
 mod gap_column_gap_wrap_align_center;
 mod gap_column_gap_wrap_align_flex_end;
@@ -687,6 +688,7 @@ fn benchmark(c: &mut Criterion) {
             gap_column_gap_percentage_cyclic_shrinkable::compute();
             gap_column_gap_percentage_cyclic_unshrinkable::compute();
             gap_column_gap_percentage_flexible::compute();
+            gap_column_gap_percentage_flexible_with_padding::compute();
             gap_column_gap_percentage_inflexible::compute();
             gap_column_gap_wrap_align_center::compute();
             gap_column_gap_wrap_align_flex_end::compute();

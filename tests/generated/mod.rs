@@ -186,6 +186,7 @@ mod gap_column_gap_percentage_cyclic_partially_shrinkable;
 mod gap_column_gap_percentage_cyclic_shrinkable;
 mod gap_column_gap_percentage_cyclic_unshrinkable;
 mod gap_column_gap_percentage_flexible;
+mod gap_column_gap_percentage_flexible_with_padding;
 mod gap_column_gap_percentage_inflexible;
 mod gap_column_gap_wrap_align_center;
 mod gap_column_gap_wrap_align_flex_end;
