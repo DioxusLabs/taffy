@@ -598,7 +598,13 @@ fn determine_flex_base_size(
         let child_known_dimensions = {
             let mut ckd = child.size;
             if child.align_self == AlignSelf::Stretch && ckd.cross(constants.dir).is_none() {
-                ckd.set_cross(constants.dir, available_space.cross(constants.dir).into_option().maybe_sub(constants.margin.cross_axis_sum(constants.dir)));
+                ckd.set_cross(
+                    constants.dir,
+                    available_space
+                        .cross(constants.dir)
+                        .into_option()
+                        .maybe_sub(constants.margin.cross_axis_sum(constants.dir)),
+                );
             }
             ckd
         };
