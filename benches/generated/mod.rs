@@ -520,6 +520,7 @@ mod percentage_flex_basis_main_max_height;
 mod percentage_flex_basis_main_max_width;
 mod percentage_flex_basis_main_min_width;
 mod percentage_margin_should_calculate_based_only_on_width;
+mod percentage_moderate_complexity;
 mod percentage_multiple_nested_with_padding_margin_and_percentage_values;
 mod percentage_padding_should_calculate_based_only_on_width;
 mod percentage_position_bottom_right;
@@ -1029,6 +1030,7 @@ fn benchmark(c: &mut Criterion) {
             percentage_flex_basis_main_max_width::compute();
             percentage_flex_basis_main_min_width::compute();
             percentage_margin_should_calculate_based_only_on_width::compute();
+            percentage_moderate_complexity::compute();
             percentage_multiple_nested_with_padding_margin_and_percentage_values::compute();
             percentage_padding_should_calculate_based_only_on_width::compute();
             percentage_position_bottom_right::compute();
