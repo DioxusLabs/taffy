@@ -58,7 +58,7 @@ impl GridAutoFlow {
 /// grid line positions.
 ///
 /// GenericGridPlacement<GridLine> is aliased as GridPlacement and is exposed to users of Taffy to define styles.
-/// GenericGridPlacement<OriginZeroLine> is aliased as OriginZeroGridPlacement and is used internally for placement computations
+/// GenericGridPlacement<OriginZeroLine> is aliased as OriginZeroGridPlacement and is used internally for placement computations.
 ///
 /// See [`crate::compute::grid::type::coordinates`] for documentation on the different coordinate systems.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
