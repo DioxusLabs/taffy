@@ -57,7 +57,7 @@ impl GridAutoFlow {
 /// A grid line placement specification which is generic over the coordinate system that it uses to define
 /// grid line positions.
 ///
-/// GenericGridPlacement<GridLine> is aliased as GridPlacement as is exposed to users of Taffy to defined styles with
+/// GenericGridPlacement<GridLine> is aliased as GridPlacement and is exposed to users of Taffy to define styles.
 /// GenericGridPlacement<OriginZeroLine> is aliased as OriginZeroGridPlacement and is used internally for placement computations
 ///
 /// See [`crate::compute::grid::type::coordinates`] for documentation on the different coordinate systems.
