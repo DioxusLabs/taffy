@@ -16,6 +16,7 @@ pub(crate) fn compute(
     tree: &mut impl LayoutTree,
     node: Node,
     known_dimensions: Size<Option<f32>>,
+    parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     _run_mode: RunMode,
     sizing_mode: SizingMode,
@@ -32,10 +33,10 @@ pub(crate) fn compute(
             (node_size, node_min_size, node_max_size)
         }
         SizingMode::InherentSize => {
-            let style_size = style.size.maybe_resolve(available_space.into_options());
+            let style_size = style.size.maybe_resolve(parent_size);
             let node_size = known_dimensions.or(style_size);
-            let node_min_size = style.min_size.maybe_resolve(available_space.into_options());
-            let node_max_size = style.max_size.maybe_resolve(available_space.into_options());
+            let node_min_size = style.min_size.maybe_resolve(parent_size);
+            let node_max_size = style.max_size.maybe_resolve(parent_size);
             (node_size, node_min_size, node_max_size)
         }
     };
@@ -77,8 +78,8 @@ pub(crate) fn compute(
 
     // Note: both horizontal and vertical percentage padding/borders are resolved against the container's inline size (i.e. width).
     // This is not a bug, but is how CSS is specified (see: https://developer.mozilla.org/en-US/docs/Web/CSS/padding#values)
-    let padding = style.padding.resolve_or_zero(available_space.width.into_option());
-    let border = style.border.resolve_or_zero(available_space.width.into_option());
+    let padding = style.padding.resolve_or_zero(parent_size.width);
+    let border = style.border.resolve_or_zero(parent_size.width);
 
     Size {
         width: node_size

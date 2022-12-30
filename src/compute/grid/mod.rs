@@ -18,6 +18,9 @@ use track_sizing::{determine_if_item_crosses_flexible_tracks, resolve_item_track
 use types::{CellOccupancyMatrix, GridTrack};
 use util::coordinates::css_grid_line_into_origin_zero_coords;
 
+#[cfg(feature = "debug")]
+use crate::debug::NODE_LOGGER;
+
 use super::compute_node_layout;
 
 mod alignment;
@@ -34,7 +37,13 @@ mod util;
 ///   - Placing items (which also resolves the implicit grid)
 ///   - Track (row/column) sizing
 ///   - Alignment & Final item placement
-pub fn compute(tree: &mut impl LayoutTree, node: Node, available_space: Size<AvailableSpace>) -> Size<f32> {
+pub fn compute(
+    tree: &mut impl LayoutTree,
+    node: Node,
+    known_dimensions: Size<Option<f32>>,
+    parent_size: Size<Option<f32>>,
+    available_space: Size<AvailableSpace>,
+) -> Size<f32> {
     let get_child_styles_iter = |node| tree.children(node).map(|child_node: &Node| tree.style(*child_node));
     let style = tree.style(node).clone();
     let child_styles_iter = get_child_styles_iter(node);
@@ -92,11 +101,12 @@ pub fn compute(tree: &mut impl LayoutTree, node: Node, available_space: Size<Ava
 
     // 4. Compute "available grid space"
     // https://www.w3.org/TR/css-grid-1/#available-grid-space
-    let padding = style.padding.resolve_or_zero(available_space.width.into_option());
-    let border = style.border.resolve_or_zero(available_space.width.into_option());
-    let min_size = style.min_size.maybe_resolve(available_space.into_options());
-    let max_size = style.max_size.maybe_resolve(available_space.into_options());
-    let size = style.size.maybe_resolve(available_space.into_options());
+    let padding = style.padding.resolve_or_zero(parent_size.width);
+    let border = style.border.resolve_or_zero(parent_size.width);
+    let margin = style.margin.resolve_or_zero(parent_size.width);
+    let min_size = style.min_size.maybe_resolve(parent_size);
+    let max_size = style.max_size.maybe_resolve(parent_size);
+    let size = style.size.maybe_resolve(parent_size);
 
     let constrained_available_space = size
         .maybe_clamp(min_size, max_size)
@@ -111,6 +121,19 @@ pub fn compute(tree: &mut impl LayoutTree, node: Node, available_space: Size<Ava
             .height
             .map_definite_value(|space| space - padding.vertical_axis_sum() - border.vertical_axis_sum()),
     };
+
+    let outer_node_size = size.maybe_clamp(min_size, max_size).or(parent_size.maybe_sub(margin.sum_axes()));
+    let inner_node_size = Size {
+        width: outer_node_size.width.map(|space| space - padding.horizontal_axis_sum() - border.horizontal_axis_sum()),
+        height: outer_node_size.height.map(|space| space - padding.vertical_axis_sum() - border.vertical_axis_sum()),
+    };
+
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.labelled_debug_log("parent_size", parent_size);
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.labelled_debug_log("outer_node_size", outer_node_size);
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.labelled_debug_log("inner_node_size", inner_node_size);
 
     // 5. Track Sizing
 
@@ -129,6 +152,7 @@ pub fn compute(tree: &mut impl LayoutTree, node: Node, available_space: Size<Ava
         AbstractAxis::Inline,
         available_space,
         available_grid_space,
+        inner_node_size,
         &style,
         &mut columns,
         &mut rows,
@@ -143,6 +167,7 @@ pub fn compute(tree: &mut impl LayoutTree, node: Node, available_space: Size<Ava
         AbstractAxis::Block,
         available_space,
         available_grid_space,
+        inner_node_size,
         &style,
         &mut rows,
         &mut columns,
@@ -157,6 +182,7 @@ pub fn compute(tree: &mut impl LayoutTree, node: Node, available_space: Size<Ava
         AbstractAxis::Inline,
         available_space,
         available_grid_space,
+        inner_node_size,
         &style,
         &mut columns,
         &mut rows,
@@ -169,6 +195,7 @@ pub fn compute(tree: &mut impl LayoutTree, node: Node, available_space: Size<Ava
         AbstractAxis::Block,
         available_space,
         available_grid_space,
+        inner_node_size,
         &style,
         &mut rows,
         &mut columns,
@@ -177,7 +204,7 @@ pub fn compute(tree: &mut impl LayoutTree, node: Node, available_space: Size<Ava
     );
 
     // 6. Compute container size
-    let resolved_style_size = style.size.maybe_resolve(available_space.into_options());
+    let resolved_style_size = known_dimensions.or(style.size.maybe_resolve(parent_size));
     let container_border_box = Size {
         width: resolved_style_size.get(AbstractAxis::Inline).unwrap_or_else(|| {
             columns.iter().map(|track| track.base_size).sum::<f32>()
@@ -229,14 +256,7 @@ pub fn compute(tree: &mut impl LayoutTree, node: Node, available_space: Size<Ava
             left: columns[item.column_indexes.start as usize + 1].offset,
             right: columns[item.column_indexes.end as usize].offset,
         };
-        align_and_position_item(
-            tree,
-            item.node,
-            index as u32,
-            grid_area,
-            container_content_box,
-            container_alignment_styles,
-        );
+        align_and_position_item(tree, item.node, index as u32, grid_area, container_alignment_styles);
     }
 
     // Position hidden and absolutely positioned children
@@ -251,6 +271,7 @@ pub fn compute(tree: &mut impl LayoutTree, node: Node, available_space: Size<Ava
             compute_node_layout(
                 tree,
                 child,
+                Size::NONE,
                 Size::NONE,
                 Size::MAX_CONTENT,
                 RunMode::PeformLayout,
@@ -287,7 +308,7 @@ pub fn compute(tree: &mut impl LayoutTree, node: Node, available_space: Size<Ava
                 left: maybe_col_indexes.start.map(|index| columns[index].offset).unwrap_or(0.0),
                 right: maybe_col_indexes.end.map(|index| columns[index].offset).unwrap_or(container_border_box.width),
             };
-            align_and_position_item(tree, child, order, grid_area, container_content_box, container_alignment_styles);
+            align_and_position_item(tree, child, order, grid_area, container_alignment_styles);
             order += 1;
         }
     });

@@ -75,7 +75,6 @@ pub(super) fn align_and_position_item(
     node: Node,
     order: u32,
     grid_area: Rect<f32>,
-    container_content_box: Size<f32>,
     container_alignment_styles: InBothAbsAxis<Option<AlignItems>>,
 ) {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
@@ -86,13 +85,11 @@ pub(super) fn align_and_position_item(
     let align_self = style.align_self;
 
     let position = style.position;
-    let inset_horizontal =
-        style.inset.horizontal_components().map(|size| size.resolve_to_option(container_content_box.width));
-    let inset_vertical =
-        style.inset.vertical_components().map(|size| size.resolve_to_option(container_content_box.height));
-    let inherent_size = style.size.maybe_resolve(container_content_box);
-    let min_size = style.min_size.maybe_resolve(container_content_box);
-    let max_size = style.max_size.maybe_resolve(container_content_box);
+    let inset_horizontal = style.inset.horizontal_components().map(|size| size.resolve_to_option(grid_area_size.width));
+    let inset_vertical = style.inset.vertical_components().map(|size| size.resolve_to_option(grid_area_size.height));
+    let inherent_size = style.size.maybe_resolve(grid_area_size);
+    let min_size = style.min_size.maybe_resolve(grid_area_size);
+    let max_size = style.max_size.maybe_resolve(grid_area_size);
 
     // Resolve default alignment styles if they are set on neither the parent or the node itself
     let alignment_styles = InBothAbsAxis {
@@ -174,6 +171,7 @@ pub(super) fn align_and_position_item(
         tree,
         node,
         Size { width, height },
+        grid_area_size.map(Option::Some),
         grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
         RunMode::PeformLayout,
         SizingMode::InherentSize,

@@ -26,8 +26,15 @@ pub fn compute_layout(
     available_space: Size<AvailableSpace>,
 ) -> Result<(), TaffyError> {
     // Recursively compute node layout
-    let size =
-        compute_node_layout(tree, root, Size::NONE, available_space, RunMode::PeformLayout, SizingMode::InherentSize);
+    let size = compute_node_layout(
+        tree,
+        root,
+        Size::NONE,
+        available_space.into_options(),
+        available_space,
+        RunMode::PeformLayout,
+        SizingMode::InherentSize,
+    );
 
     let layout = Layout { order: 0, size, location: Point::ZERO };
     *tree.layout_mut(root) = layout;
@@ -43,6 +50,7 @@ fn compute_node_layout(
     tree: &mut impl LayoutTree,
     node: Node,
     known_dimensions: Size<Option<f32>>,
+    parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
     sizing_mode: SizingMode,
@@ -83,45 +91,21 @@ fn compute_node_layout(
     #[cfg(feature = "debug")]
     NODE_LOGGER.labelled_debug_log("available_space", available_space);
 
-    // Attempt to shortcut size computation based on
-    //  - KnownSize sizing constraints
-    //  - The node's preferred sizes (width/heights) styles and AvailableSpace sizing constraints
-    // (percentages resolve to pixel values if there is a definite AvailableSpace sizing constraint)
-    // let style = tree.style(node);
-    // // let known_node_size = available_space.
-    // //     .zip_map(style.size, |constraint, style_size| style_size.maybe_resolve(constraint.as_option()));
-    // let known_node_size = style
-    //     .size
-    //     .maybe_resolve(available_space.as_options())
-    //     .zip_map(known_dimensions, |style_size, known_dimensions| known_dimensions.or(style_size));
-    // if run_mode == RunMode::ComputeSize && known_node_size.width.is_some() && known_node_size.height.is_some() {
-    //     let node_min_size = style.min_size.maybe_resolve(available_space.as_options());
-    //     let node_max_size = style.max_size.maybe_resolve(available_space.as_options());
-    //     return Size {
-    //         width: known_node_size.width.maybe_max(node_min_size.width).maybe_min(node_max_size.width).unwrap_or(0.0),
-    //         height: known_node_size
-    //             .height
-    //             .maybe_max(node_min_size.height)
-    //             .maybe_min(node_max_size.height)
-    //             .unwrap_or(0.0),
-    //     };
-    // }
-
     // If this is a leaf node we can skip a lot of this function in some cases
     let computed_size = if tree.is_childless(node) {
         #[cfg(feature = "debug")]
         NODE_LOGGER.log("Algo: leaf");
-        self::leaf::compute(tree, node, known_dimensions, available_space, run_mode, sizing_mode)
+        self::leaf::compute(tree, node, known_dimensions, parent_size, available_space, run_mode, sizing_mode)
     } else {
         // println!("match {:?}", tree.style(node).display);
         match tree.style(node).display {
             Display::Flex => {
                 #[cfg(feature = "debug")]
                 NODE_LOGGER.log("Algo: flexbox");
-                self::flexbox::compute(tree, node, known_dimensions, available_space, run_mode)
+                self::flexbox::compute(tree, node, known_dimensions, parent_size, available_space, run_mode)
             }
             #[cfg(feature = "grid")]
-            Display::Grid => self::grid::compute(tree, node, available_space),
+            Display::Grid => self::grid::compute(tree, node, known_dimensions, parent_size, available_space),
             Display::None => {
                 #[cfg(feature = "debug")]
                 NODE_LOGGER.log("Algo: none");
@@ -199,8 +183,6 @@ fn compute_from_cache(
 ) -> Option<Size<f32>> {
     for idx in 0..CACHE_SIZE {
         let entry = tree.cache_mut(node, idx);
-        #[cfg(feature = "debug")]
-        NODE_LOGGER.labelled_debug_log("cache_entry", &entry);
         if let Some(entry) = entry {
             // Cached ComputeSize results are not valid if we are running in PerformLayout mode
             if entry.run_mode == RunMode::ComputeSize && run_mode == RunMode::PeformLayout {
