@@ -35,7 +35,7 @@ mod util;
 ///   - Track (row/column) sizing
 ///   - Alignment & Final item placement
 pub fn compute(tree: &mut impl LayoutTree, node: Node, available_space: Size<AvailableSpace>) -> Size<f32> {
-    let get_child_styles_iter = |node| tree.children(node).into_iter().map(|child_node: &Node| tree.style(*child_node));
+    let get_child_styles_iter = |node| tree.children(node).map(|child_node: &Node| tree.style(*child_node));
     let style = tree.style(node).clone();
     let child_styles_iter = get_child_styles_iter(node);
 
@@ -57,7 +57,6 @@ pub fn compute(tree: &mut impl LayoutTree, node: Node, available_space: Size<Ava
     let grid_auto_flow = style.grid_auto_flow;
     let in_flow_children_iter = || {
         tree.children(node)
-            .into_iter()
             .copied()
             .enumerate()
             .map(|(index, child_node)| (index, child_node, tree.style(child_node)))
