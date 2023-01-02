@@ -169,18 +169,6 @@ impl CellOccupancyMatrix {
         }
     }
 
-    /// Converts a span of grid lines in OriginZero coordinates into a range a tracks suitable
-    /// for indexing into this CellOccupancyMatrix
-    pub fn lines_to_tracks(&self, axis: AbsoluteAxis, span: Line<OriginZeroLine>) -> Range<i16> {
-        self.track_counts(axis).oz_line_range_to_track_range(span)
-    }
-
-    /// Converts a range a tracks indexes from this CellOccupancyMatrix into a span of grid lines
-    /// in OriginZero coordinates
-    pub fn tracks_to_lines(&self, axis: AbsoluteAxis, span: Range<i16>) -> Line<OriginZeroLine> {
-        self.track_counts(axis).track_range_to_oz_line_range(span)
-    }
-
     /// Determines whether a grid area specified by the bounding grid lines in OriginZero coordinates
     /// is entirely unnocupied. Returns true if all grid cells within the grid area are unnocupied, else false.
     pub fn line_area_is_unoccupied(

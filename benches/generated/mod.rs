@@ -413,6 +413,10 @@ mod grid_percent_width_and_margin;
 #[cfg(feature = "grid")]
 mod grid_percent_width_and_padding;
 #[cfg(feature = "grid")]
+mod grid_placement_auto_negative;
+#[cfg(feature = "grid")]
+mod grid_placement_definite_in_secondary_axis_with_fully_definite_negative;
+#[cfg(feature = "grid")]
 mod grid_relayout_vertical_text;
 #[cfg(feature = "grid")]
 mod grid_size_child_fixed_tracks;
@@ -922,6 +926,10 @@ fn benchmark(c: &mut Criterion) {
             grid_percent_width_and_margin::compute();
             #[cfg(feature = "grid")]
             grid_percent_width_and_padding::compute();
+            #[cfg(feature = "grid")]
+            grid_placement_auto_negative::compute();
+            #[cfg(feature = "grid")]
+            grid_placement_definite_in_secondary_axis_with_fully_definite_negative::compute();
             #[cfg(feature = "grid")]
             grid_relayout_vertical_text::compute();
             #[cfg(feature = "grid")]

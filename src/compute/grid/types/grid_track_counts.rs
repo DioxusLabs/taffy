@@ -57,9 +57,20 @@ impl TrackCounts {
     pub fn len(&self) -> usize {
         (self.negative_implicit + self.explicit + self.positive_implicit) as usize
     }
+
+    /// The OriginZeroLine representing the start of the implicit grid
+    pub fn implicit_start_line(&self) -> OriginZeroLine {
+        OriginZeroLine(-(self.negative_implicit as i16))
+    }
+
+    /// The OriginZeroLine representing the end of the implicit grid
+    pub fn implicit_end_line(&self) -> OriginZeroLine {
+        OriginZeroLine((self.explicit + self.positive_implicit) as i16)
+    }
 }
 
 /// Conversion functions between OriginZero coordinates and CellOccupancyMatrix track indexes
+#[allow(dead_code)]
 impl TrackCounts {
     /// Converts a grid line in OriginZero coordinates into the track immediately
     /// following that grid line as an index into the CellOccupancyMatrix.
