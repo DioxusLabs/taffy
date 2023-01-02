@@ -28,12 +28,12 @@ pub(crate) fn compute_grid_size_estimate<'a>(
     // Compute *track* count estimates for each axis from:
     //   - The explicit track counts
     //   - The origin-zero coordinate min and max grid line variables
-    let negative_implicit_inline_tracks = col_min.unsigned_abs();
+    let negative_implicit_inline_tracks = col_min.implied_negative_implicit_tracks();
     let explicit_inline_tracks = explicit_col_count;
-    let mut positive_implicit_inline_tracks = max(explicit_col_count, col_max.unsigned_abs()) - explicit_col_count;
-    let negative_implicit_block_tracks = row_min.unsigned_abs();
+    let mut positive_implicit_inline_tracks = col_max.implied_positive_implicit_tracks(explicit_col_count);
+    let negative_implicit_block_tracks = row_min.implied_negative_implicit_tracks();
     let explicit_block_tracks = explicit_row_count;
-    let mut positive_implicit_block_tracks = max(explicit_row_count, row_max.unsigned_abs()) - explicit_row_count;
+    let mut positive_implicit_block_tracks = row_max.implied_positive_implicit_tracks(explicit_row_count);
 
     // In each axis, adjust positive track estimate if any items have a span that does not fit within
     // the total number of tracks in the estimate

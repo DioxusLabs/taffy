@@ -96,8 +96,22 @@ impl OriginZeroLine {
         2 * ((self.0 + track_counts.negative_implicit as i16) as usize)
     }
 
-    pub(crate) fn unsigned_abs(self) -> u16 {
-        self.0.unsigned_abs()
+    /// The minimum number of negative implicit track there must be if a grid item starts at this line.
+    pub(crate) fn implied_negative_implicit_tracks(self) -> u16 {
+        if self.0 < 0 {
+            self.0.unsigned_abs()
+        } else {
+            0
+        }
+    }
+
+    /// The minimum number of positive implicit track there must be if a grid item end at this line.
+    pub(crate) fn implied_positive_implicit_tracks(self, explicit_track_count: u16) -> u16 {
+        if self.0 > explicit_track_count as i16 {
+            self.0 as u16 - explicit_track_count
+        } else {
+            0
+        }
     }
 }
 
