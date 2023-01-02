@@ -95,6 +95,10 @@ impl OriginZeroLine {
         );
         2 * ((self.0 + track_counts.negative_implicit as i16) as usize)
     }
+
+    pub(crate) fn unsigned_abs(self) -> u16 {
+        self.0.unsigned_abs()
+    }
 }
 
 /// A trait for the different coordinates used to define grid lines.
