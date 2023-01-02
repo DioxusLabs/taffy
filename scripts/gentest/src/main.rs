@@ -714,7 +714,7 @@ fn generate_grid_position(grid_position: &serde_json::Map<String, Value>) -> Tok
             }
             "line" => {
                 let value = value() as i16;
-                quote!(taffy::style::GridPlacement::Line(#value))
+                quote!(line(#value))
             }
             _ => unreachable!(),
         },

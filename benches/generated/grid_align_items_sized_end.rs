@@ -4,14 +4,8 @@ pub fn compute() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            grid_row: taffy::geometry::Line {
-                start: taffy::style::GridPlacement::Line(1i16),
-                end: taffy::style::GridPlacement::Auto,
-            },
-            grid_column: taffy::geometry::Line {
-                start: taffy::style::GridPlacement::Line(1i16),
-                end: taffy::style::GridPlacement::Auto,
-            },
+            grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
+            grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
                 height: taffy::style::Dimension::Points(20f32),
@@ -21,14 +15,8 @@ pub fn compute() {
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            grid_row: taffy::geometry::Line {
-                start: taffy::style::GridPlacement::Line(3i16),
-                end: taffy::style::GridPlacement::Auto,
-            },
-            grid_column: taffy::geometry::Line {
-                start: taffy::style::GridPlacement::Line(3i16),
-                end: taffy::style::GridPlacement::Auto,
-            },
+            grid_row: taffy::geometry::Line { start: line(3i16), end: taffy::style::GridPlacement::Auto },
+            grid_column: taffy::geometry::Line { start: line(3i16), end: taffy::style::GridPlacement::Auto },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(60f32),
                 height: taffy::style::Dimension::Points(60f32),

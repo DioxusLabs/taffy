@@ -16,7 +16,8 @@ use implicit_grid::compute_grid_size_estimate;
 use placement::place_grid_items;
 use track_sizing::{determine_if_item_crosses_flexible_tracks, resolve_item_track_indexes, track_sizing_algorithm};
 use types::{CellOccupancyMatrix, GridTrack};
-use util::coordinates::css_grid_line_into_origin_zero_coords;
+
+pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine};
 
 #[cfg(feature = "debug")]
 use crate::debug::NODE_LOGGER;
@@ -285,22 +286,22 @@ pub fn compute(
         if child_style.position == Position::Absolute {
             // Convert grid-col-{start/end} into Option's of indexes into the columns vector
             // The Option is None if the style property is Auto and an unresolvable Span
-            let maybe_grid_cols = child_style.grid_column.resolve_absolutely_positioned_grid_tracks();
-            let maybe_col_indexes = maybe_grid_cols.map(|maybe_grid_line| {
-                maybe_grid_line.map(|grid_line| {
-                    let oz_line = css_grid_line_into_origin_zero_coords(grid_line, final_col_counts.explicit);
-                    final_col_counts.oz_line_to_grid_track_vec_index(oz_line) as usize
-                })
-            });
+            let maybe_col_indexes = child_style
+                .grid_column
+                .into_origin_zero(final_col_counts.explicit)
+                .resolve_absolutely_positioned_grid_tracks()
+                .map(|maybe_grid_line| {
+                    maybe_grid_line.map(|line: OriginZeroLine| line.into_track_vec_index(final_col_counts))
+                });
             // Convert grid-row-{start/end} into Option's of indexes into the row vector
             // The Option is None if the style property is Auto and an unresolvable Span
-            let maybe_grid_rows = child_style.grid_row.resolve_absolutely_positioned_grid_tracks();
-            let maybe_row_indexes = maybe_grid_rows.map(|maybe_grid_line| {
-                maybe_grid_line.map(|grid_line| {
-                    let oz_line = css_grid_line_into_origin_zero_coords(grid_line, final_row_counts.explicit);
-                    final_row_counts.oz_line_to_grid_track_vec_index(oz_line) as usize
-                })
-            });
+            let maybe_row_indexes = child_style
+                .grid_row
+                .into_origin_zero(final_col_counts.explicit)
+                .resolve_absolutely_positioned_grid_tracks()
+                .map(|maybe_grid_line| {
+                    maybe_grid_line.map(|line: OriginZeroLine| line.into_track_vec_index(final_row_counts))
+                });
 
             let grid_area = Rect {
                 top: maybe_row_indexes.start.map(|index| rows[index].offset).unwrap_or(0.0),

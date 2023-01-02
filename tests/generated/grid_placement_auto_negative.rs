@@ -1,5 +1,5 @@
 #[test]
-fn grid_justify_items_sized_center() {
+fn grid_placement_auto_negative() {
     use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};
@@ -7,22 +7,14 @@ fn grid_justify_items_sized_center() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
-            grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
-            size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(20f32),
-                height: taffy::style::Dimension::Points(20f32),
-            },
+            grid_column: taffy::geometry::Line { start: line(-5i16), end: taffy::style::GridPlacement::Auto },
             ..Default::default()
         })
         .unwrap();
-    let node1 = taffy
+    let node1 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
+    let node2 = taffy
         .new_leaf(taffy::style::Style {
-            grid_row: taffy::geometry::Line { start: line(3i16), end: taffy::style::GridPlacement::Auto },
-            grid_column: taffy::geometry::Line { start: line(3i16), end: taffy::style::GridPlacement::Auto },
-            size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(60f32),
-                height: taffy::style::Dimension::Points(60f32),
-            },
+            grid_row: taffy::geometry::Line { start: line(2i16), end: taffy::style::GridPlacement::Auto },
             ..Default::default()
         })
         .unwrap();
@@ -30,16 +22,15 @@ fn grid_justify_items_sized_center() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                justify_items: Some(taffy::style::JustifyItems::Center),
-                grid_template_rows: vec![points(40f32), points(40f32), points(40f32)],
-                grid_template_columns: vec![points(40f32), points(40f32), points(40f32)],
+                grid_template_rows: vec![points(40f32), points(40f32)],
+                grid_template_columns: vec![points(40f32), points(40f32)],
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(120f32),
                     height: taffy::style::Dimension::Points(120f32),
                 },
                 ..Default::default()
             },
-            &[node0, node1],
+            &[node0, node1, node2],
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
@@ -53,12 +44,17 @@ fn grid_justify_items_sized_center() {
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node0).unwrap();
     assert_eq!(size.width, 20f32, "width of node {:?}. Expected {}. Actual {}", node0.data(), 20f32, size.width);
-    assert_eq!(size.height, 20f32, "height of node {:?}. Expected {}. Actual {}", node0.data(), 20f32, size.height);
-    assert_eq!(location.x, 10f32, "x of node {:?}. Expected {}. Actual {}", node0.data(), 10f32, location.x);
+    assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node0.data(), 40f32, size.height);
+    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node1).unwrap();
-    assert_eq!(size.width, 60f32, "width of node {:?}. Expected {}. Actual {}", node1.data(), 60f32, size.width);
-    assert_eq!(size.height, 60f32, "height of node {:?}. Expected {}. Actual {}", node1.data(), 60f32, size.height);
-    assert_eq!(location.x, 70f32, "x of node {:?}. Expected {}. Actual {}", node1.data(), 70f32, location.x);
-    assert_eq!(location.y, 80f32, "y of node {:?}. Expected {}. Actual {}", node1.data(), 80f32, location.y);
+    assert_eq!(size.width, 20f32, "width of node {:?}. Expected {}. Actual {}", node1.data(), 20f32, size.width);
+    assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node1.data(), 40f32, size.height);
+    assert_eq!(location.x, 20f32, "x of node {:?}. Expected {}. Actual {}", node1.data(), 20f32, location.x);
+    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node1.data(), 0f32, location.y);
+    let Layout { size, location, .. } = taffy.layout(node2).unwrap();
+    assert_eq!(size.width, 20f32, "width of node {:?}. Expected {}. Actual {}", node2.data(), 20f32, size.width);
+    assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node2.data(), 40f32, size.height);
+    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node2.data(), 0f32, location.x);
+    assert_eq!(location.y, 40f32, "y of node {:?}. Expected {}. Actual {}", node2.data(), 40f32, location.y);
 }

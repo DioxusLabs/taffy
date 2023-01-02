@@ -1,4 +1,5 @@
 //! Helpers for use in unit tests within the grid module
+use super::super::OriginZeroLine;
 use crate::prelude::*;
 use crate::style::{Dimension, GridPlacement, Style};
 
@@ -27,5 +28,14 @@ impl CreateChildTestNode for (GridPlacement, GridPlacement, GridPlacement, GridP
             grid_row: Line { start: self.2, end: self.3 },
             ..Default::default()
         }
+    }
+}
+
+pub(crate) trait CreateExpectedPlacement {
+    fn into_oz(self) -> (OriginZeroLine, OriginZeroLine, OriginZeroLine, OriginZeroLine);
+}
+impl CreateExpectedPlacement for (i16, i16, i16, i16) {
+    fn into_oz(self) -> (OriginZeroLine, OriginZeroLine, OriginZeroLine, OriginZeroLine) {
+        (OriginZeroLine(self.0), OriginZeroLine(self.1), OriginZeroLine(self.2), OriginZeroLine(self.3))
     }
 }

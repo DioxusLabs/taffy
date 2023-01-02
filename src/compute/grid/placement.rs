@@ -1,11 +1,11 @@
 //! Implements placing items in the grid and resolving the implicit grid.
 //! https://www.w3.org/TR/css-grid-1/#placement
 use super::types::{CellOccupancyMatrix, CellOccupancyState, GridItem};
-use super::util::css_grid_line_into_origin_zero_coords;
+use super::OriginZeroLine;
 use crate::axis::{AbsoluteAxis, InBothAbsAxis};
 use crate::geometry::Line;
 use crate::node::Node;
-use crate::style::{GridAutoFlow, GridPlacement, Style};
+use crate::style::{GridAutoFlow, OriginZeroGridPlacement, Style};
 use crate::sys::Vec;
 
 /// 8.5. Grid Item Placement Algorithm
@@ -28,22 +28,23 @@ pub(super) fn place_grid_items<'a, ChildIter>(
         let explicit_row_count = cell_occupancy_matrix.track_counts(AbsoluteAxis::Vertical).explicit;
         move |(index, node, style): (usize, Node, &'a Style)| -> (_, _, _, &'a Style) {
             let origin_zero_placement = InBothAbsAxis {
-                horizontal: style.grid_column.map(|placement| {
-                    placement.map_track(|track| css_grid_line_into_origin_zero_coords(track, explicit_col_count))
-                }),
-                vertical: style.grid_row.map(|placement| {
-                    placement.map_track(|track| css_grid_line_into_origin_zero_coords(track, explicit_row_count))
-                }),
+                horizontal: style.grid_column.map(|placement| placement.into_origin_zero_placement(explicit_col_count)),
+                vertical: style.grid_row.map(|placement| placement.into_origin_zero_placement(explicit_row_count)),
             };
             (index, node, origin_zero_placement, style)
         }
     };
 
     // 1. Place children with definite positions
+    let mut idx = 0;
     children_iter()
         .filter(|(_, _, child_style)| child_style.grid_row.is_definite() && child_style.grid_column.is_definite())
         .map(map_child_style_to_origin_zero_placement)
         .for_each(|(index, child_node, child_placement, style)| {
+            idx += 1;
+            #[cfg(test)]
+            println!("Definite Item {idx}\n==============");
+
             let (row_span, col_span) = place_definite_grid_item(child_placement, primary_axis);
             record_grid_placement(
                 cell_occupancy_matrix,
@@ -59,6 +60,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
         });
 
     // 2. Place remaining children with definite secondary axis positions
+    let mut idx = 0;
     children_iter()
         .filter(|(_, _, child_style)| {
             child_style.grid_placement(secondary_axis).is_definite()
@@ -66,6 +68,10 @@ pub(super) fn place_grid_items<'a, ChildIter>(
         })
         .map(map_child_style_to_origin_zero_placement)
         .for_each(|(index, child_node, child_placement, style)| {
+            idx += 1;
+            #[cfg(test)]
+            println!("Definite Secondary Item {idx}\n==============");
+
             let (primary_span, secondary_span) =
                 place_definite_secondary_axis_item(&*cell_occupancy_matrix, child_placement, grid_auto_flow);
 
@@ -101,7 +107,10 @@ pub(super) fn place_grid_items<'a, ChildIter>(
 
     // 4. Position the remaining grid items
     // (which either have definite position only in the secondary axis or indefinite positions in both axis)
-    let mut grid_position: (u16, u16) = (0, 0);
+    let x_neg_tracks = cell_occupancy_matrix.track_counts(AbsoluteAxis::Horizontal).negative_implicit as i16;
+    let y_neg_tracks = cell_occupancy_matrix.track_counts(AbsoluteAxis::Vertical).negative_implicit as i16;
+    let grid_start_position = (OriginZeroLine(-x_neg_tracks), OriginZeroLine(-y_neg_tracks));
+    let mut grid_position = grid_start_position;
     let mut idx = 0;
     children_iter()
         .filter(|(_, _, child_style)| !child_style.grid_placement(secondary_axis).is_definite())
@@ -109,7 +118,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
         .for_each(|(index, child_node, child_placement, style)| {
             idx += 1;
             #[cfg(test)]
-            println!("\nItem {idx}\n==============");
+            println!("\nAuto Item {idx}\n==============");
 
             // Compute placement
             let (primary_span, secondary_span) = place_indefinitely_positioned_item(
@@ -132,11 +141,11 @@ pub(super) fn place_grid_items<'a, ChildIter>(
                 CellOccupancyState::AutoPlaced,
             );
 
-            // If using the "dense" placement algorithm then reset the grid position back to (0, 0) ready for the next item
+            // If using the "dense" placement algorithm then reset the grid position back to grid_start_position ready for the next item
             // Otherwise set it to the position of the current item so that the next item it placed after it.
             grid_position = match grid_auto_flow.is_dense() {
-                true => (0, 0),
-                false => (primary_span.end as u16, secondary_span.start as u16),
+                true => grid_start_position,
+                false => (primary_span.end, secondary_span.start),
             }
         });
 }
@@ -144,12 +153,12 @@ pub(super) fn place_grid_items<'a, ChildIter>(
 /// 8.5. Grid Item Placement Algorithm
 /// Place a single definitely placed item into the grid
 fn place_definite_grid_item(
-    placement: InBothAbsAxis<Line<GridPlacement>>,
+    placement: InBothAbsAxis<Line<OriginZeroGridPlacement>>,
     primary_axis: AbsoluteAxis,
-) -> (Line<i16>, Line<i16>) {
+) -> (Line<OriginZeroLine>, Line<OriginZeroLine>) {
     // Resolve spans to tracks
-    let primary_span = placement.get(primary_axis).resolve_definite_grid_tracks();
-    let secondary_span = placement.get(primary_axis.other_axis()).resolve_definite_grid_tracks();
+    let primary_span = placement.get(primary_axis).resolve_definite_grid_lines();
+    let secondary_span = placement.get(primary_axis.other_axis()).resolve_definite_grid_lines();
 
     (primary_span, secondary_span)
 }
@@ -158,21 +167,22 @@ fn place_definite_grid_item(
 /// Step 2. Place remaining children with definite secondary axis positions
 fn place_definite_secondary_axis_item(
     cell_occupancy_matrix: &CellOccupancyMatrix,
-    placement: InBothAbsAxis<Line<GridPlacement>>,
+    placement: InBothAbsAxis<Line<OriginZeroGridPlacement>>,
     auto_flow: GridAutoFlow,
-) -> (Line<i16>, Line<i16>) {
+) -> (Line<OriginZeroLine>, Line<OriginZeroLine>) {
     let primary_axis = auto_flow.primary_axis();
     let secondary_axis = primary_axis.other_axis();
 
-    let secondary_axis_placement = placement.get(secondary_axis).resolve_definite_grid_tracks();
+    let secondary_axis_placement = placement.get(secondary_axis).resolve_definite_grid_lines();
+    let primary_axis_grid_start_line = cell_occupancy_matrix.track_counts(primary_axis).implicit_start_line();
     let starting_position = match auto_flow.is_dense() {
-        true => 0,
+        true => primary_axis_grid_start_line,
         false => cell_occupancy_matrix
             .last_of_type(primary_axis, secondary_axis_placement.start, CellOccupancyState::AutoPlaced)
-            .unwrap_or(0),
+            .unwrap_or(primary_axis_grid_start_line),
     };
 
-    let mut position: i16 = starting_position;
+    let mut position: OriginZeroLine = starting_position;
     loop {
         let primary_axis_placement = placement.get(primary_axis).resolve_indefinite_grid_tracks(position);
 
@@ -194,10 +204,10 @@ fn place_definite_secondary_axis_item(
 /// Step 4. Position the remaining grid items.
 fn place_indefinitely_positioned_item(
     cell_occupancy_matrix: &CellOccupancyMatrix,
-    placement: InBothAbsAxis<Line<GridPlacement>>,
+    placement: InBothAbsAxis<Line<OriginZeroGridPlacement>>,
     auto_flow: GridAutoFlow,
-    grid_position: (u16, u16),
-) -> (Line<i16>, Line<i16>) {
+    grid_position: (OriginZeroLine, OriginZeroLine),
+) -> (Line<OriginZeroLine>, Line<OriginZeroLine>) {
     let primary_axis = auto_flow.primary_axis();
 
     let primary_placement_style = placement.get(primary_axis);
@@ -206,23 +216,24 @@ fn place_indefinitely_positioned_item(
     let primary_span = primary_placement_style.indefinite_span();
     let secondary_span = secondary_placement_style.indefinite_span();
     let has_definite_primary_axis_position = primary_placement_style.is_definite();
-    let primary_axis_length = cell_occupancy_matrix.track_counts(primary_axis).len() as i16;
+    let primary_axis_grid_start_line = cell_occupancy_matrix.track_counts(primary_axis).implicit_start_line();
+    let primary_axis_grid_end_line = cell_occupancy_matrix.track_counts(primary_axis).implicit_end_line();
+    let secondary_axis_grid_start_line =
+        cell_occupancy_matrix.track_counts(primary_axis.other_axis()).implicit_start_line();
 
-    let track_area_is_unoccupied = |primary_range, secondary_range| {
-        cell_occupancy_matrix.track_area_is_unoccupied(primary_axis, primary_range, secondary_range)
+    let line_area_is_occupied = |primary_span, secondary_span| {
+        !cell_occupancy_matrix.line_area_is_unoccupied(primary_axis, primary_span, secondary_span)
     };
-    let tracks_to_lines = |range| cell_occupancy_matrix.tracks_to_lines(primary_axis, range);
 
     let (mut primary_idx, mut secondary_idx) = grid_position;
 
     if has_definite_primary_axis_position {
-        let definite_primary_placement = primary_placement_style.resolve_definite_grid_tracks();
-        let defined_primary_idx =
-            cell_occupancy_matrix.lines_to_tracks(primary_axis.other_axis(), definite_primary_placement).start as u16;
+        let definite_primary_placement = primary_placement_style.resolve_definite_grid_lines();
+        let defined_primary_idx = definite_primary_placement.start;
 
         // Compute starting position for search
-        if defined_primary_idx < primary_idx && secondary_idx != 0 {
-            secondary_idx = 0;
+        if defined_primary_idx < primary_idx && secondary_idx != secondary_axis_grid_start_line {
+            secondary_idx = secondary_axis_grid_start_line;
             primary_idx = defined_primary_idx + 1;
         } else {
             primary_idx = defined_primary_idx;
@@ -231,43 +242,43 @@ fn place_indefinitely_positioned_item(
         // Item has fixed primary axis position: so we simply increment the secondary axis position
         // until we find a space that the item fits in
         loop {
-            let primary_range = (primary_idx as i16)..((primary_idx + primary_span) as i16);
-            let secondary_range = (secondary_idx as i16)..((secondary_idx + secondary_span) as i16);
+            let primary_span = Line { start: primary_idx, end: primary_idx + primary_span };
+            let secondary_span = Line { start: secondary_idx, end: secondary_idx + secondary_span };
 
-            let place_here = track_area_is_unoccupied(primary_range.clone(), secondary_range.clone());
-            if place_here {
-                let primary_span = tracks_to_lines(primary_range);
-                let secondary_span = tracks_to_lines(secondary_range);
-                return (primary_span, secondary_span);
+            // If area is occupied, increment the index and try again
+            if line_area_is_occupied(primary_span, secondary_span) {
+                secondary_idx += 1;
+                continue;
             }
 
-            secondary_idx += 1;
+            // Once we find a free space, return that position
+            return (primary_span, secondary_span);
         }
     } else {
         // Item does not have any fixed axis, so we search along the primary axis until we hit the end of the already
         // existent tracks, and then we reset the primary axis back to zero and increment the secondary axis index.
         // We continue in this vein until we find a space that the item fits in.
         loop {
-            let primary_range = (primary_idx as i16)..((primary_idx + primary_span) as i16);
-            let secondary_range = (secondary_idx as i16)..((secondary_idx + secondary_span) as i16);
+            let primary_span = Line { start: primary_idx, end: primary_idx + primary_span };
+            let secondary_span = Line { start: secondary_idx, end: secondary_idx + secondary_span };
 
-            // Check if item fits in it's current position, and if so place it there
-            let primary_out_of_bounds = primary_range.end > primary_axis_length;
-            let place_here =
-                !primary_out_of_bounds && track_area_is_unoccupied(primary_range.clone(), secondary_range.clone());
-            if place_here {
-                let primary_span = tracks_to_lines(primary_range);
-                let secondary_span = tracks_to_lines(secondary_range);
-                return (primary_span, secondary_span);
-            }
-
-            // Else check the next position
+            // If the primary index is out of bounds, then increment the secondary index and reset the primary
+            // index back to the start of the grid
+            let primary_out_of_bounds = primary_span.end > primary_axis_grid_end_line;
             if primary_out_of_bounds {
                 secondary_idx += 1;
-                primary_idx = 0;
-            } else {
-                primary_idx += 1;
+                primary_idx = primary_axis_grid_start_line;
+                continue;
             }
+
+            // If area is occupied, increment the primary index and try again
+            if line_area_is_occupied(primary_span, secondary_span) {
+                primary_idx += 1;
+                continue;
+            }
+
+            // Once we find a free space that's in bounds, return that position
+            return (primary_span, secondary_span);
         }
     }
 }
@@ -282,8 +293,8 @@ fn record_grid_placement(
     index: usize,
     style: &Style,
     primary_axis: AbsoluteAxis,
-    primary_span: Line<i16>,
-    secondary_span: Line<i16>,
+    primary_span: Line<OriginZeroLine>,
+    secondary_span: Line<OriginZeroLine>,
     placement_type: CellOccupancyState,
 ) {
     #[cfg(test)]
@@ -321,7 +332,7 @@ mod tests {
         use crate::compute::grid::util::*;
         use crate::compute::grid::CellOccupancyMatrix;
         use crate::prelude::*;
-        use crate::style::{GridAutoFlow, GridPlacement::*};
+        use crate::style::GridAutoFlow;
         use slotmap::SlotMap;
 
         use super::super::place_grid_items;
@@ -355,7 +366,7 @@ mod tests {
             {
                 assert_eq!(item.node, *node);
                 let actual_placement = (item.column.start, item.column.end, item.row.start, item.row.end);
-                assert_eq!(actual_placement, *expected_placement, "Item {idx} (0-indexed)");
+                assert_eq!(actual_placement, (*expected_placement).into_oz(), "Item {idx} (0-indexed)");
             }
 
             // Assert that the correct number of implicit rows have been generated
@@ -374,14 +385,34 @@ mod tests {
                 let mut sm = SlotMap::new();
                 vec![
                     // node, style (grid coords), expected_placement (oz coords)
-                    (1, sm.insert(()), (Line(1), Auto, Line(1), Auto).into_grid_child(), (0, 1, 0, 1)),
-                    (2, sm.insert(()), (Line(-4), Auto, Line(-3), Auto).into_grid_child(), (-1, 0, 0, 1)),
-                    (3, sm.insert(()), (Line(-3), Auto, Line(-4), Auto).into_grid_child(), (0, 1, -1, 0)),
-                    (4, sm.insert(()), (Line(3), Span(2), Line(5), Auto).into_grid_child(), (2, 4, 4, 5)),
+                    (1, sm.insert(()), (line(1), auto(), line(1), auto()).into_grid_child(), (0, 1, 0, 1)),
+                    (2, sm.insert(()), (line(-4), auto(), line(-3), auto()).into_grid_child(), (-1, 0, 0, 1)),
+                    (3, sm.insert(()), (line(-3), auto(), line(-4), auto()).into_grid_child(), (0, 1, -1, 0)),
+                    (4, sm.insert(()), (line(3), span(2), line(5), auto()).into_grid_child(), (2, 4, 4, 5)),
                 ]
             };
             let expected_cols = TrackCounts { negative_implicit: 1, explicit: 2, positive_implicit: 2 };
             let expected_rows = TrackCounts { negative_implicit: 1, explicit: 2, positive_implicit: 3 };
+            placement_test_runner(explicit_col_count, explicit_row_count, children, expected_cols, expected_rows, flow);
+        }
+
+        #[test]
+        fn test_placement_spanning_origin() {
+            let flow = GridAutoFlow::Row;
+            let explicit_col_count = 2;
+            let explicit_row_count = 2;
+            let children = {
+                let mut sm = SlotMap::new();
+                vec![
+                    // node, style (grid coords), expected_placement (oz coords)
+                    (1, sm.insert(()), (line(-1), line(-1), line(-1), line(-1)).into_grid_child(), (2, 3, 2, 3)),
+                    (2, sm.insert(()), (line(-1), span(2), line(-1), span(2)).into_grid_child(), (2, 4, 2, 4)),
+                    (3, sm.insert(()), (line(-4), line(-4), line(-4), line(-4)).into_grid_child(), (-1, 0, -1, 0)),
+                    (4, sm.insert(()), (line(-4), span(2), line(-4), span(2)).into_grid_child(), (-1, 1, -1, 1)),
+                ]
+            };
+            let expected_cols = TrackCounts { negative_implicit: 1, explicit: 2, positive_implicit: 2 };
+            let expected_rows = TrackCounts { negative_implicit: 1, explicit: 2, positive_implicit: 2 };
             placement_test_runner(explicit_col_count, explicit_row_count, children, expected_cols, expected_rows, flow);
         }
 
@@ -392,7 +423,7 @@ mod tests {
             let explicit_row_count = 2;
             let children = {
                 let mut sm = SlotMap::new();
-                let auto_child = (Auto, Auto, Auto, Auto).into_grid_child();
+                let auto_child = (auto(), auto(), auto(), auto()).into_grid_child();
                 vec![
                     // output order, node, style (grid coords), expected_placement (oz coords)
                     (1, sm.insert(()), auto_child.clone(), (0, 1, 0, 1)),
@@ -417,7 +448,7 @@ mod tests {
             let explicit_row_count = 2;
             let children = {
                 let mut sm = SlotMap::new();
-                let auto_child = (Auto, Auto, Auto, Auto).into_grid_child();
+                let auto_child = (auto(), auto(), auto(), auto()).into_grid_child();
                 vec![
                     // output order, node, style (grid coords), expected_placement (oz coords)
                     (1, sm.insert(()), auto_child.clone(), (0, 1, 0, 1)),
@@ -444,7 +475,7 @@ mod tests {
                 let mut sm = SlotMap::new();
                 vec![
                     // output order, node, style (grid coords), expected_placement (oz coords)
-                    (1, sm.insert(()), (Span(5), Auto, Auto, Auto).into_grid_child(), (0, 5, 0, 1)),
+                    (1, sm.insert(()), (span(5), auto(), auto(), auto()).into_grid_child(), (0, 5, 0, 1)),
                 ]
             };
             let expected_cols = TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 3 };
@@ -461,10 +492,10 @@ mod tests {
                 let mut sm = SlotMap::new();
                 vec![
                     // output order, node, style (grid coords), expected_placement (oz coords)
-                    (1, sm.insert(()), (Span(2), Auto, Line(1), Auto).into_grid_child(), (0, 2, 0, 1)),
-                    (2, sm.insert(()), (Auto, Auto, Line(2), Auto).into_grid_child(), (0, 1, 1, 2)),
-                    (3, sm.insert(()), (Auto, Auto, Line(1), Auto).into_grid_child(), (2, 3, 0, 1)),
-                    (4, sm.insert(()), (Auto, Auto, Line(4), Auto).into_grid_child(), (0, 1, 3, 4)),
+                    (1, sm.insert(()), (span(2), auto(), line(1), auto()).into_grid_child(), (0, 2, 0, 1)),
+                    (2, sm.insert(()), (auto(), auto(), line(2), auto()).into_grid_child(), (0, 1, 1, 2)),
+                    (3, sm.insert(()), (auto(), auto(), line(1), auto()).into_grid_child(), (2, 3, 0, 1)),
+                    (4, sm.insert(()), (auto(), auto(), line(4), auto()).into_grid_child(), (0, 1, 3, 4)),
                 ]
             };
             let expected_cols = TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 1 };
@@ -481,9 +512,9 @@ mod tests {
                 let mut sm = SlotMap::new();
                 vec![
                     // output order, node, style (grid coords), expected_placement (oz coords)
-                    (2, sm.insert(()), (Auto, Auto, Line(2), Auto).into_grid_child(), (0, 1, 1, 2)),
-                    (1, sm.insert(()), (Line(-4), Auto, Line(2), Auto).into_grid_child(), (-1, 0, 1, 2)),
-                    (3, sm.insert(()), (Auto, Auto, Line(1), Auto).into_grid_child(), (0, 1, 0, 1)),
+                    (2, sm.insert(()), (auto(), auto(), line(2), auto()).into_grid_child(), (0, 1, 1, 2)),
+                    (1, sm.insert(()), (line(-4), auto(), line(2), auto()).into_grid_child(), (-1, 0, 1, 2)),
+                    (3, sm.insert(()), (auto(), auto(), line(1), auto()).into_grid_child(), (-1, 0, 0, 1)),
                 ]
             };
             let expected_cols = TrackCounts { negative_implicit: 1, explicit: 2, positive_implicit: 0 };
@@ -500,9 +531,9 @@ mod tests {
                 let mut sm = SlotMap::new();
                 vec![
                     // output order, node, style (grid coords), expected_placement (oz coords)
-                    (1, sm.insert(()), (Line(2), Auto, Line(1), Auto).into_grid_child(), (1, 2, 0, 1)), // Definitely positioned in column 2
-                    (2, sm.insert(()), (Span(2), Auto, Auto, Auto).into_grid_child(), (2, 4, 0, 1)), // Spans 2 columns, so positioned after item 1
-                    (3, sm.insert(()), (Auto, Auto, Auto, Auto).into_grid_child(), (0, 1, 0, 1)), // Spans 1 column, so should be positioned before item 1
+                    (1, sm.insert(()), (line(2), auto(), line(1), auto()).into_grid_child(), (1, 2, 0, 1)), // Definitely positioned in column 2
+                    (2, sm.insert(()), (span(2), auto(), auto(), auto()).into_grid_child(), (2, 4, 0, 1)), // Spans 2 columns, so positioned after item 1
+                    (3, sm.insert(()), (auto(), auto(), auto(), auto()).into_grid_child(), (0, 1, 0, 1)), // Spans 1 column, so should be positioned before item 1
                 ]
             };
             let expected_cols = TrackCounts { negative_implicit: 0, explicit: 4, positive_implicit: 0 };
@@ -519,13 +550,32 @@ mod tests {
                 let mut sm = SlotMap::new();
                 vec![
                     // output order, node, style (grid coords), expected_placement (oz coords)
-                    (1, sm.insert(()), (Auto, Span(3), Auto, Auto).into_grid_child(), (0, 3, 0, 1)), // Width 3
-                    (2, sm.insert(()), (Auto, Span(3), Auto, Auto).into_grid_child(), (0, 3, 1, 2)), // Width 3 (wraps to next row)
-                    (3, sm.insert(()), (Auto, Span(1), Auto, Auto).into_grid_child(), (3, 4, 1, 2)), // Width 1 (uses second row as we're already on it)
+                    (1, sm.insert(()), (auto(), span(3), auto(), auto()).into_grid_child(), (0, 3, 0, 1)), // Width 3
+                    (2, sm.insert(()), (auto(), span(3), auto(), auto()).into_grid_child(), (0, 3, 1, 2)), // Width 3 (wraps to next row)
+                    (3, sm.insert(()), (auto(), span(1), auto(), auto()).into_grid_child(), (3, 4, 1, 2)), // Width 1 (uses second row as we're already on it)
                 ]
             };
             let expected_cols = TrackCounts { negative_implicit: 0, explicit: 4, positive_implicit: 0 };
             let expected_rows = TrackCounts { negative_implicit: 0, explicit: 4, positive_implicit: 0 };
+            placement_test_runner(explicit_col_count, explicit_row_count, children, expected_cols, expected_rows, flow);
+        }
+
+        #[test]
+        fn test_auto_placement_in_negative_tracks() {
+            let flow = GridAutoFlow::RowDense;
+            let explicit_col_count = 2;
+            let explicit_row_count = 2;
+            let children = {
+                let mut sm = SlotMap::new();
+                vec![
+                    // output order, node, style (grid coords), expected_placement (oz coords)
+                    (1, sm.insert(()), (line(-5), auto(), line(1), auto()).into_grid_child(), (-2, -1, 0, 1)), // Row 1. Definitely positioned in column -2
+                    (2, sm.insert(()), (auto(), auto(), line(2), auto()).into_grid_child(), (-2, -1, 1, 2)), // Row 2. Auto positioned in column -2
+                    (3, sm.insert(()), (auto(), auto(), auto(), auto()).into_grid_child(), (-1, 0, 0, 1)), // Row 1. Auto positioned in column -1
+                ]
+            };
+            let expected_cols = TrackCounts { negative_implicit: 2, explicit: 2, positive_implicit: 0 };
+            let expected_rows = TrackCounts { negative_implicit: 0, explicit: 2, positive_implicit: 0 };
             placement_test_runner(explicit_col_count, explicit_row_count, children, expected_cols, expected_rows, flow);
         }
     }

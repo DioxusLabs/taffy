@@ -8,10 +8,7 @@ fn grid_out_of_order_items() {
     let node1 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
-            grid_column: taffy::geometry::Line {
-                start: taffy::style::GridPlacement::Line(1i16),
-                end: taffy::style::GridPlacement::Auto,
-            },
+            grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(35f32),
                 height: taffy::style::Dimension::Points(35f32),
@@ -23,14 +20,8 @@ fn grid_out_of_order_items() {
     let node4 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node5 = taffy
         .new_leaf(taffy::style::Style {
-            grid_row: taffy::geometry::Line {
-                start: taffy::style::GridPlacement::Line(1i16),
-                end: taffy::style::GridPlacement::Auto,
-            },
-            grid_column: taffy::geometry::Line {
-                start: taffy::style::GridPlacement::Line(1i16),
-                end: taffy::style::GridPlacement::Auto,
-            },
+            grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
+            grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
                 height: taffy::style::Dimension::Points(20f32),
@@ -41,10 +32,7 @@ fn grid_out_of_order_items() {
     let node6 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node7 = taffy
         .new_leaf(taffy::style::Style {
-            grid_row: taffy::geometry::Line {
-                start: taffy::style::GridPlacement::Line(1i16),
-                end: taffy::style::GridPlacement::Auto,
-            },
+            grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(10f32),
                 height: taffy::style::Dimension::Points(10f32),

@@ -16,7 +16,10 @@ pub fn repeat(
     TrackSizingFunction::AutoRepeat(repetition_kind, track_list)
 }
 
-/// Returns a GridPlacement::Line
+/// Specifies a grid line to place a grid item between in CSS Grid Line coordinates:
+///  - Positive indicies count upwards from the start (top or left) of the explicit grid
+///  - Negative indicies count downwards from the end (bottom or right) of the explicit grid
+///  - ZERO IS INVALID index, and will be treated as a GridPlacement::Auto.
 pub fn line<T: TaffyGridLine>(index: i16) -> T {
     T::from_line_index(index)
 }

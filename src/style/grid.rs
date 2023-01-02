@@ -1,6 +1,7 @@
 //! Style types for CSS Grid layout
 use super::{AlignContent, LengthPercentage, Style};
 use crate::axis::{AbsoluteAxis, AbstractAxis};
+use crate::compute::grid::{GridCoordinate, GridLine, OriginZeroLine};
 use crate::geometry::{Line, MinMax};
 use crate::style::AvailableSpace;
 use crate::style_helpers::*;
@@ -53,30 +54,39 @@ impl GridAutoFlow {
     }
 }
 
+/// A grid line placement specification which is generic over the coordinate system that it uses to define
+/// grid line positions.
+///
+/// GenericGridPlacement<GridLine> is aliased as GridPlacement and is exposed to users of Taffy to define styles.
+/// GenericGridPlacement<OriginZeroLine> is aliased as OriginZeroGridPlacement and is used internally for placement computations.
+///
+/// See [`crate::compute::grid::type::coordinates`] for documentation on the different coordinate systems.
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum GenericGridPlacement<LineType: GridCoordinate> {
+    /// Place item according to the auto-placement algorithm, and the parent's grid_auto_flow property
+    Auto,
+    /// Place item at specified line (column or row) index
+    Line(LineType),
+    /// Item should span specified number of tracks (columns or rows)
+    Span(u16),
+}
+
+/// A grid line placement using the normalized OriginZero coordinates to specify line positions.
+pub(crate) type OriginZeroGridPlacement = GenericGridPlacement<OriginZeroLine>;
+
 /// A grid line placement specification. Used for grid-[row/column]-[start/end]. Named tracks are not implemented.
 ///
 /// Defaults to [`GridLine::Auto`]
 ///
 /// [Specification](https://www.w3.org/TR/css3-grid-layout/#typedef-grid-row-start-grid-line)
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum GridPlacement {
-    /// Place item according to the auto-placement algorithm, and the parent's grid_auto_flow property
-    Auto,
-    /// Place item at specified line (column or row) index
-    Line(i16),
-    /// Item should span specified number of tracks (columns or rows)
-    Span(u16),
-}
+pub type GridPlacement = GenericGridPlacement<GridLine>;
 impl TaffyAuto for GridPlacement {
     const AUTO: Self = Self::Auto;
 }
 impl TaffyGridLine for GridPlacement {
     fn from_line_index(index: i16) -> Self {
-        match index {
-            0 => GridPlacement::Auto,
-            _ => GridPlacement::Line(index),
-        }
+        GridPlacement::Line(GridLine::from(index))
     }
 }
 impl TaffyGridLine for Line<GridPlacement> {
@@ -103,41 +113,73 @@ impl Default for GridPlacement {
 
 impl GridPlacement {
     /// Apply a mapping function if the [`GridPlacement`] is a `Track`. Otherwise return `self` unmodified.
-    pub fn map_track(&self, map_fn: impl FnOnce(i16) -> i16) -> Self {
-        use GridPlacement::*;
-        match *self {
-            Auto => Auto,
-            Span(span) => Span(span),
-            Line(track) => Line(map_fn(track)),
+    pub fn into_origin_zero_placement(self, explicit_track_count: u16) -> OriginZeroGridPlacement {
+        match self {
+            Self::Auto => OriginZeroGridPlacement::Auto,
+            Self::Span(span) => OriginZeroGridPlacement::Span(span),
+            // Grid line zero is an invalid index, so it gets treated as Auto
+            // See: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row-start#values
+            Self::Line(line) => match line.as_i16() {
+                0 => OriginZeroGridPlacement::Auto,
+                _ => OriginZeroGridPlacement::Line(line.into_origin_zero_line(explicit_track_count)),
+            },
+        }
+    }
+}
+
+impl<T: GridCoordinate> Line<GenericGridPlacement<T>> {
+    #[inline]
+    /// Whether the track position is definite in this axis (or the item will need auto placement)
+    /// The track position is definite if least one of the start and end positions is a track index
+    pub fn is_definite(&self) -> bool {
+        matches!((self.start, self.end), (GenericGridPlacement::Line(_), _) | (_, GenericGridPlacement::Line(_)))
+    }
+
+    /// Resolves the span for an indefinite placement (a placement that does not consist of two `Track`s).
+    /// Panics if called on a definite placement
+    pub fn indefinite_span(&self) -> u16 {
+        use GenericGridPlacement as GP;
+        match (self.start, self.end) {
+            (GP::Line(_), GP::Auto) => 1,
+            (GP::Auto, GP::Line(_)) => 1,
+            (GP::Auto, GP::Auto) => 1,
+            (GP::Line(_), GP::Span(span)) => span,
+            (GP::Span(span), GP::Line(_)) => span,
+            (GP::Span(span), GP::Auto) => span,
+            (GP::Auto, GP::Span(span)) => span,
+            (GP::Span(span), GP::Span(_)) => span,
+            (GP::Line(_), GP::Line(_)) => panic!("indefinite_span should only be called on indefinite grid tracks"),
         }
     }
 }
 
 impl Line<GridPlacement> {
-    #[inline]
-    /// Whether the track position is definite in this axis (or the item will need auto placement)
-    /// The track position is definite if least one of the start and end positions is a track index
-    pub fn is_definite(&self) -> bool {
-        use GridPlacement::*;
-        matches!((self.start, self.end), (Line(_), _) | (_, Line(_)))
+    /// Apply a mapping function if the [`GridPlacement`] is a `Track`. Otherwise return `self` unmodified.
+    pub fn into_origin_zero(&self, explicit_track_count: u16) -> Line<OriginZeroGridPlacement> {
+        Line {
+            start: self.start.into_origin_zero_placement(explicit_track_count),
+            end: self.end.into_origin_zero_placement(explicit_track_count),
+        }
     }
+}
 
+impl Line<OriginZeroGridPlacement> {
     /// If at least one of the of the start and end positions is a track index then the other end can be resolved
     /// into a track index purely based on the information contained with the placement specification
-    pub fn resolve_definite_grid_tracks(&self) -> Line<i16> {
-        use GridPlacement as GP;
+    pub fn resolve_definite_grid_lines(&self) -> Line<OriginZeroLine> {
+        use OriginZeroGridPlacement as GP;
         match (self.start, self.end) {
-            (GP::Line(track1), GP::Line(track2)) if track1 != 0 && track2 != 0 => {
-                if track1 == track2 {
-                    Line { start: track1, end: track1 + 1 }
+            (GP::Line(line1), GP::Line(line2)) => {
+                if line1 == line2 {
+                    Line { start: line1, end: line1 + 1 }
                 } else {
-                    Line { start: min(track1, track2), end: max(track1, track2) }
+                    Line { start: min(line1, line2), end: max(line1, line2) }
                 }
             }
-            (GP::Line(track), GP::Span(span)) => Line { start: track, end: track + span as i16 },
-            (GP::Line(track), GP::Auto | GP::Line(0)) => Line { start: track, end: track + 1_i16 },
-            (GP::Span(span), GP::Line(track)) => Line { start: track - span as i16, end: track },
-            (GP::Auto | GP::Line(0), GP::Line(track)) => Line { start: track - 1_i16, end: track },
+            (GP::Line(line), GP::Span(span)) => Line { start: line, end: line + span },
+            (GP::Line(line), GP::Auto) => Line { start: line, end: line + 1 },
+            (GP::Span(span), GP::Line(line)) => Line { start: line - span, end: line },
+            (GP::Auto, GP::Line(line)) => Line { start: line - 1, end: line },
             _ => panic!("resolve_definite_grid_tracks should only be called on definite grid tracks"),
         }
     }
@@ -151,51 +193,34 @@ impl Line<GridPlacement> {
     ///
     /// When finally positioning the item, a value of None means that the item's grid area is bounded by the grid
     /// container's border box on that side.
-    pub fn resolve_absolutely_positioned_grid_tracks(&self) -> Line<Option<i16>> {
-        use GridPlacement as GP;
+    pub fn resolve_absolutely_positioned_grid_tracks(&self) -> Line<Option<OriginZeroLine>> {
+        use OriginZeroGridPlacement as GP;
         match (self.start, self.end) {
-            (GP::Line(track1), GP::Line(track2)) if track1 != 0 && track2 != 0 => {
+            (GP::Line(track1), GP::Line(track2)) => {
                 if track1 == track2 {
                     Line { start: Some(track1), end: Some(track1 + 1) }
                 } else {
                     Line { start: Some(min(track1, track2)), end: Some(max(track1, track2)) }
                 }
             }
-            (GP::Line(track), GP::Span(span)) => Line { start: Some(track), end: Some(track + span as i16) },
-            (GP::Line(track), GP::Auto | GP::Line(0)) => Line { start: Some(track), end: None },
-            (GP::Span(span), GP::Line(track)) => Line { start: Some(track - span as i16), end: Some(track) },
-            (GP::Auto | GP::Line(0), GP::Line(track)) => Line { start: None, end: Some(track) },
+            (GP::Line(track), GP::Span(span)) => Line { start: Some(track), end: Some(track + span) },
+            (GP::Line(track), GP::Auto) => Line { start: Some(track), end: None },
+            (GP::Span(span), GP::Line(track)) => Line { start: Some(track - span), end: Some(track) },
+            (GP::Auto, GP::Line(track)) => Line { start: None, end: Some(track) },
             _ => Line { start: None, end: None },
         }
     }
 
     /// If neither of the start and end positions is a track index then the other end can be resolved
     /// into a track index if a definite start position is supplied externally
-    pub fn resolve_indefinite_grid_tracks(&self, start: i16) -> Line<i16> {
-        use GridPlacement as GP;
+    pub fn resolve_indefinite_grid_tracks(&self, start: OriginZeroLine) -> Line<OriginZeroLine> {
+        use OriginZeroGridPlacement as GP;
         match (self.start, self.end) {
             (GP::Auto, GP::Auto) => Line { start, end: start + 1 },
-            (GP::Span(span), GP::Auto) => Line { start, end: start + span as i16 },
-            (GP::Auto, GP::Span(span)) => Line { start, end: start + span as i16 },
-            (GP::Span(span), GP::Span(_)) => Line { start, end: start + span as i16 },
+            (GP::Span(span), GP::Auto) => Line { start, end: start + span },
+            (GP::Auto, GP::Span(span)) => Line { start, end: start + span },
+            (GP::Span(span), GP::Span(_)) => Line { start, end: start + span },
             _ => panic!("resolve_indefinite_grid_tracks should only be called on indefinite grid tracks"),
-        }
-    }
-
-    /// Resolves the span for an indefinite placement (a placement that does not consist of two `Track`s).
-    /// Panics if called on a definite placement
-    pub fn indefinite_span(&self) -> u16 {
-        use GridPlacement as GP;
-        match (self.start, self.end) {
-            (GP::Line(_), GP::Auto) => 1,
-            (GP::Auto, GP::Line(_)) => 1,
-            (GP::Auto, GP::Auto) => 1,
-            (GP::Line(_), GP::Span(span)) => span,
-            (GP::Span(span), GP::Line(_)) => span,
-            (GP::Span(span), GP::Auto) => span,
-            (GP::Auto, GP::Span(span)) => span,
-            (GP::Span(span), GP::Span(_)) => span,
-            (GP::Line(_), GP::Line(_)) => panic!("indefinite_span should only be called on indefinite grid tracks"),
         }
     }
 }
