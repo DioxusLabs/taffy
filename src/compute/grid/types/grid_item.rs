@@ -10,7 +10,6 @@ use crate::prelude::LayoutTree;
 use crate::resolve::MaybeResolve;
 use crate::style::{AvailableSpace, LengthPercentageAuto, MaxTrackSizingFunction, MinTrackSizingFunction, Style};
 use crate::style_helpers::*;
-use core::cmp::max;
 use core::ops::Range;
 
 /// Represents a single grid item
@@ -111,8 +110,8 @@ impl GridItem {
     /// Returns the number of tracks that this item spans in the specified axis
     pub fn span(&self, axis: AbstractAxis) -> u16 {
         match axis {
-            AbstractAxis::Block => max(self.row.end.0 - self.row.start.0, 0) as u16,
-            AbstractAxis::Inline => max(self.column.end.0 - self.column.start.0, 0) as u16,
+            AbstractAxis::Block => self.row.span(),
+            AbstractAxis::Inline => self.column.span(),
         }
     }
 

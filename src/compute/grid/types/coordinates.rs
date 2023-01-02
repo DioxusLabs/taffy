@@ -1,7 +1,8 @@
 //! Taffy uses two coordinate systems to refer to grid lines (the gaps/gutters between rows/columns):
 use super::super::types::TrackCounts;
+use crate::geometry::Line;
+use core::cmp::{max, Ordering};
 use core::ops::{Add, AddAssign, Sub};
-use std::cmp::Ordering;
 
 /// Represents a grid line position in "CSS Grid Line" coordinates
 ///
@@ -112,6 +113,13 @@ impl OriginZeroLine {
         } else {
             0
         }
+    }
+}
+
+impl Line<OriginZeroLine> {
+    /// The number of tracks between the start and end lines
+    pub(crate) fn span(self) -> u16 {
+        max(self.end.0 - self.start.0, 0) as u16
     }
 }
 
