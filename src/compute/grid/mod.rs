@@ -297,7 +297,7 @@ pub fn compute(
             // The Option is None if the style property is Auto and an unresolvable Span
             let maybe_row_indexes = child_style
                 .grid_row
-                .into_origin_zero(final_col_counts.explicit)
+                .into_origin_zero(final_row_counts.explicit)
                 .resolve_absolutely_positioned_grid_tracks()
                 .map(|maybe_grid_line| {
                     maybe_grid_line.map(|line: OriginZeroLine| line.into_track_vec_index(final_row_counts))
