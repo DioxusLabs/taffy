@@ -405,13 +405,13 @@ mod grid_min_max_column_fixed_width_within_range;
 #[cfg(feature = "grid")]
 mod grid_out_of_order_items;
 #[cfg(feature = "grid")]
-mod grid_percent_nested_moderate;
+mod grid_percent_items_nested_moderate;
 #[cfg(feature = "grid")]
-mod grid_percent_nested_with_padding_margin;
+mod grid_percent_items_nested_with_padding_margin;
 #[cfg(feature = "grid")]
-mod grid_percent_width_and_margin;
+mod grid_percent_items_width_and_margin;
 #[cfg(feature = "grid")]
-mod grid_percent_width_and_padding;
+mod grid_percent_items_width_and_padding;
 #[cfg(feature = "grid")]
 mod grid_placement_auto_negative;
 #[cfg(feature = "grid")]

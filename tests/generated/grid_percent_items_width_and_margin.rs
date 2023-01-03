@@ -1,5 +1,5 @@
 #[test]
-fn grid_percent_width_and_margin() {
+fn grid_percent_items_width_and_margin() {
     use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};
