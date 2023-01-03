@@ -323,6 +323,17 @@ impl MaxTrackSizingFunction {
             MinContent | MaxContent | FitContent(_) | Auto | Flex(_) => None,
         }
     }
+
+    /// Resolve percentage values against the passed parent_size, returning Some(value)
+    /// Non-percentage values always return None.
+    #[inline(always)]
+    pub fn resolved_percentage_size(self, parent_size: f32) -> Option<f32> {
+        use MaxTrackSizingFunction::{Auto, *};
+        match self {
+            Fixed(LengthPercentage::Percent(fraction)) => Some(fraction * parent_size),
+            Fixed(LengthPercentage::Points(_)) | MinContent | MaxContent | FitContent(_) | Auto | Flex(_) => None,
+        }
+    }
 }
 
 /// Minimum track sizing function
@@ -378,6 +389,17 @@ impl MinTrackSizingFunction {
                 _ => None,
             },
             MinContent | MaxContent | Auto => None,
+        }
+    }
+
+    /// Resolve percentage values against the passed parent_size, returning Some(value)
+    /// Non-percentage values always return None.
+    #[inline(always)]
+    pub fn resolved_percentage_size(self, parent_size: f32) -> Option<f32> {
+        use MinTrackSizingFunction::{Auto, *};
+        match self {
+            Fixed(LengthPercentage::Percent(fraction)) => Some(fraction * parent_size),
+            Fixed(LengthPercentage::Points(_)) | MinContent | MaxContent | Auto => None,
         }
     }
 }
