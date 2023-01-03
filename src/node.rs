@@ -1,7 +1,7 @@
 //! UI [`Node`] types and related data structures.
 //!
 //! Layouts are composed of multiple nodes, which live in a tree-like data structure.
-use slotmap::{DefaultKey, SlotMap, SparseSecondaryMap};
+use slotmap::{DefaultKey, SecondaryMap, SlotMap, SparseSecondaryMap};
 
 /// A node in a layout.
 pub type Node = slotmap::DefaultKey;
@@ -43,12 +43,12 @@ pub struct Taffy {
     /// The children of each node
     ///
     /// The indexes in the outer vector correspond to the position of the parent [`NodeData`]
-    pub(crate) children: SlotMap<Node, ChildrenVec<Node>>,
+    pub(crate) children: SecondaryMap<Node, ChildrenVec<Node>>,
 
     /// The parents of each node
     ///
     /// The indexes in the outer vector correspond to the position of the child [`NodeData`]
-    pub(crate) parents: SlotMap<Node, Option<Node>>,
+    pub(crate) parents: SecondaryMap<Node, Option<Node>>,
 }
 
 impl Default for Taffy {
@@ -137,8 +137,8 @@ impl Taffy {
             // TODO: make this method const upstream,
             // so constructors here can be const
             nodes: SlotMap::with_capacity(capacity),
-            children: SlotMap::with_capacity(capacity),
-            parents: SlotMap::with_capacity(capacity),
+            children: SecondaryMap::with_capacity(capacity),
+            parents: SecondaryMap::with_capacity(capacity),
             measure_funcs: SparseSecondaryMap::with_capacity(capacity),
         }
     }
@@ -146,8 +146,8 @@ impl Taffy {
     /// Creates and adds a new unattached leaf node to the tree, and returns the [`NodeId`] of the new node
     pub fn new_leaf(&mut self, layout: Style) -> TaffyResult<Node> {
         let id = self.nodes.insert(NodeData::new(layout));
-        let _ = self.children.insert(new_vec_with_capacity(0));
-        let _ = self.parents.insert(None);
+        self.children.insert(id, new_vec_with_capacity(0));
+        self.parents.insert(id, None);
 
         Ok(id)
     }
@@ -162,8 +162,8 @@ impl Taffy {
         let id = self.nodes.insert(data);
         self.measure_funcs.insert(id, measure);
 
-        let _ = self.children.insert(new_vec_with_capacity(0));
-        let _ = self.parents.insert(None);
+        self.children.insert(id, new_vec_with_capacity(0));
+        self.parents.insert(id, None);
 
         Ok(id)
     }
@@ -176,8 +176,8 @@ impl Taffy {
             self.parents[*child] = Some(id);
         }
 
-        let _ = self.children.insert(children.iter().copied().collect::<_>());
-        let _ = self.parents.insert(None);
+        self.children.insert(id, children.iter().copied().collect::<_>());
+        self.parents.insert(id, None);
 
         Ok(id)
     }
@@ -340,7 +340,7 @@ impl Taffy {
         /// WARNING: this will stack-overflow if the tree contains a cycle
         fn mark_dirty_recursive(
             nodes: &mut SlotMap<Node, NodeData>,
-            parents: &SlotMap<Node, Option<Node>>,
+            parents: &SecondaryMap<Node, Option<Node>>,
             node_id: Node,
         ) {
             nodes[node_id].mark_dirty();
