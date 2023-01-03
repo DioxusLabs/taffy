@@ -26,7 +26,7 @@ impl FromPoints for LengthPercentage {
 }
 impl FromPercent for LengthPercentage {
     fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Self::Points(percent.into())
+        Self::Percent(percent.into())
     }
 }
 
@@ -57,7 +57,7 @@ impl FromPoints for LengthPercentageAuto {
 }
 impl FromPercent for LengthPercentageAuto {
     fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Self::Points(percent.into())
+        Self::Percent(percent.into())
     }
 }
 
@@ -111,7 +111,7 @@ impl FromPoints for Dimension {
 }
 impl FromPercent for Dimension {
     fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Self::Points(percent.into())
+        Self::Percent(percent.into())
     }
 }
 
