@@ -226,6 +226,27 @@ impl AvailableSpace {
         self.into_option().unwrap()
     }
 
+    /// Return self if definite or a default value
+    pub fn or(self, default: AvailableSpace) -> AvailableSpace {
+        match self {
+            AvailableSpace::Definite(_) => self,
+            _ => default,
+        }
+    }
+
+    /// Return self if definite or a the result of the default value callback
+    pub fn or_else(self, default_cb: impl FnOnce() -> AvailableSpace) -> AvailableSpace {
+        match self {
+            AvailableSpace::Definite(_) => self,
+            _ => default_cb(),
+        }
+    }
+
+    /// Return the definite value or the result of the default value callback
+    pub fn unwrap_or_else(self, default_cb: impl FnOnce() -> f32) -> f32 {
+        self.into_option().unwrap_or_else(default_cb)
+    }
+
     /// If passed value is Some then return AvailableSpace::Definite containing that value, else return self
     pub fn maybe_set(self, value: Option<f32>) -> AvailableSpace {
         match value {
