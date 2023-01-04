@@ -23,7 +23,6 @@ fn grid_placement_definite_in_secondary_axis_with_fully_definite_negative() {
             ..Default::default()
         })
         .unwrap();
-    let node3 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
@@ -36,7 +35,7 @@ fn grid_placement_definite_in_secondary_axis_with_fully_definite_negative() {
                 },
                 ..Default::default()
             },
-            &[node0, node1, node2, node3],
+            &[node0, node1, node2],
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
@@ -63,9 +62,4 @@ fn grid_placement_definite_in_secondary_axis_with_fully_definite_negative() {
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node2.data(), 40f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node2.data(), 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node2.data(), 0f32, location.y);
-    let Layout { size, location, .. } = taffy.layout(node3).unwrap();
-    assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node3.data(), 40f32, size.width);
-    assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node3.data(), 40f32, size.height);
-    assert_eq!(location.x, 40f32, "x of node {:?}. Expected {}. Actual {}", node3.data(), 40f32, location.x);
-    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node3.data(), 0f32, location.y);
 }
