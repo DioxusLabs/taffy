@@ -121,6 +121,8 @@ mod align_self_flex_end;
 mod align_self_flex_end_override_flex_start;
 mod align_self_flex_start;
 mod align_stretch_should_size_based_on_parent;
+mod aspect_ratio_grid_child_fill_content_height;
+mod aspect_ratio_grid_child_fill_content_width;
 mod aspect_ratio_leaf_fill_height;
 mod aspect_ratio_leaf_fill_max_height;
 mod aspect_ratio_leaf_fill_max_width;
@@ -652,6 +654,8 @@ fn benchmark(c: &mut Criterion) {
             align_self_flex_end_override_flex_start::compute();
             align_self_flex_start::compute();
             align_stretch_should_size_based_on_parent::compute();
+            aspect_ratio_grid_child_fill_content_height::compute();
+            aspect_ratio_grid_child_fill_content_width::compute();
             aspect_ratio_leaf_fill_height::compute();
             aspect_ratio_leaf_fill_max_height::compute();
             aspect_ratio_leaf_fill_max_width::compute();
