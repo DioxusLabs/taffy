@@ -1,5 +1,5 @@
 #[test]
-fn align_strech_should_size_based_on_parent() {
+fn align_stretch_should_size_based_on_parent() {
     use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};
