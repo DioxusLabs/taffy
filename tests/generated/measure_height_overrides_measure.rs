@@ -12,7 +12,13 @@ fn measure_height_overrides_measure() {
             },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "H";
-                super::measure_standard_text(known_dimensions, available_space, TEXT, super::WritingMode::Horizontal)
+                super::measure_standard_text(
+                    known_dimensions,
+                    available_space,
+                    TEXT,
+                    super::WritingMode::Horizontal,
+                    None,
+                )
             }),
         )
         .unwrap();

@@ -10,7 +10,13 @@ fn grid_fit_content_points_min_content() {
             taffy::style::Style { ..Default::default() },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HHHH\u{200b}HH";
-                super::measure_standard_text(known_dimensions, available_space, TEXT, super::WritingMode::Horizontal)
+                super::measure_standard_text(
+                    known_dimensions,
+                    available_space,
+                    TEXT,
+                    super::WritingMode::Horizontal,
+                    None,
+                )
             }),
         )
         .unwrap();
