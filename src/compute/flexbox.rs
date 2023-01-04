@@ -643,13 +643,10 @@ fn determine_flex_base_size(
 
         // 4.5. Automatic Minimum Size of Flex Items
         // https://www.w3.org/TR/css-flexbox-1/#min-size-auto
-        let specified = child.size.maybe_min(child.max_size);
-        child.resolved_minimum_size = child.min_size.unwrap_or(min_content_size.maybe_min(specified));
+        child.resolved_minimum_size =
+            child.min_size.unwrap_or(min_content_size.maybe_min(child.size).maybe_min(child.max_size));
 
-        let hypothetical_inner_min_main = min_content_size
-            .main(constants.dir)
-            .maybe_clamp(child.resolved_minimum_size.main(constants.dir).into(), child.size.main(constants.dir))
-            .into();
+        let hypothetical_inner_min_main = child.resolved_minimum_size.main(constants.dir).into();
         child.hypothetical_inner_size.set_main(
             constants.dir,
             child.flex_basis.maybe_clamp(hypothetical_inner_min_main, child.max_size.main(constants.dir)),
