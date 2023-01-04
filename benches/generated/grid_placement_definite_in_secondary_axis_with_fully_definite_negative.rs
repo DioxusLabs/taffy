@@ -21,7 +21,6 @@ pub fn compute() {
             ..Default::default()
         })
         .unwrap();
-    let node3 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
@@ -34,7 +33,7 @@ pub fn compute() {
                 },
                 ..Default::default()
             },
-            &[node0, node1, node2, node3],
+            &[node0, node1, node2],
         )
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
