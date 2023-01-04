@@ -553,8 +553,9 @@ fn determine_flex_base_size(
         // A. If the item has a definite used flex basis, that’s the flex base size.
 
         let flex_basis = child_style.flex_basis.maybe_resolve(constants.node_inner_size.main(constants.dir));
-        if flex_basis.is_some() {
-            child.flex_basis = flex_basis.unwrap_or(0.0);
+        let main_size = child_style.size.maybe_resolve(constants.node_inner_size).main(constants.dir);
+        if let Some(flex_basis) = flex_basis.or(main_size) {
+            child.flex_basis = flex_basis;
             continue;
         };
 
