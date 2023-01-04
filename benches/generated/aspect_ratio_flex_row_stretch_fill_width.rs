@@ -4,7 +4,7 @@ pub fn compute() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(50f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(40f32) },
             aspect_ratio: Some(2f32),
             ..Default::default()
         })
@@ -12,8 +12,7 @@ pub fn compute() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                display: taffy::style::Display::Grid,
-                align_items: Some(taffy::style::AlignItems::Start),
+                display: taffy::style::Display::Flex,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),

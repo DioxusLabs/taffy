@@ -4,7 +4,7 @@ pub fn compute() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(50f32) },
+            min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(0.5f32) },
             aspect_ratio: Some(2f32),
             ..Default::default()
         })
