@@ -424,6 +424,8 @@ mod grid_basic_with_overflow;
 #[cfg(feature = "grid")]
 mod grid_basic_with_padding;
 #[cfg(feature = "grid")]
+mod grid_fit_content_percent_definite_argument;
+#[cfg(feature = "grid")]
 mod grid_fit_content_points_argument;
 #[cfg(feature = "grid")]
 mod grid_fit_content_points_max_content;

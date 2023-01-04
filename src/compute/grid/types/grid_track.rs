@@ -113,19 +113,23 @@ impl GridTrack {
 
     #[inline]
     /// Returns true if the track is flexible (has a Flex MaxTrackSizingFunction), else false.
-    pub fn fit_content_limit(&self) -> f32 {
+    pub fn fit_content_limit(&self, axis_available_grid_space: Option<f32>) -> f32 {
         match self.max_track_sizing_function {
             MaxTrackSizingFunction::FitContent(LengthPercentage::Points(limit)) => limit,
-            // TODO: properly support percentage fit-content values
-            MaxTrackSizingFunction::FitContent(LengthPercentage::Percent(_)) => f32::INFINITY,
+            MaxTrackSizingFunction::FitContent(LengthPercentage::Percent(fraction)) => {
+                match axis_available_grid_space {
+                    Some(space) => space * fraction,
+                    None => f32::INFINITY,
+                }
+            }
             _ => f32::INFINITY,
         }
     }
 
     #[inline]
     /// Returns true if the track is flexible (has a Flex MaxTrackSizingFunction), else false.
-    pub fn fit_content_limited_growth_limit(&self) -> f32 {
-        f32_min(self.growth_limit, self.fit_content_limit())
+    pub fn fit_content_limited_growth_limit(&self, axis_available_grid_space: Option<f32>) -> f32 {
+        f32_min(self.growth_limit, dbg!(self.fit_content_limit(axis_available_grid_space)))
     }
 
     #[inline]

@@ -425,6 +425,8 @@ mod grid_basic_with_overflow;
 #[cfg(feature = "grid")]
 mod grid_basic_with_padding;
 #[cfg(feature = "grid")]
+mod grid_fit_content_percent_definite_argument;
+#[cfg(feature = "grid")]
 mod grid_fit_content_points_argument;
 #[cfg(feature = "grid")]
 mod grid_fit_content_points_max_content;
@@ -1103,6 +1105,8 @@ fn benchmark(c: &mut Criterion) {
             grid_basic_with_overflow::compute();
             #[cfg(feature = "grid")]
             grid_basic_with_padding::compute();
+            #[cfg(feature = "grid")]
+            grid_fit_content_percent_definite_argument::compute();
             #[cfg(feature = "grid")]
             grid_fit_content_points_argument::compute();
             #[cfg(feature = "grid")]
