@@ -845,13 +845,10 @@ fn generate_generic_measure_function() -> TokenStream {
             available_space: taffy::geometry::Size<taffy::style::AvailableSpace>,
             text_content: &str,
             writing_mode: WritingMode,
-            aspect_ratio: Option<f32>,
+            _aspect_ratio: Option<f32>,
         ) -> taffy::geometry::Size<f32> {
             use taffy::axis::AbsoluteAxis;
             use taffy::prelude::*;
-            fn f32_max(a: f32, b: f32) -> f32 {
-                core::cmp::max_by(a, b, |a, b| a.total_cmp(b))
-            }
             const ZWS: char = '\u{200B}';
             const H_WIDTH: f32 = 10.0;
             const H_HEIGHT: f32 = 10.0;
@@ -899,16 +896,8 @@ fn generate_generic_measure_function() -> TokenStream {
             });
 
             match writing_mode {
-                WritingMode::Horizontal => Size {
-                    width: inline_size,
-                    // Apply aspect ratio
-                    height: f32_max(block_size, aspect_ratio.map(|ratio| inline_size / ratio).unwrap_or(0.0)),
-                },
-                WritingMode::Vertical => Size {
-                    // Apply aspect ratio
-                    width: f32_max(block_size, aspect_ratio.map(|ratio| inline_size * ratio).unwrap_or(0.0)),
-                    height: inline_size,
-                },
+                WritingMode::Horizontal => Size { width: inline_size, height: block_size },
+                WritingMode::Vertical => Size { width: block_size, height: inline_size },
             }
         }
     )

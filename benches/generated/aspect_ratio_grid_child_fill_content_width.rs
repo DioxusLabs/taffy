@@ -11,7 +11,7 @@ pub fn compute() {
                     known_dimensions,
                     available_space,
                     TEXT,
-                    super::WritingMode::Vertical,
+                    super::WritingMode::Horizontal,
                     Some(2f32),
                 )
             }),
