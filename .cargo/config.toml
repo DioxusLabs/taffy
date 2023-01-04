@@ -1,2 +1,2 @@
 [alias]
-gentest = "run --package gentest --"
+gentest = "run --release --package gentest --"
