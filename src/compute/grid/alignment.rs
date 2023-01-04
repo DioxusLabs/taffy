@@ -87,14 +87,17 @@ pub(super) fn align_and_position_item(
     let position = style.position;
     let inset_horizontal = style.inset.horizontal_components().map(|size| size.resolve_to_option(grid_area_size.width));
     let inset_vertical = style.inset.vertical_components().map(|size| size.resolve_to_option(grid_area_size.height));
-    let inherent_size = style.size.maybe_resolve(grid_area_size);
-    let min_size = style.min_size.maybe_resolve(grid_area_size);
-    let max_size = style.max_size.maybe_resolve(grid_area_size);
+    let inherent_size = style.size.maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let min_size = style.min_size.maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let max_size = style.max_size.maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
 
     // Resolve default alignment styles if they are set on neither the parent or the node itself
+    // Note: if the child has a preferred aspect ratio but neither width or height are set, then the width is stretched
+    // and the then height is calculated from the width according the aspect ratio
+    // See: https://www.w3.org/TR/css-grid-1/#grid-item-sizing
     let alignment_styles = InBothAbsAxis {
         horizontal: container_alignment_styles.horizontal.or(justify_self).unwrap_or_else(|| {
-            if inherent_size.width.is_some() || aspect_ratio.is_some() {
+            if inherent_size.width.is_some() {
                 AlignSelf::Start
             } else {
                 AlignSelf::Stretch
@@ -165,6 +168,9 @@ pub(super) fn align_and_position_item(
 
         None
     });
+
+    // Reapply aspect ratio after stretch and absolute position adjustments
+    let Size { width, height } = Size { width, height }.maybe_apply_aspect_ratio(aspect_ratio);
 
     // Layout node
     let measured_size = compute_node_layout(
