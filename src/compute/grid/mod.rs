@@ -105,9 +105,10 @@ pub fn compute(
     let padding = style.padding.resolve_or_zero(parent_size.width);
     let border = style.border.resolve_or_zero(parent_size.width);
     let margin = style.margin.resolve_or_zero(parent_size.width);
-    let min_size = style.min_size.maybe_resolve(parent_size);
-    let max_size = style.max_size.maybe_resolve(parent_size);
-    let size = style.size.maybe_resolve(parent_size);
+    let aspect_ratio = style.aspect_ratio;
+    let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let size = style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
 
     let constrained_available_space = size
         .maybe_clamp(min_size, max_size)
