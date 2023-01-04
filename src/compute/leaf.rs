@@ -33,11 +33,13 @@ pub(crate) fn compute(
             (node_size, node_min_size, node_max_size)
         }
         SizingMode::InherentSize => {
-            let style_size = style.size.maybe_resolve(parent_size);
+            let aspect_ratio = style.aspect_ratio;
+            let style_size = style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+            let style_min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+            let style_max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+
             let node_size = known_dimensions.or(style_size);
-            let node_min_size = style.min_size.maybe_resolve(parent_size);
-            let node_max_size = style.max_size.maybe_resolve(parent_size);
-            (node_size, node_min_size, node_max_size)
+            (node_size, style_min_size, style_max_size)
         }
     };
 
