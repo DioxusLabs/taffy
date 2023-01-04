@@ -208,7 +208,7 @@ fn compute_preliminary(
     // 3. Determine the flex base size and hypothetical main size of each item.
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("determine_flex_base_size");
-    determine_flex_base_size(tree, known_dimensions, &constants, available_space, &mut flex_items);
+    determine_flex_base_size(tree, &constants, available_space, &mut flex_items);
 
     #[cfg(feature = "debug")]
     for item in flex_items.iter() {
@@ -446,32 +446,41 @@ fn generate_anonymous_flex_items(tree: &impl LayoutTree, node: Node, constants: 
         .map(|child| (child, tree.style(*child)))
         .filter(|(_, style)| style.position != Position::Absolute)
         .filter(|(_, style)| style.display != Display::None)
-        .map(|(child, child_style)| FlexItem {
-            node: *child,
-            size: child_style.size.maybe_resolve(constants.node_inner_size),
-            min_size: child_style.min_size.maybe_resolve(constants.node_inner_size),
-            max_size: child_style.max_size.maybe_resolve(constants.node_inner_size),
+        .map(|(child, child_style)| {
+            let aspect_ratio = child_style.aspect_ratio;
+            FlexItem {
+                node: *child,
+                size: child_style.size.maybe_resolve(constants.node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
+                min_size: child_style
+                    .min_size
+                    .maybe_resolve(constants.node_inner_size)
+                    .maybe_apply_aspect_ratio(aspect_ratio),
+                max_size: child_style
+                    .max_size
+                    .maybe_resolve(constants.node_inner_size)
+                    .maybe_apply_aspect_ratio(aspect_ratio),
 
-            inset: child_style.inset.zip_size(constants.node_inner_size, |p, s| p.maybe_resolve(s)),
-            margin: child_style.margin.resolve_or_zero(constants.node_inner_size.width),
-            padding: child_style.padding.resolve_or_zero(constants.node_inner_size.width),
-            border: child_style.border.resolve_or_zero(constants.node_inner_size.width),
-            align_self: child_style.align_self.unwrap_or(constants.align_items),
-            flex_basis: 0.0,
-            inner_flex_basis: 0.0,
-            violation: 0.0,
-            frozen: false,
+                inset: child_style.inset.zip_size(constants.node_inner_size, |p, s| p.maybe_resolve(s)),
+                margin: child_style.margin.resolve_or_zero(constants.node_inner_size.width),
+                padding: child_style.padding.resolve_or_zero(constants.node_inner_size.width),
+                border: child_style.border.resolve_or_zero(constants.node_inner_size.width),
+                align_self: child_style.align_self.unwrap_or(constants.align_items),
+                flex_basis: 0.0,
+                inner_flex_basis: 0.0,
+                violation: 0.0,
+                frozen: false,
 
-            resolved_minimum_size: Size::zero(),
-            hypothetical_inner_size: Size::zero(),
-            hypothetical_outer_size: Size::zero(),
-            target_size: Size::zero(),
-            outer_target_size: Size::zero(),
+                resolved_minimum_size: Size::zero(),
+                hypothetical_inner_size: Size::zero(),
+                hypothetical_outer_size: Size::zero(),
+                target_size: Size::zero(),
+                outer_target_size: Size::zero(),
 
-            baseline: 0.0,
+                baseline: 0.0,
 
-            offset_main: 0.0,
-            offset_cross: 0.0,
+                offset_main: 0.0,
+                offset_cross: 0.0,
+            }
         })
         .collect()
 }
@@ -541,7 +550,6 @@ fn determine_available_space(
 #[inline]
 fn determine_flex_base_size(
     tree: &mut impl LayoutTree,
-    node_size: Size<Option<f32>>,
     constants: &AlgoConstants,
     available_space: Size<AvailableSpace>,
     flex_items: &mut Vec<FlexItem>,
@@ -552,26 +560,20 @@ fn determine_flex_base_size(
 
         // A. If the item has a definite used flex basis, that’s the flex base size.
 
-        let flex_basis = child_style.flex_basis.maybe_resolve(constants.node_inner_size.main(constants.dir));
-        let main_size = child_style.size.maybe_resolve(constants.node_inner_size).main(constants.dir);
-        if let Some(flex_basis) = flex_basis.or(main_size) {
-            child.flex_basis = flex_basis;
-            continue;
-        };
-
         // B. If the flex item has an intrinsic aspect ratio,
         //    a used flex basis of content, and a definite cross size,
         //    then the flex base size is calculated from its inner
         //    cross size and the flex item’s intrinsic aspect ratio.
 
-        if let Some(ratio) = child_style.aspect_ratio {
-            if let Some(cross) = node_size.cross(constants.dir) {
-                if child_style.flex_basis == Dimension::Auto {
-                    child.flex_basis = cross * ratio;
-                    continue;
-                }
-            }
-        }
+        // Note: `child.size` has already been resolved against aspect_ratio in generate_anonymous_flex_items
+        // So B will just work here by using main_size without special handling for aspect_ratio
+
+        let flex_basis = child_style.flex_basis.maybe_resolve(constants.node_inner_size.main(constants.dir));
+        let main_size = child.size.main(constants.dir);
+        if let Some(flex_basis) = flex_basis.or(main_size) {
+            child.flex_basis = flex_basis;
+            continue;
+        };
 
         // C. If the used flex basis is content or depends on its available space,
         //    and the flex container is being sized under a min-content or max-content
