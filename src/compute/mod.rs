@@ -40,7 +40,7 @@ pub fn compute_layout(
     *tree.layout_mut(root) = layout;
 
     // Recursively round the layout's of this node and all children
-    round_layout(tree, root, 0.0, 0.0);
+    round_layout(tree, root);
 
     Ok(())
 }
@@ -231,10 +231,8 @@ fn perform_hidden_layout(tree: &mut impl LayoutTree, node: Node) -> Size<f32> {
 }
 
 /// Rounds the calculated [`NodeData`] according to the spec
-fn round_layout(tree: &mut impl LayoutTree, root: Node, abs_x: f32, abs_y: f32) {
+fn round_layout(tree: &mut impl LayoutTree, root: Node) {
     let layout = tree.layout_mut(root);
-    let abs_x = abs_x + layout.location.x;
-    let abs_y = abs_y + layout.location.y;
 
     layout.location.x = round(layout.location.x);
     layout.location.y = round(layout.location.y);
@@ -245,7 +243,7 @@ fn round_layout(tree: &mut impl LayoutTree, root: Node, abs_x: f32, abs_y: f32) 
     // Satisfy the borrow checker here by re-indexing to shorten the lifetime to the loop scope
     for x in 0..tree.child_count(root) {
         let child = tree.child(root, x);
-        round_layout(tree, child, abs_x, abs_y);
+        round_layout(tree, child);
     }
 }
 
