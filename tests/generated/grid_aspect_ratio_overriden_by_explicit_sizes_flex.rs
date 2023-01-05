@@ -1,12 +1,15 @@
 #[test]
-fn aspect_ratio_leaf_fill_width() {
+fn grid_aspect_ratio_overriden_by_explicit_sizes_flex() {
     use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(50f32) },
+            size: taffy::geometry::Size {
+                width: taffy::style::Dimension::Points(50f32),
+                height: taffy::style::Dimension::Points(50f32),
+            },
             aspect_ratio: Some(2f32),
             ..Default::default()
         })
@@ -34,7 +37,7 @@ fn aspect_ratio_leaf_fill_width() {
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node0).unwrap();
-    assert_eq!(size.width, 100f32, "width of node {:?}. Expected {}. Actual {}", node0.data(), 100f32, size.width);
+    assert_eq!(size.width, 50f32, "width of node {:?}. Expected {}. Actual {}", node0.data(), 50f32, size.width);
     assert_eq!(size.height, 50f32, "height of node {:?}. Expected {}. Actual {}", node0.data(), 50f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, location.y);

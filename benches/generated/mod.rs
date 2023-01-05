@@ -135,16 +135,6 @@ mod aspect_ratio_flex_row_stretch_fill_height;
 mod aspect_ratio_flex_row_stretch_fill_max_height;
 mod aspect_ratio_flex_row_stretch_fill_max_width;
 mod aspect_ratio_flex_row_stretch_fill_width;
-mod aspect_ratio_grid_child_fill_content_height;
-mod aspect_ratio_grid_child_fill_content_width;
-mod aspect_ratio_leaf_fill_height;
-mod aspect_ratio_leaf_fill_max_height;
-mod aspect_ratio_leaf_fill_max_width;
-mod aspect_ratio_leaf_fill_min_height;
-mod aspect_ratio_leaf_fill_min_width;
-mod aspect_ratio_leaf_fill_width;
-mod aspect_ratio_leaf_overriden_by_explicit_sizes;
-mod aspect_ratio_leaf_overriden_by_explicit_sizes_flex;
 mod border_center_child;
 mod border_flex_child;
 mod border_no_child;
@@ -308,6 +298,26 @@ mod grid_align_items_sized_start;
 mod grid_align_items_sized_stretch;
 #[cfg(feature = "grid")]
 mod grid_align_self_sized_all;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_child_fill_content_height;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_child_fill_content_width;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_fill_child_height;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_fill_child_max_height;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_fill_child_max_width;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_fill_child_min_height;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_fill_child_min_width;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_fill_child_width;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_overriden_by_explicit_sizes;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_overriden_by_explicit_sizes_flex;
 #[cfg(feature = "grid")]
 mod grid_auto_columns_fixed_width;
 #[cfg(feature = "grid")]
@@ -692,16 +702,6 @@ fn benchmark(c: &mut Criterion) {
             aspect_ratio_flex_row_stretch_fill_max_height::compute();
             aspect_ratio_flex_row_stretch_fill_max_width::compute();
             aspect_ratio_flex_row_stretch_fill_width::compute();
-            aspect_ratio_grid_child_fill_content_height::compute();
-            aspect_ratio_grid_child_fill_content_width::compute();
-            aspect_ratio_leaf_fill_height::compute();
-            aspect_ratio_leaf_fill_max_height::compute();
-            aspect_ratio_leaf_fill_max_width::compute();
-            aspect_ratio_leaf_fill_min_height::compute();
-            aspect_ratio_leaf_fill_min_width::compute();
-            aspect_ratio_leaf_fill_width::compute();
-            aspect_ratio_leaf_overriden_by_explicit_sizes::compute();
-            aspect_ratio_leaf_overriden_by_explicit_sizes_flex::compute();
             border_center_child::compute();
             border_flex_child::compute();
             border_no_child::compute();
@@ -865,6 +865,26 @@ fn benchmark(c: &mut Criterion) {
             grid_align_items_sized_stretch::compute();
             #[cfg(feature = "grid")]
             grid_align_self_sized_all::compute();
+            #[cfg(feature = "grid")]
+            grid_aspect_ratio_child_fill_content_height::compute();
+            #[cfg(feature = "grid")]
+            grid_aspect_ratio_child_fill_content_width::compute();
+            #[cfg(feature = "grid")]
+            grid_aspect_ratio_fill_child_height::compute();
+            #[cfg(feature = "grid")]
+            grid_aspect_ratio_fill_child_max_height::compute();
+            #[cfg(feature = "grid")]
+            grid_aspect_ratio_fill_child_max_width::compute();
+            #[cfg(feature = "grid")]
+            grid_aspect_ratio_fill_child_min_height::compute();
+            #[cfg(feature = "grid")]
+            grid_aspect_ratio_fill_child_min_width::compute();
+            #[cfg(feature = "grid")]
+            grid_aspect_ratio_fill_child_width::compute();
+            #[cfg(feature = "grid")]
+            grid_aspect_ratio_overriden_by_explicit_sizes::compute();
+            #[cfg(feature = "grid")]
+            grid_aspect_ratio_overriden_by_explicit_sizes_flex::compute();
             #[cfg(feature = "grid")]
             grid_auto_columns_fixed_width::compute();
             #[cfg(feature = "grid")]

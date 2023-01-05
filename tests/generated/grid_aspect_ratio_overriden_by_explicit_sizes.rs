@@ -1,5 +1,5 @@
 #[test]
-fn aspect_ratio_leaf_overriden_by_explicit_sizes_flex() {
+fn grid_aspect_ratio_overriden_by_explicit_sizes() {
     use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};

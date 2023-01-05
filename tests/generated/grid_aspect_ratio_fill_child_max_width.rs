@@ -1,5 +1,5 @@
 #[test]
-fn aspect_ratio_leaf_fill_max_height() {
+fn grid_aspect_ratio_fill_child_max_width() {
     use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};
@@ -7,17 +7,17 @@ fn aspect_ratio_leaf_fill_max_height() {
     let node0 = taffy
         .new_leaf_with_measure(
             taffy::style::Style {
-                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(40f32), height: auto() },
+                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(20f32) },
                 aspect_ratio: Some(2f32),
                 ..Default::default()
             },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
-                const TEXT: &str = "HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH";
+                const TEXT: &str = "HH\u{200b}HH\u{200b}HH\u{200b}HH";
                 super::measure_standard_text(
                     known_dimensions,
                     available_space,
                     TEXT,
-                    super::WritingMode::Vertical,
+                    super::WritingMode::Horizontal,
                     Some(2f32),
                 )
             }),

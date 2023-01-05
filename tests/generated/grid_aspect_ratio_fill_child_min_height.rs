@@ -1,27 +1,15 @@
 #[test]
-fn aspect_ratio_leaf_fill_min_width() {
+fn grid_aspect_ratio_fill_child_min_height() {
     use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
-        .new_leaf_with_measure(
-            taffy::style::Style {
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(50f32) },
-                aspect_ratio: Some(2f32),
-                ..Default::default()
-            },
-            taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
-                const TEXT: &str = "\n    \n  ";
-                super::measure_standard_text(
-                    known_dimensions,
-                    available_space,
-                    TEXT,
-                    super::WritingMode::Horizontal,
-                    Some(2f32),
-                )
-            }),
-        )
+        .new_leaf(taffy::style::Style {
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), height: auto() },
+            aspect_ratio: Some(2f32),
+            ..Default::default()
+        })
         .unwrap();
     let node = taffy
         .new_with_children(
