@@ -1,5 +1,5 @@
 #[test]
-fn aspect_ratio_flex_column_percent_fill_width() {
+fn aspect_ratio_flex_column_absolute_fill_width() {
     use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};
