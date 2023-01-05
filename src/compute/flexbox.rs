@@ -1622,9 +1622,13 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
         let (start_cross, end_cross) = if constants.is_row { (top, bottom) } else { (start, end) };
 
         // Compute known dimensions from min/max/inherent size styles
-        let style_size = child_style.size.maybe_resolve(constants.container_size);
-        let min_size = child_style.min_size.maybe_resolve(constants.container_size);
-        let max_size = child_style.max_size.maybe_resolve(constants.container_size);
+        let aspect_ratio = child_style.aspect_ratio;
+        let style_size =
+            child_style.size.maybe_resolve(constants.container_size).maybe_apply_aspect_ratio(aspect_ratio);
+        let min_size =
+            child_style.min_size.maybe_resolve(constants.container_size).maybe_apply_aspect_ratio(aspect_ratio);
+        let max_size =
+            child_style.max_size.maybe_resolve(constants.container_size).maybe_apply_aspect_ratio(aspect_ratio);
         let mut known_dimensions = style_size.maybe_clamp(min_size, max_size);
 
         // Fill in width from left/right and height from top/bottom is appropriate
@@ -1634,6 +1638,9 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
         if known_dimensions.height.is_none() && top.is_some() && bottom.is_some() {
             known_dimensions.height = Some(container_height.maybe_sub(top).maybe_sub(bottom));
         }
+
+        // Re-apply aspect ratio
+        let known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio);
 
         let preliminary_size = compute_node_layout(
             tree,
