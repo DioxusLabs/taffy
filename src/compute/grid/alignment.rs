@@ -145,7 +145,10 @@ pub(super) fn align_and_position_item(
 
         None
     });
-    let height = inherent_size.height.or_else(|| {
+    // Reapply aspect ratio after stretch and absolute position width adjustments
+    let Size { width, height } = Size { width, height: inherent_size.height }.maybe_apply_aspect_ratio(aspect_ratio);
+
+    let height = height.or_else(|| {
         if position == Position::Absolute {
             if let (Some(top), Some(bottom)) = (inset_vertical.start, inset_vertical.end) {
                 return Some(f32_max(grid_area_size.height - top - bottom, 0.0));
@@ -168,8 +171,7 @@ pub(super) fn align_and_position_item(
 
         None
     });
-
-    // Reapply aspect ratio after stretch and absolute position adjustments
+    // Reapply aspect ratio after stretch and absolute position height adjustments
     let Size { width, height } = Size { width, height }.maybe_apply_aspect_ratio(aspect_ratio);
 
     // Layout node
