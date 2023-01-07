@@ -66,7 +66,7 @@ pub fn compute() {
                 align_items: Some(taffy::style::AlignItems::Start),
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 margin: taffy::geometry::Rect {
-                    left: zero(),
+                    left: taffy::style::LengthPercentageAuto::Points(36f32),
                     right: zero(),
                     top: taffy::style::LengthPercentageAuto::Points(24f32),
                     bottom: zero(),
@@ -150,7 +150,7 @@ pub fn compute() {
                 align_items: Some(taffy::style::AlignItems::Start),
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 margin: taffy::geometry::Rect {
-                    left: zero(),
+                    left: taffy::style::LengthPercentageAuto::Points(174f32),
                     right: zero(),
                     top: taffy::style::LengthPercentageAuto::Points(24f32),
                     bottom: zero(),

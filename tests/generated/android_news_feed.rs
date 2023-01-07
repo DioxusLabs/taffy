@@ -68,7 +68,7 @@ fn android_news_feed() {
                 align_items: Some(taffy::style::AlignItems::Start),
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 margin: taffy::geometry::Rect {
-                    left: zero(),
+                    left: taffy::style::LengthPercentageAuto::Points(36f32),
                     right: zero(),
                     top: taffy::style::LengthPercentageAuto::Points(24f32),
                     bottom: zero(),
@@ -152,7 +152,7 @@ fn android_news_feed() {
                 align_items: Some(taffy::style::AlignItems::Start),
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 margin: taffy::geometry::Rect {
-                    left: zero(),
+                    left: taffy::style::LengthPercentageAuto::Points(174f32),
                     right: zero(),
                     top: taffy::style::LengthPercentageAuto::Points(24f32),
                     bottom: zero(),
@@ -229,7 +229,7 @@ fn android_news_feed() {
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node000.data(), 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node000.data(), 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node0000).unwrap();
-    assert_eq!(size.width, 1080f32, "width of node {:?}. Expected {}. Actual {}", node0000.data(), 1080f32, size.width);
+    assert_eq!(size.width, 1044f32, "width of node {:?}. Expected {}. Actual {}", node0000.data(), 1044f32, size.width);
     assert_eq!(
         size.height,
         120f32,
@@ -238,7 +238,7 @@ fn android_news_feed() {
         120f32,
         size.height
     );
-    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node0000.data(), 0f32, location.x);
+    assert_eq!(location.x, 36f32, "x of node {:?}. Expected {}. Actual {}", node0000.data(), 36f32, location.x);
     assert_eq!(location.y, 24f32, "y of node {:?}. Expected {}. Actual {}", node0000.data(), 24f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node00000).unwrap();
     assert_eq!(size.width, 120f32, "width of node {:?}. Expected {}. Actual {}", node00000.data(), 120f32, size.width);
@@ -285,9 +285,9 @@ fn android_news_feed() {
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node001.data(), 0f32, location.x);
     assert_eq!(location.y, 144f32, "y of node {:?}. Expected {}. Actual {}", node001.data(), 144f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node0010).unwrap();
-    assert_eq!(size.width, 1080f32, "width of node {:?}. Expected {}. Actual {}", node0010.data(), 1080f32, size.width);
+    assert_eq!(size.width, 906f32, "width of node {:?}. Expected {}. Actual {}", node0010.data(), 906f32, size.width);
     assert_eq!(size.height, 72f32, "height of node {:?}. Expected {}. Actual {}", node0010.data(), 72f32, size.height);
-    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node0010.data(), 0f32, location.x);
+    assert_eq!(location.x, 174f32, "x of node {:?}. Expected {}. Actual {}", node0010.data(), 174f32, location.x);
     assert_eq!(location.y, 24f32, "y of node {:?}. Expected {}. Actual {}", node0010.data(), 24f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node00100).unwrap();
     assert_eq!(size.width, 72f32, "width of node {:?}. Expected {}. Actual {}", node00100.data(), 72f32, size.width);
