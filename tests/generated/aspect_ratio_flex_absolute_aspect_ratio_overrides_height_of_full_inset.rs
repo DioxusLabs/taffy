@@ -1,5 +1,5 @@
 #[test]
-fn aspect_ratio_flex_column_absolute_fill_width() {
+fn aspect_ratio_flex_absolute_aspect_ratio_overrides_height_of_full_inset() {
     use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};
@@ -7,13 +7,12 @@ fn aspect_ratio_flex_column_absolute_fill_width() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.2f32), height: auto() },
             aspect_ratio: Some(3f32),
             inset: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                right: auto(),
+                right: taffy::style::LengthPercentageAuto::Percent(0.05f32),
                 top: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                bottom: auto(),
+                bottom: taffy::style::LengthPercentageAuto::Percent(0.05f32),
             },
             ..Default::default()
         })
@@ -23,8 +22,8 @@ fn aspect_ratio_flex_column_absolute_fill_width() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(1280f32),
-                    height: taffy::style::Dimension::Points(720f32),
+                    width: taffy::style::Dimension::Points(400f32),
+                    height: taffy::style::Dimension::Points(300f32),
                 },
                 ..Default::default()
             },
@@ -36,13 +35,13 @@ fn aspect_ratio_flex_column_absolute_fill_width() {
     taffy::debug::print_tree(&taffy, node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
-    assert_eq!(size.width, 1280f32, "width of node {:?}. Expected {}. Actual {}", node.data(), 1280f32, size.width);
-    assert_eq!(size.height, 720f32, "height of node {:?}. Expected {}. Actual {}", node.data(), 720f32, size.height);
+    assert_eq!(size.width, 400f32, "width of node {:?}. Expected {}. Actual {}", node.data(), 400f32, size.width);
+    assert_eq!(size.height, 300f32, "height of node {:?}. Expected {}. Actual {}", node.data(), 300f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node0).unwrap();
-    assert_eq!(size.width, 256f32, "width of node {:?}. Expected {}. Actual {}", node0.data(), 256f32, size.width);
-    assert_eq!(size.height, 85f32, "height of node {:?}. Expected {}. Actual {}", node0.data(), 85f32, size.height);
-    assert_eq!(location.x, 64f32, "x of node {:?}. Expected {}. Actual {}", node0.data(), 64f32, location.x);
-    assert_eq!(location.y, 36f32, "y of node {:?}. Expected {}. Actual {}", node0.data(), 36f32, location.y);
+    assert_eq!(size.width, 360f32, "width of node {:?}. Expected {}. Actual {}", node0.data(), 360f32, size.width);
+    assert_eq!(size.height, 120f32, "height of node {:?}. Expected {}. Actual {}", node0.data(), 120f32, size.height);
+    assert_eq!(location.x, 20f32, "x of node {:?}. Expected {}. Actual {}", node0.data(), 20f32, location.x);
+    assert_eq!(location.y, 15f32, "y of node {:?}. Expected {}. Actual {}", node0.data(), 15f32, location.y);
 }

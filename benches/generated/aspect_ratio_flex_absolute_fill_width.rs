@@ -5,7 +5,7 @@ pub fn compute() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.2f32), height: auto() },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(0.2f32) },
             aspect_ratio: Some(3f32),
             inset: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::Percent(0.05f32),
@@ -21,8 +21,8 @@ pub fn compute() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(1280f32),
-                    height: taffy::style::Dimension::Points(720f32),
+                    width: taffy::style::Dimension::Points(400f32),
+                    height: taffy::style::Dimension::Points(300f32),
                 },
                 ..Default::default()
             },

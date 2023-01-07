@@ -112,7 +112,13 @@ mod align_self_flex_end;
 mod align_self_flex_end_override_flex_start;
 mod align_self_flex_start;
 mod align_stretch_should_size_based_on_parent;
-mod aspect_ratio_flex_column_absolute_fill_width;
+mod aspect_ratio_flex_absolute_aspect_ratio_overrides_height_of_full_inset;
+mod aspect_ratio_flex_absolute_fill_height;
+mod aspect_ratio_flex_absolute_fill_height_from_inset;
+mod aspect_ratio_flex_absolute_fill_width;
+mod aspect_ratio_flex_absolute_fill_width_from_inset;
+mod aspect_ratio_flex_absolute_height_overrides_inset;
+mod aspect_ratio_flex_absolute_width_overrides_inset;
 mod aspect_ratio_flex_column_fill_height;
 mod aspect_ratio_flex_column_fill_max_height;
 mod aspect_ratio_flex_column_fill_max_width;
@@ -298,6 +304,8 @@ mod grid_align_items_sized_start;
 mod grid_align_items_sized_stretch;
 #[cfg(feature = "grid")]
 mod grid_align_self_sized_all;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_absolute_aspect_ratio_overrides_height_of_full_inset;
 #[cfg(feature = "grid")]
 mod grid_aspect_ratio_child_fill_content_height;
 #[cfg(feature = "grid")]
@@ -679,7 +687,13 @@ fn benchmark(c: &mut Criterion) {
             align_self_flex_end_override_flex_start::compute();
             align_self_flex_start::compute();
             align_stretch_should_size_based_on_parent::compute();
-            aspect_ratio_flex_column_absolute_fill_width::compute();
+            aspect_ratio_flex_absolute_aspect_ratio_overrides_height_of_full_inset::compute();
+            aspect_ratio_flex_absolute_fill_height::compute();
+            aspect_ratio_flex_absolute_fill_height_from_inset::compute();
+            aspect_ratio_flex_absolute_fill_width::compute();
+            aspect_ratio_flex_absolute_fill_width_from_inset::compute();
+            aspect_ratio_flex_absolute_height_overrides_inset::compute();
+            aspect_ratio_flex_absolute_width_overrides_inset::compute();
             aspect_ratio_flex_column_fill_height::compute();
             aspect_ratio_flex_column_fill_max_height::compute();
             aspect_ratio_flex_column_fill_max_width::compute();
@@ -865,6 +879,8 @@ fn benchmark(c: &mut Criterion) {
             grid_align_items_sized_stretch::compute();
             #[cfg(feature = "grid")]
             grid_align_self_sized_all::compute();
+            #[cfg(feature = "grid")]
+            grid_aspect_ratio_absolute_aspect_ratio_overrides_height_of_full_inset::compute();
             #[cfg(feature = "grid")]
             grid_aspect_ratio_child_fill_content_height::compute();
             #[cfg(feature = "grid")]
