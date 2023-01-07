@@ -89,6 +89,8 @@ mod absolute_layout_in_wrap_reverse_row_container_flex_end;
 mod absolute_layout_justify_content_center;
 mod absolute_layout_no_size;
 mod absolute_layout_percentage_bottom_based_on_parent_height;
+mod absolute_layout_percentage_height;
+mod absolute_layout_row_width_height_end_bottom;
 mod absolute_layout_start_top_end_bottom;
 mod absolute_layout_width_height_end_bottom;
 mod absolute_layout_width_height_start_top;
