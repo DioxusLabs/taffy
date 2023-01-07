@@ -1591,7 +1591,10 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
         .children(node)
         .cloned()
         .enumerate()
-        .filter(|(_, child)| tree.style(*child).position == Position::Absolute)
+        .filter(|(_, child)| {
+            let style = tree.style(*child);
+            style.display != Display::None && style.position == Position::Absolute
+        })
         .collect::<Vec<_>>();
 
     for (order, child) in candidates {
