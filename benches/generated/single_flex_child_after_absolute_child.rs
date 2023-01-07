@@ -24,6 +24,7 @@ pub fn compute() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
+                flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(428f32),
                     height: taffy::style::Dimension::Points(845f32),

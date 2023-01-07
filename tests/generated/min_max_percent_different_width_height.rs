@@ -32,6 +32,7 @@ fn min_max_percent_different_width_height() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
+                flex_direction: taffy::style::FlexDirection::Column,
                 align_items: Some(taffy::style::AlignItems::Start),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),

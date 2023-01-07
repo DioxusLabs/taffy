@@ -13,6 +13,7 @@ pub fn compute() {
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
+                flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), height: auto() },
                 ..Default::default()
             },

@@ -6,6 +6,7 @@ fn border_no_size() {
     let mut taffy = taffy::Taffy::new();
     let node = taffy
         .new_leaf(taffy::style::Style {
+            flex_direction: taffy::style::FlexDirection::Column,
             border: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentage::Points(10f32),
                 right: taffy::style::LengthPercentage::Points(10f32),

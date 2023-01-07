@@ -40,6 +40,7 @@ pub fn compute() {
     let node00001 = taffy
         .new_with_children(
             taffy::style::Style {
+                flex_direction: taffy::style::FlexDirection::Column,
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 flex_shrink: 1f32,
                 margin: taffy::geometry::Rect {
@@ -77,7 +78,11 @@ pub fn compute() {
         .unwrap();
     let node000 = taffy
         .new_with_children(
-            taffy::style::Style { align_content: Some(taffy::style::AlignContent::Stretch), ..Default::default() },
+            taffy::style::Style {
+                flex_direction: taffy::style::FlexDirection::Column,
+                align_content: Some(taffy::style::AlignContent::Stretch),
+                ..Default::default()
+            },
             &[node0000],
         )
         .unwrap();
@@ -119,6 +124,7 @@ pub fn compute() {
     let node00101 = taffy
         .new_with_children(
             taffy::style::Style {
+                flex_direction: taffy::style::FlexDirection::Column,
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 flex_shrink: 1f32,
                 margin: taffy::geometry::Rect {
@@ -156,21 +162,38 @@ pub fn compute() {
         .unwrap();
     let node001 = taffy
         .new_with_children(
-            taffy::style::Style { align_content: Some(taffy::style::AlignContent::Stretch), ..Default::default() },
+            taffy::style::Style {
+                flex_direction: taffy::style::FlexDirection::Column,
+                align_content: Some(taffy::style::AlignContent::Stretch),
+                ..Default::default()
+            },
             &[node0010],
         )
         .unwrap();
     let node00 = taffy
         .new_with_children(
-            taffy::style::Style { align_content: Some(taffy::style::AlignContent::Stretch), ..Default::default() },
+            taffy::style::Style {
+                flex_direction: taffy::style::FlexDirection::Column,
+                align_content: Some(taffy::style::AlignContent::Stretch),
+                ..Default::default()
+            },
             &[node000, node001],
         )
         .unwrap();
-    let node0 =
-        taffy.new_with_children(taffy::style::Style { flex_shrink: 0f32, ..Default::default() }, &[node00]).unwrap();
+    let node0 = taffy
+        .new_with_children(
+            taffy::style::Style {
+                flex_direction: taffy::style::FlexDirection::Column,
+                flex_shrink: 0f32,
+                ..Default::default()
+            },
+            &[node00],
+        )
+        .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
+                flex_direction: taffy::style::FlexDirection::Column,
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 flex_shrink: 0f32,
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(1080f32), height: auto() },

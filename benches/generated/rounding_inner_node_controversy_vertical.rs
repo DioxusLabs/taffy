@@ -10,27 +10,16 @@ pub fn compute() {
         })
         .unwrap();
     let node10 = taffy
-        .new_leaf_with_measure(
-            taffy::style::Style {
-                flex_grow: 1f32,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), height: auto() },
-                ..Default::default()
-            },
-            taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
-                const TEXT: &str = "\n    ";
-                super::measure_standard_text(
-                    known_dimensions,
-                    available_space,
-                    TEXT,
-                    super::WritingMode::Horizontal,
-                    None,
-                )
-            }),
-        )
+        .new_leaf(taffy::style::Style {
+            flex_grow: 1f32,
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), height: auto() },
+            ..Default::default()
+        })
         .unwrap();
     let node1 = taffy
         .new_with_children(
             taffy::style::Style {
+                flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 1f32,
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), height: auto() },
                 ..Default::default()
@@ -48,6 +37,7 @@ pub fn compute() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
+                flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(320f32) },
                 ..Default::default()
             },

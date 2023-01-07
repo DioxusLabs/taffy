@@ -13,6 +13,7 @@ pub fn compute() {
         .unwrap();
     let node100 = taffy
         .new_leaf(taffy::style::Style {
+            flex_direction: taffy::style::FlexDirection::Column,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(50f32),
                 height: taffy::style::Dimension::Points(30f32),
@@ -22,6 +23,7 @@ pub fn compute() {
         .unwrap();
     let node101 = taffy
         .new_leaf(taffy::style::Style {
+            flex_direction: taffy::style::FlexDirection::Column,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(50f32),
                 height: taffy::style::Dimension::Points(40f32),
@@ -42,7 +44,12 @@ pub fn compute() {
             &[node100, node101],
         )
         .unwrap();
-    let node1 = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[node10]).unwrap();
+    let node1 = taffy
+        .new_with_children(
+            taffy::style::Style { flex_direction: taffy::style::FlexDirection::Column, ..Default::default() },
+            &[node10],
+        )
+        .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {

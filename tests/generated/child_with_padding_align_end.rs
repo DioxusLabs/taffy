@@ -22,6 +22,7 @@ fn child_with_padding_align_end() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
+                flex_direction: taffy::style::FlexDirection::Column,
                 align_items: Some(taffy::style::AlignItems::End),
                 justify_content: Some(taffy::style::JustifyContent::End),
                 size: taffy::geometry::Size {

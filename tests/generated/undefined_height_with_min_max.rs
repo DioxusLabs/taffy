@@ -14,6 +14,7 @@ fn undefined_height_with_min_max() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
+                flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(320f32), height: auto() },
                 min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(0f32) },
                 ..Default::default()
@@ -31,7 +32,7 @@ fn undefined_height_with_min_max() {
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node0).unwrap();
-    assert_eq!(size.width, 0f32, "width of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, size.width);
+    assert_eq!(size.width, 320f32, "width of node {:?}. Expected {}. Actual {}", node0.data(), 320f32, size.width);
     assert_eq!(size.height, 0f32, "height of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, location.y);

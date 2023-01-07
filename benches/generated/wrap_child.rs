@@ -11,6 +11,11 @@ pub fn compute() {
             ..Default::default()
         })
         .unwrap();
-    let node = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[node0]).unwrap();
+    let node = taffy
+        .new_with_children(
+            taffy::style::Style { flex_direction: taffy::style::FlexDirection::Column, ..Default::default() },
+            &[node0],
+        )
+        .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
 }

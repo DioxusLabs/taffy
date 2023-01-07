@@ -28,6 +28,7 @@ fn align_items_center_justify_content_center() {
     let node00 = taffy
         .new_with_children(
             taffy::style::Style {
+                flex_direction: taffy::style::FlexDirection::Column,
                 align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(1f32) },
@@ -45,6 +46,7 @@ fn align_items_center_justify_content_center() {
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
+                flex_direction: taffy::style::FlexDirection::Column,
                 align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(50f32) },
@@ -56,6 +58,7 @@ fn align_items_center_justify_content_center() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
+                flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(500f32),
                     height: taffy::style::Dimension::Points(500f32),
@@ -75,14 +78,14 @@ fn align_items_center_justify_content_center() {
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node0).unwrap();
-    assert_eq!(size.width, 30f32, "width of node {:?}. Expected {}. Actual {}", node0.data(), 30f32, size.width);
+    assert_eq!(size.width, 500f32, "width of node {:?}. Expected {}. Actual {}", node0.data(), 500f32, size.width);
     assert_eq!(size.height, 50f32, "height of node {:?}. Expected {}. Actual {}", node0.data(), 50f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node00).unwrap();
     assert_eq!(size.width, 10f32, "width of node {:?}. Expected {}. Actual {}", node00.data(), 10f32, size.width);
     assert_eq!(size.height, 50f32, "height of node {:?}. Expected {}. Actual {}", node00.data(), 50f32, size.height);
-    assert_eq!(location.x, 10f32, "x of node {:?}. Expected {}. Actual {}", node00.data(), 10f32, location.x);
+    assert_eq!(location.x, 245f32, "x of node {:?}. Expected {}. Actual {}", node00.data(), 245f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node00.data(), 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node000).unwrap();
     assert_eq!(size.width, 10f32, "width of node {:?}. Expected {}. Actual {}", node000.data(), 10f32, size.width);

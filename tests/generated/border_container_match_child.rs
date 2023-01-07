@@ -16,6 +16,7 @@ fn border_container_match_child() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
+                flex_direction: taffy::style::FlexDirection::Column,
                 border: taffy::geometry::Rect {
                     left: taffy::style::LengthPercentage::Points(10f32),
                     right: taffy::style::LengthPercentage::Points(10f32),
