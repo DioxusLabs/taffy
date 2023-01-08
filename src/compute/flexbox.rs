@@ -395,12 +395,7 @@ fn compute_constants(
     let border = style.border.resolve_or_zero(parent_size.width);
     let align_items = style.align_items.unwrap_or(crate::style::AlignItems::Stretch);
 
-    let padding_border = Rect {
-        left: padding.left + border.left,
-        right: padding.right + border.right,
-        top: padding.top + border.top,
-        bottom: padding.bottom + border.bottom,
-    };
+    let padding_border = padding + border;
 
     let node_outer_size = Size {
         width: known_dimensions
@@ -1792,8 +1787,8 @@ mod tests {
     #![allow(clippy::redundant_clone)]
 
     use crate::{
+        geometry::Size,
         math::MaybeMath,
-        prelude::{Rect, Size},
         resolve::ResolveOrZero,
         style::{FlexWrap, Style},
         Taffy,
@@ -1822,18 +1817,9 @@ mod tests {
         assert_eq!(constants.margin, margin);
 
         let border = style.border.resolve_or_zero(parent_size);
-        assert_eq!(constants.border, border);
-
         let padding = style.padding.resolve_or_zero(parent_size);
-
-        // TODO: Replace with something less hardcoded?
-        let padding_border = Rect {
-            left: padding.left + border.left,
-            right: padding.right + border.right,
-            top: padding.top + border.top,
-            bottom: padding.bottom + border.bottom,
-        };
-
+        let padding_border = padding + border;
+        assert_eq!(constants.border, border);
         assert_eq!(constants.padding_border, padding_border);
 
         // TODO: Replace with something less hardcoded?

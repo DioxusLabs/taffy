@@ -43,6 +43,19 @@ impl<T: Default> Default for Rect<T> {
     }
 }
 
+impl<U, T: Add<U>> Add<Rect<U>> for Rect<T> {
+    type Output = Rect<T::Output>;
+
+    fn add(self, rhs: Rect<U>) -> Self::Output {
+        Rect {
+            left: self.left + rhs.left,
+            right: self.right + rhs.right,
+            top: self.top + rhs.top,
+            bottom: self.bottom + rhs.bottom,
+        }
+    }
+}
+
 impl<T> Rect<T> {
     /// Applies the function `f` to all four sides of the rect
     ///
