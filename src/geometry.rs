@@ -374,7 +374,7 @@ impl Size<Option<f32>> {
 
     /// Applies aspect_ratio (if one is supplied) to the Size:
     ///   - If width is `Some` but height is `None`, then height is computed from width and aspect_ratio
-    ///   - If height is `Some` but width is `None`, then width is computed from width and aspect_ratio
+    ///   - If height is `Some` but width is `None`, then width is computed from height and aspect_ratio
     ///
     /// If aspect_ratio is `None` then this function simply returns self.
     pub fn maybe_apply_aspect_ratio(self, aspect_ratio: Option<f32>) -> Size<Option<f32>> {

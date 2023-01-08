@@ -104,7 +104,7 @@ function parseNumber(input) {
 }
 
 function parseRatio(input) {
-  if (!input) return undefined
+  if (!input) return undefined;
 
   if (input.includes('/')) {
     let [width, height] = input.split("/").map(part => parseFloat(part.trim()));
