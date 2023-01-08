@@ -220,10 +220,7 @@ fn compute_preliminary(
         NODE_LOGGER.labelled_debug_log("item.resolved_minimum_size", item.resolved_minimum_size);
     }
 
-    // TODO: Add step 4 according to spec: https://www.w3.org/TR/css-flexbox-1/#algo-main-container
-
     // 4. Determine the main size of the flex container
-
     // This has already been done as part of compute_constants. The inner size is exposed as constants.node_inner_size.
 
     // 9.3. Main Size Determination
