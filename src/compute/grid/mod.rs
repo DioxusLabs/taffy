@@ -325,10 +325,16 @@ pub fn compute(
                 });
 
             let grid_area = Rect {
-                top: maybe_row_indexes.start.map(|index| rows[index].offset).unwrap_or(0.0),
-                bottom: maybe_row_indexes.end.map(|index| rows[index].offset).unwrap_or(container_border_box.height),
-                left: maybe_col_indexes.start.map(|index| columns[index].offset).unwrap_or(0.0),
-                right: maybe_col_indexes.end.map(|index| columns[index].offset).unwrap_or(container_border_box.width),
+                top: maybe_row_indexes.start.map(|index| rows[index].offset).unwrap_or(border.top),
+                bottom: maybe_row_indexes
+                    .end
+                    .map(|index| rows[index].offset)
+                    .unwrap_or(container_border_box.height - border.bottom),
+                left: maybe_col_indexes.start.map(|index| columns[index].offset).unwrap_or(border.left),
+                right: maybe_col_indexes
+                    .end
+                    .map(|index| columns[index].offset)
+                    .unwrap_or(container_border_box.width - border.right),
             };
             align_and_position_item(tree, child, order, grid_area, container_alignment_styles);
             order += 1;

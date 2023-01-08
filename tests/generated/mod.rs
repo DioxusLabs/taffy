@@ -264,6 +264,8 @@ mod grid_absolute_container_top_right_margin;
 #[cfg(feature = "grid")]
 mod grid_absolute_justify_self_sized_all;
 #[cfg(feature = "grid")]
+mod grid_absolute_layout_within_border;
+#[cfg(feature = "grid")]
 mod grid_absolute_row_end;
 #[cfg(feature = "grid")]
 mod grid_absolute_row_start;
