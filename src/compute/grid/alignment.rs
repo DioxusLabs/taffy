@@ -127,11 +127,11 @@ pub(super) fn align_and_position_item(
         // positioned element being set
         if position == Position::Absolute {
             if let (Some(left), Some(right)) = (inset_horizontal.start, inset_horizontal.end) {
-                return Some(f32_max(grid_area_size.width - left - right, 0.0));
+                return Some(f32_max(grid_area_minus_item_margins_size.width - left - right, 0.0));
             }
         }
 
-        // Apply width based on stretch alignment (clamped by max size) if:
+        // Apply width based on stretch alignment if:
         //  - Alignment style is "stretch"
         //  - The node is not absolutely positioned
         //  - The node does not have auto margins in this axis.
@@ -151,11 +151,11 @@ pub(super) fn align_and_position_item(
     let height = height.or_else(|| {
         if position == Position::Absolute {
             if let (Some(top), Some(bottom)) = (inset_vertical.start, inset_vertical.end) {
-                return Some(f32_max(grid_area_size.height - top - bottom, 0.0));
+                return Some(f32_max(grid_area_minus_item_margins_size.height - top - bottom, 0.0));
             }
         }
 
-        // Apply height based on stretch alignment (clamped by max size) if:
+        // Apply height based on stretch alignment if:
         //  - Alignment style is "stretch"
         //  - The node is not absolutely positioned
         //  - The node does not have auto margins in this axis.
