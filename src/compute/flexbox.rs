@@ -221,6 +221,11 @@ fn compute_preliminary(
     }
 
     // TODO: Add step 4 according to spec: https://www.w3.org/TR/css-flexbox-1/#algo-main-container
+
+    // 4. Determine the main size of the flex container
+
+    // This has already been done as part of compute_constants. The inner size is exposed as constants.node_inner_size.
+
     // 9.3. Main Size Determination
 
     // 5. Collect flex items into flex lines.
@@ -248,8 +253,7 @@ fn compute_preliminary(
         resolve_flexible_lengths(tree, line, &constants, original_gap);
     }
 
-    // TODO: Cleanup and make according to spec
-    // Not part of the spec from what i can see but seems correct
+    // Find the inner and outer used main_size of the container
     constants.container_size.set_main(
         constants.dir,
         known_dimensions.main(constants.dir).unwrap_or({
@@ -262,7 +266,6 @@ fn compute_preliminary(
             }
         }),
     );
-
     constants.inner_container_size.set_main(
         constants.dir,
         constants.container_size.main(constants.dir) - constants.padding_border.main_axis_sum(constants.dir),
@@ -555,7 +558,6 @@ fn determine_flex_base_size(
     available_space: Size<AvailableSpace>,
     flex_items: &mut Vec<FlexItem>,
 ) {
-    // TODO - this does not follow spec. See the TODOs below
     for child in flex_items.iter_mut() {
         let child_style = tree.style(child.node);
 
@@ -582,7 +584,8 @@ fn determine_flex_base_size(
         //    size the item under that constraint. The flex base size is the item’s
         //    resulting main size.
 
-        // TODO - Probably need to cover this case in future
+        // This is covered by the implementation of E below, which passes the available_space constraint
+        // through to the child size computation. It may need a separate implementation if/when D is implemented.
 
         // D. Otherwise, if the used flex basis is content or depends on its
         //    available space, the available main size is infinite, and the flex item’s
@@ -590,7 +593,7 @@ fn determine_flex_base_size(
         //    for a box in an orthogonal flow [CSS3-WRITING-MODES]. The flex base size
         //    is the item’s max-content main size.
 
-        // TODO - Probably need to cover this case in future
+        // TODO if/when vertical writing modes are supported
 
         // E. Otherwise, size the item into the available space using its used flex basis
         //    in place of its main size, treating a value of content as max-content.
@@ -783,7 +786,6 @@ fn resolve_flexible_lengths(
 
         // TODO this should really only be set inside the if-statement below but
         // that causes the target_main_size to never be set for some items
-
         child
             .outer_target_size
             .set_main(constants.dir, child.target_size.main(constants.dir) + child.margin.main_axis_sum(constants.dir));
@@ -1811,7 +1813,6 @@ mod tests {
         let parent_size = Size::NONE;
 
         let constants = super::compute_constants(tree.style(node_id).unwrap(), node_size, parent_size);
-        // let constants = super::compute_constants(&tree.nodes[node_id], node_size, parent_size);
 
         assert!(constants.dir == style.flex_direction);
         assert!(constants.is_row == style.flex_direction.is_row());
@@ -1827,7 +1828,6 @@ mod tests {
         assert_eq!(constants.border, border);
         assert_eq!(constants.padding_border, padding_border);
 
-        // TODO: Replace with something less hardcoded?
         let inner_size = Size {
             width: node_size.width.maybe_sub(padding_border.horizontal_axis_sum()),
             height: node_size.height.maybe_sub(padding_border.vertical_axis_sum()),
