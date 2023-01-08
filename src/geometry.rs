@@ -1,6 +1,7 @@
 //! Geometric primitives useful for layout
 
 use crate::style::{Dimension, FlexDirection};
+use crate::sys::f32_max;
 use core::ops::Add;
 
 #[cfg(feature = "grid")]
@@ -354,6 +355,11 @@ impl<T> Size<T> {
 impl Size<f32> {
     /// A [`Size`] with zero width and height
     pub const ZERO: Size<f32> = Self { width: 0.0, height: 0.0 };
+
+    /// Applies f32_max to each component separately
+    pub fn f32_max(self, rhs: Size<f32>) -> Size<f32> {
+        Size { width: f32_max(self.width, rhs.width), height: f32_max(self.height, rhs.height) }
+    }
 }
 
 impl Size<Option<f32>> {
