@@ -13,6 +13,9 @@
 ### Fixes
 
 - Flexbox nodes sized under a min-content constraint now size correctly (#291)
+- Aspect ratio is now applied correctly in many circumstances
+- Absolutely positioned items now apply margins correctly
+- Min/max size are now applied correctly
 
 ### Removed
 
