@@ -390,6 +390,11 @@ fn compute_constants(
     let is_column = dir.is_column();
     let is_wrap_reverse = style.flex_wrap == FlexWrap::WrapReverse;
 
+    let aspect_ratio = style.aspect_ratio;
+    let size = style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let min_size = style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let max_size = style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+
     let margin = style.margin.resolve_or_zero(parent_size.width);
     let padding = style.padding.resolve_or_zero(parent_size.width);
     let border = style.border.resolve_or_zero(parent_size.width);
@@ -400,10 +405,10 @@ fn compute_constants(
     let node_outer_size = Size {
         width: known_dimensions
             .width
-            .or_else(|| style.size.width.maybe_resolve(parent_size.width).maybe_sub(margin.horizontal_axis_sum())),
-        height: known_dimensions
-            .height
-            .or_else(|| style.size.height.maybe_resolve(parent_size.height).maybe_sub(margin.vertical_axis_sum())),
+            .or_else(|| size.width.maybe_sub(margin.horizontal_axis_sum()).maybe_clamp(min_size.width, max_size.width)),
+        height: known_dimensions.height.or_else(|| {
+            size.height.maybe_sub(margin.vertical_axis_sum()).maybe_clamp(min_size.height, max_size.height)
+        }),
     };
 
     let node_inner_size = Size {
