@@ -268,6 +268,8 @@ mod grid_absolute_justify_self_sized_all;
 #[cfg(feature = "grid")]
 mod grid_absolute_layout_within_border;
 #[cfg(feature = "grid")]
+mod grid_absolute_layout_within_border_static;
+#[cfg(feature = "grid")]
 mod grid_absolute_row_end;
 #[cfg(feature = "grid")]
 mod grid_absolute_row_start;
@@ -855,6 +857,8 @@ fn benchmark(c: &mut Criterion) {
             grid_absolute_justify_self_sized_all::compute();
             #[cfg(feature = "grid")]
             grid_absolute_layout_within_border::compute();
+            #[cfg(feature = "grid")]
+            grid_absolute_layout_within_border_static::compute();
             #[cfg(feature = "grid")]
             grid_absolute_row_end::compute();
             #[cfg(feature = "grid")]
