@@ -308,6 +308,14 @@ mod grid_align_self_sized_all;
 #[cfg(feature = "grid")]
 mod grid_aspect_ratio_absolute_aspect_ratio_overrides_height_of_full_inset;
 #[cfg(feature = "grid")]
+mod grid_aspect_ratio_absolute_fill_height_from_inset;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_absolute_fill_width_from_inset;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_absolute_height_overrides_inset;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_absolute_width_overrides_inset;
+#[cfg(feature = "grid")]
 mod grid_aspect_ratio_child_fill_content_height;
 #[cfg(feature = "grid")]
 mod grid_aspect_ratio_child_fill_content_width;
