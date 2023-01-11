@@ -1641,8 +1641,8 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
             known_dimensions,
             constants.node_inner_size,
             Size {
-                width: AvailableSpace::Definite(container_width),
-                height: AvailableSpace::Definite(container_height),
+                width: AvailableSpace::Definite(container_width.maybe_clamp(min_size.width, max_size.width)),
+                height: AvailableSpace::Definite(container_height.maybe_clamp(min_size.height, max_size.height)),
             },
             RunMode::PeformLayout,
             SizingMode::ContentSize,
