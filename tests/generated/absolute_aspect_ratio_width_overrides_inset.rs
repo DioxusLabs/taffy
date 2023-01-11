@@ -1,5 +1,5 @@
 #[test]
-fn aspect_ratio_flex_absolute_fill_width_from_inset() {
+fn absolute_aspect_ratio_width_overrides_inset() {
     use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};
@@ -7,12 +7,13 @@ fn aspect_ratio_flex_absolute_fill_width_from_inset() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.4f32), height: auto() },
             aspect_ratio: Some(3f32),
             inset: taffy::geometry::Rect {
-                left: auto(),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Percent(0.3f32),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.5f32),
+                left: taffy::style::LengthPercentageAuto::Percent(0.1f32),
+                right: taffy::style::LengthPercentageAuto::Percent(0.1f32),
+                top: taffy::style::LengthPercentageAuto::Percent(0.05f32),
+                bottom: auto(),
             },
             ..Default::default()
         })
@@ -40,8 +41,8 @@ fn aspect_ratio_flex_absolute_fill_width_from_inset() {
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node0).unwrap();
-    assert_eq!(size.width, 180f32, "width of node {:?}. Expected {}. Actual {}", node0.data(), 180f32, size.width);
-    assert_eq!(size.height, 60f32, "height of node {:?}. Expected {}. Actual {}", node0.data(), 60f32, size.height);
-    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, location.x);
-    assert_eq!(location.y, 90f32, "y of node {:?}. Expected {}. Actual {}", node0.data(), 90f32, location.y);
+    assert_eq!(size.width, 160f32, "width of node {:?}. Expected {}. Actual {}", node0.data(), 160f32, size.width);
+    assert_eq!(size.height, 53f32, "height of node {:?}. Expected {}. Actual {}", node0.data(), 53f32, size.height);
+    assert_eq!(location.x, 40f32, "x of node {:?}. Expected {}. Actual {}", node0.data(), 40f32, location.x);
+    assert_eq!(location.y, 15f32, "y of node {:?}. Expected {}. Actual {}", node0.data(), 15f32, location.y);
 }

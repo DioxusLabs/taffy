@@ -1,5 +1,5 @@
 #[test]
-fn aspect_ratio_flex_absolute_aspect_ratio_overrides_height_of_full_inset() {
+fn absolute_aspect_ratio_aspect_ratio_overrides_height_of_full_inset() {
     use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};

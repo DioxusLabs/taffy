@@ -61,6 +61,13 @@ fn measure_standard_text(
         WritingMode::Vertical => Size { width: block_size, height: inline_size },
     }
 }
+mod absolute_aspect_ratio_aspect_ratio_overrides_height_of_full_inset;
+mod absolute_aspect_ratio_fill_height;
+mod absolute_aspect_ratio_fill_height_from_inset;
+mod absolute_aspect_ratio_fill_width;
+mod absolute_aspect_ratio_fill_width_from_inset;
+mod absolute_aspect_ratio_height_overrides_inset;
+mod absolute_aspect_ratio_width_overrides_inset;
 mod absolute_layout_align_items_and_justify_content_center;
 mod absolute_layout_align_items_and_justify_content_center_and_bottom_position;
 mod absolute_layout_align_items_and_justify_content_center_and_left_position;
@@ -118,13 +125,6 @@ mod align_self_flex_end;
 mod align_self_flex_end_override_flex_start;
 mod align_self_flex_start;
 mod align_stretch_should_size_based_on_parent;
-mod aspect_ratio_flex_absolute_aspect_ratio_overrides_height_of_full_inset;
-mod aspect_ratio_flex_absolute_fill_height;
-mod aspect_ratio_flex_absolute_fill_height_from_inset;
-mod aspect_ratio_flex_absolute_fill_width;
-mod aspect_ratio_flex_absolute_fill_width_from_inset;
-mod aspect_ratio_flex_absolute_height_overrides_inset;
-mod aspect_ratio_flex_absolute_width_overrides_inset;
 mod aspect_ratio_flex_column_fill_height;
 mod aspect_ratio_flex_column_fill_max_height;
 mod aspect_ratio_flex_column_fill_max_width;
@@ -656,6 +656,13 @@ mod wrapped_row_within_align_items_flex_start;
 fn benchmark(c: &mut Criterion) {
     c.bench_function("generated benchmarks", |b| {
         b.iter(|| {
+            absolute_aspect_ratio_aspect_ratio_overrides_height_of_full_inset::compute();
+            absolute_aspect_ratio_fill_height::compute();
+            absolute_aspect_ratio_fill_height_from_inset::compute();
+            absolute_aspect_ratio_fill_width::compute();
+            absolute_aspect_ratio_fill_width_from_inset::compute();
+            absolute_aspect_ratio_height_overrides_inset::compute();
+            absolute_aspect_ratio_width_overrides_inset::compute();
             absolute_layout_align_items_and_justify_content_center::compute();
             absolute_layout_align_items_and_justify_content_center_and_bottom_position::compute();
             absolute_layout_align_items_and_justify_content_center_and_left_position::compute();
@@ -713,13 +720,6 @@ fn benchmark(c: &mut Criterion) {
             align_self_flex_end_override_flex_start::compute();
             align_self_flex_start::compute();
             align_stretch_should_size_based_on_parent::compute();
-            aspect_ratio_flex_absolute_aspect_ratio_overrides_height_of_full_inset::compute();
-            aspect_ratio_flex_absolute_fill_height::compute();
-            aspect_ratio_flex_absolute_fill_height_from_inset::compute();
-            aspect_ratio_flex_absolute_fill_width::compute();
-            aspect_ratio_flex_absolute_fill_width_from_inset::compute();
-            aspect_ratio_flex_absolute_height_overrides_inset::compute();
-            aspect_ratio_flex_absolute_width_overrides_inset::compute();
             aspect_ratio_flex_column_fill_height::compute();
             aspect_ratio_flex_column_fill_max_height::compute();
             aspect_ratio_flex_column_fill_max_width::compute();

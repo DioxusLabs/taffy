@@ -1,5 +1,5 @@
 #[test]
-fn aspect_ratio_flex_absolute_fill_width() {
+fn absolute_aspect_ratio_fill_width_from_inset() {
     use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};
@@ -7,13 +7,12 @@ fn aspect_ratio_flex_absolute_fill_width() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(0.2f32) },
             aspect_ratio: Some(3f32),
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Percent(0.05f32),
+                left: auto(),
                 right: auto(),
-                top: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                bottom: auto(),
+                top: taffy::style::LengthPercentageAuto::Percent(0.3f32),
+                bottom: taffy::style::LengthPercentageAuto::Percent(0.5f32),
             },
             ..Default::default()
         })
@@ -43,6 +42,6 @@ fn aspect_ratio_flex_absolute_fill_width() {
     let Layout { size, location, .. } = taffy.layout(node0).unwrap();
     assert_eq!(size.width, 180f32, "width of node {:?}. Expected {}. Actual {}", node0.data(), 180f32, size.width);
     assert_eq!(size.height, 60f32, "height of node {:?}. Expected {}. Actual {}", node0.data(), 60f32, size.height);
-    assert_eq!(location.x, 20f32, "x of node {:?}. Expected {}. Actual {}", node0.data(), 20f32, location.x);
-    assert_eq!(location.y, 15f32, "y of node {:?}. Expected {}. Actual {}", node0.data(), 15f32, location.y);
+    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, location.x);
+    assert_eq!(location.y, 90f32, "y of node {:?}. Expected {}. Actual {}", node0.data(), 90f32, location.y);
 }
