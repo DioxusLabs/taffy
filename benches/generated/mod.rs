@@ -64,6 +64,10 @@ fn measure_standard_text(
 mod absolute_aspect_ratio_aspect_ratio_overrides_height_of_full_inset;
 mod absolute_aspect_ratio_fill_height;
 mod absolute_aspect_ratio_fill_height_from_inset;
+mod absolute_aspect_ratio_fill_max_height;
+mod absolute_aspect_ratio_fill_max_width;
+mod absolute_aspect_ratio_fill_min_height;
+mod absolute_aspect_ratio_fill_min_width;
 mod absolute_aspect_ratio_fill_width;
 mod absolute_aspect_ratio_fill_width_from_inset;
 mod absolute_aspect_ratio_height_overrides_inset;
@@ -659,6 +663,10 @@ fn benchmark(c: &mut Criterion) {
             absolute_aspect_ratio_aspect_ratio_overrides_height_of_full_inset::compute();
             absolute_aspect_ratio_fill_height::compute();
             absolute_aspect_ratio_fill_height_from_inset::compute();
+            absolute_aspect_ratio_fill_max_height::compute();
+            absolute_aspect_ratio_fill_max_width::compute();
+            absolute_aspect_ratio_fill_min_height::compute();
+            absolute_aspect_ratio_fill_min_width::compute();
             absolute_aspect_ratio_fill_width::compute();
             absolute_aspect_ratio_fill_width_from_inset::compute();
             absolute_aspect_ratio_height_overrides_inset::compute();
