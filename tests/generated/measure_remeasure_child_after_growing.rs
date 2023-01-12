@@ -18,7 +18,13 @@ fn measure_remeasure_child_after_growing() {
             taffy::style::Style { ..Default::default() },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HH";
-                super::measure_standard_text(known_dimensions, available_space, TEXT, super::WritingMode::Horizontal)
+                super::measure_standard_text(
+                    known_dimensions,
+                    available_space,
+                    TEXT,
+                    super::WritingMode::Horizontal,
+                    None,
+                )
             }),
         )
         .unwrap();

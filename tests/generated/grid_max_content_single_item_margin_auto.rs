@@ -18,7 +18,13 @@ fn grid_max_content_single_item_margin_auto() {
             },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HH\u{200b}HH";
-                super::measure_standard_text(known_dimensions, available_space, TEXT, super::WritingMode::Horizontal)
+                super::measure_standard_text(
+                    known_dimensions,
+                    available_space,
+                    TEXT,
+                    super::WritingMode::Horizontal,
+                    None,
+                )
             }),
         )
         .unwrap();

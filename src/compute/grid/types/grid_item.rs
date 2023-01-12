@@ -241,12 +241,18 @@ impl GridItem {
     ) -> f32 {
         self.minimum_contribution_cache.unwrap_or_else(|| {
             let style = tree.style(self.node);
-            let axis_available_space = available_space.get(axis).into_option();
             style
                 .size
+                .maybe_resolve(available_space.into_options())
+                .maybe_apply_aspect_ratio(style.aspect_ratio)
                 .get(axis)
-                .maybe_resolve(axis_available_space)
-                .or_else(|| style.min_size.get(axis).maybe_resolve(axis_available_space))
+                .or_else(|| {
+                    style
+                        .min_size
+                        .maybe_resolve(available_space.into_options())
+                        .maybe_apply_aspect_ratio(style.aspect_ratio)
+                        .get(axis)
+                })
                 .unwrap_or_else(|| {
                     // Automatic minimum size. See https://www.w3.org/TR/css-grid-1/#min-size-auto
 

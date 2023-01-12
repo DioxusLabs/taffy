@@ -103,6 +103,20 @@ function parseNumber(input) {
   return Number(input);
 }
 
+function parseRatio(input) {
+  if (!input) return undefined;
+
+  if (input.includes('/')) {
+    let [width, height] = input.split("/").map(part => parseFloat(part.trim()));
+    if (!width || width < 0 || !height || height <= 0) return undefined;
+    return width / height;
+  }
+
+  let ratio = parseFloat(input);
+  if (!ratio || ratio < 0) return undefined;
+  return ratio;
+}
+
 function parseEnum(input) {
   if (input) return input;
   return undefined;
@@ -200,6 +214,7 @@ function describeElement(e) {
       size: parseSize({width: e.style.width, height: e.style.height}),
       minSize: parseSize({width: e.style.minWidth, height: e.style.minHeight}),
       maxSize: parseSize({width: e.style.maxWidth, height: e.style.maxHeight}),
+      aspectRatio: parseRatio(e.style.aspectRatio),
 
       margin: parseEdges({
         left: e.style.marginLeft,

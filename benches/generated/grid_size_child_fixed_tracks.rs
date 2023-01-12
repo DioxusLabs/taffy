@@ -11,7 +11,13 @@ pub fn compute() {
             },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HH\u{200b}HH\u{200b}HH\u{200b}HH";
-                super::measure_standard_text(known_dimensions, available_space, TEXT, super::WritingMode::Horizontal)
+                super::measure_standard_text(
+                    known_dimensions,
+                    available_space,
+                    TEXT,
+                    super::WritingMode::Horizontal,
+                    None,
+                )
             }),
         )
         .unwrap();
@@ -24,7 +30,13 @@ pub fn compute() {
             },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HHH\u{200b}HHH";
-                super::measure_standard_text(known_dimensions, available_space, TEXT, super::WritingMode::Horizontal)
+                super::measure_standard_text(
+                    known_dimensions,
+                    available_space,
+                    TEXT,
+                    super::WritingMode::Horizontal,
+                    None,
+                )
             }),
         )
         .unwrap();
@@ -37,7 +49,13 @@ pub fn compute() {
             },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HH\u{200b}HHHH";
-                super::measure_standard_text(known_dimensions, available_space, TEXT, super::WritingMode::Horizontal)
+                super::measure_standard_text(
+                    known_dimensions,
+                    available_space,
+                    TEXT,
+                    super::WritingMode::Horizontal,
+                    None,
+                )
             }),
         )
         .unwrap();
@@ -51,7 +69,13 @@ pub fn compute() {
             },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HH\u{200b}HH\u{200b}HH\u{200b}HH";
-                super::measure_standard_text(known_dimensions, available_space, TEXT, super::WritingMode::Horizontal)
+                super::measure_standard_text(
+                    known_dimensions,
+                    available_space,
+                    TEXT,
+                    super::WritingMode::Horizontal,
+                    None,
+                )
             }),
         )
         .unwrap();
@@ -65,7 +89,13 @@ pub fn compute() {
             },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HH\u{200b}HH\u{200b}HH\u{200b}HH";
-                super::measure_standard_text(known_dimensions, available_space, TEXT, super::WritingMode::Horizontal)
+                super::measure_standard_text(
+                    known_dimensions,
+                    available_space,
+                    TEXT,
+                    super::WritingMode::Horizontal,
+                    None,
+                )
             }),
         )
         .unwrap();

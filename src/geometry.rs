@@ -1,6 +1,7 @@
 //! Geometric primitives useful for layout
 
 use crate::style::{Dimension, FlexDirection};
+use crate::sys::f32_max;
 use core::ops::Add;
 
 #[cfg(feature = "grid")]
@@ -38,6 +39,19 @@ impl<T: Default> Default for Rect<T> {
             right: Default::default(),
             top: Default::default(),
             bottom: Default::default(),
+        }
+    }
+}
+
+impl<U, T: Add<U>> Add<Rect<U>> for Rect<T> {
+    type Output = Rect<T::Output>;
+
+    fn add(self, rhs: Rect<U>) -> Self::Output {
+        Rect {
+            left: self.left + rhs.left,
+            right: self.right + rhs.right,
+            top: self.top + rhs.top,
+            bottom: self.bottom + rhs.bottom,
         }
     }
 }
@@ -354,6 +368,11 @@ impl<T> Size<T> {
 impl Size<f32> {
     /// A [`Size`] with zero width and height
     pub const ZERO: Size<f32> = Self { width: 0.0, height: 0.0 };
+
+    /// Applies f32_max to each component separately
+    pub fn f32_max(self, rhs: Size<f32>) -> Size<f32> {
+        Size { width: f32_max(self.width, rhs.width), height: f32_max(self.height, rhs.height) }
+    }
 }
 
 impl Size<Option<f32>> {
@@ -364,6 +383,22 @@ impl Size<Option<f32>> {
     #[must_use]
     pub const fn new(width: f32, height: f32) -> Self {
         Size { width: Some(width), height: Some(height) }
+    }
+
+    /// Applies aspect_ratio (if one is supplied) to the Size:
+    ///   - If width is `Some` but height is `None`, then height is computed from width and aspect_ratio
+    ///   - If height is `Some` but width is `None`, then width is computed from height and aspect_ratio
+    ///
+    /// If aspect_ratio is `None` then this function simply returns self.
+    pub fn maybe_apply_aspect_ratio(self, aspect_ratio: Option<f32>) -> Size<Option<f32>> {
+        match aspect_ratio {
+            Some(ratio) => match (self.width, self.height) {
+                (Some(width), None) => Size { width: Some(width), height: Some(width / ratio) },
+                (None, Some(height)) => Size { width: Some(height * ratio), height: Some(height) },
+                _ => self,
+            },
+            None => self,
+        }
     }
 }
 

@@ -16,6 +16,7 @@ use crate::style::{
     LengthPercentageAuto, Position,
 };
 use crate::style::{FlexDirection, Style};
+use crate::sys::f32_max;
 use crate::sys::Vec;
 use crate::tree::LayoutTree;
 
@@ -208,7 +209,7 @@ fn compute_preliminary(
     // 3. Determine the flex base size and hypothetical main size of each item.
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("determine_flex_base_size");
-    determine_flex_base_size(tree, known_dimensions, &constants, available_space, &mut flex_items);
+    determine_flex_base_size(tree, &constants, available_space, &mut flex_items);
 
     #[cfg(feature = "debug")]
     for item in flex_items.iter() {
@@ -219,7 +220,9 @@ fn compute_preliminary(
         NODE_LOGGER.labelled_debug_log("item.resolved_minimum_size", item.resolved_minimum_size);
     }
 
-    // TODO: Add step 4 according to spec: https://www.w3.org/TR/css-flexbox-1/#algo-main-container
+    // 4. Determine the main size of the flex container
+    // This has already been done as part of compute_constants. The inner size is exposed as constants.node_inner_size.
+
     // 9.3. Main Size Determination
 
     // 5. Collect flex items into flex lines.
@@ -247,8 +250,7 @@ fn compute_preliminary(
         resolve_flexible_lengths(tree, line, &constants, original_gap);
     }
 
-    // TODO: Cleanup and make according to spec
-    // Not part of the spec from what i can see but seems correct
+    // Find the inner and outer used main_size of the container
     constants.container_size.set_main(
         constants.dir,
         known_dimensions.main(constants.dir).unwrap_or({
@@ -261,7 +263,6 @@ fn compute_preliminary(
             }
         }),
     );
-
     constants.inner_container_size.set_main(
         constants.dir,
         constants.container_size.main(constants.dir) - constants.padding_border.main_axis_sum(constants.dir),
@@ -389,25 +390,25 @@ fn compute_constants(
     let is_column = dir.is_column();
     let is_wrap_reverse = style.flex_wrap == FlexWrap::WrapReverse;
 
+    let aspect_ratio = style.aspect_ratio;
+    let size = style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let min_size = style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let max_size = style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+
     let margin = style.margin.resolve_or_zero(parent_size.width);
     let padding = style.padding.resolve_or_zero(parent_size.width);
     let border = style.border.resolve_or_zero(parent_size.width);
     let align_items = style.align_items.unwrap_or(crate::style::AlignItems::Stretch);
 
-    let padding_border = Rect {
-        left: padding.left + border.left,
-        right: padding.right + border.right,
-        top: padding.top + border.top,
-        bottom: padding.bottom + border.bottom,
-    };
+    let padding_border = padding + border;
 
     let node_outer_size = Size {
         width: known_dimensions
             .width
-            .or_else(|| style.size.width.maybe_resolve(parent_size.width).maybe_sub(margin.horizontal_axis_sum())),
-        height: known_dimensions
-            .height
-            .or_else(|| style.size.height.maybe_resolve(parent_size.height).maybe_sub(margin.vertical_axis_sum())),
+            .or_else(|| size.width.maybe_sub(margin.horizontal_axis_sum()).maybe_clamp(min_size.width, max_size.width)),
+        height: known_dimensions.height.or_else(|| {
+            size.height.maybe_sub(margin.vertical_axis_sum()).maybe_clamp(min_size.height, max_size.height)
+        }),
     };
 
     let node_inner_size = Size {
@@ -446,32 +447,41 @@ fn generate_anonymous_flex_items(tree: &impl LayoutTree, node: Node, constants: 
         .map(|child| (child, tree.style(*child)))
         .filter(|(_, style)| style.position != Position::Absolute)
         .filter(|(_, style)| style.display != Display::None)
-        .map(|(child, child_style)| FlexItem {
-            node: *child,
-            size: child_style.size.maybe_resolve(constants.node_inner_size),
-            min_size: child_style.min_size.maybe_resolve(constants.node_inner_size),
-            max_size: child_style.max_size.maybe_resolve(constants.node_inner_size),
+        .map(|(child, child_style)| {
+            let aspect_ratio = child_style.aspect_ratio;
+            FlexItem {
+                node: *child,
+                size: child_style.size.maybe_resolve(constants.node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
+                min_size: child_style
+                    .min_size
+                    .maybe_resolve(constants.node_inner_size)
+                    .maybe_apply_aspect_ratio(aspect_ratio),
+                max_size: child_style
+                    .max_size
+                    .maybe_resolve(constants.node_inner_size)
+                    .maybe_apply_aspect_ratio(aspect_ratio),
 
-            inset: child_style.inset.zip_size(constants.node_inner_size, |p, s| p.maybe_resolve(s)),
-            margin: child_style.margin.resolve_or_zero(constants.node_inner_size.width),
-            padding: child_style.padding.resolve_or_zero(constants.node_inner_size.width),
-            border: child_style.border.resolve_or_zero(constants.node_inner_size.width),
-            align_self: child_style.align_self.unwrap_or(constants.align_items),
-            flex_basis: 0.0,
-            inner_flex_basis: 0.0,
-            violation: 0.0,
-            frozen: false,
+                inset: child_style.inset.zip_size(constants.node_inner_size, |p, s| p.maybe_resolve(s)),
+                margin: child_style.margin.resolve_or_zero(constants.node_inner_size.width),
+                padding: child_style.padding.resolve_or_zero(constants.node_inner_size.width),
+                border: child_style.border.resolve_or_zero(constants.node_inner_size.width),
+                align_self: child_style.align_self.unwrap_or(constants.align_items),
+                flex_basis: 0.0,
+                inner_flex_basis: 0.0,
+                violation: 0.0,
+                frozen: false,
 
-            resolved_minimum_size: Size::zero(),
-            hypothetical_inner_size: Size::zero(),
-            hypothetical_outer_size: Size::zero(),
-            target_size: Size::zero(),
-            outer_target_size: Size::zero(),
+                resolved_minimum_size: Size::zero(),
+                hypothetical_inner_size: Size::zero(),
+                hypothetical_outer_size: Size::zero(),
+                target_size: Size::zero(),
+                outer_target_size: Size::zero(),
 
-            baseline: 0.0,
+                baseline: 0.0,
 
-            offset_main: 0.0,
-            offset_cross: 0.0,
+                offset_main: 0.0,
+                offset_cross: 0.0,
+            }
         })
         .collect()
 }
@@ -541,36 +551,29 @@ fn determine_available_space(
 #[inline]
 fn determine_flex_base_size(
     tree: &mut impl LayoutTree,
-    node_size: Size<Option<f32>>,
     constants: &AlgoConstants,
     available_space: Size<AvailableSpace>,
     flex_items: &mut Vec<FlexItem>,
 ) {
-    // TODO - this does not follow spec. See the TODOs below
     for child in flex_items.iter_mut() {
         let child_style = tree.style(child.node);
 
         // A. If the item has a definite used flex basis, that’s the flex base size.
-
-        let flex_basis = child_style.flex_basis.maybe_resolve(constants.node_inner_size.main(constants.dir));
-        if flex_basis.is_some() {
-            child.flex_basis = flex_basis.unwrap_or(0.0);
-            continue;
-        };
 
         // B. If the flex item has an intrinsic aspect ratio,
         //    a used flex basis of content, and a definite cross size,
         //    then the flex base size is calculated from its inner
         //    cross size and the flex item’s intrinsic aspect ratio.
 
-        if let Some(ratio) = child_style.aspect_ratio {
-            if let Some(cross) = node_size.cross(constants.dir) {
-                if child_style.flex_basis == Dimension::Auto {
-                    child.flex_basis = cross * ratio;
-                    continue;
-                }
-            }
-        }
+        // Note: `child.size` has already been resolved against aspect_ratio in generate_anonymous_flex_items
+        // So B will just work here by using main_size without special handling for aspect_ratio
+
+        let flex_basis = child_style.flex_basis.maybe_resolve(constants.node_inner_size.main(constants.dir));
+        let main_size = child.size.main(constants.dir);
+        if let Some(flex_basis) = flex_basis.or(main_size) {
+            child.flex_basis = flex_basis;
+            continue;
+        };
 
         // C. If the used flex basis is content or depends on its available space,
         //    and the flex container is being sized under a min-content or max-content
@@ -578,7 +581,8 @@ fn determine_flex_base_size(
         //    size the item under that constraint. The flex base size is the item’s
         //    resulting main size.
 
-        // TODO - Probably need to cover this case in future
+        // This is covered by the implementation of E below, which passes the available_space constraint
+        // through to the child size computation. It may need a separate implementation if/when D is implemented.
 
         // D. Otherwise, if the used flex basis is content or depends on its
         //    available space, the available main size is infinite, and the flex item’s
@@ -586,7 +590,7 @@ fn determine_flex_base_size(
         //    for a box in an orthogonal flow [CSS3-WRITING-MODES]. The flex base size
         //    is the item’s max-content main size.
 
-        // TODO - Probably need to cover this case in future
+        // TODO if/when vertical writing modes are supported
 
         // E. Otherwise, size the item into the available space using its used flex basis
         //    in place of its main size, treating a value of content as max-content.
@@ -640,13 +644,10 @@ fn determine_flex_base_size(
 
         // 4.5. Automatic Minimum Size of Flex Items
         // https://www.w3.org/TR/css-flexbox-1/#min-size-auto
-        let specified = child.size.maybe_min(child.max_size);
-        child.resolved_minimum_size = child.min_size.unwrap_or(min_content_size.maybe_min(specified));
+        child.resolved_minimum_size =
+            child.min_size.unwrap_or(min_content_size.maybe_min(child.size).maybe_min(child.max_size));
 
-        let hypothetical_inner_min_main = min_content_size
-            .main(constants.dir)
-            .maybe_clamp(child.resolved_minimum_size.main(constants.dir).into(), child.size.main(constants.dir))
-            .into();
+        let hypothetical_inner_min_main = child.resolved_minimum_size.main(constants.dir).into();
         child.hypothetical_inner_size.set_main(
             constants.dir,
             child.flex_basis.maybe_clamp(hypothetical_inner_min_main, child.max_size.main(constants.dir)),
@@ -782,7 +783,6 @@ fn resolve_flexible_lengths(
 
         // TODO this should really only be set inside the if-statement below but
         // that causes the target_main_size to never be set for some items
-
         child
             .outer_target_size
             .set_main(constants.dir, child.target_size.main(constants.dir) + child.margin.main_axis_sum(constants.dir));
@@ -1187,8 +1187,15 @@ fn determine_used_cross_size(tree: &mut impl LayoutTree, flex_lines: &mut [FlexL
                     && child_style.margin.cross_end(constants.dir) != LengthPercentageAuto::Auto
                     && child_style.size.cross(constants.dir) == Dimension::Auto
                 {
-                    (line_cross_size - child.margin.cross_axis_sum(constants.dir))
-                        .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir))
+                    // For some reason this particular usage of max_width is an exception to the rule that max_width's transfer
+                    // using the aspect_ratio (if set). Both Chrome and Firefox agree on this. And reading the spec, it seems like
+                    // a reasonable interpretation. Although it seems to me that the spec *should* apply aspect_ratio here.
+                    let max_size_ignoring_aspect_ratio = child_style.max_size.maybe_resolve(constants.node_inner_size);
+
+                    (line_cross_size - child.margin.cross_axis_sum(constants.dir)).maybe_clamp(
+                        child.min_size.cross(constants.dir),
+                        max_size_ignoring_aspect_ratio.cross(constants.dir),
+                    )
                 } else {
                     child.hypothetical_inner_size.cross(constants.dir)
                 },
@@ -1579,157 +1586,183 @@ fn final_layout_pass(tree: &mut impl LayoutTree, node: Node, flex_lines: &mut [F
 /// Perform absolute layout on all absolutely positioned children.
 #[inline]
 fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node: Node, constants: &AlgoConstants) {
-    // TODO: remove number of Vec<_> generated
-    let candidates = tree
-        .children(node)
-        .cloned()
-        .enumerate()
-        .filter(|(_, child)| tree.style(*child).position == Position::Absolute)
-        .collect::<Vec<_>>();
+    let container_width = constants.container_size.width;
+    let container_height = constants.container_size.height;
 
-    for (order, child) in candidates {
-        let container_width = constants.container_size.width;
-        let container_height = constants.container_size.height;
-
+    for order in 0..tree.child_count(node) {
+        let child = tree.child(node, order);
         let child_style = tree.style(child);
 
-        // X-axis
-        let child_position_start = child_style.inset.left.maybe_resolve(container_width);
-        let child_margin_start = child_style.margin.left.maybe_resolve(container_width);
-        let start = child_position_start.maybe_add(child_margin_start);
+        // Skip items that are display:none or are not position:absolute
+        if child_style.display == Display::None || child_style.position != Position::Absolute {
+            continue;
+        }
 
-        let child_position_end = child_style.inset.right.maybe_resolve(container_width);
-        let child_margin_end = child_style.margin.right.maybe_resolve(container_width);
-        let end = child_position_end.maybe_add(child_margin_end);
+        let aspect_ratio = child_style.aspect_ratio;
+        let margin = child_style.margin.map(|margin| margin.resolve_to_option(container_width));
+        let align_self = child_style.align_self.unwrap_or(constants.align_items);
 
-        // Y-axis
-        let child_position_top = child_style.inset.top.maybe_resolve(container_height);
-        let child_margin_top = child_style.margin.top.maybe_resolve(container_height);
-        let top = child_position_top.maybe_add(child_margin_top);
-
-        let child_position_bottom = child_style.inset.bottom.maybe_resolve(container_height);
-        let child_margin_bottom = child_style.margin.bottom.maybe_resolve(container_height);
-        let bottom = child_position_bottom.maybe_add(child_margin_bottom);
-
-        let (start_main, end_main) = if constants.is_row { (start, end) } else { (top, bottom) };
-        let (start_cross, end_cross) = if constants.is_row { (top, bottom) } else { (start, end) };
+        // Resolve inset
+        let left = child_style.inset.left.maybe_resolve(container_width);
+        let right = child_style.inset.right.maybe_resolve(container_width);
+        let top = child_style.inset.top.maybe_resolve(container_height);
+        let bottom = child_style.inset.bottom.maybe_resolve(container_height);
 
         // Compute known dimensions from min/max/inherent size styles
-        let style_size = child_style.size.maybe_resolve(constants.container_size);
-        let min_size = child_style.min_size.maybe_resolve(constants.container_size);
-        let max_size = child_style.max_size.maybe_resolve(constants.container_size);
+        let style_size =
+            child_style.size.maybe_resolve(constants.container_size).maybe_apply_aspect_ratio(aspect_ratio);
+        let min_size =
+            child_style.min_size.maybe_resolve(constants.container_size).maybe_apply_aspect_ratio(aspect_ratio);
+        let max_size =
+            child_style.max_size.maybe_resolve(constants.container_size).maybe_apply_aspect_ratio(aspect_ratio);
         let mut known_dimensions = style_size.maybe_clamp(min_size, max_size);
 
-        // Fill in width from left/right and height from top/bottom is appropriate
-        if known_dimensions.width.is_none() && start.is_some() && end.is_some() {
-            known_dimensions.width = Some(container_width.maybe_sub(start).maybe_sub(end));
-        }
-        if known_dimensions.height.is_none() && top.is_some() && bottom.is_some() {
-            known_dimensions.height = Some(container_height.maybe_sub(top).maybe_sub(bottom));
+        // Fill in width from left/right and reapply aspect ratio if:
+        //   - Width is not already known
+        //   - Item has both left and right inset properties set
+        if let (None, Some(left), Some(right)) = (known_dimensions.width, left, right) {
+            let new_width_raw = container_width.maybe_sub(margin.left).maybe_sub(margin.right) - left - right;
+            known_dimensions.width = Some(f32_max(new_width_raw, 0.0));
+            known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
         }
 
-        let preliminary_size = compute_node_layout(
+        // Fill in height from top/bottom and reapply aspect ratio if:
+        //   - Height is not already known
+        //   - Item has both top and bottom inset properties set
+        if let (None, Some(top), Some(bottom)) = (known_dimensions.height, top, bottom) {
+            let new_height_raw = container_height.maybe_sub(margin.top).maybe_sub(margin.bottom) - top - bottom;
+            known_dimensions.height = Some(f32_max(new_height_raw, 0.0));
+            known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
+        }
+
+        let measured_size = compute_node_layout(
             tree,
             child,
             known_dimensions,
             constants.node_inner_size,
             Size {
-                width: AvailableSpace::Definite(container_width),
-                height: AvailableSpace::Definite(container_height),
+                width: AvailableSpace::Definite(container_width.maybe_clamp(min_size.width, max_size.width)),
+                height: AvailableSpace::Definite(container_height.maybe_clamp(min_size.height, max_size.height)),
             },
             RunMode::PeformLayout,
             SizingMode::ContentSize,
         );
+        let final_size = known_dimensions.unwrap_or(measured_size).maybe_clamp(min_size, max_size);
 
-        // Satisfy the borrow checker by re-requesting the style from above.
-        // This shortens the lifetime of the original binding
-        let child_style = tree.style(child);
+        let non_auto_margin = margin.map(|m| m.unwrap_or(0.0));
 
-        let free_main_space = constants.container_size.main(constants.dir)
-            - preliminary_size
-                .main(constants.dir)
-                .maybe_max(
-                    child_style
-                        .min_size
-                        .main(constants.dir)
-                        .maybe_resolve(constants.node_inner_size.main(constants.dir)),
-                )
-                .maybe_min(
-                    child_style
-                        .max_size
-                        .main(constants.dir)
-                        .maybe_resolve(constants.node_inner_size.main(constants.dir)),
-                );
+        let free_space = Size {
+            width: constants.container_size.width - final_size.width - non_auto_margin.horizontal_axis_sum(),
+            height: constants.container_size.height - final_size.height - non_auto_margin.vertical_axis_sum(),
+        }
+        .f32_max(Size::ZERO);
 
-        let free_cross_space = constants.container_size.cross(constants.dir)
-            - preliminary_size
-                .cross(constants.dir)
-                .maybe_max(
-                    child_style
-                        .min_size
-                        .cross(constants.dir)
-                        .maybe_resolve(constants.node_inner_size.cross(constants.dir)),
-                )
-                .maybe_min(
-                    child_style
-                        .max_size
-                        .cross(constants.dir)
-                        .maybe_resolve(constants.node_inner_size.cross(constants.dir)),
-                );
+        // Expand auto margins to fill available space
+        let resolved_margin = {
+            let auto_margin_size = Size {
+                width: {
+                    let auto_margin_count = margin.left.is_none() as u8 + margin.right.is_none() as u8;
+                    if auto_margin_count > 0 {
+                        free_space.width / auto_margin_count as f32
+                    } else {
+                        0.0
+                    }
+                },
+                height: {
+                    let auto_margin_count = margin.top.is_none() as u8 + margin.bottom.is_none() as u8;
+                    if auto_margin_count > 0 {
+                        free_space.height / auto_margin_count as f32
+                    } else {
+                        0.0
+                    }
+                },
+            };
 
-        let offset_main = if start_main.is_some() {
-            start_main.unwrap_or(0.0) + constants.border.main_start(constants.dir)
-        } else if end_main.is_some() {
-            free_main_space - end_main.unwrap_or(0.0) - constants.border.main_end(constants.dir)
+            Rect {
+                left: margin.left.unwrap_or(auto_margin_size.width),
+                right: margin.right.unwrap_or(auto_margin_size.width),
+                top: margin.top.unwrap_or(auto_margin_size.height),
+                bottom: margin.bottom.unwrap_or(auto_margin_size.height),
+            }
+        };
+
+        // Determine flex-relative insets
+        let (start_main, end_main) = if constants.is_row { (left, right) } else { (top, bottom) };
+        let (start_cross, end_cross) = if constants.is_row { (top, bottom) } else { (left, right) };
+
+        // Apply main-axis alignment
+        // let free_main_space = free_space.main(constants.dir) - resolved_margin.main_axis_sum(constants.dir);
+        let offset_main = if let Some(start) = start_main {
+            start + constants.border.main_start(constants.dir) + resolved_margin.main_start(constants.dir)
+        } else if let Some(end) = end_main {
+            constants.container_size.main(constants.dir)
+                - constants.border.main_end(constants.dir)
+                - final_size.main(constants.dir)
+                - end
+                - resolved_margin.main_end(constants.dir)
         } else {
             match tree.style(node).justify_content.unwrap_or(JustifyContent::Start) {
                 // Stretch is an invalid value for justify_content in the flexbox algorithm, so we
                 // treat it as if it wasn't set (and thus we default to FlexStart behaviour)
                 JustifyContent::SpaceBetween | JustifyContent::Start | JustifyContent::Stretch => {
-                    constants.padding_border.main_start(constants.dir)
+                    constants.padding_border.main_start(constants.dir) + resolved_margin.main_start(constants.dir)
                 }
-                JustifyContent::End => free_main_space - constants.padding_border.main_end(constants.dir),
+                JustifyContent::End => {
+                    constants.container_size.main(constants.dir)
+                        - constants.padding_border.main_end(constants.dir)
+                        - final_size.main(constants.dir)
+                        - resolved_margin.main_end(constants.dir)
+                }
                 JustifyContent::SpaceEvenly | JustifyContent::SpaceAround | JustifyContent::Center => {
-                    free_main_space / 2.0
+                    (constants.container_size.main(constants.dir) + constants.padding_border.main_start(constants.dir)
+                        - constants.padding_border.main_end(constants.dir)
+                        - final_size.main(constants.dir)
+                        + resolved_margin.main_start(constants.dir)
+                        - resolved_margin.main_end(constants.dir))
+                        / 2.0
                 }
             }
         };
 
-        let offset_cross = if start_cross.is_some() {
-            start_cross.unwrap_or(0.0) + constants.border.cross_start(constants.dir)
-        } else if end_cross.is_some() {
-            free_cross_space - end_cross.unwrap_or(0.0) - constants.border.cross_end(constants.dir)
+        // Apply cross-axis alignment
+        // let free_cross_space = free_space.cross(constants.dir) - resolved_margin.cross_axis_sum(constants.dir);
+        let offset_cross = if let Some(start) = start_cross {
+            start + constants.border.cross_start(constants.dir) + resolved_margin.cross_start(constants.dir)
+        } else if let Some(end) = end_cross {
+            constants.container_size.cross(constants.dir)
+                - constants.border.cross_end(constants.dir)
+                - final_size.cross(constants.dir)
+                - end
+                - resolved_margin.cross_end(constants.dir)
         } else {
-            match child_style.align_self.unwrap_or(constants.align_items) {
-                AlignSelf::Start => {
-                    if constants.is_wrap_reverse {
-                        free_cross_space - constants.padding_border.cross_end(constants.dir)
-                    } else {
-                        constants.padding_border.cross_start(constants.dir)
-                    }
+            match (align_self, constants.is_wrap_reverse) {
+                // Stretch alignment does not apply to absolutely positioned items
+                // See "Example 3" at https://www.w3.org/TR/css-flexbox-1/#abspos-items
+                // Note: Stretch should be FlexStart not Start when we support both
+                (AlignSelf::Baseline | AlignSelf::Stretch | AlignSelf::Start, false) | (AlignSelf::End, true) => {
+                    constants.padding_border.cross_start(constants.dir) + resolved_margin.cross_start(constants.dir)
                 }
-                AlignSelf::End => {
-                    if constants.is_wrap_reverse {
-                        constants.padding_border.cross_start(constants.dir)
-                    } else {
-                        free_cross_space - constants.padding_border.cross_end(constants.dir)
-                    }
+                (AlignSelf::Baseline | AlignSelf::Stretch | AlignSelf::Start, true) | (AlignSelf::End, false) => {
+                    constants.container_size.cross(constants.dir)
+                        - constants.padding_border.cross_end(constants.dir)
+                        - final_size.cross(constants.dir)
+                        - resolved_margin.cross_end(constants.dir)
                 }
-                AlignSelf::Center => free_cross_space / 2.0,
-                AlignSelf::Baseline => free_cross_space / 2.0, // Treat as center for now until we have baseline support
-                AlignSelf::Stretch => {
-                    if constants.is_wrap_reverse {
-                        free_cross_space - constants.padding_border.cross_end(constants.dir)
-                    } else {
-                        constants.padding_border.cross_start(constants.dir)
-                    }
+                (AlignSelf::Center, _) => {
+                    (constants.container_size.cross(constants.dir)
+                        + constants.padding_border.cross_start(constants.dir)
+                        - constants.padding_border.cross_end(constants.dir)
+                        - final_size.cross(constants.dir)
+                        + resolved_margin.cross_start(constants.dir)
+                        - resolved_margin.cross_end(constants.dir))
+                        / 2.0
                 }
             }
         };
 
         *tree.layout_mut(child) = Layout {
             order: order as u32,
-            size: preliminary_size,
+            size: final_size,
             location: Point {
                 x: if constants.is_row { offset_main } else { offset_cross },
                 y: if constants.is_column { offset_main } else { offset_cross },
@@ -1758,8 +1791,8 @@ mod tests {
     #![allow(clippy::redundant_clone)]
 
     use crate::{
+        geometry::Size,
         math::MaybeMath,
-        prelude::{Rect, Size},
         resolve::ResolveOrZero,
         style::{FlexWrap, Style},
         Taffy,
@@ -1777,7 +1810,6 @@ mod tests {
         let parent_size = Size::NONE;
 
         let constants = super::compute_constants(tree.style(node_id).unwrap(), node_size, parent_size);
-        // let constants = super::compute_constants(&tree.nodes[node_id], node_size, parent_size);
 
         assert!(constants.dir == style.flex_direction);
         assert!(constants.is_row == style.flex_direction.is_row());
@@ -1788,21 +1820,11 @@ mod tests {
         assert_eq!(constants.margin, margin);
 
         let border = style.border.resolve_or_zero(parent_size);
-        assert_eq!(constants.border, border);
-
         let padding = style.padding.resolve_or_zero(parent_size);
-
-        // TODO: Replace with something less hardcoded?
-        let padding_border = Rect {
-            left: padding.left + border.left,
-            right: padding.right + border.right,
-            top: padding.top + border.top,
-            bottom: padding.bottom + border.bottom,
-        };
-
+        let padding_border = padding + border;
+        assert_eq!(constants.border, border);
         assert_eq!(constants.padding_border, padding_border);
 
-        // TODO: Replace with something less hardcoded?
         let inner_size = Size {
             width: node_size.width.maybe_sub(padding_border.horizontal_axis_sum()),
             height: node_size.height.maybe_sub(padding_border.vertical_axis_sum()),

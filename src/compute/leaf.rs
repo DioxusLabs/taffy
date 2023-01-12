@@ -6,6 +6,7 @@ use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::AvailableSpace;
+use crate::sys::f32_max;
 use crate::tree::LayoutTree;
 
 #[cfg(feature = "debug")]
@@ -25,19 +26,21 @@ pub(crate) fn compute(
 
     // Resolve node's preferred/min/max sizes (width/heights) against the available space (percentages resolve to pixel values)
     // For ContentSize mode, we pretend that the node has no size styles as these should be ignored.
-    let (node_size, node_min_size, node_max_size) = match sizing_mode {
+    let (node_size, node_min_size, node_max_size, aspect_ratio) = match sizing_mode {
         SizingMode::ContentSize => {
             let node_size = known_dimensions;
             let node_min_size = Size::NONE;
             let node_max_size = Size::NONE;
-            (node_size, node_min_size, node_max_size)
+            (node_size, node_min_size, node_max_size, None)
         }
         SizingMode::InherentSize => {
-            let style_size = style.size.maybe_resolve(parent_size);
+            let aspect_ratio = style.aspect_ratio;
+            let style_size = style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+            let style_min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+            let style_max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+
             let node_size = known_dimensions.or(style_size);
-            let node_min_size = style.min_size.maybe_resolve(parent_size);
-            let node_max_size = style.max_size.maybe_resolve(parent_size);
-            (node_size, node_min_size, node_max_size)
+            (node_size, style_min_size, style_max_size, aspect_ratio)
         }
     };
 
@@ -72,6 +75,11 @@ pub(crate) fn compute(
 
         // Measure node
         let measured_size = tree.measure_node(node, known_dimensions, available_space);
+
+        let measured_size = Size {
+            width: measured_size.width,
+            height: f32_max(measured_size.height, aspect_ratio.map(|ratio| measured_size.width / ratio).unwrap_or(0.0)),
+        };
 
         return node_size.unwrap_or(measured_size).maybe_clamp(node_min_size, node_max_size);
     }

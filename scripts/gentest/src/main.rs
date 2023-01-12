@@ -334,6 +334,13 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
         }
     }
 
+    fn get_number_value<'a, 'b, 'c: 'b>(prop_name: &'a str, style: &'c Value) -> Option<f32> {
+        match style[prop_name.to_case(Case::Camel)] {
+            Value::Number(ref value) => Some(value.as_f64().unwrap() as f32),
+            _ => None,
+        }
+    }
+
     fn quote_number_prop(prop_name: &str, style: &Value, quoter: impl Fn(f32) -> TokenStream) -> TokenStream {
         let prop_name_snake_case = prop_name.to_case(Case::Snake);
         let prop_name_camel_case = prop_name.to_case(Case::Camel);
@@ -484,6 +491,7 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
     let size = quote_object_prop("size", style, generate_size);
     let min_size = quote_object_prop("min_size", style, generate_size);
     let max_size = quote_object_prop("max_size", style, generate_size);
+    let aspect_ratio = quote_number_prop("aspect_ratio", style, |value: f32| quote!(Some(#value)));
 
     let gap = quote_object_prop("gap", style, generate_gap);
 
@@ -525,7 +533,9 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
 
     let text_content = get_string_value("text_content", node);
     let writing_mode = get_string_value("writingMode", style);
-    let measure_func: Option<_> = text_content.map(|text| generate_measure_function(text, writing_mode));
+    let raw_aspect_ratio = get_number_value("aspect_ratio", style);
+    let measure_func: Option<_> =
+        text_content.map(|text| generate_measure_function(text, writing_mode, raw_aspect_ratio));
 
     edges_quoted!(style, margin, generate_length_percentage_auto, quote!(zero()));
     edges_quoted!(style, padding, generate_length_percentage, quote!(zero()));
@@ -583,6 +593,7 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
         #size
         #min_size
         #max_size
+        #aspect_ratio
         #margin
         #padding
         #inset
@@ -834,6 +845,7 @@ fn generate_generic_measure_function() -> TokenStream {
             available_space: taffy::geometry::Size<taffy::style::AvailableSpace>,
             text_content: &str,
             writing_mode: WritingMode,
+            _aspect_ratio: Option<f32>,
         ) -> taffy::geometry::Size<f32> {
             use taffy::axis::AbsoluteAxis;
             use taffy::prelude::*;
@@ -891,16 +903,21 @@ fn generate_generic_measure_function() -> TokenStream {
     )
 }
 
-fn generate_measure_function(text_content: &str, writing_mode: Option<&str>) -> TokenStream {
+fn generate_measure_function(text_content: &str, writing_mode: Option<&str>, aspect_ratio: Option<f32>) -> TokenStream {
     let writing_mode_token = match writing_mode {
         Some("vertical-rl" | "vertical-lr") => quote!(super::WritingMode::Vertical),
         _ => quote!(super::WritingMode::Horizontal),
     };
 
+    let aspect_ratio_token = match aspect_ratio {
+        Some(ratio) => quote!(Some(#ratio)),
+        None => quote!(None),
+    };
+
     quote!(
         taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
             const TEXT : &str = #text_content;
-            super::measure_standard_text(known_dimensions, available_space, TEXT, #writing_mode_token)
+            super::measure_standard_text(known_dimensions, available_space, TEXT, #writing_mode_token, #aspect_ratio_token)
         })
     )
 }

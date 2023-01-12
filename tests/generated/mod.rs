@@ -10,6 +10,7 @@ fn measure_standard_text(
     available_space: taffy::geometry::Size<taffy::style::AvailableSpace>,
     text_content: &str,
     writing_mode: WritingMode,
+    _aspect_ratio: Option<f32>,
 ) -> taffy::geometry::Size<f32> {
     use taffy::axis::AbsoluteAxis;
     use taffy::prelude::*;
@@ -59,6 +60,17 @@ fn measure_standard_text(
         WritingMode::Vertical => Size { width: block_size, height: inline_size },
     }
 }
+mod absolute_aspect_ratio_aspect_ratio_overrides_height_of_full_inset;
+mod absolute_aspect_ratio_fill_height;
+mod absolute_aspect_ratio_fill_height_from_inset;
+mod absolute_aspect_ratio_fill_max_height;
+mod absolute_aspect_ratio_fill_max_width;
+mod absolute_aspect_ratio_fill_min_height;
+mod absolute_aspect_ratio_fill_min_width;
+mod absolute_aspect_ratio_fill_width;
+mod absolute_aspect_ratio_fill_width_from_inset;
+mod absolute_aspect_ratio_height_overrides_inset;
+mod absolute_aspect_ratio_width_overrides_inset;
 mod absolute_layout_align_items_and_justify_content_center;
 mod absolute_layout_align_items_and_justify_content_center_and_bottom_position;
 mod absolute_layout_align_items_and_justify_content_center_and_left_position;
@@ -80,6 +92,12 @@ mod absolute_layout_width_height_end_bottom;
 mod absolute_layout_width_height_start_top;
 mod absolute_layout_width_height_start_top_end_bottom;
 mod absolute_layout_within_border;
+mod absolute_margin_bottom_left;
+mod absolute_minmax_bottom_right_max;
+mod absolute_minmax_bottom_right_min_max;
+mod absolute_minmax_bottom_right_min_max_preferred;
+mod absolute_minmax_top_left_bottom_right_max;
+mod absolute_minmax_top_left_bottom_right_min_max;
 mod align_baseline;
 mod align_baseline_child_multiline;
 mod align_baseline_nested_child;
@@ -110,6 +128,28 @@ mod align_self_flex_end;
 mod align_self_flex_end_override_flex_start;
 mod align_self_flex_start;
 mod align_stretch_should_size_based_on_parent;
+mod aspect_ratio_flex_column_fill_height;
+mod aspect_ratio_flex_column_fill_max_height;
+mod aspect_ratio_flex_column_fill_max_width;
+mod aspect_ratio_flex_column_fill_min_height;
+mod aspect_ratio_flex_column_fill_min_width;
+mod aspect_ratio_flex_column_fill_width;
+mod aspect_ratio_flex_column_fill_width_flex;
+mod aspect_ratio_flex_column_stretch_fill_height;
+mod aspect_ratio_flex_column_stretch_fill_max_height;
+mod aspect_ratio_flex_column_stretch_fill_max_width;
+mod aspect_ratio_flex_column_stretch_fill_width;
+mod aspect_ratio_flex_row_fill_height;
+mod aspect_ratio_flex_row_fill_max_height;
+mod aspect_ratio_flex_row_fill_max_width;
+mod aspect_ratio_flex_row_fill_min_height;
+mod aspect_ratio_flex_row_fill_min_width;
+mod aspect_ratio_flex_row_fill_width;
+mod aspect_ratio_flex_row_fill_width_flex;
+mod aspect_ratio_flex_row_stretch_fill_height;
+mod aspect_ratio_flex_row_stretch_fill_max_height;
+mod aspect_ratio_flex_row_stretch_fill_max_width;
+mod aspect_ratio_flex_row_stretch_fill_width;
 mod border_center_child;
 mod border_flex_child;
 mod border_no_child;
@@ -117,10 +157,12 @@ mod border_stretch_child;
 mod child_min_max_width_flexing;
 mod container_with_unsized_child;
 mod display_none;
+mod display_none_absolute_child;
 mod display_none_fixed_size;
 mod display_none_with_child;
 mod display_none_with_margin;
 mod display_none_with_position;
+mod display_none_with_position_absolute;
 mod flex_basis_and_main_dimen_set_when_flexing;
 mod flex_basis_flex_grow_column;
 mod flex_basis_flex_grow_row;
@@ -232,6 +274,10 @@ mod grid_absolute_container_top_right_margin;
 #[cfg(feature = "grid")]
 mod grid_absolute_justify_self_sized_all;
 #[cfg(feature = "grid")]
+mod grid_absolute_layout_within_border;
+#[cfg(feature = "grid")]
+mod grid_absolute_layout_within_border_static;
+#[cfg(feature = "grid")]
 mod grid_absolute_row_end;
 #[cfg(feature = "grid")]
 mod grid_absolute_row_start;
@@ -273,6 +319,36 @@ mod grid_align_items_sized_start;
 mod grid_align_items_sized_stretch;
 #[cfg(feature = "grid")]
 mod grid_align_self_sized_all;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_absolute_aspect_ratio_overrides_height_of_full_inset;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_absolute_fill_height_from_inset;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_absolute_fill_width_from_inset;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_absolute_height_overrides_inset;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_absolute_width_overrides_inset;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_child_fill_content_height;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_child_fill_content_width;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_fill_child_height;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_fill_child_max_height;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_fill_child_max_width;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_fill_child_min_height;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_fill_child_min_width;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_fill_child_width;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_overriden_by_explicit_sizes;
+#[cfg(feature = "grid")]
+mod grid_aspect_ratio_overriden_by_explicit_sizes_flex;
 #[cfg(feature = "grid")]
 mod grid_auto_columns_fixed_width;
 #[cfg(feature = "grid")]

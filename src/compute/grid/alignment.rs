@@ -87,14 +87,17 @@ pub(super) fn align_and_position_item(
     let position = style.position;
     let inset_horizontal = style.inset.horizontal_components().map(|size| size.resolve_to_option(grid_area_size.width));
     let inset_vertical = style.inset.vertical_components().map(|size| size.resolve_to_option(grid_area_size.height));
-    let inherent_size = style.size.maybe_resolve(grid_area_size);
-    let min_size = style.min_size.maybe_resolve(grid_area_size);
-    let max_size = style.max_size.maybe_resolve(grid_area_size);
+    let inherent_size = style.size.maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let min_size = style.min_size.maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let max_size = style.max_size.maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
 
     // Resolve default alignment styles if they are set on neither the parent or the node itself
+    // Note: if the child has a preferred aspect ratio but neither width or height are set, then the width is stretched
+    // and the then height is calculated from the width according the aspect ratio
+    // See: https://www.w3.org/TR/css-grid-1/#grid-item-sizing
     let alignment_styles = InBothAbsAxis {
         horizontal: container_alignment_styles.horizontal.or(justify_self).unwrap_or_else(|| {
-            if inherent_size.width.is_some() || aspect_ratio.is_some() {
+            if inherent_size.width.is_some() {
                 AlignSelf::Start
             } else {
                 AlignSelf::Stretch
@@ -124,11 +127,11 @@ pub(super) fn align_and_position_item(
         // positioned element being set
         if position == Position::Absolute {
             if let (Some(left), Some(right)) = (inset_horizontal.start, inset_horizontal.end) {
-                return Some(f32_max(grid_area_size.width - left - right, 0.0));
+                return Some(f32_max(grid_area_minus_item_margins_size.width - left - right, 0.0));
             }
         }
 
-        // Apply width based on stretch alignment (clamped by max size) if:
+        // Apply width based on stretch alignment if:
         //  - Alignment style is "stretch"
         //  - The node is not absolutely positioned
         //  - The node does not have auto margins in this axis.
@@ -137,19 +140,22 @@ pub(super) fn align_and_position_item(
             && alignment_styles.horizontal == AlignSelf::Stretch
             && position != Position::Absolute
         {
-            return Some(grid_area_minus_item_margins_size.width.maybe_min(max_size.width).maybe_max(min_size.width));
+            return Some(grid_area_minus_item_margins_size.width);
         }
 
         None
     });
-    let height = inherent_size.height.or_else(|| {
+    // Reapply aspect ratio after stretch and absolute position width adjustments
+    let Size { width, height } = Size { width, height: inherent_size.height }.maybe_apply_aspect_ratio(aspect_ratio);
+
+    let height = height.or_else(|| {
         if position == Position::Absolute {
             if let (Some(top), Some(bottom)) = (inset_vertical.start, inset_vertical.end) {
-                return Some(f32_max(grid_area_size.height - top - bottom, 0.0));
+                return Some(f32_max(grid_area_minus_item_margins_size.height - top - bottom, 0.0));
             }
         }
 
-        // Apply height based on stretch alignment (clamped by max size) if:
+        // Apply height based on stretch alignment if:
         //  - Alignment style is "stretch"
         //  - The node is not absolutely positioned
         //  - The node does not have auto margins in this axis.
@@ -158,13 +164,16 @@ pub(super) fn align_and_position_item(
             && alignment_styles.vertical == AlignSelf::Stretch
             && position != Position::Absolute
         {
-            return Some(
-                grid_area_minus_item_margins_size.height.maybe_min(max_size.height).maybe_max(min_size.height),
-            );
+            return Some(grid_area_minus_item_margins_size.height);
         }
 
         None
     });
+    // Reapply aspect ratio after stretch and absolute position height adjustments
+    let Size { width, height } = Size { width, height }.maybe_apply_aspect_ratio(aspect_ratio);
+
+    // Clamp size by min and max width/height
+    let Size { width, height } = Size { width, height }.maybe_clamp(min_size, max_size);
 
     // Layout node
     let measured_size = compute_node_layout(
@@ -177,20 +186,21 @@ pub(super) fn align_and_position_item(
         SizingMode::InherentSize,
     );
 
-    let (x, width) = align_and_size_item_within_area(
+    // Resolve final size
+    let Size { width, height } = Size { width, height }.unwrap_or(measured_size).maybe_clamp(min_size, max_size);
+
+    let x = align_item_within_area(
         Line { start: grid_area.left, end: grid_area.right },
         justify_self.unwrap_or(alignment_styles.horizontal),
         width,
-        measured_size.width,
         position,
         inset_horizontal,
         margin.horizontal_components(),
     );
-    let (y, height) = align_and_size_item_within_area(
+    let y = align_item_within_area(
         Line { start: grid_area.top, end: grid_area.bottom },
         align_self.unwrap_or(alignment_styles.vertical),
         height,
-        measured_size.height,
         position,
         inset_vertical,
         margin.vertical_components(),
@@ -200,19 +210,18 @@ pub(super) fn align_and_position_item(
 }
 
 /// Align and size a grid item along a single axis
-pub(super) fn align_and_size_item_within_area(
+pub(super) fn align_item_within_area(
     grid_area: Line<f32>,
     alignment_style: AlignSelf,
-    style_size: Option<f32>,
-    measured_size: f32,
+    resolved_size: f32,
     position: Position,
     inset: Line<Option<f32>>,
     margin: Line<Option<f32>>,
-) -> (f32, f32) {
+) -> f32 {
     // Calculate grid area dimension in the axis
     let non_auto_margin = Line { start: margin.start.unwrap_or(0.0), end: margin.end.unwrap_or(0.0) };
     let grid_area_size = f32_max(grid_area.end - grid_area.start, 0.0);
-    let free_space = f32_max(grid_area_size - style_size.unwrap_or(measured_size) - non_auto_margin.sum(), 0.0);
+    let free_space = f32_max(grid_area_size - resolved_size - non_auto_margin.sum(), 0.0);
 
     // Expand auto margins to fill available space
     let auto_margin_count = margin.start.is_none() as u8 + margin.end.is_none() as u8;
@@ -220,20 +229,11 @@ pub(super) fn align_and_size_item_within_area(
     let resolved_margin =
         Line { start: margin.start.unwrap_or(auto_margin_size), end: margin.end.unwrap_or(auto_margin_size) };
 
-    // Compute size in the axis
-    let size = style_size.unwrap_or_else(|| {
-        if alignment_style == AlignItems::Stretch && position != Position::Absolute {
-            f32_max(grid_area_size - resolved_margin.sum(), measured_size)
-        } else {
-            measured_size
-        }
-    });
-
     // Compute offset in the axis
     let alignment_based_offset = match alignment_style {
         AlignSelf::Start => resolved_margin.start,
-        AlignSelf::End => grid_area_size - size - resolved_margin.end,
-        AlignSelf::Center => (grid_area_size - size + resolved_margin.start - resolved_margin.end) / 2.0,
+        AlignSelf::End => grid_area_size - resolved_size - resolved_margin.end,
+        AlignSelf::Center => (grid_area_size - resolved_size + resolved_margin.start - resolved_margin.end) / 2.0,
         // TODO: Add support for baseline alignment. For now we treat it as "start".
         AlignSelf::Baseline => resolved_margin.start,
         AlignSelf::Stretch => resolved_margin.start,
@@ -243,7 +243,7 @@ pub(super) fn align_and_size_item_within_area(
         if let Some(start) = inset.start {
             start + non_auto_margin.start
         } else if let Some(end) = inset.end {
-            grid_area_size - end - size - non_auto_margin.end
+            grid_area_size - end - resolved_size - non_auto_margin.end
         } else {
             alignment_based_offset
         }
@@ -256,5 +256,5 @@ pub(super) fn align_and_size_item_within_area(
         start += inset.start.or(inset.end.map(|pos| -pos)).unwrap_or(0.0);
     }
 
-    (start, size)
+    start
 }
