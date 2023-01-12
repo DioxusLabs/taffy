@@ -507,6 +507,14 @@ mod grid_max_content_single_item_margin_fixed;
 #[cfg(feature = "grid")]
 mod grid_max_content_single_item_margin_percent;
 #[cfg(feature = "grid")]
+mod grid_max_content_single_item_span_2;
+#[cfg(feature = "grid")]
+mod grid_max_content_single_item_span_2_gap_fixed;
+#[cfg(feature = "grid")]
+mod grid_max_content_single_item_span_2_gap_percent_definite;
+#[cfg(feature = "grid")]
+mod grid_max_content_single_item_span_2_gap_percent_indefinite;
+#[cfg(feature = "grid")]
 mod grid_min_content_flex_column;
 #[cfg(feature = "grid")]
 mod grid_min_content_flex_row;
@@ -1177,6 +1185,14 @@ fn benchmark(c: &mut Criterion) {
             grid_max_content_single_item_margin_fixed::compute();
             #[cfg(feature = "grid")]
             grid_max_content_single_item_margin_percent::compute();
+            #[cfg(feature = "grid")]
+            grid_max_content_single_item_span_2::compute();
+            #[cfg(feature = "grid")]
+            grid_max_content_single_item_span_2_gap_fixed::compute();
+            #[cfg(feature = "grid")]
+            grid_max_content_single_item_span_2_gap_percent_definite::compute();
+            #[cfg(feature = "grid")]
+            grid_max_content_single_item_span_2_gap_percent_indefinite::compute();
             #[cfg(feature = "grid")]
             grid_min_content_flex_column::compute();
             #[cfg(feature = "grid")]
