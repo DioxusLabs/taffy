@@ -72,6 +72,8 @@ mod absolute_aspect_ratio_fill_width;
 mod absolute_aspect_ratio_fill_width_from_inset;
 mod absolute_aspect_ratio_height_overrides_inset;
 mod absolute_aspect_ratio_width_overrides_inset;
+mod absolute_child_with_cross_margin;
+mod absolute_child_with_main_margin;
 mod absolute_child_with_max_height;
 mod absolute_child_with_max_height_larger_shrinkable_grandchild;
 mod absolute_layout_align_items_and_justify_content_center;
@@ -729,6 +731,8 @@ fn benchmark(c: &mut Criterion) {
             absolute_aspect_ratio_fill_width_from_inset::compute();
             absolute_aspect_ratio_height_overrides_inset::compute();
             absolute_aspect_ratio_width_overrides_inset::compute();
+            absolute_child_with_cross_margin::compute();
+            absolute_child_with_main_margin::compute();
             absolute_child_with_max_height::compute();
             absolute_child_with_max_height_larger_shrinkable_grandchild::compute();
             absolute_layout_align_items_and_justify_content_center::compute();
