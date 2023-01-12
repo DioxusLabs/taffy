@@ -281,7 +281,7 @@ fn compute_preliminary(
 
     // TODO - probably should move this somewhere else as it doesn't make a ton of sense here but we need it below
     // TODO - This is expensive and should only be done if we really require a baseline. aka, make it lazy
-    if has_baseline_child {
+    if has_baseline_child && constants.is_row {
         #[cfg(feature = "debug")]
         NODE_LOGGER.log("calculate_children_base_lines");
         calculate_children_base_lines(tree, node, known_dimensions, available_space, &mut flex_lines, &constants);
@@ -1132,7 +1132,6 @@ fn calculate_cross_size(
                     if child.align_self == AlignSelf::Baseline
                         && child_style.margin.cross_start(constants.dir) != LengthPercentageAuto::Auto
                         && child_style.margin.cross_end(constants.dir) != LengthPercentageAuto::Auto
-                        && child_style.size.cross(constants.dir) == Dimension::Auto
                     {
                         max_baseline - child.baseline + child.hypothetical_outer_size.cross(constants.dir)
                     } else {
