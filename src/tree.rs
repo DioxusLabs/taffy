@@ -3,7 +3,7 @@
 use slotmap::DefaultKey;
 
 use crate::{
-    layout::{Cache, Layout},
+    layout::{Cache, Layout, SizeAndBaselines, SizingMode},
     prelude::*,
 };
 
@@ -48,4 +48,24 @@ pub trait LayoutTree {
 
     /// Get a cache entry for this Node by index
     fn cache_mut(&mut self, node: Node, index: usize) -> &mut Option<Cache>;
+
+    /// Compute the size of the node given the specified constraints
+    fn measure_child_size(
+        &mut self,
+        node: Node,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        sizing_mode: SizingMode,
+    ) -> Size<f32>;
+
+    /// Perform a full layout on the node given the specified constraints
+    fn perform_child_layout(
+        &mut self,
+        node: Node,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        sizing_mode: SizingMode,
+    ) -> SizeAndBaselines;
 }

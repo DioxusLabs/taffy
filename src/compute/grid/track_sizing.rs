@@ -2,7 +2,6 @@
 //! <https://www.w3.org/TR/css-grid-1/#layout-algorithm>
 use super::types::{GridItem, GridTrack, TrackCounts};
 use crate::axis::AbstractAxis;
-use crate::compute::{GenericAlgorithm, LayoutAlgorithm};
 use crate::geometry::Size;
 use crate::layout::SizingMode;
 use crate::math::MaybeMath;
@@ -470,8 +469,7 @@ fn resolve_item_baselines(
 
         // Compute the baselines of all items in the row
         for item in row_items.iter_mut() {
-            let measured_size_and_baselines = GenericAlgorithm::perform_layout(
-                tree,
+            let measured_size_and_baselines = tree.perform_child_layout(
                 item.node,
                 Size::NONE,
                 inner_node_size,

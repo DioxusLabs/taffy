@@ -6,6 +6,7 @@ use slotmap::{DefaultKey, SlotMap, SparseSecondaryMap};
 /// A node in a layout.
 pub type Node = slotmap::DefaultKey;
 
+use crate::compute::{GenericAlgorithm, LayoutAlgorithm};
 use crate::error::{TaffyError, TaffyResult};
 use crate::geometry::Size;
 use crate::layout::{Cache, Layout};
@@ -115,6 +116,28 @@ impl LayoutTree for Taffy {
 
     fn child(&self, node: Node, id: usize) -> Node {
         self.children[node][id]
+    }
+
+    fn measure_child_size(
+        &mut self,
+        node: Node,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        sizing_mode: crate::layout::SizingMode,
+    ) -> Size<f32> {
+        GenericAlgorithm::measure_size(self, node, known_dimensions, parent_size, available_space, sizing_mode)
+    }
+
+    fn perform_child_layout(
+        &mut self,
+        node: Node,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        sizing_mode: crate::layout::SizingMode,
+    ) -> crate::layout::SizeAndBaselines {
+        GenericAlgorithm::perform_layout(self, node, known_dimensions, parent_size, available_space, sizing_mode)
     }
 }
 
