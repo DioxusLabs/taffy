@@ -1,2 +1,3 @@
 [alias]
 gentest = "run --release --package gentest --"
+import-yoga-tests = "run --package import-yoga-tests --"

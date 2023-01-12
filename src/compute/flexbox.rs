@@ -117,6 +117,8 @@ struct AlgoConstants {
     gap: Size<f32>,
     /// The align_items property of this node
     align_items: AlignItems,
+    /// The align_content property of this node
+    align_content: AlignContent,
 
     /// The content-box size of the node being laid out (if known)
     node_inner_size: Size<Option<f32>>,
@@ -293,7 +295,7 @@ fn compute_preliminary(
     // 9. Handle 'align-content: stretch'.
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("handle_align_content_stretch");
-    handle_align_content_stretch(tree, &mut flex_lines, node, known_dimensions, &constants);
+    handle_align_content_stretch(&mut flex_lines, known_dimensions, &constants);
 
     // 10. Collapse visibility:collapse items. If any flex items have visibility: collapse,
     //     note the cross size of the line they’re in as the item’s strut size, and restart
@@ -399,6 +401,7 @@ fn compute_constants(
     let padding = style.padding.resolve_or_zero(parent_size.width);
     let border = style.border.resolve_or_zero(parent_size.width);
     let align_items = style.align_items.unwrap_or(crate::style::AlignItems::Stretch);
+    let align_content = style.align_content.unwrap_or(crate::style::AlignContent::Stretch);
 
     let padding_border = padding + border;
 
@@ -430,6 +433,7 @@ fn compute_constants(
         gap,
         padding_border,
         align_items,
+        align_content,
         node_inner_size,
         container_size,
         inner_container_size,
@@ -1092,7 +1096,15 @@ fn calculate_cross_size(
     node_size: Size<Option<f32>>,
     constants: &AlgoConstants,
 ) {
-    if flex_lines.len() == 1 && node_size.cross(constants.dir).is_some() {
+    // Note: AlignContent::SpaceEvenly and AlignContent::SpaceAround behave like AlignContent::Stretch when there is only
+    // a single flex line in the container. See: https://www.w3.org/TR/css-flexbox-1/#align-content-property
+    if flex_lines.len() == 1
+        && node_size.cross(constants.dir).is_some()
+        && matches!(
+            constants.align_content,
+            AlignContent::Stretch | AlignContent::SpaceEvenly | AlignContent::SpaceAround
+        )
+    {
         flex_lines[0].cross_size =
             (node_size.cross(constants.dir).maybe_sub(constants.padding_border.cross_axis_sum(constants.dir)))
                 .unwrap_or(0.0);
@@ -1139,15 +1151,8 @@ fn calculate_cross_size(
 ///     and the sum of the flex lines' cross sizes is less than the flex container’s inner cross size,
 ///     increase the cross size of each flex line by equal amounts such that the sum of their cross sizes exactly equals the flex container’s inner cross size.
 #[inline]
-fn handle_align_content_stretch(
-    tree: &mut impl LayoutTree,
-    flex_lines: &mut [FlexLine],
-    node: Node,
-    node_size: Size<Option<f32>>,
-    constants: &AlgoConstants,
-) {
-    let align_content = tree.style(node).align_content.unwrap_or(AlignContent::Stretch);
-    if align_content == AlignContent::Stretch && node_size.cross(constants.dir).is_some() {
+fn handle_align_content_stretch(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>>, constants: &AlgoConstants) {
+    if constants.align_content == AlignContent::Stretch && node_size.cross(constants.dir).is_some() {
         let total_cross_axis_gap = sum_axis_gaps(constants.gap.cross(constants.dir), flex_lines.len());
         let total_cross: f32 = flex_lines.iter().map(|line| line.cross_size).sum::<f32>() + total_cross_axis_gap;
         let inner_cross =

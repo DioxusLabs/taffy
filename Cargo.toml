@@ -59,4 +59,4 @@ path = "benches/big_tree.rs"
 harness = false
 
 [workspace]
-members = ["scripts/gentest"]
+members = ["scripts/gentest", "scripts/import-yoga-tests"]

@@ -36,6 +36,8 @@ Once you have chromedriver installed and available in `PATH` you can re-generate
 
 To add a new test case add another HTML file to `/test_fixtures` following the current tests as a template for new tests.
 
+**Note: test fixtures (HTML files in the `text_fixtures` directory) that begin with an "x" are considered disabled, and the test generation script will not generate a test for them (and as the test generation script overwrites the entire directory when generating tests, this means that prefixing an existing test with an "x" and then running the test generation script will delete that test)**
+
 ### Writing tests
 
 1. All tests should be wrapped in a module called `tests` gated by the standard `test` feature flag, to ensure they are not compiled unless tests are being run.
