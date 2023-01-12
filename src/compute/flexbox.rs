@@ -1013,12 +1013,12 @@ fn calculate_children_base_lines(
     constants: &AlgoConstants,
 ) {
     /// Recursively calculates the baseline for children
-    fn calc_baseline(db: &impl LayoutTree, node: Node, layout: &Layout) -> f32 {
+    fn calc_baseline(db: &impl LayoutTree, node: Node, layout: &Layout, offset: f32) -> f32 {
         if let Some(first_child) = db.children(node).next() {
             let layout = db.layout(*first_child);
-            calc_baseline(db, *first_child, layout)
+            calc_baseline(db, *first_child, layout, offset + layout.location.y)
         } else {
-            layout.size.height
+            layout.size.height + offset
         }
     }
 
@@ -1062,8 +1062,9 @@ fn calculate_children_base_lines(
                 &Layout {
                     order: tree.children(node).position(|n| *n == child.node).unwrap() as u32,
                     size: preliminary_size,
-                    location: Point::zero(),
+                    location: Point { x: child.margin.left, y: child.margin.top },
                 },
+                child.margin.top,
             );
         }
     }
