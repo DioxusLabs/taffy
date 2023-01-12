@@ -1024,6 +1024,12 @@ fn calculate_children_base_lines(
 
     for line in flex_lines {
         for child in line.items.iter_mut() {
+
+            // Only calculate baselines for children participating in baseline alignment
+            if child.align_self != AlignSelf::Baseline {
+                continue;
+            }
+
             let preliminary_size = compute_node_layout(
                 tree,
                 child.node,
@@ -1066,6 +1072,8 @@ fn calculate_children_base_lines(
                 },
                 child.margin.top,
             );
+
+            dbg!(child.baseline);
         }
     }
 }
@@ -1129,16 +1137,21 @@ fn calculate_cross_size(
                 .iter()
                 .map(|child| {
                     let child_style = tree.style(child.node);
+                    dbg!(child.align_self);
                     if child.align_self == AlignSelf::Baseline
                         && child_style.margin.cross_start(constants.dir) != LengthPercentageAuto::Auto
                         && child_style.margin.cross_end(constants.dir) != LengthPercentageAuto::Auto
                     {
+                        dbg!(max_baseline);
+                        dbg!(child.baseline);
+                        dbg!(child.hypothetical_outer_size.cross(constants.dir));
                         max_baseline - child.baseline + child.hypothetical_outer_size.cross(constants.dir)
                     } else {
                         child.hypothetical_outer_size.cross(constants.dir)
                     }
                 })
                 .fold(0.0, |acc, x| acc.max(x));
+            dbg!(line.cross_size);
         }
     }
 }

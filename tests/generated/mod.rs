@@ -109,6 +109,8 @@ mod align_baseline_child;
 mod align_baseline_child_margin;
 mod align_baseline_child_margin_percent;
 mod align_baseline_child_multiline;
+mod align_baseline_child_multiline_no_override_on_secondline;
+mod align_baseline_child_multiline_override;
 mod align_baseline_child_padding;
 mod align_baseline_child_top;
 mod align_baseline_child_top2;
