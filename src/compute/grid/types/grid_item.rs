@@ -4,7 +4,7 @@ use crate::axis::AbstractAxis;
 use crate::compute::grid::OriginZeroLine;
 use crate::compute::{GenericAlgorithm, LayoutAlgorithm};
 use crate::geometry::{Line, Rect, Size};
-use crate::layout::{SizingMode};
+use crate::layout::SizingMode;
 use crate::node::Node;
 use crate::prelude::LayoutTree;
 use crate::resolve::MaybeResolve;

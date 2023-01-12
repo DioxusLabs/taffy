@@ -216,7 +216,6 @@ fn compute_preliminary(
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
 ) -> SizeAndBaselines {
-
     // Define some general constants we will need for the remainder of the algorithm.
     let mut constants = compute_constants(tree.style(node), known_dimensions, parent_size);
 
@@ -235,8 +234,6 @@ fn compute_preliminary(
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("determine_available_space");
     let available_space = determine_available_space(known_dimensions, available_space, &constants);
-
-    let has_baseline_child = flex_items.iter().any(|child| child.align_self == AlignSelf::Baseline);
 
     // 3. Determine the flex base size and hypothetical main size of each item.
     #[cfg(feature = "debug")]
@@ -309,13 +306,11 @@ fn compute_preliminary(
         determine_hypothetical_cross_size(tree, line, &constants, available_space);
     }
 
-    // TODO - probably should move this somewhere else as it doesn't make a ton of sense here but we need it below
-    // TODO - This is expensive and should only be done if we really require a baseline. aka, make it lazy
-    if has_baseline_child && constants.is_row {
-        #[cfg(feature = "debug")]
-        NODE_LOGGER.log("calculate_children_base_lines");
-        calculate_children_base_lines(tree, known_dimensions, available_space, &mut flex_lines, &constants);
-    }
+    // Calculate child baselines. This function is internally smart and only computes child baselines
+    // if they are necessary.
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.log("calculate_children_base_lines");
+    calculate_children_base_lines(tree, known_dimensions, available_space, &mut flex_lines, &constants);
 
     // 8. Calculate the cross size of each flex line.
     #[cfg(feature = "debug")]
@@ -1052,7 +1047,21 @@ fn calculate_children_base_lines(
     flex_lines: &mut [FlexLine],
     constants: &AlgoConstants,
 ) {
+    // Only compute baselines for flex rows because we only support baseline alignment in the cross axis
+    // where that axis is also the inline axis
+    // TODO: this may need revisiting if/when we support vertical writing modes
+    if !constants.is_row {
+        return;
+    }
+
     for line in flex_lines {
+        // If a flex line has one or zero items participating in baseline alignment then baseline alignment is a no-op so we skip
+        let line_baseline_child_count =
+            line.items.iter().filter(|child| child.align_self == AlignSelf::Baseline).count();
+        if line_baseline_child_count <= 1 {
+            continue;
+        }
+
         for child in line.items.iter_mut() {
             // Only calculate baselines for children participating in baseline alignment
             if child.align_self != AlignSelf::Baseline {
@@ -1090,9 +1099,10 @@ fn calculate_children_base_lines(
                 SizingMode::ContentSize,
             );
 
-            child.baseline =
-                measured_size_and_baselines.first_baselines.y.unwrap_or(measured_size_and_baselines.size.height)
-                    + child.margin.top;
+            let baseline = measured_size_and_baselines.first_baselines.y;
+            let height = measured_size_and_baselines.size.height;
+
+            child.baseline = baseline.unwrap_or(height) + child.margin.top;
         }
     }
 }
