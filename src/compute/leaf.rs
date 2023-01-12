@@ -1,7 +1,8 @@
 //! Computes size using styles and measure functions
 
-use crate::geometry::Size;
-use crate::layout::{RunMode, SizingMode};
+use crate::compute::LayoutAlgorithm;
+use crate::geometry::{Point, Size};
+use crate::layout::{SizeAndBaselines, SizingMode};
 use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
@@ -12,16 +13,43 @@ use crate::tree::LayoutTree;
 #[cfg(feature = "debug")]
 use crate::debug::NODE_LOGGER;
 
+/// The public interface to Taffy's Lead node algorithm implementation
+pub(crate) struct LeafAlgorithm;
+impl LayoutAlgorithm for LeafAlgorithm {
+    const NAME: &'static str = "LEAF";
+
+    fn perform_layout(
+        tree: &mut impl LayoutTree,
+        node: Node,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        sizing_mode: SizingMode,
+    ) -> SizeAndBaselines {
+        compute_generic(tree, node, known_dimensions, parent_size, available_space, sizing_mode)
+    }
+
+    fn measure_size(
+        tree: &mut impl LayoutTree,
+        node: Node,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        sizing_mode: SizingMode,
+    ) -> Size<f32> {
+        compute_generic(tree, node, known_dimensions, parent_size, available_space, sizing_mode).size
+    }
+}
+
 /// Compute the size of a leaf node (node with no children)
-pub(crate) fn compute(
+pub(crate) fn compute_generic(
     tree: &mut impl LayoutTree,
     node: Node,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
-    _run_mode: RunMode,
     sizing_mode: SizingMode,
-) -> Size<f32> {
+) -> SizeAndBaselines {
     let style = tree.style(node);
 
     // Resolve node's preferred/min/max sizes (width/heights) against the available space (percentages resolve to pixel values)
@@ -55,7 +83,8 @@ pub(crate) fn compute(
 
     // Return early if both width and height are known
     if let Size { width: Some(width), height: Some(height) } = node_size {
-        return Size { width, height }.maybe_clamp(node_min_size, node_max_size);
+        let size = Size { width, height }.maybe_clamp(node_min_size, node_max_size);
+        return SizeAndBaselines { size, first_baselines: Point::NONE };
     };
 
     if tree.needs_measure(node) {
@@ -81,7 +110,8 @@ pub(crate) fn compute(
             height: f32_max(measured_size.height, aspect_ratio.map(|ratio| measured_size.width / ratio).unwrap_or(0.0)),
         };
 
-        return node_size.unwrap_or(measured_size).maybe_clamp(node_min_size, node_max_size);
+        let size = node_size.unwrap_or(measured_size).maybe_clamp(node_min_size, node_max_size);
+        return SizeAndBaselines { size, first_baselines: Point::NONE };
     }
 
     // Note: both horizontal and vertical percentage padding/borders are resolved against the container's inline size (i.e. width).
@@ -89,7 +119,7 @@ pub(crate) fn compute(
     let padding = style.padding.resolve_or_zero(parent_size.width);
     let border = style.border.resolve_or_zero(parent_size.width);
 
-    Size {
+    let size = Size {
         width: node_size
             .width
             // .unwrap_or(0.0) + padding.horizontal_axis_sum() + border.horizontal_axis_sum(), // content-box
@@ -100,5 +130,6 @@ pub(crate) fn compute(
             // .unwrap_or(0.0) + padding.vertical_axis_sum() + border.vertical_axis_sum(), // content-box
             .unwrap_or(0.0 + padding.vertical_axis_sum() + border.vertical_axis_sum()) // border-box
             .maybe_clamp(node_min_size.height, node_max_size.height),
-    }
+    };
+    SizeAndBaselines { size, first_baselines: Point::NONE }
 }

@@ -2,9 +2,9 @@
 use super::types::GridTrack;
 use crate::axis::InBothAbsAxis;
 use crate::compute::common::alignment::compute_alignment_offset;
-use crate::compute::compute_node_layout;
+use crate::compute::{GenericAlgorithm, LayoutAlgorithm};
 use crate::geometry::{Line, Point, Rect, Size};
-use crate::layout::{Layout, RunMode, SizingMode};
+use crate::layout::{Layout, SizingMode};
 use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::resolve::MaybeResolve;
@@ -176,18 +176,18 @@ pub(super) fn align_and_position_item(
     let Size { width, height } = Size { width, height }.maybe_clamp(min_size, max_size);
 
     // Layout node
-    let measured_size = compute_node_layout(
+    let measured_size_and_baselines = GenericAlgorithm::perform_layout(
         tree,
         node,
         Size { width, height },
         grid_area_size.map(Option::Some),
         grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
-        RunMode::PeformLayout,
         SizingMode::InherentSize,
     );
 
     // Resolve final size
-    let Size { width, height } = Size { width, height }.unwrap_or(measured_size).maybe_clamp(min_size, max_size);
+    let Size { width, height } =
+        Size { width, height }.unwrap_or(measured_size_and_baselines.size).maybe_clamp(min_size, max_size);
 
     let x = align_item_within_area(
         Line { start: grid_area.left, end: grid_area.right },

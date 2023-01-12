@@ -22,8 +22,17 @@ pub enum SizingMode {
     InherentSize,
 }
 
+/// A struct containing both the size of a node and it's first baseline in each dimension (if it has any)
+#[derive(Debug, Copy, Clone)]
+pub struct SizeAndBaselines {
+    /// The size of the node
+    pub size: Size<f32>,
+    /// The first baseline of the node in each dimension
+    pub first_baselines: Point<Option<f32>>,
+}
+
 /// The final result of a layout algorithm for a single [`Node`](crate::node::Node).
-#[derive(Copy, Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct Layout {
     /// The relative ordering of the node
     ///
@@ -67,6 +76,6 @@ pub struct Cache {
     /// Whether or not layout should be recomputed
     pub(crate) run_mode: RunMode,
 
-    /// The cached size of the item
-    pub(crate) cached_size: Size<f32>,
+    /// The cached size and baselines of the item
+    pub(crate) cached_size_and_baselines: SizeAndBaselines,
 }

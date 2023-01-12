@@ -441,7 +441,12 @@ pub struct Point<T> {
 
 impl Point<f32> {
     /// A [`Point`] with values (0,0), representing the origin
-    pub const ZERO: Point<f32> = Self { x: 0.0, y: 0.0 };
+    pub const ZERO: Self = Self { x: 0.0, y: 0.0 };
+}
+
+impl Point<Option<f32>> {
+    /// A [`Point`] with values (None, None)
+    pub const NONE: Self = Self { x: None, y: None };
 }
 
 /// Generic struct which holds a "min" value and a "max" value

@@ -10,11 +10,15 @@ pub(crate) mod grid;
 use crate::data::CACHE_SIZE;
 use crate::error::TaffyError;
 use crate::geometry::{Point, Size};
-use crate::layout::{Cache, Layout, RunMode, SizingMode};
+use crate::layout::{Cache, Layout, RunMode, SizeAndBaselines, SizingMode};
 use crate::node::Node;
 use crate::style::{AvailableSpace, Display};
 use crate::sys::round;
 use crate::tree::LayoutTree;
+
+use self::flexbox::FlexboxAlgorithm;
+use self::grid::CssGridAlgorithm;
+use self::leaf::LeafAlgorithm;
 
 #[cfg(feature = "debug")]
 use crate::debug::NODE_LOGGER;
@@ -26,17 +30,16 @@ pub fn compute_layout(
     available_space: Size<AvailableSpace>,
 ) -> Result<(), TaffyError> {
     // Recursively compute node layout
-    let size = compute_node_layout(
+    let size_and_baselines = GenericAlgorithm::perform_layout(
         tree,
         root,
         Size::NONE,
         available_space.into_options(),
         available_space,
-        RunMode::PeformLayout,
         SizingMode::InherentSize,
     );
 
-    let layout = Layout { order: 0, size, location: Point::ZERO };
+    let layout = Layout { order: 0, size: size_and_baselines.size, location: Point::ZERO };
     *tree.layout_mut(root) = layout;
 
     // Recursively round the layout's of this node and all children
@@ -45,8 +48,81 @@ pub fn compute_layout(
     Ok(())
 }
 
+/// A common interface that all Taffy layout algorithms conform to
+pub(crate) trait LayoutAlgorithm {
+
+    /// The name of the algorithm (mainly used for debug purposes)
+    const NAME: &'static str;
+
+    /// Compute the size of the node given the specified constraints
+    fn measure_size(
+        tree: &mut impl LayoutTree,
+        node: Node,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        sizing_mode: SizingMode,
+    ) -> Size<f32>;
+
+    /// Perform a full layout on the node given the specified constraints
+    fn perform_layout(
+        tree: &mut impl LayoutTree,
+        node: Node,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        sizing_mode: SizingMode,
+    ) -> SizeAndBaselines;
+}
+
+/// The public interface to a generic algorithm that abstracts over all of Taffy's algorithms
+/// and applies the correct one based on the `Display` style
+pub struct GenericAlgorithm;
+impl LayoutAlgorithm for GenericAlgorithm {
+    const NAME: &'static str = "GENERIC";
+
+    fn perform_layout(
+        tree: &mut impl LayoutTree,
+        node: Node,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        sizing_mode: SizingMode,
+    ) -> SizeAndBaselines {
+        compute_node_generic(
+            tree,
+            node,
+            known_dimensions,
+            parent_size,
+            available_space,
+            RunMode::PeformLayout,
+            sizing_mode,
+        )
+    }
+
+    fn measure_size(
+        tree: &mut impl LayoutTree,
+        node: Node,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        sizing_mode: SizingMode,
+    ) -> Size<f32> {
+        compute_node_generic(
+            tree,
+            node,
+            known_dimensions,
+            parent_size,
+            available_space,
+            RunMode::ComputeSize,
+            sizing_mode,
+        )
+        .size
+    }
+}
+
 /// Updates the stored layout of the provided `node` and its children
-fn compute_node_layout(
+fn compute_node_generic(
     tree: &mut impl LayoutTree,
     node: Node,
     known_dimensions: Size<Option<f32>>,
@@ -54,7 +130,7 @@ fn compute_node_layout(
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
     sizing_mode: SizingMode,
-) -> Size<f32> {
+) -> SizeAndBaselines {
     #[cfg(feature = "debug")]
     NODE_LOGGER.push_node(node);
     #[cfg(feature = "debug")]
@@ -62,69 +138,121 @@ fn compute_node_layout(
 
     // First we check if we have a cached result for the given input
     let cache_run_mode = if tree.is_childless(node) { RunMode::PeformLayout } else { run_mode };
-    if let Some(cached_size) =
+    if let Some(cached_size_and_baselines) =
         compute_from_cache(tree, node, known_dimensions, available_space, cache_run_mode, sizing_mode)
     {
         #[cfg(feature = "debug")]
-        NODE_LOGGER.labelled_debug_log("CACHE", cached_size);
+        NODE_LOGGER.labelled_debug_log("CACHE", cached_size_and_baselines.size);
         #[cfg(feature = "debug")]
-        NODE_LOGGER.labelled_debug_log("run_mode", run_mode);
-        #[cfg(feature = "debug")]
-        NODE_LOGGER.labelled_debug_log("sizing_mode", sizing_mode);
-        #[cfg(feature = "debug")]
-        NODE_LOGGER.labelled_debug_log("known_dimensions", known_dimensions);
-        #[cfg(feature = "debug")]
-        NODE_LOGGER.labelled_debug_log("available_space", available_space);
+        debug_log_node(known_dimensions, parent_size, available_space, run_mode, sizing_mode);
         #[cfg(feature = "debug")]
         NODE_LOGGER.pop_node();
-        return cached_size;
+        return cached_size_and_baselines;
     }
 
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("COMPUTE");
     #[cfg(feature = "debug")]
-    NODE_LOGGER.labelled_debug_log("run_mode", run_mode);
-    #[cfg(feature = "debug")]
-    NODE_LOGGER.labelled_debug_log("sizing_mode", sizing_mode);
-    #[cfg(feature = "debug")]
-    NODE_LOGGER.labelled_debug_log("known_dimensions", known_dimensions);
-    #[cfg(feature = "debug")]
-    NODE_LOGGER.labelled_debug_log("available_space", available_space);
+    debug_log_node(known_dimensions, parent_size, available_space, run_mode, sizing_mode);
 
-    // If this is a leaf node we can skip a lot of this function in some cases
-    let computed_size = if tree.is_childless(node) {
+    /// Inlined function generic over the LayoutAlgorithm to reduce code duplication
+    #[inline(always)]
+    fn perform_computations<Algorithm: LayoutAlgorithm>(
+        tree: &mut impl LayoutTree,
+        node: Node,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        run_mode: RunMode,
+        sizing_mode: SizingMode,
+    ) -> SizeAndBaselines {
         #[cfg(feature = "debug")]
-        NODE_LOGGER.log("Algo: leaf");
-        self::leaf::compute(tree, node, known_dimensions, parent_size, available_space, run_mode, sizing_mode)
+        NODE_LOGGER.log(Algorithm::NAME);
+
+        match run_mode {
+            RunMode::PeformLayout => {
+                Algorithm::perform_layout(tree, node, known_dimensions, parent_size, available_space, sizing_mode)
+            }
+            RunMode::ComputeSize => {
+                let size =
+                    Algorithm::measure_size(tree, node, known_dimensions, parent_size, available_space, sizing_mode);
+                SizeAndBaselines { size, first_baselines: Point::NONE }
+            }
+        }
+    }
+
+    let computed_size_and_baselines = if tree.is_childless(node) {
+        perform_computations::<LeafAlgorithm>(
+            tree,
+            node,
+            known_dimensions,
+            parent_size,
+            available_space,
+            run_mode,
+            sizing_mode,
+        )
     } else {
-        // println!("match {:?}", tree.style(node).display);
         match tree.style(node).display {
-            Display::Flex => {
-                #[cfg(feature = "debug")]
-                NODE_LOGGER.log("Algo: flexbox");
-                self::flexbox::compute(tree, node, known_dimensions, parent_size, available_space, run_mode)
-            }
+            Display::Flex => perform_computations::<FlexboxAlgorithm>(
+                tree,
+                node,
+                known_dimensions,
+                parent_size,
+                available_space,
+                run_mode,
+                sizing_mode,
+            ),
             #[cfg(feature = "grid")]
-            Display::Grid => self::grid::compute(tree, node, known_dimensions, parent_size, available_space),
-            Display::None => {
-                #[cfg(feature = "debug")]
-                NODE_LOGGER.log("Algo: none");
-                perform_hidden_layout(tree, node)
-            }
+            Display::Grid => perform_computations::<CssGridAlgorithm>(
+                tree,
+                node,
+                known_dimensions,
+                parent_size,
+                available_space,
+                run_mode,
+                sizing_mode,
+            ),
+            Display::None => perform_computations::<HiddenAlgorithm>(
+                tree,
+                node,
+                known_dimensions,
+                parent_size,
+                available_space,
+                run_mode,
+                sizing_mode,
+            ),
         }
     };
 
     // Cache result
     let cache_slot = compute_cache_slot(known_dimensions, available_space);
-    *tree.cache_mut(node, cache_slot) =
-        Some(Cache { known_dimensions, available_space, run_mode: cache_run_mode, cached_size: computed_size });
+    *tree.cache_mut(node, cache_slot) = Some(Cache {
+        known_dimensions,
+        available_space,
+        run_mode: cache_run_mode,
+        cached_size_and_baselines: computed_size_and_baselines,
+    });
 
     #[cfg(feature = "debug")]
-    NODE_LOGGER.labelled_debug_log("RESULT", computed_size);
+    NODE_LOGGER.labelled_debug_log("RESULT", computed_size_and_baselines.size);
     #[cfg(feature = "debug")]
     NODE_LOGGER.pop_node();
 
-    computed_size
+    computed_size_and_baselines
+}
+
+#[cfg(feature = "debug")]
+fn debug_log_node(
+    known_dimensions: Size<Option<f32>>,
+    parent_size: Size<Option<f32>>,
+    available_space: Size<AvailableSpace>,
+    run_mode: RunMode,
+    sizing_mode: SizingMode,
+) {
+    NODE_LOGGER.labelled_debug_log("run_mode", run_mode);
+    NODE_LOGGER.labelled_debug_log("sizing_mode", sizing_mode);
+    NODE_LOGGER.labelled_debug_log("known_dimensions", known_dimensions);
+    NODE_LOGGER.labelled_debug_log("available_space", available_space);
 }
 
 /// Return the cache slot to cache the current computed result in
@@ -180,7 +308,7 @@ fn compute_from_cache(
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
     sizing_mode: SizingMode,
-) -> Option<Size<f32>> {
+) -> Option<SizeAndBaselines> {
     for idx in 0..CACHE_SIZE {
         let entry = tree.cache_mut(node, idx);
         if let Some(entry) = entry {
@@ -189,22 +317,24 @@ fn compute_from_cache(
                 return None;
             }
 
+            let cached_size = entry.cached_size_and_baselines.size;
+
             if (known_dimensions.width == entry.known_dimensions.width
-                || known_dimensions.width == Some(entry.cached_size.width))
+                || known_dimensions.width == Some(cached_size.width))
                 && (known_dimensions.height == entry.known_dimensions.height
-                    || known_dimensions.height == Some(entry.cached_size.height))
+                    || known_dimensions.height == Some(cached_size.height))
                 && (known_dimensions.width.is_some()
                     || entry.available_space.width.is_roughly_equal(available_space.width)
                     || (sizing_mode == SizingMode::ContentSize
                         && available_space.width.is_definite()
-                        && available_space.width.unwrap() >= entry.cached_size.width))
+                        && available_space.width.unwrap() >= cached_size.width))
                 && (known_dimensions.height.is_some()
                     || entry.available_space.height.is_roughly_equal(available_space.height)
                     || (sizing_mode == SizingMode::ContentSize
                         && available_space.height.is_definite()
-                        && available_space.height.unwrap() >= entry.cached_size.height))
+                        && available_space.height.unwrap() >= cached_size.height))
             {
-                return Some(entry.cached_size);
+                return Some(entry.cached_size_and_baselines);
             }
         }
     }
@@ -212,9 +342,38 @@ fn compute_from_cache(
     None
 }
 
+/// The public interface to Taffy's hidden node algorithm implementation
+struct HiddenAlgorithm;
+impl LayoutAlgorithm for HiddenAlgorithm {
+    const NAME: &'static str = "NONE";
+
+    fn perform_layout(
+        tree: &mut impl LayoutTree,
+        node: Node,
+        _known_dimensions: Size<Option<f32>>,
+        _parent_size: Size<Option<f32>>,
+        _available_space: Size<AvailableSpace>,
+        _sizing_mode: SizingMode,
+    ) -> SizeAndBaselines {
+        perform_hidden_layout(tree, node);
+        SizeAndBaselines { size: Size::ZERO, first_baselines: Point::NONE }
+    }
+
+    fn measure_size(
+        _tree: &mut impl LayoutTree,
+        _node: Node,
+        _known_dimensions: Size<Option<f32>>,
+        _parent_size: Size<Option<f32>>,
+        _available_space: Size<AvailableSpace>,
+        _sizing_mode: SizingMode,
+    ) -> Size<f32> {
+        Size::ZERO
+    }
+}
+
 /// Creates a layout for this node and its children, recursively.
 /// Each hidden node has zero size and is placed at the origin
-fn perform_hidden_layout(tree: &mut impl LayoutTree, node: Node) -> Size<f32> {
+fn perform_hidden_layout(tree: &mut impl LayoutTree, node: Node) {
     /// Recursive function to apply hidden layout to all descendents
     fn perform_hidden_layout_inner(tree: &mut impl LayoutTree, node: Node, order: u32) {
         *tree.layout_mut(node) = Layout::with_order(order);
@@ -226,8 +385,6 @@ fn perform_hidden_layout(tree: &mut impl LayoutTree, node: Node) -> Size<f32> {
     for order in 0..tree.child_count(node) {
         perform_hidden_layout_inner(tree, tree.child(node, order), order as _);
     }
-
-    Size::ZERO
 }
 
 /// Rounds the calculated [`NodeData`] according to the spec

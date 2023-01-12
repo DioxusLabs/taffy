@@ -4,9 +4,9 @@
 use core::f32;
 
 use crate::compute::common::alignment::compute_alignment_offset;
-use crate::compute::compute_node_layout;
+use crate::compute::{GenericAlgorithm, LayoutAlgorithm};
 use crate::geometry::{Point, Rect, Size};
-use crate::layout::{Layout, RunMode, SizingMode};
+use crate::layout::{Layout, RunMode, SizeAndBaselines, SizingMode};
 use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::prelude::{TaffyMaxContent, TaffyMinContent};
@@ -22,6 +22,34 @@ use crate::tree::LayoutTree;
 
 #[cfg(feature = "debug")]
 use crate::debug::NODE_LOGGER;
+
+/// The public interface to Taffy's Flexbox algorithm implementation
+pub(crate) struct FlexboxAlgorithm;
+impl LayoutAlgorithm for FlexboxAlgorithm {
+    const NAME: &'static str = "FLEXBOX";
+
+    fn perform_layout(
+        tree: &mut impl LayoutTree,
+        node: Node,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        _sizing_mode: SizingMode,
+    ) -> SizeAndBaselines {
+        compute_generic(tree, node, known_dimensions, parent_size, available_space, RunMode::PeformLayout)
+    }
+
+    fn measure_size(
+        tree: &mut impl LayoutTree,
+        node: Node,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        _sizing_mode: SizingMode,
+    ) -> Size<f32> {
+        compute_generic(tree, node, known_dimensions, parent_size, available_space, RunMode::ComputeSize).size
+    }
+}
 
 /// The intermediate results of a flexbox calculation for a single item
 struct FlexItem {
@@ -130,14 +158,14 @@ struct AlgoConstants {
 }
 
 /// Computes the layout of [`LayoutTree`] according to the flexbox algorithm
-pub fn compute(
+pub fn compute_generic(
     tree: &mut impl LayoutTree,
     node: Node,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
-) -> Size<f32> {
+) -> SizeAndBaselines {
     let style = tree.style(node);
     let has_min_max_sizes = style.min_size.width.is_defined()
         || style.min_size.height.is_defined()
@@ -159,7 +187,8 @@ pub fn compute(
             parent_size,
             available_space,
             RunMode::ComputeSize,
-        );
+        )
+        .size;
 
         let clamped_first_pass_size = first_pass.maybe_clamp(min_size, max_size);
 
@@ -186,7 +215,8 @@ fn compute_preliminary(
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
-) -> Size<f32> {
+) -> SizeAndBaselines {
+
     // Define some general constants we will need for the remainder of the algorithm.
     let mut constants = compute_constants(tree.style(node), known_dimensions, parent_size);
 
@@ -284,7 +314,7 @@ fn compute_preliminary(
     if has_baseline_child && constants.is_row {
         #[cfg(feature = "debug")]
         NODE_LOGGER.log("calculate_children_base_lines");
-        calculate_children_base_lines(tree, node, known_dimensions, available_space, &mut flex_lines, &constants);
+        calculate_children_base_lines(tree, known_dimensions, available_space, &mut flex_lines, &constants);
     }
 
     // 8. Calculate the cross size of each flex line.
@@ -339,8 +369,7 @@ fn compute_preliminary(
     // We have the container size.
     // If our caller does not care about performing layout we are done now.
     if run_mode == RunMode::ComputeSize {
-        let container_size = constants.container_size;
-        return container_size;
+        return SizeAndBaselines { size: constants.container_size, first_baselines: Point::NONE };
     }
 
     // 16. Align all flex lines per align-content.
@@ -365,19 +394,34 @@ fn compute_preliminary(
         let child = tree.child(node, order);
         if tree.style(child).display == Display::None {
             *tree.layout_mut(node) = Layout::with_order(order as u32);
-            compute_node_layout(
+            GenericAlgorithm::measure_size(
                 tree,
                 child,
                 Size::NONE,
                 Size::NONE,
                 Size::MAX_CONTENT,
-                RunMode::PeformLayout,
                 SizingMode::InherentSize,
             );
         }
     }
 
-    constants.container_size
+    // 8.5. Flex Container Baselines: calculate the flex container's first baseline
+    // See https://www.w3.org/TR/css-flexbox-1/#flex-baselines
+    let first_vertical_baseline = if flex_lines.is_empty() {
+        None
+    } else {
+        flex_lines[0]
+            .items
+            .iter()
+            .find(|item| constants.is_column || item.align_self == AlignSelf::Baseline)
+            .or_else(|| flex_lines[0].items.iter().next())
+            .map(|child| {
+                let offset_vertical = if constants.is_row { child.offset_cross } else { child.offset_main };
+                offset_vertical + child.baseline
+            })
+    };
+
+    SizeAndBaselines { size: constants.container_size, first_baselines: Point { x: None, y: first_vertical_baseline } }
 }
 
 /// Compute constants that can be reused during the flexbox algorithm.
@@ -617,13 +661,12 @@ fn determine_flex_base_size(
             ckd
         };
 
-        child.flex_basis = compute_node_layout(
+        child.flex_basis = GenericAlgorithm::measure_size(
             tree,
             child.node,
             child_known_dimensions,
             constants.node_inner_size,
             available_space,
-            RunMode::ComputeSize,
             SizingMode::ContentSize,
         )
         .main(constants.dir);
@@ -636,13 +679,12 @@ fn determine_flex_base_size(
         child.inner_flex_basis =
             child.flex_basis - child.padding.main_axis_sum(constants.dir) - child.border.main_axis_sum(constants.dir);
 
-        let min_content_size = compute_node_layout(
+        let min_content_size = GenericAlgorithm::measure_size(
             tree,
             child.node,
             Size::NONE,
             constants.node_inner_size,
             Size::MIN_CONTENT,
-            RunMode::ComputeSize,
             SizingMode::ContentSize,
         );
 
@@ -968,7 +1010,7 @@ fn determine_hypothetical_cross_size(
 
         child.hypothetical_inner_size.set_cross(
             constants.dir,
-            compute_node_layout(
+            GenericAlgorithm::measure_size(
                 tree,
                 child.node,
                 Size {
@@ -988,7 +1030,6 @@ fn determine_hypothetical_cross_size(
                         constants.container_size.main(constants.dir).into()
                     },
                 },
-                RunMode::ComputeSize,
                 SizingMode::ContentSize,
             )
             .cross(constants.dir)
@@ -1006,31 +1047,19 @@ fn determine_hypothetical_cross_size(
 #[inline]
 fn calculate_children_base_lines(
     tree: &mut impl LayoutTree,
-    node: Node,
     node_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     flex_lines: &mut [FlexLine],
     constants: &AlgoConstants,
 ) {
-    /// Recursively calculates the baseline for children
-    fn calc_baseline(db: &impl LayoutTree, node: Node, layout: &Layout, offset: f32) -> f32 {
-        if let Some(first_child) = db.children(node).next() {
-            let layout = db.layout(*first_child);
-            calc_baseline(db, *first_child, layout, offset + layout.location.y)
-        } else {
-            layout.size.height + offset
-        }
-    }
-
     for line in flex_lines {
         for child in line.items.iter_mut() {
-
             // Only calculate baselines for children participating in baseline alignment
             if child.align_self != AlignSelf::Baseline {
                 continue;
             }
 
-            let preliminary_size = compute_node_layout(
+            let measured_size_and_baselines = GenericAlgorithm::perform_layout(
                 tree,
                 child.node,
                 Size {
@@ -1058,22 +1087,12 @@ fn calculate_children_base_lines(
                         constants.container_size.height.into()
                     },
                 },
-                RunMode::PeformLayout,
                 SizingMode::ContentSize,
             );
 
-            child.baseline = calc_baseline(
-                tree,
-                child.node,
-                &Layout {
-                    order: tree.children(node).position(|n| *n == child.node).unwrap() as u32,
-                    size: preliminary_size,
-                    location: Point { x: child.margin.left, y: child.margin.top },
-                },
-                child.margin.top,
-            );
-
-            dbg!(child.baseline);
+            child.baseline =
+                measured_size_and_baselines.first_baselines.y.unwrap_or(measured_size_and_baselines.size.height)
+                    + child.margin.top;
         }
     }
 }
@@ -1137,21 +1156,16 @@ fn calculate_cross_size(
                 .iter()
                 .map(|child| {
                     let child_style = tree.style(child.node);
-                    dbg!(child.align_self);
                     if child.align_self == AlignSelf::Baseline
                         && child_style.margin.cross_start(constants.dir) != LengthPercentageAuto::Auto
                         && child_style.margin.cross_end(constants.dir) != LengthPercentageAuto::Auto
                     {
-                        dbg!(max_baseline);
-                        dbg!(child.baseline);
-                        dbg!(child.hypothetical_outer_size.cross(constants.dir));
                         max_baseline - child.baseline + child.hypothetical_outer_size.cross(constants.dir)
                     } else {
                         child.hypothetical_outer_size.cross(constants.dir)
                     }
                 })
                 .fold(0.0, |acc, x| acc.max(x));
-            dbg!(line.cross_size);
         }
     }
 }
@@ -1484,15 +1498,15 @@ fn calculate_flex_item(
     node_inner_size: Size<Option<f32>>,
     direction: FlexDirection,
 ) {
-    let preliminary_size = compute_node_layout(
+    let preliminary_size_and_baselines = GenericAlgorithm::perform_layout(
         tree,
         item.node,
         item.target_size.map(|s| s.into()),
         node_inner_size,
         container_size.map(|s| s.into()),
-        RunMode::PeformLayout,
         SizingMode::ContentSize,
     );
+    let preliminary_size = preliminary_size_and_baselines.size;
 
     let offset_main = *total_offset_main
         + item.offset_main
@@ -1505,11 +1519,21 @@ fn calculate_flex_item(
         + item.margin.cross_start(direction)
         + (item.inset.cross_start(direction).unwrap_or(0.0) - item.inset.cross_end(direction).unwrap_or(0.0));
 
+    if direction.is_row() {
+        let baseline_offset_cross = total_offset_cross + item.offset_cross + item.margin.cross_start(direction);
+        let inner_baseline = preliminary_size_and_baselines.first_baselines.y.unwrap_or(preliminary_size.height);
+        item.baseline = baseline_offset_cross + inner_baseline;
+    } else {
+        let baseline_offset_main = *total_offset_main + item.offset_main + item.margin.main_start(direction);
+        let inner_baseline = preliminary_size_and_baselines.first_baselines.y.unwrap_or(preliminary_size.height);
+        item.baseline = baseline_offset_main + inner_baseline;
+    }
+
     let order = tree.children(node).position(|n| *n == item.node).unwrap() as u32;
 
     *tree.layout_mut(item.node) = Layout {
         order,
-        size: preliminary_size,
+        size: preliminary_size_and_baselines.size,
         location: Point {
             x: if direction.is_row() { offset_main } else { offset_cross },
             y: if direction.is_column() { offset_main } else { offset_cross },
@@ -1653,7 +1677,7 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
             known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
         }
 
-        let measured_size = compute_node_layout(
+        let measured_size_and_baselines = GenericAlgorithm::perform_layout(
             tree,
             child,
             known_dimensions,
@@ -1662,9 +1686,9 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
                 width: AvailableSpace::Definite(container_width.maybe_clamp(min_size.width, max_size.width)),
                 height: AvailableSpace::Definite(container_height.maybe_clamp(min_size.height, max_size.height)),
             },
-            RunMode::PeformLayout,
             SizingMode::ContentSize,
         );
+        let measured_size = measured_size_and_baselines.size;
         let final_size = known_dimensions.unwrap_or(measured_size).maybe_clamp(min_size, max_size);
 
         let non_auto_margin = margin.map(|m| m.unwrap_or(0.0));
