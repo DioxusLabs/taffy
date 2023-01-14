@@ -2,7 +2,7 @@
 //! https://www.w3.org/TR/css-grid-1/#layout-algorithm
 use super::types::{GridItem, GridTrack, TrackCounts};
 use crate::axis::AbstractAxis;
-use crate::geometry::Size;
+use crate::geometry::{Rect, Size};
 use crate::math::MaybeMath;
 use crate::prelude::LayoutTree;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
@@ -360,7 +360,15 @@ fn resolve_intrinsic_track_sizes(
             &get_track_size_estimate,
         );
 
-        let margin = item.margin.map(|m| m.resolve_or_zero(available_grid_space.width.into_option())).sum_axes();
+        let margin = Rect {
+            left: item.margin.left.resolve_or_zero(Some(0.0)),
+            right: item.margin.right.resolve_or_zero(Some(0.0)),
+            top: item.margin.top.resolve_or_zero(available_grid_space.width.into_option()),
+            bottom: item.margin.bottom.resolve_or_zero(available_grid_space.width.into_option()),
+        }
+        .sum_axes();
+
+        // item.margin.map(|m| m.resolve_or_zero(Some(0.0))).sum_axes();
 
         let min_content_size = item.min_content_contribution_cached(tree, known_dimensions, inner_node_size) + margin;
         let max_content_size = item.max_content_contribution_cached(tree, known_dimensions, inner_node_size) + margin;
