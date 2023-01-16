@@ -27,7 +27,7 @@ pub enum SizingMode {
 pub struct SizeAndBaselines {
     /// The size of the node
     pub size: Size<f32>,
-    /// The first baseline of the node in each dimension
+    /// The first baseline of the node in each dimension, if any
     pub first_baselines: Point<Option<f32>>,
 }
 

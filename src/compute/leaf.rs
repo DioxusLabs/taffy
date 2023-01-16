@@ -13,7 +13,7 @@ use crate::tree::LayoutTree;
 #[cfg(feature = "debug")]
 use crate::debug::NODE_LOGGER;
 
-/// The public interface to Taffy's Lead node algorithm implementation
+/// The public interface to Taffy's leaf node algorithm implementation
 pub(crate) struct LeafAlgorithm;
 impl LayoutAlgorithm for LeafAlgorithm {
     const NAME: &'static str = "LEAF";
