@@ -23,6 +23,11 @@ pub enum SizingMode {
 }
 
 /// A struct containing both the size of a node and it's first baseline in each dimension (if it has any)
+///
+/// A baseline is the line on which text sits. Your node likely has a baseline if it is a text node, or contains
+/// children that may be text nodes. See https://www.w3.org/TR/css-writing-modes-3/#intro-baselines for details.
+/// If your node does not have a baseline (or you are unsure how to compute it), then simply return `Point::NONE`
+/// for the first_baselines field
 #[derive(Debug, Copy, Clone)]
 pub struct SizeAndBaselines {
     /// The size of the node
