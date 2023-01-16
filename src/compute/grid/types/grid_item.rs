@@ -1,10 +1,10 @@
 //! Contains GridItem used to represent a single grid item during layout
 use super::GridTrack;
 use crate::axis::AbstractAxis;
-use crate::compute::compute_node_layout;
 use crate::compute::grid::OriginZeroLine;
+use crate::compute::{GenericAlgorithm, LayoutAlgorithm};
 use crate::geometry::{Line, Rect, Size};
-use crate::layout::{RunMode, SizingMode};
+use crate::layout::SizingMode;
 use crate::node::Node;
 use crate::prelude::LayoutTree;
 use crate::resolve::MaybeResolve;
@@ -188,13 +188,12 @@ impl GridItem {
         inner_node_size: Size<Option<f32>>,
     ) -> Size<f32> {
         self.min_content_contribution_cache.unwrap_or_else(|| {
-            let size = compute_node_layout(
+            let size = GenericAlgorithm::measure_size(
                 tree,
                 self.node,
                 known_dimensions,
                 inner_node_size,
                 Size::MIN_CONTENT,
-                RunMode::ComputeSize,
                 SizingMode::InherentSize,
             );
             self.min_content_contribution_cache = Some(size);
@@ -210,13 +209,12 @@ impl GridItem {
         inner_node_size: Size<Option<f32>>,
     ) -> Size<f32> {
         self.max_content_contribution_cache.unwrap_or_else(|| {
-            let size = compute_node_layout(
+            let size = GenericAlgorithm::measure_size(
                 tree,
                 self.node,
                 known_dimensions,
                 inner_node_size,
                 Size::MAX_CONTENT,
-                RunMode::ComputeSize,
                 SizingMode::InherentSize,
             );
             self.max_content_contribution_cache = Some(size);

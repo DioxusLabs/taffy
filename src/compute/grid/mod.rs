@@ -1,8 +1,8 @@
 //! This module is a partial implementation of the CSS Grid Level 1 specification
 //! https://www.w3.org/TR/css-grid-1/
 use crate::axis::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
-use crate::geometry::{Line, Rect, Size};
-use crate::layout::{Layout, RunMode, SizingMode};
+use crate::geometry::{Line, Point, Rect, Size};
+use crate::layout::{Layout, RunMode, SizeAndBaselines, SizingMode};
 use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
@@ -22,7 +22,7 @@ pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine};
 #[cfg(feature = "debug")]
 use crate::debug::NODE_LOGGER;
 
-use super::compute_node_layout;
+use super::{GenericAlgorithm, LayoutAlgorithm};
 
 mod alignment;
 mod explicit_grid;
@@ -31,6 +31,34 @@ mod placement;
 mod track_sizing;
 mod types;
 mod util;
+
+/// The public interface to Taffy's CSS Grid algorithm implementation
+pub(crate) struct CssGridAlgorithm;
+impl LayoutAlgorithm for CssGridAlgorithm {
+    const NAME: &'static str = "CSS GRID";
+
+    fn perform_layout(
+        tree: &mut impl LayoutTree,
+        node: Node,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        _sizing_mode: SizingMode,
+    ) -> SizeAndBaselines {
+        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::PeformLayout)
+    }
+
+    fn measure_size(
+        tree: &mut impl LayoutTree,
+        node: Node,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        _sizing_mode: SizingMode,
+    ) -> Size<f32> {
+        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::ComputeSize).size
+    }
+}
 
 /// Grid layout algorithm
 /// This consists of a few phases:
@@ -44,7 +72,8 @@ pub fn compute(
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
-) -> Size<f32> {
+    _run_mode: RunMode,
+) -> SizeAndBaselines {
     let get_child_styles_iter = |node| tree.children(node).map(|child_node: &Node| tree.style(*child_node));
     let style = tree.style(node).clone();
     let child_styles_iter = get_child_styles_iter(node);
@@ -290,13 +319,12 @@ pub fn compute(
         // Position hidden child
         if child_style.display == Display::None {
             *tree.layout_mut(node) = Layout::with_order(order);
-            compute_node_layout(
+            GenericAlgorithm::perform_layout(
                 tree,
                 child,
                 Size::NONE,
                 Size::NONE,
                 Size::MAX_CONTENT,
-                RunMode::PeformLayout,
                 SizingMode::InherentSize,
             );
             order += 1;
@@ -341,5 +369,5 @@ pub fn compute(
         }
     });
 
-    container_border_box
+    SizeAndBaselines { size: container_border_box, first_baselines: Point::NONE }
 }
