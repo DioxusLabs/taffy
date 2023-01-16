@@ -45,7 +45,7 @@ impl LayoutAlgorithm for CssGridAlgorithm {
         available_space: Size<AvailableSpace>,
         _sizing_mode: SizingMode,
     ) -> SizeAndBaselines {
-        compute_generic(tree, node, known_dimensions, parent_size, available_space, RunMode::PeformLayout)
+        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::PeformLayout)
     }
 
     fn measure_size(
@@ -56,7 +56,7 @@ impl LayoutAlgorithm for CssGridAlgorithm {
         available_space: Size<AvailableSpace>,
         _sizing_mode: SizingMode,
     ) -> Size<f32> {
-        compute_generic(tree, node, known_dimensions, parent_size, available_space, RunMode::ComputeSize).size
+        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::ComputeSize).size
     }
 }
 
@@ -66,7 +66,7 @@ impl LayoutAlgorithm for CssGridAlgorithm {
 ///   - Placing items (which also resolves the implicit grid)
 ///   - Track (row/column) sizing
 ///   - Alignment & Final item placement
-pub fn compute_generic(
+pub fn compute(
     tree: &mut impl LayoutTree,
     node: Node,
     known_dimensions: Size<Option<f32>>,

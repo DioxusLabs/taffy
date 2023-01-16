@@ -88,7 +88,7 @@ impl LayoutAlgorithm for GenericAlgorithm {
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
     ) -> SizeAndBaselines {
-        compute_node_generic(
+        compute_node_layout(
             tree,
             node,
             known_dimensions,
@@ -107,7 +107,7 @@ impl LayoutAlgorithm for GenericAlgorithm {
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
     ) -> Size<f32> {
-        compute_node_generic(
+        compute_node_layout(
             tree,
             node,
             known_dimensions,
@@ -121,7 +121,7 @@ impl LayoutAlgorithm for GenericAlgorithm {
 }
 
 /// Updates the stored layout of the provided `node` and its children
-fn compute_node_generic(
+fn compute_node_layout(
     tree: &mut impl LayoutTree,
     node: Node,
     known_dimensions: Size<Option<f32>>,

@@ -26,7 +26,7 @@ impl LayoutAlgorithm for LeafAlgorithm {
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
     ) -> SizeAndBaselines {
-        compute_generic(tree, node, known_dimensions, parent_size, available_space, sizing_mode)
+        compute(tree, node, known_dimensions, parent_size, available_space, sizing_mode)
     }
 
     fn measure_size(
@@ -37,12 +37,12 @@ impl LayoutAlgorithm for LeafAlgorithm {
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
     ) -> Size<f32> {
-        compute_generic(tree, node, known_dimensions, parent_size, available_space, sizing_mode).size
+        compute(tree, node, known_dimensions, parent_size, available_space, sizing_mode).size
     }
 }
 
 /// Compute the size of a leaf node (node with no children)
-pub(crate) fn compute_generic(
+pub(crate) fn compute(
     tree: &mut impl LayoutTree,
     node: Node,
     known_dimensions: Size<Option<f32>>,
