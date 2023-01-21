@@ -17,7 +17,7 @@ N = Supported in spec but not implemented in Taffy
 | `size`                   | Y    | Y    | `Size<Dimension>`                     | 16    | -      | The nominal height and width of item                                                        |
 | `min_size`               | Y    | Y    | `Size<Dimension>`                     | 16    | -      | The minimum height and width of the item                                                    |
 | `max_size`               | Y    | Y    | `Size<Dimension>`                     | 16    | -      | The maximum height and width of the item                                                    |
-| `aspect_ratio`           | Y    | 3    | `f32`                                 | 4     | -      | The preferred aspect ratio (calculated as width divided by height)                          |
+| `aspect_ratio`           | Y    | 3    | `Option<f32>`                         | 4     | -      | The preferred aspect ratio (calculated as width divided by height)                          |
 | **Item spacing**         |      |      |                                       |       |        |                                                                                             |
 | `padding`                | Y    | ~Y   | `Rect<LengthPercentage>`              | 32    | -      | How large should the padding be on each side?                                               |
 | `border`                 | Y    | ~Y   | `Rect<LengthPercentage>`              | 32    | -      | How large should the border be on each side?                                                |
