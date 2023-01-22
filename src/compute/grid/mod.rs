@@ -207,9 +207,7 @@ pub fn compute(
         &mut rows,
         &mut columns,
         &mut items,
-        |track: &GridTrack, available_space: AvailableSpace| {
-            track.max_track_sizing_function.definite_value(available_space)
-        },
+        |track: &GridTrack, _| Some(track.base_size),
     );
     let initial_row_sum = rows.iter().map(|track| track.base_size).sum::<f32>();
     available_grid_space.height = available_grid_space.height.or_else(|| initial_row_sum.into());
