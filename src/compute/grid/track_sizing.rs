@@ -463,7 +463,7 @@ fn resolve_intrinsic_track_sizes(
                         space,
                         tracks,
                         has_auto_or_max_content_min_track_sizing_function,
-                        IntrinsicContributionType::Minimum,
+                        IntrinsicContributionType::Maximum,
                     );
                 }
             }
@@ -617,7 +617,13 @@ fn distribute_item_space_to_base_size(
                 filter = (|_| true) as fn(&GridTrack) -> bool;
             }
 
-            distribute_space_up_to_limits(extra_space, tracks, filter, GridTrack::fit_content_limit);
+            // The fit content limit applies to max-content sizes but not min-content sizes
+            let limit = match intrinsic_contribution_type {
+                IntrinsicContributionType::Minimum => |_: &GridTrack| f32::INFINITY,
+                IntrinsicContributionType::Maximum => GridTrack::fit_content_limit,
+            };
+
+            distribute_space_up_to_limits(extra_space, tracks, filter, limit);
         }
 
         // 4. For each affected track, if the track’s item-incurred increase is larger than the track’s planned increase
