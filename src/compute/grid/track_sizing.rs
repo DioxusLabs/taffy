@@ -172,7 +172,7 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
 ) {
     // 11.4 Initialise Track sizes
     // Initialize each track’s base size and growth limit.
-    initialize_track_sizes(axis_tracks, available_grid_space.get(axis));
+    initialize_track_sizes(axis_tracks, inner_node_size.get(axis));
 
     // If all tracks have base_size = growth_limit, then skip the rest of this function.
     // Note: this can only happen both track sizing function have the same fixed track sizing function
@@ -283,7 +283,7 @@ fn flush_planned_growth_limit_increases(tracks: &mut [GridTrack], set_infinitely
 
 /// 11.4 Initialise Track sizes
 /// Initialize each track’s base size and growth limit.
-fn initialize_track_sizes(axis_tracks: &mut [GridTrack], axis_available_grid_space: AvailableSpace) {
+fn initialize_track_sizes(axis_tracks: &mut [GridTrack], axis_inner_node_size: Option<f32>) {
     let last_track_idx = axis_tracks.len() - 1;
 
     // First and last grid lines are always zero-sized.
@@ -300,7 +300,7 @@ fn initialize_track_sizes(axis_tracks: &mut [GridTrack], axis_available_grid_spa
         //     Note: Indefinite lengths cannot occur, as they’re treated as auto.
         // - An intrinsic sizing function
         //     Use an initial base size of zero.
-        track.base_size = track.min_track_sizing_function.definite_value(axis_available_grid_space).unwrap_or(0.0);
+        track.base_size = track.min_track_sizing_function.definite_value(axis_inner_node_size.into()).unwrap_or(0.0);
 
         // For each track, if the track’s max track sizing function is:
         // - A fixed sizing function
@@ -310,7 +310,7 @@ fn initialize_track_sizes(axis_tracks: &mut [GridTrack], axis_available_grid_spa
         // - A flexible sizing function
         //     Use an initial growth limit of infinity.
         track.growth_limit =
-            track.max_track_sizing_function.definite_value(axis_available_grid_space).unwrap_or(f32::INFINITY);
+            track.max_track_sizing_function.definite_value(axis_inner_node_size.into()).unwrap_or(f32::INFINITY);
 
         // In all cases, if the growth limit is less than the base size, increase the growth limit to match the base size.
         if track.growth_limit < track.base_size {

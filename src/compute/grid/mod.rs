@@ -144,7 +144,7 @@ pub fn compute(
         .map(|size| size.map(AvailableSpace::Definite))
         .unwrap_or(available_space.maybe_clamp(min_size, max_size));
 
-    let mut available_grid_space = Size {
+    let available_grid_space = Size {
         width: constrained_available_space
             .width
             .map_definite_value(|space| space - padding.horizontal_axis_sum() - border.horizontal_axis_sum()),
@@ -193,7 +193,6 @@ pub fn compute(
         },
     );
     let initial_column_sum = columns.iter().map(|track| track.base_size).sum::<f32>();
-    available_grid_space.width = available_grid_space.width.or_else(|| initial_column_sum.into());
     inner_node_size.width = inner_node_size.width.or_else(|| initial_column_sum.into());
 
     // Run track sizing algorithm for Block axis
@@ -210,7 +209,6 @@ pub fn compute(
         |track: &GridTrack, _| Some(track.base_size),
     );
     let initial_row_sum = rows.iter().map(|track| track.base_size).sum::<f32>();
-    available_grid_space.height = available_grid_space.height.or_else(|| initial_row_sum.into());
     inner_node_size.height = inner_node_size.height.or_else(|| initial_row_sum.into());
 
     // Re-run track sizing algorithm for Inline axis
