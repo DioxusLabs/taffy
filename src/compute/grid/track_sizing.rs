@@ -600,9 +600,14 @@ fn distribute_item_space_to_base_size(
             return;
         }
 
-        // 0. Prep limit function
-        let axis_available_grid_space_opt = axis_available_grid_space.into_option();
+        // Define get_base_size function. This is passed to the distribute_space_up_to_limits helper function
+        // to indicate that it is the base size that is being distributed to.
         let get_base_size = |track: &GridTrack| track.base_size;
+
+        // Define fit_content_limited_growth_limit function. This is passed to the distribute_space_up_to_limits
+        // helper function, and is used to compute the limit to distribute up to for each track.
+        // Wrapping the method on GridTrack is necessary in order to resolve percentage fit-content arguments.
+        let axis_available_grid_space_opt = axis_available_grid_space.into_option();
         let fit_content_limited_growth_limit =
             move |track: &GridTrack| track.fit_content_limited_growth_limit(axis_available_grid_space_opt);
 
@@ -650,7 +655,7 @@ fn distribute_item_space_to_base_size(
                 filter = (|_| true) as fn(&GridTrack) -> bool;
             }
 
-            // The fit content limit applies to max-content sizes but not min-content sizes
+            // When distributing space beyond limits, the fit content limit applies to max-content sizes but not min-content sizes
             let limit = match intrinsic_contribution_type {
                 IntrinsicContributionType::Minimum => &(|_: &GridTrack| f32::INFINITY) as &dyn Fn(&GridTrack) -> f32,
                 IntrinsicContributionType::Maximum => &fit_content_limited_growth_limit as &dyn Fn(&GridTrack) -> f32,
