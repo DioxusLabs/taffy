@@ -129,7 +129,7 @@ impl GridTrack {
     #[inline]
     /// Returns true if the track is flexible (has a Flex MaxTrackSizingFunction), else false.
     pub fn fit_content_limited_growth_limit(&self, axis_available_grid_space: Option<f32>) -> f32 {
-        f32_min(self.growth_limit, dbg!(self.fit_content_limit(axis_available_grid_space)))
+        f32_min(self.growth_limit, self.fit_content_limit(axis_available_grid_space))
     }
 
     #[inline]
