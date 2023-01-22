@@ -744,16 +744,16 @@ fn distribute_item_space_to_growth_limit(
     let number_of_growable_tracks = tracks
         .iter()
         .filter(|track| track_is_affected(track))
-        .filter(|track| track.infinitely_growable || track.growth_limit == f32::INFINITY)
+        .filter(|track| {
+            track.infinitely_growable || track.fit_content_limited_growth_limit(axis_inner_node_size) == f32::INFINITY
+        })
         .count();
     if number_of_growable_tracks > 0 {
         println!("WITHIN LIMITS");
         let item_incurred_increase = extra_space / number_of_growable_tracks as f32;
-        for track in tracks
-            .iter_mut()
-            .filter(|track| track_is_affected(track))
-            .filter(|track| track.infinitely_growable || track.growth_limit == f32::INFINITY)
-        {
+        for track in tracks.iter_mut().filter(|track| track_is_affected(track)).filter(|track| {
+            track.infinitely_growable || track.fit_content_limited_growth_limit(axis_inner_node_size) == f32::INFINITY
+        }) {
             track.item_incurred_increase = item_incurred_increase;
         }
     } else {
