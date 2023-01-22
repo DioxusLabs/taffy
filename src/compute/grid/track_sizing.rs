@@ -765,7 +765,7 @@ fn distribute_item_space_to_growth_limit(
             extra_space,
             tracks,
             track_is_affected,
-            |track| track.growth_limit,
+            |track| if track.growth_limit == f32::INFINITY { track.base_size } else { track.growth_limit },
             move |track| track.fit_content_limit(axis_inner_node_size),
         );
     };
