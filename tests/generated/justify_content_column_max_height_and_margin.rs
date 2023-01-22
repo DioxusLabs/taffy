@@ -1,5 +1,5 @@
 #[test]
-fn justify_content_colunn_max_height_and_margin() {
+fn justify_content_column_max_height_and_margin() {
     use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};
