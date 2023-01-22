@@ -369,8 +369,6 @@ fn resolve_intrinsic_track_sizes(
         }
         .sum_axes();
 
-        // item.margin.map(|m| m.resolve_or_zero(Some(0.0))).sum_axes();
-
         let min_content_size = item.min_content_contribution_cached(tree, known_dimensions, inner_node_size) + margin;
         let max_content_size = item.max_content_contribution_cached(tree, known_dimensions, inner_node_size) + margin;
         let axis_minimum_size = item.minimum_contribution_cached(
