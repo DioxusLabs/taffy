@@ -430,6 +430,12 @@ mod grid_fit_content_percent_definite_max_content;
 #[cfg(feature = "grid")]
 mod grid_fit_content_percent_definite_min_content;
 #[cfg(feature = "grid")]
+mod grid_fit_content_percent_indefinite_argument;
+#[cfg(feature = "grid")]
+mod grid_fit_content_percent_indefinite_max_content;
+#[cfg(feature = "grid")]
+mod grid_fit_content_percent_indefinite_min_content;
+#[cfg(feature = "grid")]
 mod grid_fit_content_points_argument;
 #[cfg(feature = "grid")]
 mod grid_fit_content_points_max_content;
