@@ -1410,11 +1410,11 @@ fn align_flex_items_along_cross_axis(
         }
         AlignSelf::Center => free_space / 2.0,
         AlignSelf::Baseline => {
-            // Until we support vertical writing modes, baseline alignment only makes sense if
-            // the constants.direction is row, so we treat it as flex-start alignment in columns.
             if constants.is_row {
                 max_baseline - child.baseline
             } else {
+                // Until we support vertical writing modes, baseline alignment only makes sense if
+                // the constants.direction is row, so we treat it as flex-start alignment in columns.
                 if constants.is_wrap_reverse {
                     free_space
                 } else {
