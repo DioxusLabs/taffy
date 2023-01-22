@@ -51,7 +51,7 @@ pub fn compute() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::WrapReverse,
-                align_content: Some(taffy::style::AlignContent::Start),
+                align_content: Some(taffy::style::AlignContent::FlexStart),
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), height: auto() },
                 ..Default::default()
             },

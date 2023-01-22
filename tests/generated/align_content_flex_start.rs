@@ -53,7 +53,7 @@ fn align_content_flex_start() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                align_content: Some(taffy::style::AlignContent::Start),
+                align_content: Some(taffy::style::AlignContent::FlexStart),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(130f32),
                     height: taffy::style::Dimension::Points(100f32),

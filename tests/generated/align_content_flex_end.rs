@@ -54,7 +54,7 @@ fn align_content_flex_end() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                align_content: Some(taffy::style::AlignContent::End),
+                align_content: Some(taffy::style::AlignContent::FlexEnd),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),

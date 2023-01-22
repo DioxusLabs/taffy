@@ -23,8 +23,8 @@ fn child_with_padding_align_end() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                align_items: Some(taffy::style::AlignItems::End),
-                justify_content: Some(taffy::style::JustifyContent::End),
+                align_items: Some(taffy::style::AlignItems::FlexEnd),
+                justify_content: Some(taffy::style::JustifyContent::FlexEnd),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(200f32),

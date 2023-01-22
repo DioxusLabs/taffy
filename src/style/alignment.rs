@@ -8,10 +8,20 @@
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum AlignItems {
-    /// Items are packed toward the start of the cross axis
+    /// Items are packed toward the start of the axis
     Start,
-    /// Items are packed toward the end of the cross axis
+    /// Items are packed toward the end of the axis
     End,
+    /// Items are packed towards the flex-relative start of the axis.
+    ///
+    /// For flex containers with flex_direction RowReverse of ColumnReverse this is equivalent
+    /// to End. In all other cases it is equivalent to Start.
+    FlexStart,
+    /// Items are packed towards the flex-relative end of the axis.
+    ///
+    /// For flex containers with flex_direction RowReverse of ColumnReverse this is equivalent
+    /// to Start. In all other cases it is equivalent to End.
+    FlexEnd,
     /// Items are packed along the center of the cross axis
     Center,
     /// Items are aligned such as their baselines align
@@ -52,6 +62,16 @@ pub enum AlignContent {
     Start,
     /// Items are packed toward the end of the axis
     End,
+    /// Items are packed towards the flex-relative start of the axis.
+    ///
+    /// For flex containers with flex_direction RowReverse of ColumnReverse this is equivalent
+    /// to End. In all other cases it is equivalent to Start.
+    FlexStart,
+    /// Items are packed towards the flex-relative end of the axis.
+    ///
+    /// For flex containers with flex_direction RowReverse of ColumnReverse this is equivalent
+    /// to Start. In all other cases it is equivalent to End.
+    FlexEnd,
     /// Items are centered around the middle of the axis
     Center,
     /// Items are stretched to fill the container

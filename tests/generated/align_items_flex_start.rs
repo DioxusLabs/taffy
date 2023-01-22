@@ -16,7 +16,7 @@ fn align_items_flex_start() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                align_items: Some(taffy::style::AlignItems::Start),
+                align_items: Some(taffy::style::AlignItems::FlexStart),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Points(100f32),

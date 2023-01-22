@@ -33,7 +33,9 @@ pub(super) fn align_tracks(
         + border.start
         + match track_alignment_style {
             AlignContent::Start => 0.0,
+            AlignContent::FlexStart => 0.0,
             AlignContent::End => overflow,
+            AlignContent::FlexEnd => overflow,
             AlignContent::Center => overflow / 2.0,
             AlignContent::Stretch => 0.0,
             AlignContent::SpaceBetween => 0.0,
@@ -231,8 +233,8 @@ pub(super) fn align_item_within_area(
 
     // Compute offset in the axis
     let alignment_based_offset = match alignment_style {
-        AlignSelf::Start => resolved_margin.start,
-        AlignSelf::End => grid_area_size - resolved_size - resolved_margin.end,
+        AlignSelf::Start | AlignSelf::FlexStart => resolved_margin.start,
+        AlignSelf::End | AlignSelf::FlexEnd => grid_area_size - resolved_size - resolved_margin.end,
         AlignSelf::Center => (grid_area_size - resolved_size + resolved_margin.start - resolved_margin.end) / 2.0,
         // TODO: Add support for baseline alignment. For now we treat it as "start".
         AlignSelf::Baseline => resolved_margin.start,

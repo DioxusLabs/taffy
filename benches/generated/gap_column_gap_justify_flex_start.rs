@@ -23,7 +23,7 @@ pub fn compute() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                justify_content: Some(taffy::style::JustifyContent::Start),
+                justify_content: Some(taffy::style::JustifyContent::FlexStart),
                 gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::Points(10f32), height: zero() },
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),

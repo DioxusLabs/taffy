@@ -7,7 +7,7 @@ fn absolute_layout_in_wrap_reverse_column_container_flex_end() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
-            align_self: Some(taffy::style::AlignSelf::End),
+            align_self: Some(taffy::style::AlignSelf::FlexEnd),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(20f32),
                 height: taffy::style::Dimension::Points(20f32),
