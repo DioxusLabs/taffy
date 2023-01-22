@@ -324,6 +324,12 @@ impl MaxTrackSizingFunction {
         }
     }
 
+    /// Resolve the maximum size of the track as defined by either:
+    ///     - A fixed track sizing function
+    ///     - A percentage track sizing function (with definite available space)
+    ///     - A fit-content sizing function with fixed argument
+    ///     - A fit-content sizing function with percentage argument (with definite available space)
+    /// All other kinds of track sizing function return None.
     pub fn definite_limit(self, available_space: AvailableSpace) -> Option<f32> {
         use MaxTrackSizingFunction::FitContent;
         match self {
