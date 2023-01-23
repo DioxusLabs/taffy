@@ -65,7 +65,7 @@ fn android_news_feed() {
     let node0000 = taffy
         .new_with_children(
             taffy::style::Style {
-                align_items: Some(taffy::style::AlignItems::Start),
+                align_items: Some(taffy::style::AlignItems::FlexStart),
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 margin: taffy::geometry::Rect {
                     left: taffy::style::LengthPercentageAuto::Points(36f32),
@@ -149,7 +149,7 @@ fn android_news_feed() {
     let node0010 = taffy
         .new_with_children(
             taffy::style::Style {
-                align_items: Some(taffy::style::AlignItems::Start),
+                align_items: Some(taffy::style::AlignItems::FlexStart),
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 margin: taffy::geometry::Rect {
                     left: taffy::style::LengthPercentageAuto::Points(174f32),

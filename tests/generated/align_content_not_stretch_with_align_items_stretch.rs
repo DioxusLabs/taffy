@@ -38,7 +38,7 @@ fn align_content_not_stretch_with_align_items_stretch() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                align_content: Some(taffy::style::AlignContent::Start),
+                align_content: Some(taffy::style::AlignContent::FlexStart),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(328f32),
                     height: taffy::style::Dimension::Points(52f32),

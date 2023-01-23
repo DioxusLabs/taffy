@@ -98,7 +98,9 @@ pub(super) fn compute_alignment_gutter_adjustment(
     // AlignContent::Start and AlignContent::End the same
     let outer_gutter_weight = match alignment {
         AlignContent::Start => 1,
+        AlignContent::FlexStart => 1,
         AlignContent::End => 1,
+        AlignContent::FlexEnd => 1,
         AlignContent::Center => 1,
         AlignContent::Stretch => 0,
         AlignContent::SpaceBetween => 0,
@@ -107,7 +109,9 @@ pub(super) fn compute_alignment_gutter_adjustment(
     };
 
     let inner_gutter_weight = match alignment {
+        AlignContent::FlexStart => 0,
         AlignContent::Start => 0,
+        AlignContent::FlexEnd => 0,
         AlignContent::End => 0,
         AlignContent::Center => 0,
         AlignContent::Stretch => 0,

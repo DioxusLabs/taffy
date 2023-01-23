@@ -42,7 +42,7 @@ pub fn compute() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                align_items: Some(taffy::style::AlignItems::End),
+                align_items: Some(taffy::style::AlignItems::FlexEnd),
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), height: auto() },
                 ..Default::default()
             },

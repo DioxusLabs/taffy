@@ -1310,7 +1310,7 @@ fn distribute_remaining_free_space(
             let layout_reverse = constants.dir.is_reverse();
             let gap = constants.gap.main(constants.dir);
             let justify_content_mode: JustifyContent =
-                tree.style(node).justify_content.unwrap_or(JustifyContent::Start);
+                tree.style(node).justify_content.unwrap_or(JustifyContent::FlexStart);
 
             let justify_item = |(i, child): (usize, &mut FlexItem)| {
                 child.offset_main =
@@ -1392,14 +1392,16 @@ fn align_flex_items_along_cross_axis(
     constants: &AlgoConstants,
 ) -> f32 {
     match child.align_self {
-        AlignSelf::Start => {
+        AlignSelf::Start => 0.0,
+        AlignSelf::FlexStart => {
             if constants.is_wrap_reverse {
                 free_space
             } else {
                 0.0
             }
         }
-        AlignSelf::End => {
+        AlignSelf::End => free_space,
+        AlignSelf::FlexEnd => {
             if constants.is_wrap_reverse {
                 0.0
             } else {
@@ -1411,8 +1413,8 @@ fn align_flex_items_along_cross_axis(
             if constants.is_row {
                 max_baseline - child.baseline
             } else {
-                // baseline alignment only makes sense if the constants.direction is row
-                // we treat it as flex-start alignment in columns.
+                // Until we support vertical writing modes, baseline alignment only makes sense if
+                // the constants.direction is row, so we treat it as flex-start alignment in columns.
                 if constants.is_wrap_reverse {
                     free_space
                 } else {
@@ -1753,19 +1755,26 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
                 - end
                 - resolved_margin.main_end(constants.dir)
         } else {
-            match tree.style(node).justify_content.unwrap_or(JustifyContent::Start) {
-                // Stretch is an invalid value for justify_content in the flexbox algorithm, so we
-                // treat it as if it wasn't set (and thus we default to FlexStart behaviour)
-                JustifyContent::SpaceBetween | JustifyContent::Start | JustifyContent::Stretch => {
+            // Stretch is an invalid value for justify_content in the flexbox algorithm, so we
+            // treat it as if it wasn't set (and thus we default to FlexStart behaviour)
+            match (tree.style(node).justify_content.unwrap_or(JustifyContent::Start), constants.is_wrap_reverse) {
+                (JustifyContent::SpaceBetween, _)
+                | (JustifyContent::Start, _)
+                | (JustifyContent::Stretch, false)
+                | (JustifyContent::FlexStart, false)
+                | (JustifyContent::FlexEnd, true) => {
                     constants.padding_border.main_start(constants.dir) + resolved_margin.main_start(constants.dir)
                 }
-                JustifyContent::End => {
+                (JustifyContent::End, _)
+                | (JustifyContent::FlexEnd, false)
+                | (JustifyContent::FlexStart, true)
+                | (JustifyContent::Stretch, true) => {
                     constants.container_size.main(constants.dir)
                         - constants.padding_border.main_end(constants.dir)
                         - final_size.main(constants.dir)
                         - resolved_margin.main_end(constants.dir)
                 }
-                JustifyContent::SpaceEvenly | JustifyContent::SpaceAround | JustifyContent::Center => {
+                (JustifyContent::SpaceEvenly, _) | (JustifyContent::SpaceAround, _) | (JustifyContent::Center, _) => {
                     (constants.container_size.main(constants.dir) + constants.padding_border.main_start(constants.dir)
                         - constants.padding_border.main_end(constants.dir)
                         - final_size.main(constants.dir)
@@ -1791,10 +1800,14 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
                 // Stretch alignment does not apply to absolutely positioned items
                 // See "Example 3" at https://www.w3.org/TR/css-flexbox-1/#abspos-items
                 // Note: Stretch should be FlexStart not Start when we support both
-                (AlignSelf::Baseline | AlignSelf::Stretch | AlignSelf::Start, false) | (AlignSelf::End, true) => {
+                (AlignSelf::Start, _)
+                | (AlignSelf::Baseline | AlignSelf::Stretch | AlignSelf::FlexStart, false)
+                | (AlignSelf::FlexEnd, true) => {
                     constants.padding_border.cross_start(constants.dir) + resolved_margin.cross_start(constants.dir)
                 }
-                (AlignSelf::Baseline | AlignSelf::Stretch | AlignSelf::Start, true) | (AlignSelf::End, false) => {
+                (AlignSelf::End, _)
+                | (AlignSelf::Baseline | AlignSelf::Stretch | AlignSelf::FlexStart, true)
+                | (AlignSelf::FlexEnd, false) => {
                     constants.container_size.cross(constants.dir)
                         - constants.padding_border.cross_end(constants.dir)
                         - final_size.cross(constants.dir)
