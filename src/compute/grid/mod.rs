@@ -224,8 +224,6 @@ pub fn compute(
         &mut items,
         |track: &GridTrack, _| Some(track.base_size),
     );
-    let second_column_sum: f32 = columns.iter().map(|track| track.base_size).sum::<f32>();
-    inner_node_size.width = inner_node_size.width.or_else(|| second_column_sum.into());
 
     // Re-run track sizing algorithm for Block axis
     track_sizing_algorithm(
@@ -240,8 +238,6 @@ pub fn compute(
         &mut items,
         |track: &GridTrack, _| Some(track.base_size),
     );
-    let second_row_sum: f32 = rows.iter().map(|track| track.base_size).sum::<f32>();
-    inner_node_size.height = inner_node_size.height.or_else(|| second_row_sum.into());
 
     // 6. Compute container size
     let resolved_style_size = known_dimensions.or(style.size.maybe_resolve(parent_size));
