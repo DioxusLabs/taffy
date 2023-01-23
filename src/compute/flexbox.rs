@@ -364,7 +364,7 @@ fn compute_preliminary(
     // We have the container size.
     // If our caller does not care about performing layout we are done now.
     if run_mode == RunMode::ComputeSize {
-        return SizeAndBaselines { size: constants.container_size, first_baselines: Point::NONE };
+        return constants.container_size.into();
     }
 
     // 16. Align all flex lines per align-content.

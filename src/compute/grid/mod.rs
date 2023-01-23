@@ -72,7 +72,7 @@ pub fn compute(
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
-    _run_mode: RunMode,
+    run_mode: RunMode,
 ) -> SizeAndBaselines {
     let get_child_styles_iter = |node| tree.children(node).map(|child_node: &Node| tree.style(*child_node));
     let style = tree.style(node).clone();
@@ -211,6 +211,26 @@ pub fn compute(
     let initial_row_sum = rows.iter().map(|track| track.base_size).sum::<f32>();
     inner_node_size.height = inner_node_size.height.or_else(|| initial_row_sum.into());
 
+    // 6. Compute container size
+    let resolved_style_size = known_dimensions.or(style.size.maybe_resolve(parent_size));
+    let container_border_box = Size {
+        width: resolved_style_size
+            .get(AbstractAxis::Inline)
+            .unwrap_or_else(|| initial_column_sum + padding.horizontal_axis_sum() + border.horizontal_axis_sum()),
+        height: resolved_style_size
+            .get(AbstractAxis::Block)
+            .unwrap_or_else(|| initial_row_sum + padding.vertical_axis_sum() + border.vertical_axis_sum()),
+    };
+    let container_content_box = Size {
+        width: container_border_box.width - padding.horizontal_axis_sum() - border.horizontal_axis_sum(),
+        height: container_border_box.height - padding.vertical_axis_sum() - border.vertical_axis_sum(),
+    };
+
+    // If only the container's size has been requested
+    if run_mode == RunMode::ComputeSize {
+        return container_border_box.into();
+    }
+
     // Re-run track sizing algorithm for Inline axis
     track_sizing_algorithm(
         tree,
@@ -240,21 +260,6 @@ pub fn compute(
         &mut items,
         |track: &GridTrack, _| Some(track.base_size),
     );
-
-    // 6. Compute container size
-    let resolved_style_size = known_dimensions.or(style.size.maybe_resolve(parent_size));
-    let container_border_box = Size {
-        width: resolved_style_size
-            .get(AbstractAxis::Inline)
-            .unwrap_or_else(|| initial_column_sum + padding.horizontal_axis_sum() + border.horizontal_axis_sum()),
-        height: resolved_style_size
-            .get(AbstractAxis::Block)
-            .unwrap_or_else(|| initial_row_sum + padding.vertical_axis_sum() + border.vertical_axis_sum()),
-    };
-    let container_content_box = Size {
-        width: container_border_box.width - padding.horizontal_axis_sum() - border.horizontal_axis_sum(),
-        height: container_border_box.height - padding.vertical_axis_sum() - border.vertical_axis_sum(),
-    };
 
     // 7. Resolve percentage track base sizes
     // In the case of an indefinitely sized container these resolve to zero during the "Initialise Tracks" step
