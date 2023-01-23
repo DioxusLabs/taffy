@@ -5,8 +5,8 @@ use crate::axis::AbstractAxis;
 use crate::geometry::{Rect, Size};
 use crate::math::MaybeMath;
 use crate::prelude::LayoutTree;
-use crate::resolve::{MaybeResolve, ResolveOrZero};
-use crate::style::{AlignContent, AvailableSpace, MaxTrackSizingFunction, MinTrackSizingFunction, Style};
+use crate::resolve::ResolveOrZero;
+use crate::style::{AlignContent, AvailableSpace, MaxTrackSizingFunction, MinTrackSizingFunction};
 use crate::sys::{f32_max, f32_min};
 use core::cmp::Ordering;
 
@@ -173,10 +173,11 @@ pub(super) fn determine_if_item_crosses_flexible_tracks(
 pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
     tree: &mut Tree,
     axis: AbstractAxis,
-    available_space: Size<AvailableSpace>,
+    axis_min_size: Option<f32>,
+    axis_max_size: Option<f32>,
+    other_axis_alignment: AlignContent,
     available_grid_space: Size<AvailableSpace>,
     inner_node_size: Size<Option<f32>>,
-    container_style: &Style,
     axis_tracks: &mut [GridTrack],
     other_axis_tracks: &mut [GridTrack],
     items: &mut [GridItem],
@@ -206,7 +207,7 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
     // Compute an additional amount to add to each spanned gutter when computing item's estimated size in the
     // in the opposite axis based on the alignment, container size, and estimated track sizes in that axis
     let gutter_alignment_adjustment = compute_alignment_gutter_adjustment(
-        container_style.grid_align_content(axis.other()),
+        other_axis_alignment,
         inner_node_size.get(axis.other()),
         &get_track_size_estimate,
         other_axis_tracks,
@@ -237,8 +238,6 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
 
     // 11.7. Expand Flexible Tracks
     // This step sizes flexible tracks using the largest value it can assign to an fr without exceeding the available space.
-    let axis_min_size = container_style.min_size.get(axis).into_option();
-    let axis_max_size = container_style.max_size.get(axis).into_option();
     expand_flexible_tracks(
         tree,
         axis,
@@ -252,7 +251,7 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
 
     // 11.8. Stretch auto Tracks
     // This step expands tracks that have an auto max track sizing function by dividing any remaining positive, definite free space equally amongst them.
-    stretch_auto_tracks(axis, axis_tracks, container_style, available_space, available_grid_space);
+    stretch_auto_tracks(axis, axis_tracks, axis_min_size, available_grid_space);
 }
 
 /// Whether it is a minimum or maximum size's space being distributed
@@ -1003,8 +1002,7 @@ fn find_size_of_fr(tracks: &[GridTrack], space_to_fill: f32) -> f32 {
 fn stretch_auto_tracks(
     axis: AbstractAxis,
     axis_tracks: &mut [GridTrack],
-    container_style: &Style,
-    available_space: Size<AvailableSpace>,
+    axis_min_size: Option<f32>,
     available_grid_space: Size<AvailableSpace>,
 ) {
     let num_auto_tracks =
@@ -1017,7 +1015,7 @@ fn stretch_auto_tracks(
         let free_space = if available_grid_space.get(axis).is_definite() {
             available_grid_space.get(axis).compute_free_space(used_space)
         } else {
-            match container_style.min_size.maybe_resolve(available_space.into_options()).get(axis) {
+            match axis_min_size {
                 Some(size) => size - used_space,
                 None => 0.0,
             }
