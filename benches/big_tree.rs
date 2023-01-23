@@ -86,30 +86,6 @@ fn taffy_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("yoga benchmarks");
     group.sample_size(10);
 
-    group.bench_function("10 nodes", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_yoga_deep_hierarchy(&mut taffy, 10, 10);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::SmallInput,
-        )
-    });
-
-    group.bench_function("100 nodes", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_yoga_deep_hierarchy(&mut taffy, 100, 10);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::SmallInput,
-        )
-    });
-
     group.bench_function("1_000 nodes", |b| {
         b.iter_batched(
             || {
@@ -146,46 +122,11 @@ fn taffy_benchmarks(c: &mut Criterion) {
         )
     });
 
-    group.bench_function("1_000_000 nodes", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_yoga_deep_hierarchy(&mut taffy, 1_000_000, 10);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::LargeInput,
-        )
-    });
     drop(group);
 
     // Decrease sample size, because the tasks take longer
     let mut group = c.benchmark_group("big trees (wide)");
     group.sample_size(10);
-
-    group.bench_function("10 nodes (2-level hierarchy)", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_flat_hierarchy(&mut taffy, 10);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::SmallInput,
-        )
-    });
-
-    group.bench_function("100 nodes (2-level hierarchy)", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_flat_hierarchy(&mut taffy, 100);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::SmallInput,
-        )
-    });
 
     group.bench_function("1_000 nodes (2-level hierarchy)", |b| {
         b.iter_batched(
@@ -216,18 +157,6 @@ fn taffy_benchmarks(c: &mut Criterion) {
             || {
                 let mut taffy = Taffy::new();
                 let root = build_flat_hierarchy(&mut taffy, 100_000);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::LargeInput,
-        )
-    });
-
-    group.bench_function("100_000 nodes (7-level hierarchy)", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_deep_hierarchy(&mut taffy, 100_000, 7);
                 (taffy, root)
             },
             |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
@@ -277,34 +206,10 @@ fn taffy_benchmarks(c: &mut Criterion) {
         )
     });
 
-    group.bench_function("1_000_000 nodes (20-level hierarchy)", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_deep_hierarchy(&mut taffy, 1_000_000, 2);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::LargeInput,
-        )
-    });
-
     drop(group);
 
     let mut group = c.benchmark_group("super deep trees");
     group.sample_size(10);
-
-    group.bench_function("100 nodes (100-level hierarchy)", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_deep_hierarchy(&mut taffy, 100, 1);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::SmallInput,
-        )
-    });
 
     group.bench_function("1_000 nodes (1000-level hierarchy)", |b| {
         b.iter_batched(
