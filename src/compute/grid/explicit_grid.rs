@@ -4,9 +4,7 @@ use super::types::{GridTrack, TrackCounts};
 use crate::axis::AbsoluteAxis;
 use crate::math::MaybeMath;
 use crate::resolve::ResolveOrZero;
-use crate::style::{
-    AvailableSpace, GridTrackRepetition, LengthPercentage, NonRepeatedTrackSizingFunction, Style, TrackSizingFunction,
-};
+use crate::style::{GridTrackRepetition, LengthPercentage, NonRepeatedTrackSizingFunction, Style, TrackSizingFunction};
 use crate::style_helpers::TaffyAuto;
 use crate::sys::{GridTrackVec, Vec};
 use core::cmp::{max, min};
@@ -83,25 +81,20 @@ pub(crate) fn compute_explicit_grid_size_in_axis(style: &Style, axis: AbsoluteAx
     let num_repetitions: u16 = match inner_container_size {
         None => 1,
         Some(inner_container_size) => {
-            let available_space = AvailableSpace::Definite(inner_container_size);
+            let parent_size = Some(inner_container_size);
 
             /// ...treating each track as its max track sizing function if that is definite or as its minimum track sizing function
             /// otherwise, flooring the max track sizing function by the min track sizing function if both are definite
-            fn track_definite_value(
-                sizing_function: &NonRepeatedTrackSizingFunction,
-                available_space: AvailableSpace,
-            ) -> f32 {
-                let max_size = sizing_function.max.definite_value(available_space);
-                let min_size = sizing_function.max.definite_value(available_space);
+            fn track_definite_value(sizing_function: &NonRepeatedTrackSizingFunction, parent_size: Option<f32>) -> f32 {
+                let max_size = sizing_function.max.definite_value(parent_size);
+                let min_size = sizing_function.max.definite_value(parent_size);
                 max_size.map(|max| max.maybe_min(min_size)).or(min_size).unwrap()
             }
 
             let non_repeating_track_used_space: f32 = template
                 .iter()
                 .map(|track_def| match track_def {
-                    TrackSizingFunction::Single(sizing_function) => {
-                        track_definite_value(sizing_function, available_space)
-                    }
+                    TrackSizingFunction::Single(sizing_function) => track_definite_value(sizing_function, parent_size),
                     TrackSizingFunction::AutoRepeat(_, _) => 0.0,
                 })
                 .sum();
@@ -110,7 +103,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis(style: &Style, axis: AbsoluteAx
             // Compute the amount of space that a single repetition of the repeated track list takes
             let per_repetition_track_used_space: f32 = repetition_definition
                 .iter()
-                .map(|sizing_function| track_definite_value(sizing_function, available_space))
+                .map(|sizing_function| track_definite_value(sizing_function, parent_size))
                 .sum::<f32>();
 
             // We special case the first repetition here because the number of gaps in the first repetition

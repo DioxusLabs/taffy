@@ -189,9 +189,7 @@ pub fn compute(
         &mut columns,
         &mut rows,
         &mut items,
-        |track: &GridTrack, available_space: AvailableSpace| {
-            track.max_track_sizing_function.definite_value(available_space)
-        },
+        |track: &GridTrack, parent_size: Option<f32>| track.max_track_sizing_function.definite_value(parent_size),
     );
     let initial_column_sum = columns.iter().map(|track| track.base_size).sum::<f32>();
     inner_node_size.width = inner_node_size.width.or_else(|| initial_column_sum.into());

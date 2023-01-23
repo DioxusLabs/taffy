@@ -91,7 +91,7 @@ pub(super) fn cmp_by_cross_flex_then_span_then_start(
 pub(super) fn compute_alignment_gutter_adjustment(
     alignment: AlignContent,
     axis_inner_node_size: Option<f32>,
-    get_track_size_estimate: impl Fn(&GridTrack, AvailableSpace) -> Option<f32>,
+    get_track_size_estimate: impl Fn(&GridTrack, Option<f32>) -> Option<f32>,
     tracks: &[GridTrack],
 ) -> f32 {
     if tracks.len() <= 1 {
@@ -131,7 +131,7 @@ pub(super) fn compute_alignment_gutter_adjustment(
     if let Some(axis_inner_node_size) = axis_inner_node_size {
         let free_space = tracks
             .iter()
-            .map(|track| get_track_size_estimate(track, axis_inner_node_size.into()))
+            .map(|track| get_track_size_estimate(track, Some(axis_inner_node_size)))
             .sum::<Option<f32>>()
             .map(|track_size_sum| f32_max(0.0, axis_inner_node_size - track_size_sum))
             .unwrap_or(0.0);
@@ -181,7 +181,7 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
     axis_tracks: &mut [GridTrack],
     other_axis_tracks: &mut [GridTrack],
     items: &mut [GridItem],
-    get_track_size_estimate: impl Fn(&GridTrack, AvailableSpace) -> Option<f32>,
+    get_track_size_estimate: impl Fn(&GridTrack, Option<f32>) -> Option<f32>,
 ) {
     // 11.4 Initialise Track sizes
     // Initialize each track’s base size and growth limit.
@@ -234,7 +234,7 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
 
     // 11.6. Maximise Tracks
     // Distributes free space (if any) to tracks with FINITE growth limits, up to their limits.
-    maximise_tracks(axis, axis_tracks, available_grid_space);
+    maximise_tracks(axis_tracks, inner_node_size.get(axis), available_grid_space.get(axis));
 
     // 11.7. Expand Flexible Tracks
     // This step sizes flexible tracks using the largest value it can assign to an fr without exceeding the available space.
@@ -311,7 +311,7 @@ fn initialize_track_sizes(axis_tracks: &mut [GridTrack], axis_inner_node_size: O
         //     Note: Indefinite lengths cannot occur, as they’re treated as auto.
         // - An intrinsic sizing function
         //     Use an initial base size of zero.
-        track.base_size = track.min_track_sizing_function.definite_value(axis_inner_node_size.into()).unwrap_or(0.0);
+        track.base_size = track.min_track_sizing_function.definite_value(axis_inner_node_size).unwrap_or(0.0);
 
         // For each track, if the track’s max track sizing function is:
         // - A fixed sizing function
@@ -321,7 +321,7 @@ fn initialize_track_sizes(axis_tracks: &mut [GridTrack], axis_inner_node_size: O
         // - A flexible sizing function
         //     Use an initial growth limit of infinity.
         track.growth_limit =
-            track.max_track_sizing_function.definite_value(axis_inner_node_size.into()).unwrap_or(f32::INFINITY);
+            track.max_track_sizing_function.definite_value(axis_inner_node_size).unwrap_or(f32::INFINITY);
 
         // In all cases, if the growth limit is less than the base size, increase the growth limit to match the base size.
         if track.growth_limit < track.base_size {
@@ -340,7 +340,7 @@ fn resolve_intrinsic_track_sizes(
     items: &mut [GridItem],
     axis_available_grid_space: AvailableSpace,
     inner_node_size: Size<Option<f32>>,
-    get_track_size_estimate: impl Fn(&GridTrack, AvailableSpace) -> Option<f32>,
+    get_track_size_estimate: impl Fn(&GridTrack, Option<f32>) -> Option<f32>,
 ) {
     // Step 1. Shim baseline-aligned items so their intrinsic size contributions reflect their baseline alignment.
     // TODO: we do not yet support baseline alignment for CSS Grid
@@ -368,7 +368,7 @@ fn resolve_intrinsic_track_sizes(
     struct IntrisicSizeMeasurer<'tree, 'oat, Tree, EstimateFunction>
     where
         Tree: LayoutTree,
-        EstimateFunction: Fn(&GridTrack, AvailableSpace) -> Option<f32>,
+        EstimateFunction: Fn(&GridTrack, Option<f32>) -> Option<f32>,
     {
         /// The layout tree
         tree: &'tree mut Tree,
@@ -386,7 +386,7 @@ fn resolve_intrinsic_track_sizes(
     impl<'tree, 'oat, Tree, EstimateFunction> IntrisicSizeMeasurer<'tree, 'oat, Tree, EstimateFunction>
     where
         Tree: LayoutTree,
-        EstimateFunction: Fn(&GridTrack, AvailableSpace) -> Option<f32>,
+        EstimateFunction: Fn(&GridTrack, Option<f32>) -> Option<f32>,
     {
         /// Compute the known_dimensions to be passed to the child sizing functions
         /// These are estimates based on either the max track sizing function or the provisional base size in the opposite
@@ -463,9 +463,8 @@ fn resolve_intrinsic_track_sizes(
     while let Some((batch, is_flex)) = batched_item_iterator.next(items) {
         // 1. For intrinsic minimums:
         // First increase the base size of tracks with an intrinsic min track sizing function
-        let has_intrinsic_min_track_sizing_function = move |track: &GridTrack| {
-            track.min_track_sizing_function.definite_value(axis_available_grid_space).is_none()
-        };
+        let has_intrinsic_min_track_sizing_function =
+            move |track: &GridTrack| track.min_track_sizing_function.definite_value(axis_inner_node_size).is_none();
         for item in batch.iter_mut() {
             // ...by distributing extra space as needed to accommodate these items’ minimum contributions.
             // If the grid container is being sized under a min- or max-content constraint, use the items’ limited min-content contributions
@@ -474,7 +473,7 @@ fn resolve_intrinsic_track_sizes(
                 AvailableSpace::MinContent | AvailableSpace::MaxContent => {
                     let axis_minimum_size = item_sizer.minimum_contribution(item, axis_tracks);
                     let axis_min_content_size = item_sizer.min_content_contribution(item);
-                    let limit = item.spanned_fixed_track_limit(axis, axis_tracks, inner_node_size.get(axis).into());
+                    let limit = item.spanned_fixed_track_limit(axis, axis_tracks, axis_inner_node_size);
                     axis_min_content_size.maybe_min(limit).max(axis_minimum_size)
                 }
                 AvailableSpace::Definite(_) => item_sizer.minimum_contribution(item, axis_tracks),
@@ -528,7 +527,7 @@ fn resolve_intrinsic_track_sizes(
             };
             for item in batch.iter_mut() {
                 let axis_max_content_size = item_sizer.max_content_contribution(item);
-                let limit = item.spanned_fixed_track_limit(axis, axis_tracks, inner_node_size.get(axis).into());
+                let limit = item.spanned_fixed_track_limit(axis, axis_tracks, axis_inner_node_size);
                 let space = axis_max_content_size.maybe_min(limit);
                 let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
                 if space > 0.0 {
@@ -578,9 +577,8 @@ fn resolve_intrinsic_track_sizes(
         if !is_flex {
             // 5. For intrinsic maximums: Next increase the growth limit of tracks with an intrinsic max track sizing function by
             // distributing extra space as needed to account for these items' min-content contributions.
-            let has_intrinsic_max_track_sizing_function = move |track: &GridTrack| {
-                track.max_track_sizing_function.definite_value(axis_available_grid_space).is_none()
-            };
+            let has_intrinsic_max_track_sizing_function =
+                move |track: &GridTrack| track.max_track_sizing_function.definite_value(axis_inner_node_size).is_none();
             for item in batch.iter_mut() {
                 let axis_min_content_size = item_sizer.min_content_contribution(item);
                 let space = axis_min_content_size;
@@ -819,19 +817,22 @@ fn distribute_item_space_to_growth_limit(
 
 /// 11.6 Maximise Tracks
 /// Distributes free space (if any) to tracks with FINITE growth limits, up to their limits.
-fn maximise_tracks(axis: AbstractAxis, axis_tracks: &mut [GridTrack], available_grid_space: Size<AvailableSpace>) {
+fn maximise_tracks(
+    axis_tracks: &mut [GridTrack],
+    axis_inner_node_size: Option<f32>,
+    axis_available_grid_space: AvailableSpace,
+) {
     let used_space: f32 = axis_tracks.iter().map(|track| track.base_size).sum();
-    let free_space = available_grid_space.get(axis).compute_free_space(used_space);
+    let free_space = axis_available_grid_space.compute_free_space(used_space);
     if free_space == f32::INFINITY {
         axis_tracks.iter_mut().for_each(|track| track.base_size = track.growth_limit);
     } else if free_space > 0.0 {
-        let axis_available_grid_space = available_grid_space.get(axis).into_option();
         distribute_space_up_to_limits(
             free_space,
             axis_tracks,
             |_| true,
             |track| track.base_size,
-            move |track: &GridTrack| track.fit_content_limited_growth_limit(axis_available_grid_space),
+            move |track: &GridTrack| track.fit_content_limited_growth_limit(axis_inner_node_size),
         );
         for track in axis_tracks.iter_mut() {
             track.base_size += track.item_incurred_increase;

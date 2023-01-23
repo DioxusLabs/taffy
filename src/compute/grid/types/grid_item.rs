@@ -8,7 +8,7 @@ use crate::layout::SizingMode;
 use crate::node::Node;
 use crate::prelude::LayoutTree;
 use crate::resolve::MaybeResolve;
-use crate::style::{AvailableSpace, LengthPercentageAuto, MaxTrackSizingFunction, MinTrackSizingFunction, Style};
+use crate::style::{LengthPercentageAuto, MaxTrackSizingFunction, MinTrackSizingFunction, Style};
 use crate::style_helpers::*;
 use core::ops::Range;
 
@@ -133,14 +133,14 @@ impl GridItem {
         axis: AbstractAxis,
         other_axis_tracks: &[GridTrack],
         other_axis_available_space: Option<f32>,
-        get_track_size_estimate: impl Fn(&GridTrack, AvailableSpace) -> Option<f32>,
+        get_track_size_estimate: impl Fn(&GridTrack, Option<f32>) -> Option<f32>,
     ) -> Size<Option<f32>> {
         self.known_dimensions_cache.unwrap_or_else(|| {
             let item_other_axis_size: Option<f32> = {
                 other_axis_tracks[self.track_range_excluding_lines(axis.other())]
                     .iter()
                     .map(|track| {
-                        get_track_size_estimate(track, other_axis_available_space.into())
+                        get_track_size_estimate(track, other_axis_available_space)
                             .map(|size| size + track.content_alignment_adjustment)
                     })
                     .sum::<Option<f32>>()
@@ -163,16 +163,16 @@ impl GridItem {
         &mut self,
         axis: AbstractAxis,
         axis_tracks: &[GridTrack],
-        axis_available_space: AvailableSpace,
+        axis_parent_size: Option<f32>,
     ) -> Option<f32> {
         let spanned_tracks = &axis_tracks[self.track_range_excluding_lines(axis)];
         let tracks_all_fixed = spanned_tracks
             .iter()
-            .all(|track| track.max_track_sizing_function.definite_limit(axis_available_space).is_some());
+            .all(|track| track.max_track_sizing_function.definite_limit(axis_parent_size).is_some());
         if tracks_all_fixed {
             let limit: f32 = spanned_tracks
                 .iter()
-                .map(|track| track.max_track_sizing_function.definite_limit(axis_available_space).unwrap())
+                .map(|track| track.max_track_sizing_function.definite_limit(axis_parent_size).unwrap())
                 .sum();
             Some(limit)
         } else {
