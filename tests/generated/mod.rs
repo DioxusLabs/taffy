@@ -424,6 +424,18 @@ mod grid_basic_with_overflow;
 #[cfg(feature = "grid")]
 mod grid_basic_with_padding;
 #[cfg(feature = "grid")]
+mod grid_fit_content_percent_definite_argument;
+#[cfg(feature = "grid")]
+mod grid_fit_content_percent_definite_max_content;
+#[cfg(feature = "grid")]
+mod grid_fit_content_percent_definite_min_content;
+#[cfg(feature = "grid")]
+mod grid_fit_content_percent_indefinite_argument;
+#[cfg(feature = "grid")]
+mod grid_fit_content_percent_indefinite_max_content;
+#[cfg(feature = "grid")]
+mod grid_fit_content_percent_indefinite_min_content;
+#[cfg(feature = "grid")]
 mod grid_fit_content_points_argument;
 #[cfg(feature = "grid")]
 mod grid_fit_content_points_max_content;
@@ -505,6 +517,14 @@ mod grid_max_content_single_item_margin_auto;
 mod grid_max_content_single_item_margin_fixed;
 #[cfg(feature = "grid")]
 mod grid_max_content_single_item_margin_percent;
+#[cfg(feature = "grid")]
+mod grid_max_content_single_item_span_2;
+#[cfg(feature = "grid")]
+mod grid_max_content_single_item_span_2_gap_fixed;
+#[cfg(feature = "grid")]
+mod grid_max_content_single_item_span_2_gap_percent_definite;
+#[cfg(feature = "grid")]
+mod grid_max_content_single_item_span_2_gap_percent_indefinite;
 #[cfg(feature = "grid")]
 mod grid_min_content_flex_column;
 #[cfg(feature = "grid")]

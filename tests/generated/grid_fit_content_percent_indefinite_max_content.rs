@@ -1,5 +1,5 @@
 #[test]
-fn grid_fit_content_points_max_content() {
+fn grid_fit_content_percent_indefinite_max_content() {
     use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};
@@ -24,7 +24,7 @@ fn grid_fit_content_points_max_content() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 grid_template_rows: vec![points(40f32)],
-                grid_template_columns: vec![fit_content(points(30f32))],
+                grid_template_columns: vec![fit_content(percent(0.5f32))],
                 ..Default::default()
             },
             &[node0],

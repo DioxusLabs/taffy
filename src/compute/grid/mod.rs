@@ -154,7 +154,7 @@ pub fn compute(
     };
 
     let outer_node_size = size.maybe_clamp(min_size, max_size).or(parent_size.maybe_sub(margin.sum_axes()));
-    let inner_node_size = Size {
+    let mut inner_node_size = Size {
         width: outer_node_size.width.map(|space| space - padding.horizontal_axis_sum() - border.horizontal_axis_sum()),
         height: outer_node_size.height.map(|space| space - padding.vertical_axis_sum() - border.vertical_axis_sum()),
     };
@@ -192,6 +192,9 @@ pub fn compute(
             track.max_track_sizing_function.definite_value(available_space)
         },
     );
+    let initial_column_sum = columns.iter().map(|track| track.base_size).sum::<f32>();
+    inner_node_size.width = inner_node_size.width.or_else(|| initial_column_sum.into());
+
     // Run track sizing algorithm for Block axis
     track_sizing_algorithm(
         tree,
@@ -203,10 +206,11 @@ pub fn compute(
         &mut rows,
         &mut columns,
         &mut items,
-        |track: &GridTrack, available_space: AvailableSpace| {
-            track.max_track_sizing_function.definite_value(available_space)
-        },
+        |track: &GridTrack, _| Some(track.base_size),
     );
+    let initial_row_sum = rows.iter().map(|track| track.base_size).sum::<f32>();
+    inner_node_size.height = inner_node_size.height.or_else(|| initial_row_sum.into());
+
     // Re-run track sizing algorithm for Inline axis
     track_sizing_algorithm(
         tree,
@@ -220,6 +224,7 @@ pub fn compute(
         &mut items,
         |track: &GridTrack, _| Some(track.base_size),
     );
+
     // Re-run track sizing algorithm for Block axis
     track_sizing_algorithm(
         tree,
@@ -237,16 +242,12 @@ pub fn compute(
     // 6. Compute container size
     let resolved_style_size = known_dimensions.or(style.size.maybe_resolve(parent_size));
     let container_border_box = Size {
-        width: resolved_style_size.get(AbstractAxis::Inline).unwrap_or_else(|| {
-            columns.iter().map(|track| track.base_size).sum::<f32>()
-                + padding.horizontal_axis_sum()
-                + border.horizontal_axis_sum()
-        }),
-        height: resolved_style_size.get(AbstractAxis::Block).unwrap_or_else(|| {
-            rows.iter().map(|track| track.base_size).sum::<f32>()
-                + padding.vertical_axis_sum()
-                + border.vertical_axis_sum()
-        }),
+        width: resolved_style_size
+            .get(AbstractAxis::Inline)
+            .unwrap_or_else(|| initial_column_sum + padding.horizontal_axis_sum() + border.horizontal_axis_sum()),
+        height: resolved_style_size
+            .get(AbstractAxis::Block)
+            .unwrap_or_else(|| initial_row_sum + padding.vertical_axis_sum() + border.vertical_axis_sum()),
     };
     let container_content_box = Size {
         width: container_border_box.width - padding.horizontal_axis_sum() - border.horizontal_axis_sum(),

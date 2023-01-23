@@ -6,7 +6,7 @@ pub fn compute() {
         .new_leaf_with_measure(
             taffy::style::Style { ..Default::default() },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
-                const TEXT: &str = "HH";
+                const TEXT: &str = "HH\u{200b}HH\u{200b}HH";
                 super::measure_standard_text(
                     known_dimensions,
                     available_space,
@@ -22,7 +22,7 @@ pub fn compute() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 grid_template_rows: vec![points(40f32)],
-                grid_template_columns: vec![fit_content(points(30f32))],
+                grid_template_columns: vec![fit_content(percent(0.5f32))],
                 ..Default::default()
             },
             &[node0],

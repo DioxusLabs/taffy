@@ -1,5 +1,5 @@
 #[test]
-fn grid_fit_content_points_max_content() {
+fn grid_fit_content_percent_definite_max_content() {
     use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};
@@ -24,7 +24,8 @@ fn grid_fit_content_points_max_content() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 grid_template_rows: vec![points(40f32)],
-                grid_template_columns: vec![fit_content(points(30f32))],
+                grid_template_columns: vec![fit_content(percent(0.5f32))],
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), height: auto() },
                 ..Default::default()
             },
             &[node0],
@@ -35,7 +36,7 @@ fn grid_fit_content_points_max_content() {
     taffy::debug::print_tree(&taffy, node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
-    assert_eq!(size.width, 20f32, "width of node {:?}. Expected {}. Actual {}", node.data(), 20f32, size.width);
+    assert_eq!(size.width, 60f32, "width of node {:?}. Expected {}. Actual {}", node.data(), 60f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node.data(), 40f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.y);

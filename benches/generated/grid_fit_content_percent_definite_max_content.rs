@@ -22,7 +22,8 @@ pub fn compute() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 grid_template_rows: vec![points(40f32)],
-                grid_template_columns: vec![fit_content(points(30f32))],
+                grid_template_columns: vec![fit_content(percent(0.5f32))],
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), height: auto() },
                 ..Default::default()
             },
             &[node0],
