@@ -90,10 +90,14 @@ pub(super) fn cmp_by_cross_flex_then_span_then_start(
 /// other axis have definite sizes. This function computes such a per-gutter additional size adjustment.
 pub(super) fn compute_alignment_gutter_adjustment(
     alignment: AlignContent,
-    available_space: AvailableSpace,
+    axis_inner_node_size: Option<f32>,
     get_track_size_estimate: impl Fn(&GridTrack, AvailableSpace) -> Option<f32>,
     tracks: &[GridTrack],
 ) -> f32 {
+    if tracks.len() <= 1 {
+        return 0.0;
+    }
+
     // As items never cross the outermost gutters in a grid, we can simplify our calculations by treating
     // AlignContent::Start and AlignContent::End the same
     let outer_gutter_weight = match alignment {
@@ -120,21 +124,25 @@ pub(super) fn compute_alignment_gutter_adjustment(
         AlignContent::SpaceEvenly => 1,
     };
 
-    if inner_gutter_weight > 0 && available_space.is_definite() && tracks.len() > 1 {
-        let inner_available_space = tracks
+    if inner_gutter_weight == 0 {
+        return 0.0;
+    }
+
+    if let Some(axis_inner_node_size) = axis_inner_node_size {
+        let free_space = tracks
             .iter()
-            .map(|track| get_track_size_estimate(track, available_space))
+            .map(|track| get_track_size_estimate(track, axis_inner_node_size.into()))
             .sum::<Option<f32>>()
-            .map(|track_size_sum| f32_max(0.0, available_space.unwrap() - track_size_sum))
+            .map(|track_size_sum| f32_max(0.0, axis_inner_node_size - track_size_sum))
             .unwrap_or(0.0);
 
         let weighted_track_count =
             (((tracks.len() - 3) / 2) * inner_gutter_weight as usize) + (2 * outer_gutter_weight as usize);
 
-        (inner_available_space / weighted_track_count as f32) * inner_gutter_weight as f32
-    } else {
-        0.0
+        return (free_space / weighted_track_count as f32) * inner_gutter_weight as f32;
     }
+
+    0.0
 }
 
 /// Convert origin-zero coordinates track placement in grid track vector indexes
@@ -199,7 +207,7 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
     // in the opposite axis based on the alignment, container size, and estimated track sizes in that axis
     let gutter_alignment_adjustment = compute_alignment_gutter_adjustment(
         container_style.grid_align_content(axis.other()),
-        available_space.get(axis.other()),
+        inner_node_size.get(axis.other()),
         &get_track_size_estimate,
         other_axis_tracks,
     );
