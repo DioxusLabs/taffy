@@ -25,7 +25,7 @@ pub fn compute() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                align_items: Some(taffy::style::AlignItems::Start),
+                align_items: Some(taffy::style::AlignItems::FlexStart),
                 ..Default::default()
             },
             &[node00],

@@ -13,7 +13,7 @@ pub fn compute() {
         .unwrap();
     let node0 = taffy
         .new_with_children(
-            taffy::style::Style { align_items: Some(taffy::style::AlignItems::End), ..Default::default() },
+            taffy::style::Style { align_items: Some(taffy::style::AlignItems::FlexEnd), ..Default::default() },
             &[node00],
         )
         .unwrap();

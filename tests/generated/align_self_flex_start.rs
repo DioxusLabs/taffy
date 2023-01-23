@@ -6,7 +6,7 @@ fn align_self_flex_start() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            align_self: Some(taffy::style::AlignSelf::Start),
+            align_self: Some(taffy::style::AlignSelf::FlexStart),
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(10f32),
                 height: taffy::style::Dimension::Points(10f32),

@@ -11,66 +11,44 @@ pub(crate) fn compute_alignment_offset(
     num_items: usize,
     gap: f32,
     alignment_mode: AlignContent,
-    layout_is_reversed: bool,
+    layout_is_flex_reversed: bool,
     is_first: bool,
 ) -> f32 {
-    match alignment_mode {
-        AlignContent::Start => {
-            if is_first {
-                if layout_is_reversed {
+    if is_first {
+        match alignment_mode {
+            AlignContent::Start => 0.0,
+            AlignContent::FlexStart => {
+                if layout_is_flex_reversed {
                     free_space
                 } else {
                     0.0
                 }
-            } else {
-                gap
             }
-        }
-        AlignContent::End => {
-            if is_first {
-                if !layout_is_reversed {
-                    free_space
-                } else {
+            AlignContent::End => free_space,
+            AlignContent::FlexEnd => {
+                if layout_is_flex_reversed {
                     0.0
+                } else {
+                    free_space
                 }
-            } else {
-                gap
             }
+            AlignContent::Center => free_space / 2.0,
+            AlignContent::Stretch => 0.0,
+            AlignContent::SpaceBetween => 0.0,
+            AlignContent::SpaceAround => (free_space / num_items as f32) / 2.0,
+            AlignContent::SpaceEvenly => free_space / (num_items + 1) as f32,
         }
-        AlignContent::Center => {
-            if is_first {
-                free_space / 2.0
-            } else {
-                gap
-            }
-        }
-        AlignContent::Stretch => {
-            if is_first {
-                0.0
-            } else {
-                gap
-            }
-        }
-        AlignContent::SpaceBetween => {
-            if is_first {
-                0.0
-            } else {
-                gap + (free_space / (num_items - 1) as f32)
-            }
-        }
-        AlignContent::SpaceAround => {
-            if is_first {
-                (free_space / num_items as f32) / 2.0
-            } else {
-                gap + (free_space / num_items as f32)
-            }
-        }
-        AlignContent::SpaceEvenly => {
-            if is_first {
-                free_space / (num_items + 1) as f32
-            } else {
-                gap + (free_space / (num_items + 1) as f32)
-            }
+    } else {
+        gap + match alignment_mode {
+            AlignContent::Start => 0.0,
+            AlignContent::FlexStart => 0.0,
+            AlignContent::End => 0.0,
+            AlignContent::FlexEnd => 0.0,
+            AlignContent::Center => 0.0,
+            AlignContent::Stretch => 0.0,
+            AlignContent::SpaceBetween => free_space / (num_items - 1) as f32,
+            AlignContent::SpaceAround => free_space / num_items as f32,
+            AlignContent::SpaceEvenly => free_space / (num_items + 1) as f32,
         }
     }
 }

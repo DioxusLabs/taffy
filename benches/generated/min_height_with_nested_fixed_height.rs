@@ -15,7 +15,7 @@ pub fn compute() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                align_self: Some(taffy::style::AlignSelf::Start),
+                align_self: Some(taffy::style::AlignSelf::FlexStart),
                 flex_shrink: 0f32,
                 min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(28f32) },
                 margin: taffy::geometry::Rect {
