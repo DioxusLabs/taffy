@@ -125,7 +125,7 @@ impl GridItem {
     }
 
     /// Compute the known_dimensions to be passed to the child sizing functions
-    /// These are estimates based on either the max track sizing function on the provisional base size in the opposite
+    /// These are estimates based on either the max track sizing function or the provisional base size in the opposite
     /// axis to the one currently being sized.
     /// https://www.w3.org/TR/css-grid-1/#algo-overview
     pub fn known_dimensions_cached(
@@ -233,7 +233,6 @@ impl GridItem {
         tree: &mut impl LayoutTree,
         axis: AbstractAxis,
         axis_tracks: &[GridTrack],
-        available_space: Size<AvailableSpace>,
         known_dimensions: Size<Option<f32>>,
         inner_node_size: Size<Option<f32>>,
     ) -> f32 {
@@ -241,15 +240,11 @@ impl GridItem {
             let style = tree.style(self.node);
             style
                 .size
-                .maybe_resolve(available_space.into_options())
+                .maybe_resolve(inner_node_size)
                 .maybe_apply_aspect_ratio(style.aspect_ratio)
                 .get(axis)
                 .or_else(|| {
-                    style
-                        .min_size
-                        .maybe_resolve(available_space.into_options())
-                        .maybe_apply_aspect_ratio(style.aspect_ratio)
-                        .get(axis)
+                    style.min_size.maybe_resolve(inner_node_size).maybe_apply_aspect_ratio(style.aspect_ratio).get(axis)
                 })
                 .unwrap_or_else(|| {
                     // Automatic minimum size. See https://www.w3.org/TR/css-grid-1/#min-size-auto
