@@ -132,7 +132,7 @@ impl GridItem {
         &mut self,
         axis: AbstractAxis,
         other_axis_tracks: &[GridTrack],
-        other_axis_available_space: AvailableSpace,
+        other_axis_available_space: Option<f32>,
         get_track_size_estimate: impl Fn(&GridTrack, AvailableSpace) -> Option<f32>,
     ) -> Size<Option<f32>> {
         self.known_dimensions_cache.unwrap_or_else(|| {
@@ -140,7 +140,7 @@ impl GridItem {
                 other_axis_tracks[self.track_range_excluding_lines(axis.other())]
                     .iter()
                     .map(|track| {
-                        get_track_size_estimate(track, other_axis_available_space)
+                        get_track_size_estimate(track, other_axis_available_space.into())
                             .map(|size| size + track.content_alignment_adjustment)
                     })
                     .sum::<Option<f32>>()

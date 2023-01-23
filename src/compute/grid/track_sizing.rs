@@ -373,8 +373,6 @@ fn resolve_intrinsic_track_sizes(
         /// The axis we are currently sizing
         axis: AbstractAxis,
         /// The available grid space
-        available_grid_space: Size<AvailableSpace>,
-        /// The available grid space
         inner_node_size: Size<Option<f32>>,
     }
 
@@ -392,7 +390,7 @@ fn resolve_intrinsic_track_sizes(
             item.known_dimensions_cached(
                 self.axis,
                 self.other_axis_tracks,
-                self.available_grid_space.get(self.axis.other()),
+                self.inner_node_size.get(self.axis.other()),
                 &self.get_track_size_estimate,
             )
         }
@@ -401,7 +399,7 @@ fn resolve_intrinsic_track_sizes(
         /// to zero if the container size is indefinite as otherwise this would introduce a cyclic dependency.
         #[inline(always)]
         fn margins_axis_sums(&self, item: &mut GridItem) -> Size<f32> {
-            let parent_width = self.available_grid_space.width.into_option();
+            let parent_width = self.inner_node_size.width;
             Rect {
                 left: item.margin.left.resolve_or_zero(Some(0.0)),
                 right: item.margin.right.resolve_or_zero(Some(0.0)),
@@ -450,14 +448,8 @@ fn resolve_intrinsic_track_sizes(
         }
     }
 
-    let mut item_sizer = IntrisicSizeMeasurer {
-        tree,
-        other_axis_tracks,
-        axis,
-        available_grid_space,
-        inner_node_size,
-        get_track_size_estimate,
-    };
+    let mut item_sizer =
+        IntrisicSizeMeasurer { tree, other_axis_tracks, axis, inner_node_size, get_track_size_estimate };
 
     let axis_available_grid_space = available_grid_space.get(axis);
 
