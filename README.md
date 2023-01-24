@@ -73,21 +73,26 @@ assert_eq!(taffy.layout(body_node).unwrap().size.height, 500.0); // This value w
 
 ## Benchmarks (vs. [Yoga](https://github.com/facebook/yoga))
 
-- Run on a 2021 MacBook Pro with M1 Pro processor.
-- Taffy benchmarks are using criterion (10 iterations).
-- Yoga benchmarks run via it's node.js bindings (the `yoga-layout-prebuilt` npm package), they were run a few times manually and it was verified that variance in the numbers of each run was minimal. It should be noted that this is using an old version of Yoga.
+- Run on a 2021 MacBook Pro with M1 Pro processor using [criterion](https://github.com/bheisler/criterion.rs)
+- Yoga benchmarks were run via the [yoga](https://github.com/bschwind/yoga-rs) crate (Rust bindings)
+- Most popular websites seem to have between 3,000 and 10,000 nodes (although they also require text layout, which neither yoga nor taffy implement).
 
-(note that the table below contains multiple different units (milliseconds vs. microseconds vs. nanoseconds))
+Note that the table below contains multiple different units (milliseconds vs. microseconds
 
-| Benchmark | Yoga | Taffy 0.2 |
-| --- | --- | --- |
-| yoga/10 nodes (1-level hierarchy) | 45.1670 µs | 1.9857 µs |
-| yoga/100 nodes (2-level hierarchy) | 134.1250 µs | 41.810 µs |
-| yoga/1_000 nodes (3-level hierarchy) | 1.2221 ms | 357.48 µs |
-| yoga/10_000 nodes (4-level hierarchy) | 13.8672 ms | 3.7310 ms |
-| yoga/100_000 nodes (5-level hierarchy) | 141.5307 ms | 39.682 ms |
+| Benchmark          | Node Count | Depth | Yoga ([ba27f9d]) | Taffy ([9059647]) |
+| ---                | ---        | ---   | ---              | ---               |
+| yoga 'huge nested' | 1,000      | 3     | 411.42 µs        | 275.47 µs         |
+| yoga 'huge nested' | 10,000     | 4     | 3.9882 ms        | 3.9409 ms         |
+| yoga 'huge nested' | 100,000    | 5     | 46.117 ms        | 32.458 ms         |
+| big trees (wide)   | 1,000      | 1     | 750.75 µs        | 571.35 µs         |
+| big trees (wide)   | 10,000     | 1     | 7.1639 ms        | 7.4838 ms         |
+| big trees (wide)   | 100,000    | 1     | 132.17 ms        | 245.16 ms         |
+| big trees (deep)   | 4,000      | 12    | 2.3140 ms        | 2.0300 ms         |
+| big trees (deep)   | 10,000     | 14    | 6.0009 ms        | 5.1872 ms         |
+| super deep         | 1,000      | 1,000 | 563.15 µs        | 548.97 µs         |
 
-Most popular websites seem to have between 3,000 and 10,000 nodes (although they also require text layout, which neither yoga nor taffy implement).
+[ba27f9d]: https://github.com/facebook/yoga/commit/ba27f9d1ecfa7518019845b84b035d3d4a2a6658
+[9059647]: https://github.com/DioxusLabs/taffy/commit/ba27f9d1ecfa7518019845b84b035d3d4a2a6658
 
 ## Contributions
 
