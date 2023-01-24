@@ -17,6 +17,8 @@ allow = [
     "Unicode-DFS-2016",
     "Apache-2.0",
     "Zlib",
+    "ISC",
+    "BSD-3-Clause"
 ]
 default = "deny"
 
@@ -31,7 +33,7 @@ skip = [
     { name = "taffy" },
 
     # This dependency won't actually end up in the final binary anyway as it a sub-dependency
-    # of num-cpus and atty only when targetted the hermit unikernel OS
+    # of num-cpus and atty only when targetting the hermit unikernel OS
     # (https://github.com/hermitcore/rusty-hermit)
     { name = "hermit-abi" }
 ]
