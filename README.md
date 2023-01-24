@@ -74,6 +74,7 @@ assert_eq!(taffy.layout(body_node).unwrap().size.height, 500.0); // This value w
 ## Benchmarks (vs. [Yoga](https://github.com/facebook/yoga))
 
 - Run on a 2021 MacBook Pro with M1 Pro processor using [criterion](https://github.com/bheisler/criterion.rs)
+- The benchmarks measure layout computation only. They do not measure tree creation.
 - Yoga benchmarks were run via the [yoga](https://github.com/bschwind/yoga-rs) crate (Rust bindings)
 - Most popular websites seem to have between 3,000 and 10,000 nodes (although they also require text layout, which neither yoga nor taffy implement).
 
@@ -89,6 +90,7 @@ Note that the table below contains multiple different units (milliseconds vs. mi
 | big trees (wide)   | 100,000    | 1     | 132.17 ms        | 245.16 ms         |
 | big trees (deep)   | 4,000      | 12    | 2.3140 ms        | 2.0300 ms         |
 | big trees (deep)   | 10,000     | 14    | 6.0009 ms        | 5.1872 ms         |
+| big trees (deep)   | 100,000    | 17    | 76.954 ms        | 74.946 ms         |
 | super deep         | 1,000      | 1,000 | 563.15 µs        | 548.97 µs         |
 
 [ba27f9d]: https://github.com/facebook/yoga/commit/ba27f9d1ecfa7518019845b84b035d3d4a2a6658
