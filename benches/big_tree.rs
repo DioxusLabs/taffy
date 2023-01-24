@@ -1,10 +1,17 @@
 //! This file includes benchmarks for very large, pseudo-randomly generated trees
-use criterion::{criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;
 use taffy::prelude::*;
 use taffy::randomizable::Randomizeable;
 use taffy::style::Style;
+
+#[cfg(feature = "yoga_benchmark")]
+mod yoga_helpers;
+#[cfg(feature = "yoga_benchmark")]
+use slotmap::SlotMap;
+#[cfg(feature = "yoga_benchmark")]
+use yoga_helpers::yg;
 
 /// Build a random leaf node
 fn build_random_leaf(taffy: &mut Taffy, rng: &mut ChaCha8Rng) -> Node {
@@ -12,34 +19,60 @@ fn build_random_leaf(taffy: &mut Taffy, rng: &mut ChaCha8Rng) -> Node {
 }
 
 /// A tree with many children that have shallow depth
-fn build_flat_hierarchy(taffy: &mut Taffy, total_node_count: u32) -> Node {
+fn build_taffy_flat_hierarchy(total_node_count: u32) -> (Taffy, Node) {
+    let mut taffy = Taffy::new();
     let mut rng = ChaCha8Rng::seed_from_u64(12345);
     let mut children = Vec::new();
     let mut node_count = 0;
 
     while node_count < total_node_count {
         let sub_children_count = rng.gen_range(1..=4);
-        let sub_children: Vec<Node> = (0..sub_children_count).map(|_| build_random_leaf(taffy, &mut rng)).collect();
+        let sub_children: Vec<Node> =
+            (0..sub_children_count).map(|_| build_random_leaf(&mut taffy, &mut rng)).collect();
         let node = taffy.new_with_children(Style::random(&mut rng), &sub_children).unwrap();
 
         children.push(node);
         node_count += 1 + sub_children_count;
     }
 
-    taffy.new_with_children(Style { ..Default::default() }, children.as_slice()).unwrap()
+    let root = taffy.new_with_children(Style::DEFAULT, children.as_slice()).unwrap();
+    (taffy, root)
+}
+
+#[cfg(feature = "yoga_benchmark")]
+/// A tree with many children that have shallow depth
+fn build_yoga_flat_hierarchy(total_node_count: u32) -> (yg::YogaTree, Node) {
+    let mut tree = SlotMap::new();
+    let mut rng = ChaCha8Rng::seed_from_u64(12345);
+    let mut children = Vec::new();
+    let mut node_count = 0;
+
+    while node_count < total_node_count {
+        let sub_children_count = rng.gen_range(1..=4);
+        let sub_children: Vec<Node> = (0..sub_children_count)
+            .map(|_| yoga_helpers::new_with_children(&mut tree, &Style::random(&mut rng), vec![]))
+            .collect();
+        let node = yoga_helpers::new_with_children(&mut tree, &Style::random(&mut rng), sub_children);
+
+        children.push(node);
+        node_count += 1 + sub_children_count;
+    }
+
+    let root = yoga_helpers::new_with_children(&mut tree, &Style::DEFAULT, children);
+    (tree, root)
 }
 
 /// A helper function to recursively construct a deep tree
-fn build_deep_tree(
-    taffy: &mut Taffy,
+fn build_deep_tree<T, N>(
+    tree: &mut T,
     max_nodes: u32,
     branching_factor: u32,
-    create_leaf_node: &mut impl FnMut(&mut Taffy) -> Node,
-    create_flex_node: &mut impl FnMut(&mut Taffy, Vec<Node>) -> Node,
-) -> Vec<Node> {
+    create_leaf_node: &mut impl FnMut(&mut T) -> N,
+    create_flex_node: &mut impl FnMut(&mut T, Vec<N>) -> N,
+) -> Vec<N> {
     if max_nodes <= branching_factor {
         // Build leaf nodes
-        return (0..max_nodes).map(|_| create_leaf_node(taffy)).collect();
+        return (0..max_nodes).map(|_| create_leaf_node(tree)).collect();
     }
 
     // Add another layer to the tree
@@ -47,27 +80,46 @@ fn build_deep_tree(
     (0..branching_factor)
         .map(|_| {
             let max_nodes = (max_nodes - branching_factor) / branching_factor;
-            let sub_children = build_deep_tree(taffy, max_nodes, branching_factor, create_leaf_node, create_flex_node);
-            create_flex_node(taffy, sub_children)
+            let sub_children = build_deep_tree(tree, max_nodes, branching_factor, create_leaf_node, create_flex_node);
+            create_flex_node(tree, sub_children)
         })
         .collect()
 }
 
 /// A tree with a higher depth for a more realistic scenario
-fn build_deep_hierarchy(taffy: &mut Taffy, node_count: u32, branching_factor: u32) -> Node {
+fn build_taffy_deep_hierarchy(node_count: u32, branching_factor: u32) -> (Taffy, Node) {
     let mut rng = ChaCha8Rng::seed_from_u64(12345);
     let mut build_leaf_node = |taffy: &mut Taffy| build_random_leaf(taffy, &mut rng);
     let mut rng = ChaCha8Rng::seed_from_u64(12345);
     let mut build_flex_node =
         |taffy: &mut Taffy, children: Vec<Node>| taffy.new_with_children(Style::random(&mut rng), &children).unwrap();
 
-    let tree = build_deep_tree(taffy, node_count, branching_factor, &mut build_leaf_node, &mut build_flex_node);
+    let mut taffy = Taffy::new();
+    let tree = build_deep_tree(&mut taffy, node_count, branching_factor, &mut build_leaf_node, &mut build_flex_node);
+    let root = taffy.new_with_children(Style::DEFAULT, &tree).unwrap();
+    (taffy, root)
+}
 
-    taffy.new_with_children(Style { ..Default::default() }, &tree).unwrap()
+#[cfg(feature = "yoga_benchmark")]
+/// A tree with a higher depth for a more realistic scenario
+fn build_yoga_deep_hierarchy(node_count: u32, branching_factor: u32) -> (yg::YogaTree, Node) {
+    let mut rng = ChaCha8Rng::seed_from_u64(12345);
+    let mut build_leaf_node =
+        |tree: &mut yg::YogaTree| yoga_helpers::new_with_children(tree, &Style::random(&mut rng), vec![]);
+    let mut rng = ChaCha8Rng::seed_from_u64(12345);
+    let mut build_flex_node = |tree: &mut yg::YogaTree, children: Vec<Node>| {
+        yoga_helpers::new_with_children(tree, &Style::random(&mut rng), children)
+    };
+
+    let mut tree = SlotMap::new();
+    let children = build_deep_tree(&mut tree, node_count, branching_factor, &mut build_leaf_node, &mut build_flex_node);
+    let root = yoga_helpers::new_with_children(&mut tree, &Style::DEFAULT, children);
+
+    (tree, root)
 }
 
 /// A deep tree that matches the shape and styling that yoga use on their benchmarks
-fn build_yoga_deep_hierarchy(taffy: &mut Taffy, node_count: u32, branching_factor: u32) -> Node {
+fn build_taffy_huge_nested_hierarchy(node_count: u32, branching_factor: u32) -> (Taffy, Node) {
     let style = Style {
         size: Size { width: Dimension::Points(10.0), height: Dimension::Points(10.0) },
         flex_grow: 1.0,
@@ -77,246 +129,141 @@ fn build_yoga_deep_hierarchy(taffy: &mut Taffy, node_count: u32, branching_facto
     let mut build_flex_node =
         |taffy: &mut Taffy, children: Vec<Node>| taffy.new_with_children(style.clone(), &children).unwrap();
 
-    let tree = build_deep_tree(taffy, node_count, branching_factor, &mut build_leaf_node, &mut build_flex_node);
+    let mut taffy = Taffy::new();
+    let tree = build_deep_tree(&mut taffy, node_count, branching_factor, &mut build_leaf_node, &mut build_flex_node);
+    let root = taffy.new_with_children(Style::DEFAULT, &tree).unwrap();
+    (taffy, root)
+}
 
-    taffy.new_with_children(Style::DEFAULT, &tree).unwrap()
+#[cfg(feature = "yoga_benchmark")]
+/// A deep tree that matches the shape and styling that yoga use on their benchmarks
+fn build_yoga_huge_nested_hierarchy(node_count: u32, branching_factor: u32) -> (yg::YogaTree, Node) {
+    let style = Style {
+        size: Size { width: Dimension::Points(10.0), height: Dimension::Points(10.0) },
+        flex_grow: 1.0,
+        ..Default::default()
+    };
+    let mut build_leaf_node = |tree: &mut yg::YogaTree| -> Node {
+        let mut node = yg::Node::new();
+        yoga_helpers::apply_taffy_style(&mut node, &style.clone());
+        tree.insert(node)
+    };
+    let mut build_flex_node = |tree: &mut yg::YogaTree, children: Vec<Node>| -> Node {
+        let mut node = yg::Node::new();
+        yoga_helpers::apply_taffy_style(&mut node, &style.clone());
+        for (i, child) in children.into_iter().enumerate() {
+            node.insert_child(&mut tree[child], i as u32);
+        }
+        tree.insert(node)
+    };
+
+    let mut tree = SlotMap::new();
+    let children = build_deep_tree(&mut tree, node_count, branching_factor, &mut build_leaf_node, &mut build_flex_node);
+    let mut root = yg::Node::new();
+    for (i, child) in children.into_iter().enumerate() {
+        root.insert_child(&mut tree[child], i as u32);
+    }
+    let root = tree.insert(root);
+    (tree, root)
 }
 
 fn taffy_benchmarks(c: &mut Criterion) {
-    let mut group = c.benchmark_group("yoga benchmarks");
-    group.sample_size(10);
-
-    group.bench_function("10 nodes", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_yoga_deep_hierarchy(&mut taffy, 10, 10);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::SmallInput,
-        )
-    });
-
-    group.bench_function("100 nodes", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_yoga_deep_hierarchy(&mut taffy, 100, 10);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::SmallInput,
-        )
-    });
-
-    group.bench_function("1_000 nodes", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_yoga_deep_hierarchy(&mut taffy, 1_000, 10);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::SmallInput,
-        )
-    });
-
-    group.bench_function("10_000 nodes", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_yoga_deep_hierarchy(&mut taffy, 10_000, 10);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::SmallInput,
-        )
-    });
-
-    group.bench_function("100_000 nodes", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_yoga_deep_hierarchy(&mut taffy, 100_000, 10);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::LargeInput,
-        )
-    });
-
-    group.bench_function("1_000_000 nodes", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_yoga_deep_hierarchy(&mut taffy, 1_000_000, 10);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::LargeInput,
-        )
-    });
-    drop(group);
+    let mut group = c.benchmark_group("yoga 'huge nested'");
+    for node_count in [1_000u32, 10_000, 100_000].iter() {
+        #[cfg(feature = "yoga_benchmark")]
+        group.bench_with_input(BenchmarkId::new("Yoga", node_count), node_count, |b, &node_count| {
+            b.iter_batched(
+                || build_yoga_huge_nested_hierarchy(node_count, 10),
+                |(mut tree, root)| {
+                    tree[root].calculate_layout(f32::INFINITY, f32::INFINITY, yg::Direction::LTR);
+                },
+                criterion::BatchSize::SmallInput,
+            )
+        });
+        group.bench_with_input(BenchmarkId::new("Taffy", node_count), node_count, |b, &node_count| {
+            b.iter_batched(
+                || build_taffy_huge_nested_hierarchy(node_count, 10),
+                |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
+                criterion::BatchSize::SmallInput,
+            )
+        });
+    }
+    group.finish();
 
     // Decrease sample size, because the tasks take longer
     let mut group = c.benchmark_group("big trees (wide)");
     group.sample_size(10);
-
-    group.bench_function("10 nodes (2-level hierarchy)", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_flat_hierarchy(&mut taffy, 10);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::SmallInput,
-        )
-    });
-
-    group.bench_function("100 nodes (2-level hierarchy)", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_flat_hierarchy(&mut taffy, 100);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::SmallInput,
-        )
-    });
-
-    group.bench_function("1_000 nodes (2-level hierarchy)", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_flat_hierarchy(&mut taffy, 1_000);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::SmallInput,
-        )
-    });
-
-    group.bench_function("10_000 nodes (2-level hierarchy)", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_flat_hierarchy(&mut taffy, 10_000);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::LargeInput,
-        )
-    });
-
-    group.bench_function("100_000 nodes (2-level hierarchy)", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_flat_hierarchy(&mut taffy, 100_000);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::LargeInput,
-        )
-    });
-
-    group.bench_function("100_000 nodes (7-level hierarchy)", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_deep_hierarchy(&mut taffy, 100_000, 7);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::LargeInput,
-        )
-    });
-
-    drop(group);
+    for node_count in [1_000u32, 10_000, 100_000].iter() {
+        #[cfg(feature = "yoga_benchmark")]
+        let benchmark_id = BenchmarkId::new(format!("Yoga (2-level hierarchy)"), node_count);
+        #[cfg(feature = "yoga_benchmark")]
+        group.bench_with_input(benchmark_id, node_count, |b, &node_count| {
+            b.iter_batched(
+                || build_yoga_flat_hierarchy(node_count),
+                |(mut tree, root)| {
+                    tree[root].calculate_layout(f32::INFINITY, f32::INFINITY, yg::Direction::LTR);
+                },
+                criterion::BatchSize::SmallInput,
+            )
+        });
+        let benchmark_id = BenchmarkId::new(format!("Taffy (2-level hierarchy)"), node_count);
+        group.bench_with_input(benchmark_id, node_count, |b, &node_count| {
+            b.iter_batched(
+                || build_taffy_flat_hierarchy(node_count),
+                |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
+                criterion::BatchSize::SmallInput,
+            )
+        });
+    }
+    group.finish();
 
     // Decrease sample size, because the tasks take longer
     let mut group = c.benchmark_group("big trees (deep)");
     group.sample_size(10);
+    let benches = [(4000, "(12-level hierarchy)"), (10_000, "(14-level hierarchy)"), (100_000, "(17-level hierarchy)")];
+    for (node_count, label) in benches.iter() {
+        #[cfg(feature = "yoga_benchmark")]
+        group.bench_with_input(BenchmarkId::new(format!("Yoga {label}"), node_count), node_count, |b, &node_count| {
+            b.iter_batched(
+                || build_yoga_deep_hierarchy(node_count, 2),
+                |(mut tree, root)| {
+                    tree[root].calculate_layout(f32::INFINITY, f32::INFINITY, yg::Direction::LTR);
+                },
+                criterion::BatchSize::SmallInput,
+            )
+        });
+        group.bench_with_input(BenchmarkId::new(format!("Taffy {label}"), node_count), node_count, |b, &node_count| {
+            b.iter_batched(
+                || build_taffy_deep_hierarchy(node_count, 2),
+                |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
+                criterion::BatchSize::SmallInput,
+            )
+        });
+    }
+    group.finish();
 
-    group.bench_function("4000 nodes (12-level hierarchy)", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_deep_hierarchy(&mut taffy, 4000, 2);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::SmallInput,
-        )
-    });
-
-    group.bench_function("10_000 nodes (14-level hierarchy)", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_deep_hierarchy(&mut taffy, 10_000, 2);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::SmallInput,
-        )
-    });
-
-    group.bench_function("100_000 nodes (17-level hierarchy)", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_deep_hierarchy(&mut taffy, 100_000, 2);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::LargeInput,
-        )
-    });
-
-    group.bench_function("1_000_000 nodes (20-level hierarchy)", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_deep_hierarchy(&mut taffy, 1_000_000, 2);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::LargeInput,
-        )
-    });
-
-    drop(group);
-
-    let mut group = c.benchmark_group("super deep trees");
+    let mut group = c.benchmark_group("super deep (1000-level hierarchy)");
     group.sample_size(10);
-
-    group.bench_function("100 nodes (100-level hierarchy)", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_deep_hierarchy(&mut taffy, 100, 1);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::SmallInput,
-        )
-    });
-
-    group.bench_function("1_000 nodes (1000-level hierarchy)", |b| {
-        b.iter_batched(
-            || {
-                let mut taffy = Taffy::new();
-                let root = build_deep_hierarchy(&mut taffy, 1_000, 1);
-                (taffy, root)
-            },
-            |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-            criterion::BatchSize::SmallInput,
-        )
-    });
+    for node_count in [1000u32].iter() {
+        #[cfg(feature = "yoga_benchmark")]
+        group.bench_with_input(BenchmarkId::new("Yoga", node_count), node_count, |b, &node_count| {
+            b.iter_batched(
+                || build_yoga_deep_hierarchy(node_count, 2),
+                |(mut tree, root)| {
+                    tree[root].calculate_layout(f32::INFINITY, f32::INFINITY, yg::Direction::LTR);
+                },
+                criterion::BatchSize::SmallInput,
+            )
+        });
+        group.bench_with_input(BenchmarkId::new("Taffy", node_count), node_count, |b, &node_count| {
+            b.iter_batched(
+                || build_taffy_deep_hierarchy(node_count, 2),
+                |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
+                criterion::BatchSize::SmallInput,
+            )
+        });
+    }
+    group.finish();
 }
 
 criterion_group!(benches, taffy_benchmarks);

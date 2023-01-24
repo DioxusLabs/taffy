@@ -28,6 +28,7 @@ alloc = []
 std = ["num-traits/std"]
 serde = ["dep:serde"]
 random = ["dep:rand"]
+yoga_benchmark = []
 debug = []
 
 [dev-dependencies]
@@ -35,6 +36,8 @@ criterion = "0.4"
 rstest = "0.16.0"
 rand = "0.8.5"
 rand_chacha = "0.3.1"
+yoga = "0.4.0"
+ordered-float = "3.4.0"
 
 # Enable example and test-specific features
 taffy = { path = ".", features = ["random"] }
