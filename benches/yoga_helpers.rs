@@ -1,10 +1,28 @@
+use slotmap::{DefaultKey, SlotMap};
+
 pub mod yg {
     pub use ordered_float::OrderedFloat;
+    use slotmap::{DefaultKey, SlotMap};
     pub use yoga::types::*;
     pub use yoga::Node;
+
+    pub type YogaTree = SlotMap<DefaultKey, Node>;
 }
 mod tf {
     pub use taffy::prelude::*;
+}
+
+pub fn new_with_children(
+    tree: &mut SlotMap<DefaultKey, yg::Node>,
+    style: &tf::Style,
+    children: Vec<DefaultKey>,
+) -> DefaultKey {
+    let mut node = yg::Node::new();
+    apply_taffy_style(&mut node, style);
+    for (i, child) in children.into_iter().enumerate() {
+        node.insert_child(&mut tree[child], i as u32);
+    }
+    tree.insert(node)
 }
 
 fn into_yg_units(dim: impl Into<tf::Dimension>) -> yg::StyleUnit {
