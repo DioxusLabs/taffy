@@ -849,6 +849,12 @@ fn distribute_item_space_to_base_size(
         let fit_content_limited_growth_limit =
             move |track: &GridTrack| track.fit_content_limited_growth_limit(axis_inner_node_size);
 
+        // When distributing space to base sizes the fit content limit applies to max-content sizes but not min-content sizes
+        let limit = match intrinsic_contribution_type {
+            IntrinsicContributionType::Minimum => &(|_: &GridTrack| f32::INFINITY) as &dyn Fn(&GridTrack) -> f32,
+            IntrinsicContributionType::Maximum => &fit_content_limited_growth_limit as &dyn Fn(&GridTrack) -> f32,
+        };
+
         // 1. Find the space to distribute
         let track_sizes: f32 = tracks.iter().map(|track| track.base_size).sum();
         let extra_space: f32 = f32_max(0.0, space - track_sizes);
@@ -862,13 +868,7 @@ fn distribute_item_space_to_base_size(
         /// extra space when it gets to exactly zero, we will stop when it falls below this amount
         const THRESHOLD: f32 = 0.000001;
 
-        let extra_space = distribute_space_up_to_limits(
-            extra_space,
-            tracks,
-            &track_is_affected,
-            get_base_size,
-            fit_content_limited_growth_limit,
-        );
+        let extra_space = distribute_space_up_to_limits(extra_space, tracks, &track_is_affected, get_base_size, limit);
 
         // 3. Distribute remaining span beyond limits (if any)
         if extra_space > THRESHOLD {
@@ -892,12 +892,6 @@ fn distribute_item_space_to_base_size(
             if number_of_tracks == 0 {
                 filter = (|_| true) as fn(&GridTrack) -> bool;
             }
-
-            // When distributing space beyond limits, the fit content limit applies to max-content sizes but not min-content sizes
-            let limit = match intrinsic_contribution_type {
-                IntrinsicContributionType::Minimum => &(|_: &GridTrack| f32::INFINITY) as &dyn Fn(&GridTrack) -> f32,
-                IntrinsicContributionType::Maximum => &fit_content_limited_growth_limit as &dyn Fn(&GridTrack) -> f32,
-            };
 
             distribute_space_up_to_limits(extra_space, tracks, filter, get_base_size, limit);
         }
