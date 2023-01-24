@@ -38,6 +38,8 @@ rand_chacha = "0.3.1"
 
 # Enable example and test-specific features
 taffy = { path = ".", features = ["random"] }
+yoga = "0.4.0"
+ordered-float = "3.4.0"
 
 [profile.release]
 lto = true
