@@ -620,6 +620,10 @@ mod grid_size_child_fixed_tracks;
 #[cfg(feature = "grid")]
 mod grid_span_2_max_content_auto_indefinite;
 #[cfg(feature = "grid")]
+mod grid_span_2_max_content_fit_content_10px_indefinite;
+#[cfg(feature = "grid")]
+mod grid_span_2_max_content_fit_content_80px_indefinite;
+#[cfg(feature = "grid")]
 mod grid_span_2_max_content_max_content_indefinite;
 #[cfg(feature = "grid")]
 mod grid_span_2_min_content_auto_indefinite;
