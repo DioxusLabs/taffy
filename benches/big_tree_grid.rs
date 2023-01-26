@@ -7,7 +7,7 @@ use taffy::style::Style;
 use std::iter;
 
 /// Build a random leaf node
-fn build_random_leaf(taffy: &mut Taffy, rng: &mut ChaCha8Rng) -> Node {
+fn build_random_leaf(taffy: &mut Taffy, _rng: &mut ChaCha8Rng) -> Node {
     taffy.new_with_children(Style { size: points(20.0), ..Default::default() }, &[]).unwrap()
 }
 
