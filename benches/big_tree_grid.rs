@@ -105,7 +105,7 @@ fn build_taffy_deep_grid_hierarchy(levels: u32) -> (Taffy, Node) {
 fn taffy_benchmarks(c: &mut Criterion) {
 
     let mut group = c.benchmark_group("grid/wide)");
-    for track_count in [31usize, 100, 150].iter() {
+    for track_count in [31usize, 100, 150, 200].iter() {
         group.bench_with_input(BenchmarkId::new("Taffy", track_count.pow(2)), track_count, |b, &track_count| {
             b.iter_batched(
                 || build_grid_flat_hierarchy(track_count, track_count),
