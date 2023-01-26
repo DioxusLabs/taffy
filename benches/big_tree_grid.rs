@@ -60,7 +60,7 @@ fn build_grid_flat_hierarchy(col_count: usize, row_count: usize) -> (Taffy, Node
 /// A helper function to recursively construct a deep tree
 pub fn build_deep_grid_tree(
     tree: &mut Taffy,
-    levels: u32,
+    levels: usize,
     track_count: usize,
     create_leaf_node: &mut impl FnMut(&mut Taffy) -> Node,
     create_container_node: &mut impl FnMut(&mut Taffy, Vec<Node>) -> Node,
@@ -92,7 +92,7 @@ pub fn build_deep_grid_tree(
 }
 
 /// A tree with a higher depth for a more realistic scenario
-fn build_taffy_deep_grid_hierarchy(levels: u32, track_count: usize) -> (Taffy, Node) {
+fn build_taffy_deep_grid_hierarchy(levels: usize, track_count: usize) -> (Taffy, Node) {
     let mut rng = ChaCha8Rng::seed_from_u64(12345);
     let mut build_leaf_node = |taffy: &mut Taffy| build_random_leaf(taffy, &mut rng);
     let mut rng = ChaCha8Rng::seed_from_u64(12345);
@@ -107,38 +107,47 @@ fn build_taffy_deep_grid_hierarchy(levels: u32, track_count: usize) -> (Taffy, N
 }
 
 fn taffy_benchmarks(c: &mut Criterion) {
-    let mut group = c.benchmark_group("grid/wide)");
+    let mut group = c.benchmark_group("grid/wide");
     for track_count in [31usize, 100, 150, 200].iter() {
-        group.bench_with_input(BenchmarkId::new("Taffy", track_count.pow(2)), track_count, |b, &track_count| {
-            b.iter_batched(
-                || build_grid_flat_hierarchy(track_count, track_count),
-                |(mut taffy, root)| taffy.compute_layout(root, points(12000.0)).unwrap(),
-                criterion::BatchSize::SmallInput,
-            )
-        });
+        group.bench_with_input(
+            BenchmarkId::new(format!("{c}x{c}", c = track_count), track_count.pow(2)),
+            track_count,
+            |b, &track_count| {
+                b.iter_batched(
+                    || build_grid_flat_hierarchy(track_count, track_count),
+                    |(mut taffy, root)| taffy.compute_layout(root, points(12000.0)).unwrap(),
+                    criterion::BatchSize::SmallInput,
+                )
+            },
+        );
     }
     group.finish();
 
-    let mut group = c.benchmark_group("grid/deep/2x2");
+    let mut group = c.benchmark_group("grid/deep");
     group.sample_size(10);
-    for levels in [3, 4, 5, 6].iter() {
-        group.bench_with_input(BenchmarkId::new("Taffy", 5u32.pow(*levels)), levels, |b, &levels| {
-            b.iter_batched(
-                || build_taffy_deep_grid_hierarchy(levels, 2),
-                |(mut taffy, root)| taffy.compute_layout(root, points(12000.0)).unwrap(),
-                criterion::BatchSize::SmallInput,
-            )
-        });
+    for (tracks, levels) in [(3, 3), (3, 4) /*, (3, 5)*/, (2, 3), (2, 4), (2, 5), (2, 6)].iter() {
+        let children_per_level: usize = (tracks * tracks) + 1;
+        group.bench_with_input(
+            BenchmarkId::new(format!("{c}x{c}", c = tracks), children_per_level.pow(*levels as u32)),
+            &(*levels, *tracks),
+            |b, &(levels, tracks)| {
+                b.iter_batched(
+                    || build_taffy_deep_grid_hierarchy(levels, tracks),
+                    |(mut taffy, root)| taffy.compute_layout(root, points(12000.0)).unwrap(),
+                    criterion::BatchSize::SmallInput,
+                )
+            },
+        );
     }
     group.finish();
 
-    let mut group = c.benchmark_group("grid/deep/3x3");
+    let mut group = c.benchmark_group("grid/superdeep");
     group.sample_size(10);
-    for levels in [3, 4 /*, 5*/].iter() {
-        group.bench_with_input(BenchmarkId::new("Taffy", 10u32.pow(*levels)), levels, |b, &levels| {
+    for levels in [10, 20].iter() {
+        group.bench_with_input(BenchmarkId::new("1x1", levels), levels, |b, &levels| {
             b.iter_batched(
-                || build_taffy_deep_grid_hierarchy(levels, 3),
-                |(mut taffy, root)| taffy.compute_layout(root, points(12000.0)).unwrap(),
+                || build_taffy_deep_grid_hierarchy(levels, 1),
+                |(mut taffy, root)| taffy.compute_layout(root, max_content()).unwrap(),
                 criterion::BatchSize::SmallInput,
             )
         });
