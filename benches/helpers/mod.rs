@@ -19,7 +19,8 @@ pub fn build_deep_tree<T, N>(
     (0..branching_factor)
         .map(|_| {
             let max_nodes = (max_nodes - branching_factor) / branching_factor;
-            let sub_children = build_deep_tree(tree, max_nodes, branching_factor, create_leaf_node, create_container_node);
+            let sub_children =
+                build_deep_tree(tree, max_nodes, branching_factor, create_leaf_node, create_container_node);
             create_container_node(tree, sub_children)
         })
         .collect()
