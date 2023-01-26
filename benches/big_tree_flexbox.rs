@@ -6,8 +6,11 @@ use taffy::prelude::*;
 use taffy::randomizable::Randomizeable;
 use taffy::style::Style;
 
+mod helpers;
+use helpers::build_deep_tree;
+
 #[cfg(feature = "yoga_benchmark")]
-mod yoga_helpers;
+use helpers::yoga_helpers;
 #[cfg(feature = "yoga_benchmark")]
 use slotmap::SlotMap;
 #[cfg(feature = "yoga_benchmark")]
@@ -60,30 +63,6 @@ fn build_yoga_flat_hierarchy(total_node_count: u32) -> (yg::YogaTree, Node) {
 
     let root = yoga_helpers::new_with_children(&mut tree, &Style::DEFAULT, children);
     (tree, root)
-}
-
-/// A helper function to recursively construct a deep tree
-fn build_deep_tree<T, N>(
-    tree: &mut T,
-    max_nodes: u32,
-    branching_factor: u32,
-    create_leaf_node: &mut impl FnMut(&mut T) -> N,
-    create_flex_node: &mut impl FnMut(&mut T, Vec<N>) -> N,
-) -> Vec<N> {
-    if max_nodes <= branching_factor {
-        // Build leaf nodes
-        return (0..max_nodes).map(|_| create_leaf_node(tree)).collect();
-    }
-
-    // Add another layer to the tree
-    // Each child gets an equal amount of the remaining nodes
-    (0..branching_factor)
-        .map(|_| {
-            let max_nodes = (max_nodes - branching_factor) / branching_factor;
-            let sub_children = build_deep_tree(tree, max_nodes, branching_factor, create_leaf_node, create_flex_node);
-            create_flex_node(tree, sub_children)
-        })
-        .collect()
 }
 
 /// A tree with a higher depth for a more realistic scenario
