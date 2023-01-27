@@ -30,6 +30,7 @@ serde = ["dep:serde"]
 random = ["dep:rand"]
 yoga_benchmark = []
 debug = []
+profile = []
 
 [dev-dependencies]
 criterion = "0.4"
