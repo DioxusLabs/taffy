@@ -6,7 +6,7 @@ use crate::layout::{Cache, Layout};
 use crate::style::Style;
 
 /// The number of cache entries for each node in the tree
-pub(crate) const CACHE_SIZE: usize = 5;
+pub(crate) const CACHE_SIZE: usize = 7;
 
 /// Layout information for a given [`Node`](crate::node::Node)
 ///

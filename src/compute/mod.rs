@@ -286,16 +286,21 @@ fn compute_cache_slot(known_dimensions: Size<Option<f32>>, available_space: Size
         return 0;
     }
 
-    // Slot 1: 1 of 2 known_dimensions were set and the other dimension was either a MaxContent or Definite available space constraint
-    // Slot 2: 1 of 2 known_dimensions were set and the other dimension was a MinContent constraint
-    if has_known_width || has_known_height {
-        let other_dim_available_space = if has_known_width { available_space.height } else { available_space.width };
-        return 1 + (other_dim_available_space == AvailableSpace::MinContent) as usize;
+    // Slot 1: width but not height known_dimension was set and the other dimension was either a MaxContent or Definite available space constraint
+    // Slot 2: width but not height known_dimension was set and the other dimension was a MinContent constraint
+    if has_known_width && !has_known_height {
+        return 1 + (available_space.height == AvailableSpace::MinContent) as usize;
     }
 
-    // Slot 3: Neither known_dimensions were set and we are sizing under a MaxContent or Definite available space constraint
-    // Slot 4: Neither known_dimensions were set and we are sizing under a MinContent constraint
-    3 + (available_space.width == AvailableSpace::MinContent) as usize
+    // Slot 3: height but not width known_dimension was set and the other dimension was either a MaxContent or Definite available space constraint
+    // Slot 4: height but not width known_dimension was set and the other dimension was a MinContent constraint
+    if !has_known_width && has_known_height {
+        return 3 + (available_space.width == AvailableSpace::MinContent) as usize;
+    }
+
+    // Slot 5: Neither known_dimensions were set and we are sizing under a MaxContent or Definite available space constraint
+    // Slot 6: Neither known_dimensions were set and we are sizing under a MinContent constraint
+    5 + (available_space.width == AvailableSpace::MinContent) as usize
 }
 
 /// Try to get the computation result from the cache.
