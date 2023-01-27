@@ -67,7 +67,7 @@ pub fn build_deep_grid_tree(
     create_container_node: &mut impl FnMut(&mut Taffy, Vec<Node>) -> Node,
 ) -> Vec<Node> {
     // The extra one is for a position:absolute child
-    let child_count = track_count.pow(2) + 1;
+    let child_count = track_count * track_count;
 
     if levels == 1 {
         // Build leaf nodes
@@ -80,13 +80,6 @@ pub fn build_deep_grid_tree(
         .map(|_| {
             let sub_children =
                 build_deep_grid_tree(tree, levels - 1, track_count, create_leaf_node, create_container_node);
-            tree.set_style(sub_children[child_count - 1], {
-                let mut style = tree.style(sub_children[child_count - 1]).unwrap().clone();
-                style.position = Position::Absolute;
-                style.size = percent(0.5);
-                style
-            })
-            .unwrap();
             create_container_node(tree, sub_children)
         })
         .collect()
@@ -127,8 +120,8 @@ fn taffy_benchmarks(c: &mut Criterion) {
 
     let mut group = c.benchmark_group("grid/deep");
     group.sample_size(10);
-    for (tracks, levels) in [(3, 3), (3, 4) /*, (3, 5)*/, (2, 3), (2, 4), (2, 5), (2, 6)].iter() {
-        let children_per_level: usize = (tracks * tracks) + 1;
+    for (tracks, levels) in [(2, 5), (3, 4), (2, 7) /*, (3, 5)*/].iter() {
+        let children_per_level: usize = tracks * tracks;
         group.bench_with_input(
             BenchmarkId::new(format!("{c}x{c}", c = tracks), children_per_level.pow(*levels as u32)),
             &(*levels, *tracks),
@@ -145,7 +138,7 @@ fn taffy_benchmarks(c: &mut Criterion) {
 
     let mut group = c.benchmark_group("grid/superdeep");
     group.sample_size(10);
-    for levels in [10, 20].iter() {
+    for levels in [100, 1000].iter() {
         group.bench_with_input(BenchmarkId::new("1x1", levels), levels, |b, &levels| {
             b.iter_batched(
                 || build_taffy_deep_grid_hierarchy(levels, 1),
