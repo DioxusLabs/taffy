@@ -45,6 +45,7 @@ fn build_grid_flat_hierarchy(col_count: usize, row_count: usize) -> (Taffy, Node
     let mut rng = ChaCha8Rng::seed_from_u64(12345);
 
     let style = Style {
+        display: Display::Grid,
         grid_template_columns: iter::from_fn(|| Some(random_grid_track(&mut rng))).take(col_count).collect(),
         grid_template_rows: iter::from_fn(|| Some(random_grid_track(&mut rng))).take(row_count).collect(),
         ..Default::default()
