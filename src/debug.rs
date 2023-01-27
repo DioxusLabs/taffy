@@ -108,6 +108,7 @@ impl DebugLogger {
 pub(crate) static NODE_LOGGER: DebugLogger = DebugLogger::new();
 
 #[cfg(feature = "profile")]
+#[allow(unused_macros)]
 macro_rules! time {
     ($label:expr, $($code:tt)*) => {
         let start = ::std::time::Instant::now();
@@ -118,10 +119,12 @@ macro_rules! time {
 }
 
 #[cfg(not(feature = "profile"))]
+#[allow(unused_macros)]
 macro_rules! time {
     ($label:expr, $($code:tt)*) => {
         $($code)*
     };
 }
 
+#[allow(unused_imports)]
 pub(crate) use time;
