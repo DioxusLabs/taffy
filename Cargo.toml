@@ -30,6 +30,7 @@ serde = ["dep:serde"]
 random = ["dep:rand"]
 yoga_benchmark = []
 debug = []
+profile = []
 
 [dev-dependencies]
 criterion = "0.4"
@@ -57,8 +58,13 @@ path = "benches/complex.rs"
 harness = false
 
 [[bench]]
-name = "big_tree"
-path = "benches/big_tree.rs"
+name = "big_tree_flexbox"
+path = "benches/big_tree_flexbox.rs"
+harness = false
+
+[[bench]]
+name = "big_tree_grid"
+path = "benches/big_tree_grid.rs"
 harness = false
 
 [workspace]

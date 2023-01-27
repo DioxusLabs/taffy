@@ -104,5 +104,27 @@ impl DebugLogger {
     }
 }
 
-#[cfg(feature = "debug")]
+#[cfg(any(feature = "debug", feature = "profile"))]
 pub(crate) static NODE_LOGGER: DebugLogger = DebugLogger::new();
+
+#[cfg(feature = "profile")]
+#[allow(unused_macros)]
+macro_rules! time {
+    ($label:expr, $($code:tt)*) => {
+        let start = ::std::time::Instant::now();
+        $($code)*
+        let duration = ::std::time::Instant::now().duration_since(start);
+        crate::debug::NODE_LOGGER.log(format_args!("Performed {} in {}ms", $label, duration.as_millis()));
+    };
+}
+
+#[cfg(not(feature = "profile"))]
+#[allow(unused_macros)]
+macro_rules! time {
+    ($label:expr, $($code:tt)*) => {
+        $($code)*
+    };
+}
+
+#[allow(unused_imports)]
+pub(crate) use time;

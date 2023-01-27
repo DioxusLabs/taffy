@@ -20,7 +20,7 @@ use self::flexbox::FlexboxAlgorithm;
 use self::grid::CssGridAlgorithm;
 use self::leaf::LeafAlgorithm;
 
-#[cfg(feature = "debug")]
+#[cfg(any(feature = "debug", feature = "profile"))]
 use crate::debug::NODE_LOGGER;
 
 /// Updates the stored layout of the provided `node` and its children
@@ -130,7 +130,7 @@ fn compute_node_layout(
     run_mode: RunMode,
     sizing_mode: SizingMode,
 ) -> SizeAndBaselines {
-    #[cfg(feature = "debug")]
+    #[cfg(any(feature = "debug", feature = "profile"))]
     NODE_LOGGER.push_node(node);
     #[cfg(feature = "debug")]
     println!();
@@ -144,7 +144,7 @@ fn compute_node_layout(
         NODE_LOGGER.labelled_debug_log("CACHE", cached_size_and_baselines.size);
         #[cfg(feature = "debug")]
         debug_log_node(known_dimensions, parent_size, available_space, run_mode, sizing_mode);
-        #[cfg(feature = "debug")]
+        #[cfg(any(feature = "debug", feature = "profile"))]
         NODE_LOGGER.pop_node();
         return cached_size_and_baselines;
     }
@@ -234,7 +234,7 @@ fn compute_node_layout(
 
     #[cfg(feature = "debug")]
     NODE_LOGGER.labelled_debug_log("RESULT", computed_size_and_baselines.size);
-    #[cfg(feature = "debug")]
+    #[cfg(any(feature = "debug", feature = "profile"))]
     NODE_LOGGER.pop_node();
 
     computed_size_and_baselines
