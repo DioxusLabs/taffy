@@ -159,7 +159,7 @@ pub(super) fn resolve_item_track_indexes(items: &mut [GridItem], column_counts: 
 
 /// Determine (in each axis) whether the item crosses any flexible tracks
 #[inline(always)]
-pub(super) fn determine_if_item_crosses_flexible_tracks(
+pub(super) fn determine_if_item_crosses_flexible_or_intrinsic_tracks(
     items: &mut Vec<GridItem>,
     columns: &[GridTrack],
     rows: &[GridTrack],
@@ -167,8 +167,12 @@ pub(super) fn determine_if_item_crosses_flexible_tracks(
     for item in items {
         item.crosses_flexible_column =
             item.track_range_excluding_lines(AbstractAxis::Inline).any(|i| columns[i].is_flexible());
+        item.crosses_intrinsic_column =
+            item.track_range_excluding_lines(AbstractAxis::Inline).any(|i| columns[i].has_intrinsic_sizing_function());
         item.crosses_flexible_row =
             item.track_range_excluding_lines(AbstractAxis::Block).any(|i| rows[i].is_flexible());
+        item.crosses_intrinsic_row =
+            item.track_range_excluding_lines(AbstractAxis::Block).any(|i| rows[i].has_intrinsic_sizing_function());
     }
 }
 

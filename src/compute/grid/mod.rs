@@ -14,7 +14,9 @@ use alignment::{align_and_position_item, align_tracks};
 use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks};
 use implicit_grid::compute_grid_size_estimate;
 use placement::place_grid_items;
-use track_sizing::{determine_if_item_crosses_flexible_tracks, resolve_item_track_indexes, track_sizing_algorithm};
+use track_sizing::{
+    determine_if_item_crosses_flexible_or_intrinsic_tracks, resolve_item_track_indexes, track_sizing_algorithm,
+};
 use types::{CellOccupancyMatrix, GridTrack};
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine};
@@ -175,7 +177,7 @@ pub fn compute(
 
     // For each item, and in each axis, determine whether the item crosses any flexible (fr) tracks
     // Record this as a boolean (per-axis) on each item for later use in the track-sizing algorithm
-    determine_if_item_crosses_flexible_tracks(&mut items, &columns, &rows);
+    determine_if_item_crosses_flexible_or_intrinsic_tracks(&mut items, &columns, &rows);
 
     // Run track sizing algorithm for Inline axis
     track_sizing_algorithm(

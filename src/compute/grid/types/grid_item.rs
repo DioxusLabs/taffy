@@ -45,6 +45,10 @@ pub(in super::super) struct GridItem {
     pub crosses_flexible_row: bool,
     /// Whether the item crosses a flexible column
     pub crosses_flexible_column: bool,
+    /// Whether the item crosses a intrinsic row
+    pub crosses_intrinsic_row: bool,
+    /// Whether the item crosses a intrinsic column
+    pub crosses_intrinsic_column: bool,
 
     // Caches for intrinsic size computation. These caches are only valid for a single run of the track-sizing algorithm.
     /// Cache for the known_dimensions input to intrinsic sizing computation
@@ -76,6 +80,8 @@ impl GridItem {
             column_indexes: Line { start: 0, end: 0 }, // Properly initialised later
             crosses_flexible_row: false,            // Properly initialised later
             crosses_flexible_column: false,         // Properly initialised later
+            crosses_intrinsic_row: false,           // Properly initialised later
+            crosses_intrinsic_column: false,        // Properly initialised later
             known_dimensions_cache: None,
             min_content_contribution_cache: None,
             max_content_contribution_cache: None,
