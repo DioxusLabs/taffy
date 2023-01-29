@@ -2,6 +2,7 @@
 
 use crate::geometry::{Point, Size};
 use crate::style::AvailableSpace;
+use crate::sys::round;
 
 /// Whether we are performing a full layout, or we merely need to size the node
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -74,6 +75,14 @@ impl Layout {
     #[must_use]
     pub const fn with_order(order: u32) -> Self {
         Self { order, size: Size::zero(), location: Point::ZERO }
+    }
+
+    /// Round layout to integer values
+    pub fn round(&mut self) {
+        self.location.x = round(self.location.x);
+        self.location.y = round(self.location.y);
+        self.size.width = round(self.size.width);
+        self.size.height = round(self.size.height);
     }
 }
 

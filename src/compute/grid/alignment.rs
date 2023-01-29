@@ -2,11 +2,9 @@
 use super::types::GridTrack;
 use crate::axis::InBothAbsAxis;
 use crate::compute::common::alignment::compute_alignment_offset;
-use crate::compute::{GenericAlgorithm, LayoutAlgorithm};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::layout::{Layout, SizingMode};
 use crate::math::MaybeMath;
-use crate::node::Node;
 use crate::resolve::MaybeResolve;
 use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Position};
 use crate::sys::{f32_max, f32_min};
@@ -72,9 +70,9 @@ pub(super) fn align_tracks(
 }
 
 /// Align and size a grid item into it's final position
-pub(super) fn align_and_position_item(
-    tree: &mut impl LayoutTree,
-    node: Node,
+pub(super) fn align_and_position_item<Tree: LayoutTree>(
+    tree: &mut Tree,
+    node: Tree::ChildId,
     order: u32,
     grid_area: Rect<f32>,
     container_alignment_styles: InBothAbsAxis<Option<AlignItems>>,
@@ -82,7 +80,7 @@ pub(super) fn align_and_position_item(
 ) {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
 
-    let style = tree.style(node);
+    let style = tree.child_style(node);
     let aspect_ratio = style.aspect_ratio;
     let justify_self = style.justify_self;
     let align_self = style.align_self;
@@ -180,8 +178,7 @@ pub(super) fn align_and_position_item(
     let Size { width, height } = Size { width, height }.maybe_clamp(min_size, max_size);
 
     // Layout node
-    let measured_size_and_baselines = GenericAlgorithm::perform_layout(
-        tree,
+    let measured_size_and_baselines = tree.perform_child_layout(
         node,
         Size { width, height },
         grid_area_size.map(Option::Some),
@@ -212,7 +209,7 @@ pub(super) fn align_and_position_item(
         baseline_shim,
     );
 
-    *tree.layout_mut(node) = Layout { order, size: Size { width, height }, location: Point { x, y } };
+    *tree.child_layout_mut(node) = Layout { order, size: Size { width, height }, location: Point { x, y } };
 }
 
 /// Align and size a grid item along a single axis

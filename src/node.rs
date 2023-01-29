@@ -6,14 +6,15 @@ use slotmap::{DefaultKey, SlotMap, SparseSecondaryMap};
 /// A node in a layout.
 pub type Node = slotmap::DefaultKey;
 
+use crate::compute::{self, recursively_perform_hidden_layout};
 use crate::error::{TaffyError, TaffyResult};
 use crate::geometry::Size;
 use crate::layout::{Cache, Layout};
-use crate::prelude::LayoutTree;
 use crate::style::{AvailableSpace, Style};
 #[cfg(any(feature = "std", feature = "alloc"))]
 use crate::sys::Box;
 use crate::sys::{new_vec_with_capacity, ChildrenVec, Vec};
+use crate::tree::LayoutTree;
 use crate::{data::NodeData, error};
 
 /// A function type that can be used in a [`MeasureFunc`]
@@ -30,6 +31,18 @@ pub enum MeasureFunc {
     /// Stores a boxed function
     #[cfg(any(feature = "std", feature = "alloc"))]
     Boxed(Box<dyn Measurable>),
+}
+
+impl MeasureFunc {
+    /// Call the measure function to measure to the node
+    #[inline(always)]
+    pub fn measure(&self, known_dimensions: Size<Option<f32>>, available_space: Size<AvailableSpace>) -> Size<f32> {
+        match self {
+            MeasureFunc::Raw(measure) => measure(known_dimensions, available_space),
+            #[cfg(any(feature = "std", feature = "alloc"))]
+            MeasureFunc::Boxed(measure) => (measure as &dyn Fn(_, _) -> _)(known_dimensions, available_space),
+        }
+    }
 }
 
 /// A tree of UI [`Nodes`](`Node`), suitable for UI layout
@@ -57,66 +70,107 @@ impl Default for Taffy {
     }
 }
 
-impl LayoutTree for Taffy {
-    type ChildIter<'a> = std::slice::Iter<'a, DefaultKey>;
+/// An into the tree that represents a single node
+pub(crate) struct TaffyNodeRef<'tree> {
+    /// A reference to the underlying Taffy tree
+    tree: &'tree mut Taffy,
+    /// The id of the node being referenced
+    node_id: Node,
+}
 
-    fn children(&self, node: Node) -> Self::ChildIter<'_> {
-        self.children[node].iter()
+impl<'tree> TaffyNodeRef<'tree> {
+    /// Create a TaffyNodeRef from a Taffy tree and a node id
+    #[inline(always)]
+    fn new(tree: &mut Taffy, node_id: Node) -> TaffyNodeRef<'_> {
+        TaffyNodeRef { tree, node_id }
     }
 
-    fn child_count(&self, node: Node) -> usize {
-        self.children[node].len()
+    /// Get a reference to the NodeData associated with the current NodeRef
+    #[inline(always)]
+    fn node_data(&self) -> &NodeData {
+        &self.tree.nodes[self.node_id]
     }
 
-    fn is_childless(&self, node: Node) -> bool {
-        self.children[node].is_empty()
+    /// Get a mutable reference to the NodeData associated with the current NodeRef
+    #[inline(always)]
+    fn node_data_mut(&mut self) -> &mut NodeData {
+        &mut self.tree.nodes[self.node_id]
     }
+}
 
-    fn parent(&self, node: Node) -> Option<Node> {
-        self.parents.get(node).copied().flatten()
-    }
+impl<'tree> LayoutTree for TaffyNodeRef<'tree> {
+    type ChildId = Node;
+    type ChildIter<'a> = core::iter::Copied<core::slice::Iter<'a, DefaultKey>> where Self: 'a;
 
-    fn style(&self, node: Node) -> &Style {
-        &self.nodes[node].style
-    }
-
-    fn layout(&self, node: Node) -> &Layout {
-        &self.nodes[node].layout
-    }
-
-    fn layout_mut(&mut self, node: Node) -> &mut Layout {
-        &mut self.nodes[node].layout
+    #[inline(always)]
+    fn child_count(&self) -> usize {
+        self.tree.children[self.node_id].len()
     }
 
     #[inline(always)]
-    fn mark_dirty(&mut self, node: Node) -> TaffyResult<()> {
-        self.mark_dirty_internal(node)
+    fn children(&self) -> Self::ChildIter<'_> {
+        self.tree.children[self.node_id].iter().copied()
     }
 
-    fn measure_node(
-        &self,
-        node: Node,
+    #[inline(always)]
+    fn child(&self, index: usize) -> Node {
+        self.tree.children[self.node_id][index]
+    }
+
+    #[inline(always)]
+    fn style(&self) -> &Style {
+        &self.node_data().style
+    }
+
+    #[inline(always)]
+    fn child_style(&self, child_node_id: Node) -> &Style {
+        &self.tree.nodes[child_node_id].style
+    }
+
+    #[inline(always)]
+    fn layout_mut(&mut self) -> &mut Layout {
+        &mut self.node_data_mut().layout
+    }
+
+    #[inline(always)]
+    fn child_layout_mut(&mut self, child_node_id: Node) -> &mut Layout {
+        &mut self.tree.nodes[child_node_id].layout
+    }
+
+    #[inline(always)]
+    fn cache_mut(&mut self, index: usize) -> &mut Option<Cache> {
+        &mut self.node_data_mut().size_cache[index]
+    }
+
+    #[inline(always)]
+    fn measure_child_size(
+        &mut self,
+        child_node_id: Node,
         known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
+        sizing_mode: crate::layout::SizingMode,
     ) -> Size<f32> {
-        match &self.measure_funcs[node] {
-            MeasureFunc::Raw(measure) => measure(known_dimensions, available_space),
-
-            #[cfg(any(feature = "std", feature = "alloc"))]
-            MeasureFunc::Boxed(measure) => (measure as &dyn Fn(_, _) -> _)(known_dimensions, available_space),
-        }
+        // let mut tree = TaffyNodeRef::new(self.tree, child_node_id);
+        compute::measure_size(self.tree, child_node_id, known_dimensions, parent_size, available_space, sizing_mode)
     }
 
-    fn needs_measure(&self, node: Node) -> bool {
-        self.nodes[node].needs_measure && self.measure_funcs.get(node).is_some()
+    #[inline(always)]
+    fn perform_child_layout(
+        &mut self,
+        child_node_id: Node,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        sizing_mode: crate::layout::SizingMode,
+    ) -> crate::layout::SizeAndBaselines {
+        // let mut tree = TaffyNodeRef::new(self.tree, child_node_id);
+        compute::perform_layout(self.tree, child_node_id, known_dimensions, parent_size, available_space, sizing_mode)
     }
 
-    fn cache_mut(&mut self, node: Node, index: usize) -> &mut Option<Cache> {
-        &mut self.nodes[node].size_cache[index]
-    }
-
-    fn child(&self, node: Node, id: usize) -> Node {
-        self.children[node][id]
+    #[inline(always)]
+    fn perform_child_hidden_layout(&mut self, child_node_id: Node, order: u32) {
+        recursively_perform_hidden_layout(self.tree, child_node_id, order);
     }
 }
 
@@ -216,7 +270,7 @@ impl Taffy {
             self.measure_funcs.remove(node);
         }
 
-        self.mark_dirty_internal(node)?;
+        self.mark_dirty(node)?;
 
         Ok(())
     }
@@ -225,7 +279,7 @@ impl Taffy {
     pub fn add_child(&mut self, parent: Node, child: Node) -> TaffyResult<()> {
         self.parents[child] = Some(parent);
         self.children[parent].push(child);
-        self.mark_dirty_internal(parent)?;
+        self.mark_dirty(parent)?;
 
         Ok(())
     }
@@ -244,7 +298,7 @@ impl Taffy {
 
         self.children[parent] = children.iter().copied().collect::<_>();
 
-        self.mark_dirty_internal(parent)?;
+        self.mark_dirty(parent)?;
 
         Ok(())
     }
@@ -269,7 +323,7 @@ impl Taffy {
         let child = self.children[parent].remove(child_index);
         self.parents[child] = None;
 
-        self.mark_dirty_internal(parent)?;
+        self.mark_dirty(parent)?;
 
         Ok(child)
     }
@@ -287,7 +341,7 @@ impl Taffy {
         let old_child = core::mem::replace(&mut self.children[parent][child_index], new_child);
         self.parents[old_child] = None;
 
-        self.mark_dirty_internal(parent)?;
+        self.mark_dirty(parent)?;
 
         Ok(old_child)
     }
@@ -307,15 +361,29 @@ impl Taffy {
         Ok(self.children[parent].len())
     }
 
+    /// Returns a node ref to the specified node in the tree
+    pub(crate) fn node_ref_mut(&mut self, node: Node) -> TaffyResult<TaffyNodeRef> {
+        if self.nodes.get(node).is_some() {
+            Ok(TaffyNodeRef::new(self, node))
+        } else {
+            Err(error::TaffyError::InvalidInputNode(node))
+        }
+    }
+
     /// Returns a list of children that belong to the parent [`Node`]
     pub fn children(&self, parent: Node) -> TaffyResult<Vec<Node>> {
         Ok(self.children[parent].iter().copied().collect::<_>())
     }
 
+    /// Get any available parent for this node
+    pub fn parent(&self, node: Node) -> Option<Node> {
+        self.parents.get(node).copied().flatten()
+    }
+
     /// Sets the [`Style`] of the provided `node`
     pub fn set_style(&mut self, node: Node, style: Style) -> TaffyResult<()> {
         self.nodes[node].style = style;
-        self.mark_dirty_internal(node)?;
+        self.mark_dirty(node)?;
         Ok(())
     }
 
@@ -334,7 +402,7 @@ impl Taffy {
     /// Performs a recursive depth-first search up the tree until the root node is reached
     ///
     /// WARNING: this will stack-overflow if the tree contains a cycle
-    fn mark_dirty_internal(&mut self, node: Node) -> TaffyResult<()> {
+    pub fn mark_dirty(&mut self, node: Node) -> TaffyResult<()> {
         /// WARNING: this will stack-overflow if the tree contains a cycle
         fn mark_dirty_recursive(
             nodes: &mut SlotMap<Node, NodeData>,

@@ -4,7 +4,6 @@ use crate::axis::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::layout::{Layout, RunMode, SizeAndBaselines, SizingMode};
 use crate::math::MaybeMath;
-use crate::node::Node;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Display, Position};
 use crate::style_helpers::*;
@@ -17,14 +16,14 @@ use placement::place_grid_items;
 use track_sizing::{
     determine_if_item_crosses_flexible_or_intrinsic_tracks, resolve_item_track_indexes, track_sizing_algorithm,
 };
-use types::{CellOccupancyMatrix, GridTrack};
+use types::{CellOccupancyMatrix, GridItem, GridTrack};
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine};
 
 #[cfg(feature = "debug")]
 use crate::debug::NODE_LOGGER;
 
-use super::{GenericAlgorithm, LayoutAlgorithm};
+use super::LayoutAlgorithm;
 
 mod alignment;
 mod explicit_grid;
@@ -35,30 +34,30 @@ mod types;
 mod util;
 
 /// The public interface to Taffy's CSS Grid algorithm implementation
-pub(crate) struct CssGridAlgorithm;
+pub struct CssGridAlgorithm;
 impl LayoutAlgorithm for CssGridAlgorithm {
     const NAME: &'static str = "CSS GRID";
 
+    #[inline(always)]
     fn perform_layout(
         tree: &mut impl LayoutTree,
-        node: Node,
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         _sizing_mode: SizingMode,
     ) -> SizeAndBaselines {
-        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::PeformLayout)
+        compute(tree, known_dimensions, parent_size, available_space, RunMode::PeformLayout)
     }
 
+    #[inline(always)]
     fn measure_size(
         tree: &mut impl LayoutTree,
-        node: Node,
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         _sizing_mode: SizingMode,
     ) -> Size<f32> {
-        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::ComputeSize).size
+        compute(tree, known_dimensions, parent_size, available_space, RunMode::ComputeSize).size
     }
 }
 
@@ -68,17 +67,16 @@ impl LayoutAlgorithm for CssGridAlgorithm {
 ///   - Placing items (which also resolves the implicit grid)
 ///   - Track (row/column) sizing
 ///   - Alignment & Final item placement
-pub fn compute(
-    tree: &mut impl LayoutTree,
-    node: Node,
+pub fn compute<Tree: LayoutTree>(
+    tree: &mut Tree,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
 ) -> SizeAndBaselines {
-    let get_child_styles_iter = |node| tree.children(node).map(|child_node: &Node| tree.style(*child_node));
-    let style = tree.style(node).clone();
-    let child_styles_iter = get_child_styles_iter(node);
+    let get_child_styles_iter = || tree.children().map(|child_node: Tree::ChildId| tree.child_style(child_node));
+    let style = tree.style().clone();
+    let child_styles_iter = get_child_styles_iter();
 
     // 1. Resolve the explicit grid
     // Exactly compute the number of rows and columns in the explicit grid.
@@ -93,13 +91,12 @@ pub fn compute(
 
     // 2. Grid Item Placement
     // Match items (children) to a definite grid position (row start/end and column start/end position)
-    let mut items = Vec::with_capacity(tree.child_count(node));
+    let mut items: Vec<GridItem<Tree>> = Vec::with_capacity(tree.child_count());
     let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(est_col_counts, est_row_counts);
     let in_flow_children_iter = || {
-        tree.children(node)
-            .copied()
+        tree.children()
             .enumerate()
-            .map(|(index, child_node)| (index, child_node, tree.style(child_node)))
+            .map(|(index, child_node)| (index, child_node, tree.child_style(child_node)))
             .filter(|(_, _, style)| style.display != Display::None && style.position != Position::Absolute)
     };
     place_grid_items(
@@ -443,21 +440,14 @@ pub fn compute(
 
     // Position hidden and absolutely positioned children
     let mut order = items.len() as u32;
-    (0..tree.child_count(node)).for_each(|index| {
-        let child = tree.child(node, index);
-        let child_style = tree.style(child);
+    (0..tree.child_count()).for_each(|index| {
+        let child = tree.child(index);
+        let child_style = tree.child_style(child);
 
         // Position hidden child
         if child_style.display == Display::None {
-            *tree.layout_mut(node) = Layout::with_order(order);
-            GenericAlgorithm::perform_layout(
-                tree,
-                child,
-                Size::NONE,
-                Size::NONE,
-                Size::MAX_CONTENT,
-                SizingMode::InherentSize,
-            );
+            *tree.layout_mut() = Layout::with_order(order);
+            tree.perform_child_layout(child, Size::NONE, Size::NONE, Size::MAX_CONTENT, SizingMode::InherentSize);
             order += 1;
             return;
         }
@@ -526,7 +516,7 @@ pub fn compute(
             &first_row_items[0]
         };
 
-        let layout = tree.layout_mut(item.node);
+        let layout = tree.child_layout_mut(item.node);
         layout.location.y + item.baseline.unwrap_or(layout.size.height)
     };
 

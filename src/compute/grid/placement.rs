@@ -4,23 +4,23 @@ use super::types::{CellOccupancyMatrix, CellOccupancyState, GridItem};
 use super::OriginZeroLine;
 use crate::axis::{AbsoluteAxis, InBothAbsAxis};
 use crate::geometry::Line;
-use crate::node::Node;
 use crate::style::{AlignItems, GridAutoFlow, OriginZeroGridPlacement, Style};
 use crate::sys::Vec;
+use crate::tree::LayoutTree;
 
 /// 8.5. Grid Item Placement Algorithm
 /// Place items into the grid, generating new rows/column into the implicit grid as required
 ///
 /// [Specification](https://www.w3.org/TR/css-grid-2/#auto-placement-algo)
-pub(super) fn place_grid_items<'a, ChildIter>(
+pub(super) fn place_grid_items<'a, ChildIter, Tree: LayoutTree>(
     cell_occupancy_matrix: &mut CellOccupancyMatrix,
-    items: &mut Vec<GridItem>,
+    items: &mut Vec<GridItem<Tree>>,
     children_iter: impl Fn() -> ChildIter,
     grid_auto_flow: GridAutoFlow,
     align_items: AlignItems,
     justify_items: AlignItems,
 ) where
-    ChildIter: Iterator<Item = (usize, Node, &'a Style)>,
+    ChildIter: Iterator<Item = (usize, Tree::ChildId, &'a Style)>,
 {
     let primary_axis = grid_auto_flow.primary_axis();
     let secondary_axis = primary_axis.other_axis();
@@ -28,7 +28,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
     let map_child_style_to_origin_zero_placement = {
         let explicit_col_count = cell_occupancy_matrix.track_counts(AbsoluteAxis::Horizontal).explicit;
         let explicit_row_count = cell_occupancy_matrix.track_counts(AbsoluteAxis::Vertical).explicit;
-        move |(index, node, style): (usize, Node, &'a Style)| -> (_, _, _, &'a Style) {
+        move |(index, node, style): (usize, Tree::ChildId, &'a Style)| -> (_, _, _, &'a Style) {
             let origin_zero_placement = InBothAbsAxis {
                 horizontal: style.grid_column.map(|placement| placement.into_origin_zero_placement(explicit_col_count)),
                 vertical: style.grid_row.map(|placement| placement.into_origin_zero_placement(explicit_row_count)),
@@ -294,10 +294,10 @@ fn place_indefinitely_positioned_item(
 /// Record the grid item in both CellOccupancyMatric and the GridItems list
 /// once a definite placement has been determined
 #[allow(clippy::too_many_arguments)]
-fn record_grid_placement(
+fn record_grid_placement<Tree: LayoutTree>(
     cell_occupancy_matrix: &mut CellOccupancyMatrix,
-    items: &mut Vec<GridItem>,
-    node: Node,
+    items: &mut Vec<GridItem<Tree>>,
+    node: Tree::ChildId,
     index: usize,
     style: &Style,
     parent_align_items: AlignItems,
@@ -346,9 +346,10 @@ mod tests {
 
     mod test_placement_algorithm {
         use crate::compute::grid::implicit_grid::compute_grid_size_estimate;
-        use crate::compute::grid::types::TrackCounts;
+        use crate::compute::grid::types::{GridItem, TrackCounts};
         use crate::compute::grid::util::*;
         use crate::compute::grid::CellOccupancyMatrix;
+        use crate::node::TaffyNodeRef;
         use crate::prelude::*;
         use crate::style::GridAutoFlow;
         use slotmap::SlotMap;
@@ -369,7 +370,7 @@ mod tests {
             let children_iter = || children.iter().map(|(index, node, style, _)| (*index, *node, style));
             let child_styles_iter = children.iter().map(|(_, _, style, _)| style);
             let estimated_sizes = compute_grid_size_estimate(explicit_col_count, explicit_row_count, child_styles_iter);
-            let mut items = Vec::new();
+            let mut items: Vec<GridItem<TaffyNodeRef>> = Vec::new();
             let mut cell_occupancy_matrix =
                 CellOccupancyMatrix::with_track_counts(estimated_sizes.0, estimated_sizes.1);
 

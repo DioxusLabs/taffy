@@ -1,56 +1,52 @@
 //! Computes size using styles and measure functions
 
-use crate::compute::LayoutAlgorithm;
 use crate::geometry::{Point, Size};
 use crate::layout::{SizeAndBaselines, SizingMode};
 use crate::math::MaybeMath;
-use crate::node::Node;
+use crate::node::{Node, Taffy};
 use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::AvailableSpace;
 use crate::sys::f32_max;
-use crate::tree::LayoutTree;
 
 #[cfg(feature = "debug")]
 use crate::debug::NODE_LOGGER;
 
-/// The public interface to Taffy's leaf node algorithm implementation
-pub(crate) struct LeafAlgorithm;
-impl LayoutAlgorithm for LeafAlgorithm {
-    const NAME: &'static str = "LEAF";
-
-    fn perform_layout(
-        tree: &mut impl LayoutTree,
-        node: Node,
-        known_dimensions: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        sizing_mode: SizingMode,
-    ) -> SizeAndBaselines {
-        compute(tree, node, known_dimensions, parent_size, available_space, sizing_mode)
-    }
-
-    fn measure_size(
-        tree: &mut impl LayoutTree,
-        node: Node,
-        known_dimensions: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        sizing_mode: SizingMode,
-    ) -> Size<f32> {
-        compute(tree, node, known_dimensions, parent_size, available_space, sizing_mode).size
-    }
-}
-
-/// Compute the size of a leaf node (node with no children)
-pub(crate) fn compute(
-    tree: &mut impl LayoutTree,
+/// Compute the size of the node given the specified constraints
+#[inline(always)]
+pub(crate) fn perform_layout(
+    tree: &mut Taffy,
     node: Node,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     sizing_mode: SizingMode,
 ) -> SizeAndBaselines {
-    let style = tree.style(node);
+    compute(tree, node, known_dimensions, parent_size, available_space, sizing_mode)
+}
+
+/// Perform a full layout on the node given the specified constraints
+#[inline(always)]
+pub(crate) fn measure_size(
+    tree: &mut Taffy,
+    node: Node,
+    known_dimensions: Size<Option<f32>>,
+    parent_size: Size<Option<f32>>,
+    available_space: Size<AvailableSpace>,
+    sizing_mode: SizingMode,
+) -> Size<f32> {
+    compute(tree, node, known_dimensions, parent_size, available_space, sizing_mode).size
+}
+
+/// Compute the size of a leaf node (node with no children)
+pub(crate) fn compute(
+    tree: &mut Taffy,
+    node: Node,
+    known_dimensions: Size<Option<f32>>,
+    parent_size: Size<Option<f32>>,
+    available_space: Size<AvailableSpace>,
+    sizing_mode: SizingMode,
+) -> SizeAndBaselines {
+    let style = &tree.nodes[node].style;
 
     // Resolve node's preferred/min/max sizes (width/heights) against the available space (percentages resolve to pixel values)
     // For ContentSize mode, we pretend that the node has no size styles as these should be ignored.
@@ -87,7 +83,7 @@ pub(crate) fn compute(
         return SizeAndBaselines { size, first_baselines: Point::NONE };
     };
 
-    if tree.needs_measure(node) {
+    if let Some(measure_func) = tree.measure_funcs.get_mut(node) {
         // Compute available space
         let available_space = Size {
             width: available_space
@@ -103,7 +99,7 @@ pub(crate) fn compute(
         };
 
         // Measure node
-        let measured_size = tree.measure_node(node, known_dimensions, available_space);
+        let measured_size = measure_func.measure(known_dimensions, available_space);
 
         let measured_size = Size {
             width: measured_size.width,

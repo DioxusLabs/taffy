@@ -7,7 +7,6 @@ use crate::layout::{SizeAndBaselines, SizingMode};
 #[inline(always)]
 pub fn layout_flexbox(
     tree: &mut impl LayoutTree,
-    node: Node,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
@@ -15,7 +14,6 @@ pub fn layout_flexbox(
 ) -> SizeAndBaselines {
     crate::compute::flexbox::FlexboxAlgorithm::perform_layout(
         tree,
-        node,
         known_dimensions,
         parent_size,
         available_space,

@@ -40,4 +40,7 @@ mod resolve;
 mod sys;
 
 pub use crate::compute::compute_layout;
+pub use crate::compute::flexbox::FlexboxAlgorithm;
+pub use crate::compute::grid::CssGridAlgorithm;
+pub use crate::compute::LayoutAlgorithm;
 pub use crate::node::Taffy;

@@ -4,19 +4,19 @@ use std::sync::Mutex;
 
 use crate::node::Node;
 use crate::style;
-use crate::tree::LayoutTree;
+use crate::Taffy;
 
 /// Prints a debug representation of the computed layout for a tree of nodes, starting with the passed root node.
-pub fn print_tree(tree: &impl LayoutTree, root: Node) {
+pub fn print_tree(tree: &Taffy, root: Node) {
     println!("TREE");
     print_node(tree, root, false, String::new());
 }
 
-fn print_node(tree: &impl LayoutTree, node: Node, has_sibling: bool, lines_string: String) {
-    let layout = tree.layout(node);
-    let style = tree.style(node);
+fn print_node(tree: &Taffy, node: Node, has_sibling: bool, lines_string: String) {
+    let layout = tree.layout(node).unwrap();
+    let style = tree.style(node).unwrap();
 
-    let num_children = tree.child_count(node);
+    let num_children = tree.child_count(node).unwrap();
 
     let display = match (num_children, style.display) {
         (_, style::Display::None) => "NONE",
@@ -42,7 +42,7 @@ fn print_node(tree: &impl LayoutTree, node: Node, has_sibling: bool, lines_strin
     let new_string = lines_string + bar;
 
     // Recurse into children
-    for (index, child) in tree.children(node).enumerate() {
+    for (index, child) in tree.children(node).unwrap().iter().enumerate() {
         let has_sibling = index < num_children - 1;
         print_node(tree, *child, has_sibling, new_string.clone());
     }
