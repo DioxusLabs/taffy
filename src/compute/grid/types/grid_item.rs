@@ -349,12 +349,4 @@ impl GridItem {
             size
         })
     }
-
-    /// Clears the per-track-sizing-alogrithm-run caches
-    pub fn clear_contribution_caches(&mut self) {
-        self.known_dimensions_cache = None;
-        self.min_content_contribution_cache = Size::NONE;
-        self.max_content_contribution_cache = Size::NONE;
-        self.minimum_contribution_cache = Size::NONE;
-    }
 }

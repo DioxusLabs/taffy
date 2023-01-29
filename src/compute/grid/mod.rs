@@ -196,6 +196,8 @@ pub fn compute(
     let initial_column_sum = columns.iter().map(|track| track.base_size).sum::<f32>();
     inner_node_size.width = inner_node_size.width.or_else(|| initial_column_sum.into());
 
+    items.iter_mut().for_each(|item| item.known_dimensions_cache = None);
+
     // Run track sizing algorithm for Block axis
     track_sizing_algorithm(
         tree,
@@ -233,21 +235,27 @@ pub fn compute(
         return container_border_box.into();
     }
 
-    let min_content_contribution_changed = items.iter().filter(|item| item.crosses_intrinsic_column).any(|item| {
-        let known_dimensions =
-            item.known_dimensions(AbstractAxis::Inline, &rows, inner_node_size.height, |track: &GridTrack, _| {
-                Some(track.base_size)
-            });
-        let new_min_content_contribution =
-            item.min_content_contribution(AbstractAxis::Inline, tree, known_dimensions, inner_node_size);
+    let min_content_contribution_changed = items
+        .iter_mut()
+        .filter(|item| item.crosses_intrinsic_column)
+        .map(|item| {
+            let known_dimensions =
+                item.known_dimensions(AbstractAxis::Inline, &rows, inner_node_size.height, |track: &GridTrack, _| {
+                    Some(track.base_size)
+                });
+            let new_min_content_contribution =
+                item.min_content_contribution(AbstractAxis::Inline, tree, known_dimensions, inner_node_size);
 
-        Some(new_min_content_contribution) != item.min_content_contribution_cache.width
-        // self.min_content_contribution_cache.get(axis).unwrap_or_else(|| {
-        //     let size = ;
-        //     self.min_content_contribution_cache.set(axis, Some(size));
-        //     size
-        // })
-    });
+            let has_changed = Some(new_min_content_contribution) != item.min_content_contribution_cache.width;
+
+            item.known_dimensions_cache = Some(known_dimensions);
+            item.min_content_contribution_cache.width = Some(new_min_content_contribution);
+            item.max_content_contribution_cache.width = None;
+            item.minimum_contribution_cache.width = None;
+
+            has_changed
+        })
+        .any(|has_changed| has_changed);
 
     if min_content_contribution_changed {
         // Re-run track sizing algorithm for Inline axis
@@ -265,20 +273,43 @@ pub fn compute(
             |track: &GridTrack, _| Some(track.base_size),
         );
 
-        // Re-run track sizing algorithm for Block axis
-        track_sizing_algorithm(
-            tree,
-            AbstractAxis::Block,
-            min_size.get(AbstractAxis::Block),
-            max_size.get(AbstractAxis::Block),
-            style.grid_align_content(AbstractAxis::Inline),
-            available_grid_space,
-            inner_node_size,
-            &mut rows,
-            &mut columns,
-            &mut items,
-            |track: &GridTrack, _| Some(track.base_size),
-        );
+        let min_content_contribution_changed = items
+            .iter_mut()
+            .filter(|item| item.crosses_intrinsic_column)
+            .map(|item| {
+                let known_dimensions =
+                    item.known_dimensions(AbstractAxis::Block, &rows, inner_node_size.width, |track: &GridTrack, _| {
+                        Some(track.base_size)
+                    });
+                let new_min_content_contribution =
+                    item.min_content_contribution(AbstractAxis::Block, tree, known_dimensions, inner_node_size);
+
+                let has_changed = Some(new_min_content_contribution) != item.min_content_contribution_cache.height;
+
+                item.min_content_contribution_cache.height = Some(new_min_content_contribution);
+                item.max_content_contribution_cache.height = None;
+                item.minimum_contribution_cache.height = None;
+
+                has_changed
+            })
+            .any(|has_changed| has_changed);
+
+        if min_content_contribution_changed {
+            // Re-run track sizing algorithm for Block axis
+            track_sizing_algorithm(
+                tree,
+                AbstractAxis::Block,
+                min_size.get(AbstractAxis::Block),
+                max_size.get(AbstractAxis::Block),
+                style.grid_align_content(AbstractAxis::Inline),
+                available_grid_space,
+                inner_node_size,
+                &mut rows,
+                &mut columns,
+                &mut items,
+                |track: &GridTrack, _| Some(track.base_size),
+            );
+        }
     }
 
     // 7. Resolve percentage track base sizes
