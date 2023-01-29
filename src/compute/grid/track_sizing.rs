@@ -159,7 +159,7 @@ pub(super) fn resolve_item_track_indexes(items: &mut [GridItem], column_counts: 
 
 /// Determine (in each axis) whether the item crosses any flexible tracks
 #[inline(always)]
-pub(super) fn determine_if_item_crosses_flexible_tracks(
+pub(super) fn determine_if_item_crosses_flexible_or_intrinsic_tracks(
     items: &mut Vec<GridItem>,
     columns: &[GridTrack],
     rows: &[GridTrack],
@@ -167,8 +167,12 @@ pub(super) fn determine_if_item_crosses_flexible_tracks(
     for item in items {
         item.crosses_flexible_column =
             item.track_range_excluding_lines(AbstractAxis::Inline).any(|i| columns[i].is_flexible());
+        item.crosses_intrinsic_column =
+            item.track_range_excluding_lines(AbstractAxis::Inline).any(|i| columns[i].has_intrinsic_sizing_function());
         item.crosses_flexible_row =
             item.track_range_excluding_lines(AbstractAxis::Block).any(|i| rows[i].is_flexible());
+        item.crosses_intrinsic_row =
+            item.track_range_excluding_lines(AbstractAxis::Block).any(|i| rows[i].has_intrinsic_sizing_function());
     }
 }
 
@@ -198,10 +202,6 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
     if axis_tracks.iter().all(|track| track.base_size == track.growth_limit) {
         return;
     }
-
-    // Clear caches
-    // These caches are only valid for a single run of the track sizing algorithm, so ensure that they are clear.
-    items.iter_mut().for_each(|item| item.clear_contribution_caches());
 
     // Pre-computations for 11.5 Resolve Intrinsic Track Sizes
 
@@ -430,8 +430,9 @@ fn resolve_intrinsic_track_sizes(
         fn min_content_contribution(&mut self, item: &mut GridItem) -> f32 {
             let known_dimensions = self.known_dimensions(item);
             let margin_axis_sums = self.margins_axis_sums(item);
-            let contribution = item.min_content_contribution_cached(self.tree, known_dimensions, self.inner_node_size);
-            contribution.get(self.axis) + margin_axis_sums.get(self.axis)
+            let contribution =
+                item.min_content_contribution_cached(self.axis, self.tree, known_dimensions, self.inner_node_size);
+            contribution + margin_axis_sums.get(self.axis)
         }
 
         /// Retrieve the item's max content contribution from the cache or compute it using the provided parameters
@@ -439,8 +440,9 @@ fn resolve_intrinsic_track_sizes(
         fn max_content_contribution(&mut self, item: &mut GridItem) -> f32 {
             let known_dimensions = self.known_dimensions(item);
             let margin_axis_sums = self.margins_axis_sums(item);
-            let contribution = item.max_content_contribution_cached(self.tree, known_dimensions, self.inner_node_size);
-            contribution.get(self.axis) + margin_axis_sums.get(self.axis)
+            let contribution =
+                item.max_content_contribution_cached(self.axis, self.tree, known_dimensions, self.inner_node_size);
+            contribution + margin_axis_sums.get(self.axis)
         }
 
         /// The minimum contribution of an item is the smallest outer size it can have.
@@ -474,7 +476,7 @@ fn resolve_intrinsic_track_sizes(
         // First increase the base size of tracks with an intrinsic min track sizing function
         let has_intrinsic_min_track_sizing_function =
             move |track: &GridTrack| track.min_track_sizing_function.definite_value(axis_inner_node_size).is_none();
-        for item in batch.iter_mut() {
+        for item in batch.iter_mut().filter(|item| item.crosses_intrinsic_track(axis)) {
             // ...by distributing extra space as needed to accommodate these items’ minimum contributions.
             // If the grid container is being sized under a min- or max-content constraint, use the items’ limited min-content contributions
             // in place of their minimum contributions here.
@@ -911,8 +913,8 @@ fn expand_flexible_tracks(
                         let tracks = &axis_tracks[item.track_range_excluding_lines(axis)];
                         // TODO: plumb estimate of other axis size (known_dimensions) in here rather than just passing Size::NONE?
                         let max_content_contribution =
-                            item.max_content_contribution_cached(tree, Size::NONE, inner_node_size);
-                        find_size_of_fr(tracks, max_content_contribution.get(axis))
+                            item.max_content_contribution_cached(axis, tree, Size::NONE, inner_node_size);
+                        find_size_of_fr(tracks, max_content_contribution)
                     })
                     .max_by(|a, b| a.total_cmp(b))
                     .unwrap_or(0.0),

@@ -105,10 +105,22 @@ impl GridTrack {
         self.max_track_sizing_function = MaxTrackSizingFunction::Fixed(LengthPercentage::Points(0.0));
     }
 
-    #[inline]
+    #[inline(always)]
     /// Returns true if the track is flexible (has a Flex MaxTrackSizingFunction), else false.
     pub fn is_flexible(&self) -> bool {
         matches!(self.max_track_sizing_function, MaxTrackSizingFunction::Flex(_))
+    }
+
+    #[inline(always)]
+    /// Returns true if the track is flexible (has a Flex MaxTrackSizingFunction), else false.
+    pub fn uses_percentage(&self) -> bool {
+        self.min_track_sizing_function.uses_percentage() || self.max_track_sizing_function.uses_percentage()
+    }
+
+    #[inline(always)]
+    /// Returns true if the track has an intrinsic min and or max sizing function
+    pub fn has_intrinsic_sizing_function(&self) -> bool {
+        self.min_track_sizing_function.is_intrinsic() || self.max_track_sizing_function.is_intrinsic()
     }
 
     #[inline]

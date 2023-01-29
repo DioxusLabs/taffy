@@ -287,7 +287,7 @@ impl FromFlex for MaxTrackSizingFunction {
 }
 
 impl MaxTrackSizingFunction {
-    /// Returns true if the max track sizing function is `MinContent`, `MaxContent` or `Auto`, else false.
+    /// Returns true if the max track sizing function is `MinContent`, `MaxContent`, `FitContent` or `Auto`, else false.
     #[inline(always)]
     pub fn is_intrinsic(&self) -> bool {
         matches!(self, Self::MinContent | Self::MaxContent | Self::FitContent(_) | Self::Auto)
@@ -346,6 +346,13 @@ impl MaxTrackSizingFunction {
             Fixed(LengthPercentage::Points(_)) | MinContent | MaxContent | FitContent(_) | Auto | Flex(_) => None,
         }
     }
+
+    /// Whether the track sizing functions depends on the size of the parent node
+    #[inline(always)]
+    pub fn uses_percentage(self) -> bool {
+        use MaxTrackSizingFunction::*;
+        matches!(self, Fixed(LengthPercentage::Percent(_)) | FitContent(LengthPercentage::Percent(_)))
+    }
 }
 
 /// Minimum track sizing function
@@ -388,6 +395,12 @@ impl FromPercent for MinTrackSizingFunction {
 }
 
 impl MinTrackSizingFunction {
+    /// Returns true if the min track sizing function is `MinContent`, `MaxContent` or `Auto`, else false.
+    #[inline(always)]
+    pub fn is_intrinsic(&self) -> bool {
+        matches!(self, Self::MinContent | Self::MaxContent | Self::Auto)
+    }
+
     /// Returns fixed point values directly. Attempts to resolve percentage values against
     /// the passed available_space and returns if this results in a concrete value (which it
     /// will if the available_space is `Some`). Otherwise returns `None`.
@@ -410,6 +423,13 @@ impl MinTrackSizingFunction {
             Fixed(LengthPercentage::Percent(fraction)) => Some(fraction * parent_size),
             Fixed(LengthPercentage::Points(_)) | MinContent | MaxContent | Auto => None,
         }
+    }
+
+    /// Whether the track sizing functions depends on the size of the parent node
+    #[inline(always)]
+    pub fn uses_percentage(self) -> bool {
+        use MinTrackSizingFunction::*;
+        matches!(self, Fixed(LengthPercentage::Percent(_)))
     }
 }
 
