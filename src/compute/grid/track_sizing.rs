@@ -434,8 +434,9 @@ fn resolve_intrinsic_track_sizes(
         fn min_content_contribution(&mut self, item: &mut GridItem) -> f32 {
             let known_dimensions = self.known_dimensions(item);
             let margin_axis_sums = self.margins_axis_sums(item);
-            let contribution = item.min_content_contribution_cached(self.tree, known_dimensions, self.inner_node_size);
-            contribution.get(self.axis) + margin_axis_sums.get(self.axis)
+            let contribution =
+                item.min_content_contribution_cached(self.axis, self.tree, known_dimensions, self.inner_node_size);
+            contribution + margin_axis_sums.get(self.axis)
         }
 
         /// Retrieve the item's max content contribution from the cache or compute it using the provided parameters
@@ -443,8 +444,9 @@ fn resolve_intrinsic_track_sizes(
         fn max_content_contribution(&mut self, item: &mut GridItem) -> f32 {
             let known_dimensions = self.known_dimensions(item);
             let margin_axis_sums = self.margins_axis_sums(item);
-            let contribution = item.max_content_contribution_cached(self.tree, known_dimensions, self.inner_node_size);
-            contribution.get(self.axis) + margin_axis_sums.get(self.axis)
+            let contribution =
+                item.max_content_contribution_cached(self.axis, self.tree, known_dimensions, self.inner_node_size);
+            contribution + margin_axis_sums.get(self.axis)
         }
 
         /// The minimum contribution of an item is the smallest outer size it can have.
@@ -915,8 +917,8 @@ fn expand_flexible_tracks(
                         let tracks = &axis_tracks[item.track_range_excluding_lines(axis)];
                         // TODO: plumb estimate of other axis size (known_dimensions) in here rather than just passing Size::NONE?
                         let max_content_contribution =
-                            item.max_content_contribution_cached(tree, Size::NONE, inner_node_size);
-                        find_size_of_fr(tracks, max_content_contribution.get(axis))
+                            item.max_content_contribution_cached(axis, tree, Size::NONE, inner_node_size);
+                        find_size_of_fr(tracks, max_content_contribution)
                     })
                     .max_by(|a, b| a.total_cmp(b))
                     .unwrap_or(0.0),
