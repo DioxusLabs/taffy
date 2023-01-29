@@ -6,7 +6,7 @@ use crate::layout::{Layout, RunMode, SizeAndBaselines, SizingMode};
 use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
-use crate::style::{AlignContent, AvailableSpace, Display, Position};
+use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Display, Position};
 use crate::style_helpers::*;
 use crate::sys::{GridTrackVec, Vec};
 use crate::tree::LayoutTree;
@@ -95,7 +95,6 @@ pub fn compute(
     // Match items (children) to a definite grid position (row start/end and column start/end position)
     let mut items = Vec::with_capacity(tree.child_count(node));
     let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(est_col_counts, est_row_counts);
-    let grid_auto_flow = style.grid_auto_flow;
     let in_flow_children_iter = || {
         tree.children(node)
             .copied()
@@ -103,7 +102,13 @@ pub fn compute(
             .map(|(index, child_node)| (index, child_node, tree.style(child_node)))
             .filter(|(_, _, style)| style.display != Display::None && style.position != Position::Absolute)
     };
-    place_grid_items(&mut cell_occupancy_matrix, &mut items, in_flow_children_iter, grid_auto_flow);
+    place_grid_items(
+        &mut cell_occupancy_matrix,
+        &mut items,
+        in_flow_children_iter,
+        style.grid_auto_flow,
+        style.align_items.unwrap_or(AlignItems::Stretch),
+    );
 
     // Extract track counts from previous step (auto-placement can expand the number of tracks)
     let final_col_counts = *cell_occupancy_matrix.track_counts(AbsoluteAxis::Horizontal);
