@@ -182,12 +182,10 @@ impl GridItem {
                 })
                 .sum::<Option<f32>>()
         };
-        let known_dimensions = {
-            let mut size = Size::NONE;
-            size.set(axis.other(), item_other_axis_size);
-            size
-        };
-        known_dimensions
+
+        let mut size = Size::NONE;
+        size.set(axis.other(), item_other_axis_size);
+        size
     }
 
     /// Retrieve the known_dimensions from the cache or compute them using the passed parameters
