@@ -130,6 +130,15 @@ impl GridItem {
         }
     }
 
+    /// Returns the pre-computed value indicating whether the grid item crosses an intrinsic track in
+    /// the specified axis
+    pub fn crosses_intrinsic_track(&self, axis: AbstractAxis) -> bool {
+        match axis {
+            AbstractAxis::Inline => self.crosses_intrinsic_column,
+            AbstractAxis::Block => self.crosses_intrinsic_row,
+        }
+    }
+
     /// Compute the known_dimensions to be passed to the child sizing functions
     /// These are estimates based on either the max track sizing function or the provisional base size in the opposite
     /// axis to the one currently being sized.

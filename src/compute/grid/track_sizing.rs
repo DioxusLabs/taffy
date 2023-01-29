@@ -478,7 +478,7 @@ fn resolve_intrinsic_track_sizes(
         // First increase the base size of tracks with an intrinsic min track sizing function
         let has_intrinsic_min_track_sizing_function =
             move |track: &GridTrack| track.min_track_sizing_function.definite_value(axis_inner_node_size).is_none();
-        for item in batch.iter_mut() {
+        for item in batch.iter_mut().filter(|item| item.crosses_intrinsic_track(axis)) {
             // ...by distributing extra space as needed to accommodate these items’ minimum contributions.
             // If the grid container is being sized under a min- or max-content constraint, use the items’ limited min-content contributions
             // in place of their minimum contributions here.
