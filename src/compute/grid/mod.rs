@@ -286,6 +286,7 @@ pub fn compute(
 
                 let has_changed = Some(new_min_content_contribution) != item.min_content_contribution_cache.height;
 
+                item.known_dimensions_cache = Some(known_dimensions);
                 item.min_content_contribution_cache.height = Some(new_min_content_contribution);
                 item.max_content_contribution_cache.height = None;
                 item.minimum_contribution_cache.height = None;
