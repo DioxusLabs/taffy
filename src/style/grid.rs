@@ -3,7 +3,6 @@ use super::{AlignContent, LengthPercentage, Style};
 use crate::axis::{AbsoluteAxis, AbstractAxis};
 use crate::compute::grid::{GridCoordinate, GridLine, OriginZeroLine};
 use crate::geometry::{Line, MinMax};
-use crate::style::AvailableSpace;
 use crate::style_helpers::*;
 use crate::sys::GridTrackVec;
 use core::cmp::{max, min};
@@ -312,14 +311,11 @@ impl MaxTrackSizingFunction {
     /// the passed available_space and returns if this results in a concrete value (which it
     /// will if the available_space is `Some`). Otherwise returns None.
     #[inline(always)]
-    pub fn definite_value(self, available_space: AvailableSpace) -> Option<f32> {
+    pub fn definite_value(self, parent_size: Option<f32>) -> Option<f32> {
         use MaxTrackSizingFunction::{Auto, *};
         match self {
             Fixed(LengthPercentage::Points(size)) => Some(size),
-            Fixed(LengthPercentage::Percent(fraction)) => match available_space {
-                AvailableSpace::Definite(available_size) => Some(fraction * available_size),
-                _ => None,
-            },
+            Fixed(LengthPercentage::Percent(fraction)) => parent_size.map(|size| fraction * size),
             MinContent | MaxContent | FitContent(_) | Auto | Flex(_) => None,
         }
     }
@@ -330,15 +326,13 @@ impl MaxTrackSizingFunction {
     ///     - A fit-content sizing function with fixed argument
     ///     - A fit-content sizing function with percentage argument (with definite available space)
     /// All other kinds of track sizing function return None.
-    pub fn definite_limit(self, available_space: AvailableSpace) -> Option<f32> {
+    #[inline(always)]
+    pub fn definite_limit(self, parent_size: Option<f32>) -> Option<f32> {
         use MaxTrackSizingFunction::FitContent;
         match self {
             FitContent(LengthPercentage::Points(size)) => Some(size),
-            FitContent(LengthPercentage::Percent(fraction)) => match available_space {
-                AvailableSpace::Definite(available_size) => Some(fraction * available_size),
-                _ => None,
-            },
-            _ => self.definite_value(available_space),
+            FitContent(LengthPercentage::Percent(fraction)) => parent_size.map(|size| fraction * size),
+            _ => self.definite_value(parent_size),
         }
     }
 
@@ -398,14 +392,11 @@ impl MinTrackSizingFunction {
     /// the passed available_space and returns if this results in a concrete value (which it
     /// will if the available_space is `Some`). Otherwise returns `None`.
     #[inline(always)]
-    pub fn definite_value(self, available_space: AvailableSpace) -> Option<f32> {
+    pub fn definite_value(self, parent_size: Option<f32>) -> Option<f32> {
         use MinTrackSizingFunction::{Auto, *};
         match self {
             Fixed(LengthPercentage::Points(size)) => Some(size),
-            Fixed(LengthPercentage::Percent(fraction)) => match available_space {
-                AvailableSpace::Definite(available_size) => Some(fraction * available_size),
-                _ => None,
-            },
+            Fixed(LengthPercentage::Percent(fraction)) => parent_size.map(|size| fraction * size),
             MinContent | MaxContent | Auto => None,
         }
     }

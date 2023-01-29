@@ -36,6 +36,12 @@ pub struct SizeAndBaselines {
     pub first_baselines: Point<Option<f32>>,
 }
 
+impl From<Size<f32>> for SizeAndBaselines {
+    fn from(size: Size<f32>) -> Self {
+        Self { size, first_baselines: Point::NONE }
+    }
+}
+
 /// The final result of a layout algorithm for a single [`Node`](crate::node::Node).
 #[derive(Debug, Copy, Clone)]
 pub struct Layout {

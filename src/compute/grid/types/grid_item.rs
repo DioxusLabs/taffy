@@ -8,7 +8,7 @@ use crate::layout::SizingMode;
 use crate::node::Node;
 use crate::prelude::LayoutTree;
 use crate::resolve::MaybeResolve;
-use crate::style::{AvailableSpace, LengthPercentageAuto, MaxTrackSizingFunction, MinTrackSizingFunction, Style};
+use crate::style::{LengthPercentageAuto, MaxTrackSizingFunction, MinTrackSizingFunction, Style};
 use crate::style_helpers::*;
 use core::ops::Range;
 
@@ -125,15 +125,15 @@ impl GridItem {
     }
 
     /// Compute the known_dimensions to be passed to the child sizing functions
-    /// These are estimates based on either the max track sizing function on the provisional base size in the opposite
+    /// These are estimates based on either the max track sizing function or the provisional base size in the opposite
     /// axis to the one currently being sized.
     /// https://www.w3.org/TR/css-grid-1/#algo-overview
     pub fn known_dimensions_cached(
         &mut self,
         axis: AbstractAxis,
         other_axis_tracks: &[GridTrack],
-        other_axis_available_space: AvailableSpace,
-        get_track_size_estimate: impl Fn(&GridTrack, AvailableSpace) -> Option<f32>,
+        other_axis_available_space: Option<f32>,
+        get_track_size_estimate: impl Fn(&GridTrack, Option<f32>) -> Option<f32>,
     ) -> Size<Option<f32>> {
         self.known_dimensions_cache.unwrap_or_else(|| {
             let item_other_axis_size: Option<f32> = {
@@ -163,16 +163,16 @@ impl GridItem {
         &mut self,
         axis: AbstractAxis,
         axis_tracks: &[GridTrack],
-        axis_available_space: AvailableSpace,
+        axis_parent_size: Option<f32>,
     ) -> Option<f32> {
         let spanned_tracks = &axis_tracks[self.track_range_excluding_lines(axis)];
         let tracks_all_fixed = spanned_tracks
             .iter()
-            .all(|track| track.max_track_sizing_function.definite_limit(axis_available_space).is_some());
+            .all(|track| track.max_track_sizing_function.definite_limit(axis_parent_size).is_some());
         if tracks_all_fixed {
             let limit: f32 = spanned_tracks
                 .iter()
-                .map(|track| track.max_track_sizing_function.definite_limit(axis_available_space).unwrap())
+                .map(|track| track.max_track_sizing_function.definite_limit(axis_parent_size).unwrap())
                 .sum();
             Some(limit)
         } else {
@@ -233,23 +233,18 @@ impl GridItem {
         tree: &mut impl LayoutTree,
         axis: AbstractAxis,
         axis_tracks: &[GridTrack],
-        available_space: Size<AvailableSpace>,
         known_dimensions: Size<Option<f32>>,
         inner_node_size: Size<Option<f32>>,
     ) -> f32 {
         self.minimum_contribution_cache.unwrap_or_else(|| {
             let style = tree.style(self.node);
-            style
+            let contribution = style
                 .size
-                .maybe_resolve(available_space.into_options())
+                .maybe_resolve(inner_node_size)
                 .maybe_apply_aspect_ratio(style.aspect_ratio)
                 .get(axis)
                 .or_else(|| {
-                    style
-                        .min_size
-                        .maybe_resolve(available_space.into_options())
-                        .maybe_apply_aspect_ratio(style.aspect_ratio)
-                        .get(axis)
+                    style.min_size.maybe_resolve(inner_node_size).maybe_apply_aspect_ratio(style.aspect_ratio).get(axis)
                 })
                 .unwrap_or_else(|| {
                     // Automatic minimum size. See https://www.w3.org/TR/css-grid-1/#min-size-auto
@@ -282,7 +277,9 @@ impl GridItem {
                     } else {
                         0.0
                     }
-                })
+                });
+            self.minimum_contribution_cache = Some(contribution);
+            contribution
         })
     }
 

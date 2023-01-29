@@ -72,7 +72,7 @@ pub fn compute(
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
-    _run_mode: RunMode,
+    run_mode: RunMode,
 ) -> SizeAndBaselines {
     let get_child_styles_iter = |node| tree.children(node).map(|child_node: &Node| tree.style(*child_node));
     let style = tree.style(node).clone();
@@ -181,16 +181,15 @@ pub fn compute(
     track_sizing_algorithm(
         tree,
         AbstractAxis::Inline,
-        available_space,
+        min_size.get(AbstractAxis::Inline),
+        max_size.get(AbstractAxis::Inline),
+        style.grid_align_content(AbstractAxis::Block),
         available_grid_space,
         inner_node_size,
-        &style,
         &mut columns,
         &mut rows,
         &mut items,
-        |track: &GridTrack, available_space: AvailableSpace| {
-            track.max_track_sizing_function.definite_value(available_space)
-        },
+        |track: &GridTrack, parent_size: Option<f32>| track.max_track_sizing_function.definite_value(parent_size),
     );
     let initial_column_sum = columns.iter().map(|track| track.base_size).sum::<f32>();
     inner_node_size.width = inner_node_size.width.or_else(|| initial_column_sum.into());
@@ -199,10 +198,11 @@ pub fn compute(
     track_sizing_algorithm(
         tree,
         AbstractAxis::Block,
-        available_space,
+        min_size.get(AbstractAxis::Block),
+        max_size.get(AbstractAxis::Block),
+        style.grid_align_content(AbstractAxis::Inline),
         available_grid_space,
         inner_node_size,
-        &style,
         &mut rows,
         &mut columns,
         &mut items,
@@ -210,34 +210,6 @@ pub fn compute(
     );
     let initial_row_sum = rows.iter().map(|track| track.base_size).sum::<f32>();
     inner_node_size.height = inner_node_size.height.or_else(|| initial_row_sum.into());
-
-    // Re-run track sizing algorithm for Inline axis
-    track_sizing_algorithm(
-        tree,
-        AbstractAxis::Inline,
-        available_space,
-        available_grid_space,
-        inner_node_size,
-        &style,
-        &mut columns,
-        &mut rows,
-        &mut items,
-        |track: &GridTrack, _| Some(track.base_size),
-    );
-
-    // Re-run track sizing algorithm for Block axis
-    track_sizing_algorithm(
-        tree,
-        AbstractAxis::Block,
-        available_space,
-        available_grid_space,
-        inner_node_size,
-        &style,
-        &mut rows,
-        &mut columns,
-        &mut items,
-        |track: &GridTrack, _| Some(track.base_size),
-    );
 
     // 6. Compute container size
     let resolved_style_size = known_dimensions.or(style.size.maybe_resolve(parent_size));
@@ -253,6 +225,41 @@ pub fn compute(
         width: container_border_box.width - padding.horizontal_axis_sum() - border.horizontal_axis_sum(),
         height: container_border_box.height - padding.vertical_axis_sum() - border.vertical_axis_sum(),
     };
+
+    // If only the container's size has been requested
+    if run_mode == RunMode::ComputeSize {
+        return container_border_box.into();
+    }
+
+    // Re-run track sizing algorithm for Inline axis
+    track_sizing_algorithm(
+        tree,
+        AbstractAxis::Inline,
+        min_size.get(AbstractAxis::Inline),
+        max_size.get(AbstractAxis::Inline),
+        style.grid_align_content(AbstractAxis::Block),
+        available_grid_space,
+        inner_node_size,
+        &mut columns,
+        &mut rows,
+        &mut items,
+        |track: &GridTrack, _| Some(track.base_size),
+    );
+
+    // Re-run track sizing algorithm for Block axis
+    track_sizing_algorithm(
+        tree,
+        AbstractAxis::Block,
+        min_size.get(AbstractAxis::Block),
+        max_size.get(AbstractAxis::Block),
+        style.grid_align_content(AbstractAxis::Inline),
+        available_grid_space,
+        inner_node_size,
+        &mut rows,
+        &mut columns,
+        &mut items,
+        |track: &GridTrack, _| Some(track.base_size),
+    );
 
     // 7. Resolve percentage track base sizes
     // In the case of an indefinitely sized container these resolve to zero during the "Initialise Tracks" step
