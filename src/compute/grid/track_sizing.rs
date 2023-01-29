@@ -75,9 +75,7 @@ pub(super) fn cmp_by_cross_flex_then_span_then_start(
             _ => {
                 let placement_a = item_a.placement(axis);
                 let placement_b = item_b.placement(axis);
-                let a_span = placement_a.end - placement_a.start;
-                let b_span = placement_b.end - placement_b.start;
-                match a_span.cmp(&b_span) {
+                match placement_a.span().cmp(&placement_b.span()) {
                     Ordering::Less => Ordering::Less,
                     Ordering::Greater => Ordering::Greater,
                     Ordering::Equal => placement_a.start.cmp(&placement_b.start),
