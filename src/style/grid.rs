@@ -492,12 +492,14 @@ impl FromFlex for NonRepeatedTrackSizingFunction {
 /// and the difference between AutoFit and AutoFill.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum GridTrackRepetition {
-    /// Auto-repeating track should be generated to fit the container
+    /// Auto-repeating tracks should be generated to fit the container
     /// See: https://developer.mozilla.org/en-US/docs/Web/CSS/repeat#auto-fill
     AutoFill,
-    /// Auto-repeating track should be generated to fit the container
+    /// Auto-repeating tracks should be generated to fit the container
     /// See: https://developer.mozilla.org/en-US/docs/Web/CSS/repeat#auto-fit
     AutoFit,
+    /// The specified tracks should be repeated exacts N times
+    Count(u16),
 }
 
 /// The sizing function for a grid track (row/column)
@@ -508,12 +510,12 @@ pub enum TrackSizingFunction {
     Single(NonRepeatedTrackSizingFunction),
     /// Automatically generate grid tracks to fit the available space using the specified definite track lengths
     /// Only valid if every track in template (not just the repitition) has a fixed size.
-    AutoRepeat(GridTrackRepetition, GridTrackVec<NonRepeatedTrackSizingFunction>),
+    Repeat(GridTrackRepetition, GridTrackVec<NonRepeatedTrackSizingFunction>),
 }
 impl TrackSizingFunction {
     /// Whether the track definition is a auto-repeated fragment
     pub fn is_auto_repetition(&self) -> bool {
-        matches!(self, Self::AutoRepeat(_, _))
+        matches!(self, Self::Repeat(GridTrackRepetition::AutoFit | GridTrackRepetition::AutoFill, _))
     }
 }
 impl TaffyAuto for TrackSizingFunction {

@@ -16,7 +16,7 @@ pub fn repeat(
     repetition_kind: GridTrackRepetition,
     track_list: Vec<NonRepeatedTrackSizingFunction>,
 ) -> TrackSizingFunction {
-    TrackSizingFunction::AutoRepeat(repetition_kind, track_list)
+    TrackSizingFunction::Repeat(repetition_kind, track_list)
 }
 
 /// Specifies a grid line to place a grid item between in CSS Grid Line coordinates:
