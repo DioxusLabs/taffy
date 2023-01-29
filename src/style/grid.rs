@@ -346,6 +346,13 @@ impl MaxTrackSizingFunction {
             Fixed(LengthPercentage::Points(_)) | MinContent | MaxContent | FitContent(_) | Auto | Flex(_) => None,
         }
     }
+
+    /// Whether the track sizing functions depends on the size of the parent node
+    #[inline(always)]
+    pub fn uses_percentage(self) -> bool {
+        use MaxTrackSizingFunction::*;
+        matches!(self, Fixed(LengthPercentage::Percent(_)) | FitContent(LengthPercentage::Percent(_)))
+    }
 }
 
 /// Minimum track sizing function
@@ -416,6 +423,13 @@ impl MinTrackSizingFunction {
             Fixed(LengthPercentage::Percent(fraction)) => Some(fraction * parent_size),
             Fixed(LengthPercentage::Points(_)) | MinContent | MaxContent | Auto => None,
         }
+    }
+
+    /// Whether the track sizing functions depends on the size of the parent node
+    #[inline(always)]
+    pub fn uses_percentage(self) -> bool {
+        use MinTrackSizingFunction::*;
+        matches!(self, Fixed(LengthPercentage::Percent(_)))
     }
 }
 
