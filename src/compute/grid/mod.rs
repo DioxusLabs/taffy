@@ -238,6 +238,7 @@ pub fn compute(
     // Column sizing must be re-run (once) if:
     //   - The grid container's width was initially indefinite and there are any columns with percentage track sizing functions
     //   - Any grid item crossing an intrinsically sized track's min content contribution width has changed
+    // TODO: Only rerun sizing for tracks that actually require it rather than for all tracks if any need it.
     let mut rerun_column_sizing;
 
     let has_percentage_column = columns.iter().any(|track| track.uses_percentage());
@@ -290,6 +291,7 @@ pub fn compute(
         // Row sizing must be re-run (once) if:
         //   - The grid container's height was initially indefinite and there are any rows with percentage track sizing functions
         //   - Any grid item crossing an intrinsically sized track's min content contribution height has changed
+        // TODO: Only rerun sizing for tracks that actually require it rather than for all tracks if any need it.
         let mut rerun_row_sizing;
 
         let has_percentage_row = rows.iter().any(|track| track.uses_percentage());
