@@ -238,7 +238,7 @@ impl GridItem {
     ) -> f32 {
         self.minimum_contribution_cache.unwrap_or_else(|| {
             let style = tree.style(self.node);
-            style
+            let contribution = style
                 .size
                 .maybe_resolve(inner_node_size)
                 .maybe_apply_aspect_ratio(style.aspect_ratio)
@@ -277,7 +277,9 @@ impl GridItem {
                     } else {
                         0.0
                     }
-                })
+                });
+            self.minimum_contribution_cache = Some(contribution);
+            contribution
         })
     }
 
