@@ -23,7 +23,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis(style: &Style, axis: AbsoluteAx
     // and we default to no explcit tracks
     let template_has_repetitions_with_zero_tracks = template.iter().any(|track_def| match track_def {
         TrackSizingFunction::Single(_) => false,
-        TrackSizingFunction::Repeat(_, tracks) => tracks.len() == 0,
+        TrackSizingFunction::Repeat(_, tracks) => tracks.is_empty(),
     });
     if template_has_repetitions_with_zero_tracks {
         return 0;
