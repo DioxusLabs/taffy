@@ -797,9 +797,7 @@ fn generate_track_definition(track_definition: &serde_json::Map<String, Value>) 
 
                         match unit {
                             "auto-fill" => quote!(GridTrackRepetition::AutoFill),
-                            // Not yet implemented in taffy
                             "auto-fit" => quote!(GridTrackRepetition::AutoFit),
-                            // Not yet implemented in taffy
                             "integer" => {
                                 let repetition_count = value();
                                 quote!(GridTrackRepetition::Count(#repetition_count))
