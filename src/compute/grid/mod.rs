@@ -184,6 +184,9 @@ pub fn compute(
     // Record this as a boolean (per-axis) on each item for later use in the track-sizing algorithm
     determine_if_item_crosses_flexible_or_intrinsic_tracks(&mut items, &columns, &rows);
 
+    // Determine if the grid has any baseline aligned items
+    let has_baseline_aligned_item = items.iter().any(|item| item.align_self == AlignSelf::Baseline);
+
     // Run track sizing algorithm for Inline axis
     track_sizing_algorithm(
         tree,
@@ -197,6 +200,7 @@ pub fn compute(
         &mut rows,
         &mut items,
         |track: &GridTrack, parent_size: Option<f32>| track.max_track_sizing_function.definite_value(parent_size),
+        has_baseline_aligned_item,
     );
     let initial_column_sum = columns.iter().map(|track| track.base_size).sum::<f32>();
     inner_node_size.width = inner_node_size.width.or_else(|| initial_column_sum.into());
@@ -216,6 +220,7 @@ pub fn compute(
         &mut columns,
         &mut items,
         |track: &GridTrack, _| Some(track.base_size),
+        false, // TODO: Support baseline alignment in the vertical axis
     );
     let initial_row_sum = rows.iter().map(|track| track.base_size).sum::<f32>();
     inner_node_size.height = inner_node_size.height.or_else(|| initial_row_sum.into());
@@ -291,6 +296,7 @@ pub fn compute(
             &mut rows,
             &mut items,
             |track: &GridTrack, _| Some(track.base_size),
+            has_baseline_aligned_item,
         );
 
         // Row sizing must be re-run (once) if:
@@ -344,6 +350,7 @@ pub fn compute(
                 &mut columns,
                 &mut items,
                 |track: &GridTrack, _| Some(track.base_size),
+                false, // TODO: Support baseline alignment in the vertical axis
             );
         }
     }
@@ -402,7 +409,14 @@ pub fn compute(
             left: columns[item.column_indexes.start as usize + 1].offset,
             right: columns[item.column_indexes.end as usize].offset,
         };
-        align_and_position_item(tree, item.node, index as u32, grid_area, container_alignment_styles);
+        align_and_position_item(
+            tree,
+            item.node,
+            index as u32,
+            grid_area,
+            container_alignment_styles,
+            item.baseline_shim,
+        );
     }
 
     // Position hidden and absolutely positioned children
@@ -459,7 +473,8 @@ pub fn compute(
                     .map(|index| columns[index].offset)
                     .unwrap_or(container_border_box.width - border.right),
             };
-            align_and_position_item(tree, child, order, grid_area, container_alignment_styles);
+            // TODO: Baseline alignment support for absolutely positioned items (should check if is actuallty specified)
+            align_and_position_item(tree, child, order, grid_area, container_alignment_styles, 0.0);
             order += 1;
         }
     });

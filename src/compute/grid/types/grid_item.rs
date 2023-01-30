@@ -37,6 +37,11 @@ pub(in super::super) struct GridItem {
     pub margin: Rect<LengthPercentageAuto>,
     /// The item's align_self property, or the parent's align_items property is not set
     pub align_self: AlignSelf,
+    /// The items first baseline (horizontal)
+    pub baseline: f32,
+    /// Shim for baseline alignment that acts like an extra top margin
+    /// TODO: Support last baseline and vertical text baselines
+    pub baseline_shim: f32,
 
     /// The item's definite row-start and row-end (same as `row` field, except in a different coordinate system)
     /// (as indexes into the Vec<GridTrack> stored in a grid's AbstractAxisTracks)
@@ -82,6 +87,8 @@ impl GridItem {
             column: col_span,
             margin: style.margin,
             align_self: style.align_self.unwrap_or(parent_align_items),
+            baseline: 0.0,
+            baseline_shim: 0.0,
             row_indexes: Line { start: 0, end: 0 }, // Properly initialised later
             column_indexes: Line { start: 0, end: 0 }, // Properly initialised later
             crosses_flexible_row: false,            // Properly initialised later

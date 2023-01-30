@@ -78,6 +78,7 @@ pub(super) fn align_and_position_item(
     order: u32,
     grid_area: Rect<f32>,
     container_alignment_styles: InBothAbsAxis<Option<AlignItems>>,
+    baseline_shim: f32,
 ) {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
 
@@ -117,9 +118,10 @@ pub(super) fn align_and_position_item(
     // Note: This is not a bug. It is part of the CSS spec that both horizontal and vertical margins
     // resolve against the WIDTH of the grid area.
     let margin = style.margin.map(|margin| margin.resolve_to_option(grid_area_size.width));
+
     let grid_area_minus_item_margins_size = Size {
         width: grid_area_size.width.maybe_sub(margin.left).maybe_sub(margin.right),
-        height: grid_area_size.height.maybe_sub(margin.top).maybe_sub(margin.bottom),
+        height: grid_area_size.height.maybe_sub(margin.top).maybe_sub(margin.bottom) - baseline_shim,
     };
 
     // If node is absolutely positioned and width is not set explicitly, then deduce it
@@ -198,6 +200,7 @@ pub(super) fn align_and_position_item(
         position,
         inset_horizontal,
         margin.horizontal_components(),
+        0.0,
     );
     let y = align_item_within_area(
         Line { start: grid_area.top, end: grid_area.bottom },
@@ -206,6 +209,7 @@ pub(super) fn align_and_position_item(
         position,
         inset_vertical,
         margin.vertical_components(),
+        baseline_shim,
     );
 
     *tree.layout_mut(node) = Layout { order, size: Size { width, height }, location: Point { x, y } };
@@ -219,17 +223,20 @@ pub(super) fn align_item_within_area(
     position: Position,
     inset: Line<Option<f32>>,
     margin: Line<Option<f32>>,
+    baseline_shim: f32,
 ) -> f32 {
     // Calculate grid area dimension in the axis
-    let non_auto_margin = Line { start: margin.start.unwrap_or(0.0), end: margin.end.unwrap_or(0.0) };
+    let non_auto_margin = Line { start: margin.start.unwrap_or(0.0) + baseline_shim, end: margin.end.unwrap_or(0.0) };
     let grid_area_size = f32_max(grid_area.end - grid_area.start, 0.0);
     let free_space = f32_max(grid_area_size - resolved_size - non_auto_margin.sum(), 0.0);
 
     // Expand auto margins to fill available space
     let auto_margin_count = margin.start.is_none() as u8 + margin.end.is_none() as u8;
     let auto_margin_size = if auto_margin_count > 0 { free_space / auto_margin_count as f32 } else { 0.0 };
-    let resolved_margin =
-        Line { start: margin.start.unwrap_or(auto_margin_size), end: margin.end.unwrap_or(auto_margin_size) };
+    let resolved_margin = Line {
+        start: margin.start.unwrap_or(auto_margin_size) + baseline_shim,
+        end: margin.end.unwrap_or(auto_margin_size),
+    };
 
     // Compute offset in the axis
     let alignment_based_offset = match alignment_style {
