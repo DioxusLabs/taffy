@@ -363,6 +363,8 @@ mod grid_align_content_start;
 #[cfg(feature = "grid")]
 mod grid_align_content_start_with_padding_border;
 #[cfg(feature = "grid")]
+mod grid_align_items_baseline_complex;
+#[cfg(feature = "grid")]
 mod grid_align_items_sized_center;
 #[cfg(feature = "grid")]
 mod grid_align_items_sized_end;
@@ -1057,6 +1059,8 @@ fn benchmark(c: &mut Criterion) {
             grid_align_content_start::compute();
             #[cfg(feature = "grid")]
             grid_align_content_start_with_padding_border::compute();
+            #[cfg(feature = "grid")]
+            grid_align_items_baseline_complex::compute();
             #[cfg(feature = "grid")]
             grid_align_items_sized_center::compute();
             #[cfg(feature = "grid")]
