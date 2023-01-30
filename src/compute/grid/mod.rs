@@ -480,7 +480,7 @@ pub fn compute(
     });
 
     // If there are not items then return just the container size (no baseline)
-    if items.len() == 0 {
+    if items.is_empty() {
         return SizeAndBaselines { size: container_border_box, first_baselines: Point::NONE };
     }
 
@@ -499,7 +499,7 @@ pub fn compute(
         let row_has_baseline_item = first_row_items.iter().any(|item| item.align_self == AlignSelf::Baseline);
 
         let item = if row_has_baseline_item {
-            first_row_items.iter().filter(|item| item.align_self == AlignSelf::Baseline).next().unwrap()
+            first_row_items.iter().find(|item| item.align_self == AlignSelf::Baseline).unwrap()
         } else {
             &first_row_items[0]
         };

@@ -494,7 +494,7 @@ fn resolve_item_baselines(
 
         // Compute the max baseline of all items in the row
         let row_max_baseline =
-            row_items.iter().map(|item| item.baseline.unwrap_or(0.0)).max_by(|a, b| a.total_cmp(&b)).unwrap();
+            row_items.iter().map(|item| item.baseline.unwrap_or(0.0)).max_by(|a, b| a.total_cmp(b)).unwrap();
 
         // Compute the baseline shim for each item in the row
         for item in row_items.iter_mut() {
