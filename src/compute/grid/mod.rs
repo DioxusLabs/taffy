@@ -479,5 +479,37 @@ pub fn compute(
         }
     });
 
-    SizeAndBaselines { size: container_border_box, first_baselines: Point::NONE }
+    // If there are not items then return just the container size (no baseline)
+    if items.len() == 0 {
+        return SizeAndBaselines { size: container_border_box, first_baselines: Point::NONE };
+    }
+
+    // Determine the grid container baseline(s) (currently we only compute the first baseline)
+    let grid_container_baseline: f32 = {
+        // Sort items by row start position so that we can iterate items in groups which are in the same row
+        items.sort_by_key(|item| item.row_indexes.start);
+
+        // Get the row index of the first row containing items
+        let first_row = items[0].row_indexes.start;
+
+        // Create a slice of all of the items start in this row (taking advantage of the fact that we have just sorted the array)
+        let first_row_items = &items[0..].split(|item| item.row_indexes.start != first_row).next().unwrap();
+
+        // Check if any items in *this row* are baseline aligned
+        let row_has_baseline_item = first_row_items.iter().any(|item| item.align_self == AlignSelf::Baseline);
+
+        let item = if row_has_baseline_item {
+            first_row_items.iter().filter(|item| item.align_self == AlignSelf::Baseline).next().unwrap()
+        } else {
+            &first_row_items[0]
+        };
+
+        let layout = tree.layout_mut(item.node);
+        layout.location.y + item.baseline.unwrap_or(layout.size.height)
+    };
+
+    SizeAndBaselines {
+        size: container_border_box,
+        first_baselines: Point { x: None, y: Some(grid_container_baseline) },
+    }
 }

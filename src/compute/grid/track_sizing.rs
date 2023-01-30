@@ -489,15 +489,16 @@ fn resolve_item_baselines(
             let baseline = measured_size_and_baselines.first_baselines.y;
             let height = measured_size_and_baselines.size.height;
 
-            item.baseline = baseline.unwrap_or(height) + item.margin.top.resolve_or_zero(inner_node_size.width);
+            item.baseline = Some(baseline.unwrap_or(height) + item.margin.top.resolve_or_zero(inner_node_size.width));
         }
 
         // Compute the max baseline of all items in the row
-        let row_max_baseline = row_items.iter().map(|item| item.baseline).max_by(|a, b| a.total_cmp(&b)).unwrap();
+        let row_max_baseline =
+            row_items.iter().map(|item| item.baseline.unwrap_or(0.0)).max_by(|a, b| a.total_cmp(&b)).unwrap();
 
         // Compute the baseline shim for each item in the row
         for item in row_items.iter_mut() {
-            item.baseline_shim = row_max_baseline - item.baseline;
+            item.baseline_shim = row_max_baseline - item.baseline.unwrap_or(0.0);
         }
     }
 }

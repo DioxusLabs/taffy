@@ -38,7 +38,7 @@ pub(in super::super) struct GridItem {
     /// The item's align_self property, or the parent's align_items property is not set
     pub align_self: AlignSelf,
     /// The items first baseline (horizontal)
-    pub baseline: f32,
+    pub baseline: Option<f32>,
     /// Shim for baseline alignment that acts like an extra top margin
     /// TODO: Support last baseline and vertical text baselines
     pub baseline_shim: f32,
@@ -87,7 +87,7 @@ impl GridItem {
             column: col_span,
             margin: style.margin,
             align_self: style.align_self.unwrap_or(parent_align_items),
-            baseline: 0.0,
+            baseline: None,
             baseline_shim: 0.0,
             row_indexes: Line { start: 0, end: 0 }, // Properly initialised later
             column_indexes: Line { start: 0, end: 0 }, // Properly initialised later
