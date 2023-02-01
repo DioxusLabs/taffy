@@ -5,7 +5,10 @@ use crate::{
 };
 
 #[cfg(feature = "grid")]
-use crate::style::{GridTrackRepetition, NonRepeatedTrackSizingFunction, TrackSizingFunction};
+use crate::style::{
+    GridTrackRepetition, MaxTrackSizingFunction, MinTrackSizingFunction, NonRepeatedTrackSizingFunction,
+    TrackSizingFunction,
+};
 
 /// Returns an auto-repeated track definition
 #[cfg(feature = "grid")]
@@ -40,7 +43,11 @@ pub trait TaffyGridSpan {
 }
 
 /// Returns a MinMax with min value of min and max value of max
-pub fn minmax<Min, Max, Output: From<MinMax<Min, Max>>>(min: Min, max: Max) -> Output {
+#[cfg(feature = "grid")]
+pub fn minmax<Output>(min: MinTrackSizingFunction, max: MaxTrackSizingFunction) -> Output
+where
+    Output: From<MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>>,
+{
     MinMax { min, max }.into()
 }
 
