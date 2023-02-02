@@ -644,6 +644,8 @@ mod grid_span_2_min_content_max_content_indefinite;
 mod grid_span_2_min_content_min_content_indefinite;
 #[cfg(feature = "grid")]
 mod grid_span_6_all_non_flex_indefinite;
+#[cfg(feature = "grid")]
+mod grid_span_8_all_track_types_indefinite;
 mod justify_content_column_center;
 mod justify_content_column_flex_end;
 mod justify_content_column_flex_start;
@@ -1401,6 +1403,8 @@ fn benchmark(c: &mut Criterion) {
             grid_span_2_min_content_min_content_indefinite::compute();
             #[cfg(feature = "grid")]
             grid_span_6_all_non_flex_indefinite::compute();
+            #[cfg(feature = "grid")]
+            grid_span_8_all_track_types_indefinite::compute();
             justify_content_column_center::compute();
             justify_content_column_flex_end::compute();
             justify_content_column_flex_start::compute();
