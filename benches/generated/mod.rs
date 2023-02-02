@@ -487,6 +487,8 @@ mod grid_fr_fixed_size_single_item;
 #[cfg(feature = "grid")]
 mod grid_fr_span_2_proportion;
 #[cfg(feature = "grid")]
+mod grid_fr_span_2_proportion_with_non_spanned_track;
+#[cfg(feature = "grid")]
 mod grid_gap;
 #[cfg(feature = "grid")]
 mod grid_hidden;
@@ -1241,6 +1243,8 @@ fn benchmark(c: &mut Criterion) {
             grid_fr_fixed_size_single_item::compute();
             #[cfg(feature = "grid")]
             grid_fr_span_2_proportion::compute();
+            #[cfg(feature = "grid")]
+            grid_fr_span_2_proportion_with_non_spanned_track::compute();
             #[cfg(feature = "grid")]
             grid_gap::compute();
             #[cfg(feature = "grid")]

@@ -486,6 +486,8 @@ mod grid_fr_fixed_size_single_item;
 #[cfg(feature = "grid")]
 mod grid_fr_span_2_proportion;
 #[cfg(feature = "grid")]
+mod grid_fr_span_2_proportion_with_non_spanned_track;
+#[cfg(feature = "grid")]
 mod grid_gap;
 #[cfg(feature = "grid")]
 mod grid_hidden;
