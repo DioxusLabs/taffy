@@ -1076,7 +1076,7 @@ fn expand_flexible_tracks(
                     .map(|track| {
                         let flex_factor = track.flex_factor();
                         if flex_factor > 1.0 {
-                            track.base_size * flex_factor
+                            track.base_size / flex_factor
                         } else {
                             track.base_size
                         }
