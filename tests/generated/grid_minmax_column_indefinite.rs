@@ -1,5 +1,5 @@
 #[test]
-fn grid_min_max_column_indefinite() {
+fn grid_minmax_column_indefinite() {
     use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};

@@ -1,5 +1,5 @@
 #[test]
-fn grid_min_max_column_fixed_width_within_range() {
+fn grid_minmax_column_fixed_width_within_range() {
     use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};

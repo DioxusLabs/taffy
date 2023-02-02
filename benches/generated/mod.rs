@@ -583,17 +583,51 @@ mod grid_min_content_maximum_single_item;
 #[cfg(feature = "grid")]
 mod grid_min_content_single_item;
 #[cfg(feature = "grid")]
-mod grid_min_max_column_fixed_width_above_range;
+mod grid_minmax_auto_fixed_10px;
 #[cfg(feature = "grid")]
-mod grid_min_max_column_fixed_width_below_range;
+mod grid_minmax_auto_max_content;
 #[cfg(feature = "grid")]
-mod grid_min_max_column_fixed_width_within_range;
+mod grid_minmax_auto_min_content;
 #[cfg(feature = "grid")]
-mod grid_min_max_column_indefinite;
+mod grid_minmax_auto_percent_definite;
 #[cfg(feature = "grid")]
-mod grid_min_max_column_with_auto_fixed;
+mod grid_minmax_auto_percent_indefinite;
 #[cfg(feature = "grid")]
-mod grid_min_max_column_with_fr_fixed;
+mod grid_minmax_column_fixed_width_above_range;
+#[cfg(feature = "grid")]
+mod grid_minmax_column_fixed_width_below_range;
+#[cfg(feature = "grid")]
+mod grid_minmax_column_fixed_width_within_range;
+#[cfg(feature = "grid")]
+mod grid_minmax_column_indefinite;
+#[cfg(feature = "grid")]
+mod grid_minmax_column_with_auto_fixed;
+#[cfg(feature = "grid")]
+mod grid_minmax_column_with_fr_fixed;
+#[cfg(feature = "grid")]
+mod grid_minmax_max_content_1fr;
+#[cfg(feature = "grid")]
+mod grid_minmax_max_content_auto;
+#[cfg(feature = "grid")]
+mod grid_minmax_max_content_fixed_10px;
+#[cfg(feature = "grid")]
+mod grid_minmax_max_content_min_content;
+#[cfg(feature = "grid")]
+mod grid_minmax_max_content_percent_definite;
+#[cfg(feature = "grid")]
+mod grid_minmax_max_content_percent_indefinite;
+#[cfg(feature = "grid")]
+mod grid_minmax_min_content_1fr;
+#[cfg(feature = "grid")]
+mod grid_minmax_min_content_auto;
+#[cfg(feature = "grid")]
+mod grid_minmax_min_content_fixed_10px;
+#[cfg(feature = "grid")]
+mod grid_minmax_min_content_max_content;
+#[cfg(feature = "grid")]
+mod grid_minmax_min_content_percent_definite;
+#[cfg(feature = "grid")]
+mod grid_minmax_min_content_percent_indefinite;
 #[cfg(feature = "grid")]
 mod grid_out_of_order_items;
 #[cfg(feature = "grid")]
@@ -1348,17 +1382,51 @@ fn benchmark(c: &mut Criterion) {
             #[cfg(feature = "grid")]
             grid_min_content_single_item::compute();
             #[cfg(feature = "grid")]
-            grid_min_max_column_fixed_width_above_range::compute();
+            grid_minmax_auto_fixed_10px::compute();
             #[cfg(feature = "grid")]
-            grid_min_max_column_fixed_width_below_range::compute();
+            grid_minmax_auto_max_content::compute();
             #[cfg(feature = "grid")]
-            grid_min_max_column_fixed_width_within_range::compute();
+            grid_minmax_auto_min_content::compute();
             #[cfg(feature = "grid")]
-            grid_min_max_column_indefinite::compute();
+            grid_minmax_auto_percent_definite::compute();
             #[cfg(feature = "grid")]
-            grid_min_max_column_with_auto_fixed::compute();
+            grid_minmax_auto_percent_indefinite::compute();
             #[cfg(feature = "grid")]
-            grid_min_max_column_with_fr_fixed::compute();
+            grid_minmax_column_fixed_width_above_range::compute();
+            #[cfg(feature = "grid")]
+            grid_minmax_column_fixed_width_below_range::compute();
+            #[cfg(feature = "grid")]
+            grid_minmax_column_fixed_width_within_range::compute();
+            #[cfg(feature = "grid")]
+            grid_minmax_column_indefinite::compute();
+            #[cfg(feature = "grid")]
+            grid_minmax_column_with_auto_fixed::compute();
+            #[cfg(feature = "grid")]
+            grid_minmax_column_with_fr_fixed::compute();
+            #[cfg(feature = "grid")]
+            grid_minmax_max_content_1fr::compute();
+            #[cfg(feature = "grid")]
+            grid_minmax_max_content_auto::compute();
+            #[cfg(feature = "grid")]
+            grid_minmax_max_content_fixed_10px::compute();
+            #[cfg(feature = "grid")]
+            grid_minmax_max_content_min_content::compute();
+            #[cfg(feature = "grid")]
+            grid_minmax_max_content_percent_definite::compute();
+            #[cfg(feature = "grid")]
+            grid_minmax_max_content_percent_indefinite::compute();
+            #[cfg(feature = "grid")]
+            grid_minmax_min_content_1fr::compute();
+            #[cfg(feature = "grid")]
+            grid_minmax_min_content_auto::compute();
+            #[cfg(feature = "grid")]
+            grid_minmax_min_content_fixed_10px::compute();
+            #[cfg(feature = "grid")]
+            grid_minmax_min_content_max_content::compute();
+            #[cfg(feature = "grid")]
+            grid_minmax_min_content_percent_definite::compute();
+            #[cfg(feature = "grid")]
+            grid_minmax_min_content_percent_indefinite::compute();
             #[cfg(feature = "grid")]
             grid_out_of_order_items::compute();
             #[cfg(feature = "grid")]
