@@ -762,6 +762,8 @@ fn resolve_intrinsic_track_sizes(
         }
         flush_planned_base_size_increases(axis_tracks);
 
+        let sum = axis_tracks.iter().map(|track| track.base_size).sum::<f32>();
+
         // 4. If at this point any track’s growth limit is now less than its base size, increase its growth limit to match its base size.
         for track in axis_tracks.iter_mut() {
             if track.growth_limit < track.base_size {
@@ -839,6 +841,7 @@ fn distribute_item_space_to_base_size(
             space,
             tracks,
             filter,
+            |track| track.flex_factor(),
             intrinsic_contribution_type,
             axis_inner_node_size,
         )
@@ -847,6 +850,7 @@ fn distribute_item_space_to_base_size(
             space,
             tracks,
             track_is_affected,
+            |_| 1.0,
             intrinsic_contribution_type,
             axis_inner_node_size,
         )
@@ -858,13 +862,14 @@ fn distribute_item_space_to_base_size(
         space: f32,
         tracks: &mut [GridTrack],
         track_is_affected: impl Fn(&GridTrack) -> bool,
+        track_distribution_proportion: impl Fn(&GridTrack) -> f32,
         intrinsic_contribution_type: IntrinsicContributionType,
         axis_inner_node_size: Option<f32>,
     ) {
         // Skip this distribution if there is either
         //   - no space to distribute
         //   - no affected tracks to distribute space to
-        if space == 0.0 || tracks.iter().filter(|track| track_is_affected(track)).count() == 0 {
+        if space == 0.0 || !tracks.iter().any(|track| track_is_affected(track)) {
             return;
         }
 
@@ -897,7 +902,14 @@ fn distribute_item_space_to_base_size(
         /// extra space when it gets to exactly zero, we will stop when it falls below this amount
         const THRESHOLD: f32 = 0.000001;
 
-        let extra_space = distribute_space_up_to_limits(extra_space, tracks, &track_is_affected, get_base_size, limit);
+        let extra_space = distribute_space_up_to_limits(
+            extra_space,
+            tracks,
+            &track_is_affected,
+            &track_distribution_proportion,
+            get_base_size,
+            limit,
+        );
 
         // 3. Distribute remaining span beyond limits (if any)
         if extra_space > THRESHOLD {
@@ -923,7 +935,14 @@ fn distribute_item_space_to_base_size(
                 filter = (|_| true) as fn(&GridTrack) -> bool;
             }
 
-            distribute_space_up_to_limits(extra_space, tracks, filter, get_base_size, limit);
+            distribute_space_up_to_limits(
+                extra_space,
+                tracks,
+                filter,
+                &track_distribution_proportion,
+                get_base_size,
+                limit,
+            );
         }
 
         // 4. For each affected track, if the track’s item-incurred increase is larger than the track’s planned increase
@@ -988,6 +1007,7 @@ fn distribute_item_space_to_growth_limit(
             extra_space,
             tracks,
             track_is_affected,
+            |_| 1.0,
             |track| if track.growth_limit == f32::INFINITY { track.base_size } else { track.growth_limit },
             move |track| track.fit_content_limit(axis_inner_node_size),
         );
@@ -1022,6 +1042,7 @@ fn maximise_tracks(
             free_space,
             axis_tracks,
             |_| true,
+            |_| 1.0,
             |track| track.base_size,
             move |track: &GridTrack| track.fit_content_limited_growth_limit(axis_inner_node_size),
         );
@@ -1232,6 +1253,7 @@ fn distribute_space_up_to_limits(
     space_to_distribute: f32,
     tracks: &mut [GridTrack],
     track_is_affected: impl Fn(&GridTrack) -> bool,
+    track_distribution_proportion: impl Fn(&GridTrack) -> f32,
     track_affected_property: impl Fn(&GridTrack) -> f32,
     track_limit: impl Fn(&GridTrack) -> f32,
 ) -> f32 {
@@ -1241,13 +1263,14 @@ fn distribute_space_up_to_limits(
 
     let mut space_to_distribute = space_to_distribute;
     while space_to_distribute > THRESHOLD {
-        let number_of_growable_tracks = tracks
+        let track_distribution_proportion_sum: f32 = tracks
             .iter()
             .filter(|track| track_affected_property(track) + track.item_incurred_increase < track_limit(track))
             .filter(|track| track_is_affected(track))
-            .count();
+            .map(|track| track_distribution_proportion(track))
+            .sum();
 
-        if number_of_growable_tracks == 0 {
+        if track_distribution_proportion_sum == 0.0 {
             break;
         }
 
@@ -1256,21 +1279,19 @@ fn distribute_space_up_to_limits(
             .iter()
             .filter(|track| track_affected_property(track) + track.item_incurred_increase < track_limit(track))
             .filter(|track| track_is_affected(track))
-            .map(|track| track_limit(track) - track_affected_property(track))
+            .map(|track| (track_limit(track) - track_affected_property(track)) / track_distribution_proportion(track))
             .min_by(|a, b| a.total_cmp(b))
             .unwrap(); // We will never pass an empty track list to this function
         let iteration_item_incurred_increase =
-            f32_min(min_increase_limit, space_to_distribute / number_of_growable_tracks as f32);
+            f32_min(min_increase_limit, space_to_distribute / track_distribution_proportion_sum as f32);
 
-        for track in tracks
-            .iter_mut()
-            .filter(|track| track_is_affected(track))
-            .filter(|track| track_affected_property(track) + track.item_incurred_increase < track_limit(track))
-        {
-            track.item_incurred_increase += iteration_item_incurred_increase;
+        for track in tracks.iter_mut().filter(|track| track_is_affected(track)) {
+            let increase = iteration_item_incurred_increase * track_distribution_proportion(track);
+            if increase > 0.0 && track_affected_property(track) + increase <= track_limit(track) {
+                track.item_incurred_increase += increase;
+                space_to_distribute -= increase;
+            }
         }
-
-        space_to_distribute -= iteration_item_incurred_increase * number_of_growable_tracks as f32;
     }
 
     space_to_distribute
