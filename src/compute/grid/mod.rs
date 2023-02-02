@@ -300,6 +300,14 @@ pub fn compute(
             })
             .any(|has_changed| has_changed);
         rerun_column_sizing = min_content_contribution_changed;
+    } else {
+        // Clear intrisic width caches
+        items.iter_mut().for_each(|item| {
+            item.known_dimensions_cache = None;
+            item.min_content_contribution_cache.width = None;
+            item.max_content_contribution_cache.width = None;
+            item.minimum_contribution_cache.width = None;
+        });
     }
 
     if rerun_column_sizing {
@@ -354,6 +362,14 @@ pub fn compute(
                 })
                 .any(|has_changed| has_changed);
             rerun_row_sizing = min_content_contribution_changed;
+        } else {
+            items.iter_mut().for_each(|item| {
+                // Clear intrisic height caches
+                item.known_dimensions_cache = None;
+                item.min_content_contribution_cache.height = None;
+                item.max_content_contribution_cache.height = None;
+                item.minimum_contribution_cache.height = None;
+            });
         }
 
         if rerun_row_sizing {
