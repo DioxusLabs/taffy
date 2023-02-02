@@ -372,9 +372,6 @@ impl GridItem {
         // Note: The argument to fit-content() does not clamp the content-based minimum size in the same way as a fixed max track
         // sizing function.
         let limit = self.spanned_fixed_track_limit(axis, axis_tracks, inner_node_size.get(axis));
-        dbg!(size);
-        dbg!(limit);
-        dbg!(inner_node_size.get(axis));
         size.maybe_min(limit)
     }
 
