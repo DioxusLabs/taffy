@@ -689,24 +689,53 @@ fn resolve_intrinsic_track_sizes(
         // a min track sizing function of auto or max-content by distributing extra space as needed to account for these items'
         // limited max-content contributions.
         if axis_available_grid_space == AvailableSpace::MaxContent {
-            let has_auto_or_max_content_min_track_sizing_function = move |track: &GridTrack| {
-                use MinTrackSizingFunction::{Auto, MaxContent};
-                matches!(track.min_track_sizing_function, Auto | MaxContent)
-            };
+            /// Whether a track has an Auto min track sizing function
+            #[inline(always)]
+            fn has_auto_min_track_sizing_function(track: &GridTrack) -> bool {
+                track.min_track_sizing_function == MinTrackSizingFunction::Auto
+            }
+
+            /// Whether a track has a MaxContent min track sizing function
+            #[inline(always)]
+            fn has_max_content_min_track_sizing_function(track: &GridTrack) -> bool {
+                track.min_track_sizing_function == MinTrackSizingFunction::MaxContent
+            }
+
             for item in batch.iter_mut() {
                 let axis_max_content_size = item_sizer.max_content_contribution(item);
                 let limit = item.spanned_fixed_track_limit(axis, axis_tracks, axis_inner_node_size);
                 let space = axis_max_content_size.maybe_min(limit);
                 let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
                 if space > 0.0 {
-                    distribute_item_space_to_base_size(
-                        is_flex,
-                        space,
-                        tracks,
-                        has_auto_or_max_content_min_track_sizing_function,
-                        IntrinsicContributionType::Maximum,
-                        axis_inner_node_size,
-                    );
+                    // If any of the tracks spanned by the item have a MaxContent min track sizing function then
+                    // distribute space only to those tracks. Otherwise distribute space to tracks with an Auto min
+                    // track sizing function.
+                    //
+                    // Note: this prioritisation of MaxContent over Auto is not mentioned in the spec (which suggests that
+                    // we ought to distribute space evenly between MaxContent and Auto tracks). But it is implemented like
+                    // this in both Chrome and Firefox (and it does have a certain logic to it), so we implement it too for
+                    // compatibility.
+                    //
+                    // See: https://www.w3.org/TR/css-grid-1/#track-size-max-content-min
+                    if tracks.iter().any(has_max_content_min_track_sizing_function) {
+                        distribute_item_space_to_base_size(
+                            is_flex,
+                            space,
+                            tracks,
+                            has_max_content_min_track_sizing_function,
+                            IntrinsicContributionType::Maximum,
+                            axis_inner_node_size,
+                        );
+                    } else {
+                        distribute_item_space_to_base_size(
+                            is_flex,
+                            space,
+                            tracks,
+                            has_auto_min_track_sizing_function,
+                            IntrinsicContributionType::Maximum,
+                            axis_inner_node_size,
+                        );
+                    }
                 }
             }
             flush_planned_base_size_increases(axis_tracks);
