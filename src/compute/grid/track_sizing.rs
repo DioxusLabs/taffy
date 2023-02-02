@@ -693,10 +693,18 @@ fn resolve_intrinsic_track_sizes(
         // helper function, and is used to compute the limit to distribute up to for each track.
         // Wrapping the method on GridTrack is necessary in order to resolve percentage fit-content arguments.
         if axis_available_grid_space == AvailableSpace::MaxContent {
-            /// Whether a track has an Auto min track sizing function
+            /// Whether a track:
+            ///   - has an Auto MIN track sizing function
+            ///   - Does not have a MinContent MAX track sizing function
+            ///
+            /// The latter condition was added in order to match Chrome. But I believe it is due to the provision
+            /// under minmax here https://www.w3.org/TR/css-grid-1/#track-sizes which states that:
+            ///
+            ///    "If the max is less than the min, then the max will be floored by the min (essentially yielding minmax(min, min))"
             #[inline(always)]
             fn has_auto_min_track_sizing_function(track: &GridTrack) -> bool {
                 track.min_track_sizing_function == MinTrackSizingFunction::Auto
+                    && track.max_track_sizing_function != MaxTrackSizingFunction::MinContent
             }
 
             /// Whether a track has a MaxContent min track sizing function
