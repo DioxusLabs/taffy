@@ -762,8 +762,6 @@ fn resolve_intrinsic_track_sizes(
         }
         flush_planned_base_size_increases(axis_tracks);
 
-        let sum = axis_tracks.iter().map(|track| track.base_size).sum::<f32>();
-
         // 4. If at this point any track’s growth limit is now less than its base size, increase its growth limit to match its base size.
         for track in axis_tracks.iter_mut() {
             if track.growth_limit < track.base_size {
@@ -869,7 +867,7 @@ fn distribute_item_space_to_base_size(
         // Skip this distribution if there is either
         //   - no space to distribute
         //   - no affected tracks to distribute space to
-        if space == 0.0 || !tracks.iter().any(|track| track_is_affected(track)) {
+        if space == 0.0 || !tracks.iter().any(&track_is_affected) {
             return;
         }
 
@@ -1267,7 +1265,7 @@ fn distribute_space_up_to_limits(
             .iter()
             .filter(|track| track_affected_property(track) + track.item_incurred_increase < track_limit(track))
             .filter(|track| track_is_affected(track))
-            .map(|track| track_distribution_proportion(track))
+            .map(&track_distribution_proportion)
             .sum();
 
         if track_distribution_proportion_sum == 0.0 {
@@ -1283,7 +1281,7 @@ fn distribute_space_up_to_limits(
             .min_by(|a, b| a.total_cmp(b))
             .unwrap(); // We will never pass an empty track list to this function
         let iteration_item_incurred_increase =
-            f32_min(min_increase_limit, space_to_distribute / track_distribution_proportion_sum as f32);
+            f32_min(min_increase_limit, space_to_distribute / track_distribution_proportion_sum);
 
         for track in tracks.iter_mut().filter(|track| track_is_affected(track)) {
             let increase = iteration_item_incurred_increase * track_distribution_proportion(track);
