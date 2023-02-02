@@ -245,6 +245,26 @@ pub fn compute(
         return container_border_box.into();
     }
 
+    // 7. Resolve percentage track base sizes
+    // In the case of an indefinitely sized container these resolve to zero during the "Initialise Tracks" step
+    // and therefore need to be re-resolved here based on the content-sized content box of the container
+    if !available_grid_space.width.is_definite() {
+        for column in &mut columns {
+            let min: Option<f32> =
+                column.min_track_sizing_function.resolved_percentage_size(container_content_box.width);
+            let max: Option<f32> =
+                column.max_track_sizing_function.resolved_percentage_size(container_content_box.width);
+            column.base_size = column.base_size.maybe_clamp(min, max);
+        }
+    }
+    if !available_grid_space.height.is_definite() {
+        for row in &mut rows {
+            let min: Option<f32> = row.min_track_sizing_function.resolved_percentage_size(container_content_box.height);
+            let max: Option<f32> = row.max_track_sizing_function.resolved_percentage_size(container_content_box.height);
+            row.base_size = row.base_size.maybe_clamp(min, max);
+        }
+    }
+
     // Column sizing must be re-run (once) if:
     //   - The grid container's width was initially indefinite and there are any columns with percentage track sizing functions
     //   - Any grid item crossing an intrinsically sized track's min content contribution width has changed
@@ -352,26 +372,6 @@ pub fn compute(
                 |track: &GridTrack, _| Some(track.base_size),
                 false, // TODO: Support baseline alignment in the vertical axis
             );
-        }
-    }
-
-    // 7. Resolve percentage track base sizes
-    // In the case of an indefinitely sized container these resolve to zero during the "Initialise Tracks" step
-    // and therefore need to be re-resolved here based on the content-sized content box of the container
-    if !available_grid_space.width.is_definite() {
-        for column in &mut columns {
-            let min: Option<f32> =
-                column.min_track_sizing_function.resolved_percentage_size(container_content_box.width);
-            let max: Option<f32> =
-                column.max_track_sizing_function.resolved_percentage_size(container_content_box.width);
-            column.base_size = column.base_size.maybe_clamp(min, max);
-        }
-    }
-    if !available_grid_space.height.is_definite() {
-        for row in &mut rows {
-            let min: Option<f32> = row.min_track_sizing_function.resolved_percentage_size(container_content_box.height);
-            let max: Option<f32> = row.max_track_sizing_function.resolved_percentage_size(container_content_box.height);
-            row.base_size = row.base_size.maybe_clamp(min, max);
         }
     }
 
