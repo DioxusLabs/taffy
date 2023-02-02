@@ -641,7 +641,7 @@ fn resolve_intrinsic_track_sizes(
                 AvailableSpace::MinContent | AvailableSpace::MaxContent => {
                     let axis_minimum_size = item_sizer.minimum_contribution(item, axis_tracks);
                     let axis_min_content_size = item_sizer.min_content_contribution(item);
-                    let limit = item.spanned_fixed_track_limit(axis, axis_tracks, axis_inner_node_size);
+                    let limit = item.spanned_track_limit(axis, axis_tracks, axis_inner_node_size);
                     axis_min_content_size.maybe_min(limit).max(axis_minimum_size)
                 }
                 AvailableSpace::Definite(_) => item_sizer.minimum_contribution(item, axis_tracks),
@@ -703,7 +703,7 @@ fn resolve_intrinsic_track_sizes(
 
             for item in batch.iter_mut() {
                 let axis_max_content_size = item_sizer.max_content_contribution(item);
-                let limit = item.spanned_fixed_track_limit(axis, axis_tracks, axis_inner_node_size);
+                let limit = item.spanned_track_limit(axis, axis_tracks, axis_inner_node_size);
                 let space = axis_max_content_size.maybe_min(limit);
                 let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
                 if space > 0.0 {

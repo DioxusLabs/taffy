@@ -5,6 +5,7 @@ use crate::compute::grid::OriginZeroLine;
 use crate::compute::{GenericAlgorithm, LayoutAlgorithm};
 use crate::geometry::{Line, Rect, Size};
 use crate::layout::SizingMode;
+use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::prelude::LayoutTree;
 use crate::resolve::MaybeResolve;
@@ -154,7 +155,7 @@ impl GridItem {
 
     /// For an item spanning multiple tracks, the upper limit used to calculate its limited min-/max-content contribution is the
     /// sum of the fixed max track sizing functions of any tracks it spans, and is applied if it only spans such tracks.
-    pub fn spanned_fixed_track_limit(
+    pub fn spanned_track_limit(
         &mut self,
         axis: AbstractAxis,
         axis_tracks: &[GridTrack],
@@ -168,6 +169,29 @@ impl GridItem {
             let limit: f32 = spanned_tracks
                 .iter()
                 .map(|track| track.max_track_sizing_function.definite_limit(axis_parent_size).unwrap())
+                .sum();
+            Some(limit)
+        } else {
+            None
+        }
+    }
+
+    /// Similar to the spanned_track_limit, but excludes FitContent arguments from the limit.
+    /// Used to clamp the automatic minimum contributions of an item
+    pub fn spanned_fixed_track_limit(
+        &mut self,
+        axis: AbstractAxis,
+        axis_tracks: &[GridTrack],
+        axis_parent_size: Option<f32>,
+    ) -> Option<f32> {
+        let spanned_tracks = &axis_tracks[self.track_range_excluding_lines(axis)];
+        let tracks_all_fixed = spanned_tracks
+            .iter()
+            .all(|track| track.max_track_sizing_function.definite_value(axis_parent_size).is_some());
+        if tracks_all_fixed {
+            let limit: f32 = spanned_tracks
+                .iter()
+                .map(|track| track.max_track_sizing_function.definite_value(axis_parent_size).unwrap())
                 .sum();
             Some(limit)
         } else {
@@ -293,6 +317,7 @@ impl GridItem {
     ///     Its minimum contribution is the outer size that would result from assuming the item’s used minimum size as its preferred size;
     ///   - Else the item’s minimum contribution is its min-content contribution.
     /// Because the minimum contribution often depends on the size of the item’s content, it is considered a type of intrinsic size contribution.
+    /// See: https://www.w3.org/TR/css-grid-1/#min-size-auto
     pub fn minimum_contribution(
         &mut self,
         tree: &mut impl LayoutTree,
@@ -302,7 +327,7 @@ impl GridItem {
         inner_node_size: Size<Option<f32>>,
     ) -> f32 {
         let style = tree.style(self.node);
-        style
+        let size = style
             .size
             .maybe_resolve(inner_node_size)
             .maybe_apply_aspect_ratio(style.aspect_ratio)
@@ -341,7 +366,13 @@ impl GridItem {
                 } else {
                     0.0
                 }
-            })
+            });
+
+        // In all cases, the size suggestion is additionally clamped by the maximum size in the affected axis, if it’s definite.
+        // Note: The argument to fit-content() does not clamp the content-based minimum size in the same way as a fixed max track
+        // sizing function.
+        let limit = self.spanned_fixed_track_limit(axis, axis_tracks, inner_node_size.get(axis));
+        size.maybe_min(limit)
     }
 
     /// Retrieve the item's minimum contribution from the cache or compute it using the provided parameters
