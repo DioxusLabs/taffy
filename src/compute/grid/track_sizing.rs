@@ -660,11 +660,6 @@ fn resolve_intrinsic_track_sizes(
         }
         flush_planned_base_size_increases(axis_tracks);
 
-        println!("Post step 1");
-        axis_tracks.iter().for_each(|track| {
-            println!("base size: {}, growth limit: {}", track.base_size, track.growth_limit);
-        });
-
         // 2. For content-based minimums:
         // Next continue to increase the base size of tracks with a min track sizing function of min-content or max-content
         // by distributing extra space as needed to account for these items' min-content contributions.
@@ -687,11 +682,6 @@ fn resolve_intrinsic_track_sizes(
             }
         }
         flush_planned_base_size_increases(axis_tracks);
-
-        println!("Post step 2");
-        axis_tracks.iter().for_each(|track| {
-            println!("base size: {}, growth limit: {}", track.base_size, track.growth_limit);
-        });
 
         // 3. For max-content minimums:
 
