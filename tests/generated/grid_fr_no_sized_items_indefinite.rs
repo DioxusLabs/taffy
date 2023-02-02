@@ -1,5 +1,5 @@
 #[test]
-fn grid_fr_auto_no_sized_items() {
+fn grid_fr_no_sized_items_indefinite() {
     use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};
@@ -19,10 +19,6 @@ fn grid_fr_auto_no_sized_items() {
                 display: taffy::style::Display::Grid,
                 grid_template_rows: vec![points(40f32), flex(1f32), flex(1f32)],
                 grid_template_columns: vec![points(40f32), flex(1f32), flex(1f32)],
-                size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Auto,
-                    height: taffy::style::Dimension::Auto,
-                },
                 ..Default::default()
             },
             &[node0, node1, node2, node3, node4, node5, node6, node7, node8],

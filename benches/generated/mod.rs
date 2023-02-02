@@ -451,6 +451,8 @@ mod grid_auto_single_item_fixed_width;
 #[cfg(feature = "grid")]
 mod grid_auto_single_item_fixed_width_with_definite_width;
 #[cfg(feature = "grid")]
+mod grid_auto_takes_precedence_over_fr;
+#[cfg(feature = "grid")]
 mod grid_basic;
 #[cfg(feature = "grid")]
 mod grid_basic_implicit_tracks;
@@ -477,13 +479,13 @@ mod grid_fit_content_points_max_content;
 #[cfg(feature = "grid")]
 mod grid_fit_content_points_min_content;
 #[cfg(feature = "grid")]
-mod grid_fr_auto_no_sized_items;
-#[cfg(feature = "grid")]
-mod grid_fr_auto_single_item;
-#[cfg(feature = "grid")]
 mod grid_fr_fixed_size_no_content;
 #[cfg(feature = "grid")]
 mod grid_fr_fixed_size_single_item;
+#[cfg(feature = "grid")]
+mod grid_fr_no_sized_items_indefinite;
+#[cfg(feature = "grid")]
+mod grid_fr_single_item_indefinite;
 #[cfg(feature = "grid")]
 mod grid_fr_span_2_proportion;
 #[cfg(feature = "grid")]
@@ -581,13 +583,17 @@ mod grid_min_content_maximum_single_item;
 #[cfg(feature = "grid")]
 mod grid_min_content_single_item;
 #[cfg(feature = "grid")]
-mod grid_min_max_column_auto;
-#[cfg(feature = "grid")]
 mod grid_min_max_column_fixed_width_above_range;
 #[cfg(feature = "grid")]
 mod grid_min_max_column_fixed_width_below_range;
 #[cfg(feature = "grid")]
 mod grid_min_max_column_fixed_width_within_range;
+#[cfg(feature = "grid")]
+mod grid_min_max_column_indefinite;
+#[cfg(feature = "grid")]
+mod grid_min_max_column_with_auto_fixed;
+#[cfg(feature = "grid")]
+mod grid_min_max_column_with_fr_fixed;
 #[cfg(feature = "grid")]
 mod grid_out_of_order_items;
 #[cfg(feature = "grid")]
@@ -1210,6 +1216,8 @@ fn benchmark(c: &mut Criterion) {
             #[cfg(feature = "grid")]
             grid_auto_single_item_fixed_width_with_definite_width::compute();
             #[cfg(feature = "grid")]
+            grid_auto_takes_precedence_over_fr::compute();
+            #[cfg(feature = "grid")]
             grid_basic::compute();
             #[cfg(feature = "grid")]
             grid_basic_implicit_tracks::compute();
@@ -1236,13 +1244,13 @@ fn benchmark(c: &mut Criterion) {
             #[cfg(feature = "grid")]
             grid_fit_content_points_min_content::compute();
             #[cfg(feature = "grid")]
-            grid_fr_auto_no_sized_items::compute();
-            #[cfg(feature = "grid")]
-            grid_fr_auto_single_item::compute();
-            #[cfg(feature = "grid")]
             grid_fr_fixed_size_no_content::compute();
             #[cfg(feature = "grid")]
             grid_fr_fixed_size_single_item::compute();
+            #[cfg(feature = "grid")]
+            grid_fr_no_sized_items_indefinite::compute();
+            #[cfg(feature = "grid")]
+            grid_fr_single_item_indefinite::compute();
             #[cfg(feature = "grid")]
             grid_fr_span_2_proportion::compute();
             #[cfg(feature = "grid")]
@@ -1340,13 +1348,17 @@ fn benchmark(c: &mut Criterion) {
             #[cfg(feature = "grid")]
             grid_min_content_single_item::compute();
             #[cfg(feature = "grid")]
-            grid_min_max_column_auto::compute();
-            #[cfg(feature = "grid")]
             grid_min_max_column_fixed_width_above_range::compute();
             #[cfg(feature = "grid")]
             grid_min_max_column_fixed_width_below_range::compute();
             #[cfg(feature = "grid")]
             grid_min_max_column_fixed_width_within_range::compute();
+            #[cfg(feature = "grid")]
+            grid_min_max_column_indefinite::compute();
+            #[cfg(feature = "grid")]
+            grid_min_max_column_with_auto_fixed::compute();
+            #[cfg(feature = "grid")]
+            grid_min_max_column_with_fr_fixed::compute();
             #[cfg(feature = "grid")]
             grid_out_of_order_items::compute();
             #[cfg(feature = "grid")]
