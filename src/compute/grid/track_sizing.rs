@@ -801,6 +801,10 @@ fn resolve_intrinsic_track_sizes(
             // 6. For max-content maximums: Lastly continue to increase the growth limit of tracks with a max track sizing function of max-content
             // by distributing extra space as needed to account for these items' max-content contributions. However, limit the growth of any
             // fit-content() tracks by their fit-content() argument.
+            let has_max_content_max_track_sizing_function = |track: &GridTrack| {
+                track.max_track_sizing_function.is_max_content_alike()
+                    || (track.max_track_sizing_function.uses_percentage() && axis_inner_node_size.is_none())
+            };
             for item in batch.iter_mut() {
                 let axis_max_content_size = item_sizer.max_content_contribution(item);
                 let space = axis_max_content_size;
@@ -809,7 +813,7 @@ fn resolve_intrinsic_track_sizes(
                     distribute_item_space_to_growth_limit(
                         space,
                         tracks,
-                        |track: &GridTrack| track.max_track_sizing_function.is_max_content_alike(),
+                        has_max_content_max_track_sizing_function,
                         inner_node_size.get(axis),
                     );
                 }
