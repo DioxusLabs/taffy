@@ -1523,13 +1523,13 @@ fn calculate_flex_item(
     let offset_main = *total_offset_main
         + item.offset_main
         + item.margin.main_start(direction)
-        + (item.inset.main_start(direction).unwrap_or(0.0) - item.inset.main_end(direction).unwrap_or(0.0));
+        + (item.inset.main_start(direction).or(item.inset.main_end(direction).map(|pos| -pos)).unwrap_or(0.0));
 
     let offset_cross = total_offset_cross
         + item.offset_cross
         + line_offset_cross
         + item.margin.cross_start(direction)
-        + (item.inset.cross_start(direction).unwrap_or(0.0) - item.inset.cross_end(direction).unwrap_or(0.0));
+        + (item.inset.cross_start(direction).or(item.inset.cross_end(direction).map(|pos| -pos)).unwrap_or(0.0));
 
     if direction.is_row() {
         let baseline_offset_cross = total_offset_cross + item.offset_cross + item.margin.cross_start(direction);
