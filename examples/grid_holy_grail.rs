@@ -25,8 +25,8 @@ fn main() -> Result<(), taffy::error::TaffyError> {
     let root_style = Style {
         display: Display::Grid,
         size: Size { width: points(800.0), height: points(600.0) },
-        grid_template_columns: vec![points(250.0), flex(1.0), points(250.0)],
-        grid_template_rows: vec![points(150.0), flex(1.0), points(150.0)],
+        grid_template_columns: vec![points(250.0), fr(1.0), points(250.0)],
+        grid_template_rows: vec![points(150.0), fr(1.0), points(150.0)],
         ..default()
     };
 

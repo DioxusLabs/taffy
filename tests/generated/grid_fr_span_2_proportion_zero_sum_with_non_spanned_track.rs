@@ -23,7 +23,7 @@ fn grid_fr_span_2_proportion_zero_sum_with_non_spanned_track() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 grid_template_rows: vec![points(40f32), points(40f32)],
-                grid_template_columns: vec![flex(0f32), flex(0f32), flex(0f32)],
+                grid_template_columns: vec![fr(0f32), fr(0f32), fr(0f32)],
                 ..Default::default()
             },
             &[node0, node1, node2, node3, node4],

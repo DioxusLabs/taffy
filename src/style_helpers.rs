@@ -435,7 +435,7 @@ impl<T: FromPercent> Rect<T> {
 }
 
 /// Returns a value of the inferred type which represents a flex fraction
-pub fn flex<Input: Into<f32> + Copy, T: FromFlex>(flex: Input) -> T {
+pub fn fr<Input: Into<f32> + Copy, T: FromFlex>(flex: Input) -> T {
     T::from_flex(flex)
 }
 

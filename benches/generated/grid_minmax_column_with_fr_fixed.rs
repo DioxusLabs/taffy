@@ -9,7 +9,7 @@ pub fn compute() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 grid_template_rows: vec![points(40f32)],
-                grid_template_columns: vec![minmax(points(20f32), points(40f32)), flex(1f32)],
+                grid_template_columns: vec![minmax(points(20f32), points(40f32)), fr(1f32)],
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), height: auto() },
                 ..Default::default()
             },

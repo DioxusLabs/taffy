@@ -20,9 +20,9 @@ fn random_grid_track<R: Rng>(rng: &mut R) -> TrackSizingFunction {
     } else if switch < 0.3 {
         max_content()
     } else if switch < 0.5 {
-        flex(1.0)
+        fr(1.0)
     } else if switch < 0.6 {
-        minmax(points(0.0), flex(1.0))
+        minmax(points(0.0), fr(1.0))
     } else if switch < 0.8 {
         points(40.0)
     } else {

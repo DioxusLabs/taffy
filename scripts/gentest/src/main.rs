@@ -830,7 +830,7 @@ fn generate_scalar_definition(track_definition: &serde_json::Map<String, Value>)
             match unit() {
                 "points" => quote!(points(#value)),
                 "percent" => quote!(percent(#value)),
-                "fraction" => quote!(flex(#value)),
+                "fraction" => quote!(fr(#value)),
                 _ => unreachable!(),
             }
         }
