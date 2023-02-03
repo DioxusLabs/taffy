@@ -20,7 +20,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis(style: &Style, axis: AbsoluteAx
     }
 
     // If there are any repetitions that contains no tracks, then the whole definition should be considered invalid
-    // and we default to no explcit tracks
+    // and we default to no explicit tracks
     let template_has_repetitions_with_zero_tracks = template.iter().any(|track_def| match track_def {
         TrackSizingFunction::Single(_) => false,
         TrackSizingFunction::Repeat(_, tracks) => tracks.is_empty(),
