@@ -600,8 +600,6 @@ fn resolve_intrinsic_track_sizes(
                         f32_max(track.growth_limit_planned_increase, max_content_contribution);
                 } else if track.max_track_sizing_function.is_max_content_alike() {
                     track.growth_limit_planned_increase =
-                        f32_max(track.growth_limit_planned_increase, item_sizer.min_content_contribution(item));
-                    track.growth_limit_planned_increase =
                         f32_max(track.growth_limit_planned_increase, item_sizer.max_content_contribution(item));
                 } else if track.max_track_sizing_function.uses_percentage() && axis_inner_node_size.is_none() {
                     // If the container size is indefinite and has not yet been resolved then percentage sized
