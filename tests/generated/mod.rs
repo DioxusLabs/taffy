@@ -478,7 +478,9 @@ mod grid_fit_content_points_max_content;
 #[cfg(feature = "grid")]
 mod grid_fit_content_points_min_content;
 #[cfg(feature = "grid")]
-mod grid_fr_fixed_size_no_content;
+mod grid_fr_fixed_size_no_content_proportions;
+#[cfg(feature = "grid")]
+mod grid_fr_fixed_size_no_content_proportions_sub_1_sum;
 #[cfg(feature = "grid")]
 mod grid_fr_fixed_size_single_item;
 #[cfg(feature = "grid")]
@@ -487,6 +489,8 @@ mod grid_fr_no_sized_items_indefinite;
 mod grid_fr_single_item_indefinite;
 #[cfg(feature = "grid")]
 mod grid_fr_span_2_proportion;
+#[cfg(feature = "grid")]
+mod grid_fr_span_2_proportion_sub_1_sum;
 #[cfg(feature = "grid")]
 mod grid_fr_span_2_proportion_with_non_spanned_track;
 #[cfg(feature = "grid")]
