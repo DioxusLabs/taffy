@@ -6,7 +6,7 @@ use crate::layout::{Layout, RunMode, SizeAndBaselines, SizingMode};
 use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
-use crate::style::{AlignContent, AvailableSpace, Display, Position};
+use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Display, Position};
 use crate::style_helpers::*;
 use crate::sys::{GridTrackVec, Vec};
 use crate::tree::LayoutTree;
@@ -95,7 +95,6 @@ pub fn compute(
     // Match items (children) to a definite grid position (row start/end and column start/end position)
     let mut items = Vec::with_capacity(tree.child_count(node));
     let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(est_col_counts, est_row_counts);
-    let grid_auto_flow = style.grid_auto_flow;
     let in_flow_children_iter = || {
         tree.children(node)
             .copied()
@@ -103,7 +102,13 @@ pub fn compute(
             .map(|(index, child_node)| (index, child_node, tree.style(child_node)))
             .filter(|(_, _, style)| style.display != Display::None && style.position != Position::Absolute)
     };
-    place_grid_items(&mut cell_occupancy_matrix, &mut items, in_flow_children_iter, grid_auto_flow);
+    place_grid_items(
+        &mut cell_occupancy_matrix,
+        &mut items,
+        in_flow_children_iter,
+        style.grid_auto_flow,
+        style.align_items.unwrap_or(AlignItems::Stretch),
+    );
 
     // Extract track counts from previous step (auto-placement can expand the number of tracks)
     let final_col_counts = *cell_occupancy_matrix.track_counts(AbsoluteAxis::Horizontal);
@@ -179,6 +184,9 @@ pub fn compute(
     // Record this as a boolean (per-axis) on each item for later use in the track-sizing algorithm
     determine_if_item_crosses_flexible_or_intrinsic_tracks(&mut items, &columns, &rows);
 
+    // Determine if the grid has any baseline aligned items
+    let has_baseline_aligned_item = items.iter().any(|item| item.align_self == AlignSelf::Baseline);
+
     // Run track sizing algorithm for Inline axis
     track_sizing_algorithm(
         tree,
@@ -192,6 +200,7 @@ pub fn compute(
         &mut rows,
         &mut items,
         |track: &GridTrack, parent_size: Option<f32>| track.max_track_sizing_function.definite_value(parent_size),
+        has_baseline_aligned_item,
     );
     let initial_column_sum = columns.iter().map(|track| track.base_size).sum::<f32>();
     inner_node_size.width = inner_node_size.width.or_else(|| initial_column_sum.into());
@@ -211,6 +220,7 @@ pub fn compute(
         &mut columns,
         &mut items,
         |track: &GridTrack, _| Some(track.base_size),
+        false, // TODO: Support baseline alignment in the vertical axis
     );
     let initial_row_sum = rows.iter().map(|track| track.base_size).sum::<f32>();
     inner_node_size.height = inner_node_size.height.or_else(|| initial_row_sum.into());
@@ -286,6 +296,7 @@ pub fn compute(
             &mut rows,
             &mut items,
             |track: &GridTrack, _| Some(track.base_size),
+            has_baseline_aligned_item,
         );
 
         // Row sizing must be re-run (once) if:
@@ -339,6 +350,7 @@ pub fn compute(
                 &mut columns,
                 &mut items,
                 |track: &GridTrack, _| Some(track.base_size),
+                false, // TODO: Support baseline alignment in the vertical axis
             );
         }
     }
@@ -397,7 +409,14 @@ pub fn compute(
             left: columns[item.column_indexes.start as usize + 1].offset,
             right: columns[item.column_indexes.end as usize].offset,
         };
-        align_and_position_item(tree, item.node, index as u32, grid_area, container_alignment_styles);
+        align_and_position_item(
+            tree,
+            item.node,
+            index as u32,
+            grid_area,
+            container_alignment_styles,
+            item.baseline_shim,
+        );
     }
 
     // Position hidden and absolutely positioned children
@@ -454,10 +473,43 @@ pub fn compute(
                     .map(|index| columns[index].offset)
                     .unwrap_or(container_border_box.width - border.right),
             };
-            align_and_position_item(tree, child, order, grid_area, container_alignment_styles);
+            // TODO: Baseline alignment support for absolutely positioned items (should check if is actuallty specified)
+            align_and_position_item(tree, child, order, grid_area, container_alignment_styles, 0.0);
             order += 1;
         }
     });
 
-    SizeAndBaselines { size: container_border_box, first_baselines: Point::NONE }
+    // If there are not items then return just the container size (no baseline)
+    if items.is_empty() {
+        return SizeAndBaselines { size: container_border_box, first_baselines: Point::NONE };
+    }
+
+    // Determine the grid container baseline(s) (currently we only compute the first baseline)
+    let grid_container_baseline: f32 = {
+        // Sort items by row start position so that we can iterate items in groups which are in the same row
+        items.sort_by_key(|item| item.row_indexes.start);
+
+        // Get the row index of the first row containing items
+        let first_row = items[0].row_indexes.start;
+
+        // Create a slice of all of the items start in this row (taking advantage of the fact that we have just sorted the array)
+        let first_row_items = &items[0..].split(|item| item.row_indexes.start != first_row).next().unwrap();
+
+        // Check if any items in *this row* are baseline aligned
+        let row_has_baseline_item = first_row_items.iter().any(|item| item.align_self == AlignSelf::Baseline);
+
+        let item = if row_has_baseline_item {
+            first_row_items.iter().find(|item| item.align_self == AlignSelf::Baseline).unwrap()
+        } else {
+            &first_row_items[0]
+        };
+
+        let layout = tree.layout_mut(item.node);
+        layout.location.y + item.baseline.unwrap_or(layout.size.height)
+    };
+
+    SizeAndBaselines {
+        size: container_border_box,
+        first_baselines: Point { x: None, y: Some(grid_container_baseline) },
+    }
 }

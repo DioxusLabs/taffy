@@ -363,6 +363,38 @@ mod grid_align_content_start;
 #[cfg(feature = "grid")]
 mod grid_align_content_start_with_padding_border;
 #[cfg(feature = "grid")]
+mod grid_align_items_baseline;
+#[cfg(feature = "grid")]
+mod grid_align_items_baseline_child;
+#[cfg(feature = "grid")]
+mod grid_align_items_baseline_child_margin;
+#[cfg(feature = "grid")]
+mod grid_align_items_baseline_child_margin_percent;
+#[cfg(feature = "grid")]
+mod grid_align_items_baseline_child_multiline;
+#[cfg(feature = "grid")]
+mod grid_align_items_baseline_child_multiline_no_override_on_secondline;
+#[cfg(feature = "grid")]
+mod grid_align_items_baseline_child_multiline_override;
+#[cfg(feature = "grid")]
+mod grid_align_items_baseline_child_padding;
+#[cfg(feature = "grid")]
+mod grid_align_items_baseline_child_top;
+#[cfg(feature = "grid")]
+mod grid_align_items_baseline_child_top2;
+#[cfg(feature = "grid")]
+mod grid_align_items_baseline_complex;
+#[cfg(feature = "grid")]
+mod grid_align_items_baseline_double_nested_child;
+#[cfg(feature = "grid")]
+mod grid_align_items_baseline_multiline;
+#[cfg(feature = "grid")]
+mod grid_align_items_baseline_multiline_column;
+#[cfg(feature = "grid")]
+mod grid_align_items_baseline_multiline_row_and_column;
+#[cfg(feature = "grid")]
+mod grid_align_items_baseline_nested_column;
+#[cfg(feature = "grid")]
 mod grid_align_items_sized_center;
 #[cfg(feature = "grid")]
 mod grid_align_items_sized_end;
@@ -1057,6 +1089,38 @@ fn benchmark(c: &mut Criterion) {
             grid_align_content_start::compute();
             #[cfg(feature = "grid")]
             grid_align_content_start_with_padding_border::compute();
+            #[cfg(feature = "grid")]
+            grid_align_items_baseline::compute();
+            #[cfg(feature = "grid")]
+            grid_align_items_baseline_child::compute();
+            #[cfg(feature = "grid")]
+            grid_align_items_baseline_child_margin::compute();
+            #[cfg(feature = "grid")]
+            grid_align_items_baseline_child_margin_percent::compute();
+            #[cfg(feature = "grid")]
+            grid_align_items_baseline_child_multiline::compute();
+            #[cfg(feature = "grid")]
+            grid_align_items_baseline_child_multiline_no_override_on_secondline::compute();
+            #[cfg(feature = "grid")]
+            grid_align_items_baseline_child_multiline_override::compute();
+            #[cfg(feature = "grid")]
+            grid_align_items_baseline_child_padding::compute();
+            #[cfg(feature = "grid")]
+            grid_align_items_baseline_child_top::compute();
+            #[cfg(feature = "grid")]
+            grid_align_items_baseline_child_top2::compute();
+            #[cfg(feature = "grid")]
+            grid_align_items_baseline_complex::compute();
+            #[cfg(feature = "grid")]
+            grid_align_items_baseline_double_nested_child::compute();
+            #[cfg(feature = "grid")]
+            grid_align_items_baseline_multiline::compute();
+            #[cfg(feature = "grid")]
+            grid_align_items_baseline_multiline_column::compute();
+            #[cfg(feature = "grid")]
+            grid_align_items_baseline_multiline_row_and_column::compute();
+            #[cfg(feature = "grid")]
+            grid_align_items_baseline_nested_column::compute();
             #[cfg(feature = "grid")]
             grid_align_items_sized_center::compute();
             #[cfg(feature = "grid")]

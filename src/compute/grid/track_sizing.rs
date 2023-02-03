@@ -2,11 +2,15 @@
 //! https://www.w3.org/TR/css-grid-1/#layout-algorithm
 use super::types::{GridItem, GridTrack, TrackCounts};
 use crate::axis::AbstractAxis;
+use crate::compute::{GenericAlgorithm, LayoutAlgorithm};
 use crate::geometry::{Rect, Size};
+use crate::layout::SizingMode;
 use crate::math::MaybeMath;
-use crate::prelude::LayoutTree;
+use crate::prelude::{LayoutTree, TaffyMinContent};
 use crate::resolve::ResolveOrZero;
-use crate::style::{AlignContent, AvailableSpace, MaxTrackSizingFunction, MinTrackSizingFunction};
+use crate::style::{
+    AlignContent, AlignSelf, AvailableSpace, LengthPercentage, MaxTrackSizingFunction, MinTrackSizingFunction,
+};
 use crate::sys::{f32_max, f32_min};
 use core::cmp::Ordering;
 
@@ -62,6 +66,95 @@ impl ItemBatcher {
     }
 }
 
+/// This struct captures a bunch of variables which are used to compute the intrinsic sizes of children so that those variables
+/// don't have to be passed around all over the place below. It then has methods that implement the intrinsic sizing computations
+struct IntrisicSizeMeasurer<'tree, 'oat, Tree, EstimateFunction>
+where
+    Tree: LayoutTree,
+    EstimateFunction: Fn(&GridTrack, Option<f32>) -> Option<f32>,
+{
+    /// The layout tree
+    tree: &'tree mut Tree,
+    /// The tracks in the opposite axis to the one we are currently sizing
+    other_axis_tracks: &'oat [GridTrack],
+    /// A function that computes an estimate of an other-axis track's size which is passed to
+    /// the child size measurement functions
+    get_track_size_estimate: EstimateFunction,
+    /// The axis we are currently sizing
+    axis: AbstractAxis,
+    /// The available grid space
+    inner_node_size: Size<Option<f32>>,
+}
+
+impl<'tree, 'oat, Tree, EstimateFunction> IntrisicSizeMeasurer<'tree, 'oat, Tree, EstimateFunction>
+where
+    Tree: LayoutTree,
+    EstimateFunction: Fn(&GridTrack, Option<f32>) -> Option<f32>,
+{
+    /// Compute the known_dimensions to be passed to the child sizing functions
+    /// These are estimates based on either the max track sizing function or the provisional base size in the opposite
+    /// axis to the one currently being sized.
+    /// https://www.w3.org/TR/css-grid-1/#algo-overview
+    #[inline(always)]
+    fn known_dimensions(&self, item: &mut GridItem) -> Size<Option<f32>> {
+        item.known_dimensions_cached(
+            self.axis,
+            self.other_axis_tracks,
+            self.inner_node_size.get(self.axis.other()),
+            &self.get_track_size_estimate,
+        )
+    }
+
+    /// Compute the item's resolved margins for size contributions. Horizontal percentage margins always resolve
+    /// to zero if the container size is indefinite as otherwise this would introduce a cyclic dependency.
+    #[inline(always)]
+    fn margins_axis_sums_with_baseline_shims(&self, item: &mut GridItem) -> Size<f32> {
+        let parent_width = self.inner_node_size.width;
+        Rect {
+            left: item.margin.left.resolve_or_zero(Some(0.0)),
+            right: item.margin.right.resolve_or_zero(Some(0.0)),
+            top: item.margin.top.resolve_or_zero(parent_width) + item.baseline_shim,
+            bottom: item.margin.bottom.resolve_or_zero(parent_width),
+        }
+        .sum_axes()
+    }
+
+    /// Retrieve the item's min content contribution from the cache or compute it using the provided parameters
+    #[inline(always)]
+    fn min_content_contribution(&mut self, item: &mut GridItem) -> f32 {
+        let known_dimensions = self.known_dimensions(item);
+        let margin_axis_sums = self.margins_axis_sums_with_baseline_shims(item);
+        let contribution =
+            item.min_content_contribution_cached(self.axis, self.tree, known_dimensions, self.inner_node_size);
+        contribution + margin_axis_sums.get(self.axis)
+    }
+
+    /// Retrieve the item's max content contribution from the cache or compute it using the provided parameters
+    #[inline(always)]
+    fn max_content_contribution(&mut self, item: &mut GridItem) -> f32 {
+        let known_dimensions = self.known_dimensions(item);
+        let margin_axis_sums = self.margins_axis_sums_with_baseline_shims(item);
+        let contribution =
+            item.max_content_contribution_cached(self.axis, self.tree, known_dimensions, self.inner_node_size);
+        contribution + margin_axis_sums.get(self.axis)
+    }
+
+    /// The minimum contribution of an item is the smallest outer size it can have.
+    /// Specifically:
+    ///   - If the item’s computed preferred size behaves as auto or depends on the size of its containing block in the relevant axis:
+    ///     Its minimum contribution is the outer size that would result from assuming the item’s used minimum size as its preferred size;
+    ///   - Else the item’s minimum contribution is its min-content contribution.
+    /// Because the minimum contribution often depends on the size of the item’s content, it is considered a type of intrinsic size contribution.
+    #[inline(always)]
+    fn minimum_contribution(&mut self, item: &mut GridItem, axis_tracks: &[GridTrack]) -> f32 {
+        let known_dimensions = self.known_dimensions(item);
+        let margin_axis_sums = self.margins_axis_sums_with_baseline_shims(item);
+        let contribution =
+            item.minimum_contribution_cached(self.tree, self.axis, axis_tracks, known_dimensions, self.inner_node_size);
+        contribution + margin_axis_sums.get(self.axis)
+    }
+}
+
 /// To make track sizing efficient we want to order tracks
 /// Here a placement is either a Line<i16> representing a row-start/row-end or a column-start/column-end
 #[inline(always)]
@@ -75,9 +168,7 @@ pub(super) fn cmp_by_cross_flex_then_span_then_start(
             _ => {
                 let placement_a = item_a.placement(axis);
                 let placement_b = item_b.placement(axis);
-                let a_span = placement_a.end - placement_a.start;
-                let b_span = placement_b.end - placement_b.start;
-                match a_span.cmp(&b_span) {
+                match placement_a.span().cmp(&placement_b.span()) {
                     Ordering::Less => Ordering::Less,
                     Ordering::Greater => Ordering::Greater,
                     Ordering::Equal => placement_a.start.cmp(&placement_b.start),
@@ -192,10 +283,16 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
     other_axis_tracks: &mut [GridTrack],
     items: &mut [GridItem],
     get_track_size_estimate: impl Fn(&GridTrack, Option<f32>) -> Option<f32>,
+    has_baseline_aligned_item: bool,
 ) {
     // 11.4 Initialise Track sizes
     // Initialize each track’s base size and growth limit.
     initialize_track_sizes(axis_tracks, inner_node_size.get(axis));
+
+    // 11.5.1 Shim item baselines
+    if has_baseline_aligned_item {
+        resolve_item_baselines(tree, axis, items, inner_node_size);
+    }
 
     // If all tracks have base_size = growth_limit, then skip the rest of this function.
     // Note: this can only happen both track sizing function have the same fixed track sizing function
@@ -204,11 +301,6 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
     }
 
     // Pre-computations for 11.5 Resolve Intrinsic Track Sizes
-
-    // The track sizing algorithm requires us to iterate through the items in ascendeding order of the number of
-    // tracks they span (first items that span 1 track, then items that span 2 tracks, etc).
-    // To avoid having to do multiple iterations of the items, we pre-sort them into this order.
-    items.sort_by(cmp_by_cross_flex_then_span_then_start(axis));
 
     // Compute an additional amount to add to each spanned gutter when computing item's estimated size in the
     // in the opposite axis based on the alignment, container size, and estimated track sizes in that axis
@@ -339,6 +431,78 @@ fn initialize_track_sizes(axis_tracks: &mut [GridTrack], axis_inner_node_size: O
     }
 }
 
+/// 11.5.1 Shim baseline-aligned items so their intrinsic size contributions reflect their baseline alignment.
+fn resolve_item_baselines(
+    tree: &mut impl LayoutTree,
+    axis: AbstractAxis,
+    items: &mut [GridItem],
+    inner_node_size: Size<Option<f32>>,
+) {
+    // Sort items by track in the other axis (row) start position so that we can iterate items in groups which
+    // are in the same track in the other axis (row)
+    let other_axis = axis.other();
+    items.sort_by_key(|item| item.placement(other_axis).start);
+
+    // Iterate over grid rows
+    let mut remaining_items = &mut items[0..];
+    while !remaining_items.is_empty() {
+        // Get the row index of the current row
+        let current_row = remaining_items[0].placement(other_axis).start;
+
+        // Find the item index of the first item that is in a different row (or None if we've reached the end of the list)
+        let next_row_first_item =
+            remaining_items.iter().position(|item| item.placement(other_axis).start != current_row);
+
+        // Use this index to split the `remaining_items` slice in two slices:
+        //    - A `row_items` slice containing the items (that start) in the current row
+        //    - A new `remaining_items` consisting of the remainder of the `remaining_items` slice
+        //      that hasn't been split off into `row_items
+        let row_items = if let Some(index) = next_row_first_item {
+            let (row_items, tail) = remaining_items.split_at_mut(index);
+            remaining_items = tail;
+            row_items
+        } else {
+            let row_items = remaining_items;
+            remaining_items = &mut [];
+            row_items
+        };
+
+        // Count how many items in *this row* are baseline aligned
+        // If a row has one or zero items participating in baseline alignment then baseline alignment is a no-op
+        // for those items and we skip further computations for that row
+        let row_baseline_item_count = row_items.iter().filter(|item| item.align_self == AlignSelf::Baseline).count();
+        if row_baseline_item_count <= 1 {
+            continue;
+        }
+
+        // Compute the baselines of all items in the row
+        for item in row_items.iter_mut() {
+            let measured_size_and_baselines = GenericAlgorithm::perform_layout(
+                tree,
+                item.node,
+                Size::NONE,
+                inner_node_size,
+                Size::MIN_CONTENT,
+                SizingMode::InherentSize,
+            );
+
+            let baseline = measured_size_and_baselines.first_baselines.y;
+            let height = measured_size_and_baselines.size.height;
+
+            item.baseline = Some(baseline.unwrap_or(height) + item.margin.top.resolve_or_zero(inner_node_size.width));
+        }
+
+        // Compute the max baseline of all items in the row
+        let row_max_baseline =
+            row_items.iter().map(|item| item.baseline.unwrap_or(0.0)).max_by(|a, b| a.total_cmp(b)).unwrap();
+
+        // Compute the baseline shim for each item in the row
+        for item in row_items.iter_mut() {
+            item.baseline_shim = row_max_baseline - item.baseline.unwrap_or(0.0);
+        }
+    }
+}
+
 /// 11.5 Resolve Intrinsic Track Sizes
 #[allow(clippy::too_many_arguments)]
 fn resolve_intrinsic_track_sizes(
@@ -352,18 +516,19 @@ fn resolve_intrinsic_track_sizes(
     get_track_size_estimate: impl Fn(&GridTrack, Option<f32>) -> Option<f32>,
 ) {
     // Step 1. Shim baseline-aligned items so their intrinsic size contributions reflect their baseline alignment.
-    // TODO: we do not yet support baseline alignment for CSS Grid
 
-    // Step 2. We skip Step 2 as it is noted that:
-    //
-    //    This step is a simplification of the steps below for handling spanning items, and should yield
-    //    the same behavior as running those instructions on items with a span of 1.
-    //
-    // We choose this alternative of running Step 3 on items with a span of 1 as we need to write the code for this anyway.
+    // Already done at this point. See resolve_item_baselines function.
 
-    // Step 3 and Step 4
-    // 3. Iterate over items that don't cross a flex track. Items should have already been sorted in ascending order
-    // of the number of tracks they cross.
+    // Step 2.
+
+    // The track sizing algorithm requires us to iterate through the items in ascendeding order of the number of
+    // tracks they span (first items that span 1 track, then items that span 2 tracks, etc).
+    // To avoid having to do multiple iterations of the items, we pre-sort them into this order.
+    items.sort_by(cmp_by_cross_flex_then_span_then_start(axis));
+
+    // Step 2, Step 3 and Step 4
+    // 2 & 3. Iterate over items that don't cross a flex track. Items should have already been sorted in ascending order
+    // of the number of tracks they span. Step 2 is the 1 track case and has an optimised implementation
     // 4. Next, repeat the previous step instead considering (together, rather than grouped by span size) all items
     // that do span a track with a flexible sizing function while
 
@@ -372,106 +537,98 @@ fn resolve_intrinsic_track_sizes(
     // to the min-content contribution—but can differ in some cases, see §6.6 Automatic Minimum Size of Grid Items.
     // Also, minimum contribution <= min-content contribution <= max-content contribution.
 
-    /// This struct captures a bunch of variables which are used to compute the intrinsic sizes of children so that those variables
-    /// don't have to be passed around all over the place below. It then has methods that implement the intrinsic sizing computations
-    struct IntrisicSizeMeasurer<'tree, 'oat, Tree, EstimateFunction>
-    where
-        Tree: LayoutTree,
-        EstimateFunction: Fn(&GridTrack, Option<f32>) -> Option<f32>,
-    {
-        /// The layout tree
-        tree: &'tree mut Tree,
-        /// The tracks in the opposite axis to the one we are currently sizing
-        other_axis_tracks: &'oat [GridTrack],
-        /// A function that computes an estimate of an other-axis track's size which is passed to
-        /// the child size measurement functions
-        get_track_size_estimate: EstimateFunction,
-        /// The axis we are currently sizing
-        axis: AbstractAxis,
-        /// The available grid space
-        inner_node_size: Size<Option<f32>>,
-    }
-
-    impl<'tree, 'oat, Tree, EstimateFunction> IntrisicSizeMeasurer<'tree, 'oat, Tree, EstimateFunction>
-    where
-        Tree: LayoutTree,
-        EstimateFunction: Fn(&GridTrack, Option<f32>) -> Option<f32>,
-    {
-        /// Compute the known_dimensions to be passed to the child sizing functions
-        /// These are estimates based on either the max track sizing function or the provisional base size in the opposite
-        /// axis to the one currently being sized.
-        /// https://www.w3.org/TR/css-grid-1/#algo-overview
-        #[inline(always)]
-        fn known_dimensions(&self, item: &mut GridItem) -> Size<Option<f32>> {
-            item.known_dimensions_cached(
-                self.axis,
-                self.other_axis_tracks,
-                self.inner_node_size.get(self.axis.other()),
-                &self.get_track_size_estimate,
-            )
-        }
-
-        /// Compute the item's resolved margins for size contributions. Horizontal percentage margins always resolve
-        /// to zero if the container size is indefinite as otherwise this would introduce a cyclic dependency.
-        #[inline(always)]
-        fn margins_axis_sums(&self, item: &mut GridItem) -> Size<f32> {
-            let parent_width = self.inner_node_size.width;
-            Rect {
-                left: item.margin.left.resolve_or_zero(Some(0.0)),
-                right: item.margin.right.resolve_or_zero(Some(0.0)),
-                top: item.margin.top.resolve_or_zero(parent_width),
-                bottom: item.margin.bottom.resolve_or_zero(parent_width),
-            }
-            .sum_axes()
-        }
-
-        /// Retrieve the item's min content contribution from the cache or compute it using the provided parameters
-        #[inline(always)]
-        fn min_content_contribution(&mut self, item: &mut GridItem) -> f32 {
-            let known_dimensions = self.known_dimensions(item);
-            let margin_axis_sums = self.margins_axis_sums(item);
-            let contribution =
-                item.min_content_contribution_cached(self.axis, self.tree, known_dimensions, self.inner_node_size);
-            contribution + margin_axis_sums.get(self.axis)
-        }
-
-        /// Retrieve the item's max content contribution from the cache or compute it using the provided parameters
-        #[inline(always)]
-        fn max_content_contribution(&mut self, item: &mut GridItem) -> f32 {
-            let known_dimensions = self.known_dimensions(item);
-            let margin_axis_sums = self.margins_axis_sums(item);
-            let contribution =
-                item.max_content_contribution_cached(self.axis, self.tree, known_dimensions, self.inner_node_size);
-            contribution + margin_axis_sums.get(self.axis)
-        }
-
-        /// The minimum contribution of an item is the smallest outer size it can have.
-        /// Specifically:
-        ///   - If the item’s computed preferred size behaves as auto or depends on the size of its containing block in the relevant axis:
-        ///     Its minimum contribution is the outer size that would result from assuming the item’s used minimum size as its preferred size;
-        ///   - Else the item’s minimum contribution is its min-content contribution.
-        /// Because the minimum contribution often depends on the size of the item’s content, it is considered a type of intrinsic size contribution.
-        #[inline(always)]
-        fn minimum_contribution(&mut self, item: &mut GridItem, axis_tracks: &[GridTrack]) -> f32 {
-            let known_dimensions = self.known_dimensions(item);
-            let margin_axis_sums = self.margins_axis_sums(item);
-            let contribution = item.minimum_contribution_cached(
-                self.tree,
-                self.axis,
-                axis_tracks,
-                known_dimensions,
-                self.inner_node_size,
-            );
-            contribution + margin_axis_sums.get(self.axis)
-        }
-    }
-
     let axis_inner_node_size = inner_node_size.get(axis);
     let mut item_sizer =
         IntrisicSizeMeasurer { tree, other_axis_tracks, axis, inner_node_size, get_track_size_estimate };
 
     let mut batched_item_iterator = ItemBatcher::new(axis);
     while let Some((batch, is_flex)) = batched_item_iterator.next(items) {
+        // 2. Size tracks to fit non-spanning items: For each track with an intrinsic track sizing function and not a flexible sizing function,
+        // consider the items in it with a span of 1:
+        let batch_span = batch[0].placement(axis).span();
+        if !is_flex && batch_span == 1 {
+            for item in batch.iter_mut() {
+                let track_index = item.placement_indexes(axis).start + 1;
+                let track = &axis_tracks[track_index as usize];
+
+                // Handle base sizes
+                let new_base_size = match track.min_track_sizing_function {
+                    MinTrackSizingFunction::MinContent => {
+                        f32_max(track.base_size, item_sizer.min_content_contribution(item))
+                    }
+                    // If the container size is indefinite and has not yet been resolved then percentage sized
+                    // tracks should be treated as min-content (this matches Chrome's behaviour and seems sensible)
+                    MinTrackSizingFunction::Fixed(LengthPercentage::Percent(_)) => {
+                        if axis_inner_node_size.is_none() {
+                            f32_max(track.base_size, item_sizer.min_content_contribution(item))
+                        } else {
+                            track.base_size
+                        }
+                    }
+                    MinTrackSizingFunction::MaxContent => {
+                        f32_max(track.base_size, item_sizer.max_content_contribution(item))
+                    }
+                    MinTrackSizingFunction::Auto => {
+                        let space = match axis_available_grid_space {
+                            AvailableSpace::MinContent | AvailableSpace::MaxContent => {
+                                let axis_minimum_size = item_sizer.minimum_contribution(item, axis_tracks);
+                                let axis_min_content_size = item_sizer.min_content_contribution(item);
+                                let limit = track.max_track_sizing_function.definite_limit(axis_inner_node_size);
+                                axis_min_content_size.maybe_min(limit).max(axis_minimum_size)
+                            }
+                            AvailableSpace::Definite(_) => item_sizer.minimum_contribution(item, axis_tracks),
+                        };
+                        f32_max(track.base_size, space)
+                    }
+                    MinTrackSizingFunction::Fixed(_) => {
+                        // Do nothing as it's not an intrinsic track sizing function
+                        track.base_size
+                    }
+                };
+                let track = &mut axis_tracks[track_index as usize];
+                track.base_size = new_base_size;
+
+                // Handle growth limits
+                if let MaxTrackSizingFunction::FitContent(_) = track.max_track_sizing_function {
+                    let fit_content_limit = track.fit_content_limit(axis_inner_node_size);
+                    let min_content_contribution = item_sizer.min_content_contribution(item);
+                    let max_content_contribution =
+                        f32_min(item_sizer.max_content_contribution(item), fit_content_limit);
+                    track.growth_limit_planned_increase =
+                        f32_max(track.growth_limit_planned_increase, min_content_contribution);
+                    track.growth_limit_planned_increase =
+                        f32_max(track.growth_limit_planned_increase, max_content_contribution);
+                } else if track.max_track_sizing_function.is_max_content_alike() {
+                    track.growth_limit_planned_increase =
+                        f32_max(track.growth_limit_planned_increase, item_sizer.min_content_contribution(item));
+                    track.growth_limit_planned_increase =
+                        f32_max(track.growth_limit_planned_increase, item_sizer.max_content_contribution(item));
+                } else if track.max_track_sizing_function.definite_value(axis_inner_node_size).is_none() {
+                    // If the container size is indefinite and has not yet been resolved then percentage sized
+                    // tracks should be treated as min-content (this matches Chrome's behaviour and seems sensible)
+                    track.growth_limit_planned_increase =
+                        f32_max(track.growth_limit_planned_increase, item_sizer.min_content_contribution(item));
+                }
+            }
+
+            for track in axis_tracks.iter_mut() {
+                if track.growth_limit_planned_increase > 0.0 {
+                    track.growth_limit = if track.growth_limit == f32::INFINITY {
+                        track.growth_limit_planned_increase
+                    } else {
+                        f32_max(track.growth_limit, track.growth_limit_planned_increase)
+                    };
+                }
+                track.infinitely_growable = false;
+                track.growth_limit_planned_increase = 0.0;
+                if track.growth_limit < track.base_size {
+                    track.growth_limit = track.base_size;
+                }
+            }
+
+            continue;
+        }
+
         // 1. For intrinsic minimums:
         // First increase the base size of tracks with an intrinsic min track sizing function
         let has_intrinsic_min_track_sizing_function =
@@ -609,8 +766,6 @@ fn resolve_intrinsic_track_sizes(
             // 6. For max-content maximums: Lastly continue to increase the growth limit of tracks with a max track sizing function of max-content
             // by distributing extra space as needed to account for these items' max-content contributions. However, limit the growth of any
             // fit-content() tracks by their fit-content() argument.
-            let has_max_content_max_track_sizing_function =
-                |track: &GridTrack| track.max_track_sizing_function.is_max_content_alike();
             for item in batch.iter_mut() {
                 let axis_max_content_size = item_sizer.max_content_contribution(item);
                 let space = axis_max_content_size;
@@ -619,7 +774,7 @@ fn resolve_intrinsic_track_sizes(
                     distribute_item_space_to_growth_limit(
                         space,
                         tracks,
-                        has_max_content_max_track_sizing_function,
+                        |track: &GridTrack| track.max_track_sizing_function.is_max_content_alike(),
                         inner_node_size.get(axis),
                     );
                 }

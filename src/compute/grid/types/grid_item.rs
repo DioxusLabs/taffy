@@ -8,7 +8,9 @@ use crate::layout::SizingMode;
 use crate::node::Node;
 use crate::prelude::LayoutTree;
 use crate::resolve::MaybeResolve;
-use crate::style::{LengthPercentageAuto, MaxTrackSizingFunction, MinTrackSizingFunction, Style};
+use crate::style::{
+    AlignItems, AlignSelf, LengthPercentageAuto, MaxTrackSizingFunction, MinTrackSizingFunction, Style,
+};
 use crate::style_helpers::*;
 use core::ops::Range;
 
@@ -33,6 +35,13 @@ pub(in super::super) struct GridItem {
 
     /// The item's margin style
     pub margin: Rect<LengthPercentageAuto>,
+    /// The item's align_self property, or the parent's align_items property is not set
+    pub align_self: AlignSelf,
+    /// The items first baseline (horizontal)
+    pub baseline: Option<f32>,
+    /// Shim for baseline alignment that acts like an extra top margin
+    /// TODO: Support last baseline and vertical text baselines
+    pub baseline_shim: f32,
 
     /// The item's definite row-start and row-end (same as `row` field, except in a different coordinate system)
     /// (as indexes into the Vec<GridTrack> stored in a grid's AbstractAxisTracks)
@@ -68,6 +77,7 @@ impl GridItem {
         col_span: Line<OriginZeroLine>,
         row_span: Line<OriginZeroLine>,
         style: &Style,
+        parent_align_items: AlignItems,
         source_order: u16,
     ) -> Self {
         GridItem {
@@ -76,6 +86,9 @@ impl GridItem {
             row: row_span,
             column: col_span,
             margin: style.margin,
+            align_self: style.align_self.unwrap_or(parent_align_items),
+            baseline: None,
+            baseline_shim: 0.0,
             row_indexes: Line { start: 0, end: 0 }, // Properly initialised later
             column_indexes: Line { start: 0, end: 0 }, // Properly initialised later
             crosses_flexible_row: false,            // Properly initialised later

@@ -5,7 +5,7 @@ use super::OriginZeroLine;
 use crate::axis::{AbsoluteAxis, InBothAbsAxis};
 use crate::geometry::Line;
 use crate::node::Node;
-use crate::style::{GridAutoFlow, OriginZeroGridPlacement, Style};
+use crate::style::{AlignItems, GridAutoFlow, OriginZeroGridPlacement, Style};
 use crate::sys::Vec;
 
 /// 8.5. Grid Item Placement Algorithm
@@ -17,6 +17,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
     items: &mut Vec<GridItem>,
     children_iter: impl Fn() -> ChildIter,
     grid_auto_flow: GridAutoFlow,
+    align_items: AlignItems,
 ) where
     ChildIter: Iterator<Item = (usize, Node, &'a Style)>,
 {
@@ -52,6 +53,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
                 child_node,
                 index,
                 style,
+                align_items,
                 primary_axis,
                 row_span,
                 col_span,
@@ -81,6 +83,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
                 child_node,
                 index,
                 style,
+                align_items,
                 primary_axis,
                 primary_span,
                 secondary_span,
@@ -135,6 +138,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
                 child_node,
                 index,
                 style,
+                align_items,
                 primary_axis,
                 primary_span,
                 secondary_span,
@@ -292,6 +296,7 @@ fn record_grid_placement(
     node: Node,
     index: usize,
     style: &Style,
+    parent_align_items: AlignItems,
     primary_axis: AbsoluteAxis,
     primary_span: Line<OriginZeroLine>,
     secondary_span: Line<OriginZeroLine>,
@@ -310,7 +315,14 @@ fn record_grid_placement(
         AbsoluteAxis::Horizontal => (primary_span, secondary_span),
         AbsoluteAxis::Vertical => (secondary_span, primary_span),
     };
-    items.push(GridItem::new_with_placement_style_and_order(node, col_span, row_span, style, index as u16));
+    items.push(GridItem::new_with_placement_style_and_order(
+        node,
+        col_span,
+        row_span,
+        style,
+        parent_align_items,
+        index as u16,
+    ));
 
     #[cfg(test)]
     println!("AFTER placement:");
@@ -356,7 +368,7 @@ mod tests {
                 CellOccupancyMatrix::with_track_counts(estimated_sizes.0, estimated_sizes.1);
 
             // Run placement algorithm
-            place_grid_items(&mut cell_occupancy_matrix, &mut items, children_iter, flow);
+            place_grid_items(&mut cell_occupancy_matrix, &mut items, children_iter, flow, AlignSelf::Start);
 
             // Assert that each item has been placed in the right location
             let mut sorted_children = children.clone();
