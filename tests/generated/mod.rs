@@ -630,6 +630,8 @@ mod grid_minmax_min_content_percent_indefinite;
 #[cfg(feature = "grid")]
 mod grid_out_of_order_items;
 #[cfg(feature = "grid")]
+mod grid_overflow_rows;
+#[cfg(feature = "grid")]
 mod grid_percent_items_nested_moderate;
 #[cfg(feature = "grid")]
 mod grid_percent_items_nested_with_padding_margin;

@@ -631,6 +631,8 @@ mod grid_minmax_min_content_percent_indefinite;
 #[cfg(feature = "grid")]
 mod grid_out_of_order_items;
 #[cfg(feature = "grid")]
+mod grid_overflow_rows;
+#[cfg(feature = "grid")]
 mod grid_percent_items_nested_moderate;
 #[cfg(feature = "grid")]
 mod grid_percent_items_nested_with_padding_margin;
@@ -1431,6 +1433,8 @@ fn benchmark(c: &mut Criterion) {
             grid_minmax_min_content_percent_indefinite::compute();
             #[cfg(feature = "grid")]
             grid_out_of_order_items::compute();
+            #[cfg(feature = "grid")]
+            grid_overflow_rows::compute();
             #[cfg(feature = "grid")]
             grid_percent_items_nested_moderate::compute();
             #[cfg(feature = "grid")]
