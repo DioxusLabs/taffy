@@ -344,7 +344,7 @@ pub fn compute(
                 .map(|item| {
                     let known_dimensions = item.known_dimensions(
                         AbstractAxis::Block,
-                        &rows,
+                        &columns,
                         inner_node_size.width,
                         |track: &GridTrack, _| Some(track.base_size),
                     );
