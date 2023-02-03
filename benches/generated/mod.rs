@@ -233,6 +233,7 @@ mod flex_basis_smaller_then_content_with_flex_grow_very_large_size;
 mod flex_basis_unconstraint_column;
 mod flex_basis_unconstraint_row;
 mod flex_basis_zero_undefined_main_size;
+mod flex_column_relative_all_sides;
 mod flex_direction_column;
 mod flex_direction_column_no_height;
 mod flex_direction_column_reverse;
@@ -256,6 +257,7 @@ mod flex_grow_within_constrained_min_max_column;
 mod flex_grow_within_constrained_min_row;
 mod flex_grow_within_max_width;
 mod flex_root_ignored;
+mod flex_row_relative_all_sides;
 mod flex_shrink_by_outer_margin_with_max_size;
 mod flex_shrink_flex_grow_child_flex_shrink_other_child;
 mod flex_shrink_flex_grow_row;
@@ -606,6 +608,8 @@ mod grid_percent_tracks_indefinite_with_content_underflow;
 mod grid_placement_auto_negative;
 #[cfg(feature = "grid")]
 mod grid_placement_definite_in_secondary_axis_with_fully_definite_negative;
+#[cfg(feature = "grid")]
+mod grid_relative_all_sides;
 #[cfg(feature = "grid")]
 mod grid_relayout_vertical_text;
 #[cfg(feature = "grid")]
@@ -960,6 +964,7 @@ fn benchmark(c: &mut Criterion) {
             flex_basis_unconstraint_column::compute();
             flex_basis_unconstraint_row::compute();
             flex_basis_zero_undefined_main_size::compute();
+            flex_column_relative_all_sides::compute();
             flex_direction_column::compute();
             flex_direction_column_no_height::compute();
             flex_direction_column_reverse::compute();
@@ -983,6 +988,7 @@ fn benchmark(c: &mut Criterion) {
             flex_grow_within_constrained_min_row::compute();
             flex_grow_within_max_width::compute();
             flex_root_ignored::compute();
+            flex_row_relative_all_sides::compute();
             flex_shrink_by_outer_margin_with_max_size::compute();
             flex_shrink_flex_grow_child_flex_shrink_other_child::compute();
             flex_shrink_flex_grow_row::compute();
@@ -1333,6 +1339,8 @@ fn benchmark(c: &mut Criterion) {
             grid_placement_auto_negative::compute();
             #[cfg(feature = "grid")]
             grid_placement_definite_in_secondary_axis_with_fully_definite_negative::compute();
+            #[cfg(feature = "grid")]
+            grid_relative_all_sides::compute();
             #[cfg(feature = "grid")]
             grid_relayout_vertical_text::compute();
             #[cfg(feature = "grid")]
