@@ -16,6 +16,7 @@
 - Aspect ratio is now applied correctly in many circumstances
 - Absolutely positioned items now apply margins correctly
 - Min/max size are now applied correctly
+- Inset applied incorrectly to relatively positioned flexbox children when both `top` and `bottom` or `left` and `right` were specified (#348)
 
 ### Removed
 
