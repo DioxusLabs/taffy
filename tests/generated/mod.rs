@@ -576,6 +576,10 @@ mod grid_placement_definite_in_secondary_axis_with_fully_definite_negative;
 #[cfg(feature = "grid")]
 mod grid_relayout_vertical_text;
 #[cfg(feature = "grid")]
+mod grid_repeat_integer;
+#[cfg(feature = "grid")]
+mod grid_repeat_mixed;
+#[cfg(feature = "grid")]
 mod grid_size_child_fixed_tracks;
 mod justify_content_column_center;
 mod justify_content_column_flex_end;

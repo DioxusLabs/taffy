@@ -577,6 +577,10 @@ mod grid_placement_definite_in_secondary_axis_with_fully_definite_negative;
 #[cfg(feature = "grid")]
 mod grid_relayout_vertical_text;
 #[cfg(feature = "grid")]
+mod grid_repeat_integer;
+#[cfg(feature = "grid")]
+mod grid_repeat_mixed;
+#[cfg(feature = "grid")]
 mod grid_size_child_fixed_tracks;
 mod justify_content_column_center;
 mod justify_content_column_flex_end;
@@ -1267,6 +1271,10 @@ fn benchmark(c: &mut Criterion) {
             grid_placement_definite_in_secondary_axis_with_fully_definite_negative::compute();
             #[cfg(feature = "grid")]
             grid_relayout_vertical_text::compute();
+            #[cfg(feature = "grid")]
+            grid_repeat_integer::compute();
+            #[cfg(feature = "grid")]
+            grid_repeat_mixed::compute();
             #[cfg(feature = "grid")]
             grid_size_child_fixed_tracks::compute();
             justify_content_column_center::compute();

@@ -6,6 +6,7 @@ use crate::geometry::{Line, MinMax};
 use crate::style_helpers::*;
 use crate::sys::GridTrackVec;
 use core::cmp::{max, min};
+use core::convert::Infallible;
 
 /// Controls whether grid items are placed row-wise or column-wise. And whether the sparse or dense packing algorithm is used.
 ///
@@ -492,12 +493,42 @@ impl FromFlex for NonRepeatedTrackSizingFunction {
 /// and the difference between AutoFit and AutoFill.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum GridTrackRepetition {
-    /// Auto-repeating track should be generated to fit the container
+    /// Auto-repeating tracks should be generated to fit the container
     /// See: https://developer.mozilla.org/en-US/docs/Web/CSS/repeat#auto-fill
     AutoFill,
-    /// Auto-repeating track should be generated to fit the container
+    /// Auto-repeating tracks should be generated to fit the container
     /// See: https://developer.mozilla.org/en-US/docs/Web/CSS/repeat#auto-fit
     AutoFit,
+    /// The specified tracks should be repeated exacts N times
+    Count(u16),
+}
+impl TryFrom<u16> for GridTrackRepetition {
+    type Error = Infallible;
+    fn try_from(value: u16) -> Result<Self, Infallible> {
+        Ok(Self::Count(value))
+    }
+}
+
+/// Error returned when trying to convert a string to a GridTrackRepetition and that string is not
+/// either "auto-fit" or "auto-fill"
+#[derive(Debug)]
+pub struct InvalidStringRepetitionValue;
+#[cfg(feature = "std")]
+impl std::error::Error for InvalidStringRepetitionValue {}
+impl core::fmt::Display for InvalidStringRepetitionValue {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.write_str("&str can only be converted to GridTrackRepetition if it's value is 'auto-fit' or 'auto-fill'")
+    }
+}
+impl<'a> TryFrom<&'a str> for GridTrackRepetition {
+    type Error = InvalidStringRepetitionValue;
+    fn try_from(value: &str) -> Result<Self, InvalidStringRepetitionValue> {
+        match value {
+            "auto-fit" => Ok(Self::AutoFit),
+            "auto-fill" => Ok(Self::AutoFill),
+            _ => Err(InvalidStringRepetitionValue),
+        }
+    }
 }
 
 /// The sizing function for a grid track (row/column)
@@ -508,12 +539,12 @@ pub enum TrackSizingFunction {
     Single(NonRepeatedTrackSizingFunction),
     /// Automatically generate grid tracks to fit the available space using the specified definite track lengths
     /// Only valid if every track in template (not just the repitition) has a fixed size.
-    AutoRepeat(GridTrackRepetition, GridTrackVec<NonRepeatedTrackSizingFunction>),
+    Repeat(GridTrackRepetition, GridTrackVec<NonRepeatedTrackSizingFunction>),
 }
 impl TrackSizingFunction {
     /// Whether the track definition is a auto-repeated fragment
     pub fn is_auto_repetition(&self) -> bool {
-        matches!(self, Self::AutoRepeat(_, _))
+        matches!(self, Self::Repeat(GridTrackRepetition::AutoFit | GridTrackRepetition::AutoFill, _))
     }
 }
 impl TaffyAuto for TrackSizingFunction {

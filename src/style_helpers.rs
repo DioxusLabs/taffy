@@ -3,6 +3,7 @@ use crate::{
     geometry::{MinMax, Point, Rect, Size},
     style::LengthPercentage,
 };
+use core::fmt::Debug;
 
 #[cfg(feature = "grid")]
 use crate::style::{
@@ -12,11 +13,36 @@ use crate::style::{
 
 /// Returns an auto-repeated track definition
 #[cfg(feature = "grid")]
-pub fn repeat(
-    repetition_kind: GridTrackRepetition,
-    track_list: Vec<NonRepeatedTrackSizingFunction>,
-) -> TrackSizingFunction {
-    TrackSizingFunction::AutoRepeat(repetition_kind, track_list)
+pub fn repeat<Input>(repetition_kind: Input, track_list: Vec<NonRepeatedTrackSizingFunction>) -> TrackSizingFunction
+where
+    Input: TryInto<GridTrackRepetition>,
+    <Input as TryInto<GridTrackRepetition>>::Error: Debug,
+{
+    TrackSizingFunction::Repeat(repetition_kind.try_into().unwrap(), track_list)
+}
+
+#[cfg(feature = "grid")]
+#[cfg(test)]
+mod repeat_fn_tests {
+    use super::repeat;
+    use crate::style::{GridTrackRepetition, NonRepeatedTrackSizingFunction, TrackSizingFunction};
+
+    const TEST_VEC: Vec<NonRepeatedTrackSizingFunction> = Vec::new();
+
+    #[test]
+    fn test_repeat_u16() {
+        assert_eq!(repeat(123, TEST_VEC), TrackSizingFunction::Repeat(GridTrackRepetition::Count(123), TEST_VEC));
+    }
+
+    #[test]
+    fn test_repeat_auto_fit_str() {
+        assert_eq!(repeat("auto-fit", TEST_VEC), TrackSizingFunction::Repeat(GridTrackRepetition::AutoFit, TEST_VEC));
+    }
+
+    #[test]
+    fn test_repeat_auto_fill_str() {
+        assert_eq!(repeat("auto-fill", TEST_VEC), TrackSizingFunction::Repeat(GridTrackRepetition::AutoFill, TEST_VEC));
+    }
 }
 
 /// Specifies a grid line to place a grid item between in CSS Grid Line coordinates:
