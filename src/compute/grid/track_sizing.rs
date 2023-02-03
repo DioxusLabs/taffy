@@ -538,6 +538,7 @@ fn resolve_intrinsic_track_sizes(
     // Also, minimum contribution <= min-content contribution <= max-content contribution.
 
     let axis_inner_node_size = inner_node_size.get(axis);
+    let flex_factor_sum = axis_tracks.iter().map(|track| track.flex_factor()).sum::<f32>();
     let mut item_sizer =
         IntrisicSizeMeasurer { tree, other_axis_tracks, axis, inner_node_size, get_track_size_estimate };
 
@@ -630,6 +631,8 @@ fn resolve_intrinsic_track_sizes(
             continue;
         }
 
+        let use_flex_factor_for_distribution = is_flex && flex_factor_sum != 0.0;
+
         // 1. For intrinsic minimums:
         // First increase the base size of tracks with an intrinsic min track sizing function
         let has_intrinsic_min_track_sizing_function =
@@ -651,6 +654,7 @@ fn resolve_intrinsic_track_sizes(
             if space > 0.0 {
                 distribute_item_space_to_base_size(
                     is_flex,
+                    use_flex_factor_for_distribution,
                     space,
                     tracks,
                     has_intrinsic_min_track_sizing_function,
@@ -674,6 +678,7 @@ fn resolve_intrinsic_track_sizes(
             if space > 0.0 {
                 distribute_item_space_to_base_size(
                     is_flex,
+                    use_flex_factor_for_distribution,
                     space,
                     tracks,
                     has_min_or_max_content_min_track_sizing_function,
@@ -733,6 +738,7 @@ fn resolve_intrinsic_track_sizes(
                     if tracks.iter().any(has_max_content_min_track_sizing_function) {
                         distribute_item_space_to_base_size(
                             is_flex,
+                            use_flex_factor_for_distribution,
                             space,
                             tracks,
                             has_max_content_min_track_sizing_function,
@@ -744,6 +750,7 @@ fn resolve_intrinsic_track_sizes(
                             move |track: &GridTrack| track.fit_content_limited_growth_limit(axis_inner_node_size);
                         distribute_item_space_to_base_size(
                             is_flex,
+                            use_flex_factor_for_distribution,
                             space,
                             tracks,
                             has_auto_min_track_sizing_function,
@@ -767,6 +774,7 @@ fn resolve_intrinsic_track_sizes(
             if space > 0.0 {
                 distribute_item_space_to_base_size(
                     is_flex,
+                    use_flex_factor_for_distribution,
                     space,
                     tracks,
                     has_max_content_min_track_sizing_function,
@@ -846,6 +854,7 @@ fn resolve_intrinsic_track_sizes(
 #[inline(always)]
 fn distribute_item_space_to_base_size(
     is_flex: bool,
+    use_flex_factor_for_distribution: bool,
     space: f32,
     tracks: &mut [GridTrack],
     track_is_affected: impl Fn(&GridTrack) -> bool,
@@ -854,14 +863,25 @@ fn distribute_item_space_to_base_size(
 ) {
     if is_flex {
         let filter = |track: &GridTrack| track.is_flexible() && track_is_affected(track);
-        distribute_item_space_to_base_size_inner(
-            space,
-            tracks,
-            filter,
-            |track| track.flex_factor(),
-            track_limit,
-            intrinsic_contribution_type,
-        )
+        if use_flex_factor_for_distribution {
+            distribute_item_space_to_base_size_inner(
+                space,
+                tracks,
+                filter,
+                |track| track.flex_factor(),
+                track_limit,
+                intrinsic_contribution_type,
+            )
+        } else {
+            distribute_item_space_to_base_size_inner(
+                space,
+                tracks,
+                filter,
+                |_| 1.0,
+                track_limit,
+                intrinsic_contribution_type,
+            )
+        }
     } else {
         distribute_item_space_to_base_size_inner(
             space,

@@ -495,6 +495,10 @@ mod grid_fr_span_2_proportion_sub_1_sum;
 #[cfg(feature = "grid")]
 mod grid_fr_span_2_proportion_with_non_spanned_track;
 #[cfg(feature = "grid")]
+mod grid_fr_span_2_proportion_zero_sum;
+#[cfg(feature = "grid")]
+mod grid_fr_span_2_proportion_zero_sum_with_non_spanned_track;
+#[cfg(feature = "grid")]
 mod grid_gap;
 #[cfg(feature = "grid")]
 mod grid_hidden;
@@ -1301,6 +1305,10 @@ fn benchmark(c: &mut Criterion) {
             grid_fr_span_2_proportion_sub_1_sum::compute();
             #[cfg(feature = "grid")]
             grid_fr_span_2_proportion_with_non_spanned_track::compute();
+            #[cfg(feature = "grid")]
+            grid_fr_span_2_proportion_zero_sum::compute();
+            #[cfg(feature = "grid")]
+            grid_fr_span_2_proportion_zero_sum_with_non_spanned_track::compute();
             #[cfg(feature = "grid")]
             grid_gap::compute();
             #[cfg(feature = "grid")]
