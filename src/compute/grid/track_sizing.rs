@@ -538,6 +538,7 @@ fn resolve_intrinsic_track_sizes(
     // Also, minimum contribution <= min-content contribution <= max-content contribution.
 
     let axis_inner_node_size = inner_node_size.get(axis);
+    let flex_factor_sum = axis_tracks.iter().map(|track| track.flex_factor()).sum::<f32>();
     let mut item_sizer =
         IntrisicSizeMeasurer { tree, other_axis_tracks, axis, inner_node_size, get_track_size_estimate };
 
@@ -598,14 +599,14 @@ fn resolve_intrinsic_track_sizes(
                         f32_max(track.growth_limit_planned_increase, min_content_contribution);
                     track.growth_limit_planned_increase =
                         f32_max(track.growth_limit_planned_increase, max_content_contribution);
-                } else if track.max_track_sizing_function.is_max_content_alike() {
-                    track.growth_limit_planned_increase =
-                        f32_max(track.growth_limit_planned_increase, item_sizer.min_content_contribution(item));
+                } else if track.max_track_sizing_function.is_max_content_alike()
+                    || track.max_track_sizing_function.uses_percentage() && axis_inner_node_size.is_none()
+                {
+                    // If the container size is indefinite and has not yet been resolved then percentage sized
+                    // tracks should be treated as auto (this matches Chrome's behaviour and seems sensible)
                     track.growth_limit_planned_increase =
                         f32_max(track.growth_limit_planned_increase, item_sizer.max_content_contribution(item));
-                } else if track.max_track_sizing_function.definite_value(axis_inner_node_size).is_none() {
-                    // If the container size is indefinite and has not yet been resolved then percentage sized
-                    // tracks should be treated as min-content (this matches Chrome's behaviour and seems sensible)
+                } else if track.max_track_sizing_function.is_intrinsic() {
                     track.growth_limit_planned_increase =
                         f32_max(track.growth_limit_planned_increase, item_sizer.min_content_contribution(item));
                 }
@@ -629,6 +630,8 @@ fn resolve_intrinsic_track_sizes(
             continue;
         }
 
+        let use_flex_factor_for_distribution = is_flex && flex_factor_sum != 0.0;
+
         // 1. For intrinsic minimums:
         // First increase the base size of tracks with an intrinsic min track sizing function
         let has_intrinsic_min_track_sizing_function =
@@ -641,7 +644,7 @@ fn resolve_intrinsic_track_sizes(
                 AvailableSpace::MinContent | AvailableSpace::MaxContent => {
                     let axis_minimum_size = item_sizer.minimum_contribution(item, axis_tracks);
                     let axis_min_content_size = item_sizer.min_content_contribution(item);
-                    let limit = item.spanned_fixed_track_limit(axis, axis_tracks, axis_inner_node_size);
+                    let limit = item.spanned_track_limit(axis, axis_tracks, axis_inner_node_size);
                     axis_min_content_size.maybe_min(limit).max(axis_minimum_size)
                 }
                 AvailableSpace::Definite(_) => item_sizer.minimum_contribution(item, axis_tracks),
@@ -650,11 +653,12 @@ fn resolve_intrinsic_track_sizes(
             if space > 0.0 {
                 distribute_item_space_to_base_size(
                     is_flex,
+                    use_flex_factor_for_distribution,
                     space,
                     tracks,
                     has_intrinsic_min_track_sizing_function,
+                    |_| f32::INFINITY,
                     IntrinsicContributionType::Minimum,
-                    axis_inner_node_size,
                 );
             }
         }
@@ -673,11 +677,12 @@ fn resolve_intrinsic_track_sizes(
             if space > 0.0 {
                 distribute_item_space_to_base_size(
                     is_flex,
+                    use_flex_factor_for_distribution,
                     space,
                     tracks,
                     has_min_or_max_content_min_track_sizing_function,
+                    |_| f32::INFINITY,
                     IntrinsicContributionType::Minimum,
-                    axis_inner_node_size,
                 );
             }
         }
@@ -688,25 +693,70 @@ fn resolve_intrinsic_track_sizes(
         // If the grid container is being sized under a max-content constraint, continue to increase the base size of tracks with
         // a min track sizing function of auto or max-content by distributing extra space as needed to account for these items'
         // limited max-content contributions.
+
+        // Define fit_content_limited_growth_limit function. This is passed to the distribute_space_up_to_limits
+        // helper function, and is used to compute the limit to distribute up to for each track.
+        // Wrapping the method on GridTrack is necessary in order to resolve percentage fit-content arguments.
         if axis_available_grid_space == AvailableSpace::MaxContent {
-            let has_auto_or_max_content_min_track_sizing_function = move |track: &GridTrack| {
-                use MinTrackSizingFunction::{Auto, MaxContent};
-                matches!(track.min_track_sizing_function, Auto | MaxContent)
-            };
+            /// Whether a track:
+            ///   - has an Auto MIN track sizing function
+            ///   - Does not have a MinContent MAX track sizing function
+            ///
+            /// The latter condition was added in order to match Chrome. But I believe it is due to the provision
+            /// under minmax here https://www.w3.org/TR/css-grid-1/#track-sizes which states that:
+            ///
+            ///    "If the max is less than the min, then the max will be floored by the min (essentially yielding minmax(min, min))"
+            #[inline(always)]
+            fn has_auto_min_track_sizing_function(track: &GridTrack) -> bool {
+                track.min_track_sizing_function == MinTrackSizingFunction::Auto
+                    && track.max_track_sizing_function != MaxTrackSizingFunction::MinContent
+            }
+
+            /// Whether a track has a MaxContent min track sizing function
+            #[inline(always)]
+            fn has_max_content_min_track_sizing_function(track: &GridTrack) -> bool {
+                track.min_track_sizing_function == MinTrackSizingFunction::MaxContent
+            }
+
             for item in batch.iter_mut() {
                 let axis_max_content_size = item_sizer.max_content_contribution(item);
-                let limit = item.spanned_fixed_track_limit(axis, axis_tracks, axis_inner_node_size);
+                let limit = item.spanned_track_limit(axis, axis_tracks, axis_inner_node_size);
                 let space = axis_max_content_size.maybe_min(limit);
                 let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
                 if space > 0.0 {
-                    distribute_item_space_to_base_size(
-                        is_flex,
-                        space,
-                        tracks,
-                        has_auto_or_max_content_min_track_sizing_function,
-                        IntrinsicContributionType::Maximum,
-                        axis_inner_node_size,
-                    );
+                    // If any of the tracks spanned by the item have a MaxContent min track sizing function then
+                    // distribute space only to those tracks. Otherwise distribute space to tracks with an Auto min
+                    // track sizing function.
+                    //
+                    // Note: this prioritisation of MaxContent over Auto is not mentioned in the spec (which suggests that
+                    // we ought to distribute space evenly between MaxContent and Auto tracks). But it is implemented like
+                    // this in both Chrome and Firefox (and it does have a certain logic to it), so we implement it too for
+                    // compatibility.
+                    //
+                    // See: https://www.w3.org/TR/css-grid-1/#track-size-max-content-min
+                    if tracks.iter().any(has_max_content_min_track_sizing_function) {
+                        distribute_item_space_to_base_size(
+                            is_flex,
+                            use_flex_factor_for_distribution,
+                            space,
+                            tracks,
+                            has_max_content_min_track_sizing_function,
+                            |_| f32::INFINITY,
+                            IntrinsicContributionType::Maximum,
+                        );
+                    } else {
+                        let fit_content_limited_growth_limit =
+                            move |track: &GridTrack| track.fit_content_limited_growth_limit(axis_inner_node_size);
+                        distribute_item_space_to_base_size(
+                            is_flex,
+                            use_flex_factor_for_distribution,
+                            space,
+                            tracks,
+                            has_auto_min_track_sizing_function,
+                            fit_content_limited_growth_limit,
+                            IntrinsicContributionType::Maximum,
+                        );
+                    }
                 }
             }
             flush_planned_base_size_increases(axis_tracks);
@@ -723,11 +773,12 @@ fn resolve_intrinsic_track_sizes(
             if space > 0.0 {
                 distribute_item_space_to_base_size(
                     is_flex,
+                    use_flex_factor_for_distribution,
                     space,
                     tracks,
                     has_max_content_min_track_sizing_function,
+                    |_| f32::INFINITY,
                     IntrinsicContributionType::Maximum,
-                    axis_inner_node_size,
                 );
             }
         }
@@ -766,6 +817,10 @@ fn resolve_intrinsic_track_sizes(
             // 6. For max-content maximums: Lastly continue to increase the growth limit of tracks with a max track sizing function of max-content
             // by distributing extra space as needed to account for these items' max-content contributions. However, limit the growth of any
             // fit-content() tracks by their fit-content() argument.
+            let has_max_content_max_track_sizing_function = |track: &GridTrack| {
+                track.max_track_sizing_function.is_max_content_alike()
+                    || (track.max_track_sizing_function.uses_percentage() && axis_inner_node_size.is_none())
+            };
             for item in batch.iter_mut() {
                 let axis_max_content_size = item_sizer.max_content_contribution(item);
                 let space = axis_max_content_size;
@@ -774,7 +829,7 @@ fn resolve_intrinsic_track_sizes(
                     distribute_item_space_to_growth_limit(
                         space,
                         tracks,
-                        |track: &GridTrack| track.max_track_sizing_function.is_max_content_alike(),
+                        has_max_content_max_track_sizing_function,
                         inner_node_size.get(axis),
                     );
                 }
@@ -798,28 +853,42 @@ fn resolve_intrinsic_track_sizes(
 #[inline(always)]
 fn distribute_item_space_to_base_size(
     is_flex: bool,
+    use_flex_factor_for_distribution: bool,
     space: f32,
     tracks: &mut [GridTrack],
     track_is_affected: impl Fn(&GridTrack) -> bool,
+    track_limit: impl Fn(&GridTrack) -> f32,
     intrinsic_contribution_type: IntrinsicContributionType,
-    axis_inner_node_size: Option<f32>,
 ) {
     if is_flex {
         let filter = |track: &GridTrack| track.is_flexible() && track_is_affected(track);
-        distribute_item_space_to_base_size_inner(
-            space,
-            tracks,
-            filter,
-            intrinsic_contribution_type,
-            axis_inner_node_size,
-        )
+        if use_flex_factor_for_distribution {
+            distribute_item_space_to_base_size_inner(
+                space,
+                tracks,
+                filter,
+                |track| track.flex_factor(),
+                track_limit,
+                intrinsic_contribution_type,
+            )
+        } else {
+            distribute_item_space_to_base_size_inner(
+                space,
+                tracks,
+                filter,
+                |_| 1.0,
+                track_limit,
+                intrinsic_contribution_type,
+            )
+        }
     } else {
         distribute_item_space_to_base_size_inner(
             space,
             tracks,
             track_is_affected,
+            |_| 1.0,
+            track_limit,
             intrinsic_contribution_type,
-            axis_inner_node_size,
         )
     }
 
@@ -829,25 +898,20 @@ fn distribute_item_space_to_base_size(
         space: f32,
         tracks: &mut [GridTrack],
         track_is_affected: impl Fn(&GridTrack) -> bool,
+        track_distribution_proportion: impl Fn(&GridTrack) -> f32,
+        track_limit: impl Fn(&GridTrack) -> f32,
         intrinsic_contribution_type: IntrinsicContributionType,
-        axis_inner_node_size: Option<f32>,
     ) {
         // Skip this distribution if there is either
         //   - no space to distribute
         //   - no affected tracks to distribute space to
-        if space == 0.0 || tracks.iter().filter(|track| track_is_affected(track)).count() == 0 {
+        if space == 0.0 || !tracks.iter().any(&track_is_affected) {
             return;
         }
 
         // Define get_base_size function. This is passed to the distribute_space_up_to_limits helper function
         // to indicate that it is the base size that is being distributed to.
         let get_base_size = |track: &GridTrack| track.base_size;
-
-        // Define fit_content_limited_growth_limit function. This is passed to the distribute_space_up_to_limits
-        // helper function, and is used to compute the limit to distribute up to for each track.
-        // Wrapping the method on GridTrack is necessary in order to resolve percentage fit-content arguments.
-        let fit_content_limited_growth_limit =
-            move |track: &GridTrack| track.fit_content_limited_growth_limit(axis_inner_node_size);
 
         // 1. Find the space to distribute
         let track_sizes: f32 = tracks.iter().map(|track| track.base_size).sum();
@@ -866,8 +930,9 @@ fn distribute_item_space_to_base_size(
             extra_space,
             tracks,
             &track_is_affected,
+            &track_distribution_proportion,
             get_base_size,
-            fit_content_limited_growth_limit,
+            &track_limit,
         );
 
         // 3. Distribute remaining span beyond limits (if any)
@@ -881,8 +946,11 @@ fn distribute_item_space_to_base_size(
                     (|track: &GridTrack| track.max_track_sizing_function.is_intrinsic()) as fn(&GridTrack) -> bool
                 }
                 IntrinsicContributionType::Maximum => {
-                    (|track: &GridTrack| track.max_track_sizing_function.is_max_content_alike())
-                        as fn(&GridTrack) -> bool
+                    use MaxTrackSizingFunction::{FitContent, MaxContent};
+                    (|track: &GridTrack| {
+                        matches!(track.max_track_sizing_function, MaxContent | FitContent(_))
+                            || track.min_track_sizing_function == MinTrackSizingFunction::MaxContent
+                    }) as fn(&GridTrack) -> bool
                 }
             };
 
@@ -893,13 +961,14 @@ fn distribute_item_space_to_base_size(
                 filter = (|_| true) as fn(&GridTrack) -> bool;
             }
 
-            // When distributing space beyond limits, the fit content limit applies to max-content sizes but not min-content sizes
-            let limit = match intrinsic_contribution_type {
-                IntrinsicContributionType::Minimum => &(|_: &GridTrack| f32::INFINITY) as &dyn Fn(&GridTrack) -> f32,
-                IntrinsicContributionType::Maximum => &fit_content_limited_growth_limit as &dyn Fn(&GridTrack) -> f32,
-            };
-
-            distribute_space_up_to_limits(extra_space, tracks, filter, get_base_size, limit);
+            distribute_space_up_to_limits(
+                extra_space,
+                tracks,
+                filter,
+                &track_distribution_proportion,
+                get_base_size,
+                &track_limit, // Should apply only fit-content limit here?
+            );
         }
 
         // 4. For each affected track, if the track’s item-incurred increase is larger than the track’s planned increase
@@ -964,6 +1033,7 @@ fn distribute_item_space_to_growth_limit(
             extra_space,
             tracks,
             track_is_affected,
+            |_| 1.0,
             |track| if track.growth_limit == f32::INFINITY { track.base_size } else { track.growth_limit },
             move |track| track.fit_content_limit(axis_inner_node_size),
         );
@@ -998,6 +1068,7 @@ fn maximise_tracks(
             free_space,
             axis_tracks,
             |_| true,
+            |_| 1.0,
             |track| track.base_size,
             move |track: &GridTrack| track.fit_content_limited_growth_limit(axis_inner_node_size),
         );
@@ -1052,7 +1123,7 @@ fn expand_flexible_tracks(
                     .map(|track| {
                         let flex_factor = track.flex_factor();
                         if flex_factor > 1.0 {
-                            track.base_size * flex_factor
+                            track.base_size / flex_factor
                         } else {
                             track.base_size
                         }
@@ -1208,6 +1279,7 @@ fn distribute_space_up_to_limits(
     space_to_distribute: f32,
     tracks: &mut [GridTrack],
     track_is_affected: impl Fn(&GridTrack) -> bool,
+    track_distribution_proportion: impl Fn(&GridTrack) -> f32,
     track_affected_property: impl Fn(&GridTrack) -> f32,
     track_limit: impl Fn(&GridTrack) -> f32,
 ) -> f32 {
@@ -1217,13 +1289,14 @@ fn distribute_space_up_to_limits(
 
     let mut space_to_distribute = space_to_distribute;
     while space_to_distribute > THRESHOLD {
-        let number_of_growable_tracks = tracks
+        let track_distribution_proportion_sum: f32 = tracks
             .iter()
             .filter(|track| track_affected_property(track) + track.item_incurred_increase < track_limit(track))
             .filter(|track| track_is_affected(track))
-            .count();
+            .map(&track_distribution_proportion)
+            .sum();
 
-        if number_of_growable_tracks == 0 {
+        if track_distribution_proportion_sum == 0.0 {
             break;
         }
 
@@ -1232,21 +1305,19 @@ fn distribute_space_up_to_limits(
             .iter()
             .filter(|track| track_affected_property(track) + track.item_incurred_increase < track_limit(track))
             .filter(|track| track_is_affected(track))
-            .map(|track| track_limit(track) - track_affected_property(track))
+            .map(|track| (track_limit(track) - track_affected_property(track)) / track_distribution_proportion(track))
             .min_by(|a, b| a.total_cmp(b))
             .unwrap(); // We will never pass an empty track list to this function
         let iteration_item_incurred_increase =
-            f32_min(min_increase_limit, space_to_distribute / number_of_growable_tracks as f32);
+            f32_min(min_increase_limit, space_to_distribute / track_distribution_proportion_sum);
 
-        for track in tracks
-            .iter_mut()
-            .filter(|track| track_is_affected(track))
-            .filter(|track| track_affected_property(track) + track.item_incurred_increase < track_limit(track))
-        {
-            track.item_incurred_increase += iteration_item_incurred_increase;
+        for track in tracks.iter_mut().filter(|track| track_is_affected(track)) {
+            let increase = iteration_item_incurred_increase * track_distribution_proportion(track);
+            if increase > 0.0 && track_affected_property(track) + increase <= track_limit(track) {
+                track.item_incurred_increase += increase;
+                space_to_distribute -= increase;
+            }
         }
-
-        space_to_distribute -= iteration_item_incurred_increase * number_of_growable_tracks as f32;
     }
 
     space_to_distribute
