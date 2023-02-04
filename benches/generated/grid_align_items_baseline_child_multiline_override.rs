@@ -58,6 +58,7 @@ pub fn compute() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
+                grid_template_columns: vec![auto(), auto()],
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
                     height: taffy::style::Dimension::Points(25f32),
