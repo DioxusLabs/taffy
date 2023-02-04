@@ -99,14 +99,14 @@ pub(super) fn align_and_position_item(
     // and the then height is calculated from the width according the aspect ratio
     // See: https://www.w3.org/TR/css-grid-1/#grid-item-sizing
     let alignment_styles = InBothAbsAxis {
-        horizontal: container_alignment_styles.horizontal.or(justify_self).unwrap_or_else(|| {
+        horizontal: justify_self.or(container_alignment_styles.horizontal).unwrap_or_else(|| {
             if inherent_size.width.is_some() {
                 AlignSelf::Start
             } else {
                 AlignSelf::Stretch
             }
         }),
-        vertical: container_alignment_styles.vertical.or(align_self).unwrap_or_else(|| {
+        vertical: align_self.or(container_alignment_styles.vertical).unwrap_or_else(|| {
             if inherent_size.height.is_some() || aspect_ratio.is_some() {
                 AlignSelf::Start
             } else {

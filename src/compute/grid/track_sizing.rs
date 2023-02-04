@@ -3,7 +3,7 @@
 use super::types::{GridItem, GridTrack, TrackCounts};
 use crate::axis::AbstractAxis;
 use crate::compute::{GenericAlgorithm, LayoutAlgorithm};
-use crate::geometry::{Rect, Size};
+use crate::geometry::Size;
 use crate::layout::SizingMode;
 use crate::math::MaybeMath;
 use crate::prelude::{LayoutTree, TaffyMinContent};
@@ -91,13 +91,13 @@ where
     Tree: LayoutTree,
     EstimateFunction: Fn(&GridTrack, Option<f32>) -> Option<f32>,
 {
-    /// Compute the known_dimensions to be passed to the child sizing functions
+    /// Compute the available_space to be passed to the child sizing functions
     /// These are estimates based on either the max track sizing function or the provisional base size in the opposite
     /// axis to the one currently being sized.
     /// https://www.w3.org/TR/css-grid-1/#algo-overview
     #[inline(always)]
-    fn known_dimensions(&self, item: &mut GridItem) -> Size<Option<f32>> {
-        item.known_dimensions_cached(
+    fn available_space(&self, item: &mut GridItem) -> Size<Option<f32>> {
+        item.available_space_cached(
             self.axis,
             self.other_axis_tracks,
             self.inner_node_size.get(self.axis.other()),
@@ -109,33 +109,26 @@ where
     /// to zero if the container size is indefinite as otherwise this would introduce a cyclic dependency.
     #[inline(always)]
     fn margins_axis_sums_with_baseline_shims(&self, item: &mut GridItem) -> Size<f32> {
-        let parent_width = self.inner_node_size.width;
-        Rect {
-            left: item.margin.left.resolve_or_zero(Some(0.0)),
-            right: item.margin.right.resolve_or_zero(Some(0.0)),
-            top: item.margin.top.resolve_or_zero(parent_width) + item.baseline_shim,
-            bottom: item.margin.bottom.resolve_or_zero(parent_width),
-        }
-        .sum_axes()
+        item.margins_axis_sums_with_baseline_shims(self.inner_node_size.width)
     }
 
     /// Retrieve the item's min content contribution from the cache or compute it using the provided parameters
     #[inline(always)]
     fn min_content_contribution(&mut self, item: &mut GridItem) -> f32 {
-        let known_dimensions = self.known_dimensions(item);
+        let available_space = self.available_space(item);
         let margin_axis_sums = self.margins_axis_sums_with_baseline_shims(item);
         let contribution =
-            item.min_content_contribution_cached(self.axis, self.tree, known_dimensions, self.inner_node_size);
+            item.min_content_contribution_cached(self.axis, self.tree, available_space, self.inner_node_size);
         contribution + margin_axis_sums.get(self.axis)
     }
 
     /// Retrieve the item's max content contribution from the cache or compute it using the provided parameters
     #[inline(always)]
     fn max_content_contribution(&mut self, item: &mut GridItem) -> f32 {
-        let known_dimensions = self.known_dimensions(item);
+        let available_space = self.available_space(item);
         let margin_axis_sums = self.margins_axis_sums_with_baseline_shims(item);
         let contribution =
-            item.max_content_contribution_cached(self.axis, self.tree, known_dimensions, self.inner_node_size);
+            item.max_content_contribution_cached(self.axis, self.tree, available_space, self.inner_node_size);
         contribution + margin_axis_sums.get(self.axis)
     }
 
@@ -147,10 +140,10 @@ where
     /// Because the minimum contribution often depends on the size of the item’s content, it is considered a type of intrinsic size contribution.
     #[inline(always)]
     fn minimum_contribution(&mut self, item: &mut GridItem, axis_tracks: &[GridTrack]) -> f32 {
-        let known_dimensions = self.known_dimensions(item);
+        let available_space = self.available_space(item);
         let margin_axis_sums = self.margins_axis_sums_with_baseline_shims(item);
         let contribution =
-            item.minimum_contribution_cached(self.tree, self.axis, axis_tracks, known_dimensions, self.inner_node_size);
+            item.minimum_contribution_cached(self.tree, self.axis, axis_tracks, available_space, self.inner_node_size);
         contribution + margin_axis_sums.get(self.axis)
     }
 }

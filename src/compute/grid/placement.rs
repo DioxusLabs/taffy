@@ -18,6 +18,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
     children_iter: impl Fn() -> ChildIter,
     grid_auto_flow: GridAutoFlow,
     align_items: AlignItems,
+    justify_items: AlignItems,
 ) where
     ChildIter: Iterator<Item = (usize, Node, &'a Style)>,
 {
@@ -54,6 +55,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
                 index,
                 style,
                 align_items,
+                justify_items,
                 primary_axis,
                 row_span,
                 col_span,
@@ -84,6 +86,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
                 index,
                 style,
                 align_items,
+                justify_items,
                 primary_axis,
                 primary_span,
                 secondary_span,
@@ -139,6 +142,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
                 index,
                 style,
                 align_items,
+                justify_items,
                 primary_axis,
                 primary_span,
                 secondary_span,
@@ -297,6 +301,7 @@ fn record_grid_placement(
     index: usize,
     style: &Style,
     parent_align_items: AlignItems,
+    parent_justify_items: AlignItems,
     primary_axis: AbsoluteAxis,
     primary_span: Line<OriginZeroLine>,
     secondary_span: Line<OriginZeroLine>,
@@ -321,6 +326,7 @@ fn record_grid_placement(
         row_span,
         style,
         parent_align_items,
+        parent_justify_items,
         index as u16,
     ));
 
@@ -368,7 +374,14 @@ mod tests {
                 CellOccupancyMatrix::with_track_counts(estimated_sizes.0, estimated_sizes.1);
 
             // Run placement algorithm
-            place_grid_items(&mut cell_occupancy_matrix, &mut items, children_iter, flow, AlignSelf::Start);
+            place_grid_items(
+                &mut cell_occupancy_matrix,
+                &mut items,
+                children_iter,
+                flow,
+                AlignSelf::Start,
+                AlignSelf::Start,
+            );
 
             // Assert that each item has been placed in the right location
             let mut sorted_children = children.clone();

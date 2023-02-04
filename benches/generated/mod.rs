@@ -641,7 +641,13 @@ mod grid_out_of_order_items;
 #[cfg(feature = "grid")]
 mod grid_overflow_rows;
 #[cfg(feature = "grid")]
+mod grid_percent_item_inside_stretch_item;
+#[cfg(feature = "grid")]
+mod grid_percent_items_nested_inside_stretch_alignment;
+#[cfg(feature = "grid")]
 mod grid_percent_items_nested_moderate;
+#[cfg(feature = "grid")]
+mod grid_percent_items_nested_with_margin;
 #[cfg(feature = "grid")]
 mod grid_percent_items_nested_with_padding_margin;
 #[cfg(feature = "grid")]
@@ -698,6 +704,18 @@ mod grid_span_2_min_content_min_content_indefinite;
 mod grid_span_6_all_non_flex_indefinite;
 #[cfg(feature = "grid")]
 mod grid_span_8_all_track_types_indefinite;
+#[cfg(feature = "grid")]
+mod gridflex_column_integration;
+#[cfg(feature = "grid")]
+mod gridflex_kitchen_sink;
+#[cfg(feature = "grid")]
+mod gridflex_kitchen_sink_minimise;
+#[cfg(feature = "grid")]
+mod gridflex_kitchen_sink_minimise2;
+#[cfg(feature = "grid")]
+mod gridflex_kitchen_sink_minimise3;
+#[cfg(feature = "grid")]
+mod gridflex_row_integration;
 mod intrinsic_sizing_cross_size_column;
 mod intrinsic_sizing_main_size_column;
 mod intrinsic_sizing_main_size_column_nested;
@@ -1461,7 +1479,13 @@ fn benchmark(c: &mut Criterion) {
             #[cfg(feature = "grid")]
             grid_overflow_rows::compute();
             #[cfg(feature = "grid")]
+            grid_percent_item_inside_stretch_item::compute();
+            #[cfg(feature = "grid")]
+            grid_percent_items_nested_inside_stretch_alignment::compute();
+            #[cfg(feature = "grid")]
             grid_percent_items_nested_moderate::compute();
+            #[cfg(feature = "grid")]
+            grid_percent_items_nested_with_margin::compute();
             #[cfg(feature = "grid")]
             grid_percent_items_nested_with_padding_margin::compute();
             #[cfg(feature = "grid")]
@@ -1518,6 +1542,18 @@ fn benchmark(c: &mut Criterion) {
             grid_span_6_all_non_flex_indefinite::compute();
             #[cfg(feature = "grid")]
             grid_span_8_all_track_types_indefinite::compute();
+            #[cfg(feature = "grid")]
+            gridflex_column_integration::compute();
+            #[cfg(feature = "grid")]
+            gridflex_kitchen_sink::compute();
+            #[cfg(feature = "grid")]
+            gridflex_kitchen_sink_minimise::compute();
+            #[cfg(feature = "grid")]
+            gridflex_kitchen_sink_minimise2::compute();
+            #[cfg(feature = "grid")]
+            gridflex_kitchen_sink_minimise3::compute();
+            #[cfg(feature = "grid")]
+            gridflex_row_integration::compute();
             intrinsic_sizing_cross_size_column::compute();
             intrinsic_sizing_main_size_column::compute();
             intrinsic_sizing_main_size_column_nested::compute();
