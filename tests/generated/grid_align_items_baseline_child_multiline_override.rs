@@ -60,6 +60,7 @@ fn grid_align_items_baseline_child_multiline_override() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
+                grid_template_columns: vec![auto(), auto()],
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(50f32),
                     height: taffy::style::Dimension::Points(25f32),
@@ -110,16 +111,16 @@ fn grid_align_items_baseline_child_multiline_override() {
     let Layout { size, location, .. } = taffy.layout(node11).unwrap();
     assert_eq!(size.width, 25f32, "width of node {:?}. Expected {}. Actual {}", node11.data(), 25f32, size.width);
     assert_eq!(size.height, 10f32, "height of node {:?}. Expected {}. Actual {}", node11.data(), 10f32, size.height);
-    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node11.data(), 0f32, location.x);
-    assert_eq!(location.y, 20f32, "y of node {:?}. Expected {}. Actual {}", node11.data(), 20f32, location.y);
+    assert_eq!(location.x, 25f32, "x of node {:?}. Expected {}. Actual {}", node11.data(), 25f32, location.x);
+    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node11.data(), 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node12).unwrap();
     assert_eq!(size.width, 25f32, "width of node {:?}. Expected {}. Actual {}", node12.data(), 25f32, size.width);
     assert_eq!(size.height, 20f32, "height of node {:?}. Expected {}. Actual {}", node12.data(), 20f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node12.data(), 0f32, location.x);
-    assert_eq!(location.y, 30f32, "y of node {:?}. Expected {}. Actual {}", node12.data(), 30f32, location.y);
+    assert_eq!(location.y, 20f32, "y of node {:?}. Expected {}. Actual {}", node12.data(), 20f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node13).unwrap();
     assert_eq!(size.width, 25f32, "width of node {:?}. Expected {}. Actual {}", node13.data(), 25f32, size.width);
     assert_eq!(size.height, 10f32, "height of node {:?}. Expected {}. Actual {}", node13.data(), 10f32, size.height);
-    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node13.data(), 0f32, location.x);
-    assert_eq!(location.y, 50f32, "y of node {:?}. Expected {}. Actual {}", node13.data(), 50f32, location.y);
+    assert_eq!(location.x, 25f32, "x of node {:?}. Expected {}. Actual {}", node13.data(), 25f32, location.x);
+    assert_eq!(location.y, 20f32, "y of node {:?}. Expected {}. Actual {}", node13.data(), 20f32, location.y);
 }
