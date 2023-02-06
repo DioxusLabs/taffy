@@ -173,9 +173,9 @@ pub fn compute(
         || style.max_size.height.is_defined();
 
     // Pull these out earlier to avoid borrowing issues
-    let min_size = style.min_size.maybe_resolve(known_dimensions);
-    let max_size = style.max_size.maybe_resolve(known_dimensions);
-    let clamped_style_size = style.size.maybe_resolve(known_dimensions).maybe_clamp(min_size, max_size);
+    let min_size = style.min_size.maybe_resolve(parent_size);
+    let max_size = style.max_size.maybe_resolve(parent_size);
+    let clamped_style_size = style.size.maybe_resolve(parent_size).maybe_clamp(min_size, max_size);
 
     if has_min_max_sizes {
         #[cfg(feature = "debug")]
