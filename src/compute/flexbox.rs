@@ -554,8 +554,9 @@ fn determine_available_space(
     outer_available_space: Size<AvailableSpace>,
     constants: &AlgoConstants,
 ) -> Size<AvailableSpace> {
+    // Note: min/max/preferred size styles have already been applied to known_dimensions in the `compute` function above
     let width = match known_dimensions.width {
-        Some(node_width) => AvailableSpace::Definite(node_width),
+        Some(node_width) => AvailableSpace::Definite(node_width - constants.padding_border.horizontal_axis_sum()),
         None => outer_available_space
             .width
             .maybe_sub(constants.margin.horizontal_axis_sum())
@@ -563,7 +564,7 @@ fn determine_available_space(
     };
 
     let height = match known_dimensions.height {
-        Some(node_height) => AvailableSpace::Definite(node_height),
+        Some(node_height) => AvailableSpace::Definite(node_height - constants.padding_border.vertical_axis_sum()),
         None => outer_available_space
             .height
             .maybe_sub(constants.margin.vertical_axis_sum())
