@@ -177,13 +177,25 @@ pub fn compute(
     let max_size = style.max_size.maybe_resolve(parent_size);
     let clamped_style_size = style.size.maybe_resolve(parent_size).maybe_clamp(min_size, max_size);
 
-    if has_min_max_sizes {
+    // If both min and max in a given axis are set and max <= min then this determines the size in that axis
+    let min_max_definite_size = min_size.zip_map(max_size, |min, max| match (min, max) {
+        (Some(min), Some(max)) if max <= min => Some(min),
+        _ => None,
+    });
+
+    let styled_based_known_dimensions = known_dimensions.or(min_max_definite_size).or(clamped_style_size);
+
+    if styled_based_known_dimensions.both_axis_defined() || !has_min_max_sizes {
+        #[cfg(feature = "debug")]
+        NODE_LOGGER.log("FLEX: single-pass");
+        compute_preliminary(tree, node, styled_based_known_dimensions, parent_size, available_space, run_mode)
+    } else {
         #[cfg(feature = "debug")]
         NODE_LOGGER.log("FLEX: two-pass");
         let first_pass = compute_preliminary(
             tree,
             node,
-            known_dimensions.zip_map(clamped_style_size, |known, style| known.or(style)),
+            styled_based_known_dimensions,
             parent_size,
             available_space,
             RunMode::ComputeSize,
@@ -195,15 +207,12 @@ pub fn compute(
         compute_preliminary(
             tree,
             node,
-            known_dimensions.zip_map(clamped_first_pass_size, |known, first_pass| known.or_else(|| first_pass.into())),
+            styled_based_known_dimensions
+                .zip_map(clamped_first_pass_size, |known, first_pass| known.or_else(|| first_pass.into())),
             parent_size,
             available_space,
             run_mode,
         )
-    } else {
-        #[cfg(feature = "debug")]
-        NODE_LOGGER.log("FLEX: single-pass");
-        compute_preliminary(tree, node, known_dimensions.or(clamped_style_size), parent_size, available_space, run_mode)
     }
 }
 
