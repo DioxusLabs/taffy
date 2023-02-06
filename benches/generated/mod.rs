@@ -838,6 +838,7 @@ mod rounding_fractial_input_4;
 mod rounding_inner_node_controversy_vertical;
 mod rounding_total_fractial;
 mod rounding_total_fractial_nested;
+mod simple_child;
 mod single_flex_child_after_absolute_child;
 mod size_defined_by_child;
 mod size_defined_by_child_with_border;
@@ -1651,6 +1652,7 @@ fn benchmark(c: &mut Criterion) {
             rounding_inner_node_controversy_vertical::compute();
             rounding_total_fractial::compute();
             rounding_total_fractial_nested::compute();
+            simple_child::compute();
             single_flex_child_after_absolute_child::compute();
             size_defined_by_child::compute();
             size_defined_by_child_with_border::compute();
