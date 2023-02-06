@@ -727,28 +727,44 @@ fn collect_flex_lines<'a>(
     available_space: Size<AvailableSpace>,
     flex_items: &'a mut Vec<FlexItem>,
 ) -> Vec<FlexLine<'a>> {
-    let mut lines = crate::sys::new_vec_with_capacity(1);
-
     if tree.style(node).flex_wrap == FlexWrap::NoWrap {
-        lines.push(FlexLine {
+        return vec![FlexLine {
             items: flex_items.as_mut_slice(),
             container_main_size_contribution: 0.0,
             cross_size: 0.0,
             offset_cross: 0.0,
-        });
+        }];
     } else {
         match available_space.main(constants.dir) {
-            // If there is infinite available space in the main axis then the flex items will never wrap
+            // If we're sizing under a max-content constraint then the flex items will never wrap
             // (at least for now - future extensions to the CSS spec may add provisions for forced wrap points)
-            AvailableSpace::MinContent | AvailableSpace::MaxContent => {
-                lines.push(FlexLine {
+            AvailableSpace::MaxContent => {
+                return vec![FlexLine {
                     items: flex_items.as_mut_slice(),
                     container_main_size_contribution: 0.0,
                     cross_size: 0.0,
                     offset_cross: 0.0,
-                });
+                }];
+            }
+            // If flex-wrap is Wrap and we're sizing under a min-content constraint, then we take every possible wrapping opportunity
+            // and place each item in it's own line
+            AvailableSpace::MinContent => {
+                let mut lines = crate::sys::new_vec_with_capacity(flex_items.len());
+                let mut items = &mut flex_items[..];
+                while !items.is_empty() {
+                    let (line_items, rest) = items.split_at_mut(1);
+                    lines.push(FlexLine {
+                        items: line_items,
+                        container_main_size_contribution: 0.0,
+                        cross_size: 0.0,
+                        offset_cross: 0.0,
+                    });
+                    items = rest;
+                }
+                return lines;
             }
             AvailableSpace::Definite(main_axis_available_space) => {
+                let mut lines = crate::sys::new_vec_with_capacity(1);
                 let mut flex_items = &mut flex_items[..];
                 let main_axis_gap = constants.gap.main(constants.dir);
 
@@ -778,11 +794,10 @@ fn collect_flex_lines<'a>(
                     });
                     flex_items = rest;
                 }
+                return lines;
             }
         }
     }
-
-    lines
 }
 
 /// Resolve the flexible lengths of the items within a flex line.
