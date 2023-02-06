@@ -453,15 +453,7 @@ fn compute_constants(
 
     let padding_border = padding + border;
 
-    let node_outer_size = Size {
-        width: known_dimensions
-            .width
-            .or_else(|| size.width.maybe_sub(margin.horizontal_axis_sum()).maybe_clamp(min_size.width, max_size.width)),
-        height: known_dimensions.height.or_else(|| {
-            size.height.maybe_sub(margin.vertical_axis_sum()).maybe_clamp(min_size.height, max_size.height)
-        }),
-    };
-
+    let node_outer_size = known_dimensions;
     let node_inner_size = Size {
         width: node_outer_size.width.maybe_sub(padding_border.horizontal_axis_sum()),
         height: node_outer_size.height.maybe_sub(padding_border.vertical_axis_sum()),
