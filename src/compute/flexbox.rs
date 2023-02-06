@@ -776,6 +776,7 @@ fn collect_flex_lines<'a>(
 }
 
 /// Resolve the flexible lengths of the items within a flex line.
+/// Sets the `main` component of each item's `target_size` and `outer_target_size`
 ///
 /// # [9.7. Resolving Flexible Lengths](https://www.w3.org/TR/css-flexbox-1/#resolve-flexible-lengths)
 #[inline]
