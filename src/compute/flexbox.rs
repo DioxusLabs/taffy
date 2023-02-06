@@ -745,31 +745,48 @@ fn collect_flex_lines<'a>(
             offset_cross: 0.0,
         });
     } else {
-        let mut flex_items = &mut flex_items[..];
-        let main_axis_gap = constants.gap.main(constants.dir);
+        match available_space.main(constants.dir) {
+            // If there is infinite available space in the main axis then the flex items will never wrap
+            // (at least for now - future extensions to the CSS spec may add provisions for forced wrap points)
+            AvailableSpace::MinContent | AvailableSpace::MaxContent => {
+                lines.push(FlexLine {
+                    items: flex_items.as_mut_slice(),
+                    container_main_size_contribution: 0.0,
+                    cross_size: 0.0,
+                    offset_cross: 0.0,
+                });
+            }
+            AvailableSpace::Definite(main_axis_available_space) => {
+                let mut flex_items = &mut flex_items[..];
+                let main_axis_gap = constants.gap.main(constants.dir);
 
-        while !flex_items.is_empty() {
-            let mut line_length = 0.0;
-            let index = flex_items
-                .iter()
-                .enumerate()
-                .find(|&(idx, child)| {
-                    // Gaps only occur between items (not before the first one or after the last one)
-                    // So first item in the line does not contribute a gap to the line length
-                    let gap_contribution = if idx == 0 { 0.0 } else { main_axis_gap };
-                    line_length += child.hypothetical_outer_size.main(constants.dir) + gap_contribution;
-                    if let AvailableSpace::Definite(main) = available_space.main(constants.dir) {
-                        line_length > main && idx != 0
-                    } else {
-                        false
-                    }
-                })
-                .map(|(idx, _)| idx)
-                .unwrap_or(flex_items.len());
+                while !flex_items.is_empty() {
+                    // Find index of the first item in the next line
+                    // (or the last item if all remaining items are in the current line)
+                    let mut line_length = 0.0;
+                    let index = flex_items
+                        .iter()
+                        .enumerate()
+                        .find(|&(idx, child)| {
+                            // Gaps only occur between items (not before the first one or after the last one)
+                            // So first item in the line does not contribute a gap to the line length
+                            let gap_contribution = if idx == 0 { 0.0 } else { main_axis_gap };
+                            line_length += child.hypothetical_outer_size.main(constants.dir) + gap_contribution;
+                            line_length > main_axis_available_space && idx != 0
+                        })
+                        .map(|(idx, _)| idx)
+                        .unwrap_or(flex_items.len());
 
-            let (items, rest) = flex_items.split_at_mut(index);
-            lines.push(FlexLine { items, container_main_size_contribution: 0.0, cross_size: 0.0, offset_cross: 0.0 });
-            flex_items = rest;
+                    let (items, rest) = flex_items.split_at_mut(index);
+                    lines.push(FlexLine {
+                        items,
+                        container_main_size_contribution: 0.0,
+                        cross_size: 0.0,
+                        offset_cross: 0.0,
+                    });
+                    flex_items = rest;
+                }
+            }
         }
     }
 
