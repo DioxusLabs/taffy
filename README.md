@@ -1,17 +1,12 @@
-# taffy
+# Taffy
 
 [![GitHub CI](https://github.com/DioxusLabs/taffy/actions/workflows/ci.yml/badge.svg)](https://github.com/DioxusLabs/taffy/actions/workflows/ci.yml)
 [![crates.io](https://img.shields.io/crates/v/taffy.svg)](https://crates.io/crates/taffy)
 [![docs.rs](https://img.shields.io/docsrs/taffy)](https://docs.rs/taffy)
 
-`taffy` is a flexible, high-performance, cross-platform UI layout library written in [Rust](https://www.rust-lang.org).
+Taffy is a flexible, high-performance, cross-platform UI layout library written in [Rust](https://www.rust-lang.org).
 
-Currently Taffy implements only CSS based layout algorithms:
-
-- The stable `0.2.x` releases of Taffy implements the [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) layout algorithm.
-- Support for [CSS Grid](https://css-tricks.com/snippets/css/complete-guide-grid/) is in preview. If you wish to try this out then you should use the `0.3.x` alpha releases ~and enable the `experimental_grid` cargo feature~ (from `0.3.0-alpha2` the CSS Grid feature is enabled by default). For information, see the [release notes](https://github.com/DioxusLabs/taffy/blob/main/RELEASES.md) and the [tracking issue](https://github.com/DioxusLabs/taffy/issues/204). Experimentation with the CSS Grid implementation is encouraged, and feedback and bug reports are welcomed.
-
-Support for other paradigms [is planned](https://github.com/DioxusLabs/taffy/issues/28).
+It currently implements the Flexbox and CSS Grid algorithms. Support for other paradigms is planned. For more information on this and other future development plans see the [roadmap issue](https://github.com/DioxusLabs/taffy/issues/345).
 
 This crate is a collaborative, cross-team project, and is designed to be used as a dependency for other UI and GUI libraries.
 Right now, it powers:
