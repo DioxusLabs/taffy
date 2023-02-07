@@ -108,6 +108,7 @@ pub fn compute(
         in_flow_children_iter,
         style.grid_auto_flow,
         style.align_items.unwrap_or(AlignItems::Stretch),
+        style.justify_items.unwrap_or(AlignItems::Stretch),
     );
 
     // Extract track counts from previous step (auto-placement can expand the number of tracks)
@@ -140,16 +141,21 @@ pub fn compute(
     // https://www.w3.org/TR/css-grid-1/#available-grid-space
     let padding = style.padding.resolve_or_zero(parent_size.width);
     let border = style.border.resolve_or_zero(parent_size.width);
-    let margin = style.margin.resolve_or_zero(parent_size.width);
     let aspect_ratio = style.aspect_ratio;
     let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
     let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
     let size = style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
 
-    let constrained_available_space = size
+    let constrained_available_space = known_dimensions
+        .or(size)
         .maybe_clamp(min_size, max_size)
         .map(|size| size.map(AvailableSpace::Definite))
-        .unwrap_or(available_space.maybe_clamp(min_size, max_size));
+        .unwrap_or(available_space.map(|space| match space {
+            // Available grid space should not depend on Definite available space as a grid is allowed
+            // to expand beyond it's available space
+            AvailableSpace::Definite(_) => AvailableSpace::MaxContent,
+            _ => space,
+        }));
 
     let available_grid_space = Size {
         width: constrained_available_space
@@ -160,7 +166,7 @@ pub fn compute(
             .map_definite_value(|space| space - padding.vertical_axis_sum() - border.vertical_axis_sum()),
     };
 
-    let outer_node_size = size.maybe_clamp(min_size, max_size).or(parent_size.maybe_sub(margin.sum_axes()));
+    let outer_node_size = known_dimensions.or(size.maybe_clamp(min_size, max_size).or(min_size));
     let mut inner_node_size = Size {
         width: outer_node_size.width.map(|space| space - padding.horizontal_axis_sum() - border.horizontal_axis_sum()),
         height: outer_node_size.height.map(|space| space - padding.vertical_axis_sum() - border.vertical_axis_sum()),
@@ -205,7 +211,7 @@ pub fn compute(
     let initial_column_sum = columns.iter().map(|track| track.base_size).sum::<f32>();
     inner_node_size.width = inner_node_size.width.or_else(|| initial_column_sum.into());
 
-    items.iter_mut().for_each(|item| item.known_dimensions_cache = None);
+    items.iter_mut().for_each(|item| item.available_space_cache = None);
 
     // Run track sizing algorithm for Block axis
     track_sizing_algorithm(
@@ -280,18 +286,18 @@ pub fn compute(
             .iter_mut()
             .filter(|item| item.crosses_intrinsic_column)
             .map(|item| {
-                let known_dimensions = item.known_dimensions(
+                let available_space = item.available_space(
                     AbstractAxis::Inline,
                     &rows,
                     inner_node_size.height,
                     |track: &GridTrack, _| Some(track.base_size),
                 );
                 let new_min_content_contribution =
-                    item.min_content_contribution(AbstractAxis::Inline, tree, known_dimensions, inner_node_size);
+                    item.min_content_contribution(AbstractAxis::Inline, tree, available_space, inner_node_size);
 
                 let has_changed = Some(new_min_content_contribution) != item.min_content_contribution_cache.width;
 
-                item.known_dimensions_cache = Some(known_dimensions);
+                item.available_space_cache = Some(available_space);
                 item.min_content_contribution_cache.width = Some(new_min_content_contribution);
                 item.max_content_contribution_cache.width = None;
                 item.minimum_contribution_cache.width = None;
@@ -303,7 +309,7 @@ pub fn compute(
     } else {
         // Clear intrisic width caches
         items.iter_mut().for_each(|item| {
-            item.known_dimensions_cache = None;
+            item.available_space_cache = None;
             item.min_content_contribution_cache.width = None;
             item.max_content_contribution_cache.width = None;
             item.minimum_contribution_cache.width = None;
@@ -342,18 +348,18 @@ pub fn compute(
                 .iter_mut()
                 .filter(|item| item.crosses_intrinsic_column)
                 .map(|item| {
-                    let known_dimensions = item.known_dimensions(
+                    let available_space = item.available_space(
                         AbstractAxis::Block,
                         &columns,
                         inner_node_size.width,
                         |track: &GridTrack, _| Some(track.base_size),
                     );
                     let new_min_content_contribution =
-                        item.min_content_contribution(AbstractAxis::Block, tree, known_dimensions, inner_node_size);
+                        item.min_content_contribution(AbstractAxis::Block, tree, available_space, inner_node_size);
 
                     let has_changed = Some(new_min_content_contribution) != item.min_content_contribution_cache.height;
 
-                    item.known_dimensions_cache = Some(known_dimensions);
+                    item.available_space_cache = Some(available_space);
                     item.min_content_contribution_cache.height = Some(new_min_content_contribution);
                     item.max_content_contribution_cache.height = None;
                     item.minimum_contribution_cache.height = None;
@@ -365,7 +371,7 @@ pub fn compute(
         } else {
             items.iter_mut().for_each(|item| {
                 // Clear intrisic height caches
-                item.known_dimensions_cache = None;
+                item.available_space_cache = None;
                 item.min_content_contribution_cache.height = None;
                 item.max_content_contribution_cache.height = None;
                 item.minimum_contribution_cache.height = None;

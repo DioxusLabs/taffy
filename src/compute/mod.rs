@@ -150,8 +150,6 @@ fn compute_node_layout(
     }
 
     #[cfg(feature = "debug")]
-    NODE_LOGGER.log("COMPUTE");
-    #[cfg(feature = "debug")]
     debug_log_node(known_dimensions, parent_size, available_space, run_mode, sizing_mode);
 
     /// Inlined function generic over the LayoutAlgorithm to reduce code duplication
@@ -248,7 +246,7 @@ fn debug_log_node(
     run_mode: RunMode,
     sizing_mode: SizingMode,
 ) {
-    NODE_LOGGER.labelled_debug_log("run_mode", run_mode);
+    NODE_LOGGER.debug_log(run_mode);
     NODE_LOGGER.labelled_debug_log("sizing_mode", sizing_mode);
     NODE_LOGGER.labelled_debug_log("known_dimensions", known_dimensions);
     NODE_LOGGER.labelled_debug_log("available_space", available_space);
