@@ -151,7 +151,8 @@ pub fn compute(
         .maybe_clamp(min_size, max_size)
         .map(|size| size.map(AvailableSpace::Definite))
         .unwrap_or(available_space.map(|space| match space {
-            // Available grid space should depend on Definite available space
+            // Available grid space should not depend on Definite available space as a grid is allowed
+            // to expand beyond it's available space
             AvailableSpace::Definite(_) => AvailableSpace::MaxContent,
             _ => space,
         }));
