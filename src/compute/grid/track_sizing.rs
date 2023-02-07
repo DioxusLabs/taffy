@@ -1146,7 +1146,7 @@ fn expand_flexible_tracks(
             let hypothetical_grid_size: f32 = axis_tracks
                 .iter()
                 .map(|track| match track.max_track_sizing_function {
-                    MaxTrackSizingFunction::Flex(track_flex_factor) => {
+                    MaxTrackSizingFunction::Fraction(track_flex_factor) => {
                         f32_max(track.base_size, track_flex_factor * flex_fraction)
                     }
                     _ => track.base_size,
@@ -1167,7 +1167,7 @@ fn expand_flexible_tracks(
     // For each flexible track, if the product of the used flex fraction and the track’s flex factor is greater
     // than the track’s base size, set its base size to that product.
     for track in axis_tracks.iter_mut() {
-        if let MaxTrackSizingFunction::Flex(track_flex_factor) = track.max_track_sizing_function {
+        if let MaxTrackSizingFunction::Fraction(track_flex_factor) = track.max_track_sizing_function {
             track.base_size = f32_max(track.base_size, track_flex_factor * flex_fraction);
         }
     }
@@ -1199,7 +1199,9 @@ fn find_size_of_fr(tracks: &[GridTrack], space_to_fill: f32) -> f32 {
         for track in tracks.iter() {
             match track.max_track_sizing_function {
                 // Tracks for which flex_factor * hypothetical_fr_size < track.base_size are treated as inflexible
-                MaxTrackSizingFunction::Flex(flex_factor) if flex_factor * hypothetical_fr_size >= track.base_size => {
+                MaxTrackSizingFunction::Fraction(flex_factor)
+                    if flex_factor * hypothetical_fr_size >= track.base_size =>
+                {
                     naive_flex_factor_sum += flex_factor;
                 }
                 _ => used_space += track.base_size,
@@ -1216,7 +1218,7 @@ fn find_size_of_fr(tracks: &[GridTrack], space_to_fill: f32) -> f32 {
         // restart this algorithm treating all such tracks as inflexible.
         // We keep track of the hypothetical_fr_size
         let hypotherical_fr_size_is_valid = tracks.iter().all(|track| match track.max_track_sizing_function {
-            MaxTrackSizingFunction::Flex(flex_factor) => {
+            MaxTrackSizingFunction::Fraction(flex_factor) => {
                 flex_factor * hypothetical_fr_size >= track.base_size
                     || flex_factor * previous_iter_hypothetical_fr_size < track.base_size
             }

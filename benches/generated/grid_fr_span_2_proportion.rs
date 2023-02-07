@@ -19,7 +19,7 @@ pub fn compute() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 grid_template_rows: vec![points(40f32), points(40f32)],
-                grid_template_columns: vec![flex(1f32), flex(2f32)],
+                grid_template_columns: vec![fr(1f32), fr(2f32)],
                 ..Default::default()
             },
             &[node0, node1, node2],

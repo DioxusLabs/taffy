@@ -441,7 +441,7 @@ impl GridItem {
                 let only_span_one_track = item_axis_tracks.len() == 1;
                 let spans_a_flexible_track = axis_tracks
                     .iter()
-                    .any(|track| matches!(track.max_track_sizing_function, MaxTrackSizingFunction::Flex(_)));
+                    .any(|track| matches!(track.max_track_sizing_function, MaxTrackSizingFunction::Fraction(_)));
 
                 let use_content_based_minimum =
                     spans_auto_min_track && (only_span_one_track || !spans_a_flexible_track);

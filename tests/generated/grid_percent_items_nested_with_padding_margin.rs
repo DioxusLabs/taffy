@@ -71,7 +71,7 @@ fn grid_percent_items_nested_with_padding_margin() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                grid_template_rows: vec![flex(1f32), flex(4f32)],
+                grid_template_rows: vec![fr(1f32), fr(4f32)],
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(200f32),
                     height: taffy::style::Dimension::Points(200f32),

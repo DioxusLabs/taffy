@@ -249,10 +249,10 @@ pub enum MaxTrackSizingFunction {
     FitContent(LengthPercentage),
     /// Track maximum size should be automatically sized
     Auto,
-    /// The dimension as a fraction of the total available grid space.
+    /// The dimension as a fraction of the total available grid space (`fr` units in CSS)
     /// Specified value is the numerator of the fraction. Denominator is the sum of all fraction specified in that grid dimension
     /// Spec: https://www.w3.org/TR/css3-grid-layout/#fr-unit
-    Flex(f32),
+    Fraction(f32),
 }
 impl TaffyAuto for MaxTrackSizingFunction {
     const AUTO: Self = Self::Auto;
@@ -283,7 +283,7 @@ impl FromPercent for MaxTrackSizingFunction {
 }
 impl FromFlex for MaxTrackSizingFunction {
     fn from_flex<Input: Into<f32> + Copy>(flex: Input) -> Self {
-        Self::Flex(flex.into())
+        Self::Fraction(flex.into())
     }
 }
 
@@ -305,7 +305,7 @@ impl MaxTrackSizingFunction {
     /// Returns true if the max track sizing function is `Flex`, else false.
     #[inline(always)]
     pub fn is_flexible(&self) -> bool {
-        matches!(self, Self::Flex(_))
+        matches!(self, Self::Fraction(_))
     }
 
     /// Returns fixed point values directly. Attempts to resolve percentage values against
@@ -317,7 +317,7 @@ impl MaxTrackSizingFunction {
         match self {
             Fixed(LengthPercentage::Points(size)) => Some(size),
             Fixed(LengthPercentage::Percent(fraction)) => parent_size.map(|size| fraction * size),
-            MinContent | MaxContent | FitContent(_) | Auto | Flex(_) => None,
+            MinContent | MaxContent | FitContent(_) | Auto | Fraction(_) => None,
         }
     }
 
@@ -344,7 +344,7 @@ impl MaxTrackSizingFunction {
         use MaxTrackSizingFunction::{Auto, *};
         match self {
             Fixed(LengthPercentage::Percent(fraction)) => Some(fraction * parent_size),
-            Fixed(LengthPercentage::Points(_)) | MinContent | MaxContent | FitContent(_) | Auto | Flex(_) => None,
+            Fixed(LengthPercentage::Points(_)) | MinContent | MaxContent | FitContent(_) | Auto | Fraction(_) => None,
         }
     }
 

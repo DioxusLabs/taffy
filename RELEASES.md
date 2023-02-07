@@ -2,6 +2,10 @@
 
 ## 0.3.0-alpha2 (unreleased)
 
+### Added
+
+- A new style helper `evenly_sized_tracks(count: u16)` has been added which creates a grid template containing `count` evenly sized tracks (rows or columns)
+
 ### Changed
 
 - `experimental_grid` feature named to just `grid`
@@ -9,6 +13,7 @@
 - `GridPlacement::Line` now stores a `GridLine` newtype wrapper around an `i16` rather than a raw `i16`. If you are using the style helpers then this change will not affect you.
 - *BREAKING:* `Position` is now renamed to `Inset` and is now in line with [CSS inset specs](https://developer.mozilla.org/en-US/docs/Web/CSS/inset)
 - *BREAKING:* `PositionType` is now renamed to `Position` and is now in line with [CSS position specs](https://developer.mozilla.org/en-US/docs/Web/CSS/position)
+- `MaxTrackSizingFunction::Flex` is now called `MaxTrackSizingFunction::Fraction`. The `flex()` helper is now called `fr()`. A new `flex()` helper has been added which create a `minmax(0, Nfr)` track.
 
 ### Fixes
 

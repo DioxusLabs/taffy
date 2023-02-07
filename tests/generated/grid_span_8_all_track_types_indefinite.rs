@@ -42,8 +42,8 @@ fn grid_span_8_all_track_types_indefinite() {
                     auto(),
                     points(10f32),
                     percent(0.2f32),
-                    flex(1f32),
-                    flex(2f32),
+                    fr(1f32),
+                    fr(2f32),
                 ],
                 ..Default::default()
             },

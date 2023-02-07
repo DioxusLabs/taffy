@@ -16,7 +16,7 @@ fn gridflex_kitchen_sink_minimise() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 grid_template_rows: vec![points(20f32)],
-                grid_template_columns: vec![flex(1f32), flex(1f32)],
+                grid_template_columns: vec![fr(1f32), fr(1f32)],
                 ..Default::default()
             },
             &[node00, node01],

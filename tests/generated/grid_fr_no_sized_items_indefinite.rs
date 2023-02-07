@@ -17,8 +17,8 @@ fn grid_fr_no_sized_items_indefinite() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                grid_template_rows: vec![points(40f32), flex(1f32), flex(1f32)],
-                grid_template_columns: vec![points(40f32), flex(1f32), flex(1f32)],
+                grid_template_rows: vec![points(40f32), fr(1f32), fr(1f32)],
+                grid_template_columns: vec![points(40f32), fr(1f32), fr(1f32)],
                 ..Default::default()
             },
             &[node0, node1, node2, node3, node4, node5, node6, node7, node8],

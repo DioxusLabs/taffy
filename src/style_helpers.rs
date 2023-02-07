@@ -45,6 +45,12 @@ mod repeat_fn_tests {
     }
 }
 
+#[cfg(feature = "grid")]
+/// Returns a grid template containing `count` evenly sized tracks
+pub fn evenly_sized_tracks(count: u16) -> Vec<TrackSizingFunction> {
+    vec![repeat(count, vec![flex(1.0)])]
+}
+
 /// Specifies a grid line to place a grid item between in CSS Grid Line coordinates:
 ///  - Positive indicies count upwards from the start (top or left) of the explicit grid
 ///  - Negative indicies count downwards from the end (bottom or right) of the explicit grid
@@ -75,6 +81,16 @@ where
     Output: From<MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>>,
 {
     MinMax { min, max }.into()
+}
+
+/// Shorthand for minmax(0, Nfr). Probably what you want if you want exactly evenly sized tracks.
+#[cfg(feature = "grid")]
+pub fn flex<Input, Output>(flex_fraction: Input) -> Output
+where
+    Input: Into<f32> + Copy,
+    Output: From<MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>>,
+{
+    MinMax { min: zero(), max: fr(flex_fraction.into()) }.into()
 }
 
 /// Returns the zero value for that type
@@ -434,8 +450,8 @@ impl<T: FromPercent> Rect<T> {
     }
 }
 
-/// Returns a value of the inferred type which represents a flex fraction
-pub fn flex<Input: Into<f32> + Copy, T: FromFlex>(flex: Input) -> T {
+/// Create a `Fraction` track sizing function (`fr` in CSS)
+pub fn fr<Input: Into<f32> + Copy, T: FromFlex>(flex: Input) -> T {
     T::from_flex(flex)
 }
 

@@ -455,7 +455,7 @@ mod test {
         let px100 = LengthPercentage::Points(100.0);
 
         // Setup test
-        let track_template = vec![points(100.0), minmax(points(100.0), flex(2.0)), flex(1.0)];
+        let track_template = vec![points(100.0), minmax(points(100.0), fr(2.0)), fr(1.0)];
         let track_counts =
             TrackCounts { negative_implicit: 3, explicit: track_template.len() as u16, positive_implicit: 3 };
         let auto_tracks = vec![auto(), points(100.0)];
@@ -479,9 +479,9 @@ mod test {
             // Explicit tracks
             (GridTrackKind::Track, MinTrackSizingFunction::Fixed(px100), MaxTrackSizingFunction::Fixed(px100)),
             (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
-            (GridTrackKind::Track, MinTrackSizingFunction::Fixed(px100), MaxTrackSizingFunction::Flex(2.0)), // Note: separate min-max functions
+            (GridTrackKind::Track, MinTrackSizingFunction::Fixed(px100), MaxTrackSizingFunction::Fraction(2.0)), // Note: separate min-max functions
             (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
-            (GridTrackKind::Track, MinTrackSizingFunction::Auto, MaxTrackSizingFunction::Flex(1.0)), // Note: min sizing function of flex sizing functions is auto
+            (GridTrackKind::Track, MinTrackSizingFunction::Auto, MaxTrackSizingFunction::Fraction(1.0)), // Note: min sizing function of flex sizing functions is auto
             (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
             // Positive implict tracks
             (GridTrackKind::Track, MinTrackSizingFunction::Auto, MaxTrackSizingFunction::Auto),
