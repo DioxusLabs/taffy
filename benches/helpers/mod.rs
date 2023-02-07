@@ -1,5 +1,5 @@
 #[cfg(feature = "yoga_benchmark")]
-mod yoga_helpers;
+pub mod yoga_helpers;
 
 /// A helper function to recursively construct a deep tree
 pub fn build_deep_tree<T, N>(
