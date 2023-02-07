@@ -986,13 +986,8 @@ fn resolve_flexible_lengths(
     //      smaller than its hypothetical main size
 
     for child in line.items.iter_mut() {
-        child.target_size.set_main(constants.dir, child.hypothetical_inner_size.main(constants.dir));
-
-        // TODO this should really only be set inside the if-statement below but
-        // that causes the target_main_size to never be set for some items
-        child
-            .outer_target_size
-            .set_main(constants.dir, child.target_size.main(constants.dir) + child.margin.main_axis_sum(constants.dir));
+        let inner_target_size = child.hypothetical_inner_size.main(constants.dir);
+        child.target_size.set_main(constants.dir, inner_target_size);
 
         let child_style = tree.style(child.node);
         if (child_style.flex_grow == 0.0 && child_style.flex_shrink == 0.0)
@@ -1000,6 +995,8 @@ fn resolve_flexible_lengths(
             || (shrinking && child.flex_basis < child.hypothetical_inner_size.main(constants.dir))
         {
             child.frozen = true;
+            let outer_target_size = inner_target_size + child.margin.main_axis_sum(constants.dir);
+            child.outer_target_size.set_main(constants.dir, outer_target_size);
         }
     }
 
