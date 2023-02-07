@@ -728,13 +728,13 @@ fn collect_flex_lines<'a>(
     flex_items: &'a mut Vec<FlexItem>,
 ) -> Vec<FlexLine<'a>> {
     if tree.style(node).flex_wrap == FlexWrap::NoWrap {
-        return vec![FlexLine { items: flex_items.as_mut_slice(), cross_size: 0.0, offset_cross: 0.0 }];
+        vec![FlexLine { items: flex_items.as_mut_slice(), cross_size: 0.0, offset_cross: 0.0 }]
     } else {
         match available_space.main(constants.dir) {
             // If we're sizing under a max-content constraint then the flex items will never wrap
             // (at least for now - future extensions to the CSS spec may add provisions for forced wrap points)
             AvailableSpace::MaxContent => {
-                return vec![FlexLine { items: flex_items.as_mut_slice(), cross_size: 0.0, offset_cross: 0.0 }];
+                vec![FlexLine { items: flex_items.as_mut_slice(), cross_size: 0.0, offset_cross: 0.0 }]
             }
             // If flex-wrap is Wrap and we're sizing under a min-content constraint, then we take every possible wrapping opportunity
             // and place each item in it's own line
@@ -746,7 +746,7 @@ fn collect_flex_lines<'a>(
                     lines.push(FlexLine { items: line_items, cross_size: 0.0, offset_cross: 0.0 });
                     items = rest;
                 }
-                return lines;
+                lines
             }
             AvailableSpace::Definite(main_axis_available_space) => {
                 let mut lines = crate::sys::new_vec_with_capacity(1);
@@ -774,7 +774,7 @@ fn collect_flex_lines<'a>(
                     lines.push(FlexLine { items, cross_size: 0.0, offset_cross: 0.0 });
                     flex_items = rest;
                 }
-                return lines;
+                lines
             }
         }
     }
