@@ -412,6 +412,12 @@ impl<T> Size<Option<T>> {
     pub fn or(self, alt: Size<Option<T>>) -> Size<Option<T>> {
         Size { width: self.width.or(alt.width), height: self.height.or(alt.height) }
     }
+
+    /// Return true if both components are Some, else false.
+    #[inline(always)]
+    pub fn both_axis_defined(&self) -> bool {
+        self.width.is_some() && self.height.is_some()
+    }
 }
 
 impl Size<Dimension> {
