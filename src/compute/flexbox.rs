@@ -183,16 +183,17 @@ pub fn compute(
         || style.max_size.height.is_defined();
 
     // Pull these out earlier to avoid borrowing issues
-    let min_size = style.min_size.maybe_resolve(parent_size);
-    let max_size = style.max_size.maybe_resolve(parent_size);
-    let clamped_style_size = style.size.maybe_resolve(parent_size).maybe_clamp(min_size, max_size);
+    let aspect_ratio = style.aspect_ratio;
+    let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let clamped_style_size =
+        style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
 
     // If both min and max in a given axis are set and max <= min then this determines the size in that axis
     let min_max_definite_size = min_size.zip_map(max_size, |min, max| match (min, max) {
         (Some(min), Some(max)) if max <= min => Some(min),
         _ => None,
     });
-
     let styled_based_known_dimensions = known_dimensions.or(min_max_definite_size).or(clamped_style_size);
 
     if styled_based_known_dimensions.both_axis_defined() || !has_min_max_sizes {
