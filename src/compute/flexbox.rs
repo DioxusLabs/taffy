@@ -899,8 +899,8 @@ fn determine_container_main_size(
                         };
                     }
 
-                    // TODO: Spec says to scale everything by the line's max flex fraction. But neither Chrome nor firefox implement this
-                    // (and it doesn't make too much sense) so we don't either. But if we did want to, we'd need this computatio here:
+                    // TODO Spec says to scale everything by the line's max flex fraction. But neither Chrome nor firefox implement this
+                    // so we don't either. But if we did want to, we'd need this computation here (and to use it below):
                     //
                     // Within each line, find the largest max-content flex fraction among all the flex items.
                     // let line_flex_fraction = line
@@ -933,7 +933,7 @@ fn determine_container_main_size(
                             };
                             let size = item.flex_basis + flex_contribution;
                             item.outer_target_size.set_main(constants.dir, size);
-                            item.target_size.set_main(constants.dir, size); // - item.margin.main_axis_sum(constants.dir));
+                            item.target_size.set_main(constants.dir, size);
                             size
                         })
                         .sum::<f32>();
