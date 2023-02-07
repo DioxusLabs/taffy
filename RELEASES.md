@@ -2,6 +2,10 @@
 
 ## 0.3.0-alpha2 (unreleased)
 
+### Added
+
+- A new style helper `evenly_sized_tracks(count: u16)` has been added which creates a grid template containing `count` evenly sized tracks (rows or columns)
+
 ### Changed
 
 - `experimental_grid` feature named to just `grid`
