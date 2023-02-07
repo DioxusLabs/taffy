@@ -68,8 +68,8 @@ fn gridflex_row_integration() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                grid_template_rows: vec![flex(1f32), flex(1f32)],
-                grid_template_columns: vec![flex(1f32), flex(1f32)],
+                grid_template_rows: vec![fr(1f32), fr(1f32)],
+                grid_template_columns: vec![fr(1f32), fr(1f32)],
                 ..Default::default()
             },
             &[node00, node01, node02, node03],
