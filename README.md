@@ -91,7 +91,6 @@ Note that the table below contains multiple different units (milliseconds vs. mi
 [ba27f9d]: https://github.com/facebook/yoga/commit/ba27f9d1ecfa7518019845b84b035d3d4a2a6658
 [71027a8]: https://github.com/DioxusLabs/taffy/commit/71027a8de03b343e120852b84bb7dca9fb4651c5
 
-
 ## Contributions
 
 [Contributions welcome](https://github.com/DioxusLabs/taffy/blob/main/CONTRIBUTING.md):
