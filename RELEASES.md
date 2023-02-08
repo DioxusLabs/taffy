@@ -61,7 +61,6 @@ And the following Grid style properties are supported on Grid Items (children):
 [`align-self`]: https://developer.mozilla.org/en-US/docs/Web/CSS/align-self
 [`justify-self`]: https://developer.mozilla.org/en-US/docs/Web/CSS/justify-self
 
-
 The following properties and features are not currently supported:
 
 - Subgrids
