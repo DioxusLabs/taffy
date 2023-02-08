@@ -61,31 +61,11 @@ async fn main() {
 
     info!("generating test sources and concatenating...");
 
-    let bench_descs: Vec<_> = test_descs
-        .iter()
-        .map(|(name, description)| {
-            debug!("generating bench contents for {}", &name);
-            (name.clone(), generate_bench(description))
-        })
-        .collect();
-
     let test_descs: Vec<_> = test_descs
         .iter()
         .map(|(name, description)| {
             debug!("generating test contents for {}", &name);
             (name.clone(), generate_test(name, description))
-        })
-        .collect();
-
-    let benchmarks: Vec<_> = test_descs
-        .iter()
-        .map(|(name, _)| {
-            let bench_mod = Ident::new(name, Span::call_site());
-            if name.starts_with("grid") {
-                quote!(#[cfg(feature = "grid")] #bench_mod::compute())
-            } else {
-                quote!(#bench_mod::compute())
-            }
         })
         .collect();
 
@@ -106,35 +86,6 @@ async fn main() {
         #generic_measure_function
         #mod_statemnts
     );
-
-    let bench_mod_file = quote!(
-        use criterion::{criterion_group, criterion_main, Criterion};
-
-        #generic_measure_function
-
-        #mod_statemnts
-
-        fn benchmark(c: &mut Criterion) {
-            c.bench_function("generated benchmarks", |b| {
-                b.iter(|| { #(#benchmarks;)* })
-            });
-        }
-
-        criterion_group!(benches, benchmark);
-        criterion_main!(benches);
-    );
-
-    info!("writing generated benchmarks file to disk...");
-    let benches_base_path = repo_root.join("benches").join("generated");
-    fs::remove_dir_all(&benches_base_path).unwrap();
-    fs::create_dir(&benches_base_path).unwrap();
-    for (name, bench_body) in bench_descs {
-        let mut bench_filename = benches_base_path.join(&name);
-        bench_filename.set_extension("rs");
-        debug!("writing {} to disk...", &name);
-        fs::write(bench_filename, bench_body.to_string()).unwrap();
-    }
-    fs::write(benches_base_path.join("mod.rs"), bench_mod_file.to_string()).unwrap();
 
     info!("writing generated test file to disk...");
     let tests_base_path = repo_root.join("tests").join("generated");
@@ -165,20 +116,6 @@ async fn test_root_element(client: Client, name: String, fixture_path: impl AsRe
     let description_string = description.as_str().unwrap();
     let description = serde_json::from_str(description_string).unwrap();
     (name, description)
-}
-
-fn generate_bench(description: &Value) -> TokenStream {
-    let node_description = generate_node("node", description);
-
-    quote!(
-        pub fn compute() {
-            #[allow(unused_imports)]
-            use taffy::prelude::*;
-            let mut taffy = taffy::Taffy::new();
-            #node_description
-            taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
-        }
-    )
 }
 
 fn generate_test(name: impl AsRef<str>, description: &Value) -> TokenStream {
