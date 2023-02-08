@@ -6,7 +6,7 @@
 
 - [CSS Grid algorithm support](#new-feature-css-grid)
 - [Style helper functions](new-feature-style-helpers)
-- [Strict style types](#strict-style-types), [Alignment type merged](##changes-to-alignment-style-types), and [position properties renamed](#position-properties-renamed)
+- [Strict style types](#strict-style-types), [Alignment type merged](#changes-to-alignment-style-types), and [position properties renamed](#position-properties-renamed)
 
 ### New Feature: CSS Grid
 
