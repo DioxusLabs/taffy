@@ -14,22 +14,6 @@ Right now, it powers:
 - [Dioxus](https://dioxuslabs.com/): a React-like library for building fast, portable, and beautiful user interfaces with Rust
 - [Bevy](https://bevyengine.org/): an ergonomic, ECS-first Rust game engine
 
-## Learning Resources
-
-Taffy implements the Flexbox and CSS Grid specifications faithfully, so documentation designed for the web should translate cleanly to Taffy's implementation. For reference documentation on individual style properties we recommend the MDN documentation (for example [this page](https://developer.mozilla.org/en-US/docs/Web/CSS/width) on the `width` property). Such pages can usually be found by searching for "MDN property-name" using a search engine.
-
-If you are interested in guide-level documentation on CSS layout, then we recommend the following resources:
-
-### Flexbox
-
-- [Flexbox Froggy](https://flexboxfroggy.com/). This is an interactive tutorial/game that allows you to learn the essential parts of Flebox in a fun engaging way.
-- [A Complete Guide To Flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) by CSS Tricks. This is detailed guide with illustrations and comphrehensive written explanation of the different Flexbox properties and how they work.
-
-### CSS Grid
-
-- [CSS Grid Garden](https://cssgridgarden.com/). This is an interactive tutorial/game that allows you to learn the essential parts of CSS Grid in a fun engaging way.
-- [A Complete Guide To CSS Grid](https://css-tricks.com/snippets/css/complete-guide-grid/) by CSS Tricks. This is detailed guide with illustrations and comphrehensive written explanation of the different CSS Grid properties and how they work.
-
 ## Usage
 
 ```rust
@@ -81,6 +65,22 @@ assert_eq!(taffy.layout(body_node).unwrap().size.width, 800.0);
 assert_eq!(taffy.layout(body_node).unwrap().size.height, 500.0); // This value was not set explicitly, but was computed by Taffy
 
 ```
+
+## Learning Resources
+
+Taffy implements the Flexbox and CSS Grid specifications faithfully, so documentation designed for the web should translate cleanly to Taffy's implementation. For reference documentation on individual style properties we recommend the MDN documentation (for example [this page](https://developer.mozilla.org/en-US/docs/Web/CSS/width) on the `width` property). Such pages can usually be found by searching for "MDN property-name" using a search engine.
+
+If you are interested in guide-level documentation on CSS layout, then we recommend the following resources:
+
+### Flexbox
+
+- [Flexbox Froggy](https://flexboxfroggy.com/). This is an interactive tutorial/game that allows you to learn the essential parts of Flebox in a fun engaging way.
+- [A Complete Guide To Flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) by CSS Tricks. This is detailed guide with illustrations and comphrehensive written explanation of the different Flexbox properties and how they work.
+
+### CSS Grid
+
+- [CSS Grid Garden](https://cssgridgarden.com/). This is an interactive tutorial/game that allows you to learn the essential parts of CSS Grid in a fun engaging way.
+- [A Complete Guide To CSS Grid](https://css-tricks.com/snippets/css/complete-guide-grid/) by CSS Tricks. This is detailed guide with illustrations and comphrehensive written explanation of the different CSS Grid properties and how they work.
 
 ## Benchmarks (vs. [Yoga](https://github.com/facebook/yoga))
 
