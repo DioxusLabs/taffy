@@ -93,29 +93,22 @@ And that same helper function will work other types like `LengthPercentage` and 
 let size : Size<Dimension> = points(100.0);
 ```
 
-The following functions work for `Dimension`, `LengthPercentageAuto`, `LengthPercentage`, `AvailableSpace` and for Grid track sizing functions
+Available style helpers:
 
-- `points(f32)` - Generates a `Points` variant with the specified value
-- `zero()` - Generates a `Points` variant with the value `0.0`.
-
-The following functions work for `Dimension`, `LengthPercentageAuto`, `LengthPercentage` and for Grid track sizing functions
-
-- `percent(f32)` - Generates a `Percent` value
-- `auto()` - Generates an `Auto` variant
-
-The following functions work for `AvailableSpace` and grid track sizing functions:
-
-- `min_content()` - Generates an `MinContent` variant
-- `max_content()` - Generates an `MaxContent` variant
-
-The following functions currently work only for grid track sizing functions:
-
-- `fr(f32)` - Genrates a `Fraction` (`fr`) variant with the specified flex fraction
-- `flex(f32)` - Genrates a `minmax(0px, 1fr)` variant with the specified flex fraction
-- `fit_content(LengthPercentage)` - Generates a `FitContent` variant with the specified limit. Nest `points` or `percent` inside this function to specified the limit.
-- `minmax(MinTrackSizingFunction, MaxTrackSizingFunction)` - Generates a track sizing function with different min and max sizing functions. Nest `points`, `percent`, `auto`, `min_content`, `max_content`, or `flex` to specify the min and max functions.
-- `repeat(GridTrackRepetition, Vec<TrackSizingFunction>)` - Genereate an auto-repeating track definition.
-- `evenly_sized_tracks(u16)` - This generates an entire `Vec<TrackSizingFunction>` containing `count` evenly sized tracks (rows or columns).
+| Helper                                                   | Works with                                                                | Description                                                                                                                                                                                    |
+| ---                                                      | ---                                                                       | ---                                                                                                                                                                                            |
+| `zero()`                                                 | `Dimension`, `LengthPercentageAuto`, `LengthPercentage`, `AvailableSpace` | Generates a `Points` variant with the value `0.0`                                                                                                                                              |
+| `points(val: f32)`                                       | `Dimension`, `LengthPercentageAuto`, `LengthPercentage`, `AvailableSpace` | Generates a `Points` variant with the specified value                                                                                                                                          |
+| `percent(value: f32)`                                    | `Dimension`, `LengthPercentageAuto`, `LengthPercentage`                   | Generates a `Percent` value. Note that the scale of 0-1 not 0-100.                                                                                                                             |
+| `auto()`                                                 | `Dimension`, `LengthPercentageAuto`, `LengthPercentage`                   | Generates an `Auto` variant                                                                                                                                                                    |
+| `min_content()`                                          | `AvailableSpace`                                                          | Generates an `MinContent` variant                                                                                                                                                              |
+| `max_content()`                                          | `AvailableSpace`                                                          | Generates an `MaxContent` variant                                                                                                                                                              |
+| `fr(f32)`                                                | `TrackSizingFunction`                                                     | Genrates a `Fraction` (`fr`) variant with the specified flex fraction                                                                                                                          |
+| `flex(f32)`                                              | `TrackSizingFunction`                                                     | Genrates a `minmax(0px, 1fr)` variant with the specified flex fraction                                                                                                                         |
+| `fit_content(LengthPercentage)`                          | `TrackSizingFunction`                                                     | Generates a `FitContent` variant with the specified limit. Nest `points` or `percent` inside this function to specified the limit.                                                             |
+| `minmax(MinTrackSizingFunction, MaxTrackSizingFunction)` | `TrackSizingFunction`                                                     | Generates a track sizing function with different min and max sizing functions. Nest `points`, `percent`, `auto`, `min_content`, `max_content`, or `flex` to specify the min and max functions. |
+| `repeat(GridTrackRepetition, Vec<TrackSizingFunction>)`  | `TrackSizingFunction`                                                     | Genereate an auto-repeating track definition.                                                                                                                                                  |
+| `evenly_sized_tracks(u16)`                               | `TrackSizingFunction`                                                     | This generates an entire `Vec<TrackSizingFunction>` containing `count` evenly sized tracks (rows or columns).                                                                                  |
 
 ### Breaking API changes
 
