@@ -95,22 +95,102 @@ let size : Size<Dimension> = points(100.0);
 
 Available style helpers:
 
-Note that anything that works with either `MinTrackSizingFunction` or `MaxTrackSizingFunction` will also work with `TrackSizingFunction` and `NonRepeatingTrackSizingFunction`.
-
-| Helper                                                   | Works with                                                                                                                                                                                                          | Description                                                                                                                                                                                    |
-| ---                                                      | ---                                                                                                                                                                                                                 | ---                                                                                                                                                                                            |
-| `zero()`                                                 | `Dimension`<br />`LengthPercentageAuto`<br />`LengthPercentage`<br />`AvailableSpace`<br />`MinTrackSizingFunction`<br />`MaxTrackSizingFunction`<br />`TrackSizingFunction`<br />`NonRepeatingTrackSizingFunction` | Generates a `Points` variant with the value `0.0`                                                                                                                                              |
-| `points(val: f32)`                                       | `Dimension`<br />`LengthPercentageAuto`<br />`LengthPercentage`<br />`AvailableSpace`<br />`MinTrackSizingFunction`<br />`MaxTrackSizingFunction`<br />`TrackSizingFunction`<br />`NonRepeatingTrackSizingFunction` | Generates a `Points` variant with the specified value                                                                                                                                          |
-| `percent(value: f32)`                                    | `Dimension`<br />`LengthPercentageAuto`<br />`LengthPercentage`<br />`MinTrackSizingFunction`<br />`MaxTrackSizingFunction`<br />`TrackSizingFunction`<br />`NonRepeatingTrackSizingFunction`                       | Generates a `Percent` value. Note that the scale of 0-1 not 0-100.                                                                                                                             |
-| `auto()`                                                 | `Dimension`<br />`LengthPercentageAuto`<br />`LengthPercentage`<br />`MinTrackSizingFunction`<br />`MaxTrackSizingFunction`<br />`TrackSizingFunction`<br />`NonRepeatingTrackSizingFunction`                       | Generates an `Auto` variant                                                                                                                                                                    |
-| `min_content()`                                          | `AvailableSpace`<br />`MinTrackSizingFunction`<br />`MaxTrackSizingFunction`<br />`TrackSizingFunction`<br />`NonRepeatingTrackSizingFunction`                                                                      | Generates an `MinContent` variant                                                                                                                                                              |
-| `max_content()`                                          | `AvailableSpace`<br />`MinTrackSizingFunction`<br />`MaxTrackSizingFunction`<br />`TrackSizingFunction`<br />`NonRepeatingTrackSizingFunction`                                                                      | Generates an `MaxContent` variant                                                                                                                                                              |
-| `fit_content(LengthPercentage)`                          | `MaxTrackSizingFunction`<br />`TrackSizingFunction`<br />`NonRepeatingTrackSizingFunction`                                                                                                                          | Generates a `FitContent` variant with the specified limit. Nest `points` or `percent` inside this function to specified the limit.                                                             |
-| `fr(f32)`                                                | `MaxTrackSizingFunction`<br />`TrackSizingFunction`<br />`NonRepeatingTrackSizingFunction`                                                                                                                          | Generates a `Fraction` (`fr`) variant with the specified flex fraction                                                                                                                         |
-| `flex(f32)`                                              | `TrackSizingFunction`<br />`NonRepeatingTrackSizingFunction`                                                                                                                                                        | Genrates a `minmax(0px, 1fr)` variant with the specified flex fraction                                                                                                                         |
-| `minmax(MinTrackSizingFunction, MaxTrackSizingFunction)` | `TrackSizingFunction`<br />`NonRepeatingTrackSizingFunction`                                                                                                                                                        | Generates a track sizing function with different min and max sizing functions. Nest `points`, `percent`, `auto`, `min_content`, `max_content`, or `flex` to specify the min and max functions. |
-| `repeat(GridTrackRepetition, Vec<TrackSizingFunction>)`  | `TrackSizingFunction`                                                                                                                                                                                               | Genereate an auto-repeating track definition.                                                                                                                                                  |
-| `evenly_sized_tracks(u16)`                               | `Vec<TrackSizingFunction>`                                                                                                                                                                                          | This generates an entire `Vec<TrackSizingFunction>` containing `count` evenly sized tracks (rows or columns).                                                                                  |
+<table>
+  <thead><tr><th>Type(s)</th><th colspan="2">Helpers that work with that type</th></tr></thead>
+  <tbody>
+    <tr>
+      <td rowspan="3"><code>LengthPercentage</code></td>
+      <td><code>zero()</code></td>
+      <td>Generates a <code>Points</code> variant with the value <code>0.0</code></td>
+    </tr>
+    <tr>
+      <td><code>points(val:&nbsp;f32)</code></td>
+      <td>Generates a <code>Points</code> variant with the specified value</td>
+    </tr>
+    <tr>
+      <td><code>percent(val:&nbsp;f32)</code></td>
+      <td>Generates a <code>Percent</code> variant with the specified value.<br />Note that the scale of 0-1 not 0-100.</td>
+    </tr>
+    <tr>
+      <td rowspan="2"><code>LengthPercentageAuto</code><br /><code>Dimension</code></td>
+      <td colspan="2"><i>All helpers from <code>LengthPercentage</code> and...</i></td>
+    </tr>
+    <tr>
+      <td><code>auto()</code></td>
+      <td>Generates an <code>Auto</code> variant</td>
+    </tr>
+    <tr>
+      <td rowspan="3"><code>MinTrackSizingFunction</code></td>
+      <td colspan="2"><i>All helpers from <code>LengthPercentageAuto</code>/<code>Dimension</code> and...</i></td>
+    </tr>
+    <tr>
+      <td><code>min_content()</code></td>
+      <td>Generates an <code>MinContent</code> variant</td>
+    </tr>
+      <tr>
+      <td><code>max_content()</code></td>
+      <td>Generates an <code>MinContent</code> variant</td>
+    </tr>
+    <tr>
+      <td rowspan="3"><code>MaxTrackSizingFunction</code></td>
+      <td colspan="2"><i>All helpers from <code>MinTrackSizingFunction</code> and...</i></td>
+    </tr>
+    <tr>
+      <td><code>fit_content(limit:&nbsp;LengthPercentage)</code></td>
+      <td>Generates a <code>FitContent</code> variant with the specified limit.<br />Nest the <code>points</code> or <code>percent</code> helper inside this function to specified the limit.</td>
+    </tr>
+      <tr>
+      <td><code>fr(fraction:&nbsp;f32)</code></td>
+      <td>Generates a <code>Fraction</code> (<code>fr</code>) variant with the specified flex fraction </td>
+    </tr>
+    <tr>
+      <td rowspan="3"><code>NonRepeatingTrackSizingFunction</code></td>
+      <td colspan="2"><i>All helpers from <code>MaxTrackSizingFunction</code> and...</i></td>
+    </tr>
+    <tr>
+      <td><code>minmax(min: MinTrackSizingFunction, max: MaxTrackSizingFunction)</code></td>
+      <td>Equivalent to CSS <code>minmax()</code> function.</td>
+    </tr>
+    <tr>
+      <td><code>flex(fraction:&nbsp;f32)</code></td>
+      <td>Equivalent to CSS <code>minmax(0px, 1fr)</code>. This is likely what you want if you want evenly sized rows/columns.</td>
+    </tr>
+    <tr>
+      <td rowspan="2"><code>TrackSizingFunction</code></td>
+      <td colspan="2"><i>All helpers from <code>NonRepeatingTrackSizingFunction</code> and...</i></td>
+    </tr>
+    <tr>
+      <td><code>repeat(rep: GridTrackRepetition, tracks: Vec&lt;TrackSizingFunction&gt;)</code></td>
+      <td>Equivalent to css <code>repeat()</code> function.</td>
+    </tr>
+    <tr>
+      <td><code>Vec&lt;TrackSizingFunction&gt;</code></td>
+      <td><code>evenly_sized_tracks(count:&nbsp;u16)</code></td>
+      <td>Equivalent to CSS <code>repeat(count, minmax(0px, 1fr)</code></td>
+    </tr>
+    <tr>
+      <td rowspan="3"><code>AvailableSpace</code></td>
+      <td><code>auto()</code></td>
+      <td>Generates an <code>Auto</code> variant</td>
+    </tr>
+    <tr>
+      <td><code>min_content()</code></td>
+      <td>Generates an <code>MinContent</code> variant</td>
+    </tr>
+      <tr>
+      <td><code>max_content()</code></td>
+      <td>Generates an <code>MinContent</code> variant</td>
+    </tr>
+    <tr>
+      <td><code>Size&lt;T&gt;</code></td>
+      <td colspan="2">Any helper that works for <code>T</code> will also work for <code>Size&lt;T&gt;</code> and will set both <code>width</code> and <code>height</code> to that value</td>
+    </tr>
+    <tr>
+      <td><code>Rect&lt;T&gt;</code></td>
+      <td colspan="2">Any helper that works for <code>T</code> will also work for <code>Rect&lt;T&gt;</code> and will set <code>top</code>, <code>left</code>, <code>bottom</code>, and <code>right</code> to that value</td>
+    </tr>
+  </tbody>
+</table>
 
 ### Breaking API changes
 
