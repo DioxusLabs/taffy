@@ -2,6 +2,12 @@
 
 ## 0.3.0
 
+### Highlights
+
+- [CSS Grid algorithm support](#new-feature-css-grid)
+- [Style helper functions](new-feature-style-helpers)
+- [Strict style types](#strict-style-types), [Alignment type merged](##changes-to-alignment-style-types), and [position properties renamed](#position-properties-renamed)
+
 ### New Feature: CSS Grid
 
 We very excited to report that we now have support for CSS Grid layout. This is in addition to the existing Flexbox layout support, and the two modes interoperate. You can set a node to use Grid layout by setting the `display` property to `Display::Grid`.
