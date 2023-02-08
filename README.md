@@ -4,15 +4,34 @@
 [![crates.io](https://img.shields.io/crates/v/taffy.svg)](https://crates.io/crates/taffy)
 [![docs.rs](https://img.shields.io/docsrs/taffy)](https://docs.rs/taffy)
 
-Taffy is a flexible, high-performance, cross-platform UI layout library written in [Rust](https://www.rust-lang.org).
+Taffy is a flexible, high-performance, cross-platform UI layout library written in [Rust](https://www.rust-lang.org). It currently implements the following layout algorithms:
 
-It currently implements the Flexbox and CSS Grid algorithms. Support for other paradigms is planned. For more information on this and other future development plans see the [roadmap issue](https://github.com/DioxusLabs/taffy/issues/345).
+- Flexbox
+- CSS Grid
+
+Support for other paradigms is planned. For more information on this and other future development plans see the [roadmap issue](https://github.com/DioxusLabs/taffy/issues/345).
 
 This crate is a collaborative, cross-team project, and is designed to be used as a dependency for other UI and GUI libraries.
 Right now, it powers:
 
 - [Dioxus](https://dioxuslabs.com/): a React-like library for building fast, portable, and beautiful user interfaces with Rust
 - [Bevy](https://bevyengine.org/): an ergonomic, ECS-first Rust game engine
+
+## Learning Resources
+
+Taffy implements the Flexbox and CSS Grid specifications faithfully, so documentation designed for the web should translate cleanly to Taffy's implementation. For reference documentation on individual style properties we recommend the MDN documentation (for example [this page](https://developer.mozilla.org/en-US/docs/Web/CSS/width) on the `width` property). Such pages can usually be found by searching for "MDN property-name" using a search engine.
+
+If you are interested in guide-level documentation on CSS layout, then we recommend the following resources:
+
+### Flexbox
+
+- [Flexbox Froggy](https://flexboxfroggy.com/). This is an interactive tutorial/game that allows you to learn the essential parts of Flebox in a fun engaging way.
+- [A Complete Guide To Flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) by CSS Tricks. This is detailed guide with illustrations and comphrehensive written explanation of the different Flexbox properties and how they work.
+
+### CSS Grid
+
+- [CSS Grid Garden](https://cssgridgarden.com/). This is an interactive tutorial/game that allows you to learn the essential parts of CSS Grid in a fun engaging way.
+- [A Complete Guide To CSS Grid](https://css-tricks.com/snippets/css/complete-guide-grid/) by CSS Tricks. This is detailed guide with illustrations and comphrehensive written explanation of the different CSS Grid properties and how they work.
 
 ## Usage
 
@@ -73,7 +92,7 @@ assert_eq!(taffy.layout(body_node).unwrap().size.height, 500.0); // This value w
 - Yoga benchmarks were run via the [yoga](https://github.com/bschwind/yoga-rs) crate (Rust bindings)
 - Most popular websites seem to have between 3,000 and 10,000 nodes (although they also require text layout, which neither yoga nor taffy implement).
 
-Note that the table below contains multiple different units (milliseconds vs. microseconds
+Note that the table below contains multiple different units (milliseconds vs. microseconds)
 
 | Benchmark          | Node Count | Depth | Yoga ([ba27f9d]) | Taffy ([71027a8]) |
 | ---                | ---        | ---   | ---              | ---               |
