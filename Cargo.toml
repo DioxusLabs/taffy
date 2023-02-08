@@ -48,11 +48,6 @@ lto = true
 panic = 'abort'
 
 [[bench]]
-name = "generated"
-path = "benches/generated/mod.rs"
-harness = false
-
-[[bench]]
 name = "big_tree_flexbox"
 path = "benches/big_tree_flexbox.rs"
 harness = false
