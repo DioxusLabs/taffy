@@ -288,15 +288,15 @@ A number of performance improvements have landed since taffy 0.1:
 
 #### Benchmarks vs. Taffy 0.1
 
-| Benchmark | Taffy 0.1 | Taffy 0.2 | % change (0.1 -> 0.2) |
-| --- | --- | --- | --- |
-| wide/1_000 nodes (2-level hierarchy) | 3.5458 µs | 4.3571 µs | +23.333% |
-| wide/10_000 nodes (2-level hierarchy) | 36.418 µs | 42.967 µs | +17.357% |
-| wide/100_000 nodes (2-level hierarchy) | 1.8275 ms | 3.9096 ms | +112.26% |
-| deep/4000 nodes (12-level hierarchy)) | 5.1845 s | 15.318 µs | -100.000% |
-| deep/10_000 nodes (14-level hierarchy) | 75.978 s | 40.315 µs | -100.000% |
-| deep/100_000 nodes (17-level hierarchy) | - | 2.7644 ms| - |
-| deep/1_000_000 nodes (20-level hierarchy) | - | 1.2130 s| - |
+| Benchmark                                 | Taffy 0.1 | Taffy 0.2 | % change (0.1 -> 0.2) |
+| ---                                       | ---       | ---       | ---                   |
+| wide/1_000 nodes (2-level hierarchy)      | 699.18 µs | 445.01 µs | -36.279%              |
+| wide/10_000 nodes (2-level hierarchy)     | 8.8244 ms | 7.1313 ms | -16.352%              |
+| wide/100_000 nodes (2-level hierarchy)    | 204.48 ms | 242.93 ms | +18.803%              |
+| deep/4000 nodes (12-level hierarchy))     | 5.2320 s  | 2.7363 ms | -99.947%              |
+| deep/10_000 nodes (14-level hierarchy)    | 75.207 s  | 6.9415 ms | -99.991%              |
+| deep/100_000 nodes (17-level hierarchy)   | -         | 102.72 ms | -                     |
+| deep/1_000_000 nodes (20-level hierarchy) | -         | 799.35 ms | -                     |
 
 (note that the table above contains multiple different units (milliseconds vs. microseconds vs. nanoseconds))
 
