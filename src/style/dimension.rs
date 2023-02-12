@@ -175,7 +175,7 @@ impl Rect<Dimension> {
 }
 
 /// The amount of space available to a node in a given axis
-/// https://www.w3.org/TR/css-sizing-3/#available
+/// <https://www.w3.org/TR/css-sizing-3/#available>
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum AvailableSpace {
     /// The amount of space available is the specified number of pixels
@@ -301,7 +301,7 @@ impl From<Option<f32>> for AvailableSpace {
 }
 
 impl Size<AvailableSpace> {
-    /// Convert Size<AvailableSpace> into Size<Option<f32>>
+    /// Convert `Size<AvailableSpace>` into `Size<Option<f32>>`
     pub fn into_options(self) -> Size<Option<f32>> {
         Size { width: self.width.into_option(), height: self.height.into_option() }
     }

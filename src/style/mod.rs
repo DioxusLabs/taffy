@@ -52,7 +52,7 @@ impl Default for Display {
 /// WARNING: this enum follows the behavior of [CSS's `position` property](https://developer.mozilla.org/en-US/docs/Web/CSS/position),
 /// which can be unintuitive.
 ///
-/// [`PositionType::Relative`] is the default value, in contrast to the default behavior in CSS.
+/// [`Position::Relative`] is the default value, in contrast to the default behavior in CSS.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Position {

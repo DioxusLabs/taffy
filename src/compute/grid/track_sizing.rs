@@ -1,5 +1,5 @@
 //! Implements the track sizing algorithm
-//! https://www.w3.org/TR/css-grid-1/#layout-algorithm
+//! <https://www.w3.org/TR/css-grid-1/#layout-algorithm>
 use super::types::{GridItem, GridTrack, TrackCounts};
 use crate::axis::AbstractAxis;
 use crate::compute::{GenericAlgorithm, LayoutAlgorithm};

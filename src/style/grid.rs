@@ -36,7 +36,7 @@ impl Default for GridAutoFlow {
 
 impl GridAutoFlow {
     /// Whether grid auto placement uses the sparse placement algorithm or the dense placement algorithm
-    /// See: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-flow#values
+    /// See: <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-flow#values>
     pub fn is_dense(&self) -> bool {
         match self {
             Self::Row | Self::Column => false,
@@ -45,7 +45,7 @@ impl GridAutoFlow {
     }
 
     /// Whether grid auto placement fills areas row-wise or column-wise
-    /// See: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-flow#values
+    /// See: <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-flow#values>
     pub fn primary_axis(&self) -> AbsoluteAxis {
         match self {
             Self::Row | Self::RowDense => AbsoluteAxis::Horizontal,
@@ -77,7 +77,7 @@ pub(crate) type OriginZeroGridPlacement = GenericGridPlacement<OriginZeroLine>;
 
 /// A grid line placement specification. Used for grid-[row/column]-[start/end]. Named tracks are not implemented.
 ///
-/// Defaults to [`GridLine::Auto`]
+/// Defaults to `GridPlacement::Auto`
 ///
 /// [Specification](https://www.w3.org/TR/css3-grid-layout/#typedef-grid-row-start-grid-line)
 pub type GridPlacement = GenericGridPlacement<GridLine>;
@@ -236,7 +236,7 @@ impl Default for Line<GridPlacement> {
 ///
 /// Specifies the maximum size of a grid track. A grid track will automatically size between it's minimum and maximum size based
 /// on the size of it's contents, the amount of available space, and the sizing constraint the grid is being size under.
-/// See https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns
+/// See <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns>
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum MaxTrackSizingFunction {
     /// Track maximum size should be a fixed points or percentage value
@@ -251,7 +251,7 @@ pub enum MaxTrackSizingFunction {
     Auto,
     /// The dimension as a fraction of the total available grid space (`fr` units in CSS)
     /// Specified value is the numerator of the fraction. Denominator is the sum of all fraction specified in that grid dimension
-    /// Spec: https://www.w3.org/TR/css3-grid-layout/#fr-unit
+    /// Spec: <https://www.w3.org/TR/css3-grid-layout/#fr-unit>
     Fraction(f32),
 }
 impl TaffyAuto for MaxTrackSizingFunction {
@@ -296,7 +296,7 @@ impl MaxTrackSizingFunction {
 
     /// Returns true if the max track sizing function is `MaxContent`, `FitContent` or `Auto` else false.
     /// "In all cases, treat auto and fit-content() as max-content, except where specified otherwise for fit-content()."
-    /// See: https://www.w3.org/TR/css-grid-1/#algo-terms
+    /// See: <https://www.w3.org/TR/css-grid-1/#algo-terms>
     #[inline(always)]
     pub fn is_max_content_alike(&self) -> bool {
         matches!(self, Self::MaxContent | Self::FitContent(_) | Self::Auto)
@@ -360,7 +360,7 @@ impl MaxTrackSizingFunction {
 ///
 /// Specifies the minimum size of a grid track. A grid track will automatically size between it's minimum and maximum size based
 /// on the size of it's contents, the amount of available space, and the sizing constraint the grid is being size under.
-/// See https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns
+/// See <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns>
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum MinTrackSizingFunction {
     /// Track minimum size should be a fixed points or percentage value
@@ -489,15 +489,15 @@ impl FromFlex for NonRepeatedTrackSizingFunction {
 
 /// The first argument to a repeated track definition. This type represents the type of automatic repetition to perform.
 ///
-/// See https://www.w3.org/TR/css-grid-1/#auto-repeat for an explanation of how auto-repeated track definitions work
+/// See <https://www.w3.org/TR/css-grid-1/#auto-repeat> for an explanation of how auto-repeated track definitions work
 /// and the difference between AutoFit and AutoFill.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum GridTrackRepetition {
     /// Auto-repeating tracks should be generated to fit the container
-    /// See: https://developer.mozilla.org/en-US/docs/Web/CSS/repeat#auto-fill
+    /// See: <https://developer.mozilla.org/en-US/docs/Web/CSS/repeat#auto-fill>
     AutoFill,
     /// Auto-repeating tracks should be generated to fit the container
-    /// See: https://developer.mozilla.org/en-US/docs/Web/CSS/repeat#auto-fit
+    /// See: <https://developer.mozilla.org/en-US/docs/Web/CSS/repeat#auto-fit>
     AutoFit,
     /// The specified tracks should be repeated exacts N times
     Count(u16),
@@ -532,7 +532,7 @@ impl<'a> TryFrom<&'a str> for GridTrackRepetition {
 }
 
 /// The sizing function for a grid track (row/column)
-/// See https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns
+/// See <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns>
 #[derive(Clone, PartialEq, Debug)]
 pub enum TrackSizingFunction {
     /// A single non-repeated track

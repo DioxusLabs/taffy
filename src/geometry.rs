@@ -85,12 +85,12 @@ impl<T> Rect<T> {
         Rect { top: f(self.top), bottom: f(self.bottom), left: f(self.left), right: f(self.right) }
     }
 
-    /// Returns a Line<T> representing the left and right properties of the Rect
+    /// Returns a `Line<T>` representing the left and right properties of the Rect
     pub fn horizontal_components(self) -> Line<T> {
         Line { start: self.left, end: self.right }
     }
 
-    /// Returns a Line<T> containing the top and bottom properties of the Rect
+    /// Returns a `Line<T>` containing the top and bottom properties of the Rect
     pub fn vertical_components(self) -> Line<T> {
         Line { start: self.top, end: self.bottom }
     }

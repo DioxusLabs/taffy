@@ -37,7 +37,7 @@ pub struct Taffy {
     /// The [`NodeData`] for each node stored in this tree
     pub(crate) nodes: SlotMap<Node, NodeData>,
 
-    /// The mapping from the Size<AvailableSpace> (in real units) to Size<f32> (in points) for this node
+    /// Functions/closures that compute the intrinsic size of leaf nodes
     pub(crate) measure_funcs: SparseSecondaryMap<Node, MeasureFunc>,
 
     /// The children of each node
@@ -143,7 +143,7 @@ impl Taffy {
         }
     }
 
-    /// Creates and adds a new unattached leaf node to the tree, and returns the [`NodeId`] of the new node
+    /// Creates and adds a new unattached leaf node to the tree, and returns the [`Node`] of the new node
     pub fn new_leaf(&mut self, layout: Style) -> TaffyResult<Node> {
         let id = self.nodes.insert(NodeData::new(layout));
         let _ = self.children.insert(new_vec_with_capacity(0));
@@ -152,7 +152,7 @@ impl Taffy {
         Ok(id)
     }
 
-    /// Creates and adds a new unattached leaf node to the tree, and returns the [`NodeId`] of the new node
+    /// Creates and adds a new unattached leaf node to the tree, and returns the [`Node`] of the new node
     ///
     /// Creates and adds a new leaf node with a supplied [`MeasureFunc`]
     pub fn new_leaf_with_measure(&mut self, layout: Style, measure: MeasureFunc) -> TaffyResult<Node> {
@@ -182,18 +182,16 @@ impl Taffy {
         Ok(id)
     }
 
-    /// Removes all nodes
-    ///
-    /// All associated [`Id`] will be rendered invalid.
+    /// Drops all nodes in the tree
     pub fn clear(&mut self) {
         self.nodes.clear();
         self.children.clear();
         self.parents.clear();
     }
 
-    /// Remove a specific [`Node`] from the tree
+    /// Remove a specific [`Node`] from the tree and drops it
     ///
-    /// Its [`Id`] is marked as invalid. Returns the id of the node removed.
+    /// Returns the id of the node removed.
     pub fn remove(&mut self, node: Node) -> TaffyResult<Node> {
         if let Some(parent) = self.parents[node] {
             if let Some(children) = self.children.get_mut(parent) {
@@ -309,7 +307,7 @@ impl Taffy {
         Ok(self.children[parent].len())
     }
 
-    /// Returns a list of children that belong to the [`Parent`]
+    /// Returns a list of children that belong to the parent [`Node`]
     pub fn children(&self, parent: Node) -> TaffyResult<Vec<Node>> {
         Ok(self.children[parent].iter().copied().collect::<_>())
     }
