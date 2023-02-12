@@ -333,7 +333,7 @@ pub fn points<Input: Into<f32> + Copy, T: FromPoints>(points: Input) -> T {
 
 /// Trait to create constant points values from plain numbers
 pub trait FromPoints {
-    /// Converts into an Into<f32> into Self
+    /// Converts into an `Into<f32>` into Self
     fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self;
 }
 impl FromPoints for f32 {
@@ -395,7 +395,7 @@ pub fn percent<Input: Into<f32> + Copy, T: FromPercent>(percent: Input) -> T {
 
 /// Trait to create constant percent values from plain numbers
 pub trait FromPercent {
-    /// Converts into an Into<f32> into Self
+    /// Converts into an `Into<f32>` into Self
     fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self;
 }
 impl FromPercent for f32 {
@@ -457,6 +457,6 @@ pub fn fr<Input: Into<f32> + Copy, T: FromFlex>(flex: Input) -> T {
 
 /// Trait to create constant percent values from plain numbers
 pub trait FromFlex {
-    /// Converts into an Into<f32> into Self
+    /// Converts into an `Into<f32>` into Self
     fn from_flex<Input: Into<f32> + Copy>(flex: Input) -> Self;
 }

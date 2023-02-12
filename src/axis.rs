@@ -45,7 +45,7 @@ impl<T: Add> Rect<T> {
 }
 
 /// The CSS abstract axis
-/// https://www.w3.org/TR/css-writing-modes-3/#abstract-axes
+/// <https://www.w3.org/TR/css-writing-modes-3/#abstract-axes>
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum AbstractAxis {
     /// The axis in the inline dimension, i.e. the horizontal axis in horizontal writing modes and the vertical axis in vertical writing modes.
