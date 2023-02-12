@@ -1,43 +1,17 @@
 # Release Notes
 
-## 0.3.0-alpha2 (unreleased)
+## 0.3.0
 
-### Added
+### Highlights
 
-- A new style helper `evenly_sized_tracks(count: u16)` has been added which creates a grid template containing `count` evenly sized tracks (rows or columns)
+- [CSS Grid algorithm support](#new-feature-css-grid)
+- [Style helper functions](#new-feature-style-helpers)
 
-### Changed
+See below for details of breaking changes.
 
-- `experimental_grid` feature named to just `grid`
-- `grid` feature enabled by default
-- `GridPlacement::Line` now stores a `GridLine` newtype wrapper around an `i16` rather than a raw `i16`. If you are using the style helpers then this change will not affect you.
-- *BREAKING:* `Position` is now renamed to `Inset` and is now in line with [CSS inset specs](https://developer.mozilla.org/en-US/docs/Web/CSS/inset)
-- *BREAKING:* `PositionType` is now renamed to `Position` and is now in line with [CSS position specs](https://developer.mozilla.org/en-US/docs/Web/CSS/position)
-- `MaxTrackSizingFunction::Flex` is now called `MaxTrackSizingFunction::Fraction`. The `flex()` helper is now called `fr()`. A new `flex()` helper has been added which create a `minmax(0, Nfr)` track.
+### New Feature: CSS Grid
 
-### Fixes
-
-- Flexbox nodes sized under a min-content constraint now size correctly (#291)
-- Aspect ratio is now applied correctly in many circumstances
-- Absolutely positioned items now apply margins correctly
-- Min/max size are now applied correctly
-- Inset applied incorrectly to relatively positioned flexbox children when both `top` and `bottom` or `left` and `right` were specified (#348)
-
-### Removed
-
-- Removed `top_from_points`, `bot_from_points`, `top_from_percent`, and `bot_from_percent` methods removed from `Rect<Dimension>`. These functions were incredibly specific for an unusual use case, so we would be surprised if anyone was using them. Please use the new style helpers instead.
-- Removed `min_main_size`, `max_main_size`, `min_cross_size`, `max_cross_size`, and `cross_size` methods from `Style`. Use the more general `cross` and `main` methods directly on the `size`, `min_size`, and `max_size` properties instead.
-- Removed `main_margin_start`, `main_margin_end`, `cross_margin_start`, `cross_margin_end` from `Style`. Use the more general `main_start`, `main_end`, `cross_start`, and `cross_end` on the `margin` property instead.
-
-## 0.3.0-alpha1
-
-This is the first in a series of planned alpha releases to allow users of Taffy to try out the new CSS Grid layout mode in advance of a stable release. We hope that by marking this is alpha release we are clearly communicating that this a pre-release and that the implementation is not yet of production quality. But we never-the-less encourage you to try it out. Feedback is welcome, and bug reports for the Grid implementation are being accepted as of this release.
-
-~**Note: CSS Grid support must be enabled using the `experimental_grid` feature. For the time being this feature is not enabled by default.**~ From `0.3.0-alpha2`, the CSS Grid feature is now enabled by default.
-
-### New Feature: CSS Grid (Experimental)
-
-We very excited to report that we have an initial version of the CSS Grid layout available. This is in addition to the existing Flexbox layout support, and the two modes interoperate (although this interaction has not been extensively tested). You can set a node to use Grid layout by setting the `display` property to `Display::Grid`.
+We very excited to report that we now have support for CSS Grid layout. This is in addition to the existing Flexbox layout support, and the two modes interoperate. You can set a node to use Grid layout by setting the `display` property to `Display::Grid`.
 
 #### Learning Resources
 
@@ -87,15 +61,10 @@ And the following Grid style properties are supported on Grid Items (children):
 [`align-self`]: https://developer.mozilla.org/en-US/docs/Web/CSS/align-self
 [`justify-self`]: https://developer.mozilla.org/en-US/docs/Web/CSS/justify-self
 
-The following properties and features are not yet supported, but are planned for the near future:
-
-- Baseline alignment
-- `fit-content()` with a percentage argument.
-- `repeat()` with integer repetition (but users of Taffy can just expand these definition manually)
-
-The following properties and features are not supported, and there are no immediate plans to implement them:
+The following properties and features are not currently supported:
 
 - Subgrids
+- Masonry grid layout
 - Named grid lines
 - Named areas: `grid-template-areas` and `grid-area`
 - `grid-template` or `grid` shorthand
@@ -130,27 +99,104 @@ And that same helper function will work other types like `LengthPercentage` and 
 let size : Size<Dimension> = points(100.0);
 ```
 
-The following functions work for `Dimension`, `LengthPercentageAuto`, `LengthPercentage`, `AvailableSpace` and for Grid track sizing functions
+Available style helpers:
 
-- `points(f32)` - Generates a `Points` variant with the specified value
-- `zero()` - Generates a `Points` variant with the value `0.0`.
-
-The following functions work for `Dimension`, `LengthPercentageAuto`, `LengthPercentage` and for Grid track sizing functions
-
-- `percent(f32)` - Generates a `Percent` value
-- `auto()` - Generates an `Auto` variant
-
-The following functions work for `AvailableSpace` and grid track sizing functions:
-
-- `min_content()` - Generates an `MinContent` variant
-- `max_content()` - Generates an `MaxContent` variant
-
-The following functions currently work only for grid track sizing functions:
-
-- `flex(f32)` - Genrates a `Flex` variant with the specified flex fraction
-- `fit_content(LengthPercentage)` - Generates a `FitContent` variant with the specified limit. Nest `points` or `percent` inside this function to specified the limit.
-- `minmax(MinTrackSizingFunction, MaxTrackSizingFunction)` - Generates a track sizing function with different min and max sizing functions. Nest `points`, `percent`, `auto`, `min_content`, `max_content`, or `flex` to specify the min and max functions.
-- `repeat(GridTrackRepetition, Vec<TrackSizingFunction>)` - Genereate an auto-repeating track definition.
+<table>
+  <thead><tr><th>Type(s)</th><th colspan="2">Helpers that work with that type</th></tr></thead>
+  <tbody>
+    <tr>
+      <td rowspan="3"><code>LengthPercentage</code></td>
+      <td><code>zero()</code></td>
+      <td>Generates a <code>Points</code> variant with the value <code>0.0</code></td>
+    </tr>
+    <tr>
+      <td><code>points(val:&nbsp;f32)</code></td>
+      <td>Generates a <code>Points</code> variant with the specified value</td>
+    </tr>
+    <tr>
+      <td><code>percent(val:&nbsp;f32)</code></td>
+      <td>Generates a <code>Percent</code> variant with the specified value.<br />Note that the scale of 0-1 not 0-100.</td>
+    </tr>
+    <tr>
+      <td rowspan="2"><code>LengthPercentageAuto</code><br /><code>Dimension</code></td>
+      <td colspan="2"><i>All helpers from <code>LengthPercentage</code> and...</i></td>
+    </tr>
+    <tr>
+      <td><code>auto()</code></td>
+      <td>Generates an <code>Auto</code> variant</td>
+    </tr>
+    <tr>
+      <td rowspan="3"><code>MinTrackSizingFunction</code></td>
+      <td colspan="2"><i>All helpers from <code>LengthPercentageAuto</code>/<code>Dimension</code> and...</i></td>
+    </tr>
+    <tr>
+      <td><code>min_content()</code></td>
+      <td>Generates an <code>MinContent</code> variant</td>
+    </tr>
+      <tr>
+      <td><code>max_content()</code></td>
+      <td>Generates an <code>MinContent</code> variant</td>
+    </tr>
+    <tr>
+      <td rowspan="3"><code>MaxTrackSizingFunction</code></td>
+      <td colspan="2"><i>All helpers from <code>MinTrackSizingFunction</code> and...</i></td>
+    </tr>
+    <tr>
+      <td><code>fit_content(limit:&nbsp;LengthPercentage)</code></td>
+      <td>Generates a <code>FitContent</code> variant with the specified limit.<br />Nest the <code>points</code> or <code>percent</code> helper inside this function to specified the limit.</td>
+    </tr>
+      <tr>
+      <td><code>fr(fraction:&nbsp;f32)</code></td>
+      <td>Generates a <code>Fraction</code> (<code>fr</code>) variant with the specified flex fraction </td>
+    </tr>
+    <tr>
+      <td rowspan="3"><code>NonRepeatingTrackSizingFunction</code></td>
+      <td colspan="2"><i>All helpers from <code>MaxTrackSizingFunction</code> and...</i></td>
+    </tr>
+    <tr>
+      <td><code>minmax(min: MinTrackSizingFunction, max: MaxTrackSizingFunction)</code></td>
+      <td>Equivalent to CSS <code>minmax()</code> function.</td>
+    </tr>
+    <tr>
+      <td><code>flex(fraction:&nbsp;f32)</code></td>
+      <td>Equivalent to CSS <code>minmax(0px, 1fr)</code>. This is likely what you want if you want evenly sized rows/columns.</td>
+    </tr>
+    <tr>
+      <td rowspan="2"><code>TrackSizingFunction</code></td>
+      <td colspan="2"><i>All helpers from <code>NonRepeatingTrackSizingFunction</code> and...</i></td>
+    </tr>
+    <tr>
+      <td><code>repeat(rep: GridTrackRepetition, tracks: Vec&lt;TrackSizingFunction&gt;)</code></td>
+      <td>Equivalent to css <code>repeat()</code> function.</td>
+    </tr>
+    <tr>
+      <td><code>Vec&lt;TrackSizingFunction&gt;</code></td>
+      <td><code>evenly_sized_tracks(count:&nbsp;u16)</code></td>
+      <td>Equivalent to CSS <code>repeat(count, minmax(0px, 1fr)</code></td>
+    </tr>
+    <tr>
+      <td rowspan="3"><code>AvailableSpace</code></td>
+      <td><code>auto()</code></td>
+      <td>Generates an <code>Auto</code> variant</td>
+    </tr>
+    <tr>
+      <td><code>min_content()</code></td>
+      <td>Generates an <code>MinContent</code> variant</td>
+    </tr>
+      <tr>
+      <td><code>max_content()</code></td>
+      <td>Generates an <code>MinContent</code> variant</td>
+    </tr>
+    <tr>
+      <td><code>Size&lt;T&gt;</code></td>
+      <td colspan="2">Any helper that works for <code>T</code> will also work for <code>Size&lt;T&gt;</code> and will set both <code>width</code> and <code>height</code> to that value</td>
+    </tr>
+    <tr>
+      <td><code>Rect&lt;T&gt;</code></td>
+      <td colspan="2">Any helper that works for <code>T</code> will also work for <code>Rect&lt;T&gt;</code> and will set <code>top</code>, <code>left</code>, <code>bottom</code>, and <code>right</code> to that value</td>
+    </tr>
+  </tbody>
+</table>
 
 ### Breaking API changes
 
@@ -172,6 +218,11 @@ The following functions currently work only for grid track sizing functions:
   - `LengthPercentageAuto` is currently identical to `Dimension` but will allow us to expand dimension in future to support values like `MinContent`, `MaxContent` and `FitContent`.
 - Some style properties have been updated to use either `LengthPercentage` or `LengthPercentageAuto` instead of `Dimension`. You will need to update your code, but it is recommended that you use the new style helpers (see above) rather than using the new types directly (although you certainly can use them directly if you want to).
 
+#### Position properties renamed
+
+- The `position` property is now renamed to `inset` and is now in line with [CSS inset specs](https://developer.mozilla.org/en-US/docs/Web/CSS/inset)
+- The `position_type` property is now renamed to `position` and is now in line with [CSS position specs](https://developer.mozilla.org/en-US/docs/Web/CSS/position). The `PositionType` enum has been similarly renamed to `Position`.
+
 #### Changes to `LayoutTree`
 
 - Added generic associated type to `LayoutTree` for a `ChildIter`, an iterator on the children of a given node.
@@ -185,7 +236,18 @@ The `AvailableSpace` enum has been moved from the `layout` module to the `style`
 
 ### Fixes
 
+- Flexbox nodes sized under a min-content constraint now size correctly (#291)
+- Aspect ratio is now applied correctly in many circumstances
+- Absolutely positioned items now apply margins correctly
+- Min/max size are now applied correctly
+- Inset applied incorrectly to relatively positioned flexbox children when both `top` and `bottom` or `left` and `right` were specified (#348)
 - Fix case where column-gap style could be used in place of row-gap style (when using a percentage gap with an indefinite container size)
+
+### Removed
+
+- Removed `top_from_points`, `bot_from_points`, `top_from_percent`, and `bot_from_percent` methods removed from `Rect<Dimension>`. These functions were incredibly specific for an unusual use case, so we would be surprised if anyone was using them. Please use the new style helpers instead.
+- Removed `min_main_size`, `max_main_size`, `min_cross_size`, `max_cross_size`, and `cross_size` methods from `Style`. Use the more general `cross` and `main` methods directly on the `size`, `min_size`, and `max_size` properties instead.
+- Removed `main_margin_start`, `main_margin_end`, `cross_margin_start`, `cross_margin_end` from `Style`. Use the more general `main_start`, `main_end`, `cross_start`, and `cross_end` on the `margin` property instead.
 
 ## 0.2.2
 
@@ -226,15 +288,15 @@ A number of performance improvements have landed since taffy 0.1:
 
 #### Benchmarks vs. Taffy 0.1
 
-| Benchmark | Taffy 0.1 | Taffy 0.2 | % change (0.1 -> 0.2) |
-| --- | --- | --- | --- |
-| wide/1_000 nodes (2-level hierarchy) | 3.5458 µs | 4.3571 µs | +23.333% |
-| wide/10_000 nodes (2-level hierarchy) | 36.418 µs | 42.967 µs | +17.357% |
-| wide/100_000 nodes (2-level hierarchy) | 1.8275 ms | 3.9096 ms | +112.26% |
-| deep/4000 nodes (12-level hierarchy)) | 5.1845 s | 15.318 µs | -100.000% |
-| deep/10_000 nodes (14-level hierarchy) | 75.978 s | 40.315 µs | -100.000% |
-| deep/100_000 nodes (17-level hierarchy) | - | 2.7644 ms| - |
-| deep/1_000_000 nodes (20-level hierarchy) | - | 1.2130 s| - |
+| Benchmark                                 | Taffy 0.1 | Taffy 0.2 | % change (0.1 -> 0.2) |
+| ---                                       | ---       | ---       | ---                   |
+| wide/1_000 nodes (2-level hierarchy)      | 699.18 µs | 445.01 µs | -36.279%              |
+| wide/10_000 nodes (2-level hierarchy)     | 8.8244 ms | 7.1313 ms | -16.352%              |
+| wide/100_000 nodes (2-level hierarchy)    | 204.48 ms | 242.93 ms | +18.803%              |
+| deep/4000 nodes (12-level hierarchy))     | 5.2320 s  | 2.7363 ms | -99.947%              |
+| deep/10_000 nodes (14-level hierarchy)    | 75.207 s  | 6.9415 ms | -99.991%              |
+| deep/100_000 nodes (17-level hierarchy)   | -         | 102.72 ms | -                     |
+| deep/1_000_000 nodes (20-level hierarchy) | -         | 799.35 ms | -                     |
 
 (note that the table above contains multiple different units (milliseconds vs. microseconds vs. nanoseconds))
 
