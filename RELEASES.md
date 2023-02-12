@@ -1,5 +1,11 @@
 # Release Notes
 
+## 0.3.1
+
+### Fixes
+
+- The `serde` feature now works when the `grid` feature is enabled
+
 ## 0.3.0
 
 ### Highlights
