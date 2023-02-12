@@ -194,6 +194,14 @@ pub fn compute(
     });
     let styled_based_known_dimensions = known_dimensions.or(min_max_definite_size).or(clamped_style_size);
 
+    // Short-circuit layout if the container's size is fully determined by the container's size and the run mode
+    // is ComputeSize (and thus the container's size is all that we're interested in)
+    if run_mode == RunMode::ComputeSize {
+        if let Size { width: Some(width), height: Some(height) } = styled_based_known_dimensions {
+            return Size { width, height }.into();
+        }
+    }
+
     if styled_based_known_dimensions.both_axis_defined() || !has_min_max_sizes {
         #[cfg(feature = "debug")]
         NODE_LOGGER.log("FLEX: single-pass");
