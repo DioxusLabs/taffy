@@ -10,7 +10,6 @@ use crate::axis::AbstractAxis;
 /// An axis-aligned UI rectangle
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde", serde(default))]
 pub struct Rect<T> {
     /// This can represent either the x-coordinate of the starting edge,
     /// or the amount of padding on the starting side.
@@ -241,7 +240,6 @@ impl<T: Add + Copy> Line<T> {
 /// The width and height of a [`Rect`]
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde", serde(default))]
 pub struct Size<T> {
     /// The x extent of the rectangle
     pub width: T,

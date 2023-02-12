@@ -89,7 +89,6 @@ impl Default for Position {
 /// If the behavior does not match the flexbox layout algorithm on the web, please file a bug!
 #[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde", serde(default))]
 pub struct Style {
     /// What layout strategy should be used?
     pub display: Display,

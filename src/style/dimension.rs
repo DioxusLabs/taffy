@@ -29,16 +29,11 @@ impl FromPercent for LengthPercentage {
         Self::Percent(percent.into())
     }
 }
-impl Default for LengthPercentage {
-    fn default() -> Self {
-        Self::Points(0.0)
-    }
-}
 
 /// A unit of linear measurement
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
-#[derive(Default, Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum LengthPercentageAuto {
     /// Points are abstract absolute units. Users of Taffy may define what they correspond
@@ -47,7 +42,6 @@ pub enum LengthPercentageAuto {
     /// The dimension is stored in percentage relative to the parent item.
     Percent(f32),
     /// The dimension should be automatically computed
-    #[default]
     Auto,
 }
 impl TaffyZero for LengthPercentageAuto {
@@ -93,7 +87,7 @@ impl LengthPercentageAuto {
 /// A unit of linear measurement
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
-#[derive(Default, Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Dimension {
     /// Points are abstract absolute units. Users of Taffy may define what they correspond
@@ -102,7 +96,6 @@ pub enum Dimension {
     /// The dimension is stored in percentage relative to the parent item.
     Percent(f32),
     /// The dimension should be automatically computed
-    #[default]
     Auto,
 }
 impl TaffyZero for Dimension {
