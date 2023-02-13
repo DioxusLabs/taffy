@@ -84,7 +84,7 @@ impl LengthPercentageAuto {
             Self::Length(length) => Some(length),
             Self::Percent(percent) => Some(context * percent),
             Self::Auto => None,
-            Self::MorphormStretch(_) => None,
+            Self::MorphormStretch(_) => Some(0.0),
         }
     }
 
