@@ -277,6 +277,19 @@ pub struct Style {
     /// Defines which column in the grid the item should start and end at
     #[cfg(feature = "grid")]
     pub grid_column: Line<GridPlacement>,
+
+    // Morphorm container properties
+    /// Sets the default spacing *around* the group of all children of a morphorm container
+    #[cfg(feature = "morphorm")]
+    pub child_spacing: Rect<LengthPercentageAuto>,
+
+    // Morphorm child properties
+    /// Sets the minimum margin for child
+    #[cfg(feature = "morphorm")]
+    pub min_margin: Rect<LengthPercentage>,
+    /// Sets the maximum margin for child
+    #[cfg(feature = "morphorm")]
+    pub max_margin: Rect<LengthPercentage>,
 }
 
 impl Style {
@@ -294,7 +307,7 @@ impl Style {
         min_size: Size::auto(),
         max_size: Size::auto(),
         aspect_ratio: None,
-        #[cfg(any(feature = "flexbox", feature = "grid"))]
+        #[cfg(any(feature = "flexbox", feature = "grid", feature = "morphorm"))]
         gap: Size::zero(),
         // Aligment
         #[cfg(any(feature = "flexbox", feature = "grid"))]
@@ -310,9 +323,9 @@ impl Style {
         #[cfg(any(feature = "flexbox", feature = "grid"))]
         justify_content: None,
         // Flexbox
-        #[cfg(feature = "flexbox")]
+        #[cfg(any(feature = "flexbox", feature = "morphorm"))]
         flex_direction: FlexDirection::Row,
-        #[cfg(feature = "flexbox")]
+        #[cfg(any(feature = "flexbox", feature = "morphorm"))]
         flex_wrap: FlexWrap::NoWrap,
         #[cfg(feature = "flexbox")]
         flex_grow: 0.0,
@@ -335,6 +348,18 @@ impl Style {
         grid_row: Line { start: GridPlacement::Auto, end: GridPlacement::Auto },
         #[cfg(feature = "grid")]
         grid_column: Line { start: GridPlacement::Auto, end: GridPlacement::Auto },
+
+        #[cfg(feature = "morphorm")]
+        child_spacing: Rect::zero(),
+        #[cfg(feature = "morphorm")]
+        min_margin: Rect::zero(),
+        #[cfg(feature = "morphorm")]
+        max_margin: Rect {
+            left: LengthPercentage::Length(f32::INFINITY),
+            right: LengthPercentage::Length(f32::INFINITY),
+            top: LengthPercentage::Length(f32::INFINITY),
+            bottom: LengthPercentage::Length(f32::INFINITY),
+        },
     };
 }
 
@@ -353,6 +378,7 @@ mod tests {
     fn defaults_match() {
         #[cfg(feature = "grid")]
         use super::GridPlacement;
+        use super::LengthPercentage;
 
         let old_defaults = Style {
             display: Default::default(),
@@ -390,6 +416,7 @@ mod tests {
             min_size: Size::auto(),
             max_size: Size::auto(),
             aspect_ratio: Default::default(),
+
             #[cfg(feature = "grid")]
             grid_template_rows: Default::default(),
             #[cfg(feature = "grid")]
@@ -404,6 +431,18 @@ mod tests {
             grid_row: Line { start: GridPlacement::Auto, end: GridPlacement::Auto },
             #[cfg(feature = "grid")]
             grid_column: Line { start: GridPlacement::Auto, end: GridPlacement::Auto },
+
+            #[cfg(feature = "morphorm")]
+            child_spacing: Rect::zero(),
+            #[cfg(feature = "morphorm")]
+            min_margin: Rect::zero(),
+            #[cfg(feature = "morphorm")]
+            max_margin: Rect {
+                left: LengthPercentage::Length(f32::INFINITY),
+                right: LengthPercentage::Length(f32::INFINITY),
+                top: LengthPercentage::Length(f32::INFINITY),
+                bottom: LengthPercentage::Length(f32::INFINITY),
+            },
         };
 
         assert_eq!(Style::DEFAULT, Style::default());
@@ -474,6 +513,6 @@ mod tests {
         assert_type_size::<Line<GridPlacement>>(8);
 
         // Overall
-        assert_type_size::<Style>(352);
+        assert_type_size::<Style>(448);
     }
 }
