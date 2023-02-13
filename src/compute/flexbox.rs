@@ -1,6 +1,4 @@
 //! Computes the [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) layout algorithm on [`Taffy`](crate::Taffy) according to the [spec](https://www.w3.org/TR/css-flexbox-1/)
-use core::f32;
-
 use crate::compute::common::alignment::compute_alignment_offset;
 use crate::compute::LayoutAlgorithm;
 use crate::geometry::{Line, Point, Rect, Size};
