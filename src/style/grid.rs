@@ -238,6 +238,7 @@ impl Default for Line<GridPlacement> {
 /// on the size of it's contents, the amount of available space, and the sizing constraint the grid is being size under.
 /// See <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns>
 #[derive(Copy, Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum MaxTrackSizingFunction {
     /// Track maximum size should be a fixed points or percentage value
     Fixed(LengthPercentage),
@@ -362,6 +363,7 @@ impl MaxTrackSizingFunction {
 /// on the size of it's contents, the amount of available space, and the sizing constraint the grid is being size under.
 /// See <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns>
 #[derive(Copy, Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum MinTrackSizingFunction {
     /// Track minimum size should be a fixed points or percentage value
     Fixed(LengthPercentage),
@@ -492,6 +494,7 @@ impl FromFlex for NonRepeatedTrackSizingFunction {
 /// See <https://www.w3.org/TR/css-grid-1/#auto-repeat> for an explanation of how auto-repeated track definitions work
 /// and the difference between AutoFit and AutoFill.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum GridTrackRepetition {
     /// Auto-repeating tracks should be generated to fit the container
     /// See: <https://developer.mozilla.org/en-US/docs/Web/CSS/repeat#auto-fill>
@@ -534,6 +537,7 @@ impl<'a> TryFrom<&'a str> for GridTrackRepetition {
 /// The sizing function for a grid track (row/column)
 /// See <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns>
 #[derive(Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum TrackSizingFunction {
     /// A single non-repeated track
     Single(NonRepeatedTrackSizingFunction),

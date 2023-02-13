@@ -13,6 +13,7 @@ use core::ops::{Add, AddAssign, Sub};
 ///     (and counts down from there)
 ///   - 0 is not a valid index
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(transparent)]
 pub struct GridLine(i16);
 
