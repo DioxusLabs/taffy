@@ -44,6 +44,9 @@ pub enum Display {
     /// The children will follow the CSS Grid layout algorithm
     #[cfg(feature = "grid")]
     Grid,
+    /// The children will follow the Morphorm layout algorithm
+    #[cfg(feature = "morphorm")]
+    Morphorm,
     /// The children will not be laid out, and will follow absolute positioning
     None,
 }

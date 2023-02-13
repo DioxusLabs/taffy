@@ -14,6 +14,9 @@ pub(crate) mod flexbox;
 #[cfg(feature = "grid")]
 pub(crate) mod grid;
 
+#[cfg(feature = "morphorm")]
+pub(crate) mod morphorm;
+
 use crate::geometry::{Line, Size};
 use crate::style::AvailableSpace;
 use crate::tree::{Layout, LayoutTree, NodeId, SizeBaselinesAndMargins, SizingMode};
@@ -26,6 +29,9 @@ pub use self::flexbox::FlexboxAlgorithm;
 
 #[cfg(feature = "grid")]
 pub use self::grid::CssGridAlgorithm;
+
+#[cfg(feature = "morphorm")]
+pub use self::morphorm::MorphormAlgorithm;
 
 #[cfg(feature = "taffy_tree")]
 pub(crate) mod taffy_tree;
