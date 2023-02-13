@@ -46,11 +46,16 @@ pub struct ChildNode {
     node: NodeId,
     // Whether the child is in flow or not
     is_in_flow: bool,
+    is_first: bool,
+    is_last: bool,
     // The index of the node.
     index: usize,
 
     style: Style,
 
+    size: Size<f32>,
+
+    spacing: Rect<f32>,
 
     // // The stretch factor of the node.
     // stretch_factor: Size<f32>,
@@ -91,33 +96,16 @@ pub fn compute(
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
 ) -> SizeBaselinesAndMargins {
-
     // TODO: Min/Max constraints for space and size
 
     // The layout type of the node. Determines the main and cross axes of the children.
-    let style = tree.style(node).clone();
-    // let layout_type = style.flex_direction;
-    let is_row = style.flex_direction.is_row();
+    let container_style = tree.style(node).clone();
+    let dir = container_style.flex_direction;
+    let is_row = dir.is_row();
 
-    // // The desired main-axis and cross-axis sizes of the node.
-    // let main = node.main(store, parent_layout_type);
-    // let cross = node.cross(store, parent_layout_type);
-
-    // // Compute main-axis size.
-    // let mut computed_main = match main {
-    //     Pixels(val) => val,
-
-    //     Percentage(val) => (parent_main * (val / 100.0)).round(),
-
-    //     Stretch(_) => parent_main,
-
-    //     Auto => 0.0,
-    // };
-
-    let min_size = style.min_size.maybe_resolve(parent_size);
-    let max_size = style.max_size.maybe_resolve(parent_size);
-    let clamped_style_size =
-        style.size.maybe_resolve(parent_size).maybe_clamp(min_size, max_size);
+    let min_size = container_style.min_size.maybe_resolve(parent_size);
+    let max_size = container_style.max_size.maybe_resolve(parent_size);
+    let clamped_style_size = container_style.size.maybe_resolve(parent_size).maybe_clamp(min_size, max_size);
 
     // If both min and max in a given axis are set and max <= min then this determines the size in that axis
     let min_max_definite_size = min_size.zip_map(max_size, |min, max| match (min, max) {
@@ -134,42 +122,107 @@ pub fn compute(
         }
     }
 
-
-
-
-    let in_flow_children =  tree.children(node)
+    let in_flow_children: Vec<ChildNode> = tree
+        .children(node)
         .map(|child| (child, tree.style(*child)))
         .filter(|(_, style)| style.position != Position::Absolute)
         .filter(|(_, style)| style.display != Display::None)
         .enumerate()
         .map(|(index, (child, child_style))| {
-
-          let child_min_size = child_style.min_size.maybe_resolve(parent_size);
-          let max_size = style.max_size.maybe_resolve(parent_size);
-          let clamped_style_size =
-              style.size.maybe_resolve(parent_size).maybe_clamp(min_size, max_size);
-
-          // If both min and max in a given axis are set and max <= min then this determines the size in that axis
-          let min_max_definite_size = min_size.zip_map(max_size, |min, max| match (min, max) {
-              (Some(min), Some(max)) if max <= min => Some(min),
-              _ => None,
-          });
-          let styled_based_known_dimensions = min_max_definite_size.or(clamped_style_size);
-
-          let content_size = if child_style.size.width == Dimension::Auto || child_style.size.height == Dimension::Auto {
-            tree.measure_child_size(node, known_dimensions, parent_size, available_space, SizingMode::InherentSize, Line::NONE)
-          } else {
-            Size::zero()
-          };
-
-          ChildNode {
-            node,
-            is_in_flow: child_style.position != Position::Absolute
-            index,
-            style: child_style.clone(),
-          }
+            ChildNode {
+                node,
+                is_first: false, // Set later
+                is_last: false, // Set later
+                is_in_flow: child_style.position != Position::Absolute,
+                index,
+                style: child_style.clone(),
+                size: Size::zero(), // Set later
+                spacing: Rect::zero(), // Set later
+            }
         })
         .collect();
+
+    // Set is_first and is_last properties on the first and last children
+    let in_flow_child_count = in_flow_children.len();
+    in_flow_children[0].is_first = true;
+    in_flow_children[in_flow_children.len() - 1].is_last = true;
+
+
+    // Compute size and spacing for each child
+    let space_around = container_style.spacing_around.resolve_or_zero(parent_size);
+    let space_between = container_style.spacing_between.resolve_or_zero(parent_size);
+    for child in in_flow_children.iter_mut() {
+      let child_min_size = child.style.min_size.maybe_resolve(parent_size);
+      let max_size = child.style.max_size.maybe_resolve(parent_size);
+      let clamped_style_size = child.style.size.maybe_resolve(parent_size).maybe_clamp(min_size, max_size);
+
+      // If both min and max in a given axis are set and max <= min then this determines the size in that axis
+      let min_max_definite_size = min_size.zip_map(max_size, |min, max| match (min, max) {
+          (Some(min), Some(max)) if max <= min => Some(min),
+          _ => None,
+      });
+      let child_style_based_known_dimensions = min_max_definite_size.or(clamped_style_size);
+
+      // Compute content size if size is not already known and the item has an "auto" dimension
+      let has_auto_dimension =
+          child.style.size.width == Dimension::Auto || child.style.size.height == Dimension::Auto;
+      let content_size: Size<Option<f32>> =
+          if !child_style_based_known_dimensions.both_axis_defined() && has_auto_dimension {
+              GenericAlgorithm::measure_size(
+                  tree,
+                  node,
+                  known_dimensions,
+                  parent_size,
+                  available_space,
+                  SizingMode::InherentSize,
+              )
+              .map(Some)
+          } else {
+              child_style_based_known_dimensions
+          };
+
+      child.size = child_style_based_known_dimensions.or(content_size).unwrap_or(Size::zero()).maybe_clamp(min_size, max_size);
+
+      let default_spacing = {
+        let mut space = space_around;
+        if !child.is_first {
+          space.set_main_start(dir, space_between.main(dir));
+        }
+        if !child.is_last {
+          space.set_main_end(dir, 0.0);
+        }
+      };
+
+      let resolved_margin = child.style.margin.map(|m| m.resolve_to_option(0.0));
+      let outer_spacing = resolved_margin.unwrap_or(space_around);
+
+    }
+
+    // Compute space used by the content size of each no in each axis
+    let main_axis_used_space: f32 =
+        in_flow_children.iter().map(|child| child.size.main(dir) + child.spacing.main_axis_sum(dir)).sum();
+    let cross_axis_used_space: f32 = in_flow_children
+        .iter()
+        .map(|child| child.size.cross(dir) + child.spacing.cross_axis_sum(dir))
+        .max_by(|a, b| a.total_cmp(b))
+        .unwrap_or(0.0);
+    let used_space = {
+        let mut space = Size::zero();
+        space.set_main(dir, main_axis_used_space);
+        space.set_cross(dir, cross_axis_used_space);
+        space
+    };
+    let container_size = styled_based_known_dimensions.unwrap_or(used_space);
+
+    // Return early if we're only computing container size
+    if run_mode == RunMode::ComputeSize {
+        return container_size.into();
+    }
+
+    let free_space = container_size - used_space;
+    
+    // TODO perform stretch sizing
+    // TODO position nodes
 
 
     // Sum of all non-flexible space and size on the main-axis of the node.
@@ -504,20 +557,20 @@ pub fn compute(
             child.cross_remainder = desired_cross - actual_cross;
 
             // if cross == Units::Auto && num_children != 0 {
-                let size = layout(child.node, layout_type, parent_main, actual_cross, cache, tree, store);
+            let size = layout(child.node, layout_type, parent_main, actual_cross, cache, tree, store);
             //     println!("size: {:?}", size);
             // } else {
-                // At this stage stretch nodes on the cross-axis can only be the determined size so we can set it directly
-                // in the cache without needing to call layout again.
-                // match layout_type {
-                //     LayoutType::Row => {
-                //         cache.set_height(child.node.key(), actual_cross);
-                //     }
+            // At this stage stretch nodes on the cross-axis can only be the determined size so we can set it directly
+            // in the cache without needing to call layout again.
+            // match layout_type {
+            //     LayoutType::Row => {
+            //         cache.set_height(child.node.key(), actual_cross);
+            //     }
 
-                //     LayoutType::Column => {
-                //         cache.set_width(child.node.key(), actual_cross);
-                //     }
-                // }
+            //     LayoutType::Column => {
+            //         cache.set_width(child.node.key(), actual_cross);
+            //     }
+            // }
             // }
         }
 
@@ -609,5 +662,4 @@ pub fn compute(
 
     // Return the computed size, propagating it back up the tree.
     Size { main: computed_main, cross: computed_cross }.into()
-
 }
