@@ -1,7 +1,7 @@
 //! The baseline requirements of any UI Tree so Taffy can efficiently calculate the layout
 
 use crate::{
-    layout::{Cache, Layout, SizeAndBaselines, SizingMode},
+    layout::{Layout, SizeAndBaselines, SizingMode},
     prelude::*,
 };
 use core::fmt::Debug;
@@ -27,9 +27,6 @@ pub trait LayoutTree {
 
     /// Modify the node's output layout
     fn layout_mut(&mut self) -> &mut Layout;
-
-    /// Get a cache entry for this Node by index
-    fn cache_mut(&mut self, index: usize) -> &mut Option<Cache>;
 
     // Child methods
 

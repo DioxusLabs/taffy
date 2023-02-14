@@ -9,7 +9,7 @@ pub type Node = slotmap::DefaultKey;
 use crate::compute::{self, recursively_perform_hidden_layout};
 use crate::error::{TaffyError, TaffyResult};
 use crate::geometry::Size;
-use crate::layout::{Cache, Layout};
+use crate::layout::{Layout};
 use crate::style::{AvailableSpace, Style};
 #[cfg(any(feature = "std", feature = "alloc"))]
 use crate::sys::Box;
@@ -135,11 +135,6 @@ impl<'tree> LayoutTree for TaffyNodeRef<'tree> {
     #[inline(always)]
     fn child_layout_mut(&mut self, child_node_id: Node) -> &mut Layout {
         &mut self.tree.nodes[child_node_id].layout
-    }
-
-    #[inline(always)]
-    fn cache_mut(&mut self, index: usize) -> &mut Option<Cache> {
-        &mut self.node_data_mut().size_cache[index]
     }
 
     #[inline(always)]
