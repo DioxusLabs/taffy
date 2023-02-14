@@ -18,10 +18,10 @@ pub use self::grid::{
 };
 use crate::geometry::{Rect, Size};
 
-#[cfg(feature = "serde")]
-use crate::style_helpers;
 #[cfg(feature = "grid")]
 use crate::geometry::Line;
+#[cfg(feature = "serde")]
+use crate::style_helpers;
 #[cfg(feature = "grid")]
 use crate::sys::GridTrackVec;
 

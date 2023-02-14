@@ -1,6 +1,6 @@
 //! Helper functions which it make it easier to create instances of types in the `style` and `geometry` modules.
 use crate::{
-    geometry::{MinMax, Point, Line, Rect, Size},
+    geometry::{Line, MinMax, Point, Rect, Size},
     style::LengthPercentage,
 };
 use core::fmt::Debug;
