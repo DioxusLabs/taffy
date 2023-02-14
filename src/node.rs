@@ -9,7 +9,7 @@ pub type Node = slotmap::DefaultKey;
 use crate::compute::{self, recursively_perform_hidden_layout};
 use crate::error::{TaffyError, TaffyResult};
 use crate::geometry::Size;
-use crate::layout::{Layout};
+use crate::layout::Layout;
 use crate::style::{AvailableSpace, Style};
 #[cfg(any(feature = "std", feature = "alloc"))]
 use crate::sys::Box;
@@ -418,7 +418,7 @@ impl Taffy {
 
     /// Indicates whether the layout of this node (and its children) need to be recomputed
     pub fn dirty(&self, node: Node) -> TaffyResult<bool> {
-        Ok(self.nodes[node].size_cache.iter().all(|entry| entry.is_none()))
+        Ok(self.nodes[node].cache.is_empty())
     }
 
     /// Updates the stored layout of the provided `node` and its children

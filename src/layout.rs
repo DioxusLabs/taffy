@@ -1,7 +1,6 @@
-//! Final and cached data structures that represent the high-level UI layout
+//! Types that are either inputs to or outputs from the layout computation
 
 use crate::geometry::{Point, Size};
-use crate::style::AvailableSpace;
 use crate::sys::round;
 
 /// Whether we are performing a full layout, or we merely need to size the node
@@ -84,18 +83,4 @@ impl Layout {
         self.size.width = round(self.size.width);
         self.size.height = round(self.size.height);
     }
-}
-
-/// Cached intermediate layout results
-#[derive(Debug, Clone, Copy)]
-pub struct Cache {
-    /// The initial cached size of the node itself
-    pub(crate) known_dimensions: Size<Option<f32>>,
-    /// The initial cached size of the parent's node
-    pub(crate) available_space: Size<AvailableSpace>,
-    /// Whether or not layout should be recomputed
-    pub(crate) run_mode: RunMode,
-
-    /// The cached size and baselines of the item
-    pub(crate) cached_size_and_baselines: SizeAndBaselines,
 }
