@@ -1,5 +1,11 @@
 # Release Notes
 
+## 0.3.2
+
+### Fixes
+
+- Allow partial nested values to be deserialized into a `Style` using the `serde` feature.
+
 ## 0.3.1
 
 ### Fixes
