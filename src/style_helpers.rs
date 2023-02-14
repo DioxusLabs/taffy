@@ -1,6 +1,6 @@
 //! Helper functions which it make it easier to create instances of types in the `style` and `geometry` modules.
 use crate::{
-    geometry::{MinMax, Point, Rect, Size},
+    geometry::{Line, MinMax, Point, Rect, Size},
     style::LengthPercentage,
 };
 use core::fmt::Debug;
@@ -119,6 +119,16 @@ impl<T: TaffyZero> Point<T> {
         zero::<Self>()
     }
 }
+impl<T: TaffyZero> TaffyZero for Line<T> {
+    const ZERO: Line<T> = Line { start: T::ZERO, end: T::ZERO };
+}
+impl<T: TaffyZero> Line<T> {
+    /// Returns a Line where both the start and end values are the zero value of the contained type
+    /// (e.g. 0.0, Some(0.0), or Dimension::Points(0.0))
+    pub const fn zero() -> Self {
+        zero::<Self>()
+    }
+}
 impl<T: TaffyZero> TaffyZero for Size<T> {
     const ZERO: Size<T> = Size { width: T::ZERO, height: T::ZERO };
 }
@@ -163,6 +173,16 @@ impl<T: TaffyAuto> Point<T> {
         auto::<Self>()
     }
 }
+impl<T: TaffyAuto> TaffyAuto for Line<T> {
+    const AUTO: Line<T> = Line { start: T::AUTO, end: T::AUTO };
+}
+impl<T: TaffyAuto> Line<T> {
+    /// Returns a Line where both the start and end values are the auto value of the contained type
+    /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
+    pub const fn auto() -> Self {
+        auto::<Self>()
+    }
+}
 impl<T: TaffyAuto> TaffyAuto for Size<T> {
     const AUTO: Size<T> = Size { width: T::AUTO, height: T::AUTO };
 }
@@ -202,6 +222,16 @@ impl<T: TaffyMinContent> TaffyMinContent for Point<T> {
 }
 impl<T: TaffyMinContent> Point<T> {
     /// Returns a Point where both the x and y values are the min_content value of the contained type
+    /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
+    pub const fn min_content() -> Self {
+        min_content::<Self>()
+    }
+}
+impl<T: TaffyMinContent> TaffyMinContent for Line<T> {
+    const MIN_CONTENT: Line<T> = Line { start: T::MIN_CONTENT, end: T::MIN_CONTENT };
+}
+impl<T: TaffyMinContent> Line<T> {
+    /// Returns a Line where both the start and end values are the min_content value of the contained type
     /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
     pub const fn min_content() -> Self {
         min_content::<Self>()
@@ -252,6 +282,16 @@ impl<T: TaffyMaxContent> Point<T> {
         max_content::<Self>()
     }
 }
+impl<T: TaffyMaxContent> TaffyMaxContent for Line<T> {
+    const MAX_CONTENT: Line<T> = Line { start: T::MAX_CONTENT, end: T::MAX_CONTENT };
+}
+impl<T: TaffyMaxContent> Line<T> {
+    /// Returns a Line where both the start and end values are the max_content value of the contained type
+    /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
+    pub const fn max_content() -> Self {
+        max_content::<Self>()
+    }
+}
 impl<T: TaffyMaxContent> TaffyMaxContent for Size<T> {
     const MAX_CONTENT: Size<T> = Size { width: T::MAX_CONTENT, height: T::MAX_CONTENT };
 }
@@ -291,6 +331,18 @@ impl<T: TaffyFitContent> TaffyFitContent for Point<T> {
 }
 impl<T: TaffyFitContent> Point<T> {
     /// Returns a Point where both the x and y values are the constant points value of the contained type
+    /// (e.g. 2.1, Some(2.1), or Dimension::Points(2.1))
+    pub fn fit_content(argument: LengthPercentage) -> Self {
+        fit_content(argument)
+    }
+}
+impl<T: TaffyFitContent> TaffyFitContent for Line<T> {
+    fn fit_content(argument: LengthPercentage) -> Self {
+        Line { start: T::fit_content(argument), end: T::fit_content(argument) }
+    }
+}
+impl<T: TaffyFitContent> Line<T> {
+    /// Returns a Line where both the start and end values are the constant points value of the contained type
     /// (e.g. 2.1, Some(2.1), or Dimension::Points(2.1))
     pub fn fit_content(argument: LengthPercentage) -> Self {
         fit_content(argument)
@@ -358,6 +410,18 @@ impl<T: FromPoints> Point<T> {
         points::<Input, Self>(points_value)
     }
 }
+impl<T: FromPoints> FromPoints for Line<T> {
+    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
+        Line { start: T::from_points(points.into()), end: T::from_points(points.into()) }
+    }
+}
+impl<T: FromPoints> Line<T> {
+    /// Returns a Line where both the start and end values are the constant points value of the contained type
+    /// (e.g. 2.1, Some(2.1), or Dimension::Points(2.1))
+    pub fn points<Input: Into<f32> + Copy>(points_value: Input) -> Self {
+        points::<Input, Self>(points_value)
+    }
+}
 impl<T: FromPoints> FromPoints for Size<T> {
     fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
         Size { width: T::from_points(points.into()), height: T::from_points(points.into()) }
@@ -415,6 +479,18 @@ impl<T: FromPercent> FromPercent for Point<T> {
 }
 impl<T: FromPercent> Point<T> {
     /// Returns a Point where both the x and y values are the constant percent value of the contained type
+    /// (e.g. 2.1, Some(2.1), or Dimension::Points(2.1))
+    pub fn percent<Input: Into<f32> + Copy>(percent_value: Input) -> Self {
+        percent::<Input, Self>(percent_value)
+    }
+}
+impl<T: FromPercent> FromPercent for Line<T> {
+    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
+        Line { start: T::from_percent(percent.into()), end: T::from_percent(percent.into()) }
+    }
+}
+impl<T: FromPercent> Line<T> {
+    /// Returns a Line where both the start and end values are the constant percent value of the contained type
     /// (e.g. 2.1, Some(2.1), or Dimension::Points(2.1))
     pub fn percent<Input: Into<f32> + Copy>(percent_value: Input) -> Self {
         percent::<Input, Self>(percent_value)

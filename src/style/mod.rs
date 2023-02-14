@@ -20,6 +20,8 @@ use crate::geometry::{Rect, Size};
 
 #[cfg(feature = "grid")]
 use crate::geometry::Line;
+#[cfg(feature = "serde")]
+use crate::style_helpers;
 #[cfg(feature = "grid")]
 use crate::sys::GridTrackVec;
 
@@ -98,14 +100,18 @@ pub struct Style {
     /// What should the `position` value of this struct use as a base offset?
     pub position: Position,
     /// How should the position of this element be tweaked relative to the layout defined?
+    #[cfg_attr(feature = "serde", serde(default = "style_helpers::auto"))]
     pub inset: Rect<LengthPercentageAuto>,
 
     // Size properies
     /// Sets the initial size of the item
+    #[cfg_attr(feature = "serde", serde(default = "style_helpers::auto"))]
     pub size: Size<Dimension>,
     /// Controls the minimum size of the item
+    #[cfg_attr(feature = "serde", serde(default = "style_helpers::auto"))]
     pub min_size: Size<Dimension>,
     /// Controls the maximum size of the item
+    #[cfg_attr(feature = "serde", serde(default = "style_helpers::auto"))]
     pub max_size: Size<Dimension>,
     /// Sets the preferred aspect ratio for the item
     ///
@@ -114,10 +120,13 @@ pub struct Style {
 
     // Spacing Properties
     /// How large should the margin be on each side?
+    #[cfg_attr(feature = "serde", serde(default = "style_helpers::zero"))]
     pub margin: Rect<LengthPercentageAuto>,
     /// How large should the padding be on each side?
+    #[cfg_attr(feature = "serde", serde(default = "style_helpers::zero"))]
     pub padding: Rect<LengthPercentage>,
     /// How large should the border be on each side?
+    #[cfg_attr(feature = "serde", serde(default = "style_helpers::zero"))]
     pub border: Rect<LengthPercentage>,
 
     // Alignment properties
@@ -137,6 +146,7 @@ pub struct Style {
     /// How should contained within this item be aligned in the main/inline axis
     pub justify_content: Option<JustifyContent>,
     /// How large should the gaps between items in a grid or flex container be?
+    #[cfg_attr(feature = "serde", serde(default = "style_helpers::zero"))]
     pub gap: Size<LengthPercentage>,
 
     // Flexbox properies
