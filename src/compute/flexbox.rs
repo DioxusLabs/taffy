@@ -14,8 +14,8 @@ use crate::style::{
     LengthPercentageAuto, Position,
 };
 use crate::style::{FlexDirection, Style};
-use crate::sys::{f32_max, new_vec_with_capacity};
 use crate::sys::Vec;
+use crate::sys::{f32_max, new_vec_with_capacity};
 use crate::tree::LayoutTree;
 
 #[cfg(feature = "debug")]
