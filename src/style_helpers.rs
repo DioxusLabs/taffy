@@ -6,12 +6,12 @@ use crate::{
 
 #[cfg(feature = "grid")]
 use crate::{
-    sys::Vec,
     geometry::MinMax,
     style::{
         GridTrackRepetition, MaxTrackSizingFunction, MinTrackSizingFunction, NonRepeatedTrackSizingFunction,
         TrackSizingFunction,
     },
+    sys::Vec,
 };
 #[cfg(feature = "grid")]
 use core::fmt::Debug;
