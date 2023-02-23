@@ -12,17 +12,6 @@ pub(crate) use self::alloc::*;
 #[cfg(all(not(feature = "alloc"), not(feature = "std")))]
 pub(crate) use self::core::*;
 
-/// Returns the largest of two f32 values
-pub(crate) fn f32_max(a: f32, b: f32) -> f32 {
-    core::cmp::max_by(a, b, |a, b| a.total_cmp(b))
-}
-
-/// Returns the smallest of two f32 values
-#[cfg(feature = "grid")]
-pub(crate) fn f32_min(a: f32, b: f32) -> f32 {
-    core::cmp::min_by(a, b, |a, b| a.total_cmp(b))
-}
-
 /// For when `std` is enabled
 #[cfg(feature = "std")]
 mod std {
@@ -53,12 +42,24 @@ mod std {
     pub(crate) fn abs(value: f32) -> f32 {
         value.abs()
     }
+
+    /// Returns the largest of two f32 values
+    pub(crate) fn f32_max(a: f32, b: f32) -> f32 {
+        std::cmp::max_by(a, b, |a, b| a.total_cmp(&b))
+    }
+
+    /// Returns the smallest of two f32 values
+    #[cfg(feature = "grid")]
+    pub(crate) fn f32_min(a: f32, b: f32) -> f32 {
+        std::cmp::min_by(a, b, |a, b| a.total_cmp(&b))
+    }
 }
 
 /// For when `alloc` but not `std` is enabled
 #[cfg(all(feature = "alloc", not(feature = "std")))]
 mod alloc {
     extern crate alloc;
+    use core::cmp::Ordering;
 
     /// An allocation-backend agnostic `Box` type
     pub(crate) type Box<A> = alloc::boxed::Box<A>;
@@ -86,11 +87,30 @@ mod alloc {
     pub(crate) fn abs(value: f32) -> f32 {
         num_traits::float::FloatCore::abs(value)
     }
+
+    /// Returns the largest of two f32 values
+    pub(crate) fn f32_max(a: f32, b: f32) -> f32 {
+        match a.total_cmp(&b) {
+            Ordering::Greater | Ordering::Equal => a,
+            Ordering::Less => b,
+        }
+    }
+
+    /// Returns the smallest of two f32 values
+    #[cfg(feature = "grid")]
+    pub(crate) fn f32_min(a: f32, b: f32) -> f32 {
+        match a.total_cmp(&b) {
+            Ordering::Less => a,
+            Ordering::Greater | Ordering::Equal => b,
+        }
+    }
 }
 
 /// For when neither `alloc` nor `std` is enabled
 #[cfg(all(not(feature = "alloc"), not(feature = "std")))]
 mod core {
+    use core::cmp::Ordering;
+
     /// The maximum number of nodes in the tree
     pub const MAX_NODE_COUNT: usize = 256;
     /// The maximum number of children of any given node
@@ -125,5 +145,22 @@ mod core {
     #[must_use]
     pub(crate) fn abs(value: f32) -> f32 {
         num_traits::float::FloatCore::abs(value)
+    }
+
+    /// Returns the largest of two f32 values
+    pub(crate) fn f32_max(a: f32, b: f32) -> f32 {
+        match a.total_cmp(&b) {
+            Ordering::Greater | Ordering::Equal => a,
+            Ordering::Less => b,
+        }
+    }
+
+    /// Returns the smallest of two f32 values
+    #[cfg(feature = "grid")]
+    pub(crate) fn f32_min(a: f32, b: f32) -> f32 {
+        match a.total_cmp(&b) {
+            Ordering::Less => a,
+            Ordering::Greater | Ordering::Equal => b,
+        }
     }
 }
