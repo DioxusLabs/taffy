@@ -1,15 +1,19 @@
 //! Helper functions which it make it easier to create instances of types in the `style` and `geometry` modules.
 use crate::{
-    geometry::{Line, MinMax, Point, Rect, Size},
+    geometry::{Line, Point, Rect, Size},
     style::LengthPercentage,
 };
-use core::fmt::Debug;
 
 #[cfg(feature = "grid")]
-use crate::style::{
-    GridTrackRepetition, MaxTrackSizingFunction, MinTrackSizingFunction, NonRepeatedTrackSizingFunction,
-    TrackSizingFunction,
+use crate::{
+    geometry::MinMax,
+    style::{
+        GridTrackRepetition, MaxTrackSizingFunction, MinTrackSizingFunction, NonRepeatedTrackSizingFunction,
+        TrackSizingFunction,
+    },
 };
+#[cfg(feature = "grid")]
+use core::fmt::Debug;
 
 /// Returns an auto-repeated track definition
 #[cfg(feature = "grid")]
@@ -527,6 +531,7 @@ impl<T: FromPercent> Rect<T> {
 }
 
 /// Create a `Fraction` track sizing function (`fr` in CSS)
+#[cfg(feature = "grid")]
 pub fn fr<Input: Into<f32> + Copy, T: FromFlex>(flex: Input) -> T {
     T::from_flex(flex)
 }

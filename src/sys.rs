@@ -13,7 +13,6 @@ pub(crate) use self::alloc::*;
 pub(crate) use self::core::*;
 
 /// Returns the largest of two f32 values
-#[cfg(feature = "grid")]
 pub(crate) fn f32_max(a: f32, b: f32) -> f32 {
     core::cmp::max_by(a, b, |a, b| a.total_cmp(b))
 }
