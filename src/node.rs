@@ -58,7 +58,7 @@ impl Default for Taffy {
 }
 
 impl LayoutTree for Taffy {
-    type ChildIter<'a> = std::slice::Iter<'a, DefaultKey>;
+    type ChildIter<'a> = core::slice::Iter<'a, DefaultKey>;
 
     fn children(&self, node: Node) -> Self::ChildIter<'_> {
         self.children[node].iter()
