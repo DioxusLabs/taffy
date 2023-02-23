@@ -1,9 +1,9 @@
 //! Helper functions which it make it easier to create instances of types in the `style` and `geometry` modules.
+use crate::sys::Vec;
 use crate::{
     geometry::{Line, Point, Rect, Size},
     style::LengthPercentage,
 };
-use crate::sys::Vec;
 
 #[cfg(feature = "grid")]
 use crate::{
