@@ -14,8 +14,8 @@ use crate::style::{
     LengthPercentageAuto, Position,
 };
 use crate::style::{FlexDirection, Style};
-use crate::sys::f32_max;
 use crate::sys::Vec;
+use crate::sys::{f32_max, new_vec_with_capacity};
 use crate::tree::LayoutTree;
 
 #[cfg(feature = "debug")]
@@ -735,18 +735,22 @@ fn collect_flex_lines<'a>(
     flex_items: &'a mut Vec<FlexItem>,
 ) -> Vec<FlexLine<'a>> {
     if tree.style(node).flex_wrap == FlexWrap::NoWrap {
-        vec![FlexLine { items: flex_items.as_mut_slice(), cross_size: 0.0, offset_cross: 0.0 }]
+        let mut lines = new_vec_with_capacity(1);
+        lines.push(FlexLine { items: flex_items.as_mut_slice(), cross_size: 0.0, offset_cross: 0.0 });
+        lines
     } else {
         match available_space.main(constants.dir) {
             // If we're sizing under a max-content constraint then the flex items will never wrap
             // (at least for now - future extensions to the CSS spec may add provisions for forced wrap points)
             AvailableSpace::MaxContent => {
-                vec![FlexLine { items: flex_items.as_mut_slice(), cross_size: 0.0, offset_cross: 0.0 }]
+                let mut lines = new_vec_with_capacity(1);
+                lines.push(FlexLine { items: flex_items.as_mut_slice(), cross_size: 0.0, offset_cross: 0.0 });
+                lines
             }
             // If flex-wrap is Wrap and we're sizing under a min-content constraint, then we take every possible wrapping opportunity
             // and place each item in it's own line
             AvailableSpace::MinContent => {
-                let mut lines = crate::sys::new_vec_with_capacity(flex_items.len());
+                let mut lines = new_vec_with_capacity(flex_items.len());
                 let mut items = &mut flex_items[..];
                 while !items.is_empty() {
                     let (line_items, rest) = items.split_at_mut(1);
@@ -756,7 +760,7 @@ fn collect_flex_lines<'a>(
                 lines
             }
             AvailableSpace::Definite(main_axis_available_space) => {
-                let mut lines = crate::sys::new_vec_with_capacity(1);
+                let mut lines = new_vec_with_capacity(1);
                 let mut flex_items = &mut flex_items[..];
                 let main_axis_gap = constants.gap.main(constants.dir);
 

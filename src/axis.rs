@@ -75,6 +75,7 @@ pub(crate) struct InBothAbsAxis<T> {
 }
 
 impl<T: Copy> InBothAbsAxis<T> {
+    #[cfg(feature = "grid")]
     /// Get the contained item based on the AbsoluteAxis passed
     pub fn get(&self, axis: AbsoluteAxis) -> T {
         match axis {

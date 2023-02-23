@@ -17,6 +17,7 @@ use crate::sys::round;
 use crate::tree::LayoutTree;
 
 use self::flexbox::FlexboxAlgorithm;
+#[cfg(feature = "grid")]
 use self::grid::CssGridAlgorithm;
 use self::leaf::LeafAlgorithm;
 

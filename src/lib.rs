@@ -19,6 +19,7 @@ extern crate alloc;
 extern crate serde;
 
 pub mod axis;
+#[cfg(feature = "std")]
 #[doc(hidden)]
 pub mod debug;
 pub mod error;
