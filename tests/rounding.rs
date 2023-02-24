@@ -1,7 +1,6 @@
 use taffy::prelude::*;
 
 #[test]
-#[ignore]
 fn rounding_doesnt_leave_gaps() {
     // First create an instance of Taffy
     let mut taffy = Taffy::new();
