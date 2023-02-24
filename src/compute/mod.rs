@@ -388,33 +388,22 @@ fn perform_hidden_layout(tree: &mut impl LayoutTree, node: Node) {
     }
 }
 
-// /// Rounds the calculated [`NodeData`] according to the spec
-// fn round_layout(tree: &mut impl LayoutTree, root: Node) {
-//     let layout = tree.layout_mut(root);
-
-//     layout.location.x = round(layout.location.x);
-//     layout.location.y = round(layout.location.y);
-
-//     layout.size.width = round(layout.size.width);
-//     layout.size.height = round(layout.size.height);
-
-//     // Satisfy the borrow checker here by re-indexing to shorten the lifetime to the loop scope
-//     for x in 0..tree.child_count(root) {
-//         let child = tree.child(root, x);
-//         round_layout(tree, child);
-//     }
-// }
-
-/// Rounds the calculated [`NodeData`] according to the spec
+/// Rounds the calculated [`Layout`] to exact pixel values
+/// In order to ensure that no gaps in the layout are introduced we:
+///   - Always round based on the absolute coordinates rather than parent-relative coordinates
+///   - Compute width/height by first rounding the top/bottom/left/right and then computing the difference
+///     rather than rounding the width/height directly
+///
+/// See <https://github.com/facebook/yoga/commit/aa5b296ac78f7a22e1aeaf4891243c6bb76488e2> for more context
 fn round_layout(tree: &mut impl LayoutTree, node: Node, abs_x: f32, abs_y: f32) {
     let layout = tree.layout_mut(node);
     let abs_x = abs_x + layout.location.x;
     let abs_y = abs_y + layout.location.y;
+
     layout.location.x = round(layout.location.x);
     layout.location.y = round(layout.location.y);
-
-    layout.size.width = round(round(abs_x + layout.size.width) - round(abs_x));
-    layout.size.height = round(round(abs_y + layout.size.height) - round(abs_y));
+    layout.size.width = round(abs_x + layout.size.width) - round(abs_x);
+    layout.size.height = round(abs_y + layout.size.height) - round(abs_y);
 
     let child_count = tree.child_count(node);
     for index in 0..child_count {
