@@ -1,5 +1,17 @@
 # Release Notes
 
+## 0.3.3
+
+### Added
+
+- Added `enabled_rounding` and `disable_rounding` methods to the `Taffy` struct which enabled consumers of Taffy to obtain unrounded `f32` values for the computed layouts if they want them. Rounding remains enabled by default.
+
+### Fixes
+
+- Fixed rounding algorithm such that it never leaves gaps between adjacent nodes (#369)
+- Fixed compiling with the `grid` feature disabled (#370)
+- Fixed compiling with the `std` feature disabled
+
 ## 0.3.2
 
 ### Fixes
