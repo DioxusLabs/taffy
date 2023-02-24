@@ -11,9 +11,9 @@ use crate::data::CACHE_SIZE;
 use crate::error::TaffyError;
 use crate::geometry::{Point, Size};
 use crate::layout::{Cache, Layout, RunMode, SizeAndBaselines, SizingMode};
-use crate::node::{Taffy, Node};
+use crate::node::{Node, Taffy};
 use crate::style::{AvailableSpace, Display};
-use crate::sys::{round};
+use crate::sys::round;
 use crate::tree::LayoutTree;
 
 use self::flexbox::FlexboxAlgorithm;
@@ -25,14 +25,10 @@ use self::leaf::LeafAlgorithm;
 use crate::debug::NODE_LOGGER;
 
 /// Updates the stored layout of the provided `node` and its children
-pub fn compute_layout(
-    tree: &mut impl LayoutTree,
-    root: Node,
-    available_space: Size<AvailableSpace>,
-) -> Result<(), TaffyError> {
+pub fn compute_layout(taffy: &mut Taffy, root: Node, available_space: Size<AvailableSpace>) -> Result<(), TaffyError> {
     // Recursively compute node layout
     let size_and_baselines = GenericAlgorithm::perform_layout(
-        tree,
+        taffy,
         root,
         Size::NONE,
         available_space.into_options(),
@@ -41,10 +37,12 @@ pub fn compute_layout(
     );
 
     let layout = Layout { order: 0, size: size_and_baselines.size, location: Point::ZERO };
-    *tree.layout_mut(root) = layout;
+    *taffy.layout_mut(root) = layout;
 
-    // Recursively round the layout's of this node and all children
-    round_layout(tree, root, 0.0, 0.0);
+    // If rounding is enabled, recursively round the layout's of this node and all children
+    if taffy.config.use_rounding {
+        round_layout(taffy, root, 0.0, 0.0);
+    }
 
     Ok(())
 }
