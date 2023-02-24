@@ -11,9 +11,9 @@ use crate::data::CACHE_SIZE;
 use crate::error::TaffyError;
 use crate::geometry::{Point, Size};
 use crate::layout::{Cache, Layout, RunMode, SizeAndBaselines, SizingMode};
-use crate::node::Node;
+use crate::node::{Taffy, Node};
 use crate::style::{AvailableSpace, Display};
-use crate::sys::round;
+use crate::sys::{round};
 use crate::tree::LayoutTree;
 
 use self::flexbox::FlexboxAlgorithm;
@@ -44,7 +44,7 @@ pub fn compute_layout(
     *tree.layout_mut(root) = layout;
 
     // Recursively round the layout's of this node and all children
-    round_layout(tree, root);
+    round_layout(tree, root, 0.0, 0.0);
 
     Ok(())
 }
@@ -390,20 +390,38 @@ fn perform_hidden_layout(tree: &mut impl LayoutTree, node: Node) {
     }
 }
 
-/// Rounds the calculated [`NodeData`] according to the spec
-fn round_layout(tree: &mut impl LayoutTree, root: Node) {
-    let layout = tree.layout_mut(root);
+// /// Rounds the calculated [`NodeData`] according to the spec
+// fn round_layout(tree: &mut impl LayoutTree, root: Node) {
+//     let layout = tree.layout_mut(root);
 
+//     layout.location.x = round(layout.location.x);
+//     layout.location.y = round(layout.location.y);
+
+//     layout.size.width = round(layout.size.width);
+//     layout.size.height = round(layout.size.height);
+
+//     // Satisfy the borrow checker here by re-indexing to shorten the lifetime to the loop scope
+//     for x in 0..tree.child_count(root) {
+//         let child = tree.child(root, x);
+//         round_layout(tree, child);
+//     }
+// }
+
+/// Rounds the calculated [`NodeData`] according to the spec
+fn round_layout(tree: &mut impl LayoutTree, node: Node, abs_x: f32, abs_y: f32) {
+    let layout = tree.layout_mut(node);
+    let abs_x = abs_x + layout.location.x;
+    let abs_y = abs_y + layout.location.y;
     layout.location.x = round(layout.location.x);
     layout.location.y = round(layout.location.y);
 
-    layout.size.width = round(layout.size.width);
-    layout.size.height = round(layout.size.height);
+    layout.size.width = round(round(abs_x + layout.size.width) - round(abs_x));
+    layout.size.height = round(round(abs_y + layout.size.height) - round(abs_y));
 
-    // Satisfy the borrow checker here by re-indexing to shorten the lifetime to the loop scope
-    for x in 0..tree.child_count(root) {
-        let child = tree.child(root, x);
-        round_layout(tree, child);
+    let child_count = tree.child_count(node);
+    for index in 0..child_count {
+        let child = tree.child(node, index);
+        round_layout(tree, child, abs_x, abs_y);
     }
 }
 
