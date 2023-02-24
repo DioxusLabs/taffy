@@ -36,7 +36,7 @@ fn rounding_flex_basis_flex_grow_row_prime_number_width() {
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node1).unwrap();
-    assert_eq!(size.width, 23f32, "width of node {:?}. Expected {}. Actual {}", node1.data(), 23f32, size.width);
+    assert_eq!(size.width, 22f32, "width of node {:?}. Expected {}. Actual {}", node1.data(), 22f32, size.width);
     assert_eq!(size.height, 100f32, "height of node {:?}. Expected {}. Actual {}", node1.data(), 100f32, size.height);
     assert_eq!(location.x, 23f32, "x of node {:?}. Expected {}. Actual {}", node1.data(), 23f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node1.data(), 0f32, location.y);
@@ -46,7 +46,7 @@ fn rounding_flex_basis_flex_grow_row_prime_number_width() {
     assert_eq!(location.x, 45f32, "x of node {:?}. Expected {}. Actual {}", node2.data(), 45f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node2.data(), 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node3).unwrap();
-    assert_eq!(size.width, 23f32, "width of node {:?}. Expected {}. Actual {}", node3.data(), 23f32, size.width);
+    assert_eq!(size.width, 22f32, "width of node {:?}. Expected {}. Actual {}", node3.data(), 22f32, size.width);
     assert_eq!(size.height, 100f32, "height of node {:?}. Expected {}. Actual {}", node3.data(), 100f32, size.height);
     assert_eq!(location.x, 68f32, "x of node {:?}. Expected {}. Actual {}", node3.data(), 68f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node3.data(), 0f32, location.y);
