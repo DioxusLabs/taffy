@@ -1,5 +1,5 @@
 #[test]
-fn rounding_inner_node_controversy_vertical() {
+fn rounding_inner_node_controversy_horizontal() {
     use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};
@@ -7,14 +7,14 @@ fn rounding_inner_node_controversy_vertical() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), height: auto() },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(10f32) },
             ..Default::default()
         })
         .unwrap();
     let node10 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), height: auto() },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -23,7 +23,7 @@ fn rounding_inner_node_controversy_vertical() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 1f32,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), height: auto() },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(10f32) },
                 ..Default::default()
             },
             &[node10],
@@ -32,15 +32,14 @@ fn rounding_inner_node_controversy_vertical() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), height: auto() },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(10f32) },
             ..Default::default()
         })
         .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(320f32) },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(320f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2],
@@ -51,28 +50,28 @@ fn rounding_inner_node_controversy_vertical() {
     taffy::debug::print_tree(&taffy, node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
-    assert_eq!(size.width, 10f32, "width of node {:?}. Expected {}. Actual {}", node.data(), 10f32, size.width);
-    assert_eq!(size.height, 320f32, "height of node {:?}. Expected {}. Actual {}", node.data(), 320f32, size.height);
+    assert_eq!(size.width, 320f32, "width of node {:?}. Expected {}. Actual {}", node.data(), 320f32, size.width);
+    assert_eq!(size.height, 10f32, "height of node {:?}. Expected {}. Actual {}", node.data(), 10f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node0).unwrap();
-    assert_eq!(size.width, 10f32, "width of node {:?}. Expected {}. Actual {}", node0.data(), 10f32, size.width);
-    assert_eq!(size.height, 107f32, "height of node {:?}. Expected {}. Actual {}", node0.data(), 107f32, size.height);
+    assert_eq!(size.width, 107f32, "width of node {:?}. Expected {}. Actual {}", node0.data(), 107f32, size.width);
+    assert_eq!(size.height, 10f32, "height of node {:?}. Expected {}. Actual {}", node0.data(), 10f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node1).unwrap();
-    assert_eq!(size.width, 10f32, "width of node {:?}. Expected {}. Actual {}", node1.data(), 10f32, size.width);
-    assert_eq!(size.height, 106f32, "height of node {:?}. Expected {}. Actual {}", node1.data(), 106f32, size.height);
-    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node1.data(), 0f32, location.x);
-    assert_eq!(location.y, 107f32, "y of node {:?}. Expected {}. Actual {}", node1.data(), 107f32, location.y);
+    assert_eq!(size.width, 106f32, "width of node {:?}. Expected {}. Actual {}", node1.data(), 106f32, size.width);
+    assert_eq!(size.height, 10f32, "height of node {:?}. Expected {}. Actual {}", node1.data(), 10f32, size.height);
+    assert_eq!(location.x, 107f32, "x of node {:?}. Expected {}. Actual {}", node1.data(), 107f32, location.x);
+    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node1.data(), 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node10).unwrap();
-    assert_eq!(size.width, 10f32, "width of node {:?}. Expected {}. Actual {}", node10.data(), 10f32, size.width);
-    assert_eq!(size.height, 106f32, "height of node {:?}. Expected {}. Actual {}", node10.data(), 106f32, size.height);
+    assert_eq!(size.width, 106f32, "width of node {:?}. Expected {}. Actual {}", node10.data(), 106f32, size.width);
+    assert_eq!(size.height, 10f32, "height of node {:?}. Expected {}. Actual {}", node10.data(), 10f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node10.data(), 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node10.data(), 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node2).unwrap();
-    assert_eq!(size.width, 10f32, "width of node {:?}. Expected {}. Actual {}", node2.data(), 10f32, size.width);
-    assert_eq!(size.height, 107f32, "height of node {:?}. Expected {}. Actual {}", node2.data(), 107f32, size.height);
-    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node2.data(), 0f32, location.x);
-    assert_eq!(location.y, 213f32, "y of node {:?}. Expected {}. Actual {}", node2.data(), 213f32, location.y);
+    assert_eq!(size.width, 107f32, "width of node {:?}. Expected {}. Actual {}", node2.data(), 107f32, size.width);
+    assert_eq!(size.height, 10f32, "height of node {:?}. Expected {}. Actual {}", node2.data(), 10f32, size.height);
+    assert_eq!(location.x, 213f32, "x of node {:?}. Expected {}. Actual {}", node2.data(), 213f32, location.x);
+    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node2.data(), 0f32, location.y);
 }

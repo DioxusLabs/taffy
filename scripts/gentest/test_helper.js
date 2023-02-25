@@ -173,6 +173,10 @@ function parseGridPosition(input) {
 
 function describeElement(e) {
 
+  // Get precise, unrounded dimensions for the current element and it's parent
+  let boundingRect = e.getBoundingClientRect();
+  let parentBoundingRect = e.parentNode.getBoundingClientRect();
+
   return {
     style: {
       display: parseEnum(e.style.display),
@@ -249,12 +253,35 @@ function describeElement(e) {
     // So we're only interested in the text content of leaf nodes
     textContent: e.childElementCount === 0 && e.textContent.length && e.textContent !== "\n" ? e.textContent : undefined,
 
-    layout: {
+    // The layout of the node in full precision (floating-point)
+    unroundedLayout: {
+      width: boundingRect.width,
+      height: boundingRect.height,
+      x: boundingRect.x - parentBoundingRect.x,
+      y: boundingRect.y - parentBoundingRect.y,
+    },
+
+    // The naively rounded layout of the node. This is equivalent to calling Math.round() on
+    // each value in the unrounded layout individually
+    naivelyRoundedLayout: {
       width: e.offsetWidth,
       height: e.offsetHeight,
       x: e.offsetLeft + e.parentNode.clientLeft,
       y: e.offsetTop + e.parentNode.clientTop,
     },
+
+    // The naive rounding can result in 1px gaps in the layout, so Taffy uses a smarter algorithm to avoid this.
+    // Chrome also uses a smarter algorithm, but it doesn't expose the output of that rounding.
+    // So we just emulate Taffy's computation here.
+    smartRoundedLayout: {
+      width: Math.round(boundingRect.right) - Math.round(boundingRect.left),
+      height: Math.round(boundingRect.bottom) - Math.round(boundingRect.top),
+      x: Math.round(boundingRect.x - parentBoundingRect.x),
+      y: Math.round(boundingRect.y - parentBoundingRect.y),
+    },
+
+    // Whether the test should enable rounding
+    useRounding: e.getAttribute("data-test-rounding") !== "false",
 
     children: Array.from(e.children).map(c => describeElement(c)),
   }

@@ -11,7 +11,7 @@ use crate::data::CACHE_SIZE;
 use crate::error::TaffyError;
 use crate::geometry::{Point, Size};
 use crate::layout::{Cache, Layout, RunMode, SizeAndBaselines, SizingMode};
-use crate::node::Node;
+use crate::node::{Node, Taffy};
 use crate::style::{AvailableSpace, Display};
 use crate::sys::round;
 use crate::tree::LayoutTree;
@@ -25,14 +25,10 @@ use self::leaf::LeafAlgorithm;
 use crate::debug::NODE_LOGGER;
 
 /// Updates the stored layout of the provided `node` and its children
-pub fn compute_layout(
-    tree: &mut impl LayoutTree,
-    root: Node,
-    available_space: Size<AvailableSpace>,
-) -> Result<(), TaffyError> {
+pub fn compute_layout(taffy: &mut Taffy, root: Node, available_space: Size<AvailableSpace>) -> Result<(), TaffyError> {
     // Recursively compute node layout
     let size_and_baselines = GenericAlgorithm::perform_layout(
-        tree,
+        taffy,
         root,
         Size::NONE,
         available_space.into_options(),
@@ -41,10 +37,12 @@ pub fn compute_layout(
     );
 
     let layout = Layout { order: 0, size: size_and_baselines.size, location: Point::ZERO };
-    *tree.layout_mut(root) = layout;
+    *taffy.layout_mut(root) = layout;
 
-    // Recursively round the layout's of this node and all children
-    round_layout(tree, root);
+    // If rounding is enabled, recursively round the layout's of this node and all children
+    if taffy.config.use_rounding {
+        round_layout(taffy, root, 0.0, 0.0);
+    }
 
     Ok(())
 }
@@ -390,20 +388,27 @@ fn perform_hidden_layout(tree: &mut impl LayoutTree, node: Node) {
     }
 }
 
-/// Rounds the calculated [`NodeData`] according to the spec
-fn round_layout(tree: &mut impl LayoutTree, root: Node) {
-    let layout = tree.layout_mut(root);
+/// Rounds the calculated [`Layout`] to exact pixel values
+/// In order to ensure that no gaps in the layout are introduced we:
+///   - Always round based on the absolute coordinates rather than parent-relative coordinates
+///   - Compute width/height by first rounding the top/bottom/left/right and then computing the difference
+///     rather than rounding the width/height directly
+///
+/// See <https://github.com/facebook/yoga/commit/aa5b296ac78f7a22e1aeaf4891243c6bb76488e2> for more context
+fn round_layout(tree: &mut impl LayoutTree, node: Node, abs_x: f32, abs_y: f32) {
+    let layout = tree.layout_mut(node);
+    let abs_x = abs_x + layout.location.x;
+    let abs_y = abs_y + layout.location.y;
 
     layout.location.x = round(layout.location.x);
     layout.location.y = round(layout.location.y);
+    layout.size.width = round(abs_x + layout.size.width) - round(abs_x);
+    layout.size.height = round(abs_y + layout.size.height) - round(abs_y);
 
-    layout.size.width = round(layout.size.width);
-    layout.size.height = round(layout.size.height);
-
-    // Satisfy the borrow checker here by re-indexing to shorten the lifetime to the loop scope
-    for x in 0..tree.child_count(root) {
-        let child = tree.child(root, x);
-        round_layout(tree, child);
+    let child_count = tree.child_count(node);
+    for index in 0..child_count {
+        let child = tree.child(node, index);
+        round_layout(tree, child, abs_x, abs_y);
     }
 }
 

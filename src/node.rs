@@ -32,6 +32,18 @@ pub enum MeasureFunc {
     Boxed(Box<dyn Measurable>),
 }
 
+/// Global configuration values for a Taffy instance
+pub(crate) struct TaffyConfig {
+    /// Whether to round layout values
+    pub(crate) use_rounding: bool,
+}
+
+impl Default for TaffyConfig {
+    fn default() -> Self {
+        Self { use_rounding: true }
+    }
+}
+
 /// A tree of UI [`Nodes`](`Node`), suitable for UI layout
 pub struct Taffy {
     /// The [`NodeData`] for each node stored in this tree
@@ -49,6 +61,9 @@ pub struct Taffy {
     ///
     /// The indexes in the outer vector correspond to the position of the child [`NodeData`]
     pub(crate) parents: SlotMap<Node, Option<Node>>,
+
+    /// Layout mode configuration
+    pub(crate) config: TaffyConfig,
 }
 
 impl Default for Taffy {
@@ -140,7 +155,18 @@ impl Taffy {
             children: SlotMap::with_capacity(capacity),
             parents: SlotMap::with_capacity(capacity),
             measure_funcs: SparseSecondaryMap::with_capacity(capacity),
+            config: TaffyConfig::default(),
         }
+    }
+
+    /// Enable rounding of layout values. Rounding is enabled by default.
+    pub fn enable_rounding(&mut self) {
+        self.config.use_rounding = true;
+    }
+
+    /// Disable rounding of layout values. Rounding is enabled by default.
+    pub fn disable_rounding(&mut self) {
+        self.config.use_rounding = false;
     }
 
     /// Creates and adds a new unattached leaf node to the tree, and returns the [`Node`] of the new node
