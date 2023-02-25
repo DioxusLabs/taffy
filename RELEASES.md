@@ -4,7 +4,7 @@
 
 ### Added
 
-- Added `enabled_rounding` and `disable_rounding` methods to the `Taffy` struct which enabled consumers of Taffy to obtain unrounded `f32` values for the computed layouts if they want them. Rounding remains enabled by default.
+- Added `enable_rounding` and `disable_rounding` methods to the `Taffy` struct which enable consumers of Taffy to obtain unrounded `f32` values for the computed layouts if they want them. Rounding remains enabled by default.
 
 ### Fixes
 
