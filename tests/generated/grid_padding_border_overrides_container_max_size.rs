@@ -1,5 +1,5 @@
 #[test]
-fn grid_container_padding_border_overrides_size() {
+fn grid_padding_border_overrides_container_max_size() {
     use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};
@@ -9,7 +9,7 @@ fn grid_container_padding_border_overrides_size() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                size: taffy::geometry::Size {
+                max_size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(12f32),
                     height: taffy::style::Dimension::Points(12f32),
                 },

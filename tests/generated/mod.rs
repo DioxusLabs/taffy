@@ -466,10 +466,6 @@ mod grid_basic_with_overflow;
 #[cfg(feature = "grid")]
 mod grid_basic_with_padding;
 #[cfg(feature = "grid")]
-mod grid_container_padding_border_overrides_max_size;
-#[cfg(feature = "grid")]
-mod grid_container_padding_border_overrides_size;
-#[cfg(feature = "grid")]
 mod grid_display_none_fixed_size;
 #[cfg(feature = "grid")]
 mod grid_fit_content_percent_definite_argument;
@@ -651,6 +647,10 @@ mod grid_minmax_min_content_percent_indefinite;
 mod grid_out_of_order_items;
 #[cfg(feature = "grid")]
 mod grid_overflow_rows;
+#[cfg(feature = "grid")]
+mod grid_padding_border_overrides_container_max_size;
+#[cfg(feature = "grid")]
+mod grid_padding_border_overrides_container_size;
 #[cfg(feature = "grid")]
 mod grid_padding_border_overrides_max_size;
 #[cfg(feature = "grid")]
