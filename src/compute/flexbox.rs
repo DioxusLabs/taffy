@@ -1814,8 +1814,11 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
         }
 
         let aspect_ratio = child_style.aspect_ratio;
-        let margin = child_style.margin.map(|margin| margin.resolve_to_option(container_width));
         let align_self = child_style.align_self.unwrap_or(constants.align_items);
+        let margin = child_style.margin.map(|margin| margin.resolve_to_option(container_width));
+        let padding = child_style.padding.resolve_or_zero(Some(container_width));
+        let border = child_style.border.resolve_or_zero(Some(container_width));
+        let padding_border_sum = (padding + border).sum_axes();
 
         // Resolve inset
         let left = child_style.inset.left.maybe_resolve(container_width);
@@ -1826,8 +1829,12 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
         // Compute known dimensions from min/max/inherent size styles
         let style_size =
             child_style.size.maybe_resolve(constants.container_size).maybe_apply_aspect_ratio(aspect_ratio);
-        let min_size =
-            child_style.min_size.maybe_resolve(constants.container_size).maybe_apply_aspect_ratio(aspect_ratio);
+        let min_size = child_style
+            .min_size
+            .maybe_resolve(constants.container_size)
+            .maybe_apply_aspect_ratio(aspect_ratio)
+            .or(padding_border_sum.map(Some))
+            .maybe_max(padding_border_sum);
         let max_size =
             child_style.max_size.maybe_resolve(constants.container_size).maybe_apply_aspect_ratio(aspect_ratio);
         let mut known_dimensions = style_size.maybe_clamp(min_size, max_size);
