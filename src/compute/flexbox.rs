@@ -687,15 +687,15 @@ fn determine_flex_base_size(
         child.inner_flex_basis =
             child.flex_basis - child.padding.main_axis_sum(constants.dir) - child.border.main_axis_sum(constants.dir);
 
-        let hypothetical_inner_min_main = child.min_size.main(constants.dir);
-        child.hypothetical_inner_size.set_main(
-            constants.dir,
-            child.flex_basis.maybe_clamp(hypothetical_inner_min_main, child.max_size.main(constants.dir)),
-        );
-        child.hypothetical_outer_size.set_main(
-            constants.dir,
-            child.hypothetical_inner_size.main(constants.dir) + child.margin.main_axis_sum(constants.dir),
-        );
+        let padding_border_axes_sums = (child.padding + child.border).sum_axes().map(Some);
+        let hypothetical_inner_min_main =
+            child.min_size.main(constants.dir).maybe_max(padding_border_axes_sums.main(constants.dir));
+        let hypothetical_inner_size =
+            child.flex_basis.maybe_clamp(hypothetical_inner_min_main, child.max_size.main(constants.dir));
+        let hypothetical_outer_size = hypothetical_inner_size + child.margin.main_axis_sum(constants.dir);
+
+        child.hypothetical_inner_size.set_main(constants.dir, hypothetical_inner_size);
+        child.hypothetical_outer_size.set_main(constants.dir, hypothetical_outer_size);
 
         let min_content_size = GenericAlgorithm::measure_size(
             tree,
@@ -709,7 +709,8 @@ fn determine_flex_base_size(
         // 4.5. Automatic Minimum Size of Flex Items
         // https://www.w3.org/TR/css-flexbox-1/#min-size-auto
         let clamped_min_content_size = min_content_size.maybe_min(child.size).maybe_min(child.max_size);
-        child.resolved_minimum_size = child.min_size.unwrap_or(clamped_min_content_size);
+        child.resolved_minimum_size =
+            child.min_size.unwrap_or(clamped_min_content_size).maybe_max(padding_border_axes_sums);
     }
 }
 
@@ -810,7 +811,10 @@ fn determine_container_main_size(
                         let total_target_size = line
                             .items
                             .iter()
-                            .map(|child| child.flex_basis + child.margin.main_axis_sum(constants.dir))
+                            .map(|child| {
+                                let padding_border_sum = (child.padding + child.border).main_axis_sum(constants.dir);
+                                (child.flex_basis + child.margin.main_axis_sum(constants.dir)).max(padding_border_sum)
+                            })
                             .sum::<f32>();
                         total_target_size + line_main_axis_gap
                     })
@@ -831,7 +835,10 @@ fn determine_container_main_size(
                         let total_target_size = line
                             .items
                             .iter()
-                            .map(|child| child.flex_basis + child.margin.main_axis_sum(constants.dir))
+                            .map(|child| {
+                                let padding_border_sum = (child.padding + child.border).main_axis_sum(constants.dir);
+                                (child.flex_basis + child.margin.main_axis_sum(constants.dir)).max(padding_border_sum)
+                            })
                             .sum::<f32>();
                         total_target_size + line_main_axis_gap
                     })
@@ -852,21 +859,27 @@ fn determine_container_main_size(
                         let style_max = item.max_size.main(constants.dir);
                         let flex_basis_min = Some(item.flex_basis).filter(|_| item.flex_shrink == 0.0);
                         let flex_basis_max = Some(item.flex_basis).filter(|_| item.flex_grow == 0.0);
-                        let min_main_size = style_min.maybe_max(flex_basis_min).or(flex_basis_min);
-                        let max_main_size = style_max.maybe_min(flex_basis_max).or(flex_basis_max);
+                        let resolved_min = item.resolved_minimum_size.main(constants.dir);
+                        let min_main_size = style_min
+                            .maybe_max(flex_basis_min)
+                            .or(flex_basis_min)
+                            .unwrap_or(resolved_min)
+                            .max(resolved_min);
+                        let max_main_size =
+                            style_max.maybe_min(flex_basis_max).or(flex_basis_max).unwrap_or(f32::INFINITY);
 
                         let content_contribution = match (min_main_size, style_preferred, max_main_size) {
                             // If the clamping values are such that max <= min, then we can avoid the expensive step of computing the content size
                             // as we know that the clamping values will override it anyway
-                            (Some(min), Some(pref), Some(max)) if max <= min || max <= pref => {
+                            (min, Some(pref), max) if max <= min || max <= pref => {
                                 pref.min(max).max(min) + item.margin.main_axis_sum(constants.dir)
                             }
-                            (Some(min), _, Some(max)) if max <= min => min + item.margin.main_axis_sum(constants.dir),
-                            (_, Some(pref), Some(max)) if max <= pref => max + item.margin.main_axis_sum(constants.dir),
+                            (min, _, max) if max <= min => min + item.margin.main_axis_sum(constants.dir),
                             // Else compute the min- or -max content size and apply the full formula for computing the
                             // min- or max- content contributuon
                             _ => {
                                 // Either the min- or max- content size depending on which constraint we are sizing under.
+                                // TODO: Optimise by using already computed values where available
                                 let content_main_size = GenericAlgorithm::measure_size(
                                     tree,
                                     item.node,
@@ -891,9 +904,14 @@ fn determine_container_main_size(
                                 // Ultimately, this was not found by reading the spec, but by trial and error fixing tests to align with Webkit/Firefox output.
                                 // (see the `flex_basis_unconstraint_row` and `flex_basis_uncontraint_column` generated tests which demonstrate this)
                                 if constants.is_row {
-                                    content_main_size.maybe_clamp(style_min, style_max)
+                                    content_main_size
+                                        .maybe_clamp(style_min, style_max)
+                                        .max(constants.padding_border.main_axis_sum(constants.dir))
                                 } else {
-                                    content_main_size.max(item.flex_basis).maybe_clamp(style_min, style_max)
+                                    content_main_size
+                                        .max(item.flex_basis)
+                                        .maybe_clamp(style_min, style_max)
+                                        .max(constants.padding_border.main_axis_sum(constants.dir))
                                 }
                             }
                         };
@@ -1162,13 +1180,15 @@ fn determine_hypothetical_cross_size(
     available_space: Size<AvailableSpace>,
 ) {
     for child in line.items.iter_mut() {
+        let padding_border_sum = (child.padding + child.border).cross_axis_sum(constants.dir);
+
         let child_cross = child
             .size
             .cross(constants.dir)
-            .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir));
+            .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir))
+            .maybe_max(padding_border_sum);
 
-        child.hypothetical_inner_size.set_cross(
-            constants.dir,
+        let child_inner_cross = child_cross.unwrap_or_else(|| {
             GenericAlgorithm::measure_size(
                 tree,
                 child.node,
@@ -1192,13 +1212,13 @@ fn determine_hypothetical_cross_size(
                 SizingMode::ContentSize,
             )
             .cross(constants.dir)
-            .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir)),
-        );
+            .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir))
+            .max(padding_border_sum)
+        });
+        let child_outer_cross = child_inner_cross + child.margin.cross_axis_sum(constants.dir);
 
-        child.hypothetical_outer_size.set_cross(
-            constants.dir,
-            child.hypothetical_inner_size.cross(constants.dir) + child.margin.cross_axis_sum(constants.dir),
-        );
+        child.hypothetical_inner_size.set_cross(constants.dir, child_inner_cross);
+        child.hypothetical_outer_size.set_cross(constants.dir, child_outer_cross);
     }
 }
 
@@ -1600,17 +1620,15 @@ fn determine_container_cross_size(
     let total_cross_axis_gap = sum_axis_gaps(constants.gap.cross(constants.dir), flex_lines.len());
     let total_line_cross_size: f32 = flex_lines.iter().map(|line| line.cross_size).sum::<f32>();
 
-    constants.container_size.set_cross(
-        constants.dir,
-        node_size.cross(constants.dir).unwrap_or(
-            total_line_cross_size + total_cross_axis_gap + constants.padding_border.cross_axis_sum(constants.dir),
-        ),
-    );
+    let padding_border_sum = constants.padding_border.cross_axis_sum(constants.dir);
+    let outer_container_size = node_size
+        .cross(constants.dir)
+        .unwrap_or(total_line_cross_size + total_cross_axis_gap + padding_border_sum)
+        .max(padding_border_sum);
+    let inner_container_size = outer_container_size - padding_border_sum;
 
-    constants.inner_container_size.set_cross(
-        constants.dir,
-        constants.container_size.cross(constants.dir) - constants.padding_border.cross_axis_sum(constants.dir),
-    );
+    constants.container_size.set_cross(constants.dir, outer_container_size);
+    constants.inner_container_size.set_cross(constants.dir, inner_container_size);
 
     total_line_cross_size
 }
