@@ -648,6 +648,12 @@ mod grid_out_of_order_items;
 #[cfg(feature = "grid")]
 mod grid_overflow_rows;
 #[cfg(feature = "grid")]
+mod grid_padding_border_overrides_max_size;
+#[cfg(feature = "grid")]
+mod grid_padding_border_overrides_min_size;
+#[cfg(feature = "grid")]
+mod grid_padding_border_overrides_size;
+#[cfg(feature = "grid")]
 mod grid_percent_item_inside_stretch_item;
 #[cfg(feature = "grid")]
 mod grid_percent_items_nested_inside_stretch_alignment;
