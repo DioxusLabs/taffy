@@ -403,8 +403,8 @@ fn compute_preliminary(
     for order in 0..len {
         let child = tree.child(node, order);
         if tree.style(child).display == Display::None {
-            *tree.layout_mut(node) = Layout::with_order(order as u32);
-            GenericAlgorithm::measure_size(
+            *tree.layout_mut(child) = Layout::with_order(order as u32);
+            GenericAlgorithm::perform_layout(
                 tree,
                 child,
                 Size::NONE,
