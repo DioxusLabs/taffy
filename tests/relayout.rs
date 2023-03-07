@@ -146,3 +146,49 @@ fn toggle_flex_child_display_none() {
     assert_eq!(layout.size.width, 0.0);
     assert_eq!(layout.size.height, 0.0);
 }
+
+#[test]
+fn toggle_flex_container_display_none() {
+    let hidden_style = Style {
+        display: Display::None,
+        size: Size { width: points(100.0), height: points(100.0) },
+        ..Default::default()
+    };
+
+    let flex_style = Style {
+        display: Display::Flex,
+        size: Size { width: points(100.0), height: points(100.0) },
+        ..Default::default()
+    };
+
+    // Setup
+    let mut taffy = taffy::Taffy::new();
+    let node = taffy.new_leaf(hidden_style.clone()).unwrap();
+    let root = taffy.new_with_children(hidden_style.clone(), &[node]).unwrap();
+
+    // Layout 1 (None)
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    let layout = taffy.layout(root).unwrap();
+    assert_eq!(layout.location.x, 0.0);
+    assert_eq!(layout.location.y, 0.0);
+    assert_eq!(layout.size.width, 0.0);
+    assert_eq!(layout.size.height, 0.0);
+
+    // Layout 2 (Flex)
+    taffy.set_style(root, flex_style).unwrap();
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    let layout = taffy.layout(root).unwrap();
+    assert_eq!(layout.location.x, 0.0);
+    assert_eq!(layout.location.y, 0.0);
+    assert_eq!(layout.size.width, 100.0);
+    assert_eq!(layout.size.height, 100.0);
+
+    // Layout 3 (None)
+    taffy.set_style(root, hidden_style).unwrap();
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    let layout = taffy.layout(root).unwrap();
+    assert_eq!(layout.location.x, 0.0);
+    assert_eq!(layout.location.y, 0.0);
+    assert_eq!(layout.size.width, 0.0);
+    assert_eq!(layout.size.height, 0.0);
+}
