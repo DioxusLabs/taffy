@@ -177,8 +177,10 @@ fn compute_node_layout(
         }
     }
 
-    let computed_size_and_baselines = if tree.is_childless(node) {
-        perform_computations::<LeafAlgorithm>(
+    let display_mode = tree.style(node).display;
+    let has_children = !tree.is_childless(node);
+    let computed_size_and_baselines = match (display_mode, has_children) {
+        (Display::None, _) => perform_computations::<HiddenAlgorithm>(
             tree,
             node,
             known_dimensions,
@@ -186,38 +188,35 @@ fn compute_node_layout(
             available_space,
             run_mode,
             sizing_mode,
-        )
-    } else {
-        match tree.style(node).display {
-            Display::Flex => perform_computations::<FlexboxAlgorithm>(
-                tree,
-                node,
-                known_dimensions,
-                parent_size,
-                available_space,
-                run_mode,
-                sizing_mode,
-            ),
-            #[cfg(feature = "grid")]
-            Display::Grid => perform_computations::<CssGridAlgorithm>(
-                tree,
-                node,
-                known_dimensions,
-                parent_size,
-                available_space,
-                run_mode,
-                sizing_mode,
-            ),
-            Display::None => perform_computations::<HiddenAlgorithm>(
-                tree,
-                node,
-                known_dimensions,
-                parent_size,
-                available_space,
-                run_mode,
-                sizing_mode,
-            ),
-        }
+        ),
+        (Display::Flex, true) => perform_computations::<FlexboxAlgorithm>(
+            tree,
+            node,
+            known_dimensions,
+            parent_size,
+            available_space,
+            run_mode,
+            sizing_mode,
+        ),
+        #[cfg(feature = "grid")]
+        (Display::Grid, true) => perform_computations::<CssGridAlgorithm>(
+            tree,
+            node,
+            known_dimensions,
+            parent_size,
+            available_space,
+            run_mode,
+            sizing_mode,
+        ),
+        (_, false) => perform_computations::<LeafAlgorithm>(
+            tree,
+            node,
+            known_dimensions,
+            parent_size,
+            available_space,
+            run_mode,
+            sizing_mode,
+        ),
     };
 
     // Cache result
