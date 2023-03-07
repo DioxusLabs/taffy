@@ -1,5 +1,11 @@
 # Release Notes
 
+## 0.3.5
+
+### Fixes
+
+- Fix `display: none` when it is set on a flexbox child (#380)
+
 ## 0.3.4
 
 ### Fixes
