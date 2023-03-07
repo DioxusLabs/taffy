@@ -1,5 +1,11 @@
 # Release Notes
 
+## 0.3.4
+
+### Fixes
+
+- Fix `display: none` when it is set for the only node in the hierarchy (#377)
+
 ## 0.3.3
 
 ### Added
