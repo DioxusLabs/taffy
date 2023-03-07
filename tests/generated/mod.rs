@@ -208,6 +208,7 @@ mod container_with_unsized_child;
 mod display_none;
 mod display_none_absolute_child;
 mod display_none_fixed_size;
+mod display_none_only_node;
 mod display_none_with_child;
 mod display_none_with_margin;
 mod display_none_with_position;
@@ -459,6 +460,8 @@ mod grid_basic_implicit_tracks;
 mod grid_basic_with_overflow;
 #[cfg(feature = "grid")]
 mod grid_basic_with_padding;
+#[cfg(feature = "grid")]
+mod grid_display_none_fixed_size;
 #[cfg(feature = "grid")]
 mod grid_fit_content_percent_definite_argument;
 #[cfg(feature = "grid")]
