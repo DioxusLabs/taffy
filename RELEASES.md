@@ -5,6 +5,7 @@
 ### Fixes
 
 - Fix `display: none` when it is set on a flexbox child (#380)
+- Fix `display: none` when it is set on a grid child (#381)
 
 ## 0.3.4
 
