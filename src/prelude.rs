@@ -32,8 +32,8 @@ pub use crate::{
         JustifyContent, JustifyItems, JustifySelf, LengthPercentage, LengthPercentageAuto, Position, Style,
     },
     style_helpers::{
-        auto, evenly_sized_tracks, fit_content, flex, fr, max_content, min_content, minmax, percent, points, zero,
-        FromFlex, FromPercent, FromPoints, TaffyAuto, TaffyFitContent, TaffyMaxContent, TaffyMinContent, TaffyZero,
+        auto, fit_content, max_content, min_content, percent, points, zero, FromFlex, FromPercent, FromPoints,
+        TaffyAuto, TaffyFitContent, TaffyMaxContent, TaffyMinContent, TaffyZero,
     },
     tree::LayoutTree,
 };
@@ -44,4 +44,6 @@ pub use crate::style::{
     NonRepeatedTrackSizingFunction, TrackSizingFunction,
 };
 #[cfg(feature = "grid")]
-pub use crate::style_helpers::{line, repeat, span, TaffyGridLine, TaffyGridSpan};
+pub use crate::style_helpers::{
+    evenly_sized_tracks, flex, fr, line, minmax, repeat, span, TaffyGridLine, TaffyGridSpan,
+};

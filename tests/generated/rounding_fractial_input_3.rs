@@ -55,7 +55,7 @@ fn rounding_fractial_input_3() {
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node1).unwrap();
     assert_eq!(size.width, 100f32, "width of node {:?}. Expected {}. Actual {}", node1.data(), 100f32, size.width);
-    assert_eq!(size.height, 24f32, "height of node {:?}. Expected {}. Actual {}", node1.data(), 24f32, size.height);
+    assert_eq!(size.height, 25f32, "height of node {:?}. Expected {}. Actual {}", node1.data(), 25f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node1.data(), 0f32, location.x);
     assert_eq!(location.y, 64f32, "y of node {:?}. Expected {}. Actual {}", node1.data(), 64f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node2).unwrap();

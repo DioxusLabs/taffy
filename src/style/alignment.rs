@@ -14,12 +14,12 @@ pub enum AlignItems {
     End,
     /// Items are packed towards the flex-relative start of the axis.
     ///
-    /// For flex containers with flex_direction RowReverse of ColumnReverse this is equivalent
+    /// For flex containers with flex_direction RowReverse or ColumnReverse this is equivalent
     /// to End. In all other cases it is equivalent to Start.
     FlexStart,
     /// Items are packed towards the flex-relative end of the axis.
     ///
-    /// For flex containers with flex_direction RowReverse of ColumnReverse this is equivalent
+    /// For flex containers with flex_direction RowReverse or ColumnReverse this is equivalent
     /// to Start. In all other cases it is equivalent to End.
     FlexEnd,
     /// Items are packed along the center of the cross axis
@@ -64,12 +64,12 @@ pub enum AlignContent {
     End,
     /// Items are packed towards the flex-relative start of the axis.
     ///
-    /// For flex containers with flex_direction RowReverse of ColumnReverse this is equivalent
+    /// For flex containers with flex_direction RowReverse or ColumnReverse this is equivalent
     /// to End. In all other cases it is equivalent to Start.
     FlexStart,
     /// Items are packed towards the flex-relative end of the axis.
     ///
-    /// For flex containers with flex_direction RowReverse of ColumnReverse this is equivalent
+    /// For flex containers with flex_direction RowReverse or ColumnReverse this is equivalent
     /// to Start. In all other cases it is equivalent to End.
     FlexEnd,
     /// Items are centered around the middle of the axis

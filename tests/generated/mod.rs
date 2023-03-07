@@ -208,6 +208,7 @@ mod container_with_unsized_child;
 mod display_none;
 mod display_none_absolute_child;
 mod display_none_fixed_size;
+mod display_none_only_node;
 mod display_none_with_child;
 mod display_none_with_margin;
 mod display_none_with_position;
@@ -459,6 +460,8 @@ mod grid_basic_implicit_tracks;
 mod grid_basic_with_overflow;
 #[cfg(feature = "grid")]
 mod grid_basic_with_padding;
+#[cfg(feature = "grid")]
+mod grid_display_none_fixed_size;
 #[cfg(feature = "grid")]
 mod grid_fit_content_percent_definite_argument;
 #[cfg(feature = "grid")]
@@ -858,6 +861,11 @@ mod rounding_fractial_input_1;
 mod rounding_fractial_input_2;
 mod rounding_fractial_input_3;
 mod rounding_fractial_input_4;
+mod rounding_fractial_input_5;
+mod rounding_fractial_input_6;
+mod rounding_fractial_input_7;
+mod rounding_inner_node_controversy_combined;
+mod rounding_inner_node_controversy_horizontal;
 mod rounding_inner_node_controversy_vertical;
 mod rounding_total_fractial;
 mod rounding_total_fractial_nested;

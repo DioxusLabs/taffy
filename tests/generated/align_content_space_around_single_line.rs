@@ -86,7 +86,7 @@ fn align_content_space_around_single_line() {
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node1).unwrap();
-    assert_eq!(size.width, 17f32, "width of node {:?}. Expected {}. Actual {}", node1.data(), 17f32, size.width);
+    assert_eq!(size.width, 16f32, "width of node {:?}. Expected {}. Actual {}", node1.data(), 16f32, size.width);
     assert_eq!(size.height, 10f32, "height of node {:?}. Expected {}. Actual {}", node1.data(), 10f32, size.height);
     assert_eq!(location.x, 17f32, "x of node {:?}. Expected {}. Actual {}", node1.data(), 17f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node1.data(), 0f32, location.y);
@@ -101,7 +101,7 @@ fn align_content_space_around_single_line() {
     assert_eq!(location.x, 50f32, "x of node {:?}. Expected {}. Actual {}", node3.data(), 50f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node3.data(), 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node4).unwrap();
-    assert_eq!(size.width, 17f32, "width of node {:?}. Expected {}. Actual {}", node4.data(), 17f32, size.width);
+    assert_eq!(size.width, 16f32, "width of node {:?}. Expected {}. Actual {}", node4.data(), 16f32, size.width);
     assert_eq!(size.height, 10f32, "height of node {:?}. Expected {}. Actual {}", node4.data(), 10f32, size.height);
     assert_eq!(location.x, 67f32, "x of node {:?}. Expected {}. Actual {}", node4.data(), 67f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node4.data(), 0f32, location.y);

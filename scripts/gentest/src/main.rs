@@ -121,8 +121,11 @@ async fn test_root_element(client: Client, name: String, fixture_path: impl AsRe
 fn generate_test(name: impl AsRef<str>, description: &Value) -> TokenStream {
     let name = name.as_ref();
     let name = Ident::new(name, Span::call_site());
+    let use_rounding = description["useRounding"].as_bool().unwrap();
+    let assertions = generate_assertions("node", description, use_rounding);
     let node_description = generate_node("node", description);
-    let assertions = generate_assertions("node", description);
+
+    let set_rounding_mode = if use_rounding { quote!() } else { quote!(taffy.disable_rounding();) };
 
     quote!(
         #[test]
@@ -131,6 +134,7 @@ fn generate_test(name: impl AsRef<str>, description: &Value) -> TokenStream {
             use taffy::{layout::Layout, prelude::*};
             use slotmap::Key;
             let mut taffy = taffy::Taffy::new();
+            #set_rounding_mode
             #node_description
             taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
 
@@ -143,8 +147,8 @@ fn generate_test(name: impl AsRef<str>, description: &Value) -> TokenStream {
     )
 }
 
-fn generate_assertions(ident: &str, node: &Value) -> TokenStream {
-    let layout = &node["layout"];
+fn generate_assertions(ident: &str, node: &Value, use_rounding: bool) -> TokenStream {
+    let layout = if use_rounding { &node["smartRoundedLayout"] } else { &node["unroundedLayout"] };
 
     let read_f32 = |s: &str| layout[s].as_f64().unwrap() as f32;
     let width = read_f32("width");
@@ -156,7 +160,7 @@ fn generate_assertions(ident: &str, node: &Value) -> TokenStream {
         let mut c = Vec::new();
         if let Value::Array(ref value) = node["children"] {
             for (idx, child) in value.iter().enumerate() {
-                c.push(generate_assertions(&format!("{ident}{idx}"), child));
+                c.push(generate_assertions(&format!("{ident}{idx}"), child, use_rounding));
             }
         };
         c.into_iter().fold(quote!(), |a, b| quote!(#a #b))
@@ -164,15 +168,27 @@ fn generate_assertions(ident: &str, node: &Value) -> TokenStream {
 
     let ident = Ident::new(ident, Span::call_site());
 
-    quote!(
-        let Layout { size, location, .. } = taffy.layout(#ident).unwrap();
-        assert_eq!(size.width, #width, "width of node {:?}. Expected {}. Actual {}", #ident.data(),  #width, size.width);
-        assert_eq!(size.height, #height, "height of node {:?}. Expected {}. Actual {}", #ident.data(),  #height, size.height);
-        assert_eq!(location.x, #x, "x of node {:?}. Expected {}. Actual {}", #ident.data(),  #x, location.x);
-        assert_eq!(location.y, #y, "y of node {:?}. Expected {}. Actual {}", #ident.data(),  #y, location.y);
+    if use_rounding {
+        quote!(
+            let Layout { size, location, .. } = taffy.layout(#ident).unwrap();
+            assert_eq!(size.width, #width, "width of node {:?}. Expected {}. Actual {}", #ident.data(),  #width, size.width);
+            assert_eq!(size.height, #height, "height of node {:?}. Expected {}. Actual {}", #ident.data(),  #height, size.height);
+            assert_eq!(location.x, #x, "x of node {:?}. Expected {}. Actual {}", #ident.data(),  #x, location.x);
+            assert_eq!(location.y, #y, "y of node {:?}. Expected {}. Actual {}", #ident.data(),  #y, location.y);
 
-        #children
-    )
+            #children
+        )
+    } else {
+        quote!(
+            let Layout { size, location, .. } = taffy.layout(#ident).unwrap();
+            assert!(size.width - #width < 0.1, "width of node {:?}. Expected {}. Actual {}", #ident.data(),  #width, size.width);
+            assert!(size.height - #height < 0.1, "height of node {:?}. Expected {}. Actual {}", #ident.data(),  #height, size.height);
+            assert!(location.x - #x < 0.1, "x of node {:?}. Expected {}. Actual {}", #ident.data(),  #x, location.x);
+            assert!(location.y - #y < 0.1, "y of node {:?}. Expected {}. Actual {}", #ident.data(),  #y, location.y);
+
+            #children
+        )
+    }
 }
 
 macro_rules! dim_quoted_renamed {

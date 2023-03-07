@@ -66,7 +66,7 @@ fn grid_span_6_all_non_flex_indefinite() {
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node1.data(), 0f32, location.x);
     assert_eq!(location.y, 40f32, "y of node {:?}. Expected {}. Actual {}", node1.data(), 40f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node2).unwrap();
-    assert_eq!(size.width, 90f32, "width of node {:?}. Expected {}. Actual {}", node2.data(), 90f32, size.width);
+    assert_eq!(size.width, 89f32, "width of node {:?}. Expected {}. Actual {}", node2.data(), 89f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node2.data(), 40f32, size.height);
     assert_eq!(location.x, 10f32, "x of node {:?}. Expected {}. Actual {}", node2.data(), 10f32, location.x);
     assert_eq!(location.y, 40f32, "y of node {:?}. Expected {}. Actual {}", node2.data(), 40f32, location.y);
@@ -76,7 +76,7 @@ fn grid_span_6_all_non_flex_indefinite() {
     assert_eq!(location.x, 99f32, "x of node {:?}. Expected {}. Actual {}", node3.data(), 99f32, location.x);
     assert_eq!(location.y, 40f32, "y of node {:?}. Expected {}. Actual {}", node3.data(), 40f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node4).unwrap();
-    assert_eq!(size.width, 10f32, "width of node {:?}. Expected {}. Actual {}", node4.data(), 10f32, size.width);
+    assert_eq!(size.width, 9f32, "width of node {:?}. Expected {}. Actual {}", node4.data(), 9f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node4.data(), 40f32, size.height);
     assert_eq!(location.x, 109f32, "x of node {:?}. Expected {}. Actual {}", node4.data(), 109f32, location.x);
     assert_eq!(location.y, 40f32, "y of node {:?}. Expected {}. Actual {}", node4.data(), 40f32, location.y);

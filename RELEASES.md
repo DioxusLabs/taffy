@@ -1,5 +1,23 @@
 # Release Notes
 
+## 0.3.4
+
+### Fixes
+
+- Fix `display: none` when it is set for the only node in the hierarchy (#377)
+
+## 0.3.3
+
+### Added
+
+- Added `enable_rounding` and `disable_rounding` methods to the `Taffy` struct which enable consumers of Taffy to obtain unrounded `f32` values for the computed layouts if they want them. Rounding remains enabled by default.
+
+### Fixes
+
+- Fixed rounding algorithm such that it never leaves gaps between adjacent nodes (#369)
+- Fixed compiling with the `grid` feature disabled (#370)
+- Fixed compiling with the `std` feature disabled
+
 ## 0.3.2
 
 ### Fixes

@@ -100,7 +100,7 @@ fn grid_span_13_most_non_flex_with_minmax_indefinite() {
     assert_eq!(location.x, 124f32, "x of node {:?}. Expected {}. Actual {}", node5.data(), 124f32, location.x);
     assert_eq!(location.y, 40f32, "y of node {:?}. Expected {}. Actual {}", node5.data(), 40f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node6).unwrap();
-    assert_eq!(size.width, 64f32, "width of node {:?}. Expected {}. Actual {}", node6.data(), 64f32, size.width);
+    assert_eq!(size.width, 65f32, "width of node {:?}. Expected {}. Actual {}", node6.data(), 65f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node6.data(), 40f32, size.height);
     assert_eq!(location.x, 134f32, "x of node {:?}. Expected {}. Actual {}", node6.data(), 134f32, location.x);
     assert_eq!(location.y, 40f32, "y of node {:?}. Expected {}. Actual {}", node6.data(), 40f32, location.y);

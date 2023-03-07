@@ -20,6 +20,10 @@ jobs:
           override: true
       - uses: actions-rs/cargo@v1
         with:
+          command: build
+          args: --no-default-features
+      - uses: actions-rs/cargo@v1
+        with:
           command: test
           args: --no-default-features
 
@@ -35,6 +39,9 @@ jobs:
           override: true
       - uses: actions-rs/cargo@v1
         with:
+          command: build
+      - uses: actions-rs/cargo@v1
+        with:
           command: test
 
   test-features-default-with-serde:
@@ -47,6 +54,10 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --features serde
       - uses: actions-rs/cargo@v1
         with:
           command: test
@@ -64,6 +75,10 @@ jobs:
           override: true
       - uses: actions-rs/cargo@v1
         with:
+          command: build
+          args: --no-default-features --features alloc,grid
+      - uses: actions-rs/cargo@v1
+        with:
           command: test
           args: --no-default-features --features alloc,grid
 
@@ -79,6 +94,10 @@ jobs:
           override: true
       - uses: actions-rs/cargo@v1
         with:
+          command: build
+          args: --no-default-features --features alloc
+      - uses: actions-rs/cargo@v1
+        with:
           command: test
           args: --no-default-features --features alloc
 
@@ -92,6 +111,10 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --no-default-features --features std
       - uses: actions-rs/cargo@v1
         with:
           command: test

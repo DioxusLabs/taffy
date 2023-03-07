@@ -59,7 +59,7 @@ fn gap_column_gap_percentage_flexible() {
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node1).unwrap();
-    assert_eq!(size.width, 27f32, "width of node {:?}. Expected {}. Actual {}", node1.data(), 27f32, size.width);
+    assert_eq!(size.width, 26f32, "width of node {:?}. Expected {}. Actual {}", node1.data(), 26f32, size.width);
     assert_eq!(size.height, 100f32, "height of node {:?}. Expected {}. Actual {}", node1.data(), 100f32, size.height);
     assert_eq!(location.x, 37f32, "x of node {:?}. Expected {}. Actual {}", node1.data(), 37f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node1.data(), 0f32, location.y);
