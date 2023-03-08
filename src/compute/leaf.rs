@@ -141,5 +141,11 @@ pub(crate) fn compute(
             .maybe_clamp(node_min_size.height, node_max_size.height)
             .maybe_max(padding_border.vertical_axis_sum().into()),
     };
+
+    let size = Size {
+        width: f32_max(size.width, aspect_ratio.map(|ratio| size.height * ratio).unwrap_or(0.0)),
+        height: f32_max(size.height, aspect_ratio.map(|ratio| size.width / ratio).unwrap_or(0.0)),
+    };
+
     SizeAndBaselines { size, first_baselines: Point::NONE }
 }
