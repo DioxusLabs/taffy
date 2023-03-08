@@ -456,10 +456,7 @@ fn compute_constants(
     let padding_border = padding + border;
 
     let node_outer_size = known_dimensions;
-    let node_inner_size = Size {
-        width: node_outer_size.width.maybe_sub(padding_border.horizontal_axis_sum()),
-        height: node_outer_size.height.maybe_sub(padding_border.vertical_axis_sum()),
-    };
+    let node_inner_size = node_outer_size.maybe_sub(padding_border.sum_axes());
     let gap = style.gap.resolve_or_zero(node_inner_size.or(Size::zero()));
 
     let container_size = Size::zero();
@@ -1307,12 +1304,14 @@ fn calculate_cross_size(
 ) {
     // Note: AlignContent::SpaceEvenly and AlignContent::SpaceAround behave like AlignContent::Stretch when there is only
     // a single flex line in the container. See: https://www.w3.org/TR/css-flexbox-1/#align-content-property
+    // Also: align_content is ignored entirely (and thus behaves like Stretch) when `flex_wrap` is set to `nowrap`.
     if flex_lines.len() == 1
         && node_size.cross(constants.dir).is_some()
-        && matches!(
-            constants.align_content,
-            AlignContent::Stretch | AlignContent::SpaceEvenly | AlignContent::SpaceAround
-        )
+        && (!constants.is_wrap
+            || matches!(
+                constants.align_content,
+                AlignContent::Stretch | AlignContent::SpaceEvenly | AlignContent::SpaceAround
+            ))
     {
         flex_lines[0].cross_size =
             (node_size.cross(constants.dir).maybe_sub(constants.padding_border.cross_axis_sum(constants.dir)))
