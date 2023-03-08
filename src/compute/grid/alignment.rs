@@ -7,7 +7,7 @@ use crate::geometry::{Line, Point, Rect, Size};
 use crate::layout::{Layout, SizingMode};
 use crate::math::MaybeMath;
 use crate::node::Node;
-use crate::resolve::MaybeResolve;
+use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Position};
 use crate::sys::{f32_max, f32_min};
 use crate::tree::LayoutTree;
@@ -90,8 +90,16 @@ pub(super) fn align_and_position_item(
     let position = style.position;
     let inset_horizontal = style.inset.horizontal_components().map(|size| size.resolve_to_option(grid_area_size.width));
     let inset_vertical = style.inset.vertical_components().map(|size| size.resolve_to_option(grid_area_size.height));
+    let padding = style.padding.map(|p| p.resolve_or_zero(Some(grid_area_size.width)));
+    let border = style.border.map(|p| p.resolve_or_zero(Some(grid_area_size.width)));
+    let padding_border_size = (padding + border).sum_axes();
     let inherent_size = style.size.maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
-    let min_size = style.min_size.maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let min_size = style
+        .min_size
+        .maybe_resolve(grid_area_size)
+        .or(padding_border_size.map(Some))
+        .maybe_max(padding_border_size)
+        .maybe_apply_aspect_ratio(aspect_ratio);
     let max_size = style.max_size.maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
 
     // Resolve default alignment styles if they are set on neither the parent or the node itself
@@ -149,6 +157,7 @@ pub(super) fn align_and_position_item(
 
         None
     });
+
     // Reapply aspect ratio after stretch and absolute position width adjustments
     let Size { width, height } = Size { width, height: inherent_size.height }.maybe_apply_aspect_ratio(aspect_ratio);
 
