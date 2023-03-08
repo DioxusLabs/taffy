@@ -1,5 +1,11 @@
 # Release Notes
 
+## 0.3.6
+
+### Fixes
+
+- Fix: Ignore `align_content` when `flex_wrap` is set to `nowrap` (#383)
+
 ## 0.3.5
 
 ### Fixes
