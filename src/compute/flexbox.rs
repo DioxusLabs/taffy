@@ -456,10 +456,11 @@ fn compute_constants(
     let padding_border = padding + border;
 
     let node_outer_size = known_dimensions;
-    let node_inner_size = Size {
-        width: node_outer_size.width.maybe_sub(padding_border.horizontal_axis_sum()),
-        height: node_outer_size.height.maybe_sub(padding_border.vertical_axis_sum()),
-    };
+    let node_inner_size = node_outer_size.maybe_sub(padding_border.sum_axes());
+    // Size {
+    //     width: node_outer_size.width.maybe_sub(padding_border.horizontal_axis_sum()),
+    //     height: node_outer_size.height.maybe_sub(padding_border.vertical_axis_sum()),
+    // };
     let gap = style.gap.resolve_or_zero(node_inner_size.or(Size::zero()));
 
     let container_size = Size::zero();
