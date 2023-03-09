@@ -285,7 +285,7 @@ fn compute_preliminary(
     // 5. Collect flex items into flex lines.
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("collect_flex_lines");
-    let mut flex_lines = collect_flex_lines(tree, node, &constants, available_space, &mut flex_items);
+    let mut flex_lines = collect_flex_lines(&constants, available_space, &mut flex_items);
 
     // If container size is undefined, determine the container's main size
     // and then re-resolve gaps based on newly determined size
@@ -728,13 +728,11 @@ fn determine_flex_base_size(
 ///         **Note that the "collect as many" line will collect zero-sized flex items onto the end of the previous line even if the last non-zero item exactly "filled up" the line**.
 #[inline]
 fn collect_flex_lines<'a>(
-    tree: &impl LayoutTree,
-    node: Node,
     constants: &AlgoConstants,
     available_space: Size<AvailableSpace>,
     flex_items: &'a mut Vec<FlexItem>,
 ) -> Vec<FlexLine<'a>> {
-    if tree.style(node).flex_wrap == FlexWrap::NoWrap {
+    if !constants.is_wrap {
         let mut lines = new_vec_with_capacity(1);
         lines.push(FlexLine { items: flex_items.as_mut_slice(), cross_size: 0.0, offset_cross: 0.0 });
         lines
