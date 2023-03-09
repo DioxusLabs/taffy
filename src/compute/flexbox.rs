@@ -309,7 +309,7 @@ fn compute_preliminary(
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("resolve_flexible_lengths");
     for line in &mut flex_lines {
-        resolve_flexible_lengths(tree, line, &constants, original_gap);
+        resolve_flexible_lengths(line, &constants, original_gap);
     }
 
     // 9.4. Cross Size Determination
@@ -966,12 +966,7 @@ fn determine_container_main_size(
 ///
 /// # [9.7. Resolving Flexible Lengths](https://www.w3.org/TR/css-flexbox-1/#resolve-flexible-lengths)
 #[inline]
-fn resolve_flexible_lengths(
-    tree: &mut impl LayoutTree,
-    line: &mut FlexLine,
-    constants: &AlgoConstants,
-    original_gap: Size<f32>,
-) {
+fn resolve_flexible_lengths(line: &mut FlexLine, constants: &AlgoConstants, original_gap: Size<f32>) {
     let total_original_main_axis_gap = sum_axis_gaps(original_gap.main(constants.dir), line.items.len());
     let total_main_axis_gap = sum_axis_gaps(constants.gap.main(constants.dir), line.items.len());
 
@@ -997,8 +992,7 @@ fn resolve_flexible_lengths(
         let inner_target_size = child.hypothetical_inner_size.main(constants.dir);
         child.target_size.set_main(constants.dir, inner_target_size);
 
-        let child_style = tree.style(child.node);
-        if (child_style.flex_grow == 0.0 && child_style.flex_shrink == 0.0)
+        if (child.flex_grow == 0.0 && child.flex_shrink == 0.0)
             || (growing && child.flex_basis > child.hypothetical_inner_size.main(constants.dir))
             || (shrinking && child.flex_basis < child.hypothetical_inner_size.main(constants.dir))
         {
@@ -1054,8 +1048,7 @@ fn resolve_flexible_lengths(
 
         let (sum_flex_grow, sum_flex_shrink): (f32, f32) =
             unfrozen.iter().fold((0.0, 0.0), |(flex_grow, flex_shrink), item| {
-                let style = tree.style(item.node);
-                (flex_grow + style.flex_grow, flex_shrink + style.flex_shrink)
+                (flex_grow + item.flex_grow, flex_shrink + item.flex_shrink)
             });
 
         let free_space = if growing && sum_flex_grow < 1.0 {
@@ -1091,18 +1084,17 @@ fn resolve_flexible_lengths(
         if free_space.is_normal() {
             if growing && sum_flex_grow > 0.0 {
                 for child in &mut unfrozen {
-                    child.target_size.set_main(
-                        constants.dir,
-                        child.flex_basis + free_space * (tree.style(child.node).flex_grow / sum_flex_grow),
-                    );
+                    child
+                        .target_size
+                        .set_main(constants.dir, child.flex_basis + free_space * (child.flex_grow / sum_flex_grow));
                 }
             } else if shrinking && sum_flex_shrink > 0.0 {
                 let sum_scaled_shrink_factor: f32 =
-                    unfrozen.iter().map(|child| child.inner_flex_basis * tree.style(child.node).flex_shrink).sum();
+                    unfrozen.iter().map(|child| child.inner_flex_basis * child.flex_shrink).sum();
 
                 if sum_scaled_shrink_factor > 0.0 {
                     for child in &mut unfrozen {
-                        let scaled_shrink_factor = child.inner_flex_basis * tree.style(child.node).flex_shrink;
+                        let scaled_shrink_factor = child.inner_flex_basis * child.flex_shrink;
                         child.target_size.set_main(
                             constants.dir,
                             child.flex_basis + free_space * (scaled_shrink_factor / sum_scaled_shrink_factor),
