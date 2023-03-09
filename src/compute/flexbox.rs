@@ -155,6 +155,8 @@ struct AlgoConstants {
     align_items: AlignItems,
     /// The align_content property of this node
     align_content: AlignContent,
+    /// The justify_content property of this node
+    justify_content: Option<JustifyContent>,
 
     /// The border-box size of the node being laid out (if known)
     node_outer_size: Size<Option<f32>>,
@@ -364,7 +366,7 @@ fn compute_preliminary(
     // 12. Distribute any remaining free space.
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("distribute_remaining_free_space");
-    distribute_remaining_free_space(tree, &mut flex_lines, node, &constants);
+    distribute_remaining_free_space(&mut flex_lines, &constants);
 
     // 9.6. Cross-Axis Alignment
 
@@ -452,8 +454,9 @@ fn compute_constants(
     let margin = style.margin.resolve_or_zero(parent_size.width);
     let padding = style.padding.resolve_or_zero(parent_size.width);
     let border = style.border.resolve_or_zero(parent_size.width);
-    let align_items = style.align_items.unwrap_or(crate::style::AlignItems::Stretch);
-    let align_content = style.align_content.unwrap_or(crate::style::AlignContent::Stretch);
+    let align_items = style.align_items.unwrap_or(AlignItems::Stretch);
+    let align_content = style.align_content.unwrap_or(AlignContent::Stretch);
+    let justify_content = style.justify_content;
 
     let padding_border = padding + border;
 
@@ -476,6 +479,7 @@ fn compute_constants(
         padding_border,
         align_items,
         align_content,
+        justify_content,
         node_outer_size,
         node_inner_size,
         container_size,
@@ -1419,12 +1423,7 @@ fn determine_used_cross_size(tree: &mut impl LayoutTree, flex_lines: &mut [FlexL
 ///
 ///     2. Align the items along the main-axis per `justify-content`.
 #[inline]
-fn distribute_remaining_free_space(
-    tree: &mut impl LayoutTree,
-    flex_lines: &mut [FlexLine],
-    node: Node,
-    constants: &AlgoConstants,
-) {
+fn distribute_remaining_free_space(flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
     for line in flex_lines {
         let total_main_axis_gap = sum_axis_gaps(constants.gap.main(constants.dir), line.items.len());
         let used_space: f32 = total_main_axis_gap
@@ -1464,8 +1463,7 @@ fn distribute_remaining_free_space(
             let num_items = line.items.len();
             let layout_reverse = constants.dir.is_reverse();
             let gap = constants.gap.main(constants.dir);
-            let justify_content_mode: JustifyContent =
-                tree.style(node).justify_content.unwrap_or(JustifyContent::FlexStart);
+            let justify_content_mode = constants.justify_content.unwrap_or(JustifyContent::FlexStart);
 
             let justify_item = |(i, child): (usize, &mut FlexItem)| {
                 child.offset_main =
@@ -1624,11 +1622,7 @@ fn determine_container_cross_size(
 ///
 /// - [**Align all flex lines**](https://www.w3.org/TR/css-flexbox-1/#algo-line-align) per `align-content`.
 #[inline]
-fn align_flex_lines_per_align_content(
-    flex_lines: &mut [FlexLine],
-    constants: &AlgoConstants,
-    total_cross_size: f32,
-) {
+fn align_flex_lines_per_align_content(flex_lines: &mut [FlexLine], constants: &AlgoConstants, total_cross_size: f32) {
     let num_lines = flex_lines.len();
     let gap = constants.gap.cross(constants.dir);
     let align_content_mode = constants.align_content;
@@ -1907,7 +1901,7 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
         } else {
             // Stretch is an invalid value for justify_content in the flexbox algorithm, so we
             // treat it as if it wasn't set (and thus we default to FlexStart behaviour)
-            match (tree.style(node).justify_content.unwrap_or(JustifyContent::Start), constants.is_wrap_reverse) {
+            match (constants.justify_content.unwrap_or(JustifyContent::Start), constants.is_wrap_reverse) {
                 (JustifyContent::SpaceBetween, _)
                 | (JustifyContent::Start, _)
                 | (JustifyContent::Stretch, false)
