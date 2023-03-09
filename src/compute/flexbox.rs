@@ -680,6 +680,15 @@ fn determine_flex_base_size(
             .main(constants.dir);
         };
 
+        // Floor flex-basis by the padding_border_sum (floors inner_flex_basis at 0)
+        // This seems to be in violation of the spec which explicitly states that the content box should not be floored at
+        // (like it usually is) when calculating the flex-basis. But including this matches both Chrome and Firefox's behaviour.
+        //
+        // TODO: resolve spec violation
+        // Spec: https://www.w3.org/TR/css-flexbox-1/#intrinsic-item-contributions
+        // Spec: https://www.w3.org/TR/css-flexbox-1/#change-2016-max-contribution
+        let padding_border_sum = child.padding.main_axis_sum(constants.dir) + child.border.main_axis_sum(constants.dir);
+        child.flex_basis = child.flex_basis.max(padding_border_sum);
 
         // The hypothetical main size is the item’s flex base size clamped according to its
         // used min and max main sizes (and flooring the content box size at zero).
