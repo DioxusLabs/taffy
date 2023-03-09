@@ -387,7 +387,7 @@ fn compute_preliminary(
     // 16. Align all flex lines per align-content.
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("align_flex_lines_per_align_content");
-    align_flex_lines_per_align_content(tree, &mut flex_lines, node, &constants, total_line_cross_size);
+    align_flex_lines_per_align_content(&mut flex_lines, &constants, total_line_cross_size);
 
     // Do a final layout pass and gather the resulting layouts
     #[cfg(feature = "debug")]
@@ -1625,15 +1625,13 @@ fn determine_container_cross_size(
 /// - [**Align all flex lines**](https://www.w3.org/TR/css-flexbox-1/#algo-line-align) per `align-content`.
 #[inline]
 fn align_flex_lines_per_align_content(
-    tree: &impl LayoutTree,
     flex_lines: &mut [FlexLine],
-    node: Node,
     constants: &AlgoConstants,
     total_cross_size: f32,
 ) {
     let num_lines = flex_lines.len();
     let gap = constants.gap.cross(constants.dir);
-    let align_content_mode = tree.style(node).align_content.unwrap_or(AlignContent::Stretch);
+    let align_content_mode = constants.align_content;
     let total_cross_axis_gap = sum_axis_gaps(gap, num_lines);
     let free_space = constants.inner_container_size.cross(constants.dir) - total_cross_size - total_cross_axis_gap;
 
