@@ -838,6 +838,7 @@ mod padding_align_end_child;
 mod padding_border_overrides_max_size;
 mod padding_border_overrides_min_size;
 mod padding_border_overrides_size;
+mod padding_border_overrides_size_flex_basis;
 mod padding_center_child;
 mod padding_container_match_child;
 mod padding_flex_child;
