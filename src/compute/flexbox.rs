@@ -680,8 +680,8 @@ fn determine_flex_base_size(
             .main(constants.dir);
         };
 
-        // Floor flex-basis by the padding_border_sum (floors inner_flex_basis at 0)
-        // This seems to be in violation of the spec which explicitly states that the content box should not be floored at
+        // Floor flex-basis by the padding_border_sum (floors inner_flex_basis at zero)
+        // This seems to be in violation of the spec which explicitly states that the content box should not be floored at zero
         // (like it usually is) when calculating the flex-basis. But including this matches both Chrome and Firefox's behaviour.
         //
         // TODO: resolve spec violation
