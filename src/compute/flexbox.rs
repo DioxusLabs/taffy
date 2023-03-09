@@ -76,6 +76,8 @@ struct FlexItem {
     inset: Rect<Option<f32>>,
     /// The margin of this item
     margin: Rect<f32>,
+    /// Whether each margin is an auto margin or not
+    margin_is_auto: Rect<bool>,
     /// The padding of this item
     padding: Rect<f32>,
     /// The border of this item
@@ -330,7 +332,7 @@ fn compute_preliminary(
     // 8. Calculate the cross size of each flex line.
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("calculate_cross_size");
-    calculate_cross_size(tree, &mut flex_lines, known_dimensions, &constants);
+    calculate_cross_size(&mut flex_lines, known_dimensions, &constants);
 
     // 9. Handle 'align-content: stretch'.
     #[cfg(feature = "debug")]
@@ -369,7 +371,7 @@ fn compute_preliminary(
     // 13. Resolve cross-axis auto margins (also includes 14).
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("resolve_cross_axis_auto_margins");
-    resolve_cross_axis_auto_margins(tree, &mut flex_lines, &constants);
+    resolve_cross_axis_auto_margins(&mut flex_lines, &constants);
 
     // 15. Determine the flex container’s used cross size.
     #[cfg(feature = "debug")]
@@ -508,6 +510,7 @@ fn generate_anonymous_flex_items(tree: &impl LayoutTree, node: Node, constants: 
 
                 inset: child_style.inset.zip_size(constants.node_inner_size, |p, s| p.maybe_resolve(s)),
                 margin: child_style.margin.resolve_or_zero(constants.node_inner_size.width),
+                margin_is_auto: child_style.margin.map(|m| m == LengthPercentageAuto::Auto),
                 padding: child_style.padding.resolve_or_zero(constants.node_inner_size.width),
                 border: child_style.border.resolve_or_zero(constants.node_inner_size.width),
                 align_self: child_style.align_self.unwrap_or(constants.align_items),
@@ -1288,12 +1291,7 @@ fn calculate_children_base_lines(
 ///         If the flex container is single-line, then clamp the line’s cross-size to be within the container’s computed min and max cross sizes.
 ///         **Note that if CSS 2.1’s definition of min/max-width/height applied more generally, this behavior would fall out automatically**.
 #[inline]
-fn calculate_cross_size(
-    tree: &mut impl LayoutTree,
-    flex_lines: &mut [FlexLine],
-    node_size: Size<Option<f32>>,
-    constants: &AlgoConstants,
-) {
+fn calculate_cross_size(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>>, constants: &AlgoConstants) {
     // Note: AlignContent::SpaceEvenly and AlignContent::SpaceAround behave like AlignContent::Stretch when there is only
     // a single flex line in the container. See: https://www.w3.org/TR/css-flexbox-1/#align-content-property
     // Also: align_content is ignored entirely (and thus behaves like Stretch) when `flex_wrap` is set to `nowrap`.
@@ -1327,10 +1325,9 @@ fn calculate_cross_size(
                 .items
                 .iter()
                 .map(|child| {
-                    let child_style = tree.style(child.node);
                     if child.align_self == AlignSelf::Baseline
-                        && child_style.margin.cross_start(constants.dir) != LengthPercentageAuto::Auto
-                        && child_style.margin.cross_end(constants.dir) != LengthPercentageAuto::Auto
+                        && !child.margin_is_auto.cross_start(constants.dir)
+                        && !child.margin_is_auto.cross_end(constants.dir)
                     {
                         max_baseline - child.baseline + child.hypothetical_outer_size.cross(constants.dir)
                     } else {
@@ -1387,8 +1384,8 @@ fn determine_used_cross_size(tree: &mut impl LayoutTree, flex_lines: &mut [FlexL
             child.target_size.set_cross(
                 constants.dir,
                 if child.align_self == AlignSelf::Stretch
-                    && child_style.margin.cross_start(constants.dir) != LengthPercentageAuto::Auto
-                    && child_style.margin.cross_end(constants.dir) != LengthPercentageAuto::Auto
+                    && !child.margin_is_auto.cross_start(constants.dir)
+                    && !child.margin_is_auto.cross_end(constants.dir)
                     && child_style.size.cross(constants.dir) == Dimension::Auto
                 {
                     // For some reason this particular usage of max_width is an exception to the rule that max_width's transfer
@@ -1438,11 +1435,10 @@ fn distribute_remaining_free_space(
         let mut num_auto_margins = 0;
 
         for child in line.items.iter_mut() {
-            let child_style = tree.style(child.node);
-            if child_style.margin.main_start(constants.dir) == LengthPercentageAuto::Auto {
+            if child.margin_is_auto.main_start(constants.dir) {
                 num_auto_margins += 1;
             }
-            if child_style.margin.main_end(constants.dir) == LengthPercentageAuto::Auto {
+            if child.margin_is_auto.main_end(constants.dir) {
                 num_auto_margins += 1;
             }
         }
@@ -1451,15 +1447,14 @@ fn distribute_remaining_free_space(
             let margin = free_space / num_auto_margins as f32;
 
             for child in line.items.iter_mut() {
-                let child_style = tree.style(child.node);
-                if child_style.margin.main_start(constants.dir) == LengthPercentageAuto::Auto {
+                if child.margin_is_auto.main_start(constants.dir) {
                     if constants.is_row {
                         child.margin.left = margin;
                     } else {
                         child.margin.top = margin;
                     }
                 }
-                if child_style.margin.main_end(constants.dir) == LengthPercentageAuto::Auto {
+                if child.margin_is_auto.main_end(constants.dir) {
                     if constants.is_row {
                         child.margin.right = margin;
                     } else {
@@ -1501,18 +1496,15 @@ fn distribute_remaining_free_space(
 ///     - Otherwise, if the block-start or inline-start margin (whichever is in the cross axis) is auto, set it to zero.
 ///         Set the opposite margin so that the outer cross size of the item equals the cross size of its flex line.
 #[inline]
-fn resolve_cross_axis_auto_margins(tree: &mut impl LayoutTree, flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
+fn resolve_cross_axis_auto_margins(flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
     for line in flex_lines {
         let line_cross_size = line.cross_size;
         let max_baseline: f32 = line.items.iter_mut().map(|child| child.baseline).fold(0.0, |acc, x| acc.max(x));
 
         for child in line.items.iter_mut() {
             let free_space = line_cross_size - child.outer_target_size.cross(constants.dir);
-            let child_style = tree.style(child.node);
 
-            if child_style.margin.cross_start(constants.dir) == LengthPercentageAuto::Auto
-                && child_style.margin.cross_end(constants.dir) == LengthPercentageAuto::Auto
-            {
+            if child.margin_is_auto.cross_start(constants.dir) && child.margin_is_auto.cross_end(constants.dir) {
                 if constants.is_row {
                     child.margin.top = free_space / 2.0;
                     child.margin.bottom = free_space / 2.0;
@@ -1520,13 +1512,13 @@ fn resolve_cross_axis_auto_margins(tree: &mut impl LayoutTree, flex_lines: &mut 
                     child.margin.left = free_space / 2.0;
                     child.margin.right = free_space / 2.0;
                 }
-            } else if child_style.margin.cross_start(constants.dir) == LengthPercentageAuto::Auto {
+            } else if child.margin_is_auto.cross_start(constants.dir) {
                 if constants.is_row {
                     child.margin.top = free_space;
                 } else {
                     child.margin.left = free_space;
                 }
-            } else if child_style.margin.cross_end(constants.dir) == LengthPercentageAuto::Auto {
+            } else if child.margin_is_auto.cross_end(constants.dir) {
                 if constants.is_row {
                     child.margin.bottom = free_space;
                 } else {
