@@ -614,88 +614,97 @@ fn determine_flex_base_size(
     for child in flex_items.iter_mut() {
         let child_style = tree.style(child.node);
 
-        // A. If the item has a definite used flex basis, that’s the flex base size.
+        child.flex_basis = 'flex_basis: {
+            // A. If the item has a definite used flex basis, that’s the flex base size.
 
-        // B. If the flex item has an intrinsic aspect ratio,
-        //    a used flex basis of content, and a definite cross size,
-        //    then the flex base size is calculated from its inner
-        //    cross size and the flex item’s intrinsic aspect ratio.
+            // B. If the flex item has an intrinsic aspect ratio,
+            //    a used flex basis of content, and a definite cross size,
+            //    then the flex base size is calculated from its inner
+            //    cross size and the flex item’s intrinsic aspect ratio.
 
-        // Note: `child.size` has already been resolved against aspect_ratio in generate_anonymous_flex_items
-        // So B will just work here by using main_size without special handling for aspect_ratio
+            // Note: `child.size` has already been resolved against aspect_ratio in generate_anonymous_flex_items
+            // So B will just work here by using main_size without special handling for aspect_ratio
 
-        let flex_basis = child_style.flex_basis.maybe_resolve(constants.node_inner_size.main(constants.dir));
-        let main_size = child.size.main(constants.dir);
-        if let Some(flex_basis) = flex_basis.or(main_size) {
-            child.flex_basis = flex_basis;
-            continue;
+            let flex_basis = child_style.flex_basis.maybe_resolve(constants.node_inner_size.main(constants.dir));
+            let main_size = child.size.main(constants.dir);
+            if let Some(flex_basis) = flex_basis.or(main_size) {
+                break 'flex_basis flex_basis;
+            };
+
+            // C. If the used flex basis is content or depends on its available space,
+            //    and the flex container is being sized under a min-content or max-content
+            //    constraint (e.g. when performing automatic table layout [CSS21]),
+            //    size the item under that constraint. The flex base size is the item’s
+            //    resulting main size.
+
+            // This is covered by the implementation of E below, which passes the available_space constraint
+            // through to the child size computation. It may need a separate implementation if/when D is implemented.
+
+            // D. Otherwise, if the used flex basis is content or depends on its
+            //    available space, the available main size is infinite, and the flex item’s
+            //    inline axis is parallel to the main axis, lay the item out using the rules
+            //    for a box in an orthogonal flow [CSS3-WRITING-MODES]. The flex base size
+            //    is the item’s max-content main size.
+
+            // TODO if/when vertical writing modes are supported
+
+            // E. Otherwise, size the item into the available space using its used flex basis
+            //    in place of its main size, treating a value of content as max-content.
+            //    If a cross size is needed to determine the main size (e.g. when the
+            //    flex item’s main size is in its block axis) and the flex item’s cross size
+            //    is auto and not definite, in this calculation use fit-content as the
+            //    flex item’s cross size. The flex base size is the item’s resulting main size.
+
+            let child_known_dimensions = {
+                let mut ckd = child.size;
+                if child.align_self == AlignSelf::Stretch && ckd.cross(constants.dir).is_none() {
+                    ckd.set_cross(
+                        constants.dir,
+                        available_space
+                            .cross(constants.dir)
+                            .into_option()
+                            .maybe_sub(constants.margin.cross_axis_sum(constants.dir)),
+                    );
+                }
+                ckd
+            };
+
+            break 'flex_basis GenericAlgorithm::measure_size(
+                tree,
+                child.node,
+                child_known_dimensions,
+                constants.node_inner_size,
+                available_space,
+                SizingMode::ContentSize,
+            )
+            .main(constants.dir);
         };
 
-        // C. If the used flex basis is content or depends on its available space,
-        //    and the flex container is being sized under a min-content or max-content
-        //    constraint (e.g. when performing automatic table layout [CSS21]),
-        //    size the item under that constraint. The flex base size is the item’s
-        //    resulting main size.
+        // Floor flex-basis by the padding_border_sum (floors inner_flex_basis at zero)
+        // This seems to be in violation of the spec which explicitly states that the content box should not be floored at zero
+        // (like it usually is) when calculating the flex-basis. But including this matches both Chrome and Firefox's behaviour.
+        //
+        // TODO: resolve spec violation
+        // Spec: https://www.w3.org/TR/css-flexbox-1/#intrinsic-item-contributions
+        // Spec: https://www.w3.org/TR/css-flexbox-1/#change-2016-max-contribution
+        let padding_border_sum = child.padding.main_axis_sum(constants.dir) + child.border.main_axis_sum(constants.dir);
+        child.flex_basis = child.flex_basis.max(padding_border_sum);
 
-        // This is covered by the implementation of E below, which passes the available_space constraint
-        // through to the child size computation. It may need a separate implementation if/when D is implemented.
+        // The hypothetical main size is the item’s flex base size clamped according to its
+        // used min and max main sizes (and flooring the content box size at zero).
 
-        // D. Otherwise, if the used flex basis is content or depends on its
-        //    available space, the available main size is infinite, and the flex item’s
-        //    inline axis is parallel to the main axis, lay the item out using the rules
-        //    for a box in an orthogonal flow [CSS3-WRITING-MODES]. The flex base size
-        //    is the item’s max-content main size.
-
-        // TODO if/when vertical writing modes are supported
-
-        // E. Otherwise, size the item into the available space using its used flex basis
-        //    in place of its main size, treating a value of content as max-content.
-        //    If a cross size is needed to determine the main size (e.g. when the
-        //    flex item’s main size is in its block axis) and the flex item’s cross size
-        //    is auto and not definite, in this calculation use fit-content as the
-        //    flex item’s cross size. The flex base size is the item’s resulting main size.
-
-        let child_known_dimensions = {
-            let mut ckd = child.size;
-            if child.align_self == AlignSelf::Stretch && ckd.cross(constants.dir).is_none() {
-                ckd.set_cross(
-                    constants.dir,
-                    available_space
-                        .cross(constants.dir)
-                        .into_option()
-                        .maybe_sub(constants.margin.cross_axis_sum(constants.dir)),
-                );
-            }
-            ckd
-        };
-
-        child.flex_basis = GenericAlgorithm::measure_size(
-            tree,
-            child.node,
-            child_known_dimensions,
-            constants.node_inner_size,
-            available_space,
-            SizingMode::ContentSize,
-        )
-        .main(constants.dir);
-    }
-
-    // The hypothetical main size is the item’s flex base size clamped according to its
-    // used min and max main sizes (and flooring the content box size at zero).
-
-    for child in flex_items {
         child.inner_flex_basis =
             child.flex_basis - child.padding.main_axis_sum(constants.dir) - child.border.main_axis_sum(constants.dir);
 
-        let hypothetical_inner_min_main = child.min_size.main(constants.dir);
-        child.hypothetical_inner_size.set_main(
-            constants.dir,
-            child.flex_basis.maybe_clamp(hypothetical_inner_min_main, child.max_size.main(constants.dir)),
-        );
-        child.hypothetical_outer_size.set_main(
-            constants.dir,
-            child.hypothetical_inner_size.main(constants.dir) + child.margin.main_axis_sum(constants.dir),
-        );
+        let padding_border_axes_sums = (child.padding + child.border).sum_axes().map(Some);
+        let hypothetical_inner_min_main =
+            child.min_size.main(constants.dir).maybe_max(padding_border_axes_sums.main(constants.dir));
+        let hypothetical_inner_size =
+            child.flex_basis.maybe_clamp(hypothetical_inner_min_main, child.max_size.main(constants.dir));
+        let hypothetical_outer_size = hypothetical_inner_size + child.margin.main_axis_sum(constants.dir);
+
+        child.hypothetical_inner_size.set_main(constants.dir, hypothetical_inner_size);
+        child.hypothetical_outer_size.set_main(constants.dir, hypothetical_outer_size);
 
         let min_content_size = GenericAlgorithm::measure_size(
             tree,
@@ -709,7 +718,8 @@ fn determine_flex_base_size(
         // 4.5. Automatic Minimum Size of Flex Items
         // https://www.w3.org/TR/css-flexbox-1/#min-size-auto
         let clamped_min_content_size = min_content_size.maybe_min(child.size).maybe_min(child.max_size);
-        child.resolved_minimum_size = child.min_size.unwrap_or(clamped_min_content_size);
+        child.resolved_minimum_size =
+            child.min_size.unwrap_or(clamped_min_content_size).maybe_max(padding_border_axes_sums);
     }
 }
 
@@ -810,7 +820,10 @@ fn determine_container_main_size(
                         let total_target_size = line
                             .items
                             .iter()
-                            .map(|child| child.flex_basis + child.margin.main_axis_sum(constants.dir))
+                            .map(|child| {
+                                let padding_border_sum = (child.padding + child.border).main_axis_sum(constants.dir);
+                                (child.flex_basis + child.margin.main_axis_sum(constants.dir)).max(padding_border_sum)
+                            })
                             .sum::<f32>();
                         total_target_size + line_main_axis_gap
                     })
@@ -831,7 +844,10 @@ fn determine_container_main_size(
                         let total_target_size = line
                             .items
                             .iter()
-                            .map(|child| child.flex_basis + child.margin.main_axis_sum(constants.dir))
+                            .map(|child| {
+                                let padding_border_sum = (child.padding + child.border).main_axis_sum(constants.dir);
+                                (child.flex_basis + child.margin.main_axis_sum(constants.dir)).max(padding_border_sum)
+                            })
                             .sum::<f32>();
                         total_target_size + line_main_axis_gap
                     })
@@ -850,23 +866,39 @@ fn determine_container_main_size(
                         let style_min = item.min_size.main(constants.dir);
                         let style_preferred = item.size.main(constants.dir);
                         let style_max = item.max_size.main(constants.dir);
-                        let flex_basis_min = Some(item.flex_basis).filter(|_| item.flex_shrink == 0.0);
-                        let flex_basis_max = Some(item.flex_basis).filter(|_| item.flex_grow == 0.0);
-                        let min_main_size = style_min.maybe_max(flex_basis_min).or(flex_basis_min);
-                        let max_main_size = style_max.maybe_min(flex_basis_max).or(flex_basis_max);
+
+                        // The spec seems a bit unclear on this point (my initial reading was that the `.maybe_max(style_preferred)` should
+                        // not be included here), however this matches both Chrome and Firefox as of 9th March 2023.
+                        //
+                        // Spec: https://www.w3.org/TR/css-flexbox-1/#intrinsic-item-contributions
+                        // Spec modifcation: https://www.w3.org/TR/css-flexbox-1/#change-2016-max-contribution
+                        // Issue: https://github.com/w3c/csswg-drafts/issues/1435
+                        // Gentest: padding_border_overrides_size_flex_basis_0.html
+                        let clamping_basis = Some(item.flex_basis).maybe_max(style_preferred);
+                        let flex_basis_min = clamping_basis.filter(|_| item.flex_shrink == 0.0);
+                        let flex_basis_max = clamping_basis.filter(|_| item.flex_grow == 0.0);
+
+                        let resolved_min = item.resolved_minimum_size.main(constants.dir);
+                        let min_main_size = style_min
+                            .maybe_max(flex_basis_min)
+                            .or(flex_basis_min)
+                            .unwrap_or(resolved_min)
+                            .max(resolved_min);
+                        let max_main_size =
+                            style_max.maybe_min(flex_basis_max).or(flex_basis_max).unwrap_or(f32::INFINITY);
 
                         let content_contribution = match (min_main_size, style_preferred, max_main_size) {
                             // If the clamping values are such that max <= min, then we can avoid the expensive step of computing the content size
                             // as we know that the clamping values will override it anyway
-                            (Some(min), Some(pref), Some(max)) if max <= min || max <= pref => {
+                            (min, Some(pref), max) if max <= min || max <= pref => {
                                 pref.min(max).max(min) + item.margin.main_axis_sum(constants.dir)
                             }
-                            (Some(min), _, Some(max)) if max <= min => min + item.margin.main_axis_sum(constants.dir),
-                            (_, Some(pref), Some(max)) if max <= pref => max + item.margin.main_axis_sum(constants.dir),
+                            (min, _, max) if max <= min => min + item.margin.main_axis_sum(constants.dir),
                             // Else compute the min- or -max content size and apply the full formula for computing the
                             // min- or max- content contributuon
                             _ => {
                                 // Either the min- or max- content size depending on which constraint we are sizing under.
+                                // TODO: Optimise by using already computed values where available
                                 let content_main_size = GenericAlgorithm::measure_size(
                                     tree,
                                     item.node,
@@ -891,9 +923,14 @@ fn determine_container_main_size(
                                 // Ultimately, this was not found by reading the spec, but by trial and error fixing tests to align with Webkit/Firefox output.
                                 // (see the `flex_basis_unconstraint_row` and `flex_basis_uncontraint_column` generated tests which demonstrate this)
                                 if constants.is_row {
-                                    content_main_size.maybe_clamp(style_min, style_max)
+                                    content_main_size
+                                        .maybe_clamp(style_min, style_max)
+                                        .max(constants.padding_border.main_axis_sum(constants.dir))
                                 } else {
-                                    content_main_size.max(item.flex_basis).maybe_clamp(style_min, style_max)
+                                    content_main_size
+                                        .max(item.flex_basis)
+                                        .maybe_clamp(style_min, style_max)
+                                        .max(constants.padding_border.main_axis_sum(constants.dir))
                                 }
                             }
                         };
@@ -902,8 +939,7 @@ fn determine_container_main_size(
                             if diff > 0.0 {
                                 diff / f32_max(1.0, item.flex_grow)
                             } else if diff < 0.0 {
-                                let scaled_shrink_factor = f32_max(1.0, item.flex_shrink) * item.inner_flex_basis;
-                                // let scaled_shrink_factor - f32_max(1.0, item.flex_shrink * item.inner_flex_basis);
+                                let scaled_shrink_factor = f32_max(1.0, item.flex_shrink * item.inner_flex_basis);
                                 diff / scaled_shrink_factor
                             } else {
                                 // We are assuming that diff is 0.0 here and that we haven't accidentally introduced a NaN
@@ -1163,13 +1199,15 @@ fn determine_hypothetical_cross_size(
     available_space: Size<AvailableSpace>,
 ) {
     for child in line.items.iter_mut() {
+        let padding_border_sum = (child.padding + child.border).cross_axis_sum(constants.dir);
+
         let child_cross = child
             .size
             .cross(constants.dir)
-            .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir));
+            .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir))
+            .maybe_max(padding_border_sum);
 
-        child.hypothetical_inner_size.set_cross(
-            constants.dir,
+        let child_inner_cross = child_cross.unwrap_or_else(|| {
             GenericAlgorithm::measure_size(
                 tree,
                 child.node,
@@ -1193,13 +1231,13 @@ fn determine_hypothetical_cross_size(
                 SizingMode::ContentSize,
             )
             .cross(constants.dir)
-            .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir)),
-        );
+            .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir))
+            .max(padding_border_sum)
+        });
+        let child_outer_cross = child_inner_cross + child.margin.cross_axis_sum(constants.dir);
 
-        child.hypothetical_outer_size.set_cross(
-            constants.dir,
-            child.hypothetical_inner_size.cross(constants.dir) + child.margin.cross_axis_sum(constants.dir),
-        );
+        child.hypothetical_inner_size.set_cross(constants.dir, child_inner_cross);
+        child.hypothetical_outer_size.set_cross(constants.dir, child_outer_cross);
     }
 }
 
@@ -1601,17 +1639,15 @@ fn determine_container_cross_size(
     let total_cross_axis_gap = sum_axis_gaps(constants.gap.cross(constants.dir), flex_lines.len());
     let total_line_cross_size: f32 = flex_lines.iter().map(|line| line.cross_size).sum::<f32>();
 
-    constants.container_size.set_cross(
-        constants.dir,
-        node_size.cross(constants.dir).unwrap_or(
-            total_line_cross_size + total_cross_axis_gap + constants.padding_border.cross_axis_sum(constants.dir),
-        ),
-    );
+    let padding_border_sum = constants.padding_border.cross_axis_sum(constants.dir);
+    let outer_container_size = node_size
+        .cross(constants.dir)
+        .unwrap_or(total_line_cross_size + total_cross_axis_gap + padding_border_sum)
+        .max(padding_border_sum);
+    let inner_container_size = outer_container_size - padding_border_sum;
 
-    constants.inner_container_size.set_cross(
-        constants.dir,
-        constants.container_size.cross(constants.dir) - constants.padding_border.cross_axis_sum(constants.dir),
-    );
+    constants.container_size.set_cross(constants.dir, outer_container_size);
+    constants.inner_container_size.set_cross(constants.dir, inner_container_size);
 
     total_line_cross_size
 }
@@ -1797,8 +1833,11 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
         }
 
         let aspect_ratio = child_style.aspect_ratio;
-        let margin = child_style.margin.map(|margin| margin.resolve_to_option(container_width));
         let align_self = child_style.align_self.unwrap_or(constants.align_items);
+        let margin = child_style.margin.map(|margin| margin.resolve_to_option(container_width));
+        let padding = child_style.padding.resolve_or_zero(Some(container_width));
+        let border = child_style.border.resolve_or_zero(Some(container_width));
+        let padding_border_sum = (padding + border).sum_axes();
 
         // Resolve inset
         let left = child_style.inset.left.maybe_resolve(container_width);
@@ -1809,8 +1848,12 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
         // Compute known dimensions from min/max/inherent size styles
         let style_size =
             child_style.size.maybe_resolve(constants.container_size).maybe_apply_aspect_ratio(aspect_ratio);
-        let min_size =
-            child_style.min_size.maybe_resolve(constants.container_size).maybe_apply_aspect_ratio(aspect_ratio);
+        let min_size = child_style
+            .min_size
+            .maybe_resolve(constants.container_size)
+            .maybe_apply_aspect_ratio(aspect_ratio)
+            .or(padding_border_sum.map(Some))
+            .maybe_max(padding_border_sum);
         let max_size =
             child_style.max_size.maybe_resolve(constants.container_size).maybe_apply_aspect_ratio(aspect_ratio);
         let mut known_dimensions = style_size.maybe_clamp(min_size, max_size);

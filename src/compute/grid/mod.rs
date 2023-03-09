@@ -141,6 +141,7 @@ pub fn compute(
     // https://www.w3.org/TR/css-grid-1/#available-grid-space
     let padding = style.padding.resolve_or_zero(parent_size.width);
     let border = style.border.resolve_or_zero(parent_size.width);
+    let padding_border_size = (padding + border).sum_axes();
     let aspect_ratio = style.aspect_ratio;
     let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
     let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
@@ -236,10 +237,12 @@ pub fn compute(
     let container_border_box = Size {
         width: resolved_style_size
             .get(AbstractAxis::Inline)
-            .unwrap_or_else(|| initial_column_sum + padding.horizontal_axis_sum() + border.horizontal_axis_sum()),
+            .unwrap_or_else(|| initial_column_sum + padding.horizontal_axis_sum() + border.horizontal_axis_sum())
+            .max(padding_border_size.width),
         height: resolved_style_size
             .get(AbstractAxis::Block)
-            .unwrap_or_else(|| initial_row_sum + padding.vertical_axis_sum() + border.vertical_axis_sum()),
+            .unwrap_or_else(|| initial_row_sum + padding.vertical_axis_sum() + border.vertical_axis_sum())
+            .max(padding_border_size.height),
     };
     let container_content_box = Size {
         width: container_border_box.width - padding.horizontal_axis_sum() - border.horizontal_axis_sum(),
