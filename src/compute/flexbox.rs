@@ -602,7 +602,7 @@ fn determine_flex_base_size(
     tree: &mut impl LayoutTree,
     constants: &AlgoConstants,
     available_space: Size<AvailableSpace>,
-    flex_items: &mut Vec<FlexItem>,
+    flex_items: &mut [FlexItem],
 ) {
     for child in flex_items.iter_mut() {
         let child_style = tree.style(child.node);
