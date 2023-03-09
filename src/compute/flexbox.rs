@@ -614,76 +614,76 @@ fn determine_flex_base_size(
     for child in flex_items.iter_mut() {
         let child_style = tree.style(child.node);
 
-        // A. If the item has a definite used flex basis, that’s the flex base size.
+        child.flex_basis = 'flex_basis: {
+            // A. If the item has a definite used flex basis, that’s the flex base size.
 
-        // B. If the flex item has an intrinsic aspect ratio,
-        //    a used flex basis of content, and a definite cross size,
-        //    then the flex base size is calculated from its inner
-        //    cross size and the flex item’s intrinsic aspect ratio.
+            // B. If the flex item has an intrinsic aspect ratio,
+            //    a used flex basis of content, and a definite cross size,
+            //    then the flex base size is calculated from its inner
+            //    cross size and the flex item’s intrinsic aspect ratio.
 
-        // Note: `child.size` has already been resolved against aspect_ratio in generate_anonymous_flex_items
-        // So B will just work here by using main_size without special handling for aspect_ratio
+            // Note: `child.size` has already been resolved against aspect_ratio in generate_anonymous_flex_items
+            // So B will just work here by using main_size without special handling for aspect_ratio
 
-        let flex_basis = child_style.flex_basis.maybe_resolve(constants.node_inner_size.main(constants.dir));
-        let main_size = child.size.main(constants.dir);
-        if let Some(flex_basis) = flex_basis.or(main_size) {
-            child.flex_basis = flex_basis;
-            continue;
+            let flex_basis = child_style.flex_basis.maybe_resolve(constants.node_inner_size.main(constants.dir));
+            let main_size = child.size.main(constants.dir);
+            if let Some(flex_basis) = flex_basis.or(main_size) {
+                break 'flex_basis flex_basis;
+            };
+
+            // C. If the used flex basis is content or depends on its available space,
+            //    and the flex container is being sized under a min-content or max-content
+            //    constraint (e.g. when performing automatic table layout [CSS21]),
+            //    size the item under that constraint. The flex base size is the item’s
+            //    resulting main size.
+
+            // This is covered by the implementation of E below, which passes the available_space constraint
+            // through to the child size computation. It may need a separate implementation if/when D is implemented.
+
+            // D. Otherwise, if the used flex basis is content or depends on its
+            //    available space, the available main size is infinite, and the flex item’s
+            //    inline axis is parallel to the main axis, lay the item out using the rules
+            //    for a box in an orthogonal flow [CSS3-WRITING-MODES]. The flex base size
+            //    is the item’s max-content main size.
+
+            // TODO if/when vertical writing modes are supported
+
+            // E. Otherwise, size the item into the available space using its used flex basis
+            //    in place of its main size, treating a value of content as max-content.
+            //    If a cross size is needed to determine the main size (e.g. when the
+            //    flex item’s main size is in its block axis) and the flex item’s cross size
+            //    is auto and not definite, in this calculation use fit-content as the
+            //    flex item’s cross size. The flex base size is the item’s resulting main size.
+
+            let child_known_dimensions = {
+                let mut ckd = child.size;
+                if child.align_self == AlignSelf::Stretch && ckd.cross(constants.dir).is_none() {
+                    ckd.set_cross(
+                        constants.dir,
+                        available_space
+                            .cross(constants.dir)
+                            .into_option()
+                            .maybe_sub(constants.margin.cross_axis_sum(constants.dir)),
+                    );
+                }
+                ckd
+            };
+
+            break 'flex_basis GenericAlgorithm::measure_size(
+                tree,
+                child.node,
+                child_known_dimensions,
+                constants.node_inner_size,
+                available_space,
+                SizingMode::ContentSize,
+            )
+            .main(constants.dir);
         };
 
-        // C. If the used flex basis is content or depends on its available space,
-        //    and the flex container is being sized under a min-content or max-content
-        //    constraint (e.g. when performing automatic table layout [CSS21]),
-        //    size the item under that constraint. The flex base size is the item’s
-        //    resulting main size.
 
-        // This is covered by the implementation of E below, which passes the available_space constraint
-        // through to the child size computation. It may need a separate implementation if/when D is implemented.
+        // The hypothetical main size is the item’s flex base size clamped according to its
+        // used min and max main sizes (and flooring the content box size at zero).
 
-        // D. Otherwise, if the used flex basis is content or depends on its
-        //    available space, the available main size is infinite, and the flex item’s
-        //    inline axis is parallel to the main axis, lay the item out using the rules
-        //    for a box in an orthogonal flow [CSS3-WRITING-MODES]. The flex base size
-        //    is the item’s max-content main size.
-
-        // TODO if/when vertical writing modes are supported
-
-        // E. Otherwise, size the item into the available space using its used flex basis
-        //    in place of its main size, treating a value of content as max-content.
-        //    If a cross size is needed to determine the main size (e.g. when the
-        //    flex item’s main size is in its block axis) and the flex item’s cross size
-        //    is auto and not definite, in this calculation use fit-content as the
-        //    flex item’s cross size. The flex base size is the item’s resulting main size.
-
-        let child_known_dimensions = {
-            let mut ckd = child.size;
-            if child.align_self == AlignSelf::Stretch && ckd.cross(constants.dir).is_none() {
-                ckd.set_cross(
-                    constants.dir,
-                    available_space
-                        .cross(constants.dir)
-                        .into_option()
-                        .maybe_sub(constants.margin.cross_axis_sum(constants.dir)),
-                );
-            }
-            ckd
-        };
-
-        child.flex_basis = GenericAlgorithm::measure_size(
-            tree,
-            child.node,
-            child_known_dimensions,
-            constants.node_inner_size,
-            available_space,
-            SizingMode::ContentSize,
-        )
-        .main(constants.dir);
-    }
-
-    // The hypothetical main size is the item’s flex base size clamped according to its
-    // used min and max main sizes (and flooring the content box size at zero).
-
-    for child in flex_items {
         child.inner_flex_basis =
             child.flex_basis - child.padding.main_axis_sum(constants.dir) - child.border.main_axis_sum(constants.dir);
 
