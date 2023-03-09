@@ -120,10 +120,6 @@ pub(crate) fn compute(
 
         let size = node_size.unwrap_or(measured_size).maybe_clamp(node_min_size, node_max_size);
         let size = size.maybe_max(padding_border.sum_axes().map(Some));
-        // let size = match sizing_mode {
-        //     SizingMode::ContentSize => size,
-        //     SizingMode::InherentSize => size.maybe_max(padding_border.sum_axes().map(Some)),
-        // };
         return SizeAndBaselines { size, first_baselines: Point::NONE };
     }
 
