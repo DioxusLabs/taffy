@@ -706,11 +706,14 @@ fn determine_flex_base_size(
         child.hypothetical_inner_size.set_main(constants.dir, hypothetical_inner_size);
         child.hypothetical_outer_size.set_main(constants.dir, hypothetical_outer_size);
 
+        // Note that it is important that the `parent_size` parameter is not set for this function call
+        // as it used to resolve percentages against, and percentage size should not contribute to a
+        // min-content contribution. See https://drafts.csswg.org/css-sizing-3/#min-percentage-contribution
         let min_content_size = GenericAlgorithm::measure_size(
             tree,
             child.node,
             Size::NONE,
-            constants.node_inner_size,
+            Size::NONE,
             Size::MIN_CONTENT,
             SizingMode::ContentSize,
         );
