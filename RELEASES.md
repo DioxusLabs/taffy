@@ -5,7 +5,7 @@
 ### Fixes
 
 - Fix: Make `padding` and `border` floor node sizes (#372)
-- Fix: Prevent percentages contributing to min-content sizes (#388) (also fixes https://github.com/bevyengine/bevy/issues/8017)
+- Fix: Prevent percentages contributing to min-content sizes (#388) (also fixes bevyengine/bevy#8017)
 
 ## 0.3.6
 
