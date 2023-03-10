@@ -95,7 +95,7 @@ jobs:
         with:
           toolchain: stable
           components: clippy
-      - run: cargo doc --workspace -- -D warnings
+      - run: cargo doc
         env:
           RUSTDOCFLAGS: "-D warnings"
 
