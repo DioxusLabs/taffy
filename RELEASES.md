@@ -1,5 +1,12 @@
 # Release Notes
 
+## 0.3.7
+
+### Fixes
+
+- Fix: Make `padding` and `border` floor node sizes (#372)
+- Fix: Prevent percentages contributing to min-content sizes (#388) (also fixes bevyengine/bevy#8017)
+
 ## 0.3.6
 
 ### Fixes
