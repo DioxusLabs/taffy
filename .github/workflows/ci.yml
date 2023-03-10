@@ -4,6 +4,7 @@ on:
     branches:
       - main
       - 0.2.x
+      - 0.3.x
 
 name: Continuous integration
 
@@ -13,162 +14,90 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --no-default-features
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --no-default-features
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --no-default-features
+      - run: cargo test --no-default-features
 
   test-features-default:
     name: "Test Suite [Features: Default]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: build
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build
+      - run: cargo test
 
   test-features-default-with-serde:
     name: "Test Suite [Features: Default + serde]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --features serde
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --features serde
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --features serde
+      - run: cargo test --features serde
 
   test-features-alloc:
     name: "Test Suite [Features: alloc]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --no-default-features --features alloc,grid
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --no-default-features --features alloc,grid
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --no-default-features --features alloc,grid
+      - run: cargo test --no-default-features --features alloc,grid
 
   test-features-alloc-no-grid:
     name: "Test Suite [Features: alloc (no grid)]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --no-default-features --features alloc
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --no-default-features --features alloc
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --no-default-features --features alloc
+      - run: cargo test  --no-default-features --features alloc
 
   test-features-default-no-grid:
     name: "Test Suite [Features: std (no grid)]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --no-default-features --features std
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --no-default-features --features std
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --no-default-features --features std
+      - run: cargo test --no-default-features --features std
 
   fmt:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: stable
-          override: true
-      - run: rustup component add rustfmt
-      - uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
+          components: rustfmt
+      - run: cargo fmt --all -- --check
 
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: nightly
-          override: true
-      - run: rustup component add clippy
-      - uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --workspace -- -D warnings
+          components: clippy
+      - run: cargo +nightly clippy --workspace -- -D warnings
 
   doc:
     name: Documentation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: stable
-          override: true
-      - run: rustup component add clippy
-      - uses: actions-rs/cargo@v1
-        with:
-          command: doc
+          components: clippy
+      - run: cargo doc
         env:
           RUSTDOCFLAGS: "-D warnings"
-
 
   markdownlint:
     name: Markdown Lint
