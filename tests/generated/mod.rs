@@ -874,6 +874,7 @@ mod percentage_position_bottom_right;
 mod percentage_position_left_top;
 mod percentage_size_based_on_parent_inner_size;
 mod percentage_size_of_flex_basis;
+mod percentage_sizes_should_not_prevent_flex_shrinking;
 mod percentage_width_height;
 mod percentage_width_height_undefined_parent_size;
 mod position_root_with_rtl_should_position_withoutdirection;
