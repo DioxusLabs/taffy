@@ -1,5 +1,14 @@
 # Release Notes
 
+## 0.3.7
+
+- Fix: Make `padding` and `border` floor node sizes (#372)
+- Fix: Prevent percentages contributing to min-content sizes (#388) (also fixes https://github.com/bevyengine/bevy/issues/8017)
+
+### Fixes
+
+- Fix: Ignore `align_content` when `flex_wrap` is set to `nowrap` (#383)
+
 ## 0.3.6
 
 ### Fixes
