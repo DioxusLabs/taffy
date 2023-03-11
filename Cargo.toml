@@ -20,10 +20,12 @@ rand = { version = "0.8.5", optional = true }
 serde = { version = "1.0", optional = true, features = ["serde_derive"] }
 slotmap = "1.0.6"
 grid = { version = "0.9.0", optional = true }
+wasm-bindgen = { version = "0.2.84", optional = true }
 
 [features]
 default = ["std", "grid"]
 grid = ["alloc", "dep:grid"]
+wasm = ["dep:wasm-bindgen"]
 alloc = []
 std = ["num-traits/std"]
 serde = ["dep:serde"]

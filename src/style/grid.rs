@@ -8,6 +8,9 @@ use crate::sys::GridTrackVec;
 use core::cmp::{max, min};
 use core::convert::Infallible;
 
+#[cfg(feature = "wasm")]
+use wasm_bindgen::prelude::*;
+
 /// Controls whether grid items are placed row-wise or column-wise. And whether the sparse or dense packing algorithm is used.
 ///
 /// The "dense" packing algorithm attempts to fill in holes earlier in the grid, if smaller items come up later. This may cause items to appear out-of-order, when doing so would fill in holes left by larger items.
@@ -15,8 +18,10 @@ use core::convert::Infallible;
 /// Defaults to [`GridAutoFlow::Row`]
 ///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-flow)
+#[repr(u8)]
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub enum GridAutoFlow {
     /// Items are placed by filling each row in turn, adding new rows as necessary
     Row,
@@ -31,6 +36,19 @@ pub enum GridAutoFlow {
 impl Default for GridAutoFlow {
     fn default() -> Self {
         Self::Row
+    }
+}
+
+impl TryFrom<i32> for GridAutoFlow {
+    type Error = ();
+    fn try_from(n: i32) -> Result<Self, ()> {
+        match n {
+            0 => Ok(GridAutoFlow::Row),
+            1 => Ok(GridAutoFlow::Column),
+            2 => Ok(GridAutoFlow::RowDense),
+            3 => Ok(GridAutoFlow::ColumnDense),
+            _ => Err(()),
+        }
     }
 }
 

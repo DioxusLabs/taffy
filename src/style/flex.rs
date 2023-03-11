@@ -1,12 +1,17 @@
 //! Style types for Flexbox layout
 
+#[cfg(feature = "wasm")]
+use wasm_bindgen::prelude::*;
+
 /// Controls whether flex items are forced onto one line or can wrap onto multiple lines.
 ///
 /// Defaults to [`FlexWrap::NoWrap`]
 ///
 /// [Specification](https://www.w3.org/TR/css-flexbox-1/#flex-wrap-property)
+#[repr(u8)]
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub enum FlexWrap {
     /// Items will not wrap and stay on a single line
     NoWrap,
@@ -22,6 +27,18 @@ impl Default for FlexWrap {
     }
 }
 
+impl TryFrom<i32> for FlexWrap {
+    type Error = ();
+    fn try_from(n: i32) -> Result<Self, ()> {
+        match n {
+            0 => Ok(FlexWrap::NoWrap),
+            1 => Ok(FlexWrap::Wrap),
+            2 => Ok(FlexWrap::WrapReverse),
+            _ => Err(()),
+        }
+    }
+}
+
 /// The direction of the flexbox layout main axis.
 ///
 /// There are always two perpendicular layout axes: main (or primary) and cross (or secondary).
@@ -33,8 +50,10 @@ impl Default for FlexWrap {
 /// The default behavior is [`FlexDirection::Row`].
 ///
 /// [Specification](https://www.w3.org/TR/css-flexbox-1/#flex-direction-property)
+#[repr(u8)]
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub enum FlexDirection {
     /// Defines +x as the main axis
     ///
@@ -57,6 +76,19 @@ pub enum FlexDirection {
 impl Default for FlexDirection {
     fn default() -> Self {
         Self::Row
+    }
+}
+
+impl TryFrom<i32> for FlexDirection {
+    type Error = ();
+    fn try_from(n: i32) -> Result<Self, ()> {
+        match n {
+            0 => Ok(FlexDirection::Row),
+            1 => Ok(FlexDirection::Column),
+            2 => Ok(FlexDirection::RowReverse),
+            3 => Ok(FlexDirection::ColumnReverse),
+            _ => Err(()),
+        }
     }
 }
 

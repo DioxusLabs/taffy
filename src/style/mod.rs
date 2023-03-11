@@ -7,6 +7,9 @@ pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, J
 pub use self::dimension::{AvailableSpace, Dimension, LengthPercentage, LengthPercentageAuto};
 pub use self::flex::{FlexDirection, FlexWrap};
 
+#[cfg(feature = "wasm")]
+use wasm_bindgen::prelude::*;
+
 #[cfg(feature = "grid")]
 mod grid;
 #[cfg(feature = "grid")]
@@ -28,21 +31,35 @@ use crate::sys::GridTrackVec;
 /// Sets the layout used for the children of this node
 ///
 /// [`Display::Flex`] is the default value.
+#[repr(u8)]
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub enum Display {
+    /// The children will not be laid out, and will follow absolute positioning
+    None,
     /// The children will follow the flexbox layout algorithm
     Flex,
     /// The children will follow the CSS Grid layout algorithm
     #[cfg(feature = "grid")]
     Grid,
-    /// The children will not be laid out, and will follow absolute positioning
-    None,
 }
 
 impl Default for Display {
     fn default() -> Self {
         Self::Flex
+    }
+}
+
+impl TryFrom<i32> for Display {
+    type Error = ();
+    fn try_from(n: i32) -> Result<Self, ()> {
+        match n {
+            0 => Ok(Display::None),
+            1 => Ok(Display::Flex),
+            2 => Ok(Display::Grid),
+            _ => Err(()),
+        }
     }
 }
 
@@ -55,8 +72,10 @@ impl Default for Display {
 /// which can be unintuitive.
 ///
 /// [`Position::Relative`] is the default value, in contrast to the default behavior in CSS.
+#[repr(u8)]
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub enum Position {
     /// The offset is computed relative to the final position given by the layout algorithm.
     /// Offsets do not affect the position of any other items; they are effectively a correction factor applied at the end.
@@ -72,6 +91,17 @@ pub enum Position {
 impl Default for Position {
     fn default() -> Self {
         Self::Relative
+    }
+}
+
+impl TryFrom<i32> for Position {
+    type Error = ();
+    fn try_from(n: i32) -> Result<Self, ()> {
+        match n {
+            0 => Ok(Position::Relative),
+            1 => Ok(Position::Absolute),
+            _ => Err(()),
+        }
     }
 }
 
