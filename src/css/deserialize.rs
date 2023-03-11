@@ -1,9 +1,13 @@
 //! Parse/Deserialize raw CSS strings into Taffy style types
 
+use crate::{
+    prelude::*,
+    style::{FlexDirection, Position},
+};
 use lightningcss::properties::border::LineStyle;
-use lightningcss::properties::{align, display, flex, position, size};
+use lightningcss::properties::{align, border, display, flex, position, size};
 use lightningcss::{
-    properties::{align::GapValue, border::BorderSideWidth, Property, PropertyId},
+    properties::{Property, PropertyId},
     stylesheet::ParserOptions,
     traits::Parse,
     values::{
@@ -11,10 +15,6 @@ use lightningcss::{
         percentage::DimensionPercentage,
         ratio::Ratio,
     },
-};
-use crate::{
-    prelude::*,
-    style::{FlexDirection, Position},
 };
 
 /// applies the entire html namespace defined in dioxus-html with the specified configeration
@@ -309,26 +309,22 @@ fn convert_length_percentage(dimension_percentage: DimensionPercentage<LengthVal
 fn convert_padding(dimension_percentage: LengthPercentageOrAuto) -> LengthPercentage {
     match dimension_percentage {
         LengthPercentageOrAuto::Auto => unimplemented!(),
-        LengthPercentageOrAuto::LengthPercentage(lp) => {
-          match lp {
+        LengthPercentageOrAuto::LengthPercentage(lp) => match lp {
             DimensionPercentage::Dimension(value) => LengthPercentage::Points(extract_px_value(value)),
             DimensionPercentage::Percentage(percentage) => LengthPercentage::Percent(percentage.0),
             DimensionPercentage::Calc(_) => unimplemented!(),
-          }
-        }
+        },
     }
 }
 
 fn convert_length_percentage_or_auto(dimension_percentage: LengthPercentageOrAuto) -> LengthPercentageAuto {
     match dimension_percentage {
         LengthPercentageOrAuto::Auto => LengthPercentageAuto::Auto,
-        LengthPercentageOrAuto::LengthPercentage(lp) => {
-          match lp {
+        LengthPercentageOrAuto::LengthPercentage(lp) => match lp {
             DimensionPercentage::Dimension(value) => LengthPercentageAuto::Points(extract_px_value(value)),
             DimensionPercentage::Percentage(percentage) => LengthPercentageAuto::Percent(percentage.0),
             DimensionPercentage::Calc(_) => todo!(),
-          }
-        }
+        },
     }
 }
 
@@ -340,20 +336,20 @@ fn convert_dimension(dimension_percentage: DimensionPercentage<LengthValue>) -> 
     }
 }
 
-fn convert_border_side_width(border_side_width: BorderSideWidth) -> LengthPercentage {
+fn convert_border_side_width(border_side_width: border::BorderSideWidth) -> LengthPercentage {
     match border_side_width {
-        BorderSideWidth::Length(Length::Value(value)) => LengthPercentage::Points(extract_px_value(value)),
-        BorderSideWidth::Thick => LengthPercentage::Points(1.0),
-        BorderSideWidth::Medium => LengthPercentage::Points(3.0),
-        BorderSideWidth::Thin => LengthPercentage::Points(5.0),
-        BorderSideWidth::Length(_) => unimplemented!(),
+        border::BorderSideWidth::Length(Length::Value(value)) => LengthPercentage::Points(extract_px_value(value)),
+        border::BorderSideWidth::Thick => LengthPercentage::Points(1.0),
+        border::BorderSideWidth::Medium => LengthPercentage::Points(3.0),
+        border::BorderSideWidth::Thin => LengthPercentage::Points(5.0),
+        border::BorderSideWidth::Length(_) => unimplemented!(),
     }
 }
 
-fn convert_gap_value(gap_value: GapValue) -> LengthPercentage {
+fn convert_gap_value(gap_value: align::GapValue) -> LengthPercentage {
     match gap_value {
-        GapValue::LengthPercentage(dim) => convert_length_percentage(dim),
-        GapValue::Normal => LengthPercentage::Points(0.0),
+        align::GapValue::LengthPercentage(dim) => convert_length_percentage(dim),
+        align::GapValue::Normal => LengthPercentage::Points(0.0),
     }
 }
 
@@ -361,12 +357,12 @@ fn convert_size(size: size::Size) -> Dimension {
     match size {
         size::Size::Auto => Dimension::Auto,
         size::Size::LengthPercentage(length) => convert_dimension(length),
-        size::Size::MinContent(_) => Dimension::Auto,         // Unimplemented, so default auto
-        size::Size::MaxContent(_) => Dimension::Auto,         // Unimplemented, so default auto
-        size::Size::FitContent(_) => Dimension::Auto,         // Unimplemented, so default auto
+        size::Size::MinContent(_) => Dimension::Auto, // Unimplemented, so default auto
+        size::Size::MaxContent(_) => Dimension::Auto, // Unimplemented, so default auto
+        size::Size::FitContent(_) => Dimension::Auto, // Unimplemented, so default auto
         size::Size::FitContentFunction(_) => Dimension::Auto, // Unimplemented, so default auto
-        size::Size::Stretch(_) => Dimension::Auto,            // Unimplemented, so default auto
-        size::Size::Contain => Dimension::Auto,               // Unimplemented, so default auto
+        size::Size::Stretch(_) => Dimension::Auto,    // Unimplemented, so default auto
+        size::Size::Contain => Dimension::Auto,       // Unimplemented, so default auto
     }
 }
 
