@@ -20,12 +20,14 @@ num-traits = { version = "0.2", default-features = false }
 serde = { version = "1.0", optional = true, features = ["serde_derive"] }
 slotmap = { version = "1.0.6", optional = true }
 grid = { version = "0.11.0", default-features = false, optional = true }
+lightningcss = { version = "1.0.0-alpha.40", optional = true }
 
 [features]
-default = ["std", "flexbox", "grid", "block_layout", "taffy_tree"]
+default = ["std", "flexbox", "grid", "block_layout", "taffy_tree", "css"]
 block_layout = []
 flexbox = []
 grid = ["alloc", "dep:grid"]
+css = ["dep:lightningcss"]
 alloc = []
 std = ["num-traits/std", "grid?/std"]
 serde = ["dep:serde"]

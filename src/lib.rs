@@ -26,6 +26,9 @@ pub mod style_helpers;
 pub mod tree;
 pub mod util;
 
+#[cfg(feature = "css")]
+pub mod css;
+
 #[cfg(feature = "flexbox")]
 pub use crate::compute::flexbox::FlexboxAlgorithm;
 #[cfg(feature = "grid")]
