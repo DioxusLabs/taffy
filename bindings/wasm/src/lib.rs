@@ -287,33 +287,48 @@ fn parse_style(style: &JsValue) -> taffy::style::Style {
     }
 }
 
+#[allow(dead_code)]
+fn has_key(obj: &JsValue, key: &str) -> bool {
+    Reflect::has(obj, &key.into()).unwrap_or(false)
+}
+
+fn get_key(obj: &JsValue, key: &str) -> Option<JsValue> {
+    Reflect::get(obj, &key.into()).ok()
+}
+
+fn get_i32(obj: &JsValue, key: &str) -> Option<i32> {
+    get_key(obj, key).and_then(|val| val.as_f64().map(|v| v as i32))
+}
+
+fn get_f32(obj: &JsValue, key: &str) -> Option<f32> {
+    get_key(obj, key).and_then(|val| val.as_f64().map(|v| v as f32))
+}
+
 fn try_parse_from_i32<T: TryFrom<i32>>(style: &JsValue, property_key: &'static str) -> Option<T> {
     get_i32(style, property_key).and_then(|i| T::try_from(i).ok())
 }
 
 fn try_parse_dimension(obj: &JsValue, key: &str) -> Option<taffy::style::Dimension> {
-    if has_key(obj, key) {
-        if let Ok(val) = Reflect::get(obj, &key.into()) {
-            if let Some(number) = val.as_f64() {
-                return Some(taffy::style::Dimension::Points(number as f32));
+    if let Some(val) = get_key(obj, key) {
+        if let Some(number) = val.as_f64() {
+            return Some(taffy::style::Dimension::Points(number as f32));
+        }
+        if let Some(string) = val.as_string() {
+            let string = string.trim();
+            if string == "auto" {
+                return Some(taffy::style::Dimension::Auto);
             }
-            if let Some(string) = val.as_string() {
-                let string = string.trim();
-                if string == "auto" {
-                    return Some(taffy::style::Dimension::Auto);
+            if string.ends_with('%') {
+                let len = string.len();
+                if let Ok(number) = string[..len - 1].parse::<f32>() {
+                    return Some(taffy::style::Dimension::Percent(number / 100.0));
                 }
-                if string.ends_with('%') {
-                    let len = string.len();
-                    if let Ok(number) = string[..len - 1].parse::<f32>() {
-                        return Some(taffy::style::Dimension::Percent(number / 100.0));
-                    }
-                }
-                if let Ok(number) = string.parse::<f32>() {
-                    return Some(taffy::style::Dimension::Points(number));
-                }
+            }
+            if let Ok(number) = string.parse::<f32>() {
+                return Some(taffy::style::Dimension::Points(number));
             }
         }
-    }
+    };
     None
 }
 
@@ -328,49 +343,23 @@ fn try_parse_length_percentage(obj: &JsValue, key: &str) -> Option<taffy::style:
 }
 
 fn get_available_space(obj: &JsValue, key: &str) -> taffy::style::AvailableSpace {
-    if has_key(obj, key) {
-        if let Ok(val) = Reflect::get(obj, &key.into()) {
-            if let Some(number) = val.as_f64() {
-                return taffy::style::AvailableSpace::Definite(number as f32);
+    if let Some(val) = get_key(obj, key) {
+        if let Some(number) = val.as_f64() {
+            return taffy::style::AvailableSpace::Definite(number as f32);
+        }
+        if let Some(string) = val.as_string() {
+            if string == "min" || string == "minContent" {
+                return taffy::style::AvailableSpace::MinContent;
             }
-            if let Some(string) = val.as_string() {
-                if string == "min" || string == "minContent" {
-                    return taffy::style::AvailableSpace::MinContent;
-                }
-                if string == "max" || string == "maxContent" {
-                    return taffy::style::AvailableSpace::MaxContent;
-                }
-                if let Ok(number) = string.parse::<f32>() {
-                    return taffy::style::AvailableSpace::Definite(number);
-                }
+            if string == "max" || string == "maxContent" {
+                return taffy::style::AvailableSpace::MaxContent;
+            }
+            if let Ok(number) = string.parse::<f32>() {
+                return taffy::style::AvailableSpace::Definite(number);
             }
         }
     }
     taffy::style::AvailableSpace::ZERO
 }
 
-fn get_i32(obj: &JsValue, key: &str) -> Option<i32> {
-    if has_key(obj, key) {
-        if let Ok(val) = Reflect::get(obj, &key.into()) {
-            return val.as_f64().map(|v| v as i32);
-        }
-    }
-    None
-}
 
-fn get_f32(obj: &JsValue, key: &str) -> Option<f32> {
-    if has_key(obj, key) {
-        if let Ok(val) = Reflect::get(obj, &key.into()) {
-            return val.as_f64().map(|v| v as f32);
-        }
-    }
-    None
-}
-
-fn has_key(obj: &JsValue, key: &str) -> bool {
-    if let Ok(exists) = Reflect::has(obj, &key.into()) {
-        exists
-    } else {
-        false
-    }
-}
