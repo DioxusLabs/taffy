@@ -8,7 +8,6 @@ use std::rc::Rc;
 use js_sys::Function;
 use js_sys::Reflect;
 use taffy::style::*;
-use taffy::style_helpers::TaffyZero;
 use taffy::tree::LayoutTree;
 use wasm_bindgen::prelude::*;
 
@@ -198,8 +197,8 @@ impl Node {
             .compute_layout(
                 self.node,
                 taffy::geometry::Size {
-                    width: get_available_space(size, "width"),
-                    height: get_available_space(size, "height"),
+                    width: try_parse_available_space(size, "width").unwrap_or(AvailableSpace::MaxContent),
+                    height: try_parse_available_space(size, "height").unwrap_or(AvailableSpace::MaxContent),
                 },
             )
             .unwrap();
@@ -213,7 +212,7 @@ fn parse_style(style: &JsValue) -> taffy::style::Style {
 
         // Position styles
         position: try_parse_from_i32(style, "position").unwrap_or_default(),
-            inset: taffy::geometry::Rect {
+        inset: taffy::geometry::Rect {
             left: try_parse_length_percentage_auto(style, "insetLeft").unwrap_or(LengthPercentageAuto::Auto),
             right: try_parse_length_percentage_auto(style, "insetRight").unwrap_or(LengthPercentageAuto::Auto),
             top: try_parse_length_percentage_auto(style, "insetTop").unwrap_or(LengthPercentageAuto::Auto),
@@ -342,24 +341,22 @@ fn try_parse_length_percentage(obj: &JsValue, key: &str) -> Option<taffy::style:
     try_parse_dimension(obj, key).and_then(|dim| dim.try_into().ok())
 }
 
-fn get_available_space(obj: &JsValue, key: &str) -> taffy::style::AvailableSpace {
+fn try_parse_available_space(obj: &JsValue, key: &str) -> Option<taffy::style::AvailableSpace> {
     if let Some(val) = get_key(obj, key) {
         if let Some(number) = val.as_f64() {
-            return taffy::style::AvailableSpace::Definite(number as f32);
+            return Some(AvailableSpace::Definite(number as f32));
         }
         if let Some(string) = val.as_string() {
-            if string == "min" || string == "minContent" {
-                return taffy::style::AvailableSpace::MinContent;
+            if string == "min-content" {
+                return Some(AvailableSpace::MinContent);
             }
-            if string == "max" || string == "maxContent" {
-                return taffy::style::AvailableSpace::MaxContent;
+            if string == "max-content" {
+                return Some(AvailableSpace::MaxContent);
             }
             if let Ok(number) = string.parse::<f32>() {
-                return taffy::style::AvailableSpace::Definite(number);
+                return Some(AvailableSpace::Definite(number));
             }
         }
     }
-    taffy::style::AvailableSpace::ZERO
+    None
 }
-
-
