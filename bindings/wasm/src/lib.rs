@@ -2,6 +2,7 @@
 
 mod utils;
 
+use core::str::FromStr;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -307,56 +308,52 @@ fn try_parse_from_i32<T: TryFrom<i32>>(style: &JsValue, property_key: &'static s
     get_i32(style, property_key).and_then(|i| T::try_from(i).ok())
 }
 
-fn try_parse_dimension(obj: &JsValue, key: &str) -> Option<taffy::style::Dimension> {
+
+fn try_parse_dimension(obj: &JsValue, key: &str) -> Option<Dimension> {
     if let Some(val) = get_key(obj, key) {
         if let Some(number) = val.as_f64() {
-            return Some(taffy::style::Dimension::Points(number as f32));
+            return Some(Dimension::Points(number as f32));
         }
         if let Some(string) = val.as_string() {
-            let string = string.trim();
-            if string == "auto" {
-                return Some(taffy::style::Dimension::Auto);
-            }
-            if string.ends_with('%') {
-                let len = string.len();
-                if let Ok(number) = string[..len - 1].parse::<f32>() {
-                    return Some(taffy::style::Dimension::Percent(number / 100.0));
-                }
-            }
-            if let Ok(number) = string.parse::<f32>() {
-                return Some(taffy::style::Dimension::Points(number));
-            }
+            return string.parse().ok()
         }
     };
     None
 }
 
 // We first parse into a Dimension then use the TryFrom impl to attempt a conversion
-fn try_parse_length_percentage_auto(obj: &JsValue, key: &str) -> Option<taffy::style::LengthPercentageAuto> {
+fn try_parse_length_percentage_auto(obj: &JsValue, key: &str) -> Option<LengthPercentageAuto> {
     try_parse_dimension(obj, key).and_then(|dim| dim.try_into().ok())
 }
 
 // We first parse into a Dimension then use the TryFrom impl to attempt a conversion
-fn try_parse_length_percentage(obj: &JsValue, key: &str) -> Option<taffy::style::LengthPercentage> {
+fn try_parse_length_percentage(obj: &JsValue, key: &str) -> Option<LengthPercentage> {
     try_parse_dimension(obj, key).and_then(|dim| dim.try_into().ok())
 }
 
-fn try_parse_available_space(obj: &JsValue, key: &str) -> Option<taffy::style::AvailableSpace> {
+fn try_parse_available_space(obj: &JsValue, key: &str) -> Option<AvailableSpace> {
     if let Some(val) = get_key(obj, key) {
         if let Some(number) = val.as_f64() {
             return Some(AvailableSpace::Definite(number as f32));
         }
         if let Some(string) = val.as_string() {
-            if string == "min-content" {
-                return Some(AvailableSpace::MinContent);
-            }
-            if string == "max-content" {
-                return Some(AvailableSpace::MaxContent);
-            }
-            if let Ok(number) = string.parse::<f32>() {
-                return Some(AvailableSpace::Definite(number));
-            }
+            return string.parse().ok()
         }
     }
     None
 }
+
+// Generic try_parse_dimension impl
+// Could in theory be used to replace the above 4 functions, but it doesn't quite work and it's
+// a bit confusing
+// fn try_parse_dimension<U, T: FromStr + From<f32> + Into<U>>(obj: &JsValue, key: &str) -> Option<U> {
+//     if let Some(val) = get_key(obj, key) {
+//         if let Some(number) = val.as_f64() {
+//             return Some(T::from(number as f32).into());
+//         }
+//         if let Some(string) = val.as_string() {
+//             return string.parse::<T>().map(|val| val.into()).ok()
+//         }
+//     };
+//     None
+// }
