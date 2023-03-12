@@ -57,6 +57,7 @@ impl TryFrom<i32> for Display {
         match n {
             0 => Ok(Display::None),
             1 => Ok(Display::Flex),
+            #[cfg(feature = "grid")]
             2 => Ok(Display::Grid),
             _ => Err(()),
         }
