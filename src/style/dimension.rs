@@ -30,6 +30,17 @@ impl FromPercent for LengthPercentage {
     }
 }
 
+impl TryFrom<Dimension> for LengthPercentage {
+    type Error = ();
+    fn try_from(input: Dimension) -> Result<Self, ()> {
+        match input {
+            Dimension::Points(value) => Ok(Self::Points(value)),
+            Dimension::Percent(value) => Ok(Self::Percent(value)),
+            Dimension::Auto => Err(()),
+        }
+    }
+}
+
 /// A unit of linear measurement
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
@@ -66,6 +77,19 @@ impl From<LengthPercentage> for LengthPercentageAuto {
         match input {
             LengthPercentage::Points(value) => Self::Points(value),
             LengthPercentage::Percent(value) => Self::Percent(value),
+        }
+    }
+}
+
+// Currently it would be possible to implement From<Dimension> for LengthPercentageAuto, but we
+// anticipate that this won't the case in future, so for forwards compatibility we stick to a TryFrom impl here
+impl TryFrom<Dimension> for LengthPercentageAuto {
+    type Error = ();
+    fn try_from(input: Dimension) -> Result<Self, ()> {
+        match input {
+            Dimension::Points(value) => Ok(Self::Points(value)),
+            Dimension::Percent(value) => Ok(Self::Percent(value)),
+            Dimension::Auto => Ok(Self::Auto),
         }
     }
 }
