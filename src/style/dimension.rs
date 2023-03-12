@@ -1,5 +1,7 @@
 //! Style types for representing lengths / sizes
 
+use core::str::FromStr;
+
 use crate::geometry::{Rect, Size};
 use crate::style_helpers::{FromPercent, FromPoints, TaffyAuto, TaffyMaxContent, TaffyMinContent, TaffyZero};
 use crate::sys::abs;
@@ -122,6 +124,7 @@ pub enum Dimension {
     /// The dimension should be automatically computed
     Auto,
 }
+
 impl TaffyZero for Dimension {
     const ZERO: Self = Self::Points(0.0);
 }
@@ -136,6 +139,12 @@ impl FromPoints for Dimension {
 impl FromPercent for Dimension {
     fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
         Self::Percent(percent.into())
+    }
+}
+
+impl From<f32> for Dimension {
+    fn from(value: f32) -> Self {
+        Dimension::Points(value)
     }
 }
 
@@ -155,6 +164,31 @@ impl From<LengthPercentageAuto> for Dimension {
             LengthPercentageAuto::Percent(value) => Self::Percent(value),
             LengthPercentageAuto::Auto => Self::Auto,
         }
+    }
+}
+
+impl FromStr for Dimension {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let s = s.trim();
+
+        // Auto
+        if s == "auto" {
+            return Ok(Self::Auto);
+        }
+        // px
+        if s.ends_with("px") {
+            let len = s.len();
+            return s[..len - 1].trim().parse::<f32>().map(Self::Points).map_err(|_| ());
+        }
+        // percent
+        if s.ends_with('%') {
+            let len = s.len();
+            return s[..len - 1].trim().parse::<f32>().map(|number| Self::Percent(number / 100.0)).map_err(|_| ());
+        }
+        // Bare number (px)
+        s.parse::<f32>().map(Self::Points).map_err(|_| ())
     }
 }
 
@@ -321,6 +355,27 @@ impl From<Option<f32>> for AvailableSpace {
             Some(value) => Self::Definite(value),
             None => Self::MaxContent,
         }
+    }
+}
+
+impl FromStr for AvailableSpace {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let s = s.trim();
+
+        if s == "min-content" {
+            return Ok(Self::MinContent);
+        }
+        if s == "max-content" {
+            return Ok(Self::MaxContent);
+        }
+        if s.ends_with("px") {
+            let len = s.len();
+            return s[..len - 1].trim().parse::<f32>().map(AvailableSpace::Definite).map_err(|_| ());
+        }
+
+        s.parse::<f32>().map(AvailableSpace::Definite).map_err(|_| ())
     }
 }
 
