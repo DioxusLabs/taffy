@@ -101,6 +101,7 @@ impl Node {
             .borrow_mut()
             .set_measure(
                 self.node,
+                // TODO: fix setting measure functions
                 // Some(taffy::node::MeasureFunc::Boxed(Box::new(
                 //     move |constraints| {
                 //         use taffy::number::OrElse;
