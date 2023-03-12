@@ -2,13 +2,13 @@
 
 mod utils;
 
-use core::str::FromStr;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use js_sys::Array;
 use js_sys::Function;
 use js_sys::Reflect;
-use taffy::style::*;
+use taffy::prelude::*;
 use taffy::tree::LayoutTree;
 use wasm_bindgen::prelude::*;
 
@@ -94,51 +94,57 @@ impl Node {
 
     #[wasm_bindgen(js_name = setMeasure)]
     pub fn set_measure(&mut self, measure: &JsValue) {
-        let _measure = Function::from(measure.clone());
+        // let js_measure_func = Arc::new(Mutex::new(Function::from(measure.clone())));
+
+        struct FuncWrap(Function);
+        impl FuncWrap {
+            fn apply(&self, this: &JsValue, args: &Array) -> Result<JsValue, JsValue> {
+                self.0.apply(this, args)
+            }
+        }
+        // SAFETY: Wasm is single-threaded so there can't be multiple threads
+        unsafe impl Send for FuncWrap {}
+        unsafe impl Sync for FuncWrap {}
+
+        let js_measure_func = FuncWrap(Function::from(measure.clone()));
+
+        let measure_func = move |known_dimensions: Size<Option<f32>>, available_space: Size<AvailableSpace>| {
+            fn convert_available_space(val: AvailableSpace) -> JsValue {
+                match val {
+                    AvailableSpace::Definite(val) => val.into(),
+                    AvailableSpace::MaxContent => JsValue::from_str("max-content"),
+                    AvailableSpace::MinContent => JsValue::from_str("min-content"),
+                }
+            }
+
+            let known_width = known_dimensions.width.map(|val| val.into()).unwrap_or(JsValue::UNDEFINED);
+            let known_height = known_dimensions.height.map(|val| val.into()).unwrap_or(JsValue::UNDEFINED);
+
+            let available_width = convert_available_space(available_space.width);
+            let available_height = convert_available_space(available_space.height);
+
+            let args = Array::new_with_length(4);
+            args.set(0, known_width);
+            args.set(1, known_height);
+            args.set(2, available_width);
+            args.set(3, available_height);
+
+            if let Ok(result) = js_measure_func.apply(&JsValue::UNDEFINED, &args) {
+                let width = get_f32(&result, "width");
+                let height = get_f32(&result, "height");
+
+                if width.is_some() && height.is_some() {
+                    return Size { width: width.unwrap(), height: height.unwrap() };
+                }
+            }
+
+            known_dimensions.unwrap_or(Size::ZERO)
+        };
 
         self.allocator
             .taffy
             .borrow_mut()
-            .set_measure(
-                self.node,
-                // TODO: fix setting measure functions
-                // Some(taffy::node::MeasureFunc::Boxed(Box::new(
-                //     move |constraints| {
-                //         use taffy::number::OrElse;
-
-                //         let widthConstraint =
-                //             if let taffy::number::Number::Defined(val) = constraints.width {
-                //                 val.into()
-                //             } else {
-                //                 JsValue::UNDEFINED
-                //             };
-
-                //         let heightConstaint =
-                //             if let taffy::number::Number::Defined(val) = constraints.height {
-                //                 val.into()
-                //             } else {
-                //                 JsValue::UNDEFINED
-                //             };
-
-                //         if let Ok(result) =
-                //             measure.call2(&JsValue::UNDEFINED, &widthConstraint, &heightConstaint)
-                //         {
-                //             let width = get_f32(&result, "width");
-                //             let height = get_f32(&result, "height");
-
-                //             if width.is_some() && height.is_some() {
-                //                 return taffy::geometry::Size {
-                //                     width: width.unwrap(),
-                //                     height: height.unwrap(),
-                //                 };
-                //             }
-                //         }
-
-                //         constraints.map(|v| v.or_else(0.0))
-                //     },
-                // ))),
-                None,
-            )
+            .set_measure(self.node, Some(taffy::node::MeasureFunc::Boxed(Box::new(measure_func))))
             .unwrap();
     }
 
@@ -309,14 +315,13 @@ fn try_parse_from_i32<T: TryFrom<i32>>(style: &JsValue, property_key: &'static s
     get_i32(style, property_key).and_then(|i| T::try_from(i).ok())
 }
 
-
 fn try_parse_dimension(obj: &JsValue, key: &str) -> Option<Dimension> {
     if let Some(val) = get_key(obj, key) {
         if let Some(number) = val.as_f64() {
             return Some(Dimension::Points(number as f32));
         }
         if let Some(string) = val.as_string() {
-            return string.parse().ok()
+            return string.parse().ok();
         }
     };
     None
@@ -338,7 +343,7 @@ fn try_parse_available_space(obj: &JsValue, key: &str) -> Option<AvailableSpace>
             return Some(AvailableSpace::Definite(number as f32));
         }
         if let Some(string) = val.as_string() {
-            return string.parse().ok()
+            return string.parse().ok();
         }
     }
     None
