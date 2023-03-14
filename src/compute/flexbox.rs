@@ -706,7 +706,7 @@ fn determine_flex_base_size(
         child.hypothetical_inner_size.set_main(constants.dir, hypothetical_inner_size);
         child.hypothetical_outer_size.set_main(constants.dir, hypothetical_outer_size);
 
-        // Note that it is important that the `parent_size` parameter in the main axis is not set for this 
+        // Note that it is important that the `parent_size` parameter in the main axis is not set for this
         // function call as it used for resolving percentages, and percentage size in an axis should not contribute
         // to a min-content contribution in that same axis. However the `parent_size` and `available_space` *should*
         // be set to their usual values in the cross axis so that wrapping content can wrap correctly.
