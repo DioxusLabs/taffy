@@ -1,5 +1,11 @@
 # Release Notes
 
+## 0.3.8
+
+### Fixes
+
+- Fix incorrect min-content size for `flex-wrap: wrap` nodes (bevyengine/bevy#8082)
+
 ## 0.3.7
 
 ### Fixes
