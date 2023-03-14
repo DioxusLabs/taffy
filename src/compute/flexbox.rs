@@ -706,17 +706,33 @@ fn determine_flex_base_size(
         child.hypothetical_inner_size.set_main(constants.dir, hypothetical_inner_size);
         child.hypothetical_outer_size.set_main(constants.dir, hypothetical_outer_size);
 
-        // Note that it is important that the `parent_size` parameter is not set for this function call
-        // as it used to resolve percentages against, and percentage size should not contribute to a
-        // min-content contribution. See https://drafts.csswg.org/css-sizing-3/#min-percentage-contribution
-        let min_content_size = GenericAlgorithm::measure_size(
-            tree,
-            child.node,
-            Size::NONE,
-            Size::NONE,
-            Size::MIN_CONTENT,
-            SizingMode::ContentSize,
-        );
+        // Note that it is important that the `parent_size` parameter in the main axis is not set for this 
+        // function call as it used for resolving percentages, and percentage size in an axis should not contribute
+        // to a min-content contribution in that same axis. However the `parent_size` and `available_space` *should*
+        // be set to their usual values in the cross axis so that wrapping content can wrap correctly.
+        //
+        // See https://drafts.csswg.org/css-sizing-3/#min-percentage-contribution
+        let min_content_size = {
+            let cross_axis_parent_size = constants.node_inner_size.cross(constants.dir);
+            let cross_axis_available_space = cross_axis_parent_size
+                .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir))
+                .into();
+
+            let mut parent_size = Size::NONE;
+            parent_size.set_cross(constants.dir, cross_axis_parent_size);
+
+            let mut available_space: Size<AvailableSpace> = Size::MIN_CONTENT;
+            available_space.set_cross(constants.dir, cross_axis_available_space);
+
+            GenericAlgorithm::measure_size(
+                tree,
+                child.node,
+                Size::NONE,
+                parent_size,
+                available_space,
+                SizingMode::ContentSize,
+            )
+        };
 
         // 4.5. Automatic Minimum Size of Flex Items
         // https://www.w3.org/TR/css-flexbox-1/#min-size-auto
