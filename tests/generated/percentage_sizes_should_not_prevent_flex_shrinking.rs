@@ -4,11 +4,15 @@ fn percentage_sizes_should_not_prevent_flex_shrinking() {
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};
     let mut taffy = taffy::Taffy::new();
+    let node00 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node0 = taffy
-        .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1.2f32), height: auto() },
-            ..Default::default()
-        })
+        .new_with_children(
+            taffy::style::Style {
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1.2f32), height: auto() },
+                ..Default::default()
+            },
+            &[node00],
+        )
         .unwrap();
     let node = taffy
         .new_with_children(
@@ -36,4 +40,9 @@ fn percentage_sizes_should_not_prevent_flex_shrinking() {
     assert_eq!(size.height, 200f32, "height of node {:?}. Expected {}. Actual {}", node0.data(), 200f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, location.y);
+    let Layout { size, location, .. } = taffy.layout(node00).unwrap();
+    assert_eq!(size.width, 0f32, "width of node {:?}. Expected {}. Actual {}", node00.data(), 0f32, size.width);
+    assert_eq!(size.height, 200f32, "height of node {:?}. Expected {}. Actual {}", node00.data(), 200f32, size.height);
+    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node00.data(), 0f32, location.x);
+    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node00.data(), 0f32, location.y);
 }

@@ -203,6 +203,8 @@ mod bevy_issue_7976_4_level;
 mod bevy_issue_7976_reduced;
 mod bevy_issue_8017;
 mod bevy_issue_8017_reduced;
+mod bevy_issue_8082;
+mod bevy_issue_8082_percent;
 mod border_center_child;
 mod border_container_match_child;
 mod border_flex_child;
