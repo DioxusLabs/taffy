@@ -1,5 +1,11 @@
 # Release Notes
 
+## 0.3.9
+
+### Fixes
+
+- Fix caching bug where a cached result would sometimes be incorrectly used when the amount of available space increased (bevyengine/bevy#8111)
+
 ## 0.3.8
 
 ### Fixes
