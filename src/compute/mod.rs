@@ -137,7 +137,7 @@ fn compute_node_layout(
     // First we check if we have a cached result for the given input
     let cache_run_mode = if tree.is_childless(node) { RunMode::PeformLayout } else { run_mode };
     if let Some(cached_size_and_baselines) =
-        compute_from_cache(tree, node, known_dimensions, available_space, cache_run_mode, sizing_mode)
+        compute_from_cache(tree, node, known_dimensions, available_space, cache_run_mode)
     {
         #[cfg(feature = "debug")]
         NODE_LOGGER.labelled_debug_log("CACHE", cached_size_and_baselines.size);
@@ -308,7 +308,6 @@ fn compute_from_cache(
     known_dimensions: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
-    sizing_mode: SizingMode,
 ) -> Option<SizeAndBaselines> {
     for idx in 0..CACHE_SIZE {
         let entry = tree.cache_mut(node, idx);
@@ -325,15 +324,9 @@ fn compute_from_cache(
                 && (known_dimensions.height == entry.known_dimensions.height
                     || known_dimensions.height == Some(cached_size.height))
                 && (known_dimensions.width.is_some()
-                    || entry.available_space.width.is_roughly_equal(available_space.width)
-                    || (sizing_mode == SizingMode::ContentSize
-                        && available_space.width.is_definite()
-                        && available_space.width.unwrap() >= cached_size.width))
+                    || entry.available_space.width.is_roughly_equal(available_space.width))
                 && (known_dimensions.height.is_some()
-                    || entry.available_space.height.is_roughly_equal(available_space.height)
-                    || (sizing_mode == SizingMode::ContentSize
-                        && available_space.height.is_definite()
-                        && available_space.height.unwrap() >= cached_size.height))
+                    || entry.available_space.height.is_roughly_equal(available_space.height))
             {
                 return Some(entry.cached_size_and_baselines);
             }
