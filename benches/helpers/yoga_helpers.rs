@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use slotmap::{DefaultKey, SlotMap};
 
 pub mod yg {
@@ -10,6 +11,17 @@ pub mod yg {
 }
 mod tf {
     pub use taffy::prelude::*;
+}
+
+pub fn new_default_style_with_children(
+    tree: &mut SlotMap<DefaultKey, yg::Node>,
+    children: Vec<DefaultKey>,
+) -> DefaultKey {
+    let mut node = yg::Node::new();
+    for (i, child) in children.into_iter().enumerate() {
+        node.insert_child(&mut tree[child], i as u32);
+    }
+    tree.insert(node)
 }
 
 pub fn new_with_children(
