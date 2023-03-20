@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
   <head>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
@@ -6,55 +7,124 @@
 
     <script type="text/javascript">
       window.BENCH_NODE_COUNT = 10000;
+      window.WARMUP_ITERS = 100;
+      window.TEST_ITERS = 1;
     </script>
 
-    <!-- Taffy WASM benchmark -->
+    <!--  -->
     <script type="module">
-      import init, { Node, Allocator, Position, AlignContent, Layout, FlexDirection } from './pkg/taffy_layout.js';
+      // Import/initialise Yoga WASM module
+      import Yoga from "https://cdn.jsdelivr.net/npm/yoga-wasm-web@0.3.3/dist/browser.js";
 
-      async function run() {
+      // Import/initialise Taffy WASM module
+      import init, * as Taffy from './pkg/taffy_layout.js';
+      await init();
 
-        // Intitialise WASM module
-        await init();
+      // Yoga WASM benchmark
+      async function benchmark_yoga(Yoga) {
+        const page = Yoga.Node.create();
 
-        // And afterwards we can use all the functionality defined in wasm.
-        const allocator = new Allocator();
-        const container = new Node(allocator, {
-          position: Position.Absolute,
-          width: 500,
-          height: 500,
-          justifyContent: AlignContent.FlexStart,
-          // gapWidth: 50
-        });
-        container.setStyle({flexDirection: FlexDirection.Row})
+        for (let i = 0; i < BENCH_NODE_COUNT; i++) {
+          const node = Yoga.Node.create();
+          node.setFlexGrow(1);
+          node.setHeight("100%");
+          page.insertChild(node, i);
+        }
+      }
 
-        console.time('Taffy: create tree')
+      // Taffy WASM benchmark
+      async function benchmark_taffy(Taffy) {
+        const { Node, Allocator, Position, AlignContent, Layout, FlexDirection } = Taffy;
+
+        const allocator = new Allocator(0);
+        // const allocator = new Allocator(BENCH_NODE_COUNT + 10);
+        const container = new Node(allocator, {});
+        // const container = new Node(allocator, {
+        //   position: Position.Absolute,
+        //   width: 500,
+        //   height: 500,
+        //   justifyContent: AlignContent.FlexStart,
+        //   // gapWidth: 50
+        // });
+        // container.setStyle({flexDirection: FlexDirection.Row})
+
         const arr = [];
         for (let i = 0; i < BENCH_NODE_COUNT; i++) {
           const child = new Node(allocator, {});
+          child.setFlexGrow(1);
+          child.setHeight("100%");
           container.addChild(child);
           arr.push(child);
         }
-        console.timeEnd('Taffy: create tree')
+      }
 
-        const layout = container.computeLayout({});
+      function wait(delay) {
+        return new Promise((resolve) => setTimeout(() => resolve(), delay))
+      }
+
+      // Actually run benchmarks
+      async function run() {
+        let start, time;
+
+        // await wait(2000);
+        
+        console.log("Warming up...");
+        await Promise.all(Array(WARMUP_ITERS).fill(0).map(() => benchmark_yoga(Yoga)));
+        await Promise.all(Array(WARMUP_ITERS).fill(0).map(() => benchmark_taffy(Taffy)));
+
+        console.log("Testing Yoga...")
+        start = performance.now();
+        for (let i = 0; i < TEST_ITERS; i++) {
+          await benchmark_yoga(Yoga)
+        }
+        time = (performance.now() - start) / TEST_ITERS;
+        console.log(`Yoga: tree created in avg. of ${time}ms`);
+
+        console.log("Testing Taffy...")
+        start = performance.now();
+        for (let i = 0; i < TEST_ITERS; i++) {
+          await benchmark_taffy(Taffy);
+        }
+        time = (performance.now() - start) / TEST_ITERS;
+        console.log(`Taffy: tree created in avg. of ${time}ms`);
+
+        console.log("Testing Yoga...")
+        start = performance.now();
+        for (let i = 0; i < TEST_ITERS; i++) {
+          await benchmark_yoga(Yoga)
+        }
+        time = (performance.now() - start) / TEST_ITERS;
+        console.log(`Yoga: tree created in avg. of ${time}ms`);
+
+        console.log("Testing Taffy...")
+        start = performance.now();
+        for (let i = 0; i < TEST_ITERS; i++) {
+          await benchmark_taffy(Taffy);
+        }
+        time = (performance.now() - start) / TEST_ITERS;
+        console.log(`Taffy: tree created in avg. of ${time}ms`);
+
+        console.log("Testing Yoga...")
+        start = performance.now();
+        for (let i = 0; i < TEST_ITERS; i++) {
+          await benchmark_yoga(Yoga)
+        }
+        time = (performance.now() - start) / TEST_ITERS;
+        console.log(`Yoga: tree created in avg. of ${time}ms`);
+
+        console.log("Testing Taffy...")
+        start = performance.now();
+        for (let i = 0; i < TEST_ITERS; i++) {
+          await benchmark_taffy(Taffy);
+        }
+        time = (performance.now() - start) / TEST_ITERS;
+        console.log(`Taffy: tree created in avg. of ${time}ms`);
+
+
       }
 
       run();
-    </script>
 
-    <!-- Yoga WASM benchmark -->
-    <script type="module">
-      import Yoga from "https://cdn.jsdelivr.net/npm/yoga-wasm-web@0.3.3/dist/browser.js";
-
-      const page = Yoga.Node.create();
-
-      console.time('Yoga: create tree')
-      for (let i = 0; i < BENCH_NODE_COUNT; i++) {
-        const node = Yoga.Node.create();
-        page.insertChild(node, i);
-      }
-      console.timeEnd('Yoga: create tree')
     </script>
 
   </body>
