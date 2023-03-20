@@ -86,7 +86,7 @@ impl Node {
     pub fn new(allocator: &Allocator, style: &JsValue) -> Self {
         Self {
             allocator: allocator.clone(),
-            node: allocator.taffy.borrow_mut().new_leaf(parse_style(&style)).unwrap(),
+            node: allocator.taffy.borrow_mut().new_leaf(Style::DEFAULT).unwrap(),
             style: style.clone(),
             childCount: 0,
         }
