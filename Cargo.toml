@@ -49,8 +49,8 @@ lto = true
 panic = 'abort'
 
 [[bench]]
-name = "allocation"
-path = "benches/allocation.rs"
+name = "tree_creation"
+path = "benches/tree_creation.rs"
 harness = false
 
 [[bench]]
