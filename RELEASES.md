@@ -4,7 +4,7 @@
 
 ### Fixes
 
-- Fix caching bug where a cached result would sometimes be incorrectly used when the amount of available space increased (bevyengine/bevy#8111)
+- Fix caching bug where a cached result would sometimes be incorrectly used when the amount of available space increased (bevyengine/bevy#8111) and (bevyengine/bevy#8124)
 
 ## 0.3.8
 
