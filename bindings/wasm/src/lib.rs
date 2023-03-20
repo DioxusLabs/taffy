@@ -182,6 +182,16 @@ impl Node {
         self.style = style.clone();
     }
 
+    #[wasm_bindgen(js_name = setFlexGrow)]
+    pub fn set_flex_grow(&mut self, flex_grow: f32) {
+        self.allocator.taffy.borrow_mut().style_mut(self.node).unwrap().flex_grow = flex_grow;
+    }
+
+    #[wasm_bindgen(js_name = setHeight)]
+    pub fn set_height(&mut self, height: &str) {
+        self.allocator.taffy.borrow_mut().style_mut(self.node).unwrap().size.height = height.parse().unwrap();
+    }
+
     #[wasm_bindgen(js_name = markDirty)]
     pub fn mark_dirty(&mut self) {
         self.allocator.taffy.borrow_mut().mark_dirty(self.node).unwrap()
