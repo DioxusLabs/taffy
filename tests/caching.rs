@@ -10,7 +10,7 @@ mod caching {
         let mut taffy = Taffy::new();
         static NUM_MEASURES: AtomicU32 = AtomicU32::new(0);
 
-        let grandchild = taffy
+        let leaf = taffy
             .new_leaf_with_measure(
                 Style { ..Default::default() },
                 MeasureFunc::Raw(|known_dimensions, _available_space| {
@@ -23,12 +23,14 @@ mod caching {
             )
             .unwrap();
 
-        let child = taffy.new_with_children(Style::DEFAULT, &[grandchild]).unwrap();
+        let mut node = taffy.new_with_children(Style::DEFAULT, &[leaf]).unwrap();
+        for _ in 0..100 {
+            node = taffy.new_with_children(Style::DEFAULT, &[node]).unwrap();
+        }
 
-        let node = taffy.new_with_children(Style::DEFAULT, &[child]).unwrap();
         taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
 
-        assert_eq!(NUM_MEASURES.load(Ordering::SeqCst), 2);
+        assert_eq!(NUM_MEASURES.load(Ordering::SeqCst), 7);
     }
 
     #[test]
@@ -41,7 +43,7 @@ mod caching {
         let mut taffy = Taffy::new();
         static NUM_MEASURES: AtomicU32 = AtomicU32::new(0);
 
-        let grandchild = taffy
+        let leaf = taffy
             .new_leaf_with_measure(
                 style(),
                 MeasureFunc::Raw(|known_dimensions, _available_space| {
@@ -54,11 +56,12 @@ mod caching {
             )
             .unwrap();
 
-        let child = taffy.new_with_children(style(), &[grandchild]).unwrap();
-
-        let node = taffy.new_with_children(style(), &[child]).unwrap();
+        let mut node = taffy.new_with_children(Style::DEFAULT, &[leaf]).unwrap();
+        for _ in 0..100 {
+            node = taffy.new_with_children(Style::DEFAULT, &[node]).unwrap();
+        }
 
         taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
-        assert_eq!(NUM_MEASURES.load(Ordering::SeqCst), 2);
+        assert_eq!(NUM_MEASURES.load(Ordering::SeqCst), 7);
     }
 }
