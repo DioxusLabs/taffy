@@ -345,9 +345,14 @@ impl Taffy {
         Ok(())
     }
 
-    /// Gets the [`Style`] of the provided `node`
+    /// Gets a reference to the [`Style`] of the provided `node`
     pub fn style(&self, node: Node) -> TaffyResult<&Style> {
         Ok(&self.nodes[node].style)
+    }
+
+    /// Gets a mutable reference to the [`Style`] of the provided `node`
+    pub fn style_mut(&mut self, node: Node) -> TaffyResult<&mut Style> {
+        Ok(&mut self.nodes[node].style)
     }
 
     /// Return this node layout relative to its parent
