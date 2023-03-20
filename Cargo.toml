@@ -49,6 +49,11 @@ lto = true
 panic = 'abort'
 
 [[bench]]
+name = "allocation"
+path = "benches/allocation.rs"
+harness = false
+
+[[bench]]
 name = "flexbox"
 path = "benches/flexbox.rs"
 harness = false

@@ -2,6 +2,7 @@
 pub mod yoga_helpers;
 
 /// A helper function to recursively construct a deep tree
+#[allow(dead_code)]
 pub fn build_deep_tree<T, N>(
     tree: &mut T,
     max_nodes: u32,
