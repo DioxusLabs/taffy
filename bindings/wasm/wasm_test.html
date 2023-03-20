@@ -1,0 +1,61 @@
+<html>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+  </head>
+  <body>
+
+    <script type="text/javascript">
+      window.BENCH_NODE_COUNT = 10000;
+    </script>
+
+    <!-- Taffy WASM benchmark -->
+    <script type="module">
+      import init, { Node, Allocator, Position, AlignContent, Layout, FlexDirection } from './pkg/taffy_layout.js';
+
+      async function run() {
+
+        // Intitialise WASM module
+        await init();
+
+        // And afterwards we can use all the functionality defined in wasm.
+        const allocator = new Allocator();
+        const container = new Node(allocator, {
+          position: Position.Absolute,
+          width: 500,
+          height: 500,
+          justifyContent: AlignContent.FlexStart,
+          // gapWidth: 50
+        });
+        container.setStyle({flexDirection: FlexDirection.Row})
+
+        console.time('Taffy: create tree')
+        const arr = [];
+        for (let i = 0; i < BENCH_NODE_COUNT; i++) {
+          const child = new Node(allocator, {});
+          container.addChild(child);
+          arr.push(child);
+        }
+        console.timeEnd('Taffy: create tree')
+
+        const layout = container.computeLayout({});
+      }
+
+      run();
+    </script>
+
+    <!-- Yoga WASM benchmark -->
+    <script type="module">
+      import Yoga from "https://cdn.jsdelivr.net/npm/yoga-wasm-web@0.3.3/dist/browser.js";
+
+      const page = Yoga.Node.create();
+
+      console.time('Yoga: create tree')
+      for (let i = 0; i < BENCH_NODE_COUNT; i++) {
+        const node = Yoga.Node.create();
+        page.insertChild(node, i);
+      }
+      console.timeEnd('Yoga: create tree')
+    </script>
+
+  </body>
+</html>
