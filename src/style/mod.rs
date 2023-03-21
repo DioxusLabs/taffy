@@ -1284,40 +1284,55 @@ mod tests {
         type S = crate::sys::DefaultCheapStr;
 
         fn assert_type_size<T>(expected_size: usize) {
+            assert_type_size_and_align::<T>(expected_size, ::core::mem::align_of::<T>());
+        }
+
+        fn assert_type_size_and_align<T>(expected_size: usize, expected_align: usize) {
             let name = ::core::any::type_name::<T>();
             let name = name.replace("taffy::geometry::", "");
             let name = name.replace("taffy::style::dimension::", "");
             let name = name.replace("taffy::style::alignment::", "");
             let name = name.replace("taffy::style::flex::", "");
             let name = name.replace("taffy::style::grid::", "");
+            let name = name.replace("alloc::vec::", "");
+            let name = name.replace("taffy::compute::grid::types::coordinates::", "");
 
             assert_eq!(
                 ::core::mem::size_of::<T>(),
                 expected_size,
-                "Expected {} for be {} byte(s) but it was {} byte(s)",
+                "Expected size_of {} to be {} byte(s) but it was {} byte(s)",
                 name,
                 expected_size,
                 ::core::mem::size_of::<T>(),
             );
+
+            assert_eq!(
+                ::core::mem::align_of::<T>(),
+                expected_align,
+                "Expected align_of {} to be {} byte(s) but it was {} byte(s)",
+                name,
+                expected_align,
+                ::core::mem::align_of::<T>(),
+            );
         }
 
         // Display and Position
-        assert_type_size::<Display>(1);
-        assert_type_size::<BoxSizing>(1);
-        assert_type_size::<Position>(1);
-        assert_type_size::<Overflow>(1);
+        assert_type_size_and_align::<Display>(1, 1);
+        assert_type_size_and_align::<BoxSizing>(1, 1);
+        assert_type_size_and_align::<Position>(1, 1);
+        assert_type_size_and_align::<Overflow>(1, 1);
 
         // Dimensions and aggregations of Dimensions
-        assert_type_size::<f32>(4);
-        assert_type_size::<LengthPercentage>(8);
-        assert_type_size::<LengthPercentageAuto>(8);
-        assert_type_size::<Dimension>(8);
-        assert_type_size::<Size<LengthPercentage>>(16);
-        assert_type_size::<Size<LengthPercentageAuto>>(16);
-        assert_type_size::<Size<Dimension>>(16);
-        assert_type_size::<Rect<LengthPercentage>>(32);
-        assert_type_size::<Rect<LengthPercentageAuto>>(32);
-        assert_type_size::<Rect<Dimension>>(32);
+        assert_type_size_and_align::<f32>(4, 4);
+        assert_type_size_and_align::<LengthPercentage>(8, 8);
+        assert_type_size_and_align::<LengthPercentageAuto>(8, 8);
+        assert_type_size_and_align::<Dimension>(8, 8);
+        assert_type_size_and_align::<Size<LengthPercentage>>(16, 8);
+        assert_type_size_and_align::<Size<LengthPercentageAuto>>(16, 8);
+        assert_type_size_and_align::<Size<Dimension>>(16, 8);
+        assert_type_size_and_align::<Rect<LengthPercentage>>(32, 8);
+        assert_type_size_and_align::<Rect<LengthPercentageAuto>>(32, 8);
+        assert_type_size_and_align::<Rect<Dimension>>(32, 8);
 
         // Alignment — `AlignContent` and `AlignItems` are structs of two `#[repr(u8)]` enums
         // (position keyword + safety modifier). Niche-packing in the safety byte (only 2 of
@@ -1331,16 +1346,16 @@ mod tests {
         assert_type_size::<Option<AlignContent>>(2);
 
         // Flexbox Container
-        assert_type_size::<FlexDirection>(1);
-        assert_type_size::<FlexWrap>(1);
+        assert_type_size_and_align::<FlexDirection>(1, 1);
+        assert_type_size_and_align::<FlexWrap>(1, 1);
 
         // CSS Grid Container
-        assert_type_size::<GridAutoFlow>(1);
-        assert_type_size::<MinTrackSizingFunction>(8);
-        assert_type_size::<MaxTrackSizingFunction>(8);
-        assert_type_size::<TrackSizingFunction>(16);
-        assert_type_size::<Vec<TrackSizingFunction>>(24);
-        assert_type_size::<Vec<GridTemplateComponent<S>>>(24);
+        assert_type_size_and_align::<GridAutoFlow>(1, 1);
+        assert_type_size_and_align::<MinTrackSizingFunction>(8, 8);
+        assert_type_size_and_align::<MaxTrackSizingFunction>(8, 8);
+        assert_type_size_and_align::<TrackSizingFunction>(16, 8);
+        assert_type_size_and_align::<Vec<TrackSizingFunction>>(24, 8);
+        assert_type_size_and_align::<Vec<GridTemplateComponent<S>>>(24, 8);
 
         // String-type dependent (String)
         assert_type_size::<GridTemplateComponent<String>>(56);
