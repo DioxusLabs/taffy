@@ -169,16 +169,6 @@ impl Node {
         self.childCount -= 1;
     }
 
-    #[wasm_bindgen(js_name = setFlexGrow)]
-    pub fn set_flex_grow(&mut self, flex_grow: f32) {
-        self.allocator.taffy.borrow_mut().style_mut(self.node).unwrap().flex_grow = flex_grow;
-    }
-
-    #[wasm_bindgen(js_name = setHeight)]
-    pub fn set_height(&mut self, height: &str) {
-        self.allocator.taffy.borrow_mut().style_mut(self.node).unwrap().size.height = height.parse().unwrap();
-    }
-
     #[wasm_bindgen(js_name = markDirty)]
     pub fn mark_dirty(&mut self) {
         self.allocator.taffy.borrow_mut().mark_dirty(self.node).unwrap()
@@ -210,6 +200,59 @@ impl Node {
         Layout::new(&self.allocator, self.node)
     }
 }
+
+macro_rules! get_style {
+    ($self:expr, $style_ident:ident, $block:expr) => {{
+        let taffy = $self.allocator.taffy.borrow();
+        let $style_ident = taffy.style($self.node)?;
+        Ok($block)
+    }};
+}
+
+macro_rules! with_style_mut {
+    ($self:expr, $style_ident:ident, $block:expr) => {{
+        let mut taffy = $self.allocator.taffy.borrow_mut();
+        let $style_ident = taffy.style_mut($self.node)?;
+        $block;
+        Ok(())
+    }};
+}
+
+
+// Style getter/setter methods
+#[wasm_bindgen]
+#[clippy::allow(non_snake_case)]
+impl Node {
+
+    // Display / Position
+    pub fn getDisplay(&mut self) -> Result<Display, JsError> {
+        get_style!(self, style, style.display)
+    }
+    pub fn setDisplay(&mut self, value: Display) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.display = value)
+    }
+    pub fn getPosition(&mut self) -> Result<Position, JsError> {
+        get_style!(self, style, style.position)
+    }
+    pub fn setPosition(&mut self, value: Position) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.position = value)
+    }
+
+    // flex-grow
+    pub fn getFlexGrow(&mut self) -> Result<f32, JsError> {
+        get_style!(self, style, style.flex_grow)
+    }
+    pub fn setFlexGrow(&mut self, flex_grow: f32) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.flex_grow = flex_grow)
+    }
+
+
+    #[wasm_bindgen(js_name = setHeight)]
+    pub fn set_height(&mut self, height: &str) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.size.height = height.parse().unwrap())
+    }
+}
+
 
 fn parse_style(style: &JsValue) -> taffy::style::Style {
     taffy::style::Style {
