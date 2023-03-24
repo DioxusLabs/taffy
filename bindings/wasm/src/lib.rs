@@ -74,7 +74,6 @@ impl Allocator {
 pub struct Node {
     allocator: Allocator,
     node: taffy::node::Node,
-    style: JsValue,
 
     #[wasm_bindgen(readonly)]
     pub childCount: usize,
@@ -83,11 +82,10 @@ pub struct Node {
 #[wasm_bindgen]
 impl Node {
     #[wasm_bindgen(constructor)]
-    pub fn new(allocator: &Allocator, style: &JsValue) -> Self {
+    pub fn new(allocator: &Allocator) -> Self {
         Self {
             allocator: allocator.clone(),
             node: allocator.taffy.borrow_mut().new_leaf(Style::DEFAULT).unwrap(),
-            style: style.clone(),
             childCount: 0,
         }
     }
@@ -169,17 +167,6 @@ impl Node {
     pub fn remove_child_at_index(&mut self, index: usize) {
         self.allocator.taffy.borrow_mut().remove_child_at_index(self.node, index).unwrap();
         self.childCount -= 1;
-    }
-
-    #[wasm_bindgen(js_name = getStyle)]
-    pub fn get_style(&self) -> JsValue {
-        self.style.clone()
-    }
-
-    #[wasm_bindgen(js_name = setStyle)]
-    pub fn set_style(&mut self, style: &JsValue) {
-        self.allocator.taffy.borrow_mut().set_style(self.node, parse_style(style)).unwrap();
-        self.style = style.clone();
     }
 
     #[wasm_bindgen(js_name = setFlexGrow)]
