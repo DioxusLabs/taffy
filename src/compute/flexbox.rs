@@ -728,23 +728,15 @@ fn determine_flex_base_size(
         //
         // See https://drafts.csswg.org/css-sizing-3/#min-percentage-contribution
         let min_content_size = {
-            let cross_axis_parent_size = constants.node_inner_size.cross(constants.dir);
-            let cross_axis_available_space = cross_axis_parent_size
-                .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir))
-                .into();
-
-            let mut parent_size = Size::NONE;
-            parent_size.set_cross(constants.dir, cross_axis_parent_size);
-
-            let mut available_space: Size<AvailableSpace> = Size::MIN_CONTENT;
-            available_space.set_cross(constants.dir, cross_axis_available_space);
+            let child_parent_size = Size::NONE.with_cross(dir, cross_axis_parent_size);
+            let child_available_space = Size::MIN_CONTENT.with_cross(dir, cross_axis_available_space);
 
             GenericAlgorithm::measure_size(
                 tree,
                 child.node,
                 Size::NONE,
-                parent_size,
-                available_space,
+                child_parent_size,
+                child_available_space,
                 SizingMode::ContentSize,
             )
         };
@@ -1235,8 +1227,15 @@ fn determine_hypothetical_cross_size(
     for child in line.items.iter_mut() {
         let padding_border_sum = (child.padding + child.border).cross_axis_sum(constants.dir);
 
+        let child_known_main = constants.container_size.main(constants.dir).into();
+
         let child_cross = child
             .size
+            .cross(constants.dir)
+            .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir))
+            .maybe_max(padding_border_sum);
+
+        let child_available_cross = available_space
             .cross(constants.dir)
             .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir))
             .maybe_max(padding_border_sum);
@@ -1251,16 +1250,8 @@ fn determine_hypothetical_cross_size(
                 },
                 constants.node_inner_size,
                 Size {
-                    width: if constants.is_row {
-                        constants.container_size.main(constants.dir).into()
-                    } else {
-                        available_space.width
-                    },
-                    height: if constants.is_row {
-                        available_space.height
-                    } else {
-                        constants.container_size.main(constants.dir).into()
-                    },
+                    width: if constants.is_row { child_known_main } else { child_available_cross },
+                    height: if constants.is_row { child_available_cross } else { child_known_main },
                 },
                 SizingMode::ContentSize,
             )
