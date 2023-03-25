@@ -30,7 +30,7 @@ mod caching {
 
         taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
 
-        assert_eq!(NUM_MEASURES.load(Ordering::SeqCst), 7);
+        assert_eq!(NUM_MEASURES.load(Ordering::SeqCst), 8);
     }
 
     #[test]
@@ -62,6 +62,6 @@ mod caching {
         }
 
         taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
-        assert_eq!(NUM_MEASURES.load(Ordering::SeqCst), 7);
+        assert_eq!(NUM_MEASURES.load(Ordering::SeqCst), 8);
     }
 }
