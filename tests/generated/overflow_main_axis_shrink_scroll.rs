@@ -11,6 +11,7 @@ fn overflow_main_axis_shrink_scroll() {
                     x: taffy::style::Overflow::Scroll,
                     y: taffy::style::Overflow::Scroll,
                 },
+                scrollbar_width: 15u8,
                 flex_shrink: 1f32,
                 ..Default::default()
             },

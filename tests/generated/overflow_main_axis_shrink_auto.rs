@@ -8,6 +8,7 @@ fn overflow_main_axis_shrink_auto() {
         .new_leaf_with_measure(
             taffy::style::Style {
                 overflow: taffy::geometry::Point { x: taffy::style::Overflow::Auto, y: taffy::style::Overflow::Auto },
+                scrollbar_width: 15u8,
                 flex_shrink: 1f32,
                 ..Default::default()
             },

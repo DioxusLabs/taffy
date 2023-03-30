@@ -107,22 +107,22 @@ async fn main() {
 
 async fn asserts_non_zero_width_scrollbars(client: Client) {
     // Load minimal test page defined in the string
-    const TEST_PAGE: &str = r#"data:text/html;charset=utf-8,<html><body style="overflow:scroll" /></html>"#;
+    const TEST_PAGE: &str = r#"data:text/html;charset=utf-8,<html><body><div style="overflow:scroll" /></body></html>"#;
     client.goto(TEST_PAGE).await.unwrap();
 
     // Determine the width of the scrollbar
-    let scrollbar_width =
-        client.execute("return document.body.clientWidth - document.body.offsetWidth;", vec![]).await.unwrap();
+    let scrollbar_width = client
+        .execute("return document.body.firstChild.clientWidth - document.body.firstChild.offsetWidth;", vec![])
+        .await
+        .unwrap();
     let Value::Number(scrollbar_width) = scrollbar_width else { panic!("Error retrieving scrollbar_width") };
     let scrollbar_width = scrollbar_width.as_f64().unwrap();
 
     if scrollbar_width == 0.0 {
-        panic!(
-            r#"
-            Scrollbar width of zero detected. This test generation script must be run with scrollbars set to take up space.\n
-            On macOS this can be done by setting Show Scrollbars to "always" in the Appearance section of the System Settings app.
-            "#
-        )
+        panic!(concat!(
+            "\n\n    Error: Scrollbar width of zero detected. This test generation script must be run with scrollbars set to take up space.\n",
+            "    On macOS this can be done by setting Show Scrollbars to 'always' in the Appearance section of the System Settings app.\n\n"
+        ))
     }
 }
 
@@ -388,12 +388,17 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
     }
     let overflow_x = quote_overflow(&style["overflowX"]);
     let overflow_y = quote_overflow(&style["overflowY"]);
-    let overflow = if overflow_x.is_some() || overflow_y.is_some() {
+    let (overflow, scrollbar_width) = if overflow_x.is_some() || overflow_y.is_some() {
         let overflow_x = overflow_x.unwrap_or(quote!(taffy::style::Overflow::Visible));
         let overflow_y = overflow_y.unwrap_or(quote!(taffy::style::Overflow::Visible));
-        quote!(overflow: taffy::geometry::Point { x: #overflow_x, y: #overflow_y },)
+        let overflow = quote!(overflow: taffy::geometry::Point { x: #overflow_x, y: #overflow_y },);
+        let scrollbar_width = quote_number_prop("scrollbar_width", style, |value: f32| {
+            let value = value as u8;
+            quote!(#value)
+        });
+        (overflow, scrollbar_width)
     } else {
-        quote!()
+        (quote!(), quote!())
     };
 
     let align_items = match style["alignItems"] {
@@ -573,6 +578,7 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
         #flex_direction
         #flex_wrap
         #overflow
+        #scrollbar_width
         #align_items
         #align_self
         #justify_items
