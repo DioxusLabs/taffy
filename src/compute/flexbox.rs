@@ -611,8 +611,19 @@ fn determine_flex_base_size(
     available_space: Size<AvailableSpace>,
     flex_items: &mut [FlexItem],
 ) {
+    let dir = constants.dir;
+
     for child in flex_items.iter_mut() {
         let child_style = tree.style(child.node);
+
+        // Parent size for child sizing
+        let cross_axis_parent_size = constants.node_inner_size.cross(dir);
+
+        // Available space for child sizing
+        let cross_axis_margin_sum = constants.margin.cross_axis_sum(dir);
+        let child_min_cross = child.min_size.cross(dir).maybe_add(cross_axis_margin_sum);
+        let child_max_cross = child.max_size.cross(dir).maybe_add(cross_axis_margin_sum);
+        let cross_axis_available_space = cross_axis_parent_size.maybe_clamp(child_min_cross, child_max_cross).into();
 
         child.flex_basis = 'flex_basis: {
             // A. If the item has a definite used flex basis, that’s the flex base size.
@@ -625,8 +636,8 @@ fn determine_flex_base_size(
             // Note: `child.size` has already been resolved against aspect_ratio in generate_anonymous_flex_items
             // So B will just work here by using main_size without special handling for aspect_ratio
 
-            let flex_basis = child_style.flex_basis.maybe_resolve(constants.node_inner_size.main(constants.dir));
-            let main_size = child.size.main(constants.dir);
+            let flex_basis = child_style.flex_basis.maybe_resolve(constants.node_inner_size.main(dir));
+            let main_size = child.size.main(dir);
             if let Some(flex_basis) = flex_basis.or(main_size) {
                 break 'flex_basis flex_basis;
             };
@@ -655,15 +666,19 @@ fn determine_flex_base_size(
             //    is auto and not definite, in this calculation use fit-content as the
             //    flex item’s cross size. The flex base size is the item’s resulting main size.
 
+            let child_parent_size = Size::NONE.with_cross(dir, cross_axis_parent_size);
+            let child_available_space = available_space.with_cross(dir, cross_axis_available_space);
+
             let child_known_dimensions = {
                 let mut ckd = child.size;
-                if child.align_self == AlignSelf::Stretch && ckd.cross(constants.dir).is_none() {
+                if child.align_self == AlignSelf::Stretch && ckd.cross(dir).is_none() {
                     ckd.set_cross(
-                        constants.dir,
-                        available_space
-                            .cross(constants.dir)
+                        dir,
+                        child_available_space
+                            .cross(dir)
                             .into_option()
-                            .maybe_sub(constants.margin.cross_axis_sum(constants.dir)),
+                            .maybe_clamp(child_min_cross, child_max_cross)
+                            .maybe_sub(constants.margin.cross_axis_sum(dir)),
                     );
                 }
                 ckd
@@ -673,11 +688,11 @@ fn determine_flex_base_size(
                 tree,
                 child.node,
                 child_known_dimensions,
-                constants.node_inner_size,
-                available_space,
+                child_parent_size,
+                child_available_space,
                 SizingMode::ContentSize,
             )
-            .main(constants.dir);
+            .main(dir);
         };
 
         // Floor flex-basis by the padding_border_sum (floors inner_flex_basis at zero)
@@ -713,23 +728,15 @@ fn determine_flex_base_size(
         //
         // See https://drafts.csswg.org/css-sizing-3/#min-percentage-contribution
         let min_content_size = {
-            let cross_axis_parent_size = constants.node_inner_size.cross(constants.dir);
-            let cross_axis_available_space = cross_axis_parent_size
-                .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir))
-                .into();
-
-            let mut parent_size = Size::NONE;
-            parent_size.set_cross(constants.dir, cross_axis_parent_size);
-
-            let mut available_space: Size<AvailableSpace> = Size::MIN_CONTENT;
-            available_space.set_cross(constants.dir, cross_axis_available_space);
+            let child_parent_size = Size::NONE.with_cross(dir, cross_axis_parent_size);
+            let child_available_space = Size::MIN_CONTENT.with_cross(dir, cross_axis_available_space);
 
             GenericAlgorithm::measure_size(
                 tree,
                 child.node,
                 Size::NONE,
-                parent_size,
-                available_space,
+                child_parent_size,
+                child_available_space,
                 SizingMode::ContentSize,
             )
         };
@@ -1220,8 +1227,15 @@ fn determine_hypothetical_cross_size(
     for child in line.items.iter_mut() {
         let padding_border_sum = (child.padding + child.border).cross_axis_sum(constants.dir);
 
+        let child_known_main = constants.container_size.main(constants.dir).into();
+
         let child_cross = child
             .size
+            .cross(constants.dir)
+            .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir))
+            .maybe_max(padding_border_sum);
+
+        let child_available_cross = available_space
             .cross(constants.dir)
             .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir))
             .maybe_max(padding_border_sum);
@@ -1236,16 +1250,8 @@ fn determine_hypothetical_cross_size(
                 },
                 constants.node_inner_size,
                 Size {
-                    width: if constants.is_row {
-                        constants.container_size.main(constants.dir).into()
-                    } else {
-                        available_space.width
-                    },
-                    height: if constants.is_row {
-                        available_space.height
-                    } else {
-                        constants.container_size.main(constants.dir).into()
-                    },
+                    width: if constants.is_row { child_known_main } else { child_available_cross },
+                    height: if constants.is_row { child_available_cross } else { child_known_main },
                 },
                 SizingMode::ContentSize,
             )

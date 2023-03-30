@@ -812,6 +812,7 @@ mod measure_child_constraint;
 mod measure_child_constraint_padding_parent;
 mod measure_child_with_flex_grow;
 mod measure_child_with_flex_shrink;
+mod measure_child_with_min_size_greater_than_available_space;
 mod measure_flex_basis_overrides_measure;
 mod measure_height_overrides_measure;
 mod measure_remeasure_child_after_growing;
