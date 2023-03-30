@@ -352,13 +352,25 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
         _ => quote!(),
     };
 
-    let overflow = match style["overflow"] {
-        Value::String(ref value) => match value.as_ref() {
-            "hidden" => quote!(overflow: taffy::style::Overflow::Hidden,),
-            "scroll" => quote!(overflow: taffy::style::Overflow::Scroll,),
-            _ => quote!(),
-        },
-        _ => quote!(),
+    fn quote_overflow(overflow: &Value) -> Option<TokenStream> {
+        match overflow {
+            Value::String(ref value) => match value.as_ref() {
+                "hidden" => Some(quote!(taffy::style::Overflow::Hidden)),
+                "scroll" => Some(quote!(taffy::style::Overflow::Scroll)),
+                "auto" => Some(quote!(taffy::style::Overflow::Auto)),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+    let overflow_x = quote_overflow(&style["overflowX"]);
+    let overflow_y = quote_overflow(&style["overflowY"]);
+    let overflow = if overflow_x.is_some() || overflow_y.is_some() {
+        let overflow_x = overflow_x.unwrap_or(quote!(taffy::style::Overflow::Visible));
+        let overflow_y = overflow_y.unwrap_or(quote!(taffy::style::Overflow::Visible));
+        quote!(overflow: taffy::geometry::Point { x: #overflow_x, y: #overflow_y },)
+    } else {
+        quote!()
     };
 
     let align_items = match style["alignItems"] {

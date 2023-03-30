@@ -188,7 +188,8 @@ function describeElement(e) {
       writingMode: parseEnum(e.style.writingMode),
 
       flexWrap: parseEnum(e.style.flexWrap),
-      overflow: parseEnum(e.style.overflow),
+      overflowX: parseEnum(e.style.overflowX),
+      overflowY: parseEnum(e.style.overflowY),
 
       alignItems: parseEnum(e.style.alignItems),
       alignSelf: parseEnum(e.style.alignSelf),
