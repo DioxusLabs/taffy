@@ -1355,9 +1355,15 @@ fn calculate_cross_size(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>
                 AlignContent::Stretch | AlignContent::SpaceEvenly | AlignContent::SpaceAround
             ))
     {
-        flex_lines[0].cross_size =
-            (node_size.cross(constants.dir).maybe_sub(constants.padding_border.cross_axis_sum(constants.dir)))
-                .unwrap_or(0.0);
+        let cross_axis_padding_border = constants.padding_border.cross_axis_sum(constants.dir);
+        let cross_min_size = constants.min_size.cross(constants.dir);
+        let cross_max_size = constants.max_size.cross(constants.dir);
+        flex_lines[0].cross_size = node_size
+            .cross(constants.dir)
+            .maybe_clamp(cross_min_size, cross_max_size)
+            .maybe_sub(cross_axis_padding_border)
+            .maybe_max(0.0)
+            .unwrap_or(0.0);
     } else {
         for line in flex_lines.iter_mut() {
             //    1. Collect all the flex items whose inline-axis is parallel to the main-axis, whose
