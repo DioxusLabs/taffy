@@ -446,6 +446,7 @@ impl Size<Dimension> {
 ///
 /// When used in association with a [`Rect`], represents the bottom-left corner.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Point<T> {
     /// The x-coordinate
     pub x: T,
