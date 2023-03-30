@@ -20,7 +20,7 @@ pub use self::grid::{
     GridAutoFlow, GridPlacement, GridTrackRepetition, MaxTrackSizingFunction, MinTrackSizingFunction,
     NonRepeatedTrackSizingFunction, TrackSizingFunction,
 };
-use crate::geometry::{Rect, Size};
+use crate::geometry::{Point, Rect, Size};
 
 #[cfg(feature = "grid")]
 use crate::geometry::Line;
@@ -94,6 +94,38 @@ impl Default for Position {
     }
 }
 
+/// How children overflowing their container should affect layout
+///
+/// In CSS the primary effect of this property is to control whether contents of a parent container that overflow that container should
+/// be displayed anyway, be clipped, or trigger the container to become a scroll container. However it also has secondary effects on layout,
+/// the main ones being:
+///
+///   - The automatic minimum size Flexbox/CSS Grid items with non-`Visible` overflow is `0` rather than being content based
+///   - `Overflow::Scroll` nodes have space in the layout reserved for a scrollbar (width controlled by the `scrollbar_width` property)
+///   - `Overflow::Auto` nodes also have space in the layout reserved for a scrollbar, *but only if their contents actually overflow*.
+///
+/// In Taffy, we only implement the layout related secondary effects as we are not concerned with drawing/painting. The amount of space reserved for
+/// a scrollbar is controlled by the `scrollbar_width` property. If this is `0` then `Auto` and `Scroll` behave identically to `Hidden`.
+///
+/// <https://developer.mozilla.org/en-US/docs/Web/CSS/overflow>
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum Overflow {
+    /// The automatic minimum size of this node as a flexbox/grid item should be based on the size of it's content.
+    #[default]
+    Visible,
+    /// The automatic minimum size of this node as a flexbox/grid item should be `0`.
+    Hidden,
+    /// The automatic minimum size of this node as a flexbox/grid item should be `0`. Additionally, space should be reserved
+    /// for a scrollbar. The amount of space reserved is controlled by the `scrollbar_width` property.
+    Scroll,
+    /// The automatic minimum size of this node as a flexbox/grid item should be 0. Additionall, while this node should initially be laid out
+    /// without reserving space for a scrollbar, *if* the contents of this node overflow during this initial layout then space should be reserved
+    /// for a scrollbar and the node's relayout recomputed on that basis. The amount of space reserved is controlled by the `scrollbar_width` property.
+    /// If this is set to `0` then no relayout will occur.
+    Auto,
+}
+
 /// The flexbox layout information for a single [`Node`](crate::node::Node).
 ///
 /// The most important idea in flexbox is the notion of a "main" and "cross" axis, which are always perpendicular to each other.
@@ -114,6 +146,8 @@ impl Default for Position {
 pub struct Style {
     /// What layout strategy should be used?
     pub display: Display,
+    /// How children overflowing their container should affect layout
+    pub overflow: Point<Overflow>,
 
     // Position properties
     /// What should the `position` value of this struct use as a base offset?
@@ -225,6 +259,7 @@ impl Style {
     /// The [`Default`] layout, in a form that can be used in const functions
     pub const DEFAULT: Style = Style {
         display: Display::DEFAULT,
+        overflow: Point { x: Overflow::Visible, y: Overflow::Visible },
         position: Position::Relative,
         inset: Rect::auto(),
         margin: Rect::zero(),
@@ -296,6 +331,7 @@ mod tests {
 
         let old_defaults = Style {
             display: Default::default(),
+            overflow: Default::default(),
             position: Default::default(),
             #[cfg(feature = "flexbox")]
             flex_direction: Default::default(),
@@ -375,6 +411,7 @@ mod tests {
         // Display and Position
         assert_type_size::<Display>(1);
         assert_type_size::<Position>(1);
+        assert_type_size::<Overflow>(1);
 
         // Dimensions and aggregations of Dimensions
         assert_type_size::<f32>(4);
