@@ -3,14 +3,15 @@ use super::GridTrack;
 use crate::axis::AbstractAxis;
 use crate::compute::grid::OriginZeroLine;
 use crate::compute::{GenericAlgorithm, LayoutAlgorithm};
-use crate::geometry::{Line, Rect, Size};
+use crate::geometry::{Line, Point, Rect, Size};
 use crate::layout::SizingMode;
 use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::prelude::LayoutTree;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::{
-    AlignItems, AlignSelf, AvailableSpace, LengthPercentageAuto, MaxTrackSizingFunction, MinTrackSizingFunction, Style,
+    AlignItems, AlignSelf, AvailableSpace, LengthPercentageAuto, MaxTrackSizingFunction, MinTrackSizingFunction,
+    Overflow, Style,
 };
 use core::ops::Range;
 
@@ -33,6 +34,8 @@ pub(in super::super) struct GridItem {
     /// (in origin-zero coordinates)
     pub column: Line<OriginZeroLine>,
 
+    /// The item's overflow style
+    pub overflow: Point<Overflow>,
     /// The item's margin style
     pub margin: Rect<LengthPercentageAuto>,
     /// The item's align_self property, or the parent's align_items property is not set
@@ -88,6 +91,7 @@ impl GridItem {
             source_order,
             row: row_span,
             column: col_span,
+            overflow: style.overflow,
             margin: style.margin,
             align_self: style.align_self.unwrap_or(parent_align_items),
             justify_self: style.justify_self.unwrap_or(parent_justify_items),
@@ -421,6 +425,7 @@ impl GridItem {
             .or_else(|| {
                 style.min_size.maybe_resolve(inner_node_size).maybe_apply_aspect_ratio(style.aspect_ratio).get(axis)
             })
+            .or_else(|| self.overflow.get(axis).maybe_into_automatic_min_size())
             .unwrap_or_else(|| {
                 // Automatic minimum size. See https://www.w3.org/TR/css-grid-1/#min-size-auto
 
