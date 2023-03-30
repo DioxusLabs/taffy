@@ -143,6 +143,14 @@ struct AlgoConstants {
     /// Is the wrap direction inverted
     is_wrap_reverse: bool,
 
+    /// The item's size style
+    size: Size<Option<f32>>,
+    /// The item's min_size style
+    min_size: Size<Option<f32>>,
+    /// The item's max_size style
+    max_size: Size<Option<f32>>,
+    // /// The item's aspect_ratio style
+    // aspect_ratio: Option<f32>,
     /// The margin of this section
     margin: Rect<f32>,
     /// The border of this section
@@ -179,10 +187,6 @@ pub fn compute(
     run_mode: RunMode,
 ) -> SizeAndBaselines {
     let style = tree.style(node);
-    let has_min_max_sizes = style.min_size.width.is_defined()
-        || style.min_size.height.is_defined()
-        || style.max_size.width.is_defined()
-        || style.max_size.height.is_defined();
 
     // Pull these out earlier to avoid borrowing issues
     let aspect_ratio = style.aspect_ratio;
@@ -206,35 +210,9 @@ pub fn compute(
         }
     }
 
-    if styled_based_known_dimensions.both_axis_defined() || !has_min_max_sizes {
-        #[cfg(feature = "debug")]
-        NODE_LOGGER.log("FLEX: single-pass");
-        compute_preliminary(tree, node, styled_based_known_dimensions, parent_size, available_space, run_mode)
-    } else {
-        #[cfg(feature = "debug")]
-        NODE_LOGGER.log("FLEX: two-pass");
-        let first_pass = compute_preliminary(
-            tree,
-            node,
-            styled_based_known_dimensions,
-            parent_size,
-            available_space,
-            RunMode::ComputeSize,
-        )
-        .size;
-
-        let clamped_first_pass_size = first_pass.maybe_clamp(min_size, max_size);
-
-        compute_preliminary(
-            tree,
-            node,
-            styled_based_known_dimensions
-                .zip_map(clamped_first_pass_size, |known, first_pass| known.or_else(|| first_pass.into())),
-            parent_size,
-            available_space,
-            run_mode,
-        )
-    }
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.log("FLEX: single-pass");
+    compute_preliminary(tree, node, styled_based_known_dimensions, parent_size, available_space, run_mode)
 }
 
 /// Compute a preliminary size for an item
@@ -451,6 +429,7 @@ fn compute_constants(
     let is_wrap = matches!(style.flex_wrap, FlexWrap::Wrap | FlexWrap::WrapReverse);
     let is_wrap_reverse = style.flex_wrap == FlexWrap::WrapReverse;
 
+    let aspect_ratio = style.aspect_ratio;
     let margin = style.margin.resolve_or_zero(parent_size.width);
     let padding = style.padding.resolve_or_zero(parent_size.width);
     let border = style.border.resolve_or_zero(parent_size.width);
@@ -473,6 +452,9 @@ fn compute_constants(
         is_column,
         is_wrap,
         is_wrap_reverse,
+        size: style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio),
+        min_size: style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio),
+        max_size: style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio),
         margin,
         border,
         gap,
@@ -836,6 +818,8 @@ fn determine_container_main_size(
     lines: &mut Vec<FlexLine<'_>>,
     constants: &mut AlgoConstants,
 ) {
+    let main_padding_border = constants.padding_border.main_axis_sum(constants.dir);
+
     let outer_main_size: f32 = constants.node_outer_size.main(constants.dir).unwrap_or_else(|| {
         match main_axis_available_space {
             AvailableSpace::Definite(main_axis_available_space) => {
@@ -855,7 +839,7 @@ fn determine_container_main_size(
                     })
                     .max_by(|a, b| a.total_cmp(b))
                     .unwrap_or(0.0);
-                let size = longest_line_length + constants.padding_border.main_axis_sum(constants.dir);
+                let size = longest_line_length + main_padding_border;
                 if lines.len() > 1 {
                     f32_max(size, main_axis_available_space)
                 } else {
@@ -879,7 +863,7 @@ fn determine_container_main_size(
                     })
                     .max_by(|a, b| a.total_cmp(b))
                     .unwrap_or(0.0);
-                longest_line_length + constants.padding_border.main_axis_sum(constants.dir)
+                longest_line_length + main_padding_border
             }
             AvailableSpace::MinContent | AvailableSpace::MaxContent => {
                 // Define a base main_size variable. This is mutated once for iteration over the outer
@@ -949,14 +933,12 @@ fn determine_container_main_size(
                                 // Ultimately, this was not found by reading the spec, but by trial and error fixing tests to align with Webkit/Firefox output.
                                 // (see the `flex_basis_unconstraint_row` and `flex_basis_uncontraint_column` generated tests which demonstrate this)
                                 if constants.is_row {
-                                    content_main_size
-                                        .maybe_clamp(style_min, style_max)
-                                        .max(constants.padding_border.main_axis_sum(constants.dir))
+                                    content_main_size.maybe_clamp(style_min, style_max).max(main_padding_border)
                                 } else {
                                     content_main_size
                                         .max(item.flex_basis)
                                         .maybe_clamp(style_min, style_max)
-                                        .max(constants.padding_border.main_axis_sum(constants.dir))
+                                        .max(main_padding_border)
                                 }
                             }
                         };
@@ -1017,10 +999,15 @@ fn determine_container_main_size(
                     main_size = f32_max(main_size, item_main_size_sum + gap_sum)
                 }
 
-                main_size + constants.padding_border.main_axis_sum(constants.dir)
+                main_size + main_padding_border
             }
         }
     });
+
+    let outer_main_size = outer_main_size
+        .maybe_clamp(constants.min_size.main(constants.dir), constants.max_size.main(constants.dir))
+        .max(main_padding_border);
+
     // let outer_main_size = inner_main_size + constants.padding_border.main_axis_sum(constants.dir);
     let inner_main_size = outer_main_size - constants.padding_border.main_axis_sum(constants.dir);
     constants.container_size.set_main(constants.dir, outer_main_size);
