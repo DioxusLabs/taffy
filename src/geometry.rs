@@ -490,6 +490,26 @@ impl<T> Point<T> {
     {
         Point { x: f(self.x), y: f(self.y) }
     }
+
+    /// Gets the extent of the specified layout axis
+    /// Whether this is the width or height depends on the `GridAxis` provided
+    #[cfg(feature = "grid")]
+    pub fn get(self, axis: AbstractAxis) -> T {
+        match axis {
+            AbstractAxis::Inline => self.x,
+            AbstractAxis::Block => self.y,
+        }
+    }
+
+    /// Sets the extent of the specified layout axis
+    /// Whether this is the width or height depends on the `GridAxis` provided
+    #[cfg(feature = "grid")]
+    pub fn set(&mut self, axis: AbstractAxis, value: T) {
+        match axis {
+            AbstractAxis::Inline => self.x = value,
+            AbstractAxis::Block => self.y = value,
+        }
+    }
 }
 
 impl<T> From<Point<T>> for Size<T> {
