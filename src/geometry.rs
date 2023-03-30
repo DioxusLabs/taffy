@@ -11,7 +11,7 @@ use crate::style::FlexDirection;
 use crate::axis::AbstractAxis;
 
 /// An axis-aligned UI rectangle
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Rect<T> {
     /// This can represent either the x-coordinate of the starting edge,
@@ -32,17 +32,6 @@ pub struct Rect<T> {
     /// This can represent either the y-coordinate of the bottom edge,
     /// or the amount of padding on the bottom side.
     pub bottom: T,
-}
-
-impl<T: Default> Default for Rect<T> {
-    fn default() -> Self {
-        Rect {
-            left: Default::default(),
-            right: Default::default(),
-            top: Default::default(),
-            bottom: Default::default(),
-        }
-    }
 }
 
 impl<U, T: Add<U>> Add<Rect<U>> for Rect<T> {
@@ -248,19 +237,13 @@ impl<T: Add + Copy> Line<T> {
 }
 
 /// The width and height of a [`Rect`]
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Size<T> {
     /// The x extent of the rectangle
     pub width: T,
     /// The y extent of the rectangle
     pub height: T,
-}
-
-impl<T: Default> Default for Size<T> {
-    fn default() -> Self {
-        Size { width: Default::default(), height: Default::default() }
-    }
 }
 
 // Generic Add impl for Size<T> + Size<U> where T + U has an Add impl
@@ -478,7 +461,7 @@ impl Size<Dimension> {
 /// A 2-dimensional coordinate.
 ///
 /// When used in association with a [`Rect`], represents the bottom-left corner.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
 pub struct Point<T> {
     /// The x-coordinate
     pub x: T,
