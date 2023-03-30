@@ -146,8 +146,12 @@ pub enum Overflow {
 pub struct Style {
     /// What layout strategy should be used?
     pub display: Display,
+
+    // Overflow properties
     /// How children overflowing their container should affect layout
     pub overflow: Point<Overflow>,
+    /// How much space (in points) should be reserved for the scrollbars of `Overflow::Scroll` and `Overflow::Auto` nodes.
+    pub scrollbar_width: u8,
 
     // Position properties
     /// What should the `position` value of this struct use as a base offset?
@@ -260,6 +264,7 @@ impl Style {
     pub const DEFAULT: Style = Style {
         display: Display::DEFAULT,
         overflow: Point { x: Overflow::Visible, y: Overflow::Visible },
+        scrollbar_width: 0,
         position: Position::Relative,
         inset: Rect::auto(),
         margin: Rect::zero(),
@@ -332,6 +337,7 @@ mod tests {
         let old_defaults = Style {
             display: Default::default(),
             overflow: Default::default(),
+            scrollbar_width: 0,
             position: Default::default(),
             #[cfg(feature = "flexbox")]
             flex_direction: Default::default(),
