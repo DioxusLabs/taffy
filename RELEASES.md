@@ -1,5 +1,11 @@
 # Release Notes
 
+## 0.3.10
+
+### Fixes
+
+- Fix sizing of children when the available_space < min_size (#407)
+
 ## 0.3.9
 
 ### Fixes
