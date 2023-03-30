@@ -51,6 +51,8 @@ async fn main() {
     info!("spawning webdriver client and collecting test descriptions");
     let client = ClientBuilder::native().capabilities(caps.clone()).connect(webdriver_url).await.unwrap();
 
+    asserts_non_zero_width_scrollbars(client.clone()).await;
+
     let mut test_descs = vec![];
     for (name, fixture_path) in fixtures {
         test_descs.push(test_root_element(client.clone(), name, fixture_path).await);
@@ -101,6 +103,27 @@ async fn main() {
 
     info!("formatting the source directory");
     Command::new("cargo").arg("fmt").current_dir(repo_root).status().unwrap();
+}
+
+async fn asserts_non_zero_width_scrollbars(client: Client) {
+    // Load minimal test page defined in the string
+    const TEST_PAGE: &str = r#"data:text/html;charset=utf-8,<html><body style="overflow:scroll" /></html>"#;
+    client.goto(TEST_PAGE).await.unwrap();
+
+    // Determine the width of the scrollbar
+    let scrollbar_width =
+        client.execute("return document.body.clientWidth - document.body.offsetWidth;", vec![]).await.unwrap();
+    let Value::Number(scrollbar_width) = scrollbar_width else { panic!("Error retrieving scrollbar_width") };
+    let scrollbar_width = scrollbar_width.as_f64().unwrap();
+
+    if scrollbar_width == 0.0 {
+        panic!(
+            r#"
+            Scrollbar width of zero detected. This test generation script must be run with scrollbars set to take up space.\n
+            On macOS this can be done by setting Show Scrollbars to "always" in the Appearance section of the System Settings app.
+            "#
+        )
+    }
 }
 
 async fn test_root_element(client: Client, name: String, fixture_path: impl AsRef<Path>) -> (String, Value) {
