@@ -11,7 +11,7 @@ use crate::prelude::{TaffyMaxContent, TaffyMinContent};
 use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::{
     AlignContent, AlignItems, AlignSelf, AvailableSpace, Dimension, Display, FlexWrap, JustifyContent,
-    LengthPercentageAuto, Position,
+    LengthPercentageAuto, Overflow, Position,
 };
 use crate::style::{FlexDirection, Style};
 use crate::sys::Vec;
@@ -63,6 +63,8 @@ struct FlexItem {
     /// The cross-alignment of this item
     align_self: AlignSelf,
 
+    /// The overflow style of the item
+    overflow: Point<Overflow>,
     /// The flex shrink style of the item
     flex_shrink: f32,
     /// The flex grow style of the item
@@ -495,6 +497,7 @@ fn generate_anonymous_flex_items(tree: &impl LayoutTree, node: Node, constants: 
                 padding: child_style.padding.resolve_or_zero(constants.node_inner_size.width),
                 border: child_style.border.resolve_or_zero(constants.node_inner_size.width),
                 align_self: child_style.align_self.unwrap_or(constants.align_items),
+                overflow: child_style.overflow,
                 flex_grow: child_style.flex_grow,
                 flex_shrink: child_style.flex_shrink,
                 flex_basis: 0.0,
@@ -704,25 +707,30 @@ fn determine_flex_base_size(
         // be set to their usual values in the cross axis so that wrapping content can wrap correctly.
         //
         // See https://drafts.csswg.org/css-sizing-3/#min-percentage-contribution
-        let min_content_size = {
-            let child_parent_size = Size::NONE.with_cross(dir, cross_axis_parent_size);
-            let child_available_space = Size::MIN_CONTENT.with_cross(dir, cross_axis_available_space);
+        let style_min_size = child.min_size.or(child.overflow.map(Overflow::maybe_into_automatic_min_size).into());
+        if let Size { width: Some(width), height: Some(height) } = style_min_size {
+            child.resolved_minimum_size = Size { width, height };
+        } else {
+            let min_content_size = {
+                let child_parent_size = Size::NONE.with_cross(dir, cross_axis_parent_size);
+                let child_available_space = Size::MIN_CONTENT.with_cross(dir, cross_axis_available_space);
 
-            GenericAlgorithm::measure_size(
-                tree,
-                child.node,
-                Size::NONE,
-                child_parent_size,
-                child_available_space,
-                SizingMode::ContentSize,
-            )
-        };
+                GenericAlgorithm::measure_size(
+                    tree,
+                    child.node,
+                    Size::NONE,
+                    child_parent_size,
+                    child_available_space,
+                    SizingMode::ContentSize,
+                )
+            };
 
-        // 4.5. Automatic Minimum Size of Flex Items
-        // https://www.w3.org/TR/css-flexbox-1/#min-size-auto
-        let clamped_min_content_size = min_content_size.maybe_min(child.size).maybe_min(child.max_size);
-        child.resolved_minimum_size =
-            child.min_size.unwrap_or(clamped_min_content_size).maybe_max(padding_border_axes_sums);
+            // 4.5. Automatic Minimum Size of Flex Items
+            // https://www.w3.org/TR/css-flexbox-1/#min-size-auto
+            let clamped_min_content_size = min_content_size.maybe_min(child.size).maybe_min(child.max_size);
+            child.resolved_minimum_size =
+                style_min_size.unwrap_or(clamped_min_content_size).maybe_max(padding_border_axes_sums);
+        }
     }
 }
 

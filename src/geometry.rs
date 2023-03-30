@@ -463,6 +463,24 @@ impl Point<Option<f32>> {
     pub const NONE: Self = Self { x: None, y: None };
 }
 
+impl<T> Point<T> {
+    /// Applies the function `f` to both the x and y
+    ///
+    /// This is used to transform a `Point<T>` into a `Point<R>`.
+    pub fn map<R, F>(self, f: F) -> Point<R>
+    where
+        F: Fn(T) -> R,
+    {
+        Point { x: f(self.x), y: f(self.y) }
+    }
+}
+
+impl<T> From<Point<T>> for Size<T> {
+    fn from(value: Point<T>) -> Self {
+        Size { width: value.x, height: value.y }
+    }
+}
+
 /// Generic struct which holds a "min" value and a "max" value
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
