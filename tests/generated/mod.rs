@@ -651,6 +651,14 @@ mod grid_minmax_min_content_percent_indefinite;
 #[cfg(feature = "grid")]
 mod grid_out_of_order_items;
 #[cfg(feature = "grid")]
+mod grid_overflow_inline_axis_auto;
+#[cfg(feature = "grid")]
+mod grid_overflow_inline_axis_hidden;
+#[cfg(feature = "grid")]
+mod grid_overflow_inline_axis_scroll;
+#[cfg(feature = "grid")]
+mod grid_overflow_inline_axis_visible;
+#[cfg(feature = "grid")]
 mod grid_overflow_rows;
 #[cfg(feature = "grid")]
 mod grid_padding_border_overrides_container_max_size;
