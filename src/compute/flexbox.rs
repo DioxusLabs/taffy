@@ -143,8 +143,6 @@ struct AlgoConstants {
     /// Is the wrap direction inverted
     is_wrap_reverse: bool,
 
-    /// The item's size style
-    size: Size<Option<f32>>,
     /// The item's min_size style
     min_size: Size<Option<f32>>,
     /// The item's max_size style
@@ -452,7 +450,6 @@ fn compute_constants(
         is_column,
         is_wrap,
         is_wrap_reverse,
-        size: style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio),
         min_size: style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio),
         max_size: style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio),
         margin,
@@ -1406,15 +1403,23 @@ fn calculate_cross_size(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>
 ///     increase the cross size of each flex line by equal amounts such that the sum of their cross sizes exactly equals the flex container’s inner cross size.
 #[inline]
 fn handle_align_content_stretch(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>>, constants: &AlgoConstants) {
-    if constants.align_content == AlignContent::Stretch && node_size.cross(constants.dir).is_some() {
-        let total_cross_axis_gap = sum_axis_gaps(constants.gap.cross(constants.dir), flex_lines.len());
-        let total_cross: f32 = flex_lines.iter().map(|line| line.cross_size).sum::<f32>() + total_cross_axis_gap;
-        let inner_cross =
-            (node_size.cross(constants.dir).maybe_sub(constants.padding_border.cross_axis_sum(constants.dir)))
-                .unwrap_or(0.0);
+    if constants.align_content == AlignContent::Stretch {
+        let cross_axis_padding_border = constants.padding_border.cross_axis_sum(constants.dir);
+        let cross_min_size = constants.min_size.cross(constants.dir);
+        let cross_max_size = constants.max_size.cross(constants.dir);
+        let container_min_inner_cross = node_size
+            .cross(constants.dir)
+            .or(cross_min_size)
+            .maybe_clamp(cross_min_size, cross_max_size)
+            .maybe_sub(cross_axis_padding_border)
+            .maybe_max(0.0)
+            .unwrap_or(0.0);
 
-        if total_cross < inner_cross {
-            let remaining = inner_cross - total_cross;
+        let total_cross_axis_gap = sum_axis_gaps(constants.gap.cross(constants.dir), flex_lines.len());
+        let lines_total_cross: f32 = flex_lines.iter().map(|line| line.cross_size).sum::<f32>() + total_cross_axis_gap;
+
+        if lines_total_cross < container_min_inner_cross {
+            let remaining = container_min_inner_cross - lines_total_cross;
             let addition = remaining / flex_lines.len() as f32;
             flex_lines.iter_mut().for_each(|line| line.cross_size += addition);
         }
@@ -1553,6 +1558,7 @@ fn resolve_cross_axis_auto_margins(flex_lines: &mut [FlexLine], constants: &Algo
         let line_cross_size = line.cross_size;
         let max_baseline: f32 = line.items.iter_mut().map(|child| child.baseline).fold(0.0, |acc, x| acc.max(x));
 
+        dbg!(line_cross_size);
         for child in line.items.iter_mut() {
             let free_space = line_cross_size - child.outer_target_size.cross(constants.dir);
 
@@ -1658,9 +1664,12 @@ fn determine_container_cross_size(
     let total_line_cross_size: f32 = flex_lines.iter().map(|line| line.cross_size).sum::<f32>();
 
     let padding_border_sum = constants.padding_border.cross_axis_sum(constants.dir);
+    let min_cross_size = constants.min_size.cross(constants.dir);
+    let max_cross_size = constants.max_size.cross(constants.dir);
     let outer_container_size = node_size
         .cross(constants.dir)
         .unwrap_or(total_line_cross_size + total_cross_axis_gap + padding_border_sum)
+        .maybe_clamp(min_cross_size, max_cross_size)
         .max(padding_border_sum);
     let inner_container_size = outer_container_size - padding_border_sum;
 
