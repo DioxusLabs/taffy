@@ -222,6 +222,7 @@ mod display_none_with_child;
 mod display_none_with_margin;
 mod display_none_with_position;
 mod display_none_with_position_absolute;
+mod do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent;
 mod flex_basis_and_main_dimen_set_when_flexing;
 mod flex_basis_flex_grow_column;
 mod flex_basis_flex_grow_row;
