@@ -596,7 +596,10 @@ fn determine_flex_base_size(
         let cross_axis_margin_sum = constants.margin.cross_axis_sum(dir);
         let child_min_cross = child.min_size.cross(dir).maybe_add(cross_axis_margin_sum);
         let child_max_cross = child.max_size.cross(dir).maybe_add(cross_axis_margin_sum);
-        let cross_axis_available_space = cross_axis_parent_size.maybe_clamp(child_min_cross, child_max_cross).into();
+        let cross_axis_available_space: AvailableSpace = available_space
+            .cross(dir)
+            .map_definite_value(|val| cross_axis_parent_size.unwrap_or(val))
+            .maybe_clamp(child_min_cross, child_max_cross);
 
         child.flex_basis = 'flex_basis: {
             // A. If the item has a definite used flex basis, that’s the flex base size.
@@ -640,7 +643,17 @@ fn determine_flex_base_size(
             //    flex item’s cross size. The flex base size is the item’s resulting main size.
 
             let child_parent_size = Size::NONE.with_cross(dir, cross_axis_parent_size);
-            let child_available_space = available_space.with_cross(dir, cross_axis_available_space);
+            let child_available_space = Size::MAX_CONTENT
+                .with_main(
+                    dir,
+                    // Map AvailableSpace::Definite to AvailableSpace::MaxContent
+                    if available_space.main(dir) == AvailableSpace::MinContent {
+                        AvailableSpace::MinContent
+                    } else {
+                        AvailableSpace::MaxContent
+                    },
+                )
+                .with_cross(dir, cross_axis_available_space);
 
             let child_known_dimensions = {
                 let mut ckd = child.size;

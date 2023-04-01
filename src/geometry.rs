@@ -255,6 +255,7 @@ impl<U, T: Add<U>> Add<Size<U>> for Size<T> {
     }
 }
 
+#[allow(dead_code)]
 impl<T> Size<T> {
     /// Applies the function `f` to both the width and height
     ///
@@ -318,7 +319,6 @@ impl<T> Size<T> {
     /// Creates a new value of type Self with the main axis set to value provided
     ///
     /// Whether this is the width or height depends on the `direction` provided
-    #[allow(dead_code)]
     #[cfg(feature = "flexbox")]
     pub(crate) fn with_main(self, direction: FlexDirection, value: T) -> Self {
         let mut new = self;
@@ -340,6 +340,32 @@ impl<T> Size<T> {
             new.height = value
         } else {
             new.width = value
+        }
+        new
+    }
+
+    /// Creates a new value of type Self with the main axis modified by the callback provided
+    ///
+    /// Whether this is the width or height depends on the `direction` provided
+    pub(crate) fn map_main(self, direction: FlexDirection, mapper: impl FnOnce(T) -> T) -> Self {
+        let mut new = self;
+        if direction.is_row() {
+            new.width = mapper(new.width);
+        } else {
+            new.height = mapper(new.height);
+        }
+        new
+    }
+
+    /// Creates a new value of type Self with the cross axis modified by the callback provided
+    ///
+    /// Whether this is the width or height depends on the `direction` provided
+    pub(crate) fn map_cross(self, direction: FlexDirection, mapper: impl FnOnce(T) -> T) -> Self {
+        let mut new = self;
+        if direction.is_row() {
+            new.height = mapper(new.height);
+        } else {
+            new.width = mapper(new.width);
         }
         new
     }
