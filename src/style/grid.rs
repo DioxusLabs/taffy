@@ -427,7 +427,7 @@ impl MinTrackSizingFunction {
     /// will if the available_space is `Some`). Otherwise returns `None`.
     #[inline(always)]
     pub fn definite_value(self, parent_size: Option<f32>) -> Option<f32> {
-        use MinTrackSizingFunction::{Auto, *};
+        use MinTrackSizingFunction::*;
         match self {
             Fixed(LengthPercentage::Points(size)) => Some(size),
             Fixed(LengthPercentage::Percent(fraction)) => parent_size.map(|size| fraction * size),
@@ -439,7 +439,7 @@ impl MinTrackSizingFunction {
     /// Non-percentage values always return None.
     #[inline(always)]
     pub fn resolved_percentage_size(self, parent_size: f32) -> Option<f32> {
-        use MinTrackSizingFunction::{Auto, *};
+        use MinTrackSizingFunction::*;
         match self {
             Fixed(LengthPercentage::Percent(fraction)) => Some(fraction * parent_size),
             Fixed(LengthPercentage::Points(_)) | MinContent | MaxContent | Auto => None,
