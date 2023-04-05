@@ -26,7 +26,6 @@ pub enum StyleUnit {
 }
 
 impl StyleUnit {
-
     fn has_value(&self) -> bool {
         use StyleUnit::*;
         matches!(self, Px | Percent | FitContentPx | FitContentPercent | Fr)
@@ -37,7 +36,7 @@ impl StyleUnit {
             StyleUnit::Px => Ok(Dimension::Points(val)),
             StyleUnit::Percent => Ok(Dimension::Percent(val)),
             StyleUnit::Auto => Ok(Dimension::Auto),
-            _ => Err(())
+            _ => Err(()),
         }
     }
 
@@ -46,7 +45,7 @@ impl StyleUnit {
             StyleUnit::Px => Ok(LengthPercentageAuto::Points(val)),
             StyleUnit::Percent => Ok(LengthPercentageAuto::Percent(val)),
             StyleUnit::Auto => Ok(LengthPercentageAuto::Auto),
-            _ => Err(())
+            _ => Err(()),
         }
     }
 
@@ -54,7 +53,7 @@ impl StyleUnit {
         match self {
             StyleUnit::Px => Ok(LengthPercentage::Points(val)),
             StyleUnit::Percent => Ok(LengthPercentage::Percent(val)),
-            _ => Err(())
+            _ => Err(()),
         }
     }
 }
@@ -283,12 +282,10 @@ macro_rules! with_style_mut {
     }};
 }
 
-
 // Style getter/setter methods
 #[wasm_bindgen]
 #[clippy::allow(non_snake_case)]
 impl Node {
-
     // Display / Position
     pub fn getDisplay(&mut self) -> Result<Display, JsError> {
         get_style!(self, style, style.display)
@@ -532,13 +529,11 @@ impl Node {
     //     with_style_mut!(self, style, style.grid_auto_flow = value)
     // }
 
-
     // #[wasm_bindgen(js_name = setHeightStr)]
     // pub fn set_height_str(&mut self, height: &str) -> Result<(), JsError> {
     //     with_style_mut!(self, style, style.size.height = height.parse().unwrap())
     // }
 }
-
 
 fn parse_style(style: &JsValue) -> taffy::style::Style {
     taffy::style::Style {
