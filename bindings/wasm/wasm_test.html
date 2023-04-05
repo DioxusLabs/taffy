@@ -36,12 +36,55 @@
 
         for (let i = 0; i < BENCH_NODE_COUNT; i++) {
           const node = Yoga.Node.create();
+          // for (let j = 0; j < 6; j++) {
+          //   node.setFlexGrow(1);
+          // }
           for (let j = 0; j < 6; j++) {
-            node.setFlexGrow(1);
+            node.setHeight("100%");
           }
-          node.setHeight("100%");
           page.insertChild(node, i);
         }
+      }
+
+      function parseDimensionValue(value) {
+        switch (typeof value) {
+          case "number":
+            return value;
+          case "string":
+            return parseFloat(value)
+        }
+      }
+
+      function parseStringDimensionUnit(value) {
+        if (value.endsWith("%")) {
+          return Taffy.StyleUnit.Percent;
+        } else if (value.endsWith("px")) {
+          return Taffy.StyleUnit.Px
+        } else if (value == "auto") {
+          return Taffy.StyleUnit.Auto
+        }
+
+        return Taffy.StyleUnit.Px;
+      }
+
+      function setHeightWrapper(node, heightStr) {
+        node.setHeight(parseDimensionValue(heightStr), parseStringDimensionUnit(heightStr));
+      }
+
+      function setHeightWrapper2(node, value, unit) {
+        let actualUnit = Taffy.StyleUnit.Px;
+        switch (unit) {
+          case 'px':
+            actualUnit = Taffy.StyleUnit.Px;
+            break;
+          case '%':
+            actualUnit = Taffy.StyleUnit.Percent;
+            break;
+          case 'auto':
+            actualUnit = Taffy.StyleUnit.Auto;
+            break;
+        }
+        node.setHeight(value, actualUnit);
       }
 
       // Taffy WASM benchmark
@@ -63,10 +106,21 @@
         const arr = [];
         for (let i = 0; i < BENCH_NODE_COUNT; i++) {
           const child = new Node(allocator, {});
-          for (let j = 0; j < 6; j++) {
-            child.setFlexGrow(1);
+          // for (let j = 0; j < 6; j++) {
+          //   child.setFlexGrow(1);
+          // }
+          // for (let j = 0; j < 100; j++) {
+          //   child.setHeight(100, Taffy.StyleUnit.Percent);
+          // }
+          // for (let j = 0; j < 100; j++) {
+          //   child.setHeightStr("100%");
+          // }
+          // for (let j = 0; j < 100; j++) {
+          //   setHeightWrapper(child, "100%");
+          // }
+          for (let j = 0; j < 100; j++) {
+            setHeightWrapper2(child, 100, '%');
           }
-          child.setHeight("100%");
           container.addChild(child);
           arr.push(child);
         }

@@ -13,6 +13,71 @@ use taffy::tree::LayoutTree;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
+#[repr(u8)]
+pub enum StyleUnit {
+    Px,
+    Percent,
+    Auto,
+    MinContent,
+    MaxContent,
+    FitContentPx,
+    FitContentPercent,
+    Fr,
+}
+
+impl StyleUnit {
+
+    fn has_value(&self) -> bool {
+        use StyleUnit::*;
+        matches!(self, Px | Percent | FitContentPx | FitContentPercent | Fr)
+    }
+
+    fn try_into_dimension(self, val: f32) -> Result<Dimension, ()> {
+        match self {
+            StyleUnit::Px => Ok(Dimension::Points(val)),
+            StyleUnit::Percent => Ok(Dimension::Percent(val)),
+            StyleUnit::Auto => Ok(Dimension::Auto),
+            _ => Err(())
+        }
+    }
+
+    fn try_into_length_percentage_auto(self, val: f32) -> Result<LengthPercentageAuto, ()> {
+        match self {
+            StyleUnit::Px => Ok(LengthPercentageAuto::Points(val)),
+            StyleUnit::Percent => Ok(LengthPercentageAuto::Percent(val)),
+            StyleUnit::Auto => Ok(LengthPercentageAuto::Auto),
+            _ => Err(())
+        }
+    }
+
+    fn try_into_length_percentage(self, val: f32) -> Result<LengthPercentage, ()> {
+        match self {
+            StyleUnit::Px => Ok(LengthPercentage::Points(val)),
+            StyleUnit::Percent => Ok(LengthPercentage::Percent(val)),
+            _ => Err(())
+        }
+    }
+}
+
+impl TryFrom<u8> for StyleUnit {
+    type Error = ();
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(StyleUnit::Px),
+            1 => Ok(StyleUnit::Percent),
+            2 => Ok(StyleUnit::Auto),
+            3 => Ok(StyleUnit::MinContent),
+            4 => Ok(StyleUnit::MaxContent),
+            5 => Ok(StyleUnit::FitContentPx),
+            6 => Ok(StyleUnit::FitContentPercent),
+            7 => Ok(StyleUnit::Fr),
+            _ => Err(()),
+        }
+    }
+}
+
+#[wasm_bindgen]
 #[derive(Clone, Debug)]
 pub struct Layout {
     #[wasm_bindgen(readonly)]
@@ -238,19 +303,240 @@ impl Node {
         with_style_mut!(self, style, style.position = value)
     }
 
-    // flex-grow
-    pub fn getFlexGrow(&mut self) -> Result<f32, JsError> {
-        get_style!(self, style, style.flex_grow)
+    // inset
+    pub fn setInsetTop(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.inset.top = unit.try_into_length_percentage_auto(value).unwrap())
     }
-    pub fn setFlexGrow(&mut self, flex_grow: f32) -> Result<(), JsError> {
-        with_style_mut!(self, style, style.flex_grow = flex_grow)
+    pub fn setInsetBottom(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.inset.bottom = unit.try_into_length_percentage_auto(value).unwrap())
+    }
+    pub fn setInsetLeft(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.inset.left = unit.try_into_length_percentage_auto(value).unwrap())
+    }
+    pub fn setInsetRight(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.inset.right = unit.try_into_length_percentage_auto(value).unwrap())
+    }
+    pub fn setInsetHorizontal(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, {
+            let value = unit.try_into_length_percentage_auto(value).unwrap();
+            style.inset.left = value;
+            style.inset.right = value;
+        })
+    }
+    pub fn setInsetVertical(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, {
+            let value = unit.try_into_length_percentage_auto(value).unwrap();
+            style.inset.left = value;
+            style.inset.right = value;
+        })
+    }
+    pub fn setInsetAll(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, {
+            let value = unit.try_into_length_percentage_auto(value).unwrap();
+            style.inset.top = value;
+            style.inset.bottom = value;
+            style.inset.left = value;
+            style.inset.right = value;
+        })
     }
 
-
-    #[wasm_bindgen(js_name = setHeight)]
-    pub fn set_height(&mut self, height: &str) -> Result<(), JsError> {
-        with_style_mut!(self, style, style.size.height = height.parse().unwrap())
+    // Sizes
+    pub fn setWidth(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.size.width = unit.try_into_dimension(value).unwrap())
     }
+    pub fn setHeight(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.size.height = unit.try_into_dimension(value).unwrap())
+    }
+    pub fn setMinWidth(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.min_size.width = unit.try_into_dimension(value).unwrap())
+    }
+    pub fn setMinHeight(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.min_size.height = unit.try_into_dimension(value).unwrap())
+    }
+    pub fn setMaxWidth(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.max_size.width = unit.try_into_dimension(value).unwrap())
+    }
+    pub fn setMaxHeight(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.max_size.height = unit.try_into_dimension(value).unwrap())
+    }
+    pub fn setAspectRatio(&mut self, value: f32) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.aspect_ratio = option_from_f32(value))
+    }
+
+    // Padding
+    pub fn setPaddingTop(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.padding.top = unit.try_into_length_percentage(value).unwrap())
+    }
+    pub fn setPaddingBottom(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.padding.bottom = unit.try_into_length_percentage(value).unwrap())
+    }
+    pub fn setPaddingLeft(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.padding.left = unit.try_into_length_percentage(value).unwrap())
+    }
+    pub fn setPaddingRight(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.padding.right = unit.try_into_length_percentage(value).unwrap())
+    }
+    pub fn setPaddingHorizontal(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, {
+            let value = unit.try_into_length_percentage(value).unwrap();
+            style.padding.left = value;
+            style.padding.right = value;
+        })
+    }
+    pub fn setPaddingVertical(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, {
+            let value = unit.try_into_length_percentage(value).unwrap();
+            style.padding.left = value;
+            style.padding.right = value;
+        })
+    }
+    pub fn setPaddingAll(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, {
+            let value = unit.try_into_length_percentage(value).unwrap();
+            style.padding.top = value;
+            style.padding.bottom = value;
+            style.padding.left = value;
+            style.padding.right = value;
+        })
+    }
+
+    // Margin
+    pub fn setMarginTop(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.margin.top = unit.try_into_length_percentage_auto(value).unwrap())
+    }
+    pub fn setMarginBottom(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.margin.bottom = unit.try_into_length_percentage_auto(value).unwrap())
+    }
+    pub fn setMarginLeft(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.margin.left = unit.try_into_length_percentage_auto(value).unwrap())
+    }
+    pub fn setMarginRight(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.margin.right = unit.try_into_length_percentage_auto(value).unwrap())
+    }
+    pub fn setMarginHorizontal(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, {
+            let value = unit.try_into_length_percentage_auto(value).unwrap();
+            style.margin.left = value;
+            style.margin.right = value;
+        })
+    }
+    pub fn setMarginVertical(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, {
+            let value = unit.try_into_length_percentage_auto(value).unwrap();
+            style.margin.left = value;
+            style.margin.right = value;
+        })
+    }
+    pub fn setMarginAll(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, {
+            let value = unit.try_into_length_percentage_auto(value).unwrap();
+            style.margin.top = value;
+            style.margin.bottom = value;
+            style.margin.left = value;
+            style.margin.right = value;
+        })
+    }
+
+    // Border
+    pub fn setBorderWidthTop(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.border.top = unit.try_into_length_percentage(value).unwrap())
+    }
+    pub fn setBorderWidthBottom(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.border.bottom = unit.try_into_length_percentage(value).unwrap())
+    }
+    pub fn setBorderWidthLeft(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.border.left = unit.try_into_length_percentage(value).unwrap())
+    }
+    pub fn setBorderWidthRight(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.border.right = unit.try_into_length_percentage(value).unwrap())
+    }
+    pub fn setBorderWidthHorizontal(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, {
+            let value = unit.try_into_length_percentage(value).unwrap();
+            style.border.left = value;
+            style.border.right = value;
+        })
+    }
+    pub fn setBorderWidthVertical(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, {
+            let value = unit.try_into_length_percentage(value).unwrap();
+            style.border.left = value;
+            style.border.right = value;
+        })
+    }
+    pub fn setBorderWidthAll(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, {
+            let value = unit.try_into_length_percentage(value).unwrap();
+            style.border.top = value;
+            style.border.bottom = value;
+            style.border.left = value;
+            style.border.right = value;
+        })
+    }
+
+    // Gap
+    pub fn setRowGap(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.gap.width = unit.try_into_length_percentage(value).unwrap())
+    }
+    pub fn setColumnGap(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.gap.height = unit.try_into_length_percentage(value).unwrap())
+    }
+    pub fn setGap(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, {
+            let value = unit.try_into_length_percentage(value).unwrap();
+            style.gap.width = value;
+            style.gap.height = value;
+        })
+    }
+
+    // Alignment
+    // TODO: Allow None values to be set
+    pub fn setAlignContent(&mut self, value: AlignContent) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.align_content = Some(value))
+    }
+    pub fn setJustifyContent(&mut self, value: JustifyContent) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.justify_content = Some(value))
+    }
+    pub fn setAlignItems(&mut self, value: AlignItems) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.align_items = Some(value))
+    }
+    pub fn setJustifyItems(&mut self, value: JustifyItems) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.justify_items = Some(value))
+    }
+    pub fn setAlignSelf(&mut self, value: AlignSelf) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.align_self = Some(value))
+    }
+    pub fn setJustifySelf(&mut self, value: JustifySelf) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.justify_self = Some(value))
+    }
+
+    // Flex
+    pub fn setFlexDirection(&mut self, value: FlexDirection) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.flex_direction = value)
+    }
+    pub fn setFlexWrap(&mut self, value: FlexWrap) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.flex_wrap = value)
+    }
+    pub fn setFlexGrow(&mut self, value: f32) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.flex_grow = value)
+    }
+    pub fn setFlexShrink(&mut self, value: f32) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.flex_shrink = value)
+    }
+    pub fn setFlexBasis(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.flex_basis = unit.try_into_dimension(value).unwrap())
+    }
+
+    // Grid
+    // pub fn setGridAutoFlow(&mut self, value: GridAutoFlow) -> Result<(), JsError> {
+    //     with_style_mut!(self, style, style.grid_auto_flow = value)
+    // }
+
+
+    // #[wasm_bindgen(js_name = setHeightStr)]
+    // pub fn set_height_str(&mut self, height: &str) -> Result<(), JsError> {
+    //     with_style_mut!(self, style, style.size.height = height.parse().unwrap())
+    // }
 }
 
 
@@ -353,6 +639,14 @@ fn get_f32(obj: &JsValue, key: &str) -> Option<f32> {
 
 fn try_parse_from_i32<T: TryFrom<i32>>(style: &JsValue, property_key: &'static str) -> Option<T> {
     get_i32(style, property_key).and_then(|i| T::try_from(i).ok())
+}
+
+fn option_from_f32(value: f32) -> Option<f32> {
+    if value.is_nan() {
+        None
+    } else {
+        Some(value)
+    }
 }
 
 fn try_parse_dimension(obj: &JsValue, key: &str) -> Option<Dimension> {
