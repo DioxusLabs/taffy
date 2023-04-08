@@ -15,6 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
+      - uses: Leafwing-Studios/cargo-cache@v1
       - run: cargo build --no-default-features
       - run: cargo test --no-default-features
 
@@ -60,6 +61,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
+      - uses: Leafwing-Studios/cargo-cache@v1
       - run: cargo build --no-default-features --features std
       - run: cargo test --no-default-features --features std
 
@@ -68,11 +70,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
           components: rustfmt
+      - uses: Leafwing-Studios/cargo-cache@v1
       - run: cargo fmt --all -- --check
 
   clippy:
@@ -84,6 +86,7 @@ jobs:
         with:
           toolchain: nightly
           components: clippy
+      - uses: Leafwing-Studios/cargo-cache@v1
       - run: cargo +nightly clippy --workspace -- -D warnings
 
   doc:
@@ -95,6 +98,7 @@ jobs:
         with:
           toolchain: stable
           components: clippy
+      - uses: Leafwing-Studios/cargo-cache@v1
       - run: cargo doc
         env:
           RUSTDOCFLAGS: "-D warnings"
