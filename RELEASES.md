@@ -1,5 +1,11 @@
 # Release Notes
 
+## 0.3.11
+
+### Fixes
+
+- Fix exponential blowup when laying out trees containing nodes with min and max sizes.
+
 ## 0.3.10
 
 ### Fixes
