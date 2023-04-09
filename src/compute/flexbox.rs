@@ -147,8 +147,6 @@ struct AlgoConstants {
     min_size: Size<Option<f32>>,
     /// The item's max_size style
     max_size: Size<Option<f32>>,
-    // /// The item's aspect_ratio style
-    // aspect_ratio: Option<f32>,
     /// The margin of this section
     margin: Rect<f32>,
     /// The border of this section
