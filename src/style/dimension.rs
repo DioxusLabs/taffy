@@ -135,11 +135,6 @@ impl From<LengthPercentageAuto> for Dimension {
 }
 
 impl Dimension {
-    /// Is this value defined?
-    pub(crate) fn is_defined(self) -> bool {
-        matches!(self, Dimension::Points(_) | Dimension::Percent(_))
-    }
-
     /// Get Points value if value is Points variant
     #[cfg(feature = "grid")]
     pub fn into_option(self) -> Option<f32> {
