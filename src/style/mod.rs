@@ -34,6 +34,8 @@ use crate::sys::GridTrackVec;
 /// Sets the layout used for the children of this node
 ///
 /// [`Display::Flex`] is the default value.
+/// TODO: Fix this documentation.
+/// Default will be defined based on which features is enabled.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Display {
@@ -48,9 +50,10 @@ pub enum Display {
 }
 
 impl Display {
-    #[cfg(feature = "flexbox")]
+    /// The default of Display.
+    #[cfg(any(feature = "flexbox", feature = "grid"))]
     pub const DEFAULT: Display = Display::Flex;
-    #[cfg(feature = "grid")]
+    #[cfg(all(feature = "grid", not(feature = "flexbox")))]
     pub const DEFAULT: Display = Display::Grid;
 }
 
