@@ -409,7 +409,7 @@ impl Taffy {
 
     /// Indicates whether the layout of this node (and its children) need to be recomputed
     pub fn dirty(&self, node: NodeId) -> TaffyResult<bool> {
-        Ok(self.nodes[node.into()].size_cache.iter().all(|entry| entry.is_none()))
+        Ok(self.nodes[node.into()].cache.is_empty())
     }
 
     /// Updates the stored layout of the provided `node` and its children
