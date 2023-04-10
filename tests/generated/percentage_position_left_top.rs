@@ -1,6 +1,5 @@
 #[test]
 fn percentage_position_left_top() {
-    use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};
     let mut taffy = taffy::Taffy::new();
@@ -36,13 +35,13 @@ fn percentage_position_left_top() {
     taffy::debug::print_tree(&taffy, node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
-    assert_eq!(size.width, 400f32, "width of node {:?}. Expected {}. Actual {}", node.data(), 400f32, size.width);
-    assert_eq!(size.height, 400f32, "height of node {:?}. Expected {}. Actual {}", node.data(), 400f32, size.height);
-    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.x);
-    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.y);
+    assert_eq!(size.width, 400f32, "width of node {:?}. Expected {}. Actual {}", node, 400f32, size.width);
+    assert_eq!(size.height, 400f32, "height of node {:?}. Expected {}. Actual {}", node, 400f32, size.height);
+    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node, 0f32, location.x);
+    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node, 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node0).unwrap();
-    assert_eq!(size.width, 180f32, "width of node {:?}. Expected {}. Actual {}", node0.data(), 180f32, size.width);
-    assert_eq!(size.height, 220f32, "height of node {:?}. Expected {}. Actual {}", node0.data(), 220f32, size.height);
-    assert_eq!(location.x, 40f32, "x of node {:?}. Expected {}. Actual {}", node0.data(), 40f32, location.x);
-    assert_eq!(location.y, 80f32, "y of node {:?}. Expected {}. Actual {}", node0.data(), 80f32, location.y);
+    assert_eq!(size.width, 180f32, "width of node {:?}. Expected {}. Actual {}", node0, 180f32, size.width);
+    assert_eq!(size.height, 220f32, "height of node {:?}. Expected {}. Actual {}", node0, 220f32, size.height);
+    assert_eq!(location.x, 40f32, "x of node {:?}. Expected {}. Actual {}", node0, 40f32, location.x);
+    assert_eq!(location.y, 80f32, "y of node {:?}. Expected {}. Actual {}", node0, 80f32, location.y);
 }

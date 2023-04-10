@@ -13,7 +13,7 @@ use crate::data::CACHE_SIZE;
 use crate::error::TaffyError;
 use crate::geometry::{Point, Size};
 use crate::layout::{Cache, Layout, RunMode, SizeAndBaselines, SizingMode};
-use crate::node::{Node, Taffy};
+use crate::node::Taffy;
 use crate::style::{AvailableSpace, Display};
 use crate::sys::round;
 use crate::tree::{LayoutTree, NodeId};
@@ -29,9 +29,11 @@ use self::leaf::LeafAlgorithm;
 use crate::debug::NODE_LOGGER;
 
 /// Updates the stored layout of the provided `node` and its children
-pub fn compute_layout(taffy: &mut Taffy, root: Node, available_space: Size<AvailableSpace>) -> Result<(), TaffyError> {
-    let root = root.into();
-
+pub fn compute_layout(
+    taffy: &mut Taffy,
+    root: NodeId,
+    available_space: Size<AvailableSpace>,
+) -> Result<(), TaffyError> {
     // Recursively compute node layout
     let size_and_baselines = GenericAlgorithm::perform_layout(
         taffy,
@@ -443,8 +445,8 @@ mod tests {
 
         // Whatever size and display-mode the nodes had previously,
         // all layouts should resolve to ZERO due to the root's DISPLAY::NONE
-        for (node, _) in taffy.nodes.iter().filter(|(node, _)| *node != root) {
-            if let Ok(layout) = taffy.layout(node) {
+        for (node, _) in taffy.nodes.iter().filter(|(node, _)| *node != root.into()) {
+            if let Ok(layout) = taffy.layout(node.into()) {
                 assert_eq!(layout.size, Size::zero());
                 assert_eq!(layout.location, Point::zero());
             }

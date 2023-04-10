@@ -3,7 +3,7 @@
 pub use crate::{
     geometry::{Line, Rect, Size},
     layout::Layout,
-    node::{Node, Taffy},
+    node::Taffy,
     style::{
         AlignContent, AlignItems, AlignSelf, AvailableSpace, Dimension, Display, JustifyContent, JustifyItems,
         JustifySelf, LengthPercentage, LengthPercentageAuto, Position, Style,
