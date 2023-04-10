@@ -148,3 +148,12 @@ jobs:
           VALIDATE_ALL_CODEBASE: true
           VALIDATE_MARKDOWN: true
           DEFAULT_BRANCH: master
+  
+  html-validation:
+    name: HTML Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: Cyb3r-Jak3/html5validator-action@v7.2.0
+        with:
+            root: test_fixtures/
