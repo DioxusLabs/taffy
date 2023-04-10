@@ -55,8 +55,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --no-default-features --features flexbox
-      - run: cargo test --no-default-features --features flexbox
+      - run: cargo build --no-default-features --features flexbox std
+      - run: cargo test --no-default-features --features flexbox std
 
   # Grid
   test-features-grid:
@@ -65,8 +65,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --no-default-features --features grid
-      - run: cargo test --no-default-features --features grid
+      - run: cargo build --no-default-features --features grid std
+      - run: cargo test --no-default-features --features grid std
 
   test-features-alloc:
     name: "Test Suite [Features: alloc]"
