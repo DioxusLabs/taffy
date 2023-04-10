@@ -2,29 +2,29 @@
 #[cfg(feature = "std")]
 use core::fmt::{Display, Formatter, Result};
 
-use crate::node::Node;
+use crate::tree::NodeId;
 
 /// The error Taffy generates on invalid operations
 pub type TaffyResult<T> = core::result::Result<T, TaffyError>;
 
-/// An error that occurs while trying to access or modify a [`Node`]'s children by index.
+/// An error that occurs while trying to access or modify a node's children by index.
 #[derive(Debug)]
 pub enum TaffyError {
-    /// The parent [`Node`] does not have a child at `child_index`. It only has `child_count` children
+    /// The parent node does not have a child at `child_index`. It only has `child_count` children
     ChildIndexOutOfBounds {
         /// The parent node whose child was being looked up
-        parent: Node,
+        parent: NodeId,
         /// The index that was looked up
         child_index: usize,
         /// The total number of children the parent has
         child_count: usize,
     },
-    /// The parent [`Node`] was not found in the [`Taffy`](crate::Taffy) instance.
-    InvalidParentNode(Node),
-    /// The child [`Node`] was not found in the [`Taffy`](crate::Taffy) instance.
-    InvalidChildNode(Node),
-    /// The supplied [`Node`] was not found in the [`Taffy`](crate::Taffy) instance.
-    InvalidInputNode(Node),
+    /// The parent node was not found in the [`Taffy`](crate::Taffy) instance.
+    InvalidParentNode(NodeId),
+    /// The child node was not found in the [`Taffy`](crate::Taffy) instance.
+    InvalidChildNode(NodeId),
+    /// The supplied node was not found in the [`Taffy`](crate::Taffy) instance.
+    InvalidInputNode(NodeId),
 }
 
 #[cfg(feature = "std")]

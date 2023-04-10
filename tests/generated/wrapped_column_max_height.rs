@@ -1,6 +1,5 @@
 #[test]
 fn wrapped_column_max_height() {
-    use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};
     let mut taffy = taffy::Taffy::new();
@@ -60,23 +59,23 @@ fn wrapped_column_max_height() {
     taffy::debug::print_tree(&taffy, node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
-    assert_eq!(size.width, 700f32, "width of node {:?}. Expected {}. Actual {}", node.data(), 700f32, size.width);
-    assert_eq!(size.height, 500f32, "height of node {:?}. Expected {}. Actual {}", node.data(), 500f32, size.height);
-    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.x);
-    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.y);
+    assert_eq!(size.width, 700f32, "width of node {:?}. Expected {}. Actual {}", node, 700f32, size.width);
+    assert_eq!(size.height, 500f32, "height of node {:?}. Expected {}. Actual {}", node, 500f32, size.height);
+    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node, 0f32, location.x);
+    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node, 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node0).unwrap();
-    assert_eq!(size.width, 100f32, "width of node {:?}. Expected {}. Actual {}", node0.data(), 100f32, size.width);
-    assert_eq!(size.height, 200f32, "height of node {:?}. Expected {}. Actual {}", node0.data(), 200f32, size.height);
-    assert_eq!(location.x, 250f32, "x of node {:?}. Expected {}. Actual {}", node0.data(), 250f32, location.x);
-    assert_eq!(location.y, 30f32, "y of node {:?}. Expected {}. Actual {}", node0.data(), 30f32, location.y);
+    assert_eq!(size.width, 100f32, "width of node {:?}. Expected {}. Actual {}", node0, 100f32, size.width);
+    assert_eq!(size.height, 200f32, "height of node {:?}. Expected {}. Actual {}", node0, 200f32, size.height);
+    assert_eq!(location.x, 250f32, "x of node {:?}. Expected {}. Actual {}", node0, 250f32, location.x);
+    assert_eq!(location.y, 30f32, "y of node {:?}. Expected {}. Actual {}", node0, 30f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node1).unwrap();
-    assert_eq!(size.width, 200f32, "width of node {:?}. Expected {}. Actual {}", node1.data(), 200f32, size.width);
-    assert_eq!(size.height, 200f32, "height of node {:?}. Expected {}. Actual {}", node1.data(), 200f32, size.height);
-    assert_eq!(location.x, 200f32, "x of node {:?}. Expected {}. Actual {}", node1.data(), 200f32, location.x);
-    assert_eq!(location.y, 250f32, "y of node {:?}. Expected {}. Actual {}", node1.data(), 250f32, location.y);
+    assert_eq!(size.width, 200f32, "width of node {:?}. Expected {}. Actual {}", node1, 200f32, size.width);
+    assert_eq!(size.height, 200f32, "height of node {:?}. Expected {}. Actual {}", node1, 200f32, size.height);
+    assert_eq!(location.x, 200f32, "x of node {:?}. Expected {}. Actual {}", node1, 200f32, location.x);
+    assert_eq!(location.y, 250f32, "y of node {:?}. Expected {}. Actual {}", node1, 250f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node2).unwrap();
-    assert_eq!(size.width, 100f32, "width of node {:?}. Expected {}. Actual {}", node2.data(), 100f32, size.width);
-    assert_eq!(size.height, 100f32, "height of node {:?}. Expected {}. Actual {}", node2.data(), 100f32, size.height);
-    assert_eq!(location.x, 420f32, "x of node {:?}. Expected {}. Actual {}", node2.data(), 420f32, location.x);
-    assert_eq!(location.y, 200f32, "y of node {:?}. Expected {}. Actual {}", node2.data(), 200f32, location.y);
+    assert_eq!(size.width, 100f32, "width of node {:?}. Expected {}. Actual {}", node2, 100f32, size.width);
+    assert_eq!(size.height, 100f32, "height of node {:?}. Expected {}. Actual {}", node2, 100f32, size.height);
+    assert_eq!(location.x, 420f32, "x of node {:?}. Expected {}. Actual {}", node2, 420f32, location.x);
+    assert_eq!(location.y, 200f32, "y of node {:?}. Expected {}. Actual {}", node2, 200f32, location.y);
 }

@@ -155,7 +155,6 @@ fn generate_test(name: impl AsRef<str>, description: &Value) -> TokenStream {
         fn #name() {
             #[allow(unused_imports)]
             use taffy::{layout::Layout, prelude::*};
-            use slotmap::Key;
             let mut taffy = taffy::Taffy::new();
             #set_rounding_mode
             #node_description
@@ -194,20 +193,20 @@ fn generate_assertions(ident: &str, node: &Value, use_rounding: bool) -> TokenSt
     if use_rounding {
         quote!(
             let Layout { size, location, .. } = taffy.layout(#ident).unwrap();
-            assert_eq!(size.width, #width, "width of node {:?}. Expected {}. Actual {}", #ident.data(),  #width, size.width);
-            assert_eq!(size.height, #height, "height of node {:?}. Expected {}. Actual {}", #ident.data(),  #height, size.height);
-            assert_eq!(location.x, #x, "x of node {:?}. Expected {}. Actual {}", #ident.data(),  #x, location.x);
-            assert_eq!(location.y, #y, "y of node {:?}. Expected {}. Actual {}", #ident.data(),  #y, location.y);
+            assert_eq!(size.width, #width, "width of node {:?}. Expected {}. Actual {}", #ident,  #width, size.width);
+            assert_eq!(size.height, #height, "height of node {:?}. Expected {}. Actual {}", #ident,  #height, size.height);
+            assert_eq!(location.x, #x, "x of node {:?}. Expected {}. Actual {}", #ident,  #x, location.x);
+            assert_eq!(location.y, #y, "y of node {:?}. Expected {}. Actual {}", #ident,  #y, location.y);
 
             #children
         )
     } else {
         quote!(
             let Layout { size, location, .. } = taffy.layout(#ident).unwrap();
-            assert!(size.width - #width < 0.1, "width of node {:?}. Expected {}. Actual {}", #ident.data(),  #width, size.width);
-            assert!(size.height - #height < 0.1, "height of node {:?}. Expected {}. Actual {}", #ident.data(),  #height, size.height);
-            assert!(location.x - #x < 0.1, "x of node {:?}. Expected {}. Actual {}", #ident.data(),  #x, location.x);
-            assert!(location.y - #y < 0.1, "y of node {:?}. Expected {}. Actual {}", #ident.data(),  #y, location.y);
+            assert!(size.width - #width < 0.1, "width of node {:?}. Expected {}. Actual {}", #ident,  #width, size.width);
+            assert!(size.height - #height < 0.1, "height of node {:?}. Expected {}. Actual {}", #ident,  #height, size.height);
+            assert!(location.x - #x < 0.1, "x of node {:?}. Expected {}. Actual {}", #ident,  #x, location.x);
+            assert!(location.y - #y < 0.1, "y of node {:?}. Expected {}. Actual {}", #ident,  #y, location.y);
 
             #children
         )

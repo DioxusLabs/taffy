@@ -7,7 +7,7 @@ use taffy::prelude::*;
 use taffy::style::Style;
 
 /// Build a random leaf node
-fn build_random_leaf(taffy: &mut Taffy, _rng: &mut ChaCha8Rng) -> Node {
+fn build_random_leaf(taffy: &mut Taffy, _rng: &mut ChaCha8Rng) -> NodeId {
     taffy.new_with_children(Style { size: points(20.0), ..Default::default() }, &[]).unwrap()
 }
 
@@ -40,7 +40,7 @@ fn random_nxn_grid_style<R: Rng>(rng: &mut R, track_count: usize) -> Style {
 }
 
 /// A tree with many children that have shallow depth
-fn build_grid_flat_hierarchy(col_count: usize, row_count: usize) -> (Taffy, Node) {
+fn build_grid_flat_hierarchy(col_count: usize, row_count: usize) -> (Taffy, NodeId) {
     let mut taffy = Taffy::new();
     let mut rng = ChaCha8Rng::seed_from_u64(12345);
 
@@ -63,9 +63,9 @@ pub fn build_deep_grid_tree(
     tree: &mut Taffy,
     levels: usize,
     track_count: usize,
-    create_leaf_node: &mut impl FnMut(&mut Taffy) -> Node,
-    create_container_node: &mut impl FnMut(&mut Taffy, Vec<Node>) -> Node,
-) -> Vec<Node> {
+    create_leaf_node: &mut impl FnMut(&mut Taffy) -> NodeId,
+    create_container_node: &mut impl FnMut(&mut Taffy, Vec<NodeId>) -> NodeId,
+) -> Vec<NodeId> {
     // The extra one is for a position:absolute child
     let child_count = track_count * track_count;
 
@@ -86,11 +86,11 @@ pub fn build_deep_grid_tree(
 }
 
 /// A tree with a higher depth for a more realistic scenario
-fn build_taffy_deep_grid_hierarchy(levels: usize, track_count: usize) -> (Taffy, Node) {
+fn build_taffy_deep_grid_hierarchy(levels: usize, track_count: usize) -> (Taffy, NodeId) {
     let mut rng = ChaCha8Rng::seed_from_u64(12345);
     let mut build_leaf_node = |taffy: &mut Taffy| build_random_leaf(taffy, &mut rng);
     let mut rng = ChaCha8Rng::seed_from_u64(12345);
-    let mut build_flex_node = |taffy: &mut Taffy, children: Vec<Node>| {
+    let mut build_flex_node = |taffy: &mut Taffy, children: Vec<NodeId>| {
         taffy.new_with_children(random_nxn_grid_style(&mut rng, track_count), &children).unwrap()
     };
 

@@ -5,11 +5,10 @@ use crate::compute::common::alignment::compute_alignment_offset;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::layout::{Layout, SizingMode};
 use crate::math::MaybeMath;
-use crate::node::Node;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Position};
 use crate::sys::{f32_max, f32_min};
-use crate::tree::LayoutTree;
+use crate::tree::{LayoutTree, NodeId};
 
 /// Align the grid tracks within the grid according to the align-content (rows) or
 /// justify-content (columns) property. This only does anything if the size of the
@@ -73,7 +72,7 @@ pub(super) fn align_tracks(
 /// Align and size a grid item into it's final position
 pub(super) fn align_and_position_item(
     tree: &mut impl LayoutTree,
-    node: Node,
+    node: NodeId,
     order: u32,
     grid_area: Rect<f32>,
     container_alignment_styles: InBothAbsAxis<Option<AlignItems>>,

@@ -42,7 +42,7 @@ impl From<Size<f32>> for SizeAndBaselines {
     }
 }
 
-/// The final result of a layout algorithm for a single [`Node`](crate::node::Node).
+/// The final result of a layout algorithm for a single node.
 #[derive(Debug, Copy, Clone)]
 pub struct Layout {
     /// The relative ordering of the node

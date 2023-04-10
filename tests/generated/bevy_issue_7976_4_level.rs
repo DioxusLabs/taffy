@@ -1,6 +1,5 @@
 #[test]
 fn bevy_issue_7976_4_level() {
-    use slotmap::Key;
     #[allow(unused_imports)]
     use taffy::{layout::Layout, prelude::*};
     let mut taffy = taffy::Taffy::new();
@@ -65,23 +64,23 @@ fn bevy_issue_7976_4_level() {
     taffy::debug::print_tree(&taffy, node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
-    assert_eq!(size.width, 200f32, "width of node {:?}. Expected {}. Actual {}", node.data(), 200f32, size.width);
-    assert_eq!(size.height, 200f32, "height of node {:?}. Expected {}. Actual {}", node.data(), 200f32, size.height);
-    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.x);
-    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.y);
+    assert_eq!(size.width, 200f32, "width of node {:?}. Expected {}. Actual {}", node, 200f32, size.width);
+    assert_eq!(size.height, 200f32, "height of node {:?}. Expected {}. Actual {}", node, 200f32, size.height);
+    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node, 0f32, location.x);
+    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node, 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node0).unwrap();
-    assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node0.data(), 40f32, size.width);
-    assert_eq!(size.height, 190f32, "height of node {:?}. Expected {}. Actual {}", node0.data(), 190f32, size.height);
-    assert_eq!(location.x, 5f32, "x of node {:?}. Expected {}. Actual {}", node0.data(), 5f32, location.x);
-    assert_eq!(location.y, 5f32, "y of node {:?}. Expected {}. Actual {}", node0.data(), 5f32, location.y);
+    assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node0, 40f32, size.width);
+    assert_eq!(size.height, 190f32, "height of node {:?}. Expected {}. Actual {}", node0, 190f32, size.height);
+    assert_eq!(location.x, 5f32, "x of node {:?}. Expected {}. Actual {}", node0, 5f32, location.x);
+    assert_eq!(location.y, 5f32, "y of node {:?}. Expected {}. Actual {}", node0, 5f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node00).unwrap();
-    assert_eq!(size.width, 30f32, "width of node {:?}. Expected {}. Actual {}", node00.data(), 30f32, size.width);
-    assert_eq!(size.height, 180f32, "height of node {:?}. Expected {}. Actual {}", node00.data(), 180f32, size.height);
-    assert_eq!(location.x, 5f32, "x of node {:?}. Expected {}. Actual {}", node00.data(), 5f32, location.x);
-    assert_eq!(location.y, 5f32, "y of node {:?}. Expected {}. Actual {}", node00.data(), 5f32, location.y);
+    assert_eq!(size.width, 30f32, "width of node {:?}. Expected {}. Actual {}", node00, 30f32, size.width);
+    assert_eq!(size.height, 180f32, "height of node {:?}. Expected {}. Actual {}", node00, 180f32, size.height);
+    assert_eq!(location.x, 5f32, "x of node {:?}. Expected {}. Actual {}", node00, 5f32, location.x);
+    assert_eq!(location.y, 5f32, "y of node {:?}. Expected {}. Actual {}", node00, 5f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node000).unwrap();
-    assert_eq!(size.width, 0f32, "width of node {:?}. Expected {}. Actual {}", node000.data(), 0f32, size.width);
-    assert_eq!(size.height, 170f32, "height of node {:?}. Expected {}. Actual {}", node000.data(), 170f32, size.height);
-    assert_eq!(location.x, 5f32, "x of node {:?}. Expected {}. Actual {}", node000.data(), 5f32, location.x);
-    assert_eq!(location.y, 5f32, "y of node {:?}. Expected {}. Actual {}", node000.data(), 5f32, location.y);
+    assert_eq!(size.width, 0f32, "width of node {:?}. Expected {}. Actual {}", node000, 0f32, size.width);
+    assert_eq!(size.height, 170f32, "height of node {:?}. Expected {}. Actual {}", node000, 170f32, size.height);
+    assert_eq!(location.x, 5f32, "x of node {:?}. Expected {}. Actual {}", node000, 5f32, location.x);
+    assert_eq!(location.y, 5f32, "y of node {:?}. Expected {}. Actual {}", node000, 5f32, location.y);
 }
