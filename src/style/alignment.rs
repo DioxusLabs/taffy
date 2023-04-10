@@ -1,6 +1,6 @@
 //! Style types for controlling alignment
 
-/// Used to control how child [`Nodes`](crate::node::Node) are aligned.
+/// Used to control how child nodes are aligned.
 /// For Flexbox it controls alignment in the cross axis
 /// For Grid it controls alignment in the block axis
 ///
@@ -29,20 +29,20 @@ pub enum AlignItems {
     /// Stretch to fill the container
     Stretch,
 }
-/// Used to control how child [`Nodes`](crate::node::Node) are aligned.
+/// Used to control how child nodes are aligned.
 /// Does not apply to Flexbox, and will be ignored if specified on a flex container
 /// For Grid it controls alignment in the inline axis
 ///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/justify-items)
 pub type JustifyItems = AlignItems;
-/// Used to control how the specified [`Nodes`](crate::node::Node) is aligned.
+/// Used to control how the specified nodes is aligned.
 /// Overrides the parent Node's `AlignItems` property.
 /// For Flexbox it controls alignment in the cross axis
 /// For Grid it controls alignment in the block axis
 ///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/align-self)
 pub type AlignSelf = AlignItems;
-/// Used to control how the specified [`Nodes`](crate::node::Node) is aligned.
+/// Used to control how the specified nodes is aligned.
 /// Overrides the parent Node's `JustifyItems` property.
 /// Does not apply to Flexbox, and will be ignored if specified on a flex child
 /// For Grid it controls alignment in the inline axis

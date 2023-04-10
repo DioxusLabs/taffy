@@ -7,10 +7,10 @@ use crate::tree::NodeId;
 /// The error Taffy generates on invalid operations
 pub type TaffyResult<T> = core::result::Result<T, TaffyError>;
 
-/// An error that occurs while trying to access or modify a [`Node`]'s children by index.
+/// An error that occurs while trying to access or modify a node's children by index.
 #[derive(Debug)]
 pub enum TaffyError {
-    /// The parent [`Node`] does not have a child at `child_index`. It only has `child_count` children
+    /// The parent node does not have a child at `child_index`. It only has `child_count` children
     ChildIndexOutOfBounds {
         /// The parent node whose child was being looked up
         parent: NodeId,

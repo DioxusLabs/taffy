@@ -1,4 +1,4 @@
-//! UI [`Node`] types and related data structures.
+//! UI node types and related data structures.
 //!
 //! Layouts are composed of multiple nodes, which live in a tree-like data structure.
 use slotmap::{DefaultKey, SlotMap, SparseSecondaryMap};
@@ -43,7 +43,7 @@ impl Default for TaffyConfig {
     }
 }
 
-/// A tree of UI [`Nodes`](`Node`), suitable for UI layout
+/// A tree of UI nodes suitable for UI layout
 pub struct Taffy {
     /// The [`NodeData`] for each node stored in this tree
     pub(crate) nodes: SlotMap<DefaultKey, NodeData>,
@@ -71,7 +71,7 @@ impl Default for Taffy {
     }
 }
 
-/// Iterator that wraps a slice of [`Node`]s, lazily converting them to u64
+/// Iterator that wraps a slice of nodes, lazily converting them to u64
 pub struct TaffyChildIter<'a>(core::slice::Iter<'a, NodeId>);
 impl<'a> Iterator for TaffyChildIter<'a> {
     type Item = NodeId;
@@ -191,7 +191,7 @@ impl Taffy {
         self.config.use_rounding = false;
     }
 
-    /// Creates and adds a new unattached leaf node to the tree, and returns the [`Node`] of the new node
+    /// Creates and adds a new unattached leaf node to the tree, and returns the node of the new node
     pub fn new_leaf(&mut self, layout: Style) -> TaffyResult<NodeId> {
         let id = self.nodes.insert(NodeData::new(layout));
         let _ = self.children.insert(new_vec_with_capacity(0));
@@ -200,7 +200,7 @@ impl Taffy {
         Ok(id.into())
     }
 
-    /// Creates and adds a new unattached leaf node to the tree, and returns the [`Node`] of the new node
+    /// Creates and adds a new unattached leaf node to the tree, and returns the node of the new node
     ///
     /// Creates and adds a new leaf node with a supplied [`MeasureFunc`]
     pub fn new_leaf_with_measure(&mut self, layout: Style, measure: MeasureFunc) -> TaffyResult<NodeId> {
@@ -271,7 +271,7 @@ impl Taffy {
         Ok(())
     }
 
-    /// Adds a `child` [`Node`] under the supplied `parent`
+    /// Adds a `child` node under the supplied `parent`
     pub fn add_child(&mut self, parent: NodeId, child: NodeId) -> TaffyResult<()> {
         let parent_key = parent.into();
         let child_key = child.into();
@@ -355,7 +355,7 @@ impl Taffy {
         Ok(old_child)
     }
 
-    /// Returns the child [`Node`] of the parent `node` at the provided `child_index`
+    /// Returns the child node of the parent `node` at the provided `child_index`
     pub fn child_at_index(&self, parent: NodeId, child_index: usize) -> TaffyResult<NodeId> {
         let parent_key = parent.into();
         let child_count = self.children[parent_key].len();
@@ -366,12 +366,12 @@ impl Taffy {
         Ok(self.children[parent_key][child_index])
     }
 
-    /// Returns the number of children of the `parent` [`Node`]
+    /// Returns the number of children of the `parent` node
     pub fn child_count(&self, parent: NodeId) -> TaffyResult<usize> {
         Ok(self.children[parent.into()].len())
     }
 
-    /// Returns a list of children that belong to the parent [`Node`]
+    /// Returns a list of children that belong to the parent node
     pub fn children(&self, parent: NodeId) -> TaffyResult<Vec<NodeId>> {
         Ok(self.children[parent.into()].iter().copied().collect::<_>())
     }
