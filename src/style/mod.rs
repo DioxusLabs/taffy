@@ -5,8 +5,6 @@ mod dimension;
 #[cfg(feature = "flexbox")]
 mod flex;
 
-// use core::default;
-
 pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, JustifyItems, JustifySelf};
 pub use self::dimension::{AvailableSpace, Dimension, LengthPercentage, LengthPercentageAuto};
 
@@ -33,9 +31,7 @@ use crate::sys::GridTrackVec;
 
 /// Sets the layout used for the children of this node
 ///
-/// [`Display::Flex`] is the default value.
-/// TODO: Fix this documentation.
-/// Default will be defined based on which features is enabled.
+/// The default values depends on on which feature flags are enabled. The order of precedence is: Flex, Grid, None.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Display {
