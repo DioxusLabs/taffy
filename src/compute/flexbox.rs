@@ -11,7 +11,7 @@ use crate::prelude::{TaffyMaxContent, TaffyMinContent};
 use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::{
     AlignContent, AlignItems, AlignSelf, AvailableSpace, Dimension, Display, FlexWrap, JustifyContent,
-    LengthPercentageAuto, Position,
+    LengthPercentageAuto, Overflow, Position,
 };
 use crate::style::{FlexDirection, Style};
 use crate::sys::Vec;
@@ -63,6 +63,8 @@ struct FlexItem {
     /// The cross-alignment of this item
     align_self: AlignSelf,
 
+    /// The overflow style of the item
+    overflow: Point<Overflow>,
     /// The flex shrink style of the item
     flex_shrink: f32,
     /// The flex grow style of the item
@@ -70,7 +72,7 @@ struct FlexItem {
 
     /// The minimum size of the item. This differs from min_size above because it also
     /// takes into account content based automatic minimum sizes
-    resolved_minimum_size: Size<f32>,
+    resolved_minimum_main_size: f32,
 
     /// The final offset of this item
     inset: Rect<Option<f32>>,
@@ -250,7 +252,7 @@ fn compute_preliminary(
         NODE_LOGGER.labelled_log("item.inner_flex_basis", item.inner_flex_basis);
         NODE_LOGGER.labelled_debug_log("item.hypothetical_outer_size", item.hypothetical_outer_size);
         NODE_LOGGER.labelled_debug_log("item.hypothetical_inner_size", item.hypothetical_inner_size);
-        NODE_LOGGER.labelled_debug_log("item.resolved_minimum_size", item.resolved_minimum_size);
+        NODE_LOGGER.labelled_debug_log("item.resolved_minimum_main_size", item.resolved_minimum_main_size);
     }
 
     // 4. Determine the main size of the flex container
@@ -488,6 +490,7 @@ fn generate_anonymous_flex_items(tree: &impl LayoutTree, node: Node, constants: 
                 padding: child_style.padding.resolve_or_zero(constants.node_inner_size.width),
                 border: child_style.border.resolve_or_zero(constants.node_inner_size.width),
                 align_self: child_style.align_self.unwrap_or(constants.align_items),
+                overflow: child_style.overflow,
                 flex_grow: child_style.flex_grow,
                 flex_shrink: child_style.flex_shrink,
                 flex_basis: 0.0,
@@ -495,7 +498,7 @@ fn generate_anonymous_flex_items(tree: &impl LayoutTree, node: Node, constants: 
                 violation: 0.0,
                 frozen: false,
 
-                resolved_minimum_size: Size::zero(),
+                resolved_minimum_main_size: 0.0,
                 hypothetical_inner_size: Size::zero(),
                 hypothetical_outer_size: Size::zero(),
                 target_size: Size::zero(),
@@ -593,7 +596,10 @@ fn determine_flex_base_size(
         let cross_axis_margin_sum = constants.margin.cross_axis_sum(dir);
         let child_min_cross = child.min_size.cross(dir).maybe_add(cross_axis_margin_sum);
         let child_max_cross = child.max_size.cross(dir).maybe_add(cross_axis_margin_sum);
-        let cross_axis_available_space = cross_axis_parent_size.maybe_clamp(child_min_cross, child_max_cross).into();
+        let cross_axis_available_space: AvailableSpace = available_space
+            .cross(dir)
+            .map_definite_value(|val| cross_axis_parent_size.unwrap_or(val))
+            .maybe_clamp(child_min_cross, child_max_cross);
 
         child.flex_basis = 'flex_basis: {
             // A. If the item has a definite used flex basis, that’s the flex base size.
@@ -637,7 +643,17 @@ fn determine_flex_base_size(
             //    flex item’s cross size. The flex base size is the item’s resulting main size.
 
             let child_parent_size = Size::NONE.with_cross(dir, cross_axis_parent_size);
-            let child_available_space = available_space.with_cross(dir, cross_axis_available_space);
+            let child_available_space = Size::MAX_CONTENT
+                .with_main(
+                    dir,
+                    // Map AvailableSpace::Definite to AvailableSpace::MaxContent
+                    if available_space.main(dir) == AvailableSpace::MinContent {
+                        AvailableSpace::MinContent
+                    } else {
+                        AvailableSpace::MaxContent
+                    },
+                )
+                .with_cross(dir, cross_axis_available_space);
 
             let child_known_dimensions = {
                 let mut ckd = child.size;
@@ -697,24 +713,28 @@ fn determine_flex_base_size(
         // be set to their usual values in the cross axis so that wrapping content can wrap correctly.
         //
         // See https://drafts.csswg.org/css-sizing-3/#min-percentage-contribution
-        let min_content_size = {
-            let child_parent_size = Size::NONE.with_cross(dir, cross_axis_parent_size);
-            let child_available_space = Size::MIN_CONTENT.with_cross(dir, cross_axis_available_space);
+        let style_min_main_size =
+            child.min_size.or(child.overflow.map(Overflow::maybe_into_automatic_min_size).into()).main(dir);
 
-            tree.measure_child_size(
-                child.node,
-                Size::NONE,
-                child_parent_size,
-                child_available_space,
-                SizingMode::ContentSize,
-            )
-        };
+        child.resolved_minimum_main_size = style_min_main_size.unwrap_or({
+            let min_content_size = {
+                let child_parent_size = Size::NONE.with_cross(dir, cross_axis_parent_size);
+                let child_available_space = Size::MIN_CONTENT.with_cross(dir, cross_axis_available_space);
 
-        // 4.5. Automatic Minimum Size of Flex Items
-        // https://www.w3.org/TR/css-flexbox-1/#min-size-auto
-        let clamped_min_content_size = min_content_size.maybe_min(child.size).maybe_min(child.max_size);
-        child.resolved_minimum_size =
-            child.min_size.unwrap_or(clamped_min_content_size).maybe_max(padding_border_axes_sums);
+                tree.measure_child_size(
+                    child.node,
+                    Size::NONE,
+                    child_parent_size,
+                    child_available_space,
+                    SizingMode::ContentSize,
+                )
+            };
+
+            // 4.5. Automatic Minimum Size of Flex Items
+            // https://www.w3.org/TR/css-flexbox-1/#min-size-auto
+            let clamped_min_content_size = min_content_size.maybe_min(child.size).maybe_min(child.max_size);
+            clamped_min_content_size.maybe_max(padding_border_axes_sums).main(dir)
+        });
     }
 }
 
@@ -875,12 +895,11 @@ fn determine_container_main_size(
                         let flex_basis_min = clamping_basis.filter(|_| item.flex_shrink == 0.0);
                         let flex_basis_max = clamping_basis.filter(|_| item.flex_grow == 0.0);
 
-                        let resolved_min = item.resolved_minimum_size.main(constants.dir);
                         let min_main_size = style_min
                             .maybe_max(flex_basis_min)
                             .or(flex_basis_min)
-                            .unwrap_or(resolved_min)
-                            .max(resolved_min);
+                            .unwrap_or(item.resolved_minimum_main_size)
+                            .max(item.resolved_minimum_main_size);
                         let max_main_size =
                             style_max.maybe_min(flex_basis_max).or(flex_basis_max).unwrap_or(f32::INFINITY);
 
@@ -1151,7 +1170,7 @@ fn resolve_flexible_lengths(line: &mut FlexLine, constants: &AlgoConstants, orig
         //    If the item’s target main size was made larger by this, it’s a min violation.
 
         let total_violation = unfrozen.iter_mut().fold(0.0, |acc, child| -> f32 {
-            let resolved_min_main: Option<f32> = child.resolved_minimum_size.main(constants.dir).into();
+            let resolved_min_main: Option<f32> = child.resolved_minimum_main_size.into();
             let max_main = child.max_size.main(constants.dir);
             let clamped = child.target_size.main(constants.dir).maybe_clamp(resolved_min_main, max_main).max(0.0);
             child.violation = clamped - child.target_size.main(constants.dir);

@@ -1,4 +1,13 @@
 
+function getScrollBarWidth() {
+  let el = document.createElement("div");
+  el.style.cssText = "overflow:scroll; visibility:hidden; position:absolute;";
+  document.body.appendChild(el);
+  let width = el.offsetWidth - el.clientWidth;
+  el.remove();
+  return width;
+}
+
 class TrackSizingParser {
   static INITIAL_CHAR_REGEX = /[a-z-A-Z0-9]/;
   static TOKEN_CHAR_REGEX = /[-\.a-z-A-Z0-9%]/;
@@ -188,7 +197,9 @@ function describeElement(e) {
       writingMode: parseEnum(e.style.writingMode),
 
       flexWrap: parseEnum(e.style.flexWrap),
-      overflow: parseEnum(e.style.overflow),
+      overflowX: parseEnum(e.style.overflowX),
+      overflowY: parseEnum(e.style.overflowY),
+      scrollbarWidth: getScrollBarWidth(),
 
       alignItems: parseEnum(e.style.alignItems),
       alignSelf: parseEnum(e.style.alignSelf),

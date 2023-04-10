@@ -11,7 +11,7 @@ use crate::style::FlexDirection;
 use crate::axis::AbstractAxis;
 
 /// An axis-aligned UI rectangle
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Rect<T> {
     /// This can represent either the x-coordinate of the starting edge,
@@ -32,17 +32,6 @@ pub struct Rect<T> {
     /// This can represent either the y-coordinate of the bottom edge,
     /// or the amount of padding on the bottom side.
     pub bottom: T,
-}
-
-impl<T: Default> Default for Rect<T> {
-    fn default() -> Self {
-        Rect {
-            left: Default::default(),
-            right: Default::default(),
-            top: Default::default(),
-            bottom: Default::default(),
-        }
-    }
 }
 
 impl<U, T: Add<U>> Add<Rect<U>> for Rect<T> {
@@ -248,19 +237,13 @@ impl<T: Add + Copy> Line<T> {
 }
 
 /// The width and height of a [`Rect`]
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Size<T> {
     /// The x extent of the rectangle
     pub width: T,
     /// The y extent of the rectangle
     pub height: T,
-}
-
-impl<T: Default> Default for Size<T> {
-    fn default() -> Self {
-        Size { width: Default::default(), height: Default::default() }
-    }
 }
 
 // Generic Add impl for Size<T> + Size<U> where T + U has an Add impl
@@ -272,6 +255,9 @@ impl<U, T: Add<U>> Add<Size<U>> for Size<T> {
     }
 }
 
+// Note: we allow dead_code here as we want to provide a complete API of helpers that is symetrical in all axes,
+// but sometimes we only currently have a use for the helper in a single axis
+#[allow(dead_code)]
 impl<T> Size<T> {
     /// Applies the function `f` to both the width and height
     ///
@@ -335,7 +321,6 @@ impl<T> Size<T> {
     /// Creates a new value of type Self with the main axis set to value provided
     ///
     /// Whether this is the width or height depends on the `direction` provided
-    #[allow(dead_code)]
     #[cfg(feature = "flexbox")]
     pub(crate) fn with_main(self, direction: FlexDirection, value: T) -> Self {
         let mut new = self;
@@ -357,6 +342,34 @@ impl<T> Size<T> {
             new.height = value
         } else {
             new.width = value
+        }
+        new
+    }
+
+    /// Creates a new value of type Self with the main axis modified by the callback provided
+    ///
+    /// Whether this is the width or height depends on the `direction` provided
+    #[cfg(feature = "flexbox")]
+    pub(crate) fn map_main(self, direction: FlexDirection, mapper: impl FnOnce(T) -> T) -> Self {
+        let mut new = self;
+        if direction.is_row() {
+            new.width = mapper(new.width);
+        } else {
+            new.height = mapper(new.height);
+        }
+        new
+    }
+
+    /// Creates a new value of type Self with the cross axis modified by the callback provided
+    ///
+    /// Whether this is the width or height depends on the `direction` provided
+    #[cfg(feature = "flexbox")]
+    pub(crate) fn map_cross(self, direction: FlexDirection, mapper: impl FnOnce(T) -> T) -> Self {
+        let mut new = self;
+        if direction.is_row() {
+            new.height = mapper(new.height);
+        } else {
+            new.width = mapper(new.width);
         }
         new
     }
@@ -478,7 +491,8 @@ impl Size<Dimension> {
 /// A 2-dimensional coordinate.
 ///
 /// When used in association with a [`Rect`], represents the bottom-left corner.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Point<T> {
     /// The x-coordinate
     pub x: T,
@@ -494,6 +508,44 @@ impl Point<f32> {
 impl Point<Option<f32>> {
     /// A [`Point`] with values (None, None)
     pub const NONE: Self = Self { x: None, y: None };
+}
+
+impl<T> Point<T> {
+    /// Applies the function `f` to both the x and y
+    ///
+    /// This is used to transform a `Point<T>` into a `Point<R>`.
+    pub fn map<R, F>(self, f: F) -> Point<R>
+    where
+        F: Fn(T) -> R,
+    {
+        Point { x: f(self.x), y: f(self.y) }
+    }
+
+    /// Gets the extent of the specified layout axis
+    /// Whether this is the width or height depends on the `GridAxis` provided
+    #[cfg(feature = "grid")]
+    pub fn get(self, axis: AbstractAxis) -> T {
+        match axis {
+            AbstractAxis::Inline => self.x,
+            AbstractAxis::Block => self.y,
+        }
+    }
+
+    /// Sets the extent of the specified layout axis
+    /// Whether this is the width or height depends on the `GridAxis` provided
+    #[cfg(feature = "grid")]
+    pub fn set(&mut self, axis: AbstractAxis, value: T) {
+        match axis {
+            AbstractAxis::Inline => self.x = value,
+            AbstractAxis::Block => self.y = value,
+        }
+    }
+}
+
+impl<T> From<Point<T>> for Size<T> {
+    fn from(value: Point<T>) -> Self {
+        Size { width: value.x, height: value.y }
+    }
 }
 
 /// Generic struct which holds a "min" value and a "max" value

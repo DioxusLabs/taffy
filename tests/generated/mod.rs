@@ -222,6 +222,7 @@ mod display_none_with_child;
 mod display_none_with_margin;
 mod display_none_with_position;
 mod display_none_with_position_absolute;
+mod do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent;
 mod flex_basis_and_main_dimen_set_when_flexing;
 mod flex_basis_flex_grow_column;
 mod flex_basis_flex_grow_row;
@@ -482,13 +483,19 @@ mod grid_fit_content_percent_indefinite_argument;
 #[cfg(feature = "grid")]
 mod grid_fit_content_percent_indefinite_max_content;
 #[cfg(feature = "grid")]
+mod grid_fit_content_percent_indefinite_max_content_hidden;
+#[cfg(feature = "grid")]
 mod grid_fit_content_percent_indefinite_min_content;
+#[cfg(feature = "grid")]
+mod grid_fit_content_percent_indefinite_min_content_hidden;
 #[cfg(feature = "grid")]
 mod grid_fit_content_points_argument;
 #[cfg(feature = "grid")]
 mod grid_fit_content_points_max_content;
 #[cfg(feature = "grid")]
 mod grid_fit_content_points_min_content;
+#[cfg(feature = "grid")]
+mod grid_fit_content_points_min_content_hidden;
 #[cfg(feature = "grid")]
 mod grid_fr_fixed_size_no_content_proportions;
 #[cfg(feature = "grid")]
@@ -650,6 +657,10 @@ mod grid_minmax_min_content_percent_indefinite;
 #[cfg(feature = "grid")]
 mod grid_out_of_order_items;
 #[cfg(feature = "grid")]
+mod grid_overflow_inline_axis_hidden;
+#[cfg(feature = "grid")]
+mod grid_overflow_inline_axis_visible;
+#[cfg(feature = "grid")]
 mod grid_overflow_rows;
 #[cfg(feature = "grid")]
 mod grid_padding_border_overrides_container_max_size;
@@ -702,27 +713,45 @@ mod grid_size_child_fixed_tracks;
 #[cfg(feature = "grid")]
 mod grid_span_13_most_non_flex_with_minmax_indefinite;
 #[cfg(feature = "grid")]
+mod grid_span_13_most_non_flex_with_minmax_indefinite_hidden;
+#[cfg(feature = "grid")]
 mod grid_span_2_max_content_auto_indefinite;
+#[cfg(feature = "grid")]
+mod grid_span_2_max_content_auto_indefinite_hidden;
 #[cfg(feature = "grid")]
 mod grid_span_2_max_content_fit_content_10px_indefinite;
 #[cfg(feature = "grid")]
+mod grid_span_2_max_content_fit_content_10px_indefinite_hidden;
+#[cfg(feature = "grid")]
 mod grid_span_2_max_content_fit_content_80px_indefinite;
+#[cfg(feature = "grid")]
+mod grid_span_2_max_content_fit_content_80px_indefinite_hidden;
 #[cfg(feature = "grid")]
 mod grid_span_2_max_content_max_content_indefinite;
 #[cfg(feature = "grid")]
 mod grid_span_2_min_content_auto_indefinite;
 #[cfg(feature = "grid")]
+mod grid_span_2_min_content_auto_indefinite_hidden;
+#[cfg(feature = "grid")]
 mod grid_span_2_min_content_fit_content_10px_indefinite;
+#[cfg(feature = "grid")]
+mod grid_span_2_min_content_fit_content_10px_indefinite_hidden;
 #[cfg(feature = "grid")]
 mod grid_span_2_min_content_fit_content_30px_indefinite;
 #[cfg(feature = "grid")]
+mod grid_span_2_min_content_fit_content_30px_indefinite_hidden;
+#[cfg(feature = "grid")]
 mod grid_span_2_min_content_fit_content_80px_indefinite;
+#[cfg(feature = "grid")]
+mod grid_span_2_min_content_fit_content_80px_indefinite_hidden;
 #[cfg(feature = "grid")]
 mod grid_span_2_min_content_max_content_indefinite;
 #[cfg(feature = "grid")]
 mod grid_span_2_min_content_min_content_indefinite;
 #[cfg(feature = "grid")]
 mod grid_span_6_all_non_flex_indefinite;
+#[cfg(feature = "grid")]
+mod grid_span_6_all_non_flex_indefinite_hidden;
 #[cfg(feature = "grid")]
 mod grid_span_8_all_track_types_indefinite;
 #[cfg(feature = "grid")]
@@ -812,6 +841,7 @@ mod measure_child_constraint;
 mod measure_child_constraint_padding_parent;
 mod measure_child_with_flex_grow;
 mod measure_child_with_flex_shrink;
+mod measure_child_with_flex_shrink_hidden;
 mod measure_child_with_min_size_greater_than_available_space;
 mod measure_flex_basis_overrides_measure;
 mod measure_height_overrides_measure;
@@ -839,6 +869,8 @@ mod nested_overflowing_child_in_constraint_parent;
 mod only_shrinkable_item_with_flex_basis_zero;
 mod overflow_cross_axis;
 mod overflow_main_axis;
+mod overflow_main_axis_shrink_hidden;
+mod overflow_main_axis_shrink_visible;
 mod padding_align_end_child;
 mod padding_border_overrides_max_size;
 mod padding_border_overrides_min_size;
