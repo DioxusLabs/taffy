@@ -1,32 +1,5 @@
 //! Commonly used types
 
-#[cfg(feature = "flexbox")]
-use crate::{
-    compute::LayoutAlgorithm,
-    layout::{SizeAndBaselines, SizingMode},
-};
-
-/// Apply the flexbox algorithm and recursively layout the specified node
-#[cfg(feature = "flexbox")]
-#[inline(always)]
-pub fn layout_flexbox(
-    tree: &mut impl LayoutTree,
-    node: Node,
-    known_dimensions: Size<Option<f32>>,
-    parent_size: Size<Option<f32>>,
-    available_space: Size<AvailableSpace>,
-    sizing_mode: SizingMode,
-) -> SizeAndBaselines {
-    crate::compute::flexbox::FlexboxAlgorithm::perform_layout(
-        tree,
-        node,
-        known_dimensions,
-        parent_size,
-        available_space,
-        sizing_mode,
-    )
-}
-
 pub use crate::{
     geometry::{Line, Rect, Size},
     layout::Layout,

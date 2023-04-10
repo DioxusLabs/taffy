@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Removed
+
+- `layout_flexbox()` has been removed from the prelude. Use `FlexboxAlgorithm::perform_layout()` instead.
+
 ### Changes
 
 - The Flexbox algorithm has now been moved behind the `flexbox` feature. The `flexbox` feature is enabled by default.
