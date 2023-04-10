@@ -39,7 +39,7 @@ jobs:
       - run: cargo build --features serde
       - run: cargo test --features serde
 
-  test-features-no-grid-nor-flexbox:
+  test-features-default-no-grid-nor-flexbox:
     name: "Test Suite [Features: std (no grid or flexbox)]"
     runs-on: ubuntu-latest
     steps:
