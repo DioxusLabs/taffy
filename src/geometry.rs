@@ -255,6 +255,8 @@ impl<U, T: Add<U>> Add<Size<U>> for Size<T> {
     }
 }
 
+// Note: we allow dead_code here as we want to provide a complete API of helpers that is symetrical in all axes,
+// but sometimes we only currently have a use for the helper in a single axis
 #[allow(dead_code)]
 impl<T> Size<T> {
     /// Applies the function `f` to both the width and height
