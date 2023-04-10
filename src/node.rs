@@ -76,18 +76,22 @@ impl Default for Taffy {
 impl LayoutTree for Taffy {
     type ChildIter<'a> = core::slice::Iter<'a, DefaultKey>;
 
+    #[inline(always)]
     fn children(&self, node: Node) -> Self::ChildIter<'_> {
         self.children[node].iter()
     }
 
+    #[inline(always)]
     fn child_count(&self, node: Node) -> usize {
         self.children[node].len()
     }
 
+    #[inline(always)]
     fn style(&self, node: Node) -> &Style {
         &self.nodes[node].style
     }
 
+    #[inline(always)]
     fn layout_mut(&mut self, node: Node) -> &mut Layout {
         &mut self.nodes[node].layout
     }
@@ -114,10 +118,12 @@ impl LayoutTree for Taffy {
         &mut self.nodes[node].size_cache[index]
     }
 
+    #[inline(always)]
     fn child(&self, node: Node, id: usize) -> Node {
         self.children[node][id]
     }
 
+    #[inline(always)]
     fn measure_child_size(
         &mut self,
         node: Node,
@@ -129,6 +135,7 @@ impl LayoutTree for Taffy {
         GenericAlgorithm::measure_size(self, node, known_dimensions, parent_size, available_space, sizing_mode)
     }
 
+    #[inline(always)]
     fn perform_child_layout(
         &mut self,
         node: Node,
