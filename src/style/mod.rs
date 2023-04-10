@@ -57,7 +57,7 @@ impl Display {
     /// The default of Display.
     #[cfg(all(feature = "grid", not(feature = "flexbox")))]
     pub const DEFAULT: Display = Display::Grid;
-    
+
     /// The default of Display.
     #[cfg(all(not(feature = "flexbox"), not(feature = "grid")))]
     pub const DEFAULT: Display = Display::None;
