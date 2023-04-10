@@ -5,6 +5,8 @@ mod dimension;
 #[cfg(feature = "flexbox")]
 mod flex;
 
+// use core::default;
+
 pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, JustifyItems, JustifySelf};
 pub use self::dimension::{AvailableSpace, Dimension, LengthPercentage, LengthPercentageAuto};
 
@@ -45,9 +47,16 @@ pub enum Display {
     None,
 }
 
+impl Display {
+    #[cfg(feature = "flexbox")]
+    pub const DEFAULT: Display = Display::Flex;
+    #[cfg(feature = "grid")]
+    pub const DEFAULT: Display = Display::Grid;
+}
+
 impl Default for Display {
     fn default() -> Self {
-        Self::None // FIXME: What should the default be if the flexbox feature is disabled?
+        Self::DEFAULT
     }
 }
 
@@ -204,7 +213,7 @@ pub struct Style {
 impl Style {
     /// The [`Default`] layout, in a form that can be used in const functions
     pub const DEFAULT: Style = Style {
-        display: Display::None, // FIXME: Does it make sense to have this?
+        display: Display::DEFAULT,
         position: Position::Relative,
         #[cfg(feature = "flexbox")]
         flex_direction: FlexDirection::Row,
