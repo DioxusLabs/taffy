@@ -78,7 +78,7 @@ jobs:
       - run: cargo test --no-default-features --features alloc,grid
 
   test-features-alloc:
-    name: "Test Suite [Features: alloc (no grid)]"
+    name: "Test Suite [Features: alloc]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
