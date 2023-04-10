@@ -1,10 +1,14 @@
 //! A representation of [CSS layout properties](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust, used for flexbox layout
 mod alignment;
 mod dimension;
+
+#[cfg(feature = "flexbox")]
 mod flex;
 
 pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, JustifyItems, JustifySelf};
 pub use self::dimension::{AvailableSpace, Dimension, LengthPercentage, LengthPercentageAuto};
+
+#[cfg(feature = "flexbox")]
 pub use self::flex::{FlexDirection, FlexWrap};
 
 #[cfg(feature = "grid")]
@@ -32,6 +36,7 @@ use crate::sys::GridTrackVec;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Display {
     /// The children will follow the flexbox layout algorithm
+    #[cfg(feature = "flexbox")]
     Flex,
     /// The children will follow the CSS Grid layout algorithm
     #[cfg(feature = "grid")]
@@ -42,7 +47,7 @@ pub enum Display {
 
 impl Default for Display {
     fn default() -> Self {
-        Self::Flex
+        Self::None // FIXME: What should the default be if the flexbox feature is disabled?
     }
 }
 
@@ -151,18 +156,23 @@ pub struct Style {
 
     // Flexbox properies
     /// Which direction does the main axis flow in?
+    #[cfg(feature = "flexbox")]
     pub flex_direction: FlexDirection,
     /// Should elements wrap, or stay in a single line?
+    #[cfg(feature = "flexbox")]
     pub flex_wrap: FlexWrap,
     /// Sets the initial main axis size of the item
+    #[cfg(feature = "flexbox")]
     pub flex_basis: Dimension,
     /// The relative rate at which this item grows when it is expanding to fill space
     ///
     /// 0.0 is the default value, and this value must be positive.
+    #[cfg(feature = "flexbox")]
     pub flex_grow: f32,
     /// The relative rate at which this item shrinks when it is contracting to fit into space
     ///
     /// 1.0 is the default value, and this value must be positive.
+    #[cfg(feature = "flexbox")]
     pub flex_shrink: f32,
 
     // Grid container properies
@@ -194,9 +204,11 @@ pub struct Style {
 impl Style {
     /// The [`Default`] layout, in a form that can be used in const functions
     pub const DEFAULT: Style = Style {
-        display: Display::Flex,
+        display: Display::None, // FIXME: Does it make sense to have this?
         position: Position::Relative,
+        #[cfg(feature = "flexbox")]
         flex_direction: FlexDirection::Row,
+        #[cfg(feature = "flexbox")]
         flex_wrap: FlexWrap::NoWrap,
         align_items: None,
         align_self: None,
@@ -210,8 +222,11 @@ impl Style {
         padding: Rect::zero(),
         border: Rect::zero(),
         gap: Size::zero(),
+        #[cfg(feature = "flexbox")]
         flex_grow: 0.0,
+        #[cfg(feature = "flexbox")]
         flex_shrink: 1.0,
+        #[cfg(feature = "flexbox")]
         flex_basis: Dimension::Auto,
         size: Size::auto(),
         min_size: Size::auto(),
@@ -253,7 +268,9 @@ mod tests {
         let old_defaults = Style {
             display: Default::default(),
             position: Default::default(),
+            #[cfg(feature = "flexbox")]
             flex_direction: Default::default(),
+            #[cfg(feature = "flexbox")]
             flex_wrap: Default::default(),
             align_items: Default::default(),
             align_self: Default::default(),
@@ -267,8 +284,11 @@ mod tests {
             padding: Rect::zero(),
             border: Rect::zero(),
             gap: Size::zero(),
+            #[cfg(feature = "flexbox")]
             flex_grow: 0.0,
+            #[cfg(feature = "flexbox")]
             flex_shrink: 1.0,
+            #[cfg(feature = "flexbox")]
             flex_basis: super::Dimension::Auto,
             size: Size::auto(),
             min_size: Size::auto(),

@@ -1,5 +1,11 @@
 # Release Notes
 
+## Unreleased
+
+### Changes
+
+- The Flexbox algorithm has now been moved behind the `flexbox` feature. The `flexbox` feature is enabled by default.
+
 ## 0.3.11
 
 ### Fixes
