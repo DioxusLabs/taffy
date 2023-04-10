@@ -592,12 +592,19 @@ fn resolve_intrinsic_track_sizes(
 
                 // Handle growth limits
                 if let MaxTrackSizingFunction::FitContent(_) = track.max_track_sizing_function {
+                    // If item is not a scroll container, then increase the growth limit to at least the
+                    // size of the min-content contribution
+                    if !item.overflow.get(axis).is_scroll_container() {
+                        let min_content_contribution = item_sizer.min_content_contribution(item);
+                        track.growth_limit_planned_increase =
+                            f32_max(track.growth_limit_planned_increase, min_content_contribution);
+                    }
+
+                    // Always increase the growth limit to at least the size of the *fit-content limited*
+                    // max-cotent contribution
                     let fit_content_limit = track.fit_content_limit(axis_inner_node_size);
-                    let min_content_contribution = item_sizer.min_content_contribution(item);
                     let max_content_contribution =
                         f32_min(item_sizer.max_content_contribution(item), fit_content_limit);
-                    track.growth_limit_planned_increase =
-                        f32_max(track.growth_limit_planned_increase, min_content_contribution);
                     track.growth_limit_planned_increase =
                         f32_max(track.growth_limit_planned_increase, max_content_contribution);
                 } else if track.max_track_sizing_function.is_max_content_alike()
