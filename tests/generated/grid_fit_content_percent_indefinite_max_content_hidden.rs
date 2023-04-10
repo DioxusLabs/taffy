@@ -11,7 +11,6 @@ fn grid_fit_content_percent_indefinite_max_content_hidden() {
                     x: taffy::style::Overflow::Hidden,
                     y: taffy::style::Overflow::Hidden,
                 },
-                scrollbar_width: 15u8,
                 ..Default::default()
             },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
@@ -30,11 +29,6 @@ fn grid_fit_content_percent_indefinite_max_content_hidden() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                overflow: taffy::geometry::Point {
-                    x: taffy::style::Overflow::Hidden,
-                    y: taffy::style::Overflow::Hidden,
-                },
-                scrollbar_width: 15u8,
                 grid_template_rows: vec![points(40f32)],
                 grid_template_columns: vec![fit_content(percent(0.5f32))],
                 ..Default::default()

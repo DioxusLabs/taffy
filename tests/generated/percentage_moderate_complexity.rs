@@ -91,10 +91,10 @@ fn percentage_moderate_complexity() {
     assert!(location.y - 8f32 < 0.1, "y of node {:?}. Expected {}. Actual {}", node0.data(), 8f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node00).unwrap();
     assert!(
-        size.width - 38.40625f32 < 0.1,
+        size.width - 38.414063f32 < 0.1,
         "width of node {:?}. Expected {}. Actual {}",
         node00.data(),
-        38.40625f32,
+        38.414063f32,
         size.width
     );
     assert!(size.height - 6f32 < 0.1, "height of node {:?}. Expected {}. Actual {}", node00.data(), 6f32, size.height);

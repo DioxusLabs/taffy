@@ -11,7 +11,6 @@ fn grid_overflow_inline_axis_hidden() {
                     x: taffy::style::Overflow::Hidden,
                     y: taffy::style::Overflow::Hidden,
                 },
-                scrollbar_width: 15u8,
                 ..Default::default()
             },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {

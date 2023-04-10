@@ -101,11 +101,8 @@ impl Default for Position {
 /// the main ones being:
 ///
 ///   - The automatic minimum size Flexbox/CSS Grid items with non-`Visible` overflow is `0` rather than being content based
-///   - `Overflow::Scroll` nodes have space in the layout reserved for a scrollbar (width controlled by the `scrollbar_width` property)
-///   - `Overflow::Auto` nodes also have space in the layout reserved for a scrollbar, *but only if their contents actually overflow*.
 ///
-/// In Taffy, we only implement the layout related secondary effects as we are not concerned with drawing/painting. The amount of space reserved for
-/// a scrollbar is controlled by the `scrollbar_width` property. If this is `0` then `Auto` and `Scroll` behave identically to `Hidden`.
+/// In Taffy, we only implement the layout related secondary effects as we are not concerned with drawing/painting.
 ///
 /// <https://developer.mozilla.org/en-US/docs/Web/CSS/overflow>
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -116,14 +113,6 @@ pub enum Overflow {
     Visible,
     /// The automatic minimum size of this node as a flexbox/grid item should be `0`.
     Hidden,
-    /// The automatic minimum size of this node as a flexbox/grid item should be `0`. Additionally, space should be reserved
-    /// for a scrollbar. The amount of space reserved is controlled by the `scrollbar_width` property.
-    Scroll,
-    /// The automatic minimum size of this node as a flexbox/grid item should be 0. Additionall, while this node should initially be laid out
-    /// without reserving space for a scrollbar, *if* the contents of this node overflow during this initial layout then space should be reserved
-    /// for a scrollbar and the node's relayout recomputed on that basis. The amount of space reserved is controlled by the `scrollbar_width` property.
-    /// If this is set to `0` then no relayout will occur.
-    Auto,
 }
 
 impl Overflow {
@@ -169,8 +158,6 @@ pub struct Style {
     // Overflow properties
     /// How children overflowing their container should affect layout
     pub overflow: Point<Overflow>,
-    /// How much space (in points) should be reserved for the scrollbars of `Overflow::Scroll` and `Overflow::Auto` nodes.
-    pub scrollbar_width: u8,
 
     // Position properties
     /// What should the `position` value of this struct use as a base offset?
@@ -283,7 +270,6 @@ impl Style {
     pub const DEFAULT: Style = Style {
         display: Display::DEFAULT,
         overflow: Point { x: Overflow::Visible, y: Overflow::Visible },
-        scrollbar_width: 0,
         position: Position::Relative,
         inset: Rect::auto(),
         margin: Rect::zero(),
@@ -356,7 +342,6 @@ mod tests {
         let old_defaults = Style {
             display: Default::default(),
             overflow: Default::default(),
-            scrollbar_width: 0,
             position: Default::default(),
             #[cfg(feature = "flexbox")]
             flex_direction: Default::default(),

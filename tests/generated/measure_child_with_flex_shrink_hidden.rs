@@ -6,8 +6,6 @@ fn measure_child_with_flex_shrink_hidden() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            overflow: taffy::geometry::Point { x: taffy::style::Overflow::Hidden, y: taffy::style::Overflow::Hidden },
-            scrollbar_width: 15u8,
             size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Points(50f32),
                 height: taffy::style::Dimension::Points(50f32),
@@ -22,7 +20,6 @@ fn measure_child_with_flex_shrink_hidden() {
                     x: taffy::style::Overflow::Hidden,
                     y: taffy::style::Overflow::Hidden,
                 },
-                scrollbar_width: 15u8,
                 ..Default::default()
             },
             taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
@@ -40,11 +37,6 @@ fn measure_child_with_flex_shrink_hidden() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                overflow: taffy::geometry::Point {
-                    x: taffy::style::Overflow::Hidden,
-                    y: taffy::style::Overflow::Hidden,
-                },
-                scrollbar_width: 15u8,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Points(100f32),
                     height: taffy::style::Dimension::Auto,
