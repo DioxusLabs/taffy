@@ -205,12 +205,7 @@ fn compute_node_layout(
     };
 
     // Cache result
-    tree.nodes[node_key].cache.store(
-        known_dimensions,
-        available_space,
-        cache_run_mode,
-        computed_size_and_baselines,
-    );
+    tree.nodes[node_key].cache.store(known_dimensions, available_space, cache_run_mode, computed_size_and_baselines);
 
     #[cfg(feature = "debug")]
     NODE_LOGGER.labelled_debug_log("RESULT", computed_size_and_baselines.size);
