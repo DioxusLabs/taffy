@@ -1,10 +1,14 @@
 //! A representation of [CSS layout properties](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust, used for flexbox layout
 mod alignment;
 mod dimension;
+
+#[cfg(feature = "flexbox")]
 mod flex;
 
 pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, JustifyItems, JustifySelf};
 pub use self::dimension::{AvailableSpace, Dimension, LengthPercentage, LengthPercentageAuto};
+
+#[cfg(feature = "flexbox")]
 pub use self::flex::{FlexDirection, FlexWrap};
 
 #[cfg(feature = "grid")]
@@ -27,11 +31,12 @@ use crate::sys::GridTrackVec;
 
 /// Sets the layout used for the children of this node
 ///
-/// [`Display::Flex`] is the default value.
+/// The default values depends on on which feature flags are enabled. The order of precedence is: Flex, Grid, None.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Display {
     /// The children will follow the flexbox layout algorithm
+    #[cfg(feature = "flexbox")]
     Flex,
     /// The children will follow the CSS Grid layout algorithm
     #[cfg(feature = "grid")]
@@ -40,9 +45,23 @@ pub enum Display {
     None,
 }
 
+impl Display {
+    /// The default of Display.
+    #[cfg(feature = "flexbox")]
+    pub const DEFAULT: Display = Display::Flex;
+
+    /// The default of Display.
+    #[cfg(all(feature = "grid", not(feature = "flexbox")))]
+    pub const DEFAULT: Display = Display::Grid;
+
+    /// The default of Display.
+    #[cfg(all(not(feature = "flexbox"), not(feature = "grid")))]
+    pub const DEFAULT: Display = Display::None;
+}
+
 impl Default for Display {
     fn default() -> Self {
-        Self::Flex
+        Self::DEFAULT
     }
 }
 
@@ -131,38 +150,49 @@ pub struct Style {
 
     // Alignment properties
     /// How this node's children aligned in the cross/block axis?
+    #[cfg(any(feature = "flexbox", feature = "grid"))]
     pub align_items: Option<AlignItems>,
     /// How this node should be aligned in the cross/block axis
     /// Falls back to the parents [`AlignItems`] if not set
+    #[cfg(any(feature = "flexbox", feature = "grid"))]
     pub align_self: Option<AlignSelf>,
     /// How this node's children should be aligned in the inline axis
     #[cfg(feature = "grid")]
     pub justify_items: Option<AlignItems>,
     /// How this node should be aligned in the inline axis
     /// Falls back to the parents [`JustifyItems`] if not set
+    #[cfg(feature = "grid")]
     pub justify_self: Option<AlignSelf>,
     /// How should content contained within this item be aligned in the cross/block axis
+    #[cfg(any(feature = "flexbox", feature = "grid"))]
     pub align_content: Option<AlignContent>,
     /// How should contained within this item be aligned in the main/inline axis
+    #[cfg(any(feature = "flexbox", feature = "grid"))]
     pub justify_content: Option<JustifyContent>,
     /// How large should the gaps between items in a grid or flex container be?
+    #[cfg(any(feature = "flexbox", feature = "grid"))]
     #[cfg_attr(feature = "serde", serde(default = "style_helpers::zero"))]
     pub gap: Size<LengthPercentage>,
 
     // Flexbox properies
     /// Which direction does the main axis flow in?
+    #[cfg(feature = "flexbox")]
     pub flex_direction: FlexDirection,
     /// Should elements wrap, or stay in a single line?
+    #[cfg(feature = "flexbox")]
     pub flex_wrap: FlexWrap,
     /// Sets the initial main axis size of the item
+    #[cfg(feature = "flexbox")]
     pub flex_basis: Dimension,
     /// The relative rate at which this item grows when it is expanding to fill space
     ///
     /// 0.0 is the default value, and this value must be positive.
+    #[cfg(feature = "flexbox")]
     pub flex_grow: f32,
     /// The relative rate at which this item shrinks when it is contracting to fit into space
     ///
     /// 1.0 is the default value, and this value must be positive.
+    #[cfg(feature = "flexbox")]
     pub flex_shrink: f32,
 
     // Grid container properies
@@ -194,29 +224,43 @@ pub struct Style {
 impl Style {
     /// The [`Default`] layout, in a form that can be used in const functions
     pub const DEFAULT: Style = Style {
-        display: Display::Flex,
+        display: Display::DEFAULT,
         position: Position::Relative,
-        flex_direction: FlexDirection::Row,
-        flex_wrap: FlexWrap::NoWrap,
-        align_items: None,
-        align_self: None,
-        #[cfg(feature = "grid")]
-        justify_items: None,
-        justify_self: None,
-        align_content: None,
-        justify_content: None,
         inset: Rect::auto(),
         margin: Rect::zero(),
         padding: Rect::zero(),
         border: Rect::zero(),
-        gap: Size::zero(),
-        flex_grow: 0.0,
-        flex_shrink: 1.0,
-        flex_basis: Dimension::Auto,
         size: Size::auto(),
         min_size: Size::auto(),
         max_size: Size::auto(),
         aspect_ratio: None,
+        #[cfg(any(feature = "flexbox", feature = "grid"))]
+        gap: Size::zero(),
+        // Aligment
+        #[cfg(any(feature = "flexbox", feature = "grid"))]
+        align_items: None,
+        #[cfg(any(feature = "flexbox", feature = "grid"))]
+        align_self: None,
+        #[cfg(feature = "grid")]
+        justify_items: None,
+        #[cfg(feature = "grid")]
+        justify_self: None,
+        #[cfg(any(feature = "flexbox", feature = "grid"))]
+        align_content: None,
+        #[cfg(any(feature = "flexbox", feature = "grid"))]
+        justify_content: None,
+        // Flexbox
+        #[cfg(feature = "flexbox")]
+        flex_direction: FlexDirection::Row,
+        #[cfg(feature = "flexbox")]
+        flex_wrap: FlexWrap::NoWrap,
+        #[cfg(feature = "flexbox")]
+        flex_grow: 0.0,
+        #[cfg(feature = "flexbox")]
+        flex_shrink: 1.0,
+        #[cfg(feature = "flexbox")]
+        flex_basis: Dimension::Auto,
+        // Grid
         #[cfg(feature = "grid")]
         grid_template_rows: GridTrackVec::new(),
         #[cfg(feature = "grid")]
@@ -253,22 +297,32 @@ mod tests {
         let old_defaults = Style {
             display: Default::default(),
             position: Default::default(),
+            #[cfg(feature = "flexbox")]
             flex_direction: Default::default(),
+            #[cfg(feature = "flexbox")]
             flex_wrap: Default::default(),
+            #[cfg(any(feature = "flexbox", feature = "grid"))]
             align_items: Default::default(),
+            #[cfg(any(feature = "flexbox", feature = "grid"))]
             align_self: Default::default(),
             #[cfg(feature = "grid")]
             justify_items: Default::default(),
+            #[cfg(feature = "grid")]
             justify_self: Default::default(),
+            #[cfg(any(feature = "flexbox", feature = "grid"))]
             align_content: Default::default(),
+            #[cfg(any(feature = "flexbox", feature = "grid"))]
             justify_content: Default::default(),
             inset: Rect::auto(),
             margin: Rect::zero(),
             padding: Rect::zero(),
             border: Rect::zero(),
             gap: Size::zero(),
+            #[cfg(feature = "flexbox")]
             flex_grow: 0.0,
+            #[cfg(feature = "flexbox")]
             flex_shrink: 1.0,
+            #[cfg(feature = "flexbox")]
             flex_basis: super::Dimension::Auto,
             size: Size::auto(),
             min_size: Size::auto(),

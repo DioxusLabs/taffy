@@ -1,8 +1,10 @@
 //! The layout algorithms themselves
 
 pub(crate) mod common;
-pub(crate) mod flexbox;
 pub(crate) mod leaf;
+
+#[cfg(feature = "flexbox")]
+pub(crate) mod flexbox;
 
 #[cfg(feature = "grid")]
 pub(crate) mod grid;
@@ -16,7 +18,9 @@ use crate::style::{AvailableSpace, Display};
 use crate::sys::round;
 use crate::tree::LayoutTree;
 
+#[cfg(feature = "flexbox")]
 use self::flexbox::FlexboxAlgorithm;
+
 #[cfg(feature = "grid")]
 use self::grid::CssGridAlgorithm;
 use self::leaf::LeafAlgorithm;
@@ -189,6 +193,7 @@ fn compute_node_layout(
             run_mode,
             sizing_mode,
         ),
+        #[cfg(feature = "flexbox")]
         (Display::Flex, true) => perform_computations::<FlexboxAlgorithm>(
             tree,
             node,
