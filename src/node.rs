@@ -298,7 +298,7 @@ impl Taffy {
 
         let parent_children = &mut self.children[parent_key];
         parent_children.clear();
-        children.into_iter().for_each(|child| parent_children.push(*child));
+        children.iter().for_each(|child| parent_children.push(*child));
 
         self.mark_dirty(parent)?;
 
