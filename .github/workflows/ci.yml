@@ -39,7 +39,7 @@ jobs:
       - run: cargo build --features serde
       - run: cargo test --features serde
 
-  test-features-default-no-grid-nor-flexbox:
+  test-features-no-grid-nor-flexbox:
     name: "Test Suite [Features: std (no grid or flexbox)]"
     runs-on: ubuntu-latest
     steps:
@@ -50,7 +50,7 @@ jobs:
 
   # Flexbox
   test-features-flexbox:
-    name: "Test Suite [Features: flexbox]"
+    name: "Test Suite [Features: flexbox + std]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -60,7 +60,7 @@ jobs:
 
   # Grid
   test-features-grid:
-    name: "Test Suite [Features: grid]"
+    name: "Test Suite [Features: grid + std]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -68,8 +68,8 @@ jobs:
       - run: cargo build --no-default-features --features grid,std
       - run: cargo test --no-default-features --features grid,std
 
-  test-features-alloc:
-    name: "Test Suite [Features: alloc]"
+  test-features-grid-with-alloc:
+    name: "Test Suite [Features: grid + alloc]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
