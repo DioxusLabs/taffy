@@ -296,8 +296,9 @@ impl Taffy {
             self.parents[(*child).into()] = Some(parent);
         }
 
-        self.children[parent_key].clear();
-        self.children[parent_key].extend_from_slice(children);
+        let parent_children = &mut self.children[parent_key];
+        parent_children.clear();
+        children.into_iter().for_each(|child| parent_children.push(*child));
 
         self.mark_dirty(parent)?;
 
