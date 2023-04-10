@@ -1,5 +1,11 @@
 # Release Notes
 
+## Unreleased
+
+### Removed
+
+- `layout_flexbox()` has been removed from the prelude. Use `FlexboxAlgorithm::perform_layout()` instead.
+
 ## 0.3.11
 
 ### Fixes
