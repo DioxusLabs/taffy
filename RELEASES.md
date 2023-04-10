@@ -5,6 +5,7 @@
 ### Changes
 
 - The Flexbox algorithm has now been moved behind the `flexbox` feature. The `flexbox` feature is enabled by default.
+- The `justify_self` property has been moved behind the `grid` feature.
 
 ## 0.3.11
 

@@ -157,11 +157,11 @@ pub struct Style {
     #[cfg(any(feature = "flexbox", feature = "grid"))]
     pub align_self: Option<AlignSelf>,
     /// How this node's children should be aligned in the inline axis
-    #[cfg(any(feature = "flexbox", feature = "grid"))]
+    #[cfg(feature = "grid")]
     pub justify_items: Option<AlignItems>,
     /// How this node should be aligned in the inline axis
     /// Falls back to the parents [`JustifyItems`] if not set
-    #[cfg(any(feature = "flexbox", feature = "grid"))]
+    #[cfg(feature = "grid")]
     pub justify_self: Option<AlignSelf>,
     /// How should content contained within this item be aligned in the cross/block axis
     #[cfg(any(feature = "flexbox", feature = "grid"))]
@@ -241,9 +241,9 @@ impl Style {
         align_items: None,
         #[cfg(any(feature = "flexbox", feature = "grid"))]
         align_self: None,
-        #[cfg(any(feature = "flexbox", feature = "grid"))]
+        #[cfg(feature = "grid")]
         justify_items: None,
-        #[cfg(any(feature = "flexbox", feature = "grid"))]
+        #[cfg(feature = "grid")]
         justify_self: None,
         #[cfg(any(feature = "flexbox", feature = "grid"))]
         align_content: None,
@@ -301,12 +301,17 @@ mod tests {
             flex_direction: Default::default(),
             #[cfg(feature = "flexbox")]
             flex_wrap: Default::default(),
+            #[cfg(any(feature = "flexbox", feature = "grid"))]
             align_items: Default::default(),
+            #[cfg(any(feature = "flexbox", feature = "grid"))]
             align_self: Default::default(),
             #[cfg(feature = "grid")]
             justify_items: Default::default(),
+            #[cfg(feature = "grid")]
             justify_self: Default::default(),
+            #[cfg(any(feature = "flexbox", feature = "grid"))]
             align_content: Default::default(),
+            #[cfg(any(feature = "flexbox", feature = "grid"))]
             justify_content: Default::default(),
             inset: Rect::auto(),
             margin: Rect::zero(),
