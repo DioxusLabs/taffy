@@ -15,12 +15,12 @@ use slotmap::SlotMap;
 use yoga_helpers::yg;
 
 /// Build a random leaf node
-fn build_random_leaf(taffy: &mut Taffy) -> Node {
+fn build_random_leaf(taffy: &mut Taffy) -> NodeId {
     taffy.new_with_children(Style::DEFAULT, &[]).unwrap()
 }
 
 /// A tree with many children that have shallow depth
-fn build_taffy_flat_hierarchy(total_node_count: u32, use_with_capacity: bool) -> (Taffy, Node) {
+fn build_taffy_flat_hierarchy(total_node_count: u32, use_with_capacity: bool) -> (Taffy, NodeId) {
     let mut taffy = if use_with_capacity { Taffy::with_capacity(total_node_count as usize) } else { Taffy::new() };
     let mut rng = ChaCha8Rng::seed_from_u64(12345);
     let mut children = Vec::new();
@@ -28,7 +28,7 @@ fn build_taffy_flat_hierarchy(total_node_count: u32, use_with_capacity: bool) ->
 
     while node_count < total_node_count {
         let sub_children_count = rng.gen_range(1..=4);
-        let sub_children: Vec<Node> = (0..sub_children_count).map(|_| build_random_leaf(&mut taffy)).collect();
+        let sub_children: Vec<NodeId> = (0..sub_children_count).map(|_| build_random_leaf(&mut taffy)).collect();
         let node = taffy.new_with_children(Style::DEFAULT, &sub_children).unwrap();
 
         children.push(node);
@@ -41,7 +41,7 @@ fn build_taffy_flat_hierarchy(total_node_count: u32, use_with_capacity: bool) ->
 
 #[cfg(feature = "yoga_benchmark")]
 /// A tree with many children that have shallow depth
-fn build_yoga_flat_hierarchy(total_node_count: u32) -> (yg::YogaTree, Node) {
+fn build_yoga_flat_hierarchy(total_node_count: u32) -> (yg::YogaTree, yg::NodeId) {
     let mut tree = SlotMap::new();
     let mut rng = ChaCha8Rng::seed_from_u64(12345);
     let mut children = Vec::new();
@@ -49,7 +49,7 @@ fn build_yoga_flat_hierarchy(total_node_count: u32) -> (yg::YogaTree, Node) {
 
     while node_count < total_node_count {
         let sub_children_count = rng.gen_range(1..=4);
-        let sub_children: Vec<Node> =
+        let sub_children: Vec<yg::NodeId> =
             (0..sub_children_count).map(|_| yoga_helpers::new_default_style_with_children(&mut tree, vec![])).collect();
         let node = yoga_helpers::new_default_style_with_children(&mut tree, sub_children);
 

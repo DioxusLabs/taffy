@@ -5,20 +5,20 @@ use crate::compute::grid::OriginZeroLine;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::layout::SizingMode;
 use crate::math::MaybeMath;
-use crate::node::Node;
 use crate::prelude::LayoutTree;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::{
     AlignItems, AlignSelf, AvailableSpace, Dimension, LengthPercentageAuto, MaxTrackSizingFunction,
     MinTrackSizingFunction, Overflow, Style,
 };
+use crate::tree::NodeId;
 use core::ops::Range;
 
 /// Represents a single grid item
 #[derive(Debug)]
 pub(in super::super) struct GridItem {
-    /// The id of the Node that this item represents
-    pub node: Node,
+    /// The id of the node that this item represents
+    pub node: NodeId,
 
     /// The order of the item in the children array
     ///
@@ -85,7 +85,7 @@ pub(in super::super) struct GridItem {
 impl GridItem {
     /// Create a new item given a concrete placement in both axes
     pub fn new_with_placement_style_and_order(
-        node: Node,
+        node: NodeId,
         col_span: Line<OriginZeroLine>,
         row_span: Line<OriginZeroLine>,
         style: &Style,
