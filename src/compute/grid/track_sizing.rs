@@ -562,13 +562,23 @@ fn resolve_intrinsic_track_sizes(
                     }
                     MinTrackSizingFunction::Auto => {
                         let space = match axis_available_grid_space {
-                            AvailableSpace::MinContent | AvailableSpace::MaxContent => {
+                            // QUIRK: The spec says that:
+                            //
+                            //   If the grid container is being sized under a min- or max-content constraint, use the items’ limited
+                            //   min-content contributions in place of their minimum contributions here.
+                            //
+                            // However, in practice browsers only seem to apply this rule if the item is not a scroll container
+                            // (note that overflow:hidden counts as a scroll container), giving the automatic minimum size of scroll
+                            // containers (zero) precedence over the min-content contributions.
+                            AvailableSpace::MinContent | AvailableSpace::MaxContent
+                                if !item.overflow.get(axis).is_scroll_container() =>
+                            {
                                 let axis_minimum_size = item_sizer.minimum_contribution(item, axis_tracks);
                                 let axis_min_content_size = item_sizer.min_content_contribution(item);
                                 let limit = track.max_track_sizing_function.definite_limit(axis_inner_node_size);
                                 axis_min_content_size.maybe_min(limit).max(axis_minimum_size)
                             }
-                            AvailableSpace::Definite(_) => item_sizer.minimum_contribution(item, axis_tracks),
+                            _ => item_sizer.minimum_contribution(item, axis_tracks),
                         };
                         f32_max(track.base_size, space)
                     }
@@ -629,28 +639,49 @@ fn resolve_intrinsic_track_sizes(
             move |track: &GridTrack| track.min_track_sizing_function.definite_value(axis_inner_node_size).is_none();
         for item in batch.iter_mut().filter(|item| item.crosses_intrinsic_track(axis)) {
             // ...by distributing extra space as needed to accommodate these items’ minimum contributions.
-            // If the grid container is being sized under a min- or max-content constraint, use the items’ limited min-content contributions
-            // in place of their minimum contributions here.
+            //
+            // QUIRK: The spec says that:
+            //
+            //   If the grid container is being sized under a min- or max-content constraint, use the items’ limited min-content contributions
+            //   in place of their minimum contributions here.
+            //
+            // However, in practice browsers only seem to apply this rule if the item is not a scroll container (note that overflow:hidden counts as
+            // a scroll container), giving the automatic minimum size of scroll containers (zero) precedence over the min-content contributions.
             let space = match axis_available_grid_space {
-                AvailableSpace::MinContent | AvailableSpace::MaxContent => {
+                AvailableSpace::MinContent | AvailableSpace::MaxContent
+                    if !item.overflow.get(axis).is_scroll_container() =>
+                {
                     let axis_minimum_size = item_sizer.minimum_contribution(item, axis_tracks);
                     let axis_min_content_size = item_sizer.min_content_contribution(item);
                     let limit = item.spanned_track_limit(axis, axis_tracks, axis_inner_node_size);
                     axis_min_content_size.maybe_min(limit).max(axis_minimum_size)
                 }
-                AvailableSpace::Definite(_) => item_sizer.minimum_contribution(item, axis_tracks),
+                _ => item_sizer.minimum_contribution(item, axis_tracks),
             };
             let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
             if space > 0.0 {
-                distribute_item_space_to_base_size(
-                    is_flex,
-                    use_flex_factor_for_distribution,
-                    space,
-                    tracks,
-                    has_intrinsic_min_track_sizing_function,
-                    |_| f32::INFINITY,
-                    IntrinsicContributionType::Minimum,
-                );
+                if item.overflow.get(axis).is_scroll_container() {
+                    let fit_content_limit = move |track: &GridTrack| track.fit_content_limit(axis_inner_node_size);
+                    distribute_item_space_to_base_size(
+                        is_flex,
+                        use_flex_factor_for_distribution,
+                        space,
+                        tracks,
+                        has_intrinsic_min_track_sizing_function,
+                        fit_content_limit,
+                        IntrinsicContributionType::Minimum,
+                    );
+                } else {
+                    distribute_item_space_to_base_size(
+                        is_flex,
+                        use_flex_factor_for_distribution,
+                        space,
+                        tracks,
+                        has_intrinsic_min_track_sizing_function,
+                        |_| f32::INFINITY,
+                        IntrinsicContributionType::Minimum,
+                    );
+                }
             }
         }
         flush_planned_base_size_increases(axis_tracks);
@@ -666,15 +697,28 @@ fn resolve_intrinsic_track_sizes(
             let space = item_sizer.min_content_contribution(item);
             let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
             if space > 0.0 {
-                distribute_item_space_to_base_size(
-                    is_flex,
-                    use_flex_factor_for_distribution,
-                    space,
-                    tracks,
-                    has_min_or_max_content_min_track_sizing_function,
-                    |_| f32::INFINITY,
-                    IntrinsicContributionType::Minimum,
-                );
+                if item.overflow.get(axis).is_scroll_container() {
+                    let fit_content_limit = move |track: &GridTrack| track.fit_content_limit(axis_inner_node_size);
+                    distribute_item_space_to_base_size(
+                        is_flex,
+                        use_flex_factor_for_distribution,
+                        space,
+                        tracks,
+                        has_min_or_max_content_min_track_sizing_function,
+                        fit_content_limit,
+                        IntrinsicContributionType::Minimum,
+                    );
+                } else {
+                    distribute_item_space_to_base_size(
+                        is_flex,
+                        use_flex_factor_for_distribution,
+                        space,
+                        tracks,
+                        has_min_or_max_content_min_track_sizing_function,
+                        |_| f32::INFINITY,
+                        IntrinsicContributionType::Minimum,
+                    );
+                }
             }
         }
         flush_planned_base_size_increases(axis_tracks);

@@ -130,7 +130,7 @@ impl Overflow {
     /// Returns true for overflow modes that contain their contents (`Overflow::Hidden`, `Overflow::Scroll`, `Overflow::Auto`)
     /// or else false for overflow modes that allow their contains to spill (`Overflow::Visible`).
     #[inline(always)]
-    pub(crate) fn contains_content(self) -> bool {
+    pub(crate) fn is_scroll_container(self) -> bool {
         self != Overflow::Visible
     }
 
@@ -138,7 +138,7 @@ impl Overflow {
     /// to be `0`. Else returns None.
     #[inline(always)]
     pub(crate) fn maybe_into_automatic_min_size(self) -> Option<f32> {
-        match self.contains_content() {
+        match self.is_scroll_container() {
             true => Some(0.0),
             false => None,
         }
