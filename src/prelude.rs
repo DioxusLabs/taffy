@@ -1,7 +1,7 @@
 //! Commonly used types
 
-use crate::compute::LayoutAlgorithm;
-use crate::layout::{SizeAndBaselines, SizingMode};
+// use crate::compute::LayoutAlgorithm;
+// use crate::layout::{SizeAndBaselines, SizingMode};
 
 // /// Apply the flexbox algorithm and recursively layout the specified node
 // #[inline(always)]
