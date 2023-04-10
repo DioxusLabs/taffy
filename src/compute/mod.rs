@@ -139,7 +139,7 @@ fn compute_node_layout(
     println!();
 
     // First we check if we have a cached result for the given input
-    let cache_run_mode = if tree.is_childless(node) { RunMode::PeformLayout } else { run_mode };
+    let cache_run_mode = if tree.child_count(node) == 0 { RunMode::PeformLayout } else { run_mode };
     if let Some(cached_size_and_baselines) =
         compute_from_cache(tree, node, known_dimensions, available_space, cache_run_mode)
     {
@@ -182,7 +182,7 @@ fn compute_node_layout(
     }
 
     let display_mode = tree.style(node).display;
-    let has_children = !tree.is_childless(node);
+    let has_children = tree.child_count(node) != 0;
     let computed_size_and_baselines = match (display_mode, has_children) {
         (Display::None, _) => perform_computations::<HiddenAlgorithm>(
             tree,

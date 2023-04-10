@@ -83,29 +83,13 @@ impl LayoutTree for Taffy {
         self.children[node].len()
     }
 
-    fn is_childless(&self, node: Node) -> bool {
-        self.children[node].is_empty()
-    }
-
-    fn parent(&self, node: Node) -> Option<Node> {
-        self.parents.get(node).copied().flatten()
-    }
 
     fn style(&self, node: Node) -> &Style {
         &self.nodes[node].style
     }
 
-    fn layout(&self, node: Node) -> &Layout {
-        &self.nodes[node].layout
-    }
-
     fn layout_mut(&mut self, node: Node) -> &mut Layout {
         &mut self.nodes[node].layout
-    }
-
-    #[inline(always)]
-    fn mark_dirty(&mut self, node: Node) -> TaffyResult<()> {
-        self.mark_dirty_internal(node)
     }
 
     fn measure_node(
@@ -242,7 +226,7 @@ impl Taffy {
             self.measure_funcs.remove(node);
         }
 
-        self.mark_dirty_internal(node)?;
+        self.mark_dirty(node)?;
 
         Ok(())
     }
@@ -251,7 +235,7 @@ impl Taffy {
     pub fn add_child(&mut self, parent: Node, child: Node) -> TaffyResult<()> {
         self.parents[child] = Some(parent);
         self.children[parent].push(child);
-        self.mark_dirty_internal(parent)?;
+        self.mark_dirty(parent)?;
 
         Ok(())
     }
@@ -270,7 +254,7 @@ impl Taffy {
 
         self.children[parent] = children.iter().copied().collect::<_>();
 
-        self.mark_dirty_internal(parent)?;
+        self.mark_dirty(parent)?;
 
         Ok(())
     }
@@ -295,7 +279,7 @@ impl Taffy {
         let child = self.children[parent].remove(child_index);
         self.parents[child] = None;
 
-        self.mark_dirty_internal(parent)?;
+        self.mark_dirty(parent)?;
 
         Ok(child)
     }
@@ -313,7 +297,7 @@ impl Taffy {
         let old_child = core::mem::replace(&mut self.children[parent][child_index], new_child);
         self.parents[old_child] = None;
 
-        self.mark_dirty_internal(parent)?;
+        self.mark_dirty(parent)?;
 
         Ok(old_child)
     }
@@ -341,7 +325,7 @@ impl Taffy {
     /// Sets the [`Style`] of the provided `node`
     pub fn set_style(&mut self, node: Node, style: Style) -> TaffyResult<()> {
         self.nodes[node].style = style;
-        self.mark_dirty_internal(node)?;
+        self.mark_dirty(node)?;
         Ok(())
     }
 
@@ -360,7 +344,7 @@ impl Taffy {
     /// Performs a recursive depth-first search up the tree until the root node is reached
     ///
     /// WARNING: this will stack-overflow if the tree contains a cycle
-    fn mark_dirty_internal(&mut self, node: Node) -> TaffyResult<()> {
+    pub fn mark_dirty(&mut self, node: Node) -> TaffyResult<()> {
         /// WARNING: this will stack-overflow if the tree contains a cycle
         fn mark_dirty_recursive(
             nodes: &mut SlotMap<Node, NodeData>,

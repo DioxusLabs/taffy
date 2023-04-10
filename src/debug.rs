@@ -2,21 +2,19 @@ use core::fmt::{Debug, Display, Write};
 use slotmap::Key;
 use std::sync::Mutex;
 
-use crate::node::Node;
+use crate::node::{Node, Taffy};
 use crate::style;
-use crate::tree::LayoutTree;
 
 /// Prints a debug representation of the computed layout for a tree of nodes, starting with the passed root node.
-pub fn print_tree(tree: &impl LayoutTree, root: Node) {
+pub fn print_tree(tree: &Taffy, root: Node) {
     println!("TREE");
     print_node(tree, root, false, String::new());
 }
 
-fn print_node(tree: &impl LayoutTree, node: Node, has_sibling: bool, lines_string: String) {
-    let layout = tree.layout(node);
-    let style = tree.style(node);
-
-    let num_children = tree.child_count(node);
+fn print_node(tree: &Taffy, node: Node, has_sibling: bool, lines_string: String) {
+    let layout = &tree.nodes[node].layout;
+    let style = &tree.nodes[node].style;
+    let num_children = tree.children[node].len();
 
     let display = match (num_children, style.display) {
         (_, style::Display::None) => "NONE",
@@ -43,7 +41,7 @@ fn print_node(tree: &impl LayoutTree, node: Node, has_sibling: bool, lines_strin
     let new_string = lines_string + bar;
 
     // Recurse into children
-    for (index, child) in tree.children(node).enumerate() {
+    for (index, child) in tree.children[node].iter().enumerate() {
         let has_sibling = index < num_children - 1;
         print_node(tree, *child, has_sibling, new_string.clone());
     }
