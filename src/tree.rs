@@ -77,17 +77,6 @@ pub trait LayoutTree {
     /// Modify the node's output layout
     fn layout_mut(&mut self, node: NodeId) -> &mut Layout;
 
-    /// Measure a node. Taffy uses this to force reflows of things like text and overflowing content.
-    fn measure_node(
-        &self,
-        node: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-    ) -> Size<f32>;
-
-    /// Node needs to be measured
-    fn needs_measure(&self, node: NodeId) -> bool;
-
     /// Get a cache entry for this Node by index
     fn cache_mut(&mut self, node: NodeId, index: usize) -> &mut Option<Cache>;
 
