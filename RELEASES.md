@@ -5,6 +5,7 @@
 ### Removed
 
 - `layout_flexbox()` has been removed from the prelude. Use `FlexboxAlgorithm::perform_layout()` instead.
+- The following methods have been removed from the `LayoutTree` trait: `parent`, `is_childless`, `layout`, and `mark_dirty`. These no longer need to be implemented in custom implementation of `LayoutTree`.
 
 ### Changes
 

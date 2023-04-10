@@ -3,7 +3,6 @@
 use slotmap::DefaultKey;
 
 use crate::{
-    error::TaffyResult,
     layout::{Cache, Layout},
     prelude::*,
 };
@@ -24,14 +23,8 @@ pub trait LayoutTree {
     /// Get the number of children for the given node
     fn child_count(&self, node: Node) -> usize;
 
-    /// Returns true if the node has no children
-    fn is_childless(&self, node: Node) -> bool;
-
     /// Get a specific child of a node, where the index represents the nth child
     fn child(&self, node: Node, index: usize) -> Node;
-
-    /// Get any available parent for this node
-    fn parent(&self, node: Node) -> Option<Node>;
 
     // todo: allow abstractions over this so we don't prescribe how layout works
     // for reference, CSS cascades require context, and storing a full flexbox layout for each node could be inefficient
@@ -39,16 +32,8 @@ pub trait LayoutTree {
     /// Get the [`Style`] for this Node.
     fn style(&self, node: Node) -> &Style;
 
-    /// Get the node's output "Final Layout"
-    fn layout(&self, node: Node) -> &Layout;
-
     /// Modify the node's output layout
     fn layout_mut(&mut self, node: Node) -> &mut Layout;
-
-    /// Mark a node as dirty to tell Taffy that something has changed and it needs to be recomputed.
-    ///
-    /// Commonly done if the style of the node has changed.
-    fn mark_dirty(&mut self, node: Node) -> TaffyResult<()>;
 
     /// Measure a node. Taffy uses this to force reflows of things like text and overflowing content.
     fn measure_node(
