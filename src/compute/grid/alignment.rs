@@ -2,7 +2,6 @@
 use super::types::GridTrack;
 use crate::axis::InBothAbsAxis;
 use crate::compute::common::alignment::compute_alignment_offset;
-use crate::compute::{GenericAlgorithm, LayoutAlgorithm};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::layout::{Layout, SizingMode};
 use crate::math::MaybeMath;
@@ -189,8 +188,7 @@ pub(super) fn align_and_position_item(
     let Size { width, height } = Size { width, height }.maybe_clamp(min_size, max_size);
 
     // Layout node
-    let measured_size_and_baselines = GenericAlgorithm::perform_layout(
-        tree,
+    let measured_size_and_baselines = tree.perform_child_layout(
         node,
         Size { width, height },
         grid_area_size.map(Option::Some),

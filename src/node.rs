@@ -6,9 +6,10 @@ use slotmap::{DefaultKey, SlotMap, SparseSecondaryMap};
 /// A node in a layout.
 pub type Node = slotmap::DefaultKey;
 
+use crate::compute::{GenericAlgorithm, LayoutAlgorithm};
 use crate::error::{TaffyError, TaffyResult};
 use crate::geometry::Size;
-use crate::layout::{Cache, Layout};
+use crate::layout::{Cache, Layout, SizeAndBaselines, SizingMode};
 use crate::prelude::LayoutTree;
 use crate::style::{AvailableSpace, Style};
 #[cfg(any(feature = "std", feature = "alloc"))]
@@ -75,18 +76,22 @@ impl Default for Taffy {
 impl LayoutTree for Taffy {
     type ChildIter<'a> = core::slice::Iter<'a, DefaultKey>;
 
+    #[inline(always)]
     fn children(&self, node: Node) -> Self::ChildIter<'_> {
         self.children[node].iter()
     }
 
+    #[inline(always)]
     fn child_count(&self, node: Node) -> usize {
         self.children[node].len()
     }
 
+    #[inline(always)]
     fn style(&self, node: Node) -> &Style {
         &self.nodes[node].style
     }
 
+    #[inline(always)]
     fn layout_mut(&mut self, node: Node) -> &mut Layout {
         &mut self.nodes[node].layout
     }
@@ -113,8 +118,33 @@ impl LayoutTree for Taffy {
         &mut self.nodes[node].size_cache[index]
     }
 
+    #[inline(always)]
     fn child(&self, node: Node, id: usize) -> Node {
         self.children[node][id]
+    }
+
+    #[inline(always)]
+    fn measure_child_size(
+        &mut self,
+        node: Node,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        sizing_mode: SizingMode,
+    ) -> Size<f32> {
+        GenericAlgorithm::measure_size(self, node, known_dimensions, parent_size, available_space, sizing_mode)
+    }
+
+    #[inline(always)]
+    fn perform_child_layout(
+        &mut self,
+        node: Node,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        sizing_mode: SizingMode,
+    ) -> SizeAndBaselines {
+        GenericAlgorithm::perform_layout(self, node, known_dimensions, parent_size, available_space, sizing_mode)
     }
 }
 

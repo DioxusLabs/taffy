@@ -2,7 +2,6 @@
 use super::GridTrack;
 use crate::axis::AbstractAxis;
 use crate::compute::grid::OriginZeroLine;
-use crate::compute::{GenericAlgorithm, LayoutAlgorithm};
 use crate::geometry::{Line, Rect, Size};
 use crate::layout::SizingMode;
 use crate::math::MaybeMath;
@@ -328,8 +327,7 @@ impl GridItem {
         inner_node_size: Size<Option<f32>>,
     ) -> f32 {
         let known_dimensions = self.known_dimensions(tree, inner_node_size, available_space);
-        GenericAlgorithm::measure_size(
-            tree,
+        tree.measure_child_size(
             self.node,
             known_dimensions,
             available_space,
@@ -367,8 +365,7 @@ impl GridItem {
         inner_node_size: Size<Option<f32>>,
     ) -> f32 {
         let known_dimensions = self.known_dimensions(tree, inner_node_size, available_space);
-        GenericAlgorithm::measure_size(
-            tree,
+        tree.measure_child_size(
             self.node,
             known_dimensions,
             available_space,
