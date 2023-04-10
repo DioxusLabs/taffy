@@ -7,6 +7,12 @@ fn grid_absolute_container_top_bottom_margin() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
+            margin: taffy::geometry::Rect {
+                left: taffy::style::LengthPercentageAuto::Points(4f32),
+                right: taffy::style::LengthPercentageAuto::Points(2f32),
+                top: taffy::style::LengthPercentageAuto::Points(1f32),
+                bottom: taffy::style::LengthPercentageAuto::Points(3f32),
+            },
             inset: taffy::geometry::Rect {
                 left: auto(),
                 right: auto(),
@@ -52,9 +58,9 @@ fn grid_absolute_container_top_bottom_margin() {
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node.data(), 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node0).unwrap();
     assert_eq!(size.width, 0f32, "width of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, size.width);
-    assert_eq!(size.height, 153f32, "height of node {:?}. Expected {}. Actual {}", node0.data(), 153f32, size.height);
-    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node0.data(), 0f32, location.x);
-    assert_eq!(location.y, 2f32, "y of node {:?}. Expected {}. Actual {}", node0.data(), 2f32, location.y);
+    assert_eq!(size.height, 149f32, "height of node {:?}. Expected {}. Actual {}", node0.data(), 149f32, size.height);
+    assert_eq!(location.x, 4f32, "x of node {:?}. Expected {}. Actual {}", node0.data(), 4f32, location.x);
+    assert_eq!(location.y, 3f32, "y of node {:?}. Expected {}. Actual {}", node0.data(), 3f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node1).unwrap();
     assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node1.data(), 40f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node1.data(), 40f32, size.height);
