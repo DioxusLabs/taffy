@@ -207,7 +207,7 @@ fn compute_node_layout(
 
     // Cache result
     let cache_slot = compute_cache_slot(known_dimensions, available_space);
-    *tree.cache_mut(node, cache_slot) = Some(Cache {
+    tree.nodes[node_key].size_cache[cache_slot] = Some(Cache {
         known_dimensions,
         available_space,
         run_mode: cache_run_mode,
@@ -289,14 +289,15 @@ fn compute_cache_slot(known_dimensions: Size<Option<f32>>, available_space: Size
 /// Try to get the computation result from the cache.
 #[inline]
 fn compute_from_cache(
-    tree: &mut impl LayoutTree,
+    tree: &mut Taffy,
     node: NodeId,
     known_dimensions: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
 ) -> Option<SizeAndBaselines> {
+    let node_key = node.into();
     for idx in 0..CACHE_SIZE {
-        let entry = tree.cache_mut(node, idx);
+        let entry = tree.nodes[node_key].size_cache[idx];
         if let Some(entry) = entry {
             // Cached ComputeSize results are not valid if we are running in PerformLayout mode
             if entry.run_mode == RunMode::ComputeSize && run_mode == RunMode::PeformLayout {

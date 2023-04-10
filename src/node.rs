@@ -7,7 +7,7 @@ use crate::compute::{measure_node_size, perform_node_layout};
 use crate::data::NodeData;
 use crate::error::{TaffyError, TaffyResult};
 use crate::geometry::Size;
-use crate::layout::{Cache, Layout, SizeAndBaselines, SizingMode};
+use crate::layout::{Layout, SizeAndBaselines, SizingMode};
 use crate::prelude::LayoutTree;
 use crate::style::{AvailableSpace, Style};
 #[cfg(any(feature = "std", feature = "alloc"))]
@@ -114,10 +114,6 @@ impl LayoutTree for Taffy {
     #[inline(always)]
     fn layout_mut(&mut self, node: NodeId) -> &mut Layout {
         &mut self.nodes[node.into()].layout
-    }
-
-    fn cache_mut(&mut self, node: NodeId, index: usize) -> &mut Option<Cache> {
-        &mut self.nodes[node.into()].size_cache[index]
     }
 
     #[inline(always)]
