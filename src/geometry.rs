@@ -74,7 +74,7 @@ impl<T> Rect<T> {
     where
         F: Fn(T) -> R,
     {
-        Rect { top: f(self.top), bottom: f(self.bottom), left: f(self.left), right: f(self.right) }
+        Rect { left: f(self.left), right: f(self.right), top: f(self.top), bottom: f(self.bottom) }
     }
 
     /// Returns a `Line<T>` representing the left and right properties of the Rect
