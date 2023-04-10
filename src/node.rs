@@ -9,7 +9,7 @@ pub type Node = slotmap::DefaultKey;
 use crate::compute::{GenericAlgorithm, LayoutAlgorithm};
 use crate::error::{TaffyError, TaffyResult};
 use crate::geometry::Size;
-use crate::layout::{Cache, Layout};
+use crate::layout::{Cache, Layout, SizeAndBaselines, SizingMode};
 use crate::prelude::LayoutTree;
 use crate::style::{AvailableSpace, Style};
 #[cfg(any(feature = "std", feature = "alloc"))]
@@ -130,7 +130,7 @@ impl LayoutTree for Taffy {
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
-        sizing_mode: crate::layout::SizingMode,
+        sizing_mode: SizingMode,
     ) -> Size<f32> {
         GenericAlgorithm::measure_size(self, node, known_dimensions, parent_size, available_space, sizing_mode)
     }
@@ -142,8 +142,8 @@ impl LayoutTree for Taffy {
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
-        sizing_mode: crate::layout::SizingMode,
-    ) -> crate::layout::SizeAndBaselines {
+        sizing_mode: SizingMode,
+    ) -> SizeAndBaselines {
         GenericAlgorithm::perform_layout(self, node, known_dimensions, parent_size, available_space, sizing_mode)
     }
 }
