@@ -347,6 +347,7 @@ impl<T> Size<T> {
     /// Creates a new value of type Self with the main axis modified by the callback provided
     ///
     /// Whether this is the width or height depends on the `direction` provided
+    #[cfg(feature = "flexbox")]
     pub(crate) fn map_main(self, direction: FlexDirection, mapper: impl FnOnce(T) -> T) -> Self {
         let mut new = self;
         if direction.is_row() {
@@ -360,6 +361,7 @@ impl<T> Size<T> {
     /// Creates a new value of type Self with the cross axis modified by the callback provided
     ///
     /// Whether this is the width or height depends on the `direction` provided
+    #[cfg(feature = "flexbox")]
     pub(crate) fn map_cross(self, direction: FlexDirection, mapper: impl FnOnce(T) -> T) -> Self {
         let mut new = self;
         if direction.is_row() {
