@@ -41,19 +41,20 @@ impl Cache {
     ///
     /// The two variables that we care about when determining cache slot are:
     ///
-    ///   - How many "known_dimensions" are set. In the worst case, a node may be called first with neither dimensions known known_dimensions,
-    ///     then with one dimension known (either width of height - which doesn't matter for our purposes here), and then with both dimensions
-    ///     known.
+    ///   - How many "known_dimensions" are set. In the worst case, a node may be called first with neither dimension known, then with one
+    ///     dimension known (either width of height - which doesn't matter for our purposes here), and then with both dimensions known.
     ///   - Whether unknown dimensions are being sized under a min-content or a max-content available space constraint (definite available space
     ///     shares a cache slot with max-content because a node will generally be sized under one or the other but not both).
     ///
     /// ## Cache slots:
     ///
     /// - Slot 0: Both known_dimensions were set
-    /// - Slot 1: 1 of 2 known_dimensions were set and the other dimension was either a MaxContent or Definite available space constraint
-    /// - Slot 2: 1 of 2 known_dimensions were set and the other dimension was a MinContent constraint
-    /// - Slot 3: Neither known_dimensions were set and we are sizing under a MaxContent or Definite available space constraint
-    /// - Slot 4: Neither known_dimensions were set and we are sizing under a MinContent constraint
+    /// - Slot 1: width but not height known_dimension was set and the other dimension was either a MaxContent or Definite available space constraintraint
+    /// - Slot 2: width but not height known_dimension was set and the other dimension was a MinContent constraint
+    /// - Slot 3: height but not width known_dimension was set and the other dimension was either a MaxContent or Definite available space constraintable space constraint
+    /// - Slot 4: height but not width known_dimension was set and the other dimension was a MinContent constraint
+    /// - Slot 5: Neither known_dimensions were set and we are sizing under a MaxContent or Definite available space constraint
+    /// - Slot 6: Neither known_dimensions were set and we are sizing under a MinContent constraint
     #[inline]
     fn compute_cache_slot(known_dimensions: Size<Option<f32>>, available_space: Size<AvailableSpace>) -> usize {
         let has_known_width = known_dimensions.width.is_some();
