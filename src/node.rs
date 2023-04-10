@@ -77,7 +77,7 @@ impl<'a> Iterator for TaffyChildIter<'a> {
     type Item = NodeId;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.0.next().map(|key| *key)
+        self.0.next().copied()
     }
 }
 
@@ -129,7 +129,7 @@ impl LayoutTree for Taffy {
 
     #[inline(always)]
     fn child(&self, node: NodeId, id: usize) -> NodeId {
-        self.children[node.into()][id].into()
+        self.children[node.into()][id]
     }
 
     #[inline(always)]
@@ -309,7 +309,7 @@ impl Taffy {
     /// The child is not removed from the tree entirely, it is simply no longer attached to its previous parent.
     pub fn remove_child(&mut self, parent: NodeId, child: NodeId) -> TaffyResult<NodeId> {
         let index = self.children[parent.into()].iter().position(|n| *n == child).unwrap();
-        self.remove_child_at_index(parent, index).into()
+        self.remove_child_at_index(parent, index)
     }
 
     /// Removes the child at the given `index` from the `parent`
