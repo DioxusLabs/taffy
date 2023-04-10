@@ -9,92 +9,66 @@ on:
 name: Continuous integration
 
 jobs:
-  # None
-  test-features-none:
-    name: "Test Suite [Features: None]"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Leafwing-Studios/cargo-cache@v1
-      - run: cargo build --no-default-features
-      - run: cargo test --no-default-features
-
-  # Default
   test-features-default:
     name: "Test Suite [Features: Default]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build
-      - run: cargo test
+      - uses: Leafwing-Studios/cargo-cache@v1
+      - run: |
+          cargo build
+          cargo test
 
-  test-features-default-with-serde:
-    name: "Test Suite [Features: Default + serde]"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --features serde
-      - run: cargo test --features serde
-
-  test-features-no-grid-nor-flexbox:
-    name: "Test Suite [Features: std (no grid or flexbox)]"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --no-default-features --features std
-      - run: cargo test --no-default-features --features std
-
-  # Flexbox
-  test-features-flexbox:
-    name: "Test Suite [Features: flexbox + std]"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --no-default-features --features flexbox,std
-      - run: cargo test --no-default-features --features flexbox,std
-
-  # Grid
-  test-features-grid:
-    name: "Test Suite [Features: grid + std]"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --no-default-features --features grid,std
-      - run: cargo test --no-default-features --features grid,std
-
-  test-features-grid-with-alloc:
-    name: "Test Suite [Features: grid + alloc]"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --no-default-features --features alloc,grid
-      - run: cargo test --no-default-features --features alloc,grid
-
-  test-features-alloc:
-    name: "Test Suite [Features: alloc]"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --no-default-features --features alloc
-      - run: cargo test  --no-default-features --features alloc
-
-  test-features-default-no-grid:
-    name: "Test Suite [Features: std (no grid)]"
+  test-features-no-default:
+    name: "Test Suite [Features: None]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
       - uses: Leafwing-Studios/cargo-cache@v1
-      - run: cargo build --no-default-features --features std
-      - run: cargo test --no-default-features --features std
+      - run: |
+          cargo build --no-default-features
+          cargo test --no-default-features
+  
+  # This tests all enabled default features with each of the optional features on top.
+  test-features-with-default:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        feature: [serde, random]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Leafwing-Studios/cargo-cache@v1
+      - run: |
+          cargo build --features ${{ matrix.feature }}
+          cargo test --features ${{ matrix.feature }}
+  
+  # This test all layout features with each of the optional features in isolation.
+  test-features-without-default:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        layout: [flexbox, grid, none]
+        allocation: [std, alloc]
+        feature: [serde, random, none]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Leafwing-Studios/cargo-cache@v1
+      - if: ${{ matrix.layout != 'none' && matrix.feature == 'none' }}
+        run: |
+          cargo build --no-default-features --features ${{ matrix.allocation }},${{ matrix.layout }}
+          cargo test --no-default-features --features ${{ matrix.allocation }},${{ matrix.layout }}
+      - if: ${{ matrix.layout == 'none' && matrix.feature != 'none' }}
+        run: |
+          cargo build --no-default-features --features ${{ matrix.allocation }},${{ matrix.feature }}
+          cargo test --no-default-features --features ${{ matrix.allocation }},${{ matrix.feature }}
+      - if: ${{ matrix.layout != 'none' && matrix.feature != 'none' }}
+        run: |
+          cargo build --no-default-features --features ${{ matrix.allocation }},${{ matrix.layout }},${{ matrix.feature }}
+          cargo test --no-default-features --features ${{ matrix.allocation }},${{ matrix.layout }},${{ matrix.feature }}
 
   fmt:
     name: Rustfmt
