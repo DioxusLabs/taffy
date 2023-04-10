@@ -7,6 +7,7 @@ pub mod yg {
     pub use yoga::types::*;
     pub use yoga::Node;
 
+    pub type NodeId = DefaultKey;
     pub type YogaTree = SlotMap<DefaultKey, Node>;
 }
 mod tf {
