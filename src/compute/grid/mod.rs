@@ -4,7 +4,6 @@ use crate::axis::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::layout::{Layout, RunMode, SizeAndBaselines, SizingMode};
 use crate::math::MaybeMath;
-use crate::node::Node;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Display, Position};
 use crate::style_helpers::*;
@@ -41,7 +40,7 @@ impl LayoutAlgorithm for CssGridAlgorithm {
 
     fn perform_layout(
         tree: &mut impl LayoutTree,
-        node: Node,
+        node: u64,
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
@@ -52,7 +51,7 @@ impl LayoutAlgorithm for CssGridAlgorithm {
 
     fn measure_size(
         tree: &mut impl LayoutTree,
-        node: Node,
+        node: u64,
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
@@ -70,13 +69,13 @@ impl LayoutAlgorithm for CssGridAlgorithm {
 ///   - Alignment & Final item placement
 pub fn compute(
     tree: &mut impl LayoutTree,
-    node: Node,
+    node: u64,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
 ) -> SizeAndBaselines {
-    let get_child_styles_iter = |node| tree.children(node).map(|child_node: &Node| tree.style(*child_node));
+    let get_child_styles_iter = |node| tree.children(node).map(|child_node: u64| tree.style(child_node));
     let style = tree.style(node).clone();
     let child_styles_iter = get_child_styles_iter(node);
 
@@ -97,7 +96,6 @@ pub fn compute(
     let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(est_col_counts, est_row_counts);
     let in_flow_children_iter = || {
         tree.children(node)
-            .copied()
             .enumerate()
             .map(|(index, child_node)| (index, child_node, tree.style(child_node)))
             .filter(|(_, _, style)| style.display != Display::None && style.position != Position::Absolute)

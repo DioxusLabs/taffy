@@ -4,7 +4,6 @@ use crate::compute::LayoutAlgorithm;
 use crate::geometry::{Point, Size};
 use crate::layout::{SizeAndBaselines, SizingMode};
 use crate::math::MaybeMath;
-use crate::node::Node;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::AvailableSpace;
 use crate::sys::f32_max;
@@ -20,7 +19,7 @@ impl LayoutAlgorithm for LeafAlgorithm {
 
     fn perform_layout(
         tree: &mut impl LayoutTree,
-        node: Node,
+        node: u64,
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
@@ -31,7 +30,7 @@ impl LayoutAlgorithm for LeafAlgorithm {
 
     fn measure_size(
         tree: &mut impl LayoutTree,
-        node: Node,
+        node: u64,
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
@@ -44,7 +43,7 @@ impl LayoutAlgorithm for LeafAlgorithm {
 /// Compute the size of a leaf node (node with no children)
 pub(crate) fn compute(
     tree: &mut impl LayoutTree,
-    node: Node,
+    node: u64,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,

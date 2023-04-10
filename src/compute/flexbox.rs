@@ -6,7 +6,6 @@ use crate::compute::LayoutAlgorithm;
 use crate::geometry::{Point, Rect, Size};
 use crate::layout::{Layout, RunMode, SizeAndBaselines, SizingMode};
 use crate::math::MaybeMath;
-use crate::node::Node;
 use crate::prelude::{TaffyMaxContent, TaffyMinContent};
 use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::{
@@ -28,7 +27,7 @@ impl LayoutAlgorithm for FlexboxAlgorithm {
 
     fn perform_layout(
         tree: &mut impl LayoutTree,
-        node: Node,
+        node: u64,
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
@@ -39,7 +38,7 @@ impl LayoutAlgorithm for FlexboxAlgorithm {
 
     fn measure_size(
         tree: &mut impl LayoutTree,
-        node: Node,
+        node: u64,
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
@@ -51,8 +50,8 @@ impl LayoutAlgorithm for FlexboxAlgorithm {
 
 /// The intermediate results of a flexbox calculation for a single item
 struct FlexItem {
-    /// The identifier for the associated [`Node`](crate::node::Node)
-    node: Node,
+    /// The identifier for the associated node
+    node: u64,
 
     /// The base size of this item
     size: Size<Option<f32>>,
@@ -178,7 +177,7 @@ struct AlgoConstants {
 /// Computes the layout of [`LayoutTree`] according to the flexbox algorithm
 pub fn compute(
     tree: &mut impl LayoutTree,
-    node: Node,
+    node: u64,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
@@ -216,7 +215,7 @@ pub fn compute(
 /// Compute a preliminary size for an item
 fn compute_preliminary(
     tree: &mut impl LayoutTree,
-    node: Node,
+    node: u64,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
@@ -465,15 +464,15 @@ fn compute_constants(
 ///
 /// - [**Generate anonymous flex items**](https://www.w3.org/TR/css-flexbox-1/#algo-anon-box) as described in [§4 Flex Items](https://www.w3.org/TR/css-flexbox-1/#flex-items).
 #[inline]
-fn generate_anonymous_flex_items(tree: &impl LayoutTree, node: Node, constants: &AlgoConstants) -> Vec<FlexItem> {
+fn generate_anonymous_flex_items(tree: &impl LayoutTree, node: u64, constants: &AlgoConstants) -> Vec<FlexItem> {
     tree.children(node)
-        .map(|child| (child, tree.style(*child)))
+        .map(|child| (child, tree.style(child)))
         .filter(|(_, style)| style.position != Position::Absolute)
         .filter(|(_, style)| style.display != Display::None)
         .map(|(child, child_style)| {
             let aspect_ratio = child_style.aspect_ratio;
             FlexItem {
-                node: *child,
+                node: child,
                 size: child_style.size.maybe_resolve(constants.node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
                 min_size: child_style
                     .min_size
@@ -1714,7 +1713,7 @@ fn align_flex_lines_per_align_content(flex_lines: &mut [FlexLine], constants: &A
 #[allow(clippy::too_many_arguments)]
 fn calculate_flex_item(
     tree: &mut impl LayoutTree,
-    node: Node,
+    node: u64,
     item: &mut FlexItem,
     total_offset_main: &mut f32,
     total_offset_cross: f32,
@@ -1753,7 +1752,7 @@ fn calculate_flex_item(
         item.baseline = baseline_offset_main + inner_baseline;
     }
 
-    let order = tree.children(node).position(|n| *n == item.node).unwrap() as u32;
+    let order = tree.children(node).position(|n| n == item.node).unwrap() as u32;
 
     *tree.layout_mut(item.node) = Layout {
         order,
@@ -1771,7 +1770,7 @@ fn calculate_flex_item(
 #[allow(clippy::too_many_arguments)]
 fn calculate_layout_line(
     tree: &mut impl LayoutTree,
-    node: Node,
+    node: u64,
     line: &mut FlexLine,
     total_offset_cross: &mut f32,
     container_size: Size<f32>,
@@ -1817,7 +1816,7 @@ fn calculate_layout_line(
 
 /// Do a final layout pass and collect the resulting layouts.
 #[inline]
-fn final_layout_pass(tree: &mut impl LayoutTree, node: Node, flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
+fn final_layout_pass(tree: &mut impl LayoutTree, node: u64, flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
     let mut total_offset_cross = constants.padding_border.cross_start(constants.dir);
 
     if constants.is_wrap_reverse {
@@ -1851,7 +1850,7 @@ fn final_layout_pass(tree: &mut impl LayoutTree, node: Node, flex_lines: &mut [F
 
 /// Perform absolute layout on all absolutely positioned children.
 #[inline]
-fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node: Node, constants: &AlgoConstants) {
+fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node: u64, constants: &AlgoConstants) {
     let container_width = constants.container_size.width;
     let container_height = constants.container_size.height;
 
