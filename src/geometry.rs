@@ -1,8 +1,11 @@
 //! Geometric primitives useful for layout
 
-use crate::style::{Dimension, FlexDirection};
+use crate::style::Dimension;
 use crate::sys::f32_max;
 use core::ops::Add;
+
+#[cfg(feature = "flexbox")]
+use crate::style::FlexDirection;
 
 #[cfg(feature = "grid")]
 use crate::axis::AbstractAxis;
@@ -61,6 +64,7 @@ impl<T> Rect<T> {
     /// When applied to the left and right sides, the width is used
     /// as the second parameter of `f`.
     /// When applied to the top or bottom sides, the height is used instead.
+    #[cfg(feature = "flexbox")]
     pub(crate) fn zip_size<R, F, U>(self, size: Size<U>, f: F) -> Rect<R>
     where
         F: Fn(T, U) -> R,
@@ -134,6 +138,7 @@ where
     ///
     /// If the [`FlexDirection`] is [`FlexDirection::Row`] or [`FlexDirection::RowReverse`], this is [`Rect::horizontal`].
     /// Otherwise, this is [`Rect::vertical`].
+    #[cfg(feature = "flexbox")]
     pub(crate) fn main_axis_sum(&self, direction: FlexDirection) -> U {
         if direction.is_row() {
             self.horizontal_axis_sum()
@@ -146,6 +151,7 @@ where
     ///
     /// If the [`FlexDirection`] is [`FlexDirection::Row`] or [`FlexDirection::RowReverse`], this is [`Rect::vertical`].
     /// Otherwise, this is [`Rect::horizontal`].
+    #[cfg(feature = "flexbox")]
     pub(crate) fn cross_axis_sum(&self, direction: FlexDirection) -> U {
         if direction.is_row() {
             self.vertical_axis_sum()
@@ -160,6 +166,7 @@ where
     T: Copy + Clone,
 {
     /// The `start` or `top` value of the [`Rect`], from the perspective of the main layout axis
+    #[cfg(feature = "flexbox")]
     pub(crate) fn main_start(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.left
@@ -169,6 +176,7 @@ where
     }
 
     /// The `end` or `bottom` value of the [`Rect`], from the perspective of the main layout axis
+    #[cfg(feature = "flexbox")]
     pub(crate) fn main_end(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.right
@@ -178,6 +186,7 @@ where
     }
 
     /// The `start` or `top` value of the [`Rect`], from the perspective of the cross layout axis
+    #[cfg(feature = "flexbox")]
     pub(crate) fn cross_start(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.top
@@ -187,6 +196,7 @@ where
     }
 
     /// The `end` or `bottom` value of the [`Rect`], from the perspective of the main layout axis
+    #[cfg(feature = "flexbox")]
     pub(crate) fn cross_end(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.bottom
@@ -301,6 +311,7 @@ impl<T> Size<T> {
     /// Sets the extent of the main layout axis
     ///
     /// Whether this is the width or height depends on the `direction` provided
+    #[cfg(feature = "flexbox")]
     pub(crate) fn set_main(&mut self, direction: FlexDirection, value: T) {
         if direction.is_row() {
             self.width = value
@@ -312,6 +323,7 @@ impl<T> Size<T> {
     /// Sets the extent of the cross layout axis
     ///
     /// Whether this is the width or height depends on the `direction` provided
+    #[cfg(feature = "flexbox")]
     pub(crate) fn set_cross(&mut self, direction: FlexDirection, value: T) {
         if direction.is_row() {
             self.height = value
@@ -324,6 +336,7 @@ impl<T> Size<T> {
     ///
     /// Whether this is the width or height depends on the `direction` provided
     #[allow(dead_code)]
+    #[cfg(feature = "flexbox")]
     pub(crate) fn with_main(self, direction: FlexDirection, value: T) -> Self {
         let mut new = self;
         if direction.is_row() {
@@ -337,6 +350,7 @@ impl<T> Size<T> {
     /// Creates a new value of type Self with the cross axis set to value provided
     ///
     /// Whether this is the width or height depends on the `direction` provided
+    #[cfg(feature = "flexbox")]
     pub(crate) fn with_cross(self, direction: FlexDirection, value: T) -> Self {
         let mut new = self;
         if direction.is_row() {
@@ -350,6 +364,7 @@ impl<T> Size<T> {
     /// Gets the extent of the main layout axis
     ///
     /// Whether this is the width or height depends on the `direction` provided
+    #[cfg(feature = "flexbox")]
     pub(crate) fn main(self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.width
@@ -361,6 +376,7 @@ impl<T> Size<T> {
     /// Gets the extent of the cross layout axis
     ///
     /// Whether this is the width or height depends on the `direction` provided
+    #[cfg(feature = "flexbox")]
     pub(crate) fn cross(self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.height
