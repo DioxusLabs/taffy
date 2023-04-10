@@ -9,6 +9,7 @@ on:
 name: Continuous integration
 
 jobs:
+  # None
   test-features-none:
     name: "Test Suite [Features: None]"
     runs-on: ubuntu-latest
@@ -19,6 +20,7 @@ jobs:
       - run: cargo build --no-default-features
       - run: cargo test --no-default-features
 
+  # Default
   test-features-default:
     name: "Test Suite [Features: Default]"
     runs-on: ubuntu-latest
@@ -36,6 +38,35 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --features serde
       - run: cargo test --features serde
+
+  test-features-default-no-grid-nor-flexbox:
+    name: "Test Suite [Features: std (no grid or flexbox)]"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --no-default-features --features std
+      - run: cargo test --no-default-features --features std
+
+  # Flexbox
+  test-features-flexbox:
+    name: "Test Suite [Features: flexbox]"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --no-default-features --features flexbox
+      - run: cargo test --no-default-features --features flexbox
+
+  # Grid
+  test-features-grid:
+    name: "Test Suite [Features: grid]"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --no-default-features --features grid
+      - run: cargo test --no-default-features --features grid
 
   test-features-alloc:
     name: "Test Suite [Features: alloc]"
