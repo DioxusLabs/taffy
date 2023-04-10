@@ -83,7 +83,6 @@ impl LayoutTree for Taffy {
         self.children[node].len()
     }
 
-
     fn style(&self, node: Node) -> &Style {
         &self.nodes[node].style
     }
