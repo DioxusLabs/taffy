@@ -8,7 +8,7 @@ use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Display, Position};
 use crate::style_helpers::*;
 use crate::sys::{GridTrackVec, Vec};
-use crate::tree::LayoutTree;
+use crate::tree::{LayoutTree, NodeId};
 use alignment::{align_and_position_item, align_tracks};
 use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks};
 use implicit_grid::compute_grid_size_estimate;
@@ -40,7 +40,7 @@ impl LayoutAlgorithm for CssGridAlgorithm {
 
     fn perform_layout(
         tree: &mut impl LayoutTree,
-        node: u64,
+        node: NodeId,
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
@@ -51,7 +51,7 @@ impl LayoutAlgorithm for CssGridAlgorithm {
 
     fn measure_size(
         tree: &mut impl LayoutTree,
-        node: u64,
+        node: NodeId,
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
@@ -69,13 +69,13 @@ impl LayoutAlgorithm for CssGridAlgorithm {
 ///   - Alignment & Final item placement
 pub fn compute(
     tree: &mut impl LayoutTree,
-    node: u64,
+    node: NodeId,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
 ) -> SizeAndBaselines {
-    let get_child_styles_iter = |node| tree.children(node).map(|child_node: u64| tree.style(child_node));
+    let get_child_styles_iter = |node| tree.children(node).map(|child_node: NodeId| tree.style(child_node));
     let style = tree.style(node).clone();
     let child_styles_iter = get_child_styles_iter(node);
 

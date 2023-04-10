@@ -6,6 +6,7 @@ use crate::axis::{AbsoluteAxis, InBothAbsAxis};
 use crate::geometry::Line;
 use crate::style::{AlignItems, GridAutoFlow, OriginZeroGridPlacement, Style};
 use crate::sys::Vec;
+use crate::tree::NodeId;
 
 /// 8.5. Grid Item Placement Algorithm
 /// Place items into the grid, generating new rows/column into the implicit grid as required
@@ -19,7 +20,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
     align_items: AlignItems,
     justify_items: AlignItems,
 ) where
-    ChildIter: Iterator<Item = (usize, u64, &'a Style)>,
+    ChildIter: Iterator<Item = (usize, NodeId, &'a Style)>,
 {
     let primary_axis = grid_auto_flow.primary_axis();
     let secondary_axis = primary_axis.other_axis();
@@ -27,7 +28,7 @@ pub(super) fn place_grid_items<'a, ChildIter>(
     let map_child_style_to_origin_zero_placement = {
         let explicit_col_count = cell_occupancy_matrix.track_counts(AbsoluteAxis::Horizontal).explicit;
         let explicit_row_count = cell_occupancy_matrix.track_counts(AbsoluteAxis::Vertical).explicit;
-        move |(index, node, style): (usize, u64, &'a Style)| -> (_, _, _, &'a Style) {
+        move |(index, node, style): (usize, NodeId, &'a Style)| -> (_, _, _, &'a Style) {
             let origin_zero_placement = InBothAbsAxis {
                 horizontal: style.grid_column.map(|placement| placement.into_origin_zero_placement(explicit_col_count)),
                 vertical: style.grid_row.map(|placement| placement.into_origin_zero_placement(explicit_row_count)),
@@ -296,7 +297,7 @@ fn place_indefinitely_positioned_item(
 fn record_grid_placement(
     cell_occupancy_matrix: &mut CellOccupancyMatrix,
     items: &mut Vec<GridItem>,
-    node: u64,
+    node: NodeId,
     index: usize,
     style: &Style,
     parent_align_items: AlignItems,
@@ -364,7 +365,7 @@ mod tests {
             flow: GridAutoFlow,
         ) {
             // Setup test
-            let children_iter = || children.iter().map(|(index, style, _)| (*index, *index as u64, style));
+            let children_iter = || children.iter().map(|(index, style, _)| (*index, NodeId::from(*index), style));
             let child_styles_iter = children.iter().map(|(_, style, _)| style);
             let estimated_sizes = compute_grid_size_estimate(explicit_col_count, explicit_row_count, child_styles_iter);
             let mut items = Vec::new();
@@ -386,7 +387,7 @@ mod tests {
             sorted_children.sort_by_key(|child| child.0);
             for (idx, ((id, _style, expected_placement), item)) in sorted_children.iter().zip(items.iter()).enumerate()
             {
-                assert_eq!(item.node, *id as u64);
+                assert_eq!(item.node, NodeId::from(*id));
                 let actual_placement = (item.column.start, item.column.end, item.row.start, item.row.end);
                 assert_eq!(actual_placement, (*expected_placement).into_oz(), "Item {idx} (0-indexed)");
             }

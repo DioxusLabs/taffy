@@ -15,9 +15,8 @@ use crate::style::{AvailableSpace, Style};
 #[cfg(any(feature = "std", feature = "alloc"))]
 use crate::sys::Box;
 use crate::sys::{new_vec_with_capacity, ChildrenVec, Vec};
+use crate::tree::NodeId;
 use crate::{data::NodeData, error};
-use slotmap::Key;
-use slotmap::KeyData;
 
 /// A function type that can be used in a [`MeasureFunc`]
 ///
@@ -78,10 +77,10 @@ impl Default for Taffy {
 /// Iterator that wraps a slice of [`Node`]s, lazily converting them to u64
 pub struct TaffyChildIter<'a>(core::slice::Iter<'a, Node>);
 impl<'a> Iterator for TaffyChildIter<'a> {
-    type Item = u64;
+    type Item = NodeId;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.0.next().map(|key| key.data().as_ffi())
+        self.0.next().map(|key| (*key).into())
     }
 }
 
@@ -89,32 +88,32 @@ impl LayoutTree for Taffy {
     type ChildIter<'a> = TaffyChildIter<'a>;
 
     #[inline(always)]
-    fn children(&self, node: u64) -> Self::ChildIter<'_> {
-        TaffyChildIter(self.children[KeyData::from_ffi(node).into()].iter())
+    fn children(&self, node: NodeId) -> Self::ChildIter<'_> {
+        TaffyChildIter(self.children[node.into()].iter())
     }
 
     #[inline(always)]
-    fn child_count(&self, node: u64) -> usize {
-        self.children[KeyData::from_ffi(node).into()].len()
+    fn child_count(&self, node: NodeId) -> usize {
+        self.children[node.into()].len()
     }
 
     #[inline(always)]
-    fn style(&self, node: u64) -> &Style {
-        &self.nodes[KeyData::from_ffi(node).into()].style
+    fn style(&self, node: NodeId) -> &Style {
+        &self.nodes[node.into()].style
     }
 
     #[inline(always)]
-    fn layout_mut(&mut self, node: u64) -> &mut Layout {
-        &mut self.nodes[KeyData::from_ffi(node).into()].layout
+    fn layout_mut(&mut self, node: NodeId) -> &mut Layout {
+        &mut self.nodes[node.into()].layout
     }
 
     fn measure_node(
         &self,
-        node: u64,
+        node: NodeId,
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
     ) -> Size<f32> {
-        match &self.measure_funcs[KeyData::from_ffi(node).into()] {
+        match &self.measure_funcs[node.into()] {
             MeasureFunc::Raw(measure) => measure(known_dimensions, available_space),
 
             #[cfg(any(feature = "std", feature = "alloc"))]
@@ -122,24 +121,24 @@ impl LayoutTree for Taffy {
         }
     }
 
-    fn needs_measure(&self, node: u64) -> bool {
-        let node = KeyData::from_ffi(node).into();
+    fn needs_measure(&self, node: NodeId) -> bool {
+        let node = node.into();
         self.nodes[node].needs_measure && self.measure_funcs.get(node).is_some()
     }
 
-    fn cache_mut(&mut self, node: u64, index: usize) -> &mut Option<Cache> {
-        &mut self.nodes[KeyData::from_ffi(node).into()].size_cache[index]
+    fn cache_mut(&mut self, node: NodeId, index: usize) -> &mut Option<Cache> {
+        &mut self.nodes[node.into()].size_cache[index]
     }
 
     #[inline(always)]
-    fn child(&self, node: u64, id: usize) -> u64 {
-        self.children[KeyData::from_ffi(node).into()][id].data().as_ffi()
+    fn child(&self, node: NodeId, id: usize) -> NodeId {
+        self.children[node.into()][id].into()
     }
 
     #[inline(always)]
     fn measure_child_size(
         &mut self,
-        node: u64,
+        node: NodeId,
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
@@ -151,7 +150,7 @@ impl LayoutTree for Taffy {
     #[inline(always)]
     fn perform_child_layout(
         &mut self,
-        node: u64,
+        node: NodeId,
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,

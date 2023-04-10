@@ -16,8 +16,7 @@ use crate::layout::{Cache, Layout, RunMode, SizeAndBaselines, SizingMode};
 use crate::node::{Node, Taffy};
 use crate::style::{AvailableSpace, Display};
 use crate::sys::round;
-use crate::tree::LayoutTree;
-use slotmap::Key;
+use crate::tree::{LayoutTree, NodeId};
 
 #[cfg(feature = "flexbox")]
 use self::flexbox::FlexboxAlgorithm;
@@ -31,7 +30,7 @@ use crate::debug::NODE_LOGGER;
 
 /// Updates the stored layout of the provided `node` and its children
 pub fn compute_layout(taffy: &mut Taffy, root: Node, available_space: Size<AvailableSpace>) -> Result<(), TaffyError> {
-    let root = root.data().as_ffi();
+    let root = root.into();
 
     // Recursively compute node layout
     let size_and_baselines = GenericAlgorithm::perform_layout(
@@ -62,7 +61,7 @@ pub(crate) trait LayoutAlgorithm {
     /// Compute the size of the node given the specified constraints
     fn measure_size(
         tree: &mut impl LayoutTree,
-        node: u64,
+        node: NodeId,
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
@@ -72,7 +71,7 @@ pub(crate) trait LayoutAlgorithm {
     /// Perform a full layout on the node given the specified constraints
     fn perform_layout(
         tree: &mut impl LayoutTree,
-        node: u64,
+        node: NodeId,
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
@@ -88,7 +87,7 @@ impl LayoutAlgorithm for GenericAlgorithm {
 
     fn perform_layout(
         tree: &mut impl LayoutTree,
-        node: u64,
+        node: NodeId,
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
@@ -107,7 +106,7 @@ impl LayoutAlgorithm for GenericAlgorithm {
 
     fn measure_size(
         tree: &mut impl LayoutTree,
-        node: u64,
+        node: NodeId,
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
@@ -129,7 +128,7 @@ impl LayoutAlgorithm for GenericAlgorithm {
 /// Updates the stored layout of the provided `node` and its children
 fn compute_node_layout(
     tree: &mut impl LayoutTree,
-    node: u64,
+    node: NodeId,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
@@ -162,7 +161,7 @@ fn compute_node_layout(
     #[inline(always)]
     fn perform_computations<Algorithm: LayoutAlgorithm>(
         tree: &mut impl LayoutTree,
-        node: u64,
+        node: NodeId,
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
@@ -312,7 +311,7 @@ fn compute_cache_slot(known_dimensions: Size<Option<f32>>, available_space: Size
 #[inline]
 fn compute_from_cache(
     tree: &mut impl LayoutTree,
-    node: u64,
+    node: NodeId,
     known_dimensions: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
@@ -351,7 +350,7 @@ impl LayoutAlgorithm for HiddenAlgorithm {
 
     fn perform_layout(
         tree: &mut impl LayoutTree,
-        node: u64,
+        node: NodeId,
         _known_dimensions: Size<Option<f32>>,
         _parent_size: Size<Option<f32>>,
         _available_space: Size<AvailableSpace>,
@@ -363,7 +362,7 @@ impl LayoutAlgorithm for HiddenAlgorithm {
 
     fn measure_size(
         _tree: &mut impl LayoutTree,
-        _node: u64,
+        _node: NodeId,
         _known_dimensions: Size<Option<f32>>,
         _parent_size: Size<Option<f32>>,
         _available_space: Size<AvailableSpace>,
@@ -375,9 +374,9 @@ impl LayoutAlgorithm for HiddenAlgorithm {
 
 /// Creates a layout for this node and its children, recursively.
 /// Each hidden node has zero size and is placed at the origin
-fn perform_hidden_layout(tree: &mut impl LayoutTree, node: u64) {
+fn perform_hidden_layout(tree: &mut impl LayoutTree, node: NodeId) {
     /// Recursive function to apply hidden layout to all descendents
-    fn perform_hidden_layout_inner(tree: &mut impl LayoutTree, node: u64, order: u32) {
+    fn perform_hidden_layout_inner(tree: &mut impl LayoutTree, node: NodeId, order: u32) {
         *tree.layout_mut(node) = Layout::with_order(order);
         for order in 0..tree.child_count(node) {
             perform_hidden_layout_inner(tree, tree.child(node, order), order as _);
@@ -396,7 +395,7 @@ fn perform_hidden_layout(tree: &mut impl LayoutTree, node: u64) {
 ///     rather than rounding the width/height directly
 ///
 /// See <https://github.com/facebook/yoga/commit/aa5b296ac78f7a22e1aeaf4891243c6bb76488e2> for more context
-fn round_layout(tree: &mut impl LayoutTree, node: u64, abs_x: f32, abs_y: f32) {
+fn round_layout(tree: &mut impl LayoutTree, node: NodeId, abs_x: f32, abs_y: f32) {
     let layout = tree.layout_mut(node);
     let abs_x = abs_x + layout.location.x;
     let abs_y = abs_y + layout.location.y;
@@ -419,7 +418,6 @@ mod tests {
     use crate::geometry::{Point, Size};
     use crate::style::{Display, Style};
     use crate::Taffy;
-    use slotmap::Key;
 
     #[test]
     fn hidden_layout_should_hide_recursively() {
@@ -441,7 +439,7 @@ mod tests {
             )
             .unwrap();
 
-        perform_hidden_layout(&mut taffy, root.data().as_ffi());
+        perform_hidden_layout(&mut taffy, root.into());
 
         // Whatever size and display-mode the nodes had previously,
         // all layouts should resolve to ZERO due to the root's DISPLAY::NONE
