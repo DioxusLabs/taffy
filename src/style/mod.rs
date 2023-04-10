@@ -150,21 +150,27 @@ pub struct Style {
 
     // Alignment properties
     /// How this node's children aligned in the cross/block axis?
+    #[cfg(any(feature = "flexbox", feature = "grid"))]
     pub align_items: Option<AlignItems>,
     /// How this node should be aligned in the cross/block axis
     /// Falls back to the parents [`AlignItems`] if not set
+    #[cfg(any(feature = "flexbox", feature = "grid"))]
     pub align_self: Option<AlignSelf>,
     /// How this node's children should be aligned in the inline axis
-    #[cfg(feature = "grid")]
+    #[cfg(any(feature = "flexbox", feature = "grid"))]
     pub justify_items: Option<AlignItems>,
     /// How this node should be aligned in the inline axis
     /// Falls back to the parents [`JustifyItems`] if not set
+    #[cfg(any(feature = "flexbox", feature = "grid"))]
     pub justify_self: Option<AlignSelf>,
     /// How should content contained within this item be aligned in the cross/block axis
+    #[cfg(any(feature = "flexbox", feature = "grid"))]
     pub align_content: Option<AlignContent>,
     /// How should contained within this item be aligned in the main/inline axis
+    #[cfg(any(feature = "flexbox", feature = "grid"))]
     pub justify_content: Option<JustifyContent>,
     /// How large should the gaps between items in a grid or flex container be?
+    #[cfg(any(feature = "flexbox", feature = "grid"))]
     #[cfg_attr(feature = "serde", serde(default = "style_helpers::zero"))]
     pub gap: Size<LengthPercentage>,
 
@@ -220,32 +226,41 @@ impl Style {
     pub const DEFAULT: Style = Style {
         display: Display::DEFAULT,
         position: Position::Relative,
-        #[cfg(feature = "flexbox")]
-        flex_direction: FlexDirection::Row,
-        #[cfg(feature = "flexbox")]
-        flex_wrap: FlexWrap::NoWrap,
-        align_items: None,
-        align_self: None,
-        #[cfg(feature = "grid")]
-        justify_items: None,
-        justify_self: None,
-        align_content: None,
-        justify_content: None,
         inset: Rect::auto(),
         margin: Rect::zero(),
         padding: Rect::zero(),
         border: Rect::zero(),
+        size: Size::auto(),
+        min_size: Size::auto(),
+        max_size: Size::auto(),
+        aspect_ratio: None,
+        #[cfg(any(feature = "flexbox", feature = "grid"))]
         gap: Size::zero(),
+        // Aligment
+        #[cfg(any(feature = "flexbox", feature = "grid"))]
+        align_items: None,
+        #[cfg(any(feature = "flexbox", feature = "grid"))]
+        align_self: None,
+        #[cfg(any(feature = "flexbox", feature = "grid"))]
+        justify_items: None,
+        #[cfg(any(feature = "flexbox", feature = "grid"))]
+        justify_self: None,
+        #[cfg(any(feature = "flexbox", feature = "grid"))]
+        align_content: None,
+        #[cfg(any(feature = "flexbox", feature = "grid"))]
+        justify_content: None,
+        // Flexbox
+        #[cfg(feature = "flexbox")]
+        flex_direction: FlexDirection::Row,
+        #[cfg(feature = "flexbox")]
+        flex_wrap: FlexWrap::NoWrap,
         #[cfg(feature = "flexbox")]
         flex_grow: 0.0,
         #[cfg(feature = "flexbox")]
         flex_shrink: 1.0,
         #[cfg(feature = "flexbox")]
         flex_basis: Dimension::Auto,
-        size: Size::auto(),
-        min_size: Size::auto(),
-        max_size: Size::auto(),
-        aspect_ratio: None,
+        // Grid
         #[cfg(feature = "grid")]
         grid_template_rows: GridTrackVec::new(),
         #[cfg(feature = "grid")]
