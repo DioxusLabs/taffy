@@ -11,6 +11,12 @@ use slotmap::{DefaultKey, Key, KeyData};
 /// and u64 if needed.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct NodeId(u64);
+impl NodeId {
+    /// Create a new NodeId from a u64 value
+    pub const fn new(val: u64) -> Self {
+        Self(val)
+    }
+}
 
 impl From<u64> for NodeId {
     #[inline]
