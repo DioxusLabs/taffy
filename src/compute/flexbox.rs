@@ -21,7 +21,7 @@ use crate::tree::{LayoutTree, NodeId};
 use crate::debug::NODE_LOGGER;
 
 /// The public interface to Taffy's Flexbox algorithm implementation
-pub(crate) struct FlexboxAlgorithm;
+pub struct FlexboxAlgorithm;
 impl LayoutAlgorithm for FlexboxAlgorithm {
     const NAME: &'static str = "FLEXBOX";
 
