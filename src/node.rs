@@ -3,11 +3,11 @@
 //! Layouts are composed of multiple nodes, which live in a tree-like data structure.
 use slotmap::{DefaultKey, SlotMap, SparseSecondaryMap};
 
-use crate::compute::{GenericAlgorithm, LayoutAlgorithm};
+use crate::compute::{measure_node_size, perform_node_layout};
 use crate::data::NodeData;
 use crate::error::{TaffyError, TaffyResult};
 use crate::geometry::Size;
-use crate::layout::{Cache, Layout, SizeAndBaselines, SizingMode};
+use crate::layout::{Layout, SizeAndBaselines, SizingMode};
 use crate::prelude::LayoutTree;
 use crate::style::{AvailableSpace, Style};
 #[cfg(any(feature = "std", feature = "alloc"))]
@@ -29,6 +29,18 @@ pub enum MeasureFunc {
     /// Stores a boxed function
     #[cfg(any(feature = "std", feature = "alloc"))]
     Boxed(Box<dyn Measurable>),
+}
+
+impl MeasureFunc {
+    /// Call the measure function to measure to the node
+    #[inline(always)]
+    pub fn measure(&self, known_dimensions: Size<Option<f32>>, available_space: Size<AvailableSpace>) -> Size<f32> {
+        match self {
+            MeasureFunc::Raw(measure) => measure(known_dimensions, available_space),
+            #[cfg(any(feature = "std", feature = "alloc"))]
+            MeasureFunc::Boxed(measure) => (measure as &dyn Fn(_, _) -> _)(known_dimensions, available_space),
+        }
+    }
 }
 
 /// Global configuration values for a Taffy instance
@@ -104,29 +116,6 @@ impl LayoutTree for Taffy {
         &mut self.nodes[node.into()].layout
     }
 
-    fn measure_node(
-        &self,
-        node: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-    ) -> Size<f32> {
-        match &self.measure_funcs[node.into()] {
-            MeasureFunc::Raw(measure) => measure(known_dimensions, available_space),
-
-            #[cfg(any(feature = "std", feature = "alloc"))]
-            MeasureFunc::Boxed(measure) => (measure as &dyn Fn(_, _) -> _)(known_dimensions, available_space),
-        }
-    }
-
-    fn needs_measure(&self, node: NodeId) -> bool {
-        let node = node.into();
-        self.nodes[node].needs_measure && self.measure_funcs.get(node).is_some()
-    }
-
-    fn cache_mut(&mut self, node: NodeId, index: usize) -> &mut Option<Cache> {
-        &mut self.nodes[node.into()].size_cache[index]
-    }
-
     #[inline(always)]
     fn child(&self, node: NodeId, id: usize) -> NodeId {
         self.children[node.into()][id]
@@ -141,7 +130,7 @@ impl LayoutTree for Taffy {
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
     ) -> Size<f32> {
-        GenericAlgorithm::measure_size(self, node, known_dimensions, parent_size, available_space, sizing_mode)
+        measure_node_size(self, node, known_dimensions, parent_size, available_space, sizing_mode)
     }
 
     #[inline(always)]
@@ -153,7 +142,7 @@ impl LayoutTree for Taffy {
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
     ) -> SizeAndBaselines {
-        GenericAlgorithm::perform_layout(self, node, known_dimensions, parent_size, available_space, sizing_mode)
+        perform_node_layout(self, node, known_dimensions, parent_size, available_space, sizing_mode)
     }
 }
 
