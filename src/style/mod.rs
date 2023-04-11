@@ -102,10 +102,9 @@ impl Default for Position {
 ///
 ///   - The automatic minimum size Flexbox/CSS Grid items with non-`Visible` overflow is `0` rather than being content based
 ///   - `Overflow::Scroll` nodes have space in the layout reserved for a scrollbar (width controlled by the `scrollbar_width` property)
-///   - `Overflow::Auto` nodes also have space in the layout reserved for a scrollbar, *but only if their contents actually overflow*.
 ///
 /// In Taffy, we only implement the layout related secondary effects as we are not concerned with drawing/painting. The amount of space reserved for
-/// a scrollbar is controlled by the `scrollbar_width` property. If this is `0` then `Auto` and `Scroll` behave identically to `Hidden`.
+/// a scrollbar is controlled by the `scrollbar_width` property. If this is `0` then `Scroll` behaves identically to `Hidden`.
 ///
 /// <https://developer.mozilla.org/en-US/docs/Web/CSS/overflow>
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
@@ -119,11 +118,6 @@ pub enum Overflow {
     /// The automatic minimum size of this node as a flexbox/grid item should be `0`. Additionally, space should be reserved
     /// for a scrollbar. The amount of space reserved is controlled by the `scrollbar_width` property.
     Scroll,
-    /// The automatic minimum size of this node as a flexbox/grid item should be 0. Additionall, while this node should initially be laid out
-    /// without reserving space for a scrollbar, *if* the contents of this node overflow during this initial layout then space should be reserved
-    /// for a scrollbar and the node's relayout recomputed on that basis. The amount of space reserved is controlled by the `scrollbar_width` property.
-    /// If this is set to `0` then no relayout will occur.
-    Auto,
 }
 
 impl Overflow {

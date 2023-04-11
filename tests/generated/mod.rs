@@ -657,8 +657,6 @@ mod grid_minmax_min_content_percent_indefinite;
 #[cfg(feature = "grid")]
 mod grid_out_of_order_items;
 #[cfg(feature = "grid")]
-mod grid_overflow_inline_axis_auto;
-#[cfg(feature = "grid")]
 mod grid_overflow_inline_axis_hidden;
 #[cfg(feature = "grid")]
 mod grid_overflow_inline_axis_scroll;
@@ -873,7 +871,6 @@ mod nested_overflowing_child_in_constraint_parent;
 mod only_shrinkable_item_with_flex_basis_zero;
 mod overflow_cross_axis;
 mod overflow_main_axis;
-mod overflow_main_axis_shrink_auto;
 mod overflow_main_axis_shrink_hidden;
 mod overflow_main_axis_shrink_scroll;
 mod overflow_main_axis_shrink_visible;
