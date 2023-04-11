@@ -243,6 +243,7 @@ mod flex_basis_smaller_then_content_with_flex_grow_very_large_size;
 mod flex_basis_unconstraint_column;
 mod flex_basis_unconstraint_row;
 mod flex_basis_zero_undefined_main_size;
+mod flex_basis_zero_undefined_main_size_hidden;
 mod flex_column_relative_all_sides;
 mod flex_direction_column;
 mod flex_direction_column_no_height;
