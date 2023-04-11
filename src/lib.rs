@@ -42,7 +42,9 @@ mod resolve;
 mod sys;
 
 pub use crate::compute::compute_layout;
+#[cfg(feature = "flexbox")]
 pub use crate::compute::flexbox::FlexboxAlgorithm;
+#[cfg(feature = "grid")]
 pub use crate::compute::grid::CssGridAlgorithm;
 pub use crate::compute::LayoutAlgorithm;
 pub use crate::node::Taffy;
