@@ -1,7 +1,6 @@
-//! Final and cached data structures that represent the high-level UI layout
+//! Final data structures that represent the high-level UI layout
 
 use crate::geometry::{Point, Size};
-use crate::style::AvailableSpace;
 
 /// Whether we are performing a full layout, or we merely need to size the node
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -75,18 +74,4 @@ impl Layout {
     pub const fn with_order(order: u32) -> Self {
         Self { order, size: Size::zero(), location: Point::ZERO }
     }
-}
-
-/// Cached intermediate layout results
-#[derive(Debug, Clone, Copy)]
-pub struct Cache {
-    /// The initial cached size of the node itself
-    pub(crate) known_dimensions: Size<Option<f32>>,
-    /// The initial cached size of the parent's node
-    pub(crate) available_space: Size<AvailableSpace>,
-    /// Whether or not layout should be recomputed
-    pub(crate) run_mode: RunMode,
-
-    /// The cached size and baselines of the item
-    pub(crate) cached_size_and_baselines: SizeAndBaselines,
 }
