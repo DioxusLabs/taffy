@@ -43,18 +43,18 @@ fn padding_border_overrides_size_flex_basis_0_growable() {
     taffy::debug::print_tree(&taffy, node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
-    assert_eq!(size.width, 34f32, "width of node {:?}. Expected {}. Actual {}", node, 34f32, size.width);
+    assert_eq!(size.width, 46f32, "width of node {:?}. Expected {}. Actual {}", node, 46f32, size.width);
     assert_eq!(size.height, 14f32, "height of node {:?}. Expected {}. Actual {}", node, 14f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node, 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node, 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node0).unwrap();
-    assert_eq!(size.width, 28f32, "width of node {:?}. Expected {}. Actual {}", node0, 28f32, size.width);
+    assert_eq!(size.width, 34f32, "width of node {:?}. Expected {}. Actual {}", node0, 34f32, size.width);
     assert_eq!(size.height, 14f32, "height of node {:?}. Expected {}. Actual {}", node0, 14f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node0, 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node0, 0f32, location.y);
     let Layout { size, location, .. } = taffy.layout(node1).unwrap();
-    assert_eq!(size.width, 6f32, "width of node {:?}. Expected {}. Actual {}", node1, 6f32, size.width);
+    assert_eq!(size.width, 12f32, "width of node {:?}. Expected {}. Actual {}", node1, 12f32, size.width);
     assert_eq!(size.height, 12f32, "height of node {:?}. Expected {}. Actual {}", node1, 12f32, size.height);
-    assert_eq!(location.x, 28f32, "x of node {:?}. Expected {}. Actual {}", node1, 28f32, location.x);
+    assert_eq!(location.x, 34f32, "x of node {:?}. Expected {}. Actual {}", node1, 34f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node1, 0f32, location.y);
 }

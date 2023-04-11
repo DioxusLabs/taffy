@@ -45,7 +45,8 @@ async fn main() {
     std::thread::sleep(std::time::Duration::from_secs(1));
 
     let mut caps = serde_json::map::Map::new();
-    let chrome_opts = serde_json::json!({ "args": ["--headless", "--disable-gpu"] });
+    let chrome_opts =
+        serde_json::json!({ "args": ["--headless", "--disable-gpu", "--enable-blink-features=NewFlexboxSizing"] });
     caps.insert("goog:chromeOptions".to_string(), chrome_opts.clone());
 
     info!("spawning webdriver client and collecting test descriptions");
