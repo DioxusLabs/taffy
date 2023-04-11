@@ -35,6 +35,7 @@ fn do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent(
                     x: taffy::style::Overflow::Hidden,
                     y: taffy::style::Overflow::Hidden,
                 },
+                scrollbar_width: 15u8,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Length(50f32),
                     height: taffy::style::Dimension::Length(50f32),

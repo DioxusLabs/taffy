@@ -387,7 +387,7 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
     }
     let overflow_x = quote_overflow(&style["overflowX"]);
     let overflow_y = quote_overflow(&style["overflowY"]);
-    let (overflow, _scrollbar_width) = if overflow_x.is_some() || overflow_y.is_some() {
+    let (overflow, scrollbar_width) = if overflow_x.is_some() || overflow_y.is_some() {
         let overflow_x = overflow_x.unwrap_or(quote!(taffy::style::Overflow::Visible));
         let overflow_y = overflow_y.unwrap_or(quote!(taffy::style::Overflow::Visible));
         let overflow = quote!(overflow: taffy::geometry::Point { x: #overflow_x, y: #overflow_y },);
@@ -577,6 +577,7 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
         #flex_direction
         #flex_wrap
         #overflow
+        #scrollbar_width
         #align_items
         #align_self
         #justify_items

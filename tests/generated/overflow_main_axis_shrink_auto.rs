@@ -1,19 +1,17 @@
 #[test]
-fn grid_overflow_inline_axis_hidden() {
+fn overflow_main_axis_shrink_auto() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
+    use taffy::{layout::Layout, prelude::*};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf_with_measure(
             taffy::style::Style {
-                overflow: taffy::geometry::Point {
-                    x: taffy::style::Overflow::Hidden,
-                    y: taffy::style::Overflow::Hidden,
-                },
+                overflow: taffy::geometry::Point { x: taffy::style::Overflow::Auto, y: taffy::style::Overflow::Auto },
                 scrollbar_width: 15u8,
+                flex_shrink: 1f32,
                 ..Default::default()
             },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HHHHHHHHHH";
                 super::measure_standard_text(
                     known_dimensions,
@@ -28,10 +26,9 @@ fn grid_overflow_inline_axis_hidden() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                display: taffy::style::Display::Grid,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Length(50f32),
+                    width: taffy::style::Dimension::Points(50f32),
+                    height: taffy::style::Dimension::Points(50f32),
                 },
                 ..Default::default()
             },
@@ -40,7 +37,7 @@ fn grid_overflow_inline_axis_hidden() {
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
     println!("\nComputed tree:");
-    taffy::util::print_tree(&taffy, node);
+    taffy::debug::print_tree(&taffy, node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert_eq!(size.width, 50f32, "width of node {:?}. Expected {}. Actual {}", node, 50f32, size.width);

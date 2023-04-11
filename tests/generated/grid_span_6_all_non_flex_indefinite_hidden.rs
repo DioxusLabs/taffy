@@ -10,6 +10,7 @@ fn grid_span_6_all_non_flex_indefinite_hidden() {
                     x: taffy::style::Overflow::Hidden,
                     y: taffy::style::Overflow::Hidden,
                 },
+                scrollbar_width: 15u8,
                 grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Span(6u16) },
                 ..Default::default()
             },
