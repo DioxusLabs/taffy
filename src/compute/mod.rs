@@ -54,7 +54,7 @@ pub fn compute_layout(
 }
 
 /// A common interface that all Taffy layout algorithms conform to
-pub(crate) trait LayoutAlgorithm {
+pub trait LayoutAlgorithm {
     /// The name of the algorithm (mainly used for debug purposes)
     const NAME: &'static str;
 
