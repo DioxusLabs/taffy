@@ -34,9 +34,6 @@ pub trait LayoutTree {
     /// Get a specific child of a node, where the index represents the nth child
     fn child(&self, node: NodeId, index: usize) -> NodeId;
 
-    // todo: allow abstractions over this so we don't prescribe how layout works
-    // for reference, CSS cascades require context, and storing a full flexbox layout for each node could be inefficient
-    //
     /// Get the [`Style`] for this node.
     fn style(&self, node: NodeId) -> &Style;
 
