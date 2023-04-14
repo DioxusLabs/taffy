@@ -5,8 +5,8 @@ use super::OriginZeroLine;
 use crate::geometry::Line;
 use crate::geometry::{AbsoluteAxis, InBothAbsAxis};
 use crate::style::{AlignItems, GridAutoFlow, OriginZeroGridPlacement, Style};
-use crate::sys::Vec;
 use crate::tree::NodeId;
+use crate::util::sys::Vec;
 
 /// 8.5. Grid Item Placement Algorithm
 /// Place items into the grid, generating new rows/column into the implicit grid as required

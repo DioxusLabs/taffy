@@ -24,6 +24,6 @@ fn rounding_doesnt_leave_gaps() {
 
     let layout_a = taffy.layout(child_a).unwrap();
     let layout_b = taffy.layout(child_b).unwrap();
-    taffy::debug::print_tree(&taffy, root_node);
+    taffy::util::print_tree(&taffy, root_node);
     assert_eq!(layout_a.location.x + layout_a.size.width, layout_b.location.x);
 }

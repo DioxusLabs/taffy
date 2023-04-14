@@ -1,7 +1,7 @@
 //! Geometric primitives useful for layout
 
 use crate::style::Dimension;
-use crate::sys::f32_max;
+use crate::util::sys::f32_max;
 use core::ops::Add;
 
 #[cfg(feature = "flexbox")]

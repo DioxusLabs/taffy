@@ -38,7 +38,7 @@ fn padding_border_overrides_size_flex_basis_0() {
     let node = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[node0, node1]).unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
     println!("\nComputed tree:");
-    taffy::debug::print_tree(&taffy, node);
+    taffy::util::print_tree(&taffy, node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert_eq!(size.width, 34f32, "width of node {:?}. Expected {}. Actual {}", node, 34f32, size.width);

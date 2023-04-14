@@ -3,8 +3,8 @@ use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;
 use taffy::prelude::*;
-use taffy::randomizable::Randomizeable;
 use taffy::style::Style;
+use taffy::util::Randomizeable;
 
 mod helpers;
 use helpers::build_deep_tree;

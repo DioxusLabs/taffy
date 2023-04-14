@@ -18,7 +18,7 @@ fn main() -> Result<(), taffy::TaffyError> {
 
     // Compute layout and print result
     taffy.compute_layout(root, Size::MAX_CONTENT)?;
-    taffy::debug::print_tree(&taffy, root);
+    taffy::util::print_tree(&taffy, root);
 
     Ok(())
 }

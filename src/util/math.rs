@@ -252,7 +252,7 @@ impl<In, Out, T: MaybeMath<In, Out>> MaybeMath<Size<In>, Size<Out>> for Size<T> 
 mod tests {
     mod lhs_option_f32_rhs_option_f32 {
 
-        use crate::math::MaybeMath;
+        use crate::util::MaybeMath;
         use rstest::rstest;
 
         #[rstest]
@@ -298,7 +298,7 @@ mod tests {
 
     mod lhs_option_f32_rhs_f32 {
 
-        use crate::math::MaybeMath;
+        use crate::util::MaybeMath;
         use rstest::rstest;
 
         #[rstest]
@@ -336,7 +336,7 @@ mod tests {
 
     mod lhs_f32_rhs_option_f32 {
 
-        use crate::math::MaybeMath;
+        use crate::util::MaybeMath;
         use rstest::rstest;
 
         #[rstest]

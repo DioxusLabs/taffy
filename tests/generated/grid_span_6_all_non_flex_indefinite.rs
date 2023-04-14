@@ -47,7 +47,7 @@ fn grid_span_6_all_non_flex_indefinite() {
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
     println!("\nComputed tree:");
-    taffy::debug::print_tree(&taffy, node);
+    taffy::util::print_tree(&taffy, node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert_eq!(size.width, 160f32, "width of node {:?}. Expected {}. Actual {}", node, 160f32, size.width);

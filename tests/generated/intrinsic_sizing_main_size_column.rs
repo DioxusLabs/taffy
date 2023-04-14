@@ -20,7 +20,7 @@ fn intrinsic_sizing_main_size_column() {
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
     println!("\nComputed tree:");
-    taffy::debug::print_tree(&taffy, node);
+    taffy::util::print_tree(&taffy, node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert_eq!(size.width, 10f32, "width of node {:?}. Expected {}. Actual {}", node, 10f32, size.width);

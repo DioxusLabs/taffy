@@ -1,6 +1,7 @@
 //! Helper trait to calculate dimensions during layout resolution
 
-use crate::prelude::{Dimension, LengthPercentage, LengthPercentageAuto, Rect, Size};
+use crate::geometry::{Rect, Size};
+use crate::style::{Dimension, LengthPercentage, LengthPercentageAuto};
 use crate::style_helpers::TaffyZero;
 
 /// Trait to encapsulate behaviour where we need to resolve from a
@@ -136,8 +137,8 @@ impl<Out: TaffyZero, T: ResolveOrZero<Option<f32>, Out>> ResolveOrZero<Option<f3
 mod tests {
     mod maybe_resolve_dimension {
 
-        use crate::resolve::MaybeResolve;
         use crate::style::Dimension;
+        use crate::util::MaybeResolve;
         use rstest::rstest;
 
         /// `Dimension::Auto` should always return `None`
@@ -181,7 +182,9 @@ mod tests {
     }
 
     mod maybe_resolve_size_dimension {
-        use crate::{prelude::Size, resolve::MaybeResolve, style::Dimension};
+        use super::super::MaybeResolve;
+        use crate::geometry::Size;
+        use crate::style::Dimension;
         use rstest::rstest;
 
         /// Size<Dimension::Auto> should always return Size<None>
@@ -237,8 +240,8 @@ mod tests {
     }
 
     mod resolve_or_zero_dimension_to_option_f32 {
-        use crate::resolve::ResolveOrZero;
         use crate::style::Dimension;
+        use crate::util::ResolveOrZero;
         use rstest::rstest;
 
         #[rstest]
@@ -269,8 +272,8 @@ mod tests {
 
     mod resolve_or_zero_rect_dimension_to_rect {
         use crate::geometry::{Rect, Size};
-        use crate::resolve::ResolveOrZero;
         use crate::style::Dimension;
+        use crate::util::ResolveOrZero;
         use rstest::rstest;
 
         #[rstest]
@@ -315,8 +318,8 @@ mod tests {
 
     mod resolve_or_zero_rect_dimension_to_rect_f32_via_option {
         use crate::geometry::Rect;
-        use crate::resolve::ResolveOrZero;
         use crate::style::Dimension;
+        use crate::util::ResolveOrZero;
         use rstest::rstest;
 
         #[rstest]

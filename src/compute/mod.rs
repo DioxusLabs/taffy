@@ -12,8 +12,8 @@ pub(crate) mod grid;
 use crate::error::TaffyError;
 use crate::geometry::{Point, Size};
 use crate::style::{AvailableSpace, Display};
-use crate::sys::round;
 use crate::tree::{Layout, LayoutTree, NodeId, RunMode, SizeAndBaselines, SizingMode, Taffy};
+use crate::util::sys::round;
 
 #[cfg(feature = "flexbox")]
 use self::flexbox::FlexboxAlgorithm;
@@ -22,7 +22,7 @@ use self::flexbox::FlexboxAlgorithm;
 use self::grid::CssGridAlgorithm;
 
 #[cfg(any(feature = "debug", feature = "profile"))]
-use crate::debug::NODE_LOGGER;
+use crate::util::debug::NODE_LOGGER;
 
 /// Updates the stored layout of the provided `node` and its children
 pub fn compute_layout(

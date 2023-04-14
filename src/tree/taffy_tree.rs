@@ -9,9 +9,9 @@ use crate::error::{TaffyError, TaffyResult};
 use crate::geometry::Size;
 use crate::prelude::LayoutTree;
 use crate::style::{AvailableSpace, Style};
-use crate::sys::{new_vec_with_capacity, ChildrenVec, Vec};
 use crate::tree::NodeId;
 use crate::tree::{Layout, SizeAndBaselines, SizingMode};
+use crate::util::sys::{new_vec_with_capacity, ChildrenVec, Vec};
 
 /// Global configuration values for a Taffy instance
 pub(crate) struct TaffyConfig {
@@ -395,7 +395,7 @@ mod tests {
     use super::*;
     use crate::style::{Dimension, Display, FlexDirection};
     use crate::style_helpers::*;
-    use crate::sys;
+    use crate::util::sys;
 
     #[test]
     fn new_should_allocate_default_capacity() {
