@@ -15,10 +15,10 @@ use crate::tree::{Layout, LayoutTree, NodeId, RunMode, SizeAndBaselines, SizingM
 use crate::util::sys::round;
 
 #[cfg(feature = "flexbox")]
-use self::flexbox::FlexboxAlgorithm;
+pub use self::flexbox::FlexboxAlgorithm;
 
 #[cfg(feature = "grid")]
-use self::grid::CssGridAlgorithm;
+pub use self::grid::CssGridAlgorithm;
 
 #[cfg(any(feature = "debug", feature = "profile"))]
 use crate::util::debug::NODE_LOGGER;

@@ -18,14 +18,13 @@ extern crate alloc;
 #[cfg(feature = "serde")]
 extern crate serde;
 
+pub mod compute;
 pub mod geometry;
 pub mod prelude;
 pub mod style;
 pub mod style_helpers;
 pub mod tree;
 pub mod util;
-
-mod compute;
 
 #[cfg(feature = "flexbox")]
 pub use crate::compute::flexbox::FlexboxAlgorithm;
