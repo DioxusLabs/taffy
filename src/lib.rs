@@ -1,12 +1,7 @@
 //! # Taffy
 //!
-//! [![GitHub CI](https://github.com/DioxusLabs/taffy/actions/workflows/ci.yml/badge.svg)](https://github.com/DioxusLabs/taffy/actions/workflows/ci.yml)
-//! [![crates.io](https://img.shields.io/crates/v/taffy.svg)](https://crates.io/crates/taffy)
-//! [![docs.rs](https://img.shields.io/docsrs/taffy)](https://docs.rs/taffy)
-//!
-//! Taffy is a flexible, high-performance, cross-platform UI layout library written in [Rust](https://www.rust-lang.org).
-//!
-//! It currently implements the **Flexbox** and **CSS Grid** layout algorithms. Support for other paradigms is planned.
+//! Taffy is a flexible, high-performance library for **UI layout**.
+//! It currently implements the Flexbox and CSS Grid layout algorithms. Support for other paradigms is planned.
 //! For more information on this and other future development plans see the [roadmap issue](https://github.com/DioxusLabs/taffy/issues/345).
 //!
 //! ## Architecture
