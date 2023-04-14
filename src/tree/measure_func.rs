@@ -3,7 +3,7 @@
 use crate::geometry::Size;
 use crate::style::AvailableSpace;
 #[cfg(any(feature = "std", feature = "alloc"))]
-use crate::sys::Box;
+use crate::util::sys::Box;
 
 /// A function type that can be used in a [`MeasureFunc`]
 ///

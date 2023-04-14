@@ -2,7 +2,7 @@
 
 use crate::geometry::{Rect, Size};
 use crate::style_helpers::{FromPercent, FromPoints, TaffyAuto, TaffyMaxContent, TaffyMinContent, TaffyZero};
-use crate::sys::abs;
+use crate::util::sys::abs;
 
 /// A unit of linear measurement
 ///

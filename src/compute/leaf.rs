@@ -1,16 +1,16 @@
 //! Computes size using styles and measure functions
 
 use crate::geometry::{Point, Size};
-use crate::math::MaybeMath;
-use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::AvailableSpace;
-use crate::sys::f32_max;
 use crate::tree::NodeId;
 use crate::tree::Taffy;
 use crate::tree::{SizeAndBaselines, SizingMode};
+use crate::util::sys::f32_max;
+use crate::util::MaybeMath;
+use crate::util::{MaybeResolve, ResolveOrZero};
 
 #[cfg(feature = "debug")]
-use crate::debug::NODE_LOGGER;
+use crate::util::debug::NODE_LOGGER;
 
 /// Perform full layout on a leaf node
 pub(crate) fn perform_layout(

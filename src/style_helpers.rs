@@ -11,7 +11,7 @@ use crate::{
         GridTrackRepetition, MaxTrackSizingFunction, MinTrackSizingFunction, NonRepeatedTrackSizingFunction,
         TrackSizingFunction,
     },
-    sys::Vec,
+    util::sys::Vec,
 };
 #[cfg(feature = "grid")]
 use core::fmt::Debug;
@@ -53,7 +53,7 @@ mod repeat_fn_tests {
 #[cfg(feature = "grid")]
 /// Returns a grid template containing `count` evenly sized tracks
 pub fn evenly_sized_tracks(count: u16) -> Vec<TrackSizingFunction> {
-    use crate::sys::new_vec_with_capacity;
+    use crate::util::sys::new_vec_with_capacity;
     let mut repeated_tracks = new_vec_with_capacity(1);
     repeated_tracks.push(flex(1.0));
     let mut tracks = new_vec_with_capacity(1);

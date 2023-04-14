@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use core::fmt::{Debug, Display, Write};
 use slotmap::{DefaultKey, Key};
 use std::sync::Mutex;
@@ -115,7 +117,7 @@ macro_rules! time {
         let start = ::std::time::Instant::now();
         $($code)*
         let duration = ::std::time::Instant::now().duration_since(start);
-        crate::debug::NODE_LOGGER.log(format_args!("Performed {} in {}ms", $label, duration.as_millis()));
+        crate::util::debug::NODE_LOGGER.log(format_args!("Performed {} in {}ms", $label, duration.as_millis()));
     };
 }
 

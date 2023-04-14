@@ -2,11 +2,11 @@
 //! This mainly consists of evaluating GridAutoTracks
 use super::types::{GridTrack, TrackCounts};
 use crate::geometry::AbsoluteAxis;
-use crate::math::MaybeMath;
-use crate::resolve::ResolveOrZero;
 use crate::style::{GridTrackRepetition, LengthPercentage, NonRepeatedTrackSizingFunction, Style, TrackSizingFunction};
 use crate::style_helpers::TaffyAuto;
-use crate::sys::{GridTrackVec, Vec};
+use crate::util::sys::{GridTrackVec, Vec};
+use crate::util::MaybeMath;
+use crate::util::ResolveOrZero;
 use core::cmp::{max, min};
 
 /// Compute the number of rows and columns in the explicit grid

@@ -42,7 +42,7 @@ fn main() -> Result<(), taffy::TaffyError> {
 
     // Compute layout and print result
     taffy.compute_layout(root, Size { width: points(800.0), height: points(600.0) })?;
-    taffy::debug::print_tree(&taffy, root);
+    taffy::util::print_tree(&taffy, root);
 
     Ok(())
 }

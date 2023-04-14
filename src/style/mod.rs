@@ -27,7 +27,7 @@ use crate::geometry::Line;
 #[cfg(feature = "serde")]
 use crate::style_helpers;
 #[cfg(feature = "grid")]
-use crate::sys::GridTrackVec;
+use crate::util::sys::GridTrackVec;
 
 /// Sets the layout used for the children of this node
 ///

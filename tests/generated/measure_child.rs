@@ -21,7 +21,7 @@ fn measure_child() {
     let node = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[node0]).unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
     println!("\nComputed tree:");
-    taffy::debug::print_tree(&taffy, node);
+    taffy::util::print_tree(&taffy, node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert_eq!(size.width, 60f32, "width of node {:?}. Expected {}. Actual {}", node, 60f32, size.width);

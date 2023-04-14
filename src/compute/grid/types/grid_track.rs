@@ -1,7 +1,7 @@
 //! Contains GridTrack used to represent a single grid track (row/column) during layout
 use crate::{
     style::{LengthPercentage, MaxTrackSizingFunction, MinTrackSizingFunction},
-    sys::f32_min,
+    util::sys::f32_min,
 };
 
 /// Whether a GridTrack represents an actual track or a gutter.
