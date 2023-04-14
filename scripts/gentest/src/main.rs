@@ -849,7 +849,7 @@ fn generate_generic_measure_function() -> TokenStream {
             writing_mode: WritingMode,
             _aspect_ratio: Option<f32>,
         ) -> taffy::geometry::Size<f32> {
-            use taffy::axis::AbsoluteAxis;
+            use taffy::geometry::AbsoluteAxis;
             use taffy::prelude::*;
             const ZWS: char = '\u{200B}';
             const H_WIDTH: f32 = 10.0;

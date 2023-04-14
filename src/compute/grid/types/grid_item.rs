@@ -1,7 +1,7 @@
 //! Contains GridItem used to represent a single grid item during layout
 use super::GridTrack;
-use crate::axis::AbstractAxis;
 use crate::compute::grid::OriginZeroLine;
+use crate::geometry::AbstractAxis;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::layout::SizingMode;
 use crate::math::MaybeMath;
