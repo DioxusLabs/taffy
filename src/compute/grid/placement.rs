@@ -2,8 +2,8 @@
 //! <https://www.w3.org/TR/css-grid-1/#placement>
 use super::types::{CellOccupancyMatrix, CellOccupancyState, GridItem};
 use super::OriginZeroLine;
-use crate::axis::{AbsoluteAxis, InBothAbsAxis};
 use crate::geometry::Line;
+use crate::geometry::{AbsoluteAxis, InBothAbsAxis};
 use crate::style::{AlignItems, GridAutoFlow, OriginZeroGridPlacement, Style};
 use crate::sys::Vec;
 use crate::tree::NodeId;

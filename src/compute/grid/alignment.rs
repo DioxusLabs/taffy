@@ -1,7 +1,7 @@
 //! Alignment of tracks and final positioning of items
 use super::types::GridTrack;
-use crate::axis::InBothAbsAxis;
 use crate::compute::common::alignment::compute_alignment_offset;
+use crate::geometry::InBothAbsAxis;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::layout::{Layout, SizingMode};
 use crate::math::MaybeMath;
