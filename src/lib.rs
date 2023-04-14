@@ -44,4 +44,5 @@ pub use crate::compute::grid::CssGridAlgorithm;
 pub use crate::compute::LayoutAlgorithm;
 pub use crate::error::TaffyError;
 pub use crate::error::TaffyResult;
+pub use crate::tree::LayoutTree;
 pub use crate::tree::Taffy;
