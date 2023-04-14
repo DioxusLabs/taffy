@@ -1,6 +1,6 @@
 use taffy::prelude::*;
 
-fn main() -> Result<(), taffy::error::TaffyError> {
+fn main() -> Result<(), taffy::TaffyError> {
     let mut taffy = Taffy::new();
 
     let child = taffy.new_leaf(Style {

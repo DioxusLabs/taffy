@@ -22,7 +22,6 @@ pub mod cache;
 #[cfg(feature = "std")]
 #[doc(hidden)]
 pub mod debug;
-pub mod error;
 pub mod geometry;
 pub mod layout;
 pub mod node;
@@ -36,6 +35,7 @@ pub mod randomizable;
 
 mod compute;
 mod data;
+mod error;
 mod math;
 mod resolve;
 mod sys;
@@ -46,4 +46,6 @@ pub use crate::compute::flexbox::FlexboxAlgorithm;
 #[cfg(feature = "grid")]
 pub use crate::compute::grid::CssGridAlgorithm;
 pub use crate::compute::LayoutAlgorithm;
+pub use crate::error::TaffyError;
+pub use crate::error::TaffyResult;
 pub use crate::node::Taffy;
