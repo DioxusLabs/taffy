@@ -9,6 +9,7 @@ pub(crate) mod sys;
 #[cfg(feature = "std")]
 #[doc(hidden)]
 pub(crate) mod debug;
+#[cfg(feature = "std")]
 pub use debug::print_tree;
 
 #[cfg(feature = "random")]
