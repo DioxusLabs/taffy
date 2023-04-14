@@ -14,6 +14,7 @@
 - `taffy::node::Node` has been replaced with `taffy::tree::NodeId`. This should make it much easier to implement the `LayoutTree` trait as the underlying type backing the node id now a `u64` rather than a `slotmap::DefaultKey`.
 - Module organisation changes:
   - The `math` module has been made private
+  - The `axis` module has been merged into the `geometry` module
 
 ## 0.3.11
 
