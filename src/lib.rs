@@ -27,7 +27,6 @@ pub mod util;
 
 mod compute;
 
-pub use crate::compute::compute_layout;
 #[cfg(feature = "flexbox")]
 pub use crate::compute::flexbox::FlexboxAlgorithm;
 #[cfg(feature = "grid")]

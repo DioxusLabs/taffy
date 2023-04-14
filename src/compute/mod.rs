@@ -24,7 +24,7 @@ use self::grid::CssGridAlgorithm;
 use crate::util::debug::NODE_LOGGER;
 
 /// Updates the stored layout of the provided `node` and its children
-pub fn compute_layout(
+pub(crate) fn compute_layout(
     taffy: &mut Taffy,
     root: NodeId,
     available_space: Size<AvailableSpace>,
