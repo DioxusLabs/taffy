@@ -16,7 +16,7 @@ fn default<T: Default>() -> T {
 }
 
 #[cfg(feature = "grid")]
-fn main() -> Result<(), taffy::error::TaffyError> {
+fn main() -> Result<(), taffy::TaffyError> {
     use taffy::prelude::*;
 
     let mut taffy = Taffy::new();
