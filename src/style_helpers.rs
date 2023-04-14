@@ -167,7 +167,7 @@ pub const fn auto<T: TaffyAuto>() -> T {
 
 /// Trait to abstract over auto values
 pub trait TaffyAuto {
-    /// The auto value for type implementing TaffyZero
+    /// The auto value for type implementing TaffyAuto
     const AUTO: Self;
 }
 impl<T: TaffyAuto> TaffyAuto for Option<T> {
