@@ -15,6 +15,7 @@
 - Module organisation changes:
   - The `math` module has been made private
   - The `axis` module has been merged into the `geometry` module
+  - The `error` module has been made private (`TaffyError` and `TaffyResult` are now exposed at the root of the crate)
 
 ## 0.3.11
 
