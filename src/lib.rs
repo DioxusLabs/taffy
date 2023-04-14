@@ -26,7 +26,6 @@ pub mod tree;
 pub mod util;
 
 mod compute;
-mod error;
 
 pub use crate::compute::compute_layout;
 #[cfg(feature = "flexbox")]
@@ -34,7 +33,4 @@ pub use crate::compute::flexbox::FlexboxAlgorithm;
 #[cfg(feature = "grid")]
 pub use crate::compute::grid::CssGridAlgorithm;
 pub use crate::compute::LayoutAlgorithm;
-pub use crate::error::TaffyError;
-pub use crate::error::TaffyResult;
-pub use crate::tree::LayoutTree;
-pub use crate::tree::Taffy;
+pub use crate::tree::{LayoutTree, Taffy, TaffyError, TaffyResult};

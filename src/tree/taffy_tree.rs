@@ -3,14 +3,11 @@
 //! Layouts are composed of multiple nodes, which live in a tree-like data structure.
 use slotmap::{DefaultKey, SlotMap, SparseSecondaryMap};
 
-use super::{MeasureFunc, NodeData};
+use super::{Layout, MeasureFunc, NodeData, NodeId, SizeAndBaselines, SizingMode, TaffyError, TaffyResult};
 use crate::compute::{measure_node_size, perform_node_layout};
-use crate::error::{TaffyError, TaffyResult};
 use crate::geometry::Size;
 use crate::prelude::LayoutTree;
 use crate::style::{AvailableSpace, Style};
-use crate::tree::NodeId;
-use crate::tree::{Layout, SizeAndBaselines, SizingMode};
 use crate::util::sys::{new_vec_with_capacity, ChildrenVec, Vec};
 
 /// Global configuration values for a Taffy instance
