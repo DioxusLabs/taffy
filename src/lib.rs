@@ -26,7 +26,6 @@ pub mod debug;
 pub mod error;
 pub mod geometry;
 pub mod layout;
-pub mod math;
 pub mod node;
 pub mod prelude;
 pub mod style;
@@ -38,6 +37,7 @@ pub mod randomizable;
 
 mod compute;
 mod data;
+mod math;
 mod resolve;
 mod sys;
 
