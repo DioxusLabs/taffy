@@ -12,7 +12,9 @@ mod node;
 pub(self) use node::NodeData;
 pub use node::NodeId;
 mod taffy_tree;
+mod taffy_tree_error;
 pub use taffy_tree::{Taffy, TaffyChildIter};
+pub use taffy_tree_error::{TaffyError, TaffyResult};
 mod layout;
 
 /// Any item that implements the LayoutTree can be layed out using Taffy's algorithms.
