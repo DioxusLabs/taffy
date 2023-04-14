@@ -1,16 +1,16 @@
 //! Implements the track sizing algorithm
 //! <https://www.w3.org/TR/css-grid-1/#layout-algorithm>
 use super::types::{GridItem, GridTrack, TrackCounts};
-use crate::axis::AbstractAxis;
+use crate::geometry::AbstractAxis;
 use crate::geometry::Size;
-use crate::layout::SizingMode;
-use crate::math::MaybeMath;
 use crate::prelude::{LayoutTree, TaffyMinContent};
-use crate::resolve::ResolveOrZero;
 use crate::style::{
     AlignContent, AlignSelf, AvailableSpace, LengthPercentage, MaxTrackSizingFunction, MinTrackSizingFunction,
 };
-use crate::sys::{f32_max, f32_min, Vec};
+use crate::tree::SizingMode;
+use crate::util::sys::{f32_max, f32_min, Vec};
+use crate::util::MaybeMath;
+use crate::util::ResolveOrZero;
 use core::cmp::Ordering;
 
 /// Takes an axis, and a list of grid items sorted firstly by whether they cross a flex track

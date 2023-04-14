@@ -1,10 +1,10 @@
 //! A cache for storing the results of layout computation
 use crate::geometry::Size;
-use crate::layout::{RunMode, SizeAndBaselines};
 use crate::style::AvailableSpace;
+use crate::tree::{RunMode, SizeAndBaselines};
 
 /// The number of cache entries for each node in the tree
-pub(crate) const CACHE_SIZE: usize = 7;
+const CACHE_SIZE: usize = 7;
 
 /// Cached intermediate layout results
 #[derive(Debug, Clone, Copy)]

@@ -1,4 +1,4 @@
-//! A representation of [CSS layout properties](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust, used for flexbox layout
+//! A typed representation of [CSS style properties](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust. Used as input to layout computation.
 mod alignment;
 mod dimension;
 
@@ -27,7 +27,7 @@ use crate::geometry::Line;
 #[cfg(feature = "serde")]
 use crate::style_helpers;
 #[cfg(feature = "grid")]
-use crate::sys::GridTrackVec;
+use crate::util::sys::GridTrackVec;
 
 /// Sets the layout used for the children of this node
 ///

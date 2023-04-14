@@ -1,10 +1,10 @@
 //! Style types for CSS Grid layout
 use super::{AlignContent, LengthPercentage, Style};
-use crate::axis::{AbsoluteAxis, AbstractAxis};
 use crate::compute::grid::{GridCoordinate, GridLine, OriginZeroLine};
+use crate::geometry::{AbsoluteAxis, AbstractAxis};
 use crate::geometry::{Line, MinMax};
 use crate::style_helpers::*;
-use crate::sys::GridTrackVec;
+use crate::util::sys::GridTrackVec;
 use core::cmp::{max, min};
 use core::convert::Infallible;
 

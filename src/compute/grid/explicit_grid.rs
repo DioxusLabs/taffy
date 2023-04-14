@@ -1,12 +1,12 @@
 //! Helper functions for intialising GridTrack's from styles
 //! This mainly consists of evaluating GridAutoTracks
 use super::types::{GridTrack, TrackCounts};
-use crate::axis::AbsoluteAxis;
-use crate::math::MaybeMath;
-use crate::resolve::ResolveOrZero;
+use crate::geometry::AbsoluteAxis;
 use crate::style::{GridTrackRepetition, LengthPercentage, NonRepeatedTrackSizingFunction, Style, TrackSizingFunction};
 use crate::style_helpers::TaffyAuto;
-use crate::sys::{GridTrackVec, Vec};
+use crate::util::sys::{GridTrackVec, Vec};
+use crate::util::MaybeMath;
+use crate::util::ResolveOrZero;
 use core::cmp::{max, min};
 
 /// Compute the number of rows and columns in the explicit grid
@@ -286,10 +286,10 @@ fn create_implicit_tracks(
 mod test {
     use super::compute_explicit_grid_size_in_axis;
     use super::initialize_grid_tracks;
-    use crate::axis::AbsoluteAxis;
     use crate::compute::grid::types::GridTrackKind;
     use crate::compute::grid::types::TrackCounts;
     use crate::compute::grid::util::*;
+    use crate::geometry::AbsoluteAxis;
     use crate::prelude::*;
 
     #[test]

@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod measure {
-    use taffy::node::MeasureFunc;
     use taffy::prelude::*;
+    use taffy::tree::MeasureFunc;
 
     #[test]
     fn measure_root() {

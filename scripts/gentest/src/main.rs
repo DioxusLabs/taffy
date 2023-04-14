@@ -154,14 +154,14 @@ fn generate_test(name: impl AsRef<str>, description: &Value) -> TokenStream {
         #[test]
         fn #name() {
             #[allow(unused_imports)]
-            use taffy::{layout::Layout, prelude::*};
+            use taffy::{tree::Layout, prelude::*};
             let mut taffy = taffy::Taffy::new();
             #set_rounding_mode
             #node_description
             taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
 
             println!("\nComputed tree:");
-            taffy::debug::print_tree(&taffy, node);
+            taffy::util::print_tree(&taffy, node);
             println!();
 
             #assertions
@@ -849,7 +849,7 @@ fn generate_generic_measure_function() -> TokenStream {
             writing_mode: WritingMode,
             _aspect_ratio: Option<f32>,
         ) -> taffy::geometry::Size<f32> {
-            use taffy::axis::AbsoluteAxis;
+            use taffy::geometry::AbsoluteAxis;
             use taffy::prelude::*;
             const ZWS: char = '\u{200B}';
             const H_WIDTH: f32 = 10.0;
@@ -917,7 +917,7 @@ fn generate_measure_function(text_content: &str, writing_mode: Option<&str>, asp
     };
 
     quote!(
-        taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
+        taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
             const TEXT : &str = #text_content;
             super::measure_standard_text(known_dimensions, available_space, TEXT, #writing_mode_token, #aspect_ratio_token)
         })

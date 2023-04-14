@@ -1,10 +1,12 @@
+#![allow(dead_code)]
+
 use core::fmt::{Debug, Display, Write};
 use slotmap::{DefaultKey, Key};
 use std::sync::Mutex;
 
-use crate::node::Taffy;
 use crate::style;
 use crate::tree::NodeId;
+use crate::tree::Taffy;
 
 /// Prints a debug representation of the computed layout for a tree of nodes, starting with the passed root node.
 pub fn print_tree(tree: &Taffy, root: NodeId) {
@@ -115,7 +117,7 @@ macro_rules! time {
         let start = ::std::time::Instant::now();
         $($code)*
         let duration = ::std::time::Instant::now().duration_since(start);
-        crate::debug::NODE_LOGGER.log(format_args!("Performed {} in {}ms", $label, duration.as_millis()));
+        crate::util::debug::NODE_LOGGER.log(format_args!("Performed {} in {}ms", $label, duration.as_millis()));
     };
 }
 

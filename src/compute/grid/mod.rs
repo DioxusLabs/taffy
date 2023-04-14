@@ -1,14 +1,14 @@
 //! This module is a partial implementation of the CSS Grid Level 1 specification
 //! <https://www.w3.org/TR/css-grid-1>
-use crate::axis::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
+use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
-use crate::layout::{Layout, RunMode, SizeAndBaselines, SizingMode};
-use crate::math::MaybeMath;
-use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Display, Position};
 use crate::style_helpers::*;
-use crate::sys::{GridTrackVec, Vec};
+use crate::tree::{Layout, RunMode, SizeAndBaselines, SizingMode};
 use crate::tree::{LayoutTree, NodeId};
+use crate::util::sys::{GridTrackVec, Vec};
+use crate::util::MaybeMath;
+use crate::util::{MaybeResolve, ResolveOrZero};
 use alignment::{align_and_position_item, align_tracks};
 use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks};
 use implicit_grid::compute_grid_size_estimate;
@@ -21,7 +21,7 @@ use types::{CellOccupancyMatrix, GridTrack};
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine};
 
 #[cfg(feature = "debug")]
-use crate::debug::NODE_LOGGER;
+use crate::util::debug::NODE_LOGGER;
 
 use super::LayoutAlgorithm;
 

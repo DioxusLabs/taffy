@@ -12,6 +12,11 @@
 - The Flexbox algorithm has now been moved behind the `flexbox` feature. The `flexbox` feature is enabled by default.
 - The `justify_self` property has been moved behind the `grid` feature.
 - `taffy::node::Node` has been replaced with `taffy::tree::NodeId`. This should make it much easier to implement the `LayoutTree` trait as the underlying type backing the node id now a `u64` rather than a `slotmap::DefaultKey`.
+- Module organisation changes:
+  - The `math` module has been made private
+  - The `axis` module has been merged into the `geometry` module
+  - The debug module is no longer public. The `print_tree` function is now accesible under `util`.
+  - All types from the `node`, `data`, `layout`, `error` and `cache` modules have been moved to the  the `tree` module.
 
 ## 0.3.11
 

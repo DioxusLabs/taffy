@@ -16,7 +16,7 @@ fn default<T: Default>() -> T {
 }
 
 #[cfg(feature = "grid")]
-fn main() -> Result<(), taffy::error::TaffyError> {
+fn main() -> Result<(), taffy::TaffyError> {
     use taffy::prelude::*;
 
     let mut taffy = Taffy::new();
@@ -42,7 +42,7 @@ fn main() -> Result<(), taffy::error::TaffyError> {
 
     // Compute layout and print result
     taffy.compute_layout(root, Size { width: points(800.0), height: points(600.0) })?;
-    taffy::debug::print_tree(&taffy, root);
+    taffy::util::print_tree(&taffy, root);
 
     Ok(())
 }

@@ -1,7 +1,7 @@
 #[test]
 fn grid_minmax_column_fixed_width_within_range() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node1 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
@@ -26,7 +26,7 @@ fn grid_minmax_column_fixed_width_within_range() {
         .unwrap();
     taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
     println!("\nComputed tree:");
-    taffy::debug::print_tree(&taffy, node);
+    taffy::util::print_tree(&taffy, node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert_eq!(size.width, 110f32, "width of node {:?}. Expected {}. Actual {}", node, 110f32, size.width);
