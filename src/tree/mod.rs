@@ -1,4 +1,4 @@
-//! The baseline requirements of any UI Tree so Taffy can efficiently calculate the layout
+//! Contains both [a high-level interface to Taffy](crate::Taffy) using a ready-made node tree, and [a trait for defining a custom node trees](crate::tree::LayoutTree) / utility types to help with that.
 
 use crate::geometry::{Point, Size};
 use crate::style::{AvailableSpace, Style};
