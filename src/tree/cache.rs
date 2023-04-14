@@ -4,7 +4,7 @@ use crate::layout::{RunMode, SizeAndBaselines};
 use crate::style::AvailableSpace;
 
 /// The number of cache entries for each node in the tree
-pub(crate) const CACHE_SIZE: usize = 7;
+const CACHE_SIZE: usize = 7;
 
 /// Cached intermediate layout results
 #[derive(Debug, Clone, Copy)]

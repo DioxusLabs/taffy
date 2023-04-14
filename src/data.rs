@@ -2,7 +2,7 @@
 //!
 //! Used to compute layout for Taffy trees
 //!
-use crate::cache::Cache;
+use crate::tree::Cache;
 use crate::layout::Layout;
 use crate::style::Style;
 
