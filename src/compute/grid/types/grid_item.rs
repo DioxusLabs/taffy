@@ -3,7 +3,6 @@ use super::GridTrack;
 use crate::compute::grid::OriginZeroLine;
 use crate::geometry::AbstractAxis;
 use crate::geometry::{Line, Point, Rect, Size};
-use crate::layout::SizingMode;
 use crate::math::MaybeMath;
 use crate::prelude::LayoutTree;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
@@ -12,6 +11,7 @@ use crate::style::{
     MinTrackSizingFunction, Overflow, Style,
 };
 use crate::tree::NodeId;
+use crate::tree::SizingMode;
 use core::ops::Range;
 
 /// Represents a single grid item

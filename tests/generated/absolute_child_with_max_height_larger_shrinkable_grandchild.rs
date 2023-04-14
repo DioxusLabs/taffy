@@ -1,7 +1,7 @@
 #[test]
 fn absolute_child_with_max_height_larger_shrinkable_grandchild() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
         .new_leaf(taffy::style::Style {

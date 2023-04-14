@@ -1,13 +1,13 @@
 //! Computes size using styles and measure functions
 
 use crate::geometry::{Point, Size};
-use crate::layout::{SizeAndBaselines, SizingMode};
 use crate::math::MaybeMath;
-use crate::node::Taffy;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::AvailableSpace;
 use crate::sys::f32_max;
 use crate::tree::NodeId;
+use crate::tree::Taffy;
+use crate::tree::{SizeAndBaselines, SizingMode};
 
 #[cfg(feature = "debug")]
 use crate::debug::NODE_LOGGER;

@@ -1,7 +1,7 @@
 #[test]
 fn grid_max_content_single_item_margin_auto() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node1 = taffy
@@ -15,7 +15,7 @@ fn grid_max_content_single_item_margin_auto() {
                 },
                 ..Default::default()
             },
-            taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HH\u{200b}HH";
                 super::measure_standard_text(
                     known_dimensions,

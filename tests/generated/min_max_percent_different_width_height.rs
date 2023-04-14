@@ -1,7 +1,7 @@
 #[test]
 fn min_max_percent_different_width_height() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf_with_measure(
@@ -16,7 +16,7 @@ fn min_max_percent_different_width_height() {
                 },
                 ..Default::default()
             },
-            taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "\n  ";
                 super::measure_standard_text(
                     known_dimensions,

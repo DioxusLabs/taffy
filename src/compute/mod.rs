@@ -11,11 +11,9 @@ pub(crate) mod grid;
 
 use crate::error::TaffyError;
 use crate::geometry::{Point, Size};
-use crate::layout::{Layout, RunMode, SizeAndBaselines, SizingMode};
-use crate::node::Taffy;
 use crate::style::{AvailableSpace, Display};
 use crate::sys::round;
-use crate::tree::{LayoutTree, NodeId};
+use crate::tree::{Layout, LayoutTree, NodeId, RunMode, SizeAndBaselines, SizingMode, Taffy};
 
 #[cfg(feature = "flexbox")]
 use self::flexbox::FlexboxAlgorithm;

@@ -1,7 +1,7 @@
 #[test]
 fn measure_height_overrides_measure() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf_with_measure(
@@ -9,7 +9,7 @@ fn measure_height_overrides_measure() {
                 size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(5f32) },
                 ..Default::default()
             },
-            taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "H";
                 super::measure_standard_text(
                     known_dimensions,

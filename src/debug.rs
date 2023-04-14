@@ -2,9 +2,9 @@ use core::fmt::{Debug, Display, Write};
 use slotmap::{DefaultKey, Key};
 use std::sync::Mutex;
 
-use crate::node::Taffy;
 use crate::style;
 use crate::tree::NodeId;
+use crate::tree::Taffy;
 
 /// Prints a debug representation of the computed layout for a tree of nodes, starting with the passed root node.
 pub fn print_tree(tree: &Taffy, root: NodeId) {

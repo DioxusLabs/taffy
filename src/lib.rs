@@ -22,8 +22,6 @@ extern crate serde;
 #[doc(hidden)]
 pub mod debug;
 pub mod geometry;
-pub mod layout;
-pub mod node;
 pub mod prelude;
 pub mod style;
 pub mod style_helpers;
@@ -33,7 +31,6 @@ pub mod tree;
 pub mod randomizable;
 
 mod compute;
-mod data;
 mod error;
 mod math;
 mod resolve;
@@ -47,4 +44,4 @@ pub use crate::compute::grid::CssGridAlgorithm;
 pub use crate::compute::LayoutAlgorithm;
 pub use crate::error::TaffyError;
 pub use crate::error::TaffyResult;
-pub use crate::node::Taffy;
+pub use crate::tree::Taffy;

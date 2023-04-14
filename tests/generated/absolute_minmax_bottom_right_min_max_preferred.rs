@@ -1,7 +1,7 @@
 #[test]
 fn absolute_minmax_bottom_right_min_max_preferred() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {

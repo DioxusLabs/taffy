@@ -1,7 +1,7 @@
 #[test]
 fn align_items_flex_end_child_without_margin_bigger_than_parent() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
         .new_leaf(taffy::style::Style {

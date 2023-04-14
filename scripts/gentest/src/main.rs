@@ -154,7 +154,7 @@ fn generate_test(name: impl AsRef<str>, description: &Value) -> TokenStream {
         #[test]
         fn #name() {
             #[allow(unused_imports)]
-            use taffy::{layout::Layout, prelude::*};
+            use taffy::{tree::Layout, prelude::*};
             let mut taffy = taffy::Taffy::new();
             #set_rounding_mode
             #node_description
@@ -917,7 +917,7 @@ fn generate_measure_function(text_content: &str, writing_mode: Option<&str>, asp
     };
 
     quote!(
-        taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
+        taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
             const TEXT : &str = #text_content;
             super::measure_standard_text(known_dimensions, available_space, TEXT, #writing_mode_token, #aspect_ratio_token)
         })

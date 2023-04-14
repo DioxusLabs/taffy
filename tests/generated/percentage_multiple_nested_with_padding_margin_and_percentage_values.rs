@@ -1,7 +1,7 @@
 #[test]
 fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node000 = taffy
         .new_leaf(taffy::style::Style {

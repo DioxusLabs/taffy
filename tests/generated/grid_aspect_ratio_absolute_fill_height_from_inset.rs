@@ -1,7 +1,7 @@
 #[test]
 fn grid_aspect_ratio_absolute_fill_height_from_inset() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {

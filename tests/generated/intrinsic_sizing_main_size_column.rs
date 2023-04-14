@@ -1,12 +1,12 @@
 #[test]
 fn intrinsic_sizing_main_size_column() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node = taffy
         .new_leaf_with_measure(
             taffy::style::Style { flex_direction: taffy::style::FlexDirection::Column, ..Default::default() },
-            taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HH\u{200b}HH";
                 super::measure_standard_text(
                     known_dimensions,

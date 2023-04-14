@@ -1,7 +1,7 @@
 #[test]
 fn width_smaller_then_content_with_flex_grow_very_large_size() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
         .new_leaf(taffy::style::Style {

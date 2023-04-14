@@ -1,7 +1,7 @@
 #[test]
 fn padding_border_overrides_size_flex_basis_0_growable() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
