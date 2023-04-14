@@ -1,7 +1,7 @@
 #[test]
 fn wrapped_row_within_align_items_center() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
         .new_leaf(taffy::style::Style {

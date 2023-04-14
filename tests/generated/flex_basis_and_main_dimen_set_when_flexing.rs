@@ -1,7 +1,7 @@
 #[test]
 fn flex_basis_and_main_dimen_set_when_flexing() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {

@@ -1,7 +1,7 @@
 #[test]
 fn percentage_moderate_complexity() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     taffy.disable_rounding();
     let node00 = taffy

@@ -1,7 +1,7 @@
 #[test]
 fn absolute_child_with_cross_margin() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
@@ -32,7 +32,7 @@ fn absolute_child_with_cross_margin() {
                 },
                 ..Default::default()
             },
-            taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "\n  ";
                 super::measure_standard_text(
                     known_dimensions,

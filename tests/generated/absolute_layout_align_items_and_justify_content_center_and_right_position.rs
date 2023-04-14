@@ -1,7 +1,7 @@
 #[test]
 fn absolute_layout_align_items_and_justify_content_center_and_right_position() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {

@@ -1,7 +1,7 @@
 #[test]
 fn align_items_center_justify_content_center() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node000 = taffy
         .new_leaf_with_measure(
@@ -12,7 +12,7 @@ fn align_items_center_justify_content_center() {
                 },
                 ..Default::default()
             },
-            taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "\n      ";
                 super::measure_standard_text(
                     known_dimensions,

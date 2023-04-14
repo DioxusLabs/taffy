@@ -2,8 +2,6 @@
 
 pub use crate::{
     geometry::{Line, Rect, Size},
-    layout::Layout,
-    node::Taffy,
     style::{
         AlignContent, AlignItems, AlignSelf, AvailableSpace, Dimension, Display, JustifyContent, JustifyItems,
         JustifySelf, LengthPercentage, LengthPercentageAuto, Position, Style,
@@ -12,7 +10,7 @@ pub use crate::{
         auto, fit_content, max_content, min_content, percent, points, zero, FromFlex, FromPercent, FromPoints,
         TaffyAuto, TaffyFitContent, TaffyMaxContent, TaffyMinContent, TaffyZero,
     },
-    tree::{LayoutTree, NodeId},
+    tree::{Layout, LayoutTree, NodeId, Taffy},
 };
 
 #[cfg(feature = "flexbox")]

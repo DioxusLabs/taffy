@@ -1,7 +1,7 @@
 #[test]
 fn display_none_only_node() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node = taffy
         .new_leaf(taffy::style::Style {

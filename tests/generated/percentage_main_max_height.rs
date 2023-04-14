@@ -1,7 +1,7 @@
 #[test]
 fn percentage_main_max_height() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
         .new_leaf(taffy::style::Style { flex_basis: taffy::style::Dimension::Points(15f32), ..Default::default() })

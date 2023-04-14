@@ -1,12 +1,12 @@
 #[test]
 fn grid_aspect_ratio_child_fill_content_width() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf_with_measure(
             taffy::style::Style { aspect_ratio: Some(2f32), ..Default::default() },
-            taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HHHH";
                 super::measure_standard_text(
                     known_dimensions,

@@ -1,7 +1,7 @@
 #[test]
 fn grid_fr_no_sized_items_indefinite() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node1 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();

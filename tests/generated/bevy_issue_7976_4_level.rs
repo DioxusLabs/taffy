@@ -1,7 +1,7 @@
 #[test]
 fn bevy_issue_7976_4_level() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node000 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node00 = taffy

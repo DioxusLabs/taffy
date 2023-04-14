@@ -4,7 +4,6 @@ use core::f32;
 use crate::compute::common::alignment::compute_alignment_offset;
 use crate::compute::LayoutAlgorithm;
 use crate::geometry::{Point, Rect, Size};
-use crate::layout::{Layout, RunMode, SizeAndBaselines, SizingMode};
 use crate::math::MaybeMath;
 use crate::prelude::{TaffyMaxContent, TaffyMinContent};
 use crate::resolve::{MaybeResolve, ResolveOrZero};
@@ -15,6 +14,7 @@ use crate::style::{
 use crate::style::{FlexDirection, Style};
 use crate::sys::Vec;
 use crate::sys::{f32_max, new_vec_with_capacity};
+use crate::tree::{Layout, RunMode, SizeAndBaselines, SizingMode};
 use crate::tree::{LayoutTree, NodeId};
 
 #[cfg(feature = "debug")]

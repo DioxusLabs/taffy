@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod caching {
-    use taffy::node::MeasureFunc;
     use taffy::prelude::*;
+    use taffy::tree::MeasureFunc;
 
     #[test]
     fn measure_count_flexbox() {

@@ -1,7 +1,7 @@
 #[test]
 fn grid_overflow_inline_axis_hidden() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf_with_measure(
@@ -12,7 +12,7 @@ fn grid_overflow_inline_axis_hidden() {
                 },
                 ..Default::default()
             },
-            taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HHHHHHHHHH";
                 super::measure_standard_text(
                     known_dimensions,

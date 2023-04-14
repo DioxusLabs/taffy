@@ -1,7 +1,7 @@
 #[test]
 fn grid_overflow_rows() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf_with_measure(
@@ -9,7 +9,7 @@ fn grid_overflow_rows() {
                 grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Span(4u16) },
                 ..Default::default()
             },
-            taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HHHHHHHHHHHHHHHH\u{200b}HHHHHHHHHHHHHHHH";
                 super::measure_standard_text(
                     known_dimensions,

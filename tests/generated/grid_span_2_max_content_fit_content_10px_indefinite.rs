@@ -1,7 +1,7 @@
 #[test]
 fn grid_span_2_max_content_fit_content_10px_indefinite() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
@@ -24,7 +24,7 @@ fn grid_span_2_max_content_fit_content_10px_indefinite() {
                 grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Span(2u16) },
                 ..Default::default()
             },
-            taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HHHH\u{200b}HHHH";
                 super::measure_standard_text(
                     known_dimensions,

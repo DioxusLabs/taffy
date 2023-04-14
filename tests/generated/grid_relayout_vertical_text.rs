@@ -1,12 +1,12 @@
 #[test]
 fn grid_relayout_vertical_text() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf_with_measure(
             taffy::style::Style { ..Default::default() },
-            taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH";
                 super::measure_standard_text(
                     known_dimensions,
@@ -21,7 +21,7 @@ fn grid_relayout_vertical_text() {
     let node1 = taffy
         .new_leaf_with_measure(
             taffy::style::Style { ..Default::default() },
-            taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HH\u{200b}HH\u{200b}HH";
                 super::measure_standard_text(
                     known_dimensions,

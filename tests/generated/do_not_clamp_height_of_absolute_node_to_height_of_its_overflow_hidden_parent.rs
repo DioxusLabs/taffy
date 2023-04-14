@@ -1,7 +1,7 @@
 #[test]
 fn do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
         .new_leaf(taffy::style::Style {

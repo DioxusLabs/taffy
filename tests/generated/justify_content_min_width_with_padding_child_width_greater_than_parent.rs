@@ -1,7 +1,7 @@
 #[test]
 fn justify_content_min_width_with_padding_child_width_greater_than_parent() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node000 = taffy
         .new_leaf(taffy::style::Style {

@@ -1,7 +1,7 @@
 #[test]
 fn flex_basis_flex_shrink_column() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style { flex_basis: taffy::style::Dimension::Points(100f32), ..Default::default() })

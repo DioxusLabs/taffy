@@ -1,7 +1,7 @@
 #[test]
 fn parent_wrap_child_size_overflowing_parent() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
         .new_leaf(taffy::style::Style {

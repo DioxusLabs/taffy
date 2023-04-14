@@ -1,7 +1,7 @@
 #[test]
 fn grid_fr_span_2_proportion_with_non_spanned_track() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {

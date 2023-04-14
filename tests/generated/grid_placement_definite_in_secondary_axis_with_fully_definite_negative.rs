@@ -1,7 +1,7 @@
 #[test]
 fn grid_placement_definite_in_secondary_axis_with_fully_definite_negative() {
     #[allow(unused_imports)]
-    use taffy::{layout::Layout, prelude::*};
+    use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
