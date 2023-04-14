@@ -5,6 +5,9 @@ use crate::{
 };
 use slotmap::{DefaultKey, Key, KeyData};
 
+mod cache;
+pub use cache::{Cache, CacheEntry};
+
 /// A type representing the id of a single node in a tree of nodes
 ///
 /// Internally it is a wrapper around a u64 and a `NodeId` can be converted to and from

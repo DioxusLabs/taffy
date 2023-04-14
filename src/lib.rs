@@ -18,7 +18,6 @@ extern crate alloc;
 #[cfg(feature = "serde")]
 extern crate serde;
 
-pub mod cache;
 #[cfg(feature = "std")]
 #[doc(hidden)]
 pub mod debug;
