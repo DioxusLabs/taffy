@@ -11,7 +11,7 @@ fn overflow_scrollbars_overriden_by_available_space() {
                     x: taffy::style::Overflow::Scroll,
                     y: taffy::style::Overflow::Scroll,
                 },
-                scrollbar_width: 15u8,
+                scrollbar_width: 15f32,
                 flex_grow: 1f32,
                 ..Default::default()
             },

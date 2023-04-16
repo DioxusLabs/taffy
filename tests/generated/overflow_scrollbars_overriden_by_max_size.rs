@@ -11,7 +11,7 @@ fn overflow_scrollbars_overriden_by_max_size() {
                     x: taffy::style::Overflow::Scroll,
                     y: taffy::style::Overflow::Scroll,
                 },
-                scrollbar_width: 15u8,
+                scrollbar_width: 15f32,
                 max_size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Length(2f32),
                     height: taffy::style::Dimension::Length(4f32),

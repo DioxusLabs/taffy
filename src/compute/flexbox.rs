@@ -435,7 +435,7 @@ fn compute_constants(
     // However, the axis are switched (transposed) because a node that scrolls vertically needs
     // *horizontal* space to be reserved for a scrollbar
     let scrollbar_gutter = style.overflow.transpose().map(|overflow| match overflow {
-        Overflow::Scroll => style.scrollbar_width as f32,
+        Overflow::Scroll => style.scrollbar_width,
         _ => 0.0,
     });
     // TODO: make side configurable based on the `direction` property

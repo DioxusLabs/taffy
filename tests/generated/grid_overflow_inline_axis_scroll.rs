@@ -10,7 +10,7 @@ fn grid_overflow_inline_axis_scroll() {
                     x: taffy::style::Overflow::Scroll,
                     y: taffy::style::Overflow::Scroll,
                 },
-                scrollbar_width: 15u8,
+                scrollbar_width: 15f32,
                 ..Default::default()
             },
             taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {

@@ -10,7 +10,7 @@ fn overflow_main_axis_shrink_hidden() {
                     x: taffy::style::Overflow::Hidden,
                     y: taffy::style::Overflow::Hidden,
                 },
-                scrollbar_width: 15u8,
+                scrollbar_width: 15f32,
                 flex_shrink: 1f32,
                 ..Default::default()
             },

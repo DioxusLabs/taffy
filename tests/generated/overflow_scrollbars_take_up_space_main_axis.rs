@@ -11,7 +11,7 @@ fn overflow_scrollbars_take_up_space_main_axis() {
                     x: taffy::style::Overflow::Scroll,
                     y: taffy::style::Overflow::Visible,
                 },
-                scrollbar_width: 15u8,
+                scrollbar_width: 15f32,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Length(50f32),
                     height: taffy::style::Dimension::Length(50f32),

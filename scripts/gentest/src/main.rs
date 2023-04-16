@@ -391,10 +391,7 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
         let overflow_x = overflow_x.unwrap_or(quote!(taffy::style::Overflow::Visible));
         let overflow_y = overflow_y.unwrap_or(quote!(taffy::style::Overflow::Visible));
         let overflow = quote!(overflow: taffy::geometry::Point { x: #overflow_x, y: #overflow_y },);
-        let scrollbar_width = quote_number_prop("scrollbar_width", style, |value: f32| {
-            let value = value as u8;
-            quote!(#value)
-        });
+        let scrollbar_width = quote_number_prop("scrollbar_width", style, |value: f32| quote!(#value));
         (overflow, scrollbar_width)
     } else {
         (quote!(), quote!())

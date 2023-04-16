@@ -164,7 +164,7 @@ pub struct Style {
     /// How children overflowing their container should affect layout
     pub overflow: Point<Overflow>,
     /// How much space (in points) should be reserved for the scrollbars of `Overflow::Scroll` and `Overflow::Auto` nodes.
-    pub scrollbar_width: u8,
+    pub scrollbar_width: f32,
 
     // Position properties
     /// What should the `position` value of this struct use as a base offset?
@@ -277,7 +277,7 @@ impl Style {
     pub const DEFAULT: Style = Style {
         display: Display::DEFAULT,
         overflow: Point { x: Overflow::Visible, y: Overflow::Visible },
-        scrollbar_width: 0,
+        scrollbar_width: 0.0,
         position: Position::Relative,
         inset: Rect::auto(),
         margin: Rect::zero(),
@@ -350,7 +350,7 @@ mod tests {
         let old_defaults = Style {
             display: Default::default(),
             overflow: Default::default(),
-            scrollbar_width: 0,
+            scrollbar_width: 0.0,
             position: Default::default(),
             #[cfg(feature = "flexbox")]
             flex_direction: Default::default(),
@@ -467,6 +467,6 @@ mod tests {
         assert_type_size::<Line<GridPlacement>>(8);
 
         // Overall
-        assert_type_size::<Style>(344);
+        assert_type_size::<Style>(352);
     }
 }
