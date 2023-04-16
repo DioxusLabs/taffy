@@ -427,7 +427,18 @@ fn compute_constants(
     let align_content = style.align_content.unwrap_or(AlignContent::Stretch);
     let justify_content = style.justify_content;
 
-    let padding_border = padding + border;
+    let mut padding_border = padding + border;
+
+    // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
+    // However, the axis are switched (transposed) because a node that scrolls vertically needs
+    // *horizontal* space to be reserved for a scrollbar
+    let scrollbar_gutter = style.overflow.transpose().map(|overflow| match overflow {
+        Overflow::Scroll => style.scrollbar_width as f32,
+        _ => 0.0,
+    });
+    // TODO: make side configurable based on the `direction` property
+    padding_border.right += scrollbar_gutter.x;
+    padding_border.bottom += scrollbar_gutter.y;
 
     let node_outer_size = known_dimensions;
     let node_inner_size = node_outer_size.maybe_sub(padding_border.sum_axes());

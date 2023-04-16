@@ -611,6 +611,11 @@ impl<T> Point<T> {
         }
     }
 
+    /// Swap x and y components
+    pub fn transpose(self) -> Point<T> {
+        Point { x: self.y, y: self.x }
+    }
+
     /// Sets the extent of the specified layout axis
     /// Whether this is the width or height depends on the `GridAxis` provided
     #[cfg(feature = "grid")]
