@@ -625,6 +625,30 @@ impl<T> Point<T> {
             AbstractAxis::Block => self.y = value,
         }
     }
+
+    /// Gets the component in the main layout axis
+    ///
+    /// Whether this is the x or y depends on the `direction` provided
+    #[cfg(feature = "flexbox")]
+    pub(crate) fn main(self, direction: FlexDirection) -> T {
+        if direction.is_row() {
+            self.x
+        } else {
+            self.y
+        }
+    }
+
+    /// Gets the component in the cross layout axis
+    ///
+    /// Whether this is the x or y depends on the `direction` provided
+    #[cfg(feature = "flexbox")]
+    pub(crate) fn cross(self, direction: FlexDirection) -> T {
+        if direction.is_row() {
+            self.y
+        } else {
+            self.x
+        }
+    }
 }
 
 impl<T> From<Point<T>> for Size<T> {
