@@ -154,6 +154,8 @@ struct AlgoConstants {
     border: Rect<f32>,
     /// The padding of this section
     padding_border: Rect<f32>,
+    /// The size reserved for scrollbar gutters in each axis
+    scrollbar_gutter: Point<f32>,
     /// The gap of this section
     gap: Size<f32>,
     /// The align_items property of this node
@@ -459,6 +461,7 @@ fn compute_constants(
         border,
         gap,
         padding_border,
+        scrollbar_gutter,
         align_items,
         align_content,
         justify_content,
@@ -1022,10 +1025,10 @@ fn determine_container_main_size(
 
     let outer_main_size = outer_main_size
         .maybe_clamp(constants.min_size.main(constants.dir), constants.max_size.main(constants.dir))
-        .max(main_padding_border);
+        .max(main_padding_border - constants.scrollbar_gutter.main(constants.dir));
 
     // let outer_main_size = inner_main_size + constants.padding_border.main_axis_sum(constants.dir);
-    let inner_main_size = outer_main_size - constants.padding_border.main_axis_sum(constants.dir);
+    let inner_main_size = f32_max(outer_main_size - main_padding_border, 0.0);
     constants.container_size.set_main(constants.dir, outer_main_size);
     constants.inner_container_size.set_main(constants.dir, inner_main_size);
     constants.node_inner_size.set_main(constants.dir, Some(inner_main_size));
@@ -1680,14 +1683,15 @@ fn determine_container_cross_size(
     let total_line_cross_size: f32 = flex_lines.iter().map(|line| line.cross_size).sum::<f32>();
 
     let padding_border_sum = constants.padding_border.cross_axis_sum(constants.dir);
+    let cross_scrollbar_gutter = constants.scrollbar_gutter.cross(constants.dir);
     let min_cross_size = constants.min_size.cross(constants.dir);
     let max_cross_size = constants.max_size.cross(constants.dir);
     let outer_container_size = node_size
         .cross(constants.dir)
         .unwrap_or(total_line_cross_size + total_cross_axis_gap + padding_border_sum)
         .maybe_clamp(min_cross_size, max_cross_size)
-        .max(padding_border_sum);
-    let inner_container_size = outer_container_size - padding_border_sum;
+        .max(padding_border_sum - cross_scrollbar_gutter);
+    let inner_container_size = f32_max(outer_container_size - padding_border_sum, 0.0);
 
     constants.container_size.set_cross(constants.dir, outer_container_size);
     constants.inner_container_size.set_cross(constants.dir, inner_container_size);
