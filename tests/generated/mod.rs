@@ -874,6 +874,8 @@ mod overflow_main_axis;
 mod overflow_main_axis_shrink_hidden;
 mod overflow_main_axis_shrink_scroll;
 mod overflow_main_axis_shrink_visible;
+mod overflow_scrollbars_overriden_by_max_size;
+mod overflow_scrollbars_overriden_by_size;
 mod overflow_scrollbars_take_up_space_both_axis;
 mod overflow_scrollbars_take_up_space_cross_axis;
 mod overflow_scrollbars_take_up_space_main_axis;
