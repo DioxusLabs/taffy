@@ -32,6 +32,7 @@ random = ["dep:rand"]
 yoga_benchmark = []
 debug = []
 profile = []
+taffy = []
 
 [dev-dependencies]
 criterion = "0.4"

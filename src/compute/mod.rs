@@ -11,7 +11,7 @@ pub(crate) mod grid;
 
 use crate::geometry::{Point, Size};
 use crate::style::{AvailableSpace, Display};
-use crate::tree::{Layout, LayoutTree, NodeId, RunMode, SizeAndBaselines, SizingMode, Taffy, TaffyError};
+use crate::tree::{Layout, LayoutTree, NodeId, RunMode, SizeAndBaselines, SizingMode};
 use crate::util::sys::round;
 
 #[cfg(feature = "flexbox")]
@@ -25,13 +25,13 @@ use crate::util::debug::NODE_LOGGER;
 
 /// Updates the stored layout of the provided `node` and its children
 pub(crate) fn compute_layout(
-    taffy: &mut Taffy,
+    tree: &mut impl LayoutTree,
     root: NodeId,
     available_space: Size<AvailableSpace>,
-) -> Result<(), TaffyError> {
+) -> Result<(), Box<dyn std::error::Error>> {
     // Recursively compute node layout
     let size_and_baselines = perform_node_layout(
-        taffy,
+        tree,
         root,
         Size::NONE,
         available_space.into_options(),
@@ -40,11 +40,11 @@ pub(crate) fn compute_layout(
     );
 
     let layout = Layout { order: 0, size: size_and_baselines.size, location: Point::ZERO };
-    *taffy.layout_mut(root) = layout;
+    *tree.layout_mut(root) = layout;
 
     // If rounding is enabled, recursively round the layout's of this node and all children
-    if taffy.config.use_rounding {
-        round_layout(taffy, root, 0.0, 0.0);
+    if tree.use_rounding() {
+        round_layout(tree, root, 0.0, 0.0);
     }
 
     Ok(())
@@ -78,7 +78,7 @@ pub trait LayoutAlgorithm {
 
 /// Perform full layout on a node. Chooses which algorithm to use based on the `display` property.
 pub(crate) fn perform_node_layout(
-    tree: &mut Taffy,
+    tree: &mut impl LayoutTree,
     node: NodeId,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
@@ -90,7 +90,7 @@ pub(crate) fn perform_node_layout(
 
 /// Measure a node's size. Chooses which algorithm to use based on the `display` property.
 pub(crate) fn measure_node_size(
-    tree: &mut Taffy,
+    tree: &mut impl LayoutTree,
     node: NodeId,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
@@ -103,7 +103,7 @@ pub(crate) fn measure_node_size(
 
 /// Updates the stored layout of the provided `node` and its children
 fn compute_node_layout(
-    tree: &mut Taffy,
+    tree: &mut impl LayoutTree,
     node: NodeId,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
@@ -116,8 +116,7 @@ fn compute_node_layout(
     #[cfg(feature = "debug")]
     println!();
 
-    let node_key = node.into();
-    let has_children = !tree.children[node_key].is_empty();
+    let has_children = !tree.children(node).count() == 0;
 
     // First we check if we have a cached result for the given input
     let cache_run_mode = if !has_children { RunMode::PeformLayout } else { run_mode };
@@ -160,7 +159,7 @@ fn compute_node_layout(
         }
     }
 
-    let display_mode = tree.nodes[node_key].style.display;
+    let display_mode = tree.style(node).display;
     let computed_size_and_baselines = match (display_mode, has_children) {
         (Display::None, _) => perform_computations::<HiddenAlgorithm>(
             tree,

@@ -111,6 +111,11 @@ impl LayoutTree for Taffy {
     ) -> SizeAndBaselines {
         perform_node_layout(self, node, known_dimensions, parent_size, available_space, sizing_mode)
     }
+
+    #[inline(always)]
+    fn use_rounding(&self) -> bool {
+        self.config.use_rounding
+    }
 }
 
 #[allow(clippy::iter_cloned_collect)] // due to no-std support, we need to use `iter_cloned` instead of `collect`

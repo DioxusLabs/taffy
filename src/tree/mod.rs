@@ -9,11 +9,16 @@ pub use cache::{Cache, CacheEntry};
 mod measure_func;
 pub use measure_func::{Measurable, MeasureFunc};
 mod node;
-pub(self) use node::NodeData;
 pub use node::NodeId;
+#[cfg(feature = "taffy")]
+pub(self) use node::NodeData;
+#[cfg(feature = "taffy")]
 mod taffy_tree;
+#[cfg(feature = "taffy")]
 mod taffy_tree_error;
+#[cfg(feature = "taffy")]
 pub use taffy_tree::{Taffy, TaffyChildIter};
+#[cfg(feature = "taffy")]
 pub use taffy_tree_error::{TaffyError, TaffyResult};
 mod layout;
 
@@ -61,7 +66,12 @@ pub trait LayoutTree {
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
     ) -> SizeAndBaselines;
+
+    /// Whether or not to enable rounding
+    fn use_rounding(&self) -> bool;
 }
+
+pub(crate) type GenericLayoutTree<'a> = dyn LayoutTree<ChildIter<'a> = dyn Iterator<Item = NodeId>>;
 
 /// Whether we are performing a full layout, or we merely need to size the node
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
