@@ -7,9 +7,6 @@ use std::sync::Mutex;
 use crate::tree::NodeId;
 use crate::{style, LayoutTree};
 
-#[cfg(feature = "taffy")]
-use crate::tree::Taffy;
-
 /// Prints a debug representation of the computed layout for a tree of nodes, starting with the passed root node.
 pub fn print_tree<'a>(tree: &impl LayoutTree, root: NodeId) {
     println!("TREE");
@@ -18,7 +15,7 @@ pub fn print_tree<'a>(tree: &impl LayoutTree, root: NodeId) {
 
 fn print_node<'a>(tree: &impl LayoutTree, node: NodeId, has_sibling: bool, lines_string: String) {
     let key = DefaultKey::from(node);
-    let layout = &tree.layout_mut(node);
+    let layout = &tree.layout(node);
     let style = &tree.style(node);
     let num_children = tree.child_count(node);
 

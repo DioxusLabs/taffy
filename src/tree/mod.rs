@@ -15,11 +15,7 @@ pub(self) use node::NodeData;
 #[cfg(feature = "taffy")]
 mod taffy_tree;
 #[cfg(feature = "taffy")]
-mod taffy_tree_error;
-#[cfg(feature = "taffy")]
-pub use taffy_tree::{Taffy, TaffyChildIter};
-#[cfg(feature = "taffy")]
-pub use taffy_tree_error::{TaffyError, TaffyResult};
+pub use taffy_tree::{Taffy, TaffyChildIter, TaffyError, TaffyResult};
 mod layout;
 
 /// Any item that implements the LayoutTree can be layed out using Taffy's algorithms.
@@ -43,6 +39,9 @@ pub trait LayoutTree {
 
     /// Get the [`Style`] for this node.
     fn style(&self, node: NodeId) -> &Style;
+
+    /// Get a reference to the node's output layout
+    fn layout(&self, node: NodeId) -> &Layout;
 
     /// Modify the node's output layout
     fn layout_mut(&mut self, node: NodeId) -> &mut Layout;
@@ -70,8 +69,6 @@ pub trait LayoutTree {
     /// Whether or not to enable rounding
     fn use_rounding(&self) -> bool;
 }
-
-pub(crate) type GenericLayoutTree<'a> = dyn LayoutTree<ChildIter<'a> = dyn Iterator<Item = NodeId>>;
 
 /// Whether we are performing a full layout, or we merely need to size the node
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
