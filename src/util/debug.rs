@@ -1,9 +1,9 @@
 #![allow(dead_code)]
 
-use core::fmt::{Debug, Display, Write};
-use std::sync::Mutex;
 use crate::tree::NodeId;
 use crate::{style, LayoutTree};
+use core::fmt::{Debug, Display, Write};
+use std::sync::Mutex;
 
 /// Prints a debug representation of the computed layout for a tree of nodes, starting with the passed root node.
 pub fn print_tree(tree: &impl LayoutTree, root: NodeId) {
