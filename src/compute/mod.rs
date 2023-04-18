@@ -21,6 +21,9 @@ pub use self::flexbox::FlexboxAlgorithm;
 #[cfg(feature = "grid")]
 pub use self::grid::CssGridAlgorithm;
 
+#[cfg(feature = "taffy")]
+pub(crate) mod taffy_tree;
+
 #[cfg(any(feature = "debug", feature = "profile"))]
 use crate::util::debug::NODE_LOGGER;
 
