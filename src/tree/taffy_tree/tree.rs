@@ -583,7 +583,6 @@ mod tests {
     use super::*;
     use crate::style::{Dimension, Display, FlexDirection};
     use crate::style_helpers::*;
-    use crate::tree::measure_func::SyncMeasurable;
     use crate::util::sys;
 
     #[test]
