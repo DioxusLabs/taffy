@@ -12,7 +12,7 @@ pub(crate) mod flexbox;
 pub(crate) mod grid;
 
 use crate::geometry::{Point, Size};
-use crate::style::{AvailableSpace};
+use crate::style::AvailableSpace;
 use crate::tree::{Layout, LayoutTree, NodeId, SizeAndBaselines, SizingMode};
 
 #[cfg(feature = "flexbox")]

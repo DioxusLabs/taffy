@@ -1,5 +1,7 @@
-mod tree;
-mod error;
+//! Contains the default implementation of [LayoutTree](crate::tree::LayoutTree), [Taffy](crate::tree::taffy_tree::Taffy), and the error type for Taffy.
 
-pub use tree::{Taffy, TaffyChildIter};
+mod error;
+mod tree;
+
 pub use error::{TaffyError, TaffyResult};
+pub use tree::{Taffy, TaffyChildIter};

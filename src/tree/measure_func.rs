@@ -21,7 +21,6 @@ impl<F: Fn(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32>> Measurable for
 }
 impl<F: Send + Sync + Fn(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32>> SyncMeasurable for F {}
 
-
 /// A function that can be used to compute the intrinsic size of a node
 pub enum MeasureFunc {
     /// Stores an unboxed function

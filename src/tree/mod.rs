@@ -9,9 +9,9 @@ pub use cache::{Cache, CacheEntry};
 mod measure_func;
 pub use measure_func::{Measurable, MeasureFunc};
 mod node;
-pub use node::NodeId;
 #[cfg(feature = "taffy")]
 pub(self) use node::NodeData;
+pub use node::NodeId;
 #[cfg(feature = "taffy")]
 mod taffy_tree;
 #[cfg(feature = "taffy")]
