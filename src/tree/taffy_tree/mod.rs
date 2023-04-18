@@ -1,4 +1,4 @@
-//! Contains the default implementation of [LayoutTree](crate::tree::LayoutTree), [Taffy](crate::tree::taffy_tree::Taffy), and the error type for Taffy.
+//! Contains the default implementation of [LayoutTree](crate::tree::LayoutTree), [Taffy](crate::tree::Taffy), and the error type for Taffy.
 
 mod error;
 mod tree;
