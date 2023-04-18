@@ -20,6 +20,9 @@ pub use self::flexbox::FlexboxAlgorithm;
 #[cfg(feature = "grid")]
 pub use self::grid::CssGridAlgorithm;
 
+#[cfg(feature = "taffy")]
+use crate::tree::Taffy;
+
 #[cfg(any(feature = "debug", feature = "profile"))]
 use crate::util::debug::NODE_LOGGER;
 
@@ -50,32 +53,6 @@ pub(crate) fn compute_layout(
     Ok(())
 }
 
-/// A common interface that all Taffy layout algorithms conform to
-pub trait LayoutAlgorithm {
-    /// The name of the algorithm (mainly used for debug purposes)
-    const NAME: &'static str;
-
-    /// Compute the size of the node given the specified constraints
-    fn measure_size(
-        tree: &mut impl LayoutTree,
-        node: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        sizing_mode: SizingMode,
-    ) -> Size<f32>;
-
-    /// Perform a full layout on the node given the specified constraints
-    fn perform_layout(
-        tree: &mut impl LayoutTree,
-        node: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        sizing_mode: SizingMode,
-    ) -> SizeAndBaselines;
-}
-
 /// Perform full layout on a node. Chooses which algorithm to use based on the `display` property.
 pub(crate) fn perform_node_layout(
     tree: &mut impl LayoutTree,
@@ -88,7 +65,6 @@ pub(crate) fn perform_node_layout(
     compute_node_layout(tree, node, known_dimensions, parent_size, available_space, RunMode::PeformLayout, sizing_mode)
 }
 
-/// Measure a node's size. Chooses which algorithm to use based on the `display` property.
 pub(crate) fn measure_node_size(
     tree: &mut impl LayoutTree,
     node: NodeId,
@@ -117,6 +93,154 @@ fn compute_node_layout(
     println!();
 
     let has_children = !tree.children(node).count() == 0;
+
+    #[cfg(feature = "debug")]
+    debug_log_node(known_dimensions, parent_size, available_space, run_mode, sizing_mode);
+
+    /// Inlined function generic over the LayoutAlgorithm to reduce code duplication
+    #[inline(always)]
+    fn perform_computations<Algorithm: LayoutAlgorithm>(
+        tree: &mut impl LayoutTree,
+        node: NodeId,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        run_mode: RunMode,
+        sizing_mode: SizingMode,
+    ) -> SizeAndBaselines {
+        #[cfg(feature = "debug")]
+        NODE_LOGGER.log(Algorithm::NAME);
+
+        match run_mode {
+            RunMode::PeformLayout => {
+                Algorithm::perform_layout(tree, node, known_dimensions, parent_size, available_space, sizing_mode)
+            }
+            RunMode::ComputeSize => {
+                Algorithm::measure_size(tree, node, known_dimensions, parent_size, available_space, sizing_mode).into()
+            }
+        }
+    }
+
+    let display_mode = tree.style(node).display;
+    let computed_size_and_baselines = match (display_mode, has_children) {
+        (Display::None, _) => perform_computations::<HiddenAlgorithm>(
+            tree,
+            node,
+            known_dimensions,
+            parent_size,
+            available_space,
+            run_mode,
+            sizing_mode,
+        ),
+        #[cfg(feature = "flexbox")]
+        (Display::Flex, true) => perform_computations::<FlexboxAlgorithm>(
+            tree,
+            node,
+            known_dimensions,
+            parent_size,
+            available_space,
+            run_mode,
+            sizing_mode,
+        ),
+        #[cfg(feature = "grid")]
+        (Display::Grid, true) => perform_computations::<CssGridAlgorithm>(
+            tree,
+            node,
+            known_dimensions,
+            parent_size,
+            available_space,
+            run_mode,
+            sizing_mode,
+        ),
+        (_, false) => match run_mode {
+            RunMode::PeformLayout => {
+                leaf::perform_layout(tree, node, known_dimensions, parent_size, available_space, sizing_mode)
+            }
+            RunMode::ComputeSize => {
+                leaf::measure_size(tree, node, known_dimensions, parent_size, available_space, sizing_mode).into()
+            }
+        },
+    };
+
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.labelled_debug_log("RESULT", computed_size_and_baselines.size);
+    #[cfg(any(feature = "debug", feature = "profile"))]
+    NODE_LOGGER.pop_node();
+
+    computed_size_and_baselines
+}
+
+/// A common interface that all Taffy layout algorithms conform to
+pub trait LayoutAlgorithm {
+    /// The name of the algorithm (mainly used for debug purposes)
+    const NAME: &'static str;
+
+    /// Compute the size of the node given the specified constraints
+    fn measure_size(
+        tree: &mut impl LayoutTree,
+        node: NodeId,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        sizing_mode: SizingMode,
+    ) -> Size<f32>;
+
+    /// Perform a full layout on the node given the specified constraints
+    fn perform_layout(
+        tree: &mut impl LayoutTree,
+        node: NodeId,
+        known_dimensions: Size<Option<f32>>,
+        parent_size: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        sizing_mode: SizingMode,
+    ) -> SizeAndBaselines;
+}
+
+#[cfg(feature = "taffy")]
+/// A clone of `perform_node_layout` specially made for the Taffy tree
+pub(crate) fn perform_taffy_node_layout(
+    tree: &mut Taffy,
+    node: NodeId,
+    known_dimensions: Size<Option<f32>>,
+    parent_size: Size<Option<f32>>,
+    available_space: Size<AvailableSpace>,
+    sizing_mode: SizingMode,
+) -> SizeAndBaselines {
+    compute_taffy_node_layout(tree, node, known_dimensions, parent_size, available_space, RunMode::PeformLayout, sizing_mode)
+}
+
+#[cfg(feature = "taffy")]
+/// Measure a node's size. Chooses which algorithm to use based on the `display` property.
+pub(crate) fn measure_taffy_node_size(
+    tree: &mut Taffy,
+    node: NodeId,
+    known_dimensions: Size<Option<f32>>,
+    parent_size: Size<Option<f32>>,
+    available_space: Size<AvailableSpace>,
+    sizing_mode: SizingMode,
+) -> Size<f32> {
+    compute_taffy_node_layout(tree, node, known_dimensions, parent_size, available_space, RunMode::ComputeSize, sizing_mode)
+        .size
+}
+
+#[cfg(feature = "taffy")]
+/// Updates the stored layout of the provided `node` and its children
+fn compute_taffy_node_layout(
+    tree: &mut Taffy,
+    node: NodeId,
+    known_dimensions: Size<Option<f32>>,
+    parent_size: Size<Option<f32>>,
+    available_space: Size<AvailableSpace>,
+    run_mode: RunMode,
+    sizing_mode: SizingMode,
+) -> SizeAndBaselines {
+    #[cfg(any(feature = "debug", feature = "profile"))]
+    NODE_LOGGER.push_node(node);
+    #[cfg(feature = "debug")]
+    println!();
+
+    let node_key = node.into();
+    let has_children = !tree.children[node_key].is_empty();
 
     // First we check if we have a cached result for the given input
     let cache_run_mode = if !has_children { RunMode::PeformLayout } else { run_mode };
@@ -159,7 +283,7 @@ fn compute_node_layout(
         }
     }
 
-    let display_mode = tree.style(node).display;
+    let display_mode = tree.nodes[node_key].style.display;
     let computed_size_and_baselines = match (display_mode, has_children) {
         (Display::None, _) => perform_computations::<HiddenAlgorithm>(
             tree,
@@ -278,7 +402,7 @@ fn perform_hidden_layout(tree: &mut impl LayoutTree, node: NodeId) {
 ///     rather than rounding the width/height directly
 ///
 /// See <https://github.com/facebook/yoga/commit/aa5b296ac78f7a22e1aeaf4891243c6bb76488e2> for more context
-fn round_layout(tree: &mut impl LayoutTree, node: NodeId, abs_x: f32, abs_y: f32) {
+pub(crate) fn round_layout(tree: &mut impl LayoutTree, node: NodeId, abs_x: f32, abs_y: f32) {
     let layout = tree.layout_mut(node);
     let abs_x = abs_x + layout.location.x;
     let abs_y = abs_y + layout.location.y;

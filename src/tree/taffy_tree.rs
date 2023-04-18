@@ -4,8 +4,8 @@
 use slotmap::{DefaultKey, SlotMap, SparseSecondaryMap};
 
 use super::{Layout, MeasureFunc, NodeData, NodeId, SizeAndBaselines, SizingMode, TaffyError, TaffyResult};
-use crate::compute::{measure_node_size, perform_node_layout};
-use crate::geometry::Size;
+use crate::compute::{measure_taffy_node_size, perform_taffy_node_layout, round_layout};
+use crate::geometry::{Point, Size};
 use crate::prelude::LayoutTree;
 use crate::style::{AvailableSpace, Style};
 use crate::util::sys::{new_vec_with_capacity, ChildrenVec, Vec};
@@ -97,7 +97,7 @@ impl LayoutTree for Taffy {
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
     ) -> Size<f32> {
-        measure_node_size(self, node, known_dimensions, parent_size, available_space, sizing_mode)
+        measure_taffy_node_size(self, node, known_dimensions, parent_size, available_space, sizing_mode)
     }
 
     #[inline(always)]
@@ -109,7 +109,7 @@ impl LayoutTree for Taffy {
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
     ) -> SizeAndBaselines {
-        perform_node_layout(self, node, known_dimensions, parent_size, available_space, sizing_mode)
+        perform_taffy_node_layout(self, node, known_dimensions, parent_size, available_space, sizing_mode)
     }
 
     #[inline(always)]
@@ -386,7 +386,25 @@ impl Taffy {
 
     /// Updates the stored layout of the provided `node` and its children
     pub fn compute_layout(&mut self, node: NodeId, available_space: Size<AvailableSpace>) -> Result<(), TaffyError> {
-        crate::compute::compute_layout(self, node, available_space)
+        // Recursively compute node layout
+        let size_and_baselines = perform_taffy_node_layout(
+            self,
+            node,
+            Size::NONE,
+            available_space.into_options(),
+            available_space,
+            SizingMode::InherentSize,
+        );
+
+        let layout = Layout { order: 0, size: size_and_baselines.size, location: Point::ZERO };
+        *self.layout_mut(node) = layout;
+
+        // If rounding is enabled, recursively round the layout's of this node and all children
+        if self.config.use_rounding {
+            round_layout(self, node, 0.0, 0.0);
+        }
+
+        Ok(())
     }
 }
 
