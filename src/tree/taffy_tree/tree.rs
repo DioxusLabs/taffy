@@ -137,11 +137,6 @@ impl LayoutTree for Taffy {
             sizing_mode,
         )
     }
-
-    #[inline(always)]
-    fn use_rounding(&self) -> bool {
-        self.config.use_rounding
-    }
 }
 
 #[allow(clippy::iter_cloned_collect)] // due to no-std support, we need to use `iter_cloned` instead of `collect`
@@ -427,7 +422,7 @@ impl Taffy {
         *self.layout_mut(node) = layout;
 
         // If rounding is enabled, recursively round the layout's of this node and all children
-        if self.use_rounding() {
+        if self.config.use_rounding {
             round_layout(self, node, 0.0, 0.0);
         }
 

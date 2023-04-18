@@ -65,9 +65,6 @@ pub trait LayoutTree {
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
     ) -> SizeAndBaselines;
-
-    /// Whether or not to enable rounding
-    fn use_rounding(&self) -> bool;
 }
 
 /// Whether we are performing a full layout, or we merely need to size the node
