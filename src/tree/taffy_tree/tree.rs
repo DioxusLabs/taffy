@@ -3,12 +3,14 @@
 //! Layouts are composed of multiple nodes, which live in a tree-like data structure.
 use slotmap::{DefaultKey, SlotMap, SparseSecondaryMap};
 
-use super::{Layout, MeasureFunc, NodeData, NodeId, SizeAndBaselines, SizingMode, TaffyError, TaffyResult};
-use crate::compute::{measure_node_size, perform_node_layout};
+use crate::compute::taffy_tree::{compute_layout, measure_node_size, perform_node_layout};
 use crate::geometry::Size;
 use crate::prelude::LayoutTree;
 use crate::style::{AvailableSpace, Style};
+use crate::tree::{Layout, MeasureFunc, NodeData, NodeId, SizeAndBaselines, SizingMode};
 use crate::util::sys::{new_vec_with_capacity, ChildrenVec, Vec};
+
+use super::{TaffyError, TaffyResult};
 
 /// Global configuration values for a Taffy instance
 pub(crate) struct TaffyConfig {
@@ -76,6 +78,11 @@ impl LayoutTree for Taffy {
     #[inline(always)]
     fn style(&self, node: NodeId) -> &Style {
         &self.nodes[node.into()].style
+    }
+
+    #[inline(always)]
+    fn layout(&self, node: NodeId) -> &Layout {
+        &self.nodes[node.into()].layout
     }
 
     #[inline(always)]
@@ -381,7 +388,7 @@ impl Taffy {
 
     /// Updates the stored layout of the provided `node` and its children
     pub fn compute_layout(&mut self, node: NodeId, available_space: Size<AvailableSpace>) -> Result<(), TaffyError> {
-        crate::compute::compute_layout(self, node, available_space)
+        compute_layout(self, node, available_space)
     }
 }
 
@@ -719,11 +726,5 @@ mod tests {
             Size { width: AvailableSpace::Definite(100.), height: AvailableSpace::Definite(100.) },
         );
         assert!(layout_result.is_ok());
-    }
-
-    #[test]
-    fn measure_func_is_send_and_sync() {
-        fn is_send_and_sync<T: Send + Sync>() {}
-        is_send_and_sync::<MeasureFunc>();
     }
 }

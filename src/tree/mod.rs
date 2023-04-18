@@ -9,12 +9,13 @@ pub use cache::{Cache, CacheEntry};
 mod measure_func;
 pub use measure_func::{Measurable, MeasureFunc};
 mod node;
+#[cfg(feature = "taffy_tree")]
 pub(self) use node::NodeData;
 pub use node::NodeId;
+#[cfg(feature = "taffy_tree")]
 mod taffy_tree;
-mod taffy_tree_error;
-pub use taffy_tree::{Taffy, TaffyChildIter};
-pub use taffy_tree_error::{TaffyError, TaffyResult};
+#[cfg(feature = "taffy_tree")]
+pub use taffy_tree::{Taffy, TaffyChildIter, TaffyError, TaffyResult};
 mod layout;
 
 /// Any item that implements the LayoutTree can be layed out using Taffy's algorithms.
@@ -38,6 +39,9 @@ pub trait LayoutTree {
 
     /// Get the [`Style`] for this node.
     fn style(&self, node: NodeId) -> &Style;
+
+    /// Get a reference to the node's output layout
+    fn layout(&self, node: NodeId) -> &Layout;
 
     /// Modify the node's output layout
     fn layout_mut(&mut self, node: NodeId) -> &mut Layout;

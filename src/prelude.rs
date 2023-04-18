@@ -10,7 +10,7 @@ pub use crate::{
         auto, fit_content, max_content, min_content, percent, points, zero, FromFlex, FromPercent, FromPoints,
         TaffyAuto, TaffyFitContent, TaffyMaxContent, TaffyMinContent, TaffyZero,
     },
-    tree::{Layout, LayoutTree, NodeId, Taffy},
+    tree::{Layout, LayoutTree, NodeId},
 };
 
 #[cfg(feature = "flexbox")]
@@ -25,3 +25,6 @@ pub use crate::style::{
 pub use crate::style_helpers::{
     evenly_sized_tracks, flex, fr, line, minmax, repeat, span, TaffyGridLine, TaffyGridSpan,
 };
+
+#[cfg(feature = "taffy_tree")]
+pub use crate::Taffy;

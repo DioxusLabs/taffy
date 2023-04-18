@@ -1,24 +1,20 @@
 #![allow(dead_code)]
 
+use crate::tree::NodeId;
+use crate::{style, LayoutTree};
 use core::fmt::{Debug, Display, Write};
-use slotmap::{DefaultKey, Key};
 use std::sync::Mutex;
 
-use crate::style;
-use crate::tree::NodeId;
-use crate::tree::Taffy;
-
 /// Prints a debug representation of the computed layout for a tree of nodes, starting with the passed root node.
-pub fn print_tree(tree: &Taffy, root: NodeId) {
+pub fn print_tree(tree: &impl LayoutTree, root: NodeId) {
     println!("TREE");
     print_node(tree, root, false, String::new());
 }
 
-fn print_node(tree: &Taffy, node: NodeId, has_sibling: bool, lines_string: String) {
-    let key = DefaultKey::from(node);
-    let layout = &tree.nodes[key].layout;
-    let style = &tree.nodes[key].style;
-    let num_children = tree.children[key].len();
+fn print_node(tree: &impl LayoutTree, node: NodeId, has_sibling: bool, lines_string: String) {
+    let layout = &tree.layout(node);
+    let style = &tree.style(node);
+    let num_children = tree.child_count(node);
 
     let display = match (num_children, style.display) {
         (_, style::Display::None) => "NONE",
@@ -39,15 +35,15 @@ fn print_node(tree: &Taffy, node: NodeId, has_sibling: bool, lines_string: Strin
         y = layout.location.y,
         width = layout.size.width,
         height = layout.size.height,
-        key = key.data(),
+        key = node,
     );
     let bar = if has_sibling { "│   " } else { "    " };
     let new_string = lines_string + bar;
 
     // Recurse into children
-    for (index, child) in tree.children[key].iter().enumerate() {
+    for (index, child) in tree.children(node).enumerate() {
         let has_sibling = index < num_children - 1;
-        print_node(tree, *child, has_sibling, new_string.clone());
+        print_node(tree, child, has_sibling, new_string.clone());
     }
 }
 
@@ -62,10 +58,10 @@ impl DebugLogger {
         Self { stack: Mutex::new(Vec::new()) }
     }
 
-    pub fn push_node(&self, new_key: impl Key) {
+    pub fn push_node(&self, new_key: NodeId) {
         let mut stack = self.stack.lock().unwrap();
         let mut key_string = String::new();
-        write!(&mut key_string, "{:?}", new_key.data()).unwrap();
+        write!(&mut key_string, "{:?}", new_key).unwrap();
         stack.push(key_string);
     }
 
