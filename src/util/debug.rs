@@ -1,9 +1,7 @@
 #![allow(dead_code)]
 
 use core::fmt::{Debug, Display, Write};
-use slotmap::{DefaultKey, Key};
 use std::sync::Mutex;
-
 use crate::tree::NodeId;
 use crate::{style, LayoutTree};
 
@@ -14,7 +12,6 @@ pub fn print_tree(tree: &impl LayoutTree, root: NodeId) {
 }
 
 fn print_node(tree: &impl LayoutTree, node: NodeId, has_sibling: bool, lines_string: String) {
-    let key = DefaultKey::from(node);
     let layout = &tree.layout(node);
     let style = &tree.style(node);
     let num_children = tree.child_count(node);
@@ -38,7 +35,7 @@ fn print_node(tree: &impl LayoutTree, node: NodeId, has_sibling: bool, lines_str
         y = layout.location.y,
         width = layout.size.width,
         height = layout.size.height,
-        key = key.data(),
+        key = node,
     );
     let bar = if has_sibling { "│   " } else { "    " };
     let new_string = lines_string + bar;
@@ -61,10 +58,10 @@ impl DebugLogger {
         Self { stack: Mutex::new(Vec::new()) }
     }
 
-    pub fn push_node(&self, new_key: impl Key) {
+    pub fn push_node(&self, new_key: NodeId) {
         let mut stack = self.stack.lock().unwrap();
         let mut key_string = String::new();
-        write!(&mut key_string, "{:?}", new_key.data()).unwrap();
+        write!(&mut key_string, "{:?}", new_key).unwrap();
         stack.push(key_string);
     }
 
