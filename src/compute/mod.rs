@@ -21,7 +21,7 @@ pub use self::flexbox::FlexboxAlgorithm;
 #[cfg(feature = "grid")]
 pub use self::grid::CssGridAlgorithm;
 
-#[cfg(feature = "taffy")]
+#[cfg(feature = "taffy_tree")]
 pub(crate) mod taffy_tree;
 
 #[cfg(any(feature = "debug", feature = "profile"))]

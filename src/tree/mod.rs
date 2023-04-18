@@ -9,12 +9,12 @@ pub use cache::{Cache, CacheEntry};
 mod measure_func;
 pub use measure_func::{Measurable, MeasureFunc};
 mod node;
-#[cfg(feature = "taffy")]
+#[cfg(feature = "taffy_tree")]
 pub(self) use node::NodeData;
 pub use node::NodeId;
-#[cfg(feature = "taffy")]
+#[cfg(feature = "taffy_tree")]
 mod taffy_tree;
-#[cfg(feature = "taffy")]
+#[cfg(feature = "taffy_tree")]
 pub use taffy_tree::{Taffy, TaffyChildIter, TaffyError, TaffyResult};
 mod layout;
 
