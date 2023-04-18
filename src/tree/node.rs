@@ -4,6 +4,8 @@
 use crate::style::Style;
 use crate::tree::Cache;
 use crate::tree::Layout;
+
+#[cfg(feature = "taffy_tree")]
 use slotmap::{DefaultKey, Key, KeyData};
 
 /// A type representing the id of a single node in a tree of nodes
@@ -43,12 +45,16 @@ impl From<NodeId> for usize {
         id.0 as usize
     }
 }
+
+#[cfg(feature = "taffy_tree")]
 impl From<DefaultKey> for NodeId {
     #[inline]
     fn from(key: DefaultKey) -> Self {
         Self(key.data().as_ffi())
     }
 }
+
+#[cfg(feature = "taffy_tree")]
 impl From<NodeId> for DefaultKey {
     #[inline]
     fn from(key: NodeId) -> Self {
