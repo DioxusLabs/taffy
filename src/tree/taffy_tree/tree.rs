@@ -3,11 +3,11 @@
 //! Layouts are composed of multiple nodes, which live in a tree-like data structure.
 use slotmap::{DefaultKey, SlotMap, SparseSecondaryMap};
 
+use crate::compute::leaf::{measure_size, perform_layout};
 use crate::compute::HiddenAlgorithm;
 use crate::geometry::{Point, Size};
 use crate::prelude::LayoutTree;
 use crate::style::{AvailableSpace, Display, Style};
-use crate::tree::taffy_tree::leaf::{measure_size, perform_layout};
 use crate::tree::{Layout, MeasureFunc, NodeData, NodeId, RunMode, SizeAndBaselines, SizingMode};
 use crate::util::sys::{new_vec_with_capacity, round, ChildrenVec, Vec};
 use crate::{CssGridAlgorithm, FlexboxAlgorithm, LayoutAlgorithm};
@@ -526,12 +526,23 @@ fn compute_node_layout(
             sizing_mode,
         ),
         (_, false) => match run_mode {
-            RunMode::PeformLayout => {
-                perform_layout(tree, node, known_dimensions, parent_size, available_space, sizing_mode)
-            }
-            RunMode::ComputeSize => {
-                measure_size(tree, node, known_dimensions, parent_size, available_space, sizing_mode).into()
-            }
+            RunMode::PeformLayout => perform_layout(
+                &tree.nodes[node_key].style,
+                tree.nodes[node_key].needs_measure.then(|| &tree.measure_funcs[node_key]),
+                known_dimensions,
+                parent_size,
+                available_space,
+                sizing_mode,
+            ),
+            RunMode::ComputeSize => measure_size(
+                &tree.nodes[node_key].style,
+                tree.nodes[node_key].needs_measure.then(|| &tree.measure_funcs[node_key]),
+                known_dimensions,
+                parent_size,
+                available_space,
+                sizing_mode,
+            )
+            .into(),
         },
     };
 
@@ -577,6 +588,7 @@ mod tests {
     use super::*;
     use crate::style::{Dimension, Display, FlexDirection};
     use crate::style_helpers::*;
+    use crate::tree::measure_func::SyncMeasurable;
     use crate::util::sys;
 
     #[test]
@@ -904,11 +916,5 @@ mod tests {
             Size { width: AvailableSpace::Definite(100.), height: AvailableSpace::Definite(100.) },
         );
         assert!(layout_result.is_ok());
-    }
-
-    #[test]
-    fn measure_func_is_send_and_sync() {
-        fn is_send_and_sync<T: Send + Sync>() {}
-        is_send_and_sync::<MeasureFunc>();
     }
 }

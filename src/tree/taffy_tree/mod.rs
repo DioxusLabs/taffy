@@ -1,4 +1,3 @@
-mod leaf;
 mod tree;
 mod error;
 

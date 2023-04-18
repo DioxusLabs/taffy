@@ -1,6 +1,9 @@
 //! The layout algorithms themselves
 
 pub(crate) mod common;
+pub(crate) mod leaf;
+
+pub use leaf::compute;
 
 #[cfg(feature = "flexbox")]
 pub(crate) mod flexbox;

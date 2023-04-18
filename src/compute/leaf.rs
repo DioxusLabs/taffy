@@ -1,53 +1,49 @@
 //! Computes size using styles and measure functions
 
 use crate::geometry::{Point, Size};
-use crate::style::AvailableSpace;
-use crate::tree::NodeId;
+use crate::style::{AvailableSpace, Style};
+use crate::tree::Measurable;
 use crate::tree::{SizeAndBaselines, SizingMode};
 use crate::util::sys::f32_max;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
-use crate::Taffy;
 
 #[cfg(feature = "debug")]
 use crate::util::debug::NODE_LOGGER;
 
 /// Perform full layout on a leaf node
 pub(crate) fn perform_layout(
-    tree: &mut Taffy,
-    node: NodeId,
+    style: &Style,
+    measurable: Option<&impl Measurable>,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     sizing_mode: SizingMode,
 ) -> SizeAndBaselines {
-    compute(tree, node, known_dimensions, parent_size, available_space, sizing_mode)
+    compute(style, measurable, known_dimensions, parent_size, available_space, sizing_mode)
 }
 
 /// Measure a leaf node's size
 pub(crate) fn measure_size(
-    tree: &mut Taffy,
-    node: NodeId,
+    style: &Style,
+    measurable: Option<&impl Measurable>,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     sizing_mode: SizingMode,
 ) -> Size<f32> {
-    compute(tree, node, known_dimensions, parent_size, available_space, sizing_mode).size
+    compute(style, measurable, known_dimensions, parent_size, available_space, sizing_mode).size
 }
 
 /// Compute the size of a leaf node (node with no children)
-pub(crate) fn compute(
-    tree: &mut Taffy,
-    node: NodeId,
+pub fn compute(
+    style: &Style,
+    measurable: Option<&impl Measurable>,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     sizing_mode: SizingMode,
 ) -> SizeAndBaselines {
-    let key = node.into();
-    let style = &tree.nodes[key].style;
-
     // Resolve node's preferred/min/max sizes (width/heights) against the available space (percentages resolve to pixel values)
     // For ContentSize mode, we pretend that the node has no size styles as these should be ignored.
     let (node_size, node_min_size, node_max_size, aspect_ratio) = match sizing_mode {
@@ -91,7 +87,7 @@ pub(crate) fn compute(
         return SizeAndBaselines { size, first_baselines: Point::NONE };
     };
 
-    if tree.nodes[key].needs_measure {
+    if let Some(measurable) = measurable {
         // Compute available space
         let available_space = Size {
             width: available_space
@@ -107,7 +103,7 @@ pub(crate) fn compute(
         };
 
         // Measure node
-        let measured_size = tree.measure_funcs[key].measure(known_dimensions, available_space);
+        let measured_size = measurable.measure(known_dimensions, available_space);
 
         let measured_size = Size {
             width: measured_size.width,
