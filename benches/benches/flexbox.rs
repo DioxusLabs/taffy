@@ -4,13 +4,10 @@ use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;
 use taffy::prelude::*;
 use taffy::style::Style;
-use taffy::util::Randomizeable;
-
-use taffy_benchmarks as helpers;
-use helpers::build_deep_tree;
+use taffy_benchmarks::{Randomizeable, build_deep_tree};
 
 #[cfg(feature = "yoga_benchmark")]
-use helpers::yoga_helpers;
+use taffy_benchmarks::yoga_helpers;
 #[cfg(feature = "yoga_benchmark")]
 use slotmap::SlotMap;
 #[cfg(feature = "yoga_benchmark")]
