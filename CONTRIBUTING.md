@@ -85,4 +85,4 @@ To add a new test case add another HTML file to `/test_fixtures` following the c
 ## Benchmarking
 
 Benchmarks build on the same infrastructure as testing, and actually benchmarks are automatically generated from test fixtures just like tests.
-Run `cargo bench` to run benchmarks locally.
+Run `cargo xbench` to run benchmarks locally. To run head-to-head benchmarks with Yoga, run `cargo xbench --features yoga`. You will need `libclang-dev` or the xcode commandline tools installed in order to run the yoga benchmarks.
