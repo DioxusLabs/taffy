@@ -15,6 +15,7 @@ license = "MIT"
 
 [dependencies]
 arrayvec = { version = "0.7", default-features = false }
+cssparser = { version = "0.31.0", optional = true }
 num-traits = { version = "0.2", default-features = false }
 serde = { version = "1.0", optional = true, features = ["serde_derive"] }
 slotmap = { version = "1.0.6", optional = true }
@@ -22,6 +23,7 @@ grid = { version = "0.9.0", optional = true }
 
 [features]
 default = ["std", "flexbox", "grid", "taffy_tree"]
+css-syntax = ["dep:cssparser"]
 flexbox = []
 grid = ["alloc", "dep:grid"]
 alloc = []

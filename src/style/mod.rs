@@ -5,6 +5,9 @@ mod dimension;
 #[cfg(feature = "flexbox")]
 mod flex;
 
+#[cfg(feature = "css-syntax")]
+mod css_syntax;
+
 pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, JustifyItems, JustifySelf};
 pub use self::dimension::{AvailableSpace, Dimension, LengthPercentage, LengthPercentageAuto};
 

@@ -16,11 +16,13 @@ use super::{TaffyError, TaffyResult};
 pub(crate) struct TaffyConfig {
     /// Whether to round layout values
     pub(crate) use_rounding: bool,
+    /// Number of internal absolute units per CSS `px`
+    pub(crate) pixel_ratio: f32,
 }
 
 impl Default for TaffyConfig {
     fn default() -> Self {
-        Self { use_rounding: true }
+        Self { use_rounding: true, pixel_ratio: 1.0 }
     }
 }
 
@@ -152,6 +154,26 @@ impl Taffy {
     /// Disable rounding of layout values. Rounding is enabled by default.
     pub fn disable_rounding(&mut self) {
         self.config.use_rounding = false;
+    }
+
+    /// Returns the current pixel ratio: the number of internal length units per CSS `px`.
+    ///
+    /// This affects the meaning of CSS absolute length units such as `px`, `pt`, `mm`, etc
+    /// when parsing or serializing [`Style`] in CSS syntax.
+    ///
+    /// The default is 1.0.
+    pub fn pixel_ratio(&self) -> f32 {
+        self.config.pixel_ratio
+    }
+
+    /// Sets current pixel ratio: the number of internal length units per CSS `px`.
+    ///
+    /// This affects the meaning of CSS absolute length units such as `px`, `pt`, `mm`, etc
+    /// when parsing or serializing [`Style`] in CSS syntax.
+    ///
+    /// The default is 1.0.
+    pub fn set_pixel_ratio(&mut self, new_pixel_ratio: f32) {
+        self.config.pixel_ratio = new_pixel_ratio
     }
 
     /// Creates and adds a new unattached leaf node to the tree, and returns the node of the new node
