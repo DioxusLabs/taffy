@@ -1,5 +1,11 @@
 # Release Notes
 
+## 0.3.12
+
+### Fixes
+
+- Fix caching issue when toggling `display:none` on and off
+
 ## 0.3.11
 
 ### Fixes
