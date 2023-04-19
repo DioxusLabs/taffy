@@ -1,16 +1,16 @@
 //! Computation specific for the default `Taffy` tree implementation
 
-use crate::compute::{leaf, HiddenAlgorithm};
+use crate::compute::{leaf, HiddenAlgorithm, LayoutAlgorithm};
 use crate::geometry::{Point, Size};
 use crate::style::{AvailableSpace, Display};
 use crate::tree::{Layout, LayoutTree, NodeId, RunMode, SizeAndBaselines, SizingMode, Taffy, TaffyError};
 use crate::util::sys::round;
 
 #[cfg(feature = "flexbox")]
-use super::FlexboxAlgorithm;
+use crate::compute::FlexboxAlgorithm;
 
 #[cfg(feature = "grid")]
-use super::CssGridAlgorithm;
+use crate::compute::CssGridAlgorithm;
 
 /// Updates the stored layout of the provided `node` and its children
 pub(crate) fn compute_layout(
