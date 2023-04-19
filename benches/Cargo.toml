@@ -1,0 +1,40 @@
+[package]
+name = "taffy_benchmarks"
+version = "0.1.0"
+authors = [
+    "Alice Cecile <alice.i.cecile@gmail.com>",
+    "Johnathan Kelley <jkelleyrtp@gmail.com>",
+]
+edition = "2021"
+description = "Benchmarks for the taffy crate"
+repository = "https://github.com/DioxusLabs/taffy"
+keywords = ["cross-platform", "layout", "benchmarks"]
+categories = ["gui", "benchmarks"]
+license = "MIT"
+private = true
+
+[dependencies]
+criterion = "0.4"
+taffy = { path = "..", features = ["random"] }
+rand = { version = "0.8.5" }
+rand_chacha = "0.3.1"
+yoga = { version = "0.4.0", optional = true }
+ordered-float = { version = "3.4.0", optional = true }
+
+[features]
+yoga = ["dep:yoga", "dep:ordered-float"]
+
+[[bench]]
+name = "tree_creation"
+path = "benches/tree_creation.rs"
+harness = false
+
+[[bench]]
+name = "flexbox"
+path = "benches/flexbox.rs"
+harness = false
+
+[[bench]]
+name = "grid"
+path = "benches/grid.rs"
+harness = false

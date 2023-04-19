@@ -6,7 +6,7 @@ use taffy::prelude::*;
 use taffy::style::Style;
 use taffy::util::Randomizeable;
 
-mod helpers;
+use taffy_benchmarks as helpers;
 use helpers::build_deep_tree;
 
 #[cfg(feature = "yoga_benchmark")]
