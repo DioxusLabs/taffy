@@ -1,6 +1,6 @@
 //! Computation specific for the default `Taffy` tree implementation
 
-use crate::compute::{leaf, HiddenAlgorithm, LayoutAlgorithm};
+use crate::compute::{leaf, LayoutAlgorithm};
 use crate::geometry::{Point, Size};
 use crate::style::{AvailableSpace, Display};
 use crate::tree::{Layout, LayoutTree, NodeId, RunMode, SizeAndBaselines, SizingMode, Taffy, TaffyError};
@@ -11,6 +11,24 @@ use crate::compute::FlexboxAlgorithm;
 
 #[cfg(feature = "grid")]
 use crate::compute::CssGridAlgorithm;
+
+#[cfg(any(feature = "debug", feature = "profile"))]
+use crate::util::debug::NODE_LOGGER;
+
+#[cfg(feature = "debug")]
+fn debug_log_node(
+    known_dimensions: Size<Option<f32>>,
+    parent_size: Size<Option<f32>>,
+    available_space: Size<AvailableSpace>,
+    run_mode: RunMode,
+    sizing_mode: SizingMode,
+) {
+    NODE_LOGGER.debug_log(run_mode);
+    NODE_LOGGER.labelled_debug_log("sizing_mode", sizing_mode);
+    NODE_LOGGER.labelled_debug_log("known_dimensions", known_dimensions);
+    NODE_LOGGER.labelled_debug_log("parent_size", parent_size);
+    NODE_LOGGER.labelled_debug_log("available_space", available_space);
+}
 
 /// Updates the stored layout of the provided `node` and its children
 pub(crate) fn compute_layout(
@@ -125,15 +143,10 @@ fn compute_node_layout(
 
     let display_mode = tree.nodes[node_key].style.display;
     let computed_size_and_baselines = match (display_mode, has_children) {
-        (Display::None, _) => perform_computations::<HiddenAlgorithm>(
-            tree,
-            node,
-            known_dimensions,
-            parent_size,
-            available_space,
-            run_mode,
-            sizing_mode,
-        ),
+        (Display::None, _) => {
+            perform_taffy_tree_hidden_layout(tree, node);
+            SizeAndBaselines { size: Size::ZERO, first_baselines: Point::NONE }
+        }
         #[cfg(feature = "flexbox")]
         (Display::Flex, true) => perform_computations::<FlexboxAlgorithm>(
             tree,
@@ -184,6 +197,24 @@ fn compute_node_layout(
     NODE_LOGGER.pop_node();
 
     computed_size_and_baselines
+}
+
+/// Creates a layout for this node and its children, recursively.
+/// Each hidden node has zero size and is placed at the origin
+fn perform_taffy_tree_hidden_layout(tree: &mut Taffy, node: NodeId) {
+    /// Recursive function to apply hidden layout to all descendents
+    fn perform_hidden_layout_inner(tree: &mut Taffy, node: NodeId, order: u32) {
+        let node_key = node.into();
+        *tree.layout_mut(node) = Layout::with_order(order);
+        tree.nodes[node_key].cache.clear();
+        for order in 0..tree.children[node_key].len() {
+            perform_hidden_layout_inner(tree, tree.child(node, order), order as _);
+        }
+    }
+
+    for order in 0..tree.children[node.into()].len() {
+        perform_hidden_layout_inner(tree, tree.child(node, order), order as _);
+    }
 }
 
 /// Rounds the calculated [`Layout`] to exact pixel values

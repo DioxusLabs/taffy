@@ -24,9 +24,6 @@ pub use self::grid::CssGridAlgorithm;
 #[cfg(feature = "taffy_tree")]
 pub(crate) mod taffy_tree;
 
-#[cfg(any(feature = "debug", feature = "profile"))]
-use crate::util::debug::NODE_LOGGER;
-
 /// A common interface that all Taffy layout algorithms conform to
 pub trait LayoutAlgorithm {
     /// The name of the algorithm (mainly used for debug purposes)
@@ -51,21 +48,6 @@ pub trait LayoutAlgorithm {
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
     ) -> SizeAndBaselines;
-}
-
-#[cfg(feature = "debug")]
-fn debug_log_node(
-    known_dimensions: Size<Option<f32>>,
-    parent_size: Size<Option<f32>>,
-    available_space: Size<AvailableSpace>,
-    run_mode: RunMode,
-    sizing_mode: SizingMode,
-) {
-    NODE_LOGGER.debug_log(run_mode);
-    NODE_LOGGER.labelled_debug_log("sizing_mode", sizing_mode);
-    NODE_LOGGER.labelled_debug_log("known_dimensions", known_dimensions);
-    NODE_LOGGER.labelled_debug_log("parent_size", parent_size);
-    NODE_LOGGER.labelled_debug_log("available_space", available_space);
 }
 
 /// The public interface to Taffy's hidden node algorithm implementation
