@@ -102,6 +102,41 @@ fn toggle_root_display_none() {
 }
 
 #[test]
+fn toggle_root_display_none_with_children() {
+    use taffy::prelude::*;
+
+    let mut taffy = taffy::Taffy::new();
+
+    let child = taffy
+        .new_leaf(Style { size: Size { width: points(800.0), height: points(100.0) }, ..Default::default() })
+        .unwrap();
+
+    let parent = taffy
+        .new_with_children(
+            Style { size: Size { width: points(800.0), height: points(100.0) }, ..Default::default() },
+            &[child],
+        )
+        .unwrap();
+
+    let root = taffy.new_with_children(Style::default(), &[parent]).unwrap();
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    assert_eq!(taffy.layout(child).unwrap().size.width, 800.0);
+    assert_eq!(taffy.layout(child).unwrap().size.height, 100.0);
+
+    taffy.set_style(root, Style { display: Display::None, ..Default::default() }).unwrap();
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    assert_eq!(taffy.layout(child).unwrap().size.width, 0.0);
+    assert_eq!(taffy.layout(child).unwrap().size.height, 0.0);
+
+    taffy.set_style(root, Style::default()).unwrap();
+    taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+    assert_eq!(taffy.layout(parent).unwrap().size.width, 800.0);
+    assert_eq!(taffy.layout(parent).unwrap().size.height, 100.0);
+    assert_eq!(taffy.layout(child).unwrap().size.width, 800.0);
+    assert_eq!(taffy.layout(child).unwrap().size.height, 100.0);
+}
+
+#[test]
 fn toggle_flex_child_display_none() {
     let hidden_style = Style {
         display: Display::None,
