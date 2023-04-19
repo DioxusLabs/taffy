@@ -1,3 +1,4 @@
 [alias]
 gentest = "run --release --package gentest --"
 import-yoga-tests = "run --package import-yoga-tests --"
+xbench = "bench --package taffy_benchmarks"

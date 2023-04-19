@@ -2,9 +2,9 @@
 
 use rand::Rng;
 
-use crate::geometry::Size;
-use crate::style::Dimension;
-use crate::style::Style;
+use taffy::geometry::Size;
+use taffy::style::Dimension;
+use taffy::style::Style;
 
 /// A trait for generating pseudo-random instances.
 pub trait Randomizeable {

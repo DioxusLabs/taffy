@@ -5,12 +5,10 @@ use rand_chacha::ChaCha8Rng;
 use taffy::prelude::*;
 use taffy::style::Style;
 
-mod helpers;
-
-#[cfg(feature = "yoga_benchmark")]
-use helpers::yoga_helpers;
 #[cfg(feature = "yoga_benchmark")]
 use slotmap::SlotMap;
+#[cfg(feature = "yoga_benchmark")]
+use taffy_benchmarks::yoga_helpers;
 #[cfg(feature = "yoga_benchmark")]
 use yoga_helpers::yg;
 

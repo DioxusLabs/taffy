@@ -11,8 +11,3 @@ pub(crate) mod sys;
 pub(crate) mod debug;
 #[cfg(feature = "std")]
 pub use debug::print_tree;
-
-#[cfg(feature = "random")]
-mod randomizable;
-#[cfg(feature = "random")]
-pub use randomizable::Randomizeable;
