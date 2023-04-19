@@ -371,6 +371,9 @@ fn perform_hidden_layout(tree: &mut impl LayoutTree, node: Node) {
     /// Recursive function to apply hidden layout to all descendents
     fn perform_hidden_layout_inner(tree: &mut impl LayoutTree, node: Node, order: u32) {
         *tree.layout_mut(node) = Layout::with_order(order);
+        for i in 0..7 {
+            *tree.cache_mut(node, i) = None;
+        }
         for order in 0..tree.child_count(node) {
             perform_hidden_layout_inner(tree, tree.child(node, order), order as _);
         }
