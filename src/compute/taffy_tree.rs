@@ -1,17 +1,16 @@
 //! Computation specific for the default `Taffy` tree implementation
 
-use crate::{
-    compute::{
-        leaf::{measure_size, perform_layout},
-        HiddenAlgorithm,
-    },
-    geometry::Point,
-    prelude::{Layout, NodeId, Size},
-    style::{AvailableSpace, Display},
-    tree::{RunMode, SizeAndBaselines, SizingMode},
-    util::sys::round,
-    CssGridAlgorithm, FlexboxAlgorithm, LayoutAlgorithm, LayoutTree, Taffy, TaffyError,
-};
+use crate::compute::{leaf, HiddenAlgorithm};
+use crate::geometry::{Point, Size};
+use crate::style::{AvailableSpace, Display};
+use crate::tree::{Layout, LayoutTree, NodeId, RunMode, SizeAndBaselines, SizingMode, Taffy, TaffyError};
+use crate::util::sys::round;
+
+#[cfg(feature = "flexbox")]
+use super::FlexboxAlgorithm;
+
+#[cfg(feature = "grid")]
+use super::CssGridAlgorithm;
 
 /// Updates the stored layout of the provided `node` and its children
 pub(crate) fn compute_layout(
@@ -156,7 +155,7 @@ fn compute_node_layout(
             sizing_mode,
         ),
         (_, false) => match run_mode {
-            RunMode::PeformLayout => perform_layout(
+            RunMode::PeformLayout => leaf::perform_layout(
                 &tree.nodes[node_key].style,
                 tree.nodes[node_key].needs_measure.then(|| &tree.measure_funcs[node_key]),
                 known_dimensions,
@@ -164,7 +163,7 @@ fn compute_node_layout(
                 available_space,
                 sizing_mode,
             ),
-            RunMode::ComputeSize => measure_size(
+            RunMode::ComputeSize => leaf::measure_size(
                 &tree.nodes[node_key].style,
                 tree.nodes[node_key].needs_measure.then(|| &tree.measure_funcs[node_key]),
                 known_dimensions,
