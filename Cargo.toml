@@ -35,6 +35,9 @@ taffy_tree = ["dep:slotmap"]
 rstest = "0.17.0"
 serde_json = "1.0.93"
 
+# Enable default features for tests and examples
+taffy = { path = "." }
+
 [profile.release]
 lto = true
 panic = 'abort'
