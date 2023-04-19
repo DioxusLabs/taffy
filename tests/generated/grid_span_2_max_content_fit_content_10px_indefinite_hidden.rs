@@ -44,8 +44,8 @@ fn grid_span_2_max_content_fit_content_10px_indefinite_hidden() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                grid_template_rows: vec![points(40f32)],
-                grid_template_columns: vec![max_content(), fit_content(points(10f32))],
+                grid_template_rows: vec![length(40f32)],
+                grid_template_columns: vec![max_content(), fit_content(length(10f32))],
                 ..Default::default()
             },
             &[node0, node1, node2],

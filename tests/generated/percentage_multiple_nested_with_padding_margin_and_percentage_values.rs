@@ -13,10 +13,10 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
                 bottom: taffy::style::LengthPercentageAuto::Percent(0.05f32),
             },
             padding: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Points(3f32),
-                right: taffy::style::LengthPercentage::Points(3f32),
-                top: taffy::style::LengthPercentage::Points(3f32),
-                bottom: taffy::style::LengthPercentage::Points(3f32),
+                left: taffy::style::LengthPercentage::Length(3f32),
+                right: taffy::style::LengthPercentage::Length(3f32),
+                top: taffy::style::LengthPercentage::Length(3f32),
+                bottom: taffy::style::LengthPercentage::Length(3f32),
             },
             ..Default::default()
         })
@@ -27,10 +27,10 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.5f32), height: auto() },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Points(5f32),
-                    right: taffy::style::LengthPercentageAuto::Points(5f32),
-                    top: taffy::style::LengthPercentageAuto::Points(5f32),
-                    bottom: taffy::style::LengthPercentageAuto::Points(5f32),
+                    left: taffy::style::LengthPercentageAuto::Length(5f32),
+                    right: taffy::style::LengthPercentageAuto::Length(5f32),
+                    top: taffy::style::LengthPercentageAuto::Length(5f32),
+                    bottom: taffy::style::LengthPercentageAuto::Length(5f32),
                 },
                 padding: taffy::geometry::Rect {
                     left: taffy::style::LengthPercentage::Percent(0.03f32),
@@ -51,16 +51,16 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
                 flex_basis: taffy::style::Dimension::Percent(0.1f32),
                 min_size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.6f32), height: auto() },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Points(5f32),
-                    right: taffy::style::LengthPercentageAuto::Points(5f32),
-                    top: taffy::style::LengthPercentageAuto::Points(5f32),
-                    bottom: taffy::style::LengthPercentageAuto::Points(5f32),
+                    left: taffy::style::LengthPercentageAuto::Length(5f32),
+                    right: taffy::style::LengthPercentageAuto::Length(5f32),
+                    top: taffy::style::LengthPercentageAuto::Length(5f32),
+                    bottom: taffy::style::LengthPercentageAuto::Length(5f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Points(3f32),
-                    right: taffy::style::LengthPercentage::Points(3f32),
-                    top: taffy::style::LengthPercentage::Points(3f32),
-                    bottom: taffy::style::LengthPercentage::Points(3f32),
+                    left: taffy::style::LengthPercentage::Length(3f32),
+                    right: taffy::style::LengthPercentage::Length(3f32),
+                    top: taffy::style::LengthPercentage::Length(3f32),
+                    bottom: taffy::style::LengthPercentage::Length(3f32),
                 },
                 ..Default::default()
             },
@@ -80,8 +80,8 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(200f32),
-                    height: taffy::style::Dimension::Points(200f32),
+                    width: taffy::style::Dimension::Length(200f32),
+                    height: taffy::style::Dimension::Length(200f32),
                 },
                 ..Default::default()
             },

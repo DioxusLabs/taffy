@@ -8,7 +8,7 @@ use taffy::style::Style;
 
 /// Build a random leaf node
 fn build_random_leaf(taffy: &mut Taffy, _rng: &mut ChaCha8Rng) -> NodeId {
-    taffy.new_with_children(Style { size: points(20.0), ..Default::default() }, &[]).unwrap()
+    taffy.new_with_children(Style { size: length(20.0), ..Default::default() }, &[]).unwrap()
 }
 
 fn random_grid_track<R: Rng>(rng: &mut R) -> TrackSizingFunction {
@@ -22,9 +22,9 @@ fn random_grid_track<R: Rng>(rng: &mut R) -> TrackSizingFunction {
     } else if switch < 0.5 {
         fr(1.0)
     } else if switch < 0.6 {
-        minmax(points(0.0), fr(1.0))
+        minmax(length(0.0), fr(1.0))
     } else if switch < 0.8 {
-        points(40.0)
+        length(40.0)
     } else {
         percent(0.3)
     }
@@ -110,7 +110,7 @@ fn taffy_benchmarks(c: &mut Criterion) {
             |b, &track_count| {
                 b.iter_batched(
                     || build_grid_flat_hierarchy(track_count, track_count),
-                    |(mut taffy, root)| taffy.compute_layout(root, points(12000.0)).unwrap(),
+                    |(mut taffy, root)| taffy.compute_layout(root, length(12000.0)).unwrap(),
                     criterion::BatchSize::SmallInput,
                 )
             },
@@ -128,7 +128,7 @@ fn taffy_benchmarks(c: &mut Criterion) {
             |b, &(levels, tracks)| {
                 b.iter_batched(
                     || build_taffy_deep_grid_hierarchy(levels, tracks),
-                    |(mut taffy, root)| taffy.compute_layout(root, points(12000.0)).unwrap(),
+                    |(mut taffy, root)| taffy.compute_layout(root, length(12000.0)).unwrap(),
                     criterion::BatchSize::SmallInput,
                 )
             },

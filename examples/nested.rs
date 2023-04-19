@@ -5,7 +5,7 @@ fn main() -> Result<(), taffy::TaffyError> {
 
     // left
     let child_t1 = taffy.new_leaf(Style {
-        size: Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) },
+        size: Size { width: Dimension::Length(5.0), height: Dimension::Length(5.0) },
         ..Default::default()
     })?;
 
@@ -20,7 +20,7 @@ fn main() -> Result<(), taffy::TaffyError> {
 
     // right
     let child_t2 = taffy.new_leaf(Style {
-        size: Size { width: Dimension::Points(5.0), height: Dimension::Points(5.0) },
+        size: Size { width: Dimension::Length(5.0), height: Dimension::Length(5.0) },
         ..Default::default()
     })?;
 

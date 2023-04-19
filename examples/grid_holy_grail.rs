@@ -24,9 +24,9 @@ fn main() -> Result<(), taffy::TaffyError> {
     // Setup the grid
     let root_style = Style {
         display: Display::Grid,
-        size: Size { width: points(800.0), height: points(600.0) },
-        grid_template_columns: vec![points(250.0), fr(1.0), points(250.0)],
-        grid_template_rows: vec![points(150.0), fr(1.0), points(150.0)],
+        size: Size { width: length(800.0), height: length(600.0) },
+        grid_template_columns: vec![length(250.0), fr(1.0), length(250.0)],
+        grid_template_rows: vec![length(150.0), fr(1.0), length(150.0)],
         ..default()
     };
 
@@ -41,7 +41,7 @@ fn main() -> Result<(), taffy::TaffyError> {
     let root = taffy.new_with_children(root_style, &[header, left_sidebar, content_area, right_sidebar, footer])?;
 
     // Compute layout and print result
-    taffy.compute_layout(root, Size { width: points(800.0), height: points(600.0) })?;
+    taffy.compute_layout(root, Size { width: length(800.0), height: length(600.0) })?;
     taffy::util::print_tree(&taffy, root);
 
     Ok(())

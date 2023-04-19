@@ -22,8 +22,8 @@ fn measure_flex_basis_overrides_measure() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(50f32),
-                    height: taffy::style::Dimension::Points(50f32),
+                    width: taffy::style::Dimension::Length(50f32),
+                    height: taffy::style::Dimension::Length(50f32),
                 },
                 ..Default::default()
             },

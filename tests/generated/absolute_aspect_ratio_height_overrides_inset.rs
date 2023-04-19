@@ -22,8 +22,8 @@ fn absolute_aspect_ratio_height_overrides_inset() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(400f32),
-                    height: taffy::style::Dimension::Points(300f32),
+                    width: taffy::style::Dimension::Length(400f32),
+                    height: taffy::style::Dimension::Length(300f32),
                 },
                 ..Default::default()
             },

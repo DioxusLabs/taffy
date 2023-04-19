@@ -6,7 +6,7 @@ fn grid_aspect_ratio_fill_child_min_width() {
     let node0 = taffy
         .new_leaf_with_measure(
             taffy::style::Style {
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(50f32) },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(50f32) },
                 aspect_ratio: Some(2f32),
                 ..Default::default()
             },
@@ -27,8 +27,8 @@ fn grid_aspect_ratio_fill_child_min_width() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

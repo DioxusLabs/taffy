@@ -30,8 +30,8 @@ fn grid_overflow_rows() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                grid_template_rows: vec![points(40f32), points(40f32)],
-                grid_template_columns: vec![min_content(), max_content(), points(10f32), percent(0.2f32)],
+                grid_template_rows: vec![length(40f32), length(40f32)],
+                grid_template_columns: vec![min_content(), max_content(), length(10f32), percent(0.2f32)],
                 ..Default::default()
             },
             &[node0, node1, node2, node3, node4, node5],

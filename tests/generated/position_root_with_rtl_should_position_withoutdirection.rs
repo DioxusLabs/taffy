@@ -6,11 +6,11 @@ fn position_root_with_rtl_should_position_withoutdirection() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(52f32),
-                height: taffy::style::Dimension::Points(52f32),
+                width: taffy::style::Dimension::Length(52f32),
+                height: taffy::style::Dimension::Length(52f32),
             },
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Points(72f32),
+                left: taffy::style::LengthPercentageAuto::Length(72f32),
                 right: auto(),
                 top: auto(),
                 bottom: auto(),

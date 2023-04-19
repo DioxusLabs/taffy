@@ -22,8 +22,8 @@ fn percentage_position_left_top() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(400f32),
-                    height: taffy::style::Dimension::Points(400f32),
+                    width: taffy::style::Dimension::Length(400f32),
+                    height: taffy::style::Dimension::Length(400f32),
                 },
                 ..Default::default()
             },

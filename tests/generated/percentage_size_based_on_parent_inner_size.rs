@@ -17,14 +17,14 @@ fn percentage_size_based_on_parent_inner_size() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(200f32),
-                    height: taffy::style::Dimension::Points(400f32),
+                    width: taffy::style::Dimension::Length(200f32),
+                    height: taffy::style::Dimension::Length(400f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Points(20f32),
-                    right: taffy::style::LengthPercentage::Points(20f32),
-                    top: taffy::style::LengthPercentage::Points(20f32),
-                    bottom: taffy::style::LengthPercentage::Points(20f32),
+                    left: taffy::style::LengthPercentage::Length(20f32),
+                    right: taffy::style::LengthPercentage::Length(20f32),
+                    top: taffy::style::LengthPercentage::Length(20f32),
+                    bottom: taffy::style::LengthPercentage::Length(20f32),
                 },
                 ..Default::default()
             },

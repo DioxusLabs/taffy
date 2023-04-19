@@ -6,8 +6,8 @@ fn align_baseline_child_multiline_override() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(50f32),
-                height: taffy::style::Dimension::Points(60f32),
+                width: taffy::style::Dimension::Length(50f32),
+                height: taffy::style::Dimension::Length(60f32),
             },
             ..Default::default()
         })
@@ -15,8 +15,8 @@ fn align_baseline_child_multiline_override() {
     let node10 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(25f32),
-                height: taffy::style::Dimension::Points(20f32),
+                width: taffy::style::Dimension::Length(25f32),
+                height: taffy::style::Dimension::Length(20f32),
             },
             ..Default::default()
         })
@@ -25,8 +25,8 @@ fn align_baseline_child_multiline_override() {
         .new_leaf(taffy::style::Style {
             align_self: Some(taffy::style::AlignSelf::Baseline),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(25f32),
-                height: taffy::style::Dimension::Points(10f32),
+                width: taffy::style::Dimension::Length(25f32),
+                height: taffy::style::Dimension::Length(10f32),
             },
             ..Default::default()
         })
@@ -34,8 +34,8 @@ fn align_baseline_child_multiline_override() {
     let node12 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(25f32),
-                height: taffy::style::Dimension::Points(20f32),
+                width: taffy::style::Dimension::Length(25f32),
+                height: taffy::style::Dimension::Length(20f32),
             },
             ..Default::default()
         })
@@ -44,8 +44,8 @@ fn align_baseline_child_multiline_override() {
         .new_leaf(taffy::style::Style {
             align_self: Some(taffy::style::AlignSelf::Baseline),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(25f32),
-                height: taffy::style::Dimension::Points(10f32),
+                width: taffy::style::Dimension::Length(25f32),
+                height: taffy::style::Dimension::Length(10f32),
             },
             ..Default::default()
         })
@@ -55,8 +55,8 @@ fn align_baseline_child_multiline_override() {
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(50f32),
-                    height: taffy::style::Dimension::Points(25f32),
+                    width: taffy::style::Dimension::Length(50f32),
+                    height: taffy::style::Dimension::Length(25f32),
                 },
                 ..Default::default()
             },
@@ -68,8 +68,8 @@ fn align_baseline_child_multiline_override() {
             taffy::style::Style {
                 align_items: Some(taffy::style::AlignItems::Baseline),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

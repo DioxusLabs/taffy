@@ -7,8 +7,8 @@ fn gap_column_gap_percentage_cyclic_partially_shrinkable() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(20f32),
-                height: taffy::style::Dimension::Points(40f32),
+                width: taffy::style::Dimension::Length(20f32),
+                height: taffy::style::Dimension::Length(40f32),
             },
             ..Default::default()
         })
@@ -16,8 +16,8 @@ fn gap_column_gap_percentage_cyclic_partially_shrinkable() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(20f32),
-                height: taffy::style::Dimension::Points(40f32),
+                width: taffy::style::Dimension::Length(20f32),
+                height: taffy::style::Dimension::Length(40f32),
             },
             ..Default::default()
         })
@@ -26,8 +26,8 @@ fn gap_column_gap_percentage_cyclic_partially_shrinkable() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(20f32),
-                height: taffy::style::Dimension::Points(40f32),
+                width: taffy::style::Dimension::Length(20f32),
+                height: taffy::style::Dimension::Length(40f32),
             },
             ..Default::default()
         })

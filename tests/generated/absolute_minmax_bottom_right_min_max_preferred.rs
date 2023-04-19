@@ -7,22 +7,22 @@ fn absolute_minmax_bottom_right_min_max_preferred() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(200f32),
-                height: taffy::style::Dimension::Points(200f32),
+                width: taffy::style::Dimension::Length(200f32),
+                height: taffy::style::Dimension::Length(200f32),
             },
             min_size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(50f32),
-                height: taffy::style::Dimension::Points(60f32),
+                width: taffy::style::Dimension::Length(50f32),
+                height: taffy::style::Dimension::Length(60f32),
             },
             max_size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(40f32),
-                height: taffy::style::Dimension::Points(30f32),
+                width: taffy::style::Dimension::Length(40f32),
+                height: taffy::style::Dimension::Length(30f32),
             },
             inset: taffy::geometry::Rect {
                 left: auto(),
-                right: taffy::style::LengthPercentageAuto::Points(10f32),
+                right: taffy::style::LengthPercentageAuto::Length(10f32),
                 top: auto(),
-                bottom: taffy::style::LengthPercentageAuto::Points(10f32),
+                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
             },
             ..Default::default()
         })
@@ -31,8 +31,8 @@ fn absolute_minmax_bottom_right_min_max_preferred() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

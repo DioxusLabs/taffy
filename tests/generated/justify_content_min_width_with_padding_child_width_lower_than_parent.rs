@@ -7,8 +7,8 @@ fn justify_content_min_width_with_padding_child_width_lower_than_parent() {
         .new_leaf(taffy::style::Style {
             align_content: Some(taffy::style::AlignContent::Stretch),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(199f32),
-                height: taffy::style::Dimension::Points(100f32),
+                width: taffy::style::Dimension::Length(199f32),
+                height: taffy::style::Dimension::Length(100f32),
             },
             ..Default::default()
         })
@@ -18,10 +18,10 @@ fn justify_content_min_width_with_padding_child_width_lower_than_parent() {
             taffy::style::Style {
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 justify_content: Some(taffy::style::JustifyContent::Center),
-                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(400f32), height: auto() },
+                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(400f32), height: auto() },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Points(100f32),
-                    right: taffy::style::LengthPercentage::Points(100f32),
+                    left: taffy::style::LengthPercentage::Length(100f32),
+                    right: taffy::style::LengthPercentage::Length(100f32),
                     top: zero(),
                     bottom: zero(),
                 },
@@ -42,8 +42,8 @@ fn justify_content_min_width_with_padding_child_width_lower_than_parent() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(1080f32),
-                    height: taffy::style::Dimension::Points(1584f32),
+                    width: taffy::style::Dimension::Length(1080f32),
+                    height: taffy::style::Dimension::Length(1584f32),
                 },
                 ..Default::default()
             },

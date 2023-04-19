@@ -28,7 +28,7 @@ let mut taffy = Taffy::new();
 let header_node = taffy
     .new_leaf(
         Style {
-            size: Size { width: points(800.0), height: points(100.0) },
+            size: Size { width: length(800.0), height: length(100.0) },
             ..Default::default()
         },
     ).unwrap();
@@ -36,7 +36,7 @@ let header_node = taffy
 let body_node = taffy
     .new_leaf(
         Style {
-            size: Size { width: points(800.0), height: auto() },
+            size: Size { width: length(800.0), height: auto() },
             flex_grow: 1.0,
             ..Default::default()
         },
@@ -46,7 +46,7 @@ let root_node = taffy
     .new_with_children(
         Style {
             flex_direction: FlexDirection::Column,
-            size: Size { width: points(800.0), height: points(600.0) },
+            size: Size { width: length(800.0), height: length(600.0) },
             ..Default::default()
         },
         &[header_node, body_node],

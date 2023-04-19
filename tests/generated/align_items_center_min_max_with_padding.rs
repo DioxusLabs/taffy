@@ -6,8 +6,8 @@ fn align_items_center_min_max_with_padding() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(62f32),
-                height: taffy::style::Dimension::Points(62f32),
+                width: taffy::style::Dimension::Length(62f32),
+                height: taffy::style::Dimension::Length(62f32),
             },
             ..Default::default()
         })
@@ -17,18 +17,18 @@ fn align_items_center_min_max_with_padding() {
             taffy::style::Style {
                 align_items: Some(taffy::style::AlignItems::Center),
                 min_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(320f32),
-                    height: taffy::style::Dimension::Points(72f32),
+                    width: taffy::style::Dimension::Length(320f32),
+                    height: taffy::style::Dimension::Length(72f32),
                 },
                 max_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(320f32),
-                    height: taffy::style::Dimension::Points(504f32),
+                    width: taffy::style::Dimension::Length(320f32),
+                    height: taffy::style::Dimension::Length(504f32),
                 },
                 padding: taffy::geometry::Rect {
                     left: zero(),
                     right: zero(),
-                    top: taffy::style::LengthPercentage::Points(8f32),
-                    bottom: taffy::style::LengthPercentage::Points(8f32),
+                    top: taffy::style::LengthPercentage::Length(8f32),
+                    bottom: taffy::style::LengthPercentage::Length(8f32),
                 },
                 ..Default::default()
             },

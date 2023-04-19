@@ -6,8 +6,8 @@ fn nested_overflowing_child() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(200f32),
-                height: taffy::style::Dimension::Points(200f32),
+                width: taffy::style::Dimension::Length(200f32),
+                height: taffy::style::Dimension::Length(200f32),
             },
             ..Default::default()
         })
@@ -17,8 +17,8 @@ fn nested_overflowing_child() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

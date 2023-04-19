@@ -6,22 +6,22 @@ fn rounding_flex_basis_flex_shrink_row() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Points(100f32),
+            flex_basis: taffy::style::Dimension::Length(100f32),
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
-        .new_leaf(taffy::style::Style { flex_basis: taffy::style::Dimension::Points(25f32), ..Default::default() })
+        .new_leaf(taffy::style::Style { flex_basis: taffy::style::Dimension::Length(25f32), ..Default::default() })
         .unwrap();
     let node2 = taffy
-        .new_leaf(taffy::style::Style { flex_basis: taffy::style::Dimension::Points(25f32), ..Default::default() })
+        .new_leaf(taffy::style::Style { flex_basis: taffy::style::Dimension::Length(25f32), ..Default::default() })
         .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(101f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(101f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

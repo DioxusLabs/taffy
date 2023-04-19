@@ -6,8 +6,8 @@ fn justify_content_min_max() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(60f32),
-                height: taffy::style::Dimension::Points(60f32),
+                width: taffy::style::Dimension::Length(60f32),
+                height: taffy::style::Dimension::Length(60f32),
             },
             ..Default::default()
         })
@@ -17,9 +17,9 @@ fn justify_content_min_max() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 justify_content: Some(taffy::style::JustifyContent::Center),
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), height: auto() },
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(100f32) },
-                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(200f32) },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(200f32) },
                 ..Default::default()
             },
             &[node0],

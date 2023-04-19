@@ -9,7 +9,7 @@ fn grid_fr_span_2_proportion_zero_sum_with_non_spanned_track() {
                 start: taffy::style::GridPlacement::Span(2u16),
                 end: taffy::style::GridPlacement::Auto,
             },
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -21,7 +21,7 @@ fn grid_fr_span_2_proportion_zero_sum_with_non_spanned_track() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                grid_template_rows: vec![points(40f32), points(40f32)],
+                grid_template_rows: vec![length(40f32), length(40f32)],
                 grid_template_columns: vec![fr(0f32), fr(0f32), fr(0f32)],
                 ..Default::default()
             },

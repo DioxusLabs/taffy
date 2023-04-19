@@ -22,8 +22,8 @@ fn grid_minmax_min_content_fixed_10px() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                grid_template_rows: vec![points(40f32)],
-                grid_template_columns: vec![minmax(min_content(), points(10f32))],
+                grid_template_rows: vec![length(40f32)],
+                grid_template_columns: vec![minmax(min_content(), length(10f32))],
                 ..Default::default()
             },
             &[node0],

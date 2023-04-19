@@ -22,8 +22,8 @@ fn grid_fit_content_points_max_content() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                grid_template_rows: vec![points(40f32)],
-                grid_template_columns: vec![fit_content(points(30f32))],
+                grid_template_rows: vec![length(40f32)],
+                grid_template_columns: vec![fit_content(length(30f32))],
                 ..Default::default()
             },
             &[node0],

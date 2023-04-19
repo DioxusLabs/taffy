@@ -6,8 +6,8 @@ fn wrap_reverse_row_align_content_stretch() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(30f32),
-                height: taffy::style::Dimension::Points(10f32),
+                width: taffy::style::Dimension::Length(30f32),
+                height: taffy::style::Dimension::Length(10f32),
             },
             ..Default::default()
         })
@@ -15,8 +15,8 @@ fn wrap_reverse_row_align_content_stretch() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(30f32),
-                height: taffy::style::Dimension::Points(20f32),
+                width: taffy::style::Dimension::Length(30f32),
+                height: taffy::style::Dimension::Length(20f32),
             },
             ..Default::default()
         })
@@ -24,8 +24,8 @@ fn wrap_reverse_row_align_content_stretch() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(30f32),
-                height: taffy::style::Dimension::Points(30f32),
+                width: taffy::style::Dimension::Length(30f32),
+                height: taffy::style::Dimension::Length(30f32),
             },
             ..Default::default()
         })
@@ -33,8 +33,8 @@ fn wrap_reverse_row_align_content_stretch() {
     let node3 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(30f32),
-                height: taffy::style::Dimension::Points(40f32),
+                width: taffy::style::Dimension::Length(30f32),
+                height: taffy::style::Dimension::Length(40f32),
             },
             ..Default::default()
         })
@@ -42,8 +42,8 @@ fn wrap_reverse_row_align_content_stretch() {
     let node4 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(30f32),
-                height: taffy::style::Dimension::Points(50f32),
+                width: taffy::style::Dimension::Length(30f32),
+                height: taffy::style::Dimension::Length(50f32),
             },
             ..Default::default()
         })
@@ -53,7 +53,7 @@ fn wrap_reverse_row_align_content_stretch() {
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::WrapReverse,
                 align_content: Some(taffy::style::AlignContent::Stretch),
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2, node3, node4],

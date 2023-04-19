@@ -6,8 +6,8 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
     let node000 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(40f32),
-                height: taffy::style::Dimension::Points(40f32),
+                width: taffy::style::Dimension::Length(40f32),
+                height: taffy::style::Dimension::Length(40f32),
             },
             ..Default::default()
         })
@@ -21,8 +21,8 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
     let node010 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(40f32),
-                height: taffy::style::Dimension::Points(40f32),
+                width: taffy::style::Dimension::Length(40f32),
+                height: taffy::style::Dimension::Length(40f32),
             },
             ..Default::default()
         })
@@ -33,7 +33,7 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 margin: taffy::geometry::Rect {
                     left: zero(),
-                    right: taffy::style::LengthPercentageAuto::Points(10f32),
+                    right: taffy::style::LengthPercentageAuto::Length(10f32),
                     top: zero(),
                     bottom: zero(),
                 },
@@ -46,7 +46,7 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(85f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(85f32), height: auto() },
                 ..Default::default()
             },
             &[node00, node01],
@@ -57,8 +57,8 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(500f32),
-                    height: taffy::style::Dimension::Points(500f32),
+                    width: taffy::style::Dimension::Length(500f32),
+                    height: taffy::style::Dimension::Length(500f32),
                 },
                 ..Default::default()
             },

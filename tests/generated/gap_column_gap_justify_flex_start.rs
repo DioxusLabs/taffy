@@ -5,19 +5,19 @@ fn gap_column_gap_justify_flex_start() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -25,10 +25,10 @@ fn gap_column_gap_justify_flex_start() {
         .new_with_children(
             taffy::style::Style {
                 justify_content: Some(taffy::style::JustifyContent::FlexStart),
-                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::Points(10f32), height: zero() },
+                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::Length(10f32), height: zero() },
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

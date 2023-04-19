@@ -6,8 +6,8 @@ fn padding_center_child() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(10f32),
-                height: taffy::style::Dimension::Points(10f32),
+                width: taffy::style::Dimension::Length(10f32),
+                height: taffy::style::Dimension::Length(10f32),
             },
             ..Default::default()
         })
@@ -18,14 +18,14 @@ fn padding_center_child() {
                 align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Points(10f32),
-                    right: taffy::style::LengthPercentage::Points(20f32),
-                    top: taffy::style::LengthPercentage::Points(10f32),
-                    bottom: taffy::style::LengthPercentage::Points(20f32),
+                    left: taffy::style::LengthPercentage::Length(10f32),
+                    right: taffy::style::LengthPercentage::Length(20f32),
+                    top: taffy::style::LengthPercentage::Length(10f32),
+                    bottom: taffy::style::LengthPercentage::Length(20f32),
                 },
                 ..Default::default()
             },

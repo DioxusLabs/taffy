@@ -17,18 +17,18 @@ fn grid_repeat_mixed() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 grid_template_rows: vec![
-                    points(40f32),
-                    repeat(GridTrackRepetition::Count(1u16), vec![points(40f32)]),
-                    repeat(GridTrackRepetition::AutoFill, vec![points(40f32)]),
+                    length(40f32),
+                    repeat(GridTrackRepetition::Count(1u16), vec![length(40f32)]),
+                    repeat(GridTrackRepetition::AutoFill, vec![length(40f32)]),
                 ],
                 grid_template_columns: vec![
-                    points(40f32),
-                    repeat(GridTrackRepetition::Count(1u16), vec![points(40f32)]),
-                    repeat(GridTrackRepetition::AutoFill, vec![points(40f32)]),
+                    length(40f32),
+                    repeat(GridTrackRepetition::Count(1u16), vec![length(40f32)]),
+                    repeat(GridTrackRepetition::AutoFill, vec![length(40f32)]),
                 ],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(120f32),
-                    height: taffy::style::Dimension::Points(120f32),
+                    width: taffy::style::Dimension::Length(120f32),
+                    height: taffy::style::Dimension::Length(120f32),
                 },
                 ..Default::default()
             },

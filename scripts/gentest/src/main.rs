@@ -643,9 +643,9 @@ fn generate_length_percentage(dimen: &serde_json::Map<String, Value>) -> TokenSt
 
     match unit {
         Value::String(ref unit) => match unit.as_ref() {
-            "points" => {
+            "px" => {
                 let value = value();
-                quote!(taffy::style::LengthPercentage::Points(#value))
+                quote!(taffy::style::LengthPercentage::Length(#value))
             }
             "percent" => {
                 let value = value();
@@ -664,9 +664,9 @@ fn generate_length_percentage_auto(dimen: &serde_json::Map<String, Value>) -> To
     match unit {
         Value::String(ref unit) => match unit.as_ref() {
             "auto" => quote!(taffy::style::LengthPercentageAuto::Auto),
-            "points" => {
+            "px" => {
                 let value = value();
-                quote!(taffy::style::LengthPercentageAuto::Points(#value))
+                quote!(taffy::style::LengthPercentageAuto::Length(#value))
             }
             "percent" => {
                 let value = value();
@@ -685,9 +685,9 @@ fn generate_dimension(dimen: &serde_json::Map<String, Value>) -> TokenStream {
     match unit {
         Value::String(ref unit) => match unit.as_ref() {
             "auto" => quote!(taffy::style::Dimension::Auto),
-            "points" => {
+            "px" => {
                 let value = value();
-                quote!(taffy::style::Dimension::Points(#value))
+                quote!(taffy::style::Dimension::Length(#value))
             }
             "percent" => {
                 let value = value();
@@ -817,10 +817,10 @@ fn generate_scalar_definition(track_definition: &serde_json::Map<String, Value>)
         "auto" => quote!(auto()),
         "min-content" => quote!(min_content()),
         "max-content" => quote!(max_content()),
-        "points" | "percent" | "fraction" => {
+        "px" | "percent" | "fraction" => {
             let value = value();
             match unit() {
-                "points" => quote!(points(#value)),
+                "px" => quote!(length(#value)),
                 "percent" => quote!(percent(#value)),
                 "fraction" => quote!(fr(#value)),
                 _ => unreachable!(),

@@ -6,11 +6,11 @@ fn justify_content_row_max_width_and_margin() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(20f32),
-                height: taffy::style::Dimension::Points(20f32),
+                width: taffy::style::Dimension::Length(20f32),
+                height: taffy::style::Dimension::Length(20f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Points(100f32),
+                left: taffy::style::LengthPercentageAuto::Length(100f32),
                 right: zero(),
                 top: zero(),
                 bottom: zero(),
@@ -22,8 +22,8 @@ fn justify_content_row_max_width_and_margin() {
         .new_with_children(
             taffy::style::Style {
                 justify_content: Some(taffy::style::JustifyContent::Center),
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), height: auto() },
-                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(80f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
+                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(80f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

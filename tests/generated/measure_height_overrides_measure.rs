@@ -6,7 +6,7 @@ fn measure_height_overrides_measure() {
     let node0 = taffy
         .new_leaf_with_measure(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(5f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(5f32) },
                 ..Default::default()
             },
             taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {

@@ -8,14 +8,14 @@ fn grid_margins_fixed_stretch() {
             align_self: Some(taffy::style::AlignSelf::Stretch),
             justify_self: Some(taffy::style::JustifySelf::Stretch),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(20f32),
-                height: taffy::style::Dimension::Points(20f32),
+                width: taffy::style::Dimension::Length(20f32),
+                height: taffy::style::Dimension::Length(20f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Points(4f32),
-                right: taffy::style::LengthPercentageAuto::Points(2f32),
-                top: taffy::style::LengthPercentageAuto::Points(1f32),
-                bottom: taffy::style::LengthPercentageAuto::Points(3f32),
+                left: taffy::style::LengthPercentageAuto::Length(4f32),
+                right: taffy::style::LengthPercentageAuto::Length(2f32),
+                top: taffy::style::LengthPercentageAuto::Length(1f32),
+                bottom: taffy::style::LengthPercentageAuto::Length(3f32),
             },
             ..Default::default()
         })
@@ -29,13 +29,13 @@ fn grid_margins_fixed_stretch() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                grid_template_rows: vec![points(40f32), points(40f32), points(40f32)],
-                grid_template_columns: vec![points(40f32), points(40f32), points(40f32)],
+                grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
+                grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Points(40f32),
-                    right: taffy::style::LengthPercentage::Points(20f32),
-                    top: taffy::style::LengthPercentage::Points(10f32),
-                    bottom: taffy::style::LengthPercentage::Points(30f32),
+                    left: taffy::style::LengthPercentage::Length(40f32),
+                    right: taffy::style::LengthPercentage::Length(20f32),
+                    top: taffy::style::LengthPercentage::Length(10f32),
+                    bottom: taffy::style::LengthPercentage::Length(30f32),
                 },
                 ..Default::default()
             },

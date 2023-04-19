@@ -6,13 +6,13 @@ use taffy::prelude::*;
 fn main() -> Result<(), taffy::TaffyError> {
     let mut taffy = Taffy::new();
 
-    let child_style = Style { size: Size { width: points(20.0), height: points(20.0) }, ..Default::default() };
+    let child_style = Style { size: Size { width: length(20.0), height: length(20.0) }, ..Default::default() };
     let child0 = taffy.new_leaf(child_style.clone())?;
     let child1 = taffy.new_leaf(child_style.clone())?;
     let child2 = taffy.new_leaf(child_style.clone())?;
 
     let root = taffy.new_with_children(
-        Style { gap: Size { width: points(10.0), height: zero() }, ..Default::default() },
+        Style { gap: Size { width: length(10.0), height: zero() }, ..Default::default() },
         &[child0, child1, child2],
     )?;
 

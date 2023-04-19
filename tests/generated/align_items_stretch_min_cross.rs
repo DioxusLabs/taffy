@@ -6,7 +6,7 @@ fn align_items_stretch_min_cross() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(36f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(36f32) },
             ..Default::default()
         })
         .unwrap();
@@ -15,8 +15,8 @@ fn align_items_stretch_min_cross() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 min_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(400f32),
-                    height: taffy::style::Dimension::Points(50f32),
+                    width: taffy::style::Dimension::Length(400f32),
+                    height: taffy::style::Dimension::Length(50f32),
                 },
                 ..Default::default()
             },

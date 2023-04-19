@@ -6,8 +6,8 @@ fn wrap_row() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(31f32),
-                height: taffy::style::Dimension::Points(30f32),
+                width: taffy::style::Dimension::Length(31f32),
+                height: taffy::style::Dimension::Length(30f32),
             },
             ..Default::default()
         })
@@ -15,8 +15,8 @@ fn wrap_row() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(32f32),
-                height: taffy::style::Dimension::Points(30f32),
+                width: taffy::style::Dimension::Length(32f32),
+                height: taffy::style::Dimension::Length(30f32),
             },
             ..Default::default()
         })
@@ -24,8 +24,8 @@ fn wrap_row() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(33f32),
-                height: taffy::style::Dimension::Points(30f32),
+                width: taffy::style::Dimension::Length(33f32),
+                height: taffy::style::Dimension::Length(30f32),
             },
             ..Default::default()
         })
@@ -33,8 +33,8 @@ fn wrap_row() {
     let node3 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(34f32),
-                height: taffy::style::Dimension::Points(30f32),
+                width: taffy::style::Dimension::Length(34f32),
+                height: taffy::style::Dimension::Length(30f32),
             },
             ..Default::default()
         })
@@ -43,7 +43,7 @@ fn wrap_row() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2, node3],

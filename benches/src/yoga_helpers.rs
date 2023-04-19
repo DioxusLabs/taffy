@@ -41,7 +41,7 @@ pub fn new_with_children(
 fn into_yg_units(dim: impl Into<tf::Dimension>) -> yg::StyleUnit {
     match dim.into() {
         tf::Dimension::Auto => yg::StyleUnit::Auto,
-        tf::Dimension::Points(val) => yg::StyleUnit::Point(yg::OrderedFloat(val)),
+        tf::Dimension::Length(val) => yg::StyleUnit::Point(yg::OrderedFloat(val)),
         tf::Dimension::Percent(val) => yg::StyleUnit::Percent(yg::OrderedFloat(val)),
     }
 }

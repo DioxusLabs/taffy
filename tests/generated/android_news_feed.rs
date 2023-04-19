@@ -8,8 +8,8 @@ fn android_news_feed() {
             align_content: Some(taffy::style::AlignContent::Stretch),
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(120f32),
-                height: taffy::style::Dimension::Points(120f32),
+                width: taffy::style::Dimension::Length(120f32),
+                height: taffy::style::Dimension::Length(120f32),
             },
             ..Default::default()
         })
@@ -46,15 +46,15 @@ fn android_news_feed() {
                 flex_shrink: 1f32,
                 margin: taffy::geometry::Rect {
                     left: zero(),
-                    right: taffy::style::LengthPercentageAuto::Points(36f32),
+                    right: taffy::style::LengthPercentageAuto::Length(36f32),
                     top: zero(),
                     bottom: zero(),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Points(36f32),
-                    right: taffy::style::LengthPercentage::Points(36f32),
-                    top: taffy::style::LengthPercentage::Points(21f32),
-                    bottom: taffy::style::LengthPercentage::Points(18f32),
+                    left: taffy::style::LengthPercentage::Length(36f32),
+                    right: taffy::style::LengthPercentage::Length(36f32),
+                    top: taffy::style::LengthPercentage::Length(21f32),
+                    bottom: taffy::style::LengthPercentage::Length(18f32),
                 },
                 ..Default::default()
             },
@@ -67,9 +67,9 @@ fn android_news_feed() {
                 align_items: Some(taffy::style::AlignItems::FlexStart),
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Points(36f32),
+                    left: taffy::style::LengthPercentageAuto::Length(36f32),
                     right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Points(24f32),
+                    top: taffy::style::LengthPercentageAuto::Length(24f32),
                     bottom: zero(),
                 },
                 ..Default::default()
@@ -92,8 +92,8 @@ fn android_news_feed() {
             align_content: Some(taffy::style::AlignContent::Stretch),
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(72f32),
-                height: taffy::style::Dimension::Points(72f32),
+                width: taffy::style::Dimension::Length(72f32),
+                height: taffy::style::Dimension::Length(72f32),
             },
             ..Default::default()
         })
@@ -130,15 +130,15 @@ fn android_news_feed() {
                 flex_shrink: 1f32,
                 margin: taffy::geometry::Rect {
                     left: zero(),
-                    right: taffy::style::LengthPercentageAuto::Points(36f32),
+                    right: taffy::style::LengthPercentageAuto::Length(36f32),
                     top: zero(),
                     bottom: zero(),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Points(36f32),
-                    right: taffy::style::LengthPercentage::Points(36f32),
-                    top: taffy::style::LengthPercentage::Points(21f32),
-                    bottom: taffy::style::LengthPercentage::Points(18f32),
+                    left: taffy::style::LengthPercentage::Length(36f32),
+                    right: taffy::style::LengthPercentage::Length(36f32),
+                    top: taffy::style::LengthPercentage::Length(21f32),
+                    bottom: taffy::style::LengthPercentage::Length(18f32),
                 },
                 ..Default::default()
             },
@@ -151,9 +151,9 @@ fn android_news_feed() {
                 align_items: Some(taffy::style::AlignItems::FlexStart),
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Points(174f32),
+                    left: taffy::style::LengthPercentageAuto::Length(174f32),
                     right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Points(24f32),
+                    top: taffy::style::LengthPercentageAuto::Length(24f32),
                     bottom: zero(),
                 },
                 ..Default::default()
@@ -197,7 +197,7 @@ fn android_news_feed() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 flex_shrink: 0f32,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(1080f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(1080f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

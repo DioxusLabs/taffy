@@ -21,7 +21,7 @@ fn percent_absolute_position() {
                 position: taffy::style::Position::Absolute,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Percent(1f32),
-                    height: taffy::style::Dimension::Points(50f32),
+                    height: taffy::style::Dimension::Length(50f32),
                 },
                 inset: taffy::geometry::Rect {
                     left: taffy::style::LengthPercentageAuto::Percent(0.5f32),
@@ -39,8 +39,8 @@ fn percent_absolute_position() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(60f32),
-                    height: taffy::style::Dimension::Points(50f32),
+                    width: taffy::style::Dimension::Length(60f32),
+                    height: taffy::style::Dimension::Length(50f32),
                 },
                 ..Default::default()
             },

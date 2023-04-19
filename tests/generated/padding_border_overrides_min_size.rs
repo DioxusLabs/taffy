@@ -6,20 +6,20 @@ fn padding_border_overrides_min_size() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             min_size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(0f32),
-                height: taffy::style::Dimension::Points(0f32),
+                width: taffy::style::Dimension::Length(0f32),
+                height: taffy::style::Dimension::Length(0f32),
             },
             padding: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Points(8f32),
-                right: taffy::style::LengthPercentage::Points(4f32),
-                top: taffy::style::LengthPercentage::Points(2f32),
-                bottom: taffy::style::LengthPercentage::Points(6f32),
+                left: taffy::style::LengthPercentage::Length(8f32),
+                right: taffy::style::LengthPercentage::Length(4f32),
+                top: taffy::style::LengthPercentage::Length(2f32),
+                bottom: taffy::style::LengthPercentage::Length(6f32),
             },
             border: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Points(7f32),
-                right: taffy::style::LengthPercentage::Points(3f32),
-                top: taffy::style::LengthPercentage::Points(1f32),
-                bottom: taffy::style::LengthPercentage::Points(5f32),
+                left: taffy::style::LengthPercentage::Length(7f32),
+                right: taffy::style::LengthPercentage::Length(3f32),
+                top: taffy::style::LengthPercentage::Length(1f32),
+                bottom: taffy::style::LengthPercentage::Length(5f32),
             },
             ..Default::default()
         })

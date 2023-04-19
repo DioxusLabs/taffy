@@ -8,10 +8,10 @@ fn grid_max_content_single_item_margin_fixed() {
         .new_leaf_with_measure(
             taffy::style::Style {
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Points(20f32),
-                    right: taffy::style::LengthPercentageAuto::Points(10f32),
-                    top: taffy::style::LengthPercentageAuto::Points(5f32),
-                    bottom: taffy::style::LengthPercentageAuto::Points(15f32),
+                    left: taffy::style::LengthPercentageAuto::Length(20f32),
+                    right: taffy::style::LengthPercentageAuto::Length(10f32),
+                    top: taffy::style::LengthPercentageAuto::Length(5f32),
+                    bottom: taffy::style::LengthPercentageAuto::Length(15f32),
                 },
                 ..Default::default()
             },
@@ -38,8 +38,8 @@ fn grid_max_content_single_item_margin_fixed() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                grid_template_rows: vec![points(40f32), points(40f32), points(40f32)],
-                grid_template_columns: vec![points(40f32), max_content(), points(40f32)],
+                grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
+                grid_template_columns: vec![length(40f32), max_content(), length(40f32)],
                 ..Default::default()
             },
             &[node0, node1, node2, node3, node4, node5, node6, node7, node8],

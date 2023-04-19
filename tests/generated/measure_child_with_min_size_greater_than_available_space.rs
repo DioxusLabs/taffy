@@ -6,7 +6,7 @@ fn measure_child_with_min_size_greater_than_available_space() {
     let node0 = taffy
         .new_leaf_with_measure(
             taffy::style::Style {
-                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(200f32), height: auto() },
+                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
                 ..Default::default()
             },
             taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
@@ -26,7 +26,7 @@ fn measure_child_with_min_size_greater_than_available_space() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

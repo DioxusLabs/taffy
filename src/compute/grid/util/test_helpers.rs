@@ -10,7 +10,7 @@ impl CreateParentTestNode for (f32, f32, i32, i32) {
     fn into_grid(self) -> Style {
         Style {
             display: Display::Grid,
-            size: Size { width: Dimension::Points(self.0), height: Dimension::Points(self.1) },
+            size: Size { width: Dimension::Length(self.0), height: Dimension::Length(self.1) },
             grid_template_columns: vec![fr(1f32); self.2 as usize],
             grid_template_rows: vec![fr(1f32); self.3 as usize],
             ..Default::default()

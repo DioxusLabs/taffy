@@ -16,7 +16,7 @@ mod serde {
         use serde_json;
         let json = r###"{
             "inset": {
-                "left": { "Points": 22 },
+                "left": { "Length": 22 },
                 "right": "Auto"
             },
             "size":
@@ -25,7 +25,7 @@ mod serde {
             },
             "min_size":
             {
-                "height": { "Points": 10 }
+                "height": { "Length": 10 }
             },
             "max_size":
             {
@@ -33,19 +33,19 @@ mod serde {
             },
             "margin":
             {
-                "right": { "Points": 99.0 },
-                "bottom": { "Points": 99.0 }
+                "right": { "Length": 99.0 },
+                "bottom": { "Length": 99.0 }
             },
             "padding":
             {
-                "left": { "Points": 99.0 }
+                "left": { "Length": 99.0 }
             },
             "border":
             {
-                "bottom": { "Points": 99.0 }
+                "bottom": { "Length": 99.0 }
             },
             "gap": {
-                "width": { "Points": 99.0 }
+                "width": { "Length": 99.0 }
             },
             "grid_row": { "start": "Auto" },
             "grid_column": { "end": "Auto" }

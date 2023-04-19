@@ -5,13 +5,13 @@ fn gridflex_kitchen_sink() {
     let mut taffy = taffy::Taffy::new();
     let node000 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node00100 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -33,7 +33,7 @@ fn gridflex_kitchen_sink() {
         .new_with_children(
             taffy::style::Style {
                 flex_grow: 1f32,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
                 ..Default::default()
             },
             &[node0010],

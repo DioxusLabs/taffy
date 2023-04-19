@@ -6,8 +6,8 @@ fn measure_child_with_flex_shrink_hidden() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(50f32),
-                height: taffy::style::Dimension::Points(50f32),
+                width: taffy::style::Dimension::Length(50f32),
+                height: taffy::style::Dimension::Length(50f32),
             },
             ..Default::default()
         })
@@ -37,7 +37,7 @@ fn measure_child_with_flex_shrink_hidden() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(100f32),
                     height: taffy::style::Dimension::Auto,
                 },
                 ..Default::default()

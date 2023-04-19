@@ -7,10 +7,10 @@ fn absolute_layout_start_top_end_bottom() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Points(10f32),
-                right: taffy::style::LengthPercentageAuto::Points(10f32),
-                top: taffy::style::LengthPercentageAuto::Points(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Points(10f32),
+                left: taffy::style::LengthPercentageAuto::Length(10f32),
+                right: taffy::style::LengthPercentageAuto::Length(10f32),
+                top: taffy::style::LengthPercentageAuto::Length(10f32),
+                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
             },
             ..Default::default()
         })
@@ -19,8 +19,8 @@ fn absolute_layout_start_top_end_bottom() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

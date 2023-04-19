@@ -8,8 +8,8 @@ fn grid_justify_items_sized_center() {
             grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(20f32),
-                height: taffy::style::Dimension::Points(20f32),
+                width: taffy::style::Dimension::Length(20f32),
+                height: taffy::style::Dimension::Length(20f32),
             },
             ..Default::default()
         })
@@ -19,8 +19,8 @@ fn grid_justify_items_sized_center() {
             grid_row: taffy::geometry::Line { start: line(3i16), end: taffy::style::GridPlacement::Auto },
             grid_column: taffy::geometry::Line { start: line(3i16), end: taffy::style::GridPlacement::Auto },
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(60f32),
-                height: taffy::style::Dimension::Points(60f32),
+                width: taffy::style::Dimension::Length(60f32),
+                height: taffy::style::Dimension::Length(60f32),
             },
             ..Default::default()
         })
@@ -30,11 +30,11 @@ fn grid_justify_items_sized_center() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 justify_items: Some(taffy::style::JustifyItems::Center),
-                grid_template_rows: vec![points(40f32), points(40f32), points(40f32)],
-                grid_template_columns: vec![points(40f32), points(40f32), points(40f32)],
+                grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
+                grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(120f32),
-                    height: taffy::style::Dimension::Points(120f32),
+                    width: taffy::style::Dimension::Length(120f32),
+                    height: taffy::style::Dimension::Length(120f32),
                 },
                 ..Default::default()
             },

@@ -25,7 +25,7 @@ pub enum PositionType {
 
 ```rust
 pub enum Units {
-    Pixels(f32), // = Dimension::Points
+    Pixels(f32), // = Dimension::Length
     Percentage(f32), // = Dimension::Percent
     Auto, // = Dimension::Auto
     Stretch(f32), // No equivalent in Taffy!

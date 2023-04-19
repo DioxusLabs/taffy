@@ -5,7 +5,7 @@ fn grid_aspect_ratio_fill_child_height() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
             aspect_ratio: Some(2f32),
             ..Default::default()
         })
@@ -15,8 +15,8 @@ fn grid_aspect_ratio_fill_child_height() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

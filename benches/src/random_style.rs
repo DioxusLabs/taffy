@@ -26,7 +26,7 @@ impl Randomizeable for Dimension {
         if switch < 0.2 {
             Dimension::Auto
         } else if switch < 0.8 {
-            Dimension::Points(rng.gen_range(0.0..500.0))
+            Dimension::Length(rng.gen_range(0.0..500.0))
         } else {
             Dimension::Percent(rng.gen_range(0.0..1.0))
         }

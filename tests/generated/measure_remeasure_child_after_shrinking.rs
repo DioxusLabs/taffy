@@ -7,8 +7,8 @@ fn measure_remeasure_child_after_shrinking() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(50f32),
-                height: taffy::style::Dimension::Points(50f32),
+                width: taffy::style::Dimension::Length(50f32),
+                height: taffy::style::Dimension::Length(50f32),
             },
             ..Default::default()
         })
@@ -33,7 +33,7 @@ fn measure_remeasure_child_after_shrinking() {
             taffy::style::Style {
                 align_items: Some(taffy::style::AlignItems::Start),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(100f32),
                     height: taffy::style::Dimension::Auto,
                 },
                 ..Default::default()

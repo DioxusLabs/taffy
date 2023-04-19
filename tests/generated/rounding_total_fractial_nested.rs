@@ -6,13 +6,13 @@ fn rounding_total_fractial_nested() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            flex_basis: taffy::style::Dimension::Points(0.3f32),
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(9.9f32) },
+            flex_basis: taffy::style::Dimension::Length(0.3f32),
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(9.9f32) },
             inset: taffy::geometry::Rect {
                 left: auto(),
                 right: auto(),
                 top: auto(),
-                bottom: taffy::style::LengthPercentageAuto::Points(13.3f32),
+                bottom: taffy::style::LengthPercentageAuto::Length(13.3f32),
             },
             ..Default::default()
         })
@@ -20,12 +20,12 @@ fn rounding_total_fractial_nested() {
     let node01 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 4f32,
-            flex_basis: taffy::style::Dimension::Points(0.3f32),
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(1.1f32) },
+            flex_basis: taffy::style::Dimension::Length(0.3f32),
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(1.1f32) },
             inset: taffy::geometry::Rect {
                 left: auto(),
                 right: auto(),
-                top: taffy::style::LengthPercentageAuto::Points(13.3f32),
+                top: taffy::style::LengthPercentageAuto::Length(13.3f32),
                 bottom: auto(),
             },
             ..Default::default()
@@ -36,8 +36,8 @@ fn rounding_total_fractial_nested() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 0.7f32,
-                flex_basis: taffy::style::Dimension::Points(50.3f32),
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(20.3f32) },
+                flex_basis: taffy::style::Dimension::Length(50.3f32),
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(20.3f32) },
                 ..Default::default()
             },
             &[node00, node01],
@@ -46,14 +46,14 @@ fn rounding_total_fractial_nested() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1.6f32,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
             ..Default::default()
         })
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1.1f32,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(10.7f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10.7f32) },
             ..Default::default()
         })
         .unwrap();
@@ -62,8 +62,8 @@ fn rounding_total_fractial_nested() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(87.4f32),
-                    height: taffy::style::Dimension::Points(113.4f32),
+                    width: taffy::style::Dimension::Length(87.4f32),
+                    height: taffy::style::Dimension::Length(113.4f32),
                 },
                 ..Default::default()
             },

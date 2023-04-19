@@ -32,17 +32,17 @@ fn gap_column_gap_percentage_flexible_with_padding() {
             taffy::style::Style {
                 gap: taffy::geometry::Size {
                     width: taffy::style::LengthPercentage::Percent(0.1f32),
-                    height: taffy::style::LengthPercentage::Points(20f32),
+                    height: taffy::style::LengthPercentage::Length(20f32),
                 },
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Points(10f32),
-                    right: taffy::style::LengthPercentage::Points(10f32),
-                    top: taffy::style::LengthPercentage::Points(10f32),
-                    bottom: taffy::style::LengthPercentage::Points(10f32),
+                    left: taffy::style::LengthPercentage::Length(10f32),
+                    right: taffy::style::LengthPercentage::Length(10f32),
+                    top: taffy::style::LengthPercentage::Length(10f32),
+                    bottom: taffy::style::LengthPercentage::Length(10f32),
                 },
                 ..Default::default()
             },

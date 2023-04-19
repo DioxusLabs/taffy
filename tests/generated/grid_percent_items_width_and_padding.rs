@@ -19,7 +19,7 @@ fn grid_percent_items_width_and_padding() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(200f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

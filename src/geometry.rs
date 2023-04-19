@@ -555,10 +555,10 @@ impl<T> Size<Option<T>> {
 }
 
 impl Size<Dimension> {
-    /// Generates a [`Size<Dimension>`] using [`Dimension::Points`] values
+    /// Generates a [`Size<Dimension>`] using [`Dimension::Length`] values
     #[must_use]
-    pub const fn from_points(width: f32, height: f32) -> Self {
-        Size { width: Dimension::Points(width), height: Dimension::Points(height) }
+    pub const fn from_lengths(width: f32, height: f32) -> Self {
+        Size { width: Dimension::Length(width), height: Dimension::Length(height) }
     }
 
     /// Generates a [`Size<Dimension>`] using [`Dimension::Percent`] values

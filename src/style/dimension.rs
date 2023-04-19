@@ -1,7 +1,7 @@
 //! Style types for representing lengths / sizes
 
 use crate::geometry::{Rect, Size};
-use crate::style_helpers::{FromPercent, FromPoints, TaffyAuto, TaffyMaxContent, TaffyMinContent, TaffyZero};
+use crate::style_helpers::{FromLength, FromPercent, TaffyAuto, TaffyMaxContent, TaffyMinContent, TaffyZero};
 use crate::util::sys::abs;
 
 /// A unit of linear measurement
@@ -10,18 +10,18 @@ use crate::util::sys::abs;
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum LengthPercentage {
-    /// Points are abstract absolute units. Users of Taffy may define what they correspond
+    /// An absolute length in some abstract units. Users of Taffy may define what they correspond
     /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
-    Points(f32),
+    Length(f32),
     /// The dimension is stored in percentage relative to the parent item.
     Percent(f32),
 }
 impl TaffyZero for LengthPercentage {
-    const ZERO: Self = Self::Points(0.0);
+    const ZERO: Self = Self::Length(0.0);
 }
-impl FromPoints for LengthPercentage {
-    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
-        Self::Points(points.into())
+impl FromLength for LengthPercentage {
+    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
+        Self::Length(value.into())
     }
 }
 impl FromPercent for LengthPercentage {
@@ -36,23 +36,23 @@ impl FromPercent for LengthPercentage {
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum LengthPercentageAuto {
-    /// Points are abstract absolute units. Users of Taffy may define what they correspond
+    /// An absolute length in some abstract units. Users of Taffy may define what they correspond
     /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
-    Points(f32),
+    Length(f32),
     /// The dimension is stored in percentage relative to the parent item.
     Percent(f32),
     /// The dimension should be automatically computed
     Auto,
 }
 impl TaffyZero for LengthPercentageAuto {
-    const ZERO: Self = Self::Points(0.0);
+    const ZERO: Self = Self::Length(0.0);
 }
 impl TaffyAuto for LengthPercentageAuto {
     const AUTO: Self = Self::Auto;
 }
-impl FromPoints for LengthPercentageAuto {
-    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
-        Self::Points(points.into())
+impl FromLength for LengthPercentageAuto {
+    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
+        Self::Length(value.into())
     }
 }
 impl FromPercent for LengthPercentageAuto {
@@ -64,7 +64,7 @@ impl FromPercent for LengthPercentageAuto {
 impl From<LengthPercentage> for LengthPercentageAuto {
     fn from(input: LengthPercentage) -> Self {
         match input {
-            LengthPercentage::Points(value) => Self::Points(value),
+            LengthPercentage::Length(value) => Self::Length(value),
             LengthPercentage::Percent(value) => Self::Percent(value),
         }
     }
@@ -72,12 +72,12 @@ impl From<LengthPercentage> for LengthPercentageAuto {
 
 impl LengthPercentageAuto {
     /// Returns:
-    ///   - Some(points) for Points variants
+    ///   - Some(length) for Length variants
     ///   - Some(resolved) using the provided context for Percent variants
     ///   - None for Auto variants
     pub fn resolve_to_option(self, context: f32) -> Option<f32> {
         match self {
-            Self::Points(points) => Some(points),
+            Self::Length(length) => Some(length),
             Self::Percent(percent) => Some(context * percent),
             Self::Auto => None,
         }
@@ -90,23 +90,23 @@ impl LengthPercentageAuto {
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Dimension {
-    /// Points are abstract absolute units. Users of Taffy may define what they correspond
+    /// An absolute length in some abstract units. Users of Taffy may define what they correspond
     /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
-    Points(f32),
+    Length(f32),
     /// The dimension is stored in percentage relative to the parent item.
     Percent(f32),
     /// The dimension should be automatically computed
     Auto,
 }
 impl TaffyZero for Dimension {
-    const ZERO: Self = Self::Points(0.0);
+    const ZERO: Self = Self::Length(0.0);
 }
 impl TaffyAuto for Dimension {
     const AUTO: Self = Self::Auto;
 }
-impl FromPoints for Dimension {
-    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
-        Self::Points(points.into())
+impl FromLength for Dimension {
+    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
+        Self::Length(value.into())
     }
 }
 impl FromPercent for Dimension {
@@ -118,7 +118,7 @@ impl FromPercent for Dimension {
 impl From<LengthPercentage> for Dimension {
     fn from(input: LengthPercentage) -> Self {
         match input {
-            LengthPercentage::Points(value) => Self::Points(value),
+            LengthPercentage::Length(value) => Self::Length(value),
             LengthPercentage::Percent(value) => Self::Percent(value),
         }
     }
@@ -127,7 +127,7 @@ impl From<LengthPercentage> for Dimension {
 impl From<LengthPercentageAuto> for Dimension {
     fn from(input: LengthPercentageAuto) -> Self {
         match input {
-            LengthPercentageAuto::Points(value) => Self::Points(value),
+            LengthPercentageAuto::Length(value) => Self::Length(value),
             LengthPercentageAuto::Percent(value) => Self::Percent(value),
             LengthPercentageAuto::Auto => Self::Auto,
         }
@@ -135,25 +135,25 @@ impl From<LengthPercentageAuto> for Dimension {
 }
 
 impl Dimension {
-    /// Get Points value if value is Points variant
+    /// Get Length value if value is Length variant
     #[cfg(feature = "grid")]
     pub fn into_option(self) -> Option<f32> {
         match self {
-            Dimension::Points(value) => Some(value),
+            Dimension::Length(value) => Some(value),
             _ => None,
         }
     }
 }
 
 impl Rect<Dimension> {
-    /// Create a new Rect with [`Dimension::Points`]
+    /// Create a new Rect with [`Dimension::Length`]
     #[must_use]
-    pub const fn from_points(start: f32, end: f32, top: f32, bottom: f32) -> Self {
+    pub const fn from_length(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Rect {
-            left: Dimension::Points(start),
-            right: Dimension::Points(end),
-            top: Dimension::Points(top),
-            bottom: Dimension::Points(bottom),
+            left: Dimension::Length(start),
+            right: Dimension::Length(end),
+            top: Dimension::Length(top),
+            bottom: Dimension::Length(bottom),
         }
     }
 
@@ -189,9 +189,9 @@ impl TaffyMaxContent for AvailableSpace {
 impl TaffyMinContent for AvailableSpace {
     const MIN_CONTENT: Self = Self::MinContent;
 }
-impl FromPoints for AvailableSpace {
-    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
-        Self::Definite(points.into())
+impl FromLength for AvailableSpace {
+    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
+        Self::Definite(value.into())
     }
 }
 

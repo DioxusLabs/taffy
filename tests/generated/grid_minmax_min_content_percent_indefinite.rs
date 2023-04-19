@@ -22,7 +22,7 @@ fn grid_minmax_min_content_percent_indefinite() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                grid_template_rows: vec![points(40f32)],
+                grid_template_rows: vec![length(40f32)],
                 grid_template_columns: vec![minmax(min_content(), percent(0.2f32))],
                 ..Default::default()
             },

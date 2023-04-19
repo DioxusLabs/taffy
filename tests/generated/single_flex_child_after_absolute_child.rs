@@ -18,7 +18,7 @@ fn single_flex_child_after_absolute_child() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
-            flex_basis: taffy::style::Dimension::Points(174f32),
+            flex_basis: taffy::style::Dimension::Length(174f32),
             ..Default::default()
         })
         .unwrap();
@@ -27,8 +27,8 @@ fn single_flex_child_after_absolute_child() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(428f32),
-                    height: taffy::style::Dimension::Points(845f32),
+                    width: taffy::style::Dimension::Length(428f32),
+                    height: taffy::style::Dimension::Length(845f32),
                 },
                 ..Default::default()
             },

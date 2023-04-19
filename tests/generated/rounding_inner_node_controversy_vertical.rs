@@ -6,14 +6,14 @@ fn rounding_inner_node_controversy_vertical() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(10f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node10 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(10f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -22,7 +22,7 @@ fn rounding_inner_node_controversy_vertical() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 1f32,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(10f32), height: auto() },
                 ..Default::default()
             },
             &[node10],
@@ -31,7 +31,7 @@ fn rounding_inner_node_controversy_vertical() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(10f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -39,7 +39,7 @@ fn rounding_inner_node_controversy_vertical() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(320f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(320f32) },
                 ..Default::default()
             },
             &[node0, node1, node2],

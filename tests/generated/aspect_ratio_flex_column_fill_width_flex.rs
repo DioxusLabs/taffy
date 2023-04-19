@@ -5,7 +5,7 @@ fn aspect_ratio_flex_column_fill_width_flex() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(50f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(50f32) },
             aspect_ratio: Some(2f32),
             ..Default::default()
         })
@@ -16,8 +16,8 @@ fn aspect_ratio_flex_column_fill_width_flex() {
                 display: taffy::style::Display::Grid,
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

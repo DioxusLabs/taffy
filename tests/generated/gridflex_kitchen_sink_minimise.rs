@@ -5,7 +5,7 @@ fn gridflex_kitchen_sink_minimise() {
     let mut taffy = taffy::Taffy::new();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -14,7 +14,7 @@ fn gridflex_kitchen_sink_minimise() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                grid_template_rows: vec![points(20f32)],
+                grid_template_rows: vec![length(20f32)],
                 grid_template_columns: vec![fr(1f32), fr(1f32)],
                 ..Default::default()
             },

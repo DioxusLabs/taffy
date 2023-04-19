@@ -6,14 +6,14 @@ fn justify_content_column_min_height_and_margin_bottom() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(20f32),
-                height: taffy::style::Dimension::Points(20f32),
+                width: taffy::style::Dimension::Length(20f32),
+                height: taffy::style::Dimension::Length(20f32),
             },
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
                 top: zero(),
-                bottom: taffy::style::LengthPercentageAuto::Points(10f32),
+                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
             },
             ..Default::default()
         })
@@ -23,7 +23,7 @@ fn justify_content_column_min_height_and_margin_bottom() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 justify_content: Some(taffy::style::JustifyContent::Center),
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(50f32) },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(50f32) },
                 ..Default::default()
             },
             &[node0],

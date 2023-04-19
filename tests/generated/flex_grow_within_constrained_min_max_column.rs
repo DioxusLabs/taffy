@@ -6,7 +6,7 @@ fn flex_grow_within_constrained_min_max_column() {
     let node0 = taffy.new_leaf(taffy::style::Style { flex_grow: 1f32, ..Default::default() }).unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(50f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(50f32) },
             ..Default::default()
         })
         .unwrap();
@@ -14,8 +14,8 @@ fn flex_grow_within_constrained_min_max_column() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(100f32) },
-                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(200f32) },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(200f32) },
                 ..Default::default()
             },
             &[node0, node1],

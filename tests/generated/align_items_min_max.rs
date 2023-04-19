@@ -6,8 +6,8 @@ fn align_items_min_max() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(60f32),
-                height: taffy::style::Dimension::Points(60f32),
+                width: taffy::style::Dimension::Length(60f32),
+                height: taffy::style::Dimension::Length(60f32),
             },
             ..Default::default()
         })
@@ -17,9 +17,9 @@ fn align_items_min_max() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_items: Some(taffy::style::AlignItems::Center),
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(100f32) },
-                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), height: auto() },
-                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(200f32), height: auto() },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
+                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

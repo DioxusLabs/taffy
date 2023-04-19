@@ -106,7 +106,7 @@ mod tests {
     fn hidden_layout_should_hide_recursively() {
         let mut taffy = Taffy::new();
 
-        let style: Style = Style { display: Display::Flex, size: Size::from_points(50.0, 50.0), ..Default::default() };
+        let style: Style = Style { display: Display::Flex, size: Size::from_lengths(50.0, 50.0), ..Default::default() };
 
         let grandchild_00 = taffy.new_leaf(style.clone()).unwrap();
         let grandchild_01 = taffy.new_leaf(style.clone()).unwrap();
@@ -117,7 +117,7 @@ mod tests {
 
         let root = taffy
             .new_with_children(
-                Style { display: Display::None, size: Size::from_points(50.0, 50.0), ..Default::default() },
+                Style { display: Display::None, size: Size::from_lengths(50.0, 50.0), ..Default::default() },
                 &[child_00, child_01],
             )
             .unwrap();

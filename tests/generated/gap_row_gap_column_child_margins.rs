@@ -11,8 +11,8 @@ fn gap_row_gap_column_child_margins() {
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
-                top: taffy::style::LengthPercentageAuto::Points(2f32),
-                bottom: taffy::style::LengthPercentageAuto::Points(2f32),
+                top: taffy::style::LengthPercentageAuto::Length(2f32),
+                bottom: taffy::style::LengthPercentageAuto::Length(2f32),
             },
             ..Default::default()
         })
@@ -25,8 +25,8 @@ fn gap_row_gap_column_child_margins() {
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
-                top: taffy::style::LengthPercentageAuto::Points(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Points(10f32),
+                top: taffy::style::LengthPercentageAuto::Length(10f32),
+                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
             },
             ..Default::default()
         })
@@ -39,8 +39,8 @@ fn gap_row_gap_column_child_margins() {
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
-                top: taffy::style::LengthPercentageAuto::Points(15f32),
-                bottom: taffy::style::LengthPercentageAuto::Points(15f32),
+                top: taffy::style::LengthPercentageAuto::Length(15f32),
+                bottom: taffy::style::LengthPercentageAuto::Length(15f32),
             },
             ..Default::default()
         })
@@ -49,10 +49,10 @@ fn gap_row_gap_column_child_margins() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                gap: taffy::geometry::Size { width: zero(), height: taffy::style::LengthPercentage::Points(10f32) },
+                gap: taffy::geometry::Size { width: zero(), height: taffy::style::LengthPercentage::Length(10f32) },
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(200f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(200f32),
                 },
                 ..Default::default()
             },
