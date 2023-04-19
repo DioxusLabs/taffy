@@ -152,12 +152,8 @@ jobs:
       - uses: Leafwing-Studios/cargo-cache@v1
       - run: cargo xbench --no-run
         name: Build benchmarks
-        env:
-          RUSTDOCFLAGS: "-D warnings"
       - run: cargo xbench --no-run --features yoga
         name: Build benchmarks (w/yoga)
-        env:
-          RUSTDOCFLAGS: "-D warnings"
 
   markdownlint:
     name: Markdown Lint
