@@ -18,7 +18,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Leafwing-Studios/cargo-cache@v1
       - run: cargo build --no-default-features
-      - run: cargo test --no-default-features
+      - run: cargo test --no-default-features --features taffy_tree
 
   # Default
   test-features-default:
