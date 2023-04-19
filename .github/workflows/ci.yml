@@ -8,6 +8,9 @@ on:
 
 name: Continuous integration
 
+env:
+  RUSTDOCFLAGS: "-D warnings"
+
 jobs:
   # None
   test-features-none:
@@ -137,8 +140,6 @@ jobs:
           components: clippy
       - uses: Leafwing-Studios/cargo-cache@v1
       - run: cargo doc
-        env:
-          RUSTDOCFLAGS: "-D warnings"
 
   benchmarks:
     name: Build Benchmarks
