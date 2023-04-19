@@ -72,6 +72,12 @@ pub(crate) fn compute(
         }
     };
 
+    // Note: both horizontal and vertical percentage padding/borders are resolved against the container's inline size (i.e. width).
+    // This is not a bug, but is how CSS is specified (see: https://developer.mozilla.org/en-US/docs/Web/CSS/padding#values)
+    let padding = style.padding.resolve_or_zero(parent_size.width);
+    let border = style.border.resolve_or_zero(parent_size.width);
+    let padding_border = padding + border;
+
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("LEAF");
     #[cfg(feature = "debug")]
@@ -83,7 +89,9 @@ pub(crate) fn compute(
 
     // Return early if both width and height are known
     if let Size { width: Some(width), height: Some(height) } = node_size {
-        let size = Size { width, height }.maybe_clamp(node_min_size, node_max_size);
+        let size = Size { width, height }
+            .maybe_clamp(node_min_size, node_max_size)
+            .maybe_max(padding_border.sum_axes().map(Some));
         return SizeAndBaselines { size, first_baselines: Point::NONE };
     };
 
@@ -111,25 +119,29 @@ pub(crate) fn compute(
         };
 
         let size = node_size.unwrap_or(measured_size).maybe_clamp(node_min_size, node_max_size);
+        let size = size.maybe_max(padding_border.sum_axes().map(Some));
         return SizeAndBaselines { size, first_baselines: Point::NONE };
     }
-
-    // Note: both horizontal and vertical percentage padding/borders are resolved against the container's inline size (i.e. width).
-    // This is not a bug, but is how CSS is specified (see: https://developer.mozilla.org/en-US/docs/Web/CSS/padding#values)
-    let padding = style.padding.resolve_or_zero(parent_size.width);
-    let border = style.border.resolve_or_zero(parent_size.width);
 
     let size = Size {
         width: node_size
             .width
             // .unwrap_or(0.0) + padding.horizontal_axis_sum() + border.horizontal_axis_sum(), // content-box
-            .unwrap_or(0.0 + padding.horizontal_axis_sum() + border.horizontal_axis_sum()) // border-box
-            .maybe_clamp(node_min_size.width, node_max_size.width),
+            .unwrap_or(0.0) // border-box
+            .maybe_clamp(node_min_size.width, node_max_size.width)
+            .maybe_max(padding_border.horizontal_axis_sum().into()),
         height: node_size
             .height
             // .unwrap_or(0.0) + padding.vertical_axis_sum() + border.vertical_axis_sum(), // content-box
-            .unwrap_or(0.0 + padding.vertical_axis_sum() + border.vertical_axis_sum()) // border-box
-            .maybe_clamp(node_min_size.height, node_max_size.height),
+            .unwrap_or(0.0) // border-box
+            .maybe_clamp(node_min_size.height, node_max_size.height)
+            .maybe_max(padding_border.vertical_axis_sum().into()),
     };
+
+    let size = Size {
+        width: f32_max(size.width, aspect_ratio.map(|ratio| size.height * ratio).unwrap_or(0.0)),
+        height: f32_max(size.height, aspect_ratio.map(|ratio| size.width / ratio).unwrap_or(0.0)),
+    };
+
     SizeAndBaselines { size, first_baselines: Point::NONE }
 }

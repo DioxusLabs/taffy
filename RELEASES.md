@@ -1,5 +1,49 @@
 # Release Notes
 
+## 0.3.11
+
+### Fixes
+
+- Fix exponential blowup when laying out trees containing nodes with min and max sizes.
+
+## 0.3.10
+
+### Fixes
+
+- Fix sizing of children when the available_space < min_size (#407)
+
+## 0.3.9
+
+### Fixes
+
+- Fix caching bug where a cached result would sometimes be incorrectly used when the amount of available space increased (bevyengine/bevy#8111) and (bevyengine/bevy#8124)
+
+## 0.3.8
+
+### Fixes
+
+- Fix incorrect min-content size for `flex-wrap: wrap` nodes (bevyengine/bevy#8082)
+
+## 0.3.7
+
+### Fixes
+
+- Fix: Make `padding` and `border` floor node sizes (#372)
+- Fix: Prevent percentages contributing to min-content sizes (#388) (also fixes bevyengine/bevy#8017)
+
+## 0.3.6
+
+### Fixes
+
+- Fix: Ignore `align_content` when `flex_wrap` is set to `nowrap` (#383)
+
+## 0.3.5
+
+### Fixes
+
+- Fix `display: none` when it is set on a flexbox child (#380)
+- Fix `display: none` when it is set on a grid child (#381)
+
 ## 0.3.4
 
 ### Fixes

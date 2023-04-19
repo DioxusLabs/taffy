@@ -104,6 +104,8 @@ mod absolute_minmax_bottom_right_min_max;
 mod absolute_minmax_bottom_right_min_max_preferred;
 mod absolute_minmax_top_left_bottom_right_max;
 mod absolute_minmax_top_left_bottom_right_min_max;
+mod absolute_padding_border_overrides_max_size;
+mod absolute_padding_border_overrides_size;
 mod align_baseline;
 mod align_baseline_child;
 mod align_baseline_child_margin;
@@ -196,6 +198,13 @@ mod aspect_ratio_flex_row_stretch_fill_height;
 mod aspect_ratio_flex_row_stretch_fill_max_height;
 mod aspect_ratio_flex_row_stretch_fill_max_width;
 mod aspect_ratio_flex_row_stretch_fill_width;
+mod bevy_issue_7976_3_level;
+mod bevy_issue_7976_4_level;
+mod bevy_issue_7976_reduced;
+mod bevy_issue_8017;
+mod bevy_issue_8017_reduced;
+mod bevy_issue_8082;
+mod bevy_issue_8082_percent;
 mod border_center_child;
 mod border_container_match_child;
 mod border_flex_child;
@@ -643,6 +652,16 @@ mod grid_out_of_order_items;
 #[cfg(feature = "grid")]
 mod grid_overflow_rows;
 #[cfg(feature = "grid")]
+mod grid_padding_border_overrides_container_max_size;
+#[cfg(feature = "grid")]
+mod grid_padding_border_overrides_container_size;
+#[cfg(feature = "grid")]
+mod grid_padding_border_overrides_max_size;
+#[cfg(feature = "grid")]
+mod grid_padding_border_overrides_min_size;
+#[cfg(feature = "grid")]
+mod grid_padding_border_overrides_size;
+#[cfg(feature = "grid")]
 mod grid_percent_item_inside_stretch_item;
 #[cfg(feature = "grid")]
 mod grid_percent_items_nested_inside_stretch_alignment;
@@ -747,6 +766,9 @@ mod justify_content_row_min_width_and_margin;
 mod justify_content_row_space_around;
 mod justify_content_row_space_between;
 mod justify_content_row_space_evenly;
+mod leaf_padding_border_overrides_max_size;
+mod leaf_padding_border_overrides_min_size;
+mod leaf_padding_border_overrides_size;
 mod margin_and_flex_column;
 mod margin_and_flex_row;
 mod margin_and_stretch_column;
@@ -790,6 +812,7 @@ mod measure_child_constraint;
 mod measure_child_constraint_padding_parent;
 mod measure_child_with_flex_grow;
 mod measure_child_with_flex_shrink;
+mod measure_child_with_min_size_greater_than_available_space;
 mod measure_flex_basis_overrides_measure;
 mod measure_height_overrides_measure;
 mod measure_remeasure_child_after_growing;
@@ -817,6 +840,11 @@ mod only_shrinkable_item_with_flex_basis_zero;
 mod overflow_cross_axis;
 mod overflow_main_axis;
 mod padding_align_end_child;
+mod padding_border_overrides_max_size;
+mod padding_border_overrides_min_size;
+mod padding_border_overrides_size;
+mod padding_border_overrides_size_flex_basis_0;
+mod padding_border_overrides_size_flex_basis_0_growable;
 mod padding_center_child;
 mod padding_container_match_child;
 mod padding_flex_child;
@@ -849,6 +877,7 @@ mod percentage_position_bottom_right;
 mod percentage_position_left_top;
 mod percentage_size_based_on_parent_inner_size;
 mod percentage_size_of_flex_basis;
+mod percentage_sizes_should_not_prevent_flex_shrinking;
 mod percentage_width_height;
 mod percentage_width_height_undefined_parent_size;
 mod position_root_with_rtl_should_position_withoutdirection;

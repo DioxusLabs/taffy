@@ -1,13 +1,13 @@
 [package]
 name = "taffy"
-version = "0.3.4"
+version = "0.3.11"
 authors = [
     "Alice Cecile <alice.i.cecile@gmail.com>",
     "Johnathan Kelley <jkelleyrtp@gmail.com>",
 ]
 edition = "2021"
 include = ["src/**/*", "Cargo.toml", "README.md"]
-description = "A flexible UI layout library"
+description = "A flexible UI layout library "
 repository = "https://github.com/DioxusLabs/taffy"
 keywords = ["cross-platform", "layout", "flexbox", "css-grid", "grid"]
 categories = ["gui"]
@@ -34,7 +34,7 @@ profile = []
 
 [dev-dependencies]
 criterion = "0.4"
-rstest = "0.16.0"
+rstest = "0.17.0"
 rand = "0.8.5"
 rand_chacha = "0.3.1"
 yoga = "0.4.0"
@@ -47,6 +47,11 @@ taffy = { path = ".", features = ["random"] }
 [profile.release]
 lto = true
 panic = 'abort'
+
+[[bench]]
+name = "tree_creation"
+path = "benches/tree_creation.rs"
+harness = false
 
 [[bench]]
 name = "flexbox"

@@ -6,6 +6,7 @@ fn arr_to_rect<T: Copy>(items: [T; 4]) -> Rect<T> {
 }
 
 #[test]
+#[ignore]
 fn border_on_a_single_axis_doesnt_increase_size() {
     for i in 0..4 {
         let mut taffy = Taffy::new();
@@ -33,6 +34,7 @@ fn border_on_a_single_axis_doesnt_increase_size() {
 }
 
 #[test]
+#[ignore]
 fn padding_on_a_single_axis_doesnt_increase_size() {
     for i in 0..4 {
         let mut taffy = Taffy::new();
@@ -60,6 +62,7 @@ fn padding_on_a_single_axis_doesnt_increase_size() {
 }
 
 #[test]
+#[ignore]
 fn border_and_padding_on_a_single_axis_doesnt_increase_size() {
     for i in 0..4 {
         let mut taffy = Taffy::new();
@@ -82,6 +85,7 @@ fn border_and_padding_on_a_single_axis_doesnt_increase_size() {
 }
 
 #[test]
+#[ignore]
 fn vertical_border_and_padding_percentage_values_use_available_space_correctly() {
     let mut taffy = Taffy::new();
 

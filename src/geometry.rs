@@ -320,6 +320,33 @@ impl<T> Size<T> {
         }
     }
 
+    /// Creates a new value of type Self with the main axis set to value provided
+    ///
+    /// Whether this is the width or height depends on the `direction` provided
+    #[allow(dead_code)]
+    pub(crate) fn with_main(self, direction: FlexDirection, value: T) -> Self {
+        let mut new = self;
+        if direction.is_row() {
+            new.width = value
+        } else {
+            new.height = value
+        }
+        new
+    }
+
+    /// Creates a new value of type Self with the cross axis set to value provided
+    ///
+    /// Whether this is the width or height depends on the `direction` provided
+    pub(crate) fn with_cross(self, direction: FlexDirection, value: T) -> Self {
+        let mut new = self;
+        if direction.is_row() {
+            new.height = value
+        } else {
+            new.width = value
+        }
+        new
+    }
+
     /// Gets the extent of the main layout axis
     ///
     /// Whether this is the width or height depends on the `direction` provided
