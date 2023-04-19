@@ -140,6 +140,25 @@ jobs:
         env:
           RUSTDOCFLAGS: "-D warnings"
 
+  benchmarks:
+    name: Build Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: clippy
+      - uses: Leafwing-Studios/cargo-cache@v1
+      - run: cargo xbench --no-run
+        name: Build benchmarks
+        env:
+          RUSTDOCFLAGS: "-D warnings"
+      - run: cargo xbench --no-run --features yoga
+        name: Build benchmarks (w/yoga)
+        env:
+          RUSTDOCFLAGS: "-D warnings"
+
   markdownlint:
     name: Markdown Lint
     runs-on: ubuntu-latest
