@@ -6,9 +6,9 @@ use taffy::prelude::*;
 use taffy::style::Style;
 
 #[cfg(feature = "yoga_benchmark")]
-use taffy_benchmarks::yoga_helpers;
-#[cfg(feature = "yoga_benchmark")]
 use slotmap::SlotMap;
+#[cfg(feature = "yoga_benchmark")]
+use taffy_benchmarks::yoga_helpers;
 #[cfg(feature = "yoga_benchmark")]
 use yoga_helpers::yg;
 
