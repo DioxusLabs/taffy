@@ -5,12 +5,12 @@ fn flex_row_relative_all_sides() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(40f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(40f32), height: auto() },
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Points(10f32),
-                right: taffy::style::LengthPercentageAuto::Points(10f32),
-                top: taffy::style::LengthPercentageAuto::Points(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Points(10f32),
+                left: taffy::style::LengthPercentageAuto::Length(10f32),
+                right: taffy::style::LengthPercentageAuto::Length(10f32),
+                top: taffy::style::LengthPercentageAuto::Length(10f32),
+                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
             },
             ..Default::default()
         })
@@ -19,8 +19,8 @@ fn flex_row_relative_all_sides() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

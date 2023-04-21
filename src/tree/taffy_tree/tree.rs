@@ -716,7 +716,7 @@ mod tests {
     fn compute_layout_should_produce_valid_result() {
         let mut taffy = Taffy::new();
         let node_result = taffy.new_leaf(Style {
-            size: Size { width: Dimension::Points(10f32), height: Dimension::Points(10f32) },
+            size: Size { width: Dimension::Length(10f32), height: Dimension::Length(10f32) },
             ..Default::default()
         });
         assert!(node_result.is_ok());

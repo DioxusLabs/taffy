@@ -17,11 +17,11 @@ fn grid_align_content_space_evenly() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 align_content: Some(taffy::style::AlignContent::SpaceEvenly),
-                grid_template_rows: vec![points(40f32), points(40f32), points(40f32)],
-                grid_template_columns: vec![points(40f32), points(40f32), points(40f32)],
+                grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
+                grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(200f32),
-                    height: taffy::style::Dimension::Points(200f32),
+                    width: taffy::style::Dimension::Length(200f32),
+                    height: taffy::style::Dimension::Length(200f32),
                 },
                 ..Default::default()
             },

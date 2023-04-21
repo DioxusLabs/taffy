@@ -8,8 +8,8 @@ fn flex_shrink_flex_grow_child_flex_shrink_other_child() {
             flex_grow: 0f32,
             flex_shrink: 1f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(500f32),
-                height: taffy::style::Dimension::Points(100f32),
+                width: taffy::style::Dimension::Length(500f32),
+                height: taffy::style::Dimension::Length(100f32),
             },
             ..Default::default()
         })
@@ -19,8 +19,8 @@ fn flex_shrink_flex_grow_child_flex_shrink_other_child() {
             flex_grow: 1f32,
             flex_shrink: 1f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(500f32),
-                height: taffy::style::Dimension::Points(100f32),
+                width: taffy::style::Dimension::Length(500f32),
+                height: taffy::style::Dimension::Length(100f32),
             },
             ..Default::default()
         })
@@ -29,8 +29,8 @@ fn flex_shrink_flex_grow_child_flex_shrink_other_child() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(500f32),
-                    height: taffy::style::Dimension::Points(500f32),
+                    width: taffy::style::Dimension::Length(500f32),
+                    height: taffy::style::Dimension::Length(500f32),
                 },
                 ..Default::default()
             },

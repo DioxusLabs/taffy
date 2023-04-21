@@ -8,8 +8,8 @@ fn display_none_with_position_absolute() {
             display: taffy::style::Display::None,
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(100f32),
-                height: taffy::style::Dimension::Points(100f32),
+                width: taffy::style::Dimension::Length(100f32),
+                height: taffy::style::Dimension::Length(100f32),
             },
             ..Default::default()
         })
@@ -18,8 +18,8 @@ fn display_none_with_position_absolute() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

@@ -10,9 +10,9 @@ fn grid_fr_fixed_size_no_content_proportions() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                grid_template_rows: vec![points(40f32)],
+                grid_template_rows: vec![length(40f32)],
                 grid_template_columns: vec![fr(1f32), fr(2f32), fr(3f32)],
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(200f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2],

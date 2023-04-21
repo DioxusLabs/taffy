@@ -14,7 +14,7 @@ fn border_on_a_single_axis_doesnt_increase_size() {
             .new_leaf(Style {
                 border: {
                     let mut lengths = [LengthPercentage::ZERO; 4];
-                    lengths[i] = LengthPercentage::Points(10.);
+                    lengths[i] = LengthPercentage::Length(10.);
                     arr_to_rect(lengths)
                 },
                 ..Default::default()
@@ -42,7 +42,7 @@ fn padding_on_a_single_axis_doesnt_increase_size() {
             .new_leaf(Style {
                 padding: {
                     let mut lengths = [LengthPercentage::ZERO; 4];
-                    lengths[i] = LengthPercentage::Points(10.);
+                    lengths[i] = LengthPercentage::Length(10.);
                     arr_to_rect(lengths)
                 },
                 ..Default::default()
@@ -68,7 +68,7 @@ fn border_and_padding_on_a_single_axis_doesnt_increase_size() {
         let mut taffy = Taffy::new();
         let rect = {
             let mut lengths = [LengthPercentage::ZERO; 4];
-            lengths[i] = LengthPercentage::Points(10.);
+            lengths[i] = LengthPercentage::Length(10.);
             arr_to_rect(lengths)
         };
         let node = taffy.new_leaf(Style { border: rect, padding: rect, ..Default::default() }).unwrap();

@@ -101,8 +101,8 @@ impl GridTrack {
     /// to fixed zero-sized sizing functions.
     pub fn collapse(&mut self) {
         self.is_collapsed = true;
-        self.min_track_sizing_function = MinTrackSizingFunction::Fixed(LengthPercentage::Points(0.0));
-        self.max_track_sizing_function = MaxTrackSizingFunction::Fixed(LengthPercentage::Points(0.0));
+        self.min_track_sizing_function = MinTrackSizingFunction::Fixed(LengthPercentage::Length(0.0));
+        self.max_track_sizing_function = MaxTrackSizingFunction::Fixed(LengthPercentage::Length(0.0));
     }
 
     #[inline(always)]
@@ -127,7 +127,7 @@ impl GridTrack {
     /// Returns true if the track is flexible (has a Flex MaxTrackSizingFunction), else false.
     pub fn fit_content_limit(&self, axis_available_grid_space: Option<f32>) -> f32 {
         match self.max_track_sizing_function {
-            MaxTrackSizingFunction::FitContent(LengthPercentage::Points(limit)) => limit,
+            MaxTrackSizingFunction::FitContent(LengthPercentage::Length(limit)) => limit,
             MaxTrackSizingFunction::FitContent(LengthPercentage::Percent(fraction)) => {
                 match axis_available_grid_space {
                     Some(space) => space * fraction,

@@ -10,10 +10,10 @@ fn bevy_issue_7976_3_level() {
                 height: taffy::style::Dimension::Percent(1f32),
             },
             padding: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Points(5f32),
-                right: taffy::style::LengthPercentage::Points(5f32),
-                top: taffy::style::LengthPercentage::Points(5f32),
-                bottom: taffy::style::LengthPercentage::Points(5f32),
+                left: taffy::style::LengthPercentage::Length(5f32),
+                right: taffy::style::LengthPercentage::Length(5f32),
+                top: taffy::style::LengthPercentage::Length(5f32),
+                bottom: taffy::style::LengthPercentage::Length(5f32),
             },
             ..Default::default()
         })
@@ -22,20 +22,20 @@ fn bevy_issue_7976_3_level() {
         .new_with_children(
             taffy::style::Style {
                 min_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(40f32),
-                    height: taffy::style::Dimension::Points(40f32),
+                    width: taffy::style::Dimension::Length(40f32),
+                    height: taffy::style::Dimension::Length(40f32),
                 },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Points(5f32),
-                    right: taffy::style::LengthPercentageAuto::Points(5f32),
-                    top: taffy::style::LengthPercentageAuto::Points(5f32),
-                    bottom: taffy::style::LengthPercentageAuto::Points(5f32),
+                    left: taffy::style::LengthPercentageAuto::Length(5f32),
+                    right: taffy::style::LengthPercentageAuto::Length(5f32),
+                    top: taffy::style::LengthPercentageAuto::Length(5f32),
+                    bottom: taffy::style::LengthPercentageAuto::Length(5f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Points(5f32),
-                    right: taffy::style::LengthPercentage::Points(5f32),
-                    top: taffy::style::LengthPercentage::Points(5f32),
-                    bottom: taffy::style::LengthPercentage::Points(5f32),
+                    left: taffy::style::LengthPercentage::Length(5f32),
+                    right: taffy::style::LengthPercentage::Length(5f32),
+                    top: taffy::style::LengthPercentage::Length(5f32),
+                    bottom: taffy::style::LengthPercentage::Length(5f32),
                 },
                 ..Default::default()
             },
@@ -47,8 +47,8 @@ fn bevy_issue_7976_3_level() {
             taffy::style::Style {
                 align_content: Some(taffy::style::AlignContent::Start),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(200f32),
-                    height: taffy::style::Dimension::Points(200f32),
+                    width: taffy::style::Dimension::Length(200f32),
+                    height: taffy::style::Dimension::Length(200f32),
                 },
                 ..Default::default()
             },

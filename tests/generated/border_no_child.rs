@@ -6,10 +6,10 @@ fn border_no_child() {
     let node = taffy
         .new_leaf(taffy::style::Style {
             border: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Points(10f32),
-                right: taffy::style::LengthPercentage::Points(10f32),
-                top: taffy::style::LengthPercentage::Points(10f32),
-                bottom: taffy::style::LengthPercentage::Points(10f32),
+                left: taffy::style::LengthPercentage::Length(10f32),
+                right: taffy::style::LengthPercentage::Length(10f32),
+                top: taffy::style::LengthPercentage::Length(10f32),
+                bottom: taffy::style::LengthPercentage::Length(10f32),
             },
             ..Default::default()
         })

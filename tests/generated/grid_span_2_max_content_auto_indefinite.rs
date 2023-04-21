@@ -40,7 +40,7 @@ fn grid_span_2_max_content_auto_indefinite() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                grid_template_rows: vec![points(40f32)],
+                grid_template_rows: vec![length(40f32)],
                 grid_template_columns: vec![max_content(), auto()],
                 ..Default::default()
             },

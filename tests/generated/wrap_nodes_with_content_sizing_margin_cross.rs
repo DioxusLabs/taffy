@@ -6,8 +6,8 @@ fn wrap_nodes_with_content_sizing_margin_cross() {
     let node000 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(40f32),
-                height: taffy::style::Dimension::Points(40f32),
+                width: taffy::style::Dimension::Length(40f32),
+                height: taffy::style::Dimension::Length(40f32),
             },
             ..Default::default()
         })
@@ -21,8 +21,8 @@ fn wrap_nodes_with_content_sizing_margin_cross() {
     let node010 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(40f32),
-                height: taffy::style::Dimension::Points(40f32),
+                width: taffy::style::Dimension::Length(40f32),
+                height: taffy::style::Dimension::Length(40f32),
             },
             ..Default::default()
         })
@@ -34,7 +34,7 @@ fn wrap_nodes_with_content_sizing_margin_cross() {
                 margin: taffy::geometry::Rect {
                     left: zero(),
                     right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Points(10f32),
+                    top: taffy::style::LengthPercentageAuto::Length(10f32),
                     bottom: zero(),
                 },
                 ..Default::default()
@@ -46,7 +46,7 @@ fn wrap_nodes_with_content_sizing_margin_cross() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(70f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(70f32), height: auto() },
                 ..Default::default()
             },
             &[node00, node01],
@@ -57,8 +57,8 @@ fn wrap_nodes_with_content_sizing_margin_cross() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(500f32),
-                    height: taffy::style::Dimension::Points(500f32),
+                    width: taffy::style::Dimension::Length(500f32),
+                    height: taffy::style::Dimension::Length(500f32),
                 },
                 ..Default::default()
             },

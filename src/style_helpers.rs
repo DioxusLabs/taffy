@@ -124,7 +124,7 @@ impl<T: TaffyZero> TaffyZero for Point<T> {
 }
 impl<T: TaffyZero> Point<T> {
     /// Returns a Point where both the x and y values are the zero value of the contained type
-    /// (e.g. 0.0, Some(0.0), or Dimension::Points(0.0))
+    /// (e.g. 0.0, Some(0.0), or Dimension::Length(0.0))
     pub const fn zero() -> Self {
         zero::<Self>()
     }
@@ -134,7 +134,7 @@ impl<T: TaffyZero> TaffyZero for Line<T> {
 }
 impl<T: TaffyZero> Line<T> {
     /// Returns a Line where both the start and end values are the zero value of the contained type
-    /// (e.g. 0.0, Some(0.0), or Dimension::Points(0.0))
+    /// (e.g. 0.0, Some(0.0), or Dimension::Length(0.0))
     pub const fn zero() -> Self {
         zero::<Self>()
     }
@@ -144,7 +144,7 @@ impl<T: TaffyZero> TaffyZero for Size<T> {
 }
 impl<T: TaffyZero> Size<T> {
     /// Returns a Size where both the width and height values are the zero value of the contained type
-    /// (e.g. 0.0, Some(0.0), or Dimension::Points(0.0))
+    /// (e.g. 0.0, Some(0.0), or Dimension::Length(0.0))
     pub const fn zero() -> Self {
         zero::<Self>()
     }
@@ -154,7 +154,7 @@ impl<T: TaffyZero> TaffyZero for Rect<T> {
 }
 impl<T: TaffyZero> Rect<T> {
     /// Returns a Size where the left, right, top, and bottom values are all the zero value of the contained type
-    /// (e.g. 0.0, Some(0.0), or Dimension::Points(0.0))
+    /// (e.g. 0.0, Some(0.0), or Dimension::Length(0.0))
     pub const fn zero() -> Self {
         zero::<Self>()
     }
@@ -324,14 +324,15 @@ impl<T: TaffyMaxContent> Rect<T> {
     }
 }
 
-/// Returns a value of the inferred type which represent a constant of points
+/// Returns a value of the inferred type which represent a `fit-content(…)` value
+/// with the given argument.
 pub fn fit_content<T: TaffyFitContent>(argument: LengthPercentage) -> T {
     T::fit_content(argument)
 }
 
-/// Trait to create constant points values from plain numbers
+/// Trait to create `fit-content(…)` values from plain numbers
 pub trait TaffyFitContent {
-    /// Converts into a LengthPercentage into Self
+    /// Converts a LengthPercentage into Self
     fn fit_content(argument: LengthPercentage) -> Self;
 }
 impl<T: TaffyFitContent> TaffyFitContent for Point<T> {
@@ -340,8 +341,8 @@ impl<T: TaffyFitContent> TaffyFitContent for Point<T> {
     }
 }
 impl<T: TaffyFitContent> Point<T> {
-    /// Returns a Point where both the x and y values are the constant points value of the contained type
-    /// (e.g. 2.1, Some(2.1), or Dimension::Points(2.1))
+    /// Returns a Point with x and y set to the same `fit-content(…)` value
+    /// with the given argument.
     pub fn fit_content(argument: LengthPercentage) -> Self {
         fit_content(argument)
     }
@@ -352,8 +353,8 @@ impl<T: TaffyFitContent> TaffyFitContent for Line<T> {
     }
 }
 impl<T: TaffyFitContent> Line<T> {
-    /// Returns a Line where both the start and end values are the constant points value of the contained type
-    /// (e.g. 2.1, Some(2.1), or Dimension::Points(2.1))
+    /// Returns a Line with start and end set to the same `fit-content(…)` value
+    /// with the given argument.
     pub fn fit_content(argument: LengthPercentage) -> Self {
         fit_content(argument)
     }
@@ -364,8 +365,8 @@ impl<T: TaffyFitContent> TaffyFitContent for Size<T> {
     }
 }
 impl<T: TaffyFitContent> Size<T> {
-    /// Returns a Size where both the width and height values are the constant fit_content value of the contained type
-    /// (e.g. 2.1, Some(2.1), or Dimension::Points(2.1))
+    /// Returns a Size where with width and height set to the same `fit-content(…)` value
+    /// with the given argument.
     pub fn fit_content(argument: LengthPercentage) -> Self {
         fit_content(argument)
     }
@@ -382,87 +383,83 @@ impl<T: TaffyFitContent> TaffyFitContent for Rect<T> {
 }
 impl<T: TaffyFitContent> Rect<T> {
     /// Returns a Rect where the left, right, top and bottom values are all constant fit_content value of the contained type
-    /// (e.g. 2.1, Some(2.1), or Dimension::Points(2.1))
+    /// (e.g. 2.1, Some(2.1), or Dimension::Length(2.1))
     pub fn fit_content(argument: LengthPercentage) -> Self {
         fit_content(argument)
     }
 }
 
-/// Returns a value of the inferred type which represent a constant of points
-pub fn points<Input: Into<f32> + Copy, T: FromPoints>(points: Input) -> T {
-    T::from_points(points)
+/// Returns a value of the inferred type which represent an absolute length
+pub fn length<Input: Into<f32> + Copy, T: FromLength>(value: Input) -> T {
+    T::from_length(value)
 }
 
-/// Trait to create constant points values from plain numbers
-pub trait FromPoints {
+/// Trait to create absolute length values from plain numbers
+pub trait FromLength {
     /// Converts into an `Into<f32>` into Self
-    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self;
+    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self;
 }
-impl FromPoints for f32 {
-    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
-        points.into()
+impl FromLength for f32 {
+    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
+        value.into()
     }
 }
-impl FromPoints for Option<f32> {
-    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
-        Some(points.into())
+impl FromLength for Option<f32> {
+    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
+        Some(value.into())
     }
 }
-impl<T: FromPoints> FromPoints for Point<T> {
-    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
-        Point { x: T::from_points(points.into()), y: T::from_points(points.into()) }
+impl<T: FromLength> FromLength for Point<T> {
+    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
+        Point { x: T::from_length(value.into()), y: T::from_length(value.into()) }
     }
 }
-impl<T: FromPoints> Point<T> {
-    /// Returns a Point where both the x and y values are the constant points value of the contained type
-    /// (e.g. 2.1, Some(2.1), or Dimension::Points(2.1))
-    pub fn points<Input: Into<f32> + Copy>(points_value: Input) -> Self {
-        points::<Input, Self>(points_value)
+impl<T: FromLength> Point<T> {
+    /// Returns a Point where x and y values are the same given absolute length
+    pub fn length<Input: Into<f32> + Copy>(value: Input) -> Self {
+        length::<Input, Self>(value)
     }
 }
-impl<T: FromPoints> FromPoints for Line<T> {
-    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
-        Line { start: T::from_points(points.into()), end: T::from_points(points.into()) }
+impl<T: FromLength> FromLength for Line<T> {
+    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
+        Line { start: T::from_length(value.into()), end: T::from_length(value.into()) }
     }
 }
-impl<T: FromPoints> Line<T> {
-    /// Returns a Line where both the start and end values are the constant points value of the contained type
-    /// (e.g. 2.1, Some(2.1), or Dimension::Points(2.1))
-    pub fn points<Input: Into<f32> + Copy>(points_value: Input) -> Self {
-        points::<Input, Self>(points_value)
+impl<T: FromLength> Line<T> {
+    /// Returns a Line where both the start and end values are the same given absolute length
+    pub fn length<Input: Into<f32> + Copy>(value: Input) -> Self {
+        length::<Input, Self>(value)
     }
 }
-impl<T: FromPoints> FromPoints for Size<T> {
-    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
-        Size { width: T::from_points(points.into()), height: T::from_points(points.into()) }
+impl<T: FromLength> FromLength for Size<T> {
+    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
+        Size { width: T::from_length(value.into()), height: T::from_length(value.into()) }
     }
 }
-impl<T: FromPoints> Size<T> {
-    /// Returns a Size where both the width and height values are the constant points value of the contained type
-    /// (e.g. 2.1, Some(2.1), or Dimension::Points(2.1))
-    pub fn points<Input: Into<f32> + Copy>(points_value: Input) -> Self {
-        points::<Input, Self>(points_value)
+impl<T: FromLength> Size<T> {
+    /// Returns a Size where both the width and height values the same given absolute length
+    pub fn length<Input: Into<f32> + Copy>(value: Input) -> Self {
+        length::<Input, Self>(value)
     }
 }
-impl<T: FromPoints> FromPoints for Rect<T> {
-    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
+impl<T: FromLength> FromLength for Rect<T> {
+    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
         Rect {
-            left: T::from_points(points.into()),
-            right: T::from_points(points.into()),
-            top: T::from_points(points.into()),
-            bottom: T::from_points(points.into()),
+            left: T::from_length(value.into()),
+            right: T::from_length(value.into()),
+            top: T::from_length(value.into()),
+            bottom: T::from_length(value.into()),
         }
     }
 }
-impl<T: FromPoints> Rect<T> {
-    /// Returns a Rect where the left, right, top and bottom values are all constant points value of the contained type
-    /// (e.g. 2.1, Some(2.1), or Dimension::Points(2.1))
-    pub fn points<Input: Into<f32> + Copy>(points_value: Input) -> Self {
-        points::<Input, Self>(points_value)
+impl<T: FromLength> Rect<T> {
+    /// Returns a Rect where the left, right, top and bottom values are all the same given absolute length
+    pub fn length<Input: Into<f32> + Copy>(value: Input) -> Self {
+        length::<Input, Self>(value)
     }
 }
 
-/// Returns a value of the inferred type which represent a constant of points
+/// Returns a value of the inferred type which represent a percentage
 pub fn percent<Input: Into<f32> + Copy, T: FromPercent>(percent: Input) -> T {
     T::from_percent(percent)
 }
@@ -489,7 +486,7 @@ impl<T: FromPercent> FromPercent for Point<T> {
 }
 impl<T: FromPercent> Point<T> {
     /// Returns a Point where both the x and y values are the constant percent value of the contained type
-    /// (e.g. 2.1, Some(2.1), or Dimension::Points(2.1))
+    /// (e.g. 2.1, Some(2.1), or Dimension::Length(2.1))
     pub fn percent<Input: Into<f32> + Copy>(percent_value: Input) -> Self {
         percent::<Input, Self>(percent_value)
     }
@@ -501,7 +498,7 @@ impl<T: FromPercent> FromPercent for Line<T> {
 }
 impl<T: FromPercent> Line<T> {
     /// Returns a Line where both the start and end values are the constant percent value of the contained type
-    /// (e.g. 2.1, Some(2.1), or Dimension::Points(2.1))
+    /// (e.g. 2.1, Some(2.1), or Dimension::Length(2.1))
     pub fn percent<Input: Into<f32> + Copy>(percent_value: Input) -> Self {
         percent::<Input, Self>(percent_value)
     }
@@ -513,7 +510,7 @@ impl<T: FromPercent> FromPercent for Size<T> {
 }
 impl<T: FromPercent> Size<T> {
     /// Returns a Size where both the width and height values are the constant percent value of the contained type
-    /// (e.g. 2.1, Some(2.1), or Dimension::Points(2.1))
+    /// (e.g. 2.1, Some(2.1), or Dimension::Length(2.1))
     pub fn percent<Input: Into<f32> + Copy>(percent_value: Input) -> Self {
         percent::<Input, Self>(percent_value)
     }
@@ -530,7 +527,7 @@ impl<T: FromPercent> FromPercent for Rect<T> {
 }
 impl<T: FromPercent> Rect<T> {
     /// Returns a Rect where the left, right, top and bottom values are all constant percent value of the contained type
-    /// (e.g. 2.1, Some(2.1), or Dimension::Points(2.1))
+    /// (e.g. 2.1, Some(2.1), or Dimension::Length(2.1))
     pub fn percent<Input: Into<f32> + Copy>(percent_value: Input) -> Self {
         percent::<Input, Self>(percent_value)
     }

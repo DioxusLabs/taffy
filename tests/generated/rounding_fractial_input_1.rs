@@ -6,22 +6,22 @@ fn rounding_fractial_input_1() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            flex_basis: taffy::style::Dimension::Points(50f32),
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(20f32) },
+            flex_basis: taffy::style::Dimension::Length(50f32),
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(20f32) },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
             ..Default::default()
         })
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -30,8 +30,8 @@ fn rounding_fractial_input_1() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(113.4f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(113.4f32),
                 },
                 ..Default::default()
             },

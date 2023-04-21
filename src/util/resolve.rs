@@ -25,22 +25,22 @@ pub(crate) trait ResolveOrZero<TContext, TOutput: TaffyZero> {
 }
 
 impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentage {
-    /// Converts the given [`LengthPercentage`] into a concrete value of points
+    /// Converts the given [`LengthPercentage`] into an absolute length
     /// Can return `None`
     fn maybe_resolve(self, context: Option<f32>) -> Option<f32> {
         match self {
-            LengthPercentage::Points(points) => Some(points),
+            LengthPercentage::Length(length) => Some(length),
             LengthPercentage::Percent(percent) => context.map(|dim| dim * percent),
         }
     }
 }
 
 impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentageAuto {
-    /// Converts the given [`LengthPercentageAuto`] into a concrete value of points
+    /// Converts the given [`LengthPercentageAuto`] into an absolute length
     /// Can return `None`
     fn maybe_resolve(self, context: Option<f32>) -> Option<f32> {
         match self {
-            LengthPercentageAuto::Points(points) => Some(points),
+            LengthPercentageAuto::Length(length) => Some(length),
             LengthPercentageAuto::Percent(percent) => context.map(|dim| dim * percent),
             LengthPercentageAuto::Auto => None,
         }
@@ -48,12 +48,12 @@ impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentageAuto {
 }
 
 impl MaybeResolve<Option<f32>, Option<f32>> for Dimension {
-    /// Converts the given [`Dimension`] into a concrete value of points
+    /// Converts the given [`Dimension`] into an absolute length
     ///
     /// Can return `None`
     fn maybe_resolve(self, context: Option<f32>) -> Option<f32> {
         match self {
-            Dimension::Points(points) => Some(points),
+            Dimension::Length(length) => Some(length),
             Dimension::Percent(percent) => context.map(|dim| dim * percent),
             Dimension::Auto => None,
         }
@@ -63,7 +63,7 @@ impl MaybeResolve<Option<f32>, Option<f32>> for Dimension {
 // Generic implementation of MaybeResolve for f32 context where MaybeResolve is implemented
 // for Option<f32> context
 impl<T: MaybeResolve<Option<f32>, Option<f32>>> MaybeResolve<f32, Option<f32>> for T {
-    /// Converts the given MaybeResolve value into a concrete value of points
+    /// Converts the given MaybeResolve value into an absolute length
     /// Can return `None`
     fn maybe_resolve(self, context: f32) -> Option<f32> {
         self.maybe_resolve(Some(context))
@@ -153,16 +153,16 @@ mod tests {
             assert_eq!(input.maybe_resolve(context), expected);
         }
 
-        /// `Dimension::Points` should always return `Some(f32)`
-        /// where the f32 value is the inner value of the points.
+        /// `Dimension::Length` should always return `Some(f32)`
+        /// where the f32 value is the inner absolute length.
         ///
         /// The parent / context should not affect the outcome.
         #[rstest]
-        #[case(Dimension::Points(1.0), None, Some(1.0))]
-        #[case(Dimension::Points(1.0), Some(5.0), Some(1.0))]
-        #[case(Dimension::Points(1.0), Some(-5.0), Some(1.0))]
-        #[case(Dimension::Points(1.0), Some(0.), Some(1.0))]
-        fn resolve_points(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: Option<f32>) {
+        #[case(Dimension::Length(1.0), None, Some(1.0))]
+        #[case(Dimension::Length(1.0), Some(5.0), Some(1.0))]
+        #[case(Dimension::Length(1.0), Some(-5.0), Some(1.0))]
+        #[case(Dimension::Length(1.0), Some(0.), Some(1.0))]
+        fn resolve_length(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: Option<f32>) {
             assert_eq!(input.maybe_resolve(context), expected);
         }
 
@@ -203,16 +203,16 @@ mod tests {
             assert_eq!(input.maybe_resolve(context), expected);
         }
 
-        /// Size<Dimension::Points> should always return a Size<Some(f32)>
-        /// where the f32 values are the inner value of the points.
+        /// Size<Dimension::Length> should always return a Size<Some(f32)>
+        /// where the f32 values are the absolute length.
         ///
         /// The parent / context should not affect the outcome.
         #[rstest]
-        #[case(Size::from_points(5.0, 5.0), Size::NONE, Size::new(5.0, 5.0))]
-        #[case(Size::from_points(5.0, 5.0), Size::new(5.0, 5.0), Size::new(5.0, 5.0))]
-        #[case(Size::from_points(5.0, 5.0), Size::new(-5.0, -5.0), Size::new(5.0, 5.0))]
-        #[case(Size::from_points(5.0, 5.0), Size::new(0.0, 0.0), Size::new(5.0, 5.0))]
-        fn maybe_resolve_points(
+        #[case(Size::from_lengths(5.0, 5.0), Size::NONE, Size::new(5.0, 5.0))]
+        #[case(Size::from_lengths(5.0, 5.0), Size::new(5.0, 5.0), Size::new(5.0, 5.0))]
+        #[case(Size::from_lengths(5.0, 5.0), Size::new(-5.0, -5.0), Size::new(5.0, 5.0))]
+        #[case(Size::from_lengths(5.0, 5.0), Size::new(0.0, 0.0), Size::new(5.0, 5.0))]
+        fn maybe_resolve_length(
             #[case] input: Size<Dimension>,
             #[case] context: Size<Option<f32>>,
             #[case] expected: Size<Option<f32>>,
@@ -253,11 +253,11 @@ mod tests {
             assert_eq!(input.resolve_or_zero(context), expected);
         }
         #[rstest]
-        #[case(Dimension::Points(5.0), None, 5.0)]
-        #[case(Dimension::Points(5.0), Some(5.0), 5.0)]
-        #[case(Dimension::Points(5.0), Some(-5.0), 5.0)]
-        #[case(Dimension::Points(5.0), Some(0.0), 5.0)]
-        fn resolve_or_zero_points(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: f32) {
+        #[case(Dimension::Length(5.0), None, 5.0)]
+        #[case(Dimension::Length(5.0), Some(5.0), 5.0)]
+        #[case(Dimension::Length(5.0), Some(-5.0), 5.0)]
+        #[case(Dimension::Length(5.0), Some(0.0), 5.0)]
+        fn resolve_or_zero_length(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: f32) {
             assert_eq!(input.resolve_or_zero(context), expected);
         }
         #[rstest]
@@ -290,11 +290,11 @@ mod tests {
         }
 
         #[rstest]
-        #[case(Rect::from_points(5.0, 5.0, 5.0, 5.0), Size::NONE, Rect::new(5.0, 5.0, 5.0, 5.0))]
-        #[case(Rect::from_points(5.0, 5.0, 5.0, 5.0), Size::new(5.0, 5.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
-        #[case(Rect::from_points(5.0, 5.0, 5.0, 5.0), Size::new(-5.0, -5.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
-        #[case(Rect::from_points(5.0, 5.0, 5.0, 5.0), Size::new(0.0, 0.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
-        fn resolve_or_zero_points(
+        #[case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Size::NONE, Rect::new(5.0, 5.0, 5.0, 5.0))]
+        #[case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Size::new(5.0, 5.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
+        #[case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Size::new(-5.0, -5.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
+        #[case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Size::new(0.0, 0.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
+        fn resolve_or_zero_length(
             #[case] input: Rect<Dimension>,
             #[case] context: Size<Option<f32>>,
             #[case] expected: Rect<f32>,
@@ -336,11 +336,11 @@ mod tests {
         }
 
         #[rstest]
-        #[case(Rect::from_points(5.0, 5.0, 5.0, 5.0), None, Rect::new(5.0, 5.0, 5.0, 5.0))]
-        #[case(Rect::from_points(5.0, 5.0, 5.0, 5.0), Some(5.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
-        #[case(Rect::from_points(5.0, 5.0, 5.0, 5.0), Some(-5.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
-        #[case(Rect::from_points(5.0, 5.0, 5.0, 5.0), Some(0.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
-        fn resolve_or_zero_points(
+        #[case(Rect::from_length(5.0, 5.0, 5.0, 5.0), None, Rect::new(5.0, 5.0, 5.0, 5.0))]
+        #[case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Some(5.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
+        #[case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Some(-5.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
+        #[case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Some(0.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
+        fn resolve_or_zero_length(
             #[case] input: Rect<Dimension>,
             #[case] context: Option<f32>,
             #[case] expected: Rect<f32>,

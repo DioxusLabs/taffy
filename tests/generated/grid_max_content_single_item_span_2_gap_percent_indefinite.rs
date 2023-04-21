@@ -37,8 +37,8 @@ fn grid_max_content_single_item_span_2_gap_percent_indefinite() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::Percent(0.2f32), height: zero() },
-                grid_template_rows: vec![points(40f32), points(40f32), points(40f32)],
-                grid_template_columns: vec![points(40f32), max_content(), max_content()],
+                grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
+                grid_template_columns: vec![length(40f32), max_content(), max_content()],
                 ..Default::default()
             },
             &[node0, node1, node2, node3, node4, node5, node6, node7, node8],

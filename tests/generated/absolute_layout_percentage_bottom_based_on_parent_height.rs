@@ -7,8 +7,8 @@ fn absolute_layout_percentage_bottom_based_on_parent_height() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(10f32),
-                height: taffy::style::Dimension::Points(10f32),
+                width: taffy::style::Dimension::Length(10f32),
+                height: taffy::style::Dimension::Length(10f32),
             },
             inset: taffy::geometry::Rect {
                 left: auto(),
@@ -23,8 +23,8 @@ fn absolute_layout_percentage_bottom_based_on_parent_height() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(10f32),
-                height: taffy::style::Dimension::Points(10f32),
+                width: taffy::style::Dimension::Length(10f32),
+                height: taffy::style::Dimension::Length(10f32),
             },
             inset: taffy::geometry::Rect {
                 left: auto(),
@@ -38,7 +38,7 @@ fn absolute_layout_percentage_bottom_based_on_parent_height() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(10f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(10f32), height: auto() },
             inset: taffy::geometry::Rect {
                 left: auto(),
                 right: auto(),
@@ -52,8 +52,8 @@ fn absolute_layout_percentage_bottom_based_on_parent_height() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(200f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(200f32),
                 },
                 ..Default::default()
             },

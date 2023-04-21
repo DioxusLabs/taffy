@@ -6,8 +6,8 @@ fn align_content_flex_end() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(50f32),
-                height: taffy::style::Dimension::Points(10f32),
+                width: taffy::style::Dimension::Length(50f32),
+                height: taffy::style::Dimension::Length(10f32),
             },
             ..Default::default()
         })
@@ -15,8 +15,8 @@ fn align_content_flex_end() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(50f32),
-                height: taffy::style::Dimension::Points(10f32),
+                width: taffy::style::Dimension::Length(50f32),
+                height: taffy::style::Dimension::Length(10f32),
             },
             ..Default::default()
         })
@@ -24,8 +24,8 @@ fn align_content_flex_end() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(50f32),
-                height: taffy::style::Dimension::Points(10f32),
+                width: taffy::style::Dimension::Length(50f32),
+                height: taffy::style::Dimension::Length(10f32),
             },
             ..Default::default()
         })
@@ -33,8 +33,8 @@ fn align_content_flex_end() {
     let node3 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(50f32),
-                height: taffy::style::Dimension::Points(10f32),
+                width: taffy::style::Dimension::Length(50f32),
+                height: taffy::style::Dimension::Length(10f32),
             },
             ..Default::default()
         })
@@ -42,8 +42,8 @@ fn align_content_flex_end() {
     let node4 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(50f32),
-                height: taffy::style::Dimension::Points(10f32),
+                width: taffy::style::Dimension::Length(50f32),
+                height: taffy::style::Dimension::Length(10f32),
             },
             ..Default::default()
         })
@@ -55,8 +55,8 @@ fn align_content_flex_end() {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 align_content: Some(taffy::style::AlignContent::FlexEnd),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

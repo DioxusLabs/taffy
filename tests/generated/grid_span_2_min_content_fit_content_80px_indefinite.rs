@@ -40,8 +40,8 @@ fn grid_span_2_min_content_fit_content_80px_indefinite() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                grid_template_rows: vec![points(40f32)],
-                grid_template_columns: vec![min_content(), fit_content(points(80f32))],
+                grid_template_rows: vec![length(40f32)],
+                grid_template_columns: vec![min_content(), fit_content(length(80f32))],
                 ..Default::default()
             },
             &[node0, node1, node2],

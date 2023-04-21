@@ -16,8 +16,8 @@ fn grid_percent_tracks_definite_underflow() {
                 grid_template_rows: vec![percent(0.3f32), percent(0.6f32)],
                 grid_template_columns: vec![percent(0.1f32), percent(0.2f32), percent(0.3f32)],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(120f32),
-                    height: taffy::style::Dimension::Points(60f32),
+                    width: taffy::style::Dimension::Length(120f32),
+                    height: taffy::style::Dimension::Length(60f32),
                 },
                 ..Default::default()
             },

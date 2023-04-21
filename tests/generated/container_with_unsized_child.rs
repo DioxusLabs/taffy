@@ -8,8 +8,8 @@ fn container_with_unsized_child() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

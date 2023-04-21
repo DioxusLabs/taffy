@@ -6,7 +6,7 @@ fn grid_aspect_ratio_fill_child_max_height() {
     let node0 = taffy
         .new_leaf_with_measure(
             taffy::style::Style {
-                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(40f32), height: auto() },
+                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(40f32), height: auto() },
                 aspect_ratio: Some(2f32),
                 ..Default::default()
             },
@@ -27,8 +27,8 @@ fn grid_aspect_ratio_fill_child_max_height() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

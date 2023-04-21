@@ -17,8 +17,8 @@ fn percentage_sizes_should_not_prevent_flex_shrinking() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(200f32),
-                    height: taffy::style::Dimension::Points(200f32),
+                    width: taffy::style::Dimension::Length(200f32),
+                    height: taffy::style::Dimension::Length(200f32),
                 },
                 ..Default::default()
             },

@@ -6,7 +6,7 @@ fn measure_stretch_overrides_measure() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            flex_basis: taffy::style::Dimension::Points(5f32),
+            flex_basis: taffy::style::Dimension::Length(5f32),
             ..Default::default()
         })
         .unwrap();
@@ -14,7 +14,7 @@ fn measure_stretch_overrides_measure() {
         .new_leaf_with_measure(
             taffy::style::Style {
                 flex_grow: 1f32,
-                flex_basis: taffy::style::Dimension::Points(5f32),
+                flex_basis: taffy::style::Dimension::Length(5f32),
                 ..Default::default()
             },
             taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
@@ -33,8 +33,8 @@ fn measure_stretch_overrides_measure() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(20f32),
-                    height: taffy::style::Dimension::Points(10f32),
+                    width: taffy::style::Dimension::Length(20f32),
+                    height: taffy::style::Dimension::Length(10f32),
                 },
                 ..Default::default()
             },

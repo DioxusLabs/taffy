@@ -5,8 +5,8 @@ fn max_width() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(10f32) },
-            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), height: auto() },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -15,8 +15,8 @@ fn max_width() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

@@ -7,8 +7,8 @@ fn percentage_absolute_position() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(10f32),
-                height: taffy::style::Dimension::Points(10f32),
+                width: taffy::style::Dimension::Length(10f32),
+                height: taffy::style::Dimension::Length(10f32),
             },
             inset: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::Percent(0.3f32),
@@ -24,8 +24,8 @@ fn percentage_absolute_position() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(200f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(200f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

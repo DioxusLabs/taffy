@@ -31,10 +31,10 @@ fn gap_column_gap_flexible_undefined_parent() {
         .new_with_children(
             taffy::style::Style {
                 gap: taffy::geometry::Size {
-                    width: taffy::style::LengthPercentage::Points(10f32),
-                    height: taffy::style::LengthPercentage::Points(20f32),
+                    width: taffy::style::LengthPercentage::Length(10f32),
+                    height: taffy::style::LengthPercentage::Length(20f32),
                 },
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(100f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
                 ..Default::default()
             },
             &[node0, node1, node2],

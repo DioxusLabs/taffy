@@ -6,8 +6,8 @@ fn do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent(
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(100f32),
-                height: taffy::style::Dimension::Points(100f32),
+                width: taffy::style::Dimension::Length(100f32),
+                height: taffy::style::Dimension::Length(100f32),
             },
             ..Default::default()
         })
@@ -18,9 +18,9 @@ fn do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent(
                 position: taffy::style::Position::Absolute,
                 flex_direction: taffy::style::FlexDirection::Column,
                 inset: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Points(0f32),
+                    left: taffy::style::LengthPercentageAuto::Length(0f32),
                     right: auto(),
-                    top: taffy::style::LengthPercentageAuto::Points(0f32),
+                    top: taffy::style::LengthPercentageAuto::Length(0f32),
                     bottom: auto(),
                 },
                 ..Default::default()
@@ -36,8 +36,8 @@ fn do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent(
                     y: taffy::style::Overflow::Hidden,
                 },
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(50f32),
-                    height: taffy::style::Dimension::Points(50f32),
+                    width: taffy::style::Dimension::Length(50f32),
+                    height: taffy::style::Dimension::Length(50f32),
                 },
                 ..Default::default()
             },

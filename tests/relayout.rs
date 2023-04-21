@@ -5,7 +5,7 @@ fn relayout() {
     let mut taffy = taffy::Taffy::new();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: points(8.0), height: points(80.0) },
+            size: taffy::geometry::Size { width: length(8.0), height: length(80.0) },
             ..Default::default()
         })
         .unwrap();
@@ -60,13 +60,13 @@ fn relayout() {
 fn toggle_root_display_none() {
     let hidden_style = Style {
         display: Display::None,
-        size: Size { width: points(100.0), height: points(100.0) },
+        size: Size { width: length(100.0), height: length(100.0) },
         ..Default::default()
     };
 
     let flex_style = Style {
         display: Display::Flex,
-        size: Size { width: points(100.0), height: points(100.0) },
+        size: Size { width: length(100.0), height: length(100.0) },
         ..Default::default()
     };
 
@@ -108,12 +108,12 @@ fn toggle_root_display_none_with_children() {
     let mut taffy = taffy::Taffy::new();
 
     let child = taffy
-        .new_leaf(Style { size: Size { width: points(800.0), height: points(100.0) }, ..Default::default() })
+        .new_leaf(Style { size: Size { width: length(800.0), height: length(100.0) }, ..Default::default() })
         .unwrap();
 
     let parent = taffy
         .new_with_children(
-            Style { size: Size { width: points(800.0), height: points(100.0) }, ..Default::default() },
+            Style { size: Size { width: length(800.0), height: length(100.0) }, ..Default::default() },
             &[child],
         )
         .unwrap();
@@ -140,13 +140,13 @@ fn toggle_root_display_none_with_children() {
 fn toggle_flex_child_display_none() {
     let hidden_style = Style {
         display: Display::None,
-        size: Size { width: points(100.0), height: points(100.0) },
+        size: Size { width: length(100.0), height: length(100.0) },
         ..Default::default()
     };
 
     let flex_style = Style {
         display: Display::Flex,
-        size: Size { width: points(100.0), height: points(100.0) },
+        size: Size { width: length(100.0), height: length(100.0) },
         ..Default::default()
     };
 
@@ -186,13 +186,13 @@ fn toggle_flex_child_display_none() {
 fn toggle_flex_container_display_none() {
     let hidden_style = Style {
         display: Display::None,
-        size: Size { width: points(100.0), height: points(100.0) },
+        size: Size { width: length(100.0), height: length(100.0) },
         ..Default::default()
     };
 
     let flex_style = Style {
         display: Display::Flex,
-        size: Size { width: points(100.0), height: points(100.0) },
+        size: Size { width: length(100.0), height: length(100.0) },
         ..Default::default()
     };
 
@@ -232,13 +232,13 @@ fn toggle_flex_container_display_none() {
 fn toggle_grid_child_display_none() {
     let hidden_style = Style {
         display: Display::None,
-        size: Size { width: points(100.0), height: points(100.0) },
+        size: Size { width: length(100.0), height: length(100.0) },
         ..Default::default()
     };
 
     let grid_style = Style {
         display: Display::Grid,
-        size: Size { width: points(100.0), height: points(100.0) },
+        size: Size { width: length(100.0), height: length(100.0) },
         ..Default::default()
     };
 
@@ -278,13 +278,13 @@ fn toggle_grid_child_display_none() {
 fn toggle_grid_container_display_none() {
     let hidden_style = Style {
         display: Display::None,
-        size: Size { width: points(100.0), height: points(100.0) },
+        size: Size { width: length(100.0), height: length(100.0) },
         ..Default::default()
     };
 
     let grid_style = Style {
         display: Display::Grid,
-        size: Size { width: points(100.0), height: points(100.0) },
+        size: Size { width: length(100.0), height: length(100.0) },
         ..Default::default()
     };
 

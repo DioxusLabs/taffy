@@ -5,43 +5,43 @@ fn align_content_stretch_row_with_margin() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Points(10f32),
-                right: taffy::style::LengthPercentageAuto::Points(10f32),
-                top: taffy::style::LengthPercentageAuto::Points(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Points(10f32),
+                left: taffy::style::LengthPercentageAuto::Length(10f32),
+                right: taffy::style::LengthPercentageAuto::Length(10f32),
+                top: taffy::style::LengthPercentageAuto::Length(10f32),
+                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
             },
             ..Default::default()
         })
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node3 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Points(10f32),
-                right: taffy::style::LengthPercentageAuto::Points(10f32),
-                top: taffy::style::LengthPercentageAuto::Points(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Points(10f32),
+                left: taffy::style::LengthPercentageAuto::Length(10f32),
+                right: taffy::style::LengthPercentageAuto::Length(10f32),
+                top: taffy::style::LengthPercentageAuto::Length(10f32),
+                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
             },
             ..Default::default()
         })
         .unwrap();
     let node4 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -51,8 +51,8 @@ fn align_content_stretch_row_with_margin() {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(150f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(150f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

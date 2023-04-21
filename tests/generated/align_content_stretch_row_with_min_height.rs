@@ -5,32 +5,32 @@ fn align_content_stretch_row_with_min_height() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), height: auto() },
-            min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(80f32) },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+            min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(80f32) },
             ..Default::default()
         })
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node3 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node4 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(50f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -40,8 +40,8 @@ fn align_content_stretch_row_with_min_height() {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(150f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(150f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

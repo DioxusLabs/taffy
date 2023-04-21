@@ -61,7 +61,7 @@ mod measure {
 
         let node = taffy
             .new_with_children(
-                Style { size: Size { width: Dimension::Points(50.0), height: auto() }, ..Default::default() },
+                Style { size: Size { width: Dimension::Length(50.0), height: auto() }, ..Default::default() },
                 &[child],
             )
             .unwrap();
@@ -92,12 +92,12 @@ mod measure {
         let node = taffy
             .new_with_children(
                 Style {
-                    size: Size { width: Dimension::Points(50.0), height: auto() },
+                    size: Size { width: Dimension::Length(50.0), height: auto() },
                     padding: Rect {
-                        left: LengthPercentage::Points(10.0),
-                        right: LengthPercentage::Points(10.0),
-                        top: LengthPercentage::Points(10.0),
-                        bottom: LengthPercentage::Points(10.0),
+                        left: LengthPercentage::Length(10.0),
+                        right: LengthPercentage::Length(10.0),
+                        top: LengthPercentage::Length(10.0),
+                        bottom: LengthPercentage::Length(10.0),
                     },
                     ..Default::default()
                 },
@@ -122,7 +122,7 @@ mod measure {
         let mut taffy = Taffy::new();
         let child0 = taffy
             .new_leaf(Style {
-                size: Size { width: Dimension::Points(50.0), height: Dimension::Points(50.0) },
+                size: Size { width: Dimension::Length(50.0), height: Dimension::Length(50.0) },
                 ..Default::default()
             })
             .unwrap();
@@ -139,7 +139,7 @@ mod measure {
 
         let node = taffy
             .new_with_children(
-                Style { size: Size { width: Dimension::Points(100.0), height: auto() }, ..Default::default() },
+                Style { size: Size { width: Dimension::Length(100.0), height: auto() }, ..Default::default() },
                 &[child0, child1],
             )
             .unwrap();
@@ -155,7 +155,7 @@ mod measure {
         let mut taffy = Taffy::new();
         let child0 = taffy
             .new_leaf(Style {
-                size: Size { width: Dimension::Points(50.0), height: Dimension::Points(50.0) },
+                size: Size { width: Dimension::Length(50.0), height: Dimension::Length(50.0) },
                 flex_shrink: 0.0,
                 ..Default::default()
             })
@@ -173,7 +173,7 @@ mod measure {
 
         let node = taffy
             .new_with_children(
-                Style { size: Size { width: Dimension::Points(100.0), height: auto() }, ..Default::default() },
+                Style { size: Size { width: Dimension::Length(100.0), height: auto() }, ..Default::default() },
                 &[child0, child1],
             )
             .unwrap();
@@ -189,7 +189,7 @@ mod measure {
         let mut taffy = Taffy::new();
         let child0 = taffy
             .new_leaf(Style {
-                size: Size { width: Dimension::Points(50.0), height: Dimension::Points(50.0) },
+                size: Size { width: Dimension::Length(50.0), height: Dimension::Length(50.0) },
                 ..Default::default()
             })
             .unwrap();
@@ -208,7 +208,7 @@ mod measure {
         let node = taffy
             .new_with_children(
                 Style {
-                    size: Size { width: Dimension::Points(100.0), height: auto() },
+                    size: Size { width: Dimension::Length(100.0), height: auto() },
                     align_items: Some(AlignItems::Start),
                     ..Default::default()
                 },
@@ -228,7 +228,7 @@ mod measure {
 
         let child0 = taffy
             .new_leaf(Style {
-                size: Size { width: Dimension::Points(50.0), height: Dimension::Points(50.0) },
+                size: Size { width: Dimension::Length(50.0), height: Dimension::Length(50.0) },
                 flex_shrink: 0.0,
                 ..Default::default()
             })
@@ -248,7 +248,7 @@ mod measure {
         let node = taffy
             .new_with_children(
                 Style {
-                    size: Size { width: Dimension::Points(100.0), height: auto() },
+                    size: Size { width: Dimension::Length(100.0), height: auto() },
                     align_items: Some(AlignItems::Start),
                     ..Default::default()
                 },
@@ -280,7 +280,7 @@ mod measure {
         let node = taffy
             .new_with_children(
                 Style {
-                    size: Size { width: Dimension::Points(100.0), height: Dimension::Points(100.0) },
+                    size: Size { width: Dimension::Length(100.0), height: Dimension::Length(100.0) },
                     ..Default::default()
                 },
                 &[child],
@@ -298,7 +298,7 @@ mod measure {
         let mut taffy = Taffy::new();
         let child = taffy
             .new_leaf_with_measure(
-                Style { size: Size { width: Dimension::Points(50.0), height: auto() }, ..Default::default() },
+                Style { size: Size { width: Dimension::Length(50.0), height: auto() }, ..Default::default() },
                 MeasureFunc::Raw(|known_dimensions, _available_space| Size {
                     width: known_dimensions.width.unwrap_or(100.0),
                     height: known_dimensions.height.unwrap_or(100.0),
@@ -318,7 +318,7 @@ mod measure {
         let mut taffy = Taffy::new();
         let child = taffy
             .new_leaf_with_measure(
-                Style { size: Size { width: auto(), height: Dimension::Points(50.0) }, ..Default::default() },
+                Style { size: Size { width: auto(), height: Dimension::Length(50.0) }, ..Default::default() },
                 MeasureFunc::Raw(|known_dimensions, _available_space| Size {
                     width: known_dimensions.width.unwrap_or(100.0),
                     height: known_dimensions.height.unwrap_or(100.0),
@@ -337,12 +337,12 @@ mod measure {
     fn flex_basis_overrides_measure() {
         let mut taffy = Taffy::new();
         let child0 = taffy
-            .new_leaf(Style { flex_basis: Dimension::Points(50.0), flex_grow: 1.0, ..Default::default() })
+            .new_leaf(Style { flex_basis: Dimension::Length(50.0), flex_grow: 1.0, ..Default::default() })
             .unwrap();
 
         let child1 = taffy
             .new_leaf_with_measure(
-                Style { flex_basis: Dimension::Points(50.0), flex_grow: 1.0, ..Default::default() },
+                Style { flex_basis: Dimension::Length(50.0), flex_grow: 1.0, ..Default::default() },
                 MeasureFunc::Raw(|known_dimensions, _available_space| Size {
                     width: known_dimensions.width.unwrap_or(100.0),
                     height: known_dimensions.height.unwrap_or(100.0),
@@ -353,7 +353,7 @@ mod measure {
         let node = taffy
             .new_with_children(
                 Style {
-                    size: Size { width: Dimension::Points(200.0), height: Dimension::Points(100.0) },
+                    size: Size { width: Dimension::Length(200.0), height: Dimension::Length(100.0) },
                     ..Default::default()
                 },
                 &[child0, child1],
@@ -384,7 +384,7 @@ mod measure {
         let node = taffy
             .new_with_children(
                 Style {
-                    size: Size { width: Dimension::Points(100.0), height: Dimension::Points(100.0) },
+                    size: Size { width: Dimension::Length(100.0), height: Dimension::Length(100.0) },
                     ..Default::default()
                 },
                 &[child],
@@ -413,7 +413,7 @@ mod measure {
         let node = taffy
             .new_with_children(
                 Style {
-                    size: Size { width: Dimension::Points(100.0), height: Dimension::Points(100.0) },
+                    size: Size { width: Dimension::Length(100.0), height: Dimension::Length(100.0) },
                     ..Default::default()
                 },
                 &[child],
@@ -434,7 +434,7 @@ mod measure {
         let node = taffy
             .new_with_children(
                 Style {
-                    size: Size { width: Dimension::Points(100.0), height: Dimension::Points(100.0) },
+                    size: Size { width: Dimension::Length(100.0), height: Dimension::Length(100.0) },
                     ..Default::default()
                 },
                 &[child],

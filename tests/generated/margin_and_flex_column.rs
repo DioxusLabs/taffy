@@ -9,8 +9,8 @@ fn margin_and_flex_column() {
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
-                top: taffy::style::LengthPercentageAuto::Points(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Points(10f32),
+                top: taffy::style::LengthPercentageAuto::Length(10f32),
+                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
             },
             ..Default::default()
         })
@@ -20,8 +20,8 @@ fn margin_and_flex_column() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

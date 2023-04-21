@@ -64,8 +64,8 @@ fn rounding_inner_node_controversy_combined() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(640f32),
-                    height: taffy::style::Dimension::Points(320f32),
+                    width: taffy::style::Dimension::Length(640f32),
+                    height: taffy::style::Dimension::Length(320f32),
                 },
                 ..Default::default()
             },

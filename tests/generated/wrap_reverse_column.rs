@@ -6,8 +6,8 @@ fn wrap_reverse_column() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(30f32),
-                height: taffy::style::Dimension::Points(31f32),
+                width: taffy::style::Dimension::Length(30f32),
+                height: taffy::style::Dimension::Length(31f32),
             },
             ..Default::default()
         })
@@ -15,8 +15,8 @@ fn wrap_reverse_column() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(30f32),
-                height: taffy::style::Dimension::Points(32f32),
+                width: taffy::style::Dimension::Length(30f32),
+                height: taffy::style::Dimension::Length(32f32),
             },
             ..Default::default()
         })
@@ -24,8 +24,8 @@ fn wrap_reverse_column() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(30f32),
-                height: taffy::style::Dimension::Points(33f32),
+                width: taffy::style::Dimension::Length(30f32),
+                height: taffy::style::Dimension::Length(33f32),
             },
             ..Default::default()
         })
@@ -33,8 +33,8 @@ fn wrap_reverse_column() {
     let node3 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(30f32),
-                height: taffy::style::Dimension::Points(34f32),
+                width: taffy::style::Dimension::Length(30f32),
+                height: taffy::style::Dimension::Length(34f32),
             },
             ..Default::default()
         })
@@ -45,8 +45,8 @@ fn wrap_reverse_column() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_wrap: taffy::style::FlexWrap::WrapReverse,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

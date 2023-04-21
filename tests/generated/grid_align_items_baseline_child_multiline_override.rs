@@ -7,8 +7,8 @@ fn grid_align_items_baseline_child_multiline_override() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(50f32),
-                height: taffy::style::Dimension::Points(60f32),
+                width: taffy::style::Dimension::Length(50f32),
+                height: taffy::style::Dimension::Length(60f32),
             },
             ..Default::default()
         })
@@ -17,8 +17,8 @@ fn grid_align_items_baseline_child_multiline_override() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(25f32),
-                height: taffy::style::Dimension::Points(20f32),
+                width: taffy::style::Dimension::Length(25f32),
+                height: taffy::style::Dimension::Length(20f32),
             },
             ..Default::default()
         })
@@ -28,8 +28,8 @@ fn grid_align_items_baseline_child_multiline_override() {
             display: taffy::style::Display::Grid,
             align_self: Some(taffy::style::AlignSelf::Baseline),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(25f32),
-                height: taffy::style::Dimension::Points(10f32),
+                width: taffy::style::Dimension::Length(25f32),
+                height: taffy::style::Dimension::Length(10f32),
             },
             ..Default::default()
         })
@@ -38,8 +38,8 @@ fn grid_align_items_baseline_child_multiline_override() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(25f32),
-                height: taffy::style::Dimension::Points(20f32),
+                width: taffy::style::Dimension::Length(25f32),
+                height: taffy::style::Dimension::Length(20f32),
             },
             ..Default::default()
         })
@@ -49,8 +49,8 @@ fn grid_align_items_baseline_child_multiline_override() {
             display: taffy::style::Display::Grid,
             align_self: Some(taffy::style::AlignSelf::Baseline),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(25f32),
-                height: taffy::style::Dimension::Points(10f32),
+                width: taffy::style::Dimension::Length(25f32),
+                height: taffy::style::Dimension::Length(10f32),
             },
             ..Default::default()
         })
@@ -61,8 +61,8 @@ fn grid_align_items_baseline_child_multiline_override() {
                 display: taffy::style::Display::Grid,
                 grid_template_columns: vec![auto(), auto()],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(50f32),
-                    height: taffy::style::Dimension::Points(25f32),
+                    width: taffy::style::Dimension::Length(50f32),
+                    height: taffy::style::Dimension::Length(25f32),
                 },
                 ..Default::default()
             },
@@ -75,8 +75,8 @@ fn grid_align_items_baseline_child_multiline_override() {
                 display: taffy::style::Display::Grid,
                 align_items: Some(taffy::style::AlignItems::Baseline),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

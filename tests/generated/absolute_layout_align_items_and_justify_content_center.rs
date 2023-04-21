@@ -7,8 +7,8 @@ fn absolute_layout_align_items_and_justify_content_center() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(60f32),
-                height: taffy::style::Dimension::Points(40f32),
+                width: taffy::style::Dimension::Length(60f32),
+                height: taffy::style::Dimension::Length(40f32),
             },
             ..Default::default()
         })
@@ -19,8 +19,8 @@ fn absolute_layout_align_items_and_justify_content_center() {
                 align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(110f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(110f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

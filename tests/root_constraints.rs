@@ -56,8 +56,8 @@ mod root_constraints {
         let node = taffy
             .new_leaf(taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(200.0),
-                    height: taffy::style::Dimension::Points(200.0),
+                    width: taffy::style::Dimension::Length(200.0),
+                    height: taffy::style::Dimension::Length(200.0),
                 },
                 ..Default::default()
             })

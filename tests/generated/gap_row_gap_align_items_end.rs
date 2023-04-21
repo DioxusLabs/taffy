@@ -5,37 +5,37 @@ fn gap_row_gap_align_items_end() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node3 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node4 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node5 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(20f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -45,12 +45,12 @@ fn gap_row_gap_align_items_end() {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 align_items: Some(taffy::style::AlignItems::FlexEnd),
                 gap: taffy::geometry::Size {
-                    width: taffy::style::LengthPercentage::Points(10f32),
-                    height: taffy::style::LengthPercentage::Points(20f32),
+                    width: taffy::style::LengthPercentage::Length(10f32),
+                    height: taffy::style::LengthPercentage::Length(20f32),
                 },
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(200f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(200f32),
                 },
                 ..Default::default()
             },

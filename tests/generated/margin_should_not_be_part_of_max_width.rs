@@ -6,12 +6,12 @@ fn margin_should_not_be_part_of_max_width() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(100f32),
-                height: taffy::style::Dimension::Points(100f32),
+                width: taffy::style::Dimension::Length(100f32),
+                height: taffy::style::Dimension::Length(100f32),
             },
-            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), height: auto() },
+            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Points(20f32),
+                left: taffy::style::LengthPercentageAuto::Length(20f32),
                 right: zero(),
                 top: zero(),
                 bottom: zero(),
@@ -23,8 +23,8 @@ fn margin_should_not_be_part_of_max_width() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(250f32),
-                    height: taffy::style::Dimension::Points(250f32),
+                    width: taffy::style::Dimension::Length(250f32),
+                    height: taffy::style::Dimension::Length(250f32),
                 },
                 ..Default::default()
             },

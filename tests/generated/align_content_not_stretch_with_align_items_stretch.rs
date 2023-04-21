@@ -6,8 +6,8 @@ fn align_content_not_stretch_with_align_items_stretch() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(272f32),
-                height: taffy::style::Dimension::Points(44f32),
+                width: taffy::style::Dimension::Length(272f32),
+                height: taffy::style::Dimension::Length(44f32),
             },
             ..Default::default()
         })
@@ -21,8 +21,8 @@ fn align_content_not_stretch_with_align_items_stretch() {
     let node10 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(56f32),
-                height: taffy::style::Dimension::Points(44f32),
+                width: taffy::style::Dimension::Length(56f32),
+                height: taffy::style::Dimension::Length(44f32),
             },
             ..Default::default()
         })
@@ -39,8 +39,8 @@ fn align_content_not_stretch_with_align_items_stretch() {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 align_content: Some(taffy::style::AlignContent::FlexStart),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(328f32),
-                    height: taffy::style::Dimension::Points(52f32),
+                    width: taffy::style::Dimension::Length(328f32),
+                    height: taffy::style::Dimension::Length(52f32),
                 },
                 ..Default::default()
             },

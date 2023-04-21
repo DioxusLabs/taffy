@@ -5,8 +5,8 @@ fn undefined_width_with_min_max() {
     let mut taffy = taffy::Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(0f32), height: auto() },
-            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), height: auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(0f32), height: auto() },
+            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -14,7 +14,7 @@ fn undefined_width_with_min_max() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(50f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(50f32) },
                 ..Default::default()
             },
             &[node0],

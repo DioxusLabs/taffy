@@ -6,7 +6,7 @@ fn grid_auto_single_item() {
     let node0 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Points(100f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -21,8 +21,8 @@ fn grid_auto_single_item() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                grid_template_rows: vec![points(40f32), points(40f32), points(40f32)],
-                grid_template_columns: vec![points(40f32), auto(), points(40f32)],
+                grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
+                grid_template_columns: vec![length(40f32), auto(), length(40f32)],
                 ..Default::default()
             },
             &[node0, node1, node2, node3, node4, node5, node6, node7, node8],

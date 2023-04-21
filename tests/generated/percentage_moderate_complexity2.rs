@@ -6,8 +6,8 @@ fn percentage_moderate_complexity2() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(20f32),
-                height: taffy::style::Dimension::Points(20f32),
+                width: taffy::style::Dimension::Length(20f32),
+                height: taffy::style::Dimension::Length(20f32),
             },
             ..Default::default()
         })
@@ -33,8 +33,8 @@ fn percentage_moderate_complexity2() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(200f32),
-                    height: taffy::style::Dimension::Points(200f32),
+                    width: taffy::style::Dimension::Length(200f32),
+                    height: taffy::style::Dimension::Length(200f32),
                 },
                 ..Default::default()
             },

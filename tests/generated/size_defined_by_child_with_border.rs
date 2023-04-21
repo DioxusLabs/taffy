@@ -6,8 +6,8 @@ fn size_defined_by_child_with_border() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(10f32),
-                height: taffy::style::Dimension::Points(10f32),
+                width: taffy::style::Dimension::Length(10f32),
+                height: taffy::style::Dimension::Length(10f32),
             },
             ..Default::default()
         })
@@ -16,10 +16,10 @@ fn size_defined_by_child_with_border() {
         .new_with_children(
             taffy::style::Style {
                 border: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Points(10f32),
-                    right: taffy::style::LengthPercentage::Points(10f32),
-                    top: taffy::style::LengthPercentage::Points(10f32),
-                    bottom: taffy::style::LengthPercentage::Points(10f32),
+                    left: taffy::style::LengthPercentage::Length(10f32),
+                    right: taffy::style::LengthPercentage::Length(10f32),
+                    top: taffy::style::LengthPercentage::Length(10f32),
+                    bottom: taffy::style::LengthPercentage::Length(10f32),
                 },
                 ..Default::default()
             },

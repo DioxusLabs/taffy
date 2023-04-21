@@ -6,15 +6,15 @@ fn grid_align_items_baseline_complex() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(20f32),
-                height: taffy::style::Dimension::Points(20f32),
+                width: taffy::style::Dimension::Length(20f32),
+                height: taffy::style::Dimension::Length(20f32),
             },
             ..Default::default()
         })
         .unwrap();
     let node10 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -22,8 +22,8 @@ fn grid_align_items_baseline_complex() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(20f32),
-                    height: taffy::style::Dimension::Points(20f32),
+                    width: taffy::style::Dimension::Length(20f32),
+                    height: taffy::style::Dimension::Length(20f32),
                 },
                 ..Default::default()
             },
@@ -32,7 +32,7 @@ fn grid_align_items_baseline_complex() {
         .unwrap();
     let node20 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -40,8 +40,8 @@ fn grid_align_items_baseline_complex() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(20f32),
-                    height: taffy::style::Dimension::Points(20f32),
+                    width: taffy::style::Dimension::Length(20f32),
+                    height: taffy::style::Dimension::Length(20f32),
                 },
                 ..Default::default()
             },
@@ -51,8 +51,8 @@ fn grid_align_items_baseline_complex() {
     let node3 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(20f32),
-                height: taffy::style::Dimension::Points(20f32),
+                width: taffy::style::Dimension::Length(20f32),
+                height: taffy::style::Dimension::Length(20f32),
             },
             ..Default::default()
         })
@@ -60,8 +60,8 @@ fn grid_align_items_baseline_complex() {
     let node4 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(20f32),
-                height: taffy::style::Dimension::Points(20f32),
+                width: taffy::style::Dimension::Length(20f32),
+                height: taffy::style::Dimension::Length(20f32),
             },
             ..Default::default()
         })
@@ -69,15 +69,15 @@ fn grid_align_items_baseline_complex() {
     let node5 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(20f32),
-                height: taffy::style::Dimension::Points(20f32),
+                width: taffy::style::Dimension::Length(20f32),
+                height: taffy::style::Dimension::Length(20f32),
             },
             ..Default::default()
         })
         .unwrap();
     let node60 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -85,8 +85,8 @@ fn grid_align_items_baseline_complex() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(20f32),
-                    height: taffy::style::Dimension::Points(20f32),
+                    width: taffy::style::Dimension::Length(20f32),
+                    height: taffy::style::Dimension::Length(20f32),
                 },
                 ..Default::default()
             },
@@ -95,7 +95,7 @@ fn grid_align_items_baseline_complex() {
         .unwrap();
     let node70 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(5f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(5f32) },
             ..Default::default()
         })
         .unwrap();
@@ -103,8 +103,8 @@ fn grid_align_items_baseline_complex() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(20f32),
-                    height: taffy::style::Dimension::Points(20f32),
+                    width: taffy::style::Dimension::Length(20f32),
+                    height: taffy::style::Dimension::Length(20f32),
                 },
                 ..Default::default()
             },
@@ -114,8 +114,8 @@ fn grid_align_items_baseline_complex() {
     let node8 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(20f32),
-                height: taffy::style::Dimension::Points(20f32),
+                width: taffy::style::Dimension::Length(20f32),
+                height: taffy::style::Dimension::Length(20f32),
             },
             ..Default::default()
         })
@@ -125,11 +125,11 @@ fn grid_align_items_baseline_complex() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 align_items: Some(taffy::style::AlignItems::Baseline),
-                grid_template_rows: vec![points(40f32), points(40f32), points(40f32)],
-                grid_template_columns: vec![points(40f32), points(40f32), points(40f32)],
+                grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
+                grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(120f32),
-                    height: taffy::style::Dimension::Points(120f32),
+                    width: taffy::style::Dimension::Length(120f32),
+                    height: taffy::style::Dimension::Length(120f32),
                 },
                 ..Default::default()
             },

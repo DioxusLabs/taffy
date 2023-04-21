@@ -6,8 +6,8 @@ fn undefined_width_with_min_max_row() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(30f32),
-                height: taffy::style::Dimension::Points(20f32),
+                width: taffy::style::Dimension::Length(30f32),
+                height: taffy::style::Dimension::Length(20f32),
             },
             ..Default::default()
         })
@@ -15,8 +15,8 @@ fn undefined_width_with_min_max_row() {
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
-                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(60f32), height: auto() },
-                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Points(300f32), height: auto() },
+                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(300f32), height: auto() },
                 ..Default::default()
             },
             &[node00],
@@ -25,7 +25,7 @@ fn undefined_width_with_min_max_row() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(50f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(50f32) },
                 ..Default::default()
             },
             &[node0],

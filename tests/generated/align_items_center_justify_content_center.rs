@@ -7,8 +7,8 @@ fn align_items_center_justify_content_center() {
         .new_leaf_with_measure(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(10f32),
-                    height: taffy::style::Dimension::Points(10f32),
+                    width: taffy::style::Dimension::Length(10f32),
+                    height: taffy::style::Dimension::Length(10f32),
                 },
                 ..Default::default()
             },
@@ -32,8 +32,8 @@ fn align_items_center_justify_content_center() {
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(1f32) },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Points(10f32),
-                    right: taffy::style::LengthPercentageAuto::Points(10f32),
+                    left: taffy::style::LengthPercentageAuto::Length(10f32),
+                    right: taffy::style::LengthPercentageAuto::Length(10f32),
                     top: zero(),
                     bottom: zero(),
                 },
@@ -48,7 +48,7 @@ fn align_items_center_justify_content_center() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(50f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(50f32) },
                 ..Default::default()
             },
             &[node00],
@@ -59,8 +59,8 @@ fn align_items_center_justify_content_center() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(500f32),
-                    height: taffy::style::Dimension::Points(500f32),
+                    width: taffy::style::Dimension::Length(500f32),
+                    height: taffy::style::Dimension::Length(500f32),
                 },
                 ..Default::default()
             },

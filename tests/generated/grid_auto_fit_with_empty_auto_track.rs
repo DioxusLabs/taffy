@@ -10,11 +10,11 @@ fn grid_auto_fit_with_empty_auto_track() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 justify_content: Some(taffy::style::JustifyContent::SpaceEvenly),
-                grid_template_rows: vec![points(40f32), points(40f32), points(40f32)],
-                grid_template_columns: vec![repeat(GridTrackRepetition::AutoFit, vec![points(40f32)])],
+                grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
+                grid_template_columns: vec![repeat(GridTrackRepetition::AutoFit, vec![length(40f32)])],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(120f32),
-                    height: taffy::style::Dimension::Points(120f32),
+                    width: taffy::style::Dimension::Length(120f32),
+                    height: taffy::style::Dimension::Length(120f32),
                 },
                 ..Default::default()
             },

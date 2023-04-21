@@ -6,14 +6,14 @@ fn bevy_issue_8082() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(50f32),
-                height: taffy::style::Dimension::Points(50f32),
+                width: taffy::style::Dimension::Length(50f32),
+                height: taffy::style::Dimension::Length(50f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Points(10f32),
-                right: taffy::style::LengthPercentageAuto::Points(10f32),
-                top: taffy::style::LengthPercentageAuto::Points(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Points(10f32),
+                left: taffy::style::LengthPercentageAuto::Length(10f32),
+                right: taffy::style::LengthPercentageAuto::Length(10f32),
+                top: taffy::style::LengthPercentageAuto::Length(10f32),
+                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
             },
             ..Default::default()
         })
@@ -21,14 +21,14 @@ fn bevy_issue_8082() {
     let node01 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(50f32),
-                height: taffy::style::Dimension::Points(50f32),
+                width: taffy::style::Dimension::Length(50f32),
+                height: taffy::style::Dimension::Length(50f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Points(10f32),
-                right: taffy::style::LengthPercentageAuto::Points(10f32),
-                top: taffy::style::LengthPercentageAuto::Points(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Points(10f32),
+                left: taffy::style::LengthPercentageAuto::Length(10f32),
+                right: taffy::style::LengthPercentageAuto::Length(10f32),
+                top: taffy::style::LengthPercentageAuto::Length(10f32),
+                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
             },
             ..Default::default()
         })
@@ -36,14 +36,14 @@ fn bevy_issue_8082() {
     let node02 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(50f32),
-                height: taffy::style::Dimension::Points(50f32),
+                width: taffy::style::Dimension::Length(50f32),
+                height: taffy::style::Dimension::Length(50f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Points(10f32),
-                right: taffy::style::LengthPercentageAuto::Points(10f32),
-                top: taffy::style::LengthPercentageAuto::Points(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Points(10f32),
+                left: taffy::style::LengthPercentageAuto::Length(10f32),
+                right: taffy::style::LengthPercentageAuto::Length(10f32),
+                top: taffy::style::LengthPercentageAuto::Length(10f32),
+                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
             },
             ..Default::default()
         })
@@ -51,14 +51,14 @@ fn bevy_issue_8082() {
     let node03 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(50f32),
-                height: taffy::style::Dimension::Points(50f32),
+                width: taffy::style::Dimension::Length(50f32),
+                height: taffy::style::Dimension::Length(50f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Points(10f32),
-                right: taffy::style::LengthPercentageAuto::Points(10f32),
-                top: taffy::style::LengthPercentageAuto::Points(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Points(10f32),
+                left: taffy::style::LengthPercentageAuto::Length(10f32),
+                right: taffy::style::LengthPercentageAuto::Length(10f32),
+                top: taffy::style::LengthPercentageAuto::Length(10f32),
+                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
             },
             ..Default::default()
         })
@@ -83,8 +83,8 @@ fn bevy_issue_8082() {
                 align_content: Some(taffy::style::AlignContent::Center),
                 justify_content: Some(taffy::style::JustifyContent::FlexStart),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(200f32),
-                    height: taffy::style::Dimension::Points(400f32),
+                    width: taffy::style::Dimension::Length(200f32),
+                    height: taffy::style::Dimension::Length(400f32),
                 },
                 ..Default::default()
             },

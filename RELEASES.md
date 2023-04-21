@@ -2,6 +2,32 @@
 
 ## Unreleased
 
+### Breaking
+
+Many APIs have been renamed to replace `points` or `Points` with `length` or `Length`.
+This new name better describes one-dimentional measure of space in some unspecified unit
+which is often unrelated to the PostScript point or the CSS `pt` unit.
+
+This also removes a misleading similarity with the 2D `Point`,
+whose components can have any unit and are not even necessarily absolute lengths.
+
+Example usage change:
+
+```diff
+ use taffy::prelude::*;
+
+ // …
+
+ let header_node = taffy
+     .new_leaf(
+         Style {
+-            size: Size { width: points(800.0), height: points(100.0) },
++            size: Size { width: length(800.0), height: length(100.0) },
+             ..Default::default()
+         },
+     ).unwrap();
+```
+
 ### Removed
 
 - `layout_flexbox()` has been removed from the prelude. Use `FlexboxAlgorithm::perform_layout()` instead.

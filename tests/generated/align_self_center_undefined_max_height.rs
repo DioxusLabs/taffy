@@ -6,8 +6,8 @@ fn align_self_center_undefined_max_height() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(240f32),
-                height: taffy::style::Dimension::Points(44f32),
+                width: taffy::style::Dimension::Length(240f32),
+                height: taffy::style::Dimension::Length(44f32),
             },
             ..Default::default()
         })
@@ -16,8 +16,8 @@ fn align_self_center_undefined_max_height() {
         .new_leaf(taffy::style::Style {
             align_self: Some(taffy::style::AlignSelf::Center),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(40f32),
-                height: taffy::style::Dimension::Points(56f32),
+                width: taffy::style::Dimension::Length(40f32),
+                height: taffy::style::Dimension::Length(56f32),
             },
             ..Default::default()
         })
@@ -25,8 +25,8 @@ fn align_self_center_undefined_max_height() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(280f32), height: auto() },
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(52f32) },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(280f32), height: auto() },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(52f32) },
                 ..Default::default()
             },
             &[node0, node1],

@@ -6,13 +6,13 @@ fn align_items_center_with_child_margin() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(10f32),
-                height: taffy::style::Dimension::Points(10f32),
+                width: taffy::style::Dimension::Length(10f32),
+                height: taffy::style::Dimension::Length(10f32),
             },
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
-                top: taffy::style::LengthPercentageAuto::Points(10f32),
+                top: taffy::style::LengthPercentageAuto::Length(10f32),
                 bottom: zero(),
             },
             ..Default::default()
@@ -23,8 +23,8 @@ fn align_items_center_with_child_margin() {
             taffy::style::Style {
                 align_items: Some(taffy::style::AlignItems::Center),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

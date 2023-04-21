@@ -14,10 +14,10 @@ fn grid_percent_items_nested_moderate() {
                 bottom: taffy::style::LengthPercentageAuto::Percent(0.05f32),
             },
             padding: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Points(3f32),
-                right: taffy::style::LengthPercentage::Points(3f32),
-                top: taffy::style::LengthPercentage::Points(3f32),
-                bottom: taffy::style::LengthPercentage::Points(3f32),
+                left: taffy::style::LengthPercentage::Length(3f32),
+                right: taffy::style::LengthPercentage::Length(3f32),
+                top: taffy::style::LengthPercentage::Length(3f32),
+                bottom: taffy::style::LengthPercentage::Length(3f32),
             },
             ..Default::default()
         })
@@ -28,10 +28,10 @@ fn grid_percent_items_nested_moderate() {
                 display: taffy::style::Display::Grid,
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.5f32), height: auto() },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Points(5f32),
-                    right: taffy::style::LengthPercentageAuto::Points(5f32),
-                    top: taffy::style::LengthPercentageAuto::Points(5f32),
-                    bottom: taffy::style::LengthPercentageAuto::Points(5f32),
+                    left: taffy::style::LengthPercentageAuto::Length(5f32),
+                    right: taffy::style::LengthPercentageAuto::Length(5f32),
+                    top: taffy::style::LengthPercentageAuto::Length(5f32),
+                    bottom: taffy::style::LengthPercentageAuto::Length(5f32),
                 },
                 padding: taffy::geometry::Rect {
                     left: taffy::style::LengthPercentage::Percent(0.03f32),
@@ -48,12 +48,12 @@ fn grid_percent_items_nested_moderate() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Points(200f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Points(3f32),
-                    right: taffy::style::LengthPercentage::Points(3f32),
-                    top: taffy::style::LengthPercentage::Points(3f32),
-                    bottom: taffy::style::LengthPercentage::Points(3f32),
+                    left: taffy::style::LengthPercentage::Length(3f32),
+                    right: taffy::style::LengthPercentage::Length(3f32),
+                    top: taffy::style::LengthPercentage::Length(3f32),
+                    bottom: taffy::style::LengthPercentage::Length(3f32),
                 },
                 ..Default::default()
             },

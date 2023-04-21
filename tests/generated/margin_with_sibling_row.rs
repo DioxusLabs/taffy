@@ -8,7 +8,7 @@ fn margin_with_sibling_row() {
             flex_grow: 1f32,
             margin: taffy::geometry::Rect {
                 left: zero(),
-                right: taffy::style::LengthPercentageAuto::Points(10f32),
+                right: taffy::style::LengthPercentageAuto::Length(10f32),
                 top: zero(),
                 bottom: zero(),
             },
@@ -20,8 +20,8 @@ fn margin_with_sibling_row() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(100f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(100f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

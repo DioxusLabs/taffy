@@ -8,8 +8,8 @@ fn grid_absolute_justify_self_sized_all() {
             position: taffy::style::Position::Absolute,
             justify_self: Some(taffy::style::JustifySelf::Start),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(20f32),
-                height: taffy::style::Dimension::Points(20f32),
+                width: taffy::style::Dimension::Length(20f32),
+                height: taffy::style::Dimension::Length(20f32),
             },
             ..Default::default()
         })
@@ -19,8 +19,8 @@ fn grid_absolute_justify_self_sized_all() {
             position: taffy::style::Position::Absolute,
             justify_self: Some(taffy::style::JustifySelf::Start),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(60f32),
-                height: taffy::style::Dimension::Points(60f32),
+                width: taffy::style::Dimension::Length(60f32),
+                height: taffy::style::Dimension::Length(60f32),
             },
             ..Default::default()
         })
@@ -30,8 +30,8 @@ fn grid_absolute_justify_self_sized_all() {
             position: taffy::style::Position::Absolute,
             justify_self: Some(taffy::style::JustifySelf::End),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(20f32),
-                height: taffy::style::Dimension::Points(20f32),
+                width: taffy::style::Dimension::Length(20f32),
+                height: taffy::style::Dimension::Length(20f32),
             },
             ..Default::default()
         })
@@ -41,8 +41,8 @@ fn grid_absolute_justify_self_sized_all() {
             position: taffy::style::Position::Absolute,
             justify_self: Some(taffy::style::JustifySelf::End),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(60f32),
-                height: taffy::style::Dimension::Points(60f32),
+                width: taffy::style::Dimension::Length(60f32),
+                height: taffy::style::Dimension::Length(60f32),
             },
             ..Default::default()
         })
@@ -52,8 +52,8 @@ fn grid_absolute_justify_self_sized_all() {
             position: taffy::style::Position::Absolute,
             justify_self: Some(taffy::style::JustifySelf::Center),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(20f32),
-                height: taffy::style::Dimension::Points(20f32),
+                width: taffy::style::Dimension::Length(20f32),
+                height: taffy::style::Dimension::Length(20f32),
             },
             ..Default::default()
         })
@@ -63,8 +63,8 @@ fn grid_absolute_justify_self_sized_all() {
             position: taffy::style::Position::Absolute,
             justify_self: Some(taffy::style::JustifySelf::Center),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(60f32),
-                height: taffy::style::Dimension::Points(60f32),
+                width: taffy::style::Dimension::Length(60f32),
+                height: taffy::style::Dimension::Length(60f32),
             },
             ..Default::default()
         })
@@ -74,8 +74,8 @@ fn grid_absolute_justify_self_sized_all() {
             position: taffy::style::Position::Absolute,
             justify_self: Some(taffy::style::JustifySelf::Stretch),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(20f32),
-                height: taffy::style::Dimension::Points(20f32),
+                width: taffy::style::Dimension::Length(20f32),
+                height: taffy::style::Dimension::Length(20f32),
             },
             ..Default::default()
         })
@@ -85,8 +85,8 @@ fn grid_absolute_justify_self_sized_all() {
             position: taffy::style::Position::Absolute,
             justify_self: Some(taffy::style::JustifySelf::Stretch),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(60f32),
-                height: taffy::style::Dimension::Points(60f32),
+                width: taffy::style::Dimension::Length(60f32),
+                height: taffy::style::Dimension::Length(60f32),
             },
             ..Default::default()
         })
@@ -95,11 +95,11 @@ fn grid_absolute_justify_self_sized_all() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                grid_template_rows: vec![points(40f32), points(40f32), points(40f32)],
-                grid_template_columns: vec![points(40f32), points(40f32), points(40f32)],
+                grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
+                grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(120f32),
-                    height: taffy::style::Dimension::Points(120f32),
+                    width: taffy::style::Dimension::Length(120f32),
+                    height: taffy::style::Dimension::Length(120f32),
                 },
                 ..Default::default()
             },

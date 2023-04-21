@@ -5,14 +5,14 @@ fn rounding_doesnt_leave_gaps() {
     // First create an instance of Taffy
     let mut taffy = Taffy::new();
 
-    let w_square = Size { width: points(100.3), height: points(100.3) };
+    let w_square = Size { width: length(100.3), height: length(100.3) };
     let child_a = taffy.new_leaf(Style { size: w_square, ..Default::default() }).unwrap();
     let child_b = taffy.new_leaf(Style { size: w_square, ..Default::default() }).unwrap();
 
     let root_node = taffy
         .new_with_children(
             Style {
-                size: Size { width: points(963.3333), height: points(1000.) },
+                size: Size { width: length(963.3333), height: length(1000.) },
                 justify_content: Some(JustifyContent::Center),
                 ..Default::default()
             },

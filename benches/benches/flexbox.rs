@@ -97,7 +97,7 @@ fn build_yoga_deep_hierarchy(node_count: u32, branching_factor: u32) -> (yg::Yog
 /// A deep tree that matches the shape and styling that yoga use on their benchmarks
 fn build_taffy_huge_nested_hierarchy(node_count: u32, branching_factor: u32) -> (Taffy, NodeId) {
     let style = Style {
-        size: Size { width: Dimension::Points(10.0), height: Dimension::Points(10.0) },
+        size: Size { width: Dimension::Length(10.0), height: Dimension::Length(10.0) },
         flex_grow: 1.0,
         ..Default::default()
     };
@@ -115,7 +115,7 @@ fn build_taffy_huge_nested_hierarchy(node_count: u32, branching_factor: u32) -> 
 /// A deep tree that matches the shape and styling that yoga use on their benchmarks
 fn build_yoga_huge_nested_hierarchy(node_count: u32, branching_factor: u32) -> (yg::YogaTree, yg::NodeId) {
     let style = Style {
-        size: Size { width: Dimension::Points(10.0), height: Dimension::Points(10.0) },
+        size: Size { width: Dimension::Length(10.0), height: Dimension::Length(10.0) },
         flex_grow: 1.0,
         ..Default::default()
     };

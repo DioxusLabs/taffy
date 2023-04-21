@@ -7,8 +7,8 @@ fn absolute_child_with_cross_margin() {
         .new_leaf(taffy::style::Style {
             align_content: Some(taffy::style::AlignContent::Stretch),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(28f32),
-                height: taffy::style::Dimension::Points(27f32),
+                width: taffy::style::Dimension::Length(28f32),
+                height: taffy::style::Dimension::Length(27f32),
             },
             ..Default::default()
         })
@@ -22,12 +22,12 @@ fn absolute_child_with_cross_margin() {
                 flex_shrink: 1f32,
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Percent(1f32),
-                    height: taffy::style::Dimension::Points(15f32),
+                    height: taffy::style::Dimension::Length(15f32),
                 },
                 margin: taffy::geometry::Rect {
                     left: zero(),
                     right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Points(4f32),
+                    top: taffy::style::LengthPercentageAuto::Length(4f32),
                     bottom: zero(),
                 },
                 ..Default::default()
@@ -48,8 +48,8 @@ fn absolute_child_with_cross_margin() {
         .new_leaf(taffy::style::Style {
             align_content: Some(taffy::style::AlignContent::Stretch),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(25f32),
-                height: taffy::style::Dimension::Points(27f32),
+                width: taffy::style::Dimension::Length(25f32),
+                height: taffy::style::Dimension::Length(27f32),
             },
             ..Default::default()
         })
@@ -59,12 +59,12 @@ fn absolute_child_with_cross_margin() {
             taffy::style::Style {
                 justify_content: Some(taffy::style::JustifyContent::SpaceBetween),
                 min_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(311f32),
-                    height: taffy::style::Dimension::Points(0f32),
+                    width: taffy::style::Dimension::Length(311f32),
+                    height: taffy::style::Dimension::Length(0f32),
                 },
                 max_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(311f32),
-                    height: taffy::style::Dimension::Points(36893500000000000000f32),
+                    width: taffy::style::Dimension::Length(311f32),
+                    height: taffy::style::Dimension::Length(36893500000000000000f32),
                 },
                 ..Default::default()
             },

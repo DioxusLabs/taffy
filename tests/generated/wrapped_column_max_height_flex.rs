@@ -9,10 +9,10 @@ fn wrapped_column_max_height_flex() {
             flex_shrink: 1f32,
             flex_basis: taffy::style::Dimension::Percent(0f32),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(100f32),
-                height: taffy::style::Dimension::Points(500f32),
+                width: taffy::style::Dimension::Length(100f32),
+                height: taffy::style::Dimension::Length(500f32),
             },
-            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(200f32) },
+            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(200f32) },
             ..Default::default()
         })
         .unwrap();
@@ -22,14 +22,14 @@ fn wrapped_column_max_height_flex() {
             flex_shrink: 1f32,
             flex_basis: taffy::style::Dimension::Percent(0f32),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(200f32),
-                height: taffy::style::Dimension::Points(200f32),
+                width: taffy::style::Dimension::Length(200f32),
+                height: taffy::style::Dimension::Length(200f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Points(20f32),
-                right: taffy::style::LengthPercentageAuto::Points(20f32),
-                top: taffy::style::LengthPercentageAuto::Points(20f32),
-                bottom: taffy::style::LengthPercentageAuto::Points(20f32),
+                left: taffy::style::LengthPercentageAuto::Length(20f32),
+                right: taffy::style::LengthPercentageAuto::Length(20f32),
+                top: taffy::style::LengthPercentageAuto::Length(20f32),
+                bottom: taffy::style::LengthPercentageAuto::Length(20f32),
             },
             ..Default::default()
         })
@@ -37,8 +37,8 @@ fn wrapped_column_max_height_flex() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(100f32),
-                height: taffy::style::Dimension::Points(100f32),
+                width: taffy::style::Dimension::Length(100f32),
+                height: taffy::style::Dimension::Length(100f32),
             },
             ..Default::default()
         })
@@ -52,8 +52,8 @@ fn wrapped_column_max_height_flex() {
                 align_content: Some(taffy::style::AlignContent::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(700f32),
-                    height: taffy::style::Dimension::Points(500f32),
+                    width: taffy::style::Dimension::Length(700f32),
+                    height: taffy::style::Dimension::Length(500f32),
                 },
                 ..Default::default()
             },

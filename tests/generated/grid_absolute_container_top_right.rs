@@ -8,8 +8,8 @@ fn grid_absolute_container_top_right() {
             position: taffy::style::Position::Absolute,
             inset: taffy::geometry::Rect {
                 left: auto(),
-                right: taffy::style::LengthPercentageAuto::Points(0f32),
-                top: taffy::style::LengthPercentageAuto::Points(0f32),
+                right: taffy::style::LengthPercentageAuto::Length(0f32),
+                top: taffy::style::LengthPercentageAuto::Length(0f32),
                 bottom: auto(),
             },
             ..Default::default()
@@ -27,13 +27,13 @@ fn grid_absolute_container_top_right() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                grid_template_rows: vec![points(40f32), points(40f32), points(40f32)],
-                grid_template_columns: vec![points(40f32), points(40f32), points(40f32)],
+                grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
+                grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Points(40f32),
-                    right: taffy::style::LengthPercentage::Points(20f32),
-                    top: taffy::style::LengthPercentage::Points(10f32),
-                    bottom: taffy::style::LengthPercentage::Points(30f32),
+                    left: taffy::style::LengthPercentage::Length(40f32),
+                    right: taffy::style::LengthPercentage::Length(20f32),
+                    top: taffy::style::LengthPercentage::Length(10f32),
+                    bottom: taffy::style::LengthPercentage::Length(30f32),
                 },
                 ..Default::default()
             },

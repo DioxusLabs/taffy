@@ -35,13 +35,13 @@ fn grid_span_6_all_non_flex_indefinite_hidden() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                grid_template_rows: vec![points(40f32), points(40f32)],
+                grid_template_rows: vec![length(40f32), length(40f32)],
                 grid_template_columns: vec![
                     min_content(),
                     max_content(),
-                    fit_content(points(20f32)),
+                    fit_content(length(20f32)),
                     auto(),
-                    points(10f32),
+                    length(10f32),
                     percent(0.2f32),
                 ],
                 ..Default::default()

@@ -8,8 +8,8 @@ fn absolute_layout_align_items_center_on_child_only() {
             position: taffy::style::Position::Absolute,
             align_self: Some(taffy::style::AlignSelf::Center),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Points(60f32),
-                height: taffy::style::Dimension::Points(40f32),
+                width: taffy::style::Dimension::Length(60f32),
+                height: taffy::style::Dimension::Length(40f32),
             },
             ..Default::default()
         })
@@ -18,8 +18,8 @@ fn absolute_layout_align_items_center_on_child_only() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Points(110f32),
-                    height: taffy::style::Dimension::Points(100f32),
+                    width: taffy::style::Dimension::Length(110f32),
+                    height: taffy::style::Dimension::Length(100f32),
                 },
                 ..Default::default()
             },

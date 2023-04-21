@@ -6,12 +6,12 @@ fn grid_absolute_top_overrides_bottom() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Points(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
             inset: taffy::geometry::Rect {
                 left: auto(),
                 right: auto(),
-                top: taffy::style::LengthPercentageAuto::Points(2f32),
-                bottom: taffy::style::LengthPercentageAuto::Points(5f32),
+                top: taffy::style::LengthPercentageAuto::Length(2f32),
+                bottom: taffy::style::LengthPercentageAuto::Length(5f32),
             },
             ..Default::default()
         })
@@ -28,13 +28,13 @@ fn grid_absolute_top_overrides_bottom() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                grid_template_rows: vec![points(40f32), points(40f32), points(40f32)],
-                grid_template_columns: vec![points(40f32), points(40f32), points(40f32)],
+                grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
+                grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Points(40f32),
-                    right: taffy::style::LengthPercentage::Points(20f32),
-                    top: taffy::style::LengthPercentage::Points(10f32),
-                    bottom: taffy::style::LengthPercentage::Points(30f32),
+                    left: taffy::style::LengthPercentage::Length(40f32),
+                    right: taffy::style::LengthPercentage::Length(20f32),
+                    top: taffy::style::LengthPercentage::Length(10f32),
+                    bottom: taffy::style::LengthPercentage::Length(30f32),
                 },
                 ..Default::default()
             },
