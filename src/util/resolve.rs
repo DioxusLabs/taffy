@@ -135,35 +135,53 @@ impl<Out: TaffyZero, T: ResolveOrZero<Option<f32>, Out>> ResolveOrZero<Option<f3
 
 #[cfg(test)]
 mod tests {
-    mod maybe_resolve_dimension {
+    use super::{MaybeResolve, ResolveOrZero};
+    use crate::style_helpers::TaffyZero;
+    use core::fmt::Debug;
 
+    // MaybeResolve test runner
+    fn mr_case<Lhs, Rhs, Out>(input: Lhs, context: Rhs, expected: Out)
+    where
+        Lhs: MaybeResolve<Rhs, Out>,
+        Out: PartialEq + Debug,
+    {
+        assert_eq!(input.maybe_resolve(context), expected);
+    }
+
+    // ResolveOrZero test runner
+    fn roz_case<Lhs, Rhs, Out>(input: Lhs, context: Rhs, expected: Out)
+    where
+        Lhs: ResolveOrZero<Rhs, Out>,
+        Out: PartialEq + Debug + TaffyZero,
+    {
+        assert_eq!(input.resolve_or_zero(context), expected);
+    }
+
+    mod maybe_resolve_dimension {
+        use super::mr_case;
         use crate::style::Dimension;
-        use crate::util::MaybeResolve;
-        use rstest::rstest;
 
         /// `Dimension::Auto` should always return `None`
         ///
         /// The parent / context should not affect the outcome.
-        #[rstest]
-        #[case(Dimension::Auto, None, None)]
-        #[case(Dimension::Auto, Some(5.0), None)]
-        #[case(Dimension::Auto, Some(-5.0), None)]
-        #[case(Dimension::Auto, Some(0.), None)]
-        fn resolve_auto(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: Option<f32>) {
-            assert_eq!(input.maybe_resolve(context), expected);
+        #[test]
+        fn resolve_auto() {
+            mr_case(Dimension::Auto, None, None);
+            mr_case(Dimension::Auto, Some(5.0), None);
+            mr_case(Dimension::Auto, Some(-5.0), None);
+            mr_case(Dimension::Auto, Some(0.), None);
         }
 
         /// `Dimension::Length` should always return `Some(f32)`
         /// where the f32 value is the inner absolute length.
         ///
         /// The parent / context should not affect the outcome.
-        #[rstest]
-        #[case(Dimension::Length(1.0), None, Some(1.0))]
-        #[case(Dimension::Length(1.0), Some(5.0), Some(1.0))]
-        #[case(Dimension::Length(1.0), Some(-5.0), Some(1.0))]
-        #[case(Dimension::Length(1.0), Some(0.), Some(1.0))]
-        fn resolve_length(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: Option<f32>) {
-            assert_eq!(input.maybe_resolve(context), expected);
+        #[test]
+        fn resolve_length() {
+            mr_case(Dimension::Length(1.0), None, Some(1.0));
+            mr_case(Dimension::Length(1.0), Some(5.0), Some(1.0));
+            mr_case(Dimension::Length(1.0), Some(-5.0), Some(1.0));
+            mr_case(Dimension::Length(1.0), Some(0.), Some(1.0));
         }
 
         /// `Dimension::Percent` should return `None` if context is  `None`.
@@ -171,53 +189,41 @@ mod tests {
         /// where the f32 value is the inner value of the percent * context value.
         ///
         /// The parent / context __should__ affect the outcome.
-        #[rstest]
-        #[case(Dimension::Percent(1.0), None, None)]
-        #[case(Dimension::Percent(1.0), Some(5.0), Some(5.0))]
-        #[case(Dimension::Percent(1.0), Some(-5.0), Some(-5.0))]
-        #[case(Dimension::Percent(1.0), Some(50.0), Some(50.0))]
-        fn resolve_percent(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: Option<f32>) {
-            assert_eq!(input.maybe_resolve(context), expected);
+        #[test]
+        fn resolve_percent() {
+            mr_case(Dimension::Percent(1.0), None, None);
+            mr_case(Dimension::Percent(1.0), Some(5.0), Some(5.0));
+            mr_case(Dimension::Percent(1.0), Some(-5.0), Some(-5.0));
+            mr_case(Dimension::Percent(1.0), Some(50.0), Some(50.0));
         }
     }
 
     mod maybe_resolve_size_dimension {
-        use super::super::MaybeResolve;
+        use super::mr_case;
         use crate::geometry::Size;
         use crate::style::Dimension;
-        use rstest::rstest;
 
         /// Size<Dimension::Auto> should always return Size<None>
         ///
         /// The parent / context should not affect the outcome.
-        #[rstest]
-        #[case(Size::auto(), Size::NONE, Size::NONE)]
-        #[case(Size::auto(), Size::new(5.0, 5.0), Size::NONE)]
-        #[case(Size::auto(), Size::new(-5.0, -5.0), Size::NONE)]
-        #[case(Size::auto(), Size::new(0.0, 0.0), Size::NONE)]
-        fn maybe_resolve_auto(
-            #[case] input: Size<Dimension>,
-            #[case] context: Size<Option<f32>>,
-            #[case] expected: Size<Option<f32>>,
-        ) {
-            assert_eq!(input.maybe_resolve(context), expected);
+        #[test]
+        fn maybe_resolve_auto() {
+            mr_case(Size::<Dimension>::auto(), Size::NONE, Size::NONE);
+            mr_case(Size::<Dimension>::auto(), Size::new(5.0, 5.0), Size::NONE);
+            mr_case(Size::<Dimension>::auto(), Size::new(-5.0, -5.0), Size::NONE);
+            mr_case(Size::<Dimension>::auto(), Size::new(0.0, 0.0), Size::NONE);
         }
 
         /// Size<Dimension::Length> should always return a Size<Some(f32)>
         /// where the f32 values are the absolute length.
         ///
         /// The parent / context should not affect the outcome.
-        #[rstest]
-        #[case(Size::from_lengths(5.0, 5.0), Size::NONE, Size::new(5.0, 5.0))]
-        #[case(Size::from_lengths(5.0, 5.0), Size::new(5.0, 5.0), Size::new(5.0, 5.0))]
-        #[case(Size::from_lengths(5.0, 5.0), Size::new(-5.0, -5.0), Size::new(5.0, 5.0))]
-        #[case(Size::from_lengths(5.0, 5.0), Size::new(0.0, 0.0), Size::new(5.0, 5.0))]
-        fn maybe_resolve_length(
-            #[case] input: Size<Dimension>,
-            #[case] context: Size<Option<f32>>,
-            #[case] expected: Size<Option<f32>>,
-        ) {
-            assert_eq!(input.maybe_resolve(context), expected);
+        #[test]
+        fn maybe_resolve_length() {
+            mr_case(Size::from_lengths(5.0, 5.0), Size::NONE, Size::new(5.0, 5.0));
+            mr_case(Size::from_lengths(5.0, 5.0), Size::new(5.0, 5.0), Size::new(5.0, 5.0));
+            mr_case(Size::from_lengths(5.0, 5.0), Size::new(-5.0, -5.0), Size::new(5.0, 5.0));
+            mr_case(Size::from_lengths(5.0, 5.0), Size::new(0.0, 0.0), Size::new(5.0, 5.0));
         }
 
         /// `Size<Dimension::Percent>` should return `Size<None>` if context is `Size<None>`.
@@ -225,140 +231,103 @@ mod tests {
         /// where the f32 value is the inner value of the percent * context value.
         ///
         /// The context __should__ affect the outcome.
-        #[rstest]
-        #[case(Size::from_percent(5.0, 5.0), Size::NONE, Size::NONE)]
-        #[case(Size::from_percent(5.0, 5.0), Size::new(5.0, 5.0), Size::new(25.0, 25.0))]
-        #[case(Size::from_percent(5.0, 5.0), Size::new(-5.0, -5.0), Size::new(-25.0, -25.0))]
-        #[case(Size::from_percent(5.0, 5.0), Size::new(0.0, 0.0), Size::new(0.0, 0.0))]
-        fn maybe_resolve_percent(
-            #[case] input: Size<Dimension>,
-            #[case] context: Size<Option<f32>>,
-            #[case] expected: Size<Option<f32>>,
-        ) {
-            assert_eq!(input.maybe_resolve(context), expected);
+        #[test]
+        fn maybe_resolve_percent() {
+            mr_case(Size::from_percent(5.0, 5.0), Size::NONE, Size::NONE);
+            mr_case(Size::from_percent(5.0, 5.0), Size::new(5.0, 5.0), Size::new(25.0, 25.0));
+            mr_case(Size::from_percent(5.0, 5.0), Size::new(-5.0, -5.0), Size::new(-25.0, -25.0));
+            mr_case(Size::from_percent(5.0, 5.0), Size::new(0.0, 0.0), Size::new(0.0, 0.0));
         }
     }
 
     mod resolve_or_zero_dimension_to_option_f32 {
+        use super::roz_case;
         use crate::style::Dimension;
-        use crate::util::ResolveOrZero;
-        use rstest::rstest;
 
-        #[rstest]
-        #[case(Dimension::Auto, None, 0.0)]
-        #[case(Dimension::Auto, Some(5.0), 0.0)]
-        #[case(Dimension::Auto, Some(-5.0), 0.0)]
-        #[case(Dimension::Auto, Some(0.0), 0.0)]
-        fn resolve_or_zero_auto(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: f32) {
-            assert_eq!(input.resolve_or_zero(context), expected);
+        #[test]
+        fn resolve_or_zero_auto() {
+            roz_case(Dimension::Auto, None, 0.0);
+            roz_case(Dimension::Auto, Some(5.0), 0.0);
+            roz_case(Dimension::Auto, Some(-5.0), 0.0);
+            roz_case(Dimension::Auto, Some(0.0), 0.0);
         }
-        #[rstest]
-        #[case(Dimension::Length(5.0), None, 5.0)]
-        #[case(Dimension::Length(5.0), Some(5.0), 5.0)]
-        #[case(Dimension::Length(5.0), Some(-5.0), 5.0)]
-        #[case(Dimension::Length(5.0), Some(0.0), 5.0)]
-        fn resolve_or_zero_length(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: f32) {
-            assert_eq!(input.resolve_or_zero(context), expected);
+        #[test]
+        fn resolve_or_zero_length() {
+            roz_case(Dimension::Length(5.0), None, 5.0);
+            roz_case(Dimension::Length(5.0), Some(5.0), 5.0);
+            roz_case(Dimension::Length(5.0), Some(-5.0), 5.0);
+            roz_case(Dimension::Length(5.0), Some(0.0), 5.0);
         }
-        #[rstest]
-        #[case(Dimension::Percent(5.0), None, 0.0)]
-        #[case(Dimension::Percent(5.0), Some(5.0), 25.0)]
-        #[case(Dimension::Percent(5.0), Some(-5.0), -25.0)]
-        #[case(Dimension::Percent(5.0), Some(0.0), 0.0)]
-        fn resolve_or_zero_percent(#[case] input: Dimension, #[case] context: Option<f32>, #[case] expected: f32) {
-            assert_eq!(input.resolve_or_zero(context), expected);
+        #[test]
+        fn resolve_or_zero_percent() {
+            roz_case(Dimension::Percent(5.0), None, 0.0);
+            roz_case(Dimension::Percent(5.0), Some(5.0), 25.0);
+            roz_case(Dimension::Percent(5.0), Some(-5.0), -25.0);
+            roz_case(Dimension::Percent(5.0), Some(0.0), 0.0);
         }
     }
 
     mod resolve_or_zero_rect_dimension_to_rect {
+        use super::roz_case;
         use crate::geometry::{Rect, Size};
         use crate::style::Dimension;
-        use crate::util::ResolveOrZero;
-        use rstest::rstest;
 
-        #[rstest]
-        #[case(Rect::auto(), Size::NONE, Rect::zero())]
-        #[case(Rect::auto(), Size::new(5.0, 5.0), Rect::zero())]
-        #[case(Rect::auto(), Size::new(-5.0, -5.0), Rect::zero())]
-        #[case(Rect::auto(), Size::new(0.0, 0.0), Rect::zero())]
-        fn resolve_or_zero_auto(
-            #[case] input: Rect<Dimension>,
-            #[case] context: Size<Option<f32>>,
-            #[case] expected: Rect<f32>,
-        ) {
-            assert_eq!(input.resolve_or_zero(context), expected);
+        #[test]
+        fn resolve_or_zero_auto() {
+            roz_case(Rect::<Dimension>::auto(), Size::NONE, Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), Size::new(5.0, 5.0), Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), Size::new(-5.0, -5.0), Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), Size::new(0.0, 0.0), Rect::zero());
         }
 
-        #[rstest]
-        #[case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Size::NONE, Rect::new(5.0, 5.0, 5.0, 5.0))]
-        #[case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Size::new(5.0, 5.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
-        #[case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Size::new(-5.0, -5.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
-        #[case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Size::new(0.0, 0.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
-        fn resolve_or_zero_length(
-            #[case] input: Rect<Dimension>,
-            #[case] context: Size<Option<f32>>,
-            #[case] expected: Rect<f32>,
-        ) {
-            assert_eq!(input.resolve_or_zero(context), expected);
+        #[test]
+        fn resolve_or_zero_length() {
+            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Size::NONE, Rect::new(5.0, 5.0, 5.0, 5.0));
+            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Size::new(5.0, 5.0), Rect::new(5.0, 5.0, 5.0, 5.0));
+            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Size::new(-5.0, -5.0), Rect::new(5.0, 5.0, 5.0, 5.0));
+            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Size::new(0.0, 0.0), Rect::new(5.0, 5.0, 5.0, 5.0));
         }
 
-        #[rstest]
-        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::NONE, Rect::zero())]
-        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::new(5.0, 5.0), Rect::new(25.0, 25.0, 25.0, 25.0))]
-        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::new(-5.0, -5.0), Rect::new(-25.0, -25.0, -25.0, -25.0))]
-        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::new(0.0, 0.0), Rect::zero())]
-        fn resolve_or_zero_percent(
-            #[case] input: Rect<Dimension>,
-            #[case] context: Size<Option<f32>>,
-            #[case] expected: Rect<f32>,
-        ) {
-            assert_eq!(input.resolve_or_zero(context), expected);
+        #[test]
+        fn resolve_or_zero_percent() {
+            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::NONE, Rect::zero());
+            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::new(5.0, 5.0), Rect::new(25.0, 25.0, 25.0, 25.0));
+            roz_case(
+                Rect::from_percent(5.0, 5.0, 5.0, 5.0),
+                Size::new(-5.0, -5.0),
+                Rect::new(-25.0, -25.0, -25.0, -25.0),
+            );
+            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::new(0.0, 0.0), Rect::zero());
         }
     }
 
     mod resolve_or_zero_rect_dimension_to_rect_f32_via_option {
+        use super::roz_case;
         use crate::geometry::Rect;
         use crate::style::Dimension;
-        use crate::util::ResolveOrZero;
-        use rstest::rstest;
 
-        #[rstest]
-        #[case(Rect::auto(), None, Rect::zero())]
-        #[case(Rect::auto(), Some(5.0), Rect::zero())]
-        #[case(Rect::auto(), Some(-5.0), Rect::zero())]
-        #[case(Rect::auto(), Some(0.0), Rect::zero())]
-        fn resolve_or_zero_auto(
-            #[case] input: Rect<Dimension>,
-            #[case] context: Option<f32>,
-            #[case] expected: Rect<f32>,
-        ) {
-            assert_eq!(input.resolve_or_zero(context), expected);
+        #[test]
+        fn resolve_or_zero_auto() {
+            roz_case(Rect::<Dimension>::auto(), None, Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), Some(5.0), Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), Some(-5.0), Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), Some(0.0), Rect::zero());
         }
 
-        #[rstest]
-        #[case(Rect::from_length(5.0, 5.0, 5.0, 5.0), None, Rect::new(5.0, 5.0, 5.0, 5.0))]
-        #[case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Some(5.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
-        #[case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Some(-5.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
-        #[case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Some(0.0), Rect::new(5.0, 5.0, 5.0, 5.0))]
-        fn resolve_or_zero_length(
-            #[case] input: Rect<Dimension>,
-            #[case] context: Option<f32>,
-            #[case] expected: Rect<f32>,
-        ) {
-            assert_eq!(input.resolve_or_zero(context), expected);
+        #[test]
+        fn resolve_or_zero_length() {
+            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), None, Rect::new(5.0, 5.0, 5.0, 5.0));
+            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Some(5.0), Rect::new(5.0, 5.0, 5.0, 5.0));
+            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Some(-5.0), Rect::new(5.0, 5.0, 5.0, 5.0));
+            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Some(0.0), Rect::new(5.0, 5.0, 5.0, 5.0));
         }
 
-        #[rstest]
-        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), None, Rect::zero())]
-        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(5.0), Rect::new(25.0, 25.0, 25.0, 25.0))]
-        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(-5.0), Rect::new(-25.0, -25.0, -25.0, -25.0))]
-        #[case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(0.0), Rect::zero())]
-        fn resolve_or_zero_percent(
-            #[case] input: Rect<Dimension>,
-            #[case] context: Option<f32>,
-            #[case] expected: Rect<f32>,
-        ) {
-            assert_eq!(input.resolve_or_zero(context), expected);
+        #[test]
+        fn resolve_or_zero_percent() {
+            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), None, Rect::zero());
+            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(5.0), Rect::new(25.0, 25.0, 25.0, 25.0));
+            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(-5.0), Rect::new(-25.0, -25.0, -25.0, -25.0));
+            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(0.0), Rect::zero());
         }
     }
 }
