@@ -144,8 +144,6 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo xbench --no-run
         name: Build benchmarks
-      - run: cargo xbench --no-run --features yoga
-        name: Build benchmarks (w/yoga)
 
   benchmarks-with-yoga:
     name: Build Benchmarks (w/ yoga)
