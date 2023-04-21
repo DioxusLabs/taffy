@@ -139,7 +139,8 @@ mod tests {
     use crate::style_helpers::TaffyZero;
     use core::fmt::Debug;
 
-    fn maybe_resolve_case<Lhs, Rhs, Out>(input: Lhs, context: Rhs, expected: Out)
+    // MaybeResolve test runner
+    fn mr_case<Lhs, Rhs, Out>(input: Lhs, context: Rhs, expected: Out)
     where
         Lhs: MaybeResolve<Rhs, Out>,
         Out: PartialEq + Debug,
@@ -147,7 +148,8 @@ mod tests {
         assert_eq!(input.maybe_resolve(context), expected);
     }
 
-    fn resolve_or_zero_case<Lhs, Rhs, Out>(input: Lhs, context: Rhs, expected: Out)
+    // ResolveOrZero test runner
+    fn roz_case<Lhs, Rhs, Out>(input: Lhs, context: Rhs, expected: Out)
     where
         Lhs: ResolveOrZero<Rhs, Out>,
         Out: PartialEq + Debug + TaffyZero,
@@ -156,7 +158,7 @@ mod tests {
     }
 
     mod maybe_resolve_dimension {
-        use super::maybe_resolve_case;
+        use super::mr_case;
         use crate::style::Dimension;
 
         /// `Dimension::Auto` should always return `None`
@@ -164,10 +166,10 @@ mod tests {
         /// The parent / context should not affect the outcome.
         #[test]
         fn resolve_auto() {
-            maybe_resolve_case(Dimension::Auto, None, None);
-            maybe_resolve_case(Dimension::Auto, Some(5.0), None);
-            maybe_resolve_case(Dimension::Auto, Some(-5.0), None);
-            maybe_resolve_case(Dimension::Auto, Some(0.), None);
+            mr_case(Dimension::Auto, None, None);
+            mr_case(Dimension::Auto, Some(5.0), None);
+            mr_case(Dimension::Auto, Some(-5.0), None);
+            mr_case(Dimension::Auto, Some(0.), None);
         }
 
         /// `Dimension::Length` should always return `Some(f32)`
@@ -176,10 +178,10 @@ mod tests {
         /// The parent / context should not affect the outcome.
         #[test]
         fn resolve_length() {
-            maybe_resolve_case(Dimension::Length(1.0), None, Some(1.0));
-            maybe_resolve_case(Dimension::Length(1.0), Some(5.0), Some(1.0));
-            maybe_resolve_case(Dimension::Length(1.0), Some(-5.0), Some(1.0));
-            maybe_resolve_case(Dimension::Length(1.0), Some(0.), Some(1.0));
+            mr_case(Dimension::Length(1.0), None, Some(1.0));
+            mr_case(Dimension::Length(1.0), Some(5.0), Some(1.0));
+            mr_case(Dimension::Length(1.0), Some(-5.0), Some(1.0));
+            mr_case(Dimension::Length(1.0), Some(0.), Some(1.0));
         }
 
         /// `Dimension::Percent` should return `None` if context is  `None`.
@@ -189,15 +191,15 @@ mod tests {
         /// The parent / context __should__ affect the outcome.
         #[test]
         fn resolve_percent() {
-            maybe_resolve_case(Dimension::Percent(1.0), None, None);
-            maybe_resolve_case(Dimension::Percent(1.0), Some(5.0), Some(5.0));
-            maybe_resolve_case(Dimension::Percent(1.0), Some(-5.0), Some(-5.0));
-            maybe_resolve_case(Dimension::Percent(1.0), Some(50.0), Some(50.0));
+            mr_case(Dimension::Percent(1.0), None, None);
+            mr_case(Dimension::Percent(1.0), Some(5.0), Some(5.0));
+            mr_case(Dimension::Percent(1.0), Some(-5.0), Some(-5.0));
+            mr_case(Dimension::Percent(1.0), Some(50.0), Some(50.0));
         }
     }
 
     mod maybe_resolve_size_dimension {
-        use super::maybe_resolve_case;
+        use super::mr_case;
         use crate::geometry::Size;
         use crate::style::Dimension;
 
@@ -206,10 +208,10 @@ mod tests {
         /// The parent / context should not affect the outcome.
         #[test]
         fn maybe_resolve_auto() {
-            maybe_resolve_case(Size::<Dimension>::auto(), Size::NONE, Size::NONE);
-            maybe_resolve_case(Size::<Dimension>::auto(), Size::new(5.0, 5.0), Size::NONE);
-            maybe_resolve_case(Size::<Dimension>::auto(), Size::new(-5.0, -5.0), Size::NONE);
-            maybe_resolve_case(Size::<Dimension>::auto(), Size::new(0.0, 0.0), Size::NONE);
+            mr_case(Size::<Dimension>::auto(), Size::NONE, Size::NONE);
+            mr_case(Size::<Dimension>::auto(), Size::new(5.0, 5.0), Size::NONE);
+            mr_case(Size::<Dimension>::auto(), Size::new(-5.0, -5.0), Size::NONE);
+            mr_case(Size::<Dimension>::auto(), Size::new(0.0, 0.0), Size::NONE);
         }
 
         /// Size<Dimension::Length> should always return a Size<Some(f32)>
@@ -218,10 +220,10 @@ mod tests {
         /// The parent / context should not affect the outcome.
         #[test]
         fn maybe_resolve_length() {
-            maybe_resolve_case(Size::from_lengths(5.0, 5.0), Size::NONE, Size::new(5.0, 5.0));
-            maybe_resolve_case(Size::from_lengths(5.0, 5.0), Size::new(5.0, 5.0), Size::new(5.0, 5.0));
-            maybe_resolve_case(Size::from_lengths(5.0, 5.0), Size::new(-5.0, -5.0), Size::new(5.0, 5.0));
-            maybe_resolve_case(Size::from_lengths(5.0, 5.0), Size::new(0.0, 0.0), Size::new(5.0, 5.0));
+            mr_case(Size::from_lengths(5.0, 5.0), Size::NONE, Size::new(5.0, 5.0));
+            mr_case(Size::from_lengths(5.0, 5.0), Size::new(5.0, 5.0), Size::new(5.0, 5.0));
+            mr_case(Size::from_lengths(5.0, 5.0), Size::new(-5.0, -5.0), Size::new(5.0, 5.0));
+            mr_case(Size::from_lengths(5.0, 5.0), Size::new(0.0, 0.0), Size::new(5.0, 5.0));
         }
 
         /// `Size<Dimension::Percent>` should return `Size<None>` if context is `Size<None>`.
@@ -231,121 +233,101 @@ mod tests {
         /// The context __should__ affect the outcome.
         #[test]
         fn maybe_resolve_percent() {
-            maybe_resolve_case(Size::from_percent(5.0, 5.0), Size::NONE, Size::NONE);
-            maybe_resolve_case(Size::from_percent(5.0, 5.0), Size::new(5.0, 5.0), Size::new(25.0, 25.0));
-            maybe_resolve_case(Size::from_percent(5.0, 5.0), Size::new(-5.0, -5.0), Size::new(-25.0, -25.0));
-            maybe_resolve_case(Size::from_percent(5.0, 5.0), Size::new(0.0, 0.0), Size::new(0.0, 0.0));
+            mr_case(Size::from_percent(5.0, 5.0), Size::NONE, Size::NONE);
+            mr_case(Size::from_percent(5.0, 5.0), Size::new(5.0, 5.0), Size::new(25.0, 25.0));
+            mr_case(Size::from_percent(5.0, 5.0), Size::new(-5.0, -5.0), Size::new(-25.0, -25.0));
+            mr_case(Size::from_percent(5.0, 5.0), Size::new(0.0, 0.0), Size::new(0.0, 0.0));
         }
     }
 
     mod resolve_or_zero_dimension_to_option_f32 {
-        use super::resolve_or_zero_case;
+        use super::roz_case;
         use crate::style::Dimension;
 
         #[test]
         fn resolve_or_zero_auto() {
-            resolve_or_zero_case(Dimension::Auto, None, 0.0);
-            resolve_or_zero_case(Dimension::Auto, Some(5.0), 0.0);
-            resolve_or_zero_case(Dimension::Auto, Some(-5.0), 0.0);
-            resolve_or_zero_case(Dimension::Auto, Some(0.0), 0.0);
+            roz_case(Dimension::Auto, None, 0.0);
+            roz_case(Dimension::Auto, Some(5.0), 0.0);
+            roz_case(Dimension::Auto, Some(-5.0), 0.0);
+            roz_case(Dimension::Auto, Some(0.0), 0.0);
         }
         #[test]
         fn resolve_or_zero_length() {
-            resolve_or_zero_case(Dimension::Length(5.0), None, 5.0);
-            resolve_or_zero_case(Dimension::Length(5.0), Some(5.0), 5.0);
-            resolve_or_zero_case(Dimension::Length(5.0), Some(-5.0), 5.0);
-            resolve_or_zero_case(Dimension::Length(5.0), Some(0.0), 5.0);
+            roz_case(Dimension::Length(5.0), None, 5.0);
+            roz_case(Dimension::Length(5.0), Some(5.0), 5.0);
+            roz_case(Dimension::Length(5.0), Some(-5.0), 5.0);
+            roz_case(Dimension::Length(5.0), Some(0.0), 5.0);
         }
         #[test]
         fn resolve_or_zero_percent() {
-            resolve_or_zero_case(Dimension::Percent(5.0), None, 0.0);
-            resolve_or_zero_case(Dimension::Percent(5.0), Some(5.0), 25.0);
-            resolve_or_zero_case(Dimension::Percent(5.0), Some(-5.0), -25.0);
-            resolve_or_zero_case(Dimension::Percent(5.0), Some(0.0), 0.0);
+            roz_case(Dimension::Percent(5.0), None, 0.0);
+            roz_case(Dimension::Percent(5.0), Some(5.0), 25.0);
+            roz_case(Dimension::Percent(5.0), Some(-5.0), -25.0);
+            roz_case(Dimension::Percent(5.0), Some(0.0), 0.0);
         }
     }
 
     mod resolve_or_zero_rect_dimension_to_rect {
-        use super::resolve_or_zero_case;
+        use super::roz_case;
         use crate::geometry::{Rect, Size};
         use crate::style::Dimension;
 
         #[test]
         fn resolve_or_zero_auto() {
-            resolve_or_zero_case(Rect::<Dimension>::auto(), Size::NONE, Rect::zero());
-            resolve_or_zero_case(Rect::<Dimension>::auto(), Size::new(5.0, 5.0), Rect::zero());
-            resolve_or_zero_case(Rect::<Dimension>::auto(), Size::new(-5.0, -5.0), Rect::zero());
-            resolve_or_zero_case(Rect::<Dimension>::auto(), Size::new(0.0, 0.0), Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), Size::NONE, Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), Size::new(5.0, 5.0), Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), Size::new(-5.0, -5.0), Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), Size::new(0.0, 0.0), Rect::zero());
         }
 
         #[test]
         fn resolve_or_zero_length() {
-            resolve_or_zero_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Size::NONE, Rect::new(5.0, 5.0, 5.0, 5.0));
-            resolve_or_zero_case(
-                Rect::from_length(5.0, 5.0, 5.0, 5.0),
-                Size::new(5.0, 5.0),
-                Rect::new(5.0, 5.0, 5.0, 5.0),
-            );
-            resolve_or_zero_case(
-                Rect::from_length(5.0, 5.0, 5.0, 5.0),
-                Size::new(-5.0, -5.0),
-                Rect::new(5.0, 5.0, 5.0, 5.0),
-            );
-            resolve_or_zero_case(
-                Rect::from_length(5.0, 5.0, 5.0, 5.0),
-                Size::new(0.0, 0.0),
-                Rect::new(5.0, 5.0, 5.0, 5.0),
-            );
+            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Size::NONE, Rect::new(5.0, 5.0, 5.0, 5.0));
+            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Size::new(5.0, 5.0), Rect::new(5.0, 5.0, 5.0, 5.0));
+            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Size::new(-5.0, -5.0), Rect::new(5.0, 5.0, 5.0, 5.0));
+            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Size::new(0.0, 0.0), Rect::new(5.0, 5.0, 5.0, 5.0));
         }
 
         #[test]
         fn resolve_or_zero_percent() {
-            resolve_or_zero_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::NONE, Rect::zero());
-            resolve_or_zero_case(
-                Rect::from_percent(5.0, 5.0, 5.0, 5.0),
-                Size::new(5.0, 5.0),
-                Rect::new(25.0, 25.0, 25.0, 25.0),
-            );
-            resolve_or_zero_case(
+            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::NONE, Rect::zero());
+            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::new(5.0, 5.0), Rect::new(25.0, 25.0, 25.0, 25.0));
+            roz_case(
                 Rect::from_percent(5.0, 5.0, 5.0, 5.0),
                 Size::new(-5.0, -5.0),
                 Rect::new(-25.0, -25.0, -25.0, -25.0),
             );
-            resolve_or_zero_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::new(0.0, 0.0), Rect::zero());
+            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Size::new(0.0, 0.0), Rect::zero());
         }
     }
 
     mod resolve_or_zero_rect_dimension_to_rect_f32_via_option {
-        use super::resolve_or_zero_case;
+        use super::roz_case;
         use crate::geometry::Rect;
         use crate::style::Dimension;
 
         #[test]
         fn resolve_or_zero_auto() {
-            resolve_or_zero_case(Rect::<Dimension>::auto(), None, Rect::zero());
-            resolve_or_zero_case(Rect::<Dimension>::auto(), Some(5.0), Rect::zero());
-            resolve_or_zero_case(Rect::<Dimension>::auto(), Some(-5.0), Rect::zero());
-            resolve_or_zero_case(Rect::<Dimension>::auto(), Some(0.0), Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), None, Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), Some(5.0), Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), Some(-5.0), Rect::zero());
+            roz_case(Rect::<Dimension>::auto(), Some(0.0), Rect::zero());
         }
 
         #[test]
         fn resolve_or_zero_length() {
-            resolve_or_zero_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), None, Rect::new(5.0, 5.0, 5.0, 5.0));
-            resolve_or_zero_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Some(5.0), Rect::new(5.0, 5.0, 5.0, 5.0));
-            resolve_or_zero_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Some(-5.0), Rect::new(5.0, 5.0, 5.0, 5.0));
-            resolve_or_zero_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Some(0.0), Rect::new(5.0, 5.0, 5.0, 5.0));
+            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), None, Rect::new(5.0, 5.0, 5.0, 5.0));
+            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Some(5.0), Rect::new(5.0, 5.0, 5.0, 5.0));
+            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Some(-5.0), Rect::new(5.0, 5.0, 5.0, 5.0));
+            roz_case(Rect::from_length(5.0, 5.0, 5.0, 5.0), Some(0.0), Rect::new(5.0, 5.0, 5.0, 5.0));
         }
 
         #[test]
         fn resolve_or_zero_percent() {
-            resolve_or_zero_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), None, Rect::zero());
-            resolve_or_zero_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(5.0), Rect::new(25.0, 25.0, 25.0, 25.0));
-            resolve_or_zero_case(
-                Rect::from_percent(5.0, 5.0, 5.0, 5.0),
-                Some(-5.0),
-                Rect::new(-25.0, -25.0, -25.0, -25.0),
-            );
-            resolve_or_zero_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(0.0), Rect::zero());
+            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), None, Rect::zero());
+            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(5.0), Rect::new(25.0, 25.0, 25.0, 25.0));
+            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(-5.0), Rect::new(-25.0, -25.0, -25.0, -25.0));
+            roz_case(Rect::from_percent(5.0, 5.0, 5.0, 5.0), Some(0.0), Rect::zero());
         }
     }
 }
