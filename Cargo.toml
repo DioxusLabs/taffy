@@ -32,7 +32,6 @@ profile = []
 taffy_tree = ["dep:slotmap"]
 
 [dev-dependencies]
-rstest = "0.17.0"
 serde_json = "1.0.93"
 
 # Enable default features for tests and examples
