@@ -141,12 +141,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: stable
-          components: clippy
+      - uses: dtolnay/rust-toolchain@stable
       - run: cargo xbench --no-run
         name: Build benchmarks
+      - run: cargo xbench --no-run --features yoga
+        name: Build benchmarks (w/yoga)
+
+  benchmarks-with-yoga:
+    name: Build Benchmarks (w/ yoga)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@stable
       - run: cargo xbench --no-run --features yoga
         name: Build benchmarks (w/yoga)
 
