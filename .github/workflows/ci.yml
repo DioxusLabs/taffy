@@ -19,7 +19,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Leafwing-Studios/cargo-cache@v1
       - run: cargo build --no-default-features
       - run: cargo test --no-default-features --features taffy_tree
 
@@ -100,7 +99,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@stable
-      - uses: Leafwing-Studios/cargo-cache@v1
       - run: cargo build --no-default-features --features std
       - run: cargo build --no-default-features --features std,taffy_tree
       - run: cargo test --no-default-features --features std,taffy_tree
@@ -114,7 +112,6 @@ jobs:
         with:
           toolchain: stable
           components: rustfmt
-      - uses: Leafwing-Studios/cargo-cache@v1
       - run: cargo fmt --all -- --check
 
   clippy:
@@ -126,7 +123,6 @@ jobs:
         with:
           toolchain: nightly
           components: clippy
-      - uses: Leafwing-Studios/cargo-cache@v1
       - run: cargo +nightly clippy --workspace -- -D warnings
 
   doc:
@@ -138,7 +134,6 @@ jobs:
         with:
           toolchain: stable
           components: clippy
-      - uses: Leafwing-Studios/cargo-cache@v1
       - run: cargo doc
 
   benchmarks:
@@ -150,7 +145,6 @@ jobs:
         with:
           toolchain: stable
           components: clippy
-      - uses: Leafwing-Studios/cargo-cache@v1
       - run: cargo xbench --no-run
         name: Build benchmarks
       - run: cargo xbench --no-run --features yoga
