@@ -144,6 +144,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo xbench --no-run
         name: Build benchmarks
+        env:
+          RUSTFLAGS: "-C opt-level=0" 
 
   benchmarks-with-yoga:
     name: Build Benchmarks (w/ yoga)
@@ -153,6 +155,8 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo xbench --no-run --features yoga
         name: Build benchmarks (w/yoga)
+        env:
+            RUSTFLAGS: "-C opt-level=0" 
 
   markdownlint:
     name: Markdown Lint
