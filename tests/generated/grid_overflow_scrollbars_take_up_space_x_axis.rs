@@ -1,5 +1,5 @@
 #[test]
-fn grid_overflow_scrollbars_take_up_space_main_axis() {
+fn grid_overflow_scrollbars_take_up_space_x_axis() {
     #[allow(unused_imports)]
     use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();

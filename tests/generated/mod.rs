@@ -673,9 +673,9 @@ mod grid_overflow_scrollbars_overriden_by_size;
 #[cfg(feature = "grid")]
 mod grid_overflow_scrollbars_take_up_space_both_axis;
 #[cfg(feature = "grid")]
-mod grid_overflow_scrollbars_take_up_space_cross_axis;
+mod grid_overflow_scrollbars_take_up_space_x_axis;
 #[cfg(feature = "grid")]
-mod grid_overflow_scrollbars_take_up_space_main_axis;
+mod grid_overflow_scrollbars_take_up_space_y_axis;
 #[cfg(feature = "grid")]
 mod grid_padding_border_overrides_container_max_size;
 #[cfg(feature = "grid")]
