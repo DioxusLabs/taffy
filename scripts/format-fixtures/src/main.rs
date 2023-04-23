@@ -3,10 +3,12 @@ use std::{path::{PathBuf, Path}, fs};
 use regex::{Regex, Captures};
 
 fn main() {
-    let root_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
-    let repo_root = root_dir.parent().and_then(Path::parent).unwrap();
-
-    let fixtures_root = repo_root.join("test_fixtures");
+    let fixtures_root = std::env::var("FIXTURE_DIR").map(PathBuf::from).unwrap_or_else(|_| {
+        let root_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
+        let repo_root = root_dir.parent().and_then(Path::parent).unwrap();
+        let fixtures_root = repo_root.join("test_fixtures");
+        fixtures_root
+    });
     let fixtures = fs::read_dir(fixtures_root).unwrap();
 
     println!("reading test fixtures from disk");
