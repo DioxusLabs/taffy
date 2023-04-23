@@ -1,5 +1,7 @@
 /target
 /scripts/gentest/target
+/yoga_test_fixtures
+/yoga_test_fixtures_grouped
 
 **/*.rs.bk
 Cargo.lock

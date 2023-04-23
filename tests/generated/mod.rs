@@ -302,11 +302,11 @@ mod gap_column_gap_wrap_align_space_around;
 mod gap_column_gap_wrap_align_space_between;
 mod gap_column_gap_wrap_align_stretch;
 mod gap_column_row_gap_wrapping;
-mod gap_percentage_row_gap_wrapping;
 mod gap_row_gap_align_items_end;
 mod gap_row_gap_align_items_stretch;
 mod gap_row_gap_column_child_margins;
 mod gap_row_gap_determines_parent_height;
+mod gap_row_gap_percentage_wrapping;
 mod gap_row_gap_row_wrap_child_margins;
 #[cfg(feature = "grid")]
 mod grid_absolute_align_self_sized_all;

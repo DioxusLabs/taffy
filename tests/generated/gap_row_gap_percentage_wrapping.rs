@@ -1,5 +1,5 @@
 #[test]
-fn gap_percentage_row_gap_wrapping() {
+fn gap_row_gap_percentage_wrapping() {
     #[allow(unused_imports)]
     use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
