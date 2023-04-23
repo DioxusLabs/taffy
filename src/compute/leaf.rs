@@ -1,7 +1,7 @@
 //! Computes size using styles and measure functions
 
 use crate::geometry::{Point, Size};
-use crate::style::{AvailableSpace, Style};
+use crate::style::{AvailableSpace, Overflow, Style};
 use crate::tree::Measurable;
 use crate::tree::{SizeAndBaselines, SizingMode};
 use crate::util::sys::f32_max;
@@ -70,6 +70,18 @@ pub fn compute(
     let border = style.border.resolve_or_zero(parent_size.width);
     let padding_border = padding + border;
 
+    // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
+    // However, the axis are switched (transposed) because a node that scrolls vertically needs
+    // *horizontal* space to be reserved for a scrollbar
+    let scrollbar_gutter = style.overflow.transpose().map(|overflow| match overflow {
+        Overflow::Scroll => style.scrollbar_width,
+        _ => 0.0,
+    });
+    // TODO: make side configurable based on the `direction` property
+    let mut content_box_inset = padding_border;
+    content_box_inset.right += scrollbar_gutter.x;
+    content_box_inset.bottom += scrollbar_gutter.y;
+
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("LEAF");
     #[cfg(feature = "debug")]
@@ -90,16 +102,18 @@ pub fn compute(
     if let Some(measurable) = measurable {
         // Compute available space
         let available_space = Size {
-            width: available_space
-                .width
-                .maybe_set(node_size.width)
-                .maybe_set(node_max_size.width)
-                .map_definite_value(|size| size.maybe_clamp(node_min_size.width, node_max_size.width)),
+            width: available_space.width.maybe_set(node_size.width).maybe_set(node_max_size.width).map_definite_value(
+                |size| {
+                    size.maybe_clamp(node_min_size.width, node_max_size.width) - content_box_inset.horizontal_axis_sum()
+                },
+            ),
             height: available_space
                 .height
                 .maybe_set(node_size.height)
                 .maybe_set(node_max_size.height)
-                .map_definite_value(|size| size.maybe_clamp(node_min_size.height, node_max_size.height)),
+                .map_definite_value(|size| {
+                    size.maybe_clamp(node_min_size.height, node_max_size.height) - content_box_inset.vertical_axis_sum()
+                }),
         };
 
         // Measure node
@@ -119,13 +133,13 @@ pub fn compute(
         width: node_size
             .width
             // .unwrap_or(0.0) + padding.horizontal_axis_sum() + border.horizontal_axis_sum(), // content-box
-            .unwrap_or(0.0) // border-box
+            .unwrap_or(content_box_inset.horizontal_axis_sum()) // border-box
             .maybe_clamp(node_min_size.width, node_max_size.width)
             .maybe_max(padding_border.horizontal_axis_sum().into()),
         height: node_size
             .height
             // .unwrap_or(0.0) + padding.vertical_axis_sum() + border.vertical_axis_sum(), // content-box
-            .unwrap_or(0.0) // border-box
+            .unwrap_or(content_box_inset.vertical_axis_sum()) // border-box
             .maybe_clamp(node_min_size.height, node_max_size.height)
             .maybe_max(padding_border.vertical_axis_sum().into()),
     };

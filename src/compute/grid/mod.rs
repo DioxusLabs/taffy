@@ -2,11 +2,11 @@
 //! <https://www.w3.org/TR/css-grid-1>
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
-use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Display, Position};
+use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Display, Overflow, Position};
 use crate::style_helpers::*;
 use crate::tree::{Layout, RunMode, SizeAndBaselines, SizingMode};
 use crate::tree::{LayoutTree, NodeId};
-use crate::util::sys::{GridTrackVec, Vec};
+use crate::util::sys::{f32_max, GridTrackVec, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use alignment::{align_and_position_item, align_tracks};
@@ -139,11 +139,24 @@ pub fn compute(
     // https://www.w3.org/TR/css-grid-1/#available-grid-space
     let padding = style.padding.resolve_or_zero(parent_size.width);
     let border = style.border.resolve_or_zero(parent_size.width);
-    let padding_border_size = (padding + border).sum_axes();
+    let padding_border = padding + border;
+    let padding_border_size = padding_border.sum_axes();
     let aspect_ratio = style.aspect_ratio;
     let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
     let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
     let size = style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+
+    // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
+    // However, the axis are switched (transposed) because a node that scrolls vertically needs
+    // *horizontal* space to be reserved for a scrollbar
+    let scrollbar_gutter = style.overflow.transpose().map(|overflow| match overflow {
+        Overflow::Scroll => style.scrollbar_width,
+        _ => 0.0,
+    });
+    // TODO: make side configurable based on the `direction` property
+    let mut content_box_inset = padding_border;
+    content_box_inset.right += scrollbar_gutter.x;
+    content_box_inset.bottom += scrollbar_gutter.y;
 
     let constrained_available_space = known_dimensions
         .or(size)
@@ -159,16 +172,16 @@ pub fn compute(
     let available_grid_space = Size {
         width: constrained_available_space
             .width
-            .map_definite_value(|space| space - padding.horizontal_axis_sum() - border.horizontal_axis_sum()),
+            .map_definite_value(|space| space - content_box_inset.horizontal_axis_sum()),
         height: constrained_available_space
             .height
-            .map_definite_value(|space| space - padding.vertical_axis_sum() - border.vertical_axis_sum()),
+            .map_definite_value(|space| space - content_box_inset.vertical_axis_sum()),
     };
 
     let outer_node_size = known_dimensions.or(size.maybe_clamp(min_size, max_size).or(min_size));
     let mut inner_node_size = Size {
-        width: outer_node_size.width.map(|space| space - padding.horizontal_axis_sum() - border.horizontal_axis_sum()),
-        height: outer_node_size.height.map(|space| space - padding.vertical_axis_sum() - border.vertical_axis_sum()),
+        width: outer_node_size.width.map(|space| space - content_box_inset.horizontal_axis_sum()),
+        height: outer_node_size.height.map(|space| space - content_box_inset.vertical_axis_sum()),
     };
 
     #[cfg(feature = "debug")]
@@ -235,16 +248,18 @@ pub fn compute(
     let container_border_box = Size {
         width: resolved_style_size
             .get(AbstractAxis::Inline)
-            .unwrap_or_else(|| initial_column_sum + padding.horizontal_axis_sum() + border.horizontal_axis_sum())
+            .unwrap_or_else(|| initial_column_sum + content_box_inset.horizontal_axis_sum())
+            .maybe_clamp(min_size.width, max_size.width)
             .max(padding_border_size.width),
         height: resolved_style_size
             .get(AbstractAxis::Block)
-            .unwrap_or_else(|| initial_row_sum + padding.vertical_axis_sum() + border.vertical_axis_sum())
+            .unwrap_or_else(|| initial_row_sum + content_box_inset.vertical_axis_sum())
+            .maybe_clamp(min_size.height, max_size.height)
             .max(padding_border_size.height),
     };
     let container_content_box = Size {
-        width: container_border_box.width - padding.horizontal_axis_sum() - border.horizontal_axis_sum(),
-        height: container_border_box.height - padding.vertical_axis_sum() - border.vertical_axis_sum(),
+        width: f32_max(0.0, container_border_box.width - content_box_inset.horizontal_axis_sum()),
+        height: f32_max(0.0, container_border_box.height - content_box_inset.vertical_axis_sum()),
     };
 
     // If only the container's size has been requested

@@ -12,6 +12,7 @@ fn grid_span_2_min_content_auto_indefinite_hidden() {
                     x: taffy::style::Overflow::Hidden,
                     y: taffy::style::Overflow::Hidden,
                 },
+                scrollbar_width: 15f32,
                 grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Span(2u16) },
                 ..Default::default()
             },

@@ -152,8 +152,11 @@ struct AlgoConstants {
     margin: Rect<f32>,
     /// The border of this section
     border: Rect<f32>,
-    /// The padding of this section
-    padding_border: Rect<f32>,
+    /// The space between the content box and the border box.
+    /// This consists of padding + border + scrollbar_gutter.
+    content_box_inset: Rect<f32>,
+    /// The size reserved for scrollbar gutters in each axis
+    scrollbar_gutter: Point<f32>,
     /// The gap of this section
     gap: Size<f32>,
     /// The align_items property of this node
@@ -268,7 +271,7 @@ fn compute_preliminary(
     // and then re-resolve gaps based on newly determined size
     let original_gap = constants.gap;
     if let Some(inner_main_size) = constants.node_inner_size.main(constants.dir) {
-        let outer_main_size = inner_main_size + constants.padding_border.main_axis_sum(constants.dir);
+        let outer_main_size = inner_main_size + constants.content_box_inset.main_axis_sum(constants.dir);
         constants.inner_container_size.set_main(constants.dir, inner_main_size);
         constants.container_size.set_main(constants.dir, outer_main_size);
     } else {
@@ -427,10 +430,20 @@ fn compute_constants(
     let align_content = style.align_content.unwrap_or(AlignContent::Stretch);
     let justify_content = style.justify_content;
 
-    let padding_border = padding + border;
+    // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
+    // However, the axis are switched (transposed) because a node that scrolls vertically needs
+    // *horizontal* space to be reserved for a scrollbar
+    let scrollbar_gutter = style.overflow.transpose().map(|overflow| match overflow {
+        Overflow::Scroll => style.scrollbar_width,
+        _ => 0.0,
+    });
+    // TODO: make side configurable based on the `direction` property
+    let mut content_box_inset = padding + border;
+    content_box_inset.right += scrollbar_gutter.x;
+    content_box_inset.bottom += scrollbar_gutter.y;
 
     let node_outer_size = known_dimensions;
-    let node_inner_size = node_outer_size.maybe_sub(padding_border.sum_axes());
+    let node_inner_size = node_outer_size.maybe_sub(content_box_inset.sum_axes());
     let gap = style.gap.resolve_or_zero(node_inner_size.or(Size::zero()));
 
     let container_size = Size::zero();
@@ -447,7 +460,8 @@ fn compute_constants(
         margin,
         border,
         gap,
-        padding_border,
+        content_box_inset,
+        scrollbar_gutter,
         align_items,
         align_content,
         justify_content,
@@ -531,19 +545,19 @@ fn determine_available_space(
 ) -> Size<AvailableSpace> {
     // Note: min/max/preferred size styles have already been applied to known_dimensions in the `compute` function above
     let width = match known_dimensions.width {
-        Some(node_width) => AvailableSpace::Definite(node_width - constants.padding_border.horizontal_axis_sum()),
+        Some(node_width) => AvailableSpace::Definite(node_width - constants.content_box_inset.horizontal_axis_sum()),
         None => outer_available_space
             .width
             .maybe_sub(constants.margin.horizontal_axis_sum())
-            .maybe_sub(constants.padding_border.horizontal_axis_sum()),
+            .maybe_sub(constants.content_box_inset.horizontal_axis_sum()),
     };
 
     let height = match known_dimensions.height {
-        Some(node_height) => AvailableSpace::Definite(node_height - constants.padding_border.vertical_axis_sum()),
+        Some(node_height) => AvailableSpace::Definite(node_height - constants.content_box_inset.vertical_axis_sum()),
         None => outer_available_space
             .height
             .maybe_sub(constants.margin.vertical_axis_sum())
-            .maybe_sub(constants.padding_border.vertical_axis_sum()),
+            .maybe_sub(constants.content_box_inset.vertical_axis_sum()),
     };
 
     Size { width, height }
@@ -824,7 +838,7 @@ fn determine_container_main_size(
     lines: &mut Vec<FlexLine<'_>>,
     constants: &mut AlgoConstants,
 ) {
-    let main_padding_border = constants.padding_border.main_axis_sum(constants.dir);
+    let main_content_box_inset = constants.content_box_inset.main_axis_sum(constants.dir);
 
     let outer_main_size: f32 = constants.node_outer_size.main(constants.dir).unwrap_or_else(|| {
         match main_axis_available_space {
@@ -845,7 +859,7 @@ fn determine_container_main_size(
                     })
                     .max_by(|a, b| a.total_cmp(b))
                     .unwrap_or(0.0);
-                let size = longest_line_length + main_padding_border;
+                let size = longest_line_length + main_content_box_inset;
                 if lines.len() > 1 {
                     f32_max(size, main_axis_available_space)
                 } else {
@@ -869,7 +883,7 @@ fn determine_container_main_size(
                     })
                     .max_by(|a, b| a.total_cmp(b))
                     .unwrap_or(0.0);
-                longest_line_length + main_padding_border
+                longest_line_length + main_content_box_inset
             }
             AvailableSpace::MinContent | AvailableSpace::MaxContent => {
                 // Define a base main_size variable. This is mutated once for iteration over the outer
@@ -938,12 +952,12 @@ fn determine_container_main_size(
                                 // Ultimately, this was not found by reading the spec, but by trial and error fixing tests to align with Webkit/Firefox output.
                                 // (see the `flex_basis_unconstraint_row` and `flex_basis_uncontraint_column` generated tests which demonstrate this)
                                 if constants.is_row {
-                                    content_main_size.maybe_clamp(style_min, style_max).max(main_padding_border)
+                                    content_main_size.maybe_clamp(style_min, style_max).max(main_content_box_inset)
                                 } else {
                                     content_main_size
                                         .max(item.flex_basis)
                                         .maybe_clamp(style_min, style_max)
-                                        .max(main_padding_border)
+                                        .max(main_content_box_inset)
                                 }
                             }
                         };
@@ -1004,17 +1018,17 @@ fn determine_container_main_size(
                     main_size = f32_max(main_size, item_main_size_sum + gap_sum)
                 }
 
-                main_size + main_padding_border
+                main_size + main_content_box_inset
             }
         }
     });
 
     let outer_main_size = outer_main_size
         .maybe_clamp(constants.min_size.main(constants.dir), constants.max_size.main(constants.dir))
-        .max(main_padding_border);
+        .max(main_content_box_inset - constants.scrollbar_gutter.main(constants.dir));
 
     // let outer_main_size = inner_main_size + constants.padding_border.main_axis_sum(constants.dir);
-    let inner_main_size = outer_main_size - constants.padding_border.main_axis_sum(constants.dir);
+    let inner_main_size = f32_max(outer_main_size - main_content_box_inset, 0.0);
     constants.container_size.set_main(constants.dir, outer_main_size);
     constants.inner_container_size.set_main(constants.dir, inner_main_size);
     constants.node_inner_size.set_main(constants.dir, Some(inner_main_size));
@@ -1358,7 +1372,7 @@ fn calculate_cross_size(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>
                 AlignContent::Stretch | AlignContent::SpaceEvenly | AlignContent::SpaceAround
             ))
     {
-        let cross_axis_padding_border = constants.padding_border.cross_axis_sum(constants.dir);
+        let cross_axis_padding_border = constants.content_box_inset.cross_axis_sum(constants.dir);
         let cross_min_size = constants.min_size.cross(constants.dir);
         let cross_max_size = constants.max_size.cross(constants.dir);
         flex_lines[0].cross_size = node_size
@@ -1410,7 +1424,7 @@ fn calculate_cross_size(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>
 #[inline]
 fn handle_align_content_stretch(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>>, constants: &AlgoConstants) {
     if constants.align_content == AlignContent::Stretch {
-        let cross_axis_padding_border = constants.padding_border.cross_axis_sum(constants.dir);
+        let cross_axis_padding_border = constants.content_box_inset.cross_axis_sum(constants.dir);
         let cross_min_size = constants.min_size.cross(constants.dir);
         let cross_max_size = constants.max_size.cross(constants.dir);
         let container_min_inner_cross = node_size
@@ -1668,15 +1682,16 @@ fn determine_container_cross_size(
     let total_cross_axis_gap = sum_axis_gaps(constants.gap.cross(constants.dir), flex_lines.len());
     let total_line_cross_size: f32 = flex_lines.iter().map(|line| line.cross_size).sum::<f32>();
 
-    let padding_border_sum = constants.padding_border.cross_axis_sum(constants.dir);
+    let padding_border_sum = constants.content_box_inset.cross_axis_sum(constants.dir);
+    let cross_scrollbar_gutter = constants.scrollbar_gutter.cross(constants.dir);
     let min_cross_size = constants.min_size.cross(constants.dir);
     let max_cross_size = constants.max_size.cross(constants.dir);
     let outer_container_size = node_size
         .cross(constants.dir)
         .unwrap_or(total_line_cross_size + total_cross_axis_gap + padding_border_sum)
         .maybe_clamp(min_cross_size, max_cross_size)
-        .max(padding_border_sum);
-    let inner_container_size = outer_container_size - padding_border_sum;
+        .max(padding_border_sum - cross_scrollbar_gutter);
+    let inner_container_size = f32_max(outer_container_size - padding_border_sum, 0.0);
 
     constants.container_size.set_cross(constants.dir, outer_container_size);
     constants.inner_container_size.set_cross(constants.dir, inner_container_size);
@@ -1817,7 +1832,7 @@ fn calculate_layout_line(
 /// Do a final layout pass and collect the resulting layouts.
 #[inline]
 fn final_layout_pass(tree: &mut impl LayoutTree, node: NodeId, flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
-    let mut total_offset_cross = constants.padding_border.cross_start(constants.dir);
+    let mut total_offset_cross = constants.content_box_inset.cross_start(constants.dir);
 
     if constants.is_wrap_reverse {
         for line in flex_lines.iter_mut().rev() {
@@ -1828,7 +1843,7 @@ fn final_layout_pass(tree: &mut impl LayoutTree, node: NodeId, flex_lines: &mut 
                 &mut total_offset_cross,
                 constants.container_size,
                 constants.node_inner_size,
-                constants.padding_border,
+                constants.content_box_inset,
                 constants.dir,
             );
         }
@@ -1841,7 +1856,7 @@ fn final_layout_pass(tree: &mut impl LayoutTree, node: NodeId, flex_lines: &mut 
                 &mut total_offset_cross,
                 constants.container_size,
                 constants.node_inner_size,
-                constants.padding_border,
+                constants.content_box_inset,
                 constants.dir,
             );
         }
@@ -1980,20 +1995,21 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
                 | (JustifyContent::Stretch, false)
                 | (JustifyContent::FlexStart, false)
                 | (JustifyContent::FlexEnd, true) => {
-                    constants.padding_border.main_start(constants.dir) + resolved_margin.main_start(constants.dir)
+                    constants.content_box_inset.main_start(constants.dir) + resolved_margin.main_start(constants.dir)
                 }
                 (JustifyContent::End, _)
                 | (JustifyContent::FlexEnd, false)
                 | (JustifyContent::FlexStart, true)
                 | (JustifyContent::Stretch, true) => {
                     constants.container_size.main(constants.dir)
-                        - constants.padding_border.main_end(constants.dir)
+                        - constants.content_box_inset.main_end(constants.dir)
                         - final_size.main(constants.dir)
                         - resolved_margin.main_end(constants.dir)
                 }
                 (JustifyContent::SpaceEvenly, _) | (JustifyContent::SpaceAround, _) | (JustifyContent::Center, _) => {
-                    (constants.container_size.main(constants.dir) + constants.padding_border.main_start(constants.dir)
-                        - constants.padding_border.main_end(constants.dir)
+                    (constants.container_size.main(constants.dir)
+                        + constants.content_box_inset.main_start(constants.dir)
+                        - constants.content_box_inset.main_end(constants.dir)
                         - final_size.main(constants.dir)
                         + resolved_margin.main_start(constants.dir)
                         - resolved_margin.main_end(constants.dir))
@@ -2020,20 +2036,20 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
                 (AlignSelf::Start, _)
                 | (AlignSelf::Baseline | AlignSelf::Stretch | AlignSelf::FlexStart, false)
                 | (AlignSelf::FlexEnd, true) => {
-                    constants.padding_border.cross_start(constants.dir) + resolved_margin.cross_start(constants.dir)
+                    constants.content_box_inset.cross_start(constants.dir) + resolved_margin.cross_start(constants.dir)
                 }
                 (AlignSelf::End, _)
                 | (AlignSelf::Baseline | AlignSelf::Stretch | AlignSelf::FlexStart, true)
                 | (AlignSelf::FlexEnd, false) => {
                     constants.container_size.cross(constants.dir)
-                        - constants.padding_border.cross_end(constants.dir)
+                        - constants.content_box_inset.cross_end(constants.dir)
                         - final_size.cross(constants.dir)
                         - resolved_margin.cross_end(constants.dir)
                 }
                 (AlignSelf::Center, _) => {
                     (constants.container_size.cross(constants.dir)
-                        + constants.padding_border.cross_start(constants.dir)
-                        - constants.padding_border.cross_end(constants.dir)
+                        + constants.content_box_inset.cross_start(constants.dir)
+                        - constants.content_box_inset.cross_end(constants.dir)
                         - final_size.cross(constants.dir)
                         + resolved_margin.cross_start(constants.dir)
                         - resolved_margin.cross_end(constants.dir))
@@ -2104,7 +2120,7 @@ mod tests {
         let padding = style.padding.resolve_or_zero(parent_size);
         let padding_border = padding + border;
         assert_eq!(constants.border, border);
-        assert_eq!(constants.padding_border, padding_border);
+        assert_eq!(constants.content_box_inset, padding_border);
 
         let inner_size = Size {
             width: node_size.width.maybe_sub(padding_border.horizontal_axis_sum()),

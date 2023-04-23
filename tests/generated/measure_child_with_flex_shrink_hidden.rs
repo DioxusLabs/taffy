@@ -19,6 +19,7 @@ fn measure_child_with_flex_shrink_hidden() {
                     x: taffy::style::Overflow::Hidden,
                     y: taffy::style::Overflow::Hidden,
                 },
+                scrollbar_width: 15f32,
                 ..Default::default()
             },
             taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {

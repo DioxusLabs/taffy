@@ -611,6 +611,11 @@ impl<T> Point<T> {
         }
     }
 
+    /// Swap x and y components
+    pub fn transpose(self) -> Point<T> {
+        Point { x: self.y, y: self.x }
+    }
+
     /// Sets the extent of the specified layout axis
     /// Whether this is the width or height depends on the `GridAxis` provided
     #[cfg(feature = "grid")]
@@ -618,6 +623,30 @@ impl<T> Point<T> {
         match axis {
             AbstractAxis::Inline => self.x = value,
             AbstractAxis::Block => self.y = value,
+        }
+    }
+
+    /// Gets the component in the main layout axis
+    ///
+    /// Whether this is the x or y depends on the `direction` provided
+    #[cfg(feature = "flexbox")]
+    pub(crate) fn main(self, direction: FlexDirection) -> T {
+        if direction.is_row() {
+            self.x
+        } else {
+            self.y
+        }
+    }
+
+    /// Gets the component in the cross layout axis
+    ///
+    /// Whether this is the x or y depends on the `direction` provided
+    #[cfg(feature = "flexbox")]
+    pub(crate) fn cross(self, direction: FlexDirection) -> T {
+        if direction.is_row() {
+            self.y
+        } else {
+            self.x
         }
     }
 }
