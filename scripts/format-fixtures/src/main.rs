@@ -1,6 +1,9 @@
-use std::{path::{PathBuf, Path}, fs};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
-use regex::{Regex, Captures};
+use regex::{Captures, Regex};
 
 fn main() {
     let fixtures_root = std::env::var("FIXTURE_DIR").map(PathBuf::from).unwrap_or_else(|_| {
