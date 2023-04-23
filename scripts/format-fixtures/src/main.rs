@@ -9,8 +9,7 @@ fn main() {
     let fixtures_root = std::env::var("FIXTURE_DIR").map(PathBuf::from).unwrap_or_else(|_| {
         let root_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
         let repo_root = root_dir.parent().and_then(Path::parent).unwrap();
-        let fixtures_root = repo_root.join("test_fixtures");
-        fixtures_root
+        repo_root.join("test_fixtures")
     });
     let fixtures = fs::read_dir(fixtures_root).unwrap();
 
@@ -45,11 +44,11 @@ fn format_style_attr(input: &str) -> String {
     attr.push_str("style=\"");
 
     let input = &input[7..(input.len() - 1)];
-    let declarations = input.split(";").map(|decl| decl.trim()).filter(|decl| !decl.is_empty());
+    let declarations = input.split(';').map(|decl| decl.trim()).filter(|decl| !decl.is_empty());
     let mut has_declarations = false;
     for decl in declarations {
         has_declarations = true;
-        let (key, value) = decl.split_once(":").unwrap();
+        let (key, value) = decl.split_once(':').unwrap();
         attr.push_str(key.trim());
         attr.push_str(": ");
         attr.push_str(value.trim());
