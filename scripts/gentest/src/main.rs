@@ -13,7 +13,6 @@ use syn::Ident;
 #[tokio::main]
 async fn main() {
     env_logger::init();
-    // this requires being run by cargo, which is iffy
     let root_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
     let repo_root = root_dir.parent().and_then(Path::parent).unwrap();
 

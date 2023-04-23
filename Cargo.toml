@@ -47,4 +47,4 @@ path = "benches/dummy_benchmark.rs"
 harness = false
 
 [workspace]
-members = ["scripts/gentest", "scripts/import-yoga-tests", "benches"]
+members = ["scripts/gentest", "scripts/format-fixtures", "scripts/import-yoga-tests", "benches"]
