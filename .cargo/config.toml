@@ -1,4 +1,5 @@
 [alias]
 gentest = "run --release --package gentest --"
 import-yoga-tests = "run --package import-yoga-tests --"
+format-fixtures = "run --package format-fixtures --"
 xbench = "bench --package taffy_benchmarks"

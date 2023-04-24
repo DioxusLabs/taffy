@@ -137,6 +137,32 @@ jobs:
           components: clippy
       - run: cargo doc
 
+  markdownlint:
+    name: Markdown Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Markdown Lint
+        uses: DavidAnson/markdownlint-cli2-action@v9
+        with:
+          globs: '**/*.md'
+
+  fixture-format:
+    name: Test Fixture Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run format script
+        run: cargo format-fixtures
+      - name: Ensure no changes
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then 
+            echo "Fixtures formatted correctly"
+          else 
+            git status && echo -e "\nTest fixtures are not formatted correctly. Please run 'cargo format-fixtures'"
+            exit 1
+          fi
+
   benchmarks:
     name: Build Benchmarks
     runs-on: ubuntu-latest
@@ -158,13 +184,3 @@ jobs:
         name: Build benchmarks (w/yoga)
         env:
             RUSTFLAGS: "-C opt-level=0" 
-
-  markdownlint:
-    name: Markdown Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Run Markdown Lint
-        uses: DavidAnson/markdownlint-cli2-action@v9
-        with:
-          globs: '**/*.md'
