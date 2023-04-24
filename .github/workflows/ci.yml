@@ -155,16 +155,7 @@ jobs:
       - name: Run format script
         run: cargo format-fixtures
       - name: Ensure no changes
-        run: |
-          if [ -z "$(git status --porcelain)" ]; then 
-            # Working directory clean
-            exit(0)
-          else 
-            # Uncommitted changes
-            echo "Test fixtures are not formatted correctly."
-            echo "Please run 'cargo format-fixtures'"
-            exit(1)
-          fi
+        run: bash ./scripts/format-fixtures/check-if-git-dirty.sh
 
   benchmarks:
     name: Build Benchmarks
