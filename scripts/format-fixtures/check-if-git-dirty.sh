@@ -8,7 +8,6 @@ else
   # Uncommitted changes
   git status
   echo ""
-  echo "Test fixtures are not formatted correctly."
-  echo "Please run 'cargo format-fixtures'"
+  echo "Test fixtures are not formatted correctly. Please run 'cargo format-fixtures'"
   exit 1
 fi
