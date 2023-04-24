@@ -10,6 +10,7 @@ name: Continuous integration
 
 env:
   RUSTDOCFLAGS: "-D warnings"
+  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: "sparse"
 
 jobs:
   # None
