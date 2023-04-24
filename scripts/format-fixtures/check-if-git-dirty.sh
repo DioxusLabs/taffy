@@ -6,6 +6,8 @@ if [ -z "$(git status --porcelain)" ]; then
   exit 0
 else 
   # Uncommitted changes
+  git status
+  echo ""
   echo "Test fixtures are not formatted correctly."
   echo "Please run 'cargo format-fixtures'"
   exit 1
