@@ -511,9 +511,14 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
         layout.location.y + item.baseline.unwrap_or(layout.size.height)
     };
 
+    let content_size = Size {
+        width: initial_column_sum + padding.horizontal_axis_sum(),
+        height: initial_row_sum + padding.vertical_axis_sum(),
+    };
+
     LayoutOutput::from_sizes_and_baselines(
         container_border_box,
-        Size::ZERO, // TODO: compute content size
+        content_size,
         Point { x: None, y: Some(grid_container_baseline) },
     )
 }
