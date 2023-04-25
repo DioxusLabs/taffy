@@ -4,7 +4,6 @@ use crate::geometry::{Point, Size};
 
 /// Whether we are performing a full layout, or we merely need to size the node
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-#[cfg(all(feature = "grid", not(feature = "flexbox")))]
 pub enum RunMode {
     /// A full layout for this node and all children should be computed
     PeformLayout,
@@ -15,7 +14,6 @@ pub enum RunMode {
 
 /// Whether styles should be taken into account when computing size
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-#[cfg(all(feature = "grid", not(feature = "flexbox")))]
 pub enum SizingMode {
     /// Only content contributions should be taken into account
     ContentSize,
@@ -57,7 +55,6 @@ pub struct Layout {
     pub location: Point<f32>,
 }
 
-#[cfg(all(feature = "grid", not(feature = "flexbox")))]
 impl Layout {
     /// Creates a new zero-[`Layout`].
     ///
