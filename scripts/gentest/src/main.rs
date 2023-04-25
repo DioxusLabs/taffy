@@ -238,6 +238,8 @@ fn generate_assertions(ident: &str, node: &Value, use_rounding: bool) -> TokenSt
     let height = read_f32("height");
     let x = read_f32("x");
     let y = read_f32("y");
+    let scroll_width = read_f32("scrollWidth"); // - width;
+    let scroll_height = read_f32("scrollHeight"); // - height;
 
     let children = {
         let mut c = Vec::new();
@@ -253,21 +255,25 @@ fn generate_assertions(ident: &str, node: &Value, use_rounding: bool) -> TokenSt
 
     if use_rounding {
         quote!(
-            let Layout { size, location, .. } = taffy.layout(#ident).unwrap();
+            let layout @ Layout { size, location, .. } = taffy.layout(#ident).unwrap();
             assert_eq!(size.width, #width, "width of node {:?}. Expected {}. Actual {}", #ident,  #width, size.width);
             assert_eq!(size.height, #height, "height of node {:?}. Expected {}. Actual {}", #ident,  #height, size.height);
             assert_eq!(location.x, #x, "x of node {:?}. Expected {}. Actual {}", #ident,  #x, location.x);
             assert_eq!(location.y, #y, "y of node {:?}. Expected {}. Actual {}", #ident,  #y, location.y);
+            assert_eq!(layout.scroll_width(), #scroll_width, "scroll_width of node {:?}. Expected {}. Actual {}", #ident,  #scroll_width, layout.scroll_width());
+            assert_eq!(layout.scroll_height(), #scroll_height, "scroll_height of node {:?}. Expected {}. Actual {}", #ident,  #scroll_height, layout.scroll_height());
 
             #children
         )
     } else {
         quote!(
-            let Layout { size, location, .. } = taffy.layout(#ident).unwrap();
+            let layout @ Layout { size, location, .. } = taffy.layout(#ident).unwrap();
             assert!(size.width - #width < 0.1, "width of node {:?}. Expected {}. Actual {}", #ident,  #width, size.width);
             assert!(size.height - #height < 0.1, "height of node {:?}. Expected {}. Actual {}", #ident,  #height, size.height);
             assert!(location.x - #x < 0.1, "x of node {:?}. Expected {}. Actual {}", #ident,  #x, location.x);
             assert!(location.y - #y < 0.1, "y of node {:?}. Expected {}. Actual {}", #ident,  #y, location.y);
+            assert!(layout.scroll_width() - #scroll_width < 0.1, "scroll_width of node {:?}. Expected {}. Actual {}", #ident,  #scroll_width, layout.scroll_width());
+            assert!(layout.scroll_height() - #scroll_height < 0.1, "scroll_height of node {:?}. Expected {}. Actual {}", #ident,  #scroll_height, layout.scroll_height());
 
             #children
         )

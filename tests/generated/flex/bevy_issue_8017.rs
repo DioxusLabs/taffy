@@ -101,39 +101,151 @@ fn bevy_issue_8017() {
     println!("\nComputed tree:");
     taffy.print_tree(node);
     println!();
-    let Layout { size, location, .. } = taffy.layout(node).unwrap();
+    let layout @ Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert_eq!(size.width, 400f32, "width of node {:?}. Expected {}. Actual {}", node, 400f32, size.width);
     assert_eq!(size.height, 400f32, "height of node {:?}. Expected {}. Actual {}", node, 400f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node, 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node, 0f32, location.y);
-    let Layout { size, location, .. } = taffy.layout(node0).unwrap();
+    assert_eq!(
+        layout.scroll_width(),
+        0f32,
+        "scroll_width of node {:?}. Expected {}. Actual {}",
+        node,
+        0f32,
+        layout.scroll_width()
+    );
+    assert_eq!(
+        layout.scroll_height(),
+        0f32,
+        "scroll_height of node {:?}. Expected {}. Actual {}",
+        node,
+        0f32,
+        layout.scroll_height()
+    );
+    let layout @ Layout { size, location, .. } = taffy.layout(node0).unwrap();
     assert_eq!(size.width, 384f32, "width of node {:?}. Expected {}. Actual {}", node0, 384f32, size.width);
     assert_eq!(size.height, 188f32, "height of node {:?}. Expected {}. Actual {}", node0, 188f32, size.height);
     assert_eq!(location.x, 8f32, "x of node {:?}. Expected {}. Actual {}", node0, 8f32, location.x);
     assert_eq!(location.y, 8f32, "y of node {:?}. Expected {}. Actual {}", node0, 8f32, location.y);
-    let Layout { size, location, .. } = taffy.layout(node00).unwrap();
+    assert_eq!(
+        layout.scroll_width(),
+        0f32,
+        "scroll_width of node {:?}. Expected {}. Actual {}",
+        node0,
+        0f32,
+        layout.scroll_width()
+    );
+    assert_eq!(
+        layout.scroll_height(),
+        0f32,
+        "scroll_height of node {:?}. Expected {}. Actual {}",
+        node0,
+        0f32,
+        layout.scroll_height()
+    );
+    let layout @ Layout { size, location, .. } = taffy.layout(node00).unwrap();
     assert_eq!(size.width, 188f32, "width of node {:?}. Expected {}. Actual {}", node00, 188f32, size.width);
     assert_eq!(size.height, 188f32, "height of node {:?}. Expected {}. Actual {}", node00, 188f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node00, 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node00, 0f32, location.y);
-    let Layout { size, location, .. } = taffy.layout(node01).unwrap();
+    assert_eq!(
+        layout.scroll_width(),
+        0f32,
+        "scroll_width of node {:?}. Expected {}. Actual {}",
+        node00,
+        0f32,
+        layout.scroll_width()
+    );
+    assert_eq!(
+        layout.scroll_height(),
+        0f32,
+        "scroll_height of node {:?}. Expected {}. Actual {}",
+        node00,
+        0f32,
+        layout.scroll_height()
+    );
+    let layout @ Layout { size, location, .. } = taffy.layout(node01).unwrap();
     assert_eq!(size.width, 188f32, "width of node {:?}. Expected {}. Actual {}", node01, 188f32, size.width);
     assert_eq!(size.height, 188f32, "height of node {:?}. Expected {}. Actual {}", node01, 188f32, size.height);
     assert_eq!(location.x, 196f32, "x of node {:?}. Expected {}. Actual {}", node01, 196f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node01, 0f32, location.y);
-    let Layout { size, location, .. } = taffy.layout(node1).unwrap();
+    assert_eq!(
+        layout.scroll_width(),
+        0f32,
+        "scroll_width of node {:?}. Expected {}. Actual {}",
+        node01,
+        0f32,
+        layout.scroll_width()
+    );
+    assert_eq!(
+        layout.scroll_height(),
+        0f32,
+        "scroll_height of node {:?}. Expected {}. Actual {}",
+        node01,
+        0f32,
+        layout.scroll_height()
+    );
+    let layout @ Layout { size, location, .. } = taffy.layout(node1).unwrap();
     assert_eq!(size.width, 384f32, "width of node {:?}. Expected {}. Actual {}", node1, 384f32, size.width);
     assert_eq!(size.height, 188f32, "height of node {:?}. Expected {}. Actual {}", node1, 188f32, size.height);
     assert_eq!(location.x, 8f32, "x of node {:?}. Expected {}. Actual {}", node1, 8f32, location.x);
     assert_eq!(location.y, 204f32, "y of node {:?}. Expected {}. Actual {}", node1, 204f32, location.y);
-    let Layout { size, location, .. } = taffy.layout(node10).unwrap();
+    assert_eq!(
+        layout.scroll_width(),
+        0f32,
+        "scroll_width of node {:?}. Expected {}. Actual {}",
+        node1,
+        0f32,
+        layout.scroll_width()
+    );
+    assert_eq!(
+        layout.scroll_height(),
+        0f32,
+        "scroll_height of node {:?}. Expected {}. Actual {}",
+        node1,
+        0f32,
+        layout.scroll_height()
+    );
+    let layout @ Layout { size, location, .. } = taffy.layout(node10).unwrap();
     assert_eq!(size.width, 188f32, "width of node {:?}. Expected {}. Actual {}", node10, 188f32, size.width);
     assert_eq!(size.height, 188f32, "height of node {:?}. Expected {}. Actual {}", node10, 188f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node10, 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node10, 0f32, location.y);
-    let Layout { size, location, .. } = taffy.layout(node11).unwrap();
+    assert_eq!(
+        layout.scroll_width(),
+        0f32,
+        "scroll_width of node {:?}. Expected {}. Actual {}",
+        node10,
+        0f32,
+        layout.scroll_width()
+    );
+    assert_eq!(
+        layout.scroll_height(),
+        0f32,
+        "scroll_height of node {:?}. Expected {}. Actual {}",
+        node10,
+        0f32,
+        layout.scroll_height()
+    );
+    let layout @ Layout { size, location, .. } = taffy.layout(node11).unwrap();
     assert_eq!(size.width, 188f32, "width of node {:?}. Expected {}. Actual {}", node11, 188f32, size.width);
     assert_eq!(size.height, 188f32, "height of node {:?}. Expected {}. Actual {}", node11, 188f32, size.height);
     assert_eq!(location.x, 196f32, "x of node {:?}. Expected {}. Actual {}", node11, 196f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node11, 0f32, location.y);
+    assert_eq!(
+        layout.scroll_width(),
+        0f32,
+        "scroll_width of node {:?}. Expected {}. Actual {}",
+        node11,
+        0f32,
+        layout.scroll_width()
+    );
+    assert_eq!(
+        layout.scroll_height(),
+        0f32,
+        "scroll_height of node {:?}. Expected {}. Actual {}",
+        node11,
+        0f32,
+        layout.scroll_height()
+    );
 }

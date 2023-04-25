@@ -8,6 +8,22 @@ function getScrollBarWidth() {
   return width;
 }
 
+// function getContentSize(e) {
+//   let min_x = 0;
+//   let max_x = 0;
+//   let min_y = 0;
+//   let max_y = 0;
+//   for (node of e.childNodes) {
+//     let boundingRect = e.getBoundingClientRect();
+//     let style = getComputedStyle(e);
+//     min_x = min_x.min(boundingRect.left);
+//     max_x = max_x.max(boundingRect.right);
+//     min_y = min_y.min(boundingRect.top);
+//     max_y = max_y.min(boundingRect.bottom);
+//   }
+//   let padding = getComputedStyle(e)
+// }
+
 class TrackSizingParser {
   static INITIAL_CHAR_REGEX = /[a-z-A-Z0-9]/;
   static TOKEN_CHAR_REGEX = /[-\.a-z-A-Z0-9%]/;
@@ -284,6 +300,8 @@ function describeElement(e) {
       height: boundingRect.height,
       x: boundingRect.x - parentBoundingRect.x,
       y: boundingRect.y - parentBoundingRect.y,
+      scrollWidth: e.scrollWidth - e.clientWidth,
+      scrollHeight: e.scrollHeight - e.clientHeight,
     },
 
     // The naively rounded layout of the node. This is equivalent to calling Math.round() on
@@ -293,6 +311,8 @@ function describeElement(e) {
       height: e.offsetHeight,
       x: e.offsetLeft + e.parentNode.clientLeft,
       y: e.offsetTop + e.parentNode.clientTop,
+      scrollWidth: e.scrollWidth - e.clientWidth,
+      scrollHeight: e.scrollHeight - e.clientHeight,
     },
 
     // The naive rounding can result in 1px gaps in the layout, so Taffy uses a smarter algorithm to avoid this.
@@ -303,6 +323,8 @@ function describeElement(e) {
       height: Math.round(boundingRect.bottom) - Math.round(boundingRect.top),
       x: Math.round(boundingRect.x - parentBoundingRect.x),
       y: Math.round(boundingRect.y - parentBoundingRect.y),
+      scrollWidth: e.scrollWidth - e.clientWidth,
+      scrollHeight: e.scrollHeight - e.clientHeight,
     },
 
     // Whether the test should enable rounding

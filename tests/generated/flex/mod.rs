@@ -187,6 +187,7 @@ mod border_stretch_child;
 mod child_min_max_width_flexing;
 mod child_with_padding_align_end;
 mod container_with_unsized_child;
+mod content_size;
 mod display_none;
 mod display_none_absolute_child;
 mod display_none_fixed_size;
