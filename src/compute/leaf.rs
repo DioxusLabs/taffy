@@ -85,6 +85,7 @@ where
             .maybe_max(padding_border.sum_axes().map(Some));
         return LayoutOutput {
             size,
+            content_size: Size::ZERO,
             first_baselines: Point::NONE,
             top_margin: CollapsibleMarginSet::ZERO,
             bottom_margin: CollapsibleMarginSet::ZERO,
@@ -127,6 +128,7 @@ where
 
         return LayoutOutput {
             size,
+            content_size: measured_size,
             first_baselines: Point::NONE,
             top_margin: CollapsibleMarginSet::ZERO,
             bottom_margin: CollapsibleMarginSet::ZERO,
@@ -158,6 +160,7 @@ where
 
     LayoutOutput {
         size,
+        content_size: padding_border.sum_axes(),
         first_baselines: Point::NONE,
         top_margin: CollapsibleMarginSet::ZERO,
         bottom_margin: CollapsibleMarginSet::ZERO,

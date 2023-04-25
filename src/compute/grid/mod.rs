@@ -229,7 +229,7 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
 
     // If only the container's size has been requested
     if run_mode == RunMode::ComputeSize {
-        return container_border_box.into();
+        return LayoutOutput::from_outer_size(container_border_box);
     }
 
     // 7. Resolve percentage track base sizes
@@ -484,7 +484,7 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
 
     // If there are not items then return just the container size (no baseline)
     if items.is_empty() {
-        return container_border_box.into();
+        return LayoutOutput::from_outer_size(container_border_box);
     }
 
     // Determine the grid container baseline(s) (currently we only compute the first baseline)
@@ -511,5 +511,9 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
         layout.location.y + item.baseline.unwrap_or(layout.size.height)
     };
 
-    LayoutOutput::from_size_and_baselines(container_border_box, Point { x: None, y: Some(grid_container_baseline) })
+    LayoutOutput::from_sizes_and_baselines(
+        container_border_box,
+        Size::ZERO, // TODO: compute content size
+        Point { x: None, y: Some(grid_container_baseline) },
+    )
 }

@@ -173,7 +173,7 @@ pub fn compute_flexbox_layout(tree: &mut impl PartialLayoutTree, node: NodeId, i
     // is ComputeSize (and thus the container's size is all that we're interested in)
     if run_mode == RunMode::ComputeSize {
         if let Size { width: Some(width), height: Some(height) } = styled_based_known_dimensions {
-            return Size { width, height }.into();
+            return LayoutOutput::from_outer_size(Size { width, height });
         }
     }
 
@@ -313,7 +313,7 @@ fn compute_preliminary(tree: &mut impl PartialLayoutTree, node: NodeId, inputs: 
     // We have the container size.
     // If our caller does not care about performing layout we are done now.
     if run_mode == RunMode::ComputeSize {
-        return constants.container_size.into();
+        return LayoutOutput::from_outer_size(constants.container_size);
     }
 
     // 16. Align all flex lines per align-content.
@@ -361,7 +361,11 @@ fn compute_preliminary(tree: &mut impl PartialLayoutTree, node: NodeId, inputs: 
             })
     };
 
-    LayoutOutput::from_size_and_baselines(constants.container_size, Point { x: None, y: first_vertical_baseline })
+    LayoutOutput::from_sizes_and_baselines(
+        constants.container_size,
+        Size::ZERO, // TODO: compute content size
+        Point { x: None, y: first_vertical_baseline },
+    )
 }
 
 /// Compute constants that can be reused during the flexbox algorithm.

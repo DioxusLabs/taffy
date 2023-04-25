@@ -83,7 +83,7 @@ pub fn compute_block_layout(tree: &mut impl PartialLayoutTree, node_id: NodeId, 
     // is ComputeSize (and thus the container's size is all that we're interested in)
     if run_mode == RunMode::ComputeSize {
         if let Size { width: Some(width), height: Some(height) } = styled_based_known_dimensions {
-            return Size { width, height }.into();
+            return LayoutOutput::from_outer_size(Size { width, height });
         }
     }
 
@@ -162,7 +162,7 @@ fn compute_inner(tree: &mut impl PartialLayoutTree, node_id: NodeId, inputs: Lay
 
     // Short-circuit if computing size and both dimensions known
     if let (RunMode::ComputeSize, Some(container_outer_height)) = (run_mode, known_dimensions.height) {
-        return Size { width: container_outer_width, height: container_outer_height }.into();
+        return LayoutOutput::from_outer_size(Size { width: container_outer_width, height: container_outer_height });
     }
 
     // 3. Perform final item layout and return content height
@@ -186,7 +186,7 @@ fn compute_inner(tree: &mut impl PartialLayoutTree, node_id: NodeId, inputs: Lay
 
     // Short-circuit if computing size
     if run_mode == RunMode::ComputeSize {
-        return final_outer_size.into();
+        return LayoutOutput::from_outer_size(final_outer_size);
     }
 
     // 4. Layout absolutely positioned children
@@ -220,6 +220,7 @@ fn compute_inner(tree: &mut impl PartialLayoutTree, node_id: NodeId, inputs: Lay
 
     LayoutOutput {
         size: final_outer_size,
+        content_size: Size::ZERO, // TODO: compute content size
         first_baselines: Point::NONE,
         top_margin: if own_margins_collapse_with_children.start {
             first_child_top_margin_set
@@ -597,8 +598,8 @@ fn perform_absolute_layout_on_absolute_children(
 
         *tree.get_unrounded_layout_mut(item.node_id) = Layout {
             order: item.order,
-            content_size: Size::ZERO, // TODO: compute content size,
             size: final_size,
+            content_size: Size::ZERO, // TODO: compute content size
             location: area_offset + item_offset,
         };
     }

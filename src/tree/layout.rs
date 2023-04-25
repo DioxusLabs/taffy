@@ -155,6 +155,8 @@ impl LayoutInput {
 pub struct LayoutOutput {
     /// The size of the node
     pub size: Size<f32>,
+    /// The size of the content within the node
+    pub content_size: Size<f32>,
     /// The first baseline of the node in each dimension, if any
     pub first_baselines: Point<Option<f32>>,
     /// Top margin that can be collapsed with. This is used for CSS block layout and can be set to
@@ -172,6 +174,7 @@ impl LayoutOutput {
     /// An all-zero `LayoutOutput` for hidden nodes
     pub const HIDDEN: Self = Self {
         size: Size::ZERO,
+        content_size: Size::ZERO,
         first_baselines: Point::NONE,
         top_margin: CollapsibleMarginSet::ZERO,
         bottom_margin: CollapsibleMarginSet::ZERO,
@@ -179,26 +182,29 @@ impl LayoutOutput {
     };
 
     /// Constructor to create a `LayoutOutput` from just the size and baselines
-    pub fn from_size_and_baselines(size: Size<f32>, first_baselines: Point<Option<f32>>) -> Self {
+    pub fn from_sizes_and_baselines(
+        size: Size<f32>,
+        content_size: Size<f32>,
+        first_baselines: Point<Option<f32>>,
+    ) -> Self {
         Self {
             size,
+            content_size,
             first_baselines,
             top_margin: CollapsibleMarginSet::ZERO,
             bottom_margin: CollapsibleMarginSet::ZERO,
             margins_can_collapse_through: false,
         }
     }
-}
 
-impl From<Size<f32>> for LayoutOutput {
-    fn from(size: Size<f32>) -> Self {
-        Self {
-            size,
-            first_baselines: Point::NONE,
-            top_margin: CollapsibleMarginSet::ZERO,
-            bottom_margin: CollapsibleMarginSet::ZERO,
-            margins_can_collapse_through: false,
-        }
+    /// Construct a SizeBaselinesAndMargins from just the container and content sizes
+    pub fn from_sizes(size: Size<f32>, content_size: Size<f32>) -> Self {
+        Self::from_sizes_and_baselines(size, content_size, Point::NONE)
+    }
+
+    /// Construct a SizeBaselinesAndMargins from just the container's size.
+    pub fn from_outer_size(size: Size<f32>) -> Self {
+        Self::from_sizes(size, Size::zero())
     }
 }
 
