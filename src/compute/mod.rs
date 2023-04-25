@@ -34,7 +34,7 @@ use crate::util::sys::round;
 /// Updates the stored layout of the provided `node` and its children
 pub fn compute_layout(tree: &mut impl PartialLayoutTree, root: NodeId, available_space: Size<AvailableSpace>) {
     // Recursively compute node layout
-    let size_and_baselines = tree.perform_child_layout(
+    let output = tree.perform_child_layout(
         root,
         Size::NONE,
         available_space.into_options(),
@@ -43,7 +43,7 @@ pub fn compute_layout(tree: &mut impl PartialLayoutTree, root: NodeId, available
         Line::FALSE,
     );
 
-    let layout = Layout { order: 0, size: size_and_baselines.size, location: Point::ZERO };
+    let layout = Layout { order: 0, size: output.size, content_size: Size::ZERO, location: Point::ZERO };
     *tree.get_unrounded_layout_mut(root) = layout;
 }
 

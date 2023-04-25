@@ -398,6 +398,7 @@ fn perform_final_layout_on_in_flow_children(
             *tree.get_unrounded_layout_mut(item.node_id) = Layout {
                 order: item.order,
                 size: item_layout.size,
+                content_size: Size::ZERO, // TODO: compute content size
                 location: Point {
                     x: resolved_content_box_inset.left + inset_offset.x + resolved_margin.left,
                     y: committed_y_offset + inset_offset.y + y_margin_offset,
@@ -594,7 +595,11 @@ fn perform_absolute_layout_on_absolute_children(
                 .unwrap_or(item.static_position.y + resolved_margin.top),
         };
 
-        *tree.get_unrounded_layout_mut(item.node_id) =
-            Layout { order: item.order, size: final_size, location: area_offset + item_offset };
+        *tree.get_unrounded_layout_mut(item.node_id) = Layout {
+            order: item.order,
+            content_size: Size::ZERO, // TODO: compute content size,
+            size: final_size,
+            location: area_offset + item_offset,
+        };
     }
 }

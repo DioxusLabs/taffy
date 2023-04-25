@@ -1746,6 +1746,7 @@ fn calculate_flex_item(
     *tree.get_unrounded_layout_mut(item.node) = Layout {
         order: item.order,
         size: preliminary_size_and_baselines.size,
+        content_size: Size::zero(),
         location: Point {
             x: if direction.is_row() { offset_main } else { offset_cross },
             y: if direction.is_column() { offset_main } else { offset_cross },
@@ -2035,6 +2036,7 @@ fn perform_absolute_layout_on_absolute_children(
         *tree.get_unrounded_layout_mut(child) = Layout {
             order: order as u32,
             size: final_size,
+            content_size: Size::zero(),
             location: Point {
                 x: if constants.is_row { offset_main } else { offset_cross },
                 y: if constants.is_column { offset_main } else { offset_cross },

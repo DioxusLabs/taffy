@@ -212,6 +212,9 @@ pub struct Layout {
     pub order: u32,
     /// The width and height of the node
     pub size: Size<f32>,
+    /// The width and height of the content inside the node. This may be larger than the size of the node in the case of
+    /// overflowing content and is useful for computing a "scroll width/height" for scrollable nodes
+    pub content_size: Size<f32>,
     /// The top-left corner of the node
     pub location: Point<f32>,
 }
@@ -224,7 +227,7 @@ impl Layout {
     /// This means it should be rendered below all other [`Layout`]s.
     #[must_use]
     pub const fn new() -> Self {
-        Self { order: 0, size: Size::zero(), location: Point::ZERO }
+        Self { order: 0, size: Size::zero(), content_size: Size::zero(), location: Point::ZERO }
     }
 
     /// Creates a new zero-[`Layout`] with the supplied `order` value.
@@ -233,6 +236,6 @@ impl Layout {
     /// The Zero-layout has size and location set to ZERO.
     #[must_use]
     pub const fn with_order(order: u32) -> Self {
-        Self { order, size: Size::zero(), location: Point::ZERO }
+        Self { order, size: Size::zero(), content_size: Size::zero(), location: Point::ZERO }
     }
 }
