@@ -122,6 +122,8 @@ struct AlgoConstants {
     margin: Rect<f32>,
     /// The border of this section
     border: Rect<f32>,
+    /// The padding of this section
+    padding: Rect<f32>,
     /// The space between the content box and the border box.
     /// This consists of padding + border + scrollbar_gutter.
     content_box_inset: Rect<f32>,
@@ -361,9 +363,40 @@ fn compute_preliminary(tree: &mut impl PartialLayoutTree, node: NodeId, inputs: 
             })
     };
 
+    // Compute content size for node
+    let content_size = {
+        let main_content_size = {
+            let longest_line_length: f32 = flex_lines
+                .iter()
+                .map(|line| {
+                    let line_main_axis_gap = sum_axis_gaps(constants.gap.main(constants.dir), line.items.len());
+                    let total_target_size = line
+                        .items
+                        .iter()
+                        .map(|child| {
+                            let padding_border_sum = (child.padding + child.border).main_axis_sum(constants.dir);
+                            (child.outer_target_size.main(constants.dir) + child.margin.main_axis_sum(constants.dir))
+                                .max(padding_border_sum)
+                        })
+                        .sum::<f32>();
+                    total_target_size + line_main_axis_gap
+                })
+                .max_by(|a, b| a.total_cmp(b))
+                .unwrap_or(0.0);
+            longest_line_length + constants.padding.main_axis_sum(constants.dir)
+        };
+        let cross_content_size = {
+            let total_line_cross_size: f32 = flex_lines.iter().map(|line| line.cross_size).sum::<f32>();
+            let total_cross_axis_gap = sum_axis_gaps(constants.gap.cross(constants.dir), flex_lines.len());
+            total_line_cross_size + total_cross_axis_gap + constants.padding.cross_axis_sum(constants.dir)
+        };
+
+        Size::ZERO.with_main(constants.dir, main_content_size).with_cross(constants.dir, cross_content_size)
+    };
+
     LayoutOutput::from_sizes_and_baselines(
         constants.container_size,
-        Size::ZERO, // TODO: compute content size
+        content_size,
         Point { x: None, y: first_vertical_baseline },
     )
 }
@@ -418,6 +451,7 @@ fn compute_constants(
         max_size: style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio),
         margin,
         border,
+        padding,
         gap,
         content_box_inset,
         scrollbar_gutter,
