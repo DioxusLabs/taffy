@@ -1,4 +1,4 @@
-#[cfg(feature = "yoga_benchmark")]
+#[cfg(feature = "yoga")]
 pub mod yoga_helpers;
 
 mod random_style;

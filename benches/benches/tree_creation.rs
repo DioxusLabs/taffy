@@ -5,11 +5,11 @@ use rand_chacha::ChaCha8Rng;
 use taffy::prelude::*;
 use taffy::style::Style;
 
-#[cfg(feature = "yoga_benchmark")]
+#[cfg(feature = "yoga")]
 use slotmap::SlotMap;
-#[cfg(feature = "yoga_benchmark")]
+#[cfg(feature = "yoga")]
 use taffy_benchmarks::yoga_helpers;
-#[cfg(feature = "yoga_benchmark")]
+#[cfg(feature = "yoga")]
 use yoga_helpers::yg;
 
 /// Build a random leaf node
@@ -37,7 +37,7 @@ fn build_taffy_flat_hierarchy(total_node_count: u32, use_with_capacity: bool) ->
     (taffy, root)
 }
 
-#[cfg(feature = "yoga_benchmark")]
+#[cfg(feature = "yoga")]
 /// A tree with many children that have shallow depth
 fn build_yoga_flat_hierarchy(total_node_count: u32) -> (yg::YogaTree, yg::NodeId) {
     let mut tree = SlotMap::new();
@@ -62,9 +62,9 @@ fn build_yoga_flat_hierarchy(total_node_count: u32) -> (yg::YogaTree, yg::NodeId
 fn taffy_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("Tree creation");
     for node_count in [1_000u32, 10_000, 100_000].iter() {
-        #[cfg(feature = "yoga_benchmark")]
+        #[cfg(feature = "yoga")]
         let benchmark_id = BenchmarkId::new(format!("Yoga"), node_count);
-        #[cfg(feature = "yoga_benchmark")]
+        #[cfg(feature = "yoga")]
         group.bench_with_input(benchmark_id, node_count, |b, &node_count| {
             b.iter(|| {
                 let (taffy, root) = build_yoga_flat_hierarchy(node_count);
