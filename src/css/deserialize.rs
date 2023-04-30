@@ -89,36 +89,36 @@ pub fn apply_layout_attributes(name: &str, value: &str, style: &mut Style) {
             }
             Property::BorderTopStyle(line_style) => {
                 if line_style != LineStyle::None {
-                    style.border.top = LengthPercentage::Points(3.0);
+                    style.border.top = LengthPercentage::Length(3.0);
                 }
             }
             Property::BorderBottomStyle(line_style) => {
                 if line_style != LineStyle::None {
-                    style.border.bottom = LengthPercentage::Points(3.0);
+                    style.border.bottom = LengthPercentage::Length(3.0);
                 }
             }
             Property::BorderLeftStyle(line_style) => {
                 if line_style != LineStyle::None {
-                    style.border.left = LengthPercentage::Points(3.0);
+                    style.border.left = LengthPercentage::Length(3.0);
                 }
             }
             Property::BorderRightStyle(line_style) => {
                 if line_style != LineStyle::None {
-                    style.border.right = LengthPercentage::Points(3.0);
+                    style.border.right = LengthPercentage::Length(3.0);
                 }
             }
             Property::BorderStyle(styles) => {
                 if styles.top != LineStyle::None {
-                    style.border.top = LengthPercentage::Points(3.0);
+                    style.border.top = LengthPercentage::Length(3.0);
                 }
                 if styles.bottom != LineStyle::None {
-                    style.border.bottom = LengthPercentage::Points(3.0);
+                    style.border.bottom = LengthPercentage::Length(3.0);
                 }
                 if styles.left != LineStyle::None {
-                    style.border.left = LengthPercentage::Points(3.0);
+                    style.border.left = LengthPercentage::Length(3.0);
                 }
                 if styles.right != LineStyle::None {
-                    style.border.right = LengthPercentage::Points(3.0);
+                    style.border.right = LengthPercentage::Length(3.0);
                 }
             }
 
@@ -300,7 +300,7 @@ fn extract_px_value(length_value: LengthValue) -> f32 {
 
 fn convert_length_percentage(dimension_percentage: DimensionPercentage<LengthValue>) -> LengthPercentage {
     match dimension_percentage {
-        DimensionPercentage::Dimension(value) => LengthPercentage::Points(extract_px_value(value)),
+        DimensionPercentage::Dimension(value) => LengthPercentage::Length(extract_px_value(value)),
         DimensionPercentage::Percentage(percentage) => LengthPercentage::Percent(percentage.0),
         DimensionPercentage::Calc(_) => todo!(),
     }
@@ -310,7 +310,7 @@ fn convert_padding(dimension_percentage: LengthPercentageOrAuto) -> LengthPercen
     match dimension_percentage {
         LengthPercentageOrAuto::Auto => unimplemented!(),
         LengthPercentageOrAuto::LengthPercentage(lp) => match lp {
-            DimensionPercentage::Dimension(value) => LengthPercentage::Points(extract_px_value(value)),
+            DimensionPercentage::Dimension(value) => LengthPercentage::Length(extract_px_value(value)),
             DimensionPercentage::Percentage(percentage) => LengthPercentage::Percent(percentage.0),
             DimensionPercentage::Calc(_) => unimplemented!(),
         },
@@ -321,7 +321,7 @@ fn convert_length_percentage_or_auto(dimension_percentage: LengthPercentageOrAut
     match dimension_percentage {
         LengthPercentageOrAuto::Auto => LengthPercentageAuto::Auto,
         LengthPercentageOrAuto::LengthPercentage(lp) => match lp {
-            DimensionPercentage::Dimension(value) => LengthPercentageAuto::Points(extract_px_value(value)),
+            DimensionPercentage::Dimension(value) => LengthPercentageAuto::Length(extract_px_value(value)),
             DimensionPercentage::Percentage(percentage) => LengthPercentageAuto::Percent(percentage.0),
             DimensionPercentage::Calc(_) => todo!(),
         },
@@ -330,7 +330,7 @@ fn convert_length_percentage_or_auto(dimension_percentage: LengthPercentageOrAut
 
 fn convert_dimension(dimension_percentage: DimensionPercentage<LengthValue>) -> Dimension {
     match dimension_percentage {
-        DimensionPercentage::Dimension(value) => Dimension::Points(extract_px_value(value)),
+        DimensionPercentage::Dimension(value) => Dimension::Length(extract_px_value(value)),
         DimensionPercentage::Percentage(percentage) => Dimension::Percent(percentage.0),
         DimensionPercentage::Calc(_) => todo!(),
     }
@@ -338,10 +338,10 @@ fn convert_dimension(dimension_percentage: DimensionPercentage<LengthValue>) -> 
 
 fn convert_border_side_width(border_side_width: border::BorderSideWidth) -> LengthPercentage {
     match border_side_width {
-        border::BorderSideWidth::Length(Length::Value(value)) => LengthPercentage::Points(extract_px_value(value)),
-        border::BorderSideWidth::Thick => LengthPercentage::Points(1.0),
-        border::BorderSideWidth::Medium => LengthPercentage::Points(3.0),
-        border::BorderSideWidth::Thin => LengthPercentage::Points(5.0),
+        border::BorderSideWidth::Length(Length::Value(value)) => LengthPercentage::Length(extract_px_value(value)),
+        border::BorderSideWidth::Thick => LengthPercentage::Length(1.0),
+        border::BorderSideWidth::Medium => LengthPercentage::Length(3.0),
+        border::BorderSideWidth::Thin => LengthPercentage::Length(5.0),
         border::BorderSideWidth::Length(_) => unimplemented!(),
     }
 }
@@ -349,7 +349,7 @@ fn convert_border_side_width(border_side_width: border::BorderSideWidth) -> Leng
 fn convert_gap_value(gap_value: align::GapValue) -> LengthPercentage {
     match gap_value {
         align::GapValue::LengthPercentage(dim) => convert_length_percentage(dim),
-        align::GapValue::Normal => LengthPercentage::Points(0.0),
+        align::GapValue::Normal => LengthPercentage::Length(0.0),
     }
 }
 
@@ -370,7 +370,7 @@ fn convert_size(size: size::Size) -> Dimension {
 pub fn parse_value(value: &str) -> Option<Dimension> {
     if value.ends_with("px") {
         if let Ok(px) = value.trim_end_matches("px").parse::<f32>() {
-            Some(Dimension::Points(px))
+            Some(Dimension::Length(px))
         } else {
             None
         }
