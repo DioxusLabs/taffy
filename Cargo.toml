@@ -19,13 +19,13 @@ num-traits = { version = "0.2", default-features = false }
 rand = { version = "0.8.5", optional = true }
 serde = { version = "1.0", optional = true, features = ["serde_derive"] }
 slotmap = "1.0.6"
-grid = { version = "0.9.0", optional = true }
+grid = { version = "0.10.0", default-features = false, optional = true }
 
 [features]
 default = ["std", "grid"]
 grid = ["alloc", "dep:grid"]
 alloc = []
-std = ["num-traits/std"]
+std = ["num-traits/std", "grid?/std"]
 serde = ["dep:serde"]
 random = ["dep:rand"]
 yoga_benchmark = []
