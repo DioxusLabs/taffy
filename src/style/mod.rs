@@ -58,7 +58,7 @@ impl Display {
     pub const DEFAULT: Display = Display::Grid;
 
     /// The default of Display.
-    #[cfg(all(not(feature = "flexbox"), not(feature = "grid")))]
+    #[cfg(all(feature = "block_layout", not(feature = "flexbox"), not(feature = "grid")))]
     pub const DEFAULT: Display = Display::Block;
 
     /// The default of Display.
