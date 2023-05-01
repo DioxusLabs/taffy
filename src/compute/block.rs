@@ -1,16 +1,11 @@
 //! Computes the [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) layout algorithm on [`Taffy`](crate::Taffy) according to the [spec](https://www.w3.org/TR/css-flexbox-1/)
 use crate::compute::LayoutAlgorithm;
 use crate::geometry::{Point, Rect, Size};
-use crate::prelude::{TaffyMaxContent, TaffyMinContent};
-use crate::style::Style;
-use crate::style::{
-    AlignContent, AlignItems, AlignSelf, AvailableSpace, Dimension, Display, FlexWrap, JustifyContent,
-    LengthPercentageAuto, Overflow, Position,
-};
+use crate::style::{AvailableSpace, Display, LengthPercentageAuto, Overflow, Position};
 use crate::tree::{Layout, RunMode, SizeAndBaselines, SizingMode};
 use crate::tree::{LayoutTree, NodeId};
+use crate::util::sys::f32_max;
 use crate::util::sys::Vec;
-use crate::util::sys::{f32_max, new_vec_with_capacity};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 
