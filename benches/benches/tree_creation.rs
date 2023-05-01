@@ -48,14 +48,14 @@ fn build_yoga_flat_hierarchy(total_node_count: u32) -> (yg::YogaTree, yg::NodeId
     while node_count < total_node_count {
         let sub_children_count = rng.gen_range(1..=4);
         let sub_children: Vec<yg::NodeId> =
-            (0..sub_children_count).map(|_| yoga_helpers::new_default_style_with_children(&mut tree, vec![])).collect();
-        let node = yoga_helpers::new_default_style_with_children(&mut tree, sub_children);
+            (0..sub_children_count).map(|_| yoga_helpers::new_default_style_with_children(&mut tree, &[])).collect();
+        let node = yoga_helpers::new_default_style_with_children(&mut tree, &sub_children);
 
         children.push(node);
         node_count += 1 + sub_children_count;
     }
 
-    let root = yoga_helpers::new_default_style_with_children(&mut tree, children);
+    let root = yoga_helpers::new_default_style_with_children(&mut tree, &children);
     (tree, root)
 }
 
