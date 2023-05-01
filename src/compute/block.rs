@@ -48,7 +48,7 @@ impl LayoutAlgorithm for BlockAlgorithm {
 /// The intermediate results of a flexbox calculation for a single item
 struct BlockItem {
     /// The identifier for the associated node
-    node: NodeId,
+    node_id: NodeId,
 
     /// The base size of this item
     size: Size<Option<f32>>,
@@ -83,13 +83,13 @@ struct BlockItem {
 /// Computes the layout of [`LayoutTree`] according to the block layout algorithm
 pub fn compute(
     tree: &mut impl LayoutTree,
-    node: NodeId,
+    node_id: NodeId,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
 ) -> SizeAndBaselines {
-    let style = tree.style(node);
+    let style = tree.style(node_id);
 
     // Pull these out earlier to avoid borrowing issues
     let aspect_ratio = style.aspect_ratio;
@@ -115,19 +115,19 @@ pub fn compute(
 
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("BLOCK");
-    compute_inner(tree, node, styled_based_known_dimensions, parent_size, available_space, run_mode)
+    compute_inner(tree, node_id, styled_based_known_dimensions, parent_size, available_space, run_mode)
 }
 
 /// Computes the layout of [`LayoutTree`] according to the block layout algorithm
 fn compute_inner(
     tree: &mut impl LayoutTree,
-    node: NodeId,
+    node_id: NodeId,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
 ) -> SizeAndBaselines {
-    let style = tree.style(node);
+    let style = tree.style(node_id);
     let margin = style.margin.resolve_or_zero(parent_size.width);
     let padding = style.padding.resolve_or_zero(parent_size.width);
     let border = style.border.resolve_or_zero(parent_size.width);
@@ -147,26 +147,24 @@ fn compute_inner(
     let container_border_box_size = known_dimensions;
     let container_content_box_size = container_border_box_size.maybe_sub(content_box_inset.sum_axes());
 
-    let items = generate_item_list(&*tree, node, container_content_box_size);
+    let mut items = generate_item_list(tree, node_id, container_content_box_size);
 
-    todo!()
+    let content_height = perform_final_layout(tree, node_id, &mut items, container_content_box_size);
+
+    known_dimensions.unwrap_or(Size { width: 0.0, height: content_height }).into()
 }
 
-/// Generate anonymous flex items.
-///
-/// # [9.1. Initial Setup](https://www.w3.org/TR/css-flexbox-1/#box-manip)
-///
-/// - [**Generate anonymous flex items**](https://www.w3.org/TR/css-flexbox-1/#algo-anon-box) as described in [§4 Flex Items](https://www.w3.org/TR/css-flexbox-1/#flex-items).
+/// Create a `Vec` of `BlockItem` structs where each item in the `Vec` represents a child of the current node
 #[inline]
 fn generate_item_list(tree: &impl LayoutTree, node: NodeId, node_inner_size: Size<Option<f32>>) -> Vec<BlockItem> {
     tree.children(node)
-        .map(|child| (child, tree.style(child)))
+        .map(|child_node_id| (child_node_id, tree.style(child_node_id)))
         .filter(|(_, style)| style.position != Position::Absolute)
         .filter(|(_, style)| style.display != Display::None)
-        .map(|(child, child_style)| {
+        .map(|(child_node_id, child_style)| {
             let aspect_ratio = child_style.aspect_ratio;
             BlockItem {
-                node: child,
+                node_id: child_node_id,
                 size: child_style.size.maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
                 min_size: child_style.min_size.maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
                 max_size: child_style.max_size.maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
@@ -185,4 +183,39 @@ fn generate_item_list(tree: &impl LayoutTree, node: NodeId, node_inner_size: Siz
             }
         })
         .collect()
+}
+
+/// Compute each child's final size and position
+#[inline]
+fn perform_final_layout(
+    tree: &mut impl LayoutTree,
+    node_id: NodeId,
+    items: &mut [BlockItem],
+    container_content_box_size: Size<Option<f32>>,
+) -> f32 {
+    let mut total_y_offset = 0.0;
+
+    for item in items {
+        let known_dimensions = item
+            .size
+            .maybe_clamp(item.min_size, item.max_size)
+            .map_width(|width| width.or(container_content_box_size.width));
+
+        let size_and_baselines = tree.perform_child_layout(
+            item.node_id,
+            known_dimensions,
+            container_content_box_size,
+            container_content_box_size.map(|s| s.into()),
+            SizingMode::InherentSize,
+        );
+
+        let order = tree.children(node_id).position(|n| n == item.node_id).unwrap() as u32;
+
+        *tree.layout_mut(item.node_id) =
+            Layout { order, size: size_and_baselines.size, location: Point { x: 0.0, y: total_y_offset } };
+
+        total_y_offset += size_and_baselines.size.height;
+    }
+
+    total_y_offset
 }
