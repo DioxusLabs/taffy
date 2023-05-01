@@ -208,6 +208,7 @@ mod bevy_issue_8082_percent;
 mod block_basic;
 mod block_border_fixed_size;
 mod block_border_intrinsic_size;
+mod block_inset;
 mod block_intrinsic_width;
 mod block_padding_border_fixed_size;
 mod block_padding_border_intrinsic_size;
