@@ -254,10 +254,15 @@ fn perform_final_layout(
 
         let order = tree.children(node_id).position(|n| n == item.node_id).unwrap() as u32;
 
+        let inset_offset = Point {
+            x: item.inset.left.or(item.inset.right.map(|x| -x)).unwrap_or(0.0),
+            y: item.inset.top.or(item.inset.bottom.map(|x| -x)).unwrap_or(0.0),
+        };
+
         *tree.layout_mut(item.node_id) = Layout {
             order,
             size: size_and_baselines.size,
-            location: Point { x: content_box_inset.left, y: total_y_offset },
+            location: Point { x: content_box_inset.left + inset_offset.x, y: total_y_offset + inset_offset.y },
         };
 
         total_y_offset += size_and_baselines.size.height;
