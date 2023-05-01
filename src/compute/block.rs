@@ -149,14 +149,15 @@ fn compute_inner(
     let mut items = generate_item_list(tree, node_id, container_content_box_size);
 
     // Compute container width
-    let container_outer_width = known_dimensions
-        .width
-        .unwrap_or_else(|| determine_content_based_container_width(tree, &items, available_space.width));
-    let container_inner_width = container_outer_width - content_box_inset.horizontal_axis_sum();
+    let container_outer_width = known_dimensions.width.unwrap_or_else(|| {
+        let available_width = available_space.width.maybe_sub(content_box_inset.horizontal_axis_sum());
+        determine_content_based_container_width(tree, &items, available_width) + content_box_inset.horizontal_axis_sum()
+    });
 
     // Perform item layout and return content height
-    let content_height = perform_final_layout(tree, node_id, &mut items, container_outer_width, container_inner_width);
-    let container_outer_height = known_dimensions.height.unwrap_or(content_height);
+    let intrinsic_outer_height =
+        perform_final_layout(tree, node_id, &mut items, container_outer_width, content_box_inset);
+    let container_outer_height = known_dimensions.height.unwrap_or(intrinsic_outer_height);
 
     known_dimensions.unwrap_or(Size { width: container_outer_width, height: container_outer_height }).into()
 }
@@ -229,11 +230,14 @@ fn perform_final_layout(
     node_id: NodeId,
     items: &mut [BlockItem],
     container_outer_width: f32,
-    container_inner_width: f32,
+    content_box_inset: Rect<f32>,
 ) -> f32 {
-    let mut total_y_offset = 0.0;
-
+    let container_inner_width = container_outer_width - content_box_inset.horizontal_axis_sum();
     let parent_size = Size { width: Some(container_outer_width), height: None };
+    let available_space =
+        Size { width: AvailableSpace::Definite(container_inner_width), height: AvailableSpace::MinContent };
+
+    let mut total_y_offset = content_box_inset.top;
     for item in items {
         let known_dimensions = item
             .size
@@ -244,17 +248,21 @@ fn perform_final_layout(
             item.node_id,
             known_dimensions,
             parent_size,
-            parent_size.map(|s| s.into()),
+            available_space,
             SizingMode::InherentSize,
         );
 
         let order = tree.children(node_id).position(|n| n == item.node_id).unwrap() as u32;
 
-        *tree.layout_mut(item.node_id) =
-            Layout { order, size: size_and_baselines.size, location: Point { x: 0.0, y: total_y_offset } };
+        *tree.layout_mut(item.node_id) = Layout {
+            order,
+            size: size_and_baselines.size,
+            location: Point { x: content_box_inset.left, y: total_y_offset },
+        };
 
         total_y_offset += size_and_baselines.size.height;
     }
 
+    total_y_offset += content_box_inset.bottom;
     total_y_offset
 }
