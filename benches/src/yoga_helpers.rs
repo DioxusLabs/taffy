@@ -96,9 +96,10 @@ fn content_into_justify(align: Option<tf::JustifyContent>) -> yg::Justify {
 pub fn apply_taffy_style(node: &mut yg::Node, style: &tf::Style) {
     // display
     node.set_display(match style.display {
-        tf::Display::Flex => yg::Display::Flex,
-        tf::Display::Grid => panic!("Yoga does not support CSS Grid"),
         tf::Display::None => yg::Display::None,
+        tf::Display::Flex => yg::Display::Flex,
+        tf::Display::Grid => panic!("Yoga does not support CSS Grid layout"),
+        tf::Display::Block => panic!("Yoga does not support CSS Block layout"),
     });
 
     // position
