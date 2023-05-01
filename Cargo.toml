@@ -18,14 +18,14 @@ arrayvec = { version = "0.7", default-features = false }
 num-traits = { version = "0.2", default-features = false }
 serde = { version = "1.0", optional = true, features = ["serde_derive"] }
 slotmap = { version = "1.0.6", optional = true }
-grid = { version = "0.10.0", optional = true }
+grid = { version = "0.10.0", default-features = false, optional = true }
 
 [features]
 default = ["std", "flexbox", "grid", "taffy_tree"]
 flexbox = []
 grid = ["alloc", "dep:grid"]
 alloc = []
-std = ["num-traits/std"]
+std = ["num-traits/std", "grid?/std"]
 serde = ["dep:serde"]
 debug = []
 profile = []
