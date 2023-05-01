@@ -9,6 +9,9 @@ use crate::style_helpers::TaffyAuto;
 use crate::sys::{GridTrackVec, Vec};
 use core::cmp::{max, min};
 
+#[cfg(not(feature = "std"))]
+use num_traits::float::FloatCore;
+
 /// Compute the number of rows and columns in the explicit grid
 pub(crate) fn compute_explicit_grid_size_in_axis(style: &Style, axis: AbsoluteAxis) -> u16 {
     // Load the grid-template-rows or grid-template-columns definition (depending on the axis)
