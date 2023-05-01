@@ -144,14 +144,20 @@ fn compute_inner(
     content_box_inset.right += scrollbar_gutter.x;
     content_box_inset.bottom += scrollbar_gutter.y;
 
-    let container_border_box_size = known_dimensions;
-    let container_content_box_size = container_border_box_size.maybe_sub(content_box_inset.sum_axes());
-
+    let container_content_box_size = known_dimensions.maybe_sub(content_box_inset.sum_axes());
     let mut items = generate_item_list(tree, node_id, container_content_box_size);
 
-    let content_height = perform_final_layout(tree, node_id, &mut items, container_content_box_size);
+    // Compute container width
+    let container_outer_width = known_dimensions
+        .width
+        .unwrap_or_else(|| determine_content_based_container_width(tree, &items, available_space.width));
+    let container_inner_width = container_outer_width - content_box_inset.horizontal_axis_sum();
 
-    known_dimensions.unwrap_or(Size { width: 0.0, height: content_height }).into()
+    // Perform item layout and return content height
+    let content_height = perform_final_layout(tree, node_id, &mut items, container_outer_width, container_inner_width);
+    let container_outer_height = known_dimensions.height.unwrap_or(content_height);
+
+    known_dimensions.unwrap_or(Size { width: container_outer_width, height: container_outer_height }).into()
 }
 
 /// Create a `Vec` of `BlockItem` structs where each item in the `Vec` represents a child of the current node
@@ -185,27 +191,59 @@ fn generate_item_list(tree: &impl LayoutTree, node: NodeId, node_inner_size: Siz
         .collect()
 }
 
+/// Compute the content-based width in the case that the width of the container is not known
+#[inline]
+fn determine_content_based_container_width(
+    tree: &mut impl LayoutTree,
+    items: &[BlockItem],
+    available_width: AvailableSpace,
+) -> f32 {
+    let available_space = Size { width: available_width, height: AvailableSpace::MinContent };
+
+    let mut max_child_width = 0.0;
+    for item in items {
+        let known_dimensions = item.size.maybe_clamp(item.min_size, item.max_size);
+        let width = known_dimensions.width.unwrap_or_else(|| {
+            let size_and_baselines = tree.perform_child_layout(
+                item.node_id,
+                known_dimensions,
+                Size::NONE,
+                available_space,
+                SizingMode::InherentSize,
+            );
+
+            size_and_baselines.size.width
+        });
+
+        max_child_width = f32_max(max_child_width, width);
+    }
+
+    max_child_width
+}
+
 /// Compute each child's final size and position
 #[inline]
 fn perform_final_layout(
     tree: &mut impl LayoutTree,
     node_id: NodeId,
     items: &mut [BlockItem],
-    container_content_box_size: Size<Option<f32>>,
+    container_outer_width: f32,
+    container_inner_width: f32,
 ) -> f32 {
     let mut total_y_offset = 0.0;
 
+    let parent_size = Size { width: Some(container_outer_width), height: None };
     for item in items {
         let known_dimensions = item
             .size
             .maybe_clamp(item.min_size, item.max_size)
-            .map_width(|width| width.or(container_content_box_size.width));
+            .map_width(|width| Some(width.unwrap_or(container_inner_width)));
 
         let size_and_baselines = tree.perform_child_layout(
             item.node_id,
             known_dimensions,
-            container_content_box_size,
-            container_content_box_size.map(|s| s.into()),
+            parent_size,
+            parent_size.map(|s| s.into()),
             SizingMode::InherentSize,
         );
 
