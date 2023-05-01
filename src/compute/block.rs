@@ -88,6 +88,7 @@ pub fn compute(
 
     // Pull these out earlier to avoid borrowing issues
     let aspect_ratio = style.aspect_ratio;
+    let margin = style.margin.resolve_or_zero(parent_size.width);
     let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
     let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
     let clamped_style_size =
@@ -98,7 +99,13 @@ pub fn compute(
         (Some(min), Some(max)) if max <= min => Some(min),
         _ => None,
     });
-    let styled_based_known_dimensions = known_dimensions.or(min_max_definite_size).or(clamped_style_size);
+
+    // Block nodes automatically stretch fit their width to fit available space if available space is definite
+    let available_space_based_size =
+        Size { width: available_space.width.into_option().maybe_sub(margin.horizontal_axis_sum()), height: None };
+
+    let styled_based_known_dimensions =
+        known_dimensions.or(min_max_definite_size).or(clamped_style_size).or(available_space_based_size);
 
     // Short-circuit layout if the container's size is fully determined by the container's size and the run mode
     // is ComputeSize (and thus the container's size is all that we're interested in)
@@ -123,7 +130,6 @@ fn compute_inner(
     run_mode: RunMode,
 ) -> SizeAndBaselines {
     let style = tree.style(node_id);
-    let margin = style.margin.resolve_or_zero(parent_size.width);
     let padding = style.padding.resolve_or_zero(parent_size.width);
     let border = style.border.resolve_or_zero(parent_size.width);
 
