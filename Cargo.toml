@@ -21,7 +21,8 @@ slotmap = { version = "1.0.6", optional = true }
 grid = { version = "0.10.0", default-features = false, optional = true }
 
 [features]
-default = ["std", "flexbox", "grid", "taffy_tree"]
+default = ["std", "flexbox", "grid", "block_layout", "taffy_tree"]
+block_layout = []
 flexbox = []
 grid = ["alloc", "dep:grid"]
 alloc = []

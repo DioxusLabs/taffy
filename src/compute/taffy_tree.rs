@@ -6,6 +6,9 @@ use crate::style::{AvailableSpace, Display};
 use crate::tree::{Layout, LayoutTree, NodeId, RunMode, SizeAndBaselines, SizingMode, Taffy, TaffyError};
 use crate::util::sys::round;
 
+#[cfg(feature = "block_layout")]
+use crate::compute::BlockAlgorithm;
+
 #[cfg(feature = "flexbox")]
 use crate::compute::FlexboxAlgorithm;
 
@@ -147,6 +150,16 @@ fn compute_node_layout(
             perform_taffy_tree_hidden_layout(tree, node);
             SizeAndBaselines { size: Size::ZERO, first_baselines: Point::NONE }
         }
+        #[cfg(feature = "block_layout")]
+        (Display::Block, true) => perform_computations::<BlockAlgorithm>(
+            tree,
+            node,
+            known_dimensions,
+            parent_size,
+            available_space,
+            run_mode,
+            sizing_mode,
+        ),
         #[cfg(feature = "flexbox")]
         (Display::Flex, true) => perform_computations::<FlexboxAlgorithm>(
             tree,

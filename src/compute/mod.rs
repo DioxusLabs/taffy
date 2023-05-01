@@ -5,6 +5,9 @@ pub(crate) mod leaf;
 
 pub use leaf::compute;
 
+#[cfg(feature = "block_layout")]
+pub(crate) mod block;
+
 #[cfg(feature = "flexbox")]
 pub(crate) mod flexbox;
 
@@ -14,6 +17,9 @@ pub(crate) mod grid;
 use crate::geometry::{Point, Size};
 use crate::style::AvailableSpace;
 use crate::tree::{Layout, LayoutTree, NodeId, SizeAndBaselines, SizingMode};
+
+#[cfg(feature = "block_layout")]
+pub use self::block::BlockAlgorithm;
 
 #[cfg(feature = "flexbox")]
 pub use self::flexbox::FlexboxAlgorithm;

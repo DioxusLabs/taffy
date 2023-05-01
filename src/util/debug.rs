@@ -19,6 +19,8 @@ fn print_node(tree: &impl LayoutTree, node: NodeId, has_sibling: bool, lines_str
     let display = match (num_children, style.display) {
         (_, style::Display::None) => "NONE",
         (0, _) => "LEAF",
+        #[cfg(feature = "block_layout")]
+        (_, style::Display::Block) => "BLOCK",
         #[cfg(feature = "flexbox")]
         (_, style::Display::Flex) => "FLEX",
         #[cfg(feature = "grid")]
