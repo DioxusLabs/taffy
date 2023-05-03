@@ -153,7 +153,7 @@ impl<T: TaffyZero> TaffyZero for Rect<T> {
     const ZERO: Rect<T> = Rect { left: T::ZERO, right: T::ZERO, top: T::ZERO, bottom: T::ZERO };
 }
 impl<T: TaffyZero> Rect<T> {
-    /// Returns a Size where the left, right, top, and bottom values are all the zero value of the contained type
+    /// Returns a Rect where the left, right, top, and bottom values are all the zero value of the contained type
     /// (e.g. 0.0, Some(0.0), or Dimension::Length(0.0))
     pub const fn zero() -> Self {
         zero::<Self>()
@@ -207,7 +207,7 @@ impl<T: TaffyAuto> TaffyAuto for Rect<T> {
     const AUTO: Rect<T> = Rect { left: T::AUTO, right: T::AUTO, top: T::AUTO, bottom: T::AUTO };
 }
 impl<T: TaffyAuto> Rect<T> {
-    /// Returns a Size where the left, right, top, and bottom values are all the auto value of the contained type
+    /// Returns a Rect where the left, right, top, and bottom values are all the auto value of the contained type
     /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
     pub const fn auto() -> Self {
         auto::<Self>()
@@ -262,7 +262,7 @@ impl<T: TaffyMinContent> TaffyMinContent for Rect<T> {
         Rect { left: T::MIN_CONTENT, right: T::MIN_CONTENT, top: T::MIN_CONTENT, bottom: T::MIN_CONTENT };
 }
 impl<T: TaffyMinContent> Rect<T> {
-    /// Returns a Size where the left, right, top, and bottom values are all the min_content value of the contained type
+    /// Returns a Rect where the left, right, top, and bottom values are all the min_content value of the contained type
     /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
     pub const fn min_content() -> Self {
         min_content::<Self>()
@@ -317,7 +317,7 @@ impl<T: TaffyMaxContent> TaffyMaxContent for Rect<T> {
         Rect { left: T::MAX_CONTENT, right: T::MAX_CONTENT, top: T::MAX_CONTENT, bottom: T::MAX_CONTENT };
 }
 impl<T: TaffyMaxContent> Rect<T> {
-    /// Returns a Size where the left, right, top, and bottom values are all the max_content value of the contained type
+    /// Returns a Rect where the left, right, top, and bottom values are all the max_content value of the contained type
     /// (e.g. Dimension::Auto or LengthPercentageAuto::Auto)
     pub const fn max_content() -> Self {
         max_content::<Self>()
