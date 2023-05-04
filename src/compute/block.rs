@@ -56,7 +56,7 @@ struct BlockItem {
     overflow: Point<Overflow>,
 
     /// The final offset of this item
-    inset: Rect<Option<f32>>,
+    inset: Rect<LengthPercentageAuto>,
     /// The margin of this item
     margin: Rect<f32>,
     /// Whether each margin is an auto margin or not
@@ -66,10 +66,11 @@ struct BlockItem {
     /// The border of this item
     border: Rect<f32>,
 
-    /// The computed content box size of this item
-    computed_content_box_size: Size<f32>,
     /// The computed border box size of this item
-    computed_border_box_size: Size<f32>,
+    computed_size: Size<f32>,
+    /// The computed "static position" of this item. The static position is the position
+    /// taking into account padding, border, margins, and scrollbar_gutters but not inset
+    static_position: Point<f32>,
 
     /// The position of the bottom edge of this item
     baseline: f32,
@@ -130,6 +131,8 @@ fn compute_inner(
     run_mode: RunMode,
 ) -> SizeAndBaselines {
     let style = tree.style(node_id);
+    let raw_padding = style.padding;
+    let raw_border = style.border;
     let padding = style.padding.resolve_or_zero(parent_size.width);
     let border = style.border.resolve_or_zero(parent_size.width);
 
@@ -154,9 +157,21 @@ fn compute_inner(
         determine_content_based_container_width(tree, &items, available_width) + content_box_inset.horizontal_axis_sum()
     });
 
+    let resolved_padding = raw_padding.resolve_or_zero(Some(container_outer_width));
+    let resolved_border = raw_border.resolve_or_zero(Some(container_outer_width));
+    let mut resolved_content_box_inset = resolved_padding + resolved_border;
+    resolved_content_box_inset.right += scrollbar_gutter.x;
+    resolved_content_box_inset.bottom += scrollbar_gutter.y;
+
     // Perform item layout and return content height
-    let intrinsic_outer_height =
-        perform_final_layout(tree, node_id, &mut items, container_outer_width, content_box_inset);
+    let intrinsic_outer_height = perform_final_layout(
+        tree,
+        node_id,
+        &mut items,
+        container_outer_width,
+        content_box_inset,
+        resolved_content_box_inset,
+    );
     let container_outer_height = known_dimensions.height.unwrap_or(intrinsic_outer_height);
 
     known_dimensions.unwrap_or(Size { width: container_outer_width, height: container_outer_height }).into()
@@ -177,7 +192,7 @@ fn generate_item_list(tree: &impl LayoutTree, node: NodeId, node_inner_size: Siz
                 min_size: child_style.min_size.maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
                 max_size: child_style.max_size.maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
 
-                inset: child_style.inset.zip_size(node_inner_size, |p, s| p.maybe_resolve(s)),
+                inset: child_style.inset,
                 margin: child_style.margin.resolve_or_zero(node_inner_size.width),
                 margin_is_auto: child_style.margin.map(|m| m == LengthPercentageAuto::Auto),
                 padding: child_style.padding.resolve_or_zero(node_inner_size.width),
@@ -185,8 +200,8 @@ fn generate_item_list(tree: &impl LayoutTree, node: NodeId, node_inner_size: Siz
                 overflow: child_style.overflow,
 
                 // Fields to be computed later (for now we initialise with dummy values)
-                computed_content_box_size: Size::zero(),
-                computed_border_box_size: Size::zero(),
+                computed_size: Size::zero(),
+                static_position: Point::zero(),
                 baseline: 0.0,
             }
         })
@@ -231,14 +246,16 @@ fn perform_final_layout(
     items: &mut [BlockItem],
     container_outer_width: f32,
     content_box_inset: Rect<f32>,
+    resolved_content_box_inset: Rect<f32>,
 ) -> f32 {
+    // Resolve container_inner_width for sizing child nodes using intial content_box_inset
     let container_inner_width = container_outer_width - content_box_inset.horizontal_axis_sum();
     let parent_size = Size { width: Some(container_outer_width), height: None };
     let available_space =
         Size { width: AvailableSpace::Definite(container_inner_width), height: AvailableSpace::MinContent };
 
-    let mut total_y_offset = content_box_inset.top;
-    for item in items {
+    let mut total_y_offset = resolved_content_box_inset.top;
+    for item in items.iter_mut() {
         let known_dimensions = item
             .size
             .maybe_clamp(item.min_size, item.max_size)
@@ -252,22 +269,27 @@ fn perform_final_layout(
             SizingMode::InherentSize,
         );
 
+        item.computed_size = size_and_baselines.size;
+        item.static_position = Point { x: resolved_content_box_inset.left, y: total_y_offset };
+
         let order = tree.children(node_id).position(|n| n == item.node_id).unwrap() as u32;
 
+        // Resolve item inset
+        let inset = item.inset.zip_size(Size { width: container_inner_width, height: 0.0 }, |p, s| p.maybe_resolve(s));
         let inset_offset = Point {
-            x: item.inset.left.or(item.inset.right.map(|x| -x)).unwrap_or(0.0),
-            y: item.inset.top.or(item.inset.bottom.map(|x| -x)).unwrap_or(0.0),
+            x: inset.left.or(inset.right.map(|x| -x)).unwrap_or(0.0),
+            y: inset.top.or(inset.bottom.map(|x| -x)).unwrap_or(0.0),
         };
 
         *tree.layout_mut(item.node_id) = Layout {
             order,
             size: size_and_baselines.size,
-            location: Point { x: content_box_inset.left + inset_offset.x, y: total_y_offset + inset_offset.y },
+            location: Point { x: resolved_content_box_inset.left + inset_offset.x, y: total_y_offset + inset_offset.y },
         };
 
         total_y_offset += size_and_baselines.size.height;
     }
 
-    total_y_offset += content_box_inset.bottom;
+    total_y_offset += resolved_content_box_inset.bottom;
     total_y_offset
 }
