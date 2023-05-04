@@ -2,7 +2,7 @@
 
 use crate::style::Dimension;
 use crate::util::sys::f32_max;
-use core::ops::Add;
+use core::ops::{Add, Sub};
 
 #[cfg(feature = "flexbox")]
 use crate::style::FlexDirection;
@@ -332,6 +332,15 @@ impl<U, T: Add<U>> Add<Size<U>> for Size<T> {
 
     fn add(self, rhs: Size<U>) -> Self::Output {
         Size { width: self.width + rhs.width, height: self.height + rhs.height }
+    }
+}
+
+// Generic Sub impl for Size<T> + Size<U> where T + U has an Sub impl
+impl<U, T: Sub<U>> Sub<Size<U>> for Size<T> {
+    type Output = Size<<T as Sub<U>>::Output>;
+
+    fn sub(self, rhs: Size<U>) -> Self::Output {
+        Size { width: self.width - rhs.width, height: self.height - rhs.height }
     }
 }
 
