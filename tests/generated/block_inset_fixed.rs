@@ -1,5 +1,5 @@
 #[test]
-fn block_inset() {
+fn block_inset_fixed() {
     #[allow(unused_imports)]
     use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
