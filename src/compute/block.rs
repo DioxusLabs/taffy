@@ -188,8 +188,7 @@ fn compute_inner(
     );
     let container_outer_height =
         known_dimensions.height.unwrap_or(intrinsic_outer_height.maybe_clamp(min_size.height, max_size.height));
-    let final_outer_size =
-        known_dimensions.unwrap_or(Size { width: container_outer_width, height: container_outer_height });
+    let final_outer_size = Size { width: container_outer_width, height: container_outer_height };
 
     if run_mode == RunMode::ComputeSize {
         return final_outer_size.into();
