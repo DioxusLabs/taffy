@@ -205,6 +205,7 @@ mod bevy_issue_8017;
 mod bevy_issue_8017_reduced;
 mod bevy_issue_8082;
 mod bevy_issue_8082_percent;
+mod block_absolute_no_styles;
 mod block_basic;
 mod block_border_fixed_size;
 mod block_border_intrinsic_size;
