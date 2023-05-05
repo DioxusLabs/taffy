@@ -140,6 +140,9 @@ fn compute_inner(
     let style = tree.style(node_id);
     let raw_padding = style.padding;
     let raw_border = style.border;
+    let aspect_ratio = style.aspect_ratio;
+    let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
     let padding = style.padding.resolve_or_zero(parent_size.width);
     let border = style.border.resolve_or_zero(parent_size.width);
 
@@ -162,7 +165,9 @@ fn compute_inner(
     // Compute container width
     let container_outer_width = known_dimensions.width.unwrap_or_else(|| {
         let available_width = available_space.width.maybe_sub(content_box_inset.horizontal_axis_sum());
-        determine_content_based_container_width(tree, &items, available_width) + content_box_inset.horizontal_axis_sum()
+        let intrinsic_width = determine_content_based_container_width(tree, &items, available_width)
+            + content_box_inset.horizontal_axis_sum();
+        intrinsic_width.maybe_clamp(min_size.width, max_size.width)
     });
 
     let resolved_padding = raw_padding.resolve_or_zero(Some(container_outer_width));
@@ -177,7 +182,8 @@ fn compute_inner(
         content_box_inset,
         resolved_content_box_inset,
     );
-    let container_outer_height = known_dimensions.height.unwrap_or(intrinsic_outer_height);
+    let container_outer_height =
+        known_dimensions.height.unwrap_or(intrinsic_outer_height.maybe_clamp(min_size.height, max_size.height));
     let final_outer_size =
         known_dimensions.unwrap_or(Size { width: container_outer_width, height: container_outer_height });
 
