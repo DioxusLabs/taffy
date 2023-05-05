@@ -174,6 +174,10 @@ fn compute_inner(
     let resolved_border = raw_border.resolve_or_zero(Some(container_outer_width));
     let resolved_content_box_inset = resolved_padding + resolved_border + scrollbar_gutter;
 
+    if let (RunMode::ComputeSize, Some(container_outer_height)) = (run_mode, known_dimensions.height) {
+        return Size { width: container_outer_width, height: container_outer_height }.into();
+    }
+
     // Perform item layout and return content height
     let intrinsic_outer_height = perform_final_layout_on_in_flow_children(
         tree,
