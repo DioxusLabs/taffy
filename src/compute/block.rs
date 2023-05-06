@@ -352,7 +352,7 @@ fn perform_final_layout_on_in_flow_children(
                 .maybe_clamp(item.min_size, item.max_size)
                 .map_width(|width| Some(width.unwrap_or(container_inner_width - item_non_auto_x_margin_sum)));
 
-            let mut size_and_baselines = tree.perform_child_layout(
+            let size_and_baselines = tree.perform_child_layout(
                 item.node_id,
                 known_dimensions,
                 parent_size,
@@ -381,22 +381,21 @@ fn perform_final_layout_on_in_flow_children(
                     height: 0.0,
                 };
 
-                size_and_baselines.top_margin.collapse_with_margin(item_margin.top.unwrap_or(0.0));
-                size_and_baselines.bottom_margin.collapse_with_margin(item_margin.bottom.unwrap_or(0.0));
-
                 Rect {
                     left: item_margin.left.unwrap_or(auto_margin_size.width),
                     right: item_margin.right.unwrap_or(auto_margin_size.width),
-                    top: size_and_baselines.top_margin.resolve(),
-                    bottom: size_and_baselines.bottom_margin.resolve(),
+                    top: size_and_baselines.top_margin.collapse_with_margin(item_margin.top.unwrap_or(0.0)).resolve(),
+                    bottom: size_and_baselines
+                        .bottom_margin
+                        .collapse_with_margin(item_margin.bottom.unwrap_or(0.0))
+                        .resolve(),
                 }
             };
 
             let y_margin_offset = if is_first && own_margins_collapse_with_children.start {
                 0.0
             } else {
-                previous_sibling_collapsible_margin_set.collapse_with_margin(resolved_margin.top);
-                previous_sibling_collapsible_margin_set.resolve()
+                previous_sibling_collapsible_margin_set.collapse_with_margin(resolved_margin.top).resolve()
             };
             if is_first {
                 first_child_top_margin_set = CollapsibleMarginSet::from_margin(resolved_margin.top);
