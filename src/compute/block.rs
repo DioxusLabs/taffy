@@ -4,8 +4,8 @@ use crate::geometry::{Point, Rect, Size};
 use crate::style::{AvailableSpace, Display, LengthPercentageAuto, Overflow, Position};
 use crate::tree::{Layout, RunMode, SizeAndBaselines, SizingMode};
 use crate::tree::{LayoutTree, NodeId};
-use crate::util::sys::f32_max;
 use crate::util::sys::Vec;
+use crate::util::sys::{f32_max, f32_min};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 
@@ -287,6 +287,7 @@ fn perform_final_layout_on_in_flow_children(
         Size { width: AvailableSpace::Definite(container_inner_width), height: AvailableSpace::MinContent };
 
     let mut total_y_offset = resolved_content_box_inset.top;
+    let mut collapsible_bottom_margin: f32 = 0.0;
     for item in items.iter_mut() {
         if item.position == Position::Absolute {
             item.static_position.y = total_y_offset;
@@ -313,15 +314,6 @@ fn perform_final_layout_on_in_flow_children(
             let free_x_space = f32_max(0.0, container_inner_width - final_size.width - item_non_auto_x_margin_sum);
             let resolved_margin = {
                 let auto_margin_size = Size {
-                    // If all three of 'left', 'width', and 'right' are 'auto': First set any 'auto' values for 'margin-left' and 'margin-right' to 0.
-                    // Then, if the 'direction' property of the element establishing the static-position containing block is 'ltr' set 'left' to the
-                    // static position and apply rule number three below; otherwise, set 'right' to the static position and apply rule number one below.
-                    //
-                    // If none of the three is 'auto': If both 'margin-left' and 'margin-right' are 'auto', solve the equation under the extra constraint
-                    // that the two margins get equal values, unless this would make them negative, in which case when direction of the containing block is
-                    // 'ltr' ('rtl'), set 'margin-left' ('margin-right') to zero and solve for 'margin-right' ('margin-left'). If one of 'margin-left' or
-                    // 'margin-right' is 'auto', solve the equation for that value. If the values are over-constrained, ignore the value for 'left' (in case
-                    // the 'direction' property of the containing block is 'rtl') or 'right' (in case 'direction' is 'ltr') and solve for that value.
                     width: {
                         let auto_margin_count = item_margin.left.is_none() as u8 + item_margin.right.is_none() as u8;
                         if auto_margin_count == 2 && item.size.width.is_none() {
@@ -344,6 +336,12 @@ fn perform_final_layout_on_in_flow_children(
                 }
             };
 
+            let y_margin_offset = match (resolved_margin.top >= 0.0, collapsible_bottom_margin >= 0.0) {
+                (true, true) => f32_max(resolved_margin.top, collapsible_bottom_margin),
+                (false, false) => f32_min(resolved_margin.top, collapsible_bottom_margin),
+                _ => resolved_margin.top + collapsible_bottom_margin,
+            };
+
             item.computed_size = size_and_baselines.size;
             item.static_position = Point { x: resolved_content_box_inset.left, y: total_y_offset };
 
@@ -360,16 +358,17 @@ fn perform_final_layout_on_in_flow_children(
                 size: size_and_baselines.size,
                 location: Point {
                     x: resolved_content_box_inset.left + inset_offset.x + resolved_margin.left,
-                    y: total_y_offset + inset_offset.y,
+                    y: total_y_offset + inset_offset.y + y_margin_offset,
                 },
             };
 
-            total_y_offset += size_and_baselines.size.height;
+            total_y_offset += size_and_baselines.size.height + y_margin_offset;
+            collapsible_bottom_margin = resolved_margin.bottom;
         }
     }
 
-    total_y_offset += resolved_content_box_inset.bottom;
-    total_y_offset
+    total_y_offset += resolved_content_box_inset.bottom + collapsible_bottom_margin;
+    f32_max(0.0, total_y_offset)
 }
 
 /// Perform absolute layout on all absolutely positioned children.
