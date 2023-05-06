@@ -1,5 +1,5 @@
 #[test]
-fn block_margin_x_percentage_intrinsic_size_other() {
+fn block_margin_x_percentage_intrinsic_size_other_positive() {
     #[allow(unused_imports)]
     use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
