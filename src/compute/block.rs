@@ -163,6 +163,7 @@ fn compute_inner(
     let style = tree.style(node_id);
     let raw_padding = style.padding;
     let raw_border = style.border;
+    let raw_margin = style.margin;
     let aspect_ratio = style.aspect_ratio;
     let size = style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
     let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
@@ -246,8 +247,18 @@ fn compute_inner(
     SizeBaselinesAndMargins {
         size: final_outer_size,
         first_baselines: Point::NONE,
-        top_margin: first_child_top_margin_set,
-        bottom_margin: last_child_bottom_margin_set,
+        top_margin: if own_margins_collapse_with_children.start {
+            first_child_top_margin_set
+        } else {
+            let margin_top = raw_margin.top.resolve_or_zero(parent_size.width);
+            CollapsibleMarginSet::from_margin(margin_top)
+        },
+        bottom_margin: if own_margins_collapse_with_children.end {
+            last_child_bottom_margin_set
+        } else {
+            let margin_bottom = raw_margin.bottom.resolve_or_zero(parent_size.width);
+            CollapsibleMarginSet::from_margin(margin_bottom)
+        },
         margins_can_collapse_through: false,
     }
 }
