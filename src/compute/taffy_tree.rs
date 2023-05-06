@@ -1,11 +1,9 @@
 //! Computation specific for the default `Taffy` tree implementation
 
 use crate::compute::{leaf, LayoutAlgorithm};
-use crate::geometry::{Point, Size};
+use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, Display};
-use crate::tree::{
-    CollapsibleMarginSet, Layout, LayoutTree, NodeId, RunMode, SizeBaselinesAndMargins, SizingMode, Taffy, TaffyError,
-};
+use crate::tree::{Layout, LayoutTree, NodeId, RunMode, SizeBaselinesAndMargins, SizingMode, Taffy, TaffyError};
 use crate::util::sys::round;
 
 #[cfg(feature = "block_layout")]
@@ -49,7 +47,7 @@ pub(crate) fn compute_layout(
         available_space.into_options(),
         available_space,
         SizingMode::InherentSize,
-        CollapsibleMarginSet::ZERO,
+        Line::FALSE,
     );
 
     let layout = Layout { order: 0, size: size_and_baselines.size, location: Point::ZERO };
@@ -71,7 +69,7 @@ pub(crate) fn perform_node_layout(
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     sizing_mode: SizingMode,
-    collapsible_top_margin: CollapsibleMarginSet,
+    vertical_margins_are_collapsible: Line<bool>,
 ) -> SizeBaselinesAndMargins {
     compute_node_layout(
         tree,
@@ -81,7 +79,7 @@ pub(crate) fn perform_node_layout(
         available_space,
         RunMode::PeformLayout,
         sizing_mode,
-        collapsible_top_margin,
+        vertical_margins_are_collapsible,
     )
 }
 
@@ -93,7 +91,7 @@ pub(crate) fn measure_node_size(
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     sizing_mode: SizingMode,
-    collapsible_top_margin: CollapsibleMarginSet,
+    vertical_margins_are_collapsible: Line<bool>,
 ) -> Size<f32> {
     compute_node_layout(
         tree,
@@ -103,7 +101,7 @@ pub(crate) fn measure_node_size(
         available_space,
         RunMode::ComputeSize,
         sizing_mode,
-        collapsible_top_margin,
+        vertical_margins_are_collapsible,
     )
     .size
 }
@@ -118,7 +116,7 @@ fn compute_node_layout(
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
     sizing_mode: SizingMode,
-    collapsible_top_margin: CollapsibleMarginSet,
+    vertical_margins_are_collapsible: Line<bool>,
 ) -> SizeBaselinesAndMargins {
     #[cfg(any(feature = "debug", feature = "profile"))]
     NODE_LOGGER.push_node(node);
@@ -155,7 +153,7 @@ fn compute_node_layout(
         available_space: Size<AvailableSpace>,
         run_mode: RunMode,
         sizing_mode: SizingMode,
-        collapsible_top_margin: CollapsibleMarginSet,
+        vertical_margins_are_collapsible: Line<bool>,
     ) -> SizeBaselinesAndMargins {
         #[cfg(feature = "debug")]
         NODE_LOGGER.log(Algorithm::NAME);
@@ -168,7 +166,7 @@ fn compute_node_layout(
                 parent_size,
                 available_space,
                 sizing_mode,
-                collapsible_top_margin,
+                vertical_margins_are_collapsible,
             ),
             RunMode::ComputeSize => Algorithm::measure_size(
                 tree,
@@ -177,7 +175,7 @@ fn compute_node_layout(
                 parent_size,
                 available_space,
                 sizing_mode,
-                collapsible_top_margin,
+                vertical_margins_are_collapsible,
             )
             .into(),
         }
@@ -198,7 +196,7 @@ fn compute_node_layout(
             available_space,
             run_mode,
             sizing_mode,
-            collapsible_top_margin,
+            vertical_margins_are_collapsible,
         ),
         #[cfg(feature = "flexbox")]
         (Display::Flex, true) => perform_computations::<FlexboxAlgorithm>(
@@ -209,7 +207,7 @@ fn compute_node_layout(
             available_space,
             run_mode,
             sizing_mode,
-            collapsible_top_margin,
+            vertical_margins_are_collapsible,
         ),
         #[cfg(feature = "grid")]
         (Display::Grid, true) => perform_computations::<CssGridAlgorithm>(
@@ -220,7 +218,7 @@ fn compute_node_layout(
             available_space,
             run_mode,
             sizing_mode,
-            collapsible_top_margin,
+            vertical_margins_are_collapsible,
         ),
         (_, false) => match run_mode {
             RunMode::PeformLayout => leaf::perform_layout(
@@ -230,7 +228,7 @@ fn compute_node_layout(
                 parent_size,
                 available_space,
                 sizing_mode,
-                collapsible_top_margin,
+                vertical_margins_are_collapsible,
             ),
             RunMode::ComputeSize => leaf::measure_size(
                 &tree.nodes[node_key].style,
@@ -239,7 +237,7 @@ fn compute_node_layout(
                 parent_size,
                 available_space,
                 sizing_mode,
-                collapsible_top_margin,
+                vertical_margins_are_collapsible,
             )
             .into(),
         },

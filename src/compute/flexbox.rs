@@ -3,14 +3,14 @@ use core::f32;
 
 use crate::compute::common::alignment::compute_alignment_offset;
 use crate::compute::LayoutAlgorithm;
-use crate::geometry::{Point, Rect, Size};
+use crate::geometry::{Line, Point, Rect, Size};
 use crate::prelude::{TaffyMaxContent, TaffyMinContent};
 use crate::style::{
     AlignContent, AlignItems, AlignSelf, AvailableSpace, Dimension, Display, FlexWrap, JustifyContent,
     LengthPercentageAuto, Overflow, Position,
 };
 use crate::style::{FlexDirection, Style};
-use crate::tree::{CollapsibleMarginSet, Layout, RunMode, SizeBaselinesAndMargins, SizingMode};
+use crate::tree::{Layout, RunMode, SizeBaselinesAndMargins, SizingMode};
 use crate::tree::{LayoutTree, NodeId};
 use crate::util::sys::Vec;
 use crate::util::sys::{f32_max, new_vec_with_capacity};
@@ -32,7 +32,7 @@ impl LayoutAlgorithm for FlexboxAlgorithm {
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         _sizing_mode: SizingMode,
-        _collapsible_top_margin: CollapsibleMarginSet,
+        _vertical_margins_are_collapsible: Line<bool>,
     ) -> SizeBaselinesAndMargins {
         compute(tree, node, known_dimensions, parent_size, available_space, RunMode::PeformLayout)
     }
@@ -44,7 +44,7 @@ impl LayoutAlgorithm for FlexboxAlgorithm {
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         _sizing_mode: SizingMode,
-        _collapsible_top_margin: CollapsibleMarginSet,
+        _vertical_margins_are_collapsible: Line<bool>,
     ) -> Size<f32> {
         compute(tree, node, known_dimensions, parent_size, available_space, RunMode::ComputeSize).size
     }
@@ -394,7 +394,7 @@ fn compute_preliminary(
                 Size::NONE,
                 Size::MAX_CONTENT,
                 SizingMode::InherentSize,
-                CollapsibleMarginSet::ZERO,
+                Line::FALSE,
             );
         }
     }
@@ -702,7 +702,7 @@ fn determine_flex_base_size(
                     child_parent_size,
                     child_available_space,
                     SizingMode::ContentSize,
-                    CollapsibleMarginSet::ZERO,
+                    Line::FALSE,
                 )
                 .main(dir);
         };
@@ -753,7 +753,7 @@ fn determine_flex_base_size(
                     child_parent_size,
                     child_available_space,
                     SizingMode::ContentSize,
-                    CollapsibleMarginSet::ZERO,
+                    Line::FALSE,
                 )
             };
 
@@ -949,7 +949,7 @@ fn determine_container_main_size(
                                         constants.node_inner_size,
                                         Size { width: main_axis_available_space, height: main_axis_available_space },
                                         SizingMode::InherentSize,
-                                        CollapsibleMarginSet::ZERO,
+                                        Line::FALSE,
                                     )
                                     .main(constants.dir)
                                     + item.margin.main_axis_sum(constants.dir);
@@ -1274,7 +1274,7 @@ fn determine_hypothetical_cross_size(
                     height: if constants.is_row { child_available_cross } else { child_known_main },
                 },
                 SizingMode::ContentSize,
-                CollapsibleMarginSet::ZERO,
+                Line::FALSE,
             )
             .cross(constants.dir)
             .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir))
@@ -1345,7 +1345,7 @@ fn calculate_children_base_lines(
                     },
                 },
                 SizingMode::ContentSize,
-                CollapsibleMarginSet::ZERO,
+                Line::FALSE,
             );
 
             let baseline = measured_size_and_baselines.first_baselines.y;
@@ -1760,7 +1760,7 @@ fn calculate_flex_item(
         node_inner_size,
         container_size.map(|s| s.into()),
         SizingMode::ContentSize,
-        CollapsibleMarginSet::ZERO,
+        Line::FALSE,
     );
     let preliminary_size = preliminary_size_and_baselines.size;
 
@@ -1949,7 +1949,7 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
                 height: AvailableSpace::Definite(container_height.maybe_clamp(min_size.height, max_size.height)),
             },
             SizingMode::ContentSize,
-            CollapsibleMarginSet::ZERO,
+            Line::FALSE,
         );
         let measured_size = measured_size_and_baselines.size;
         let final_size = known_dimensions.unwrap_or(measured_size).maybe_clamp(min_size, max_size);

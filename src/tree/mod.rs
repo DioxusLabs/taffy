@@ -1,6 +1,6 @@
 //! Contains both [a high-level interface to Taffy](crate::Taffy) using a ready-made node tree, and [a trait for defining a custom node trees](crate::tree::LayoutTree) / utility types to help with that.
 
-use crate::geometry::Size;
+use crate::geometry::{Line, Size};
 use crate::style::{AvailableSpace, Style};
 
 // Submodules
@@ -55,7 +55,7 @@ pub trait LayoutTree {
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
-        collapsible_top_margin: CollapsibleMarginSet,
+        vertical_margins_are_collapsible: Line<bool>,
     ) -> Size<f32>;
 
     /// Perform a full layout on the node given the specified constraints
@@ -66,6 +66,6 @@ pub trait LayoutTree {
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
-        collapsible_top_margin: CollapsibleMarginSet,
+        vertical_margins_are_collapsible: Line<bool>,
     ) -> SizeBaselinesAndMargins;
 }

@@ -1,9 +1,9 @@
 //! Computes size using styles and measure functions
 
-use crate::geometry::Size;
+use crate::geometry::{Line, Size};
 use crate::style::{AvailableSpace, Overflow, Style};
 use crate::tree::Measurable;
-use crate::tree::{CollapsibleMarginSet, SizeBaselinesAndMargins, SizingMode};
+use crate::tree::{SizeBaselinesAndMargins, SizingMode};
 use crate::util::sys::f32_max;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
@@ -19,7 +19,7 @@ pub(crate) fn perform_layout(
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     sizing_mode: SizingMode,
-    _collapsible_top_margin: CollapsibleMarginSet,
+    _vertical_margins_are_collapsible: Line<bool>,
 ) -> SizeBaselinesAndMargins {
     compute(style, measurable, known_dimensions, parent_size, available_space, sizing_mode)
 }
@@ -32,7 +32,7 @@ pub(crate) fn measure_size(
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     sizing_mode: SizingMode,
-    _collapsible_top_margin: CollapsibleMarginSet,
+    _vertical_margins_are_collapsible: Line<bool>,
 ) -> Size<f32> {
     compute(style, measurable, known_dimensions, parent_size, available_space, sizing_mode).size
 }

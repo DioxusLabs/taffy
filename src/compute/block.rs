@@ -1,6 +1,6 @@
 //! Computes the [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) layout algorithm on [`Taffy`](crate::Taffy) according to the [spec](https://www.w3.org/TR/css-flexbox-1/)
 use crate::compute::LayoutAlgorithm;
-use crate::geometry::{Point, Rect, Size};
+use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AvailableSpace, Display, LengthPercentageAuto, Overflow, Position};
 use crate::tree::{CollapsibleMarginSet, Layout, RunMode, SizeBaselinesAndMargins, SizingMode};
 use crate::tree::{LayoutTree, NodeId};
@@ -24,7 +24,7 @@ impl LayoutAlgorithm for BlockAlgorithm {
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         _sizing_mode: SizingMode,
-        collapsible_top_margin: CollapsibleMarginSet,
+        vertical_margins_are_collapsible: Line<bool>,
     ) -> SizeBaselinesAndMargins {
         compute(
             tree,
@@ -33,7 +33,7 @@ impl LayoutAlgorithm for BlockAlgorithm {
             parent_size,
             available_space,
             RunMode::PeformLayout,
-            collapsible_top_margin,
+            vertical_margins_are_collapsible,
         )
     }
 
@@ -44,7 +44,7 @@ impl LayoutAlgorithm for BlockAlgorithm {
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         _sizing_mode: SizingMode,
-        collapsible_top_margin: CollapsibleMarginSet,
+        vertical_margins_are_collapsible: Line<bool>,
     ) -> Size<f32> {
         compute(
             tree,
@@ -53,7 +53,7 @@ impl LayoutAlgorithm for BlockAlgorithm {
             parent_size,
             available_space,
             RunMode::ComputeSize,
-            collapsible_top_margin,
+            vertical_margins_are_collapsible,
         )
         .size
     }
@@ -104,7 +104,7 @@ pub fn compute(
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
-    collapsible_top_margin: CollapsibleMarginSet,
+    vertical_margins_are_collapsible: Line<bool>,
 ) -> SizeBaselinesAndMargins {
     let style = tree.style(node_id);
 
@@ -146,7 +146,7 @@ pub fn compute(
         parent_size,
         available_space,
         run_mode,
-        collapsible_top_margin,
+        vertical_margins_are_collapsible,
     )
 }
 
@@ -158,7 +158,7 @@ fn compute_inner(
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
-    parent_collapsible_top_margin: CollapsibleMarginSet,
+    vertical_margins_are_collapsible: Line<bool>,
 ) -> SizeBaselinesAndMargins {
     let style = tree.style(node_id);
     let raw_padding = style.padding;
@@ -208,7 +208,6 @@ fn compute_inner(
     // 3.Determine margin collapsing behaviour
     let collapsible_margin_set = if own_top_margin_collapses_with_children {
         let mut collapsible_margin_set = CollapsibleMarginSet::ZERO;
-        collapsible_margin_set.collapse_with_set(parent_collapsible_top_margin);
         collapsible_margin_set.collapse_with_margin(raw_margin.top.resolve_or_zero(parent_size.width));
         collapsible_margin_set
     } else {
@@ -299,7 +298,7 @@ fn determine_content_based_container_width(
                 Size::NONE,
                 available_space.map_width(|w| w.maybe_sub(item_x_margin_sum)),
                 SizingMode::InherentSize,
-                CollapsibleMarginSet::ZERO,
+                Line::FALSE,
             );
 
             size_and_baselines.size.width + item_x_margin_sum
@@ -352,7 +351,7 @@ fn perform_final_layout_on_in_flow_children(
                 parent_size,
                 available_space.map_width(|w| w.maybe_sub(item_non_auto_x_margin_sum)),
                 SizingMode::InherentSize,
-                CollapsibleMarginSet::ZERO,
+                Line::FALSE,
             );
             let final_size = size_and_baselines.size;
 
@@ -484,7 +483,7 @@ fn perform_absolute_layout_on_absolute_children(
                 height: AvailableSpace::Definite(area_height.maybe_clamp(min_size.height, max_size.height)),
             },
             SizingMode::ContentSize,
-            CollapsibleMarginSet::ZERO,
+            Line::FALSE,
         );
         let measured_size = measured_size_and_baselines.size;
         let final_size = known_dimensions.unwrap_or(measured_size).maybe_clamp(min_size, max_size);

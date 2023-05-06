@@ -4,7 +4,7 @@ use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Display, Overflow, Position};
 use crate::style_helpers::*;
-use crate::tree::{CollapsibleMarginSet, Layout, RunMode, SizeBaselinesAndMargins, SizingMode};
+use crate::tree::{Layout, RunMode, SizeBaselinesAndMargins, SizingMode};
 use crate::tree::{LayoutTree, NodeId};
 use crate::util::sys::{f32_max, GridTrackVec, Vec};
 use crate::util::MaybeMath;
@@ -45,7 +45,7 @@ impl LayoutAlgorithm for CssGridAlgorithm {
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         _sizing_mode: SizingMode,
-        _collapsible_top_margin: CollapsibleMarginSet,
+        _vertical_margins_are_collapsible: Line<bool>,
     ) -> SizeBaselinesAndMargins {
         compute(tree, node, known_dimensions, parent_size, available_space, RunMode::PeformLayout)
     }
@@ -57,7 +57,7 @@ impl LayoutAlgorithm for CssGridAlgorithm {
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         _sizing_mode: SizingMode,
-        _collapsible_top_margin: CollapsibleMarginSet,
+        _vertical_margins_are_collapsible: Line<bool>,
     ) -> Size<f32> {
         compute(tree, node, known_dimensions, parent_size, available_space, RunMode::ComputeSize).size
     }
@@ -474,7 +474,7 @@ pub fn compute(
                 Size::NONE,
                 Size::MAX_CONTENT,
                 SizingMode::InherentSize,
-                CollapsibleMarginSet::ZERO,
+                Line::FALSE,
             );
             order += 1;
             return;

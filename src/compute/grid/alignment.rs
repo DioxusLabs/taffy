@@ -4,7 +4,7 @@ use crate::compute::common::alignment::compute_alignment_offset;
 use crate::geometry::InBothAbsAxis;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Position};
-use crate::tree::{CollapsibleMarginSet, Layout, SizingMode};
+use crate::tree::{Layout, SizingMode};
 use crate::tree::{LayoutTree, NodeId};
 use crate::util::sys::{f32_max, f32_min};
 use crate::util::MaybeMath;
@@ -193,7 +193,7 @@ pub(super) fn align_and_position_item(
         grid_area_size.map(Option::Some),
         grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
         SizingMode::InherentSize,
-        CollapsibleMarginSet::ZERO,
+        Line::FALSE,
     );
 
     // Resolve final size

@@ -309,6 +309,11 @@ impl<T> Line<T> {
     }
 }
 
+impl Line<bool> {
+    /// A Line<bool> with both start and end set to `false`
+    pub const FALSE: Self = Line { start: false, end: false };
+}
+
 impl<T: Add + Copy> Line<T> {
     /// Adds the start and end values together and returns the result
     pub fn sum(&self) -> <T as Add>::Output {

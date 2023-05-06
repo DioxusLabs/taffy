@@ -14,9 +14,9 @@ pub(crate) mod flexbox;
 #[cfg(feature = "grid")]
 pub(crate) mod grid;
 
-use crate::geometry::Size;
+use crate::geometry::{Line, Size};
 use crate::style::AvailableSpace;
-use crate::tree::{CollapsibleMarginSet, Layout, LayoutTree, NodeId, SizeBaselinesAndMargins, SizingMode};
+use crate::tree::{Layout, LayoutTree, NodeId, SizeBaselinesAndMargins, SizingMode};
 
 #[cfg(feature = "block_layout")]
 pub use self::block::BlockAlgorithm;
@@ -43,7 +43,7 @@ pub trait LayoutAlgorithm {
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
-        collapsible_top_margin: CollapsibleMarginSet,
+        vertical_margins_are_collapsible: Line<bool>,
     ) -> Size<f32>;
 
     /// Perform a full layout on the node given the specified constraints
@@ -54,7 +54,7 @@ pub trait LayoutAlgorithm {
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
-        collapsible_top_margin: CollapsibleMarginSet,
+        vertical_margins_are_collapsible: Line<bool>,
     ) -> SizeBaselinesAndMargins;
 }
 
@@ -70,7 +70,7 @@ impl LayoutAlgorithm for HiddenAlgorithm {
         _parent_size: Size<Option<f32>>,
         _available_space: Size<AvailableSpace>,
         _sizing_mode: SizingMode,
-        _collapsible_top_margin: CollapsibleMarginSet,
+        _vertical_margins_are_collapsible: Line<bool>,
     ) -> SizeBaselinesAndMargins {
         perform_hidden_layout(tree, node);
         SizeBaselinesAndMargins::HIDDEN
@@ -83,7 +83,7 @@ impl LayoutAlgorithm for HiddenAlgorithm {
         _parent_size: Size<Option<f32>>,
         _available_space: Size<AvailableSpace>,
         _sizing_mode: SizingMode,
-        _collapsible_top_margin: CollapsibleMarginSet,
+        _vertical_margins_are_collapsible: Line<bool>,
     ) -> Size<f32> {
         Size::ZERO
     }

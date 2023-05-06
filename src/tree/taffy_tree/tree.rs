@@ -4,10 +4,10 @@
 use slotmap::{DefaultKey, SlotMap, SparseSecondaryMap};
 
 use crate::compute::taffy_tree::{compute_layout, measure_node_size, perform_node_layout};
-use crate::geometry::Size;
+use crate::geometry::{Line, Size};
 use crate::prelude::LayoutTree;
 use crate::style::{AvailableSpace, Style};
-use crate::tree::{CollapsibleMarginSet, Layout, MeasureFunc, NodeData, NodeId, SizeBaselinesAndMargins, SizingMode};
+use crate::tree::{Layout, MeasureFunc, NodeData, NodeId, SizeBaselinesAndMargins, SizingMode};
 use crate::util::sys::{new_vec_with_capacity, ChildrenVec, Vec};
 
 use super::{TaffyError, TaffyResult};
@@ -103,7 +103,7 @@ impl LayoutTree for Taffy {
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
-        collapsible_top_margin: CollapsibleMarginSet,
+        vertical_margins_are_collapsible: Line<bool>,
     ) -> Size<f32> {
         measure_node_size(
             self,
@@ -112,7 +112,7 @@ impl LayoutTree for Taffy {
             parent_size,
             available_space,
             sizing_mode,
-            collapsible_top_margin,
+            vertical_margins_are_collapsible,
         )
     }
 
@@ -124,7 +124,7 @@ impl LayoutTree for Taffy {
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
-        collapsible_top_margin: CollapsibleMarginSet,
+        vertical_margins_are_collapsible: Line<bool>,
     ) -> SizeBaselinesAndMargins {
         perform_node_layout(
             self,
@@ -133,7 +133,7 @@ impl LayoutTree for Taffy {
             parent_size,
             available_space,
             sizing_mode,
-            collapsible_top_margin,
+            vertical_margins_are_collapsible,
         )
     }
 }
