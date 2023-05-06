@@ -69,14 +69,17 @@ impl CollapsibleMarginSet {
 pub struct SizeBaselinesAndMargins {
     /// The size of the node
     pub size: Size<f32>,
+    /// The first baseline of the node in each dimension, if any
+    pub first_baselines: Point<Option<f32>>,
     /// Top margin that can be collapsed with. This is used for CSS block layout and can be set to
     /// `CollapsibleMarginSet::ZERO` for other layout modes that don't support margin collapsing
     pub top_margin: CollapsibleMarginSet,
     /// Bottom margin that can be collapsed with. This is used for CSS block layout and can be set to
     /// `CollapsibleMarginSet::ZERO` for other layout modes that don't support margin collapsing
     pub bottom_margin: CollapsibleMarginSet,
-    /// The first baseline of the node in each dimension, if any
-    pub first_baselines: Point<Option<f32>>,
+    /// Whether margins can be collapsed through this node. This is used for CSS block layout and can
+    /// be set to `false` for other layout modes that don't support margin collapsing
+    pub margins_can_collapse_through: bool,
 }
 
 impl SizeBaselinesAndMargins {
@@ -86,6 +89,7 @@ impl SizeBaselinesAndMargins {
         first_baselines: Point::NONE,
         top_margin: CollapsibleMarginSet::ZERO,
         bottom_margin: CollapsibleMarginSet::ZERO,
+        margins_can_collapse_through: false,
     };
 
     /// Constructor to create a `SizeBaselinesAndMargins` from just the size and baselines
@@ -95,6 +99,7 @@ impl SizeBaselinesAndMargins {
             first_baselines,
             top_margin: CollapsibleMarginSet::ZERO,
             bottom_margin: CollapsibleMarginSet::ZERO,
+            margins_can_collapse_through: false,
         }
     }
 }
@@ -103,9 +108,10 @@ impl From<Size<f32>> for SizeBaselinesAndMargins {
     fn from(size: Size<f32>) -> Self {
         Self {
             size,
+            first_baselines: Point::NONE,
             top_margin: CollapsibleMarginSet::ZERO,
             bottom_margin: CollapsibleMarginSet::ZERO,
-            first_baselines: Point::NONE,
+            margins_can_collapse_through: false,
         }
     }
 }
