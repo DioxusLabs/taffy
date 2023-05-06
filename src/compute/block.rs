@@ -291,20 +291,58 @@ fn perform_final_layout_on_in_flow_children(
         if item.position == Position::Absolute {
             item.static_position.y = total_y_offset;
         } else {
-            let item_margin = item.margin.resolve_or_zero(Some(container_outer_width));
-            let item_x_margin_sum = item_margin.horizontal_axis_sum();
+            let item_margin = item.margin.map(|margin| margin.resolve_to_option(container_outer_width));
+            let item_non_auto_margin = item_margin.map(|m| m.unwrap_or(0.0));
+            let item_non_auto_x_margin_sum = item_non_auto_margin.horizontal_axis_sum();
             let known_dimensions = item
                 .size
                 .maybe_clamp(item.min_size, item.max_size)
-                .map_width(|width| Some(width.unwrap_or(container_inner_width - item_x_margin_sum)));
+                .map_width(|width| Some(width.unwrap_or(container_inner_width - item_non_auto_x_margin_sum)));
 
             let size_and_baselines = tree.perform_child_layout(
                 item.node_id,
                 known_dimensions,
                 parent_size,
-                available_space.map_width(|w| w.maybe_sub(item_x_margin_sum)),
+                available_space.map_width(|w| w.maybe_sub(item_non_auto_x_margin_sum)),
                 SizingMode::InherentSize,
             );
+            let final_size = size_and_baselines.size;
+
+            // Expand auto margins to fill available space
+            // https://www.w3.org/TR/CSS21/visudet.html#abs-non-replaced-width
+            let free_x_space = f32_max(0.0, container_inner_width - final_size.width - item_non_auto_x_margin_sum);
+            let resolved_margin = {
+                let auto_margin_size = Size {
+                    // If all three of 'left', 'width', and 'right' are 'auto': First set any 'auto' values for 'margin-left' and 'margin-right' to 0.
+                    // Then, if the 'direction' property of the element establishing the static-position containing block is 'ltr' set 'left' to the
+                    // static position and apply rule number three below; otherwise, set 'right' to the static position and apply rule number one below.
+                    //
+                    // If none of the three is 'auto': If both 'margin-left' and 'margin-right' are 'auto', solve the equation under the extra constraint
+                    // that the two margins get equal values, unless this would make them negative, in which case when direction of the containing block is
+                    // 'ltr' ('rtl'), set 'margin-left' ('margin-right') to zero and solve for 'margin-right' ('margin-left'). If one of 'margin-left' or
+                    // 'margin-right' is 'auto', solve the equation for that value. If the values are over-constrained, ignore the value for 'left' (in case
+                    // the 'direction' property of the containing block is 'rtl') or 'right' (in case 'direction' is 'ltr') and solve for that value.
+                    width: {
+                        let auto_margin_count = item_margin.left.is_none() as u8 + item_margin.right.is_none() as u8;
+                        if auto_margin_count == 2 && item.size.width.is_none() {
+                            0.0
+                        } else if auto_margin_count > 0 {
+                            free_x_space / auto_margin_count as f32
+                        } else {
+                            0.0
+                        }
+                    },
+                    // Vertical auto-margins for relatively positioned block items simply resolve to 0.
+                    height: 0.0,
+                };
+
+                Rect {
+                    left: item_margin.left.unwrap_or(auto_margin_size.width),
+                    right: item_margin.right.unwrap_or(auto_margin_size.width),
+                    top: item_margin.top.unwrap_or(auto_margin_size.height),
+                    bottom: item_margin.bottom.unwrap_or(auto_margin_size.height),
+                }
+            };
 
             item.computed_size = size_and_baselines.size;
             item.static_position = Point { x: resolved_content_box_inset.left, y: total_y_offset };
@@ -321,7 +359,7 @@ fn perform_final_layout_on_in_flow_children(
                 order: item.order,
                 size: size_and_baselines.size,
                 location: Point {
-                    x: resolved_content_box_inset.left + inset_offset.x + item_margin.left,
+                    x: resolved_content_box_inset.left + inset_offset.x + resolved_margin.left,
                     y: total_y_offset + inset_offset.y,
                 },
             };
