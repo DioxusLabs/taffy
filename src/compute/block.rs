@@ -56,22 +56,16 @@ struct BlockItem {
     max_size: Size<Option<f32>>,
 
     /// The display style of the item
-    display: Display,
+    _display: Display,
     /// The position style of the item
     position: Position,
     /// The overflow style of the item
-    overflow: Point<Overflow>,
+    _overflow: Point<Overflow>,
 
     /// The final offset of this item
     inset: Rect<LengthPercentageAuto>,
     /// The margin of this item
     margin: Rect<LengthPercentageAuto>,
-    /// Whether each margin is an auto margin or not
-    margin_is_auto: Rect<bool>,
-    /// The padding of this item
-    padding: Rect<f32>,
-    /// The border of this item
-    border: Rect<f32>,
 
     /// The computed border box size of this item
     computed_size: Size<f32>,
@@ -80,7 +74,7 @@ struct BlockItem {
     static_position: Point<f32>,
 
     /// The position of the bottom edge of this item
-    baseline: f32,
+    _baseline: f32,
 }
 
 /// Computes the layout of [`LayoutTree`] according to the block layout algorithm
@@ -217,23 +211,22 @@ fn generate_item_list(tree: &impl LayoutTree, node: NodeId, node_inner_size: Siz
             BlockItem {
                 node_id: child_node_id,
                 order: order as u32,
-                display: child_style.display,
+
+                _display: child_style.display,
+                _overflow: child_style.overflow,
                 position: child_style.position,
+
                 size: child_style.size.maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
                 min_size: child_style.min_size.maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
                 max_size: child_style.max_size.maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
 
                 inset: child_style.inset,
                 margin: child_style.margin,
-                margin_is_auto: child_style.margin.map(|m| m == LengthPercentageAuto::Auto),
-                padding: child_style.padding.resolve_or_zero(node_inner_size.width),
-                border: child_style.border.resolve_or_zero(node_inner_size.width),
-                overflow: child_style.overflow,
 
                 // Fields to be computed later (for now we initialise with dummy values)
                 computed_size: Size::zero(),
                 static_position: Point::zero(),
-                baseline: 0.0,
+                _baseline: 0.0,
             }
         })
         .collect()
