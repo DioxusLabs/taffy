@@ -47,11 +47,15 @@ impl CollapsibleMarginSet {
     }
 
     /// Collapse a single margin with this set
-    pub fn collapse_with_margin(&mut self, margin: f32) {
+    pub fn collapse_with_margin(&mut self, margin: f32) -> f32 {
         if margin >= 0.0 {
+            let initial = self.positive;
             self.positive = f32_max(self.positive, margin);
+            f32_max(0.0, margin - initial)
         } else {
+            let initial = self.positive;
             self.negative = f32_min(self.negative, margin);
+            f32_min(0.0, margin - initial)
         }
     }
 

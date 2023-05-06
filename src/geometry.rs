@@ -310,6 +310,8 @@ impl<T> Line<T> {
 }
 
 impl Line<bool> {
+    /// A Line<bool> with both start and end set to `true`
+    pub const TRUE: Self = Line { start: true, end: true };
     /// A Line<bool> with both start and end set to `false`
     pub const FALSE: Self = Line { start: false, end: false };
 }
