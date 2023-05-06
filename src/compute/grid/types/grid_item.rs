@@ -8,8 +8,8 @@ use crate::style::{
     AlignItems, AlignSelf, AvailableSpace, Dimension, LengthPercentageAuto, MaxTrackSizingFunction,
     MinTrackSizingFunction, Overflow, Style,
 };
-use crate::tree::NodeId;
 use crate::tree::SizingMode;
+use crate::tree::{CollapsibleMarginSet, NodeId};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use core::ops::Range;
@@ -350,6 +350,7 @@ impl GridItem {
                 None => AvailableSpace::MinContent,
             }),
             SizingMode::InherentSize,
+            CollapsibleMarginSet::ZERO,
         )
         .get(axis)
     }
@@ -388,6 +389,7 @@ impl GridItem {
                 None => AvailableSpace::MaxContent,
             }),
             SizingMode::InherentSize,
+            CollapsibleMarginSet::ZERO,
         )
         .get(axis)
     }

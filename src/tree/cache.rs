@@ -1,7 +1,7 @@
 //! A cache for storing the results of layout computation
 use crate::geometry::Size;
 use crate::style::AvailableSpace;
-use crate::tree::{RunMode, SizeAndBaselines};
+use crate::tree::{RunMode, SizeBaselinesAndMargins};
 
 /// The number of cache entries for each node in the tree
 const CACHE_SIZE: usize = 7;
@@ -17,7 +17,7 @@ pub struct CacheEntry {
     run_mode: RunMode,
 
     /// The cached size and baselines of the item
-    cached_size_and_baselines: SizeAndBaselines,
+    cached_size_and_baselines: SizeBaselinesAndMargins,
 }
 
 /// A cache for caching the results of a sizing a Grid Item or Flexbox Item
@@ -89,7 +89,7 @@ impl Cache {
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         run_mode: RunMode,
-    ) -> Option<SizeAndBaselines> {
+    ) -> Option<SizeBaselinesAndMargins> {
         for entry in self.entries.iter().flatten() {
             // Cached ComputeSize results are not valid if we are running in PerformLayout mode
             if entry.run_mode == RunMode::ComputeSize && run_mode == RunMode::PeformLayout {
@@ -120,7 +120,7 @@ impl Cache {
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         run_mode: RunMode,
-        cached_size_and_baselines: SizeAndBaselines,
+        cached_size_and_baselines: SizeBaselinesAndMargins,
     ) {
         let cache_slot = Self::compute_cache_slot(known_dimensions, available_space);
         self.entries[cache_slot] =

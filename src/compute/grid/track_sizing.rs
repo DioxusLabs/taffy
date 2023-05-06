@@ -7,6 +7,7 @@ use crate::prelude::{LayoutTree, TaffyMinContent};
 use crate::style::{
     AlignContent, AlignSelf, AvailableSpace, LengthPercentage, MaxTrackSizingFunction, MinTrackSizingFunction,
 };
+use crate::tree::CollapsibleMarginSet;
 use crate::tree::SizingMode;
 use crate::util::sys::{f32_max, f32_min, Vec};
 use crate::util::MaybeMath;
@@ -475,6 +476,7 @@ fn resolve_item_baselines(
                 inner_node_size,
                 Size::MIN_CONTENT,
                 SizingMode::InherentSize,
+                CollapsibleMarginSet::ZERO,
             );
 
             let baseline = measured_size_and_baselines.first_baselines.y;

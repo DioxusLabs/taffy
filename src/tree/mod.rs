@@ -17,7 +17,7 @@ mod taffy_tree;
 #[cfg(feature = "taffy_tree")]
 pub use taffy_tree::{Taffy, TaffyChildIter, TaffyError, TaffyResult};
 mod layout;
-pub use layout::{Layout, RunMode, SizeAndBaselines, SizingMode};
+pub use layout::{CollapsibleMarginSet, Layout, RunMode, SizeBaselinesAndMargins, SizingMode};
 
 /// Any item that implements the LayoutTree can be layed out using Taffy's algorithms.
 ///
@@ -55,6 +55,7 @@ pub trait LayoutTree {
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
+        collapsible_top_margin: CollapsibleMarginSet,
     ) -> Size<f32>;
 
     /// Perform a full layout on the node given the specified constraints
@@ -65,5 +66,6 @@ pub trait LayoutTree {
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
-    ) -> SizeAndBaselines;
+        collapsible_top_margin: CollapsibleMarginSet,
+    ) -> SizeBaselinesAndMargins;
 }

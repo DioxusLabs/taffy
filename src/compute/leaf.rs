@@ -1,9 +1,9 @@
 //! Computes size using styles and measure functions
 
-use crate::geometry::{Point, Size};
+use crate::geometry::Size;
 use crate::style::{AvailableSpace, Overflow, Style};
 use crate::tree::Measurable;
-use crate::tree::{SizeAndBaselines, SizingMode};
+use crate::tree::{CollapsibleMarginSet, SizeBaselinesAndMargins, SizingMode};
 use crate::util::sys::f32_max;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
@@ -19,7 +19,8 @@ pub(crate) fn perform_layout(
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     sizing_mode: SizingMode,
-) -> SizeAndBaselines {
+    _collapsible_top_margin: CollapsibleMarginSet,
+) -> SizeBaselinesAndMargins {
     compute(style, measurable, known_dimensions, parent_size, available_space, sizing_mode)
 }
 
@@ -31,6 +32,7 @@ pub(crate) fn measure_size(
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     sizing_mode: SizingMode,
+    _collapsible_top_margin: CollapsibleMarginSet,
 ) -> Size<f32> {
     compute(style, measurable, known_dimensions, parent_size, available_space, sizing_mode).size
 }
@@ -43,7 +45,7 @@ pub fn compute(
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     sizing_mode: SizingMode,
-) -> SizeAndBaselines {
+) -> SizeBaselinesAndMargins {
     // Resolve node's preferred/min/max sizes (width/heights) against the available space (percentages resolve to pixel values)
     // For ContentSize mode, we pretend that the node has no size styles as these should be ignored.
     let (node_size, node_min_size, node_max_size, aspect_ratio) = match sizing_mode {
@@ -96,7 +98,7 @@ pub fn compute(
         let size = Size { width, height }
             .maybe_clamp(node_min_size, node_max_size)
             .maybe_max(padding_border.sum_axes().map(Some));
-        return SizeAndBaselines { size, first_baselines: Point::NONE };
+        return size.into();
     };
 
     if let Some(measurable) = measurable {
@@ -126,7 +128,7 @@ pub fn compute(
 
         let size = node_size.unwrap_or(measured_size).maybe_clamp(node_min_size, node_max_size);
         let size = size.maybe_max(padding_border.sum_axes().map(Some));
-        return SizeAndBaselines { size, first_baselines: Point::NONE };
+        return size.into();
     }
 
     let size = Size {
@@ -149,5 +151,5 @@ pub fn compute(
         height: f32_max(size.height, aspect_ratio.map(|ratio| size.width / ratio).unwrap_or(0.0)),
     };
 
-    SizeAndBaselines { size, first_baselines: Point::NONE }
+    size.into()
 }

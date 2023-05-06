@@ -2,7 +2,7 @@
 use crate::compute::LayoutAlgorithm;
 use crate::geometry::{Point, Rect, Size};
 use crate::style::{AvailableSpace, Display, LengthPercentageAuto, Overflow, Position};
-use crate::tree::{Layout, RunMode, SizeAndBaselines, SizingMode};
+use crate::tree::{CollapsibleMarginSet, Layout, RunMode, SizeBaselinesAndMargins, SizingMode};
 use crate::tree::{LayoutTree, NodeId};
 use crate::util::sys::Vec;
 use crate::util::sys::{f32_max, f32_min};
@@ -24,8 +24,17 @@ impl LayoutAlgorithm for BlockAlgorithm {
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         _sizing_mode: SizingMode,
-    ) -> SizeAndBaselines {
-        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::PeformLayout)
+        collapsible_top_margin: CollapsibleMarginSet,
+    ) -> SizeBaselinesAndMargins {
+        compute(
+            tree,
+            node,
+            known_dimensions,
+            parent_size,
+            available_space,
+            RunMode::PeformLayout,
+            collapsible_top_margin,
+        )
     }
 
     fn measure_size(
@@ -35,8 +44,18 @@ impl LayoutAlgorithm for BlockAlgorithm {
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         _sizing_mode: SizingMode,
+        collapsible_top_margin: CollapsibleMarginSet,
     ) -> Size<f32> {
-        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::ComputeSize).size
+        compute(
+            tree,
+            node,
+            known_dimensions,
+            parent_size,
+            available_space,
+            RunMode::ComputeSize,
+            collapsible_top_margin,
+        )
+        .size
     }
 }
 
@@ -85,7 +104,8 @@ pub fn compute(
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
-) -> SizeAndBaselines {
+    collapsible_top_margin: CollapsibleMarginSet,
+) -> SizeBaselinesAndMargins {
     let style = tree.style(node_id);
 
     // Pull these out earlier to avoid borrowing issues
@@ -119,7 +139,15 @@ pub fn compute(
 
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("BLOCK");
-    compute_inner(tree, node_id, styled_based_known_dimensions, parent_size, available_space, run_mode)
+    compute_inner(
+        tree,
+        node_id,
+        styled_based_known_dimensions,
+        parent_size,
+        available_space,
+        run_mode,
+        collapsible_top_margin,
+    )
 }
 
 /// Computes the layout of [`LayoutTree`] according to the block layout algorithm
@@ -130,7 +158,8 @@ fn compute_inner(
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
-) -> SizeAndBaselines {
+    _collapsible_top_margin: CollapsibleMarginSet,
+) -> SizeBaselinesAndMargins {
     let style = tree.style(node_id);
     let raw_padding = style.padding;
     let raw_border = style.border;
@@ -253,6 +282,7 @@ fn determine_content_based_container_width(
                 Size::NONE,
                 available_space.map_width(|w| w.maybe_sub(item_x_margin_sum)),
                 SizingMode::InherentSize,
+                CollapsibleMarginSet::ZERO,
             );
 
             size_and_baselines.size.width + item_x_margin_sum
@@ -299,6 +329,7 @@ fn perform_final_layout_on_in_flow_children(
                 parent_size,
                 available_space.map_width(|w| w.maybe_sub(item_non_auto_x_margin_sum)),
                 SizingMode::InherentSize,
+                CollapsibleMarginSet::ZERO,
             );
             let final_size = size_and_baselines.size;
 
@@ -433,6 +464,7 @@ fn perform_absolute_layout_on_absolute_children(
                 height: AvailableSpace::Definite(area_height.maybe_clamp(min_size.height, max_size.height)),
             },
             SizingMode::ContentSize,
+            CollapsibleMarginSet::ZERO,
         );
         let measured_size = measured_size_and_baselines.size;
         let final_size = known_dimensions.unwrap_or(measured_size).maybe_clamp(min_size, max_size);

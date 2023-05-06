@@ -7,7 +7,7 @@ use crate::compute::taffy_tree::{compute_layout, measure_node_size, perform_node
 use crate::geometry::Size;
 use crate::prelude::LayoutTree;
 use crate::style::{AvailableSpace, Style};
-use crate::tree::{Layout, MeasureFunc, NodeData, NodeId, SizeAndBaselines, SizingMode};
+use crate::tree::{CollapsibleMarginSet, Layout, MeasureFunc, NodeData, NodeId, SizeBaselinesAndMargins, SizingMode};
 use crate::util::sys::{new_vec_with_capacity, ChildrenVec, Vec};
 
 use super::{TaffyError, TaffyResult};
@@ -103,8 +103,17 @@ impl LayoutTree for Taffy {
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
+        collapsible_top_margin: CollapsibleMarginSet,
     ) -> Size<f32> {
-        measure_node_size(self, node, known_dimensions, parent_size, available_space, sizing_mode)
+        measure_node_size(
+            self,
+            node,
+            known_dimensions,
+            parent_size,
+            available_space,
+            sizing_mode,
+            collapsible_top_margin,
+        )
     }
 
     #[inline(always)]
@@ -115,8 +124,17 @@ impl LayoutTree for Taffy {
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
-    ) -> SizeAndBaselines {
-        perform_node_layout(self, node, known_dimensions, parent_size, available_space, sizing_mode)
+        collapsible_top_margin: CollapsibleMarginSet,
+    ) -> SizeBaselinesAndMargins {
+        perform_node_layout(
+            self,
+            node,
+            known_dimensions,
+            parent_size,
+            available_space,
+            sizing_mode,
+            collapsible_top_margin,
+        )
     }
 }
 
