@@ -362,6 +362,10 @@ fn perform_final_layout_on_in_flow_children(
             );
             let final_size = size_and_baselines.size;
 
+            let top_margin_set = size_and_baselines.top_margin.collapse_with_margin(item_margin.top.unwrap_or(0.0));
+            let bottom_margin_set =
+                size_and_baselines.bottom_margin.collapse_with_margin(item_margin.bottom.unwrap_or(0.0));
+
             // Expand auto margins to fill available space
             // https://www.w3.org/TR/CSS21/visudet.html#abs-non-replaced-width
             let free_x_space = f32_max(0.0, container_inner_width - final_size.width - item_non_auto_x_margin_sum);
@@ -384,11 +388,8 @@ fn perform_final_layout_on_in_flow_children(
                 Rect {
                     left: item_margin.left.unwrap_or(auto_margin_size.width),
                     right: item_margin.right.unwrap_or(auto_margin_size.width),
-                    top: size_and_baselines.top_margin.collapse_with_margin(item_margin.top.unwrap_or(0.0)).resolve(),
-                    bottom: size_and_baselines
-                        .bottom_margin
-                        .collapse_with_margin(item_margin.bottom.unwrap_or(0.0))
-                        .resolve(),
+                    top: top_margin_set.resolve(),
+                    bottom: bottom_margin_set.resolve(),
                 }
             };
 
@@ -398,7 +399,7 @@ fn perform_final_layout_on_in_flow_children(
                 previous_sibling_collapsible_margin_set.collapse_with_margin(resolved_margin.top).resolve()
             };
             if is_first {
-                first_child_top_margin_set = CollapsibleMarginSet::from_margin(resolved_margin.top);
+                first_child_top_margin_set = top_margin_set
             }
 
             item.computed_size = size_and_baselines.size;
@@ -422,7 +423,7 @@ fn perform_final_layout_on_in_flow_children(
             };
 
             total_y_offset += size_and_baselines.size.height + y_margin_offset;
-            previous_sibling_collapsible_margin_set = CollapsibleMarginSet::from_margin(resolved_margin.bottom);
+            previous_sibling_collapsible_margin_set = bottom_margin_set;
         }
     }
 
