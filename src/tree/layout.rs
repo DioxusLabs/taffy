@@ -37,6 +37,15 @@ impl CollapsibleMarginSet {
     /// A default margin set with no collapsible margins
     pub const ZERO: Self = Self { positive: 0.0, negative: 0.0 };
 
+    /// Create a set from a single margin
+    pub fn from_margin(margin: f32) -> Self {
+        if margin >= 0.0 {
+            Self { positive: margin, negative: 0.0 }
+        } else {
+            Self { positive: 0.0, negative: margin }
+        }
+    }
+
     /// Collapse a single margin with this set
     pub fn collapse_with_margin(&mut self, margin: f32) {
         if margin >= 0.0 {

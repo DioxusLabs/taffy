@@ -158,11 +158,12 @@ fn compute_inner(
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
-    _collapsible_top_margin: CollapsibleMarginSet,
+    parent_collapsible_top_margin: CollapsibleMarginSet,
 ) -> SizeBaselinesAndMargins {
     let style = tree.style(node_id);
     let raw_padding = style.padding;
     let raw_border = style.border;
+    let raw_margin = style.margin;
     let aspect_ratio = style.aspect_ratio;
     let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
     let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
@@ -183,6 +184,11 @@ fn compute_inner(
     let content_box_inset = padding + border + scrollbar_gutter;
     let container_content_box_size = known_dimensions.maybe_sub(content_box_inset.sum_axes());
 
+    let own_top_margin_collapses_with_children = style.overflow.y == Overflow::Visible
+        && style.position == Position::Relative
+        && padding.top == 0.0
+        && border.top == 0.0;
+
     // 1. Generate items
     let mut items = generate_item_list(tree, node_id, container_content_box_size);
 
@@ -199,6 +205,16 @@ fn compute_inner(
         return Size { width: container_outer_width, height: container_outer_height }.into();
     }
 
+    // 3.Determine margin collapsing behaviour
+    let collapsible_margin_set = if own_top_margin_collapses_with_children {
+        let mut collapsible_margin_set = CollapsibleMarginSet::ZERO;
+        collapsible_margin_set.collapse_with_set(parent_collapsible_top_margin);
+        collapsible_margin_set.collapse_with_margin(raw_margin.top.resolve_or_zero(parent_size.width));
+        collapsible_margin_set
+    } else {
+        CollapsibleMarginSet::ZERO
+    };
+
     // 3. Perform final item layout and return content height
     let resolved_padding = raw_padding.resolve_or_zero(Some(container_outer_width));
     let resolved_border = raw_border.resolve_or_zero(Some(container_outer_width));
@@ -209,6 +225,7 @@ fn compute_inner(
         container_outer_width,
         content_box_inset,
         resolved_content_box_inset,
+        collapsible_margin_set,
     );
     let container_outer_height =
         known_dimensions.height.unwrap_or(intrinsic_outer_height.maybe_clamp(min_size.height, max_size.height));
@@ -302,6 +319,7 @@ fn perform_final_layout_on_in_flow_children(
     container_outer_width: f32,
     content_box_inset: Rect<f32>,
     resolved_content_box_inset: Rect<f32>,
+    initial_collapsible_margin_set: CollapsibleMarginSet,
 ) -> f32 {
     // Resolve container_inner_width for sizing child nodes using intial content_box_inset
     let container_inner_width = container_outer_width - content_box_inset.horizontal_axis_sum();
@@ -310,11 +328,16 @@ fn perform_final_layout_on_in_flow_children(
         Size { width: AvailableSpace::Definite(container_inner_width), height: AvailableSpace::MinContent };
 
     let mut total_y_offset = resolved_content_box_inset.top;
-    let mut collapsible_bottom_margin: f32 = 0.0;
-    for item in items.iter_mut() {
+    let mut collapsible_margin_set: CollapsibleMarginSet = initial_collapsible_margin_set;
+    let first_in_flow_item_index = items.iter().position(|item| item.position != Position::Absolute).unwrap_or(0);
+    let last_in_flow_item_index = items.iter().rev().position(|item| item.position != Position::Absolute).unwrap_or(0);
+    for (index, item) in items.iter_mut().enumerate() {
         if item.position == Position::Absolute {
             item.static_position.y = total_y_offset;
         } else {
+            let is_first = index == first_in_flow_item_index;
+            let is_last = index == last_in_flow_item_index;
+
             let item_margin = item.margin.map(|margin| margin.resolve_to_option(container_outer_width));
             let item_non_auto_margin = item_margin.map(|m| m.unwrap_or(0.0));
             let item_non_auto_x_margin_sum = item_non_auto_margin.horizontal_axis_sum();
@@ -360,11 +383,8 @@ fn perform_final_layout_on_in_flow_children(
                 }
             };
 
-            let y_margin_offset = match (resolved_margin.top >= 0.0, collapsible_bottom_margin >= 0.0) {
-                (true, true) => f32_max(resolved_margin.top, collapsible_bottom_margin),
-                (false, false) => f32_min(resolved_margin.top, collapsible_bottom_margin),
-                _ => resolved_margin.top + collapsible_bottom_margin,
-            };
+            collapsible_margin_set.collapse_with_margin(resolved_margin.top);
+            let y_margin_offset = collapsible_margin_set.resolve();
 
             item.computed_size = size_and_baselines.size;
             item.static_position = Point { x: resolved_content_box_inset.left, y: total_y_offset };
@@ -387,11 +407,11 @@ fn perform_final_layout_on_in_flow_children(
             };
 
             total_y_offset += size_and_baselines.size.height + y_margin_offset;
-            collapsible_bottom_margin = resolved_margin.bottom;
+            collapsible_margin_set = CollapsibleMarginSet::from_margin(resolved_margin.bottom);
         }
     }
 
-    total_y_offset += resolved_content_box_inset.bottom + collapsible_bottom_margin;
+    total_y_offset += resolved_content_box_inset.bottom + collapsible_margin_set.resolve();
     f32_max(0.0, total_y_offset)
 }
 
