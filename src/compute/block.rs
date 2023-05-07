@@ -546,16 +546,22 @@ fn perform_absolute_layout_on_absolute_children(
         let measured_size = measured_size_and_baselines.size;
         let final_size = known_dimensions.unwrap_or(measured_size).maybe_clamp(min_size, max_size);
 
+        let non_auto_margin = Rect {
+            left: if left.is_some() { margin.left.unwrap_or(0.0) } else { 0.0 },
+            right: if right.is_some() { margin.right.unwrap_or(0.0) } else { 0.0 },
+            top: if top.is_some() { margin.top.unwrap_or(0.0) } else { 0.0 },
+            bottom: if bottom.is_some() { margin.left.unwrap_or(0.0) } else { 0.0 },
+        };
+
         // Expand auto margins to fill available space
         // https://www.w3.org/TR/CSS21/visudet.html#abs-non-replaced-width
-        let resolved_margin = {
+        let auto_margin = {
             // Auto margins for absolutely positioned elements in block containers only resolve
             // if inset is set. Otherwise they resolve to 0.
             let absolute_auto_margin_space = Point {
                 x: right.map(|right| area_size.width - right - left.unwrap_or(0.0)).unwrap_or(final_size.width),
                 y: bottom.map(|bottom| area_size.height - bottom - top.unwrap_or(0.0)).unwrap_or(final_size.height),
             };
-            let non_auto_margin = margin.map(|m| m.unwrap_or(0.0));
             let free_space = Size {
                 width: absolute_auto_margin_space.x - final_size.width - non_auto_margin.horizontal_axis_sum(),
                 height: absolute_auto_margin_space.y - final_size.height - non_auto_margin.vertical_axis_sum(),
@@ -573,7 +579,9 @@ fn perform_absolute_layout_on_absolute_children(
                 // the 'direction' property of the containing block is 'rtl') or 'right' (in case 'direction' is 'ltr') and solve for that value.
                 width: {
                     let auto_margin_count = margin.left.is_none() as u8 + margin.right.is_none() as u8;
-                    if auto_margin_count == 2 && style_size.width.is_none() {
+                    if auto_margin_count == 2
+                        && (style_size.width.is_none() || style_size.width.unwrap() >= free_space.width)
+                    {
                         0.0
                     } else if auto_margin_count > 0 {
                         free_space.width / auto_margin_count as f32
@@ -583,7 +591,9 @@ fn perform_absolute_layout_on_absolute_children(
                 },
                 height: {
                     let auto_margin_count = margin.top.is_none() as u8 + margin.bottom.is_none() as u8;
-                    if auto_margin_count == 2 && style_size.height.is_none() {
+                    if auto_margin_count == 2
+                        && (style_size.height.is_none() || style_size.height.unwrap() >= free_space.height)
+                    {
                         0.0
                     } else if auto_margin_count > 0 {
                         free_space.height / auto_margin_count as f32
@@ -594,11 +604,18 @@ fn perform_absolute_layout_on_absolute_children(
             };
 
             Rect {
-                left: margin.left.unwrap_or(auto_margin_size.width),
-                right: margin.right.unwrap_or(auto_margin_size.width),
-                top: margin.top.unwrap_or(auto_margin_size.height),
-                bottom: margin.bottom.unwrap_or(auto_margin_size.height),
+                left: margin.left.map(|_| 0.0).unwrap_or(auto_margin_size.width),
+                right: margin.right.map(|_| 0.0).unwrap_or(auto_margin_size.width),
+                top: margin.top.map(|_| 0.0).unwrap_or(auto_margin_size.height),
+                bottom: margin.bottom.map(|_| 0.0).unwrap_or(auto_margin_size.height),
             }
+        };
+
+        let resolved_margin = Rect {
+            left: margin.left.unwrap_or(auto_margin.left),
+            right: margin.right.unwrap_or(auto_margin.right),
+            top: margin.top.unwrap_or(auto_margin.top),
+            bottom: margin.bottom.unwrap_or(auto_margin.bottom),
         };
 
         let item_offset = Point {
