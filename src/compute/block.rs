@@ -94,7 +94,7 @@ struct BlockItem {
     static_position: Point<f32>,
 
     /// The position of the bottom edge of this item
-    _baseline: f32,
+    baseline: Option<f32>,
 }
 
 /// Computes the layout of [`LayoutTree`] according to the block layout algorithm
@@ -261,9 +261,16 @@ fn compute_inner(
             );
         }
     }
+
+    // 6. Calculate the container's first vertical baseline
+    let first_vertical_baseline = items
+        .iter()
+        .find(|item| item.position != Position::Absolute)
+        .map(|child| child.static_position.y + child.baseline.unwrap_or(child.computed_size.height));
+
     SizeBaselinesAndMargins {
         size: final_outer_size,
-        first_baselines: Point::NONE,
+        first_baselines: Point { x: None, y: first_vertical_baseline },
         top_margin: if own_margins_collapse_with_children.start {
             first_child_top_margin_set
         } else {
@@ -307,7 +314,7 @@ fn generate_item_list(tree: &impl LayoutTree, node: NodeId, node_inner_size: Siz
                 // Fields to be computed later (for now we initialise with dummy values)
                 computed_size: Size::zero(),
                 static_position: Point::zero(),
-                _baseline: 0.0,
+                baseline: None,
             }
         })
         .collect()
@@ -431,6 +438,7 @@ fn perform_final_layout_on_in_flow_children(
             }
 
             item.computed_size = size_and_baselines.size;
+            item.baseline = size_and_baselines.first_baselines.y;
             item.static_position = Point { x: resolved_content_box_inset.left, y: total_y_offset };
 
             // Resolve item inset
