@@ -598,8 +598,14 @@ fn perform_absolute_layout_on_absolute_children(
         };
 
         let item_offset = Point {
-            x: left.or(right.map(|x| -x)).unwrap_or(0.0) + resolved_margin.left,
-            y: top.or(bottom.map(|x| -x)).unwrap_or(item.static_position.y) + resolved_margin.top,
+            x: left
+                .map(|left| left + resolved_margin.left)
+                .or(right.map(|right| area_size.width - final_size.width - right - resolved_margin.right))
+                .unwrap_or(resolved_margin.left),
+            y: top
+                .map(|top| top + resolved_margin.top)
+                .or(bottom.map(|bottom| area_size.height - final_size.height - bottom - resolved_margin.bottom))
+                .unwrap_or(item.static_position.y + resolved_margin.top),
         };
 
         *tree.layout_mut(item.node_id) =
