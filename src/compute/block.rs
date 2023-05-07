@@ -546,17 +546,21 @@ fn perform_absolute_layout_on_absolute_children(
         let measured_size = measured_size_and_baselines.size;
         let final_size = known_dimensions.unwrap_or(measured_size).maybe_clamp(min_size, max_size);
 
-        let non_auto_margin = margin.map(|m| m.unwrap_or(0.0));
-
-        let free_space = Size {
-            width: area_size.width - final_size.width - non_auto_margin.horizontal_axis_sum(),
-            height: area_size.height - final_size.height - non_auto_margin.vertical_axis_sum(),
-        }
-        .f32_max(Size::ZERO);
-
         // Expand auto margins to fill available space
         // https://www.w3.org/TR/CSS21/visudet.html#abs-non-replaced-width
         let resolved_margin = {
+            // Auto margins for absolutely positioned elements in block containers only resolve
+            // if inset is set. Otherwise they resolve to 0.
+            let absolute_auto_margin_space = Point {
+                x: right.map(|right| area_size.width - right - left.unwrap_or(0.0)).unwrap_or(final_size.width),
+                y: bottom.map(|bottom| area_size.height - bottom - top.unwrap_or(0.0)).unwrap_or(final_size.height),
+            };
+            let non_auto_margin = margin.map(|m| m.unwrap_or(0.0));
+            let free_space = Size {
+                width: absolute_auto_margin_space.x - final_size.width - non_auto_margin.horizontal_axis_sum(),
+                height: absolute_auto_margin_space.y - final_size.height - non_auto_margin.vertical_axis_sum(),
+            };
+
             let auto_margin_size = Size {
                 // If all three of 'left', 'width', and 'right' are 'auto': First set any 'auto' values for 'margin-left' and 'margin-right' to 0.
                 // Then, if the 'direction' property of the element establishing the static-position containing block is 'ltr' set 'left' to the
