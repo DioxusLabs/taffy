@@ -2,6 +2,7 @@
 use crate::compute::LayoutAlgorithm;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AvailableSpace, Display, LengthPercentageAuto, Overflow, Position};
+use crate::style_helpers::TaffyMaxContent;
 use crate::tree::{CollapsibleMarginSet, Layout, RunMode, SizeBaselinesAndMargins, SizingMode};
 use crate::tree::{LayoutTree, NodeId};
 use crate::util::sys::f32_max;
@@ -244,6 +245,22 @@ fn compute_inner(
     let absolute_position_offset = Point { x: absolute_position_inset.left, y: absolute_position_inset.top };
     perform_absolute_layout_on_absolute_children(tree, &mut items, absolute_position_area, absolute_position_offset);
 
+    // 5. Perform hidden layout on hidden children
+    let len = tree.child_count(node_id);
+    for order in 0..len {
+        let child = tree.child(node_id, order);
+        if tree.style(child).display == Display::None {
+            *tree.layout_mut(child) = Layout::with_order(order as u32);
+            tree.perform_child_layout(
+                child,
+                Size::NONE,
+                Size::NONE,
+                Size::MAX_CONTENT,
+                SizingMode::InherentSize,
+                Line::FALSE,
+            );
+        }
+    }
     SizeBaselinesAndMargins {
         size: final_outer_size,
         first_baselines: Point::NONE,
