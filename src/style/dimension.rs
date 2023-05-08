@@ -1,6 +1,8 @@
 //! Style types for representing lengths / sizes
 
 use crate::geometry::{Rect, Size};
+#[cfg(doc)]
+use crate::prelude::Taffy;
 use crate::style_helpers::{FromLength, FromPercent, TaffyAuto, TaffyMaxContent, TaffyMinContent, TaffyZero};
 use crate::util::sys::abs;
 
@@ -10,8 +12,9 @@ use crate::util::sys::abs;
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum LengthPercentage {
-    /// An absolute length in some abstract units. Users of Taffy may define what they correspond
-    /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
+    /// An absolute length in CSS `px` units a.k.a. logical pixels.
+    ///
+    /// See [`Taffy::set_pixel_ratio`].
     Length(f32),
     /// The dimension is stored in percentage relative to the parent item.
     Percent(f32),
@@ -36,8 +39,9 @@ impl FromPercent for LengthPercentage {
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum LengthPercentageAuto {
-    /// An absolute length in some abstract units. Users of Taffy may define what they correspond
-    /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
+    /// An absolute length in CSS `px` units a.k.a. logical pixels.
+    ///
+    /// See [`Taffy::set_pixel_ratio`].
     Length(f32),
     /// The dimension is stored in percentage relative to the parent item.
     Percent(f32),
@@ -90,8 +94,9 @@ impl LengthPercentageAuto {
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Dimension {
-    /// An absolute length in some abstract units. Users of Taffy may define what they correspond
-    /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
+    /// An absolute length in CSS `px` units a.k.a. logical pixels.
+    ///
+    /// See [`Taffy::set_pixel_ratio`].
     Length(f32),
     /// The dimension is stored in percentage relative to the parent item.
     Percent(f32),

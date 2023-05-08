@@ -16,11 +16,15 @@ use super::{TaffyError, TaffyResult};
 pub(crate) struct TaffyConfig {
     /// Whether to round layout values
     pub(crate) use_rounding: bool,
+
+    /// Number of output length units per input length units.
+    /// See `pixel_ratio` and `set_pixel_ratio` methods.
+    pub(crate) pixel_ratio: f32,
 }
 
 impl Default for TaffyConfig {
     fn default() -> Self {
-        Self { use_rounding: true }
+        Self { use_rounding: true, pixel_ratio: 1.0 }
     }
 }
 
@@ -144,14 +148,38 @@ impl Taffy {
         }
     }
 
-    /// Enable rounding of layout values. Rounding is enabled by default.
+    /// Enable rounding of sizes and locations in [`Layout`].
+    /// Rounding is enabled by default.
     pub fn enable_rounding(&mut self) {
         self.config.use_rounding = true;
     }
 
-    /// Disable rounding of layout values. Rounding is enabled by default.
+    /// Disable rounding of sizes and locations in [`Layout`].
+    /// Rounding is enabled by default.
     pub fn disable_rounding(&mut self) {
         self.config.use_rounding = false;
+    }
+
+    /// Returns the current pixel ratio. See [`set_pixel_ratio`][Self::set_pixel_ratio].
+    pub fn pixel_ratio(&self) -> f32 {
+        self.config.pixel_ratio
+    }
+
+    /// Sets the pixel ratio: the number of output pixels per logical pixels.
+    ///
+    /// Absolute length values in [`style`][crate::style] are measured in **logical pixels**
+    /// and correspond to CSS the `px` unit.
+    ///
+    /// Sizes and locations in [`Layout`] are measured in output pixels.
+    /// When rendering to screen media, it is recommended to use them as **physical pixels**
+    /// a.k.a. [device pixels](https://drafts.csswg.org/css-values/#device-pixel)
+    /// and set the pixel ratio to the whole number that makes a logical pixel best approximate
+    /// the [reference pixel](https://drafts.csswg.org/css-values/#reference-pixel),
+    /// (the visual angle of one pixel on a 96dpi device held at arm’s length).
+    ///
+    /// The default is 1.0.
+    pub fn set_pixel_ratio(&mut self, new_pixel_ratio: f32) {
+        self.config.pixel_ratio = new_pixel_ratio
     }
 
     /// Creates and adds a new unattached leaf node to the tree, and returns the node of the new node

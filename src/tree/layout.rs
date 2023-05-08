@@ -1,6 +1,8 @@
 //! Final data structures that represent the high-level UI layout
 
 use crate::geometry::{Point, Size};
+#[cfg(doc)]
+use crate::prelude::Taffy;
 
 /// Whether we are performing a full layout, or we merely need to size the node
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -31,6 +33,7 @@ pub enum SizingMode {
 pub struct SizeAndBaselines {
     /// The size of the node
     pub size: Size<f32>,
+
     /// The first baseline of the node in each dimension, if any
     pub first_baselines: Point<Option<f32>>,
 }
@@ -49,9 +52,15 @@ pub struct Layout {
     /// Nodes with a higher order should be rendered on top of those with a lower order.
     /// This is effectively a topological sort of each tree.
     pub order: u32,
-    /// The width and height of the node
+
+    /// The width and height of the node, in output pixels.
+    ///
+    /// See [`Taffy::set_pixel_ratio`].
     pub size: Size<f32>,
-    /// The bottom-left corner of the node
+
+    /// The bottom-left corner of the node, in output pixels.
+    ///
+    /// See [`Taffy::set_pixel_ratio`].
     pub location: Point<f32>,
 }
 
