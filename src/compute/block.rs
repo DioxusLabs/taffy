@@ -92,6 +92,8 @@ struct BlockItem {
     /// The computed "static position" of this item. The static position is the position
     /// taking into account padding, border, margins, and scrollbar_gutters but not inset
     static_position: Point<f32>,
+    /// Whether margins can be collapsed through this item
+    can_be_collapsed_through: bool,
 
     /// The position of the bottom edge of this item
     baseline: Option<f32>,
@@ -189,17 +191,24 @@ fn compute_inner(
     // Determine margin collapsing behaviour
     let own_margins_collapse_with_children = Line {
         start: vertical_margins_are_collapsible.start
-            && style.overflow.y == Overflow::Visible
+            && !style.overflow.y.is_scroll_container()
             && style.position == Position::Relative
             && padding.top == 0.0
             && border.top == 0.0,
         end: vertical_margins_are_collapsible.end
-            && style.overflow.y == Overflow::Visible
+            && !style.overflow.y.is_scroll_container()
             && style.position == Position::Relative
             && padding.bottom == 0.0
             && border.bottom == 0.0
             && size.height.is_none(),
     };
+    let has_styles_preventing_being_collapsed_through = style.display != Display::Block
+        || style.overflow.y.is_scroll_container()
+        || style.position == Position::Absolute
+        || padding.top > 0.0
+        || padding.bottom > 0.0
+        || border.top > 0.0
+        || border.bottom > 0.0;
 
     // 1. Generate items
     let mut items = generate_item_list(tree, node_id, container_content_box_size);
@@ -268,6 +277,12 @@ fn compute_inner(
         .find(|item| item.position != Position::Absolute)
         .map(|child| child.static_position.y + child.baseline.unwrap_or(child.computed_size.height));
 
+    // 7. Determine whether this node can be collapsed through
+    let all_in_flow_children_can_be_collapsed_through =
+        items.iter().all(|item| item.position == Position::Absolute || item.can_be_collapsed_through);
+    let can_be_collapsed_through =
+        !has_styles_preventing_being_collapsed_through && all_in_flow_children_can_be_collapsed_through;
+
     SizeBaselinesAndMargins {
         size: final_outer_size,
         first_baselines: Point { x: None, y: first_vertical_baseline },
@@ -283,7 +298,7 @@ fn compute_inner(
             let margin_bottom = raw_margin.bottom.resolve_or_zero(parent_size.width);
             CollapsibleMarginSet::from_margin(margin_bottom)
         },
-        margins_can_collapse_through: false,
+        margins_can_collapse_through: can_be_collapsed_through,
     }
 }
 
@@ -314,6 +329,7 @@ fn generate_item_list(tree: &impl LayoutTree, node: NodeId, node_inner_size: Siz
                 // Fields to be computed later (for now we initialise with dummy values)
                 computed_size: Size::zero(),
                 static_position: Point::zero(),
+                can_be_collapsed_through: false,
                 baseline: None,
             }
         })
@@ -369,16 +385,17 @@ fn perform_final_layout_on_in_flow_children(
     let available_space =
         Size { width: AvailableSpace::Definite(container_inner_width), height: AvailableSpace::MinContent };
 
-    let mut total_y_offset = resolved_content_box_inset.top;
+    let mut committed_y_offset = resolved_content_box_inset.top;
     let mut first_child_top_margin_set = CollapsibleMarginSet::ZERO;
-    let mut previous_sibling_collapsible_margin_set = CollapsibleMarginSet::ZERO;
-    let first_in_flow_item_index = items.iter().position(|item| item.position != Position::Absolute).unwrap_or(0);
-    for (index, item) in items.iter_mut().enumerate() {
-        if item.position == Position::Absolute {
-            item.static_position.y = total_y_offset;
-        } else {
-            let is_first = index == first_in_flow_item_index;
+    let mut active_collapsible_margin_set = CollapsibleMarginSet::ZERO;
+    let mut is_collapsing_with_first_margin_set = true;
+    for item in items.iter_mut() {
+        dbg!(committed_y_offset);
+        dbg!(active_collapsible_margin_set);
 
+        if item.position == Position::Absolute {
+            item.static_position.y = committed_y_offset;
+        } else {
             let item_margin = item.margin.map(|margin| margin.resolve_to_option(container_outer_width));
             let item_non_auto_margin = item_margin.map(|m| m.unwrap_or(0.0));
             let item_non_auto_x_margin_sum = item_non_auto_margin.horizontal_axis_sum();
@@ -387,7 +404,7 @@ fn perform_final_layout_on_in_flow_children(
                 .maybe_clamp(item.min_size, item.max_size)
                 .map_width(|width| Some(width.unwrap_or(container_inner_width - item_non_auto_x_margin_sum)));
 
-            let size_and_baselines = tree.perform_child_layout(
+            let item_layout = tree.perform_child_layout(
                 item.node_id,
                 known_dimensions,
                 parent_size,
@@ -395,11 +412,10 @@ fn perform_final_layout_on_in_flow_children(
                 SizingMode::InherentSize,
                 Line::TRUE,
             );
-            let final_size = size_and_baselines.size;
+            let final_size = item_layout.size;
 
-            let top_margin_set = size_and_baselines.top_margin.collapse_with_margin(item_margin.top.unwrap_or(0.0));
-            let bottom_margin_set =
-                size_and_baselines.bottom_margin.collapse_with_margin(item_margin.bottom.unwrap_or(0.0));
+            let top_margin_set = item_layout.top_margin.collapse_with_margin(item_margin.top.unwrap_or(0.0));
+            let bottom_margin_set = item_layout.bottom_margin.collapse_with_margin(item_margin.bottom.unwrap_or(0.0));
 
             // Expand auto margins to fill available space
             // https://www.w3.org/TR/CSS21/visudet.html#abs-non-replaced-width
@@ -428,19 +444,6 @@ fn perform_final_layout_on_in_flow_children(
                 }
             };
 
-            let y_margin_offset = if is_first && own_margins_collapse_with_children.start {
-                0.0
-            } else {
-                previous_sibling_collapsible_margin_set.collapse_with_margin(resolved_margin.top).resolve()
-            };
-            if is_first {
-                first_child_top_margin_set = top_margin_set
-            }
-
-            item.computed_size = size_and_baselines.size;
-            item.baseline = size_and_baselines.first_baselines.y;
-            item.static_position = Point { x: resolved_content_box_inset.left, y: total_y_offset };
-
             // Resolve item inset
             let inset =
                 item.inset.zip_size(Size { width: container_inner_width, height: 0.0 }, |p, s| p.maybe_resolve(s));
@@ -449,26 +452,61 @@ fn perform_final_layout_on_in_flow_children(
                 y: inset.top.or(inset.bottom.map(|x| -x)).unwrap_or(0.0),
             };
 
+            let y_margin_offset = if is_collapsing_with_first_margin_set && own_margins_collapse_with_children.start {
+                0.0
+            } else {
+                active_collapsible_margin_set.collapse_with_margin(resolved_margin.top).resolve()
+            };
+
+            item.computed_size = item_layout.size;
+            item.baseline = item_layout.first_baselines.y;
+            item.can_be_collapsed_through = dbg!(item_layout.margins_can_collapse_through);
+            item.static_position = Point {
+                x: resolved_content_box_inset.left,
+                y: committed_y_offset + active_collapsible_margin_set.resolve(),
+            };
+
             *tree.layout_mut(item.node_id) = Layout {
                 order: item.order,
-                size: size_and_baselines.size,
+                size: item_layout.size,
                 location: Point {
                     x: resolved_content_box_inset.left + inset_offset.x + resolved_margin.left,
-                    y: total_y_offset + inset_offset.y + y_margin_offset,
+                    y: committed_y_offset + inset_offset.y + y_margin_offset,
                 },
             };
 
-            total_y_offset += size_and_baselines.size.height + y_margin_offset;
-            previous_sibling_collapsible_margin_set = bottom_margin_set;
+            // Update first_child_top_margin_set
+            if is_collapsing_with_first_margin_set {
+                if item.can_be_collapsed_through {
+                    first_child_top_margin_set = first_child_top_margin_set
+                        .collapse_with_set(top_margin_set)
+                        .collapse_with_set(bottom_margin_set);
+                } else {
+                    first_child_top_margin_set = first_child_top_margin_set.collapse_with_set(top_margin_set);
+                    is_collapsing_with_first_margin_set = false;
+                }
+            }
+
+            // Update active_collapsible_margin_set
+            if item.can_be_collapsed_through {
+                active_collapsible_margin_set = active_collapsible_margin_set
+                    .collapse_with_set(top_margin_set)
+                    .collapse_with_set(bottom_margin_set);
+            } else {
+                committed_y_offset += item_layout.size.height + y_margin_offset;
+                active_collapsible_margin_set = bottom_margin_set;
+            }
+
+            println!();
         }
     }
 
-    let last_child_bottom_margin_set = previous_sibling_collapsible_margin_set;
+    let last_child_bottom_margin_set = active_collapsible_margin_set;
     let bottom_y_margin_offset =
         if own_margins_collapse_with_children.end { 0.0 } else { last_child_bottom_margin_set.resolve() };
 
-    total_y_offset += resolved_content_box_inset.bottom + bottom_y_margin_offset;
-    let content_height = f32_max(0.0, total_y_offset);
+    committed_y_offset += resolved_content_box_inset.bottom + bottom_y_margin_offset;
+    let content_height = f32_max(0.0, committed_y_offset);
     (content_height, first_child_top_margin_set, last_child_bottom_margin_set)
 }
 

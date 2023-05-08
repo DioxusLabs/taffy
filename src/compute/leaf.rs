@@ -1,8 +1,8 @@
 //! Computes size using styles and measure functions
 
-use crate::geometry::{Line, Size};
-use crate::style::{AvailableSpace, Overflow, Style};
-use crate::tree::Measurable;
+use crate::geometry::{Line, Point, Size};
+use crate::style::{AvailableSpace, Display, Overflow, Position, Style};
+use crate::tree::{CollapsibleMarginSet, Measurable};
 use crate::tree::{SizeBaselinesAndMargins, SizingMode};
 use crate::util::sys::f32_max;
 use crate::util::MaybeMath;
@@ -84,6 +84,14 @@ pub fn compute(
     content_box_inset.right += scrollbar_gutter.x;
     content_box_inset.bottom += scrollbar_gutter.y;
 
+    let has_styles_preventing_being_collapsed_through = style.display != Display::Block
+        || style.overflow.y.is_scroll_container()
+        || style.position == Position::Absolute
+        || padding.top > 0.0
+        || padding.bottom > 0.0
+        || border.top > 0.0
+        || border.bottom > 0.0;
+
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("LEAF");
     #[cfg(feature = "debug")]
@@ -98,7 +106,13 @@ pub fn compute(
         let size = Size { width, height }
             .maybe_clamp(node_min_size, node_max_size)
             .maybe_max(padding_border.sum_axes().map(Some));
-        return size.into();
+        return SizeBaselinesAndMargins {
+            size,
+            first_baselines: Point::NONE,
+            top_margin: CollapsibleMarginSet::ZERO,
+            bottom_margin: CollapsibleMarginSet::ZERO,
+            margins_can_collapse_through: !has_styles_preventing_being_collapsed_through && size.height == 0.0,
+        };
     };
 
     if let Some(measurable) = measurable {
@@ -128,7 +142,13 @@ pub fn compute(
 
         let size = node_size.unwrap_or(measured_size).maybe_clamp(node_min_size, node_max_size);
         let size = size.maybe_max(padding_border.sum_axes().map(Some));
-        return size.into();
+        return SizeBaselinesAndMargins {
+            size,
+            first_baselines: Point::NONE,
+            top_margin: CollapsibleMarginSet::ZERO,
+            bottom_margin: CollapsibleMarginSet::ZERO,
+            margins_can_collapse_through: !has_styles_preventing_being_collapsed_through && size.height == 0.0,
+        };
     }
 
     let size = Size {
@@ -151,5 +171,11 @@ pub fn compute(
         height: f32_max(size.height, aspect_ratio.map(|ratio| size.width / ratio).unwrap_or(0.0)),
     };
 
-    size.into()
+    return SizeBaselinesAndMargins {
+        size,
+        first_baselines: Point::NONE,
+        top_margin: CollapsibleMarginSet::ZERO,
+        bottom_margin: CollapsibleMarginSet::ZERO,
+        margins_can_collapse_through: !has_styles_preventing_being_collapsed_through && size.height == 0.0,
+    };
 }
