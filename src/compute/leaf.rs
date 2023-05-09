@@ -174,11 +174,11 @@ pub fn compute(
         height: f32_max(size.height, aspect_ratio.map(|ratio| size.width / ratio).unwrap_or(0.0)),
     };
 
-    return SizeBaselinesAndMargins {
+    SizeBaselinesAndMargins {
         size,
         first_baselines: Point::NONE,
         top_margin: CollapsibleMarginSet::ZERO,
         bottom_margin: CollapsibleMarginSet::ZERO,
         margins_can_collapse_through: !has_styles_preventing_being_collapsed_through && size.height == 0.0,
-    };
+    }
 }
