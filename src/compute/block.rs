@@ -418,30 +418,24 @@ fn perform_final_layout_on_in_flow_children(
             let bottom_margin_set = item_layout.bottom_margin.collapse_with_margin(item_margin.bottom.unwrap_or(0.0));
 
             // Expand auto margins to fill available space
-            // https://www.w3.org/TR/CSS21/visudet.html#abs-non-replaced-width
+            // Note: Vertical auto-margins for relatively positioned block items simply resolve to 0.
+            // See: https://www.w3.org/TR/CSS21/visudet.html#abs-non-replaced-width
             let free_x_space = f32_max(0.0, container_inner_width - final_size.width - item_non_auto_x_margin_sum);
-            let resolved_margin = {
-                let auto_margin_size = Size {
-                    width: {
-                        let auto_margin_count = item_margin.left.is_none() as u8 + item_margin.right.is_none() as u8;
-                        if auto_margin_count == 2 && item.size.width.is_none() {
-                            0.0
-                        } else if auto_margin_count > 0 {
-                            free_x_space / auto_margin_count as f32
-                        } else {
-                            0.0
-                        }
-                    },
-                    // Vertical auto-margins for relatively positioned block items simply resolve to 0.
-                    height: 0.0,
-                };
-
-                Rect {
-                    left: item_margin.left.unwrap_or(auto_margin_size.width),
-                    right: item_margin.right.unwrap_or(auto_margin_size.width),
-                    top: top_margin_set.resolve(),
-                    bottom: bottom_margin_set.resolve(),
+            let x_axis_auto_margin_size = {
+                let auto_margin_count = item_margin.left.is_none() as u8 + item_margin.right.is_none() as u8;
+                if auto_margin_count == 2 && item.size.width.is_none() {
+                    0.0
+                } else if auto_margin_count > 0 {
+                    free_x_space / auto_margin_count as f32
+                } else {
+                    0.0
                 }
+            };
+            let resolved_margin = Rect {
+                left: item_margin.left.unwrap_or(x_axis_auto_margin_size),
+                right: item_margin.right.unwrap_or(x_axis_auto_margin_size),
+                top: top_margin_set.resolve(),
+                bottom: bottom_margin_set.resolve(),
             };
 
             // Resolve item inset
