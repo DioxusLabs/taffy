@@ -75,13 +75,8 @@ struct BlockItem {
     /// The maximum allowable size of this item
     max_size: Size<Option<f32>>,
 
-    /// The display style of the item
-    _display: Display,
     /// The position style of the item
     position: Position,
-    /// The overflow style of the item
-    _overflow: Point<Overflow>,
-
     /// The final offset of this item
     inset: Rect<LengthPercentageAuto>,
     /// The margin of this item
@@ -315,14 +310,10 @@ fn generate_item_list(tree: &impl LayoutTree, node: NodeId, node_inner_size: Siz
                 node_id: child_node_id,
                 order: order as u32,
 
-                _display: child_style.display,
-                _overflow: child_style.overflow,
-                position: child_style.position,
-
                 size: child_style.size.maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
                 min_size: child_style.min_size.maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
                 max_size: child_style.max_size.maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
-
+                position: child_style.position,
                 inset: child_style.inset,
                 margin: child_style.margin,
 
