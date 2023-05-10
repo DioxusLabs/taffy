@@ -390,9 +390,6 @@ fn perform_final_layout_on_in_flow_children(
     let mut active_collapsible_margin_set = CollapsibleMarginSet::ZERO;
     let mut is_collapsing_with_first_margin_set = true;
     for item in items.iter_mut() {
-        dbg!(committed_y_offset);
-        dbg!(active_collapsible_margin_set);
-
         if item.position == Position::Absolute {
             item.static_position.y = committed_y_offset;
         } else {
@@ -454,7 +451,7 @@ fn perform_final_layout_on_in_flow_children(
 
             item.computed_size = item_layout.size;
             item.baseline = item_layout.first_baselines.y;
-            item.can_be_collapsed_through = dbg!(item_layout.margins_can_collapse_through);
+            item.can_be_collapsed_through = item_layout.margins_can_collapse_through;
             item.static_position = Point {
                 x: resolved_content_box_inset.left,
                 y: committed_y_offset + active_collapsible_margin_set.resolve(),
