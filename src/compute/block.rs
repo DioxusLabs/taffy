@@ -1,4 +1,4 @@
-//! Computes the [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) layout algorithm on [`Taffy`](crate::Taffy) according to the [spec](https://www.w3.org/TR/css-flexbox-1/)
+//! Computes the CSS block layout algorithm in the case that the block container being laid out contains only block-level boxes
 use crate::compute::LayoutAlgorithm;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AvailableSpace, Display, LengthPercentageAuto, Overflow, Position};
@@ -60,7 +60,7 @@ impl LayoutAlgorithm for BlockAlgorithm {
     }
 }
 
-/// The intermediate results of a block calculation for a single item
+/// Per-child data that is accumulated and modified over the course of the layout algorithm
 struct BlockItem {
     /// The identifier for the associated node
     node_id: NodeId,
