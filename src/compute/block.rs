@@ -13,10 +13,10 @@ use crate::util::{MaybeResolve, ResolveOrZero};
 #[cfg(feature = "debug")]
 use crate::util::debug::NODE_LOGGER;
 
-/// The public interface to Taffy's Flexbox algorithm implementation
+/// The public interface to Taffy's Block algorithm implementation
 pub struct BlockAlgorithm;
 impl LayoutAlgorithm for BlockAlgorithm {
-    const NAME: &'static str = "FLEXBOX";
+    const NAME: &'static str = "BLOCK";
 
     fn perform_layout(
         tree: &mut impl LayoutTree,
@@ -60,7 +60,7 @@ impl LayoutAlgorithm for BlockAlgorithm {
     }
 }
 
-/// The intermediate results of a flexbox calculation for a single item
+/// The intermediate results of a block calculation for a single item
 struct BlockItem {
     /// The identifier for the associated node
     node_id: NodeId,
