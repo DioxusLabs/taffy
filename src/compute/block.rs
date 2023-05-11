@@ -478,8 +478,6 @@ fn perform_final_layout_on_in_flow_children(
                 committed_y_offset += item_layout.size.height + y_margin_offset;
                 active_collapsible_margin_set = bottom_margin_set;
             }
-
-            println!();
         }
     }
 
