@@ -89,9 +89,6 @@ struct BlockItem {
     static_position: Point<f32>,
     /// Whether margins can be collapsed through this item
     can_be_collapsed_through: bool,
-
-    /// The position of the bottom edge of this item
-    baseline: Option<f32>,
 }
 
 /// Computes the layout of [`LayoutTree`] according to the block layout algorithm
@@ -266,12 +263,6 @@ fn compute_inner(
         }
     }
 
-    // 6. Calculate the container's first vertical baseline
-    let first_vertical_baseline = items
-        .iter()
-        .find(|item| item.position != Position::Absolute)
-        .map(|child| child.static_position.y + child.baseline.unwrap_or(child.computed_size.height));
-
     // 7. Determine whether this node can be collapsed through
     let all_in_flow_children_can_be_collapsed_through =
         items.iter().all(|item| item.position == Position::Absolute || item.can_be_collapsed_through);
@@ -280,7 +271,7 @@ fn compute_inner(
 
     SizeBaselinesAndMargins {
         size: final_outer_size,
-        first_baselines: Point { x: None, y: first_vertical_baseline },
+        first_baselines: Point::NONE,
         top_margin: if own_margins_collapse_with_children.start {
             first_child_top_margin_set
         } else {
@@ -321,7 +312,6 @@ fn generate_item_list(tree: &impl LayoutTree, node: NodeId, node_inner_size: Siz
                 computed_size: Size::zero(),
                 static_position: Point::zero(),
                 can_be_collapsed_through: false,
-                baseline: None,
             }
         })
         .collect()
@@ -441,7 +431,6 @@ fn perform_final_layout_on_in_flow_children(
             };
 
             item.computed_size = item_layout.size;
-            item.baseline = item_layout.first_baselines.y;
             item.can_be_collapsed_through = item_layout.margins_can_collapse_through;
             item.static_position = Point {
                 x: resolved_content_box_inset.left,
