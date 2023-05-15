@@ -65,7 +65,8 @@ struct BlockItem {
     /// The identifier for the associated node
     node_id: NodeId,
 
-    /// The order of the item
+    /// The "source order" of the item. This is the index of the item within the children iterator,
+    /// and controls the order in which the nodes are placed
     order: u32,
 
     /// The base size of this item
