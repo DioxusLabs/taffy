@@ -59,7 +59,7 @@ pub fn compute(
             let aspect_ratio = style.aspect_ratio;
             let style_size = style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
             let style_min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-            let style_max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+            let style_max_size = style.max_size.maybe_resolve(parent_size);
 
             let node_size = known_dimensions.or(style_size);
             (node_size, style_min_size, style_max_size, aspect_ratio)
@@ -117,7 +117,9 @@ pub fn compute(
             first_baselines: Point::NONE,
             top_margin: CollapsibleMarginSet::ZERO,
             bottom_margin: CollapsibleMarginSet::ZERO,
-            margins_can_collapse_through: !has_styles_preventing_being_collapsed_through && size.height == 0.0,
+            margins_can_collapse_through: !has_styles_preventing_being_collapsed_through
+                && size.height == 0.0
+                && measurable.is_none(),
         };
     };
 
@@ -140,22 +142,21 @@ pub fn compute(
 
         // Measure node
         let measured_size = measurable.measure(known_dimensions, available_space);
-
-        let measured_size = Size {
-            width: measured_size.width,
-            height: f32_max(measured_size.height, aspect_ratio.map(|ratio| measured_size.width / ratio).unwrap_or(0.0)),
+        let clamped_size = node_size.unwrap_or(measured_size).maybe_clamp(node_min_size, node_max_size);
+        let size = Size {
+            width: clamped_size.width,
+            height: f32_max(clamped_size.height, aspect_ratio.map(|ratio| clamped_size.width / ratio).unwrap_or(0.0)),
         };
-
-        let measured_max_size =
-            if is_block { Size { width: node_max_size.width, height: None } } else { node_max_size };
-        let size = node_size.unwrap_or(measured_size).maybe_clamp(node_min_size, measured_max_size);
         let size = size.maybe_max(padding_border.sum_axes().map(Some));
+
         return SizeBaselinesAndMargins {
             size,
             first_baselines: Point::NONE,
             top_margin: CollapsibleMarginSet::ZERO,
             bottom_margin: CollapsibleMarginSet::ZERO,
-            margins_can_collapse_through: !has_styles_preventing_being_collapsed_through && size.height == 0.0,
+            margins_can_collapse_through: !has_styles_preventing_being_collapsed_through
+                && size.height == 0.0
+                && measured_size.height == 0.0,
         };
     }
 
