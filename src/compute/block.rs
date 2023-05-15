@@ -389,8 +389,8 @@ fn perform_final_layout_on_in_flow_children(
             let item_non_auto_x_margin_sum = item_non_auto_margin.horizontal_axis_sum();
             let known_dimensions = item
                 .size
-                .maybe_clamp(item.min_size, item.max_size)
-                .map_width(|width| Some(width.unwrap_or(container_inner_width - item_non_auto_x_margin_sum)));
+                .map_width(|width| Some(width.unwrap_or(container_inner_width - item_non_auto_x_margin_sum)))
+                .maybe_clamp(item.min_size, item.max_size);
 
             let item_layout = tree.perform_child_layout(
                 item.node_id,
