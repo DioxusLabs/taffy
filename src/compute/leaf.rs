@@ -85,15 +85,17 @@ pub fn compute(
     content_box_inset.bottom += scrollbar_gutter.y;
 
     #[cfg(feature = "block_layout")]
-    let has_styles_preventing_being_collapsed_through = style.display != Display::Block
+    let is_block = style.display == Display::Block;
+    #[cfg(not(feature = "block_layout"))]
+    let is_block = false;
+
+    let has_styles_preventing_being_collapsed_through = !is_block
         || style.overflow.y.is_scroll_container()
         || style.position == Position::Absolute
         || padding.top > 0.0
         || padding.bottom > 0.0
         || border.top > 0.0
         || border.bottom > 0.0;
-    #[cfg(not(feature = "block_layout"))]
-    let has_styles_preventing_being_collapsed_through = true;
 
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("LEAF");
@@ -143,7 +145,9 @@ pub fn compute(
             height: f32_max(measured_size.height, aspect_ratio.map(|ratio| measured_size.width / ratio).unwrap_or(0.0)),
         };
 
-        let size = node_size.unwrap_or(measured_size).maybe_clamp(node_min_size, node_max_size);
+        let measured_max_size =
+            if is_block { Size { width: node_max_size.width, height: None } } else { node_max_size };
+        let size = node_size.unwrap_or(measured_size).maybe_clamp(node_min_size, measured_max_size);
         let size = size.maybe_max(padding_border.sum_axes().map(Some));
         return SizeBaselinesAndMargins {
             size,
