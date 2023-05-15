@@ -196,6 +196,7 @@ fn compute_inner(
             && size.height.is_none(),
     };
     let has_styles_preventing_being_collapsed_through = style.display != Display::Block
+        || style.overflow.x.is_scroll_container()
         || style.overflow.y.is_scroll_container()
         || style.position == Position::Absolute
         || padding.top > 0.0

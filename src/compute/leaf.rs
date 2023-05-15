@@ -90,6 +90,7 @@ pub fn compute(
     let is_block = false;
 
     let has_styles_preventing_being_collapsed_through = !is_block
+        || style.overflow.x.is_scroll_container()
         || style.overflow.y.is_scroll_container()
         || style.position == Position::Absolute
         || padding.top > 0.0
