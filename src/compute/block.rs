@@ -184,11 +184,13 @@ fn compute_inner(
     // Determine margin collapsing behaviour
     let own_margins_collapse_with_children = Line {
         start: vertical_margins_are_collapsible.start
+            && !style.overflow.x.is_scroll_container()
             && !style.overflow.y.is_scroll_container()
             && style.position == Position::Relative
             && padding.top == 0.0
             && border.top == 0.0,
         end: vertical_margins_are_collapsible.end
+            && !style.overflow.x.is_scroll_container()
             && !style.overflow.y.is_scroll_container()
             && style.position == Position::Relative
             && padding.bottom == 0.0
