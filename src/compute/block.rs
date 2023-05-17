@@ -82,6 +82,8 @@ struct BlockItem {
     inset: Rect<LengthPercentageAuto>,
     /// The margin of this item
     margin: Rect<LengthPercentageAuto>,
+    /// The sum of padding and border for this item
+    padding_border_sum: Size<f32>,
 
     /// The computed border box size of this item
     computed_size: Size<f32>,
@@ -109,6 +111,9 @@ pub fn compute(
     let margin = style.margin.resolve_or_zero(parent_size.width);
     let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
     let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let padding = style.padding.resolve_or_zero(parent_size.width);
+    let border = style.border.resolve_or_zero(parent_size.width);
+    let padding_border_size = (padding + border).sum_axes();
     let clamped_style_size =
         style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
 
@@ -122,8 +127,11 @@ pub fn compute(
     let available_space_based_size =
         Size { width: available_space.width.into_option().maybe_sub(margin.horizontal_axis_sum()), height: None };
 
-    let styled_based_known_dimensions =
-        known_dimensions.or(min_max_definite_size).or(clamped_style_size).or(available_space_based_size);
+    let styled_based_known_dimensions = known_dimensions
+        .or(min_max_definite_size)
+        .or(clamped_style_size)
+        .or(available_space_based_size)
+        .maybe_max(padding_border_size);
 
     // Short-circuit layout if the container's size is fully determined by the container's size and the run mode
     // is ComputeSize (and thus the container's size is all that we're interested in)
@@ -178,7 +186,9 @@ fn compute_inner(
         // TODO: make side configurable based on the `direction` property
         Rect { top: 0.0, left: 0.0, right: offsets.x, bottom: offsets.y }
     };
-    let content_box_inset = padding + border + scrollbar_gutter;
+    let padding_border = padding + border;
+    let padding_border_size = padding_border.sum_axes();
+    let content_box_inset = padding_border + scrollbar_gutter;
     let container_content_box_size = known_dimensions.maybe_sub(content_box_inset.sum_axes());
 
     // Determine margin collapsing behaviour
@@ -214,7 +224,7 @@ fn compute_inner(
         let available_width = available_space.width.maybe_sub(content_box_inset.horizontal_axis_sum());
         let intrinsic_width = determine_content_based_container_width(tree, &items, available_width)
             + content_box_inset.horizontal_axis_sum();
-        intrinsic_width.maybe_clamp(min_size.width, max_size.width)
+        intrinsic_width.maybe_clamp(min_size.width, max_size.width).maybe_max(Some(padding_border_size.width))
     });
 
     // Short-circuit if computing size and both dimensions known
@@ -235,8 +245,10 @@ fn compute_inner(
             resolved_content_box_inset,
             own_margins_collapse_with_children,
         );
-    let container_outer_height =
-        known_dimensions.height.unwrap_or(intrinsic_outer_height.maybe_clamp(min_size.height, max_size.height));
+    let container_outer_height = known_dimensions
+        .height
+        .unwrap_or(intrinsic_outer_height.maybe_clamp(min_size.height, max_size.height))
+        .maybe_max(Some(padding_border_size.height));
     let final_outer_size = Size { width: container_outer_width, height: container_outer_height };
 
     // Short-circuit if computing size
@@ -301,6 +313,8 @@ fn generate_item_list(tree: &impl LayoutTree, node: NodeId, node_inner_size: Siz
         .enumerate()
         .map(|(order, (child_node_id, child_style))| {
             let aspect_ratio = child_style.aspect_ratio;
+            let padding = child_style.padding.resolve_or_zero(node_inner_size);
+            let border = child_style.border.resolve_or_zero(node_inner_size);
             BlockItem {
                 node_id: child_node_id,
                 order: order as u32,
@@ -311,6 +325,7 @@ fn generate_item_list(tree: &impl LayoutTree, node: NodeId, node_inner_size: Siz
                 position: child_style.position,
                 inset: child_style.inset,
                 margin: child_style.margin,
+                padding_border_sum: (padding + border).sum_axes(),
 
                 // Fields to be computed later (for now we initialise with dummy values)
                 computed_size: Size::zero(),
@@ -333,9 +348,10 @@ fn determine_content_based_container_width(
     let mut max_child_width = 0.0;
     for item in items.iter().filter(|item| item.position != Position::Absolute) {
         let known_dimensions = item.size.maybe_clamp(item.min_size, item.max_size);
-        let item_x_margin_sum = item.margin.resolve_or_zero(available_space.width.into_option()).horizontal_axis_sum();
 
         let width = known_dimensions.width.unwrap_or_else(|| {
+            let item_x_margin_sum =
+                item.margin.resolve_or_zero(available_space.width.into_option()).horizontal_axis_sum();
             let size_and_baselines = tree.perform_child_layout(
                 item.node_id,
                 known_dimensions,
@@ -347,6 +363,7 @@ fn determine_content_based_container_width(
 
             size_and_baselines.size.width + item_x_margin_sum
         });
+        let width = f32_max(width, item.padding_border_sum.width);
 
         max_child_width = f32_max(max_child_width, width);
     }
