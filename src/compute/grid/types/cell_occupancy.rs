@@ -91,10 +91,9 @@ impl CellOccupancyMatrix {
     fn expand_to_fit_range(&mut self, row_range: Range<i16>, col_range: Range<i16>) {
         // Calculate number of rows and columns missing to accomodate ranges (if any)
         let req_negative_rows = min(row_range.start, 0);
-        let req_positive_rows = max(row_range.end - self.rows.explicit as i16 - self.rows.positive_implicit as i16, 0);
+        let req_positive_rows = max(row_range.end - self.rows.len() as i16, 0);
         let req_negative_cols = min(col_range.start, 0);
-        let req_positive_cols =
-            max(col_range.end - self.columns.explicit as i16 - self.columns.positive_implicit as i16, 0);
+        let req_positive_cols = max(col_range.end - self.columns.len() as i16, 0);
 
         let old_row_count = self.rows.len();
         let old_col_count = self.columns.len();

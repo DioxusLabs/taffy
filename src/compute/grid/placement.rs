@@ -113,9 +113,11 @@ pub(super) fn place_grid_items<'a, ChildIter>(
 
     // 4. Position the remaining grid items
     // (which either have definite position only in the secondary axis or indefinite positions in both axis)
-    let x_neg_tracks = cell_occupancy_matrix.track_counts(AbsoluteAxis::Horizontal).negative_implicit as i16;
-    let y_neg_tracks = cell_occupancy_matrix.track_counts(AbsoluteAxis::Vertical).negative_implicit as i16;
-    let grid_start_position = (OriginZeroLine(-x_neg_tracks), OriginZeroLine(-y_neg_tracks));
+    let primary_axis = grid_auto_flow.primary_axis();
+    let secondary_axis = primary_axis.other_axis();
+    let primary_neg_tracks = cell_occupancy_matrix.track_counts(primary_axis).negative_implicit as i16;
+    let secondary_neg_tracks = cell_occupancy_matrix.track_counts(secondary_axis).negative_implicit as i16;
+    let grid_start_position = (OriginZeroLine(-primary_neg_tracks), OriginZeroLine(-secondary_neg_tracks));
     let mut grid_position = grid_start_position;
     let mut idx = 0;
     children_iter()
