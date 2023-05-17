@@ -447,6 +447,8 @@ mod grid_aspect_ratio_overriden_by_explicit_sizes;
 #[cfg(feature = "grid")]
 mod grid_aspect_ratio_overriden_by_explicit_sizes_flex;
 #[cfg(feature = "grid")]
+mod grid_auto_columns;
+#[cfg(feature = "grid")]
 mod grid_auto_columns_fixed_width;
 #[cfg(feature = "grid")]
 mod grid_auto_fill_fixed_size;
@@ -454,6 +456,8 @@ mod grid_auto_fill_fixed_size;
 mod grid_auto_fill_with_empty_auto_track;
 #[cfg(feature = "grid")]
 mod grid_auto_fit_with_empty_auto_track;
+#[cfg(feature = "grid")]
+mod grid_auto_rows;
 #[cfg(feature = "grid")]
 mod grid_auto_single_item;
 #[cfg(feature = "grid")]

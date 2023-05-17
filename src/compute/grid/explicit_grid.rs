@@ -7,7 +7,6 @@ use crate::style_helpers::TaffyAuto;
 use crate::util::sys::{GridTrackVec, Vec};
 use crate::util::MaybeMath;
 use crate::util::ResolveOrZero;
-use core::cmp::{max, min};
 
 #[cfg(not(feature = "std"))]
 use num_traits::float::FloatCore;
@@ -194,15 +193,15 @@ pub(super) fn initialize_grid_tracks(
     tracks.push(GridTrack::gutter(gap));
 
     // Create negative implicit tracks
-    if auto_tracks.is_empty() {
-        let iter = core::iter::repeat(NonRepeatedTrackSizingFunction::AUTO);
-        create_implicit_tracks(tracks, counts.negative_implicit, iter, gap)
-    } else {
-        let max_count = max(auto_tracks.len(), counts.negative_implicit as usize);
-        let min_count = min(auto_tracks.len(), counts.negative_implicit as usize);
-        let offset = max_count % min_count;
-        let iter = auto_tracks.iter().copied().cycle().skip(offset);
-        create_implicit_tracks(tracks, counts.negative_implicit, iter, gap)
+    if counts.negative_implicit > 0 {
+        if auto_tracks.is_empty() {
+            let iter = core::iter::repeat(NonRepeatedTrackSizingFunction::AUTO);
+            create_implicit_tracks(tracks, counts.negative_implicit, iter, gap)
+        } else {
+            let offset = auto_tracks.len() - (counts.negative_implicit as usize % auto_tracks.len());
+            let iter = auto_tracks.iter().copied().cycle().skip(offset);
+            create_implicit_tracks(tracks, counts.negative_implicit, iter, gap)
+        }
     }
 
     let mut current_track_index = (counts.negative_implicit) as usize;
