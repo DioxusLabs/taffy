@@ -44,6 +44,13 @@ Example usage change:
   - The debug module is no longer public. The `print_tree` function is now accesible under `util`.
   - All types from the `node`, `data`, `layout`, `error` and `cache` modules have been moved to the  the `tree` module.
 
+### Fixes
+
+- Fix divide by zero when using grid_auto_rows/grid_auto_columns with zero negative implicit tracks
+- Fix over counting of tracks (leading to incorrect container heights) when auto-placing in grids that contain negative implicit tracks.
+- Fix axis conflation in auto-placement code when grid_auto_flow is column
+- Fix assignment of auto track sizes when initializing negative implicit tracks
+
 ## 0.3.11
 
 ### Fixes
