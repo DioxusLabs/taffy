@@ -4,29 +4,31 @@
 
 ### Breaking
 
-Many APIs have been renamed to replace `points` or `Points` with `length` or `Length`.
-This new name better describes one-dimentional measure of space in some unspecified unit
-which is often unrelated to the PostScript point or the CSS `pt` unit.
+- Previously, absolute length values in `Style` and `Layout` were measured in some unspecified abstract unit whose meaning was chosen by Taffy users. Instead, they are now redefinied so that `Style` uses "logical pixel" which correspond to CSS `px`, while `Layout` contains "output pixels" which are recommended to use as device pixels. A new pixel ratio configuration controls the relationship between these two units. See `Taffy::set_pixel_ratio` documentation for details.
 
-This also removes a misleading similarity with the 2D `Point`,
-whose components can have any unit and are not even necessarily absolute lengths.
+- Many APIs have been renamed to replace `points` or `Points` with `length` or `Length`.
+  The previous name suggested the PostScript point or the CSS `pt` unit,
+  but per the above these values are now measured in CSS `px`.
 
-Example usage change:
+  This also removes a misleading similarity with the 2D `Point` struct,
+  whose components can have any unit and are not even necessarily absolute lengths.
 
-```diff
- use taffy::prelude::*;
+  Example usage change:
 
- // …
+  ```diff
+  use taffy::prelude::*;
 
- let header_node = taffy
-     .new_leaf(
-         Style {
--            size: Size { width: points(800.0), height: points(100.0) },
-+            size: Size { width: length(800.0), height: length(100.0) },
-             ..Default::default()
-         },
-     ).unwrap();
-```
+  // …
+
+  let header_node = taffy
+      .new_leaf(
+          Style {
+  -            size: Size { width: points(800.0), height: points(100.0) },
+  +            size: Size { width: length(800.0), height: length(100.0) },
+              ..Default::default()
+          },
+      ).unwrap();
+  ```
 
 ### Removed
 
