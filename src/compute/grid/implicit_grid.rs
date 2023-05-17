@@ -21,7 +21,7 @@ pub(crate) fn compute_grid_size_estimate<'a>(
     child_styles_iter: impl Iterator<Item = &'a Style>,
 ) -> (TrackCounts, TrackCounts) {
     // Iterate over children, producing an estimate of the min and max grid lines (in origin-zero coordinates where)
-    // along with the span of each itme
+    // along with the span of each item
     let (col_min, col_max, col_max_span, row_min, row_max, row_max_span) =
         get_known_child_positions(child_styles_iter, explicit_col_count, explicit_row_count);
 
