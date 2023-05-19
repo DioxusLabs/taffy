@@ -1,10 +1,13 @@
 //! Computation specific for the default `Taffy` tree implementation
 
 use crate::compute::{leaf, LayoutAlgorithm};
-use crate::geometry::{Point, Size};
+use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, Display};
-use crate::tree::{Layout, LayoutTree, NodeId, RunMode, SizeAndBaselines, SizingMode, Taffy, TaffyError};
+use crate::tree::{Layout, LayoutTree, NodeId, RunMode, SizeBaselinesAndMargins, SizingMode, Taffy, TaffyError};
 use crate::util::sys::round;
+
+#[cfg(feature = "block_layout")]
+use crate::compute::BlockAlgorithm;
 
 #[cfg(feature = "flexbox")]
 use crate::compute::FlexboxAlgorithm;
@@ -44,6 +47,7 @@ pub(crate) fn compute_layout(
         available_space.into_options(),
         available_space,
         SizingMode::InherentSize,
+        Line::FALSE,
     );
 
     let layout = Layout { order: 0, size: size_and_baselines.size, location: Point::ZERO };
@@ -65,8 +69,18 @@ pub(crate) fn perform_node_layout(
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     sizing_mode: SizingMode,
-) -> SizeAndBaselines {
-    compute_node_layout(tree, node, known_dimensions, parent_size, available_space, RunMode::PeformLayout, sizing_mode)
+    vertical_margins_are_collapsible: Line<bool>,
+) -> SizeBaselinesAndMargins {
+    compute_node_layout(
+        tree,
+        node,
+        known_dimensions,
+        parent_size,
+        available_space,
+        RunMode::PeformLayout,
+        sizing_mode,
+        vertical_margins_are_collapsible,
+    )
 }
 
 /// Measure a node's size. Chooses which algorithm to use based on the `display` property.
@@ -77,12 +91,23 @@ pub(crate) fn measure_node_size(
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     sizing_mode: SizingMode,
+    vertical_margins_are_collapsible: Line<bool>,
 ) -> Size<f32> {
-    compute_node_layout(tree, node, known_dimensions, parent_size, available_space, RunMode::ComputeSize, sizing_mode)
-        .size
+    compute_node_layout(
+        tree,
+        node,
+        known_dimensions,
+        parent_size,
+        available_space,
+        RunMode::ComputeSize,
+        sizing_mode,
+        vertical_margins_are_collapsible,
+    )
+    .size
 }
 
 /// Updates the stored layout of the provided `node` and its children
+#[allow(clippy::too_many_arguments)]
 fn compute_node_layout(
     tree: &mut Taffy,
     node: NodeId,
@@ -91,7 +116,8 @@ fn compute_node_layout(
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
     sizing_mode: SizingMode,
-) -> SizeAndBaselines {
+    vertical_margins_are_collapsible: Line<bool>,
+) -> SizeBaselinesAndMargins {
     #[cfg(any(feature = "debug", feature = "profile"))]
     NODE_LOGGER.push_node(node);
     #[cfg(feature = "debug")]
@@ -127,17 +153,31 @@ fn compute_node_layout(
         available_space: Size<AvailableSpace>,
         run_mode: RunMode,
         sizing_mode: SizingMode,
-    ) -> SizeAndBaselines {
+        vertical_margins_are_collapsible: Line<bool>,
+    ) -> SizeBaselinesAndMargins {
         #[cfg(feature = "debug")]
         NODE_LOGGER.log(Algorithm::NAME);
 
         match run_mode {
-            RunMode::PeformLayout => {
-                Algorithm::perform_layout(tree, node, known_dimensions, parent_size, available_space, sizing_mode)
-            }
-            RunMode::ComputeSize => {
-                Algorithm::measure_size(tree, node, known_dimensions, parent_size, available_space, sizing_mode).into()
-            }
+            RunMode::PeformLayout => Algorithm::perform_layout(
+                tree,
+                node,
+                known_dimensions,
+                parent_size,
+                available_space,
+                sizing_mode,
+                vertical_margins_are_collapsible,
+            ),
+            RunMode::ComputeSize => Algorithm::measure_size(
+                tree,
+                node,
+                known_dimensions,
+                parent_size,
+                available_space,
+                sizing_mode,
+                vertical_margins_are_collapsible,
+            )
+            .into(),
         }
     }
 
@@ -145,8 +185,19 @@ fn compute_node_layout(
     let computed_size_and_baselines = match (display_mode, has_children) {
         (Display::None, _) => {
             perform_taffy_tree_hidden_layout(tree, node);
-            SizeAndBaselines { size: Size::ZERO, first_baselines: Point::NONE }
+            SizeBaselinesAndMargins::HIDDEN
         }
+        #[cfg(feature = "block_layout")]
+        (Display::Block, true) => perform_computations::<BlockAlgorithm>(
+            tree,
+            node,
+            known_dimensions,
+            parent_size,
+            available_space,
+            run_mode,
+            sizing_mode,
+            vertical_margins_are_collapsible,
+        ),
         #[cfg(feature = "flexbox")]
         (Display::Flex, true) => perform_computations::<FlexboxAlgorithm>(
             tree,
@@ -156,6 +207,7 @@ fn compute_node_layout(
             available_space,
             run_mode,
             sizing_mode,
+            vertical_margins_are_collapsible,
         ),
         #[cfg(feature = "grid")]
         (Display::Grid, true) => perform_computations::<CssGridAlgorithm>(
@@ -166,6 +218,7 @@ fn compute_node_layout(
             available_space,
             run_mode,
             sizing_mode,
+            vertical_margins_are_collapsible,
         ),
         (_, false) => match run_mode {
             RunMode::PeformLayout => leaf::perform_layout(
@@ -175,6 +228,7 @@ fn compute_node_layout(
                 parent_size,
                 available_space,
                 sizing_mode,
+                vertical_margins_are_collapsible,
             ),
             RunMode::ComputeSize => leaf::measure_size(
                 &tree.nodes[node_key].style,
@@ -183,6 +237,7 @@ fn compute_node_layout(
                 parent_size,
                 available_space,
                 sizing_mode,
+                vertical_margins_are_collapsible,
             )
             .into(),
         },

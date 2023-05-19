@@ -2,7 +2,7 @@
 
 use crate::style::Dimension;
 use crate::util::sys::f32_max;
-use core::ops::Add;
+use core::ops::{Add, Sub};
 
 #[cfg(feature = "flexbox")]
 use crate::style::FlexDirection;
@@ -309,6 +309,13 @@ impl<T> Line<T> {
     }
 }
 
+impl Line<bool> {
+    /// A `Line<bool>` with both start and end set to `true`
+    pub const TRUE: Self = Line { start: true, end: true };
+    /// A `Line<bool>` with both start and end set to `false`
+    pub const FALSE: Self = Line { start: false, end: false };
+}
+
 impl<T: Add + Copy> Line<T> {
     /// Adds the start and end values together and returns the result
     pub fn sum(&self) -> <T as Add>::Output {
@@ -332,6 +339,15 @@ impl<U, T: Add<U>> Add<Size<U>> for Size<T> {
 
     fn add(self, rhs: Size<U>) -> Self::Output {
         Size { width: self.width + rhs.width, height: self.height + rhs.height }
+    }
+}
+
+// Generic Sub impl for Size<T> + Size<U> where T + U has an Sub impl
+impl<U, T: Sub<U>> Sub<Size<U>> for Size<T> {
+    type Output = Size<<T as Sub<U>>::Output>;
+
+    fn sub(self, rhs: Size<U>) -> Self::Output {
+        Size { width: self.width - rhs.width, height: self.height - rhs.height }
     }
 }
 
@@ -588,6 +604,15 @@ impl Point<f32> {
 impl Point<Option<f32>> {
     /// A [`Point`] with values (None, None)
     pub const NONE: Self = Self { x: None, y: None };
+}
+
+// Generic Add impl for Point<T> + Point<U> where T + U has an Add impl
+impl<U, T: Add<U>> Add<Point<U>> for Point<T> {
+    type Output = Point<<T as Add<U>>::Output>;
+
+    fn add(self, rhs: Point<U>) -> Self::Output {
+        Point { x: self.x + rhs.x, y: self.y + rhs.y }
+    }
 }
 
 impl<T> Point<T> {

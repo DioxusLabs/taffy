@@ -5,15 +5,21 @@ pub(crate) mod leaf;
 
 pub use leaf::compute;
 
+#[cfg(feature = "block_layout")]
+pub(crate) mod block;
+
 #[cfg(feature = "flexbox")]
 pub(crate) mod flexbox;
 
 #[cfg(feature = "grid")]
 pub(crate) mod grid;
 
-use crate::geometry::{Point, Size};
+use crate::geometry::{Line, Size};
 use crate::style::AvailableSpace;
-use crate::tree::{Layout, LayoutTree, NodeId, SizeAndBaselines, SizingMode};
+use crate::tree::{Layout, LayoutTree, NodeId, SizeBaselinesAndMargins, SizingMode};
+
+#[cfg(feature = "block_layout")]
+pub use self::block::BlockAlgorithm;
 
 #[cfg(feature = "flexbox")]
 pub use self::flexbox::FlexboxAlgorithm;
@@ -37,6 +43,7 @@ pub trait LayoutAlgorithm {
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
+        vertical_margins_are_collapsible: Line<bool>,
     ) -> Size<f32>;
 
     /// Perform a full layout on the node given the specified constraints
@@ -47,7 +54,8 @@ pub trait LayoutAlgorithm {
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
-    ) -> SizeAndBaselines;
+        vertical_margins_are_collapsible: Line<bool>,
+    ) -> SizeBaselinesAndMargins;
 }
 
 /// The public interface to Taffy's hidden node algorithm implementation
@@ -62,9 +70,10 @@ impl LayoutAlgorithm for HiddenAlgorithm {
         _parent_size: Size<Option<f32>>,
         _available_space: Size<AvailableSpace>,
         _sizing_mode: SizingMode,
-    ) -> SizeAndBaselines {
+        _vertical_margins_are_collapsible: Line<bool>,
+    ) -> SizeBaselinesAndMargins {
         perform_hidden_layout(tree, node);
-        SizeAndBaselines { size: Size::ZERO, first_baselines: Point::NONE }
+        SizeBaselinesAndMargins::HIDDEN
     }
 
     fn measure_size(
@@ -74,6 +83,7 @@ impl LayoutAlgorithm for HiddenAlgorithm {
         _parent_size: Size<Option<f32>>,
         _available_space: Size<AvailableSpace>,
         _sizing_mode: SizingMode,
+        _vertical_margins_are_collapsible: Line<bool>,
     ) -> Size<f32> {
         Size::ZERO
     }

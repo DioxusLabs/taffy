@@ -49,7 +49,6 @@ mod std {
     }
 
     /// Returns the smallest of two f32 values
-    #[cfg(feature = "grid")]
     pub(crate) fn f32_min(a: f32, b: f32) -> f32 {
         std::cmp::min_by(a, b, |a, b| a.total_cmp(b))
     }
@@ -98,7 +97,6 @@ mod alloc {
     }
 
     /// Returns the smallest of two f32 values
-    #[cfg(feature = "grid")]
     pub(crate) fn f32_min(a: f32, b: f32) -> f32 {
         match a.total_cmp(&b) {
             Ordering::Less => a,
@@ -159,7 +157,6 @@ mod core {
     }
 
     /// Returns the smallest of two f32 values
-    #[cfg(feature = "grid")]
     pub(crate) fn f32_min(a: f32, b: f32) -> f32 {
         match a.total_cmp(&b) {
             Ordering::Less => a,

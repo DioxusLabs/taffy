@@ -193,6 +193,7 @@ pub(super) fn align_and_position_item(
         grid_area_size.map(Option::Some),
         grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
         SizingMode::InherentSize,
+        Line::FALSE,
     );
 
     // Resolve final size

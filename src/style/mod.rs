@@ -31,10 +31,13 @@ use crate::util::sys::GridTrackVec;
 
 /// Sets the layout used for the children of this node
 ///
-/// The default values depends on on which feature flags are enabled. The order of precedence is: Flex, Grid, None.
+/// The default values depends on on which feature flags are enabled. The order of precedence is: Flex, Grid, Block, None.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Display {
+    /// The children will follow the block layout algorithm
+    #[cfg(feature = "block_layout")]
+    Block,
     /// The children will follow the flexbox layout algorithm
     #[cfg(feature = "flexbox")]
     Flex,
@@ -55,7 +58,11 @@ impl Display {
     pub const DEFAULT: Display = Display::Grid;
 
     /// The default of Display.
-    #[cfg(all(not(feature = "flexbox"), not(feature = "grid")))]
+    #[cfg(all(feature = "block_layout", not(feature = "flexbox"), not(feature = "grid")))]
+    pub const DEFAULT: Display = Display::Block;
+
+    /// The default of Display.
+    #[cfg(all(not(feature = "flexbox"), not(feature = "grid"), not(feature = "block_layout")))]
     pub const DEFAULT: Display = Display::None;
 }
 

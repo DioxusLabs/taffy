@@ -350,6 +350,7 @@ impl GridItem {
                 None => AvailableSpace::MinContent,
             }),
             SizingMode::InherentSize,
+            Line::FALSE,
         )
         .get(axis)
     }
@@ -388,6 +389,7 @@ impl GridItem {
                 None => AvailableSpace::MaxContent,
             }),
             SizingMode::InherentSize,
+            Line::FALSE,
         )
         .get(axis)
     }

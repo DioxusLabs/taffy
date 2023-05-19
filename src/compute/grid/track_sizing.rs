@@ -2,7 +2,7 @@
 //! <https://www.w3.org/TR/css-grid-1/#layout-algorithm>
 use super::types::{GridItem, GridTrack, TrackCounts};
 use crate::geometry::AbstractAxis;
-use crate::geometry::Size;
+use crate::geometry::{Line, Size};
 use crate::prelude::{LayoutTree, TaffyMinContent};
 use crate::style::{
     AlignContent, AlignSelf, AvailableSpace, LengthPercentage, MaxTrackSizingFunction, MinTrackSizingFunction,
@@ -475,6 +475,7 @@ fn resolve_item_baselines(
                 inner_node_size,
                 Size::MIN_CONTENT,
                 SizingMode::InherentSize,
+                Line::FALSE,
             );
 
             let baseline = measured_size_and_baselines.first_baselines.y;

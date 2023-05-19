@@ -75,12 +75,19 @@ impl LengthPercentageAuto {
     ///   - Some(length) for Length variants
     ///   - Some(resolved) using the provided context for Percent variants
     ///   - None for Auto variants
+    #[inline(always)]
     pub fn resolve_to_option(self, context: f32) -> Option<f32> {
         match self {
             Self::Length(length) => Some(length),
             Self::Percent(percent) => Some(context * percent),
             Self::Auto => None,
         }
+    }
+
+    /// Returns true if value is LengthPercentageAuto::Auto
+    #[inline(always)]
+    pub fn is_auto(self) -> bool {
+        self == Self::Auto
     }
 }
 
