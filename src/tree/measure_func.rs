@@ -9,28 +9,44 @@ use crate::util::sys::Box;
 ///
 /// This trait is automatically implemented for all types (including closures) that define a function with the appropriate type signature.
 pub trait Measurable: Send + Sync {
+    /// A user-defined context which is passed to taffy when the `compute_layout` function is called, and which Taffy then passes
+    /// into measure functions when it calls them
+    type Context;
+
     /// Measure node
-    fn measure(&self, known_dimensions: Size<Option<f32>>, available_space: Size<AvailableSpace>) -> Size<f32>;
+    fn measure(
+        &self,
+        known_dimensions: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        context: Self::Context,
+    ) -> Size<f32>;
 }
 
 /// A function that can be used to compute the intrinsic size of a node
-pub enum MeasureFunc {
+pub enum MeasureFunc<Context = ()> {
     /// Stores an unboxed function
-    Raw(fn(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32>),
+    Raw(fn(Size<Option<f32>>, Size<AvailableSpace>, context: Context) -> Size<f32>),
 
     /// Stores a boxed function
     #[cfg(any(feature = "std", feature = "alloc"))]
-    Boxed(Box<dyn Measurable>),
+    Boxed(Box<dyn Measurable<Context = Context>>),
 }
 
-impl Measurable for MeasureFunc {
+impl<Context> Measurable for MeasureFunc<Context> {
+    type Context = Context;
+
     /// Call the measure function to measure to the node
     #[inline(always)]
-    fn measure(&self, known_dimensions: Size<Option<f32>>, available_space: Size<AvailableSpace>) -> Size<f32> {
+    fn measure(
+        &self,
+        known_dimensions: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        context: Context,
+    ) -> Size<f32> {
         match self {
-            Self::Raw(measure) => measure(known_dimensions, available_space),
+            Self::Raw(measure) => measure(known_dimensions, available_space, context),
             #[cfg(any(feature = "std", feature = "alloc"))]
-            Self::Boxed(measurable) => measurable.measure(known_dimensions, available_space),
+            Self::Boxed(measurable) => measurable.measure(known_dimensions, available_space, context),
         }
     }
 }
