@@ -18,14 +18,17 @@ pub trait Measurable: Send + Sync {
         &self,
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
-        context: Self::Context,
+        context: &mut Self::Context,
     ) -> Size<f32>;
 }
 
 /// A function that can be used to compute the intrinsic size of a node
 pub enum MeasureFunc<Context = ()> {
-    /// Stores an unboxed function
-    Raw(fn(Size<Option<f32>>, Size<AvailableSpace>, context: Context) -> Size<f32>),
+    /// Stores an unboxed function with no context parameter
+    Raw(fn(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32>),
+
+    /// Stores an unboxed function with a context parameter
+    RawWithContext(fn(Size<Option<f32>>, Size<AvailableSpace>, context: &mut Context) -> Size<f32>),
 
     /// Stores a boxed function
     #[cfg(any(feature = "std", feature = "alloc"))]
@@ -41,10 +44,11 @@ impl<Context> Measurable for MeasureFunc<Context> {
         &self,
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
-        context: Context,
+        context: &mut Context,
     ) -> Size<f32> {
         match self {
-            Self::Raw(measure) => measure(known_dimensions, available_space, context),
+            Self::Raw(measure) => measure(known_dimensions, available_space),
+            Self::RawWithContext(measure) => measure(known_dimensions, available_space, context),
             #[cfg(any(feature = "std", feature = "alloc"))]
             Self::Boxed(measurable) => measurable.measure(known_dimensions, available_space, context),
         }

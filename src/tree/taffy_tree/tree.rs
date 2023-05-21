@@ -7,7 +7,7 @@ use crate::compute::taffy_tree::{compute_layout, measure_node_size, perform_node
 use crate::geometry::{Line, Size};
 use crate::prelude::LayoutTree;
 use crate::style::{AvailableSpace, Style};
-use crate::tree::{Layout, MeasureFunc, NodeData, NodeId, SizeBaselinesAndMargins, SizingMode};
+use crate::tree::{Layout, Measurable, MeasureFunc, NodeData, NodeId, SizeBaselinesAndMargins, SizingMode};
 use crate::util::sys::{new_vec_with_capacity, ChildrenVec, Vec};
 
 use super::{TaffyError, TaffyResult};
@@ -25,12 +25,15 @@ impl Default for TaffyConfig {
 }
 
 /// A tree of UI nodes suitable for UI layout
-pub struct Taffy {
+pub struct Taffy<Measure = MeasureFunc<()>>
+where
+    Measure: Measurable,
+{
     /// The [`NodeData`] for each node stored in this tree
     pub(crate) nodes: SlotMap<DefaultKey, NodeData>,
 
     /// Functions/closures that compute the intrinsic size of leaf nodes
-    pub(crate) measure_funcs: SparseSecondaryMap<DefaultKey, MeasureFunc>,
+    pub(crate) measure_funcs: SparseSecondaryMap<DefaultKey, MeasureFunc<Measure::Context>>,
 
     /// The children of each node
     ///
@@ -49,6 +52,9 @@ pub struct Taffy {
     /// the layout algorithms during layout, while exposing the `NodeData.final_layout` when called by external users.
     /// This allows us to fix <https://github.com/DioxusLabs/taffy/issues/501> without breaking backwards compatibility
     pub(crate) is_layouting: bool,
+
+    /// Used to store the context during layout. Cleared before returning from `compute_layout`.
+    pub(crate) context: Option<Measure::Context>,
 }
 
 impl Default for Taffy {
@@ -67,8 +73,8 @@ impl<'a> Iterator for TaffyChildIter<'a> {
     }
 }
 
-impl LayoutTree for Taffy {
-    type ChildIter<'a> = TaffyChildIter<'a>;
+impl<Measure: Measurable> LayoutTree for Taffy<Measure> {
+    type ChildIter<'a> = TaffyChildIter<'a> where Measure: 'a;
 
     #[inline(always)]
     fn children(&self, node: NodeId) -> Self::ChildIter<'_> {
@@ -152,30 +158,7 @@ impl LayoutTree for Taffy {
 }
 
 #[allow(clippy::iter_cloned_collect)] // due to no-std support, we need to use `iter_cloned` instead of `collect`
-impl Taffy {
-    /// Creates a new [`Taffy`]
-    ///
-    /// The default capacity of a [`Taffy`] is 16 nodes.
-    #[must_use]
-    pub fn new() -> Self {
-        Self::with_capacity(16)
-    }
-
-    /// Creates a new [`Taffy`] that can store `capacity` nodes before reallocation
-    #[must_use]
-    pub fn with_capacity(capacity: usize) -> Self {
-        Self {
-            // TODO: make this method const upstream,
-            // so constructors here can be const
-            nodes: SlotMap::with_capacity(capacity),
-            children: SlotMap::with_capacity(capacity),
-            parents: SlotMap::with_capacity(capacity),
-            measure_funcs: SparseSecondaryMap::with_capacity(capacity),
-            config: TaffyConfig::default(),
-            is_layouting: false,
-        }
-    }
-
+impl<Measure: Measurable> Taffy<Measure> {
     /// Enable rounding of layout values. Rounding is enabled by default.
     pub fn enable_rounding(&mut self) {
         self.config.use_rounding = true;
@@ -198,7 +181,11 @@ impl Taffy {
     /// Creates and adds a new unattached leaf node to the tree, and returns the node of the new node
     ///
     /// Creates and adds a new leaf node with a supplied [`MeasureFunc`]
-    pub fn new_leaf_with_measure(&mut self, layout: Style, measure: MeasureFunc) -> TaffyResult<NodeId> {
+    pub fn new_leaf_with_measure(
+        &mut self,
+        layout: Style,
+        measure: MeasureFunc<Measure::Context>,
+    ) -> TaffyResult<NodeId> {
         let mut data = NodeData::new(layout);
         data.needs_measure = true;
 
@@ -258,7 +245,7 @@ impl Taffy {
     }
 
     /// Sets the [`MeasureFunc`] of the associated node
-    pub fn set_measure(&mut self, node: NodeId, measure: Option<MeasureFunc>) -> TaffyResult<()> {
+    pub fn set_measure(&mut self, node: NodeId, measure: Option<MeasureFunc<Measure::Context>>) -> TaffyResult<()> {
         let key = node.into();
         if let Some(measure) = measure {
             self.nodes[key].needs_measure = true;
@@ -442,8 +429,47 @@ impl Taffy {
     }
 
     /// Updates the stored layout of the provided `node` and its children
-    pub fn compute_layout(&mut self, node: NodeId, available_space: Size<AvailableSpace>) -> TaffyResult<()> {
-        compute_layout(self, node, available_space)
+    pub fn compute_layout_with_context(
+        &mut self,
+        node: NodeId,
+        available_space: Size<AvailableSpace>,
+        context: Measure::Context,
+    ) -> Result<(), TaffyError> {
+        self.context = Some(context);
+        let result = compute_layout(self, node, available_space);
+        self.context = None;
+        result
+    }
+}
+
+impl Taffy<MeasureFunc<()>> {
+    /// Creates a new [`Taffy`]
+    ///
+    /// The default capacity of a [`Taffy`] is 16 nodes.
+    #[must_use]
+    pub fn new() -> Self {
+        Self::with_capacity(16)
+    }
+
+    /// Creates a new [`Taffy`] that can store `capacity` nodes before reallocation
+    #[must_use]
+    pub fn with_capacity(capacity: usize) -> Self {
+        Taffy {
+            // TODO: make this method const upstream,
+            // so constructors here can be const
+            nodes: SlotMap::with_capacity(capacity),
+            children: SlotMap::with_capacity(capacity),
+            parents: SlotMap::with_capacity(capacity),
+            measure_funcs: SparseSecondaryMap::with_capacity(capacity),
+            config: TaffyConfig::default(),
+            is_layouting: false,
+            context: None,
+        }
+    }
+
+    /// Updates the stored layout of the provided `node` and its children
+    pub fn compute_layout(&mut self, node: NodeId, available_space: Size<AvailableSpace>) -> Result<(), TaffyError> {
+        self.compute_layout_with_context(node, available_space, ())
     }
 }
 
