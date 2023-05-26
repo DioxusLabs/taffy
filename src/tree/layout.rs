@@ -9,7 +9,7 @@ use crate::{
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum RunMode {
     /// A full layout for this node and all children should be computed
-    PeformLayout,
+    PerformLayout,
     /// The layout algorithm should be executed such that an accurate container size for the node can be determined.
     /// Layout steps that aren't necessary for determining the container size of the current node can be skipped.
     ComputeSize,

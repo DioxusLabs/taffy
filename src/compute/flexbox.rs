@@ -34,7 +34,7 @@ impl LayoutAlgorithm for FlexboxAlgorithm {
         _sizing_mode: SizingMode,
         _vertical_margins_are_collapsible: Line<bool>,
     ) -> SizeBaselinesAndMargins {
-        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::PeformLayout)
+        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::PerformLayout)
     }
 
     fn measure_size(

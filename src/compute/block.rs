@@ -33,7 +33,7 @@ impl LayoutAlgorithm for BlockAlgorithm {
             known_dimensions,
             parent_size,
             available_space,
-            RunMode::PeformLayout,
+            RunMode::PerformLayout,
             vertical_margins_are_collapsible,
         )
     }
