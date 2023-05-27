@@ -263,6 +263,22 @@ impl Taffy {
         Ok(())
     }
 
+    /// Inserts a `child` node at the given `child_index` under the supplied `parent`, shifting all children after it to the right.
+    pub fn insert_child_at_index(&mut self, parent: NodeId, child_index: usize, child: NodeId) -> TaffyResult<()> {
+        let parent_key = parent.into();
+
+        let child_count = self.children[parent_key].len();
+        if child_index > child_count {
+            return Err(TaffyError::ChildIndexOutOfBounds { parent, child_index, child_count });
+        }
+
+        self.parents[child.into()] = Some(parent);
+        self.children[parent_key].insert(child_index, child);
+        self.mark_dirty(parent)?;
+
+        Ok(())
+    }
+
     /// Directly sets the `children` of the supplied `parent`
     pub fn set_children(&mut self, parent: NodeId, children: &[NodeId]) -> TaffyResult<()> {
         let parent_key = parent.into();
@@ -559,6 +575,33 @@ mod tests {
         let child1 = taffy.new_leaf(Style::default()).unwrap();
         taffy.add_child(node, child1).unwrap();
         assert_eq!(taffy.child_count(node).unwrap(), 2);
+    }
+
+    #[test]
+    fn insert_child_at_index() {
+        let mut taffy = Taffy::new();
+
+        let child0 = taffy.new_leaf(Style::default()).unwrap();
+        let child1 = taffy.new_leaf(Style::default()).unwrap();
+        let child2 = taffy.new_leaf(Style::default()).unwrap();
+
+        let node = taffy.new_leaf(Style::default()).unwrap();
+        assert_eq!(taffy.child_count(node).unwrap(), 0);
+
+        taffy.insert_child_at_index(node, 0, child0).unwrap();
+        assert_eq!(taffy.child_count(node).unwrap(), 1);
+        assert_eq!(taffy.children(node).unwrap()[0], child0);
+
+        taffy.insert_child_at_index(node, 0, child1).unwrap();
+        assert_eq!(taffy.child_count(node).unwrap(), 2);
+        assert_eq!(taffy.children(node).unwrap()[0], child1);
+        assert_eq!(taffy.children(node).unwrap()[1], child0);
+
+        taffy.insert_child_at_index(node, 1, child2).unwrap();
+        assert_eq!(taffy.child_count(node).unwrap(), 3);
+        assert_eq!(taffy.children(node).unwrap()[0], child1);
+        assert_eq!(taffy.children(node).unwrap()[1], child2);
+        assert_eq!(taffy.children(node).unwrap()[2], child0);
     }
 
     #[test]

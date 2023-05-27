@@ -31,6 +31,7 @@ Example usage change:
 ### Added
 
 - Support for [CSS Block layout](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flow_Layout/Block_and_Inline_Layout_in_Normal_Flow#elements_participating_in_a_block_formatting_context) has been added. This can be used via the new `Display::Block` variant of the `Display` enum. Note that inline, inline-block and float have *not* been implemented. The use case supported is block container nodes which contain block-level children.
+- Added `insert_child_at_index()` method to the `Taffy` tree. This can be used to insert a child node at any position instead of just the end.
 
 ### Removed
 
