@@ -13,7 +13,7 @@ categories = ["gui", "benchmarks"]
 license = "MIT"
 
 [dependencies]
-criterion = "0.4"
+criterion = "0.5"
 taffy = { path = ".." }
 rand = { version = "0.8.5" }
 rand_chacha = "0.3.1"
