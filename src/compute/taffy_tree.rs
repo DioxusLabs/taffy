@@ -77,7 +77,7 @@ pub(crate) fn perform_node_layout(
         known_dimensions,
         parent_size,
         available_space,
-        RunMode::PeformLayout,
+        RunMode::PerformLayout,
         sizing_mode,
         vertical_margins_are_collapsible,
     )
@@ -127,7 +127,7 @@ fn compute_node_layout(
     let has_children = !tree.children[node_key].is_empty();
 
     // First we check if we have a cached result for the given input
-    let cache_run_mode = if !has_children { RunMode::PeformLayout } else { run_mode };
+    let cache_run_mode = if !has_children { RunMode::PerformLayout } else { run_mode };
     if let Some(cached_size_and_baselines) =
         tree.nodes[node_key].cache.get(known_dimensions, available_space, cache_run_mode)
     {
@@ -159,7 +159,7 @@ fn compute_node_layout(
         NODE_LOGGER.log(Algorithm::NAME);
 
         match run_mode {
-            RunMode::PeformLayout => Algorithm::perform_layout(
+            RunMode::PerformLayout => Algorithm::perform_layout(
                 tree,
                 node,
                 known_dimensions,
@@ -221,7 +221,7 @@ fn compute_node_layout(
             vertical_margins_are_collapsible,
         ),
         (_, false) => match run_mode {
-            RunMode::PeformLayout => leaf::perform_layout(
+            RunMode::PerformLayout => leaf::perform_layout(
                 &tree.nodes[node_key].style,
                 tree.nodes[node_key].needs_measure.then(|| &tree.measure_funcs[node_key]),
                 known_dimensions,

@@ -92,7 +92,7 @@ impl Cache {
     ) -> Option<SizeBaselinesAndMargins> {
         for entry in self.entries.iter().flatten() {
             // Cached ComputeSize results are not valid if we are running in PerformLayout mode
-            if entry.run_mode == RunMode::ComputeSize && run_mode == RunMode::PeformLayout {
+            if entry.run_mode == RunMode::ComputeSize && run_mode == RunMode::PerformLayout {
                 return None;
             }
 
