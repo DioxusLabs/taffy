@@ -28,6 +28,7 @@ pub enum MeasureFunc<Context = ()> {
     Raw(fn(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32>),
 
     /// Stores an unboxed function with a context parameter
+    #[allow(clippy::type_complexity)]
     RawWithContext(fn(Size<Option<f32>>, Size<AvailableSpace>, context: &mut Context) -> Size<f32>),
 
     /// Stores a boxed function
@@ -61,6 +62,7 @@ pub enum SyncMeasureFunc<Context = ()> {
     Raw(fn(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32>),
 
     /// Stores an unboxed function with a context parameter
+    #[allow(clippy::type_complexity)]
     RawWithContext(fn(Size<Option<f32>>, Size<AvailableSpace>, context: &mut Context) -> Size<f32>),
 
     /// Stores a boxed function
