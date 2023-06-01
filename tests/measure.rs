@@ -9,7 +9,7 @@ mod measure {
         let node = taffy
             .new_leaf_with_measure(
                 Style::default(),
-                MeasureFunc::Raw(|known_dimensions, _available_space| Size {
+                MeasureFunc::Raw(|known_dimensions, _available_space, _context| Size {
                     width: known_dimensions.width.unwrap_or(100.0),
                     height: known_dimensions.height.unwrap_or(100.0),
                 }),
@@ -29,7 +29,7 @@ mod measure {
         let child = taffy
             .new_leaf_with_measure(
                 Style::default(),
-                MeasureFunc::Raw(|known_dimensions, _available_space| Size {
+                MeasureFunc::Raw(|known_dimensions, _available_space, _context| Size {
                     width: known_dimensions.width.unwrap_or(100.0),
                     height: known_dimensions.height.unwrap_or(100.0),
                 }),
@@ -52,7 +52,7 @@ mod measure {
         let child = taffy
             .new_leaf_with_measure(
                 Style::default(),
-                MeasureFunc::Raw(|known_dimensions, _available_space| Size {
+                MeasureFunc::Raw(|known_dimensions, _available_space, _context| Size {
                     width: known_dimensions.width.unwrap_or(100.0),
                     height: known_dimensions.height.unwrap_or(100.0),
                 }),
@@ -82,7 +82,7 @@ mod measure {
         let child = taffy
             .new_leaf_with_measure(
                 Style::default(),
-                MeasureFunc::Raw(|known_dimensions, _available_space| Size {
+                MeasureFunc::Raw(|known_dimensions, _available_space, _context| Size {
                     width: known_dimensions.width.unwrap_or(100.0),
                     height: known_dimensions.height.unwrap_or(100.0),
                 }),
@@ -130,7 +130,7 @@ mod measure {
         let child1 = taffy
             .new_leaf_with_measure(
                 Style { flex_grow: 1.0, ..Default::default() },
-                MeasureFunc::Raw(|known_dimensions, _available_space| Size {
+                MeasureFunc::Raw(|known_dimensions, _available_space, _context| Size {
                     width: known_dimensions.width.unwrap_or(10.0),
                     height: known_dimensions.height.unwrap_or(50.0),
                 }),
@@ -164,7 +164,7 @@ mod measure {
         let child1 = taffy
             .new_leaf_with_measure(
                 Style::default(),
-                MeasureFunc::Raw(|known_dimensions, _available_space| Size {
+                MeasureFunc::Raw(|known_dimensions, _available_space, _context| Size {
                     width: known_dimensions.width.unwrap_or(100.0),
                     height: known_dimensions.height.unwrap_or(50.0),
                 }),
@@ -197,7 +197,7 @@ mod measure {
         let child1 = taffy
             .new_leaf_with_measure(
                 Style { flex_grow: 1.0, ..Default::default() },
-                MeasureFunc::Raw(|known_dimensions, _available_space| {
+                MeasureFunc::Raw(|known_dimensions, _available_space, _context| {
                     let width = known_dimensions.width.unwrap_or(10.0);
                     let height = known_dimensions.height.unwrap_or(width * 2.0);
                     Size { width, height }
@@ -237,7 +237,7 @@ mod measure {
         let child1 = taffy
             .new_leaf_with_measure(
                 Style::default(),
-                MeasureFunc::Raw(|known_dimensions, _available_space| {
+                MeasureFunc::Raw(|known_dimensions, _available_space, _context| {
                     let width = known_dimensions.width.unwrap_or(100.0);
                     let height = known_dimensions.height.unwrap_or(width * 2.0);
                     Size { width, height }
@@ -269,7 +269,7 @@ mod measure {
         let child = taffy
             .new_leaf_with_measure(
                 Style::default(),
-                MeasureFunc::Raw(|known_dimensions, _available_space| {
+                MeasureFunc::Raw(|known_dimensions, _available_space, _context| {
                     let height = known_dimensions.height.unwrap_or(50.0);
                     let width = known_dimensions.width.unwrap_or(height);
                     Size { width, height }
@@ -299,7 +299,7 @@ mod measure {
         let child = taffy
             .new_leaf_with_measure(
                 Style { size: Size { width: Dimension::Length(50.0), height: auto() }, ..Default::default() },
-                MeasureFunc::Raw(|known_dimensions, _available_space| Size {
+                MeasureFunc::Raw(|known_dimensions, _available_space, _context| Size {
                     width: known_dimensions.width.unwrap_or(100.0),
                     height: known_dimensions.height.unwrap_or(100.0),
                 }),
@@ -319,7 +319,7 @@ mod measure {
         let child = taffy
             .new_leaf_with_measure(
                 Style { size: Size { width: auto(), height: Dimension::Length(50.0) }, ..Default::default() },
-                MeasureFunc::Raw(|known_dimensions, _available_space| Size {
+                MeasureFunc::Raw(|known_dimensions, _available_space, _context| Size {
                     width: known_dimensions.width.unwrap_or(100.0),
                     height: known_dimensions.height.unwrap_or(100.0),
                 }),
@@ -343,7 +343,7 @@ mod measure {
         let child1 = taffy
             .new_leaf_with_measure(
                 Style { flex_basis: Dimension::Length(50.0), flex_grow: 1.0, ..Default::default() },
-                MeasureFunc::Raw(|known_dimensions, _available_space| Size {
+                MeasureFunc::Raw(|known_dimensions, _available_space, _context| Size {
                     width: known_dimensions.width.unwrap_or(100.0),
                     height: known_dimensions.height.unwrap_or(100.0),
                 }),
@@ -374,7 +374,7 @@ mod measure {
         let child = taffy
             .new_leaf_with_measure(
                 Style::default(),
-                MeasureFunc::Raw(|known_dimensions, _available_space| Size {
+                MeasureFunc::Raw(|known_dimensions, _available_space, _context| Size {
                     width: known_dimensions.width.unwrap_or(50.0),
                     height: known_dimensions.height.unwrap_or(50.0),
                 }),
@@ -403,7 +403,7 @@ mod measure {
         let child = taffy
             .new_leaf_with_measure(
                 Style { position: Position::Absolute, ..Default::default() },
-                MeasureFunc::Raw(|known_dimensions, _available_space| Size {
+                MeasureFunc::Raw(|known_dimensions, _available_space, _context| Size {
                     width: known_dimensions.width.unwrap_or(50.0),
                     height: known_dimensions.height.unwrap_or(50.0),
                 }),

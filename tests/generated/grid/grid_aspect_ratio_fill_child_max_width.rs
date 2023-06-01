@@ -14,7 +14,7 @@ fn grid_aspect_ratio_fill_child_max_width() {
                 aspect_ratio: Some(2f32),
                 ..Default::default()
             },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "HH\u{200b}HH\u{200b}HH\u{200b}HH";
                 crate::measure_standard_text(
                     known_dimensions,

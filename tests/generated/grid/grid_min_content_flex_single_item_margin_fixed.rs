@@ -37,7 +37,7 @@ fn grid_min_content_flex_single_item_margin_fixed() {
                 },
                 ..Default::default()
             },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "HH\u{200b}HH";
                 crate::measure_standard_text(
                     known_dimensions,

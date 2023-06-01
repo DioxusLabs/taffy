@@ -10,7 +10,7 @@ fn intrinsic_sizing_main_size_column_nested() {
     let node0 = taffy
         .new_leaf_with_measure(
             taffy::style::Style { flex_direction: taffy::style::FlexDirection::Column, ..Default::default() },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "HH\u{200b}HH";
                 crate::measure_standard_text(
                     known_dimensions,

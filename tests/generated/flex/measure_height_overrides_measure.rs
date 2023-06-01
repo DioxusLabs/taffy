@@ -13,7 +13,7 @@ fn measure_height_overrides_measure() {
                 size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(5f32) },
                 ..Default::default()
             },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "H";
                 crate::measure_standard_text(
                     known_dimensions,

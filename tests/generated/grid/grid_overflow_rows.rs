@@ -13,7 +13,7 @@ fn grid_overflow_rows() {
                 grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Span(4u16) },
                 ..Default::default()
             },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "HHHHHHHHHHHHHHHH\u{200b}HHHHHHHHHHHHHHHH";
                 crate::measure_standard_text(
                     known_dimensions,

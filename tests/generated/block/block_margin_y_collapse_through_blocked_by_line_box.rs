@@ -32,7 +32,7 @@ fn block_margin_y_collapse_through_blocked_by_line_box() {
                 },
                 ..Default::default()
             },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "HH";
                 crate::measure_standard_text(
                     known_dimensions,

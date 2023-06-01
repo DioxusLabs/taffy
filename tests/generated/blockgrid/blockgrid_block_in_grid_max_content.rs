@@ -10,7 +10,7 @@ fn blockgrid_block_in_grid_max_content() {
     let node0 = taffy
         .new_leaf_with_measure(
             taffy::style::Style { display: taffy::style::Display::Block, ..Default::default() },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "HH\u{200b}HH";
                 crate::measure_standard_text(
                     known_dimensions,

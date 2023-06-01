@@ -14,7 +14,7 @@ fn aspect_ratio_flex_row_fill_min_width() {
                 aspect_ratio: Some(2f32),
                 ..Default::default()
             },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "\n    \n  ";
                 crate::measure_standard_text(
                     known_dimensions,

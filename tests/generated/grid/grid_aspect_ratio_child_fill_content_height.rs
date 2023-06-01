@@ -10,7 +10,7 @@ fn grid_aspect_ratio_child_fill_content_height() {
     let node0 = taffy
         .new_leaf_with_measure(
             taffy::style::Style { aspect_ratio: Some(0.5f32), ..Default::default() },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "HHHH";
                 crate::measure_standard_text(
                     known_dimensions,

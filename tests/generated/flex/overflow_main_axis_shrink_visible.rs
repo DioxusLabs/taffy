@@ -10,7 +10,7 @@ fn overflow_main_axis_shrink_visible() {
     let node0 = taffy
         .new_leaf_with_measure(
             taffy::style::Style { flex_shrink: 1f32, ..Default::default() },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "HHHHHHHHHH";
                 crate::measure_standard_text(
                     known_dimensions,

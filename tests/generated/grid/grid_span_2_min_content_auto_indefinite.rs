@@ -15,7 +15,7 @@ fn grid_span_2_min_content_auto_indefinite() {
                 grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Span(2u16) },
                 ..Default::default()
             },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "HHHH\u{200b}HHHH";
                 crate::measure_standard_text(
                     known_dimensions,

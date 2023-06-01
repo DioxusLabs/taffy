@@ -23,7 +23,7 @@ fn block_margin_y_collapse_through_with_absolute_child() {
     let node10 = taffy
         .new_leaf_with_measure(
             taffy::style::Style { position: taffy::style::Position::Absolute, ..Default::default() },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "HH";
                 crate::measure_standard_text(
                     known_dimensions,

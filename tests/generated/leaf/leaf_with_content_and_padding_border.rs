@@ -24,7 +24,7 @@ fn leaf_with_content_and_padding_border() {
                 },
                 ..Default::default()
             },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "HHHH";
                 crate::measure_standard_text(
                     known_dimensions,

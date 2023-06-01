@@ -879,7 +879,7 @@ fn generate_measure_function(text_content: &str, writing_mode: Option<&str>, asp
     };
 
     quote!(
-        taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+        taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
             const TEXT : &str = #text_content;
             crate::measure_standard_text(known_dimensions, available_space, TEXT, #writing_mode_token, #aspect_ratio_token)
         })

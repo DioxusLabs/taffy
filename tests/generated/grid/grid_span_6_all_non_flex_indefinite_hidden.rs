@@ -18,7 +18,7 @@ fn grid_span_6_all_non_flex_indefinite_hidden() {
                 grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Span(6u16) },
                 ..Default::default()
             },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "HHHHHHHH\u{200b}HHHHHHHH";
                 crate::measure_standard_text(
                     known_dimensions,

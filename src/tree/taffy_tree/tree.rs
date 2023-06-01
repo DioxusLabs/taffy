@@ -517,7 +517,7 @@ mod tests {
     fn new_leaf_with_measure() {
         let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
 
-        let res = taffy.new_leaf_with_measure(Style::default(), MeasureFunc::Raw(|_, _| Size::ZERO));
+        let res = taffy.new_leaf_with_measure(Style::default(), MeasureFunc::Raw(|_, _, _| Size::ZERO));
         assert!(res.is_ok());
         let node = res.unwrap();
 
@@ -585,12 +585,12 @@ mod tests {
     fn set_measure() {
         let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
         let node = taffy
-            .new_leaf_with_measure(Style::default(), MeasureFunc::Raw(|_, _| Size { width: 200.0, height: 200.0 }))
+            .new_leaf_with_measure(Style::default(), MeasureFunc::Raw(|_, _, _| Size { width: 200.0, height: 200.0 }))
             .unwrap();
         taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
         assert_eq!(taffy.layout(node).unwrap().size.width, 200.0);
 
-        taffy.set_measure(node, Some(MeasureFunc::Raw(|_, _| Size { width: 100.0, height: 100.0 }))).unwrap();
+        taffy.set_measure(node, Some(MeasureFunc::Raw(|_, _, _| Size { width: 100.0, height: 100.0 }))).unwrap();
         taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
         assert_eq!(taffy.layout(node).unwrap().size.width, 100.0);
     }
@@ -602,7 +602,7 @@ mod tests {
         taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
         assert_eq!(taffy.layout(node).unwrap().size.width, 0.0);
 
-        taffy.set_measure(node, Some(MeasureFunc::Raw(|_, _| Size { width: 100.0, height: 100.0 }))).unwrap();
+        taffy.set_measure(node, Some(MeasureFunc::Raw(|_, _, _| Size { width: 100.0, height: 100.0 }))).unwrap();
         taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
         assert_eq!(taffy.layout(node).unwrap().size.width, 100.0);
     }

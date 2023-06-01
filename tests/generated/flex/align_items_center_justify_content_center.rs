@@ -16,7 +16,7 @@ fn align_items_center_justify_content_center() {
                 },
                 ..Default::default()
             },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "\n      ";
                 crate::measure_standard_text(
                     known_dimensions,

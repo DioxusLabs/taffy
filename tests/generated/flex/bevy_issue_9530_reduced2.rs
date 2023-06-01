@@ -10,7 +10,7 @@ fn bevy_issue_9530_reduced2() {
     let node00 = taffy
         .new_leaf_with_measure(
             taffy::style::Style { flex_grow: 1f32, ..Default::default() },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH";
                 crate::measure_standard_text(
                     known_dimensions,

@@ -24,12 +24,9 @@ pub trait Measurable {
 
 /// A function that can be used to compute the intrinsic size of a node
 pub enum MeasureFunc<Context = ()> {
-    /// Stores an unboxed function with no context parameter
-    Raw(fn(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32>),
-
-    /// Stores an unboxed function with a context parameter
+    /// Stores an unboxed function
     #[allow(clippy::type_complexity)]
-    RawWithContext(fn(Size<Option<f32>>, Size<AvailableSpace>, context: &mut Context) -> Size<f32>),
+    Raw(fn(Size<Option<f32>>, Size<AvailableSpace>, context: &mut Context) -> Size<f32>),
 
     /// Stores a boxed function
     #[cfg(any(feature = "std", feature = "alloc"))]
@@ -48,8 +45,7 @@ impl<Context> Measurable for MeasureFunc<Context> {
         context: &mut Context,
     ) -> Size<f32> {
         match self {
-            Self::Raw(measure) => measure(known_dimensions, available_space),
-            Self::RawWithContext(measure) => measure(known_dimensions, available_space, context),
+            Self::Raw(measure) => measure(known_dimensions, available_space, context),
             #[cfg(any(feature = "std", feature = "alloc"))]
             Self::Boxed(measurable) => measurable.measure(known_dimensions, available_space, context),
         }
@@ -58,12 +54,9 @@ impl<Context> Measurable for MeasureFunc<Context> {
 
 /// A function that can be used to compute the intrinsic size of a node
 pub enum SyncMeasureFunc<Context = ()> {
-    /// Stores an unboxed function with no context parameter
-    Raw(fn(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32>),
-
-    /// Stores an unboxed function with a context parameter
+    /// Stores an unboxed function
     #[allow(clippy::type_complexity)]
-    RawWithContext(fn(Size<Option<f32>>, Size<AvailableSpace>, context: &mut Context) -> Size<f32>),
+    Raw(fn(Size<Option<f32>>, Size<AvailableSpace>, context: &mut Context) -> Size<f32>),
 
     /// Stores a boxed function
     #[cfg(any(feature = "std", feature = "alloc"))]
@@ -82,8 +75,7 @@ impl<Context> Measurable for SyncMeasureFunc<Context> {
         context: &mut Context,
     ) -> Size<f32> {
         match self {
-            Self::Raw(measure) => measure(known_dimensions, available_space),
-            Self::RawWithContext(measure) => measure(known_dimensions, available_space, context),
+            Self::Raw(measure) => measure(known_dimensions, available_space, context),
             #[cfg(any(feature = "std", feature = "alloc"))]
             Self::Boxed(measurable) => measurable.measure(known_dimensions, available_space, context),
         }

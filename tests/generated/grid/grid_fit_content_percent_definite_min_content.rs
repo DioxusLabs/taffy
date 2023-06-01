@@ -10,7 +10,7 @@ fn grid_fit_content_percent_definite_min_content() {
     let node0 = taffy
         .new_leaf_with_measure(
             taffy::style::Style { ..Default::default() },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "HHHH\u{200b}HH";
                 crate::measure_standard_text(
                     known_dimensions,

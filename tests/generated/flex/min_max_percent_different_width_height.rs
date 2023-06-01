@@ -20,7 +20,7 @@ fn min_max_percent_different_width_height() {
                 },
                 ..Default::default()
             },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "\n  ";
                 crate::measure_standard_text(
                     known_dimensions,

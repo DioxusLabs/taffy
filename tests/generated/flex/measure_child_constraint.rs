@@ -7,7 +7,7 @@ fn measure_child_constraint() {
         Taffy,
     };
     let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
-    let node0 = taffy . new_leaf_with_measure (taffy :: style :: Style { .. Default :: default () } , taffy :: tree :: MeasureFunc :: Raw (| known_dimensions , available_space | { const TEXT : & str = "HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH" ; crate :: measure_standard_text (known_dimensions , available_space , TEXT , crate :: WritingMode :: Horizontal , None) }) ,) . unwrap () ;
+    let node0 = taffy . new_leaf_with_measure (taffy :: style :: Style { .. Default :: default () } , taffy :: tree :: MeasureFunc :: Raw (| known_dimensions , available_space , _context | { const TEXT : & str = "HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH" ; crate :: measure_standard_text (known_dimensions , available_space , TEXT , crate :: WritingMode :: Horizontal , None) }) ,) . unwrap () ;
     let node = taffy
         .new_with_children(
             taffy::style::Style {

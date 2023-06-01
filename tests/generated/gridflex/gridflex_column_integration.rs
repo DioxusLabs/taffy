@@ -10,7 +10,7 @@ fn gridflex_column_integration() {
     let node00 = taffy
         .new_leaf_with_measure(
             taffy::style::Style { ..Default::default() },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "HH";
                 crate::measure_standard_text(
                     known_dimensions,
@@ -25,7 +25,7 @@ fn gridflex_column_integration() {
     let node01 = taffy
         .new_leaf_with_measure(
             taffy::style::Style { ..Default::default() },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "HH";
                 crate::measure_standard_text(
                     known_dimensions,
@@ -40,7 +40,7 @@ fn gridflex_column_integration() {
     let node02 = taffy
         .new_leaf_with_measure(
             taffy::style::Style { ..Default::default() },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "HH";
                 crate::measure_standard_text(
                     known_dimensions,
@@ -55,7 +55,7 @@ fn gridflex_column_integration() {
     let node03 = taffy
         .new_leaf_with_measure(
             taffy::style::Style { ..Default::default() },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "HH";
                 crate::measure_standard_text(
                     known_dimensions,

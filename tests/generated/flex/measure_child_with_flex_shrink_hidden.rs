@@ -26,7 +26,7 @@ fn measure_child_with_flex_shrink_hidden() {
                 scrollbar_width: 15f32,
                 ..Default::default()
             },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH";
                 crate::measure_standard_text(
                     known_dimensions,

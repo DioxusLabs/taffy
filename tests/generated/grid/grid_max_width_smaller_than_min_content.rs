@@ -10,7 +10,7 @@ fn grid_max_width_smaller_than_min_content() {
     let node00 = taffy
         .new_leaf_with_measure(
             taffy::style::Style { ..Default::default() },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "HHHH\u{200b}HHHH";
                 crate::measure_standard_text(
                     known_dimensions,
@@ -25,7 +25,7 @@ fn grid_max_width_smaller_than_min_content() {
     let node01 = taffy
         .new_leaf_with_measure(
             taffy::style::Style { ..Default::default() },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
+            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
                 const TEXT: &str = "HHHH\u{200b}HHHH";
                 crate::measure_standard_text(
                     known_dimensions,
