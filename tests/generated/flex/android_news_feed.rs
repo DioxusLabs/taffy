@@ -1,8 +1,12 @@
 #[test]
 fn android_news_feed() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{
+        prelude::*,
+        tree::{Layout, MeasureFunc},
+        Taffy,
+    };
+    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
     let node000000 = taffy
         .new_leaf(taffy::style::Style {
             align_content: Some(taffy::style::AlignContent::Stretch),

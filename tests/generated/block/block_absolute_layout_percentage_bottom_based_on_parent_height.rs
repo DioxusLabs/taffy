@@ -1,8 +1,12 @@
 #[test]
 fn block_absolute_layout_percentage_bottom_based_on_parent_height() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{
+        prelude::*,
+        tree::{Layout, MeasureFunc},
+        Taffy,
+    };
+    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,

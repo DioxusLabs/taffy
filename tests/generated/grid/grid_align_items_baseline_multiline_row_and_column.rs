@@ -1,8 +1,12 @@
 #[test]
 fn grid_align_items_baseline_multiline_row_and_column() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{
+        prelude::*,
+        tree::{Layout, MeasureFunc},
+        Taffy,
+    };
+    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,

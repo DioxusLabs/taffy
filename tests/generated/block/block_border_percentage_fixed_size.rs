@@ -1,8 +1,12 @@
 #[test]
 fn block_border_percentage_fixed_size() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{
+        prelude::*,
+        tree::{Layout, MeasureFunc},
+        Taffy,
+    };
+    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,

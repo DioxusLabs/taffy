@@ -1,8 +1,12 @@
 #[test]
 fn absolute_child_with_max_height_larger_shrinkable_grandchild() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{
+        prelude::*,
+        tree::{Layout, MeasureFunc},
+        Taffy,
+    };
+    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             flex_shrink: 1f32,

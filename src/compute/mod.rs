@@ -110,11 +110,12 @@ mod tests {
     use super::perform_hidden_layout;
     use crate::geometry::{Point, Size};
     use crate::style::{Display, Style};
+    use crate::tree::MeasureFunc;
     use crate::Taffy;
 
     #[test]
     fn hidden_layout_should_hide_recursively() {
-        let mut taffy = Taffy::new();
+        let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
 
         let style: Style = Style { display: Display::Flex, size: Size::from_lengths(50.0, 50.0), ..Default::default() };
 

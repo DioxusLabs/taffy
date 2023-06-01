@@ -1,8 +1,12 @@
 #[test]
 fn grid_span_2_min_content_min_content_indefinite() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{
+        prelude::*,
+        tree::{Layout, MeasureFunc},
+        Taffy,
+    };
+    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },

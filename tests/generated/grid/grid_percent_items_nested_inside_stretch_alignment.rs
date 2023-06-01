@@ -1,8 +1,12 @@
 #[test]
 fn grid_percent_items_nested_inside_stretch_alignment() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{
+        prelude::*,
+        tree::{Layout, MeasureFunc},
+        Taffy,
+    };
+    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,

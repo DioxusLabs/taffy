@@ -1,8 +1,12 @@
 #[test]
 fn percentage_container_in_wrapping_container() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{
+        prelude::*,
+        tree::{Layout, MeasureFunc},
+        Taffy,
+    };
+    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
     let node000 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {

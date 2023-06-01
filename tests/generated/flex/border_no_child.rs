@@ -1,8 +1,12 @@
 #[test]
 fn border_no_child() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{
+        prelude::*,
+        tree::{Layout, MeasureFunc},
+        Taffy,
+    };
+    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
     let node = taffy
         .new_leaf(taffy::style::Style {
             border: taffy::geometry::Rect {

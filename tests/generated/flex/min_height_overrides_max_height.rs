@@ -1,8 +1,12 @@
 #[test]
 fn min_height_overrides_max_height() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{
+        prelude::*,
+        tree::{Layout, MeasureFunc},
+        Taffy,
+    };
+    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },

@@ -1,7 +1,7 @@
 use taffy::prelude::*;
 
 fn main() -> Result<(), taffy::TaffyError> {
-    let mut taffy = Taffy::new();
+    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
 
     let child = taffy.new_leaf(Style {
         size: Size { width: Dimension::Percent(0.5), height: Dimension::Auto },

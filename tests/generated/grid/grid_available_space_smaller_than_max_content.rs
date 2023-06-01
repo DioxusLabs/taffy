@@ -1,8 +1,12 @@
 #[test]
 fn grid_available_space_smaller_than_max_content() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{
+        prelude::*,
+        tree::{Layout, MeasureFunc},
+        Taffy,
+    };
+    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
     let node0 = taffy
         .new_leaf_with_measure(
             taffy::style::Style { ..Default::default() },

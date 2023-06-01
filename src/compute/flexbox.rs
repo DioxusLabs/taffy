@@ -2125,6 +2125,7 @@ mod tests {
     use crate::{
         geometry::Size,
         style::{FlexWrap, Style},
+        tree::MeasureFunc,
         util::{MaybeMath, ResolveOrZero},
         Taffy,
     };
@@ -2132,7 +2133,7 @@ mod tests {
     // Make sure we get correct constants
     #[test]
     fn correct_constants() {
-        let mut tree = Taffy::with_capacity(16);
+        let mut tree: Taffy<MeasureFunc<()>> = Taffy::with_capacity(16);
 
         let style = Style::default();
         let node_id = tree.new_leaf(style.clone()).unwrap();

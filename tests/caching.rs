@@ -7,7 +7,7 @@ mod caching {
     fn measure_count_flexbox() {
         use std::sync::atomic::{AtomicU32, Ordering};
 
-        let mut taffy = Taffy::new();
+        let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
         static NUM_MEASURES: AtomicU32 = AtomicU32::new(0);
 
         let leaf = taffy
@@ -40,7 +40,7 @@ mod caching {
 
         let style = || Style { display: Display::Grid, ..Default::default() };
 
-        let mut taffy = Taffy::new();
+        let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
         static NUM_MEASURES: AtomicU32 = AtomicU32::new(0);
 
         let leaf = taffy

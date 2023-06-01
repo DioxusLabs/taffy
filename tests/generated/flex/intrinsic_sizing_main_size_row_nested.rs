@@ -1,8 +1,12 @@
 #[test]
 fn intrinsic_sizing_main_size_row_nested() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{
+        prelude::*,
+        tree::{Layout, MeasureFunc},
+        Taffy,
+    };
+    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
     let node0 = taffy
         .new_leaf_with_measure(
             taffy::style::Style { ..Default::default() },

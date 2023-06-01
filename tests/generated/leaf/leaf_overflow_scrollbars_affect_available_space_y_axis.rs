@@ -1,8 +1,12 @@
 #[test]
 fn leaf_overflow_scrollbars_affect_available_space_y_axis() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{
+        prelude::*,
+        tree::{Layout, MeasureFunc},
+        Taffy,
+    };
+    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
     let node = taffy
         .new_leaf_with_measure(
             taffy::style::Style {

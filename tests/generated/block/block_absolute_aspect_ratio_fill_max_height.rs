@@ -1,8 +1,12 @@
 #[test]
 fn block_absolute_aspect_ratio_fill_max_height() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{
+        prelude::*,
+        tree::{Layout, MeasureFunc},
+        Taffy,
+    };
+    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
     let node0 = taffy . new_leaf_with_measure (taffy :: style :: Style { position : taffy :: style :: Position :: Absolute , max_size : taffy :: geometry :: Size { width : taffy :: style :: Dimension :: Length (50f32) , height : auto () , } , aspect_ratio : Some (3f32) , .. Default :: default () } , taffy :: tree :: MeasureFunc :: Raw (| known_dimensions , available_space | { const TEXT : & str = "HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH" ; crate :: measure_standard_text (known_dimensions , available_space , TEXT , crate :: WritingMode :: Horizontal , Some (3f32)) }) ,) . unwrap () ;
     let node = taffy
         .new_with_children(

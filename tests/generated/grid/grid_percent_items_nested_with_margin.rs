@@ -1,8 +1,12 @@
 #[test]
 fn grid_percent_items_nested_with_margin() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{
+        prelude::*,
+        tree::{Layout, MeasureFunc},
+        Taffy,
+    };
+    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.45f32), height: auto() },

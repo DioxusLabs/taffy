@@ -1,8 +1,12 @@
 #[test]
 fn bevy_issue_7976_4_level() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{
+        prelude::*,
+        tree::{Layout, MeasureFunc},
+        Taffy,
+    };
+    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
     let node000 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node00 = taffy
         .new_with_children(

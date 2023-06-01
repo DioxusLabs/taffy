@@ -1,8 +1,12 @@
 #[test]
 fn grid_percent_items_width_and_padding() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{
+        prelude::*,
+        tree::{Layout, MeasureFunc},
+        Taffy,
+    };
+    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.5f32), height: auto() },

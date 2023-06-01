@@ -1,8 +1,12 @@
 #[test]
 fn align_items_center_justify_content_center() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{
+        prelude::*,
+        tree::{Layout, MeasureFunc},
+        Taffy,
+    };
+    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
     let node000 = taffy
         .new_leaf_with_measure(
             taffy::style::Style {

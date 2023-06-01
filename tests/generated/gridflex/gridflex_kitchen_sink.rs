@@ -1,8 +1,12 @@
 #[test]
 fn gridflex_kitchen_sink() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{
+        prelude::*,
+        tree::{Layout, MeasureFunc},
+        Taffy,
+    };
+    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
     let node000 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },

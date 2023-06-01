@@ -1,8 +1,12 @@
 #[test]
 fn grid_auto_single_item_fixed_width() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{
+        prelude::*,
+        tree::{Layout, MeasureFunc},
+        Taffy,
+    };
+    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
     let node0 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
