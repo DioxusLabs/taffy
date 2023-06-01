@@ -7,7 +7,7 @@ use crate::style::{AvailableSpace, Style};
 mod cache;
 pub use cache::{Cache, CacheEntry};
 mod measure_func;
-pub use measure_func::{Measurable, MeasureFunc};
+pub use measure_func::{Measurable, MeasureFunc, SyncMeasureFunc};
 mod node;
 #[cfg(feature = "taffy_tree")]
 use node::NodeData;

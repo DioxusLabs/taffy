@@ -33,7 +33,7 @@ where
     pub(crate) nodes: SlotMap<DefaultKey, NodeData>,
 
     /// Functions/closures that compute the intrinsic size of leaf nodes
-    pub(crate) measure_funcs: SparseSecondaryMap<DefaultKey, MeasureFunc<Measure::Context>>,
+    pub(crate) measure_funcs: SparseSecondaryMap<DefaultKey, Measure>,
 
     /// The children of each node
     ///
@@ -181,11 +181,7 @@ impl<Measure: Measurable> Taffy<Measure> {
     /// Creates and adds a new unattached leaf node to the tree, and returns the node of the new node
     ///
     /// Creates and adds a new leaf node with a supplied [`MeasureFunc`]
-    pub fn new_leaf_with_measure(
-        &mut self,
-        layout: Style,
-        measure: MeasureFunc<Measure::Context>,
-    ) -> TaffyResult<NodeId> {
+    pub fn new_leaf_with_measure(&mut self, layout: Style, measure: Measure) -> TaffyResult<NodeId> {
         let mut data = NodeData::new(layout);
         data.needs_measure = true;
 
@@ -245,7 +241,7 @@ impl<Measure: Measurable> Taffy<Measure> {
     }
 
     /// Sets the [`MeasureFunc`] of the associated node
-    pub fn set_measure(&mut self, node: NodeId, measure: Option<MeasureFunc<Measure::Context>>) -> TaffyResult<()> {
+    pub fn set_measure(&mut self, node: NodeId, measure: Option<Measure>) -> TaffyResult<()> {
         let key = node.into();
         if let Some(measure) = measure {
             self.nodes[key].needs_measure = true;
