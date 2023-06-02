@@ -5,9 +5,9 @@ use crate::style::AvailableSpace;
 #[cfg(any(feature = "std", feature = "alloc"))]
 use crate::util::sys::Box;
 
-/// A function type that can be used in a [`MeasureFunc`]
+/// Represents a node that can be sized A function type that can be used in a [`MeasureFunc`]
 ///
-/// This trait is automatically implemented for all types (including closures) that define a function with the appropriate type signature.
+/// This trait is automatically implemented for `FnMut` closures that define a function with the appropriate type signature.
 pub trait Measurable {
     /// A user-defined context which is passed to taffy when the `compute_layout` function is called, and which Taffy then passes
     /// into measure functions when it calls them
@@ -15,7 +15,7 @@ pub trait Measurable {
 
     /// Measure node
     fn measure(
-        &self,
+        &mut self,
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         context: &mut Self::Context,
@@ -26,11 +26,22 @@ pub trait Measurable {
 pub enum MeasureFunc<Context = ()> {
     /// Stores an unboxed function
     #[allow(clippy::type_complexity)]
-    Raw(fn(Size<Option<f32>>, Size<AvailableSpace>, context: &mut Context) -> Size<f32>),
+    Raw(fn(Size<Option<f32>>, Size<AvailableSpace>, &mut Context) -> Size<f32>),
 
     /// Stores a boxed function
     #[cfg(any(feature = "std", feature = "alloc"))]
     Boxed(Box<dyn Measurable<Context = Context>>),
+}
+
+/// A function that can be used to compute the intrinsic size of a node
+pub enum SyncMeasureFunc<Context = ()> {
+    /// Stores an unboxed function
+    #[allow(clippy::type_complexity)]
+    Raw(fn(Size<Option<f32>>, Size<AvailableSpace>, &mut Context) -> Size<f32>),
+
+    /// Stores a boxed function
+    #[cfg(any(feature = "std", feature = "alloc"))]
+    Boxed(Box<dyn Measurable<Context = Context> + Send + Sync>),
 }
 
 impl<Context> Measurable for MeasureFunc<Context> {
@@ -39,7 +50,7 @@ impl<Context> Measurable for MeasureFunc<Context> {
     /// Call the measure function to measure the node
     #[inline(always)]
     fn measure(
-        &self,
+        &mut self,
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         context: &mut Context,
@@ -52,24 +63,13 @@ impl<Context> Measurable for MeasureFunc<Context> {
     }
 }
 
-/// A function that can be used to compute the intrinsic size of a node
-pub enum SyncMeasureFunc<Context = ()> {
-    /// Stores an unboxed function
-    #[allow(clippy::type_complexity)]
-    Raw(fn(Size<Option<f32>>, Size<AvailableSpace>, context: &mut Context) -> Size<f32>),
-
-    /// Stores a boxed function
-    #[cfg(any(feature = "std", feature = "alloc"))]
-    Boxed(Box<dyn Measurable<Context = Context> + Send + Sync>),
-}
-
 impl<Context> Measurable for SyncMeasureFunc<Context> {
     type Context = Context;
 
     /// Call the measure function to measure the node
     #[inline(always)]
     fn measure(
-        &self,
+        &mut self,
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         context: &mut Context,
