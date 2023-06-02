@@ -36,7 +36,7 @@ pub enum MeasureFunc<Context = ()> {
 impl<Context> Measurable for MeasureFunc<Context> {
     type Context = Context;
 
-    /// Call the measure function to measure to the node
+    /// Call the measure function to measure the node
     #[inline(always)]
     fn measure(
         &self,
