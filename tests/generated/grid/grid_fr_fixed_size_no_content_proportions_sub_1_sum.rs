@@ -6,7 +6,7 @@ fn grid_fr_fixed_size_no_content_proportions_sub_1_sum() {
         tree::{Layout, MeasureFunc},
         Taffy,
     };
-    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node1 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node = taffy

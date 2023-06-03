@@ -6,7 +6,7 @@ fn flex_grow_shrink_at_most() {
         tree::{Layout, MeasureFunc},
         Taffy,
     };
-    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node00 =
         taffy.new_leaf(taffy::style::Style { flex_grow: 1f32, flex_shrink: 1f32, ..Default::default() }).unwrap();
     let node0 = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[node00]).unwrap();

@@ -6,7 +6,7 @@ fn percent_absolute_position() {
         tree::{Layout, MeasureFunc},
         Taffy,
     };
-    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), height: auto() },

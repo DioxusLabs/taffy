@@ -6,7 +6,7 @@ fn flex_basis_zero_undefined_main_size() {
         tree::{Layout, MeasureFunc},
         Taffy,
     };
-    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {

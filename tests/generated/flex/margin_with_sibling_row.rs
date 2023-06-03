@@ -6,7 +6,7 @@ fn margin_with_sibling_row() {
         tree::{Layout, MeasureFunc},
         Taffy,
     };
-    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,

@@ -6,7 +6,7 @@ fn block_margin_x_intrinsic_size_positive() {
         tree::{Layout, MeasureFunc},
         Taffy,
     };
-    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },

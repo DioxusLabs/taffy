@@ -6,7 +6,7 @@ fn undefined_height_with_min_max() {
         tree::{Layout, MeasureFunc},
         Taffy,
     };
-    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(0f32) },

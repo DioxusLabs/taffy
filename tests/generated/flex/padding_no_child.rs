@@ -6,7 +6,7 @@ fn padding_no_child() {
         tree::{Layout, MeasureFunc},
         Taffy,
     };
-    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node = taffy
         .new_leaf(taffy::style::Style {
             padding: taffy::geometry::Rect {

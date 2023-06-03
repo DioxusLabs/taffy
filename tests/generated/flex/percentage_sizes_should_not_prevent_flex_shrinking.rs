@@ -6,7 +6,7 @@ fn percentage_sizes_should_not_prevent_flex_shrinking() {
         tree::{Layout, MeasureFunc},
         Taffy,
     };
-    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node00 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node0 = taffy
         .new_with_children(

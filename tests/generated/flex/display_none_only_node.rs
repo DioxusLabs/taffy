@@ -6,7 +6,7 @@ fn display_none_only_node() {
         tree::{Layout, MeasureFunc},
         Taffy,
     };
-    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::None,

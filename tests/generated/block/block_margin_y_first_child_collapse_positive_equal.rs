@@ -6,7 +6,7 @@ fn block_margin_y_first_child_collapse_positive_equal() {
         tree::{Layout, MeasureFunc},
         Taffy,
     };
-    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node000 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },

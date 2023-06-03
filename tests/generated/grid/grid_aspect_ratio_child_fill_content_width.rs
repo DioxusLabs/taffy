@@ -6,20 +6,15 @@ fn grid_aspect_ratio_child_fill_content_width() {
         tree::{Layout, MeasureFunc},
         Taffy,
     };
-    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0 = taffy
         .new_leaf_with_measure(
             taffy::style::Style { aspect_ratio: Some(2f32), ..Default::default() },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
-                const TEXT: &str = "HHHH";
-                crate::measure_standard_text(
-                    known_dimensions,
-                    available_space,
-                    TEXT,
-                    crate::WritingMode::Horizontal,
-                    Some(2f32),
-                )
-            }),
+            crate::TextMeasure {
+                text_content: "HHHH",
+                writing_mode: crate::WritingMode::Horizontal,
+                _aspect_ratio: Some(2f32),
+            },
         )
         .unwrap();
     let node1 = taffy

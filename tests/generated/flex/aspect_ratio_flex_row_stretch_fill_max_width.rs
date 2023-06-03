@@ -6,7 +6,7 @@ fn aspect_ratio_flex_row_stretch_fill_max_width() {
         tree::{Layout, MeasureFunc},
         Taffy,
     };
-    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0 = taffy
         .new_leaf_with_measure(
             taffy::style::Style {
@@ -14,16 +14,11 @@ fn aspect_ratio_flex_row_stretch_fill_max_width() {
                 aspect_ratio: Some(2f32),
                 ..Default::default()
             },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space, _context| {
-                const TEXT: &str = "HH\u{200b}HH\u{200b}HH\u{200b}HH";
-                crate::measure_standard_text(
-                    known_dimensions,
-                    available_space,
-                    TEXT,
-                    crate::WritingMode::Horizontal,
-                    Some(2f32),
-                )
-            }),
+            crate::TextMeasure {
+                text_content: "HH\u{200b}HH\u{200b}HH\u{200b}HH",
+                writing_mode: crate::WritingMode::Horizontal,
+                _aspect_ratio: Some(2f32),
+            },
         )
         .unwrap();
     let node = taffy

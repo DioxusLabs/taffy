@@ -6,7 +6,7 @@ fn grid_placement_definite_in_secondary_axis_with_fully_definite_negative() {
         tree::{Layout, MeasureFunc},
         Taffy,
     };
-    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             grid_row: taffy::geometry::Line { start: line(2i16), end: taffy::style::GridPlacement::Auto },

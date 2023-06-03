@@ -6,7 +6,7 @@ fn grid_percent_items_nested_moderate() {
         tree::{Layout, MeasureFunc},
         Taffy,
     };
-    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     taffy.disable_rounding();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
