@@ -230,7 +230,7 @@ fn compute_node_layout<Measure: Measurable>(
         (_, false) => match run_mode {
             RunMode::PerformLayout => leaf::perform_layout(
                 &tree.nodes[node_key].style,
-                tree.nodes[node_key].needs_measure.then(|| &tree.measure_funcs[node_key]),
+                tree.nodes[node_key].needs_measure.then(|| &mut tree.measure_funcs[node_key]),
                 known_dimensions,
                 parent_size,
                 available_space,
@@ -239,7 +239,7 @@ fn compute_node_layout<Measure: Measurable>(
             ),
             RunMode::ComputeSize => leaf::measure_size(
                 &tree.nodes[node_key].style,
-                tree.nodes[node_key].needs_measure.then(|| &tree.measure_funcs[node_key]),
+                tree.nodes[node_key].needs_measure.then(|| &mut tree.measure_funcs[node_key]),
                 known_dimensions,
                 parent_size,
                 available_space,

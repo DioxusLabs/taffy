@@ -14,7 +14,7 @@ use crate::util::debug::NODE_LOGGER;
 /// Perform full layout on a leaf node
 pub(crate) fn perform_layout<Context>(
     style: &Style,
-    measurable: Option<&impl Measurable<Context = Context>>,
+    measurable: Option<&mut impl Measurable<Context = Context>>,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
@@ -27,7 +27,7 @@ pub(crate) fn perform_layout<Context>(
 /// Measure a leaf node's size
 pub(crate) fn measure_size<Context>(
     style: &Style,
-    measurable: Option<&impl Measurable<Context = Context>>,
+    measurable: Option<&mut impl Measurable<Context = Context>>,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
@@ -40,7 +40,7 @@ pub(crate) fn measure_size<Context>(
 /// Compute the size of a leaf node (node with no children)
 pub fn compute<Context>(
     style: &Style,
-    measurable: Option<&impl Measurable<Context = Context>>,
+    measurable: Option<&mut impl Measurable<Context = Context>>,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
