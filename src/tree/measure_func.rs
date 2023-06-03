@@ -5,9 +5,11 @@ use crate::style::AvailableSpace;
 #[cfg(any(feature = "std", feature = "alloc"))]
 use crate::util::sys::Box;
 
-/// Represents a node that can be sized A function type that can be used in a [`MeasureFunc`]
+/// Represents a node that can be sized / laid out, where the sizing/layout logic exists outside of Taffy. For example,
+/// a text node where the text layout logic is implemented by the user.
 ///
-/// This trait is automatically implemented for `FnMut` closures that define a function with the appropriate type signature.
+/// This trait is implemented by the `MeasureFunc` and `SyncMeasureFunc` types which provide a bridge between this trait
+/// and raw functions / `FnMut` closures.
 pub trait Measurable {
     /// A user-defined context which is passed to taffy when the `compute_layout` function is called, and which Taffy then passes
     /// into measure functions when it calls them
@@ -23,25 +25,35 @@ pub trait Measurable {
 }
 
 /// A function that can be used to compute the intrinsic size of a node
+#[allow(clippy::type_complexity)]
 pub enum MeasureFunc<Context = ()> {
     /// Stores an unboxed function
-    #[allow(clippy::type_complexity)]
     Raw(fn(Size<Option<f32>>, Size<AvailableSpace>, &mut Context) -> Size<f32>),
 
     /// Stores a boxed function
     #[cfg(any(feature = "std", feature = "alloc"))]
-    Boxed(Box<dyn Measurable<Context = Context>>),
+    Boxed(Box<dyn FnMut(Size<Option<f32>>, Size<AvailableSpace>, &mut Context) -> Size<f32>>),
 }
 
 /// A function that can be used to compute the intrinsic size of a node
+#[allow(clippy::type_complexity)]
 pub enum SyncMeasureFunc<Context = ()> {
     /// Stores an unboxed function
-    #[allow(clippy::type_complexity)]
     Raw(fn(Size<Option<f32>>, Size<AvailableSpace>, &mut Context) -> Size<f32>),
 
     /// Stores a boxed function
     #[cfg(any(feature = "std", feature = "alloc"))]
-    Boxed(Box<dyn Measurable<Context = Context> + Send + Sync>),
+    Boxed(Box<dyn FnMut(Size<Option<f32>>, Size<AvailableSpace>, &mut Context) -> Size<f32> + Send + Sync>),
+}
+
+#[cfg(any(feature = "std", feature = "alloc"))]
+impl<Context> MeasureFunc<Context> {
+    /// Constructor for the Boxed variant that takes a plain closure and handles the actual boxing
+    pub fn boxed(
+        measure: impl FnMut(Size<Option<f32>>, Size<AvailableSpace>, &mut Context) -> Size<f32> + 'static,
+    ) -> Self {
+        Self::Boxed(Box::new(measure))
+    }
 }
 
 impl<Context> Measurable for MeasureFunc<Context> {
@@ -58,8 +70,18 @@ impl<Context> Measurable for MeasureFunc<Context> {
         match self {
             Self::Raw(measure) => measure(known_dimensions, available_space, context),
             #[cfg(any(feature = "std", feature = "alloc"))]
-            Self::Boxed(measurable) => measurable.measure(known_dimensions, available_space, context),
+            Self::Boxed(measure) => measure(known_dimensions, available_space, context),
         }
+    }
+}
+
+#[cfg(any(feature = "std", feature = "alloc"))]
+impl<Context> SyncMeasureFunc<Context> {
+    /// Constructor for the Boxed variant that takes a plain closure and handles the actual boxing
+    pub fn boxed(
+        measure: impl FnMut(Size<Option<f32>>, Size<AvailableSpace>, &mut Context) -> Size<f32> + Send + Sync + 'static,
+    ) -> Self {
+        Self::Boxed(Box::new(measure))
     }
 }
 
@@ -77,7 +99,7 @@ impl<Context> Measurable for SyncMeasureFunc<Context> {
         match self {
             Self::Raw(measure) => measure(known_dimensions, available_space, context),
             #[cfg(any(feature = "std", feature = "alloc"))]
-            Self::Boxed(measurable) => measurable.measure(known_dimensions, available_space, context),
+            Self::Boxed(measure) => measure(known_dimensions, available_space, context),
         }
     }
 }
