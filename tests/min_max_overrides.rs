@@ -19,7 +19,7 @@ mod min_max_overrides {
         taffy
             .compute_layout(
                 child,
-                Size { height: AvailableSpace::Definite(100.0), width: AvailableSpace::Definite(100.0) },
+                Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::Definite(100.0) },
             )
             .unwrap();
 
@@ -41,7 +41,7 @@ mod min_max_overrides {
         taffy
             .compute_layout(
                 child,
-                Size { height: AvailableSpace::Definite(100.0), width: AvailableSpace::Definite(100.0) },
+                Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::Definite(100.0) },
             )
             .unwrap();
 
@@ -63,7 +63,7 @@ mod min_max_overrides {
         taffy
             .compute_layout(
                 child,
-                Size { height: AvailableSpace::Definite(100.0), width: AvailableSpace::Definite(100.0) },
+                Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::Definite(100.0) },
             )
             .unwrap();
 
