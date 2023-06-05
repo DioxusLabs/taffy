@@ -33,7 +33,7 @@ mod root_constraints {
     #[test]
     fn root_with_no_size() {
         let mut taffy = taffy::Taffy::new();
-        let node = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
+        let node = taffy.new_leaf(taffy::style::Style::default()).unwrap();
 
         taffy
             .compute_layout(
