@@ -24,7 +24,7 @@ fn border_on_a_single_axis_doesnt_increase_size() {
         taffy
             .compute_layout(
                 node,
-                Size { height: AvailableSpace::Definite(100.0), width: AvailableSpace::Definite(100.0) },
+                Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::Definite(100.0) },
             )
             .ok();
 
@@ -52,7 +52,7 @@ fn padding_on_a_single_axis_doesnt_increase_size() {
         taffy
             .compute_layout(
                 node,
-                Size { height: AvailableSpace::Definite(100.0), width: AvailableSpace::Definite(100.0) },
+                Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::Definite(100.0) },
             )
             .ok();
 
@@ -76,7 +76,7 @@ fn border_and_padding_on_a_single_axis_doesnt_increase_size() {
         taffy
             .compute_layout(
                 node,
-                Size { height: AvailableSpace::Definite(100.0), width: AvailableSpace::Definite(100.0) },
+                Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::Definite(100.0) },
             )
             .ok();
         let layout = taffy.layout(node).unwrap();
