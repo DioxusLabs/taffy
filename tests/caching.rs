@@ -12,7 +12,7 @@ mod caching {
 
         let leaf = taffy
             .new_leaf_with_measure(
-                Style { ..Default::default() },
+                Style::default(),
                 MeasureFunc::Raw(|known_dimensions, _available_space| {
                     NUM_MEASURES.fetch_add(1, Ordering::SeqCst);
                     Size {
