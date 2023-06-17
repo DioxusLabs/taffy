@@ -76,9 +76,9 @@ impl LengthPercentageAuto {
     ///   - Some(resolved) using the provided context for Percent variants
     ///   - None for Auto variants
     #[inline(always)]
-    pub fn resolve_to_option(self, context: f32) -> Option<f32> {
+    pub fn resolve_to_option(&self, context: f32) -> Option<f32> {
         match self {
-            Self::Length(length) => Some(length),
+            Self::Length(length) => Some(*length),
             Self::Percent(percent) => Some(context * percent),
             Self::Auto => None,
         }
@@ -204,8 +204,8 @@ impl FromLength for AvailableSpace {
 
 impl AvailableSpace {
     /// Returns true for definite values, else false
-    pub fn is_definite(self) -> bool {
-        matches!(self, AvailableSpace::Definite(_))
+    pub fn is_definite(&self) -> bool {
+        matches!(*self, AvailableSpace::Definite(_))
     }
 
     /// Convert to Option

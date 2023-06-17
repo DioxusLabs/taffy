@@ -313,10 +313,10 @@ impl MaxTrackSizingFunction {
     /// the passed available_space and returns if this results in a concrete value (which it
     /// will if the available_space is `Some`). Otherwise returns None.
     #[inline(always)]
-    pub fn definite_value(self, parent_size: Option<f32>) -> Option<f32> {
+    pub fn definite_value(&self, parent_size: Option<f32>) -> Option<f32> {
         use MaxTrackSizingFunction::*;
         match self {
-            Fixed(LengthPercentage::Length(size)) => Some(size),
+            Fixed(LengthPercentage::Length(size)) => Some(*size),
             Fixed(LengthPercentage::Percent(fraction)) => parent_size.map(|size| fraction * size),
             MinContent | MaxContent | FitContent(_) | Auto | Fraction(_) => None,
         }
@@ -329,10 +329,10 @@ impl MaxTrackSizingFunction {
     ///     - A fit-content sizing function with percentage argument (with definite available space)
     /// All other kinds of track sizing function return None.
     #[inline(always)]
-    pub fn definite_limit(self, parent_size: Option<f32>) -> Option<f32> {
+    pub fn definite_limit(&self, parent_size: Option<f32>) -> Option<f32> {
         use MaxTrackSizingFunction::FitContent;
         match self {
-            FitContent(LengthPercentage::Length(size)) => Some(size),
+            FitContent(LengthPercentage::Length(size)) => Some(*size),
             FitContent(LengthPercentage::Percent(fraction)) => parent_size.map(|size| fraction * size),
             _ => self.definite_value(parent_size),
         }
@@ -341,7 +341,7 @@ impl MaxTrackSizingFunction {
     /// Resolve percentage values against the passed parent_size, returning Some(value)
     /// Non-percentage values always return None.
     #[inline(always)]
-    pub fn resolved_percentage_size(self, parent_size: f32) -> Option<f32> {
+    pub fn resolved_percentage_size(&self, parent_size: f32) -> Option<f32> {
         use MaxTrackSizingFunction::*;
         match self {
             Fixed(LengthPercentage::Percent(fraction)) => Some(fraction * parent_size),
@@ -351,7 +351,7 @@ impl MaxTrackSizingFunction {
 
     /// Whether the track sizing functions depends on the size of the parent node
     #[inline(always)]
-    pub fn uses_percentage(self) -> bool {
+    pub fn uses_percentage(&self) -> bool {
         use MaxTrackSizingFunction::*;
         matches!(self, Fixed(LengthPercentage::Percent(_)) | FitContent(LengthPercentage::Percent(_)))
     }
@@ -408,10 +408,10 @@ impl MinTrackSizingFunction {
     /// the passed available_space and returns if this results in a concrete value (which it
     /// will if the available_space is `Some`). Otherwise returns `None`.
     #[inline(always)]
-    pub fn definite_value(self, parent_size: Option<f32>) -> Option<f32> {
+    pub fn definite_value(&self, parent_size: Option<f32>) -> Option<f32> {
         use MinTrackSizingFunction::*;
         match self {
-            Fixed(LengthPercentage::Length(size)) => Some(size),
+            Fixed(LengthPercentage::Length(size)) => Some(*size),
             Fixed(LengthPercentage::Percent(fraction)) => parent_size.map(|size| fraction * size),
             MinContent | MaxContent | Auto => None,
         }
@@ -420,7 +420,7 @@ impl MinTrackSizingFunction {
     /// Resolve percentage values against the passed parent_size, returning Some(value)
     /// Non-percentage values always return None.
     #[inline(always)]
-    pub fn resolved_percentage_size(self, parent_size: f32) -> Option<f32> {
+    pub fn resolved_percentage_size(&self, parent_size: f32) -> Option<f32> {
         use MinTrackSizingFunction::*;
         match self {
             Fixed(LengthPercentage::Percent(fraction)) => Some(fraction * parent_size),
@@ -430,9 +430,9 @@ impl MinTrackSizingFunction {
 
     /// Whether the track sizing functions depends on the size of the parent node
     #[inline(always)]
-    pub fn uses_percentage(self) -> bool {
+    pub fn uses_percentage(&self) -> bool {
         use MinTrackSizingFunction::*;
-        matches!(self, Fixed(LengthPercentage::Percent(_)))
+        matches!(*self, Fixed(LengthPercentage::Percent(_)))
     }
 }
 

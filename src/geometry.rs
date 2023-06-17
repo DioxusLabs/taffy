@@ -27,10 +27,10 @@ impl AbsoluteAxis {
     }
 }
 
-impl<T> Size<T> {
+impl<T: Copy> Size<T> {
     #[inline(always)]
     /// Get either the width or height depending on the AbsoluteAxis passed in
-    pub fn get_abs(self, axis: AbsoluteAxis) -> T {
+    pub fn get_abs(&self, axis: AbsoluteAxis) -> T {
         match axis {
             AbsoluteAxis::Horizontal => self.width,
             AbsoluteAxis::Vertical => self.height,
@@ -38,10 +38,10 @@ impl<T> Size<T> {
     }
 }
 
-impl<T: Add> Rect<T> {
+impl<T: Add + Copy> Rect<T> {
     #[inline(always)]
     /// Get either the width or height depending on the AbsoluteAxis passed in
-    pub fn grid_axis_sum(self, axis: AbsoluteAxis) -> <T as Add>::Output {
+    pub fn grid_axis_sum(&self, axis: AbsoluteAxis) -> <T as Add>::Output {
         match axis {
             AbsoluteAxis::Horizontal => self.left + self.right,
             AbsoluteAxis::Vertical => self.top + self.bottom,
@@ -127,14 +127,14 @@ impl<U, T: Add<U>> Add<Rect<U>> for Rect<T> {
     }
 }
 
-impl<T> Rect<T> {
+impl<T: Copy> Rect<T> {
     /// Applies the function `f` to all four sides of the rect
     ///
     /// When applied to the left and right sides, the width is used
     /// as the second parameter of `f`.
     /// When applied to the top or bottom sides, the height is used instead.
     #[cfg(feature = "flexbox")]
-    pub(crate) fn zip_size<R, F, U>(self, size: Size<U>, f: F) -> Rect<R>
+    pub(crate) fn zip_size<R, F, U>(&self, size: Size<U>, f: F) -> Rect<R>
     where
         F: Fn(T, U) -> R,
         U: Copy,
@@ -150,7 +150,7 @@ impl<T> Rect<T> {
     /// Applies the function `f` to the left, right, top, and bottom properties
     ///
     /// This is used to transform a `Rect<T>` into a `Rect<R>`.
-    pub fn map<R, F>(self, f: F) -> Rect<R>
+    pub fn map<R, F>(&self, f: F) -> Rect<R>
     where
         F: Fn(T) -> R,
     {
@@ -158,12 +158,12 @@ impl<T> Rect<T> {
     }
 
     /// Returns a `Line<T>` representing the left and right properties of the Rect
-    pub fn horizontal_components(self) -> Line<T> {
+    pub fn horizontal_components(&self) -> Line<T> {
         Line { start: self.left, end: self.right }
     }
 
     /// Returns a `Line<T>` containing the top and bottom properties of the Rect
-    pub fn vertical_components(self) -> Line<T> {
+    pub fn vertical_components(&self) -> Line<T> {
         Line { start: self.top, end: self.bottom }
     }
 }
@@ -297,11 +297,11 @@ pub struct Line<T> {
     pub end: T,
 }
 
-impl<T> Line<T> {
+impl<T: Copy> Line<T> {
     /// Applies the function `f` to both the width and height
     ///
     /// This is used to transform a `Line<T>` into a `Line<R>`.
-    pub fn map<R, F>(self, f: F) -> Line<R>
+    pub fn map<R, F>(&self, f: F) -> Line<R>
     where
         F: Fn(T) -> R,
     {
@@ -351,14 +351,14 @@ impl<U, T: Sub<U>> Sub<Size<U>> for Size<T> {
     }
 }
 
-// Note: we allow dead_code here as we want to provide a complete API of helpers that is symetrical in all axes,
+// Note: we allow dead_code here as we want to provide a complete API of helpers that is symmetrical in all axes,
 // but sometimes we only currently have a use for the helper in a single axis
 #[allow(dead_code)]
-impl<T> Size<T> {
+impl<T: Copy> Size<T> {
     /// Applies the function `f` to both the width and height
     ///
     /// This is used to transform a `Size<T>` into a `Size<R>`.
-    pub fn map<R, F>(self, f: F) -> Size<R>
+    pub fn map<R, F>(&self, f: F) -> Size<R>
     where
         F: Fn(T) -> R,
     {
@@ -366,7 +366,7 @@ impl<T> Size<T> {
     }
 
     /// Applies the function `f` to the width
-    pub fn map_width<F>(self, f: F) -> Size<T>
+    pub fn map_width<F>(&self, f: F) -> Size<T>
     where
         F: Fn(T) -> T,
     {
@@ -374,7 +374,7 @@ impl<T> Size<T> {
     }
 
     /// Applies the function `f` to the height
-    pub fn map_height<F>(self, f: F) -> Size<T>
+    pub fn map_height<F>(&self, f: F) -> Size<T>
     where
         F: Fn(T) -> T,
     {
@@ -383,7 +383,7 @@ impl<T> Size<T> {
 
     /// Applies the function `f` to both the width and height
     /// of this value and another passed value
-    pub fn zip_map<Other, Ret, Func>(self, other: Size<Other>, f: Func) -> Size<Ret>
+    pub fn zip_map<Other, Ret, Func>(&self, other: Size<Other>, f: Func) -> Size<Ret>
     where
         Func: Fn(T, Other) -> Ret,
     {
@@ -474,7 +474,7 @@ impl<T> Size<T> {
     ///
     /// Whether this is the width or height depends on the `direction` provided
     #[cfg(feature = "flexbox")]
-    pub(crate) fn main(self, direction: FlexDirection) -> T {
+    pub(crate) fn main(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.width
         } else {
@@ -486,7 +486,7 @@ impl<T> Size<T> {
     ///
     /// Whether this is the width or height depends on the `direction` provided
     #[cfg(feature = "flexbox")]
-    pub(crate) fn cross(self, direction: FlexDirection) -> T {
+    pub(crate) fn cross(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.height
         } else {
@@ -497,7 +497,7 @@ impl<T> Size<T> {
     /// Gets the extent of the specified layout axis
     /// Whether this is the width or height depends on the `GridAxis` provided
     #[cfg(feature = "grid")]
-    pub(crate) fn get(self, axis: AbstractAxis) -> T {
+    pub(crate) fn get(&self, axis: AbstractAxis) -> T {
         match axis {
             AbstractAxis::Inline => self.width,
             AbstractAxis::Block => self.height,
@@ -520,7 +520,7 @@ impl Size<f32> {
     pub const ZERO: Size<f32> = Self { width: 0.0, height: 0.0 };
 
     /// Applies f32_max to each component separately
-    pub fn f32_max(self, rhs: Size<f32>) -> Size<f32> {
+    pub fn f32_max(&self, rhs: Size<f32>) -> Size<f32> {
         Size { width: f32_max(self.width, rhs.width), height: f32_max(self.height, rhs.height) }
     }
 }
@@ -540,26 +540,26 @@ impl Size<Option<f32>> {
     ///   - If height is `Some` but width is `None`, then width is computed from height and aspect_ratio
     ///
     /// If aspect_ratio is `None` then this function simply returns self.
-    pub fn maybe_apply_aspect_ratio(self, aspect_ratio: Option<f32>) -> Size<Option<f32>> {
+    pub fn maybe_apply_aspect_ratio(&self, aspect_ratio: Option<f32>) -> Size<Option<f32>> {
         match aspect_ratio {
             Some(ratio) => match (self.width, self.height) {
                 (Some(width), None) => Size { width: Some(width), height: Some(width / ratio) },
                 (None, Some(height)) => Size { width: Some(height * ratio), height: Some(height) },
-                _ => self,
+                _ => *self,
             },
-            None => self,
+            None => *self,
         }
     }
 }
 
-impl<T> Size<Option<T>> {
+impl<T: Copy> Size<Option<T>> {
     /// Performs Option::unwrap_or on each component separately
-    pub fn unwrap_or(self, alt: Size<T>) -> Size<T> {
+    pub fn unwrap_or(&self, alt: Size<T>) -> Size<T> {
         Size { width: self.width.unwrap_or(alt.width), height: self.height.unwrap_or(alt.height) }
     }
 
     /// Performs Option::or on each component separately
-    pub fn or(self, alt: Size<Option<T>>) -> Size<Option<T>> {
+    pub fn or(&self, alt: Size<Option<T>>) -> Size<Option<T>> {
         Size { width: self.width.or(alt.width), height: self.height.or(alt.height) }
     }
 
@@ -615,11 +615,11 @@ impl<U, T: Add<U>> Add<Point<U>> for Point<T> {
     }
 }
 
-impl<T> Point<T> {
+impl<T: Copy> Point<T> {
     /// Applies the function `f` to both the x and y
     ///
     /// This is used to transform a `Point<T>` into a `Point<R>`.
-    pub fn map<R, F>(self, f: F) -> Point<R>
+    pub fn map<R, F>(&self, f: F) -> Point<R>
     where
         F: Fn(T) -> R,
     {
@@ -629,7 +629,7 @@ impl<T> Point<T> {
     /// Gets the extent of the specified layout axis
     /// Whether this is the width or height depends on the `GridAxis` provided
     #[cfg(feature = "grid")]
-    pub fn get(self, axis: AbstractAxis) -> T {
+    pub fn get(&self, axis: AbstractAxis) -> T {
         match axis {
             AbstractAxis::Inline => self.x,
             AbstractAxis::Block => self.y,
@@ -637,7 +637,7 @@ impl<T> Point<T> {
     }
 
     /// Swap x and y components
-    pub fn transpose(self) -> Point<T> {
+    pub fn transpose(&self) -> Point<T> {
         Point { x: self.y, y: self.x }
     }
 
@@ -655,7 +655,7 @@ impl<T> Point<T> {
     ///
     /// Whether this is the x or y depends on the `direction` provided
     #[cfg(feature = "flexbox")]
-    pub(crate) fn main(self, direction: FlexDirection) -> T {
+    pub(crate) fn main(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.x
         } else {
@@ -667,7 +667,7 @@ impl<T> Point<T> {
     ///
     /// Whether this is the x or y depends on the `direction` provided
     #[cfg(feature = "flexbox")]
-    pub(crate) fn cross(self, direction: FlexDirection) -> T {
+    pub(crate) fn cross(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.y
         } else {

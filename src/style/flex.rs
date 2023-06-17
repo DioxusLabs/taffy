@@ -63,20 +63,20 @@ impl Default for FlexDirection {
 impl FlexDirection {
     #[inline]
     /// Is the direction [`FlexDirection::Row`] or [`FlexDirection::RowReverse`]?
-    pub(crate) fn is_row(self) -> bool {
-        matches!(self, Self::Row | Self::RowReverse)
+    pub(crate) fn is_row(&self) -> bool {
+        matches!(*self, Self::Row | Self::RowReverse)
     }
 
     #[inline]
     /// Is the direction [`FlexDirection::Column`] or [`FlexDirection::ColumnReverse`]?
-    pub(crate) fn is_column(self) -> bool {
-        matches!(self, Self::Column | Self::ColumnReverse)
+    pub(crate) fn is_column(&self) -> bool {
+        matches!(*self, Self::Column | Self::ColumnReverse)
     }
 
     #[inline]
     /// Is the direction [`FlexDirection::RowReverse`] or [`FlexDirection::ColumnReverse`]?
-    pub(crate) fn is_reverse(self) -> bool {
-        matches!(self, Self::RowReverse | Self::ColumnReverse)
+    pub(crate) fn is_reverse(&self) -> bool {
+        matches!(*self, Self::RowReverse | Self::ColumnReverse)
     }
 }
 

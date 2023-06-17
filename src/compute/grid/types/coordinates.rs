@@ -108,7 +108,7 @@ impl OriginZeroLine {
     }
 
     /// The minimum number of positive implicit track there must be if a grid item end at this line.
-    pub(crate) fn implied_positive_implicit_tracks(self, explicit_track_count: u16) -> u16 {
+    pub(crate) fn implied_positive_implicit_tracks(&self, explicit_track_count: u16) -> u16 {
         if self.0 > explicit_track_count as i16 {
             self.0 as u16 - explicit_track_count
         } else {
