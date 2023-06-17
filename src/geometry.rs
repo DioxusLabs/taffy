@@ -27,13 +27,13 @@ impl AbsoluteAxis {
     }
 }
 
-impl<T: Copy> Size<T> {
+impl<T: Clone> Size<T> {
     #[inline(always)]
     /// Get either the width or height depending on the AbsoluteAxis passed in
     pub fn get_abs(&self, axis: AbsoluteAxis) -> T {
         match axis {
-            AbsoluteAxis::Horizontal => self.width,
-            AbsoluteAxis::Vertical => self.height,
+            AbsoluteAxis::Horizontal => self.width.clone(),
+            AbsoluteAxis::Vertical => self.height.clone(),
         }
     }
 }
@@ -351,6 +351,20 @@ impl<U, T: Sub<U>> Sub<Size<U>> for Size<T> {
     }
 }
 
+impl<T: Clone> Size<T> {
+    /// Gets the extent of the cross layout axis
+    ///
+    /// Whether this is the width or height depends on the `direction` provided
+    #[cfg(feature = "flexbox")]
+    pub(crate) fn cross(&self, direction: FlexDirection) -> T {
+        if direction.is_row() {
+            self.height.clone()
+        } else {
+            self.width.clone()
+        }
+    }
+}
+
 // Note: we allow dead_code here as we want to provide a complete API of helpers that is symmetrical in all axes,
 // but sometimes we only currently have a use for the helper in a single axis
 #[allow(dead_code)]
@@ -479,18 +493,6 @@ impl<T: Copy> Size<T> {
             self.width
         } else {
             self.height
-        }
-    }
-
-    /// Gets the extent of the cross layout axis
-    ///
-    /// Whether this is the width or height depends on the `direction` provided
-    #[cfg(feature = "flexbox")]
-    pub(crate) fn cross(&self, direction: FlexDirection) -> T {
-        if direction.is_row() {
-            self.height
-        } else {
-            self.width
         }
     }
 
