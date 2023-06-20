@@ -788,4 +788,42 @@ mod tests {
         );
         assert!(layout_result.is_ok());
     }
+
+    #[test]
+    fn make_sure_layout_location_is_top_left() {
+        use crate::prelude::Rect;
+
+        let mut taffy = Taffy::new();
+
+        let node = taffy.new_leaf(Style {
+            size: Size { width: Dimension::Length(10f32), height: Dimension::Length(10f32) },
+            ..Default::default()
+        }).unwrap();
+
+        let root = taffy.new_with_children(Style {
+            size: Size { width: Dimension::Length(100f32), height: Dimension::Length(100f32) },
+            padding: Rect {
+                left:   length(10f32),
+                right:  length(20f32),
+                top:    length(30f32),
+                bottom: length(40f32),
+            },
+            ..Default::default()
+        }, &[node]
+        ).unwrap();
+
+        taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+        // If Layout::location represents top-left coord, 'node' location
+        // must be (due applied 'root' padding): {x: 10, y: 30}.
+        //
+        // It's important, since result will be different for each other
+        // coordinate space:
+        // - bottom-left:  {x: 10, y: 40}
+        // - top-right:    {x: 20, y: 30}
+        // - bottom-right: {x: 20, y: 40}
+        let layout = taffy.layout(node).unwrap();
+        assert_eq!(layout.location.x, 10f32);
+        assert_eq!(layout.location.y, 30f32);
+    }
 }
