@@ -795,22 +795,28 @@ mod tests {
 
         let mut taffy = Taffy::new();
 
-        let node = taffy.new_leaf(Style {
-            size: Size { width: Dimension::Percent(1f32), height: Dimension::Percent(1f32) },
-            ..Default::default()
-        }).unwrap();
+        let node = taffy
+            .new_leaf(Style {
+                size: Size { width: Dimension::Percent(1f32), height: Dimension::Percent(1f32) },
+                ..Default::default()
+            })
+            .unwrap();
 
-        let root = taffy.new_with_children(Style {
-            size: Size { width: Dimension::Length(100f32), height: Dimension::Length(100f32) },
-            padding: Rect {
-                left:   length(10f32),
-                right:  length(20f32),
-                top:    length(30f32),
-                bottom: length(40f32),
-            },
-            ..Default::default()
-        }, &[node]
-        ).unwrap();
+        let root = taffy
+            .new_with_children(
+                Style {
+                    size: Size { width: Dimension::Length(100f32), height: Dimension::Length(100f32) },
+                    padding: Rect {
+                        left: length(10f32),
+                        right: length(20f32),
+                        top: length(30f32),
+                        bottom: length(40f32),
+                    },
+                    ..Default::default()
+                },
+                &[node],
+            )
+            .unwrap();
 
         taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
 
