@@ -796,7 +796,7 @@ mod tests {
         let mut taffy = Taffy::new();
 
         let node = taffy.new_leaf(Style {
-            size: Size { width: Dimension::Length(10f32), height: Dimension::Length(10f32) },
+            size: Size { width: Dimension::Percent(1f32), height: Dimension::Percent(1f32) },
             ..Default::default()
         }).unwrap();
 
