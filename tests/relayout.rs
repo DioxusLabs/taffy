@@ -319,3 +319,47 @@ fn toggle_grid_container_display_none() {
     assert_eq!(layout.size.width, 0.0);
     assert_eq!(layout.size.height, 0.0);
 }
+
+#[test]
+fn relayout_is_stable_with_rounding() {
+    let mut taffy = Taffy::new();
+
+    // <div style="width: 1920px; height: 1080px">
+    //     <div style="width: 100%; left: 1.5px">
+    //         <div style="width: 150px; justify-content: end">
+    //             <div style="min-width: 300px" />
+    //         </div>
+    //     </div>
+    // </div>
+
+    let inner = taffy.new_leaf(Style { min_size: Size { width: length(300.), height: auto() }, ..Default::default() }).unwrap();
+    let wrapper = taffy.new_with_children( 
+        Style {
+            size: Size { width: length(150.), height: auto() },
+            justify_content: Some(JustifyContent::End),
+            ..Default::default()
+        }, 
+        &[inner]
+    ).unwrap();
+    let outer = taffy.new_with_children( 
+        Style {
+            size: Size { width: percent(1.), height: auto() },            
+            inset: Rect { left: length(1.5), right: auto(), top: auto(), bottom: auto() },
+            ..Default::default()
+        },
+        &[wrapper]
+    ).unwrap();
+    let viewport =  taffy.new_with_children(
+        Style { 
+            size: Size { width: length(1920.),height: length(1080.) },
+            ..Default::default()
+        },
+        &[outer]
+    ).unwrap();
+    for _ in 0..5 {
+        taffy.mark_dirty(viewport).ok();
+        taffy.compute_layout(viewport, Size::MAX_CONTENT).ok();
+        taffy::util::print_tree(&taffy, viewport);
+        println!();
+    }
+}

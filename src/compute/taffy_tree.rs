@@ -137,6 +137,10 @@ fn compute_node_layout(
         debug_log_node(known_dimensions, parent_size, available_space, run_mode, sizing_mode);
         #[cfg(any(feature = "debug", feature = "profile"))]
         NODE_LOGGER.pop_node();
+
+        if has_children && run_mode == RunMode::PerformLayout {
+            perform_taffy_tree_cache_layout(tree, node);
+        }
         return cached_size_and_baselines;
     }
 
@@ -269,6 +273,23 @@ fn perform_taffy_tree_hidden_layout(tree: &mut Taffy, node: NodeId) {
 
     for order in 0..tree.children[node.into()].len() {
         perform_hidden_layout_inner(tree, tree.child(node, order), order as _);
+    }
+}
+
+/// Creates a layout for this node and its children, recursively.
+/// Each hidden node has zero size and is placed at the origin
+fn perform_taffy_tree_cache_layout(tree: &mut Taffy, node: NodeId) {
+    /// Recursive function to apply cache layout to all descendents
+    fn perform_cache_layout_inner(tree: &mut Taffy, node: NodeId) {
+        let node_key = node.into();
+        tree.layout_mut(node).size = tree.nodes[node_key].cache.get_raw(0).unwrap().size;
+        for i in 0..tree.children[node_key].len() {
+            perform_cache_layout_inner(tree, tree.child(node, i));
+        }
+    }
+
+    for i in 0..tree.children[node.into()].len() {
+        perform_cache_layout_inner(tree, tree.child(node, i));
     }
 }
 
