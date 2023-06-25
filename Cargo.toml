@@ -17,22 +17,12 @@ license = "MIT"
 arrayvec = { version = "0.7", default-features = false }
 num-traits = { version = "0.2", default-features = false }
 serde = { version = "1.0", optional = true, features = ["serde_derive"] }
-<<<<<<< HEAD
 slotmap = { version = "1.0.6", optional = true }
 grid = { version = "0.10.0", default-features = false, optional = true }
 
 [features]
 default = ["std", "flexbox", "grid", "block_layout", "taffy_tree"]
 block_layout = []
-=======
-slotmap = "1.0.6"
-grid = { version = "0.9.0", optional = true }
-ordered-float = "3.4.0"
-hashbrown = "0.14.0"
-
-[features]
-default = ["std", "flexbox", "grid"]
->>>>>>> 86c60cd7 (improve benches with deeper, thinner trees and flex auto layout)
 flexbox = []
 grid = ["alloc", "dep:grid"]
 alloc = []
@@ -45,13 +35,8 @@ taffy_tree = ["dep:slotmap"]
 [dev-dependencies]
 serde_json = "1.0.93"
 
-<<<<<<< HEAD
 # Enable default features for tests and examples
 taffy = { path = "." }
-=======
-# Enable example and test-specific features
-taffy = { path = ".", features = ["random", "yoga_benchmark"] }
->>>>>>> 86c60cd7 (improve benches with deeper, thinner trees and flex auto layout)
 
 [profile.release]
 lto = true
@@ -63,4 +48,9 @@ path = "benches/dummy_benchmark.rs"
 harness = false
 
 [workspace]
-members = ["scripts/gentest", "scripts/format-fixtures", "scripts/import-yoga-tests", "benches"]
+members = [
+    "scripts/gentest",
+    "scripts/format-fixtures",
+    "scripts/import-yoga-tests",
+    "benches",
+]
