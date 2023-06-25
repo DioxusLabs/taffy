@@ -7,7 +7,7 @@ use taffy::randomizable::Randomizeable;
 use taffy::style::Style;
 
 mod helpers;
-use helpers::build_deep_tree;
+use helpers::{build_deep_tree, build_linear_tree_with_n_children_per_level};
 
 #[cfg(feature = "yoga_benchmark")]
 use helpers::yoga_helpers;
@@ -16,9 +16,37 @@ use slotmap::SlotMap;
 #[cfg(feature = "yoga_benchmark")]
 use yoga_helpers::yg;
 
+struct FlexAutoStyle(Style);
+
+impl Randomizeable for FlexAutoStyle {
+    fn random<R>(rng: &mut R) -> Self
+    where
+        R: Rng,
+    {
+        let mut style = Style::DEFAULT;
+        style.margin = Rect {
+            left: LengthPercentageAuto::Points(rng.gen::<f32>()),
+            right: LengthPercentageAuto::Points(rng.gen()),
+            top: LengthPercentageAuto::Points(rng.gen()),
+            bottom: LengthPercentageAuto::Points(rng.gen()),
+        };
+        Self(style)
+    }
+}
+
+impl From<FlexAutoStyle> for Style {
+    fn from(flex_auto_style: FlexAutoStyle) -> Self {
+        flex_auto_style.0
+    }
+}
+
 /// Build a random leaf node
 fn build_random_leaf(taffy: &mut Taffy, rng: &mut ChaCha8Rng) -> Node {
     taffy.new_with_children(Style::random(rng), &[]).unwrap()
+}
+
+fn build_random_leaf_flex_auto(taffy: &mut Taffy, rng: &mut ChaCha8Rng) -> Node {
+    taffy.new_with_children(FlexAutoStyle::random(rng).into(), &[]).unwrap()
 }
 
 /// A tree with many children that have shallow depth
@@ -76,6 +104,43 @@ fn build_taffy_deep_hierarchy(node_count: u32, branching_factor: u32) -> (Taffy,
     let mut taffy = Taffy::new();
     let tree = build_deep_tree(&mut taffy, node_count, branching_factor, &mut build_leaf_node, &mut build_flex_node);
     let root = taffy.new_with_children(Style::DEFAULT, &tree).unwrap();
+    (taffy, root)
+}
+
+/// A tree with a higher depth for a more realistic scenario
+fn _build_taffy_deep_thin_tree(node_count: u32, children_per_level: u32) -> (Taffy, Node) {
+    assert!(node_count < 1001);
+    let mut rng = ChaCha8Rng::seed_from_u64(12345);
+    let mut build_leaf_node = |taffy: &mut Taffy| build_random_leaf(taffy, &mut rng);
+    let mut append_child = |taffy: &mut Taffy, parent: Node, child: Node| {
+        taffy.add_child(parent, child).unwrap();
+    };
+    let mut taffy = Taffy::new();
+    let root = build_linear_tree_with_n_children_per_level(
+        &mut taffy,
+        node_count,
+        children_per_level,
+        &mut build_leaf_node,
+        &mut append_child,
+    );
+    (taffy, root)
+}
+
+fn build_taffy_deep_thin_tree(node_count: u32, children_per_level: u32) -> (Taffy, Node) {
+    assert!(node_count < 1001);
+    let mut rng = ChaCha8Rng::seed_from_u64(12345);
+    let mut build_leaf_node = |taffy: &mut Taffy| build_random_leaf_flex_auto(taffy, &mut rng);
+    let mut append_child = |taffy: &mut Taffy, parent: Node, child: Node| {
+        taffy.add_child(parent, child).unwrap();
+    };
+    let mut taffy = Taffy::new();
+    let root = build_linear_tree_with_n_children_per_level(
+        &mut taffy,
+        node_count,
+        children_per_level,
+        &mut build_leaf_node,
+        &mut append_child,
+    );
     (taffy, root)
 }
 
@@ -237,6 +302,29 @@ fn taffy_benchmarks(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("Taffy", node_count), node_count, |b, &node_count| {
             b.iter_batched(
                 || build_taffy_deep_hierarchy(node_count, 2),
+                |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
+                criterion::BatchSize::SmallInput,
+            )
+        });
+    }
+    group.finish();
+
+    let mut group = c.benchmark_group("Flex Auto tree with 300 level depth (2 siblings per level)");
+    group.sample_size(10);
+    for node_count in [600u32].iter() {
+        #[cfg(feature = "yoga_benchmark")]
+        group.bench_with_input(BenchmarkId::new("Yoga", node_count), node_count, |b, &node_count| {
+            b.iter_batched(
+                || build_yoga_deep_hierarchy(node_count, 1),
+                |(mut tree, root)| {
+                    tree[root].calculate_layout(f32::INFINITY, f32::INFINITY, yg::Direction::LTR);
+                },
+                criterion::BatchSize::SmallInput,
+            )
+        });
+        group.bench_with_input(BenchmarkId::new("Taffy", node_count), node_count, |b, &node_count| {
+            b.iter_batched(
+                || build_taffy_deep_thin_tree(node_count, 2),
                 |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
                 criterion::BatchSize::SmallInput,
             )
