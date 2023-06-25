@@ -137,7 +137,7 @@ pub struct Layout {
     pub order: u32,
     /// The width and height of the node
     pub size: Size<f32>,
-    /// The bottom-left corner of the node
+    /// The top-left corner of the node
     pub location: Point<f32>,
 }
 
