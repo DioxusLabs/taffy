@@ -653,6 +653,8 @@ fn determine_flex_base_size(
                 break 'flex_basis flex_basis;
             };
 
+            StackFrameCache::set_should_use(true);
+
             // C. If the used flex basis is content or depends on its available space,
             //    and the flex container is being sized under a min-content or max-content
             //    constraint (e.g. when performing automatic table layout [CSS21]),
@@ -1326,6 +1328,8 @@ fn calculate_children_base_lines(
             if child.align_self != AlignSelf::Baseline {
                 continue;
             }
+
+            StackFrameCache::set_should_use(true);
 
             let measured_size_and_baselines = tree.perform_child_layout(
                 child.node,

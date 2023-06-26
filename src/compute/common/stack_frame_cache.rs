@@ -1,26 +1,23 @@
 use core::hash::Hasher;
 use ordered_float::OrderedFloat;
-use slotmap::DefaultKey;
 use std::cell::RefCell;
 use std::hash::Hash;
 
 use crate::{
-    layout::{RunMode, SizeAndBaselines, SizingMode},
-    node::Node,
-    prelude::Size,
+    prelude::{NodeId, Size},
     style::AvailableSpace,
+    tree::{RunMode, SizeBaselinesAndMargins, SizingMode},
 };
 
 thread_local! {
     static SHOULD_USE_CACHE: RefCell<bool> = RefCell::new(false);
-    static CHILD_DEPTH_CACHE: RefCell<hashbrown::HashMap<Node, usize>> = RefCell::new(hashbrown::HashMap::new());
     static CACHE_STACK_FRAME_COUNT: RefCell<usize> = RefCell::new(0);
-    static CALL_STACK_CACHE: core::cell::RefCell<hashbrown::HashMap<CacheKey, LocalCacheItem>>  = core::cell::RefCell::new(hashbrown::HashMap::new());
+    static CALL_STACK_CACHE: core::cell::RefCell<hashbrown::HashMap<CacheKey, CachedItem>>  = core::cell::RefCell::new(hashbrown::HashMap::new());
 }
 
 #[derive(Hash, PartialEq, Eq, Debug)]
 struct CacheKey {
-    node: DefaultKey,
+    node: NodeId,
     known_dimensions: Size<Option<OrderedFloat<f32>>>,
     available_space: Size<CachedAvailableSpace>,
     parent_size: Size<Option<OrderedFloat<f32>>>,
@@ -30,7 +27,7 @@ struct CacheKey {
 
 impl CacheKey {
     fn new(
-        node: DefaultKey,
+        node: NodeId,
         known_dimensions: &Size<Option<f32>>,
         available_space: &Size<AvailableSpace>,
         parent_size: &Size<Option<f32>>,
@@ -43,12 +40,12 @@ impl CacheKey {
     }
 }
 
-struct LocalCacheItem {
-    cached_size_and_baselines: SizeAndBaselines,
+struct CachedItem {
+    cached_size_and_baselines: SizeBaselinesAndMargins,
 }
 
-impl LocalCacheItem {
-    fn new(cached_size_and_baselines: SizeAndBaselines) -> Self {
+impl CachedItem {
+    fn new(cached_size_and_baselines: SizeBaselinesAndMargins) -> Self {
         Self { cached_size_and_baselines }
     }
 }
@@ -88,11 +85,11 @@ fn decrement_cache_call_stack_frame_count() {
 }
 
 fn store_in_thread_local_cache(
-    node: DefaultKey,
+    node: NodeId,
     parent_size: Size<Option<f32>>,
     known_dimensions: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
-    computed_size_and_baselines: SizeAndBaselines,
+    computed_size_and_baselines: SizeBaselinesAndMargins,
     run_mode: RunMode,
     sizing_mode: SizingMode,
 ) {
@@ -101,18 +98,19 @@ fn store_in_thread_local_cache(
     }
     CALL_STACK_CACHE.with(|cache| {
         let cache_key = CacheKey::new(node, &known_dimensions, &available_space, &parent_size, run_mode, sizing_mode);
-        cache.borrow_mut().entry(cache_key).or_insert_with(|| LocalCacheItem::new(computed_size_and_baselines));
+        cache.borrow_mut().entry(cache_key).or_insert_with(|| CachedItem::new(computed_size_and_baselines));
+        // println!("cache size: {}", cache.borrow().len());
     });
 }
 
 fn get_from_thread_local_cache(
-    node: DefaultKey,
+    node: NodeId,
     parent_size: &Size<Option<f32>>,
     known_dimensions: &Size<Option<f32>>,
     available_space: &Size<AvailableSpace>,
     run_mode: RunMode,
     sizing_mode: SizingMode,
-) -> Option<SizeAndBaselines> {
+) -> Option<SizeBaselinesAndMargins> {
     if !StackFrameCache::should_use() {
         return None;
     }
@@ -134,22 +132,22 @@ impl StackFrameCache {
     }
 
     pub fn get(
-        node: DefaultKey,
+        node: NodeId,
         parent_size: &Size<Option<f32>>,
         known_dimensions: &Size<Option<f32>>,
         available_space: &Size<AvailableSpace>,
         run_mode: RunMode,
         sizing_mode: SizingMode,
-    ) -> Option<SizeAndBaselines> {
+    ) -> Option<SizeBaselinesAndMargins> {
         get_from_thread_local_cache(node, parent_size, known_dimensions, available_space, run_mode, sizing_mode)
     }
 
     pub fn insert(
-        node: DefaultKey,
+        node: NodeId,
         parent_size: Size<Option<f32>>,
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
-        computed_size_and_baselines: SizeAndBaselines,
+        computed_size_and_baselines: SizeBaselinesAndMargins,
         run_mode: RunMode,
         sizing_mode: SizingMode,
     ) {
@@ -203,13 +201,6 @@ impl Hash for Size<Option<OrderedFloat<f32>>> {
 impl Size<Option<f32>> {
     fn to_cache_variant(&self) -> Size<Option<OrderedFloat<f32>>> {
         Size { width: self.width.map(|w| round_to_6dp(w).into()), height: self.height.map(|h| round_to_6dp(h).into()) }
-    }
-}
-
-impl Hash for Size<Option<f32>> {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        ((self.width.unwrap_or(0.) * 1000000.).round() as u32).hash(state);
-        ((self.height.unwrap_or(0.) * 1000000.).round() as u32).hash(state);
     }
 }
 

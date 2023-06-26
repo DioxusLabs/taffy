@@ -1,5 +1,6 @@
 //! Computation specific for the default `Taffy` tree implementation
 
+use crate::compute::common::StackFrameCache;
 use crate::compute::{leaf, LayoutAlgorithm};
 use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, Display};
@@ -139,6 +140,12 @@ fn compute_node_layout(
         NODE_LOGGER.pop_node();
         return cached_size_and_baselines;
     }
+    if let Some(cached_size_and_baselines) =
+        StackFrameCache::get(node, &parent_size, &known_dimensions, &available_space, run_mode, sizing_mode)
+    {
+        return cached_size_and_baselines;
+    }
+    StackFrameCache::increment_frame_count();
 
     #[cfg(feature = "debug")]
     debug_log_node(known_dimensions, parent_size, available_space, run_mode, sizing_mode);
@@ -243,6 +250,18 @@ fn compute_node_layout(
         },
     };
 
+    // Cache result in stack frame cache
+    StackFrameCache::insert(
+        node,
+        parent_size,
+        known_dimensions,
+        available_space,
+        // TODO: should rearrange these params so they make sense (keys first, then payload)
+        computed_size_and_baselines,
+        run_mode,
+        sizing_mode,
+    );
+
     // Cache result
     tree.nodes[node_key].cache.store(known_dimensions, available_space, cache_run_mode, computed_size_and_baselines);
 
@@ -251,6 +270,7 @@ fn compute_node_layout(
     #[cfg(any(feature = "debug", feature = "profile"))]
     NODE_LOGGER.pop_node();
 
+    StackFrameCache::decrement_frame_count();
     computed_size_and_baselines
 }
 

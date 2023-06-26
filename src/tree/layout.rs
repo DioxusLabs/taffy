@@ -6,7 +6,7 @@ use crate::{
 };
 
 /// Whether we are performing a full layout, or we merely need to size the node
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum RunMode {
     /// A full layout for this node and all children should be computed
     PerformLayout,
@@ -16,7 +16,7 @@ pub enum RunMode {
 }
 
 /// Whether styles should be taken into account when computing size
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum SizingMode {
     /// Only content contributions should be taken into account
     ContentSize,
