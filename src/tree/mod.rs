@@ -10,7 +10,7 @@ mod measure_func;
 pub use measure_func::{Measurable, MeasureFunc};
 mod node;
 #[cfg(feature = "taffy_tree")]
-pub(self) use node::NodeData;
+use node::NodeData;
 pub use node::NodeId;
 #[cfg(feature = "taffy_tree")]
 mod taffy_tree;
