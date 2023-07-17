@@ -243,6 +243,7 @@ impl Taffy {
             }
         }
 
+        // Remove "parent" references to a node when removing that node
         if let Some(children) = self.children.get(key) {
             for child in children.iter().copied() {
                 self.parents[child.into()] = None;
@@ -678,6 +679,22 @@ mod tests {
 
         taffy.remove_child_at_index(node, 0).unwrap();
         assert_eq!(taffy.child_count(node).unwrap(), 0);
+    }
+
+    // Related to: https://github.com/DioxusLabs/taffy/issues/510
+    #[test]
+    fn remove_child_updates_parents() {
+        let mut taffy = Taffy::new();
+
+        let parent = taffy.new_leaf(Style::default()).unwrap();
+        let child = taffy.new_leaf(Style::default()).unwrap();
+
+        taffy.add_child(parent, child).unwrap();
+
+        taffy.remove(parent).unwrap();
+
+        // Once the parent is removed this shouldn't panic.
+        assert!(taffy.set_children(child, &[]).is_ok());
     }
 
     #[test]
