@@ -207,7 +207,7 @@ impl GridItem {
     /// allow percentage sizes further down the tree to resolve properly in some cases
     fn known_dimensions(
         &self,
-        tree: &mut impl LayoutTree,
+        tree: &impl LayoutTree,
         inner_node_size: Size<Option<f32>>,
         grid_area_size: Size<Option<f32>>,
     ) -> Size<Option<f32>> {
