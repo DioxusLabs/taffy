@@ -358,7 +358,7 @@ fn compute_preliminary(
     // 15. Determine the flex container’s used cross size.
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("determine_container_cross_size");
-    let total_line_cross_size = determine_container_cross_size(&mut flex_lines, known_dimensions, &mut constants);
+    let total_line_cross_size = determine_container_cross_size(&flex_lines, known_dimensions, &mut constants);
 
     // We have the container size.
     // If our caller does not care about performing layout we are done now.
