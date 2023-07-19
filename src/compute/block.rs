@@ -504,7 +504,7 @@ fn perform_final_layout_on_in_flow_children(
 #[inline]
 fn perform_absolute_layout_on_absolute_children(
     tree: &mut impl LayoutTree,
-    items: &mut [BlockItem],
+    items: &[BlockItem],
     area_size: Size<f32>,
     area_offset: Point<f32>,
 ) {
