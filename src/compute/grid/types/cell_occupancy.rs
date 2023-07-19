@@ -72,7 +72,7 @@ impl CellOccupancyMatrix {
 
     /// Determines whether the specified area fits within the tracks currently represented by the matrix
     pub fn is_area_in_range(
-        &mut self,
+        &self,
         primary_axis: AbsoluteAxis,
         primary_range: Range<i16>,
         secondary_range: Range<i16>,
