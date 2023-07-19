@@ -43,7 +43,7 @@ impl LayoutAlgorithm for LeafAlgorithm {
 
 /// Compute the size of a leaf node (node with no children)
 pub(crate) fn compute(
-    tree: &mut impl LayoutTree,
+    tree: &impl LayoutTree,
     node: Node,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
