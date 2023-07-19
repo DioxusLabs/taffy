@@ -358,7 +358,7 @@ fn compute_preliminary(
     // 15. Determine the flex container’s used cross size.
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("determine_container_cross_size");
-    let total_line_cross_size = determine_container_cross_size(&mut flex_lines, known_dimensions, &mut constants);
+    let total_line_cross_size = determine_container_cross_size(&flex_lines, known_dimensions, &mut constants);
 
     // We have the container size.
     // If our caller does not care about performing layout we are done now.
@@ -1475,7 +1475,7 @@ fn handle_align_content_stretch(flex_lines: &mut [FlexLine], node_size: Size<Opt
 ///
 ///     **Note that this step does not affect the main size of the flex item, even if it has an intrinsic aspect ratio**.
 #[inline]
-fn determine_used_cross_size(tree: &mut impl LayoutTree, flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
+fn determine_used_cross_size(tree: &impl LayoutTree, flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
     for line in flex_lines {
         let line_cross_size = line.cross_size;
 
@@ -1634,7 +1634,7 @@ fn resolve_cross_axis_auto_margins(flex_lines: &mut [FlexLine], constants: &Algo
 ///     if neither of the item's cross-axis margins are `auto`.
 #[inline]
 fn align_flex_items_along_cross_axis(
-    child: &mut FlexItem,
+    child: &FlexItem,
     free_space: f32,
     max_baseline: f32,
     constants: &AlgoConstants,
@@ -1692,7 +1692,7 @@ fn align_flex_items_along_cross_axis(
 #[inline]
 #[must_use]
 fn determine_container_cross_size(
-    flex_lines: &mut [FlexLine],
+    flex_lines: &[FlexLine],
     node_size: Size<Option<f32>>,
     constants: &mut AlgoConstants,
 ) -> f32 {

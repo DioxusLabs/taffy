@@ -260,7 +260,7 @@ fn compute_inner(
     let absolute_position_inset = resolved_border + scrollbar_gutter;
     let absolute_position_area = final_outer_size - absolute_position_inset.sum_axes();
     let absolute_position_offset = Point { x: absolute_position_inset.left, y: absolute_position_inset.top };
-    perform_absolute_layout_on_absolute_children(tree, &mut items, absolute_position_area, absolute_position_offset);
+    perform_absolute_layout_on_absolute_children(tree, &items, absolute_position_area, absolute_position_offset);
 
     // 5. Perform hidden layout on hidden children
     let len = tree.child_count(node_id);
@@ -504,7 +504,7 @@ fn perform_final_layout_on_in_flow_children(
 #[inline]
 fn perform_absolute_layout_on_absolute_children(
     tree: &mut impl LayoutTree,
-    items: &mut [BlockItem],
+    items: &[BlockItem],
     area_size: Size<f32>,
     area_offset: Point<f32>,
 ) {
