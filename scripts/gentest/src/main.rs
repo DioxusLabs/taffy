@@ -120,10 +120,6 @@ async fn main() {
     // Open base mod.rs file for appending
     let mut base_mod_file = OpenOptions::new().create(true).append(true).open(tests_base_path.join("mod.rs")).unwrap();
 
-    let generic_measure_function = generate_generic_measure_function();
-    let generic_measure_token = quote!(#generic_measure_function);
-    writeln!(&mut base_mod_file, "{}", generic_measure_token).unwrap();
-
     for (name, fixture_path, test_body) in test_descs {
         // Create test directory if it doesn't exist
         let test_path_stripped = fixture_path.parent().unwrap().strip_prefix(&fixtures_root).unwrap();
@@ -151,6 +147,10 @@ async fn main() {
         debug!("writing {} to disk...", &name);
         fs::write(test_filename, test_body.to_string()).unwrap();
     }
+
+    let generic_measure_function = generate_generic_measure_function();
+    let generic_measure_token = quote!(#generic_measure_function);
+    writeln!(&mut base_mod_file, "{}", generic_measure_token).unwrap();
 
     info!("formatting the source directory");
     Command::new("cargo").arg("fmt").current_dir(repo_root).status().unwrap();

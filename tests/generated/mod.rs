@@ -1,3 +1,10 @@
+mod block;
+mod blockflex;
+mod blockgrid;
+mod flex;
+mod grid;
+mod gridflex;
+mod leaf;
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum WritingMode {
@@ -60,10 +67,3 @@ fn measure_standard_text(
         WritingMode::Vertical => Size { width: block_size, height: inline_size },
     }
 }
-mod block;
-mod blockflex;
-mod blockgrid;
-mod flex;
-mod grid;
-mod gridflex;
-mod leaf;
