@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
+use walkdir::WalkDir;
 
 struct YogaFixture {
     #[allow(dead_code)]
@@ -16,8 +17,8 @@ fn main() {
     let taffy_fixtures_dir = taffy_repo_root.join("test_fixtures");
 
     // Get Taffy fixture names
-    let taffy_fixture_names = fs::read_dir(&taffy_fixtures_dir)
-        .unwrap()
+    let taffy_fixture_names = WalkDir::new(&taffy_fixtures_dir)
+        .into_iter()
         .filter_map(|a| a.ok())
         .map(|f| {
             let file_name = f.file_name();
