@@ -157,7 +157,7 @@ fn generate_test(name: impl AsRef<str>, description: &Value) -> TokenStream {
             let mut taffy = taffy::Taffy::new();
             #set_rounding_mode
             #node_description
-            taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+            taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT);
 
             println!("\nComputed tree:");
             taffy::util::print_tree(&taffy, node);
@@ -191,7 +191,7 @@ fn generate_assertions(ident: &str, node: &Value, use_rounding: bool) -> TokenSt
 
     if use_rounding {
         quote!(
-            let Layout { size, location, .. } = taffy.layout(#ident).unwrap();
+            let Layout { size, location, .. } = taffy.layout(#ident);
             assert_eq!(size.width, #width, "width of node {:?}. Expected {}. Actual {}", #ident,  #width, size.width);
             assert_eq!(size.height, #height, "height of node {:?}. Expected {}. Actual {}", #ident,  #height, size.height);
             assert_eq!(location.x, #x, "x of node {:?}. Expected {}. Actual {}", #ident,  #x, location.x);
@@ -201,7 +201,7 @@ fn generate_assertions(ident: &str, node: &Value, use_rounding: bool) -> TokenSt
         )
     } else {
         quote!(
-            let Layout { size, location, .. } = taffy.layout(#ident).unwrap();
+            let Layout { size, location, .. } = taffy.layout(#ident);
             assert!(size.width - #width < 0.1, "width of node {:?}. Expected {}. Actual {}", #ident,  #width, size.width);
             assert!(size.height - #height < 0.1, "height of node {:?}. Expected {}. Actual {}", #ident,  #height, size.height);
             assert!(location.x - #x < 0.1, "x of node {:?}. Expected {}. Actual {}", #ident,  #x, location.x);
@@ -606,12 +606,12 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
     if has_children {
         quote!(
             #children_body
-            let #ident = taffy.new_with_children(#style,#children).unwrap();
+            let #ident = taffy.new_with_children(#style,#children);
         )
     } else if measure_func.is_some() {
-        quote!(let #ident = taffy.new_leaf_with_measure(#style,#measure_func,).unwrap();)
+        quote!(let #ident = taffy.new_leaf_with_measure(#style,#measure_func,);)
     } else {
-        quote!(let #ident = taffy.new_leaf(#style).unwrap();)
+        quote!(let #ident = taffy.new_leaf(#style);)
     }
 }
 
