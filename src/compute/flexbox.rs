@@ -2120,12 +2120,12 @@ mod tests {
         let mut tree = Taffy::with_capacity(16);
 
         let style = Style::default();
-        let node_id = tree.new_leaf(style.clone()).unwrap();
+        let node_id = tree.new_leaf(style.clone());
 
         let node_size = Size::NONE;
         let parent_size = Size::NONE;
 
-        let constants = super::compute_constants(tree.style(node_id).unwrap(), node_size, parent_size);
+        let constants = super::compute_constants(tree.style(node_id), node_size, parent_size);
 
         assert!(constants.dir == style.flex_direction);
         assert!(constants.is_row == style.flex_direction.is_row());

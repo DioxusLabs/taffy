@@ -118,29 +118,26 @@ mod tests {
 
         let style: Style = Style { display: Display::Flex, size: Size::from_lengths(50.0, 50.0), ..Default::default() };
 
-        let grandchild_00 = taffy.new_leaf(style.clone()).unwrap();
-        let grandchild_01 = taffy.new_leaf(style.clone()).unwrap();
-        let child_00 = taffy.new_with_children(style.clone(), &[grandchild_00, grandchild_01]).unwrap();
+        let grandchild_00 = taffy.new_leaf(style.clone());
+        let grandchild_01 = taffy.new_leaf(style.clone());
+        let child_00 = taffy.new_with_children(style.clone(), &[grandchild_00, grandchild_01]);
 
-        let grandchild_02 = taffy.new_leaf(style.clone()).unwrap();
-        let child_01 = taffy.new_with_children(style.clone(), &[grandchild_02]).unwrap();
+        let grandchild_02 = taffy.new_leaf(style.clone());
+        let child_01 = taffy.new_with_children(style.clone(), &[grandchild_02]);
 
-        let root = taffy
-            .new_with_children(
-                Style { display: Display::None, size: Size::from_lengths(50.0, 50.0), ..Default::default() },
-                &[child_00, child_01],
-            )
-            .unwrap();
+        let root = taffy.new_with_children(
+            Style { display: Display::None, size: Size::from_lengths(50.0, 50.0), ..Default::default() },
+            &[child_00, child_01],
+        );
 
-        perform_hidden_layout(&mut taffy, root.into());
+        perform_hidden_layout(&mut taffy, root);
 
         // Whatever size and display-mode the nodes had previously,
         // all layouts should resolve to ZERO due to the root's DISPLAY::NONE
         for (node, _) in taffy.nodes.iter().filter(|(node, _)| *node != root.into()) {
-            if let Ok(layout) = taffy.layout(node.into()) {
-                assert_eq!(layout.size, Size::zero());
-                assert_eq!(layout.location, Point::zero());
-            }
+            let layout = taffy.layout(node.into());
+            assert_eq!(layout.size, Size::zero());
+            assert_eq!(layout.location, Point::zero());
         }
     }
 }

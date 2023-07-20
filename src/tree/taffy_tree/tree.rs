@@ -173,18 +173,18 @@ impl Taffy {
     }
 
     /// Creates and adds a new unattached leaf node to the tree, and returns the node of the new node
-    pub fn new_leaf(&mut self, layout: Style) -> TaffyResult<NodeId> {
+    pub fn new_leaf(&mut self, layout: Style) -> NodeId {
         let id = self.nodes.insert(NodeData::new(layout));
         let _ = self.children.insert(new_vec_with_capacity(0));
         let _ = self.parents.insert(None);
 
-        Ok(id.into())
+        id.into()
     }
 
     /// Creates and adds a new unattached leaf node to the tree, and returns the node of the new node
     ///
     /// Creates and adds a new leaf node with a supplied [`MeasureFunc`]
-    pub fn new_leaf_with_measure(&mut self, layout: Style, measure: MeasureFunc) -> TaffyResult<NodeId> {
+    pub fn new_leaf_with_measure(&mut self, layout: Style, measure: MeasureFunc) -> NodeId {
         let mut data = NodeData::new(layout);
         data.needs_measure = true;
 
@@ -194,11 +194,11 @@ impl Taffy {
         let _ = self.children.insert(new_vec_with_capacity(0));
         let _ = self.parents.insert(None);
 
-        Ok(id.into())
+        id.into()
     }
 
     /// Creates and adds a new node, which may have any number of `children`
-    pub fn new_with_children(&mut self, layout: Style, children: &[NodeId]) -> TaffyResult<NodeId> {
+    pub fn new_with_children(&mut self, layout: Style, children: &[NodeId]) -> NodeId {
         let id = NodeId::from(self.nodes.insert(NodeData::new(layout)));
 
         for child in children {
@@ -208,7 +208,7 @@ impl Taffy {
         let _ = self.children.insert(children.iter().copied().collect::<_>());
         let _ = self.parents.insert(None);
 
-        Ok(id)
+        id
     }
 
     /// Drops all nodes in the tree
@@ -221,7 +221,7 @@ impl Taffy {
     /// Remove a specific node from the tree and drop it
     ///
     /// Returns the id of the node removed.
-    pub fn remove(&mut self, node: NodeId) -> TaffyResult<NodeId> {
+    pub fn remove(&mut self, node: NodeId) -> NodeId {
         let key = node.into();
         if let Some(parent) = self.parents[key] {
             if let Some(children) = self.children.get_mut(parent.into()) {
@@ -239,11 +239,11 @@ impl Taffy {
         let _ = self.parents.remove(key);
         let _ = self.nodes.remove(key);
 
-        Ok(node)
+        node
     }
 
     /// Sets the [`MeasureFunc`] of the associated node
-    pub fn set_measure(&mut self, node: NodeId, measure: Option<MeasureFunc>) -> TaffyResult<()> {
+    pub fn set_measure(&mut self, node: NodeId, measure: Option<MeasureFunc>) {
         let key = node.into();
         if let Some(measure) = measure {
             self.nodes[key].needs_measure = true;
@@ -253,20 +253,16 @@ impl Taffy {
             self.measure_funcs.remove(key);
         }
 
-        self.mark_dirty(node)?;
-
-        Ok(())
+        self.mark_dirty(node);
     }
 
     /// Adds a `child` node under the supplied `parent`
-    pub fn add_child(&mut self, parent: NodeId, child: NodeId) -> TaffyResult<()> {
+    pub fn add_child(&mut self, parent: NodeId, child: NodeId) {
         let parent_key = parent.into();
         let child_key = child.into();
         self.parents[child_key] = Some(parent);
         self.children[parent_key].push(child);
-        self.mark_dirty(parent)?;
-
-        Ok(())
+        self.mark_dirty(parent);
     }
 
     /// Inserts a `child` node at the given `child_index` under the supplied `parent`, shifting all children after it to the right.
@@ -280,13 +276,13 @@ impl Taffy {
 
         self.parents[child.into()] = Some(parent);
         self.children[parent_key].insert(child_index, child);
-        self.mark_dirty(parent)?;
+        self.mark_dirty(parent);
 
         Ok(())
     }
 
     /// Directly sets the `children` of the supplied `parent`
-    pub fn set_children(&mut self, parent: NodeId, children: &[NodeId]) -> TaffyResult<()> {
+    pub fn set_children(&mut self, parent: NodeId, children: &[NodeId]) {
         let parent_key = parent.into();
 
         // Remove node as parent from all its current children.
@@ -303,9 +299,7 @@ impl Taffy {
         parent_children.clear();
         children.iter().for_each(|child| parent_children.push(*child));
 
-        self.mark_dirty(parent)?;
-
-        Ok(())
+        self.mark_dirty(parent);
     }
 
     /// Removes the `child` of the parent `node`
@@ -329,7 +323,7 @@ impl Taffy {
         let child = self.children[parent_key].remove(child_index);
         self.parents[child.into()] = None;
 
-        self.mark_dirty(parent)?;
+        self.mark_dirty(parent);
 
         Ok(child)
     }
@@ -354,7 +348,7 @@ impl Taffy {
         let old_child = core::mem::replace(&mut self.children[parent_key][child_index], new_child);
         self.parents[old_child.into()] = None;
 
-        self.mark_dirty(parent)?;
+        self.mark_dirty(parent);
 
         Ok(old_child)
     }
@@ -371,30 +365,29 @@ impl Taffy {
     }
 
     /// Returns the number of children of the `parent` node
-    pub fn child_count(&self, parent: NodeId) -> TaffyResult<usize> {
-        Ok(self.children[parent.into()].len())
+    pub fn child_count(&self, parent: NodeId) -> usize {
+        self.children[parent.into()].len()
     }
 
     /// Returns a list of children that belong to the parent node
-    pub fn children(&self, parent: NodeId) -> TaffyResult<Vec<NodeId>> {
-        Ok(self.children[parent.into()].iter().copied().collect::<_>())
+    pub fn children(&self, parent: NodeId) -> Vec<NodeId> {
+        self.children[parent.into()].iter().copied().collect()
     }
 
     /// Sets the [`Style`] of the provided `node`
-    pub fn set_style(&mut self, node: NodeId, style: Style) -> TaffyResult<()> {
+    pub fn set_style(&mut self, node: NodeId, style: Style) {
         self.nodes[node.into()].style = style;
-        self.mark_dirty(node)?;
-        Ok(())
+        self.mark_dirty(node);
     }
 
     /// Gets the [`Style`] of the provided `node`
-    pub fn style(&self, node: NodeId) -> TaffyResult<&Style> {
-        Ok(&self.nodes[node.into()].style)
+    pub fn style(&self, node: NodeId) -> &Style {
+        &self.nodes[node.into()].style
     }
 
     /// Return this node layout relative to its parent
-    pub fn layout(&self, node: NodeId) -> TaffyResult<&Layout> {
-        Ok(&self.nodes[node.into()].layout)
+    pub fn layout(&self, node: NodeId) -> &Layout {
+        &self.nodes[node.into()].layout
     }
 
     /// Marks the layout computation of this node and its children as outdated
@@ -402,7 +395,7 @@ impl Taffy {
     /// Performs a recursive depth-first search up the tree until the root node is reached
     ///
     /// WARNING: this will stack-overflow if the tree contains a cycle
-    pub fn mark_dirty(&mut self, node: NodeId) -> TaffyResult<()> {
+    pub fn mark_dirty(&mut self, node: NodeId) {
         /// WARNING: this will stack-overflow if the tree contains a cycle
         fn mark_dirty_recursive(
             nodes: &mut SlotMap<DefaultKey, NodeData>,
@@ -417,17 +410,15 @@ impl Taffy {
         }
 
         mark_dirty_recursive(&mut self.nodes, &self.parents, node.into());
-
-        Ok(())
     }
 
     /// Indicates whether the layout of this node (and its children) need to be recomputed
-    pub fn dirty(&self, node: NodeId) -> TaffyResult<bool> {
-        Ok(self.nodes[node.into()].cache.is_empty())
+    pub fn dirty(&self, node: NodeId) -> bool {
+        self.nodes[node.into()].cache.is_empty()
     }
 
     /// Updates the stored layout of the provided `node` and its children
-    pub fn compute_layout(&mut self, node: NodeId, available_space: Size<AvailableSpace>) -> TaffyResult<()> {
+    pub fn compute_layout(&mut self, node: NodeId, available_space: Size<AvailableSpace>) {
         compute_layout(self, node, available_space)
     }
 }
@@ -465,47 +456,41 @@ mod tests {
     fn test_new_leaf() {
         let mut taffy = Taffy::new();
 
-        let res = taffy.new_leaf(Style::default());
-        assert!(res.is_ok());
-        let node = res.unwrap();
+        let node = taffy.new_leaf(Style::default());
 
         // node should be in the taffy tree and have no children
-        assert!(taffy.child_count(node).unwrap() == 0);
+        assert!(taffy.child_count(node) == 0);
     }
 
     #[test]
     fn new_leaf_with_measure() {
         let mut taffy = Taffy::new();
 
-        let res = taffy.new_leaf_with_measure(Style::default(), MeasureFunc::Raw(|_, _| Size::ZERO));
-        assert!(res.is_ok());
-        let node = res.unwrap();
+        let node = taffy.new_leaf_with_measure(Style::default(), MeasureFunc::Raw(|_, _| Size::ZERO));
 
         // node should be in the taffy tree and have no children
-        assert!(taffy.child_count(node).unwrap() == 0);
+        assert!(taffy.child_count(node) == 0);
     }
 
     /// Test that new_with_children works as expected
     #[test]
     fn test_new_with_children() {
         let mut taffy = Taffy::new();
-        let child0 = taffy.new_leaf(Style::default()).unwrap();
-        let child1 = taffy.new_leaf(Style::default()).unwrap();
-        let node = taffy.new_with_children(Style::default(), &[child0, child1]).unwrap();
+        let child0 = taffy.new_leaf(Style::default());
+        let child1 = taffy.new_leaf(Style::default());
+        let node = taffy.new_with_children(Style::default(), &[child0, child1]);
 
         // node should have two children
-        assert_eq!(taffy.child_count(node).unwrap(), 2);
-        assert_eq!(taffy.children(node).unwrap()[0], child0);
-        assert_eq!(taffy.children(node).unwrap()[1], child1);
+        assert_eq!(taffy.child_count(node), 2);
+        assert_eq!(taffy.children(node)[0], child0);
+        assert_eq!(taffy.children(node)[1], child1);
     }
 
     #[test]
     fn remove_node_should_remove() {
         let mut taffy = Taffy::new();
-
-        let node = taffy.new_leaf(Style::default()).unwrap();
-
-        let _ = taffy.remove(node).unwrap();
+        let node = taffy.new_leaf(Style::default());
+        taffy.remove(node);
     }
 
     #[test]
@@ -513,286 +498,277 @@ mod tests {
         let mut taffy = Taffy::new();
 
         // Build a linear tree layout: <0> <- <1> <- <2>
-        let node2 = taffy.new_leaf(Style::default()).unwrap();
-        let node1 = taffy.new_with_children(Style::default(), &[node2]).unwrap();
-        let node0 = taffy.new_with_children(Style::default(), &[node1]).unwrap();
+        let node2 = taffy.new_leaf(Style::default());
+        let node1 = taffy.new_with_children(Style::default(), &[node2]);
+        let node0 = taffy.new_with_children(Style::default(), &[node1]);
 
         // Both node0 and node1 should have 1 child nodes
-        assert_eq!(taffy.children(node0).unwrap().as_slice(), &[node1]);
-        assert_eq!(taffy.children(node1).unwrap().as_slice(), &[node2]);
+        assert_eq!(taffy.children(node0).as_slice(), &[node1]);
+        assert_eq!(taffy.children(node1).as_slice(), &[node2]);
 
         // Disconnect the tree: <0> <2>
-        let _ = taffy.remove(node1).unwrap();
+        taffy.remove(node1);
 
         // Both remaining nodes should have no child nodes
-        assert!(taffy.children(node0).unwrap().is_empty());
-        assert!(taffy.children(node2).unwrap().is_empty());
+        assert!(taffy.children(node0).is_empty());
+        assert!(taffy.children(node2).is_empty());
     }
 
     #[test]
     fn remove_last_node() {
         let mut taffy = Taffy::new();
 
-        let parent = taffy.new_leaf(Style::default()).unwrap();
-        let child = taffy.new_leaf(Style::default()).unwrap();
-        taffy.add_child(parent, child).unwrap();
+        let parent = taffy.new_leaf(Style::default());
+        let child = taffy.new_leaf(Style::default());
+        taffy.add_child(parent, child);
 
-        taffy.remove(child).unwrap();
-        taffy.remove(parent).unwrap();
+        taffy.remove(child);
+        taffy.remove(parent);
     }
 
     #[test]
     fn set_measure() {
         let mut taffy = Taffy::new();
         let node = taffy
-            .new_leaf_with_measure(Style::default(), MeasureFunc::Raw(|_, _| Size { width: 200.0, height: 200.0 }))
-            .unwrap();
-        taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
-        assert_eq!(taffy.layout(node).unwrap().size.width, 200.0);
+            .new_leaf_with_measure(Style::default(), MeasureFunc::Raw(|_, _| Size { width: 200.0, height: 200.0 }));
+        taffy.compute_layout(node, Size::MAX_CONTENT);
+        assert_eq!(taffy.layout(node).size.width, 200.0);
 
-        taffy.set_measure(node, Some(MeasureFunc::Raw(|_, _| Size { width: 100.0, height: 100.0 }))).unwrap();
-        taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
-        assert_eq!(taffy.layout(node).unwrap().size.width, 100.0);
+        taffy.set_measure(node, Some(MeasureFunc::Raw(|_, _| Size { width: 100.0, height: 100.0 })));
+        taffy.compute_layout(node, Size::MAX_CONTENT);
+        assert_eq!(taffy.layout(node).size.width, 100.0);
     }
 
     #[test]
     fn set_measure_of_previously_unmeasured_node() {
         let mut taffy = Taffy::new();
-        let node = taffy.new_leaf(Style::default()).unwrap();
-        taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
-        assert_eq!(taffy.layout(node).unwrap().size.width, 0.0);
+        let node = taffy.new_leaf(Style::default());
+        taffy.compute_layout(node, Size::MAX_CONTENT);
+        assert_eq!(taffy.layout(node).size.width, 0.0);
 
-        taffy.set_measure(node, Some(MeasureFunc::Raw(|_, _| Size { width: 100.0, height: 100.0 }))).unwrap();
-        taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
-        assert_eq!(taffy.layout(node).unwrap().size.width, 100.0);
+        taffy.set_measure(node, Some(MeasureFunc::Raw(|_, _| Size { width: 100.0, height: 100.0 })));
+        taffy.compute_layout(node, Size::MAX_CONTENT);
+        assert_eq!(taffy.layout(node).size.width, 100.0);
     }
 
     /// Test that adding `add_child()` works
     #[test]
     fn add_child() {
         let mut taffy = Taffy::new();
-        let node = taffy.new_leaf(Style::default()).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 0);
+        let node = taffy.new_leaf(Style::default());
+        assert_eq!(taffy.child_count(node), 0);
 
-        let child0 = taffy.new_leaf(Style::default()).unwrap();
-        taffy.add_child(node, child0).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 1);
+        let child0 = taffy.new_leaf(Style::default());
+        taffy.add_child(node, child0);
+        assert_eq!(taffy.child_count(node), 1);
 
-        let child1 = taffy.new_leaf(Style::default()).unwrap();
-        taffy.add_child(node, child1).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 2);
+        let child1 = taffy.new_leaf(Style::default());
+        taffy.add_child(node, child1);
+        assert_eq!(taffy.child_count(node), 2);
     }
 
     #[test]
     fn insert_child_at_index() {
         let mut taffy = Taffy::new();
 
-        let child0 = taffy.new_leaf(Style::default()).unwrap();
-        let child1 = taffy.new_leaf(Style::default()).unwrap();
-        let child2 = taffy.new_leaf(Style::default()).unwrap();
+        let child0 = taffy.new_leaf(Style::default());
+        let child1 = taffy.new_leaf(Style::default());
+        let child2 = taffy.new_leaf(Style::default());
 
-        let node = taffy.new_leaf(Style::default()).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 0);
+        let node = taffy.new_leaf(Style::default());
+        assert_eq!(taffy.child_count(node), 0);
 
         taffy.insert_child_at_index(node, 0, child0).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 1);
-        assert_eq!(taffy.children(node).unwrap()[0], child0);
+        assert_eq!(taffy.child_count(node), 1);
+        assert_eq!(taffy.children(node)[0], child0);
 
         taffy.insert_child_at_index(node, 0, child1).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 2);
-        assert_eq!(taffy.children(node).unwrap()[0], child1);
-        assert_eq!(taffy.children(node).unwrap()[1], child0);
+        assert_eq!(taffy.child_count(node), 2);
+        assert_eq!(taffy.children(node)[0], child1);
+        assert_eq!(taffy.children(node)[1], child0);
 
         taffy.insert_child_at_index(node, 1, child2).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 3);
-        assert_eq!(taffy.children(node).unwrap()[0], child1);
-        assert_eq!(taffy.children(node).unwrap()[1], child2);
-        assert_eq!(taffy.children(node).unwrap()[2], child0);
+        assert_eq!(taffy.child_count(node), 3);
+        assert_eq!(taffy.children(node)[0], child1);
+        assert_eq!(taffy.children(node)[1], child2);
+        assert_eq!(taffy.children(node)[2], child0);
     }
 
     #[test]
     fn set_children() {
         let mut taffy = Taffy::new();
 
-        let child0 = taffy.new_leaf(Style::default()).unwrap();
-        let child1 = taffy.new_leaf(Style::default()).unwrap();
-        let node = taffy.new_with_children(Style::default(), &[child0, child1]).unwrap();
+        let child0 = taffy.new_leaf(Style::default());
+        let child1 = taffy.new_leaf(Style::default());
+        let node = taffy.new_with_children(Style::default(), &[child0, child1]);
 
-        assert_eq!(taffy.child_count(node).unwrap(), 2);
-        assert_eq!(taffy.children(node).unwrap()[0], child0);
-        assert_eq!(taffy.children(node).unwrap()[1], child1);
+        assert_eq!(taffy.child_count(node), 2);
+        assert_eq!(taffy.children(node)[0], child0);
+        assert_eq!(taffy.children(node)[1], child1);
 
-        let child2 = taffy.new_leaf(Style::default()).unwrap();
-        let child3 = taffy.new_leaf(Style::default()).unwrap();
-        taffy.set_children(node, &[child2, child3]).unwrap();
+        let child2 = taffy.new_leaf(Style::default());
+        let child3 = taffy.new_leaf(Style::default());
+        taffy.set_children(node, &[child2, child3]);
 
-        assert_eq!(taffy.child_count(node).unwrap(), 2);
-        assert_eq!(taffy.children(node).unwrap()[0], child2);
-        assert_eq!(taffy.children(node).unwrap()[1], child3);
+        assert_eq!(taffy.child_count(node), 2);
+        assert_eq!(taffy.children(node)[0], child2);
+        assert_eq!(taffy.children(node)[1], child3);
     }
 
     /// Test that removing a child works
     #[test]
     fn remove_child() {
         let mut taffy = Taffy::new();
-        let child0 = taffy.new_leaf(Style::default()).unwrap();
-        let child1 = taffy.new_leaf(Style::default()).unwrap();
-        let node = taffy.new_with_children(Style::default(), &[child0, child1]).unwrap();
+        let child0 = taffy.new_leaf(Style::default());
+        let child1 = taffy.new_leaf(Style::default());
+        let node = taffy.new_with_children(Style::default(), &[child0, child1]);
 
-        assert_eq!(taffy.child_count(node).unwrap(), 2);
+        assert_eq!(taffy.child_count(node), 2);
 
         taffy.remove_child(node, child0).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 1);
-        assert_eq!(taffy.children(node).unwrap()[0], child1);
+        assert_eq!(taffy.child_count(node), 1);
+        assert_eq!(taffy.children(node)[0], child1);
 
         taffy.remove_child(node, child1).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 0);
+        assert_eq!(taffy.child_count(node), 0);
     }
 
     #[test]
     fn remove_child_at_index() {
         let mut taffy = Taffy::new();
-        let child0 = taffy.new_leaf(Style::default()).unwrap();
-        let child1 = taffy.new_leaf(Style::default()).unwrap();
-        let node = taffy.new_with_children(Style::default(), &[child0, child1]).unwrap();
+        let child0 = taffy.new_leaf(Style::default());
+        let child1 = taffy.new_leaf(Style::default());
+        let node = taffy.new_with_children(Style::default(), &[child0, child1]);
 
-        assert_eq!(taffy.child_count(node).unwrap(), 2);
-
-        taffy.remove_child_at_index(node, 0).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 1);
-        assert_eq!(taffy.children(node).unwrap()[0], child1);
+        assert_eq!(taffy.child_count(node), 2);
 
         taffy.remove_child_at_index(node, 0).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 0);
+        assert_eq!(taffy.child_count(node), 1);
+        assert_eq!(taffy.children(node)[0], child1);
+
+        taffy.remove_child_at_index(node, 0).unwrap();
+        assert_eq!(taffy.child_count(node), 0);
     }
 
     #[test]
     fn replace_child_at_index() {
         let mut taffy = Taffy::new();
 
-        let child0 = taffy.new_leaf(Style::default()).unwrap();
-        let child1 = taffy.new_leaf(Style::default()).unwrap();
+        let child0 = taffy.new_leaf(Style::default());
+        let child1 = taffy.new_leaf(Style::default());
 
-        let node = taffy.new_with_children(Style::default(), &[child0]).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 1);
-        assert_eq!(taffy.children(node).unwrap()[0], child0);
+        let node = taffy.new_with_children(Style::default(), &[child0]);
+        assert_eq!(taffy.child_count(node), 1);
+        assert_eq!(taffy.children(node)[0], child0);
 
         taffy.replace_child_at_index(node, 0, child1).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 1);
-        assert_eq!(taffy.children(node).unwrap()[0], child1);
+        assert_eq!(taffy.child_count(node), 1);
+        assert_eq!(taffy.children(node)[0], child1);
     }
     #[test]
     fn test_child_at_index() {
         let mut taffy = Taffy::new();
-        let child0 = taffy.new_leaf(Style::default()).unwrap();
-        let child1 = taffy.new_leaf(Style::default()).unwrap();
-        let child2 = taffy.new_leaf(Style::default()).unwrap();
-        let node = taffy.new_with_children(Style::default(), &[child0, child1, child2]).unwrap();
+        let child0 = taffy.new_leaf(Style::default());
+        let child1 = taffy.new_leaf(Style::default());
+        let child2 = taffy.new_leaf(Style::default());
+        let node = taffy.new_with_children(Style::default(), &[child0, child1, child2]);
 
-        assert!(if let Ok(result) = taffy.child_at_index(node, 0) { result == child0 } else { false });
-        assert!(if let Ok(result) = taffy.child_at_index(node, 1) { result == child1 } else { false });
-        assert!(if let Ok(result) = taffy.child_at_index(node, 2) { result == child2 } else { false });
+        assert_eq!(taffy.child_at_index(node, 0).unwrap(), child0);
+        assert_eq!(taffy.child_at_index(node, 1).unwrap(), child1);
+        assert_eq!(taffy.child_at_index(node, 2).unwrap(), child2);
     }
     #[test]
     fn test_child_count() {
         let mut taffy = Taffy::new();
-        let child0 = taffy.new_leaf(Style::default()).unwrap();
-        let child1 = taffy.new_leaf(Style::default()).unwrap();
-        let node = taffy.new_with_children(Style::default(), &[child0, child1]).unwrap();
+        let child0 = taffy.new_leaf(Style::default());
+        let child1 = taffy.new_leaf(Style::default());
+        let node = taffy.new_with_children(Style::default(), &[child0, child1]);
 
-        assert!(if let Ok(count) = taffy.child_count(node) { count == 2 } else { false });
-        assert!(if let Ok(count) = taffy.child_count(child0) { count == 0 } else { false });
-        assert!(if let Ok(count) = taffy.child_count(child1) { count == 0 } else { false });
+        assert_eq!(taffy.child_count(node), 2);
+        assert_eq!(taffy.child_count(child0), 0);
+        assert_eq!(taffy.child_count(child1), 0);
     }
 
     #[allow(clippy::vec_init_then_push)]
     #[test]
     fn test_children() {
         let mut taffy = Taffy::new();
-        let child0 = taffy.new_leaf(Style::default()).unwrap();
-        let child1 = taffy.new_leaf(Style::default()).unwrap();
-        let node = taffy.new_with_children(Style::default(), &[child0, child1]).unwrap();
+        let child0 = taffy.new_leaf(Style::default());
+        let child1 = taffy.new_leaf(Style::default());
+        let node = taffy.new_with_children(Style::default(), &[child0, child1]);
 
         let mut children = sys::Vec::new();
         children.push(child0);
         children.push(child1);
 
-        let children_result = taffy.children(node).unwrap();
+        let children_result = taffy.children(node);
         assert_eq!(children_result, children);
 
-        assert!(taffy.children(child0).unwrap().is_empty());
+        assert!(taffy.children(child0).is_empty());
     }
     #[test]
     fn test_set_style() {
         let mut taffy = Taffy::new();
 
-        let node = taffy.new_leaf(Style::default()).unwrap();
-        assert_eq!(taffy.style(node).unwrap().display, Display::Flex);
+        let node = taffy.new_leaf(Style::default());
+        assert_eq!(taffy.style(node).display, Display::Flex);
 
-        taffy.set_style(node, Style { display: Display::None, ..Style::default() }).unwrap();
-        assert_eq!(taffy.style(node).unwrap().display, Display::None);
+        taffy.set_style(node, Style { display: Display::None, ..Style::default() });
+        assert_eq!(taffy.style(node).display, Display::None);
     }
     #[test]
     fn test_style() {
         let mut taffy = Taffy::new();
 
         let style = Style { display: Display::None, flex_direction: FlexDirection::RowReverse, ..Default::default() };
-
-        let node = taffy.new_leaf(style.clone()).unwrap();
-
-        let res = taffy.style(node);
-        assert!(res.is_ok());
-        assert!(res.unwrap() == &style);
+        let node = taffy.new_leaf(style.clone());
+        assert!(taffy.style(node) == &style);
     }
     #[test]
     fn test_layout() {
         let mut taffy = Taffy::new();
-        let node = taffy.new_leaf(Style::default()).unwrap();
-
+        let node = taffy.new_leaf(Style::default());
         // TODO: Improve this test?
-        let res = taffy.layout(node);
-        assert!(res.is_ok());
+        taffy.layout(node);
     }
 
     #[test]
     fn test_mark_dirty() {
         let mut taffy = Taffy::new();
-        let child0 = taffy.new_leaf(Style::default()).unwrap();
-        let child1 = taffy.new_leaf(Style::default()).unwrap();
-        let node = taffy.new_with_children(Style::default(), &[child0, child1]).unwrap();
+        let child0 = taffy.new_leaf(Style::default());
+        let child1 = taffy.new_leaf(Style::default());
+        let node = taffy.new_with_children(Style::default(), &[child0, child1]);
 
-        taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
+        taffy.compute_layout(node, Size::MAX_CONTENT);
 
-        assert_eq!(taffy.dirty(child0).unwrap(), false);
-        assert_eq!(taffy.dirty(child1).unwrap(), false);
-        assert_eq!(taffy.dirty(node).unwrap(), false);
+        assert_eq!(taffy.dirty(child0), false);
+        assert_eq!(taffy.dirty(child1), false);
+        assert_eq!(taffy.dirty(node), false);
 
-        taffy.mark_dirty(node).unwrap();
-        assert_eq!(taffy.dirty(child0).unwrap(), false);
-        assert_eq!(taffy.dirty(child1).unwrap(), false);
-        assert_eq!(taffy.dirty(node).unwrap(), true);
+        taffy.mark_dirty(node);
+        assert_eq!(taffy.dirty(child0), false);
+        assert_eq!(taffy.dirty(child1), false);
+        assert_eq!(taffy.dirty(node), true);
 
-        taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
-        taffy.mark_dirty(child0).unwrap();
-        assert_eq!(taffy.dirty(child0).unwrap(), true);
-        assert_eq!(taffy.dirty(child1).unwrap(), false);
-        assert_eq!(taffy.dirty(node).unwrap(), true);
+        taffy.compute_layout(node, Size::MAX_CONTENT);
+        taffy.mark_dirty(child0);
+        assert_eq!(taffy.dirty(child0), true);
+        assert_eq!(taffy.dirty(child1), false);
+        assert_eq!(taffy.dirty(node), true);
     }
 
     #[test]
     fn compute_layout_should_produce_valid_result() {
         let mut taffy = Taffy::new();
-        let node_result = taffy.new_leaf(Style {
+        let node = taffy.new_leaf(Style {
             size: Size { width: Dimension::Length(10f32), height: Dimension::Length(10f32) },
             ..Default::default()
         });
-        assert!(node_result.is_ok());
-        let node = node_result.unwrap();
-        let layout_result = taffy.compute_layout(
+        // TODO: improve test by asserting equalities
+        taffy.compute_layout(
             node,
             Size { width: AvailableSpace::Definite(100.), height: AvailableSpace::Definite(100.) },
         );
-        assert!(layout_result.is_ok());
     }
 
     #[test]
@@ -801,30 +777,21 @@ mod tests {
 
         let mut taffy = Taffy::new();
 
-        let node = taffy
-            .new_leaf(Style {
-                size: Size { width: Dimension::Percent(1f32), height: Dimension::Percent(1f32) },
+        let node = taffy.new_leaf(Style {
+            size: Size { width: Dimension::Percent(1f32), height: Dimension::Percent(1f32) },
+            ..Default::default()
+        });
+
+        let root = taffy.new_with_children(
+            Style {
+                size: Size { width: Dimension::Length(100f32), height: Dimension::Length(100f32) },
+                padding: Rect { left: length(10f32), right: length(20f32), top: length(30f32), bottom: length(40f32) },
                 ..Default::default()
-            })
-            .unwrap();
+            },
+            &[node],
+        );
 
-        let root = taffy
-            .new_with_children(
-                Style {
-                    size: Size { width: Dimension::Length(100f32), height: Dimension::Length(100f32) },
-                    padding: Rect {
-                        left: length(10f32),
-                        right: length(20f32),
-                        top: length(30f32),
-                        bottom: length(40f32),
-                    },
-                    ..Default::default()
-                },
-                &[node],
-            )
-            .unwrap();
-
-        taffy.compute_layout(root, Size::MAX_CONTENT).unwrap();
+        taffy.compute_layout(root, Size::MAX_CONTENT);
 
         // If Layout::location represents top-left coord, 'node' location
         // must be (due applied 'root' padding): {x: 10, y: 30}.
@@ -834,7 +801,7 @@ mod tests {
         // - bottom-left:  {x: 10, y: 40}
         // - top-right:    {x: 20, y: 30}
         // - bottom-right: {x: 20, y: 40}
-        let layout = taffy.layout(node).unwrap();
+        let layout = taffy.layout(node);
         assert_eq!(layout.location.x, 10f32);
         assert_eq!(layout.location.y, 30f32);
     }

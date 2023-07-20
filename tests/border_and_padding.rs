@@ -10,25 +10,21 @@ fn arr_to_rect<T: Copy>(items: [T; 4]) -> Rect<T> {
 fn border_on_a_single_axis_doesnt_increase_size() {
     for i in 0..4 {
         let mut taffy = Taffy::new();
-        let node = taffy
-            .new_leaf(Style {
-                border: {
-                    let mut lengths = [LengthPercentage::ZERO; 4];
-                    lengths[i] = LengthPercentage::Length(10.);
-                    arr_to_rect(lengths)
-                },
-                ..Default::default()
-            })
-            .unwrap();
+        let node = taffy.new_leaf(Style {
+            border: {
+                let mut lengths = [LengthPercentage::ZERO; 4];
+                lengths[i] = LengthPercentage::Length(10.);
+                arr_to_rect(lengths)
+            },
+            ..Default::default()
+        });
 
-        taffy
-            .compute_layout(
-                node,
-                Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::Definite(100.0) },
-            )
-            .unwrap();
+        taffy.compute_layout(
+            node,
+            Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::Definite(100.0) },
+        );
 
-        let layout = taffy.layout(node).unwrap();
+        let layout = taffy.layout(node);
         assert_eq!(layout.size.width * layout.size.height, 0.);
     }
 }
@@ -38,25 +34,21 @@ fn border_on_a_single_axis_doesnt_increase_size() {
 fn padding_on_a_single_axis_doesnt_increase_size() {
     for i in 0..4 {
         let mut taffy = Taffy::new();
-        let node = taffy
-            .new_leaf(Style {
-                padding: {
-                    let mut lengths = [LengthPercentage::ZERO; 4];
-                    lengths[i] = LengthPercentage::Length(10.);
-                    arr_to_rect(lengths)
-                },
-                ..Default::default()
-            })
-            .unwrap();
+        let node = taffy.new_leaf(Style {
+            padding: {
+                let mut lengths = [LengthPercentage::ZERO; 4];
+                lengths[i] = LengthPercentage::Length(10.);
+                arr_to_rect(lengths)
+            },
+            ..Default::default()
+        });
 
-        taffy
-            .compute_layout(
-                node,
-                Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::Definite(100.0) },
-            )
-            .unwrap();
+        taffy.compute_layout(
+            node,
+            Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::Definite(100.0) },
+        );
 
-        let layout = taffy.layout(node).unwrap();
+        let layout = taffy.layout(node);
         assert_eq!(layout.size.width * layout.size.height, 0.);
     }
 }
@@ -71,15 +63,13 @@ fn border_and_padding_on_a_single_axis_doesnt_increase_size() {
             lengths[i] = LengthPercentage::Length(10.);
             arr_to_rect(lengths)
         };
-        let node = taffy.new_leaf(Style { border: rect, padding: rect, ..Default::default() }).unwrap();
+        let node = taffy.new_leaf(Style { border: rect, padding: rect, ..Default::default() });
 
-        taffy
-            .compute_layout(
-                node,
-                Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::Definite(100.0) },
-            )
-            .unwrap();
-        let layout = taffy.layout(node).unwrap();
+        taffy.compute_layout(
+            node,
+            Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::Definite(100.0) },
+        );
+        let layout = taffy.layout(node);
         assert_eq!(layout.size.width * layout.size.height, 0.);
     }
 }
@@ -89,18 +79,15 @@ fn border_and_padding_on_a_single_axis_doesnt_increase_size() {
 fn vertical_border_and_padding_percentage_values_use_available_space_correctly() {
     let mut taffy = Taffy::new();
 
-    let node = taffy
-        .new_leaf(Style {
-            padding: Rect { left: LengthPercentage::Percent(1.0), top: LengthPercentage::Percent(1.0), ..Rect::zero() },
-            ..Default::default()
-        })
-        .unwrap();
+    let node = taffy.new_leaf(Style {
+        padding: Rect { left: LengthPercentage::Percent(1.0), top: LengthPercentage::Percent(1.0), ..Rect::zero() },
+        ..Default::default()
+    });
 
     taffy
-        .compute_layout(node, Size { width: AvailableSpace::Definite(200.0), height: AvailableSpace::Definite(100.0) })
-        .unwrap();
+        .compute_layout(node, Size { width: AvailableSpace::Definite(200.0), height: AvailableSpace::Definite(100.0) });
 
-    let layout = taffy.layout(node).unwrap();
+    let layout = taffy.layout(node);
     assert_eq!(layout.size.width, 200.0);
     assert_eq!(layout.size.height, 200.0);
 }

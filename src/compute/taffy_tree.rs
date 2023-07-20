@@ -3,7 +3,7 @@
 use crate::compute::{leaf, LayoutAlgorithm};
 use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, Display};
-use crate::tree::{Layout, LayoutTree, NodeId, RunMode, SizeBaselinesAndMargins, SizingMode, Taffy, TaffyError};
+use crate::tree::{Layout, LayoutTree, NodeId, RunMode, SizeBaselinesAndMargins, SizingMode, Taffy};
 use crate::util::sys::round;
 
 #[cfg(feature = "block_layout")]
@@ -34,11 +34,7 @@ fn debug_log_node(
 }
 
 /// Updates the stored layout of the provided `node` and its children
-pub(crate) fn compute_layout(
-    taffy: &mut Taffy,
-    root: NodeId,
-    available_space: Size<AvailableSpace>,
-) -> Result<(), TaffyError> {
+pub(crate) fn compute_layout(taffy: &mut Taffy, root: NodeId, available_space: Size<AvailableSpace>) {
     // Recursively compute node layout
     let size_and_baselines = perform_node_layout(
         taffy,
@@ -57,8 +53,6 @@ pub(crate) fn compute_layout(
     if taffy.config.use_rounding {
         round_layout(taffy, root, 0.0, 0.0);
     }
-
-    Ok(())
 }
 
 /// Perform full layout on a node. Chooses which algorithm to use based on the `display` property.
