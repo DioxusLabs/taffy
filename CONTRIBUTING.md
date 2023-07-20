@@ -34,6 +34,8 @@ Be sure that your Chrome vesion matches the downloaded `chromedriver` version!
 
 Once you have chromedriver installed and available in `PATH` you can re-generate all tests by running `cargo gentest`. You should not manually update the tests in `tests/generated`. Instead, fix the script in `scripts/gentest/` and re-generate them. This can happen after a refactor. It can be helpful to commit the updated tests in a dedicated commit so that they can be easier to ignore during review.
 
+`cargo gentest` generates log events that can be viewed by setting the [`RUST_LOG`](https://docs.rs/env_logger/0.10.0/env_logger/#enabling-logging) env variable. E.g. `export RUST_LOG="info"`.
+
 To add a new test case add another HTML file to `/test_fixtures` following the current tests as a template for new tests.
 
 **Note: test fixtures (HTML files in the `text_fixtures` directory) that begin with an "x" are considered disabled, and the test generation script will not generate a test for them (and as the test generation script overwrites the entire directory when generating tests, this means that prefixing an existing test with an "x" and then running the test generation script will delete that test)**
