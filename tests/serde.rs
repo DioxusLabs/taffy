@@ -14,7 +14,7 @@ mod serde {
     #[test]
     fn serde_can_deserialize_partial_values() {
         use serde_json;
-        let json = r###"{
+        let json = r#"{
             "inset": {
                 "left": { "Length": 22 },
                 "right": "Auto"
@@ -49,7 +49,7 @@ mod serde {
             },
             "grid_row": { "start": "Auto" },
             "grid_column": { "end": "Auto" }
-        }"###;
-        let _: Value = serde_json::from_str(&json).unwrap();
+        }"#;
+        serde_json::from_str::<Value>(json).unwrap();
     }
 }
