@@ -427,7 +427,7 @@ impl Taffy {
     }
 
     /// Updates the stored layout of the provided `node` and its children
-    pub fn compute_layout(&mut self, node: NodeId, available_space: Size<AvailableSpace>) -> Result<(), TaffyError> {
+    pub fn compute_layout(&mut self, node: NodeId, available_space: Size<AvailableSpace>) -> TaffyResult<()> {
         compute_layout(self, node, available_space)
     }
 }
