@@ -31,7 +31,7 @@ let header_node = taffy
             size: Size { width: length(800.0), height: length(100.0) },
             ..Default::default()
         },
-    ).unwrap();
+    );
 
 let body_node = taffy
     .new_leaf(
@@ -40,7 +40,7 @@ let body_node = taffy
             flex_grow: 1.0,
             ..Default::default()
         },
-    ).unwrap();
+    );
 
 let root_node = taffy
     .new_with_children(
@@ -51,18 +51,18 @@ let root_node = taffy
         },
         &[header_node, body_node],
     )
-    .unwrap();
+    ;
 
 // Call compute_layout on the root of your tree to run the layout algorithm
-taffy.compute_layout(root_node, Size::MAX_CONTENT).unwrap();
+taffy.compute_layout(root_node, Size::MAX_CONTENT);
 
 // Inspect the computed layout using taffy.layout
-assert_eq!(taffy.layout(root_node).unwrap().size.width, 800.0);
-assert_eq!(taffy.layout(root_node).unwrap().size.height, 600.0);
-assert_eq!(taffy.layout(header_node).unwrap().size.width, 800.0);
-assert_eq!(taffy.layout(header_node).unwrap().size.height, 100.0);
-assert_eq!(taffy.layout(body_node).unwrap().size.width, 800.0);
-assert_eq!(taffy.layout(body_node).unwrap().size.height, 500.0); // This value was not set explicitly, but was computed by Taffy
+assert_eq!(taffy.layout(root_node).size.width, 800.0);
+assert_eq!(taffy.layout(root_node).size.height, 600.0);
+assert_eq!(taffy.layout(header_node).size.width, 800.0);
+assert_eq!(taffy.layout(header_node).size.height, 100.0);
+assert_eq!(taffy.layout(body_node).size.width, 800.0);
+assert_eq!(taffy.layout(body_node).size.height, 500.0); // This value was not set explicitly, but was computed by Taffy
 
 ```
 
