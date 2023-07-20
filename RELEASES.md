@@ -4,8 +4,31 @@
 
 ### Breaking
 
+#### Fewer unwraps.
+
+Infallible `Taffy` methods that have previously returned `TaffyResult` will simply return the `Ok` value only.
+This change affects the following methods:
+
+* `Taffy::add_child`,
+* `Taffy::child_count`,
+* `Taffy::children`,
+* `Taffy::compute_layout`,
+* `Taffy::dirty`,
+* `Taffy::layout`,
+* `Taffy::mark_dirty`,
+* `Taffy::new_leaf_with_measure`,
+* `Taffy::new_with_children`,
+* `Taffy::remove`,
+* `Taffy::set_children`,
+* `Taffy::set_measure`,
+* `Taffy::set_style`,
+* `Taffy::style`,
+* `Taffy::new_leaf`,
+
+#### Replace `Points` with `Length`
+
 Many APIs have been renamed to replace `points` or `Points` with `length` or `Length`.
-This new name better describes one-dimentional measure of space in some unspecified unit
+This new name better describes one-dimensional measure of space in some unspecified unit
 which is often unrelated to the PostScript point or the CSS `pt` unit.
 
 This also removes a misleading similarity with the 2D `Point`,
