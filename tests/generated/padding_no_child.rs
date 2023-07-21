@@ -3,22 +3,20 @@ fn padding_no_child() {
     #[allow(unused_imports)]
     use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
-    let node = taffy
-        .new_leaf(taffy::style::Style {
-            padding: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Length(10f32),
-                right: taffy::style::LengthPercentage::Length(10f32),
-                top: taffy::style::LengthPercentage::Length(10f32),
-                bottom: taffy::style::LengthPercentage::Length(10f32),
-            },
-            ..Default::default()
-        })
-        .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    let node = taffy.new_leaf(taffy::style::Style {
+        padding: taffy::geometry::Rect {
+            left: taffy::style::LengthPercentage::Length(10f32),
+            right: taffy::style::LengthPercentage::Length(10f32),
+            top: taffy::style::LengthPercentage::Length(10f32),
+            bottom: taffy::style::LengthPercentage::Length(10f32),
+        },
+        ..Default::default()
+    });
+    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT);
     println!("\nComputed tree:");
     taffy::util::print_tree(&taffy, node);
     println!();
-    let Layout { size, location, .. } = taffy.layout(node).unwrap();
+    let Layout { size, location, .. } = taffy.layout(node);
     assert_eq!(size.width, 20f32, "width of node {:?}. Expected {}. Actual {}", node, 20f32, size.width);
     assert_eq!(size.height, 20f32, "height of node {:?}. Expected {}. Actual {}", node, 20f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node, 0f32, location.x);
