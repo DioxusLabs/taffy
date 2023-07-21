@@ -9,21 +9,21 @@
 Infallible `Taffy` methods that have previously returned `TaffyResult` will simply return the `Ok` value only.
 This change affects the following methods:
 
-* `Taffy::add_child`,
-* `Taffy::child_count`,
-* `Taffy::children`,
-* `Taffy::compute_layout`,
-* `Taffy::dirty`,
-* `Taffy::layout`,
-* `Taffy::mark_dirty`,
-* `Taffy::new_leaf_with_measure`,
-* `Taffy::new_with_children`,
-* `Taffy::remove`,
-* `Taffy::set_children`,
-* `Taffy::set_measure`,
-* `Taffy::set_style`,
-* `Taffy::style`,
-* `Taffy::new_leaf`,
+- `Taffy::add_child`
+- `Taffy::child_count`
+- `Taffy::children`
+- `Taffy::compute_layout`
+- `Taffy::dirty`
+- `Taffy::layout`
+- `Taffy::mark_dirty`
+- `Taffy::new_leaf_with_measure`
+- `Taffy::new_with_children`
+- `Taffy::remove`
+- `Taffy::set_children`
+- `Taffy::set_measure`
+- `Taffy::set_style`
+- `Taffy::style`
+- `Taffy::new_leaf`
 
 #### Replace `Points` with `Length`
 
