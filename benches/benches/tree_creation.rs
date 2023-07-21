@@ -14,7 +14,7 @@ use yoga_helpers::yg;
 
 /// Build a random leaf node
 fn build_random_leaf(taffy: &mut Taffy) -> NodeId {
-    taffy.new_with_children(Style::DEFAULT, &[]).unwrap()
+    taffy.new_with_children(Style::DEFAULT, &[])
 }
 
 /// A tree with many children that have shallow depth
@@ -27,13 +27,13 @@ fn build_taffy_flat_hierarchy(total_node_count: u32, use_with_capacity: bool) ->
     while node_count < total_node_count {
         let sub_children_count = rng.gen_range(1..=4);
         let sub_children: Vec<NodeId> = (0..sub_children_count).map(|_| build_random_leaf(&mut taffy)).collect();
-        let node = taffy.new_with_children(Style::DEFAULT, &sub_children).unwrap();
+        let node = taffy.new_with_children(Style::DEFAULT, &sub_children);
 
         children.push(node);
         node_count += 1 + sub_children_count;
     }
 
-    let root = taffy.new_with_children(Style::DEFAULT, children.as_slice()).unwrap();
+    let root = taffy.new_with_children(Style::DEFAULT, children.as_slice());
     (taffy, root)
 }
 
