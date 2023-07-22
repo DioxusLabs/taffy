@@ -323,6 +323,7 @@ fn toggle_grid_container_display_none() {
 #[test]
 fn relayout_is_stable_with_rounding() {
     let mut taffy = Taffy::new();
+    taffy.enable_rounding();
 
     // <div style="width: 1920px; height: 1080px">
     //     <div style="width: 100%; left: 1.5px">
@@ -349,7 +350,7 @@ fn relayout_is_stable_with_rounding() {
         },
         &[wrapper]
     ).unwrap();
-    let viewport =  taffy.new_with_children(
+    let root =  taffy.new_with_children(
         Style { 
             size: Size { width: length(1920.),height: length(1080.) },
             ..Default::default()
@@ -357,9 +358,32 @@ fn relayout_is_stable_with_rounding() {
         &[outer]
     ).unwrap();
     for _ in 0..5 {
-        taffy.mark_dirty(viewport).ok();
-        taffy.compute_layout(viewport, Size::MAX_CONTENT).ok();
-        taffy::util::print_tree(&taffy, viewport);
-        println!();
+        taffy.mark_dirty(root).ok();
+        taffy.compute_layout(root, Size::MAX_CONTENT).ok();
+        taffy::util::print_tree(&taffy, root);
+
+        let root_layout = taffy.layout(root).unwrap();
+        assert_eq!(root_layout.location.x, 0.0);
+        assert_eq!(root_layout.location.y, 0.0);
+        assert_eq!(root_layout.size.width, 1920.0);
+        assert_eq!(root_layout.size.height, 1080.0);
+
+        let outer_layout = taffy.layout(outer).unwrap();
+        assert_eq!(outer_layout.location.x, 2.0);
+        assert_eq!(outer_layout.location.y, 0.0);
+        assert_eq!(outer_layout.size.width, 1920.0);
+        assert_eq!(outer_layout.size.height, 1080.0);
+
+        let wrapper_layout = taffy.layout(wrapper).unwrap();
+        assert_eq!(wrapper_layout.location.x, 0.0);
+        assert_eq!(wrapper_layout.location.y, 0.0);
+        assert_eq!(wrapper_layout.size.width, 150.0);
+        assert_eq!(wrapper_layout.size.height, 1080.0);
+
+        let inner_layout = taffy.layout(inner).unwrap();
+        assert_eq!(inner_layout.location.x, -150.0);
+        assert_eq!(inner_layout.location.y, 0.0);
+        assert_eq!(inner_layout.size.width, 301.0);
+        assert_eq!(inner_layout.size.height, 1080.0);
     }
 }
