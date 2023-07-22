@@ -333,30 +333,34 @@ fn relayout_is_stable_with_rounding() {
     //     </div>
     // </div>
 
-    let inner = taffy.new_leaf(Style { min_size: Size { width: length(300.), height: auto() }, ..Default::default() }).unwrap();
-    let wrapper = taffy.new_with_children( 
-        Style {
-            size: Size { width: length(150.), height: auto() },
-            justify_content: Some(JustifyContent::End),
-            ..Default::default()
-        }, 
-        &[inner]
-    ).unwrap();
-    let outer = taffy.new_with_children( 
-        Style {
-            size: Size { width: percent(1.), height: auto() },            
-            inset: Rect { left: length(1.5), right: auto(), top: auto(), bottom: auto() },
-            ..Default::default()
-        },
-        &[wrapper]
-    ).unwrap();
-    let root =  taffy.new_with_children(
-        Style { 
-            size: Size { width: length(1920.),height: length(1080.) },
-            ..Default::default()
-        },
-        &[outer]
-    ).unwrap();
+    let inner =
+        taffy.new_leaf(Style { min_size: Size { width: length(300.), height: auto() }, ..Default::default() }).unwrap();
+    let wrapper = taffy
+        .new_with_children(
+            Style {
+                size: Size { width: length(150.), height: auto() },
+                justify_content: Some(JustifyContent::End),
+                ..Default::default()
+            },
+            &[inner],
+        )
+        .unwrap();
+    let outer = taffy
+        .new_with_children(
+            Style {
+                size: Size { width: percent(1.), height: auto() },
+                inset: Rect { left: length(1.5), right: auto(), top: auto(), bottom: auto() },
+                ..Default::default()
+            },
+            &[wrapper],
+        )
+        .unwrap();
+    let root = taffy
+        .new_with_children(
+            Style { size: Size { width: length(1920.), height: length(1080.) }, ..Default::default() },
+            &[outer],
+        )
+        .unwrap();
     for _ in 0..5 {
         taffy.mark_dirty(root).ok();
         taffy.compute_layout(root, Size::MAX_CONTENT).ok();
