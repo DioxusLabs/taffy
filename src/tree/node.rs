@@ -70,7 +70,7 @@ pub(crate) struct NodeData {
     pub(crate) style: Style,
 
     /// The always unrounded results of the layout computation. We must store this separately from the rounded
-    /// layout to avoid errors from rounding already-rounded values
+    /// layout to avoid errors from rounding already-rounded values. See <https://github.com/DioxusLabs/taffy/issues/501>.
     pub(crate) unrounded_layout: Layout,
 
     /// The final (possibly rounded) results of the layout computation

@@ -47,7 +47,7 @@ pub struct Taffy {
 
     /// Hack to allow the `LayoutTree::layout_mut` function to expose the `NodeData.unrounded_layout` of a node to
     /// the layout algorithms during layout, while exposing the `NodeData.final_layout` when called by external users.
-    /// This allows us to fix https://github.com/DioxusLabs/taffy/issues/501 without breaking backwards compatibility
+    /// This allows us to fix <https://github.com/DioxusLabs/taffy/issues/501> without breaking backwards compatibility
     pub(crate) is_layouting: bool,
 }
 
