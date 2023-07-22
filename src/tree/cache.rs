@@ -114,13 +114,6 @@ impl Cache {
         None
     }
 
-    /// Try to retrieve a cached result from the cache
-    #[inline]
-    pub(crate) fn get_raw(&self, index: usize) -> Option<SizeBaselinesAndMargins> {
-        let Some(entry) = self.entries.get(index) else { return None };
-        entry.map(|entry| entry.cached_size_and_baselines)
-    }
-
     /// Store a computed size in the cache
     pub fn store(
         &mut self,
