@@ -44,6 +44,11 @@ pub struct Taffy {
 
     /// Layout mode configuration
     pub(crate) config: TaffyConfig,
+
+    /// Hack to allow the `LayoutTree::layout_mut` function to expose the `NodeData.unrounded_layout` of a node to
+    /// the layout algorithms during layout, while exposing the `NodeData.final_layout` when called by external users.
+    /// This allows us to fix https://github.com/DioxusLabs/taffy/issues/501 without breaking backwards compatibility
+    pub(crate) is_layouting: bool,
 }
 
 impl Default for Taffy {
@@ -82,12 +87,20 @@ impl LayoutTree for Taffy {
 
     #[inline(always)]
     fn layout(&self, node: NodeId) -> &Layout {
-        &self.nodes[node.into()].layout
+        if self.is_layouting && self.config.use_rounding {
+            &self.nodes[node.into()].unrounded_layout
+        } else {
+            &self.nodes[node.into()].final_layout
+        }
     }
 
     #[inline(always)]
     fn layout_mut(&mut self, node: NodeId) -> &mut Layout {
-        &mut self.nodes[node.into()].layout
+        if self.is_layouting && self.config.use_rounding {
+            &mut self.nodes[node.into()].unrounded_layout
+        } else {
+            &mut self.nodes[node.into()].final_layout
+        }
     }
 
     #[inline(always)]
@@ -159,6 +172,7 @@ impl Taffy {
             parents: SlotMap::with_capacity(capacity),
             measure_funcs: SparseSecondaryMap::with_capacity(capacity),
             config: TaffyConfig::default(),
+            is_layouting: false,
         }
     }
 
@@ -394,7 +408,7 @@ impl Taffy {
 
     /// Return this node layout relative to its parent
     pub fn layout(&self, node: NodeId) -> TaffyResult<&Layout> {
-        Ok(&self.nodes[node.into()].layout)
+        Ok(&self.nodes[node.into()].final_layout)
     }
 
     /// Marks the layout computation of this node and its children as outdated
