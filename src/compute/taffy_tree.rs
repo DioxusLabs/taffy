@@ -39,6 +39,8 @@ pub(crate) fn compute_layout(
     root: NodeId,
     available_space: Size<AvailableSpace>,
 ) -> Result<(), TaffyError> {
+    taffy.is_layouting = true;
+
     // Recursively compute node layout
     let size_and_baselines = perform_node_layout(
         taffy,
@@ -57,6 +59,8 @@ pub(crate) fn compute_layout(
     if taffy.config.use_rounding {
         round_layout(taffy, root, 0.0, 0.0);
     }
+
+    taffy.is_layouting = false;
 
     Ok(())
 }
@@ -137,6 +141,7 @@ fn compute_node_layout(
         debug_log_node(known_dimensions, parent_size, available_space, run_mode, sizing_mode);
         #[cfg(any(feature = "debug", feature = "profile"))]
         NODE_LOGGER.pop_node();
+
         return cached_size_and_baselines;
     }
 
@@ -273,25 +278,32 @@ fn perform_taffy_tree_hidden_layout(tree: &mut Taffy, node: NodeId) {
 }
 
 /// Rounds the calculated [`Layout`] to exact pixel values
+///
 /// In order to ensure that no gaps in the layout are introduced we:
-///   - Always round based on the absolute coordinates rather than parent-relative coordinates
+///   - Always round based on the cumulative x/y coordinates (relative to the viewport) rather than
+///     parent-relative coordinates
 ///   - Compute width/height by first rounding the top/bottom/left/right and then computing the difference
 ///     rather than rounding the width/height directly
-///
 /// See <https://github.com/facebook/yoga/commit/aa5b296ac78f7a22e1aeaf4891243c6bb76488e2> for more context
-fn round_layout(tree: &mut impl LayoutTree, node: NodeId, abs_x: f32, abs_y: f32) {
-    let layout = tree.layout_mut(node);
-    let abs_x = abs_x + layout.location.x;
-    let abs_y = abs_y + layout.location.y;
+///
+/// In order to prevent innacuracies caused by rounding already-rounded values, we read from `unrounded_layout`
+/// and write to `final_layout`.
+fn round_layout(tree: &mut Taffy, node_id: NodeId, cumulative_x: f32, cumulative_y: f32) {
+    let node = &mut tree.nodes[node_id.into()];
+    let unrounded_layout = node.unrounded_layout;
+    let layout = &mut node.final_layout;
 
-    layout.location.x = round(layout.location.x);
-    layout.location.y = round(layout.location.y);
-    layout.size.width = round(abs_x + layout.size.width) - round(abs_x);
-    layout.size.height = round(abs_y + layout.size.height) - round(abs_y);
+    let cumulative_x = cumulative_x + unrounded_layout.location.x;
+    let cumulative_y = cumulative_y + unrounded_layout.location.y;
 
-    let child_count = tree.child_count(node);
+    layout.location.x = round(unrounded_layout.location.x);
+    layout.location.y = round(unrounded_layout.location.y);
+    layout.size.width = round(cumulative_x + unrounded_layout.size.width) - round(cumulative_x);
+    layout.size.height = round(cumulative_y + unrounded_layout.size.height) - round(cumulative_y);
+
+    let child_count = tree.child_count(node_id).unwrap();
     for index in 0..child_count {
-        let child = tree.child(node, index);
-        round_layout(tree, child, abs_x, abs_y);
+        let child = tree.child(node_id, index);
+        round_layout(tree, child, cumulative_x, cumulative_y);
     }
 }

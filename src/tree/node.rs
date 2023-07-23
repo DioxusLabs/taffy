@@ -68,8 +68,14 @@ impl From<NodeId> for DefaultKey {
 pub(crate) struct NodeData {
     /// The layout strategy used by this node
     pub(crate) style: Style,
-    /// The results of the layout computation
-    pub(crate) layout: Layout,
+
+    /// The always unrounded results of the layout computation. We must store this separately from the rounded
+    /// layout to avoid errors from rounding already-rounded values. See <https://github.com/DioxusLabs/taffy/issues/501>.
+    pub(crate) unrounded_layout: Layout,
+
+    /// The final results of the layout computation.
+    /// These may be rounded or unrounded depending on what the `use_rounding` config setting is set to.
+    pub(crate) final_layout: Layout,
 
     /// Should we try and measure this node?
     pub(crate) needs_measure: bool,
@@ -82,7 +88,13 @@ impl NodeData {
     /// Create the data for a new node
     #[must_use]
     pub const fn new(style: Style) -> Self {
-        Self { style, cache: Cache::new(), layout: Layout::new(), needs_measure: false }
+        Self {
+            style,
+            cache: Cache::new(),
+            unrounded_layout: Layout::new(),
+            final_layout: Layout::new(),
+            needs_measure: false,
+        }
     }
 
     /// Marks a node and all of its parents (recursively) as dirty
