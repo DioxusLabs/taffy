@@ -73,7 +73,8 @@ pub(crate) struct NodeData {
     /// layout to avoid errors from rounding already-rounded values. See <https://github.com/DioxusLabs/taffy/issues/501>.
     pub(crate) unrounded_layout: Layout,
 
-    /// The final (possibly rounded) results of the layout computation
+    /// The final results of the layout computation.
+    /// These may be rounded or unrounded depending on what the `use_rounding` config setting is set to.
     pub(crate) final_layout: Layout,
 
     /// Should we try and measure this node?
