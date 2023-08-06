@@ -68,6 +68,7 @@ pub fn compute(
 
     // Note: both horizontal and vertical percentage padding/borders are resolved against the container's inline size (i.e. width).
     // This is not a bug, but is how CSS is specified (see: https://developer.mozilla.org/en-US/docs/Web/CSS/padding#values)
+    let margin = style.margin.resolve_or_zero(parent_size.width);
     let padding = style.padding.resolve_or_zero(parent_size.width);
     let border = style.border.resolve_or_zero(parent_size.width);
     let padding_border = padding + border;
@@ -126,13 +127,17 @@ pub fn compute(
     if let Some(measurable) = measurable {
         // Compute available space
         let available_space = Size {
-            width: available_space.width.maybe_set(node_size.width).maybe_set(node_max_size.width).map_definite_value(
-                |size| {
+            width: available_space
+                .width
+                .maybe_sub(margin.horizontal_axis_sum())
+                .maybe_set(node_size.width)
+                .maybe_set(node_max_size.width)
+                .map_definite_value(|size| {
                     size.maybe_clamp(node_min_size.width, node_max_size.width) - content_box_inset.horizontal_axis_sum()
-                },
-            ),
+                }),
             height: available_space
                 .height
+                .maybe_sub(margin.vertical_axis_sum())
                 .maybe_set(node_size.height)
                 .maybe_set(node_max_size.height)
                 .map_definite_value(|size| {
