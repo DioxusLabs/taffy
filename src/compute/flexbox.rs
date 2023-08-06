@@ -689,7 +689,7 @@ fn determine_flex_base_size(
                             .cross(dir)
                             .into_option()
                             .maybe_clamp(child_min_cross, child_max_cross)
-                            .maybe_sub(constants.margin.cross_axis_sum(dir)),
+                            .maybe_sub(child.margin.cross_axis_sum(dir)),
                     );
                 }
                 ckd
