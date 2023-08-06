@@ -278,7 +278,7 @@ fn compute_preliminary(
         constants.container_size.set_main(constants.dir, outer_main_size);
     } else {
         // Sets constants.container_size and constants.outer_container_size
-        determine_container_main_size(tree, available_space.main(constants.dir), &mut flex_lines, &mut constants);
+        determine_container_main_size(tree, available_space, &mut flex_lines, &mut constants);
         constants.node_inner_size.set_main(constants.dir, Some(constants.inner_container_size.main(constants.dir)));
         constants.node_outer_size.set_main(constants.dir, Some(constants.container_size.main(constants.dir)));
 
@@ -848,14 +848,15 @@ fn collect_flex_lines<'a>(
 /// Determine the container's main size (if not already known)
 fn determine_container_main_size(
     tree: &mut impl LayoutTree,
-    main_axis_available_space: AvailableSpace,
+    available_space: Size<AvailableSpace>,
     lines: &mut Vec<FlexLine<'_>>,
     constants: &mut AlgoConstants,
 ) {
+    let dir = constants.dir;
     let main_content_box_inset = constants.content_box_inset.main_axis_sum(constants.dir);
 
     let outer_main_size: f32 = constants.node_outer_size.main(constants.dir).unwrap_or_else(|| {
-        match main_axis_available_space {
+        match available_space.main(dir) {
             AvailableSpace::Definite(main_axis_available_space) => {
                 let longest_line_length: f32 = lines
                     .iter()
@@ -940,6 +941,20 @@ fn determine_container_main_size(
                             // Else compute the min- or -max content size and apply the full formula for computing the
                             // min- or max- content contributuon
                             _ => {
+                                // Parent size for child sizing
+                                let cross_axis_parent_size = constants.node_inner_size.cross(dir);
+
+                                // Available space for child sizing
+                                let cross_axis_margin_sum = constants.margin.cross_axis_sum(dir);
+                                let child_min_cross = item.min_size.cross(dir).maybe_add(cross_axis_margin_sum);
+                                let child_max_cross = item.max_size.cross(dir).maybe_add(cross_axis_margin_sum);
+                                let cross_axis_available_space: AvailableSpace = available_space
+                                    .cross(dir)
+                                    .map_definite_value(|val| cross_axis_parent_size.unwrap_or(val))
+                                    .maybe_clamp(child_min_cross, child_max_cross);
+
+                                let child_available_space = available_space.with_cross(dir, cross_axis_available_space);
+
                                 // Either the min- or max- content size depending on which constraint we are sizing under.
                                 // TODO: Optimise by using already computed values where available
                                 let content_main_size = tree
@@ -947,7 +962,7 @@ fn determine_container_main_size(
                                         item.node,
                                         Size::NONE,
                                         constants.node_inner_size,
-                                        Size { width: main_axis_available_space, height: main_axis_available_space },
+                                        child_available_space,
                                         SizingMode::InherentSize,
                                         Line::FALSE,
                                     )
