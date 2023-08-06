@@ -271,6 +271,8 @@ fn compute_preliminary(
 
     // If container size is undefined, determine the container's main size
     // and then re-resolve gaps based on newly determined size
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.log("determine_container_main_size");
     let original_gap = constants.gap;
     if let Some(inner_main_size) = constants.node_inner_size.main(constants.dir) {
         let outer_main_size = inner_main_size + constants.content_box_inset.main_axis_sum(constants.dir);
@@ -281,6 +283,11 @@ fn compute_preliminary(
         determine_container_main_size(tree, available_space, &mut flex_lines, &mut constants);
         constants.node_inner_size.set_main(constants.dir, Some(constants.inner_container_size.main(constants.dir)));
         constants.node_outer_size.set_main(constants.dir, Some(constants.container_size.main(constants.dir)));
+
+        #[cfg(feature = "debug")]
+        NODE_LOGGER.labelled_debug_log("constants.node_outer_size", constants.node_outer_size);
+        #[cfg(feature = "debug")]
+        NODE_LOGGER.labelled_debug_log("constants.node_inner_size", constants.node_inner_size);
 
         // Re-resolve percentage gaps
         let style = tree.style(node);
