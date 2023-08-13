@@ -17,14 +17,16 @@ fn main() -> Result<(), taffy::TaffyError> {
         &[child],
     )?;
 
+    println!("Compute layout with 100x100 viewport:");
     taffy.compute_layout(
         node,
         Size { height: AvailableSpace::Definite(100.0), width: AvailableSpace::Definite(100.0) },
     )?;
+    println!("node: {:#?}", taffy.layout(node)?);
+    println!("child: {:#?}", taffy.layout(child)?);
 
-    // or just use undefined for 100 x 100
-    // taffy.compute_layout(node, Size::NONE)?;
-
+    println!("Compute layout with undefined (infinite) viewport:");
+    taffy.compute_layout(node, Size::MAX_CONTENT)?;
     println!("node: {:#?}", taffy.layout(node)?);
     println!("child: {:#?}", taffy.layout(child)?);
 
