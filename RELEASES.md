@@ -1,5 +1,27 @@
 # Release Notes
 
+## 0.3.13
+
+### Fixes
+
+- Fix rounding accumulation bug (#521) (Fixes #501 and bevyengine/bevy#8911)
+- Flexbox: pass correct cross-axis available space when computing an item's intrinsic main size (#522)(Fixes bevyengine/bevy#9350)
+- Flexbox: Subtract child margin not parent margin when computing stretch-alignment known size
+- Grid: Make CSS Grid algorithm correctly apply max width/height and available space when it is the root node (#491)
+- Grid: Fix CSS Grid "auto track" / placement bugs #481
+  - Fix divide by zero when using grid_auto_rows/grid_auto_columns with zero negative implicit tracks
+  - Fix over counting of tracks (leading to incorrect container heights) when auto-placing in grids that contain negative implicit tracks.
+  - Fix axis conflation in auto-placement code when grid_auto_flow is column
+  - Fix assignment of auto track sizes when initializing negative implicit tracks
+- Leaf: Apply margins to leaf nodes when computing available space for measure functions
+- Leaf: Reserve space for padding/borders in nodes with measure functions (#497)
+  
+  **NOTE: This has the potential to break layouts relying on the old behaviour.** However, such layouts would be relying on a style having no effect, so it is judged that such layouts are unlikely to exist in the wild. If this turns out not to be true then this fix will be reverted on the 0.3.x branch.
+
+### Dependencies
+
+- Upgrade `grid` to `0.10`. This eliminates the transitive dependency on `no-std-compat`.
+
 ## 0.3.12
 
 ### Fixes
