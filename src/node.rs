@@ -241,6 +241,12 @@ impl Taffy {
             }
         }
 
+        if let Some(children) = self.children.get(node) {
+            for child in children.iter().copied() {
+                self.parents[child] = None;
+            }
+        }
+
         let _ = self.children.remove(node);
         let _ = self.parents.remove(node);
         let _ = self.nodes.remove(node);
