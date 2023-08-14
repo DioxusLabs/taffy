@@ -31,6 +31,15 @@ body > * {
   border-color: red;
 }
 
+.viewport {
+  display: flex;
+  align-items: start;
+  justify-content: start;
+  /* Defaults: can be overriden in individual tests */
+  width: max-content;
+  height: max-content;
+}
+
 #test-root {
   font-family: ahem;
   line-height: 1;
