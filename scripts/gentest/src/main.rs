@@ -10,6 +10,47 @@ use quote::{format_ident, quote};
 use serde_json::Value;
 use syn::Ident;
 
+macro_rules! dim_quoted_renamed {
+    ($obj:ident, $in_name:ident, $out_name:ident, $value_mapper:ident, $default:expr) => {
+        let $out_name = match $obj.get(stringify!($in_name)) {
+            Some(Value::Object(ref value)) => {
+                let dim = $value_mapper(value);
+                quote!($out_name: #dim,)
+            }
+            _ => {
+                let dim = $default;
+                quote!($out_name: #dim,)
+            }
+        };
+    };
+}
+
+macro_rules! dim_quoted {
+    ($obj:ident, $dim_name:ident, $value_mapper: ident, $default:expr) => {
+        dim_quoted_renamed!($obj, $dim_name, $dim_name, $value_mapper, $default)
+    };
+}
+
+macro_rules! edges_quoted {
+    ($style:ident, $val:ident, $value_mapper:ident, $default_value: expr) => {
+        let $val = match $style[stringify!($val)] {
+            Value::Object(ref value) => {
+                dim_quoted!(value, left, $value_mapper, $default_value);
+                dim_quoted!(value, right, $value_mapper, $default_value);
+                dim_quoted!(value, top, $value_mapper, $default_value);
+                dim_quoted!(value, bottom, $value_mapper, $default_value);
+
+                let edges = quote!(taffy::geometry::Rect {
+                    #left #right #top #bottom
+                });
+
+                quote!($val: #edges,)
+            },
+            _ => quote!(),
+        };
+    };
+}
+
 #[tokio::main]
 async fn main() {
     env_logger::init();
@@ -127,6 +168,20 @@ fn generate_test(name: impl AsRef<str>, description: &Value) -> TokenStream {
 
     let set_rounding_mode = if use_rounding { quote!() } else { quote!(taffy.disable_rounding();) };
 
+    // Compute available space
+    let viewport = &description["viewport"];
+    let available_space = if viewport["width"]["unit"] == "max-content" && viewport["height"]["unit"] == "max-content" {
+        quote!(taffy::geometry::Size::MAX_CONTENT)
+    } else {
+        dim_quoted!(viewport, width, generate_available_space, quote!(taffy::style::AvailableSpace::MAX_CONTENT));
+        dim_quoted!(viewport, height, generate_available_space, quote!(taffy::style::AvailableSpace::MAX_CONTENT));
+        quote!(
+            taffy::geometry::Size {
+                #width #height
+            }
+        )
+    };
+
     quote!(
         #[test]
         fn #name() {
@@ -136,7 +191,7 @@ fn generate_test(name: impl AsRef<str>, description: &Value) -> TokenStream {
             let mut taffy = taffy::Taffy::new();
             #set_rounding_mode
             #node_description
-            taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+            taffy.compute_layout(node, #available_space).unwrap();
 
             println!("\nComputed tree:");
             taffy::debug::print_tree(&taffy, node);
@@ -189,47 +244,6 @@ fn generate_assertions(ident: &str, node: &Value, use_rounding: bool) -> TokenSt
             #children
         )
     }
-}
-
-macro_rules! dim_quoted_renamed {
-    ($obj:ident, $in_name:ident, $out_name:ident, $value_mapper:ident, $default:expr) => {
-        let $out_name = match $obj.get(stringify!($in_name)) {
-            Some(Value::Object(ref value)) => {
-                let dim = $value_mapper(value);
-                quote!($out_name: #dim,)
-            }
-            _ => {
-                let dim = $default;
-                quote!($out_name: #dim,)
-            }
-        };
-    };
-}
-
-macro_rules! dim_quoted {
-    ($obj:ident, $dim_name:ident, $value_mapper: ident, $default:expr) => {
-        dim_quoted_renamed!($obj, $dim_name, $dim_name, $value_mapper, $default)
-    };
-}
-
-macro_rules! edges_quoted {
-    ($style:ident, $val:ident, $value_mapper:ident, $default_value: expr) => {
-        let $val = match $style[stringify!($val)] {
-            Value::Object(ref value) => {
-                dim_quoted!(value, left, $value_mapper, $default_value);
-                dim_quoted!(value, right, $value_mapper, $default_value);
-                dim_quoted!(value, top, $value_mapper, $default_value);
-                dim_quoted!(value, bottom, $value_mapper, $default_value);
-
-                let edges = quote!(taffy::geometry::Rect {
-                    #left #right #top #bottom
-                });
-
-                quote!($val: #edges,)
-            },
-            _ => quote!(),
-        };
-    };
 }
 
 fn generate_node(ident: &str, node: &Value) -> TokenStream {
@@ -653,6 +667,24 @@ fn generate_dimension(dimen: &serde_json::Map<String, Value>) -> TokenStream {
             "percent" => {
                 let value = value();
                 quote!(taffy::style::Dimension::Percent(#value))
+            }
+            _ => unreachable!(),
+        },
+        _ => unreachable!(),
+    }
+}
+
+fn generate_available_space(dimen: &serde_json::Map<String, Value>) -> TokenStream {
+    let unit = dimen.get("unit").unwrap();
+    let value = || dimen.get("value").unwrap().as_f64().unwrap() as f32;
+
+    match unit {
+        Value::String(ref unit) => match unit.as_ref() {
+            "max-content" => quote!(taffy::style::AvailableSpace::MaxContent),
+            "min-content" => quote!(taffy::style::AvailableSpace::MaxContent),
+            "points" => {
+                let value = value();
+                quote!(taffy::style::AvailableSpace::Definite(#value))
             }
             _ => unreachable!(),
         },

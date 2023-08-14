@@ -149,14 +149,10 @@ pub fn compute(
 
     let constrained_available_space = known_dimensions
         .or(size)
-        .maybe_clamp(min_size, max_size)
         .map(|size| size.map(AvailableSpace::Definite))
-        .unwrap_or(available_space.map(|space| match space {
-            // Available grid space should not depend on Definite available space as a grid is allowed
-            // to expand beyond it's available space
-            AvailableSpace::Definite(_) => AvailableSpace::MaxContent,
-            _ => space,
-        }));
+        .unwrap_or(available_space)
+        .maybe_clamp(min_size, max_size)
+        .maybe_max(padding_border_size);
 
     let available_grid_space = Size {
         width: constrained_available_space
@@ -167,7 +163,7 @@ pub fn compute(
             .map_definite_value(|space| space - padding.vertical_axis_sum() - border.vertical_axis_sum()),
     };
 
-    let outer_node_size = known_dimensions.or(size.maybe_clamp(min_size, max_size).or(min_size));
+    let outer_node_size = known_dimensions.or(size).maybe_clamp(min_size, max_size).maybe_max(padding_border_size);
     let mut inner_node_size = Size {
         width: outer_node_size.width.map(|space| space - padding.horizontal_axis_sum() - border.horizontal_axis_sum()),
         height: outer_node_size.height.map(|space| space - padding.vertical_axis_sum() - border.vertical_axis_sum()),
@@ -232,16 +228,23 @@ pub fn compute(
     let initial_row_sum = rows.iter().map(|track| track.base_size).sum::<f32>();
     inner_node_size.height = inner_node_size.height.or_else(|| initial_row_sum.into());
 
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.labelled_debug_log("initial_column_sum", initial_column_sum);
+    #[cfg(feature = "debug")]
+    NODE_LOGGER.labelled_debug_log("initial_row_sum", initial_row_sum);
+
     // 6. Compute container size
     let resolved_style_size = known_dimensions.or(style.size.maybe_resolve(parent_size));
     let container_border_box = Size {
         width: resolved_style_size
             .get(AbstractAxis::Inline)
             .unwrap_or_else(|| initial_column_sum + padding.horizontal_axis_sum() + border.horizontal_axis_sum())
+            .maybe_clamp(min_size.width, max_size.width)
             .max(padding_border_size.width),
         height: resolved_style_size
             .get(AbstractAxis::Block)
             .unwrap_or_else(|| initial_row_sum + padding.vertical_axis_sum() + border.vertical_axis_sum())
+            .maybe_clamp(min_size.height, max_size.height)
             .max(padding_border_size.height),
     };
     let container_content_box = Size {

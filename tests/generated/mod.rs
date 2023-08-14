@@ -467,6 +467,12 @@ mod grid_auto_single_item_fixed_width_with_definite_width;
 #[cfg(feature = "grid")]
 mod grid_auto_takes_precedence_over_fr;
 #[cfg(feature = "grid")]
+mod grid_available_space_greater_than_max_content;
+#[cfg(feature = "grid")]
+mod grid_available_space_smaller_than_max_content;
+#[cfg(feature = "grid")]
+mod grid_available_space_smaller_than_min_content;
+#[cfg(feature = "grid")]
 mod grid_basic;
 #[cfg(feature = "grid")]
 mod grid_basic_implicit_tracks;
@@ -590,6 +596,14 @@ mod grid_max_content_single_item_span_2_gap_fixed;
 mod grid_max_content_single_item_span_2_gap_percent_definite;
 #[cfg(feature = "grid")]
 mod grid_max_content_single_item_span_2_gap_percent_indefinite;
+#[cfg(feature = "grid")]
+mod grid_max_width_greater_than_max_content;
+#[cfg(feature = "grid")]
+mod grid_max_width_less_than_max_content_with_min_content;
+#[cfg(feature = "grid")]
+mod grid_max_width_smaller_than_max_content;
+#[cfg(feature = "grid")]
+mod grid_max_width_smaller_than_min_content;
 #[cfg(feature = "grid")]
 mod grid_min_content_flex_column;
 #[cfg(feature = "grid")]
