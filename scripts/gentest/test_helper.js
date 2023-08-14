@@ -90,6 +90,20 @@ class TrackSizingParser {
 
 }
 
+function parseViewportConstraint(e) {
+  if (e.parentNode.classList.contains('viewport')) {
+    return {
+      width: parseDimension(e.parentNode.style.width || 'max-content'),
+      height: parseDimension(e.parentNode.style.height || 'max-content'),
+    }
+  } else {
+    return {
+      width: { unit: 'max-content' },
+      height: { unit: 'max-content' },
+    }
+  }
+}
+
 function parseRepetition(input) {
   if (input === "auto-fill") return { unit: 'auto-fill' };
   if (input === "auto-fit") return { unit: 'auto-fit' };
@@ -293,6 +307,8 @@ function describeElement(e) {
 
     // Whether the test should enable rounding
     useRounding: e.getAttribute("data-test-rounding") !== "false",
+
+    viewport: parseViewportConstraint(e),
 
     children: Array.from(e.children).map(c => describeElement(c)),
   };
