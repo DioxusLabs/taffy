@@ -21,11 +21,11 @@ fn block_margin_y_collapse_through_with_absolute_child() {
             taffy::style::Style { position: taffy::style::Position::Absolute, ..Default::default() },
             taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HH";
-                crate::generated::measure_standard_text(
+                crate::measure_standard_text(
                     known_dimensions,
                     available_space,
                     TEXT,
-                    crate::generated::WritingMode::Horizontal,
+                    crate::WritingMode::Horizontal,
                     None,
                 )
             }),
