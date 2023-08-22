@@ -8,11 +8,11 @@ fn bevy_issue_9530_reduced2() {
             taffy::style::Style { flex_grow: 1f32, ..Default::default() },
             taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH";
-                crate::generated::measure_standard_text(
+                crate::measure_standard_text(
                     known_dimensions,
                     available_space,
                     TEXT,
-                    crate::generated::WritingMode::Horizontal,
+                    crate::WritingMode::Horizontal,
                     None,
                 )
             }),

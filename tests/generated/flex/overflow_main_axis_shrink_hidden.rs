@@ -16,11 +16,11 @@ fn overflow_main_axis_shrink_hidden() {
             },
             taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HHHHHHHHHH";
-                crate::generated::measure_standard_text(
+                crate::measure_standard_text(
                     known_dimensions,
                     available_space,
                     TEXT,
-                    crate::generated::WritingMode::Horizontal,
+                    crate::WritingMode::Horizontal,
                     None,
                 )
             }),

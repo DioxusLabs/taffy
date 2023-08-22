@@ -8,11 +8,11 @@ fn grid_max_width_smaller_than_min_content() {
             taffy::style::Style { ..Default::default() },
             taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HHHH\u{200b}HHHH";
-                crate::generated::measure_standard_text(
+                crate::measure_standard_text(
                     known_dimensions,
                     available_space,
                     TEXT,
-                    crate::generated::WritingMode::Horizontal,
+                    crate::WritingMode::Horizontal,
                     None,
                 )
             }),
@@ -23,11 +23,11 @@ fn grid_max_width_smaller_than_min_content() {
             taffy::style::Style { ..Default::default() },
             taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HHHH\u{200b}HHHH";
-                crate::generated::measure_standard_text(
+                crate::measure_standard_text(
                     known_dimensions,
                     available_space,
                     TEXT,
-                    crate::generated::WritingMode::Horizontal,
+                    crate::WritingMode::Horizontal,
                     None,
                 )
             }),

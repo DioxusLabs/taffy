@@ -19,11 +19,11 @@ fn leaf_overflow_scrollbars_affect_available_space_y_axis() {
             },
             taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "H\u{a0}H\u{a0}H\u{a0}H\u{a0}H\u{a0}H\u{a0}H\u{a0}H\u{a0}H\u{a0}H\u{a0}H";
-                crate::generated::measure_standard_text(
+                crate::measure_standard_text(
                     known_dimensions,
                     available_space,
                     TEXT,
-                    crate::generated::WritingMode::Horizontal,
+                    crate::WritingMode::Horizontal,
                     None,
                 )
             }),

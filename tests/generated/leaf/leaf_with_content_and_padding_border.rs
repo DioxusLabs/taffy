@@ -22,11 +22,11 @@ fn leaf_with_content_and_padding_border() {
             },
             taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HHHH";
-                crate::generated::measure_standard_text(
+                crate::measure_standard_text(
                     known_dimensions,
                     available_space,
                     TEXT,
-                    crate::generated::WritingMode::Horizontal,
+                    crate::WritingMode::Horizontal,
                     None,
                 )
             }),

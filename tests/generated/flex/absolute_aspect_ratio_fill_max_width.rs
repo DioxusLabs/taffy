@@ -3,7 +3,7 @@ fn absolute_aspect_ratio_fill_max_width() {
     #[allow(unused_imports)]
     use taffy::{prelude::*, tree::Layout};
     let mut taffy = taffy::Taffy::new();
-    let node0 = taffy . new_leaf_with_measure (taffy :: style :: Style { position : taffy :: style :: Position :: Absolute , max_size : taffy :: geometry :: Size { width : auto () , height : taffy :: style :: Dimension :: Length (50f32) , } , aspect_ratio : Some (0.5f32) , .. Default :: default () } , taffy :: tree :: MeasureFunc :: Raw (| known_dimensions , available_space | { const TEXT : & str = "HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH" ; crate :: generated :: measure_standard_text (known_dimensions , available_space , TEXT , crate :: generated :: WritingMode :: Horizontal , Some (0.5f32)) }) ,) . unwrap () ;
+    let node0 = taffy . new_leaf_with_measure (taffy :: style :: Style { position : taffy :: style :: Position :: Absolute , max_size : taffy :: geometry :: Size { width : auto () , height : taffy :: style :: Dimension :: Length (50f32) , } , aspect_ratio : Some (0.5f32) , .. Default :: default () } , taffy :: tree :: MeasureFunc :: Raw (| known_dimensions , available_space | { const TEXT : & str = "HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH" ; crate :: measure_standard_text (known_dimensions , available_space , TEXT , crate :: WritingMode :: Horizontal , Some (0.5f32)) }) ,) . unwrap () ;
     let node = taffy
         .new_with_children(
             taffy::style::Style {

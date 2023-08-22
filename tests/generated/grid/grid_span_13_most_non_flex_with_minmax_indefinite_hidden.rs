@@ -16,11 +16,11 @@ fn grid_span_13_most_non_flex_with_minmax_indefinite_hidden() {
             },
             taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
                 const TEXT: &str = "HHHHHHHHHHHHHHHH\u{200b}HHHHHHHHHHHHHHHH";
-                crate::generated::measure_standard_text(
+                crate::measure_standard_text(
                     known_dimensions,
                     available_space,
                     TEXT,
-                    crate::generated::WritingMode::Horizontal,
+                    crate::WritingMode::Horizontal,
                     None,
                 )
             }),
