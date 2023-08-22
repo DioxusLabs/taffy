@@ -4,6 +4,7 @@ use std::{
 };
 
 use regex::{Captures, Regex};
+use walkdir::WalkDir;
 
 fn main() {
     let fixtures_root = std::env::var("FIXTURE_DIR").map(PathBuf::from).unwrap_or_else(|_| {
@@ -11,15 +12,14 @@ fn main() {
         let repo_root = root_dir.parent().and_then(Path::parent).unwrap();
         repo_root.join("test_fixtures")
     });
-    let fixtures = fs::read_dir(fixtures_root).unwrap();
 
     println!("reading test fixtures from disk");
-    let fixtures: Vec<_> = fixtures
+    let fixtures: Vec<_> = WalkDir::new(fixtures_root)
         .into_iter()
         .filter_map(|a| a.ok())
         .filter(|f| f.path().is_file() && f.path().extension().map(|p| p == "html").unwrap_or(false))
         .map(|f| {
-            let fixture_path = f.path();
+            let fixture_path = f.path().to_path_buf();
             let name = fixture_path.file_stem().unwrap().to_str().unwrap().to_string();
             (name, fixture_path)
         })

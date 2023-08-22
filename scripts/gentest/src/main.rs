@@ -1,4 +1,5 @@
-use std::fs;
+use std::fs::{self, OpenOptions};
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -9,6 +10,7 @@ use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote};
 use serde_json::Value;
 use syn::Ident;
+use walkdir::WalkDir;
 
 macro_rules! dim_quoted_renamed {
     ($obj:ident, $in_name:ident, $out_name:ident, $value_mapper:ident, $default:expr) => {
@@ -58,16 +60,15 @@ async fn main() {
     let repo_root = root_dir.parent().and_then(Path::parent).unwrap();
 
     let fixtures_root = repo_root.join("test_fixtures");
-    let fixtures = fs::read_dir(fixtures_root).unwrap();
 
     info!("reading test fixtures from disk");
-    let mut fixtures: Vec<_> = fixtures
+    let mut fixtures: Vec<_> = WalkDir::new(fixtures_root.clone())
         .into_iter()
         .filter_map(|a| a.ok())
         .filter(|f| !f.file_name().to_string_lossy().starts_with('x')) // ignore tests beginning with x
         .filter(|f| f.path().is_file() && f.path().extension().map(|p| p == "html").unwrap_or(false))
         .map(|f| {
-            let fixture_path = f.path();
+            let fixture_path = f.path().to_path_buf();
             let name = fixture_path.file_stem().unwrap().to_str().unwrap().to_string();
             (name, fixture_path)
         })
@@ -94,8 +95,8 @@ async fn main() {
     asserts_non_zero_width_scrollbars(client.clone()).await;
 
     let mut test_descs = vec![];
-    for (name, fixture_path) in fixtures {
-        test_descs.push(test_root_element(client.clone(), name, fixture_path).await);
+    for (name, fixture_path) in fixtures.iter() {
+        test_descs.push(test_root_element(client.clone(), name.clone(), fixture_path).await);
     }
 
     info!("killing webdriver instance...");
@@ -105,41 +106,51 @@ async fn main() {
 
     let test_descs: Vec<_> = test_descs
         .iter()
-        .map(|(name, description)| {
+        .map(|(name, fixture_path, description)| {
             debug!("generating test contents for {}", &name);
-            (name.clone(), generate_test(name, description))
+            (name.clone(), fixture_path, generate_test(name, description))
         })
         .collect();
-
-    let mod_statemnts = test_descs
-        .iter()
-        .map(|(name, _)| {
-            let name_ident = Ident::new(name, Span::call_site());
-            if name.starts_with("grid") {
-                quote!(#[cfg(feature = "grid")] mod #name_ident;)
-            } else {
-                quote!(mod #name_ident;)
-            }
-        })
-        .fold(quote!(), |a, b| quote!(#a #b));
-    let generic_measure_function = generate_generic_measure_function();
-
-    let test_mod_file = quote!(
-        #generic_measure_function
-        #mod_statemnts
-    );
 
     info!("writing generated test file to disk...");
     let tests_base_path = repo_root.join("tests").join("generated");
     fs::remove_dir_all(&tests_base_path).unwrap();
     fs::create_dir(&tests_base_path).unwrap();
-    for (name, test_body) in test_descs {
-        let mut test_filename = tests_base_path.join(&name);
+
+    // Open base mod.rs file for appending
+    let mut base_mod_file = OpenOptions::new().create(true).append(true).open(tests_base_path.join("mod.rs")).unwrap();
+
+    for (name, fixture_path, test_body) in test_descs {
+        // Create test directory if it doesn't exist
+        let test_path_stripped = fixture_path.parent().unwrap().strip_prefix(&fixtures_root).unwrap();
+        let test_path = tests_base_path.join(test_path_stripped);
+        if !test_path.exists() {
+            fs::create_dir(&test_path).unwrap();
+
+            let ident = Ident::new(test_path_stripped.to_str().unwrap(), Span::call_site());
+            let token = quote!(mod #ident;);
+            writeln!(&mut base_mod_file, "{}", token).unwrap();
+        }
+        // Open mod file in current folder
+        let mod_path = test_path.join("mod.rs");
+        let mut mod_file = OpenOptions::new().create(true).append(true).open(mod_path).unwrap();
+
+        let name_ident = Ident::new(&name, Span::call_site());
+        let token = if name.starts_with("grid") {
+            quote!(#[cfg(feature = "grid")] mod #name_ident;)
+        } else {
+            quote!(mod #name_ident;)
+        };
+        writeln!(&mut mod_file, "{}", token).unwrap();
+        let mut test_filename = test_path.join(&name);
         test_filename.set_extension("rs");
         debug!("writing {} to disk...", &name);
         fs::write(test_filename, test_body.to_string()).unwrap();
     }
-    fs::write(tests_base_path.join("mod.rs"), test_mod_file.to_string()).unwrap();
+
+    let generic_measure_function = generate_generic_measure_function();
+    let generic_measure_token = quote!(#generic_measure_function);
+    writeln!(&mut base_mod_file, "{}", generic_measure_token).unwrap();
 
     info!("formatting the source directory");
     Command::new("cargo").arg("fmt").current_dir(repo_root).status().unwrap();
@@ -166,7 +177,7 @@ async fn asserts_non_zero_width_scrollbars(client: Client) {
     }
 }
 
-async fn test_root_element(client: Client, name: String, fixture_path: impl AsRef<Path>) -> (String, Value) {
+async fn test_root_element(client: Client, name: String, fixture_path: impl AsRef<Path>) -> (String, PathBuf, Value) {
     let fixture_path = fixture_path.as_ref();
 
     let url = format!("file://{}", fixture_path.display());
@@ -178,7 +189,7 @@ async fn test_root_element(client: Client, name: String, fixture_path: impl AsRe
         .unwrap();
     let description_string = description.as_str().unwrap();
     let description = serde_json::from_str(description_string).unwrap();
-    (name, description)
+    (name.to_string(), fixture_path.to_path_buf(), description)
 }
 
 fn generate_test(name: impl AsRef<str>, description: &Value) -> TokenStream {
@@ -937,8 +948,8 @@ fn generate_generic_measure_function() -> TokenStream {
 
 fn generate_measure_function(text_content: &str, writing_mode: Option<&str>, aspect_ratio: Option<f32>) -> TokenStream {
     let writing_mode_token = match writing_mode {
-        Some("vertical-rl" | "vertical-lr") => quote!(super::WritingMode::Vertical),
-        _ => quote!(super::WritingMode::Horizontal),
+        Some("vertical-rl" | "vertical-lr") => quote!(crate::generated::WritingMode::Vertical),
+        _ => quote!(crate::generated::WritingMode::Horizontal),
     };
 
     let aspect_ratio_token = match aspect_ratio {
@@ -949,7 +960,7 @@ fn generate_measure_function(text_content: &str, writing_mode: Option<&str>, asp
     quote!(
         taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
             const TEXT : &str = #text_content;
-            super::measure_standard_text(known_dimensions, available_space, TEXT, #writing_mode_token, #aspect_ratio_token)
+            crate::generated::measure_standard_text(known_dimensions, available_space, TEXT, #writing_mode_token, #aspect_ratio_token)
         })
     )
 }

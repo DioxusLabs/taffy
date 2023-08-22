@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    Test description
+  </title>
+</head>
+<body>
+
+<!-- this test has an extra node compared to the yoga version because yoga's gentest script wraps places the test
+  snippet within an extra root node. Whereas Taffy's script make the root of the snippet the test root -->
+<div id="test-root">
+  <div style="height: 100px; max-height: 80px; margin-top: 100px; justify-content: center; flex-direction: column;">
+    <div style="height: 20px; width: 20px;"></div>
+  </div>
+</div>
+
+</body>
+</html>
