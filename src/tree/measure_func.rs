@@ -13,7 +13,7 @@ use crate::util::sys::Box;
 pub trait Measurable {
     /// A user-defined context which is passed to taffy when the `compute_layout` function is called, and which Taffy then passes
     /// into measure functions when it calls them
-    type Context;
+    type Context: ?Sized;
 
     /// Measure node
     fn measure(
@@ -26,7 +26,7 @@ pub trait Measurable {
 
 /// A function that can be used to compute the intrinsic size of a node
 #[allow(clippy::type_complexity)]
-pub enum MeasureFunc<Context = ()> {
+pub enum MeasureFunc<Context: ?Sized = ()> {
     /// Stores an unboxed function
     Raw(fn(Size<Option<f32>>, Size<AvailableSpace>, &mut Context) -> Size<f32>),
 
@@ -37,7 +37,7 @@ pub enum MeasureFunc<Context = ()> {
 
 /// A function that can be used to compute the intrinsic size of a node
 #[allow(clippy::type_complexity)]
-pub enum SyncMeasureFunc<Context = ()> {
+pub enum SyncMeasureFunc<Context: ?Sized = ()> {
     /// Stores an unboxed function
     Raw(fn(Size<Option<f32>>, Size<AvailableSpace>, &mut Context) -> Size<f32>),
 
@@ -47,7 +47,7 @@ pub enum SyncMeasureFunc<Context = ()> {
 }
 
 #[cfg(any(feature = "std", feature = "alloc"))]
-impl<Context> MeasureFunc<Context> {
+impl<Context: ?Sized> MeasureFunc<Context> {
     /// Constructor for the Boxed variant that takes a plain closure and handles the actual boxing
     pub fn boxed(
         measure: impl FnMut(Size<Option<f32>>, Size<AvailableSpace>, &mut Context) -> Size<f32> + 'static,
@@ -71,7 +71,7 @@ impl Measurable for () {
     }
 }
 
-impl<Context> Measurable for MeasureFunc<Context> {
+impl<Context: ?Sized> Measurable for MeasureFunc<Context> {
     type Context = Context;
 
     /// Call the measure function to measure the node
@@ -91,7 +91,7 @@ impl<Context> Measurable for MeasureFunc<Context> {
 }
 
 #[cfg(any(feature = "std", feature = "alloc"))]
-impl<Context> SyncMeasureFunc<Context> {
+impl<Context: ?Sized> SyncMeasureFunc<Context> {
     /// Constructor for the Boxed variant that takes a plain closure and handles the actual boxing
     pub fn boxed(
         measure: impl FnMut(Size<Option<f32>>, Size<AvailableSpace>, &mut Context) -> Size<f32> + Send + Sync + 'static,

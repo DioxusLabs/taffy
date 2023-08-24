@@ -68,13 +68,12 @@ impl<'a> Iterator for TaffyChildIter<'a> {
 /// View over the Taffy tree that holds the tree itself along with a reference to the context
 /// and implements LayoutTree. This allows the context to be stored outside of the Taffy struct
 /// which makes the lifetimes of the context much more flexible.
-pub struct TaffyView<'t, Measure: Measurable> {
+pub struct TaffyView<'t, 'c, Measure: Measurable> {
     pub(crate) taffy: &'t mut Taffy<Measure>,
-    pub(crate) context: Measure::Context,
+    pub(crate) context: &'c mut Measure::Context,
 }
 
-
-impl<'t, Measure: Measurable> LayoutTree for TaffyView<'t, Measure> {
+impl<'t, 'c, Measure: Measurable> LayoutTree for TaffyView<'t, 'c, Measure> {
     type ChildIter<'a> = TaffyChildIter<'a> where Measure: 'a, Self: 'a;
 
     #[inline(always)]
@@ -452,7 +451,7 @@ impl<Measure: Measurable> Taffy<Measure> {
         &mut self,
         node: NodeId,
         available_space: Size<AvailableSpace>,
-        context: Measure::Context,
+        context: &mut Measure::Context,
     ) -> Result<(), TaffyError> {
         let mut taffy_view = TaffyView { taffy: self, context };
         compute_layout(&mut taffy_view, node, available_space)
@@ -465,7 +464,7 @@ where
 {
     /// Updates the stored layout of the provided `node` and its children
     pub fn compute_layout(&mut self, node: NodeId, available_space: Size<AvailableSpace>) -> Result<(), TaffyError> {
-        self.compute_layout_with_context(node, available_space, Default::default())
+        self.compute_layout_with_context(node, available_space, &mut Default::default())
     }
 }
 
@@ -890,5 +889,21 @@ mod tests {
         let layout = taffy.layout(node).unwrap();
         assert_eq!(layout.location.x, 10f32);
         assert_eq!(layout.location.y, 30f32);
+    }
+
+    #[test]
+    fn ensure_context_lifetime_can_be_shorter_than_tree_lifetime() {
+        use taffy::prelude::{Size, Style};
+        use taffy::tree::MeasureFunc;
+        use taffy::Taffy;
+
+        struct TaffyState {
+            taffy: Taffy<MeasureFunc<str>>,
+        }
+
+        let mut str = "hello".to_string();
+        let mut state = TaffyState { taffy: Taffy::new() };
+        let node = state.taffy.new_with_children(Style { ..Style::default() }, &[]).unwrap();
+        state.taffy.compute_layout_with_context(node, Size::length(100.0), &mut str).unwrap();
     }
 }
