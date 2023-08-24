@@ -231,7 +231,7 @@ fn compute_node_layout<Measure: Measurable>(
                 parent_size,
                 available_space,
                 sizing_mode,
-                &mut taffy_view.context,
+                taffy_view.context,
             ),
             RunMode::ComputeSize => leaf::measure_size(
                 &taffy_view.taffy.nodes[node_key].style,
@@ -240,7 +240,7 @@ fn compute_node_layout<Measure: Measurable>(
                 parent_size,
                 available_space,
                 sizing_mode,
-                &mut taffy_view.context,
+                taffy_view.context,
             )
             .into(),
         },

@@ -69,7 +69,9 @@ impl<'a> Iterator for TaffyChildIter<'a> {
 /// and implements LayoutTree. This allows the context to be stored outside of the Taffy struct
 /// which makes the lifetimes of the context much more flexible.
 pub struct TaffyView<'t, 'c, Measure: Measurable> {
+    /// A reference to the Taffy tree
     pub(crate) taffy: &'t mut Taffy<Measure>,
+    /// The context provided for passing to measure functions if layout is run over this struct
     pub(crate) context: &'c mut Measure::Context,
 }
 
