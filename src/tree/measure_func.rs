@@ -56,6 +56,21 @@ impl<Context> MeasureFunc<Context> {
     }
 }
 
+impl Measurable for () {
+    type Context = ();
+
+    /// Call the measure function to measure the node
+    #[inline(always)]
+    fn measure(
+        &mut self,
+        _known_dimensions: Size<Option<f32>>,
+        _available_space: Size<AvailableSpace>,
+        _context: &mut (),
+    ) -> Size<f32> {
+        Size::ZERO
+    }
+}
+
 impl<Context> Measurable for MeasureFunc<Context> {
     type Context = Context;
 

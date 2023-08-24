@@ -110,12 +110,12 @@ mod tests {
     use super::perform_hidden_layout;
     use crate::geometry::{Point, Size};
     use crate::style::{Display, Style};
-    use crate::tree::MeasureFunc;
+    use crate::tree::TaffyView;
     use crate::Taffy;
 
     #[test]
     fn hidden_layout_should_hide_recursively() {
-        let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
+        let mut taffy: Taffy<()> = Taffy::new();
 
         let style: Style = Style { display: Display::Flex, size: Size::from_lengths(50.0, 50.0), ..Default::default() };
 
@@ -133,7 +133,7 @@ mod tests {
             )
             .unwrap();
 
-        perform_hidden_layout(&mut taffy, root.into());
+        perform_hidden_layout(&mut TaffyView { taffy: &mut taffy, context: () }, root.into());
 
         // Whatever size and display-mode the nodes had previously,
         // all layouts should resolve to ZERO due to the root's DISPLAY::NONE

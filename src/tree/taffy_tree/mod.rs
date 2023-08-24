@@ -4,4 +4,4 @@ mod error;
 mod tree;
 
 pub use error::{TaffyError, TaffyResult};
-pub use tree::{Taffy, TaffyChildIter};
+pub use tree::{Taffy, TaffyChildIter, TaffyView};

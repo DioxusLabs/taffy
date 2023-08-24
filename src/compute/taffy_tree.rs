@@ -4,7 +4,7 @@ use crate::compute::{leaf, LayoutAlgorithm};
 use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, Display};
 use crate::tree::{
-    Layout, LayoutTree, Measurable, NodeId, RunMode, SizeBaselinesAndMargins, SizingMode, Taffy, TaffyError,
+    Layout, LayoutTree, Measurable, NodeId, RunMode, SizeBaselinesAndMargins, SizingMode, Taffy, TaffyError, TaffyView,
 };
 use crate::util::sys::round;
 
@@ -37,15 +37,13 @@ fn debug_log_node(
 
 /// Updates the stored layout of the provided `node` and its children
 pub(crate) fn compute_layout<Measure: Measurable>(
-    taffy: &mut Taffy<Measure>,
+    taffy_view: &mut TaffyView<Measure>,
     root: NodeId,
     available_space: Size<AvailableSpace>,
 ) -> Result<(), TaffyError> {
-    taffy.is_layouting = true;
-
     // Recursively compute node layout
     let size_and_baselines = perform_node_layout(
-        taffy,
+        taffy_view,
         root,
         Size::NONE,
         available_space.into_options(),
@@ -55,21 +53,19 @@ pub(crate) fn compute_layout<Measure: Measurable>(
     );
 
     let layout = Layout { order: 0, size: size_and_baselines.size, location: Point::ZERO };
-    *taffy.layout_mut(root) = layout;
+    *taffy_view.layout_mut(root) = layout;
 
     // If rounding is enabled, recursively round the layout's of this node and all children
-    if taffy.config.use_rounding {
-        round_layout(taffy, root, 0.0, 0.0);
+    if taffy_view.taffy.config.use_rounding {
+        round_layout(taffy_view.taffy, root, 0.0, 0.0);
     }
-
-    taffy.is_layouting = false;
 
     Ok(())
 }
 
 /// Perform full layout on a node. Chooses which algorithm to use based on the `display` property.
 pub(crate) fn perform_node_layout<Measure: Measurable>(
-    tree: &mut Taffy<Measure>,
+    taffy_view: &mut TaffyView<Measure>,
     node: NodeId,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
@@ -78,7 +74,7 @@ pub(crate) fn perform_node_layout<Measure: Measurable>(
     vertical_margins_are_collapsible: Line<bool>,
 ) -> SizeBaselinesAndMargins {
     compute_node_layout(
-        tree,
+        taffy_view,
         node,
         known_dimensions,
         parent_size,
@@ -91,7 +87,7 @@ pub(crate) fn perform_node_layout<Measure: Measurable>(
 
 /// Measure a node's size. Chooses which algorithm to use based on the `display` property.
 pub(crate) fn measure_node_size<Measure: Measurable>(
-    tree: &mut Taffy<Measure>,
+    taffy_view: &mut TaffyView<Measure>,
     node: NodeId,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
@@ -100,7 +96,7 @@ pub(crate) fn measure_node_size<Measure: Measurable>(
     vertical_margins_are_collapsible: Line<bool>,
 ) -> Size<f32> {
     compute_node_layout(
-        tree,
+        taffy_view,
         node,
         known_dimensions,
         parent_size,
@@ -115,7 +111,7 @@ pub(crate) fn measure_node_size<Measure: Measurable>(
 /// Updates the stored layout of the provided `node` and its children
 #[allow(clippy::too_many_arguments)]
 fn compute_node_layout<Measure: Measurable>(
-    tree: &mut Taffy<Measure>,
+    taffy_view: &mut TaffyView<Measure>,
     node: NodeId,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
@@ -130,12 +126,12 @@ fn compute_node_layout<Measure: Measurable>(
     println!();
 
     let node_key = node.into();
-    let has_children = !tree.children[node_key].is_empty();
+    let has_children = !taffy_view.taffy.children[node_key].is_empty();
 
     // First we check if we have a cached result for the given input
     let cache_run_mode = if !has_children { RunMode::PerformLayout } else { run_mode };
     if let Some(cached_size_and_baselines) =
-        tree.nodes[node_key].cache.get(known_dimensions, available_space, cache_run_mode)
+        taffy_view.taffy.nodes[node_key].cache.get(known_dimensions, available_space, cache_run_mode)
     {
         #[cfg(feature = "debug")]
         NODE_LOGGER.labelled_debug_log("CACHE", cached_size_and_baselines.size);
@@ -188,15 +184,15 @@ fn compute_node_layout<Measure: Measurable>(
         }
     }
 
-    let display_mode = tree.nodes[node_key].style.display;
+    let display_mode = taffy_view.taffy.nodes[node_key].style.display;
     let computed_size_and_baselines = match (display_mode, has_children) {
         (Display::None, _) => {
-            perform_taffy_tree_hidden_layout(tree, node);
+            perform_taffy_tree_hidden_layout(taffy_view.taffy, node);
             SizeBaselinesAndMargins::HIDDEN
         }
         #[cfg(feature = "block_layout")]
         (Display::Block, true) => perform_computations::<BlockAlgorithm>(
-            tree,
+            taffy_view,
             node,
             known_dimensions,
             parent_size,
@@ -207,7 +203,7 @@ fn compute_node_layout<Measure: Measurable>(
         ),
         #[cfg(feature = "flexbox")]
         (Display::Flex, true) => perform_computations::<FlexboxAlgorithm>(
-            tree,
+            taffy_view,
             node,
             known_dimensions,
             parent_size,
@@ -218,7 +214,7 @@ fn compute_node_layout<Measure: Measurable>(
         ),
         #[cfg(feature = "grid")]
         (Display::Grid, true) => perform_computations::<CssGridAlgorithm>(
-            tree,
+            taffy_view,
             node,
             known_dimensions,
             parent_size,
@@ -229,29 +225,34 @@ fn compute_node_layout<Measure: Measurable>(
         ),
         (_, false) => match run_mode {
             RunMode::PerformLayout => leaf::perform_layout(
-                &tree.nodes[node_key].style,
-                tree.nodes[node_key].needs_measure.then(|| &mut tree.measure_funcs[node_key]),
+                &taffy_view.taffy.nodes[node_key].style,
+                taffy_view.taffy.nodes[node_key].needs_measure.then(|| &mut taffy_view.taffy.measure_funcs[node_key]),
                 known_dimensions,
                 parent_size,
                 available_space,
                 sizing_mode,
-                tree.context.as_mut().unwrap(),
+                &mut taffy_view.context,
             ),
             RunMode::ComputeSize => leaf::measure_size(
-                &tree.nodes[node_key].style,
-                tree.nodes[node_key].needs_measure.then(|| &mut tree.measure_funcs[node_key]),
+                &taffy_view.taffy.nodes[node_key].style,
+                taffy_view.taffy.nodes[node_key].needs_measure.then(|| &mut taffy_view.taffy.measure_funcs[node_key]),
                 known_dimensions,
                 parent_size,
                 available_space,
                 sizing_mode,
-                tree.context.as_mut().unwrap(),
+                &mut taffy_view.context,
             )
             .into(),
         },
     };
 
     // Cache result
-    tree.nodes[node_key].cache.store(known_dimensions, available_space, cache_run_mode, computed_size_and_baselines);
+    taffy_view.taffy.nodes[node_key].cache.store(
+        known_dimensions,
+        available_space,
+        cache_run_mode,
+        computed_size_and_baselines,
+    );
 
     #[cfg(feature = "debug")]
     NODE_LOGGER.labelled_debug_log("RESULT", computed_size_and_baselines.size);
@@ -267,15 +268,17 @@ fn perform_taffy_tree_hidden_layout<Measure: Measurable>(tree: &mut Taffy<Measur
     /// Recursive function to apply hidden layout to all descendents
     fn perform_hidden_layout_inner<Measure: Measurable>(tree: &mut Taffy<Measure>, node: NodeId, order: u32) {
         let node_key = node.into();
-        *tree.layout_mut(node) = Layout::with_order(order);
+        tree.nodes[node_key].unrounded_layout = Layout::with_order(order);
+        tree.nodes[node_key].final_layout = Layout::with_order(order);
         tree.nodes[node_key].cache.clear();
         for order in 0..tree.children[node_key].len() {
-            perform_hidden_layout_inner(tree, tree.child(node, order), order as _);
+            perform_hidden_layout_inner(tree, tree.children[node_key][order], order as _);
         }
     }
 
+    let node_key = node.into();
     for order in 0..tree.children[node.into()].len() {
-        perform_hidden_layout_inner(tree, tree.child(node, order), order as _);
+        perform_hidden_layout_inner(tree, tree.children[node_key][order], order as _);
     }
 }
 
@@ -305,7 +308,7 @@ fn round_layout<Measure: Measurable>(tree: &mut Taffy<Measure>, node_id: NodeId,
 
     let child_count = tree.child_count(node_id).unwrap();
     for index in 0..child_count {
-        let child = tree.child(node_id, index);
+        let child = tree.children[node_id.into()][index];
         round_layout(tree, child, cumulative_x, cumulative_y);
     }
 }

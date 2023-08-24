@@ -47,14 +47,6 @@ where
 
     /// Layout mode configuration
     pub(crate) config: TaffyConfig,
-
-    /// Hack to allow the `LayoutTree::layout_mut` function to expose the `NodeData.unrounded_layout` of a node to
-    /// the layout algorithms during layout, while exposing the `NodeData.final_layout` when called by external users.
-    /// This allows us to fix <https://github.com/DioxusLabs/taffy/issues/501> without breaking backwards compatibility
-    pub(crate) is_layouting: bool,
-
-    /// Used to store the context during layout. Cleared before returning from `compute_layout`.
-    pub(crate) context: Option<Measure::Context>,
 }
 
 impl Default for Taffy {
@@ -73,45 +65,54 @@ impl<'a> Iterator for TaffyChildIter<'a> {
     }
 }
 
-impl<Measure: Measurable> LayoutTree for Taffy<Measure> {
-    type ChildIter<'a> = TaffyChildIter<'a> where Measure: 'a;
+/// View over the Taffy tree that holds the tree itself along with a reference to the context
+/// and implements LayoutTree. This allows the context to be stored outside of the Taffy struct
+/// which makes the lifetimes of the context much more flexible.
+pub struct TaffyView<'t, Measure: Measurable> {
+    pub(crate) taffy: &'t mut Taffy<Measure>,
+    pub(crate) context: Measure::Context,
+}
+
+
+impl<'t, Measure: Measurable> LayoutTree for TaffyView<'t, Measure> {
+    type ChildIter<'a> = TaffyChildIter<'a> where Measure: 'a, Self: 'a;
 
     #[inline(always)]
     fn children(&self, node: NodeId) -> Self::ChildIter<'_> {
-        TaffyChildIter(self.children[node.into()].iter())
+        TaffyChildIter(self.taffy.children[node.into()].iter())
     }
 
     #[inline(always)]
     fn child_count(&self, node: NodeId) -> usize {
-        self.children[node.into()].len()
+        self.taffy.children[node.into()].len()
     }
 
     #[inline(always)]
     fn style(&self, node: NodeId) -> &Style {
-        &self.nodes[node.into()].style
+        &self.taffy.nodes[node.into()].style
     }
 
     #[inline(always)]
     fn layout(&self, node: NodeId) -> &Layout {
-        if self.is_layouting && self.config.use_rounding {
-            &self.nodes[node.into()].unrounded_layout
+        if self.taffy.config.use_rounding {
+            &self.taffy.nodes[node.into()].unrounded_layout
         } else {
-            &self.nodes[node.into()].final_layout
+            &self.taffy.nodes[node.into()].final_layout
         }
     }
 
     #[inline(always)]
     fn layout_mut(&mut self, node: NodeId) -> &mut Layout {
-        if self.is_layouting && self.config.use_rounding {
-            &mut self.nodes[node.into()].unrounded_layout
+        if self.taffy.config.use_rounding {
+            &mut self.taffy.nodes[node.into()].unrounded_layout
         } else {
-            &mut self.nodes[node.into()].final_layout
+            &mut self.taffy.nodes[node.into()].final_layout
         }
     }
 
     #[inline(always)]
     fn child(&self, node: NodeId, id: usize) -> NodeId {
-        self.children[node.into()][id]
+        self.taffy.children[node.into()][id]
     }
 
     #[inline(always)]
@@ -178,8 +179,6 @@ impl<Measure: Measurable> Taffy<Measure> {
             parents: SlotMap::with_capacity(capacity),
             measure_funcs: SparseSecondaryMap::with_capacity(capacity),
             config: TaffyConfig::default(),
-            is_layouting: false,
-            context: None,
         }
     }
 
@@ -455,10 +454,8 @@ impl<Measure: Measurable> Taffy<Measure> {
         available_space: Size<AvailableSpace>,
         context: Measure::Context,
     ) -> Result<(), TaffyError> {
-        self.context = Some(context);
-        let result = compute_layout(self, node, available_space);
-        self.context = None;
-        result
+        let mut taffy_view = TaffyView { taffy: self, context };
+        compute_layout(&mut taffy_view, node, available_space)
     }
 }
 
