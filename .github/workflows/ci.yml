@@ -18,7 +18,7 @@ jobs:
     name: "Test Suite [Features: None]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features
       - run: cargo test --no-default-features --features taffy_tree
@@ -28,7 +28,7 @@ jobs:
     name: "Test Suite [Features: Default]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build
       - run: cargo test
@@ -37,7 +37,7 @@ jobs:
     name: "Test Suite [Features: Default + serde]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --features serde
       - run: cargo test --features serde
@@ -46,7 +46,7 @@ jobs:
     name: "Test Suite [Features: std (no grid or flexbox)]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features std
       - run: cargo build --no-default-features --features std,taffy_tree
@@ -57,7 +57,7 @@ jobs:
     name: "Test Suite [Features: flexbox + std]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features flexbox,std
       - run: cargo build --no-default-features --features flexbox,std,taffy_tree
@@ -68,7 +68,7 @@ jobs:
     name: "Test Suite [Features: grid + std]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features grid,std
       - run: cargo build --no-default-features --features grid,std,taffy_tree
@@ -78,7 +78,7 @@ jobs:
     name: "Test Suite [Features: grid + alloc]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features alloc,grid
       - run: cargo build --no-default-features --features alloc,grid,taffy_tree
@@ -88,7 +88,7 @@ jobs:
     name: "Test Suite [Features: alloc]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features alloc
       - run: cargo build --no-default-features --features alloc,taffy_tree
@@ -98,7 +98,7 @@ jobs:
     name: "Test Suite [Features: std (no grid)]"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features std
       - run: cargo build --no-default-features --features std,taffy_tree
@@ -108,7 +108,7 @@ jobs:
     name: Rustfmt
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
@@ -119,7 +119,7 @@ jobs:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly
@@ -130,7 +130,7 @@ jobs:
     name: Documentation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
@@ -141,7 +141,7 @@ jobs:
     name: Markdown Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Run Markdown Lint
         uses: DavidAnson/markdownlint-cli2-action@v11
         with:
@@ -151,7 +151,7 @@ jobs:
     name: Test Fixture Formatting
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Run format script
         run: cargo format-fixtures
       - name: Ensure no changes
@@ -167,7 +167,7 @@ jobs:
     name: Build Benchmarks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo xbench --no-run
         name: Build benchmarks
@@ -178,7 +178,7 @@ jobs:
     name: Build Benchmarks (w/ yoga)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo xbench --no-run --features yoga
         name: Build benchmarks (w/yoga)
