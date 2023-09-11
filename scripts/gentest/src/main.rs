@@ -352,6 +352,7 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
     let display = match style["display"] {
         Value::String(ref value) => match value.as_ref() {
             "none" => quote!(display: taffy::style::Display::None,),
+            "contents" => quote!(display: taffy::style::Display::Contents,),
             "block" => quote!(display: taffy::style::Display::Block,),
             "grid" => quote!(display: taffy::style::Display::Grid,),
             _ => quote!(display: taffy::style::Display::Flex,),

@@ -87,6 +87,7 @@ Example usage change:
 ### Added
 
 - Support for [CSS Block layout](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flow_Layout/Block_and_Inline_Layout_in_Normal_Flow#elements_participating_in_a_block_formatting_context) has been added. This can be used via the new `Display::Block` variant of the `Display` enum. Note that inline, inline-block and float have *not* been implemented. The use case supported is block container nodes which contain block-level children.
+- Support for [`Display::Contents`](https://css-tricks.com/get-ready-for-display-contents/)
 - Support for running each layout algorithm individually on a single node via the following top-level functions:
   - `compute_flexbox_layout`
   - `compute_grid_layout`

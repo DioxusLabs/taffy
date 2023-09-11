@@ -1,6 +1,8 @@
 //! UI node types and related data structures.
 //!
 //! Layouts are composed of multiple nodes, which live in a tree-like data structure.
+use core::cell::{RefCell, RefMut};
+
 use slotmap::{DefaultKey, SlotMap, SparseSecondaryMap};
 
 use crate::geometry::Size;
@@ -28,6 +30,21 @@ pub(crate) struct TaffyConfig {
 impl Default for TaffyConfig {
     fn default() -> Self {
         Self { use_rounding: true }
+    }
+}
+
+/// Used to cache the resolved children of a node (taking into account `Display::contents`) during layout
+/// so that repeated calls to the children method don't need to re-resolve the list.
+struct ChildrenCache {
+    /// The NodeId of the node whose children we are caching (the cache key)
+    node_id: NodeId,
+    /// The actual list of child ids
+    children: Vec<NodeId>,
+}
+impl ChildrenCache {
+    /// Create a new empty cache
+    fn new() -> ChildrenCache {
+        ChildrenCache { node_id: NodeId::new(0), children: Vec::new() }
     }
 }
 
@@ -59,13 +76,33 @@ impl Default for Taffy {
     }
 }
 
-/// Iterator that wraps a slice of nodes, lazily converting them to u64
-pub(crate) struct TaffyChildIter<'a>(core::slice::Iter<'a, NodeId>);
-impl<'a> Iterator for TaffyChildIter<'a> {
+/// Iterator over the Vec in a RefMut<'a, Vec<NodeId>>
+pub struct RefCellVecIter<'a> {
+    /// The items to iterate over
+    children: RefMut<'a, Vec<NodeId>>,
+    /// The next index to return
+    index: usize,
+}
+impl<'a> Iterator for RefCellVecIter<'a> {
     type Item = NodeId;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.0.next().copied()
+        let item = self.children.get(self.index).copied();
+        self.index += 1;
+        item
+    }
+}
+
+/// Iterates over children, checking the Display type of the node
+/// If the node is `Display::Contents`, then we recurse it's children, else we simply push the `NodeId` into the list
+fn find_children_recursive<NodeContext>(tree: &Taffy<NodeContext>, node: NodeId, out: &mut Vec<NodeId>) {
+    for child_id in tree.children[node.into()].iter() {
+        let child_key: DefaultKey = (*child_id).into();
+        let display = tree.nodes[child_key].style.display;
+        match display {
+            Display::Contents => find_children_recursive(tree, *child_id, out),
+            _ => out.push(*child_id),
+        }
     }
 }
 
@@ -80,27 +117,57 @@ where
     pub(crate) taffy: &'t mut Taffy<NodeContext>,
     /// The context provided for passing to measure functions if layout is run over this struct
     pub(crate) measure_function: MeasureFunction,
+    /// Used to cache the resolved children of a node (taking into account `Display::contents`) during layout
+    /// so that repeated calls to the children method don't need to re-resolve the list.
+    node_children_cache: RefCell<ChildrenCache>,
+}
+
+impl<'t, NodeContext, MeasureFunction> TaffyView<'t, NodeContext, MeasureFunction>
+where
+    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+{
+    /// Create a new TaffyView from a Taffy and a measure function
+    pub(crate) fn new(taffy: &'t mut Taffy<NodeContext>, measure_function: MeasureFunction) -> Self {
+        TaffyView { taffy, measure_function, node_children_cache: RefCell::new(ChildrenCache::new()) }
+    }
+
+    /// Returns the resolved children, taking into account `Display::Contents`
+    /// Will use cached result if available, else compute and cache.
+    fn resolve_children(&self, node: NodeId) -> RefMut<'_, Vec<NodeId>> {
+        let mut cache = self.node_children_cache.borrow_mut();
+
+        // If the cache key does not match the requested node_id, then recompute the children for
+        // the requested node and update the cache in-place.
+        if cache.node_id != node {
+            cache.node_id = node;
+            cache.children.clear();
+            find_children_recursive(self.taffy, node, &mut cache.children);
+        }
+
+        // In all cases, return a reference into the cache
+        RefMut::map(cache, |c| &mut c.children)
+    }
 }
 
 impl<'t, NodeContext, MeasureFunction> PartialLayoutTree for TaffyView<'t, NodeContext, MeasureFunction>
 where
     MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
 {
-    type ChildIter<'a> = TaffyChildIter<'a> where Self: 'a;
+    type ChildIter<'a> = RefCellVecIter<'a> where Self: 'a;
 
     #[inline(always)]
     fn child_ids(&self, node: NodeId) -> Self::ChildIter<'_> {
-        TaffyChildIter(self.taffy.children[node.into()].iter())
+        RefCellVecIter { children: self.resolve_children(node), index: 0 }
     }
 
     #[inline(always)]
     fn child_count(&self, node: NodeId) -> usize {
-        self.taffy.children[node.into()].len()
+        self.resolve_children(node).len()
     }
 
     #[inline(always)]
     fn get_child_id(&self, node: NodeId, id: usize) -> NodeId {
-        self.taffy.children[node.into()][id]
+        self.resolve_children(node)[id]
     }
 
     #[inline(always)]
@@ -148,6 +215,11 @@ where
             // Dispatch to a layout algorithm based on the node's display style and whether the node has children or not.
             match (display_mode, has_children) {
                 (Display::None, _) => compute_hidden_layout(tree, node),
+                (Display::Contents, _) => {
+                    *tree.get_unrounded_layout_mut(node) = Layout::with_order(0);
+                    tree.get_cache_mut(node).clear();
+                    LayoutOutput::HIDDEN
+                }
                 #[cfg(feature = "block_layout")]
                 (Display::Block, true) => compute_block_layout(tree, node, inputs),
                 #[cfg(feature = "flexbox")]
@@ -505,7 +577,7 @@ impl<NodeContext> Taffy<NodeContext> {
         MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
     {
         let use_rounding = self.config.use_rounding;
-        let mut taffy_view = TaffyView { taffy: self, measure_function };
+        let mut taffy_view = TaffyView::new(self, measure_function);
         compute_layout(&mut taffy_view, node_id, available_space);
         if use_rounding {
             round_layout(&mut taffy_view, node_id);
@@ -521,14 +593,14 @@ impl<NodeContext> Taffy<NodeContext> {
     /// Prints a debug representation of the tree's layout
     #[cfg(feature = "std")]
     pub fn print_tree(&mut self, root: NodeId) {
-        let taffy_view = TaffyView { taffy: self, measure_function: |_, _, _, _| Size::ZERO };
+        let taffy_view = TaffyView::new(self, |_, _, _, _| Size::ZERO);
         crate::util::print_tree(&taffy_view, root)
     }
 
     /// Returns an instance of LayoutTree representing the Taffy
     #[cfg(test)]
     pub(crate) fn as_layout_tree(&mut self) -> impl LayoutTree + '_ {
-        TaffyView { taffy: self, measure_function: |_, _, _, _| Size::ZERO }
+        TaffyView::new(self, |_, _, _, _| Size::ZERO)
     }
 }
 
