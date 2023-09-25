@@ -18,7 +18,7 @@ taffy = { path = ".." }
 rand = { version = "0.8.5" }
 rand_chacha = "0.3.1"
 yoga = { version = "0.4.0", optional = true }
-ordered-float = { version = "3.4.0", optional = true }
+ordered-float = { version = "4.1.0", optional = true }
 slotmap = { version = "1.0.6", optional = true }
 
 [features]
