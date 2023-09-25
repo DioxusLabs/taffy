@@ -23,6 +23,18 @@ jobs:
       - run: cargo build --no-default-features
       - run: cargo test --no-default-features --features taffy_tree
 
+  # MSRV check.
+  # Taffy only guarantees "latest stable". However we have this check here to ensure that we advertise
+  # our MSRV. We also make an effort not to increase MSRV in patch versions of Taffy.
+  test-features-msrv:
+    name: "Test Suite [Features: Default] (Rust 1.65)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.65
+      - run: cargo build
+      - run: cargo test
+
   # Default
   test-features-default:
     name: "Test Suite [Features: Default]"
