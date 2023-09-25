@@ -54,6 +54,9 @@ struct FlexItem {
     /// The identifier for the associated [`Node`](crate::node::Node)
     node: Node,
 
+    /// The order of the node relative to it's siblings
+    order: u32,
+
     /// The base size of this item
     size: Size<Option<f32>>,
     /// The minimum allowable size of this item
@@ -375,7 +378,7 @@ fn compute_preliminary(
     // Do a final layout pass and gather the resulting layouts
     #[cfg(feature = "debug")]
     NODE_LOGGER.log("final_layout_pass");
-    final_layout_pass(tree, node, &mut flex_lines, &constants);
+    final_layout_pass(tree, &mut flex_lines, &constants);
 
     // Before returning we perform absolute layout on all absolutely positioned children
     #[cfg(feature = "debug")]
@@ -479,13 +482,15 @@ fn compute_constants(
 #[inline]
 fn generate_anonymous_flex_items(tree: &impl LayoutTree, node: Node, constants: &AlgoConstants) -> Vec<FlexItem> {
     tree.children(node)
-        .map(|child| (child, tree.style(*child)))
-        .filter(|(_, style)| style.position != Position::Absolute)
-        .filter(|(_, style)| style.display != Display::None)
-        .map(|(child, child_style)| {
+        .enumerate()
+        .map(|(index, child)| (index, child, tree.style(*child)))
+        .filter(|(_, _, style)| style.position != Position::Absolute)
+        .filter(|(_, _, style)| style.display != Display::None)
+        .map(|(index, child, child_style)| {
             let aspect_ratio = child_style.aspect_ratio;
             FlexItem {
                 node: *child,
+                order: index as u32,
                 size: child_style.size.maybe_resolve(constants.node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
                 min_size: child_style
                     .min_size
@@ -1724,7 +1729,6 @@ fn align_flex_lines_per_align_content(flex_lines: &mut [FlexLine], constants: &A
 #[allow(clippy::too_many_arguments)]
 fn calculate_flex_item(
     tree: &mut impl LayoutTree,
-    node: Node,
     item: &mut FlexItem,
     total_offset_main: &mut f32,
     total_offset_cross: f32,
@@ -1764,10 +1768,8 @@ fn calculate_flex_item(
         item.baseline = baseline_offset_main + inner_baseline;
     }
 
-    let order = tree.children(node).position(|n| *n == item.node).unwrap() as u32;
-
     *tree.layout_mut(item.node) = Layout {
-        order,
+        order: item.order,
         size: preliminary_size_and_baselines.size,
         location: Point {
             x: if direction.is_row() { offset_main } else { offset_cross },
@@ -1782,7 +1784,6 @@ fn calculate_flex_item(
 #[allow(clippy::too_many_arguments)]
 fn calculate_layout_line(
     tree: &mut impl LayoutTree,
-    node: Node,
     line: &mut FlexLine,
     total_offset_cross: &mut f32,
     container_size: Size<f32>,
@@ -1797,7 +1798,6 @@ fn calculate_layout_line(
         for item in line.items.iter_mut().rev() {
             calculate_flex_item(
                 tree,
-                node,
                 item,
                 &mut total_offset_main,
                 *total_offset_cross,
@@ -1811,7 +1811,6 @@ fn calculate_layout_line(
         for item in line.items.iter_mut() {
             calculate_flex_item(
                 tree,
-                node,
                 item,
                 &mut total_offset_main,
                 *total_offset_cross,
@@ -1828,14 +1827,13 @@ fn calculate_layout_line(
 
 /// Do a final layout pass and collect the resulting layouts.
 #[inline]
-fn final_layout_pass(tree: &mut impl LayoutTree, node: Node, flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
+fn final_layout_pass(tree: &mut impl LayoutTree, flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
     let mut total_offset_cross = constants.padding_border.cross_start(constants.dir);
 
     if constants.is_wrap_reverse {
         for line in flex_lines.iter_mut().rev() {
             calculate_layout_line(
                 tree,
-                node,
                 line,
                 &mut total_offset_cross,
                 constants.container_size,
@@ -1848,7 +1846,6 @@ fn final_layout_pass(tree: &mut impl LayoutTree, node: Node, flex_lines: &mut [F
         for line in flex_lines.iter_mut() {
             calculate_layout_line(
                 tree,
-                node,
                 line,
                 &mut total_offset_cross,
                 constants.container_size,
