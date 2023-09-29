@@ -238,6 +238,7 @@ mod gap_column_gap_percentage_flexible;
 mod gap_column_gap_percentage_flexible_with_padding;
 mod gap_column_gap_percentage_inflexible;
 mod gap_column_gap_row_gap_wrapping;
+mod gap_column_gap_start_index;
 mod gap_column_gap_wrap_align_center;
 mod gap_column_gap_wrap_align_flex_end;
 mod gap_column_gap_wrap_align_flex_start;
