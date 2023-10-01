@@ -222,7 +222,7 @@ fn generate_test(name: impl AsRef<str>, description: &Value) -> TokenStream {
             taffy.compute_layout_with_measure(node, #available_space, crate::test_measure_function).unwrap();
 
             println!("\nComputed tree:");
-            taffy::util::print_tree(&taffy, node);
+            taffy.print_tree(node);
             println!();
 
             #assertions

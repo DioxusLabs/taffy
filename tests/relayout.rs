@@ -30,7 +30,6 @@ fn relayout() {
             &[node0],
         )
         .unwrap();
-    println!("0:");
     taffy
         .compute_layout(
             node,
@@ -40,8 +39,7 @@ fn relayout() {
     let initial = taffy.layout(node).unwrap().location;
     let initial0 = taffy.layout(node0).unwrap().location;
     let initial1 = taffy.layout(node1).unwrap().location;
-    for i in 1..10 {
-        println!("\n\n{i}:");
+    for _ in 1..10 {
         taffy
             .compute_layout(
                 node,
@@ -365,7 +363,7 @@ fn relayout_is_stable_with_rounding() {
     for _ in 0..5 {
         taffy.mark_dirty(root).ok();
         taffy.compute_layout(root, Size::MAX_CONTENT).ok();
-        taffy::util::print_tree(&taffy, root);
+        taffy.print_tree(root);
 
         let root_layout = taffy.layout(root).unwrap();
         assert_eq!(root_layout.location.x, 0.0);

@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
+use crate::tree::NodeId;
 use crate::{style, LayoutTree};
-use crate::tree::{NodeId};
 use core::fmt::{Debug, Display, Write};
 use std::sync::Mutex;
 

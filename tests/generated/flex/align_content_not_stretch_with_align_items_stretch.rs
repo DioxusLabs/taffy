@@ -53,7 +53,7 @@ fn align_content_not_stretch_with_align_items_stretch() {
         .unwrap();
     taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
-    taffy::util::print_tree(&taffy, node);
+    taffy.print_tree(node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert_eq!(size.width, 328f32, "width of node {:?}. Expected {}. Actual {}", node, 328f32, size.width);

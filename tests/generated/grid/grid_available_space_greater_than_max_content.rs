@@ -48,7 +48,7 @@ fn grid_available_space_greater_than_max_content() {
         )
         .unwrap();
     println!("\nComputed tree:");
-    taffy::util::print_tree(&taffy, node);
+    taffy.print_tree(node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert_eq!(size.width, 160f32, "width of node {:?}. Expected {}. Actual {}", node, 160f32, size.width);

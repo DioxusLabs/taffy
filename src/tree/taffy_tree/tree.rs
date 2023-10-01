@@ -283,7 +283,6 @@ impl<NodeContext> Taffy<NodeContext> {
         Ok(())
     }
 
-
     /// Sets the [`MeasureFunc`] of the associated node
     pub fn get_node_context_mut(&mut self, node: NodeId) -> Option<&mut NodeContext> {
         self.node_context_data.get_mut(node.into())
@@ -470,6 +469,12 @@ impl<NodeContext> Taffy<NodeContext> {
         let mut taffy_view = TaffyView { taffy: self, measure_function };
         compute_layout(&mut taffy_view, node, available_space)
     }
+
+    /// Prints a debug representation of the tree's layout
+    pub fn print_tree(&mut self, root: NodeId) {
+        let taffy_view = TaffyView { taffy: self, measure_function: |_, _, _, _| Size::ZERO };
+        crate::util::print_tree(&taffy_view, root)
+    }
 }
 
 impl<Measure: Measurable> Taffy<Measure>
@@ -603,9 +608,7 @@ mod tests {
     #[test]
     fn set_measure() {
         let mut taffy: Taffy<Size<f32>> = Taffy::new();
-        let node = taffy
-            .new_leaf_with_context(Style::default(), Size { width: 200.0, height: 200.0 })
-            .unwrap();
+        let node = taffy.new_leaf_with_context(Style::default(), Size { width: 200.0, height: 200.0 }).unwrap();
         taffy.compute_layout_with_measure(node, Size::MAX_CONTENT, size_measure_function).unwrap();
         assert_eq!(taffy.layout(node).unwrap().size.width, 200.0);
 
