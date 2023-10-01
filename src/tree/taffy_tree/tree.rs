@@ -471,6 +471,7 @@ impl<NodeContext> Taffy<NodeContext> {
     }
 
     /// Prints a debug representation of the tree's layout
+    #[cfg(feature = "std")]
     pub fn print_tree(&mut self, root: NodeId) {
         let taffy_view = TaffyView { taffy: self, measure_function: |_, _, _, _| Size::ZERO };
         crate::util::print_tree(&taffy_view, root)
