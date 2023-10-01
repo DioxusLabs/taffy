@@ -43,7 +43,7 @@ fn print_node(tree: &impl LayoutTree, node: NodeId, has_sibling: bool, lines_str
     let new_string = lines_string + bar;
 
     // Recurse into children
-    for (index, child) in tree.children(node).into_iter().enumerate() {
+    for (index, child) in tree.children(node).enumerate() {
         let has_sibling = index < num_children - 1;
         print_node(tree, child, has_sibling, new_string.clone());
     }

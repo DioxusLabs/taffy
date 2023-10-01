@@ -2,8 +2,8 @@
 
 use crate::geometry::{Point, Size};
 use crate::style::{AvailableSpace, Display, Overflow, Position, Style};
+use crate::tree::CollapsibleMarginSet;
 use crate::tree::NodeId;
-use crate::tree::{CollapsibleMarginSet, Measurable};
 use crate::tree::{SizeBaselinesAndMargins, SizingMode};
 use crate::util::sys::f32_max;
 use crate::util::MaybeMath;
@@ -13,6 +13,7 @@ use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::util::debug::NODE_LOGGER;
 
 /// Perform full layout on a leaf node
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn perform_layout<NodeContext, MeasureFunction>(
     style: &Style,
     known_dimensions: Size<Option<f32>>,
@@ -30,6 +31,7 @@ where
 }
 
 /// Measure a leaf node's size
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn measure_size<NodeContext, MeasureFunction>(
     style: &Style,
     known_dimensions: Size<Option<f32>>,
@@ -47,6 +49,7 @@ where
 }
 
 /// Compute the size of a leaf node (node with no children)
+#[allow(clippy::too_many_arguments)]
 pub fn compute<NodeContext, MeasureFunction>(
     style: &Style,
     known_dimensions: Size<Option<f32>>,

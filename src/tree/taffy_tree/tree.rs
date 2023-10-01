@@ -7,7 +7,7 @@ use crate::compute::taffy_tree::{compute_layout, measure_node_size, perform_node
 use crate::geometry::{Line, Size};
 use crate::prelude::LayoutTree;
 use crate::style::{AvailableSpace, Style};
-use crate::tree::{Layout, Measurable, MeasureFunc, NodeData, NodeId, SizeBaselinesAndMargins, SizingMode};
+use crate::tree::{Layout, Measurable, NodeData, NodeId, SizeBaselinesAndMargins, SizingMode};
 use crate::util::sys::{new_vec_with_capacity, ChildrenVec, Vec};
 
 use super::{TaffyError, TaffyResult};

@@ -4,7 +4,7 @@ use crate::compute::{leaf, LayoutAlgorithm};
 use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, Display};
 use crate::tree::{
-    Layout, LayoutTree, Measurable, NodeId, RunMode, SizeBaselinesAndMargins, SizingMode, Taffy, TaffyError, TaffyView,
+    Layout, LayoutTree, NodeId, RunMode, SizeBaselinesAndMargins, SizingMode, Taffy, TaffyError, TaffyView,
 };
 use crate::util::sys::round;
 
