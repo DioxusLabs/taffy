@@ -24,6 +24,9 @@ slotmap = { version = "1.0.6", optional = true }
 [features]
 yoga = ["dep:yoga", "dep:slotmap", "dep:ordered-float"]
 
+[lib]
+bench = false
+
 [[bench]]
 name = "tree_creation"
 path = "benches/tree_creation.rs"
