@@ -205,9 +205,9 @@ impl<NodeContext> Taffy<NodeContext> {
         Ok(id.into())
     }
 
-    /// Creates and adds a new unattached leaf node to the tree, and returns the node of the new node
+    /// Creates and adds a new unattached leaf node to the tree, and returns the [`NodeId`] of the new node
     ///
-    /// Creates and adds a new leaf node with a supplied [`MeasureFunc`]
+    /// Creates and adds a new leaf node with a supplied context
     pub fn new_leaf_with_context(&mut self, layout: Style, context: NodeContext) -> TaffyResult<NodeId> {
         let mut data = NodeData::new(layout);
         data.needs_measure = true;
@@ -267,7 +267,7 @@ impl<NodeContext> Taffy<NodeContext> {
         Ok(node)
     }
 
-    /// Sets the [`MeasureFunc`] of the associated node
+    /// Sets the context data associated with the node
     pub fn set_node_context(&mut self, node: NodeId, measure: Option<NodeContext>) -> TaffyResult<()> {
         let key = node.into();
         if let Some(measure) = measure {
@@ -283,7 +283,7 @@ impl<NodeContext> Taffy<NodeContext> {
         Ok(())
     }
 
-    /// Sets the [`MeasureFunc`] of the associated node
+    /// Get's a mutable reference to the the context data associated with the node
     pub fn get_node_context_mut(&mut self, node: NodeId) -> Option<&mut NodeContext> {
         self.node_context_data.get_mut(node.into())
     }
