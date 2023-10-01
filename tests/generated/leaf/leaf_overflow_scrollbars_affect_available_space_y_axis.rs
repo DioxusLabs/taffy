@@ -8,7 +8,7 @@ fn leaf_overflow_scrollbars_affect_available_space_y_axis() {
     };
     let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style {
                 overflow: taffy::geometry::Point {
                     x: taffy::style::Overflow::Visible,
@@ -28,7 +28,7 @@ fn leaf_overflow_scrollbars_affect_available_space_y_axis() {
             },
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
     taffy::util::print_tree(&taffy, node);
     println!();

@@ -22,7 +22,7 @@ fn grid_span_2_max_content_fit_content_80px_indefinite() {
         })
         .unwrap();
     let node2 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style {
                 grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
                 grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Span(2u16) },
@@ -46,7 +46,7 @@ fn grid_span_2_max_content_fit_content_80px_indefinite() {
             &[node0, node1, node2],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
     taffy::util::print_tree(&taffy, node);
     println!();

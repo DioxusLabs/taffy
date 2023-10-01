@@ -8,7 +8,7 @@ fn grid_available_space_smaller_than_min_content() {
     };
     let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style { ..Default::default() },
             crate::TextMeasure {
                 text_content: "HHHH\u{200b}HHHH",
@@ -18,7 +18,7 @@ fn grid_available_space_smaller_than_min_content() {
         )
         .unwrap();
     let node1 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style { ..Default::default() },
             crate::TextMeasure {
                 text_content: "HHHH\u{200b}HHHH",
@@ -38,12 +38,13 @@ fn grid_available_space_smaller_than_min_content() {
         )
         .unwrap();
     taffy
-        .compute_layout(
+        .compute_layout_with_measure(
             node,
             taffy::geometry::Size {
                 width: taffy::style::AvailableSpace::Definite(60f32),
                 height: taffy::style::AvailableSpace::MaxContent,
             },
+            crate::test_measure_function,
         )
         .unwrap();
     println!("\nComputed tree:");

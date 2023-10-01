@@ -21,7 +21,7 @@ fn block_margin_y_collapse_through_with_absolute_child() {
         })
         .unwrap();
     let node10 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style { position: taffy::style::Position::Absolute, ..Default::default() },
             crate::TextMeasure {
                 text_content: "HH",
@@ -68,7 +68,7 @@ fn block_margin_y_collapse_through_with_absolute_child() {
             &[node0, node1, node2],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
     taffy::util::print_tree(&taffy, node);
     println!();

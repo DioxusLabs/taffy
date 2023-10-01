@@ -8,7 +8,7 @@ fn min_max_percent_different_width_height() {
     };
     let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style {
                 min_size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Percent(0.1f32),
@@ -41,7 +41,7 @@ fn min_max_percent_different_width_height() {
             &[node0],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
     taffy::util::print_tree(&taffy, node);
     println!();

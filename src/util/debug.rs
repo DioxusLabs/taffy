@@ -7,12 +7,12 @@ use core::fmt::{Debug, Display, Write};
 use std::sync::Mutex;
 
 /// Prints a debug representation of the computed layout for a tree of nodes, starting with the passed root node.
-pub fn print_tree<M: Measurable>(tree: &Taffy<M>, root: NodeId) {
+pub fn print_tree<NodeContext>(tree: &Taffy<NodeContext>, root: NodeId) {
     println!("TREE");
     print_node(tree, root, false, String::new());
 }
 
-fn print_node<M: Measurable>(tree: &Taffy<M>, node: NodeId, has_sibling: bool, lines_string: String) {
+fn print_node<NodeContext>(tree: &Taffy<NodeContext>, node: NodeId, has_sibling: bool, lines_string: String) {
     let layout = &tree.layout(node).unwrap();
     let style = &tree.style(node).unwrap();
     let num_children = tree.child_count(node).unwrap();

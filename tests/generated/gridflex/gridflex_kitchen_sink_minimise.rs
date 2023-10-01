@@ -26,7 +26,7 @@ fn gridflex_kitchen_sink_minimise() {
         )
         .unwrap();
     let node = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[node0]).unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
     taffy::util::print_tree(&taffy, node);
     println!();

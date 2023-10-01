@@ -21,7 +21,7 @@ fn block_margin_y_collapse_through_blocked_by_line_box_with_height_zero() {
         })
         .unwrap();
     let node1 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(0f32) },
@@ -63,7 +63,7 @@ fn block_margin_y_collapse_through_blocked_by_line_box_with_height_zero() {
             &[node0, node1, node2],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
     taffy::util::print_tree(&taffy, node);
     println!();

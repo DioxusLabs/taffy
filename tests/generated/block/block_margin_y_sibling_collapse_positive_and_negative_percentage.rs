@@ -101,7 +101,7 @@ fn block_margin_y_sibling_collapse_positive_and_negative_percentage() {
             &[node0, node1, node2, node3, node4, node5, node6],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
     taffy::util::print_tree(&taffy, node);
     println!();

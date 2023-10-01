@@ -8,7 +8,7 @@ fn grid_overflow_inline_axis_visible() {
     };
     let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style { ..Default::default() },
             crate::TextMeasure {
                 text_content: "HHHHHHHHHH",
@@ -30,7 +30,7 @@ fn grid_overflow_inline_axis_visible() {
             &[node0],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
     taffy::util::print_tree(&taffy, node);
     println!();

@@ -8,7 +8,7 @@ fn measure_child_with_min_size_greater_than_available_space() {
     };
     let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style {
                 min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
                 ..Default::default()
@@ -31,7 +31,7 @@ fn measure_child_with_min_size_greater_than_available_space() {
             &[node0],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
     taffy::util::print_tree(&taffy, node);
     println!();

@@ -8,7 +8,7 @@ fn blockflex_overflow_hidden() {
     };
     let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 overflow: taffy::geometry::Point {
@@ -27,7 +27,7 @@ fn blockflex_overflow_hidden() {
         )
         .unwrap();
     let node1 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style { display: taffy::style::Display::Block, flex_grow: 1f32, ..Default::default() },
             crate::TextMeasure {
                 text_content: "HHHH\u{200b}HH",
@@ -49,7 +49,7 @@ fn blockflex_overflow_hidden() {
             &[node0, node1],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
     taffy::util::print_tree(&taffy, node);
     println!();

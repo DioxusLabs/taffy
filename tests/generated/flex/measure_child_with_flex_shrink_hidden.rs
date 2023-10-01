@@ -17,7 +17,7 @@ fn measure_child_with_flex_shrink_hidden() {
         })
         .unwrap();
     let node1 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style {
                 overflow: taffy::geometry::Point {
                     x: taffy::style::Overflow::Hidden,
@@ -45,7 +45,7 @@ fn measure_child_with_flex_shrink_hidden() {
             &[node0, node1],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
     taffy::util::print_tree(&taffy, node);
     println!();

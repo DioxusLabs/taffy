@@ -8,7 +8,7 @@ fn measure_width_overrides_measure() {
     };
     let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style {
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
                 ..Default::default()
@@ -21,7 +21,7 @@ fn measure_width_overrides_measure() {
         )
         .unwrap();
     let node = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[node0]).unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
     taffy::util::print_tree(&taffy, node);
     println!();

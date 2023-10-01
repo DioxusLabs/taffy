@@ -8,7 +8,7 @@ fn intrinsic_sizing_main_size_column_nested() {
     };
     let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style { flex_direction: taffy::style::FlexDirection::Column, ..Default::default() },
             crate::TextMeasure {
                 text_content: "HH\u{200b}HH",
@@ -23,7 +23,7 @@ fn intrinsic_sizing_main_size_column_nested() {
             &[node0],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
     taffy::util::print_tree(&taffy, node);
     println!();

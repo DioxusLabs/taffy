@@ -36,11 +36,14 @@ fn debug_log_node(
 }
 
 /// Updates the stored layout of the provided `node` and its children
-pub(crate) fn compute_layout<Measure: Measurable>(
-    taffy_view: &mut TaffyView<Measure>,
+pub(crate) fn compute_layout<NodeContext, MeasureFunction>(
+    taffy_view: &mut TaffyView<NodeContext, MeasureFunction>,
     root: NodeId,
     available_space: Size<AvailableSpace>,
-) -> Result<(), TaffyError> {
+) -> Result<(), TaffyError>
+where
+    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+{
     // Recursively compute node layout
     let size_and_baselines = perform_node_layout(
         taffy_view,
@@ -64,15 +67,18 @@ pub(crate) fn compute_layout<Measure: Measurable>(
 }
 
 /// Perform full layout on a node. Chooses which algorithm to use based on the `display` property.
-pub(crate) fn perform_node_layout<Measure: Measurable>(
-    taffy_view: &mut TaffyView<Measure>,
+pub(crate) fn perform_node_layout<NodeContext, MeasureFunction>(
+    taffy_view: &mut TaffyView<NodeContext, MeasureFunction>,
     node: NodeId,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     sizing_mode: SizingMode,
     vertical_margins_are_collapsible: Line<bool>,
-) -> SizeBaselinesAndMargins {
+) -> SizeBaselinesAndMargins
+where
+    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+{
     compute_node_layout(
         taffy_view,
         node,
@@ -86,15 +92,18 @@ pub(crate) fn perform_node_layout<Measure: Measurable>(
 }
 
 /// Measure a node's size. Chooses which algorithm to use based on the `display` property.
-pub(crate) fn measure_node_size<Measure: Measurable>(
-    taffy_view: &mut TaffyView<Measure>,
+pub(crate) fn measure_node_size<NodeContext, MeasureFunction>(
+    taffy_view: &mut TaffyView<NodeContext, MeasureFunction>,
     node: NodeId,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     sizing_mode: SizingMode,
     vertical_margins_are_collapsible: Line<bool>,
-) -> Size<f32> {
+) -> Size<f32>
+where
+    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+{
     compute_node_layout(
         taffy_view,
         node,
@@ -110,8 +119,8 @@ pub(crate) fn measure_node_size<Measure: Measurable>(
 
 /// Updates the stored layout of the provided `node` and its children
 #[allow(clippy::too_many_arguments)]
-fn compute_node_layout<Measure: Measurable>(
-    taffy_view: &mut TaffyView<Measure>,
+fn compute_node_layout<NodeContext, MeasureFunction>(
+    taffy_view: &mut TaffyView<NodeContext, MeasureFunction>,
     node: NodeId,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
@@ -119,7 +128,10 @@ fn compute_node_layout<Measure: Measurable>(
     run_mode: RunMode,
     sizing_mode: SizingMode,
     vertical_margins_are_collapsible: Line<bool>,
-) -> SizeBaselinesAndMargins {
+) -> SizeBaselinesAndMargins
+where
+    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+{
     #[cfg(any(feature = "debug", feature = "profile"))]
     NODE_LOGGER.push_node(node);
     #[cfg(feature = "debug")]
@@ -226,21 +238,27 @@ fn compute_node_layout<Measure: Measurable>(
         (_, false) => match run_mode {
             RunMode::PerformLayout => leaf::perform_layout(
                 &taffy_view.taffy.nodes[node_key].style,
-                taffy_view.taffy.nodes[node_key].needs_measure.then(|| &mut taffy_view.taffy.measure_funcs[node_key]),
                 known_dimensions,
                 parent_size,
                 available_space,
                 sizing_mode,
-                taffy_view.context,
+                &mut taffy_view.measure_function,
+                node,
+                taffy_view.taffy.nodes[node_key]
+                    .needs_measure
+                    .then(|| &mut taffy_view.taffy.node_context_data[node_key]),
             ),
             RunMode::ComputeSize => leaf::measure_size(
                 &taffy_view.taffy.nodes[node_key].style,
-                taffy_view.taffy.nodes[node_key].needs_measure.then(|| &mut taffy_view.taffy.measure_funcs[node_key]),
                 known_dimensions,
                 parent_size,
                 available_space,
                 sizing_mode,
-                taffy_view.context,
+                &mut taffy_view.measure_function,
+                node,
+                taffy_view.taffy.nodes[node_key]
+                    .needs_measure
+                    .then(|| &mut taffy_view.taffy.node_context_data[node_key]),
             )
             .into(),
         },
@@ -264,9 +282,9 @@ fn compute_node_layout<Measure: Measurable>(
 
 /// Creates a layout for this node and its children, recursively.
 /// Each hidden node has zero size and is placed at the origin
-fn perform_taffy_tree_hidden_layout<Measure: Measurable>(tree: &mut Taffy<Measure>, node: NodeId) {
+fn perform_taffy_tree_hidden_layout<NodeContext>(tree: &mut Taffy<NodeContext>, node: NodeId) {
     /// Recursive function to apply hidden layout to all descendents
-    fn perform_hidden_layout_inner<Measure: Measurable>(tree: &mut Taffy<Measure>, node: NodeId, order: u32) {
+    fn perform_hidden_layout_inner<NodeContext>(tree: &mut Taffy<NodeContext>, node: NodeId, order: u32) {
         let node_key = node.into();
         tree.nodes[node_key].unrounded_layout = Layout::with_order(order);
         tree.nodes[node_key].final_layout = Layout::with_order(order);
@@ -293,7 +311,7 @@ fn perform_taffy_tree_hidden_layout<Measure: Measurable>(tree: &mut Taffy<Measur
 ///
 /// In order to prevent innacuracies caused by rounding already-rounded values, we read from `unrounded_layout`
 /// and write to `final_layout`.
-fn round_layout<Measure: Measurable>(tree: &mut Taffy<Measure>, node_id: NodeId, cumulative_x: f32, cumulative_y: f32) {
+fn round_layout<NodeContext>(tree: &mut Taffy<NodeContext>, node_id: NodeId, cumulative_x: f32, cumulative_y: f32) {
     let node = &mut tree.nodes[node_id.into()];
     let unrounded_layout = node.unrounded_layout;
     let layout = &mut node.final_layout;

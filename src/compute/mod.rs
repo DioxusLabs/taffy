@@ -133,7 +133,7 @@ mod tests {
             )
             .unwrap();
 
-        perform_hidden_layout(&mut TaffyView { taffy: &mut taffy, context: &mut () }, root.into());
+        perform_hidden_layout(&mut TaffyView { taffy: &mut taffy, measure_function: |_, _, _, _| Size::ZERO}, root.into());
 
         // Whatever size and display-mode the nodes had previously,
         // all layouts should resolve to ZERO due to the root's DISPLAY::NONE

@@ -7,7 +7,7 @@ fn block_absolute_aspect_ratio_fill_max_width() {
         Taffy,
     };
     let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
-    let node0 = taffy . new_leaf_with_measure (taffy :: style :: Style { position : taffy :: style :: Position :: Absolute , max_size : taffy :: geometry :: Size { width : auto () , height : taffy :: style :: Dimension :: Length (50f32) , } , aspect_ratio : Some (0.5f32) , .. Default :: default () } , crate :: TextMeasure { text_content : "HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH" , writing_mode : crate :: WritingMode :: Horizontal , _aspect_ratio : Some (0.5f32) , } ,) . unwrap () ;
+    let node0 = taffy . new_leaf_with_context (taffy :: style :: Style { position : taffy :: style :: Position :: Absolute , max_size : taffy :: geometry :: Size { width : auto () , height : taffy :: style :: Dimension :: Length (50f32) , } , aspect_ratio : Some (0.5f32) , .. Default :: default () } , crate :: TextMeasure { text_content : "HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH" , writing_mode : crate :: WritingMode :: Horizontal , _aspect_ratio : Some (0.5f32) , } ,) . unwrap () ;
     let node = taffy
         .new_with_children(
             taffy::style::Style {
@@ -21,7 +21,7 @@ fn block_absolute_aspect_ratio_fill_max_width() {
             &[node0],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
     taffy::util::print_tree(&taffy, node);
     println!();

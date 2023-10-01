@@ -14,7 +14,7 @@ fn grid_margins_auto_margins_override_stretch() {
     let node4 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node5 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node6 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style {
                 align_self: Some(taffy::style::AlignSelf::Stretch),
                 justify_self: Some(taffy::style::JustifySelf::Stretch),
@@ -52,7 +52,7 @@ fn grid_margins_auto_margins_override_stretch() {
             &[node0, node1, node2, node3, node4, node5, node6, node7, node8],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
     taffy::util::print_tree(&taffy, node);
     println!();

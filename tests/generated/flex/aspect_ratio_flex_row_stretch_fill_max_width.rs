@@ -8,7 +8,7 @@ fn aspect_ratio_flex_row_stretch_fill_max_width() {
     };
     let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style {
                 max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(20f32) },
                 aspect_ratio: Some(2f32),
@@ -34,7 +34,7 @@ fn aspect_ratio_flex_row_stretch_fill_max_width() {
             &[node0],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
     taffy::util::print_tree(&taffy, node);
     println!();

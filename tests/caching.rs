@@ -1,67 +1,56 @@
 #[cfg(test)]
 mod caching {
     use taffy::prelude::*;
-    use taffy::tree::MeasureFunc;
+
+    struct CountMeasure {
+        count: usize,
+    }
+    impl CountMeasure {
+        fn new() -> CountMeasure {
+            CountMeasure { count: 0 }
+        }
+    }
+
+    fn count_measure_function(
+        known_dimensions: Size<Option<f32>>,
+        _available_space: Size<AvailableSpace>,
+        _node_id: NodeId,
+        mut node_context: Option<&mut CountMeasure>,
+    ) -> Size<f32> {
+        node_context.as_mut().unwrap().count += 1;
+        Size { width: known_dimensions.width.unwrap_or(50.0), height: known_dimensions.height.unwrap_or(50.0) }
+    }
 
     #[test]
     fn measure_count_flexbox() {
-        use std::sync::atomic::{AtomicU32, Ordering};
+        let mut taffy: Taffy<CountMeasure> = Taffy::new();
 
-        let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
-        static NUM_MEASURES: AtomicU32 = AtomicU32::new(0);
-
-        let leaf = taffy
-            .new_leaf_with_measure(
-                Style::default(),
-                MeasureFunc::Raw(|known_dimensions, _available_space, _context| {
-                    NUM_MEASURES.fetch_add(1, Ordering::SeqCst);
-                    Size {
-                        width: known_dimensions.width.unwrap_or(50.0),
-                        height: known_dimensions.height.unwrap_or(50.0),
-                    }
-                }),
-            )
-            .unwrap();
+        let leaf = taffy.new_leaf_with_context(Style::default(), CountMeasure::new()).unwrap();
 
         let mut node = taffy.new_with_children(Style::DEFAULT, &[leaf]).unwrap();
         for _ in 0..100 {
             node = taffy.new_with_children(Style::DEFAULT, &[node]).unwrap();
         }
 
-        taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
+        taffy.compute_layout_with_measure(node, Size::MAX_CONTENT, count_measure_function).unwrap();
 
-        assert_eq!(NUM_MEASURES.load(Ordering::SeqCst), 3);
+        assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 3);
     }
 
     #[test]
     #[cfg(feature = "grid")]
     fn measure_count_grid() {
-        use std::sync::atomic::{AtomicU32, Ordering};
+        let mut taffy: Taffy<CountMeasure> = Taffy::new();
 
         let style = || Style { display: Display::Grid, ..Default::default() };
-
-        let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
-        static NUM_MEASURES: AtomicU32 = AtomicU32::new(0);
-
-        let leaf = taffy
-            .new_leaf_with_measure(
-                style(),
-                MeasureFunc::Raw(|known_dimensions, _available_space, _context| {
-                    NUM_MEASURES.fetch_add(1, Ordering::SeqCst);
-                    Size {
-                        width: known_dimensions.width.unwrap_or(50.0),
-                        height: known_dimensions.height.unwrap_or(50.0),
-                    }
-                }),
-            )
-            .unwrap();
+        let leaf = taffy.new_leaf_with_context(style(), CountMeasure::new()).unwrap();
 
         let mut node = taffy.new_with_children(Style::DEFAULT, &[leaf]).unwrap();
         for _ in 0..100 {
             node = taffy.new_with_children(Style::DEFAULT, &[node]).unwrap();
         }
 
-        taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
-        assert_eq!(NUM_MEASURES.load(Ordering::SeqCst), 3);
+        taffy.compute_layout_with_measure(node, Size::MAX_CONTENT, count_measure_function).unwrap();
+        assert_eq!(taffy.get_node_context_mut(leaf).unwrap().count, 3);
     }
 }
