@@ -7,7 +7,7 @@ use crate::compute::taffy_tree::{compute_layout, measure_node_size, perform_node
 use crate::geometry::{Line, Size};
 use crate::prelude::LayoutTree;
 use crate::style::{AvailableSpace, Style};
-use crate::tree::{Layout, Measurable, NodeData, NodeId, SizeBaselinesAndMargins, SizingMode};
+use crate::tree::{Layout, NodeData, NodeId, SizeBaselinesAndMargins, SizingMode};
 use crate::util::sys::{new_vec_with_capacity, ChildrenVec, Vec};
 
 use super::{TaffyError, TaffyResult};
@@ -470,21 +470,16 @@ impl<NodeContext> Taffy<NodeContext> {
         compute_layout(&mut taffy_view, node, available_space)
     }
 
+    /// Updates the stored layout of the provided `node` and its children
+    pub fn compute_layout(&mut self, node: NodeId, available_space: Size<AvailableSpace>) -> Result<(), TaffyError> {
+        self.compute_layout_with_measure(node, available_space, |_, _, _, _| Size::ZERO)
+    }
+
     /// Prints a debug representation of the tree's layout
     #[cfg(feature = "std")]
     pub fn print_tree(&mut self, root: NodeId) {
         let taffy_view = TaffyView { taffy: self, measure_function: |_, _, _, _| Size::ZERO };
         crate::util::print_tree(&taffy_view, root)
-    }
-}
-
-impl<Measure: Measurable> Taffy<Measure>
-where
-    Measure::Context: Default,
-{
-    /// Updates the stored layout of the provided `node` and its children
-    pub fn compute_layout(&mut self, node: NodeId, available_space: Size<AvailableSpace>) -> Result<(), TaffyError> {
-        self.compute_layout_with_measure(node, available_space, |_, _, _, _| Size::ZERO)
     }
 }
 

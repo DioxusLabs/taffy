@@ -1,11 +1,7 @@
 #[test]
 fn justify_content_min_width_with_padding_child_width_lower_than_parent() {
     #[allow(unused_imports)]
-    use taffy::{
-        prelude::*,
-        tree::{Layout, MeasureFunc},
-        Taffy,
-    };
+    use taffy::{prelude::*, tree::Layout, Taffy};
     let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node000 = taffy
         .new_leaf(taffy::style::Style {

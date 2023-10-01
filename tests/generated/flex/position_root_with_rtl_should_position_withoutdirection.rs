@@ -1,11 +1,7 @@
 #[test]
 fn position_root_with_rtl_should_position_withoutdirection() {
     #[allow(unused_imports)]
-    use taffy::{
-        prelude::*,
-        tree::{Layout, MeasureFunc},
-        Taffy,
-    };
+    use taffy::{prelude::*, tree::Layout, Taffy};
     let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {

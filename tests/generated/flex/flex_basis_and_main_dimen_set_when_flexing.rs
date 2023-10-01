@@ -1,11 +1,7 @@
 #[test]
 fn flex_basis_and_main_dimen_set_when_flexing() {
     #[allow(unused_imports)]
-    use taffy::{
-        prelude::*,
-        tree::{Layout, MeasureFunc},
-        Taffy,
-    };
+    use taffy::{prelude::*, tree::Layout, Taffy};
     let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {

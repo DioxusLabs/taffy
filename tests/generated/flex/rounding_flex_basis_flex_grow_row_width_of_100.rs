@@ -1,11 +1,7 @@
 #[test]
 fn rounding_flex_basis_flex_grow_row_width_of_100() {
     #[allow(unused_imports)]
-    use taffy::{
-        prelude::*,
-        tree::{Layout, MeasureFunc},
-        Taffy,
-    };
+    use taffy::{prelude::*, tree::Layout, Taffy};
     let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0 = taffy.new_leaf(taffy::style::Style { flex_grow: 1f32, ..Default::default() }).unwrap();
     let node1 = taffy.new_leaf(taffy::style::Style { flex_grow: 1f32, ..Default::default() }).unwrap();

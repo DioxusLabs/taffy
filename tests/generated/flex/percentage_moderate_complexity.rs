@@ -1,11 +1,7 @@
 #[test]
 fn percentage_moderate_complexity() {
     #[allow(unused_imports)]
-    use taffy::{
-        prelude::*,
-        tree::{Layout, MeasureFunc},
-        Taffy,
-    };
+    use taffy::{prelude::*, tree::Layout, Taffy};
     let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     taffy.disable_rounding();
     let node00 = taffy

@@ -1,11 +1,7 @@
 #[test]
 fn block_margin_y_last_granchild_collapse_positive_equal() {
     #[allow(unused_imports)]
-    use taffy::{
-        prelude::*,
-        tree::{Layout, MeasureFunc},
-        Taffy,
-    };
+    use taffy::{prelude::*, tree::Layout, Taffy};
     let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0000 = taffy
         .new_leaf(taffy::style::Style {

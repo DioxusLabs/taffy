@@ -1,11 +1,7 @@
 #[test]
 fn blockflex_margin_y_first_child_collapse_blocked_by_flex() {
     #[allow(unused_imports)]
-    use taffy::{
-        prelude::*,
-        tree::{Layout, MeasureFunc},
-        Taffy,
-    };
+    use taffy::{prelude::*, tree::Layout, Taffy};
     let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node000 = taffy
         .new_leaf(taffy::style::Style {

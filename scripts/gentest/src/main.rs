@@ -215,7 +215,7 @@ fn generate_test(name: impl AsRef<str>, description: &Value) -> TokenStream {
         #[test]
         fn #name() {
             #[allow(unused_imports)]
-            use taffy::{tree::{Layout, MeasureFunc}, prelude::*, Taffy};
+            use taffy::{tree::Layout, prelude::*, Taffy};
             let mut taffy : Taffy<crate::TextMeasure> = Taffy::new();
             #set_rounding_mode
             #node_description

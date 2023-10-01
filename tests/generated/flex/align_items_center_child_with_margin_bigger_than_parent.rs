@@ -1,11 +1,7 @@
 #[test]
 fn align_items_center_child_with_margin_bigger_than_parent() {
     #[allow(unused_imports)]
-    use taffy::{
-        prelude::*,
-        tree::{Layout, MeasureFunc},
-        Taffy,
-    };
+    use taffy::{prelude::*, tree::Layout, Taffy};
     let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node00 = taffy
         .new_leaf(taffy::style::Style {

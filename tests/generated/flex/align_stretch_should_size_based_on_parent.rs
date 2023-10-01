@@ -1,11 +1,7 @@
 #[test]
 fn align_stretch_should_size_based_on_parent() {
     #[allow(unused_imports)]
-    use taffy::{
-        prelude::*,
-        tree::{Layout, MeasureFunc},
-        Taffy,
-    };
+    use taffy::{prelude::*, tree::Layout, Taffy};
     let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node000 = taffy
         .new_leaf(taffy::style::Style {

@@ -1,6 +1,5 @@
 use taffy::prelude::*;
 use taffy::style_helpers::TaffyZero;
-use taffy::tree::MeasureFunc;
 
 fn arr_to_rect<T: Copy>(items: [T; 4]) -> Rect<T> {
     Rect { left: items[0], right: items[1], top: items[2], bottom: items[3] }
@@ -10,7 +9,7 @@ fn arr_to_rect<T: Copy>(items: [T; 4]) -> Rect<T> {
 #[ignore]
 fn border_on_a_single_axis_doesnt_increase_size() {
     for i in 0..4 {
-        let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
+        let mut taffy: Taffy<()> = Taffy::new();
         let node = taffy
             .new_leaf(Style {
                 border: {
@@ -38,7 +37,7 @@ fn border_on_a_single_axis_doesnt_increase_size() {
 #[ignore]
 fn padding_on_a_single_axis_doesnt_increase_size() {
     for i in 0..4 {
-        let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
+        let mut taffy: Taffy<()> = Taffy::new();
         let node = taffy
             .new_leaf(Style {
                 padding: {
@@ -66,7 +65,7 @@ fn padding_on_a_single_axis_doesnt_increase_size() {
 #[ignore]
 fn border_and_padding_on_a_single_axis_doesnt_increase_size() {
     for i in 0..4 {
-        let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
+        let mut taffy: Taffy<()> = Taffy::new();
         let rect = {
             let mut lengths = [LengthPercentage::ZERO; 4];
             lengths[i] = LengthPercentage::Length(10.);
@@ -88,7 +87,7 @@ fn border_and_padding_on_a_single_axis_doesnt_increase_size() {
 #[test]
 #[ignore]
 fn vertical_border_and_padding_percentage_values_use_available_space_correctly() {
-    let mut taffy: Taffy<MeasureFunc<()>> = Taffy::new();
+    let mut taffy: Taffy<()> = Taffy::new();
 
     let node = taffy
         .new_leaf(Style {

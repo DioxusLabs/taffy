@@ -1,11 +1,7 @@
 #[test]
 fn grid_fit_content_percent_indefinite_max_content_hidden() {
     #[allow(unused_imports)]
-    use taffy::{
-        prelude::*,
-        tree::{Layout, MeasureFunc},
-        Taffy,
-    };
+    use taffy::{prelude::*, tree::Layout, Taffy};
     let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0 = taffy
         .new_leaf_with_context(
