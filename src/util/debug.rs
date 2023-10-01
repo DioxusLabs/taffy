@@ -1,21 +1,20 @@
 #![allow(dead_code)]
 
-use crate::prelude::Measurable;
-use crate::style;
-use crate::tree::{NodeId, Taffy};
+use crate::{style, LayoutTree};
+use crate::tree::{NodeId};
 use core::fmt::{Debug, Display, Write};
 use std::sync::Mutex;
 
 /// Prints a debug representation of the computed layout for a tree of nodes, starting with the passed root node.
-pub fn print_tree<NodeContext>(tree: &Taffy<NodeContext>, root: NodeId) {
+pub fn print_tree(tree: &impl LayoutTree, root: NodeId) {
     println!("TREE");
     print_node(tree, root, false, String::new());
 }
 
-fn print_node<NodeContext>(tree: &Taffy<NodeContext>, node: NodeId, has_sibling: bool, lines_string: String) {
-    let layout = &tree.layout(node).unwrap();
-    let style = &tree.style(node).unwrap();
-    let num_children = tree.child_count(node).unwrap();
+fn print_node(tree: &impl LayoutTree, node: NodeId, has_sibling: bool, lines_string: String) {
+    let layout = &tree.layout(node);
+    let style = &tree.style(node);
+    let num_children = tree.child_count(node);
 
     let display = match (num_children, style.display) {
         (_, style::Display::None) => "NONE",
@@ -44,7 +43,7 @@ fn print_node<NodeContext>(tree: &Taffy<NodeContext>, node: NodeId, has_sibling:
     let new_string = lines_string + bar;
 
     // Recurse into children
-    for (index, child) in tree.children(node).unwrap().into_iter().enumerate() {
+    for (index, child) in tree.children(node).into_iter().enumerate() {
         let has_sibling = index < num_children - 1;
         print_node(tree, child, has_sibling, new_string.clone());
     }
