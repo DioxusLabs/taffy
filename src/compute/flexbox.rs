@@ -628,6 +628,7 @@ fn determine_flex_base_size(
 
         // Parent size for child sizing
         let cross_axis_parent_size = constants.node_inner_size.cross(dir);
+        let child_parent_size = Size::NONE.with_cross(dir, cross_axis_parent_size);
 
         // Available space for child sizing
         let cross_axis_margin_sum = constants.margin.cross_axis_sum(dir);
@@ -637,6 +638,18 @@ fn determine_flex_base_size(
             .cross(dir)
             .map_definite_value(|val| cross_axis_parent_size.unwrap_or(val))
             .maybe_clamp(child_min_cross, child_max_cross);
+
+        // Known dimensions for child sizing
+        let child_known_dimensions = {
+            let mut ckd = child.size.with_main(dir, None);
+            if child.align_self == AlignSelf::Stretch && ckd.cross(dir).is_none() {
+                ckd.set_cross(
+                    dir,
+                    cross_axis_available_space.into_option().maybe_sub(child.margin.cross_axis_sum(dir)),
+                );
+            }
+            ckd
+        };
 
         child.flex_basis = 'flex_basis: {
             // A. If the item has a definite used flex basis, that’s the flex base size.
@@ -679,7 +692,6 @@ fn determine_flex_base_size(
             //    is auto and not definite, in this calculation use fit-content as the
             //    flex item’s cross size. The flex base size is the item’s resulting main size.
 
-            let child_parent_size = Size::NONE.with_cross(dir, cross_axis_parent_size);
             let child_available_space = Size::MAX_CONTENT
                 .with_main(
                     dir,
@@ -691,21 +703,6 @@ fn determine_flex_base_size(
                     },
                 )
                 .with_cross(dir, cross_axis_available_space);
-
-            let child_known_dimensions = {
-                let mut ckd = child.size;
-                if child.align_self == AlignSelf::Stretch && ckd.cross(dir).is_none() {
-                    ckd.set_cross(
-                        dir,
-                        child_available_space
-                            .cross(dir)
-                            .into_option()
-                            .maybe_clamp(child_min_cross, child_max_cross)
-                            .maybe_sub(child.margin.cross_axis_sum(dir)),
-                    );
-                }
-                ckd
-            };
 
             break 'flex_basis tree
                 .measure_child_size(
@@ -756,12 +753,11 @@ fn determine_flex_base_size(
 
         child.resolved_minimum_main_size = style_min_main_size.unwrap_or({
             let min_content_size = {
-                let child_parent_size = Size::NONE.with_cross(dir, cross_axis_parent_size);
                 let child_available_space = Size::MIN_CONTENT.with_cross(dir, cross_axis_available_space);
 
                 tree.measure_child_size(
                     child.node,
-                    Size::NONE,
+                    child_known_dimensions,
                     child_parent_size,
                     child_available_space,
                     SizingMode::ContentSize,
