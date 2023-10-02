@@ -50,6 +50,12 @@ Example usage change:
   - All types from the `node`, `data`, `layout`, `error` and `cache` modules have been moved to the  the `tree` module.
 - Fixed misspelling: `RunMode::PeformLayout` renamed into `RunMode::PerformLayout` (added missing `r`).
 
+## 0.3.14
+
+### Fixes
+
+- Flex: Fix issue where constraints were not being propagated, causing nodes with inherent aspect-ratio (typically images) to not apply that aspect-ratio (#545) (Fixes bevyengine/bevy#9841)
+
 ## 0.3.13
 
 ### Fixes
