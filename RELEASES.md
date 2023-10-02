@@ -1,5 +1,11 @@
 # Release Notes
 
+## 0.3.14
+
+### Fixes
+
+- Flex: Fix issue where constraints were not being propagated, causing nodes with inherent aspect-ratio (typically images) to not apply that aspect-ratio (#545) (Fixes bevyengine/bevy#9841)
+
 ## 0.3.13
 
 ### Fixes
