@@ -45,23 +45,35 @@ mod grid_absolute_with_padding_and_margin;
 #[cfg(feature = "grid")]
 mod grid_align_content_center;
 #[cfg(feature = "grid")]
+mod grid_align_content_center_negative_space_gap;
+#[cfg(feature = "grid")]
 mod grid_align_content_end;
+#[cfg(feature = "grid")]
+mod grid_align_content_end_negative_space_gap;
 #[cfg(feature = "grid")]
 mod grid_align_content_end_with_padding_border;
 #[cfg(feature = "grid")]
 mod grid_align_content_space_around;
 #[cfg(feature = "grid")]
+mod grid_align_content_space_around_negative_space_gap;
+#[cfg(feature = "grid")]
 mod grid_align_content_space_around_with_padding_border;
 #[cfg(feature = "grid")]
 mod grid_align_content_space_between;
+#[cfg(feature = "grid")]
+mod grid_align_content_space_between_negative_space_gap;
 #[cfg(feature = "grid")]
 mod grid_align_content_space_between_with_padding_border;
 #[cfg(feature = "grid")]
 mod grid_align_content_space_evenly;
 #[cfg(feature = "grid")]
+mod grid_align_content_space_evenly_negative_space_gap;
+#[cfg(feature = "grid")]
 mod grid_align_content_space_evenly_with_padding_border;
 #[cfg(feature = "grid")]
 mod grid_align_content_start;
+#[cfg(feature = "grid")]
+mod grid_align_content_start_negative_space_gap;
 #[cfg(feature = "grid")]
 mod grid_align_content_start_with_padding_border;
 #[cfg(feature = "grid")]
@@ -223,25 +235,37 @@ mod grid_hidden;
 #[cfg(feature = "grid")]
 mod grid_justify_content_center;
 #[cfg(feature = "grid")]
+mod grid_justify_content_center_negative_space_gap;
+#[cfg(feature = "grid")]
 mod grid_justify_content_center_with_padding_border;
 #[cfg(feature = "grid")]
 mod grid_justify_content_end;
+#[cfg(feature = "grid")]
+mod grid_justify_content_end_negative_space_gap;
 #[cfg(feature = "grid")]
 mod grid_justify_content_end_with_padding_border;
 #[cfg(feature = "grid")]
 mod grid_justify_content_space_around;
 #[cfg(feature = "grid")]
+mod grid_justify_content_space_around_negative_space_gap;
+#[cfg(feature = "grid")]
 mod grid_justify_content_space_around_with_padding_border;
 #[cfg(feature = "grid")]
 mod grid_justify_content_space_between;
+#[cfg(feature = "grid")]
+mod grid_justify_content_space_between_negative_space_gap;
 #[cfg(feature = "grid")]
 mod grid_justify_content_space_between_with_padding_border;
 #[cfg(feature = "grid")]
 mod grid_justify_content_space_evenly;
 #[cfg(feature = "grid")]
+mod grid_justify_content_space_evenly_negative_space_gap;
+#[cfg(feature = "grid")]
 mod grid_justify_content_space_evenly_with_padding_border;
 #[cfg(feature = "grid")]
 mod grid_justify_content_start;
+#[cfg(feature = "grid")]
+mod grid_justify_content_start_negative_space_gap;
 #[cfg(feature = "grid")]
 mod grid_justify_content_start_with_padding_border;
 #[cfg(feature = "grid")]
