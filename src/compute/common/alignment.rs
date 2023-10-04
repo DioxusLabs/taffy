@@ -49,6 +49,7 @@ pub(crate) fn compute_alignment_offset(
             AlignContent::SpaceBetween => free_space / (num_items - 1) as f32,
             AlignContent::SpaceAround => free_space / num_items as f32,
             AlignContent::SpaceEvenly => free_space / (num_items + 1) as f32,
-        }).max(0.0)
+        })
+        .max(0.0)
     }
 }
