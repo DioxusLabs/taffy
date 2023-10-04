@@ -39,7 +39,7 @@ pub(crate) fn compute_alignment_offset(
             AlignContent::SpaceEvenly => free_space / (num_items + 1) as f32,
         }
     } else {
-        gap + match alignment_mode {
+        (gap + match alignment_mode {
             AlignContent::Start => 0.0,
             AlignContent::FlexStart => 0.0,
             AlignContent::End => 0.0,
@@ -49,6 +49,6 @@ pub(crate) fn compute_alignment_offset(
             AlignContent::SpaceBetween => free_space / (num_items - 1) as f32,
             AlignContent::SpaceAround => free_space / num_items as f32,
             AlignContent::SpaceEvenly => free_space / (num_items + 1) as f32,
-        }
+        }).max(0.0)
     }
 }
