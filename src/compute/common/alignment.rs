@@ -35,10 +35,23 @@ pub(crate) fn compute_alignment_offset(
             AlignContent::Center => free_space / 2.0,
             AlignContent::Stretch => 0.0,
             AlignContent::SpaceBetween => 0.0,
-            AlignContent::SpaceAround => (free_space / num_items as f32) / 2.0,
-            AlignContent::SpaceEvenly => free_space / (num_items + 1) as f32,
+            AlignContent::SpaceAround => {
+                if free_space >= 0.0 {
+                    (free_space / num_items as f32) / 2.0
+                } else {
+                    free_space / 2.0
+                }
+            }
+            AlignContent::SpaceEvenly => {
+                if free_space >= 0.0 {
+                    free_space / (num_items + 1) as f32
+                } else {
+                    free_space / 2.0
+                }
+            }
         }
     } else {
+        let free_space = free_space.max(0.0);
         gap + match alignment_mode {
             AlignContent::Start => 0.0,
             AlignContent::FlexStart => 0.0,

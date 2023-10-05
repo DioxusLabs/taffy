@@ -50,6 +50,12 @@ Example usage change:
   - All types from the `node`, `data`, `layout`, `error` and `cache` modules have been moved to the  the `tree` module.
 - Fixed misspelling: `RunMode::PeformLayout` renamed into `RunMode::PerformLayout` (added missing `r`).
 
+## 0.3.15
+
+### Fixes
+
+- Fix justify-content and align-content when free space is negative (content overflows container) (#549) (#551)
+
 ## 0.3.14
 
 ### Fixes
