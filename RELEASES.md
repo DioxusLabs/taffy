@@ -1,5 +1,11 @@
 # Release Notes
 
+## 0.3.15
+
+### Fixes
+
+- Fix justify-content and align-content when free space is negative (content overflows container) (#549) (#551)
+
 ## 0.3.14
 
 ### Fixes
