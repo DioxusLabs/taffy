@@ -9,7 +9,7 @@ use crate::math::MaybeMath;
 use crate::node::Node;
 use crate::resolve::{MaybeResolve, ResolveOrZero};
 use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Position};
-use crate::sys::{f32_max, f32_min};
+use crate::sys::f32_max;
 use crate::tree::LayoutTree;
 
 /// Align the grid tracks within the grid according to the align-content (rows) or
@@ -23,25 +23,8 @@ pub(super) fn align_tracks(
     track_alignment_style: AlignContent,
 ) {
     let used_size: f32 = tracks.iter().map(|track| track.base_size).sum();
-    let size_diff = grid_container_content_box_size - used_size;
-    let free_space = f32_max(size_diff, 0.0);
-    let overflow = f32_min(size_diff, 0.0);
-
-    // If the used_size > grid_container_size then the tracks must overflow their container
-    // The direction in which they do so is determined by the alignment style
-    let origin = padding.start
-        + border.start
-        + match track_alignment_style {
-            AlignContent::Start => 0.0,
-            AlignContent::FlexStart => 0.0,
-            AlignContent::End => overflow,
-            AlignContent::FlexEnd => overflow,
-            AlignContent::Center => overflow / 2.0,
-            AlignContent::Stretch => 0.0,
-            AlignContent::SpaceBetween => 0.0,
-            AlignContent::SpaceEvenly => 0.0,
-            AlignContent::SpaceAround => 0.0,
-        };
+    let free_space = grid_container_content_box_size - used_size;
+    let origin = padding.start + border.start;
 
     // Count the number of non-collapsed tracks (not counting gutters)
     let num_tracks = tracks.iter().skip(1).step_by(2).filter(|track| !track.is_collapsed).count();
