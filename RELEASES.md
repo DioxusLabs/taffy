@@ -106,6 +106,12 @@ Example usage change:
   - All types from the `node`, `data`, `layout`, `error` and `cache` modules have been moved to the  the `tree` module.
 - Fixed misspelling: `RunMode::PeformLayout` renamed into `RunMode::PerformLayout` (added missing `r`).
 
+## 0.3.16
+
+### Fixes
+
+- Improve performance of flexbox columns
+
 ## 0.3.15
 
 ### Fixes
