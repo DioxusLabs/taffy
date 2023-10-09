@@ -264,21 +264,28 @@ fn debug_log_node(
 ///
 /// The two variables that we care about when determining cache slot are:
 ///
-///   - How many "known_dimensions" are set. In the worst case, a node may be called first with neither dimensions known known_dimensions,
-///     then with one dimension known (either width of height - which doesn't matter for our purposes here), and then with both dimensions
-///     known.
+///   - How many "known_dimensions" are set. In the worst case, a node may be called first with neither dimension known, then with one
+///     dimension known (either width of height - which doesn't matter for our purposes here), and then with both dimensions known.
 ///   - Whether unknown dimensions are being sized under a min-content or a max-content available space constraint (definite available space
 ///     shares a cache slot with max-content because a node will generally be sized under one or the other but not both).
 ///
 /// ## Cache slots:
 ///
 /// - Slot 0: Both known_dimensions were set
-/// - Slot 1: 1 of 2 known_dimensions were set and the other dimension was either a MaxContent or Definite available space constraint
-/// - Slot 2: 1 of 2 known_dimensions were set and the other dimension was a MinContent constraint
-/// - Slot 3: Neither known_dimensions were set and we are sizing under a MaxContent or Definite available space constraint
-/// - Slot 4: Neither known_dimensions were set and we are sizing under a MinContent constraint
+/// - Slots 1-4: 1 of 2 known_dimensions were set and:
+///   - Slot 1: width but not height known_dimension was set and the other dimension was either a MaxContent or Definite available space constraintraint
+///   - Slot 2: width but not height known_dimension was set and the other dimension was a MinContent constraint
+///   - Slot 3: height but not width known_dimension was set and the other dimension was either a MaxContent or Definite available space constraintable space constraint
+///   - Slot 4: height but not width known_dimension was set and the other dimension was a MinContent constraint
+/// - Slots 5-8: Neither known_dimensions were set and:
+///   - Slot 5: x-axis available space is MaxContent or Definite and y-axis available space is MaxContent or Definite
+///   - Slot 6: x-axis available space is MaxContent or Definite and y-axis available space is MinContent
+///   - Slot 7: x-axis available space is MinContent and y-axis available space is MaxContent or Definite
+///   - Slot 8: x-axis available space is MinContent and y-axis available space is MinContent
 #[inline]
 fn compute_cache_slot(known_dimensions: Size<Option<f32>>, available_space: Size<AvailableSpace>) -> usize {
+    use AvailableSpace::{Definite, MaxContent, MinContent};
+
     let has_known_width = known_dimensions.width.is_some();
     let has_known_height = known_dimensions.height.is_some();
 
@@ -290,18 +297,26 @@ fn compute_cache_slot(known_dimensions: Size<Option<f32>>, available_space: Size
     // Slot 1: width but not height known_dimension was set and the other dimension was either a MaxContent or Definite available space constraint
     // Slot 2: width but not height known_dimension was set and the other dimension was a MinContent constraint
     if has_known_width && !has_known_height {
-        return 1 + (available_space.height == AvailableSpace::MinContent) as usize;
+        return 1 + (available_space.height == MinContent) as usize;
     }
 
     // Slot 3: height but not width known_dimension was set and the other dimension was either a MaxContent or Definite available space constraint
     // Slot 4: height but not width known_dimension was set and the other dimension was a MinContent constraint
     if !has_known_width && has_known_height {
-        return 3 + (available_space.width == AvailableSpace::MinContent) as usize;
+        return 3 + (available_space.width == MinContent) as usize;
     }
 
-    // Slot 5: Neither known_dimensions were set and we are sizing under a MaxContent or Definite available space constraint
-    // Slot 6: Neither known_dimensions were set and we are sizing under a MinContent constraint
-    5 + (available_space.width == AvailableSpace::MinContent) as usize
+    // Slots 5-8: Neither known_dimensions were set and:
+    match (available_space.width, available_space.height) {
+        // Slot 5: x-axis available space is MaxContent or Definite and y-axis available space is MaxContent or Definite
+        (MaxContent | Definite(_), MaxContent | Definite(_)) => 5,
+        // Slot 6: x-axis available space is MaxContent or Definite and y-axis available space is MinContent
+        (MaxContent | Definite(_), MinContent) => 6,
+        // Slot 7: x-axis available space is MinContent and y-axis available space is MaxContent or Definite
+        (MinContent, MaxContent | Definite(_)) => 7,
+        // Slot 8: x-axis available space is MinContent and y-axis available space is MinContent
+        (MinContent, MinContent) => 8,
+    }
 }
 
 /// Try to get the computation result from the cache.
