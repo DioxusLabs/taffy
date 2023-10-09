@@ -1,8 +1,8 @@
 #[test]
 fn flex_basis_smaller_then_content_with_flex_grow_unconstraint_size() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{prelude::*, tree::Layout, Taffy};
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
@@ -44,9 +44,9 @@ fn flex_basis_smaller_then_content_with_flex_grow_unconstraint_size() {
         )
         .unwrap();
     let node = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[node0, node1]).unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
-    taffy::util::print_tree(&taffy, node);
+    taffy.print_tree(node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert_eq!(size.width, 90f32, "width of node {:?}. Expected {}. Actual {}", node, 90f32, size.width);

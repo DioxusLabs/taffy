@@ -1,8 +1,8 @@
 #[test]
 fn min_height_overrides_height_on_root() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{prelude::*, tree::Layout, Taffy};
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(50f32) },
@@ -10,9 +10,9 @@ fn min_height_overrides_height_on_root() {
             ..Default::default()
         })
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
-    taffy::util::print_tree(&taffy, node);
+    taffy.print_tree(node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert_eq!(size.width, 0f32, "width of node {:?}. Expected {}. Actual {}", node, 0f32, size.width);

@@ -6,8 +6,6 @@ use crate::style::{AvailableSpace, Style};
 // Submodules
 mod cache;
 pub use cache::{Cache, CacheEntry};
-mod measure_func;
-pub use measure_func::{Measurable, MeasureFunc};
 mod node;
 #[cfg(feature = "taffy_tree")]
 use node::NodeData;
@@ -15,7 +13,7 @@ pub use node::NodeId;
 #[cfg(feature = "taffy_tree")]
 mod taffy_tree;
 #[cfg(feature = "taffy_tree")]
-pub use taffy_tree::{Taffy, TaffyChildIter, TaffyError, TaffyResult};
+pub use taffy_tree::{Taffy, TaffyChildIter, TaffyError, TaffyResult, TaffyView};
 mod layout;
 pub use layout::{CollapsibleMarginSet, Layout, RunMode, SizeBaselinesAndMargins, SizingMode};
 

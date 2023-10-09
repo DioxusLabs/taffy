@@ -2,7 +2,7 @@ use taffy::prelude::*;
 
 #[test]
 fn relayout() {
-    let mut taffy = taffy::Taffy::new();
+    let mut taffy: Taffy<()> = taffy::Taffy::new();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size { width: length(8.0), height: length(80.0) },
@@ -29,7 +29,6 @@ fn relayout() {
             &[node0],
         )
         .unwrap();
-    println!("0:");
     taffy
         .compute_layout(
             node,
@@ -39,8 +38,7 @@ fn relayout() {
     let initial = taffy.layout(node).unwrap().location;
     let initial0 = taffy.layout(node0).unwrap().location;
     let initial1 = taffy.layout(node1).unwrap().location;
-    for i in 1..10 {
-        println!("\n\n{i}:");
+    for _ in 1..10 {
         taffy
             .compute_layout(
                 node,
@@ -71,7 +69,7 @@ fn toggle_root_display_none() {
     };
 
     // Setup
-    let mut taffy = taffy::Taffy::new();
+    let mut taffy: Taffy<()> = taffy::Taffy::new();
     let node = taffy.new_leaf(hidden_style.clone()).unwrap();
 
     // Layout 1 (None)
@@ -105,7 +103,7 @@ fn toggle_root_display_none() {
 fn toggle_root_display_none_with_children() {
     use taffy::prelude::*;
 
-    let mut taffy = taffy::Taffy::new();
+    let mut taffy: Taffy<()> = taffy::Taffy::new();
 
     let child = taffy
         .new_leaf(Style { size: Size { width: length(800.0), height: length(100.0) }, ..Default::default() })
@@ -151,7 +149,7 @@ fn toggle_flex_child_display_none() {
     };
 
     // Setup
-    let mut taffy = taffy::Taffy::new();
+    let mut taffy: Taffy<()> = taffy::Taffy::new();
     let node = taffy.new_leaf(hidden_style.clone()).unwrap();
     let root = taffy.new_with_children(flex_style.clone(), &[node]).unwrap();
 
@@ -197,7 +195,7 @@ fn toggle_flex_container_display_none() {
     };
 
     // Setup
-    let mut taffy = taffy::Taffy::new();
+    let mut taffy: Taffy<()> = taffy::Taffy::new();
     let node = taffy.new_leaf(hidden_style.clone()).unwrap();
     let root = taffy.new_with_children(hidden_style.clone(), &[node]).unwrap();
 
@@ -243,7 +241,7 @@ fn toggle_grid_child_display_none() {
     };
 
     // Setup
-    let mut taffy = taffy::Taffy::new();
+    let mut taffy: Taffy<()> = taffy::Taffy::new();
     let node = taffy.new_leaf(hidden_style.clone()).unwrap();
     let root = taffy.new_with_children(grid_style.clone(), &[node]).unwrap();
 
@@ -289,7 +287,7 @@ fn toggle_grid_container_display_none() {
     };
 
     // Setup
-    let mut taffy = taffy::Taffy::new();
+    let mut taffy: Taffy<()> = taffy::Taffy::new();
     let node = taffy.new_leaf(hidden_style.clone()).unwrap();
     let root = taffy.new_with_children(hidden_style.clone(), &[node]).unwrap();
 
@@ -322,7 +320,7 @@ fn toggle_grid_container_display_none() {
 
 #[test]
 fn relayout_is_stable_with_rounding() {
-    let mut taffy = Taffy::new();
+    let mut taffy: Taffy<()> = taffy::Taffy::new();
     taffy.enable_rounding();
 
     // <div style="width: 1920px; height: 1080px">
@@ -364,7 +362,7 @@ fn relayout_is_stable_with_rounding() {
     for _ in 0..5 {
         taffy.mark_dirty(root).ok();
         taffy.compute_layout(root, Size::MAX_CONTENT).ok();
-        taffy::util::print_tree(&taffy, root);
+        taffy.print_tree(root);
 
         let root_layout = taffy.layout(root).unwrap();
         assert_eq!(root_layout.location.x, 0.0);

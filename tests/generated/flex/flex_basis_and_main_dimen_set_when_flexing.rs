@@ -1,8 +1,8 @@
 #[test]
 fn flex_basis_and_main_dimen_set_when_flexing() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{prelude::*, tree::Layout, Taffy};
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
@@ -34,9 +34,9 @@ fn flex_basis_and_main_dimen_set_when_flexing() {
             &[node0, node1],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
-    taffy::util::print_tree(&taffy, node);
+    taffy.print_tree(node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert_eq!(size.width, 100f32, "width of node {:?}. Expected {}. Actual {}", node, 100f32, size.width);

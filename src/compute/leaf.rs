@@ -1,8 +1,9 @@
 //! Computes size using styles and measure functions
 
-use crate::geometry::{Line, Point, Size};
+use crate::geometry::{Point, Size};
 use crate::style::{AvailableSpace, Display, Overflow, Position, Style};
-use crate::tree::{CollapsibleMarginSet, Measurable};
+use crate::tree::CollapsibleMarginSet;
+use crate::tree::NodeId;
 use crate::tree::{SizeBaselinesAndMargins, SizingMode};
 use crate::util::sys::f32_max;
 use crate::util::MaybeMath;
@@ -12,40 +13,56 @@ use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::util::debug::NODE_LOGGER;
 
 /// Perform full layout on a leaf node
-pub(crate) fn perform_layout(
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn perform_layout<NodeContext, MeasureFunction>(
     style: &Style,
-    measurable: Option<&impl Measurable>,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     sizing_mode: SizingMode,
-    _vertical_margins_are_collapsible: Line<bool>,
-) -> SizeBaselinesAndMargins {
-    compute(style, measurable, known_dimensions, parent_size, available_space, sizing_mode)
+    measure_function: MeasureFunction,
+    node_id: NodeId,
+    context: Option<&mut NodeContext>,
+) -> SizeBaselinesAndMargins
+where
+    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+{
+    compute(style, known_dimensions, parent_size, available_space, sizing_mode, measure_function, node_id, context)
 }
 
 /// Measure a leaf node's size
-pub(crate) fn measure_size(
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn measure_size<NodeContext, MeasureFunction>(
     style: &Style,
-    measurable: Option<&impl Measurable>,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     sizing_mode: SizingMode,
-    _vertical_margins_are_collapsible: Line<bool>,
-) -> Size<f32> {
-    compute(style, measurable, known_dimensions, parent_size, available_space, sizing_mode).size
+    measure_function: MeasureFunction,
+    node_id: NodeId,
+    context: Option<&mut NodeContext>,
+) -> Size<f32>
+where
+    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+{
+    compute(style, known_dimensions, parent_size, available_space, sizing_mode, measure_function, node_id, context).size
 }
 
 /// Compute the size of a leaf node (node with no children)
-pub fn compute(
+#[allow(clippy::too_many_arguments)]
+pub fn compute<NodeContext, MeasureFunction>(
     style: &Style,
-    measurable: Option<&impl Measurable>,
     known_dimensions: Size<Option<f32>>,
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     sizing_mode: SizingMode,
-) -> SizeBaselinesAndMargins {
+    mut measure_function: MeasureFunction,
+    node_id: NodeId,
+    context: Option<&mut NodeContext>,
+) -> SizeBaselinesAndMargins
+where
+    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+{
     // Resolve node's preferred/min/max sizes (width/heights) against the available space (percentages resolve to pixel values)
     // For ContentSize mode, we pretend that the node has no size styles as these should be ignored.
     let (node_size, node_min_size, node_max_size, aspect_ratio) = match sizing_mode {
@@ -120,11 +137,11 @@ pub fn compute(
             bottom_margin: CollapsibleMarginSet::ZERO,
             margins_can_collapse_through: !has_styles_preventing_being_collapsed_through
                 && size.height == 0.0
-                && measurable.is_none(),
+                && context.is_none(),
         };
     };
 
-    if let Some(measurable) = measurable {
+    if let Some(context) = context {
         // Compute available space
         let available_space = Size {
             width: available_space
@@ -146,7 +163,7 @@ pub fn compute(
         };
 
         // Measure node
-        let measured_size = measurable.measure(known_dimensions, available_space);
+        let measured_size = measure_function(known_dimensions, available_space, node_id, Some(context));
         let clamped_size =
             node_size.unwrap_or(measured_size + content_box_inset.sum_axes()).maybe_clamp(node_min_size, node_max_size);
         let size = Size {

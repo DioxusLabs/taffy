@@ -1,8 +1,8 @@
 #[test]
 fn grid_align_content_space_between_negative_space_gap() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{prelude::*, tree::Layout, Taffy};
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node00 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node01 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node02 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
@@ -52,9 +52,9 @@ fn grid_align_content_space_between_negative_space_gap() {
             &[node0],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
-    taffy::util::print_tree(&taffy, node);
+    taffy.print_tree(node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert_eq!(size.width, 240f32, "width of node {:?}. Expected {}. Actual {}", node, 240f32, size.width);

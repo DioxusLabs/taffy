@@ -215,14 +215,14 @@ fn generate_test(name: impl AsRef<str>, description: &Value) -> TokenStream {
         #[test]
         fn #name() {
             #[allow(unused_imports)]
-            use taffy::{tree::Layout, prelude::*};
-            let mut taffy = taffy::Taffy::new();
+            use taffy::{tree::Layout, prelude::*, Taffy};
+            let mut taffy : Taffy<crate::TextMeasure> = Taffy::new();
             #set_rounding_mode
             #node_description
-            taffy.compute_layout(node, #available_space).unwrap();
+            taffy.compute_layout_with_measure(node, #available_space, crate::test_measure_function).unwrap();
 
             println!("\nComputed tree:");
-            taffy::util::print_tree(&taffy, node);
+            taffy.print_tree(node);
             println!();
 
             #assertions
@@ -556,8 +556,7 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
     let text_content = get_string_value("text_content", node);
     let writing_mode = get_string_value("writingMode", style);
     let raw_aspect_ratio = get_number_value("aspect_ratio", style);
-    let measure_func: Option<_> =
-        text_content.map(|text| generate_measure_function(text, writing_mode, raw_aspect_ratio));
+    let node_context: Option<_> = text_content.map(|text| generate_node_context(text, writing_mode, raw_aspect_ratio));
 
     edges_quoted!(style, margin, generate_length_percentage_auto, quote!(zero()));
     edges_quoted!(style, padding, generate_length_percentage, quote!(zero()));
@@ -629,8 +628,8 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
             #children_body
             let #ident = taffy.new_with_children(#style,#children).unwrap();
         )
-    } else if measure_func.is_some() {
-        quote!(let #ident = taffy.new_leaf_with_measure(#style,#measure_func,).unwrap();)
+    } else if node_context.is_some() {
+        quote!(let #ident = taffy.new_leaf_with_context(#style,#node_context,).unwrap();)
     } else {
         quote!(let #ident = taffy.new_leaf(#style).unwrap();)
     }
@@ -867,7 +866,7 @@ fn generate_scalar_definition(track_definition: &serde_json::Map<String, Value>)
     }
 }
 
-fn generate_measure_function(text_content: &str, writing_mode: Option<&str>, aspect_ratio: Option<f32>) -> TokenStream {
+fn generate_node_context(text_content: &str, writing_mode: Option<&str>, aspect_ratio: Option<f32>) -> TokenStream {
     let writing_mode_token = match writing_mode {
         Some("vertical-rl" | "vertical-lr") => quote!(crate::WritingMode::Vertical),
         _ => quote!(crate::WritingMode::Horizontal),
@@ -879,9 +878,10 @@ fn generate_measure_function(text_content: &str, writing_mode: Option<&str>, asp
     };
 
     quote!(
-        taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
-            const TEXT : &str = #text_content;
-            crate::measure_standard_text(known_dimensions, available_space, TEXT, #writing_mode_token, #aspect_ratio_token)
-        })
+        crate::TextMeasure {
+            text_content: #text_content,
+            writing_mode: #writing_mode_token,
+            _aspect_ratio: #aspect_ratio_token,
+        }
     )
 }

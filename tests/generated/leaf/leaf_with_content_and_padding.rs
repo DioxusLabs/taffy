@@ -1,10 +1,10 @@
 #[test]
 fn leaf_with_content_and_padding() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{prelude::*, tree::Layout, Taffy};
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style {
                 padding: taffy::geometry::Rect {
                     left: taffy::style::LengthPercentage::Length(8f32),
@@ -14,21 +14,16 @@ fn leaf_with_content_and_padding() {
                 },
                 ..Default::default()
             },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
-                const TEXT: &str = "HHHH";
-                crate::measure_standard_text(
-                    known_dimensions,
-                    available_space,
-                    TEXT,
-                    crate::WritingMode::Horizontal,
-                    None,
-                )
-            }),
+            crate::TextMeasure {
+                text_content: "HHHH",
+                writing_mode: crate::WritingMode::Horizontal,
+                _aspect_ratio: None,
+            },
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
-    taffy::util::print_tree(&taffy, node);
+    taffy.print_tree(node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert_eq!(size.width, 52f32, "width of node {:?}. Expected {}. Actual {}", node, 52f32, size.width);

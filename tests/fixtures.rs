@@ -11,15 +11,22 @@ enum WritingMode {
 }
 
 #[allow(dead_code)]
-fn measure_standard_text(
-    known_dimensions: taffy::geometry::Size<Option<f32>>,
-    available_space: taffy::geometry::Size<taffy::style::AvailableSpace>,
-    text_content: &str,
+struct TextMeasure {
+    text_content: &'static str,
     writing_mode: WritingMode,
     _aspect_ratio: Option<f32>,
+}
+
+#[allow(dead_code)]
+fn test_measure_function(
+    known_dimensions: taffy::geometry::Size<Option<f32>>,
+    available_space: taffy::geometry::Size<taffy::style::AvailableSpace>,
+    _node_id: taffy::tree::NodeId,
+    node_context: Option<&mut TextMeasure>,
 ) -> taffy::geometry::Size<f32> {
     use taffy::geometry::AbsoluteAxis;
     use taffy::prelude::*;
+
     const ZWS: char = '\u{200B}';
     const H_WIDTH: f32 = 10.0;
     const H_HEIGHT: f32 = 10.0;
@@ -28,13 +35,15 @@ fn measure_standard_text(
         return Size { width, height };
     }
 
-    let inline_axis = match writing_mode {
+    let Some(node_context) = node_context else { return Size::ZERO };
+
+    let inline_axis = match node_context.writing_mode {
         WritingMode::Horizontal => AbsoluteAxis::Horizontal,
         WritingMode::Vertical => AbsoluteAxis::Vertical,
     };
     let block_axis = inline_axis.other_axis();
+    let lines: Vec<&str> = node_context.text_content.split(ZWS).collect();
 
-    let lines: Vec<&str> = text_content.split(ZWS).collect();
     if lines.is_empty() {
         return Size::ZERO;
     }
@@ -66,7 +75,7 @@ fn measure_standard_text(
         (line_count as f32) * H_HEIGHT
     });
 
-    match writing_mode {
+    match node_context.writing_mode {
         WritingMode::Horizontal => Size { width: inline_size, height: block_size },
         WritingMode::Vertical => Size { width: block_size, height: inline_size },
     }

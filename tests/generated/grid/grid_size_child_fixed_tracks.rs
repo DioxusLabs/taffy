@@ -1,103 +1,78 @@
 #[test]
 fn grid_size_child_fixed_tracks() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{prelude::*, tree::Layout, Taffy};
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style {
                 align_self: Some(taffy::style::AlignSelf::Start),
                 justify_self: Some(taffy::style::JustifySelf::Start),
                 ..Default::default()
             },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
-                const TEXT: &str = "HH\u{200b}HH\u{200b}HH\u{200b}HH";
-                crate::measure_standard_text(
-                    known_dimensions,
-                    available_space,
-                    TEXT,
-                    crate::WritingMode::Horizontal,
-                    None,
-                )
-            }),
+            crate::TextMeasure {
+                text_content: "HH\u{200b}HH\u{200b}HH\u{200b}HH",
+                writing_mode: crate::WritingMode::Horizontal,
+                _aspect_ratio: None,
+            },
         )
         .unwrap();
     let node1 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style {
                 align_self: Some(taffy::style::AlignSelf::Start),
                 justify_self: Some(taffy::style::JustifySelf::Start),
                 ..Default::default()
             },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
-                const TEXT: &str = "HHH\u{200b}HHH";
-                crate::measure_standard_text(
-                    known_dimensions,
-                    available_space,
-                    TEXT,
-                    crate::WritingMode::Horizontal,
-                    None,
-                )
-            }),
+            crate::TextMeasure {
+                text_content: "HHH\u{200b}HHH",
+                writing_mode: crate::WritingMode::Horizontal,
+                _aspect_ratio: None,
+            },
         )
         .unwrap();
     let node2 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style {
                 align_self: Some(taffy::style::AlignSelf::Start),
                 justify_self: Some(taffy::style::JustifySelf::Start),
                 ..Default::default()
             },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
-                const TEXT: &str = "HH\u{200b}HHHH";
-                crate::measure_standard_text(
-                    known_dimensions,
-                    available_space,
-                    TEXT,
-                    crate::WritingMode::Horizontal,
-                    None,
-                )
-            }),
+            crate::TextMeasure {
+                text_content: "HH\u{200b}HHHH",
+                writing_mode: crate::WritingMode::Horizontal,
+                _aspect_ratio: None,
+            },
         )
         .unwrap();
     let node3 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style {
                 align_self: Some(taffy::style::AlignSelf::Start),
                 justify_self: Some(taffy::style::JustifySelf::Start),
                 size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
                 ..Default::default()
             },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
-                const TEXT: &str = "HH\u{200b}HH\u{200b}HH\u{200b}HH";
-                crate::measure_standard_text(
-                    known_dimensions,
-                    available_space,
-                    TEXT,
-                    crate::WritingMode::Horizontal,
-                    None,
-                )
-            }),
+            crate::TextMeasure {
+                text_content: "HH\u{200b}HH\u{200b}HH\u{200b}HH",
+                writing_mode: crate::WritingMode::Horizontal,
+                _aspect_ratio: None,
+            },
         )
         .unwrap();
     let node4 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style {
                 align_self: Some(taffy::style::AlignSelf::Start),
                 justify_self: Some(taffy::style::JustifySelf::Start),
                 max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(30f32), height: auto() },
                 ..Default::default()
             },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
-                const TEXT: &str = "HH\u{200b}HH\u{200b}HH\u{200b}HH";
-                crate::measure_standard_text(
-                    known_dimensions,
-                    available_space,
-                    TEXT,
-                    crate::WritingMode::Horizontal,
-                    None,
-                )
-            }),
+            crate::TextMeasure {
+                text_content: "HH\u{200b}HH\u{200b}HH\u{200b}HH",
+                writing_mode: crate::WritingMode::Horizontal,
+                _aspect_ratio: None,
+            },
         )
         .unwrap();
     let node = taffy
@@ -115,9 +90,9 @@ fn grid_size_child_fixed_tracks() {
             &[node0, node1, node2, node3, node4],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
-    taffy::util::print_tree(&taffy, node);
+    taffy.print_tree(node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert_eq!(size.width, 120f32, "width of node {:?}. Expected {}. Actual {}", node, 120f32, size.width);

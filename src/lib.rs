@@ -1,9 +1,9 @@
 #![doc = include_str!("../README.md")]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(unsafe_code)]
+#![forbid(unsafe_code)]
 #![warn(missing_docs)]
 #![warn(clippy::missing_docs_in_private_items)]
-#![forbid(unsafe_code)]
 
 // We always need std for the tests
 // See <https://github.com/la10736/rstest/issues/149#issuecomment-1156402989>

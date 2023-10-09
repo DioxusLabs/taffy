@@ -1,36 +1,26 @@
 #[test]
 fn grid_max_width_smaller_than_min_content() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{prelude::*, tree::Layout, Taffy};
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node00 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style { ..Default::default() },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
-                const TEXT: &str = "HHHH\u{200b}HHHH";
-                crate::measure_standard_text(
-                    known_dimensions,
-                    available_space,
-                    TEXT,
-                    crate::WritingMode::Horizontal,
-                    None,
-                )
-            }),
+            crate::TextMeasure {
+                text_content: "HHHH\u{200b}HHHH",
+                writing_mode: crate::WritingMode::Horizontal,
+                _aspect_ratio: None,
+            },
         )
         .unwrap();
     let node01 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style { ..Default::default() },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
-                const TEXT: &str = "HHHH\u{200b}HHHH";
-                crate::measure_standard_text(
-                    known_dimensions,
-                    available_space,
-                    TEXT,
-                    crate::WritingMode::Horizontal,
-                    None,
-                )
-            }),
+            crate::TextMeasure {
+                text_content: "HHHH\u{200b}HHHH",
+                writing_mode: crate::WritingMode::Horizontal,
+                _aspect_ratio: None,
+            },
         )
         .unwrap();
     let node0 = taffy
@@ -54,9 +44,9 @@ fn grid_max_width_smaller_than_min_content() {
             &[node0],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
-    taffy::util::print_tree(&taffy, node);
+    taffy.print_tree(node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert_eq!(size.width, 60f32, "width of node {:?}. Expected {}. Actual {}", node, 60f32, size.width);

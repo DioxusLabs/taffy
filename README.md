@@ -20,7 +20,7 @@ Right now, it powers:
 use taffy::prelude::*;
 
 // First create an instance of Taffy
-let mut taffy = Taffy::new();
+let mut taffy : Taffy<()> = Taffy::new();
 
 // Create a tree of nodes using `taffy.new_leaf` and `taffy.new_with_children`.
 // These functions both return a node id which can be used to refer to that node

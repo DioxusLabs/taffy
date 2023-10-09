@@ -4,7 +4,63 @@
 
 ### Breaking
 
-Many APIs have been renamed to replace `points` or `Points` with `length` or `Length`.
+#### Measure function changes
+
+The "measure function" API for integrating Taffy with other measurement systems (such as text layout) has been changed to be more flexible,
+and to interact better with borrow checking (you can now borrow external data in your measure function!).
+
+- There are no longer per-node measure functions.
+- There is now a single "global" measure function, and a per-node "context" of a user-defined type
+- The `Taffy` tree is now a generic `Taffy<T>` where `T` is the "context" type.
+
+If you are not using measure functions, then the only change you will need to make is from:
+
+```rust
+let mut tree = Taffy::new();
+```
+
+to
+
+```rust
+let mut tree : Taffy<()> = Taffy::new();
+```
+
+And generally update any uses of `Taffy` in your codebase to `Taffy<()>`.
+
+If you are using measure functions then you will need to make some bigger (but straightforward) changes. The following Taffy 0.3 code:
+
+```rust
+let mut tree = Taffy::new();
+let leaf = tree.new_leaf_with_measure(
+  Style::DEFAULT,
+  |known_dimensions: Size<Option<f32>>, available_space: Size<AvailableSpace>| Size { width: 100.0, height: 200.0 }
+);
+tree.compute_layout(leaf, Size::MAX_CONTENT);
+```
+
+Should become something like the following with Taffy 0.4:
+
+```rust
+let mut tree : Taffy<Size> = Taffy::new();
+let leaf = tree.new_leaf_with_context(Style::DEFAULT, Size { width: 100.0, height: 200.0 });
+tree.compute_layout_with_measure(
+  leaf,
+  Size::MAX_CONTENT,
+  |known_dimensions: Size<Option<f32>>, available_space: Size<AvailableSpace>, node_id: NodeId, node_context: Option<Size>| {
+    node_context.unwrap_or(Size::ZERO)
+  }
+);
+```
+
+Note that:
+
+- You can choose any type instead of `Size` in the above example. This includes your own custom type (which can be an enum or a trait object).
+- If you don't need a context then you can use `()` for the context type
+- As the single "global" measure function passed to `compute_layout_with_measure` only needs to exist for the duration of a single layout run,
+  it can (mutably) borrow data from it's environment
+
+#### Many APIs have been renamed to replace `points` or `Points` with `length` or `Length`
+
 This new name better describes one-dimentional measure of space in some unspecified unit
 which is often unrelated to the PostScript point or the CSS `pt` unit.
 

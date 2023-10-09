@@ -15,8 +15,6 @@ pub(crate) use self::core::*;
 /// For when `std` is enabled
 #[cfg(feature = "std")]
 mod std {
-    /// An allocation-backend agnostic [`Box`] type
-    pub(crate) type Box<A> = std::boxed::Box<A>;
     /// An allocation-backend agnostic vector type
     pub(crate) type Vec<A> = std::vec::Vec<A>;
     /// A vector of child nodes
@@ -60,8 +58,6 @@ mod alloc {
     extern crate alloc;
     use core::cmp::Ordering;
 
-    /// An allocation-backend agnostic `Box` type
-    pub(crate) type Box<A> = alloc::boxed::Box<A>;
     /// An allocation-backend agnostic vector type
     pub(crate) type Vec<A> = alloc::vec::Vec<A>;
     /// A vector of child nodes

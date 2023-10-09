@@ -1,21 +1,16 @@
 #[test]
 fn bevy_issue_9530_reduced2() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{prelude::*, tree::Layout, Taffy};
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node00 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style { flex_grow: 1f32, ..Default::default() },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
-                const TEXT: &str = "HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH";
-                crate::measure_standard_text(
-                    known_dimensions,
-                    available_space,
-                    TEXT,
-                    crate::WritingMode::Horizontal,
-                    None,
-                )
-            }),
+            crate::TextMeasure {
+                text_content: "HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH",
+                writing_mode: crate::WritingMode::Horizontal,
+                _aspect_ratio: None,
+            },
         )
         .unwrap();
     let node0 = taffy
@@ -41,9 +36,9 @@ fn bevy_issue_9530_reduced2() {
             &[node0],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
-    taffy::util::print_tree(&taffy, node);
+    taffy.print_tree(node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert_eq!(size.width, 120f32, "width of node {:?}. Expected {}. Actual {}", node, 120f32, size.width);

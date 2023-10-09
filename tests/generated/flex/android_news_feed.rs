@@ -1,8 +1,8 @@
 #[test]
 fn android_news_feed() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{prelude::*, tree::Layout, Taffy};
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node000000 = taffy
         .new_leaf(taffy::style::Style {
             align_content: Some(taffy::style::AlignContent::Stretch),
@@ -203,9 +203,9 @@ fn android_news_feed() {
             &[node0],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
-    taffy::util::print_tree(&taffy, node);
+    taffy.print_tree(node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert_eq!(size.width, 1080f32, "width of node {:?}. Expected {}. Actual {}", node, 1080f32, size.width);

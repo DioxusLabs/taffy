@@ -1,25 +1,20 @@
 #[test]
 fn aspect_ratio_flex_row_fill_max_width() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout};
-    let mut taffy = taffy::Taffy::new();
+    use taffy::{prelude::*, tree::Layout, Taffy};
+    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0 = taffy
-        .new_leaf_with_measure(
+        .new_leaf_with_context(
             taffy::style::Style {
                 max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(20f32) },
                 aspect_ratio: Some(2f32),
                 ..Default::default()
             },
-            taffy::tree::MeasureFunc::Raw(|known_dimensions, available_space| {
-                const TEXT: &str = "HH\u{200b}HH\u{200b}HH\u{200b}HH";
-                crate::measure_standard_text(
-                    known_dimensions,
-                    available_space,
-                    TEXT,
-                    crate::WritingMode::Horizontal,
-                    Some(2f32),
-                )
-            }),
+            crate::TextMeasure {
+                text_content: "HH\u{200b}HH\u{200b}HH\u{200b}HH",
+                writing_mode: crate::WritingMode::Horizontal,
+                _aspect_ratio: Some(2f32),
+            },
         )
         .unwrap();
     let node = taffy
@@ -36,9 +31,9 @@ fn aspect_ratio_flex_row_fill_max_width() {
             &[node0],
         )
         .unwrap();
-    taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
+    taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
     println!("\nComputed tree:");
-    taffy::util::print_tree(&taffy, node);
+    taffy.print_tree(node);
     println!();
     let Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert_eq!(size.width, 100f32, "width of node {:?}. Expected {}. Actual {}", node, 100f32, size.width);
