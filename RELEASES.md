@@ -1,5 +1,11 @@
 # Release Notes
 
+## 0.3.16
+
+### Fixes
+
+- Improve performance of flexbox columns
+
 ## 0.3.15
 
 ### Fixes
