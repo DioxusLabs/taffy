@@ -137,11 +137,13 @@ fn taffy_benchmarks(c: &mut Criterion) {
 
     let mut group = c.benchmark_group("super deep (1000-level hierarchy)");
     group.sample_size(10);
+    let style = Style { flex_grow: 1.0, margin: length(10.0), ..Default::default() };
+    let style_gen = || FixedStyleGenerator(style.clone());
     for node_count in [1000u32].iter() {
         #[cfg(feature = "yoga")]
         group.bench_with_input(BenchmarkId::new("Yoga", node_count), node_count, |b, &node_count| {
             b.iter_batched(
-                || build_deep_hierarchy::<_, YogaTreeBuilder<_, _>>(node_count, 2, || RandomStyleGenerator),
+                || build_deep_hierarchy::<_, YogaTreeBuilder<_, _>>(node_count, 1, style_gen),
                 |(mut tree, root)| {
                     tree[root].calculate_layout(f32::INFINITY, f32::INFINITY, yg::Direction::LTR);
                 },
@@ -150,7 +152,7 @@ fn taffy_benchmarks(c: &mut Criterion) {
         });
         group.bench_with_input(BenchmarkId::new("Taffy", node_count), node_count, |b, &node_count| {
             b.iter_batched(
-                || build_deep_hierarchy::<_, TaffyTreeBuilder<_, _>>(node_count, 2, || RandomStyleGenerator),
+                || build_deep_hierarchy::<_, TaffyTreeBuilder<_, _>>(node_count, 1, style_gen),
                 |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
                 criterion::BatchSize::SmallInput,
             )
