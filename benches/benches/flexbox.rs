@@ -58,7 +58,7 @@ fn build_huge_nested_hierarchy<G: GenStyle<TaffyStyle>, TreeBuilder: BuildTreeEx
     tree_builder.build_deep_hierarchy(node_count, branching_factor)
 }
 
-fn taffy_benchmarks(c: &mut Criterion) {
+fn huge_nested_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("yoga 'huge nested'");
     let style = Style { size: length(10.0), flex_grow: 1.0, ..Default::default() };
     let style_gen = || FixedStyleGenerator(style.clone());
@@ -90,9 +90,11 @@ fn taffy_benchmarks(c: &mut Criterion) {
         });
     }
     group.finish();
+}
 
+fn wide_benchmarks(c: &mut Criterion) {
     // Decrease sample size, because the tasks take longer
-    let mut group = c.benchmark_group("big trees (wide)");
+    let mut group = c.benchmark_group("Wide tree)");
     group.sample_size(10);
     for node_count in [
         #[cfg(feature = "1k")]
@@ -125,7 +127,9 @@ fn taffy_benchmarks(c: &mut Criterion) {
         });
     }
     group.finish();
+}
 
+fn deep_random_benchmarks(c: &mut Criterion) {
     // Decrease sample size, because the tasks take longer
     let mut group = c.benchmark_group("big trees (deep)");
     group.sample_size(10);
@@ -155,7 +159,10 @@ fn taffy_benchmarks(c: &mut Criterion) {
         });
     }
     group.finish();
+}
 
+
+fn super_deep_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("super deep (1000-level hierarchy)");
     group.sample_size(10);
     let style = Style { flex_grow: 1.0, margin: length(10.0), ..Default::default() };
@@ -180,6 +187,14 @@ fn taffy_benchmarks(c: &mut Criterion) {
         });
     }
     group.finish();
+}
+
+fn taffy_benchmarks(c: &mut Criterion) {
+    huge_nested_benchmarks(c);
+    wide_benchmarks(c);
+    deep_auto_benchmarks(c);
+    deep_random_benchmarks(c);
+    super_deep_benchmarks(c);
 }
 
 criterion_group!(benches, taffy_benchmarks);
