@@ -35,7 +35,7 @@ impl GenStyle<TaffyStyle> for FixedStyleGenerator {
     }
 }
 
-pub trait BuildTree<R: Rng, G: GenStyle<TaffyStyle>> {
+pub trait BuildTree<R: Rng, G: GenStyle<TaffyStyle>>: Sized {
     type Tree;
     type Node: Clone;
 
@@ -70,21 +70,31 @@ pub trait BuildTree<R: Rng, G: GenStyle<TaffyStyle>> {
             .collect()
     }
 
+    /// A helper function to recursively construct a deep tree
+    fn build_super_deep_hierarchy(mut self, depth: u32, nodes_per_level: u32) -> (Self::Tree, Self::Node) {
+        let mut children = Vec::with_capacity(nodes_per_level as usize);
+        for _ in 0..depth {
+            let node_with_children = self.create_container_node(&children);
+
+            children.clear();
+            children.push(node_with_children);
+            for _ in 0..(nodes_per_level - 1) {
+                children.push(self.create_leaf_node())
+            }
+        }
+        self.set_root_children(&children);
+        self.into_tree_and_root()
+    }
+
     /// A tree with a higher depth for a more realistic scenario
-    fn build_deep_hierarchy(mut self, node_count: u32, branching_factor: u32) -> (Self::Tree, Self::Node)
-    where
-        Self: Sized,
-    {
+    fn build_deep_hierarchy(mut self, node_count: u32, branching_factor: u32) -> (Self::Tree, Self::Node) {
         let children = self.build_deep_tree(node_count, branching_factor);
         self.set_root_children(&children);
         self.into_tree_and_root()
     }
 
     /// A tree with many children that have shallow depth
-    fn build_flat_hierarchy(mut self, target_node_count: u32) -> (Self::Tree, Self::Node)
-    where
-        Self: Sized,
-    {
+    fn build_flat_hierarchy(mut self, target_node_count: u32) -> (Self::Tree, Self::Node) {
         let mut children = Vec::new();
 
         while self.total_node_count() < target_node_count as usize {
