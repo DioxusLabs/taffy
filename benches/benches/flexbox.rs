@@ -62,7 +62,15 @@ fn taffy_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("yoga 'huge nested'");
     let style = Style { size: length(10.0), flex_grow: 1.0, ..Default::default() };
     let style_gen = || FixedStyleGenerator(style.clone());
-    for node_count in [1_000u32, 10_000, 100_000].iter() {
+    for node_count in [
+        #[cfg(feature = "1k")]
+        1_000u32,
+        10_000,
+        #[cfg(feature = "100k")]
+        100_000,
+    ]
+    .iter()
+    {
         #[cfg(feature = "yoga")]
         group.bench_with_input(BenchmarkId::new("Yoga", node_count), node_count, |b, &node_count| {
             b.iter_batched(
@@ -86,7 +94,15 @@ fn taffy_benchmarks(c: &mut Criterion) {
     // Decrease sample size, because the tasks take longer
     let mut group = c.benchmark_group("big trees (wide)");
     group.sample_size(10);
-    for node_count in [1_000u32, 10_000, 100_000].iter() {
+    for node_count in [
+        #[cfg(feature = "1k")]
+        1_000u32,
+        10_000,
+        #[cfg(feature = "100k")]
+        100_000,
+    ]
+    .iter()
+    {
         #[cfg(feature = "yoga")]
         let benchmark_id = BenchmarkId::new(format!("Yoga (2-level hierarchy)"), node_count);
         #[cfg(feature = "yoga")]
@@ -113,7 +129,12 @@ fn taffy_benchmarks(c: &mut Criterion) {
     // Decrease sample size, because the tasks take longer
     let mut group = c.benchmark_group("big trees (deep)");
     group.sample_size(10);
-    let benches = [(4000, "(12-level hierarchy)"), (10_000, "(14-level hierarchy)"), (100_000, "(17-level hierarchy)")];
+    let benches = [
+        (4000, "(12-level hierarchy)"),
+        (10_000, "(14-level hierarchy)"),
+        #[cfg(feature = "100k")]
+        (100_000, "(17-level hierarchy)"),
+    ];
     for (node_count, label) in benches.iter() {
         #[cfg(feature = "yoga")]
         group.bench_with_input(BenchmarkId::new(format!("Yoga {label}"), node_count), node_count, |b, &node_count| {
