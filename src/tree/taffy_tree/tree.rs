@@ -155,8 +155,19 @@ where
                 let node_key = node.into();
                 let style = &self.taffy.nodes[node_key].style;
                 let needs_measure = self.taffy.nodes[node_key].needs_measure;
-                let node_context = needs_measure.then(|| &mut self.taffy.node_context_data[node_key]);
-                compute_leaf_layout(&mut self.measure_function, node, inputs, style, node_context)
+                if needs_measure {
+                    let node_context = Some(&mut self.taffy.node_context_data[node_key]);
+                    compute_leaf_layout(
+                        inputs,
+                        style,
+                        Some(|known_dimensions, available_space| {
+                            (&mut self.measure_function)(known_dimensions, available_space, node, node_context)
+                        }),
+                    )
+                } else {
+                    let measure_function: Option<fn(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32>> = None;
+                    compute_leaf_layout(inputs, style, measure_function)
+                }
             }
         }
     }
