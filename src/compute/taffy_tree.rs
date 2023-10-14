@@ -10,10 +10,8 @@ use crate::util::sys::round;
 
 #[cfg(feature = "block_layout")]
 use crate::compute::compute_block_layout;
-
 #[cfg(feature = "flexbox")]
 use crate::compute::compute_flexbox_layout;
-
 #[cfg(feature = "grid")]
 use crate::compute::compute_grid_layout;
 
@@ -77,39 +75,26 @@ where
         return cached_size_and_baselines;
     }
 
+    // Fetch `Display` style (+ debug log)
+    let display_mode = taffy_view.taffy.nodes[node_key].style.display;
+    debug_log!(display_mode);
     debug_log_node!(known_dimensions, parent_size, available_space, run_mode, sizing_mode);
 
-    let display_mode = taffy_view.taffy.nodes[node_key].style.display;
     let computed_size_and_baselines = match (display_mode, has_children) {
         (Display::None, _) => perform_taffy_tree_hidden_layout(taffy_view.taffy, node),
         #[cfg(feature = "block_layout")]
-        (Display::Block, true) => {
-            debug_log!("BLOCK");
-            compute_block_layout(taffy_view, node, inputs)
-        }
+        (Display::Block, true) => compute_block_layout(taffy_view, node, inputs),
         #[cfg(feature = "flexbox")]
-        (Display::Flex, true) => {
-            debug_log!("FLEXBOX");
-            compute_flexbox_layout(taffy_view, node, inputs)
-        }
+        (Display::Flex, true) => compute_flexbox_layout(taffy_view, node, inputs),
         #[cfg(feature = "grid")]
-        (Display::Grid, true) => {
-            debug_log!("GRID");
-            compute_grid_layout(taffy_view, node, inputs)
-        }
-        (_, false) => {
-            debug_log!("LEAF");
-            compute_leaf_layout(
-                &mut taffy_view.measure_function,
-                node,
-                inputs,
-                &taffy_view.taffy.nodes[node_key].style,
-                taffy_view.taffy.nodes[node_key]
-                    .needs_measure
-                    .then(|| &mut taffy_view.taffy.node_context_data[node_key]),
-            )
-            .into()
-        }
+        (Display::Grid, true) => compute_grid_layout(taffy_view, node, inputs),
+        (_, false) => compute_leaf_layout(
+            &mut taffy_view.measure_function,
+            node,
+            inputs,
+            &taffy_view.taffy.nodes[node_key].style,
+            taffy_view.taffy.nodes[node_key].needs_measure.then(|| &mut taffy_view.taffy.node_context_data[node_key]),
+        ),
     };
 
     // Cache result
