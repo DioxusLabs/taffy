@@ -15,7 +15,7 @@ mod taffy_tree;
 #[cfg(feature = "taffy_tree")]
 pub use taffy_tree::{Taffy, TaffyChildIter, TaffyError, TaffyResult, TaffyView};
 mod layout;
-pub use layout::{CollapsibleMarginSet, Layout, LayoutOutput, RunMode, SizingMode};
+pub use layout::{CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
 
 /// Any item that implements the LayoutTree can be layed out using Taffy's algorithms.
 ///

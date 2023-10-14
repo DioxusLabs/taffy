@@ -1,9 +1,7 @@
 //! Final data structures that represent the high-level UI layout
-
-use crate::{
-    geometry::{Point, Size},
-    util::sys::{f32_max, f32_min},
-};
+use crate::geometry::{Line, Point, Size};
+use crate::style::AvailableSpace;
+use crate::util::sys::{f32_max, f32_min};
 
 /// Whether we are performing a full layout, or we merely need to size the node
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -70,7 +68,33 @@ impl CollapsibleMarginSet {
     }
 }
 
-/// A struct containing both the size of a node and it's first baseline in each dimension (if it has any)
+/// A struct containing the inputs constraints/hints for laying out a node, which are passed in by the parent
+#[derive(Debug, Copy, Clone)]
+pub struct LayoutInput {
+    /// Known dimensions represent dimensions (width/height) which should be taken as fixed when performing layout.
+    /// For example, if known_dimensions.width is set to Some(WIDTH) then this means something like:
+    ///
+    ///    "What would the height of this node be, assuming the width is WIDTH"
+    ///
+    /// Layout functions will be called with both known_dimensions set for final layout. Where the meaning is:
+    ///
+    ///   "The exact size of this node is WIDTHxHEIGHT. Please lay out your children"
+    ///
+    pub known_dimensions: Size<Option<f32>>,
+    /// Parent size dimensions are intended to be used for percentage resolution.
+    pub parent_size: Size<Option<f32>>,
+    /// Available space represents an amount of space to layout into, and is used as a soft constraint
+    /// for the purpose of wrapping.
+    pub available_space: Size<AvailableSpace>,
+    /// Whether a Node's style sizes should be taken into account or ignored
+    pub sizing_mode: SizingMode,
+    /// Whether we only need to know the Node's size, or whe
+    pub run_mode: RunMode,
+    /// Specific to CSS Block layout. Used for correctly computing margin collapsing. You probably want to set this to `Line::FALSE`.
+    pub vertical_margins_are_collapsible: Line<bool>,
+}
+
+/// A struct containing the result of laying a single node, which is returned up to the parent node
 ///
 /// A baseline is the line on which text sits. Your node likely has a baseline if it is a text node, or contains
 /// children that may be text nodes. See <https://www.w3.org/TR/css-writing-modes-3/#intro-baselines> for details.

@@ -4,7 +4,7 @@ use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Display, Overflow, Position};
 use crate::style_helpers::*;
-use crate::tree::{Layout, LayoutOutput, RunMode, SizingMode};
+use crate::tree::{Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
 use crate::tree::{LayoutTree, NodeId};
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, GridTrackVec, Vec};
@@ -21,8 +21,6 @@ use types::{CellOccupancyMatrix, GridTrack};
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine};
 
-use super::LayoutAlgorithm;
-
 mod alignment;
 mod explicit_grid;
 mod implicit_grid;
@@ -31,50 +29,15 @@ mod track_sizing;
 mod types;
 mod util;
 
-/// The public interface to Taffy's CSS Grid algorithm implementation
-pub struct CssGridAlgorithm;
-impl LayoutAlgorithm for CssGridAlgorithm {
-    const NAME: &'static str = "CSS GRID";
-
-    fn perform_layout(
-        tree: &mut impl LayoutTree,
-        node: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        _sizing_mode: SizingMode,
-        _vertical_margins_are_collapsible: Line<bool>,
-    ) -> LayoutOutput {
-        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::PerformLayout)
-    }
-
-    fn measure_size(
-        tree: &mut impl LayoutTree,
-        node: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        _sizing_mode: SizingMode,
-        _vertical_margins_are_collapsible: Line<bool>,
-    ) -> Size<f32> {
-        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::ComputeSize).size
-    }
-}
-
 /// Grid layout algorithm
 /// This consists of a few phases:
 ///   - Resolving the explicit grid
 ///   - Placing items (which also resolves the implicit grid)
 ///   - Track (row/column) sizing
 ///   - Alignment & Final item placement
-pub fn compute(
-    tree: &mut impl LayoutTree,
-    node: NodeId,
-    known_dimensions: Size<Option<f32>>,
-    parent_size: Size<Option<f32>>,
-    available_space: Size<AvailableSpace>,
-    run_mode: RunMode,
-) -> LayoutOutput {
+pub fn compute_grid_layout(tree: &mut impl LayoutTree, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
+    let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
+
     let get_child_styles_iter = |node| tree.children(node).map(|child_node: NodeId| tree.style(child_node));
     let style = tree.style(node).clone();
     let child_styles_iter = get_child_styles_iter(node);

@@ -4,63 +4,25 @@ use crate::geometry::{Point, Size};
 use crate::style::{AvailableSpace, Display, Overflow, Position, Style};
 use crate::tree::CollapsibleMarginSet;
 use crate::tree::NodeId;
-use crate::tree::{LayoutOutput, SizingMode};
+use crate::tree::{LayoutInput, LayoutOutput, SizingMode};
 use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 
-/// Perform full layout on a leaf node
-#[allow(clippy::too_many_arguments)]
-pub(crate) fn perform_layout<NodeContext, MeasureFunction>(
-    style: &Style,
-    known_dimensions: Size<Option<f32>>,
-    parent_size: Size<Option<f32>>,
-    available_space: Size<AvailableSpace>,
-    sizing_mode: SizingMode,
-    measure_function: MeasureFunction,
-    node_id: NodeId,
-    context: Option<&mut NodeContext>,
-) -> LayoutOutput
-where
-    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
-{
-    compute(style, known_dimensions, parent_size, available_space, sizing_mode, measure_function, node_id, context)
-}
-
-/// Measure a leaf node's size
-#[allow(clippy::too_many_arguments)]
-pub(crate) fn measure_size<NodeContext, MeasureFunction>(
-    style: &Style,
-    known_dimensions: Size<Option<f32>>,
-    parent_size: Size<Option<f32>>,
-    available_space: Size<AvailableSpace>,
-    sizing_mode: SizingMode,
-    measure_function: MeasureFunction,
-    node_id: NodeId,
-    context: Option<&mut NodeContext>,
-) -> Size<f32>
-where
-    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
-{
-    compute(style, known_dimensions, parent_size, available_space, sizing_mode, measure_function, node_id, context).size
-}
-
 /// Compute the size of a leaf node (node with no children)
-#[allow(clippy::too_many_arguments)]
-pub fn compute<NodeContext, MeasureFunction>(
-    style: &Style,
-    known_dimensions: Size<Option<f32>>,
-    parent_size: Size<Option<f32>>,
-    available_space: Size<AvailableSpace>,
-    sizing_mode: SizingMode,
+pub fn compute_leaf_layout<NodeContext, MeasureFunction>(
     mut measure_function: MeasureFunction,
     node_id: NodeId,
+    inputs: LayoutInput,
+    style: &Style,
     context: Option<&mut NodeContext>,
 ) -> LayoutOutput
 where
     MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
 {
+    let LayoutInput { known_dimensions, parent_size, available_space, sizing_mode, .. } = inputs;
+
     // Resolve node's preferred/min/max sizes (width/heights) against the available space (percentages resolve to pixel values)
     // For ContentSize mode, we pretend that the node has no size styles as these should be ignored.
     let (node_size, node_min_size, node_max_size, aspect_ratio) = match sizing_mode {

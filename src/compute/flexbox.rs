@@ -2,7 +2,6 @@
 use core::f32;
 
 use crate::compute::common::alignment::compute_alignment_offset;
-use crate::compute::LayoutAlgorithm;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::prelude::{TaffyMaxContent, TaffyMinContent};
 use crate::style::{
@@ -10,43 +9,13 @@ use crate::style::{
     LengthPercentageAuto, Overflow, Position,
 };
 use crate::style::{FlexDirection, Style};
-use crate::tree::{Layout, LayoutOutput, RunMode, SizingMode};
+use crate::tree::{Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
 use crate::tree::{LayoutTree, NodeId};
 use crate::util::debug::debug_log;
 use crate::util::sys::Vec;
 use crate::util::sys::{f32_max, new_vec_with_capacity};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
-
-/// The public interface to Taffy's Flexbox algorithm implementation
-pub struct FlexboxAlgorithm;
-impl LayoutAlgorithm for FlexboxAlgorithm {
-    const NAME: &'static str = "FLEXBOX";
-
-    fn perform_layout(
-        tree: &mut impl LayoutTree,
-        node: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        _sizing_mode: SizingMode,
-        _vertical_margins_are_collapsible: Line<bool>,
-    ) -> LayoutOutput {
-        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::PerformLayout)
-    }
-
-    fn measure_size(
-        tree: &mut impl LayoutTree,
-        node: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        _sizing_mode: SizingMode,
-        _vertical_margins_are_collapsible: Line<bool>,
-    ) -> Size<f32> {
-        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::ComputeSize).size
-    }
-}
 
 /// The intermediate results of a flexbox calculation for a single item
 struct FlexItem {
@@ -181,14 +150,8 @@ struct AlgoConstants {
 }
 
 /// Computes the layout of [`LayoutTree`] according to the flexbox algorithm
-pub fn compute(
-    tree: &mut impl LayoutTree,
-    node: NodeId,
-    known_dimensions: Size<Option<f32>>,
-    parent_size: Size<Option<f32>>,
-    available_space: Size<AvailableSpace>,
-    run_mode: RunMode,
-) -> LayoutOutput {
+pub fn compute_flexbox_layout(tree: &mut impl LayoutTree, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
+    let LayoutInput { known_dimensions, parent_size, run_mode, .. } = inputs;
     let style = tree.style(node);
 
     // Pull these out earlier to avoid borrowing issues
@@ -214,18 +177,13 @@ pub fn compute(
     }
 
     debug_log!("FLEX: single-pass");
-    compute_preliminary(tree, node, styled_based_known_dimensions, parent_size, available_space, run_mode)
+    compute_preliminary(tree, node, LayoutInput { known_dimensions: styled_based_known_dimensions, ..inputs })
 }
 
 /// Compute a preliminary size for an item
-fn compute_preliminary(
-    tree: &mut impl LayoutTree,
-    node: NodeId,
-    known_dimensions: Size<Option<f32>>,
-    parent_size: Size<Option<f32>>,
-    available_space: Size<AvailableSpace>,
-    run_mode: RunMode,
-) -> LayoutOutput {
+fn compute_preliminary(tree: &mut impl LayoutTree, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
+    let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
+
     // Define some general constants we will need for the remainder of the algorithm.
     let mut constants = compute_constants(tree.style(node), known_dimensions, parent_size);
 

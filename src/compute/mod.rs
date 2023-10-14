@@ -3,8 +3,6 @@
 pub(crate) mod common;
 pub(crate) mod leaf;
 
-pub use leaf::compute;
-
 #[cfg(feature = "block_layout")]
 pub(crate) mod block;
 
@@ -14,84 +12,25 @@ pub(crate) mod flexbox;
 #[cfg(feature = "grid")]
 pub(crate) mod grid;
 
-use crate::geometry::{Line, Size};
-use crate::style::AvailableSpace;
-use crate::tree::{Layout, LayoutOutput, LayoutTree, NodeId, SizingMode};
+pub use leaf::compute_leaf_layout;
 
 #[cfg(feature = "block_layout")]
-pub use self::block::BlockAlgorithm;
+pub use self::block::compute_block_layout;
 
 #[cfg(feature = "flexbox")]
-pub use self::flexbox::FlexboxAlgorithm;
+pub use self::flexbox::compute_flexbox_layout;
 
 #[cfg(feature = "grid")]
-pub use self::grid::CssGridAlgorithm;
+pub use self::grid::compute_grid_layout;
 
 #[cfg(feature = "taffy_tree")]
 pub(crate) mod taffy_tree;
 
-/// A common interface that all Taffy layout algorithms conform to
-pub trait LayoutAlgorithm {
-    /// The name of the algorithm (mainly used for debug purposes)
-    const NAME: &'static str;
-
-    /// Compute the size of the node given the specified constraints
-    fn measure_size(
-        tree: &mut impl LayoutTree,
-        node: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        sizing_mode: SizingMode,
-        vertical_margins_are_collapsible: Line<bool>,
-    ) -> Size<f32>;
-
-    /// Perform a full layout on the node given the specified constraints
-    fn perform_layout(
-        tree: &mut impl LayoutTree,
-        node: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        sizing_mode: SizingMode,
-        vertical_margins_are_collapsible: Line<bool>,
-    ) -> LayoutOutput;
-}
-
-/// The public interface to Taffy's hidden node algorithm implementation
-pub struct HiddenAlgorithm;
-impl LayoutAlgorithm for HiddenAlgorithm {
-    const NAME: &'static str = "NONE";
-
-    fn perform_layout(
-        tree: &mut impl LayoutTree,
-        node: NodeId,
-        _known_dimensions: Size<Option<f32>>,
-        _parent_size: Size<Option<f32>>,
-        _available_space: Size<AvailableSpace>,
-        _sizing_mode: SizingMode,
-        _vertical_margins_are_collapsible: Line<bool>,
-    ) -> LayoutOutput {
-        perform_hidden_layout(tree, node);
-        LayoutOutput::HIDDEN
-    }
-
-    fn measure_size(
-        _tree: &mut impl LayoutTree,
-        _node: NodeId,
-        _known_dimensions: Size<Option<f32>>,
-        _parent_size: Size<Option<f32>>,
-        _available_space: Size<AvailableSpace>,
-        _sizing_mode: SizingMode,
-        _vertical_margins_are_collapsible: Line<bool>,
-    ) -> Size<f32> {
-        Size::ZERO
-    }
-}
+use crate::tree::{Layout, LayoutOutput, LayoutTree, NodeId};
 
 /// Creates a layout for this node and its children, recursively.
 /// Each hidden node has zero size and is placed at the origin
-fn perform_hidden_layout(tree: &mut impl LayoutTree, node: NodeId) {
+pub fn compute_hidden_layout(tree: &mut impl LayoutTree, node: NodeId) -> LayoutOutput {
     /// Recursive function to apply hidden layout to all descendents
     fn perform_hidden_layout_inner(tree: &mut impl LayoutTree, node: NodeId, order: u32) {
         *tree.layout_mut(node) = Layout::with_order(order);
@@ -103,11 +42,13 @@ fn perform_hidden_layout(tree: &mut impl LayoutTree, node: NodeId) {
     for order in 0..tree.child_count(node) {
         perform_hidden_layout_inner(tree, tree.child(node, order), order as _);
     }
+
+    LayoutOutput::HIDDEN
 }
 
 #[cfg(test)]
 mod tests {
-    use super::perform_hidden_layout;
+    use super::compute_hidden_layout;
     use crate::geometry::{Point, Size};
     use crate::style::{Display, Style};
     use crate::tree::TaffyView;
@@ -133,7 +74,7 @@ mod tests {
             )
             .unwrap();
 
-        perform_hidden_layout(
+        compute_hidden_layout(
             &mut TaffyView { taffy: &mut taffy, measure_function: |_, _, _, _| Size::ZERO },
             root.into(),
         );
