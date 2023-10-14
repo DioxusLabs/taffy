@@ -16,6 +16,7 @@ mod taffy_tree;
 pub use taffy_tree::{Taffy, TaffyChildIter, TaffyError, TaffyResult};
 mod layout;
 pub use layout::{CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
+use crate::compute::compute_cached_layout;
 
 /// Any item that implements the LayoutTree can be layed out using Taffy's algorithms.
 ///
@@ -39,11 +40,24 @@ pub trait LayoutTree {
     /// Get the [`Style`] for this node.
     fn style(&self, node: NodeId) -> &Style;
 
-    /// Get a reference to the node's output layout
-    fn layout(&self, node: NodeId) -> &Layout;
-
     /// Modify the node's output layout
     fn unrounded_layout_mut(&mut self, node: NodeId) -> &mut Layout;
+
+    /// Get a reference to the node's output final layout
+    fn final_layout(&self, node: NodeId) -> &Layout;
+
+    /// Get a mutable reference to the node's output final layout
+    fn final_layout_mut(&mut self, node: NodeId) -> &mut Layout;
+
+    /// Get a mutable reference to the [`Cache`] for this node.
+    fn cache_mut(&mut self, node: NodeId) -> &mut Cache;
+
+    /// Compute the specified node's size or full layout given the specified constraints
+    fn compute_child_layout(
+        &mut self,
+        node: NodeId,
+        inputs: LayoutInput
+    ) -> LayoutOutput;
 
     /// Compute the size of the node given the specified constraints
     fn measure_child_size(
@@ -54,7 +68,16 @@ pub trait LayoutTree {
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
         vertical_margins_are_collapsible: Line<bool>,
-    ) -> Size<f32>;
+    ) -> Size<f32> {
+        compute_cached_layout(self, node, LayoutInput {
+            known_dimensions,
+            parent_size,
+            available_space,
+            sizing_mode,
+            run_mode: RunMode::ComputeSize,
+            vertical_margins_are_collapsible,
+        }).size
+    }
 
     /// Perform a full layout on the node given the specified constraints
     fn perform_child_layout(
@@ -65,5 +88,14 @@ pub trait LayoutTree {
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
         vertical_margins_are_collapsible: Line<bool>,
-    ) -> LayoutOutput;
+    ) -> LayoutOutput {
+        compute_cached_layout(self, node, LayoutInput {
+            known_dimensions,
+            parent_size,
+            available_space,
+            sizing_mode,
+            run_mode: RunMode::PerformLayout,
+            vertical_margins_are_collapsible,
+        })
+    }
 }
