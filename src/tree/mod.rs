@@ -58,6 +58,7 @@ pub trait LayoutTree {
 
 pub(crate) trait LayoutTreeExt: LayoutTree {
     /// Compute the size of the node given the specified constraints
+    #[inline(always)]
     fn measure_child_size(
         &mut self,
         node: NodeId,
@@ -83,6 +84,7 @@ pub(crate) trait LayoutTreeExt: LayoutTree {
     }
 
     /// Perform a full layout on the node given the specified constraints
+    #[inline(always)]
     fn perform_child_layout(
         &mut self,
         node: NodeId,
