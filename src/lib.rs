@@ -33,7 +33,7 @@ pub use crate::compute::compute_block_layout;
 pub use crate::compute::compute_flexbox_layout;
 #[cfg(feature = "grid")]
 pub use crate::compute::compute_grid_layout;
-pub use crate::compute::{compute_hidden_layout, compute_leaf_layout, round_layout};
+pub use crate::compute::{compute_hidden_layout, compute_layout, compute_leaf_layout, round_layout};
 pub use crate::tree::LayoutTree;
 #[cfg(feature = "taffy_tree")]
 pub use crate::tree::{Taffy, TaffyError, TaffyResult};
