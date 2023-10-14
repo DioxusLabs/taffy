@@ -29,31 +29,31 @@ pub trait LayoutTree {
         Self: 'a;
 
     /// Get the list of children IDs for the given node
-    fn children(&self, node: NodeId) -> Self::ChildIter<'_>;
+    fn children(&self, node_id: NodeId) -> Self::ChildIter<'_>;
 
     /// Get the number of children for the given node
-    fn child_count(&self, node: NodeId) -> usize;
+    fn child_count(&self, node_id: NodeId) -> usize;
 
     /// Get a specific child of a node, where the index represents the nth child
-    fn child(&self, node: NodeId, index: usize) -> NodeId;
+    fn child(&self, node_id: NodeId, index: usize) -> NodeId;
 
     /// Get the [`Style`] for this node.
-    fn style(&self, node: NodeId) -> &Style;
+    fn style(&self, node_id: NodeId) -> &Style;
 
     /// Modify the node's output layout
-    fn unrounded_layout_mut(&mut self, node: NodeId) -> &mut Layout;
+    fn unrounded_layout_mut(&mut self, node_id: NodeId) -> &mut Layout;
 
     /// Get a reference to the node's output final layout
-    fn final_layout(&self, node: NodeId) -> &Layout;
+    fn final_layout(&self, node_id: NodeId) -> &Layout;
 
     /// Get a mutable reference to the node's output final layout
-    fn final_layout_mut(&mut self, node: NodeId) -> &mut Layout;
+    fn final_layout_mut(&mut self, node_id: NodeId) -> &mut Layout;
 
     /// Get a mutable reference to the [`Cache`] for this node.
-    fn cache_mut(&mut self, node: NodeId) -> &mut Cache;
+    fn cache_mut(&mut self, node_id: NodeId) -> &mut Cache;
 
     /// Compute the specified node's size or full layout given the specified constraints
-    fn compute_child_layout(&mut self, node: NodeId, inputs: LayoutInput) -> LayoutOutput;
+    fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
 }
 
 pub(crate) trait LayoutTreeExt: LayoutTree {
@@ -61,7 +61,7 @@ pub(crate) trait LayoutTreeExt: LayoutTree {
     #[inline(always)]
     fn measure_child_size(
         &mut self,
-        node: NodeId,
+        node_id: NodeId,
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
@@ -70,7 +70,7 @@ pub(crate) trait LayoutTreeExt: LayoutTree {
     ) -> Size<f32> {
         compute_cached_layout(
             self,
-            node,
+            node_id,
             LayoutInput {
                 known_dimensions,
                 parent_size,
@@ -87,7 +87,7 @@ pub(crate) trait LayoutTreeExt: LayoutTree {
     #[inline(always)]
     fn perform_child_layout(
         &mut self,
-        node: NodeId,
+        node_id: NodeId,
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
@@ -96,7 +96,7 @@ pub(crate) trait LayoutTreeExt: LayoutTree {
     ) -> LayoutOutput {
         compute_cached_layout(
             self,
-            node,
+            node_id,
             LayoutInput {
                 known_dimensions,
                 parent_size,
