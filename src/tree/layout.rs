@@ -77,7 +77,7 @@ impl CollapsibleMarginSet {
 /// If your node does not have a baseline (or you are unsure how to compute it), then simply return `Point::NONE`
 /// for the first_baselines field
 #[derive(Debug, Copy, Clone)]
-pub struct SizeBaselinesAndMargins {
+pub struct LayoutOutput {
     /// The size of the node
     pub size: Size<f32>,
     /// The first baseline of the node in each dimension, if any
@@ -93,8 +93,8 @@ pub struct SizeBaselinesAndMargins {
     pub margins_can_collapse_through: bool,
 }
 
-impl SizeBaselinesAndMargins {
-    /// An all-zero `SizeBaselinesAndMargins` for hidden nodes
+impl LayoutOutput {
+    /// An all-zero `LayoutOutput` for hidden nodes
     pub const HIDDEN: Self = Self {
         size: Size::ZERO,
         first_baselines: Point::NONE,
@@ -103,7 +103,7 @@ impl SizeBaselinesAndMargins {
         margins_can_collapse_through: false,
     };
 
-    /// Constructor to create a `SizeBaselinesAndMargins` from just the size and baselines
+    /// Constructor to create a `LayoutOutput` from just the size and baselines
     pub fn from_size_and_baselines(size: Size<f32>, first_baselines: Point<Option<f32>>) -> Self {
         Self {
             size,
@@ -115,7 +115,7 @@ impl SizeBaselinesAndMargins {
     }
 }
 
-impl From<Size<f32>> for SizeBaselinesAndMargins {
+impl From<Size<f32>> for LayoutOutput {
     fn from(size: Size<f32>) -> Self {
         Self {
             size,

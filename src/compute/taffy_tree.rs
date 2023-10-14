@@ -3,9 +3,7 @@
 use crate::compute::{leaf, LayoutAlgorithm};
 use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, Display};
-use crate::tree::{
-    Layout, LayoutTree, NodeId, RunMode, SizeBaselinesAndMargins, SizingMode, Taffy, TaffyError, TaffyView,
-};
+use crate::tree::{Layout, LayoutOutput, LayoutTree, NodeId, RunMode, SizingMode, Taffy, TaffyError, TaffyView};
 use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
 use crate::util::sys::round;
 
@@ -58,7 +56,7 @@ pub(crate) fn perform_node_layout<NodeContext, MeasureFunction>(
     available_space: Size<AvailableSpace>,
     sizing_mode: SizingMode,
     vertical_margins_are_collapsible: Line<bool>,
-) -> SizeBaselinesAndMargins
+) -> LayoutOutput
 where
     MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
 {
@@ -111,7 +109,7 @@ fn compute_node_layout<NodeContext, MeasureFunction>(
     run_mode: RunMode,
     sizing_mode: SizingMode,
     vertical_margins_are_collapsible: Line<bool>,
-) -> SizeBaselinesAndMargins
+) -> LayoutOutput
 where
     MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
 {
@@ -143,7 +141,7 @@ where
         run_mode: RunMode,
         sizing_mode: SizingMode,
         vertical_margins_are_collapsible: Line<bool>,
-    ) -> SizeBaselinesAndMargins {
+    ) -> LayoutOutput {
         debug_log!(Algorithm::NAME);
 
         match run_mode {
@@ -173,7 +171,7 @@ where
     let computed_size_and_baselines = match (display_mode, has_children) {
         (Display::None, _) => {
             perform_taffy_tree_hidden_layout(taffy_view.taffy, node);
-            SizeBaselinesAndMargins::HIDDEN
+            LayoutOutput::HIDDEN
         }
         #[cfg(feature = "block_layout")]
         (Display::Block, true) => perform_computations::<BlockAlgorithm>(

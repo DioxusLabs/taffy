@@ -10,7 +10,7 @@ use crate::style::{
     LengthPercentageAuto, Overflow, Position,
 };
 use crate::style::{FlexDirection, Style};
-use crate::tree::{Layout, RunMode, SizeBaselinesAndMargins, SizingMode};
+use crate::tree::{Layout, LayoutOutput, RunMode, SizingMode};
 use crate::tree::{LayoutTree, NodeId};
 use crate::util::debug::debug_log;
 use crate::util::sys::Vec;
@@ -31,7 +31,7 @@ impl LayoutAlgorithm for FlexboxAlgorithm {
         available_space: Size<AvailableSpace>,
         _sizing_mode: SizingMode,
         _vertical_margins_are_collapsible: Line<bool>,
-    ) -> SizeBaselinesAndMargins {
+    ) -> LayoutOutput {
         compute(tree, node, known_dimensions, parent_size, available_space, RunMode::PerformLayout)
     }
 
@@ -188,7 +188,7 @@ pub fn compute(
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
-) -> SizeBaselinesAndMargins {
+) -> LayoutOutput {
     let style = tree.style(node);
 
     // Pull these out earlier to avoid borrowing issues
@@ -225,7 +225,7 @@ fn compute_preliminary(
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
-) -> SizeBaselinesAndMargins {
+) -> LayoutOutput {
     // Define some general constants we will need for the remainder of the algorithm.
     let mut constants = compute_constants(tree.style(node), known_dimensions, parent_size);
 
@@ -402,10 +402,7 @@ fn compute_preliminary(
             })
     };
 
-    SizeBaselinesAndMargins::from_size_and_baselines(
-        constants.container_size,
-        Point { x: None, y: first_vertical_baseline },
-    )
+    LayoutOutput::from_size_and_baselines(constants.container_size, Point { x: None, y: first_vertical_baseline })
 }
 
 /// Compute constants that can be reused during the flexbox algorithm.

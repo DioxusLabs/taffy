@@ -3,7 +3,7 @@ use crate::compute::LayoutAlgorithm;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AvailableSpace, Display, LengthPercentageAuto, Overflow, Position};
 use crate::style_helpers::TaffyMaxContent;
-use crate::tree::{CollapsibleMarginSet, Layout, RunMode, SizeBaselinesAndMargins, SizingMode};
+use crate::tree::{CollapsibleMarginSet, Layout, LayoutOutput, RunMode, SizingMode};
 use crate::tree::{LayoutTree, NodeId};
 use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
@@ -24,7 +24,7 @@ impl LayoutAlgorithm for BlockAlgorithm {
         available_space: Size<AvailableSpace>,
         _sizing_mode: SizingMode,
         vertical_margins_are_collapsible: Line<bool>,
-    ) -> SizeBaselinesAndMargins {
+    ) -> LayoutOutput {
         compute(
             tree,
             node,
@@ -101,7 +101,7 @@ pub fn compute(
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
     vertical_margins_are_collapsible: Line<bool>,
-) -> SizeBaselinesAndMargins {
+) -> LayoutOutput {
     let style = tree.style(node_id);
 
     // Pull these out earlier to avoid borrowing issues
@@ -160,7 +160,7 @@ fn compute_inner(
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
     vertical_margins_are_collapsible: Line<bool>,
-) -> SizeBaselinesAndMargins {
+) -> LayoutOutput {
     let style = tree.style(node_id);
     let raw_padding = style.padding;
     let raw_border = style.border;
@@ -282,7 +282,7 @@ fn compute_inner(
     let can_be_collapsed_through =
         !has_styles_preventing_being_collapsed_through && all_in_flow_children_can_be_collapsed_through;
 
-    SizeBaselinesAndMargins {
+    LayoutOutput {
         size: final_outer_size,
         first_baselines: Point::NONE,
         top_margin: if own_margins_collapse_with_children.start {

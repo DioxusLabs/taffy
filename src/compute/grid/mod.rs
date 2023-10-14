@@ -4,7 +4,7 @@ use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Display, Overflow, Position};
 use crate::style_helpers::*;
-use crate::tree::{Layout, RunMode, SizeBaselinesAndMargins, SizingMode};
+use crate::tree::{Layout, LayoutOutput, RunMode, SizingMode};
 use crate::tree::{LayoutTree, NodeId};
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, GridTrackVec, Vec};
@@ -44,7 +44,7 @@ impl LayoutAlgorithm for CssGridAlgorithm {
         available_space: Size<AvailableSpace>,
         _sizing_mode: SizingMode,
         _vertical_margins_are_collapsible: Line<bool>,
-    ) -> SizeBaselinesAndMargins {
+    ) -> LayoutOutput {
         compute(tree, node, known_dimensions, parent_size, available_space, RunMode::PerformLayout)
     }
 
@@ -74,7 +74,7 @@ pub fn compute(
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
-) -> SizeBaselinesAndMargins {
+) -> LayoutOutput {
     let get_child_styles_iter = |node| tree.children(node).map(|child_node: NodeId| tree.style(child_node));
     let style = tree.style(node).clone();
     let child_styles_iter = get_child_styles_iter(node);
@@ -542,8 +542,5 @@ pub fn compute(
         layout.location.y + item.baseline.unwrap_or(layout.size.height)
     };
 
-    SizeBaselinesAndMargins::from_size_and_baselines(
-        container_border_box,
-        Point { x: None, y: Some(grid_container_baseline) },
-    )
+    LayoutOutput::from_size_and_baselines(container_border_box, Point { x: None, y: Some(grid_container_baseline) })
 }

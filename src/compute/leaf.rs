@@ -4,7 +4,7 @@ use crate::geometry::{Point, Size};
 use crate::style::{AvailableSpace, Display, Overflow, Position, Style};
 use crate::tree::CollapsibleMarginSet;
 use crate::tree::NodeId;
-use crate::tree::{SizeBaselinesAndMargins, SizingMode};
+use crate::tree::{LayoutOutput, SizingMode};
 use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
 use crate::util::MaybeMath;
@@ -21,7 +21,7 @@ pub(crate) fn perform_layout<NodeContext, MeasureFunction>(
     measure_function: MeasureFunction,
     node_id: NodeId,
     context: Option<&mut NodeContext>,
-) -> SizeBaselinesAndMargins
+) -> LayoutOutput
 where
     MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
 {
@@ -57,7 +57,7 @@ pub fn compute<NodeContext, MeasureFunction>(
     mut measure_function: MeasureFunction,
     node_id: NodeId,
     context: Option<&mut NodeContext>,
-) -> SizeBaselinesAndMargins
+) -> LayoutOutput
 where
     MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
 {
@@ -124,7 +124,7 @@ where
         let size = Size { width, height }
             .maybe_clamp(node_min_size, node_max_size)
             .maybe_max(padding_border.sum_axes().map(Some));
-        return SizeBaselinesAndMargins {
+        return LayoutOutput {
             size,
             first_baselines: Point::NONE,
             top_margin: CollapsibleMarginSet::ZERO,
@@ -166,7 +166,7 @@ where
         };
         let size = size.maybe_max(padding_border.sum_axes().map(Some));
 
-        return SizeBaselinesAndMargins {
+        return LayoutOutput {
             size,
             first_baselines: Point::NONE,
             top_margin: CollapsibleMarginSet::ZERO,
@@ -197,7 +197,7 @@ where
         height: f32_max(size.height, aspect_ratio.map(|ratio| size.width / ratio).unwrap_or(0.0)),
     };
 
-    SizeBaselinesAndMargins {
+    LayoutOutput {
         size,
         first_baselines: Point::NONE,
         top_margin: CollapsibleMarginSet::ZERO,

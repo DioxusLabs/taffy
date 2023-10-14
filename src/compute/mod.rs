@@ -16,7 +16,7 @@ pub(crate) mod grid;
 
 use crate::geometry::{Line, Size};
 use crate::style::AvailableSpace;
-use crate::tree::{Layout, LayoutTree, NodeId, SizeBaselinesAndMargins, SizingMode};
+use crate::tree::{Layout, LayoutOutput, LayoutTree, NodeId, SizingMode};
 
 #[cfg(feature = "block_layout")]
 pub use self::block::BlockAlgorithm;
@@ -55,7 +55,7 @@ pub trait LayoutAlgorithm {
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
         vertical_margins_are_collapsible: Line<bool>,
-    ) -> SizeBaselinesAndMargins;
+    ) -> LayoutOutput;
 }
 
 /// The public interface to Taffy's hidden node algorithm implementation
@@ -71,9 +71,9 @@ impl LayoutAlgorithm for HiddenAlgorithm {
         _available_space: Size<AvailableSpace>,
         _sizing_mode: SizingMode,
         _vertical_margins_are_collapsible: Line<bool>,
-    ) -> SizeBaselinesAndMargins {
+    ) -> LayoutOutput {
         perform_hidden_layout(tree, node);
-        SizeBaselinesAndMargins::HIDDEN
+        LayoutOutput::HIDDEN
     }
 
     fn measure_size(
