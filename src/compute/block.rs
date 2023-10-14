@@ -5,13 +5,11 @@ use crate::style::{AvailableSpace, Display, LengthPercentageAuto, Overflow, Posi
 use crate::style_helpers::TaffyMaxContent;
 use crate::tree::{CollapsibleMarginSet, Layout, RunMode, SizeBaselinesAndMargins, SizingMode};
 use crate::tree::{LayoutTree, NodeId};
+use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
 use crate::util::sys::Vec;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
-
-#[cfg(feature = "debug")]
-use crate::util::debug::NODE_LOGGER;
 
 /// The public interface to Taffy's Block algorithm implementation
 pub struct BlockAlgorithm;
@@ -141,8 +139,7 @@ pub fn compute(
         }
     }
 
-    #[cfg(feature = "debug")]
-    NODE_LOGGER.log("BLOCK");
+    debug_log!("BLOCK");
     compute_inner(
         tree,
         node_id,

@@ -6,8 +6,8 @@ mod resolve;
 pub(crate) use resolve::{MaybeResolve, ResolveOrZero};
 pub(crate) mod sys;
 
-#[cfg(feature = "std")]
 #[doc(hidden)]
+#[macro_use]
 pub(crate) mod debug;
 #[cfg(feature = "std")]
 pub use debug::print_tree;
