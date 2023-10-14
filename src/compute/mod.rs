@@ -51,7 +51,6 @@ mod tests {
     use super::compute_hidden_layout;
     use crate::geometry::{Point, Size};
     use crate::style::{Display, Style};
-    use crate::tree::TaffyView;
     use crate::Taffy;
 
     #[test]
@@ -74,10 +73,7 @@ mod tests {
             )
             .unwrap();
 
-        compute_hidden_layout(
-            &mut TaffyView { taffy: &mut taffy, measure_function: |_, _, _, _| Size::ZERO },
-            root.into(),
-        );
+        compute_hidden_layout(&mut taffy.as_layout_tree(), root.into());
 
         // Whatever size and display-mode the nodes had previously,
         // all layouts should resolve to ZERO due to the root's DISPLAY::NONE

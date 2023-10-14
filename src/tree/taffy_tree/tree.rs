@@ -65,7 +65,7 @@ impl<'a> Iterator for TaffyChildIter<'a> {
 /// View over the Taffy tree that holds the tree itself along with a reference to the context
 /// and implements LayoutTree. This allows the context to be stored outside of the Taffy struct
 /// which makes the lifetimes of the context much more flexible.
-pub struct TaffyView<'t, NodeContext, MeasureFunction>
+pub(crate) struct TaffyView<'t, NodeContext, MeasureFunction>
 where
     MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
 {
@@ -492,6 +492,12 @@ impl<NodeContext> Taffy<NodeContext> {
     pub fn print_tree(&mut self, root: NodeId) {
         let taffy_view = TaffyView { taffy: self, measure_function: |_, _, _, _| Size::ZERO };
         crate::util::print_tree(&taffy_view, root)
+    }
+
+    /// Returns an instance of LayoutTree representing the Taffy
+    #[cfg(test)]
+    pub(crate) fn as_layout_tree(&mut self) -> impl LayoutTree + '_ {
+        TaffyView { taffy: self, measure_function: |_, _, _, _| Size::ZERO }
     }
 }
 
