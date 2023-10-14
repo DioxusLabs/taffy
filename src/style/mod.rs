@@ -66,6 +66,20 @@ impl Display {
     pub const DEFAULT: Display = Display::None;
 }
 
+impl core::fmt::Display for Display {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Display::None => write!(f, "NONE"),
+            #[cfg(feature = "block_layout")]
+            Display::Block => write!(f, "BLOCK"),
+            #[cfg(feature = "flexbox")]
+            Display::Flex => write!(f, "FLEX"),
+            #[cfg(feature = "grid")]
+            Display::Grid => write!(f, "GRID"),
+        }
+    }
+}
+
 impl Default for Display {
     fn default() -> Self {
         Self::DEFAULT

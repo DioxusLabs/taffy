@@ -1,62 +1,14 @@
 //! Computes the CSS block layout algorithm in the case that the block container being laid out contains only block-level boxes
-use crate::compute::LayoutAlgorithm;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AvailableSpace, Display, LengthPercentageAuto, Overflow, Position};
 use crate::style_helpers::TaffyMaxContent;
-use crate::tree::{CollapsibleMarginSet, Layout, RunMode, SizeBaselinesAndMargins, SizingMode};
+use crate::tree::{CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
 use crate::tree::{LayoutTree, NodeId};
 use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
 use crate::util::sys::Vec;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
-
-/// The public interface to Taffy's Block algorithm implementation
-pub struct BlockAlgorithm;
-impl LayoutAlgorithm for BlockAlgorithm {
-    const NAME: &'static str = "BLOCK";
-
-    fn perform_layout(
-        tree: &mut impl LayoutTree,
-        node: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        _sizing_mode: SizingMode,
-        vertical_margins_are_collapsible: Line<bool>,
-    ) -> SizeBaselinesAndMargins {
-        compute(
-            tree,
-            node,
-            known_dimensions,
-            parent_size,
-            available_space,
-            RunMode::PerformLayout,
-            vertical_margins_are_collapsible,
-        )
-    }
-
-    fn measure_size(
-        tree: &mut impl LayoutTree,
-        node: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        _sizing_mode: SizingMode,
-        vertical_margins_are_collapsible: Line<bool>,
-    ) -> Size<f32> {
-        compute(
-            tree,
-            node,
-            known_dimensions,
-            parent_size,
-            available_space,
-            RunMode::ComputeSize,
-            vertical_margins_are_collapsible,
-        )
-        .size
-    }
-}
 
 /// Per-child data that is accumulated and modified over the course of the layout algorithm
 struct BlockItem {
@@ -93,15 +45,8 @@ struct BlockItem {
 }
 
 /// Computes the layout of [`LayoutTree`] according to the block layout algorithm
-pub fn compute(
-    tree: &mut impl LayoutTree,
-    node_id: NodeId,
-    known_dimensions: Size<Option<f32>>,
-    parent_size: Size<Option<f32>>,
-    available_space: Size<AvailableSpace>,
-    run_mode: RunMode,
-    vertical_margins_are_collapsible: Line<bool>,
-) -> SizeBaselinesAndMargins {
+pub fn compute_block_layout(tree: &mut impl LayoutTree, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput {
+    let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
     let style = tree.style(node_id);
 
     // Pull these out earlier to avoid borrowing issues
@@ -140,27 +85,15 @@ pub fn compute(
     }
 
     debug_log!("BLOCK");
-    compute_inner(
-        tree,
-        node_id,
-        styled_based_known_dimensions,
-        parent_size,
-        available_space,
-        run_mode,
-        vertical_margins_are_collapsible,
-    )
+    compute_inner(tree, node_id, LayoutInput { known_dimensions: styled_based_known_dimensions, ..inputs })
 }
 
 /// Computes the layout of [`LayoutTree`] according to the block layout algorithm
-fn compute_inner(
-    tree: &mut impl LayoutTree,
-    node_id: NodeId,
-    known_dimensions: Size<Option<f32>>,
-    parent_size: Size<Option<f32>>,
-    available_space: Size<AvailableSpace>,
-    run_mode: RunMode,
-    vertical_margins_are_collapsible: Line<bool>,
-) -> SizeBaselinesAndMargins {
+fn compute_inner(tree: &mut impl LayoutTree, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput {
+    let LayoutInput {
+        known_dimensions, parent_size, available_space, run_mode, vertical_margins_are_collapsible, ..
+    } = inputs;
+
     let style = tree.style(node_id);
     let raw_padding = style.padding;
     let raw_border = style.border;
@@ -282,7 +215,7 @@ fn compute_inner(
     let can_be_collapsed_through =
         !has_styles_preventing_being_collapsed_through && all_in_flow_children_can_be_collapsed_through;
 
-    SizeBaselinesAndMargins {
+    LayoutOutput {
         size: final_outer_size,
         first_baselines: Point::NONE,
         top_margin: if own_margins_collapse_with_children.start {

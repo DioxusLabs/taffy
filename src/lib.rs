@@ -27,11 +27,13 @@ pub mod tree;
 #[macro_use]
 pub mod util;
 
+#[cfg(feature = "block_layout")]
+pub use crate::compute::compute_block_layout;
 #[cfg(feature = "flexbox")]
-pub use crate::compute::flexbox::FlexboxAlgorithm;
+pub use crate::compute::compute_flexbox_layout;
 #[cfg(feature = "grid")]
-pub use crate::compute::grid::CssGridAlgorithm;
-pub use crate::compute::LayoutAlgorithm;
+pub use crate::compute::compute_grid_layout;
+pub use crate::compute::compute_leaf_layout;
 pub use crate::tree::LayoutTree;
 #[cfg(feature = "taffy_tree")]
 pub use crate::tree::{Taffy, TaffyError, TaffyResult};

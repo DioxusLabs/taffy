@@ -3,11 +3,11 @@
 //! Layouts are composed of multiple nodes, which live in a tree-like data structure.
 use slotmap::{DefaultKey, SlotMap, SparseSecondaryMap};
 
-use crate::compute::taffy_tree::{compute_layout, measure_node_size, perform_node_layout};
+use crate::compute::taffy_tree::{compute_layout, compute_node_layout};
 use crate::geometry::{Line, Size};
 use crate::prelude::LayoutTree;
 use crate::style::{AvailableSpace, Style};
-use crate::tree::{Layout, NodeData, NodeId, SizeBaselinesAndMargins, SizingMode};
+use crate::tree::{Layout, LayoutInput, LayoutOutput, NodeData, NodeId, RunMode, SizingMode};
 use crate::util::sys::{new_vec_with_capacity, ChildrenVec, Vec};
 
 use super::{TaffyError, TaffyResult};
@@ -129,15 +129,19 @@ where
         sizing_mode: SizingMode,
         vertical_margins_are_collapsible: Line<bool>,
     ) -> Size<f32> {
-        measure_node_size(
+        compute_node_layout(
             self,
             node,
-            known_dimensions,
-            parent_size,
-            available_space,
-            sizing_mode,
-            vertical_margins_are_collapsible,
+            LayoutInput {
+                known_dimensions,
+                parent_size,
+                available_space,
+                sizing_mode,
+                run_mode: RunMode::ComputeSize,
+                vertical_margins_are_collapsible,
+            },
         )
+        .size
     }
 
     #[inline(always)]
@@ -149,15 +153,18 @@ where
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
         vertical_margins_are_collapsible: Line<bool>,
-    ) -> SizeBaselinesAndMargins {
-        perform_node_layout(
+    ) -> LayoutOutput {
+        compute_node_layout(
             self,
             node,
-            known_dimensions,
-            parent_size,
-            available_space,
-            sizing_mode,
-            vertical_margins_are_collapsible,
+            LayoutInput {
+                known_dimensions,
+                parent_size,
+                available_space,
+                sizing_mode,
+                run_mode: RunMode::PerformLayout,
+                vertical_margins_are_collapsible,
+            },
         )
     }
 }

@@ -87,11 +87,16 @@ Example usage change:
 ### Added
 
 - Support for [CSS Block layout](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flow_Layout/Block_and_Inline_Layout_in_Normal_Flow#elements_participating_in_a_block_formatting_context) has been added. This can be used via the new `Display::Block` variant of the `Display` enum. Note that inline, inline-block and float have *not* been implemented. The use case supported is block container nodes which contain block-level children.
+- Support for running each layout algorithm individually on a single node via the following top-level functions:
+  - `compute_flexbox_layout`
+  - `compute_grid_layout`
+  - `compute_leaf_layout`
+  - `compute_hidden_layout`
 - Added `insert_child_at_index()` method to the `Taffy` tree. This can be used to insert a child node at any position instead of just the end.
 
 ### Removed
 
-- `layout_flexbox()` has been removed from the prelude. Use `FlexboxAlgorithm::perform_layout()` instead.
+- `layout_flexbox()` has been removed from the prelude. Use `taffy::compute_flexbox_layout` instead.
 - The following methods have been removed from the `LayoutTree` trait: `parent`, `is_childless`, `layout`, `measure_node`, `needs_measure`, `cache_mut` and `mark_dirty`. These no longer need to be implemented in custom implementations of `LayoutTree`.
 
 ### Changes

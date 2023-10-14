@@ -1,22 +1,19 @@
 //! Computation specific for the default `Taffy` tree implementation
-
-use crate::compute::{leaf, LayoutAlgorithm};
+use crate::compute::leaf::compute_leaf_layout;
 use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, Display};
 use crate::tree::{
-    Layout, LayoutTree, NodeId, RunMode, SizeBaselinesAndMargins, SizingMode, Taffy, TaffyError, TaffyView,
+    Layout, LayoutInput, LayoutOutput, LayoutTree, NodeId, RunMode, SizingMode, Taffy, TaffyError, TaffyView,
 };
 use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
 use crate::util::sys::round;
 
 #[cfg(feature = "block_layout")]
-use crate::compute::BlockAlgorithm;
-
+use crate::compute::compute_block_layout;
 #[cfg(feature = "flexbox")]
-use crate::compute::FlexboxAlgorithm;
-
+use crate::compute::compute_flexbox_layout;
 #[cfg(feature = "grid")]
-use crate::compute::CssGridAlgorithm;
+use crate::compute::compute_grid_layout;
 
 /// Updates the stored layout of the provided `node` and its children
 pub(crate) fn compute_layout<NodeContext, MeasureFunction>(
@@ -28,14 +25,17 @@ where
     MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
 {
     // Recursively compute node layout
-    let size_and_baselines = perform_node_layout(
+    let size_and_baselines = compute_node_layout(
         taffy_view,
         root,
-        Size::NONE,
-        available_space.into_options(),
-        available_space,
-        SizingMode::InherentSize,
-        Line::FALSE,
+        LayoutInput {
+            known_dimensions: Size::NONE,
+            parent_size: available_space.into_options(),
+            available_space,
+            sizing_mode: SizingMode::InherentSize,
+            run_mode: RunMode::PerformLayout,
+            vertical_margins_are_collapsible: Line::FALSE,
+        },
     );
 
     let layout = Layout { order: 0, size: size_and_baselines.size, location: Point::ZERO };
@@ -49,80 +49,25 @@ where
     Ok(())
 }
 
-/// Perform full layout on a node. Chooses which algorithm to use based on the `display` property.
-pub(crate) fn perform_node_layout<NodeContext, MeasureFunction>(
-    taffy_view: &mut TaffyView<NodeContext, MeasureFunction>,
-    node: NodeId,
-    known_dimensions: Size<Option<f32>>,
-    parent_size: Size<Option<f32>>,
-    available_space: Size<AvailableSpace>,
-    sizing_mode: SizingMode,
-    vertical_margins_are_collapsible: Line<bool>,
-) -> SizeBaselinesAndMargins
-where
-    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
-{
-    compute_node_layout(
-        taffy_view,
-        node,
-        known_dimensions,
-        parent_size,
-        available_space,
-        RunMode::PerformLayout,
-        sizing_mode,
-        vertical_margins_are_collapsible,
-    )
-}
-
-/// Measure a node's size. Chooses which algorithm to use based on the `display` property.
-pub(crate) fn measure_node_size<NodeContext, MeasureFunction>(
-    taffy_view: &mut TaffyView<NodeContext, MeasureFunction>,
-    node: NodeId,
-    known_dimensions: Size<Option<f32>>,
-    parent_size: Size<Option<f32>>,
-    available_space: Size<AvailableSpace>,
-    sizing_mode: SizingMode,
-    vertical_margins_are_collapsible: Line<bool>,
-) -> Size<f32>
-where
-    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
-{
-    compute_node_layout(
-        taffy_view,
-        node,
-        known_dimensions,
-        parent_size,
-        available_space,
-        RunMode::ComputeSize,
-        sizing_mode,
-        vertical_margins_are_collapsible,
-    )
-    .size
-}
-
 /// Updates the stored layout of the provided `node` and its children
-#[allow(clippy::too_many_arguments)]
-fn compute_node_layout<NodeContext, MeasureFunction>(
+pub(crate) fn compute_node_layout<NodeContext, MeasureFunction>(
     taffy_view: &mut TaffyView<NodeContext, MeasureFunction>,
     node: NodeId,
-    known_dimensions: Size<Option<f32>>,
-    parent_size: Size<Option<f32>>,
-    available_space: Size<AvailableSpace>,
-    run_mode: RunMode,
-    sizing_mode: SizingMode,
-    vertical_margins_are_collapsible: Line<bool>,
-) -> SizeBaselinesAndMargins
+    inputs: LayoutInput,
+) -> LayoutOutput
 where
     MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
 {
     debug_push_node!(node);
 
+    let LayoutInput { known_dimensions, available_space, run_mode, .. } = inputs;
     let node_key = node.into();
     let has_children = !taffy_view.taffy.children[node_key].is_empty();
 
     // First we check if we have a cached result for the given input
     let cache_run_mode = if !has_children { RunMode::PerformLayout } else { run_mode };
-    let cache_entry = taffy_view.taffy.nodes[node_key].cache.get(known_dimensions, available_space, cache_run_mode);
+    let cache = &taffy_view.taffy.nodes[node_key].cache;
+    let cache_entry = cache.get(known_dimensions, available_space, cache_run_mode);
     if let Some(cached_size_and_baselines) = cache_entry {
         debug_log!("CACHE", dbg:cached_size_and_baselines.size);
         debug_log_node!(known_dimensions, parent_size, available_space, run_mode, sizing_mode);
@@ -130,111 +75,26 @@ where
         return cached_size_and_baselines;
     }
 
+    // Fetch `Display` style (+ debug log)
+    let display_mode = taffy_view.taffy.nodes[node_key].style.display;
+    debug_log!(display_mode);
     debug_log_node!(known_dimensions, parent_size, available_space, run_mode, sizing_mode);
 
-    /// Inlined function generic over the LayoutAlgorithm to reduce code duplication
-    #[inline(always)]
-    fn perform_computations<Algorithm: LayoutAlgorithm>(
-        tree: &mut impl LayoutTree,
-        node: NodeId,
-        known_dimensions: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        run_mode: RunMode,
-        sizing_mode: SizingMode,
-        vertical_margins_are_collapsible: Line<bool>,
-    ) -> SizeBaselinesAndMargins {
-        debug_log!(Algorithm::NAME);
-
-        match run_mode {
-            RunMode::PerformLayout => Algorithm::perform_layout(
-                tree,
-                node,
-                known_dimensions,
-                parent_size,
-                available_space,
-                sizing_mode,
-                vertical_margins_are_collapsible,
-            ),
-            RunMode::ComputeSize => Algorithm::measure_size(
-                tree,
-                node,
-                known_dimensions,
-                parent_size,
-                available_space,
-                sizing_mode,
-                vertical_margins_are_collapsible,
-            )
-            .into(),
-        }
-    }
-
-    let display_mode = taffy_view.taffy.nodes[node_key].style.display;
     let computed_size_and_baselines = match (display_mode, has_children) {
-        (Display::None, _) => {
-            perform_taffy_tree_hidden_layout(taffy_view.taffy, node);
-            SizeBaselinesAndMargins::HIDDEN
-        }
+        (Display::None, _) => perform_taffy_tree_hidden_layout(taffy_view.taffy, node),
         #[cfg(feature = "block_layout")]
-        (Display::Block, true) => perform_computations::<BlockAlgorithm>(
-            taffy_view,
-            node,
-            known_dimensions,
-            parent_size,
-            available_space,
-            run_mode,
-            sizing_mode,
-            vertical_margins_are_collapsible,
-        ),
+        (Display::Block, true) => compute_block_layout(taffy_view, node, inputs),
         #[cfg(feature = "flexbox")]
-        (Display::Flex, true) => perform_computations::<FlexboxAlgorithm>(
-            taffy_view,
-            node,
-            known_dimensions,
-            parent_size,
-            available_space,
-            run_mode,
-            sizing_mode,
-            vertical_margins_are_collapsible,
-        ),
+        (Display::Flex, true) => compute_flexbox_layout(taffy_view, node, inputs),
         #[cfg(feature = "grid")]
-        (Display::Grid, true) => perform_computations::<CssGridAlgorithm>(
-            taffy_view,
+        (Display::Grid, true) => compute_grid_layout(taffy_view, node, inputs),
+        (_, false) => compute_leaf_layout(
+            &mut taffy_view.measure_function,
             node,
-            known_dimensions,
-            parent_size,
-            available_space,
-            run_mode,
-            sizing_mode,
-            vertical_margins_are_collapsible,
+            inputs,
+            &taffy_view.taffy.nodes[node_key].style,
+            taffy_view.taffy.nodes[node_key].needs_measure.then(|| &mut taffy_view.taffy.node_context_data[node_key]),
         ),
-        (_, false) => match run_mode {
-            RunMode::PerformLayout => leaf::perform_layout(
-                &taffy_view.taffy.nodes[node_key].style,
-                known_dimensions,
-                parent_size,
-                available_space,
-                sizing_mode,
-                &mut taffy_view.measure_function,
-                node,
-                taffy_view.taffy.nodes[node_key]
-                    .needs_measure
-                    .then(|| &mut taffy_view.taffy.node_context_data[node_key]),
-            ),
-            RunMode::ComputeSize => leaf::measure_size(
-                &taffy_view.taffy.nodes[node_key].style,
-                known_dimensions,
-                parent_size,
-                available_space,
-                sizing_mode,
-                &mut taffy_view.measure_function,
-                node,
-                taffy_view.taffy.nodes[node_key]
-                    .needs_measure
-                    .then(|| &mut taffy_view.taffy.node_context_data[node_key]),
-            )
-            .into(),
-        },
     };
 
     // Cache result
@@ -253,7 +113,7 @@ where
 
 /// Creates a layout for this node and its children, recursively.
 /// Each hidden node has zero size and is placed at the origin
-fn perform_taffy_tree_hidden_layout<NodeContext>(tree: &mut Taffy<NodeContext>, node: NodeId) {
+fn perform_taffy_tree_hidden_layout<NodeContext>(tree: &mut Taffy<NodeContext>, node: NodeId) -> LayoutOutput {
     /// Recursive function to apply hidden layout to all descendents
     fn perform_hidden_layout_inner<NodeContext>(tree: &mut Taffy<NodeContext>, node: NodeId, order: u32) {
         let node_key = node.into();
@@ -269,6 +129,8 @@ fn perform_taffy_tree_hidden_layout<NodeContext>(tree: &mut Taffy<NodeContext>, 
     for order in 0..tree.children[node.into()].len() {
         perform_hidden_layout_inner(tree, tree.children[node_key][order], order as _);
     }
+
+    LayoutOutput::HIDDEN
 }
 
 /// Rounds the calculated [`Layout`] to exact pixel values
