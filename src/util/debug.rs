@@ -2,15 +2,20 @@
 
 use crate::tree::NodeId;
 use crate::{style, LayoutTree};
+
+#[cfg(any(feature = "debug", feature = "profile"))]
 use core::fmt::{Debug, Display, Write};
+#[cfg(any(feature = "debug", feature = "profile"))]
 use std::sync::Mutex;
 
 /// Prints a debug representation of the computed layout for a tree of nodes, starting with the passed root node.
+#[cfg(feature = "std")]
 pub fn print_tree(tree: &impl LayoutTree, root: NodeId) {
     println!("TREE");
     print_node(tree, root, false, String::new());
 }
 
+#[cfg(feature = "std")]
 fn print_node(tree: &impl LayoutTree, node: NodeId, has_sibling: bool, lines_string: String) {
     let layout = &tree.layout(node);
     let style = &tree.style(node);
@@ -50,11 +55,14 @@ fn print_node(tree: &impl LayoutTree, node: NodeId, has_sibling: bool, lines_str
 }
 
 #[doc(hidden)]
+#[cfg(any(feature = "debug", feature = "profile"))]
 pub struct DebugLogger {
     stack: Mutex<Vec<String>>,
 }
 
+#[cfg(any(feature = "debug", feature = "profile"))]
 static EMPTY_STRING: String = String::new();
+#[cfg(any(feature = "debug", feature = "profile"))]
 impl DebugLogger {
     pub const fn new() -> Self {
         Self { stack: Mutex::new(Vec::new()) }
@@ -108,6 +116,59 @@ impl DebugLogger {
 #[cfg(any(feature = "debug", feature = "profile"))]
 pub(crate) static NODE_LOGGER: DebugLogger = DebugLogger::new();
 
+macro_rules! debug_log {
+    // String literal label with debug printing
+    ($label:literal, dbg:$item:expr) => {
+        #[cfg(feature = "debug")]
+        $crate::util::debug::NODE_LOGGER.labelled_debug_log($label, $item);
+    };
+    // String literal label with display printing
+    ($label:literal, $item:expr) => {
+        #[cfg(feature = "debug")]
+        $crate::util::debug::NODE_LOGGER.labelled_log($label, $item);
+    };
+    // Debug printing
+    (dbg:$item:expr) => {
+        #[cfg(feature = "debug")]
+        $crate::util::debug::NODE_LOGGER.debug_log($item);
+    };
+    // Display printing
+    ($item:expr) => {
+        #[cfg(feature = "debug")]
+        $crate::util::debug::NODE_LOGGER.log($item);
+    };
+    // Blank newline
+    () => {
+        #[cfg(feature = "debug")]
+        println!();
+    };
+}
+
+macro_rules! debug_log_node {
+    ($known_dimensions: expr, $parent_size: expr, $available_space: expr, $run_mode: expr, $sizing_mode: expr) => {
+        debug_log!(dbg:$run_mode);
+        debug_log!("sizing_mode", dbg:$sizing_mode);
+        debug_log!("known_dimensions", dbg:$known_dimensions);
+        debug_log!("parent_size", dbg:$parent_size);
+        debug_log!("available_space", dbg:$available_space);
+    };
+}
+
+macro_rules! debug_push_node {
+    ($node_id:expr) => {
+        #[cfg(any(feature = "debug", feature = "profile"))]
+        $crate::util::debug::NODE_LOGGER.push_node($node_id);
+        debug_log!("");
+    };
+}
+
+macro_rules! debug_pop_node {
+    () => {
+        #[cfg(any(feature = "debug", feature = "profile"))]
+        $crate::util::debug::NODE_LOGGER.pop_node();
+    };
+}
+
 #[cfg(feature = "profile")]
 #[allow(unused_macros)]
 macro_rules! time {
@@ -128,4 +189,4 @@ macro_rules! time {
 }
 
 #[allow(unused_imports)]
-pub(crate) use time;
+pub(crate) use {debug_log, debug_log_node, debug_pop_node, debug_push_node, time};

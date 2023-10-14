@@ -6,6 +6,7 @@ use crate::style::{AvailableSpace, Display};
 use crate::tree::{
     Layout, LayoutTree, NodeId, RunMode, SizeBaselinesAndMargins, SizingMode, Taffy, TaffyError, TaffyView,
 };
+use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
 use crate::util::sys::round;
 
 #[cfg(feature = "block_layout")]
@@ -16,24 +17,6 @@ use crate::compute::FlexboxAlgorithm;
 
 #[cfg(feature = "grid")]
 use crate::compute::CssGridAlgorithm;
-
-#[cfg(any(feature = "debug", feature = "profile"))]
-use crate::util::debug::NODE_LOGGER;
-
-#[cfg(feature = "debug")]
-fn debug_log_node(
-    known_dimensions: Size<Option<f32>>,
-    parent_size: Size<Option<f32>>,
-    available_space: Size<AvailableSpace>,
-    run_mode: RunMode,
-    sizing_mode: SizingMode,
-) {
-    NODE_LOGGER.debug_log(run_mode);
-    NODE_LOGGER.labelled_debug_log("sizing_mode", sizing_mode);
-    NODE_LOGGER.labelled_debug_log("known_dimensions", known_dimensions);
-    NODE_LOGGER.labelled_debug_log("parent_size", parent_size);
-    NODE_LOGGER.labelled_debug_log("available_space", available_space);
-}
 
 /// Updates the stored layout of the provided `node` and its children
 pub(crate) fn compute_layout<NodeContext, MeasureFunction>(
@@ -132,31 +115,22 @@ fn compute_node_layout<NodeContext, MeasureFunction>(
 where
     MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
 {
-    #[cfg(any(feature = "debug", feature = "profile"))]
-    NODE_LOGGER.push_node(node);
-    #[cfg(feature = "debug")]
-    println!();
+    debug_push_node!(node);
 
     let node_key = node.into();
     let has_children = !taffy_view.taffy.children[node_key].is_empty();
 
     // First we check if we have a cached result for the given input
     let cache_run_mode = if !has_children { RunMode::PerformLayout } else { run_mode };
-    if let Some(cached_size_and_baselines) =
-        taffy_view.taffy.nodes[node_key].cache.get(known_dimensions, available_space, cache_run_mode)
-    {
-        #[cfg(feature = "debug")]
-        NODE_LOGGER.labelled_debug_log("CACHE", cached_size_and_baselines.size);
-        #[cfg(feature = "debug")]
-        debug_log_node(known_dimensions, parent_size, available_space, run_mode, sizing_mode);
-        #[cfg(any(feature = "debug", feature = "profile"))]
-        NODE_LOGGER.pop_node();
-
+    let cache_entry = taffy_view.taffy.nodes[node_key].cache.get(known_dimensions, available_space, cache_run_mode);
+    if let Some(cached_size_and_baselines) = cache_entry {
+        debug_log!("CACHE", dbg:cached_size_and_baselines.size);
+        debug_log_node!(known_dimensions, parent_size, available_space, run_mode, sizing_mode);
+        debug_pop_node!();
         return cached_size_and_baselines;
     }
 
-    #[cfg(feature = "debug")]
-    debug_log_node(known_dimensions, parent_size, available_space, run_mode, sizing_mode);
+    debug_log_node!(known_dimensions, parent_size, available_space, run_mode, sizing_mode);
 
     /// Inlined function generic over the LayoutAlgorithm to reduce code duplication
     #[inline(always)]
@@ -170,8 +144,7 @@ where
         sizing_mode: SizingMode,
         vertical_margins_are_collapsible: Line<bool>,
     ) -> SizeBaselinesAndMargins {
-        #[cfg(feature = "debug")]
-        NODE_LOGGER.log(Algorithm::NAME);
+        debug_log!(Algorithm::NAME);
 
         match run_mode {
             RunMode::PerformLayout => Algorithm::perform_layout(
@@ -272,10 +245,8 @@ where
         computed_size_and_baselines,
     );
 
-    #[cfg(feature = "debug")]
-    NODE_LOGGER.labelled_debug_log("RESULT", computed_size_and_baselines.size);
-    #[cfg(any(feature = "debug", feature = "profile"))]
-    NODE_LOGGER.pop_node();
+    debug_log!("RESULT", dbg:computed_size_and_baselines.size);
+    debug_pop_node!();
 
     computed_size_and_baselines
 }

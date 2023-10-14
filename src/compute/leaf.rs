@@ -5,12 +5,10 @@ use crate::style::{AvailableSpace, Display, Overflow, Position, Style};
 use crate::tree::CollapsibleMarginSet;
 use crate::tree::NodeId;
 use crate::tree::{SizeBaselinesAndMargins, SizingMode};
+use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
-
-#[cfg(feature = "debug")]
-use crate::util::debug::NODE_LOGGER;
 
 /// Perform full layout on a leaf node
 #[allow(clippy::too_many_arguments)]
@@ -116,14 +114,10 @@ where
         || border.top > 0.0
         || border.bottom > 0.0;
 
-    #[cfg(feature = "debug")]
-    NODE_LOGGER.log("LEAF");
-    #[cfg(feature = "debug")]
-    NODE_LOGGER.labelled_debug_log("node_size", node_size);
-    #[cfg(feature = "debug")]
-    NODE_LOGGER.labelled_debug_log("min_size ", node_min_size);
-    #[cfg(feature = "debug")]
-    NODE_LOGGER.labelled_debug_log("max_size ", node_max_size);
+    debug_log!("LEAF");
+    debug_log!("node_size", dbg:node_size);
+    debug_log!("min_size ", dbg:node_min_size);
+    debug_log!("max_size ", dbg:node_max_size);
 
     // Return early if both width and height are known
     if let Size { width: Some(width), height: Some(height) } = node_size {

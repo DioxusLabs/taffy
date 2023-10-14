@@ -6,6 +6,7 @@ use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Display,
 use crate::style_helpers::*;
 use crate::tree::{Layout, RunMode, SizeBaselinesAndMargins, SizingMode};
 use crate::tree::{LayoutTree, NodeId};
+use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, GridTrackVec, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
@@ -19,9 +20,6 @@ use track_sizing::{
 use types::{CellOccupancyMatrix, GridTrack};
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine};
-
-#[cfg(feature = "debug")]
-use crate::util::debug::NODE_LOGGER;
 
 use super::LayoutAlgorithm;
 
@@ -182,12 +180,9 @@ pub fn compute(
         height: outer_node_size.height.map(|space| space - content_box_inset.vertical_axis_sum()),
     };
 
-    #[cfg(feature = "debug")]
-    NODE_LOGGER.labelled_debug_log("parent_size", parent_size);
-    #[cfg(feature = "debug")]
-    NODE_LOGGER.labelled_debug_log("outer_node_size", outer_node_size);
-    #[cfg(feature = "debug")]
-    NODE_LOGGER.labelled_debug_log("inner_node_size", inner_node_size);
+    debug_log!("parent_size", dbg:parent_size);
+    debug_log!("outer_node_size", dbg:outer_node_size);
+    debug_log!("inner_node_size", dbg:inner_node_size);
 
     // 5. Track Sizing
 
@@ -241,10 +236,8 @@ pub fn compute(
     let initial_row_sum = rows.iter().map(|track| track.base_size).sum::<f32>();
     inner_node_size.height = inner_node_size.height.or_else(|| initial_row_sum.into());
 
-    #[cfg(feature = "debug")]
-    NODE_LOGGER.labelled_debug_log("initial_column_sum", initial_column_sum);
-    #[cfg(feature = "debug")]
-    NODE_LOGGER.labelled_debug_log("initial_row_sum", initial_row_sum);
+    debug_log!("initial_column_sum", dbg:initial_column_sum);
+    debug_log!("initial_row_sum", dbg:initial_row_sum);
 
     // 6. Compute container size
     let resolved_style_size = known_dimensions.or(style.size.maybe_resolve(parent_size));

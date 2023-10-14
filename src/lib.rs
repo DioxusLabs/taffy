@@ -24,6 +24,7 @@ pub mod prelude;
 pub mod style;
 pub mod style_helpers;
 pub mod tree;
+#[macro_use]
 pub mod util;
 
 #[cfg(feature = "flexbox")]
