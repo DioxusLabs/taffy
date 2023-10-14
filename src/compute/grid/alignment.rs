@@ -202,7 +202,7 @@ pub(super) fn align_and_position_item(
         baseline_shim,
     );
 
-    *tree.layout_mut(node) = Layout { order, size: Size { width, height }, location: Point { x, y } };
+    *tree.unrounded_layout_mut(node) = Layout { order, size: Size { width, height }, location: Point { x, y } };
 }
 
 /// Align and size a grid item along a single axis

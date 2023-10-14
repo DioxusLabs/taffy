@@ -33,7 +33,7 @@ use crate::tree::{Layout, LayoutOutput, LayoutTree, NodeId};
 pub fn compute_hidden_layout(tree: &mut impl LayoutTree, node: NodeId) -> LayoutOutput {
     /// Recursive function to apply hidden layout to all descendents
     fn perform_hidden_layout_inner(tree: &mut impl LayoutTree, node: NodeId, order: u32) {
-        *tree.layout_mut(node) = Layout::with_order(order);
+        *tree.unrounded_layout_mut(node) = Layout::with_order(order);
         for order in 0..tree.child_count(node) {
             perform_hidden_layout_inner(tree, tree.child(node, order), order as _);
         }

@@ -330,7 +330,7 @@ fn compute_preliminary(tree: &mut impl LayoutTree, node: NodeId, inputs: LayoutI
     for order in 0..len {
         let child = tree.child(node, order);
         if tree.style(child).display == Display::None {
-            *tree.layout_mut(child) = Layout::with_order(order as u32);
+            *tree.unrounded_layout_mut(child) = Layout::with_order(order as u32);
             tree.perform_child_layout(
                 child,
                 Size::NONE,
@@ -1737,7 +1737,7 @@ fn calculate_flex_item(
         item.baseline = baseline_offset_main + inner_baseline;
     }
 
-    *tree.layout_mut(item.node) = Layout {
+    *tree.unrounded_layout_mut(item.node) = Layout {
         order: item.order,
         size: preliminary_size_and_baselines.size,
         location: Point {
@@ -2022,7 +2022,7 @@ fn perform_absolute_layout_on_absolute_children(tree: &mut impl LayoutTree, node
             }
         };
 
-        *tree.layout_mut(child) = Layout {
+        *tree.unrounded_layout_mut(child) = Layout {
             order: order as u32,
             size: final_size,
             location: Point {

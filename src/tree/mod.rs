@@ -43,7 +43,7 @@ pub trait LayoutTree {
     fn layout(&self, node: NodeId) -> &Layout;
 
     /// Modify the node's output layout
-    fn layout_mut(&mut self, node: NodeId) -> &mut Layout;
+    fn unrounded_layout_mut(&mut self, node: NodeId) -> &mut Layout;
 
     /// Compute the size of the node given the specified constraints
     fn measure_child_size(

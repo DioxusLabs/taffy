@@ -424,7 +424,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutTree, node: NodeId, inputs: Lay
 
         // Position hidden child
         if child_style.display == Display::None {
-            *tree.layout_mut(child) = Layout::with_order(order);
+            *tree.unrounded_layout_mut(child) = Layout::with_order(order);
             tree.perform_child_layout(
                 child,
                 Size::NONE,
@@ -501,7 +501,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutTree, node: NodeId, inputs: Lay
             &first_row_items[0]
         };
 
-        let layout = tree.layout_mut(item.node);
+        let layout = tree.unrounded_layout_mut(item.node);
         layout.location.y + item.baseline.unwrap_or(layout.size.height)
     };
 

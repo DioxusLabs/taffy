@@ -197,7 +197,7 @@ fn compute_inner(tree: &mut impl LayoutTree, node_id: NodeId, inputs: LayoutInpu
     for order in 0..len {
         let child = tree.child(node_id, order);
         if tree.style(child).display == Display::None {
-            *tree.layout_mut(child) = Layout::with_order(order as u32);
+            *tree.unrounded_layout_mut(child) = Layout::with_order(order as u32);
             tree.perform_child_layout(
                 child,
                 Size::NONE,
@@ -388,7 +388,7 @@ fn perform_final_layout_on_in_flow_children(
                 y: committed_y_offset + active_collapsible_margin_set.resolve(),
             };
 
-            *tree.layout_mut(item.node_id) = Layout {
+            *tree.unrounded_layout_mut(item.node_id) = Layout {
                 order: item.order,
                 size: item_layout.size,
                 location: Point {
@@ -587,7 +587,7 @@ fn perform_absolute_layout_on_absolute_children(
                 .unwrap_or(item.static_position.y + resolved_margin.top),
         };
 
-        *tree.layout_mut(item.node_id) =
+        *tree.unrounded_layout_mut(item.node_id) =
             Layout { order: item.order, size: final_size, location: area_offset + item_offset };
     }
 }
