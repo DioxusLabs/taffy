@@ -15,8 +15,8 @@ mod taffy_tree;
 #[cfg(feature = "taffy_tree")]
 pub use taffy_tree::{Taffy, TaffyChildIter, TaffyError, TaffyResult};
 mod layout;
-pub use layout::{CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
 use crate::compute::compute_cached_layout;
+pub use layout::{CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
 
 /// Any item that implements the LayoutTree can be layed out using Taffy's algorithms.
 ///
@@ -53,12 +53,10 @@ pub trait LayoutTree {
     fn cache_mut(&mut self, node: NodeId) -> &mut Cache;
 
     /// Compute the specified node's size or full layout given the specified constraints
-    fn compute_child_layout(
-        &mut self,
-        node: NodeId,
-        inputs: LayoutInput
-    ) -> LayoutOutput;
+    fn compute_child_layout(&mut self, node: NodeId, inputs: LayoutInput) -> LayoutOutput;
+}
 
+pub(crate) trait LayoutTreeExt: LayoutTree {
     /// Compute the size of the node given the specified constraints
     fn measure_child_size(
         &mut self,
@@ -69,14 +67,19 @@ pub trait LayoutTree {
         sizing_mode: SizingMode,
         vertical_margins_are_collapsible: Line<bool>,
     ) -> Size<f32> {
-        compute_cached_layout(self, node, LayoutInput {
-            known_dimensions,
-            parent_size,
-            available_space,
-            sizing_mode,
-            run_mode: RunMode::ComputeSize,
-            vertical_margins_are_collapsible,
-        }).size
+        compute_cached_layout(
+            self,
+            node,
+            LayoutInput {
+                known_dimensions,
+                parent_size,
+                available_space,
+                sizing_mode,
+                run_mode: RunMode::ComputeSize,
+                vertical_margins_are_collapsible,
+            },
+        )
+        .size
     }
 
     /// Perform a full layout on the node given the specified constraints
@@ -89,13 +92,19 @@ pub trait LayoutTree {
         sizing_mode: SizingMode,
         vertical_margins_are_collapsible: Line<bool>,
     ) -> LayoutOutput {
-        compute_cached_layout(self, node, LayoutInput {
-            known_dimensions,
-            parent_size,
-            available_space,
-            sizing_mode,
-            run_mode: RunMode::PerformLayout,
-            vertical_margins_are_collapsible,
-        })
+        compute_cached_layout(
+            self,
+            node,
+            LayoutInput {
+                known_dimensions,
+                parent_size,
+                available_space,
+                sizing_mode,
+                run_mode: RunMode::PerformLayout,
+                vertical_margins_are_collapsible,
+            },
+        )
     }
 }
+
+impl<T: LayoutTree> LayoutTreeExt for T {}

@@ -3,15 +3,12 @@ use super::GridTrack;
 use crate::compute::grid::OriginZeroLine;
 use crate::geometry::AbstractAxis;
 use crate::geometry::{Line, Point, Rect, Size};
-use crate::prelude::LayoutTree;
 use crate::style::{
     AlignItems, AlignSelf, AvailableSpace, Dimension, LengthPercentageAuto, MaxTrackSizingFunction,
     MinTrackSizingFunction, Overflow, Style,
 };
-use crate::tree::NodeId;
-use crate::tree::SizingMode;
-use crate::util::MaybeMath;
-use crate::util::{MaybeResolve, ResolveOrZero};
+use crate::tree::{LayoutTree, LayoutTreeExt, NodeId, SizingMode};
+use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use core::ops::Range;
 
 /// Represents a single grid item

@@ -5,7 +5,7 @@ use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Display, Overflow, Position};
 use crate::style_helpers::*;
 use crate::tree::{Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
-use crate::tree::{LayoutTree, NodeId};
+use crate::tree::{LayoutTree, LayoutTreeExt, NodeId};
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, GridTrackVec, Vec};
 use crate::util::MaybeMath;

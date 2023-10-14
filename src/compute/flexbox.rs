@@ -8,7 +8,7 @@ use crate::style::{
 };
 use crate::style::{FlexDirection, Style};
 use crate::tree::{Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
-use crate::tree::{LayoutTree, NodeId};
+use crate::tree::{LayoutTree, LayoutTreeExt, NodeId};
 use crate::util::debug::debug_log;
 use crate::util::sys::Vec;
 use crate::util::sys::{f32_max, new_vec_with_capacity};
