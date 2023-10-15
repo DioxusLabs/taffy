@@ -161,11 +161,14 @@ where
                         inputs,
                         style,
                         Some(|known_dimensions, available_space| {
-                            (&mut self.measure_function)(known_dimensions, available_space, node, node_context)
+                            (self.measure_function)(known_dimensions, available_space, node, node_context)
                         }),
                     )
                 } else {
-                    let measure_function: Option<fn(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32>> = None;
+                    /// Type inference gets confused because we're just passing None here. So we give
+                    /// it a concrete type to work with (even though we never construct the inner type)
+                    type DummyMeasureFunction = Option<fn(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32>>;
+                    let measure_function: DummyMeasureFunction = None;
                     compute_leaf_layout(inputs, style, measure_function)
                 }
             }

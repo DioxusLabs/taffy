@@ -56,6 +56,8 @@ pub trait LayoutTree {
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
 }
 
+/// A private trait which allows us to add extra convenience methods to types which implement
+/// LayoutTree without making those methods public.
 pub(crate) trait LayoutTreeExt: LayoutTree {
     /// Compute the size of the node given the specified constraints
     #[inline(always)]
