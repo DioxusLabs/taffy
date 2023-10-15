@@ -52,7 +52,7 @@ pub fn compute_layout(
 
     // If rounding is enabled, recursively round the layout's of this node and all children
     if use_rounding {
-        round_layout(tree, root, 0.0, 0.0);
+        round_layout(tree, root);
     }
 }
 
@@ -99,22 +99,26 @@ pub(crate) fn compute_cached_layout<Tree: LayoutTree + ?Sized>(
 ///
 /// In order to prevent innacuracies caused by rounding already-rounded values, we read from `unrounded_layout`
 /// and write to `final_layout`.
-pub fn round_layout(tree: &mut impl LayoutTree, node_id: NodeId, cumulative_x: f32, cumulative_y: f32) {
-    let unrounded_layout = *tree.unrounded_layout_mut(node_id);
-    let layout = &mut tree.final_layout_mut(node_id);
+pub fn round_layout(tree: &mut impl LayoutTree, node_id: NodeId) {
+    return round_layout_inner(tree, node_id, 0.0, 0.0);
+    /// Recursive function to apply rounding to all descendents
+    fn round_layout_inner(tree: &mut impl LayoutTree, node_id: NodeId, cumulative_x: f32, cumulative_y: f32) {
+        let unrounded_layout = *tree.unrounded_layout_mut(node_id);
+        let layout = &mut tree.final_layout_mut(node_id);
 
-    let cumulative_x = cumulative_x + unrounded_layout.location.x;
-    let cumulative_y = cumulative_y + unrounded_layout.location.y;
+        let cumulative_x = cumulative_x + unrounded_layout.location.x;
+        let cumulative_y = cumulative_y + unrounded_layout.location.y;
 
-    layout.location.x = round(unrounded_layout.location.x);
-    layout.location.y = round(unrounded_layout.location.y);
-    layout.size.width = round(cumulative_x + unrounded_layout.size.width) - round(cumulative_x);
-    layout.size.height = round(cumulative_y + unrounded_layout.size.height) - round(cumulative_y);
+        layout.location.x = round(unrounded_layout.location.x);
+        layout.location.y = round(unrounded_layout.location.y);
+        layout.size.width = round(cumulative_x + unrounded_layout.size.width) - round(cumulative_x);
+        layout.size.height = round(cumulative_y + unrounded_layout.size.height) - round(cumulative_y);
 
-    let child_count = tree.child_count(node_id);
-    for index in 0..child_count {
-        let child = tree.child(node_id, index);
-        round_layout(tree, child, cumulative_x, cumulative_y);
+        let child_count = tree.child_count(node_id);
+        for index in 0..child_count {
+            let child = tree.child(node_id, index);
+            round_layout_inner(tree, child, cumulative_x, cumulative_y);
+        }
     }
 }
 
