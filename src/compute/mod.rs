@@ -70,7 +70,7 @@ pub(crate) fn compute_cached_layout<Tree: PartialLayoutTree + ?Sized>(
 
     // First we check if we have a cached result for the given input
     let cache_run_mode = if !has_children { RunMode::PerformLayout } else { run_mode };
-    let cache_entry = tree.cache_mut(node).get(known_dimensions, available_space, cache_run_mode);
+    let cache_entry = tree.get_cache_mut(node).get(known_dimensions, available_space, cache_run_mode);
     if let Some(cached_size_and_baselines) = cache_entry {
         debug_log!("CACHE", dbg:cached_size_and_baselines.size);
         debug_log_node!(known_dimensions, parent_size, available_space, run_mode, sizing_mode);
@@ -81,7 +81,7 @@ pub(crate) fn compute_cached_layout<Tree: PartialLayoutTree + ?Sized>(
     let computed_size_and_baselines = tree.compute_child_layout(node, inputs);
 
     // Cache result
-    tree.cache_mut(node).store(known_dimensions, available_space, cache_run_mode, computed_size_and_baselines);
+    tree.get_cache_mut(node).store(known_dimensions, available_space, cache_run_mode, computed_size_and_baselines);
 
     debug_log!("RESULT", dbg:computed_size_and_baselines.size);
     debug_pop_node!();
@@ -127,7 +127,7 @@ pub fn round_layout(tree: &mut impl LayoutTree, node_id: NodeId) {
 /// Each hidden node has zero size and is placed at the origin
 pub fn compute_hidden_layout(tree: &mut impl PartialLayoutTree, node: NodeId) -> LayoutOutput {
     // Clear cache and set zeroed-out layout for the node
-    tree.cache_mut(node).clear();
+    tree.get_cache_mut(node).clear();
     *tree.get_unrounded_layout_mut(node) = Layout::with_order(0);
     *tree.get_final_layout_mut(node) = Layout::with_order(0);
 

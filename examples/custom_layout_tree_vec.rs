@@ -147,7 +147,7 @@ impl PartialLayoutTree for Tree {
         &mut self.node_from_id_mut(node_id).final_layout
     }
 
-    fn cache_mut(&mut self, node_id: NodeId) -> &mut Cache {
+    fn get_cache_mut(&mut self, node_id: NodeId) -> &mut Cache {
         &mut self.node_from_id_mut(node_id).cache
     }
 

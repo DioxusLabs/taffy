@@ -110,7 +110,7 @@ where
     }
 
     #[inline(always)]
-    fn cache_mut(&mut self, node: NodeId) -> &mut Cache {
+    fn get_cache_mut(&mut self, node: NodeId) -> &mut Cache {
         &mut self.taffy.nodes[node.into()].cache
     }
 
