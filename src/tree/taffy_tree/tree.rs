@@ -15,7 +15,7 @@ use crate::compute::compute_block_layout;
 use crate::compute::compute_flexbox_layout;
 #[cfg(feature = "grid")]
 use crate::compute::compute_grid_layout;
-use crate::compute::{compute_hidden_layout, compute_layout, compute_leaf_layout, round_layout};
+use crate::compute::{compute_cached_layout, compute_hidden_layout, compute_layout, compute_leaf_layout, round_layout};
 
 use super::{TaffyError, TaffyResult};
 
@@ -118,7 +118,7 @@ where
         &mut self.taffy.nodes[node.into()].unrounded_layout
     }
 
-    #[inline(always)]
+    #[inline]
     fn compute_child_layout(&mut self, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
         // If RunMode is PerformHiddenLayout then this indicates that an ancestor node is `Display::None`
         // and thus that we should lay out this node using hidden layout regardless of it's own display style.
@@ -127,49 +127,56 @@ where
             return compute_hidden_layout(self, node);
         }
 
-        let display_mode = self.get_style(node).display;
-        let has_children = self.child_count(node) > 0;
+        // We run the following wrapped in "compute_cached_layout", which will check the cache for an entry matching the node and inputs and:
+        //   - Return that entry if exists
+        //   - Else call the passed closure (below) to compute the result
+        //
+        // If there was no cache match and a new result needs to be computed then that result will be added to the cache
+        compute_cached_layout(self, node, inputs, |tree, node, inputs| {
+            let display_mode = tree.get_style(node).display;
+            let has_children = tree.child_count(node) > 0;
 
-        debug_log!(display_mode);
-        debug_log_node!(
-            inputs.known_dimensions,
-            inputs.parent_size,
-            inputs.available_space,
-            inputs.run_mode,
-            inputs.sizing_mode
-        );
+            debug_log!(display_mode);
+            debug_log_node!(
+                inputs.known_dimensions,
+                inputs.parent_size,
+                inputs.available_space,
+                inputs.run_mode,
+                inputs.sizing_mode
+            );
 
-        // Dispatch to a layout algorithm based on the node's display style and whether the node has children or not.
-        match (display_mode, has_children) {
-            (Display::None, _) => compute_hidden_layout(self, node),
-            #[cfg(feature = "block_layout")]
-            (Display::Block, true) => compute_block_layout(self, node, inputs),
-            #[cfg(feature = "flexbox")]
-            (Display::Flex, true) => compute_flexbox_layout(self, node, inputs),
-            #[cfg(feature = "grid")]
-            (Display::Grid, true) => compute_grid_layout(self, node, inputs),
-            (_, false) => {
-                let node_key = node.into();
-                let style = &self.taffy.nodes[node_key].style;
-                let needs_measure = self.taffy.nodes[node_key].needs_measure;
-                if needs_measure {
-                    let node_context = Some(&mut self.taffy.node_context_data[node_key]);
-                    compute_leaf_layout(
-                        inputs,
-                        style,
-                        Some(|known_dimensions, available_space| {
-                            (self.measure_function)(known_dimensions, available_space, node, node_context)
-                        }),
-                    )
-                } else {
-                    /// Type inference gets confused because we're just passing None here. So we give
-                    /// it a concrete type to work with (even though we never construct the inner type)
-                    type DummyMeasureFunction = Option<fn(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32>>;
-                    let measure_function: DummyMeasureFunction = None;
-                    compute_leaf_layout(inputs, style, measure_function)
+            // Dispatch to a layout algorithm based on the node's display style and whether the node has children or not.
+            match (display_mode, has_children) {
+                (Display::None, _) => compute_hidden_layout(tree, node),
+                #[cfg(feature = "block_layout")]
+                (Display::Block, true) => compute_block_layout(tree, node, inputs),
+                #[cfg(feature = "flexbox")]
+                (Display::Flex, true) => compute_flexbox_layout(tree, node, inputs),
+                #[cfg(feature = "grid")]
+                (Display::Grid, true) => compute_grid_layout(tree, node, inputs),
+                (_, false) => {
+                    let node_key = node.into();
+                    let style = &tree.taffy.nodes[node_key].style;
+                    let needs_measure = tree.taffy.nodes[node_key].needs_measure;
+                    if needs_measure {
+                        let node_context = Some(&mut tree.taffy.node_context_data[node_key]);
+                        compute_leaf_layout(
+                            inputs,
+                            style,
+                            Some(|known_dimensions, available_space| {
+                                (tree.measure_function)(known_dimensions, available_space, node, node_context)
+                            }),
+                        )
+                    } else {
+                        /// Type inference gets confused because we're just passing None here. So we give
+                        /// it a concrete type to work with (even though we never construct the inner type)
+                        type DummyMeasureFunction = Option<fn(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32>>;
+                        let measure_function: DummyMeasureFunction = None;
+                        compute_leaf_layout(inputs, style, measure_function)
+                    }
                 }
             }
-        }
+        })
     }
 }
 

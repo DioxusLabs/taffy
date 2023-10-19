@@ -15,7 +15,6 @@ mod taffy_tree;
 #[cfg(feature = "taffy_tree")]
 pub use taffy_tree::{Taffy, TaffyChildIter, TaffyError, TaffyResult};
 mod layout;
-use crate::compute::compute_cached_layout;
 pub use layout::{CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
 
 /// This if the core abstraction in Taffy. Any type that *correctly* implements `PartialLayoutTree` can be laid out using Taffy's algorithms.
@@ -74,8 +73,7 @@ pub(crate) trait PartialLayoutTreeExt: PartialLayoutTree {
         sizing_mode: SizingMode,
         vertical_margins_are_collapsible: Line<bool>,
     ) -> Size<f32> {
-        compute_cached_layout(
-            self,
+        self.compute_child_layout(
             node_id,
             LayoutInput {
                 known_dimensions,
@@ -85,7 +83,6 @@ pub(crate) trait PartialLayoutTreeExt: PartialLayoutTree {
                 run_mode: RunMode::ComputeSize,
                 vertical_margins_are_collapsible,
             },
-            Self::compute_child_layout,
         )
         .size
     }
@@ -101,8 +98,7 @@ pub(crate) trait PartialLayoutTreeExt: PartialLayoutTree {
         sizing_mode: SizingMode,
         vertical_margins_are_collapsible: Line<bool>,
     ) -> LayoutOutput {
-        compute_cached_layout(
-            self,
+        self.compute_child_layout(
             node_id,
             LayoutInput {
                 known_dimensions,
@@ -112,7 +108,6 @@ pub(crate) trait PartialLayoutTreeExt: PartialLayoutTree {
                 run_mode: RunMode::PerformLayout,
                 vertical_margins_are_collapsible,
             },
-            Self::compute_child_layout,
         )
     }
 }
