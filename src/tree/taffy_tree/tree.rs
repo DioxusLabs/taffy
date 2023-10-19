@@ -100,7 +100,7 @@ where
     }
 
     #[inline(always)]
-    fn child(&self, node: NodeId, id: usize) -> NodeId {
+    fn get_child_id(&self, node: NodeId, id: usize) -> NodeId {
         self.taffy.children[node.into()][id]
     }
 

@@ -131,7 +131,7 @@ impl PartialLayoutTree for Tree {
         self.node_from_id(node_id).children.len()
     }
 
-    fn child(&self, node_id: NodeId, index: usize) -> NodeId {
+    fn get_child_id(&self, node_id: NodeId, index: usize) -> NodeId {
         NodeId::from(self.node_from_id(node_id).children[index])
     }
 

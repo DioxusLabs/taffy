@@ -121,7 +121,7 @@ impl PartialLayoutTree for StatelessLayoutTree {
         unsafe { node_from_id(node_id).children.len() }
     }
 
-    fn child(&self, node_id: NodeId, index: usize) -> NodeId {
+    fn get_child_id(&self, node_id: NodeId, index: usize) -> NodeId {
         unsafe { node_from_id(node_id).children[index].as_id() }
     }
 

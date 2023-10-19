@@ -117,7 +117,7 @@ pub fn round_layout(tree: &mut impl LayoutTree, node_id: NodeId) {
 
         let child_count = tree.child_count(node_id);
         for index in 0..child_count {
-            let child = tree.child(node_id, index);
+            let child = tree.get_child_id(node_id, index);
             round_layout_inner(tree, child, cumulative_x, cumulative_y);
         }
     }
@@ -133,7 +133,7 @@ pub fn compute_hidden_layout(tree: &mut impl PartialLayoutTree, node: NodeId) ->
 
     // Perform hidden layout on all children
     for index in 0..tree.child_count(node) {
-        let child_id = tree.child(node, index);
+        let child_id = tree.get_child_id(node, index);
         tree.compute_child_layout(child_id, LayoutInput::HIDDEN);
     }
 

@@ -328,7 +328,7 @@ fn compute_preliminary(tree: &mut impl PartialLayoutTree, node: NodeId, inputs: 
     debug_log!("hidden_layout");
     let len = tree.child_count(node);
     for order in 0..len {
-        let child = tree.child(node, order);
+        let child = tree.get_child_id(node, order);
         if tree.style(child).display == Display::None {
             *tree.unrounded_layout_mut(child) = Layout::with_order(order as u32);
             tree.perform_child_layout(
@@ -1841,7 +1841,7 @@ fn perform_absolute_layout_on_absolute_children(
     let container_height = constants.container_size.height;
 
     for order in 0..tree.child_count(node) {
-        let child = tree.child(node, order);
+        let child = tree.get_child_id(node, order);
         let child_style = tree.style(child);
 
         // Skip items that are display:none or are not position:absolute

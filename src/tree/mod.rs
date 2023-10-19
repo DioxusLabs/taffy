@@ -36,7 +36,7 @@ pub trait PartialLayoutTree {
     fn child_count(&self, node_id: NodeId) -> usize;
 
     /// Get a specific child of a node, where the index represents the nth child
-    fn child(&self, node_id: NodeId, index: usize) -> NodeId;
+    fn get_child_id(&self, node_id: NodeId, index: usize) -> NodeId;
 
     /// Get the [`Style`] for this node.
     fn style(&self, node_id: NodeId) -> &Style;

@@ -195,7 +195,7 @@ fn compute_inner(tree: &mut impl PartialLayoutTree, node_id: NodeId, inputs: Lay
     // 5. Perform hidden layout on hidden children
     let len = tree.child_count(node_id);
     for order in 0..len {
-        let child = tree.child(node_id, order);
+        let child = tree.get_child_id(node_id, order);
         if tree.style(child).display == Display::None {
             *tree.unrounded_layout_mut(child) = Layout::with_order(order as u32);
             tree.perform_child_layout(

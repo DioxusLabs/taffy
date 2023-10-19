@@ -419,7 +419,7 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
     // Position hidden and absolutely positioned children
     let mut order = items.len() as u32;
     (0..tree.child_count(node)).for_each(|index| {
-        let child = tree.child(node, index);
+        let child = tree.get_child_id(node, index);
         let child_style = tree.style(child);
 
         // Position hidden child
