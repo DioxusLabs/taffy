@@ -48,7 +48,7 @@ pub fn compute_layout(tree: &mut impl PartialLayoutTree, root: NodeId, available
 }
 
 /// Updates the stored layout of the provided `node` and its children
-pub(crate) fn compute_cached_layout<Tree: PartialLayoutTree + ?Sized, ComputeFunction>(
+pub fn compute_cached_layout<Tree: PartialLayoutTree + ?Sized, ComputeFunction>(
     tree: &mut Tree,
     node: NodeId,
     inputs: LayoutInput,
