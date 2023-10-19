@@ -30,13 +30,13 @@ pub trait PartialLayoutTree {
         Self: 'a;
 
     /// Get the list of children IDs for the given node
-    fn child_ids(&self, node_id: NodeId) -> Self::ChildIter<'_>;
+    fn child_ids(&self, parent_node_id: NodeId) -> Self::ChildIter<'_>;
 
     /// Get the number of children for the given node
-    fn child_count(&self, node_id: NodeId) -> usize;
+    fn child_count(&self, parent_node_id: NodeId) -> usize;
 
     /// Get a specific child of a node, where the index represents the nth child
-    fn get_child_id(&self, node_id: NodeId, index: usize) -> NodeId;
+    fn get_child_id(&self, parent_node_id: NodeId, child_index: usize) -> NodeId;
 
     /// Get the [`Style`] for this node.
     fn style(&self, node_id: NodeId) -> &Style;
