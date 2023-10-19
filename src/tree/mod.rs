@@ -5,7 +5,7 @@ use crate::style::{AvailableSpace, Style};
 
 // Submodules
 mod cache;
-pub use cache::{Cache, CacheEntry};
+pub use cache::Cache;
 mod node;
 #[cfg(feature = "taffy_tree")]
 use node::NodeData;
