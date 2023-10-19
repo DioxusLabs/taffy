@@ -129,7 +129,7 @@ impl PartialLayoutTree for StatelessLayoutTree {
         unsafe { &node_from_id(node_id).style }
     }
 
-    fn unrounded_layout_mut(&mut self, node_id: NodeId) -> &mut Layout {
+    fn get_unrounded_layout_mut(&mut self, node_id: NodeId) -> &mut Layout {
         unsafe { &mut node_from_id_mut(node_id).unrounded_layout }
     }
 

@@ -42,7 +42,7 @@ pub trait PartialLayoutTree {
     fn get_style(&self, node_id: NodeId) -> &Style;
 
     /// Modify the node's output layout
-    fn unrounded_layout_mut(&mut self, node_id: NodeId) -> &mut Layout;
+    fn get_unrounded_layout_mut(&mut self, node_id: NodeId) -> &mut Layout;
 
     /// Get a mutable reference to the node's output final layout
     fn final_layout_mut(&mut self, node_id: NodeId) -> &mut Layout;
