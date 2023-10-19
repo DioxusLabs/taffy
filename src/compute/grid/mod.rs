@@ -5,7 +5,7 @@ use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Display, Overflow, Position};
 use crate::style_helpers::*;
 use crate::tree::{Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
-use crate::tree::{LayoutTree, LayoutTreeExt, NodeId};
+use crate::tree::{NodeId, PartialLayoutTree, PartialLayoutTreeExt};
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, GridTrackVec, Vec};
 use crate::util::MaybeMath;
@@ -35,7 +35,7 @@ mod util;
 ///   - Placing items (which also resolves the implicit grid)
 ///   - Track (row/column) sizing
 ///   - Alignment & Final item placement
-pub fn compute_grid_layout(tree: &mut impl LayoutTree, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
+pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
     let get_child_styles_iter = |node| tree.children(node).map(|child_node: NodeId| tree.style(child_node));

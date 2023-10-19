@@ -25,17 +25,14 @@ pub use self::grid::compute_grid_layout;
 
 use crate::geometry::{Line, Point, Size};
 use crate::style::AvailableSpace;
-use crate::tree::{Layout, LayoutInput, LayoutOutput, LayoutTree, LayoutTreeExt, NodeId, RunMode, SizingMode};
+use crate::tree::{
+    Layout, LayoutInput, LayoutOutput, LayoutTree, NodeId, PartialLayoutTree, PartialLayoutTreeExt, RunMode, SizingMode,
+};
 use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
 use crate::util::sys::round;
 
 /// Updates the stored layout of the provided `node` and its children
-pub fn compute_layout(
-    tree: &mut impl LayoutTree,
-    root: NodeId,
-    available_space: Size<AvailableSpace>,
-    use_rounding: bool,
-) {
+pub fn compute_layout(tree: &mut impl PartialLayoutTree, root: NodeId, available_space: Size<AvailableSpace>) {
     // Recursively compute node layout
     let size_and_baselines = tree.perform_child_layout(
         root,
@@ -49,15 +46,19 @@ pub fn compute_layout(
     let layout = Layout { order: 0, size: size_and_baselines.size, location: Point::ZERO };
     *tree.unrounded_layout_mut(root) = layout;
     *tree.final_layout_mut(root) = layout;
+}
 
-    // If rounding is enabled, recursively round the layout's of this node and all children
-    if use_rounding {
-        round_layout(tree, root);
-    }
+/// Updates the stored layout of the provided `node` and its children and then rounds the result to an exact pixel grid
+pub fn compute_layout_with_rounding(tree: &mut impl LayoutTree, root: NodeId, available_space: Size<AvailableSpace>) {
+    // Perform the layout
+    compute_layout(tree, root, available_space);
+
+    // Recursively round the layout's of this node and all children
+    round_layout(tree, root);
 }
 
 /// Updates the stored layout of the provided `node` and its children
-pub(crate) fn compute_cached_layout<Tree: LayoutTree + ?Sized>(
+pub(crate) fn compute_cached_layout<Tree: PartialLayoutTree + ?Sized>(
     tree: &mut Tree,
     node: NodeId,
     inputs: LayoutInput,
@@ -102,7 +103,7 @@ pub(crate) fn compute_cached_layout<Tree: LayoutTree + ?Sized>(
 pub fn round_layout(tree: &mut impl LayoutTree, node_id: NodeId) {
     return round_layout_inner(tree, node_id, 0.0, 0.0);
     /// Recursive function to apply rounding to all descendents
-    fn round_layout_inner(tree: &mut impl LayoutTree, node_id: NodeId, cumulative_x: f32, cumulative_y: f32) {
+    fn round_layout_inner(tree: &mut impl PartialLayoutTree, node_id: NodeId, cumulative_x: f32, cumulative_y: f32) {
         let unrounded_layout = *tree.unrounded_layout_mut(node_id);
         let layout = &mut tree.final_layout_mut(node_id);
 
@@ -124,19 +125,16 @@ pub fn round_layout(tree: &mut impl LayoutTree, node_id: NodeId) {
 
 /// Creates a layout for this node and its children, recursively.
 /// Each hidden node has zero size and is placed at the origin
-pub fn compute_hidden_layout(tree: &mut impl LayoutTree, node: NodeId) -> LayoutOutput {
-    /// Recursive function to apply hidden layout to all descendents
-    fn compute_hidden_layout_inner(tree: &mut impl LayoutTree, node: NodeId, order: u32) {
-        *tree.unrounded_layout_mut(node) = Layout::with_order(order);
-        *tree.final_layout_mut(node) = Layout::with_order(order);
-        tree.cache_mut(node).clear();
-        for order in 0..tree.child_count(node) {
-            compute_hidden_layout_inner(tree, tree.child(node, order), order as _);
-        }
-    }
+pub fn compute_hidden_layout(tree: &mut impl PartialLayoutTree, node: NodeId) -> LayoutOutput {
+    // Clear cache and set zeroed-out layout for the node
+    tree.cache_mut(node).clear();
+    *tree.unrounded_layout_mut(node) = Layout::with_order(0);
+    *tree.final_layout_mut(node) = Layout::with_order(0);
 
-    for order in 0..tree.child_count(node) {
-        compute_hidden_layout_inner(tree, tree.child(node, order), order as _);
+    // Perform hidden layout on all children
+    for index in 0..tree.child_count(node) {
+        let child_id = tree.child(node, index);
+        tree.compute_child_layout(child_id, LayoutInput::HIDDEN);
     }
 
     LayoutOutput::HIDDEN

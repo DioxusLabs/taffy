@@ -6,7 +6,7 @@ use slotmap::{DefaultKey, SlotMap, SparseSecondaryMap};
 use crate::geometry::Size;
 use crate::prelude::LayoutTree;
 use crate::style::{AvailableSpace, Display, Style};
-use crate::tree::{Cache, Layout, LayoutInput, LayoutOutput, NodeData, NodeId};
+use crate::tree::{Cache, Layout, LayoutInput, LayoutOutput, NodeData, NodeId, PartialLayoutTree, RunMode};
 use crate::util::debug::{debug_log, debug_log_node};
 use crate::util::sys::{new_vec_with_capacity, ChildrenVec, Vec};
 
@@ -16,7 +16,7 @@ use crate::compute::compute_block_layout;
 use crate::compute::compute_flexbox_layout;
 #[cfg(feature = "grid")]
 use crate::compute::compute_grid_layout;
-use crate::compute::{compute_hidden_layout, compute_layout, compute_leaf_layout};
+use crate::compute::{compute_hidden_layout, compute_layout, compute_layout_with_rounding, compute_leaf_layout};
 
 use super::{TaffyError, TaffyResult};
 
@@ -83,7 +83,7 @@ where
     pub(crate) measure_function: MeasureFunction,
 }
 
-impl<'t, NodeContext, MeasureFunction> LayoutTree for TaffyView<'t, NodeContext, MeasureFunction>
+impl<'t, NodeContext, MeasureFunction> PartialLayoutTree for TaffyView<'t, NodeContext, MeasureFunction>
 where
     MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
 {
@@ -125,12 +125,14 @@ where
     }
 
     #[inline(always)]
-    fn final_layout(&self, node: NodeId) -> &Layout {
-        &self.taffy.nodes[node.into()].final_layout
-    }
-
-    #[inline(always)]
     fn compute_child_layout(&mut self, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
+        // If RunMode is PerformHiddenLayout then this indicates that an ancestor node is `Display::None`
+        // and thus that we should lay out this node using hidden layout regardless of it's own display style.
+        if inputs.run_mode == RunMode::PerformHiddenLayout {
+            debug_log!("HIDDEN");
+            return compute_hidden_layout(self, node);
+        }
+
         let display_mode = self.style(node).display;
         let has_children = self.child_count(node) > 0;
 
@@ -143,6 +145,7 @@ where
             inputs.sizing_mode
         );
 
+        // Dispatch to a layout algorithm based on the node's display style and whether the node has children or not.
         match (display_mode, has_children) {
             (Display::None, _) => compute_hidden_layout(self, node),
             #[cfg(feature = "block_layout")]
@@ -173,6 +176,16 @@ where
                 }
             }
         }
+    }
+}
+
+impl<'t, NodeContext, MeasureFunction> LayoutTree for TaffyView<'t, NodeContext, MeasureFunction>
+where
+    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+{
+    #[inline(always)]
+    fn final_layout(&self, node: NodeId) -> &Layout {
+        &self.taffy.nodes[node.into()].final_layout
     }
 }
 
@@ -487,7 +500,11 @@ impl<NodeContext> Taffy<NodeContext> {
     {
         let use_rounding = self.config.use_rounding;
         let mut taffy_view = TaffyView { taffy: self, measure_function };
-        compute_layout(&mut taffy_view, node, available_space, use_rounding);
+        if use_rounding {
+            compute_layout_with_rounding(&mut taffy_view, node, available_space);
+        } else {
+            compute_layout(&mut taffy_view, node, available_space);
+        }
         Ok(())
     }
 

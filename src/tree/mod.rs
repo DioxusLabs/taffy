@@ -18,11 +18,12 @@ mod layout;
 use crate::compute::compute_cached_layout;
 pub use layout::{CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
 
-/// Any item that implements the LayoutTree can be layed out using Taffy's algorithms.
+/// This if the core abstraction in Taffy. Any type that *correctly* implements `PartialLayoutTree` can be laid out using Taffy's algorithms.
 ///
-/// Generally, Taffy expects your Node tree to be indexable by stable indices. A "stable" index means that the Node's ID
-/// remains the same between re-layouts.
-pub trait LayoutTree {
+/// The type implementing `PartialLayoutTree` would typically be an entire tree of nodes (or a view over an entire tree of nodes).
+/// However, `PartialLayoutTree` and Taffy's algorithm implementations have been designed such that they can be used for a laying out a single
+/// node that only has access to it's immediate children.
+pub trait PartialLayoutTree {
     /// Type representing an iterator of the children of a node
     type ChildIter<'a>: Iterator<Item = NodeId>
     where
@@ -43,9 +44,6 @@ pub trait LayoutTree {
     /// Modify the node's output layout
     fn unrounded_layout_mut(&mut self, node_id: NodeId) -> &mut Layout;
 
-    /// Get a reference to the node's output final layout
-    fn final_layout(&self, node_id: NodeId) -> &Layout;
-
     /// Get a mutable reference to the node's output final layout
     fn final_layout_mut(&mut self, node_id: NodeId) -> &mut Layout;
 
@@ -56,9 +54,16 @@ pub trait LayoutTree {
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
 }
 
+/// Extends [`PartialLayoutTree`] with an additional guarantee: that the child/children methods can be used to recurse
+/// infinitely down the tree. Enables Taffy's rounding and debug printing methods to be used.
+pub trait LayoutTree: PartialLayoutTree {
+    /// Get a reference to the node's layout for the purpose of printing the tree
+    fn final_layout(&self, node_id: NodeId) -> &Layout;
+}
+
 /// A private trait which allows us to add extra convenience methods to types which implement
 /// LayoutTree without making those methods public.
-pub(crate) trait LayoutTreeExt: LayoutTree {
+pub(crate) trait PartialLayoutTreeExt: PartialLayoutTree {
     /// Compute the size of the node given the specified constraints
     #[inline(always)]
     fn measure_child_size(
@@ -111,4 +116,4 @@ pub(crate) trait LayoutTreeExt: LayoutTree {
     }
 }
 
-impl<T: LayoutTree> LayoutTreeExt for T {}
+impl<T: PartialLayoutTree> PartialLayoutTreeExt for T {}

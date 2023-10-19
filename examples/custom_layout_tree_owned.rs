@@ -4,9 +4,11 @@ mod common {
 }
 use common::image::{image_measure_function, ImageContext};
 use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode, LOREM_IPSUM};
-use taffy::tree::Cache;
+use taffy::tree::{Cache, PartialLayoutTree};
 use taffy::util::print_tree;
-use taffy::{compute_flexbox_layout, compute_grid_layout, compute_layout, compute_leaf_layout, prelude::*};
+use taffy::{
+    compute_flexbox_layout, compute_grid_layout, compute_layout, compute_leaf_layout, prelude::*, round_layout,
+};
 
 #[derive(Debug, Copy, Clone)]
 #[allow(dead_code)]
@@ -77,7 +79,11 @@ impl Node {
     }
 
     pub fn compute_layout(&mut self, available_space: Size<AvailableSpace>, use_rounding: bool) {
-        compute_layout(&mut StatelessLayoutTree, unsafe { self.as_id() }, available_space, use_rounding);
+        let root_node_id = unsafe { self.as_id() };
+        compute_layout(&mut StatelessLayoutTree, root_node_id, available_space);
+        if use_rounding {
+            round_layout(&mut StatelessLayoutTree, root_node_id)
+        }
     }
 
     pub fn print_tree(&mut self) {
@@ -104,7 +110,7 @@ unsafe fn node_from_id_mut<'a>(node_id: NodeId) -> &'a mut Node {
 }
 
 struct StatelessLayoutTree;
-impl LayoutTree for StatelessLayoutTree {
+impl PartialLayoutTree for StatelessLayoutTree {
     type ChildIter<'a> = ChildIter<'a>;
 
     fn children(&self, node_id: NodeId) -> Self::ChildIter<'_> {
@@ -127,10 +133,6 @@ impl LayoutTree for StatelessLayoutTree {
         unsafe { &mut node_from_id_mut(node_id).unrounded_layout }
     }
 
-    fn final_layout(&self, node_id: NodeId) -> &Layout {
-        unsafe { &node_from_id(node_id).final_layout }
-    }
-
     fn final_layout_mut(&mut self, node_id: NodeId) -> &mut Layout {
         unsafe { &mut node_from_id_mut(node_id).final_layout }
     }
@@ -144,8 +146,8 @@ impl LayoutTree for StatelessLayoutTree {
         let font_metrics = FontMetrics { char_width: 10.0, char_height: 10.0 };
 
         match node.kind {
-            NodeKind::Flexbox => compute_flexbox_layout(&mut StatelessLayoutTree, node_id, inputs),
-            NodeKind::Grid => compute_grid_layout(&mut StatelessLayoutTree, node_id, inputs),
+            NodeKind::Flexbox => compute_flexbox_layout(self, node_id, inputs),
+            NodeKind::Grid => compute_grid_layout(self, node_id, inputs),
             NodeKind::Text => compute_leaf_layout(
                 inputs,
                 &node.style,
@@ -166,6 +168,12 @@ impl LayoutTree for StatelessLayoutTree {
                 }),
             ),
         }
+    }
+}
+
+impl LayoutTree for StatelessLayoutTree {
+    fn final_layout(&self, node_id: NodeId) -> &Layout {
+        unsafe { &node_from_id(node_id).final_layout }
     }
 }
 

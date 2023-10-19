@@ -7,7 +7,7 @@ use crate::style::{
     AlignItems, AlignSelf, AvailableSpace, Dimension, LengthPercentageAuto, MaxTrackSizingFunction,
     MinTrackSizingFunction, Overflow, Style,
 };
-use crate::tree::{LayoutTree, LayoutTreeExt, NodeId, SizingMode};
+use crate::tree::{NodeId, PartialLayoutTree, PartialLayoutTreeExt, SizingMode};
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use core::ops::Range;
 
@@ -333,7 +333,7 @@ impl GridItem {
     pub fn min_content_contribution(
         &self,
         axis: AbstractAxis,
-        tree: &mut impl LayoutTree,
+        tree: &mut impl PartialLayoutTree,
         available_space: Size<Option<f32>>,
         inner_node_size: Size<Option<f32>>,
     ) -> f32 {
@@ -357,7 +357,7 @@ impl GridItem {
     pub fn min_content_contribution_cached(
         &mut self,
         axis: AbstractAxis,
-        tree: &mut impl LayoutTree,
+        tree: &mut impl PartialLayoutTree,
         available_space: Size<Option<f32>>,
         inner_node_size: Size<Option<f32>>,
     ) -> f32 {
@@ -372,7 +372,7 @@ impl GridItem {
     pub fn max_content_contribution(
         &self,
         axis: AbstractAxis,
-        tree: &mut impl LayoutTree,
+        tree: &mut impl PartialLayoutTree,
         available_space: Size<Option<f32>>,
         inner_node_size: Size<Option<f32>>,
     ) -> f32 {
@@ -396,7 +396,7 @@ impl GridItem {
     pub fn max_content_contribution_cached(
         &mut self,
         axis: AbstractAxis,
-        tree: &mut impl LayoutTree,
+        tree: &mut impl PartialLayoutTree,
         available_space: Size<Option<f32>>,
         inner_node_size: Size<Option<f32>>,
     ) -> f32 {
@@ -416,7 +416,7 @@ impl GridItem {
     /// See: https://www.w3.org/TR/css-grid-1/#min-size-auto
     pub fn minimum_contribution(
         &mut self,
-        tree: &mut impl LayoutTree,
+        tree: &mut impl PartialLayoutTree,
         axis: AbstractAxis,
         axis_tracks: &[GridTrack],
         known_dimensions: Size<Option<f32>>,
@@ -475,7 +475,7 @@ impl GridItem {
     #[inline(always)]
     pub fn minimum_contribution_cached(
         &mut self,
-        tree: &mut impl LayoutTree,
+        tree: &mut impl PartialLayoutTree,
         axis: AbstractAxis,
         axis_tracks: &[GridTrack],
         known_dimensions: Size<Option<f32>>,

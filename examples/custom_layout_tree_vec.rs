@@ -4,9 +4,11 @@ mod common {
 }
 use common::image::{image_measure_function, ImageContext};
 use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode, LOREM_IPSUM};
-use taffy::tree::Cache;
+use taffy::tree::{Cache, PartialLayoutTree};
 use taffy::util::print_tree;
-use taffy::{compute_flexbox_layout, compute_grid_layout, compute_layout, compute_leaf_layout, prelude::*};
+use taffy::{
+    compute_flexbox_layout, compute_grid_layout, compute_layout, compute_leaf_layout, prelude::*, round_layout,
+};
 
 #[derive(Debug, Copy, Clone)]
 #[allow(dead_code)]
@@ -99,7 +101,10 @@ impl Tree {
     }
 
     pub fn compute_layout(&mut self, root: usize, available_space: Size<AvailableSpace>, use_rounding: bool) {
-        compute_layout(self, NodeId::from(root), available_space, use_rounding);
+        compute_layout(self, NodeId::from(root), available_space);
+        if use_rounding {
+            round_layout(self, NodeId::from(root))
+        }
     }
 
     pub fn print_tree(&mut self, root: usize) {
@@ -115,7 +120,7 @@ impl<'a> Iterator for ChildIter<'a> {
     }
 }
 
-impl LayoutTree for Tree {
+impl PartialLayoutTree for Tree {
     type ChildIter<'a> = ChildIter<'a>;
 
     fn children(&self, node_id: NodeId) -> Self::ChildIter<'_> {
@@ -136,10 +141,6 @@ impl LayoutTree for Tree {
 
     fn unrounded_layout_mut(&mut self, node_id: NodeId) -> &mut Layout {
         &mut self.node_from_id_mut(node_id).unrounded_layout
-    }
-
-    fn final_layout(&self, node_id: NodeId) -> &Layout {
-        &self.node_from_id(node_id).final_layout
     }
 
     fn final_layout_mut(&mut self, node_id: NodeId) -> &mut Layout {
@@ -177,6 +178,12 @@ impl LayoutTree for Tree {
                 }),
             ),
         }
+    }
+}
+
+impl LayoutTree for Tree {
+    fn final_layout(&self, node_id: NodeId) -> &Layout {
+        &self.node_from_id(node_id).final_layout
     }
 }
 
