@@ -118,7 +118,7 @@ where
         &mut self.taffy.nodes[node.into()].unrounded_layout
     }
 
-    #[inline]
+    #[inline(always)]
     fn compute_child_layout(&mut self, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
         // If RunMode is PerformHiddenLayout then this indicates that an ancestor node is `Display::None`
         // and thus that we should lay out this node using hidden layout regardless of it's own display style.
