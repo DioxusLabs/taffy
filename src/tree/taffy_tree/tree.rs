@@ -120,7 +120,7 @@ where
     }
 
     #[inline(always)]
-    fn final_layout_mut(&mut self, node: NodeId) -> &mut Layout {
+    fn get_final_layout_mut(&mut self, node: NodeId) -> &mut Layout {
         &mut self.taffy.nodes[node.into()].final_layout
     }
 

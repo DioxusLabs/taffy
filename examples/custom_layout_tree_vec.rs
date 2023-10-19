@@ -143,7 +143,7 @@ impl PartialLayoutTree for Tree {
         &mut self.node_from_id_mut(node_id).unrounded_layout
     }
 
-    fn final_layout_mut(&mut self, node_id: NodeId) -> &mut Layout {
+    fn get_final_layout_mut(&mut self, node_id: NodeId) -> &mut Layout {
         &mut self.node_from_id_mut(node_id).final_layout
     }
 

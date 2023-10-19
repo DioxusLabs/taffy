@@ -45,7 +45,7 @@ pub trait PartialLayoutTree {
     fn get_unrounded_layout_mut(&mut self, node_id: NodeId) -> &mut Layout;
 
     /// Get a mutable reference to the node's output final layout
-    fn final_layout_mut(&mut self, node_id: NodeId) -> &mut Layout;
+    fn get_final_layout_mut(&mut self, node_id: NodeId) -> &mut Layout;
 
     /// Get a mutable reference to the [`Cache`] for this node.
     fn cache_mut(&mut self, node_id: NodeId) -> &mut Cache;
