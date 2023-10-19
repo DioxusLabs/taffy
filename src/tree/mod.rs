@@ -13,7 +13,7 @@ pub use node::NodeId;
 #[cfg(feature = "taffy_tree")]
 mod taffy_tree;
 #[cfg(feature = "taffy_tree")]
-pub use taffy_tree::{Taffy, TaffyChildIter, TaffyError, TaffyResult};
+pub use taffy_tree::{Taffy, TaffyError, TaffyResult};
 mod layout;
 pub use layout::{CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
 

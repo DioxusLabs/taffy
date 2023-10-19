@@ -60,7 +60,7 @@ impl Default for Taffy {
 }
 
 /// Iterator that wraps a slice of nodes, lazily converting them to u64
-pub struct TaffyChildIter<'a>(core::slice::Iter<'a, NodeId>);
+pub(crate) struct TaffyChildIter<'a>(core::slice::Iter<'a, NodeId>);
 impl<'a> Iterator for TaffyChildIter<'a> {
     type Item = NodeId;
 
