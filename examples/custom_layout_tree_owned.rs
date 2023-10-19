@@ -172,7 +172,7 @@ impl PartialLayoutTree for StatelessLayoutTree {
 }
 
 impl LayoutTree for StatelessLayoutTree {
-    fn final_layout(&self, node_id: NodeId) -> &Layout {
+    fn get_final_layout(&self, node_id: NodeId) -> &Layout {
         unsafe { &node_from_id(node_id).final_layout }
     }
 }

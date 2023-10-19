@@ -58,7 +58,7 @@ pub trait PartialLayoutTree {
 /// infinitely down the tree. Enables Taffy's rounding and debug printing methods to be used.
 pub trait LayoutTree: PartialLayoutTree {
     /// Get a reference to the node's layout for the purpose of printing the tree
-    fn final_layout(&self, node_id: NodeId) -> &Layout;
+    fn get_final_layout(&self, node_id: NodeId) -> &Layout;
 }
 
 /// A private trait which allows us to add extra convenience methods to types which implement

@@ -182,7 +182,7 @@ impl PartialLayoutTree for Tree {
 }
 
 impl LayoutTree for Tree {
-    fn final_layout(&self, node_id: NodeId) -> &Layout {
+    fn get_final_layout(&self, node_id: NodeId) -> &Layout {
         &self.node_from_id(node_id).final_layout
     }
 }

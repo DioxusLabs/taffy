@@ -184,7 +184,7 @@ where
     MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
 {
     #[inline(always)]
-    fn final_layout(&self, node: NodeId) -> &Layout {
+    fn get_final_layout(&self, node: NodeId) -> &Layout {
         &self.taffy.nodes[node.into()].final_layout
     }
 }

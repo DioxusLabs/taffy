@@ -17,7 +17,7 @@ pub fn print_tree(tree: &impl LayoutTree, root: NodeId) {
 
 #[cfg(feature = "std")]
 fn print_node(tree: &impl LayoutTree, node: NodeId, has_sibling: bool, lines_string: String) {
-    let layout = &tree.final_layout(node);
+    let layout = &tree.get_final_layout(node);
     let style = &tree.get_style(node);
     let num_children = tree.child_count(node);
 
