@@ -241,7 +241,7 @@ fn generate_item_list(
     node: NodeId,
     node_inner_size: Size<Option<f32>>,
 ) -> Vec<BlockItem> {
-    tree.children(node)
+    tree.child_ids(node)
         .map(|child_node_id| (child_node_id, tree.style(child_node_id)))
         .filter(|(_, style)| style.display != Display::None)
         .enumerate()

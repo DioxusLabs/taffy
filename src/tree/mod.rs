@@ -30,7 +30,7 @@ pub trait PartialLayoutTree {
         Self: 'a;
 
     /// Get the list of children IDs for the given node
-    fn children(&self, node_id: NodeId) -> Self::ChildIter<'_>;
+    fn child_ids(&self, node_id: NodeId) -> Self::ChildIter<'_>;
 
     /// Get the number of children for the given node
     fn child_count(&self, node_id: NodeId) -> usize;

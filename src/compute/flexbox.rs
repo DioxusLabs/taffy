@@ -435,7 +435,7 @@ fn generate_anonymous_flex_items(
     node: NodeId,
     constants: &AlgoConstants,
 ) -> Vec<FlexItem> {
-    tree.children(node)
+    tree.child_ids(node)
         .enumerate()
         .map(|(index, child)| (index, child, tree.style(child)))
         .filter(|(_, _, style)| style.position != Position::Absolute)

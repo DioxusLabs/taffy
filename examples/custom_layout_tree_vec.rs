@@ -123,7 +123,7 @@ impl<'a> Iterator for ChildIter<'a> {
 impl PartialLayoutTree for Tree {
     type ChildIter<'a> = ChildIter<'a>;
 
-    fn children(&self, node_id: NodeId) -> Self::ChildIter<'_> {
+    fn child_ids(&self, node_id: NodeId) -> Self::ChildIter<'_> {
         ChildIter(self.node_from_id(node_id).children.iter())
     }
 

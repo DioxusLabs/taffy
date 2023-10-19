@@ -113,7 +113,7 @@ struct StatelessLayoutTree;
 impl PartialLayoutTree for StatelessLayoutTree {
     type ChildIter<'a> = ChildIter<'a>;
 
-    fn children(&self, node_id: NodeId) -> Self::ChildIter<'_> {
+    fn child_ids(&self, node_id: NodeId) -> Self::ChildIter<'_> {
         unsafe { ChildIter(node_from_id(node_id).children.iter()) }
     }
 

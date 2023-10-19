@@ -90,7 +90,7 @@ where
     type ChildIter<'a> = TaffyChildIter<'a> where Self: 'a;
 
     #[inline(always)]
-    fn children(&self, node: NodeId) -> Self::ChildIter<'_> {
+    fn child_ids(&self, node: NodeId) -> Self::ChildIter<'_> {
         TaffyChildIter(self.taffy.children[node.into()].iter())
     }
 

@@ -38,7 +38,7 @@ mod util;
 pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
-    let get_child_styles_iter = |node| tree.children(node).map(|child_node: NodeId| tree.style(child_node));
+    let get_child_styles_iter = |node| tree.child_ids(node).map(|child_node: NodeId| tree.style(child_node));
     let style = tree.style(node).clone();
     let child_styles_iter = get_child_styles_iter(node);
 
@@ -58,7 +58,7 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
     let mut items = Vec::with_capacity(tree.child_count(node));
     let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(est_col_counts, est_row_counts);
     let in_flow_children_iter = || {
-        tree.children(node)
+        tree.child_ids(node)
             .enumerate()
             .map(|(index, child_node)| (index, child_node, tree.style(child_node)))
             .filter(|(_, _, style)| style.display != Display::None && style.position != Position::Absolute)
