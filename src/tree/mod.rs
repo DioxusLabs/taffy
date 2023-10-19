@@ -39,7 +39,7 @@ pub trait PartialLayoutTree {
     fn get_child_id(&self, parent_node_id: NodeId, child_index: usize) -> NodeId;
 
     /// Get the [`Style`] for this node.
-    fn style(&self, node_id: NodeId) -> &Style;
+    fn get_style(&self, node_id: NodeId) -> &Style;
 
     /// Modify the node's output layout
     fn unrounded_layout_mut(&mut self, node_id: NodeId) -> &mut Layout;

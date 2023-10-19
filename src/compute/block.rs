@@ -47,7 +47,7 @@ struct BlockItem {
 /// Computes the layout of [`PartialLayoutTree`] according to the block layout algorithm
 pub fn compute_block_layout(tree: &mut impl PartialLayoutTree, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
-    let style = tree.style(node_id);
+    let style = tree.get_style(node_id);
 
     // Pull these out earlier to avoid borrowing issues
     let aspect_ratio = style.aspect_ratio;
@@ -94,7 +94,7 @@ fn compute_inner(tree: &mut impl PartialLayoutTree, node_id: NodeId, inputs: Lay
         known_dimensions, parent_size, available_space, run_mode, vertical_margins_are_collapsible, ..
     } = inputs;
 
-    let style = tree.style(node_id);
+    let style = tree.get_style(node_id);
     let raw_padding = style.padding;
     let raw_border = style.border;
     let raw_margin = style.margin;
@@ -196,7 +196,7 @@ fn compute_inner(tree: &mut impl PartialLayoutTree, node_id: NodeId, inputs: Lay
     let len = tree.child_count(node_id);
     for order in 0..len {
         let child = tree.get_child_id(node_id, order);
-        if tree.style(child).display == Display::None {
+        if tree.get_style(child).display == Display::None {
             *tree.unrounded_layout_mut(child) = Layout::with_order(order as u32);
             tree.perform_child_layout(
                 child,
@@ -242,7 +242,7 @@ fn generate_item_list(
     node_inner_size: Size<Option<f32>>,
 ) -> Vec<BlockItem> {
     tree.child_ids(node)
-        .map(|child_node_id| (child_node_id, tree.style(child_node_id)))
+        .map(|child_node_id| (child_node_id, tree.get_style(child_node_id)))
         .filter(|(_, style)| style.display != Display::None)
         .enumerate()
         .map(|(order, (child_node_id, child_style))| {
@@ -446,7 +446,7 @@ fn perform_absolute_layout_on_absolute_children(
     let area_height = area_size.height;
 
     for item in items.iter().filter(|item| item.position == Position::Absolute) {
-        let child_style = tree.style(item.node_id);
+        let child_style = tree.get_style(item.node_id);
 
         // Skip items that are display:none or are not position:absolute
         if child_style.display == Display::None || child_style.position != Position::Absolute {

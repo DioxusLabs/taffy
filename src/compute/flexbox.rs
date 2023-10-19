@@ -150,7 +150,7 @@ struct AlgoConstants {
 /// Computes the layout of [`PartialLayoutTree`] according to the flexbox algorithm
 pub fn compute_flexbox_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, run_mode, .. } = inputs;
-    let style = tree.style(node);
+    let style = tree.get_style(node);
 
     // Pull these out earlier to avoid borrowing issues
     let aspect_ratio = style.aspect_ratio;
@@ -183,7 +183,7 @@ fn compute_preliminary(tree: &mut impl PartialLayoutTree, node: NodeId, inputs: 
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
     // Define some general constants we will need for the remainder of the algorithm.
-    let mut constants = compute_constants(tree.style(node), known_dimensions, parent_size);
+    let mut constants = compute_constants(tree.get_style(node), known_dimensions, parent_size);
 
     // 9. Flex Layout Algorithm
 
@@ -239,7 +239,7 @@ fn compute_preliminary(tree: &mut impl PartialLayoutTree, node: NodeId, inputs: 
         debug_log!("constants.node_inner_size", dbg:constants.node_inner_size);
 
         // Re-resolve percentage gaps
-        let style = tree.style(node);
+        let style = tree.get_style(node);
         let inner_container_size = constants.inner_container_size.main(constants.dir);
         let new_gap = style.gap.main(constants.dir).maybe_resolve(inner_container_size).unwrap_or(0.0);
         constants.gap.set_main(constants.dir, new_gap);
@@ -329,7 +329,7 @@ fn compute_preliminary(tree: &mut impl PartialLayoutTree, node: NodeId, inputs: 
     let len = tree.child_count(node);
     for order in 0..len {
         let child = tree.get_child_id(node, order);
-        if tree.style(child).display == Display::None {
+        if tree.get_style(child).display == Display::None {
             *tree.unrounded_layout_mut(child) = Layout::with_order(order as u32);
             tree.perform_child_layout(
                 child,
@@ -437,7 +437,7 @@ fn generate_anonymous_flex_items(
 ) -> Vec<FlexItem> {
     tree.child_ids(node)
         .enumerate()
-        .map(|(index, child)| (index, child, tree.style(child)))
+        .map(|(index, child)| (index, child, tree.get_style(child)))
         .filter(|(_, _, style)| style.position != Position::Absolute)
         .filter(|(_, _, style)| style.display != Display::None)
         .map(|(index, child, child_style)| {
@@ -558,7 +558,7 @@ fn determine_flex_base_size(
     let dir = constants.dir;
 
     for child in flex_items.iter_mut() {
-        let child_style = tree.style(child.node);
+        let child_style = tree.get_style(child.node);
 
         // Parent size for child sizing
         let cross_axis_parent_size = constants.node_inner_size.cross(dir);
@@ -1437,7 +1437,7 @@ fn determine_used_cross_size(tree: &impl PartialLayoutTree, flex_lines: &mut [Fl
         let line_cross_size = line.cross_size;
 
         for child in line.items.iter_mut() {
-            let child_style = tree.style(child.node);
+            let child_style = tree.get_style(child.node);
             child.target_size.set_cross(
                 constants.dir,
                 if child.align_self == AlignSelf::Stretch
@@ -1842,7 +1842,7 @@ fn perform_absolute_layout_on_absolute_children(
 
     for order in 0..tree.child_count(node) {
         let child = tree.get_child_id(node, order);
-        let child_style = tree.style(child);
+        let child_style = tree.get_style(child);
 
         // Skip items that are display:none or are not position:absolute
         if child_style.display == Display::None || child_style.position != Position::Absolute {

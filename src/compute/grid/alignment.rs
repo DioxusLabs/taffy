@@ -60,7 +60,7 @@ pub(super) fn align_and_position_item(
 ) {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
 
-    let style = tree.style(node);
+    let style = tree.get_style(node);
     let aspect_ratio = style.aspect_ratio;
     let justify_self = style.justify_self;
     let align_self = style.align_self;

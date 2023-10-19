@@ -135,7 +135,7 @@ impl PartialLayoutTree for Tree {
         NodeId::from(self.node_from_id(node_id).children[index])
     }
 
-    fn style(&self, node_id: NodeId) -> &Style {
+    fn get_style(&self, node_id: NodeId) -> &Style {
         &self.node_from_id(node_id).style
     }
 

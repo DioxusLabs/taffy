@@ -38,8 +38,8 @@ mod util;
 pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
-    let get_child_styles_iter = |node| tree.child_ids(node).map(|child_node: NodeId| tree.style(child_node));
-    let style = tree.style(node).clone();
+    let get_child_styles_iter = |node| tree.child_ids(node).map(|child_node: NodeId| tree.get_style(child_node));
+    let style = tree.get_style(node).clone();
     let child_styles_iter = get_child_styles_iter(node);
 
     // 1. Resolve the explicit grid
@@ -60,7 +60,7 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
     let in_flow_children_iter = || {
         tree.child_ids(node)
             .enumerate()
-            .map(|(index, child_node)| (index, child_node, tree.style(child_node)))
+            .map(|(index, child_node)| (index, child_node, tree.get_style(child_node)))
             .filter(|(_, _, style)| style.display != Display::None && style.position != Position::Absolute)
     };
     place_grid_items(
@@ -420,7 +420,7 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
     let mut order = items.len() as u32;
     (0..tree.child_count(node)).for_each(|index| {
         let child = tree.get_child_id(node, index);
-        let child_style = tree.style(child);
+        let child_style = tree.get_style(child);
 
         // Position hidden child
         if child_style.display == Display::None {

@@ -105,7 +105,7 @@ where
     }
 
     #[inline(always)]
-    fn style(&self, node: NodeId) -> &Style {
+    fn get_style(&self, node: NodeId) -> &Style {
         &self.taffy.nodes[node.into()].style
     }
 
@@ -133,7 +133,7 @@ where
             return compute_hidden_layout(self, node);
         }
 
-        let display_mode = self.style(node).display;
+        let display_mode = self.get_style(node).display;
         let has_children = self.child_count(node) > 0;
 
         debug_log!(display_mode);
