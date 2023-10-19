@@ -48,11 +48,15 @@ pub fn compute_layout(tree: &mut impl PartialLayoutTree, root: NodeId, available
 }
 
 /// Updates the stored layout of the provided `node` and its children
-pub(crate) fn compute_cached_layout<Tree: PartialLayoutTree + ?Sized>(
+pub(crate) fn compute_cached_layout<Tree: PartialLayoutTree + ?Sized, ComputeFunction>(
     tree: &mut Tree,
     node: NodeId,
     inputs: LayoutInput,
-) -> LayoutOutput {
+    mut compute_uncached: ComputeFunction,
+) -> LayoutOutput
+where
+    ComputeFunction: FnMut(&mut Tree, NodeId, LayoutInput) -> LayoutOutput,
+{
     debug_push_node!(node);
 
     let LayoutInput { known_dimensions, available_space, run_mode, .. } = inputs;
@@ -68,7 +72,7 @@ pub(crate) fn compute_cached_layout<Tree: PartialLayoutTree + ?Sized>(
         return cached_size_and_baselines;
     }
 
-    let computed_size_and_baselines = tree.compute_child_layout(node, inputs);
+    let computed_size_and_baselines = compute_uncached(tree, node, inputs);
 
     // Cache result
     tree.get_cache_mut(node).store(known_dimensions, available_space, cache_run_mode, computed_size_and_baselines);

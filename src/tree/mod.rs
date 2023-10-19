@@ -85,6 +85,7 @@ pub(crate) trait PartialLayoutTreeExt: PartialLayoutTree {
                 run_mode: RunMode::ComputeSize,
                 vertical_margins_are_collapsible,
             },
+            Self::compute_child_layout,
         )
         .size
     }
@@ -111,6 +112,7 @@ pub(crate) trait PartialLayoutTreeExt: PartialLayoutTree {
                 run_mode: RunMode::PerformLayout,
                 vertical_margins_are_collapsible,
             },
+            Self::compute_child_layout,
         )
     }
 }
