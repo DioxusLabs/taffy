@@ -4,9 +4,8 @@
 use slotmap::{DefaultKey, SlotMap, SparseSecondaryMap};
 
 use crate::geometry::Size;
-use crate::prelude::LayoutTree;
 use crate::style::{AvailableSpace, Display, Style};
-use crate::tree::{Cache, Layout, LayoutInput, LayoutOutput, NodeData, NodeId, PartialLayoutTree, RunMode};
+use crate::tree::{Cache, Layout, LayoutInput, LayoutOutput, LayoutTree, NodeData, NodeId, PartialLayoutTree, RunMode};
 use crate::util::debug::{debug_log, debug_log_node};
 use crate::util::sys::{new_vec_with_capacity, ChildrenVec, Vec};
 
@@ -16,7 +15,7 @@ use crate::compute::compute_block_layout;
 use crate::compute::compute_flexbox_layout;
 #[cfg(feature = "grid")]
 use crate::compute::compute_grid_layout;
-use crate::compute::{compute_hidden_layout, compute_layout, compute_layout_with_rounding, compute_leaf_layout};
+use crate::compute::{compute_hidden_layout, compute_layout, compute_leaf_layout, round_layout};
 
 use super::{TaffyError, TaffyResult};
 
@@ -491,7 +490,7 @@ impl<NodeContext> Taffy<NodeContext> {
     /// Updates the stored layout of the provided `node` and its children
     pub fn compute_layout_with_measure<MeasureFunction>(
         &mut self,
-        node: NodeId,
+        node_id: NodeId,
         available_space: Size<AvailableSpace>,
         measure_function: MeasureFunction,
     ) -> Result<(), TaffyError>
@@ -500,10 +499,9 @@ impl<NodeContext> Taffy<NodeContext> {
     {
         let use_rounding = self.config.use_rounding;
         let mut taffy_view = TaffyView { taffy: self, measure_function };
+        compute_layout(&mut taffy_view, node_id, available_space);
         if use_rounding {
-            compute_layout_with_rounding(&mut taffy_view, node, available_space);
-        } else {
-            compute_layout(&mut taffy_view, node, available_space);
+            round_layout(&mut taffy_view, node_id);
         }
         Ok(())
     }

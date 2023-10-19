@@ -48,15 +48,6 @@ pub fn compute_layout(tree: &mut impl PartialLayoutTree, root: NodeId, available
     *tree.get_final_layout_mut(root) = layout;
 }
 
-/// Updates the stored layout of the provided `node` and its children and then rounds the result to an exact pixel grid
-pub fn compute_layout_with_rounding(tree: &mut impl LayoutTree, root: NodeId, available_space: Size<AvailableSpace>) {
-    // Perform the layout
-    compute_layout(tree, root, available_space);
-
-    // Recursively round the layout's of this node and all children
-    round_layout(tree, root);
-}
-
 /// Updates the stored layout of the provided `node` and its children
 pub(crate) fn compute_cached_layout<Tree: PartialLayoutTree + ?Sized>(
     tree: &mut Tree,
