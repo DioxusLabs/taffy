@@ -38,14 +38,11 @@ pub trait PartialLayoutTree {
     /// Get a specific child of a node, where the index represents the nth child
     fn get_child_id(&self, parent_node_id: NodeId, child_index: usize) -> NodeId;
 
-    /// Get the [`Style`] for this node.
+    /// Get a reference to the [`Style`] for this node.
     fn get_style(&self, node_id: NodeId) -> &Style;
 
-    /// Modify the node's output layout
+    /// Get a mutable reference to the node's unrounded layout
     fn get_unrounded_layout_mut(&mut self, node_id: NodeId) -> &mut Layout;
-
-    /// Get a mutable reference to the node's output final layout
-    fn get_final_layout_mut(&mut self, node_id: NodeId) -> &mut Layout;
 
     /// Get a mutable reference to the [`Cache`] for this node.
     fn get_cache_mut(&mut self, node_id: NodeId) -> &mut Cache;
@@ -57,8 +54,10 @@ pub trait PartialLayoutTree {
 /// Extends [`PartialLayoutTree`] with an additional guarantee: that the child/children methods can be used to recurse
 /// infinitely down the tree. Enables Taffy's rounding and debug printing methods to be used.
 pub trait LayoutTree: PartialLayoutTree {
-    /// Get a reference to the node's layout for the purpose of printing the tree
+    /// Get a reference to the node's final layout
     fn get_final_layout(&self, node_id: NodeId) -> &Layout;
+    /// Get a mutable reference to the node's final layout
+    fn get_final_layout_mut(&mut self, node_id: NodeId) -> &mut Layout;
 }
 
 /// A private trait which allows us to add extra convenience methods to types which implement

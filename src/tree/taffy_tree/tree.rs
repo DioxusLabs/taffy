@@ -119,11 +119,6 @@ where
     }
 
     #[inline(always)]
-    fn get_final_layout_mut(&mut self, node: NodeId) -> &mut Layout {
-        &mut self.taffy.nodes[node.into()].final_layout
-    }
-
-    #[inline(always)]
     fn compute_child_layout(&mut self, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
         // If RunMode is PerformHiddenLayout then this indicates that an ancestor node is `Display::None`
         // and thus that we should lay out this node using hidden layout regardless of it's own display style.
@@ -185,6 +180,11 @@ where
     #[inline(always)]
     fn get_final_layout(&self, node: NodeId) -> &Layout {
         &self.taffy.nodes[node.into()].final_layout
+    }
+
+    #[inline(always)]
+    fn get_final_layout_mut(&mut self, node: NodeId) -> &mut Layout {
+        &mut self.taffy.nodes[node.into()].final_layout
     }
 }
 

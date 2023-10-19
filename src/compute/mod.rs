@@ -45,7 +45,6 @@ pub fn compute_layout(tree: &mut impl PartialLayoutTree, root: NodeId, available
 
     let layout = Layout { order: 0, size: size_and_baselines.size, location: Point::ZERO };
     *tree.get_unrounded_layout_mut(root) = layout;
-    *tree.get_final_layout_mut(root) = layout;
 }
 
 /// Updates the stored layout of the provided `node` and its children
@@ -94,7 +93,7 @@ pub(crate) fn compute_cached_layout<Tree: PartialLayoutTree + ?Sized>(
 pub fn round_layout(tree: &mut impl LayoutTree, node_id: NodeId) {
     return round_layout_inner(tree, node_id, 0.0, 0.0);
     /// Recursive function to apply rounding to all descendents
-    fn round_layout_inner(tree: &mut impl PartialLayoutTree, node_id: NodeId, cumulative_x: f32, cumulative_y: f32) {
+    fn round_layout_inner(tree: &mut impl LayoutTree, node_id: NodeId, cumulative_x: f32, cumulative_y: f32) {
         let unrounded_layout = *tree.get_unrounded_layout_mut(node_id);
         let layout = &mut tree.get_final_layout_mut(node_id);
 
@@ -120,7 +119,6 @@ pub fn compute_hidden_layout(tree: &mut impl PartialLayoutTree, node: NodeId) ->
     // Clear cache and set zeroed-out layout for the node
     tree.get_cache_mut(node).clear();
     *tree.get_unrounded_layout_mut(node) = Layout::with_order(0);
-    *tree.get_final_layout_mut(node) = Layout::with_order(0);
 
     // Perform hidden layout on all children
     for index in 0..tree.child_count(node) {
