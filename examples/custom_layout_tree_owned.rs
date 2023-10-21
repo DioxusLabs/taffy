@@ -7,7 +7,8 @@ use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode,
 use taffy::tree::{Cache, PartialLayoutTree};
 use taffy::util::print_tree;
 use taffy::{
-    compute_flexbox_layout, compute_grid_layout, compute_layout, compute_leaf_layout, prelude::*, round_layout,
+    compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_layout, compute_leaf_layout,
+    prelude::*, round_layout,
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -138,32 +139,34 @@ impl PartialLayoutTree for StatelessLayoutTree {
     }
 
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: taffy::tree::LayoutInput) -> taffy::tree::LayoutOutput {
-        let node = unsafe { node_from_id_mut(node_id) };
-        let font_metrics = FontMetrics { char_width: 10.0, char_height: 10.0 };
+        compute_cached_layout(self, node_id, inputs, |tree, node_id, inputs| {
+            let node = unsafe { node_from_id_mut(node_id) };
+            let font_metrics = FontMetrics { char_width: 10.0, char_height: 10.0 };
 
-        match node.kind {
-            NodeKind::Flexbox => compute_flexbox_layout(self, node_id, inputs),
-            NodeKind::Grid => compute_grid_layout(self, node_id, inputs),
-            NodeKind::Text => compute_leaf_layout(
-                inputs,
-                &node.style,
-                Some(|known_dimensions, available_space| {
-                    text_measure_function(
-                        known_dimensions,
-                        available_space,
-                        node.text_data.as_ref().unwrap(),
-                        &font_metrics,
-                    )
-                }),
-            ),
-            NodeKind::Image => compute_leaf_layout(
-                inputs,
-                &node.style,
-                Some(|known_dimensions, _available_space| {
-                    image_measure_function(known_dimensions, node.image_data.as_ref().unwrap())
-                }),
-            ),
-        }
+            match node.kind {
+                NodeKind::Flexbox => compute_flexbox_layout(tree, node_id, inputs),
+                NodeKind::Grid => compute_grid_layout(tree, node_id, inputs),
+                NodeKind::Text => compute_leaf_layout(
+                    inputs,
+                    &node.style,
+                    Some(|known_dimensions, available_space| {
+                        text_measure_function(
+                            known_dimensions,
+                            available_space,
+                            node.text_data.as_ref().unwrap(),
+                            &font_metrics,
+                        )
+                    }),
+                ),
+                NodeKind::Image => compute_leaf_layout(
+                    inputs,
+                    &node.style,
+                    Some(|known_dimensions, _available_space| {
+                        image_measure_function(known_dimensions, node.image_data.as_ref().unwrap())
+                    }),
+                ),
+            }
+        })
     }
 }
 
