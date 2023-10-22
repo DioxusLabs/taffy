@@ -9,7 +9,7 @@ pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, J
 pub use self::dimension::{AvailableSpace, Dimension, LengthPercentage, LengthPercentageAuto};
 
 #[cfg(feature = "flexbox")]
-pub use self::flex::{FlexDirection, FlexWrap};
+pub use self::flex::{FlexDirection, FlexWrap, FlexboxContainerStyle, FlexboxItemStyle};
 
 #[cfg(feature = "grid")]
 mod grid;
@@ -17,8 +17,8 @@ mod grid;
 pub(crate) use self::grid::{GenericGridPlacement, OriginZeroGridPlacement};
 #[cfg(feature = "grid")]
 pub use self::grid::{
-    GridAutoFlow, GridPlacement, GridTrackRepetition, MaxTrackSizingFunction, MinTrackSizingFunction,
-    NonRepeatedTrackSizingFunction, TrackSizingFunction,
+    GridAutoFlow, GridContainerStyle, GridItemStyle, GridPlacement, GridTrackRepetition, MaxTrackSizingFunction,
+    MinTrackSizingFunction, NonRepeatedTrackSizingFunction, TrackSizingFunction,
 };
 use crate::geometry::{Point, Rect, Size};
 
@@ -28,6 +28,80 @@ use crate::geometry::Line;
 use crate::style_helpers;
 #[cfg(feature = "grid")]
 use crate::util::sys::GridTrackVec;
+
+/// The core set of styles that are shared between all CSS layout nodes
+///
+/// Note that all methods come with a default implementation which simply returns the default value for that style property
+/// but this is a just a convenience to save on boilerplate for styles that your implementation doesn't support. You will need
+/// to override the default implementation for each style property that your style type actually supports.
+pub trait CoreStyle {
+    /// What layout strategy should be used?
+    // fn display(&self);
+
+    // Overflow properties
+    /// How children overflowing their container should affect layout
+    #[inline(always)]
+    fn overflow(&self) -> Point<Overflow> {
+        Style::DEFAULT.overflow
+    }
+    /// How much space (in points) should be reserved for the scrollbars of `Overflow::Scroll` and `Overflow::Auto` nodes.
+    #[inline(always)]
+    fn scrollbar_width(&self) -> f32 {
+        0.0
+    }
+
+    // Position properties
+    /// What should the `position` value of this struct use as a base offset?
+    #[inline(always)]
+    fn position(&self) -> Position {
+        Style::DEFAULT.position
+    }
+    /// How should the position of this element be tweaked relative to the layout defined?
+    #[inline(always)]
+    fn inset(&self) -> Rect<LengthPercentageAuto> {
+        Style::DEFAULT.inset
+    }
+
+    // Size properies
+    /// Sets the initial size of the item
+    #[inline(always)]
+    fn size(&self) -> Size<Dimension> {
+        Style::DEFAULT.size
+    }
+    /// Controls the minimum size of the item
+    #[inline(always)]
+    fn min_size(&self) -> Size<Dimension> {
+        Style::DEFAULT.min_size
+    }
+    /// Controls the maximum size of the item
+    #[inline(always)]
+    fn max_size(&self) -> Size<Dimension> {
+        Style::DEFAULT.max_size
+    }
+    /// Sets the preferred aspect ratio for the item
+    /// The ratio is calculated as width divided by height.
+    #[inline(always)]
+    fn aspect_ratio(&self) -> Option<f32> {
+        Style::DEFAULT.aspect_ratio
+    }
+
+    // Spacing Properties
+    /// How large should the margin be on each side?
+    #[inline(always)]
+    fn margin(&self) -> Rect<LengthPercentageAuto> {
+        Style::DEFAULT.margin
+    }
+    /// How large should the padding be on each side?
+    #[inline(always)]
+    fn padding(&self) -> Rect<LengthPercentage> {
+        Style::DEFAULT.padding
+    }
+    /// How large should the border be on each side?
+    #[inline(always)]
+    fn border(&self) -> Rect<LengthPercentage> {
+        Style::DEFAULT.border
+    }
+}
 
 /// Sets the layout used for the children of this node
 ///
@@ -276,11 +350,11 @@ pub struct Style {
     #[cfg(feature = "flexbox")]
     pub flex_shrink: f32,
 
-    // Grid container properties
-    /// Defines the track sizing functions (widths) of the grid rows
+    // Grid container properies
+    /// Defines the track sizing functions (heights) of the grid rows
     #[cfg(feature = "grid")]
     pub grid_template_rows: GridTrackVec<TrackSizingFunction>,
-    /// Defines the track sizing functions (heights) of the grid columns
+    /// Defines the track sizing functions (widths) of the grid columns
     #[cfg(feature = "grid")]
     pub grid_template_columns: GridTrackVec<TrackSizingFunction>,
     /// Defines the size of implicitly created rows
@@ -364,6 +438,163 @@ impl Style {
 impl Default for Style {
     fn default() -> Self {
         Style::DEFAULT
+    }
+}
+
+impl CoreStyle for Style {
+    #[inline(always)]
+    fn overflow(&self) -> Point<Overflow> {
+        self.overflow
+    }
+    #[inline(always)]
+    fn scrollbar_width(&self) -> f32 {
+        self.scrollbar_width
+    }
+    #[inline(always)]
+    fn position(&self) -> Position {
+        self.position
+    }
+    #[inline(always)]
+    fn inset(&self) -> Rect<LengthPercentageAuto> {
+        self.inset
+    }
+    #[inline(always)]
+    fn size(&self) -> Size<Dimension> {
+        self.size
+    }
+    #[inline(always)]
+    fn min_size(&self) -> Size<Dimension> {
+        self.min_size
+    }
+    #[inline(always)]
+    fn max_size(&self) -> Size<Dimension> {
+        self.max_size
+    }
+    #[inline(always)]
+    fn aspect_ratio(&self) -> Option<f32> {
+        self.aspect_ratio
+    }
+    #[inline(always)]
+    fn margin(&self) -> Rect<LengthPercentageAuto> {
+        self.margin
+    }
+    #[inline(always)]
+    fn padding(&self) -> Rect<LengthPercentage> {
+        self.padding
+    }
+    #[inline(always)]
+    fn border(&self) -> Rect<LengthPercentage> {
+        self.border
+    }
+}
+
+#[cfg(feature = "flexbox")]
+impl FlexboxContainerStyle for Style {
+    #[inline(always)]
+    fn flex_direction(&self) -> FlexDirection {
+        self.flex_direction
+    }
+    #[inline(always)]
+    fn flex_wrap(&self) -> FlexWrap {
+        self.flex_wrap
+    }
+    #[inline(always)]
+    fn gap(&self) -> Size<LengthPercentage> {
+        self.gap
+    }
+    #[inline(always)]
+    fn align_content(&self) -> Option<AlignContent> {
+        self.align_content
+    }
+    #[inline(always)]
+    fn align_items(&self) -> Option<AlignItems> {
+        self.align_items
+    }
+    #[inline(always)]
+    fn justify_content(&self) -> Option<JustifyContent> {
+        self.justify_content
+    }
+}
+#[cfg(feature = "flexbox")]
+impl FlexboxItemStyle for Style {
+    #[inline(always)]
+    fn flex_basis(&self) -> Dimension {
+        self.flex_basis
+    }
+    #[inline(always)]
+    fn flex_grow(&self) -> f32 {
+        self.flex_grow
+    }
+    #[inline(always)]
+    fn flex_shrink(&self) -> f32 {
+        self.flex_shrink
+    }
+    #[inline(always)]
+    fn align_self(&self) -> Option<AlignSelf> {
+        self.align_self
+    }
+}
+
+#[cfg(feature = "grid")]
+impl GridContainerStyle for Style {
+    #[inline(always)]
+    fn grid_template_rows(&self) -> &[TrackSizingFunction] {
+        &self.grid_template_rows
+    }
+    #[inline(always)]
+    fn grid_template_columns(&self) -> &[TrackSizingFunction] {
+        &self.grid_template_columns
+    }
+    #[inline(always)]
+    fn grid_auto_rows(&self) -> &[NonRepeatedTrackSizingFunction] {
+        &self.grid_auto_rows
+    }
+    #[inline(always)]
+    fn grid_auto_columns(&self) -> &[NonRepeatedTrackSizingFunction] {
+        &self.grid_auto_columns
+    }
+    #[inline(always)]
+    fn grid_auto_flow(&self) -> GridAutoFlow {
+        self.grid_auto_flow
+    }
+    #[inline(always)]
+    fn gap(&self) -> Size<LengthPercentage> {
+        self.gap
+    }
+    #[inline(always)]
+    fn align_content(&self) -> Option<AlignContent> {
+        self.align_content
+    }
+    #[inline(always)]
+    fn justify_content(&self) -> Option<JustifyContent> {
+        self.justify_content
+    }
+    #[inline(always)]
+    fn align_items(&self) -> Option<AlignItems> {
+        self.align_items
+    }
+    #[inline(always)]
+    fn justify_items(&self) -> Option<AlignItems> {
+        self.justify_items
+    }
+}
+#[cfg(feature = "grid")]
+impl GridItemStyle for Style {
+    #[inline(always)]
+    fn grid_row(&self) -> Line<GridPlacement> {
+        self.grid_row
+    }
+    #[inline(always)]
+    fn grid_column(&self) -> Line<GridPlacement> {
+        self.grid_column
+    }
+    #[inline(always)]
+    fn align_self(&self) -> Option<AlignSelf> {
+        self.align_self
+    }
+    #[inline(always)]
+    fn justify_self(&self) -> Option<AlignSelf> {
+        self.justify_self
     }
 }
 
