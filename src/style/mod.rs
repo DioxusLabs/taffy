@@ -35,8 +35,11 @@ use crate::util::sys::GridTrackVec;
 /// but this is a just a convenience to save on boilerplate for styles that your implementation doesn't support. You will need
 /// to override the default implementation for each style property that your style type actually supports.
 pub trait CoreStyle {
-    /// What layout strategy should be used?
-    // fn display(&self);
+    /// Which box generation mode should be used
+    #[inline(always)]
+    fn box_generation_mode(&self) -> BoxGenerationMode {
+        BoxGenerationMode::DEFAULT
+    }
 
     // Overflow properties
     /// How children overflowing their container should affect layout
@@ -118,26 +121,32 @@ pub enum Display {
     /// The children will follow the CSS Grid layout algorithm
     #[cfg(feature = "grid")]
     Grid,
-    /// The children will not be laid out, and will follow absolute positioning
+    /// The node is hidden, and it's children will also be hidden
     None,
 }
 
 impl Display {
-    /// The default of Display.
+    /// The default Display mode
     #[cfg(feature = "flexbox")]
     pub const DEFAULT: Display = Display::Flex;
 
-    /// The default of Display.
+    /// The default Display mode
     #[cfg(all(feature = "grid", not(feature = "flexbox")))]
     pub const DEFAULT: Display = Display::Grid;
 
-    /// The default of Display.
+    /// The default Display mode
     #[cfg(all(feature = "block_layout", not(feature = "flexbox"), not(feature = "grid")))]
     pub const DEFAULT: Display = Display::Block;
 
-    /// The default of Display.
+    /// The default Display mode
     #[cfg(all(not(feature = "flexbox"), not(feature = "grid"), not(feature = "block_layout")))]
     pub const DEFAULT: Display = Display::None;
+}
+
+impl Default for Display {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
 }
 
 impl core::fmt::Display for Display {
@@ -154,7 +163,23 @@ impl core::fmt::Display for Display {
     }
 }
 
-impl Default for Display {
+/// An abstracted version of the CSS `display` property where any value other than "none" is represented by "normal"
+/// See: <https://www.w3.org/TR/css-display-3/#box-generation>
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum BoxGenerationMode {
+    /// The node generates a box in the regular way
+    Normal,
+    /// The node and it's descendants generate no boxes (they are hidden)
+    None,
+}
+
+impl BoxGenerationMode {
+    /// The default of BoxGenerationMode
+    pub const DEFAULT: BoxGenerationMode = BoxGenerationMode::Normal;
+}
+
+impl Default for BoxGenerationMode {
     fn default() -> Self {
         Self::DEFAULT
     }
@@ -442,6 +467,13 @@ impl Default for Style {
 }
 
 impl CoreStyle for Style {
+    #[inline(always)]
+    fn box_generation_mode(&self) -> BoxGenerationMode {
+        match self.display {
+            Display::None => BoxGenerationMode::None,
+            _ => BoxGenerationMode::Normal,
+        }
+    }
     #[inline(always)]
     fn overflow(&self) -> Point<Overflow> {
         self.overflow
