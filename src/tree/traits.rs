@@ -128,7 +128,11 @@
 //!
 use super::{Cache, Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, SizingMode};
 use crate::geometry::{AbsoluteAxis, Line, Size};
-use crate::style::{AvailableSpace, Style};
+use crate::style::{AvailableSpace, CoreStyle};
+#[cfg(feature = "flexbox")]
+use crate::style::{FlexboxContainerStyle, FlexboxItemStyle};
+#[cfg(feature = "grid")]
+use crate::style::{GridContainerStyle, GridItemStyle};
 
 /// This trait is Taffy's abstraction for downward tree traversal.
 /// However, this trait does *not* require access to any node's other than a single container node's immediate children unless you also intend to implement `TraverseTree`.
@@ -157,8 +161,14 @@ pub trait TraverseTree: TraversePartialTree {}
 /// Note that this trait extends [`TraversePartialTree`] (not [`TraverseTree`]). Taffy's algorithm implementations have been designed such that they can be used for a laying out a single
 /// node that only has access to it's immediate children.
 pub trait LayoutPartialTree: TraversePartialTree {
-    /// Get a reference to the [`Style`] for this node.
-    fn get_style(&self, node_id: NodeId) -> &Style;
+    /// The style type representing the core container styles that all containers should have
+    /// Used when laying out the root node of a tree
+    type CoreContainerStyle<'a>: CoreStyle
+    where
+        Self: 'a;
+
+    /// Get core style
+    fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_>;
 
     /// Set the node's unrounded layout
     fn set_unrounded_layout(&mut self, node_id: NodeId, layout: &Layout);
@@ -189,6 +199,62 @@ pub trait PrintTree: TraverseTree {
     fn get_debug_label(&self, node_id: NodeId) -> &'static str;
     /// Get a reference to the node's final layout
     fn get_final_layout(&self, node_id: NodeId) -> &Layout;
+}
+
+#[cfg(feature = "flexbox")]
+/// Extends [`LayoutPartialTree`] with getters for the styles required for Flexbox layout
+pub trait LayoutFlexboxContainer: LayoutPartialTree {
+    /// The style type representing the Flexbox container's styles
+    type ContainerStyle<'a>: FlexboxContainerStyle
+    where
+        Self: 'a;
+    /// The style type representing each Flexbox item's styles
+    type ItemStyle<'a>: FlexboxItemStyle
+    where
+        Self: 'a;
+
+    /// Get the container's styles
+    fn get_flexbox_container_style(&self, node_id: NodeId) -> Self::ContainerStyle<'_>;
+
+    /// Get the child's styles
+    fn get_flexbox_child_style(&self, child_node_id: NodeId) -> Self::ItemStyle<'_>;
+}
+
+#[cfg(feature = "grid")]
+/// Extends [`LayoutPartialTree`] with getters for the styles required for CSS Grid layout
+pub trait LayoutGridContainer: LayoutPartialTree {
+    /// The style type representing the CSS Grid container's styles
+    type ContainerStyle: GridContainerStyle + Clone;
+
+    /// The style type representing each CSS Grid item's styles
+    type ItemStyle<'a>: GridItemStyle
+    where
+        Self: 'a;
+
+    /// Get the container's styles
+    fn get_grid_container_style(&self, node_id: NodeId) -> &Self::ContainerStyle;
+
+    /// Get the child's styles
+    fn get_grid_child_style(&self, child_node_id: NodeId) -> Self::ItemStyle<'_>;
+}
+
+#[cfg(feature = "block_layout")]
+/// Extends [`LayoutPartialTree`] with getters for the styles required for CSS Block layout
+pub trait LayoutBlockContainer: LayoutPartialTree {
+    /// The style type representing the CSS Block container's styles
+    type ContainerStyle<'a>: CoreStyle
+    where
+        Self: 'a;
+    /// The style type representing each CSS Block item's styles
+    type ItemStyle<'a>: CoreStyle
+    where
+        Self: 'a;
+
+    /// Get the container's styles
+    fn get_block_container_style(&self, node_id: NodeId) -> Self::ContainerStyle<'_>;
+
+    /// Get the child's styles
+    fn get_block_child_style(&self, child_node_id: NodeId) -> Self::ItemStyle<'_>;
 }
 
 // --- PRIVATE TRAITS

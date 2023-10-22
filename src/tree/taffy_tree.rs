@@ -271,9 +271,11 @@ where
     MeasureFunction:
         FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
 {
+    type CoreContainerStyle<'a> = &'a Style where Self : 'a;
+
     #[inline(always)]
-    fn get_style(&self, node: NodeId) -> &Style {
-        &self.taffy.nodes[node.into()].style
+    fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_> {
+        &self.taffy.nodes[node_id.into()].style
     }
 
     #[inline(always)]
