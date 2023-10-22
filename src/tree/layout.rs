@@ -1,5 +1,6 @@
 //! Final data structures that represent the high-level UI layout
 use crate::geometry::{Line, Point, Size};
+use crate::prelude::TaffyMaxContent;
 use crate::style::AvailableSpace;
 use crate::util::sys::{f32_max, f32_min};
 
@@ -11,6 +12,8 @@ pub enum RunMode {
     /// The layout algorithm should be executed such that an accurate container size for the node can be determined.
     /// Layout steps that aren't necessary for determining the container size of the current node can be skipped.
     ComputeSize,
+    /// This node should have a null layout set as it has been hidden (i.e. using `Display::None`)
+    PerformHiddenLayout,
 }
 
 /// Whether styles should be taken into account when computing size
@@ -92,6 +95,20 @@ pub struct LayoutInput {
     pub run_mode: RunMode,
     /// Specific to CSS Block layout. Used for correctly computing margin collapsing. You probably want to set this to `Line::FALSE`.
     pub vertical_margins_are_collapsible: Line<bool>,
+}
+
+impl LayoutInput {
+    /// A LayoutInput that can be used to request hidden layout
+    pub const HIDDEN: LayoutInput = LayoutInput {
+        // The important property for hidden layout
+        run_mode: RunMode::PerformHiddenLayout,
+        // The rest will be ignored
+        known_dimensions: Size::NONE,
+        parent_size: Size::NONE,
+        available_space: Size::MAX_CONTENT,
+        sizing_mode: SizingMode::InherentSize,
+        vertical_margins_are_collapsible: Line::FALSE,
+    };
 }
 
 /// A struct containing the result of laying a single node, which is returned up to the parent node

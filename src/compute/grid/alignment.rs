@@ -1,14 +1,11 @@
 //! Alignment of tracks and final positioning of items
 use super::types::GridTrack;
 use crate::compute::common::alignment::compute_alignment_offset;
-use crate::geometry::InBothAbsAxis;
-use crate::geometry::{Line, Point, Rect, Size};
+use crate::geometry::{InBothAbsAxis, Line, Point, Rect, Size};
 use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Position};
-use crate::tree::{Layout, SizingMode};
-use crate::tree::{LayoutTree, NodeId};
+use crate::tree::{Layout, NodeId, PartialLayoutTree, PartialLayoutTreeExt, SizingMode};
 use crate::util::sys::f32_max;
-use crate::util::MaybeMath;
-use crate::util::{MaybeResolve, ResolveOrZero};
+use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 
 /// Align the grid tracks within the grid according to the align-content (rows) or
 /// justify-content (columns) property. This only does anything if the size of the
@@ -54,7 +51,7 @@ pub(super) fn align_tracks(
 
 /// Align and size a grid item into it's final position
 pub(super) fn align_and_position_item(
-    tree: &mut impl LayoutTree,
+    tree: &mut impl PartialLayoutTree,
     node: NodeId,
     order: u32,
     grid_area: Rect<f32>,
@@ -63,7 +60,7 @@ pub(super) fn align_and_position_item(
 ) {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
 
-    let style = tree.style(node);
+    let style = tree.get_style(node);
     let aspect_ratio = style.aspect_ratio;
     let justify_self = style.justify_self;
     let align_self = style.align_self;
@@ -202,7 +199,7 @@ pub(super) fn align_and_position_item(
         baseline_shim,
     );
 
-    *tree.layout_mut(node) = Layout { order, size: Size { width, height }, location: Point { x, y } };
+    *tree.get_unrounded_layout_mut(node) = Layout { order, size: Size { width, height }, location: Point { x, y } };
 }
 
 /// Align and size a grid item along a single axis

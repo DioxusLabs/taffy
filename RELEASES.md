@@ -97,7 +97,7 @@ Example usage change:
 ### Removed
 
 - `layout_flexbox()` has been removed from the prelude. Use `taffy::compute_flexbox_layout` instead.
-- The following methods have been removed from the `LayoutTree` trait: `parent`, `is_childless`, `layout`, `measure_node`, `needs_measure`, `cache_mut` and `mark_dirty`. These no longer need to be implemented in custom implementations of `LayoutTree`.
+- The following methods have been removed from the `LayoutTree` trait: `parent`, `is_childless`, `measure_node`, `needs_measure`, and `mark_dirty`. These no longer need to be implemented in custom implementations of `LayoutTree`.
 
 ### Changes
 

@@ -3,7 +3,7 @@ use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AvailableSpace, Display, LengthPercentageAuto, Overflow, Position};
 use crate::style_helpers::TaffyMaxContent;
 use crate::tree::{CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
-use crate::tree::{LayoutTree, NodeId};
+use crate::tree::{NodeId, PartialLayoutTree, PartialLayoutTreeExt};
 use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
 use crate::util::sys::Vec;
@@ -44,10 +44,10 @@ struct BlockItem {
     can_be_collapsed_through: bool,
 }
 
-/// Computes the layout of [`LayoutTree`] according to the block layout algorithm
-pub fn compute_block_layout(tree: &mut impl LayoutTree, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput {
+/// Computes the layout of [`PartialLayoutTree`] according to the block layout algorithm
+pub fn compute_block_layout(tree: &mut impl PartialLayoutTree, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
-    let style = tree.style(node_id);
+    let style = tree.get_style(node_id);
 
     // Pull these out earlier to avoid borrowing issues
     let aspect_ratio = style.aspect_ratio;
@@ -88,13 +88,13 @@ pub fn compute_block_layout(tree: &mut impl LayoutTree, node_id: NodeId, inputs:
     compute_inner(tree, node_id, LayoutInput { known_dimensions: styled_based_known_dimensions, ..inputs })
 }
 
-/// Computes the layout of [`LayoutTree`] according to the block layout algorithm
-fn compute_inner(tree: &mut impl LayoutTree, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput {
+/// Computes the layout of [`PartialLayoutTree`] according to the block layout algorithm
+fn compute_inner(tree: &mut impl PartialLayoutTree, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput {
     let LayoutInput {
         known_dimensions, parent_size, available_space, run_mode, vertical_margins_are_collapsible, ..
     } = inputs;
 
-    let style = tree.style(node_id);
+    let style = tree.get_style(node_id);
     let raw_padding = style.padding;
     let raw_border = style.border;
     let raw_margin = style.margin;
@@ -195,9 +195,9 @@ fn compute_inner(tree: &mut impl LayoutTree, node_id: NodeId, inputs: LayoutInpu
     // 5. Perform hidden layout on hidden children
     let len = tree.child_count(node_id);
     for order in 0..len {
-        let child = tree.child(node_id, order);
-        if tree.style(child).display == Display::None {
-            *tree.layout_mut(child) = Layout::with_order(order as u32);
+        let child = tree.get_child_id(node_id, order);
+        if tree.get_style(child).display == Display::None {
+            *tree.get_unrounded_layout_mut(child) = Layout::with_order(order as u32);
             tree.perform_child_layout(
                 child,
                 Size::NONE,
@@ -236,9 +236,13 @@ fn compute_inner(tree: &mut impl LayoutTree, node_id: NodeId, inputs: LayoutInpu
 
 /// Create a `Vec` of `BlockItem` structs where each item in the `Vec` represents a child of the current node
 #[inline]
-fn generate_item_list(tree: &impl LayoutTree, node: NodeId, node_inner_size: Size<Option<f32>>) -> Vec<BlockItem> {
-    tree.children(node)
-        .map(|child_node_id| (child_node_id, tree.style(child_node_id)))
+fn generate_item_list(
+    tree: &impl PartialLayoutTree,
+    node: NodeId,
+    node_inner_size: Size<Option<f32>>,
+) -> Vec<BlockItem> {
+    tree.child_ids(node)
+        .map(|child_node_id| (child_node_id, tree.get_style(child_node_id)))
         .filter(|(_, style)| style.display != Display::None)
         .enumerate()
         .map(|(order, (child_node_id, child_style))| {
@@ -269,7 +273,7 @@ fn generate_item_list(tree: &impl LayoutTree, node: NodeId, node_inner_size: Siz
 /// Compute the content-based width in the case that the width of the container is not known
 #[inline]
 fn determine_content_based_container_width(
-    tree: &mut impl LayoutTree,
+    tree: &mut impl PartialLayoutTree,
     items: &[BlockItem],
     available_width: AvailableSpace,
 ) -> f32 {
@@ -304,7 +308,7 @@ fn determine_content_based_container_width(
 /// Compute each child's final size and position
 #[inline]
 fn perform_final_layout_on_in_flow_children(
-    tree: &mut impl LayoutTree,
+    tree: &mut impl PartialLayoutTree,
     items: &mut [BlockItem],
     container_outer_width: f32,
     content_box_inset: Rect<f32>,
@@ -388,7 +392,7 @@ fn perform_final_layout_on_in_flow_children(
                 y: committed_y_offset + active_collapsible_margin_set.resolve(),
             };
 
-            *tree.layout_mut(item.node_id) = Layout {
+            *tree.get_unrounded_layout_mut(item.node_id) = Layout {
                 order: item.order,
                 size: item_layout.size,
                 location: Point {
@@ -433,7 +437,7 @@ fn perform_final_layout_on_in_flow_children(
 /// Perform absolute layout on all absolutely positioned children.
 #[inline]
 fn perform_absolute_layout_on_absolute_children(
-    tree: &mut impl LayoutTree,
+    tree: &mut impl PartialLayoutTree,
     items: &[BlockItem],
     area_size: Size<f32>,
     area_offset: Point<f32>,
@@ -442,7 +446,7 @@ fn perform_absolute_layout_on_absolute_children(
     let area_height = area_size.height;
 
     for item in items.iter().filter(|item| item.position == Position::Absolute) {
-        let child_style = tree.style(item.node_id);
+        let child_style = tree.get_style(item.node_id);
 
         // Skip items that are display:none or are not position:absolute
         if child_style.display == Display::None || child_style.position != Position::Absolute {
@@ -587,7 +591,7 @@ fn perform_absolute_layout_on_absolute_children(
                 .unwrap_or(item.static_position.y + resolved_margin.top),
         };
 
-        *tree.layout_mut(item.node_id) =
+        *tree.get_unrounded_layout_mut(item.node_id) =
             Layout { order: item.order, size: final_size, location: area_offset + item_offset };
     }
 }

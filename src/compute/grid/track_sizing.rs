@@ -1,16 +1,14 @@
 //! Implements the track sizing algorithm
 //! <https://www.w3.org/TR/css-grid-1/#layout-algorithm>
 use super::types::{GridItem, GridTrack, TrackCounts};
-use crate::geometry::AbstractAxis;
-use crate::geometry::{Line, Size};
-use crate::prelude::{LayoutTree, TaffyMinContent};
+use crate::geometry::{AbstractAxis, Line, Size};
 use crate::style::{
     AlignContent, AlignSelf, AvailableSpace, LengthPercentage, MaxTrackSizingFunction, MinTrackSizingFunction,
 };
-use crate::tree::SizingMode;
+use crate::style_helpers::TaffyMinContent;
+use crate::tree::{PartialLayoutTree, PartialLayoutTreeExt, SizingMode};
 use crate::util::sys::{f32_max, f32_min, Vec};
-use crate::util::MaybeMath;
-use crate::util::ResolveOrZero;
+use crate::util::{MaybeMath, ResolveOrZero};
 use core::cmp::Ordering;
 
 /// Takes an axis, and a list of grid items sorted firstly by whether they cross a flex track
@@ -69,7 +67,7 @@ impl ItemBatcher {
 /// don't have to be passed around all over the place below. It then has methods that implement the intrinsic sizing computations
 struct IntrisicSizeMeasurer<'tree, 'oat, Tree, EstimateFunction>
 where
-    Tree: LayoutTree,
+    Tree: PartialLayoutTree,
     EstimateFunction: Fn(&GridTrack, Option<f32>) -> Option<f32>,
 {
     /// The layout tree
@@ -87,7 +85,7 @@ where
 
 impl<'tree, 'oat, Tree, EstimateFunction> IntrisicSizeMeasurer<'tree, 'oat, Tree, EstimateFunction>
 where
-    Tree: LayoutTree,
+    Tree: PartialLayoutTree,
     EstimateFunction: Fn(&GridTrack, Option<f32>) -> Option<f32>,
 {
     /// Compute the available_space to be passed to the child sizing functions
@@ -263,7 +261,7 @@ pub(super) fn determine_if_item_crosses_flexible_or_intrinsic_tracks(
 /// Note: Gutters are treated as empty fixed-size tracks for the purpose of the track sizing algorithm.
 #[allow(clippy::too_many_arguments)]
 #[inline(always)]
-pub(super) fn track_sizing_algorithm<Tree: LayoutTree>(
+pub(super) fn track_sizing_algorithm<Tree: PartialLayoutTree>(
     tree: &mut Tree,
     axis: AbstractAxis,
     axis_min_size: Option<f32>,
@@ -438,7 +436,7 @@ fn initialize_track_sizes(axis_tracks: &mut [GridTrack], axis_inner_node_size: O
 
 /// 11.5.1 Shim baseline-aligned items so their intrinsic size contributions reflect their baseline alignment.
 fn resolve_item_baselines(
-    tree: &mut impl LayoutTree,
+    tree: &mut impl PartialLayoutTree,
     axis: AbstractAxis,
     items: &mut [GridItem],
     inner_node_size: Size<Option<f32>>,
@@ -511,7 +509,7 @@ fn resolve_item_baselines(
 /// 11.5 Resolve Intrinsic Track Sizes
 #[allow(clippy::too_many_arguments)]
 fn resolve_intrinsic_track_sizes(
-    tree: &mut impl LayoutTree,
+    tree: &mut impl PartialLayoutTree,
     axis: AbstractAxis,
     axis_tracks: &mut [GridTrack],
     other_axis_tracks: &[GridTrack],
@@ -1140,7 +1138,7 @@ fn maximise_tracks(
 #[allow(clippy::too_many_arguments)]
 #[inline(always)]
 fn expand_flexible_tracks(
-    tree: &mut impl LayoutTree,
+    tree: &mut impl PartialLayoutTree,
     axis: AbstractAxis,
     axis_tracks: &mut [GridTrack],
     items: &mut [GridItem],

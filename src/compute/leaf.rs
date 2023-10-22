@@ -3,7 +3,6 @@
 use crate::geometry::{Point, Size};
 use crate::style::{AvailableSpace, Display, Overflow, Position, Style};
 use crate::tree::CollapsibleMarginSet;
-use crate::tree::NodeId;
 use crate::tree::{LayoutInput, LayoutOutput, SizingMode};
 use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
@@ -11,15 +10,13 @@ use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 
 /// Compute the size of a leaf node (node with no children)
-pub fn compute_leaf_layout<NodeContext, MeasureFunction>(
-    mut measure_function: MeasureFunction,
-    node_id: NodeId,
+pub fn compute_leaf_layout<MeasureFunction>(
     inputs: LayoutInput,
     style: &Style,
-    context: Option<&mut NodeContext>,
+    measure_function: Option<MeasureFunction>,
 ) -> LayoutOutput
 where
-    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+    MeasureFunction: FnOnce(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32>,
 {
     let LayoutInput { known_dimensions, parent_size, available_space, sizing_mode, .. } = inputs;
 
@@ -93,11 +90,11 @@ where
             bottom_margin: CollapsibleMarginSet::ZERO,
             margins_can_collapse_through: !has_styles_preventing_being_collapsed_through
                 && size.height == 0.0
-                && context.is_none(),
+                && measure_function.is_none(),
         };
     };
 
-    if let Some(context) = context {
+    if let Some(measure_function) = measure_function {
         // Compute available space
         let available_space = Size {
             width: available_space
@@ -119,7 +116,7 @@ where
         };
 
         // Measure node
-        let measured_size = measure_function(known_dimensions, available_space, node_id, Some(context));
+        let measured_size = measure_function(known_dimensions, available_space);
         let clamped_size =
             node_size.unwrap_or(measured_size + content_box_inset.sum_axes()).maybe_clamp(node_min_size, node_max_size);
         let size = Size {

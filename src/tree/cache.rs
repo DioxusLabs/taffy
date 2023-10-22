@@ -8,7 +8,7 @@ const CACHE_SIZE: usize = 9;
 
 /// Cached intermediate layout results
 #[derive(Debug, Clone, Copy)]
-pub struct CacheEntry {
+pub(crate) struct CacheEntry {
     /// The initial cached size of the node itself
     known_dimensions: Size<Option<f32>>,
     /// The initial cached size of the parent's node

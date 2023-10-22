@@ -3,15 +3,12 @@ use super::GridTrack;
 use crate::compute::grid::OriginZeroLine;
 use crate::geometry::AbstractAxis;
 use crate::geometry::{Line, Point, Rect, Size};
-use crate::prelude::LayoutTree;
 use crate::style::{
     AlignItems, AlignSelf, AvailableSpace, Dimension, LengthPercentageAuto, MaxTrackSizingFunction,
     MinTrackSizingFunction, Overflow, Style,
 };
-use crate::tree::NodeId;
-use crate::tree::SizingMode;
-use crate::util::MaybeMath;
-use crate::util::{MaybeResolve, ResolveOrZero};
+use crate::tree::{NodeId, PartialLayoutTree, PartialLayoutTreeExt, SizingMode};
+use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use core::ops::Range;
 
 /// Represents a single grid item
@@ -336,7 +333,7 @@ impl GridItem {
     pub fn min_content_contribution(
         &self,
         axis: AbstractAxis,
-        tree: &mut impl LayoutTree,
+        tree: &mut impl PartialLayoutTree,
         available_space: Size<Option<f32>>,
         inner_node_size: Size<Option<f32>>,
     ) -> f32 {
@@ -360,7 +357,7 @@ impl GridItem {
     pub fn min_content_contribution_cached(
         &mut self,
         axis: AbstractAxis,
-        tree: &mut impl LayoutTree,
+        tree: &mut impl PartialLayoutTree,
         available_space: Size<Option<f32>>,
         inner_node_size: Size<Option<f32>>,
     ) -> f32 {
@@ -375,7 +372,7 @@ impl GridItem {
     pub fn max_content_contribution(
         &self,
         axis: AbstractAxis,
-        tree: &mut impl LayoutTree,
+        tree: &mut impl PartialLayoutTree,
         available_space: Size<Option<f32>>,
         inner_node_size: Size<Option<f32>>,
     ) -> f32 {
@@ -399,7 +396,7 @@ impl GridItem {
     pub fn max_content_contribution_cached(
         &mut self,
         axis: AbstractAxis,
-        tree: &mut impl LayoutTree,
+        tree: &mut impl PartialLayoutTree,
         available_space: Size<Option<f32>>,
         inner_node_size: Size<Option<f32>>,
     ) -> f32 {
@@ -419,7 +416,7 @@ impl GridItem {
     /// See: https://www.w3.org/TR/css-grid-1/#min-size-auto
     pub fn minimum_contribution(
         &mut self,
-        tree: &mut impl LayoutTree,
+        tree: &mut impl PartialLayoutTree,
         axis: AbstractAxis,
         axis_tracks: &[GridTrack],
         known_dimensions: Size<Option<f32>>,
@@ -478,7 +475,7 @@ impl GridItem {
     #[inline(always)]
     pub fn minimum_contribution_cached(
         &mut self,
-        tree: &mut impl LayoutTree,
+        tree: &mut impl PartialLayoutTree,
         axis: AbstractAxis,
         axis_tracks: &[GridTrack],
         known_dimensions: Size<Option<f32>>,

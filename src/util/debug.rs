@@ -17,8 +17,8 @@ pub fn print_tree(tree: &impl LayoutTree, root: NodeId) {
 
 #[cfg(feature = "std")]
 fn print_node(tree: &impl LayoutTree, node: NodeId, has_sibling: bool, lines_string: String) {
-    let layout = &tree.layout(node);
-    let style = &tree.style(node);
+    let layout = &tree.get_final_layout(node);
+    let style = &tree.get_style(node);
     let num_children = tree.child_count(node);
 
     let display = match (num_children, style.display) {
@@ -48,7 +48,7 @@ fn print_node(tree: &impl LayoutTree, node: NodeId, has_sibling: bool, lines_str
     let new_string = lines_string + bar;
 
     // Recurse into children
-    for (index, child) in tree.children(node).enumerate() {
+    for (index, child) in tree.child_ids(node).enumerate() {
         let has_sibling = index < num_children - 1;
         print_node(tree, child, has_sibling, new_string.clone());
     }
