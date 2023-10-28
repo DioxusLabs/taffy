@@ -26,7 +26,7 @@ pub use self::grid::compute_grid_layout;
 use crate::geometry::{Line, Point, Size};
 use crate::style::AvailableSpace;
 use crate::tree::{
-    Layout, LayoutInput, LayoutOutput, LayoutTree, NodeId, PartialLayoutTree, PartialLayoutTreeExt, RunMode, SizingMode,
+    Layout, LayoutInput, LayoutOutput, LayoutTree, NodeId, PartialLayoutTree, PartialLayoutTreeExt, SizingMode,
 };
 use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
 use crate::util::sys::round;
@@ -59,13 +59,10 @@ where
     ComputeFunction: FnMut(&mut Tree, NodeId, LayoutInput) -> LayoutOutput,
 {
     debug_push_node!(node);
-
     let LayoutInput { known_dimensions, available_space, run_mode, .. } = inputs;
-    let has_children = tree.child_count(node) > 0;
 
     // First we check if we have a cached result for the given input
-    let cache_run_mode = if !has_children { RunMode::PerformLayout } else { run_mode };
-    let cache_entry = tree.get_cache_mut(node).get(known_dimensions, available_space, cache_run_mode);
+    let cache_entry = tree.get_cache_mut(node).get(known_dimensions, available_space, run_mode);
     if let Some(cached_size_and_baselines) = cache_entry {
         debug_log!("CACHE", dbg:cached_size_and_baselines.size);
         debug_log_node!(known_dimensions, parent_size, available_space, run_mode, sizing_mode);
@@ -76,7 +73,7 @@ where
     let computed_size_and_baselines = compute_uncached(tree, node, inputs);
 
     // Cache result
-    tree.get_cache_mut(node).store(known_dimensions, available_space, cache_run_mode, computed_size_and_baselines);
+    tree.get_cache_mut(node).store(known_dimensions, available_space, run_mode, computed_size_and_baselines);
 
     debug_log!("RESULT", dbg:computed_size_and_baselines.size);
     debug_pop_node!();

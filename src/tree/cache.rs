@@ -131,7 +131,7 @@ impl Cache {
                         && (known_dimensions.height.is_some()
                             || entry.available_space.height.is_roughly_equal(available_space.height))
                     {
-                        return Some(LayoutOutput::from(cached_size));
+                        return Some(LayoutOutput::from_outer_size(cached_size));
                     }
                 }
 
