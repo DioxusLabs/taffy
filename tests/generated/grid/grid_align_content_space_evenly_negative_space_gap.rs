@@ -71,10 +71,10 @@ fn grid_align_content_space_evenly_negative_space_gap() {
     );
     assert_eq!(
         layout.scroll_height(),
-        20f32,
+        0f32,
         "scroll_height of node {:?}. Expected {}. Actual {}",
         node,
-        20f32,
+        0f32,
         layout.scroll_height()
     );
     let layout @ Layout { size, location, .. } = taffy.layout(node0).unwrap();

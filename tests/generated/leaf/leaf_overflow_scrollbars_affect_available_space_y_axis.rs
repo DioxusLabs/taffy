@@ -35,10 +35,10 @@ fn leaf_overflow_scrollbars_affect_available_space_y_axis() {
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node, 0f32, location.y);
     assert_eq!(
         layout.scroll_width(),
-        180f32,
+        165f32,
         "scroll_width of node {:?}. Expected {}. Actual {}",
         node,
-        180f32,
+        165f32,
         layout.scroll_width()
     );
     assert_eq!(

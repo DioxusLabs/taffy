@@ -63,10 +63,10 @@ fn grid_justify_content_space_between_negative_space_gap() {
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node, 0f32, location.y);
     assert_eq!(
         layout.scroll_width(),
-        20f32,
+        0f32,
         "scroll_width of node {:?}. Expected {}. Actual {}",
         node,
-        20f32,
+        0f32,
         layout.scroll_width()
     );
     assert_eq!(

@@ -65,10 +65,10 @@ fn overflow_main_axis_shrink_scroll() {
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node0, 0f32, location.y);
     assert_eq!(
         layout.scroll_width(),
-        65f32,
+        50f32,
         "scroll_width of node {:?}. Expected {}. Actual {}",
         node0,
-        65f32,
+        50f32,
         layout.scroll_width()
     );
     assert_eq!(
