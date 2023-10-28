@@ -18,7 +18,7 @@ fn leaf_overflow_scrollbars_affect_available_space_y_axis() {
                 ..Default::default()
             },
             crate::TextMeasure {
-                text_content: "H\u{a0}H\u{a0}H\u{a0}H\u{a0}H\u{a0}H\u{a0}H\u{a0}H\u{a0}H\u{a0}H\u{a0}H",
+                text_content: "HHHHHHHHHHHHHHHHHHHHH",
                 writing_mode: crate::WritingMode::Horizontal,
                 _aspect_ratio: None,
             },
