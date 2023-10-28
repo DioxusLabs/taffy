@@ -8,9 +8,12 @@ use taffy::style::Style as TaffyStyle;
 use taffy_benchmarks::{BuildTreeExt, FixedStyleGenerator, GenStyle, TaffyTreeBuilder};
 
 #[cfg(feature = "yoga")]
-use taffy_benchmarks::yoga_helpers;
-#[cfg(feature = "yoga")]
-use yoga_helpers::{yg, YogaTreeBuilder};
+use taffy_benchmarks::yoga_helpers::{yg, YogaTreeBuilder};
+
+#[cfg(feature = "taffy03")]
+use taffy_03::prelude::TaffyMaxContent as Taffy03MaxContent;
+#[cfg(feature = "taffy03")]
+use taffy_benchmarks::taffy_03_helpers::Taffy03TreeBuilder;
 
 fn random_dimension(rng: &mut impl Rng) -> Dimension {
     match rng.gen_range(0.0..=1.0) {
@@ -19,6 +22,8 @@ fn random_dimension(rng: &mut impl Rng) -> Dimension {
         _ => Dimension::Percent(rng.gen_range(0.0..1.0)),
     }
 }
+
+#[derive(Clone)]
 pub struct RandomStyleGenerator;
 impl GenStyle<TaffyStyle> for RandomStyleGenerator {
     fn create_leaf_style(&mut self, rng: &mut impl Rng) -> TaffyStyle {
@@ -28,6 +33,18 @@ impl GenStyle<TaffyStyle> for RandomStyleGenerator {
         TaffyStyle { size: Size { width: random_dimension(rng), height: random_dimension(rng) }, ..Default::default() }
     }
 }
+
+// fn with_each_library<G, TreeBuilder, F>(style_generator: G, build_tree: F)
+// where
+//     G: GenStyle<TaffyStyle>,
+//     TreeBuilder: BuildTreeExt<G>,
+//     F: FnMut(&mut TreeBuilder)
+// {
+//     #[cfg(feature = "yoga")]
+//     let tree = YogaTreeBuilder::new(style_generator());
+
+//     let tree = TaffyTreeBuilder::new(style_generator.clone());
+// }
 
 /// A deep tree that matches the shape and styling that yoga use on their benchmarks
 fn build_flat_hierarchy<G: GenStyle<TaffyStyle>, TreeBuilder: BuildTreeExt<G>>(
@@ -91,7 +108,15 @@ fn huge_nested_benchmarks(c: &mut Criterion) {
                 criterion::BatchSize::SmallInput,
             )
         });
-        group.bench_with_input(BenchmarkId::new("Taffy", node_count), node_count, |b, &node_count| {
+        #[cfg(feature = "taffy03")]
+        group.bench_with_input(BenchmarkId::new("Taffy 0.3", node_count), node_count, |b, &node_count| {
+            b.iter_batched(
+                || build_huge_nested_hierarchy::<_, Taffy03TreeBuilder<_, _>>(node_count, 10, style_gen),
+                |(mut taffy, root)| taffy.compute_layout(root, taffy_03::prelude::Size::MAX_CONTENT).unwrap(),
+                criterion::BatchSize::SmallInput,
+            )
+        });
+        group.bench_with_input(BenchmarkId::new("Taffy 0.4", node_count), node_count, |b, &node_count| {
             b.iter_batched(
                 || build_huge_nested_hierarchy::<_, TaffyTreeBuilder<_, _>>(node_count, 10, style_gen),
                 |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
@@ -127,7 +152,19 @@ fn wide_benchmarks(c: &mut Criterion) {
                 criterion::BatchSize::SmallInput,
             )
         });
-        let benchmark_id = BenchmarkId::new(format!("Taffy (2-level hierarchy)"), node_count);
+        #[cfg(feature = "taffy03")]
+        group.bench_with_input(
+            BenchmarkId::new("Taffy 0.3 (2-level hierarchy)", node_count),
+            node_count,
+            |b, &node_count| {
+                b.iter_batched(
+                    || build_flat_hierarchy::<_, Taffy03TreeBuilder<_, _>>(node_count, || RandomStyleGenerator),
+                    |(mut taffy, root)| taffy.compute_layout(root, taffy_03::prelude::Size::MAX_CONTENT).unwrap(),
+                    criterion::BatchSize::LargeInput,
+                )
+            },
+        );
+        let benchmark_id = BenchmarkId::new(format!("Taffy 0.4 (2-level hierarchy)"), node_count);
         group.bench_with_input(benchmark_id, node_count, |b, &node_count| {
             b.iter_batched(
                 || build_flat_hierarchy::<_, TaffyTreeBuilder<_, _>>(node_count, || RandomStyleGenerator),
@@ -160,13 +197,29 @@ fn deep_random_benchmarks(c: &mut Criterion) {
                 criterion::BatchSize::SmallInput,
             )
         });
-        group.bench_with_input(BenchmarkId::new(format!("Taffy {label}"), node_count), node_count, |b, &node_count| {
-            b.iter_batched(
-                || build_deep_hierarchy::<_, TaffyTreeBuilder<_, _>>(node_count, 2, || RandomStyleGenerator),
-                |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-                criterion::BatchSize::SmallInput,
-            )
-        });
+        #[cfg(feature = "taffy03")]
+        group.bench_with_input(
+            BenchmarkId::new(format!("Taffy 0.3 {label}"), node_count),
+            node_count,
+            |b, &node_count| {
+                b.iter_batched(
+                    || build_deep_hierarchy::<_, Taffy03TreeBuilder<_, _>>(node_count, 2, || RandomStyleGenerator),
+                    |(mut taffy, root)| taffy.compute_layout(root, taffy_03::prelude::Size::MAX_CONTENT).unwrap(),
+                    criterion::BatchSize::SmallInput,
+                )
+            },
+        );
+        group.bench_with_input(
+            BenchmarkId::new(format!("Taffy 0.4 {label}"), node_count),
+            node_count,
+            |b, &node_count| {
+                b.iter_batched(
+                    || build_deep_hierarchy::<_, TaffyTreeBuilder<_, _>>(node_count, 2, || RandomStyleGenerator),
+                    |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
+                    criterion::BatchSize::SmallInput,
+                )
+            },
+        );
     }
     group.finish();
 }
@@ -194,13 +247,29 @@ fn deep_auto_benchmarks(c: &mut Criterion) {
                 criterion::BatchSize::SmallInput,
             )
         });
-        group.bench_with_input(BenchmarkId::new(format!("Taffy {label}"), node_count), node_count, |b, &node_count| {
-            b.iter_batched(
-                || build_deep_hierarchy::<_, TaffyTreeBuilder<_, _>>(node_count, 2, style_gen),
-                |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
-                criterion::BatchSize::SmallInput,
-            )
-        });
+        #[cfg(feature = "taffy03")]
+        group.bench_with_input(
+            BenchmarkId::new(format!("Taffy 0.3 {label}"), node_count),
+            node_count,
+            |b, &node_count| {
+                b.iter_batched(
+                    || build_deep_hierarchy::<_, Taffy03TreeBuilder<_, _>>(node_count, 2, style_gen),
+                    |(mut taffy, root)| taffy.compute_layout(root, taffy_03::prelude::Size::MAX_CONTENT).unwrap(),
+                    criterion::BatchSize::SmallInput,
+                )
+            },
+        );
+        group.bench_with_input(
+            BenchmarkId::new(format!("Taffy 0.4 {label}"), node_count),
+            node_count,
+            |b, &node_count| {
+                b.iter_batched(
+                    || build_deep_hierarchy::<_, TaffyTreeBuilder<_, _>>(node_count, 2, style_gen),
+                    |(mut taffy, root)| taffy.compute_layout(root, Size::MAX_CONTENT).unwrap(),
+                    criterion::BatchSize::SmallInput,
+                )
+            },
+        );
     }
     group.finish();
 }
@@ -208,6 +277,7 @@ fn deep_auto_benchmarks(c: &mut Criterion) {
 fn super_deep_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("super deep");
     group.sample_size(10);
+    #[derive(Clone)]
     struct SuperDeepStyleGen;
     impl GenStyle<TaffyStyle> for SuperDeepStyleGen {
         fn create_leaf_style(&mut self, _rng: &mut impl Rng) -> TaffyStyle {
@@ -239,7 +309,25 @@ fn super_deep_benchmarks(c: &mut Criterion) {
                 criterion::BatchSize::SmallInput,
             )
         });
-        group.bench_with_input(BenchmarkId::new("Taffy", depth), depth, |b, &depth| {
+        #[cfg(feature = "taffy03")]
+        group.bench_with_input(BenchmarkId::new("Taffy 0.3", depth), depth, |b, &depth| {
+            b.iter_batched(
+                || build_super_deep_hierarchy::<_, Taffy03TreeBuilder<_, _>>(depth, 3, || SuperDeepStyleGen),
+                |(mut taffy, root)| {
+                    taffy
+                        .compute_layout(
+                            root,
+                            taffy_03::prelude::Size {
+                                width: taffy_03::prelude::AvailableSpace::Definite(800.),
+                                height: taffy_03::prelude::AvailableSpace::Definite(800.),
+                            },
+                        )
+                        .unwrap()
+                },
+                criterion::BatchSize::SmallInput,
+            )
+        });
+        group.bench_with_input(BenchmarkId::new("Taffy 0.4", depth), depth, |b, &depth| {
             b.iter_batched(
                 || build_super_deep_hierarchy::<_, TaffyTreeBuilder<_, _>>(depth, 3, || SuperDeepStyleGen),
                 |(mut taffy, root)| {

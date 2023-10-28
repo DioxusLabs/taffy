@@ -5,6 +5,9 @@
 pub mod taffy_helpers;
 pub use taffy_helpers::TaffyTreeBuilder;
 
+#[cfg(feature = "taffy03")]
+pub mod taffy_03_helpers;
+
 #[cfg(feature = "yoga")]
 pub mod yoga_helpers;
 #[cfg(feature = "yoga")]
@@ -17,7 +20,7 @@ use taffy::style::Style as TaffyStyle;
 
 pub const STANDARD_RNG_SEED: u64 = 12345;
 
-pub trait GenStyle<Style: Default> {
+pub trait GenStyle<Style: Default> : Clone {
     fn create_leaf_style(&mut self, rng: &mut impl Rng) -> Style;
     fn create_container_style(&mut self, rng: &mut impl Rng) -> Style;
     fn create_root_style(&mut self, _rng: &mut impl Rng) -> Style {
@@ -25,6 +28,7 @@ pub trait GenStyle<Style: Default> {
     }
 }
 
+#[derive(Clone)]
 pub struct FixedStyleGenerator(pub TaffyStyle);
 impl GenStyle<TaffyStyle> for FixedStyleGenerator {
     fn create_leaf_style(&mut self, _rng: &mut impl Rng) -> TaffyStyle {
@@ -36,11 +40,13 @@ impl GenStyle<TaffyStyle> for FixedStyleGenerator {
 }
 
 pub trait BuildTree<R: Rng, G: GenStyle<TaffyStyle>>: Sized {
+    const NAME : &'static str;
     type Tree;
     type Node: Clone;
 
     fn with_rng(rng: R, style_generator: G) -> Self;
 
+    fn compute_layout(&mut self, available_width: Option<f32>, available_height: Option<f32>);
     fn random_usize(&mut self, range: impl SampleRange<usize>) -> usize;
     fn create_leaf_node(&mut self) -> Self::Node;
     fn create_container_node(&mut self, children: &[Self::Node]) -> Self::Node;
