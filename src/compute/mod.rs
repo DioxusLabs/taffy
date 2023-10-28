@@ -109,6 +109,8 @@ pub fn round_layout(tree: &mut impl LayoutTree, node_id: NodeId) {
         layout.location.y = round(unrounded_layout.location.y);
         layout.size.width = round(cumulative_x + unrounded_layout.size.width) - round(cumulative_x);
         layout.size.height = round(cumulative_y + unrounded_layout.size.height) - round(cumulative_y);
+        layout.content_size.width = round(cumulative_x + unrounded_layout.content_size.width) - round(cumulative_x);
+        layout.content_size.height = round(cumulative_y + unrounded_layout.content_size.height) - round(cumulative_y);
 
         let child_count = tree.child_count(node_id);
         for index in 0..child_count {
