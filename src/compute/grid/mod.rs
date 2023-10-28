@@ -399,6 +399,8 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
 
     // 9. Size, Align, and Position Grid Items
 
+    let mut item_content_size_contribution = Size::ZERO;
+
     // Sort items back into original order to allow them to be matched up with styles
     items.sort_by_key(|item| item.source_order);
 
@@ -412,7 +414,7 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
             left: columns[item.column_indexes.start as usize + 1].offset,
             right: columns[item.column_indexes.end as usize].offset,
         };
-        align_and_position_item(
+        let content_size_contribution = align_and_position_item(
             tree,
             item.node,
             index as u32,
@@ -420,6 +422,7 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
             container_alignment_styles,
             item.baseline_shim,
         );
+        item_content_size_contribution = item_content_size_contribution.f32_max(content_size_contribution);
     }
 
     // Position hidden and absolutely positioned children
@@ -477,7 +480,9 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
                     .unwrap_or(container_border_box.width - border.right),
             };
             // TODO: Baseline alignment support for absolutely positioned items (should check if is actuallty specified)
-            align_and_position_item(tree, child, order, grid_area, container_alignment_styles, 0.0);
+            let content_size_contribution =
+                align_and_position_item(tree, child, order, grid_area, container_alignment_styles, 0.0);
+            item_content_size_contribution = item_content_size_contribution.f32_max(content_size_contribution);
             order += 1;
         }
     });
@@ -511,14 +516,9 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
         layout.location.y + item.baseline.unwrap_or(layout.size.height)
     };
 
-    let content_size = Size {
-        width: initial_column_sum + padding.horizontal_axis_sum(),
-        height: initial_row_sum + padding.vertical_axis_sum(),
-    };
-
     LayoutOutput::from_sizes_and_baselines(
         container_border_box,
-        content_size,
+        item_content_size_contribution,
         Point { x: None, y: Some(grid_container_baseline) },
     )
 }

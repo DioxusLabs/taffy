@@ -2,7 +2,7 @@
 use super::types::GridTrack;
 use crate::compute::common::alignment::compute_alignment_offset;
 use crate::geometry::{InBothAbsAxis, Line, Point, Rect, Size};
-use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Position};
+use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Overflow, Position};
 use crate::tree::{Layout, NodeId, PartialLayoutTree, PartialLayoutTreeExt, SizingMode};
 use crate::util::sys::f32_max;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
@@ -57,10 +57,11 @@ pub(super) fn align_and_position_item(
     grid_area: Rect<f32>,
     container_alignment_styles: InBothAbsAxis<Option<AlignItems>>,
     baseline_shim: f32,
-) {
+) -> Size<f32> {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
 
     let style = tree.get_style(node);
+    let overflow = style.overflow;
     let aspect_ratio = style.aspect_ratio;
     let justify_self = style.justify_self;
     let align_self = style.align_self;
@@ -167,7 +168,7 @@ pub(super) fn align_and_position_item(
     let Size { width, height } = Size { width, height }.maybe_clamp(min_size, max_size);
 
     // Layout node
-    let measured_size_and_baselines = tree.perform_child_layout(
+    let layout_output = tree.perform_child_layout(
         node,
         Size { width, height },
         grid_area_size.map(Option::Some),
@@ -177,8 +178,7 @@ pub(super) fn align_and_position_item(
     );
 
     // Resolve final size
-    let Size { width, height } =
-        Size { width, height }.unwrap_or(measured_size_and_baselines.size).maybe_clamp(min_size, max_size);
+    let Size { width, height } = Size { width, height }.unwrap_or(layout_output.size).maybe_clamp(min_size, max_size);
 
     let x = align_item_within_area(
         Line { start: grid_area.left, end: grid_area.right },
@@ -199,8 +199,30 @@ pub(super) fn align_and_position_item(
         baseline_shim,
     );
 
-    *tree.get_unrounded_layout_mut(node) =
-        Layout { order, size: Size { width, height }, content_size: Size::zero(), location: Point { x, y } };
+    *tree.get_unrounded_layout_mut(node) = Layout {
+        order,
+        size: Size { width, height },
+        content_size: layout_output.content_size,
+        location: Point { x, y },
+    };
+
+    let size_content_size_contribution = Size {
+        width: match overflow.x {
+            Overflow::Visible => f32_max(width, layout_output.content_size.width),
+            _ => width,
+        },
+        height: match overflow.y {
+            Overflow::Visible => f32_max(height, layout_output.content_size.height),
+            _ => height,
+        },
+    };
+    let content_size_contribution =
+        if size_content_size_contribution.width > 0.0 && size_content_size_contribution.height > 0.0 {
+            Size { width: x + size_content_size_contribution.width, height: y + size_content_size_contribution.height }
+        } else {
+            Size::ZERO
+        };
+    content_size_contribution
 }
 
 /// Align and size a grid item along a single axis
