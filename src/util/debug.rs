@@ -34,7 +34,7 @@ fn print_node(tree: &impl LayoutTree, node: NodeId, has_sibling: bool, lines_str
 
     let fork_string = if has_sibling { "├── " } else { "└── " };
     println!(
-        "{lines}{fork} {display} [x: {x:<4} y: {y:<4} width: {width:<4} height: {height:<4}] ({key:?})",
+        "{lines}{fork} {display} [x: {x:<4} y: {y:<4} width: {width:<4} height: {height:<4} content_width: {content_width:<4} content_height: {content_height:<4}] ({key:?})",
         lines = lines_string,
         fork = fork_string,
         display = display,
@@ -42,6 +42,8 @@ fn print_node(tree: &impl LayoutTree, node: NodeId, has_sibling: bool, lines_str
         y = layout.location.y,
         width = layout.size.width,
         height = layout.size.height,
+        content_width = layout.content_size.width,
+        content_height = layout.content_size.height,
         key = node,
     );
     let bar = if has_sibling { "│   " } else { "    " };
