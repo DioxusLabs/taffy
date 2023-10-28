@@ -1,7 +1,7 @@
 //! Geometric primitives useful for layout
 
-use crate::style::Dimension;
 use crate::util::sys::f32_max;
+use crate::{style::Dimension, util::sys::f32_min};
 use core::ops::{Add, Sub};
 
 #[cfg(feature = "flexbox")]
@@ -533,6 +533,11 @@ impl Size<f32> {
     /// Applies f32_max to each component separately
     pub fn f32_max(self, rhs: Size<f32>) -> Size<f32> {
         Size { width: f32_max(self.width, rhs.width), height: f32_max(self.height, rhs.height) }
+    }
+
+    /// Applies f32_min to each component separately
+    pub fn f32_min(self, rhs: Size<f32>) -> Size<f32> {
+        Size { width: f32_min(self.width, rhs.width), height: f32_min(self.height, rhs.height) }
     }
 }
 
