@@ -16,11 +16,7 @@ fn min_max_percent_different_width_height() {
                 },
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "\n  ",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TextMeasure { text_content: "", writing_mode: crate::WritingMode::Horizontal, _aspect_ratio: None },
         )
         .unwrap();
     let node = taffy

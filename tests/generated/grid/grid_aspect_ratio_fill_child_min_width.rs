@@ -11,7 +11,7 @@ fn grid_aspect_ratio_fill_child_min_width() {
                 ..Default::default()
             },
             crate::TextMeasure {
-                text_content: "\n    \n  ",
+                text_content: "",
                 writing_mode: crate::WritingMode::Horizontal,
                 _aspect_ratio: Some(2f32),
             },

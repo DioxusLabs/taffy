@@ -877,6 +877,8 @@ fn generate_scalar_definition(track_definition: &serde_json::Map<String, Value>)
 }
 
 fn generate_node_context(text_content: &str, writing_mode: Option<&str>, aspect_ratio: Option<f32>) -> TokenStream {
+    let trimmed_text_content = text_content.trim();
+
     let writing_mode_token = match writing_mode {
         Some("vertical-rl" | "vertical-lr") => quote!(crate::WritingMode::Vertical),
         _ => quote!(crate::WritingMode::Horizontal),
@@ -889,7 +891,7 @@ fn generate_node_context(text_content: &str, writing_mode: Option<&str>, aspect_
 
     quote!(
         crate::TextMeasure {
-            text_content: #text_content,
+            text_content: #trimmed_text_content,
             writing_mode: #writing_mode_token,
             _aspect_ratio: #aspect_ratio_token,
         }

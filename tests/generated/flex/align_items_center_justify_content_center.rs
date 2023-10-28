@@ -12,11 +12,7 @@ fn align_items_center_justify_content_center() {
                 },
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "\n      ",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TextMeasure { text_content: "", writing_mode: crate::WritingMode::Horizontal, _aspect_ratio: None },
         )
         .unwrap();
     let node00 = taffy

@@ -32,11 +32,7 @@ fn absolute_child_with_cross_margin() {
                 },
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "\n  ",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TextMeasure { text_content: "", writing_mode: crate::WritingMode::Horizontal, _aspect_ratio: None },
         )
         .unwrap();
     let node2 = taffy
