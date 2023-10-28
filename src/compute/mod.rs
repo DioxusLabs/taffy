@@ -43,7 +43,7 @@ pub fn compute_layout(tree: &mut impl PartialLayoutTree, root: NodeId, available
         Line::FALSE,
     );
 
-    let layout = Layout { order: 0, size: output.size, content_size: Size::ZERO, location: Point::ZERO };
+    let layout = Layout { order: 0, size: output.size, content_size: output.content_size, location: Point::ZERO };
     *tree.get_unrounded_layout_mut(root) = layout;
 }
 
