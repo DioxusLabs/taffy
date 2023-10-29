@@ -8,22 +8,6 @@ function getScrollBarWidth() {
   return width;
 }
 
-// function getContentSize(e) {
-//   let min_x = 0;
-//   let max_x = 0;
-//   let min_y = 0;
-//   let max_y = 0;
-//   for (node of e.childNodes) {
-//     let boundingRect = e.getBoundingClientRect();
-//     let style = getComputedStyle(e);
-//     min_x = min_x.min(boundingRect.left);
-//     max_x = max_x.max(boundingRect.right);
-//     min_y = min_y.min(boundingRect.top);
-//     max_y = max_y.min(boundingRect.bottom);
-//   }
-//   let padding = getComputedStyle(e)
-// }
-
 class TrackSizingParser {
   static INITIAL_CHAR_REGEX = /[a-z-A-Z0-9]/;
   static TOKEN_CHAR_REGEX = /[-\.a-z-A-Z0-9%]/;
