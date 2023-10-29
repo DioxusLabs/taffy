@@ -21,17 +21,37 @@ serde = { version = "1.0", optional = true, features = ["serde_derive"] }
 slotmap = { version = "1.0.6", optional = true }
 grid = { version = "0.11.0", default-features = false, optional = true }
 
+### FEATURES #################################################################
+
 [features]
-default = ["std", "flexbox", "grid", "block_layout", "taffy_tree"]
+default = ["std", "taffy_tree", "flexbox", "grid", "block_layout"]
+
+### Algorithms 
+
+# Enables the Block layout algorithm
 block_layout = []
+# Enables the Flexbox layout algorithm
 flexbox = []
+# Enables the CSS Grid layout algorithm
 grid = ["alloc", "dep:grid"]
-alloc = []
-std = ["num-traits/std", "grid?/std"]
-serde = ["dep:serde"]
-debug = ["std"]
-profile = ["std"]
+
+### Taffy Tree
+
+# Enable the built-in Taffy node tree
 taffy_tree = ["dep:slotmap"]
+
+### Other
+
+# Add serde derives to Style structs
+serde = ["dep:serde"]
+# Allow Taffy to depend on the standard library
+std = ["num-traits/std", "grid?/std"]
+# Allow Taffy to depend on the alloc library
+alloc = []
+# Internal featyre for debugging
+debug = ["std"]
+# Internal feature for profiling
+profile = ["std"]
 
 [dev-dependencies]
 serde_json = "1.0.93"
