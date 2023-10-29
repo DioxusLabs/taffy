@@ -1,5 +1,15 @@
 # Release Notes
 
+## 0.3.17
+
+### Added
+
+- Added `total_node_count` method to the `Taffy` struct. Returns the total number of nodes in the tree.
+
+### Fixes
+
+- Flexbox: fix O(n^2) order lookup (#537). Greatly improves layout performance on wide trees.
+
 ## 0.3.16
 
 ### Fixes
