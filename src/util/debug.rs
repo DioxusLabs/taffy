@@ -23,6 +23,7 @@ fn print_node(tree: &impl LayoutTree, node: NodeId, has_sibling: bool, lines_str
 
     let display = match (num_children, style.display) {
         (_, style::Display::None) => "NONE",
+        (_, style::Display::Contents) => "CONTENTS",
         (0, _) => "LEAF",
         #[cfg(feature = "block_layout")]
         (_, style::Display::Block) => "BLOCK",
@@ -48,7 +49,8 @@ fn print_node(tree: &impl LayoutTree, node: NodeId, has_sibling: bool, lines_str
     let new_string = lines_string + bar;
 
     // Recurse into children
-    for (index, child) in tree.child_ids(node).enumerate() {
+    let child_ids: Vec<NodeId> = tree.child_ids(node).collect();
+    for (index, child) in child_ids.into_iter().enumerate() {
         let has_sibling = index < num_children - 1;
         print_node(tree, child, has_sibling, new_string.clone());
     }

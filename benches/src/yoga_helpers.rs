@@ -187,6 +187,7 @@ fn apply_taffy_style(node: &mut yg::Node, style: &tf::Style) {
     node.set_display(match style.display {
         tf::Display::None => yg::Display::None,
         tf::Display::Flex => yg::Display::Flex,
+        tf::Display::Contents => panic!("Yoga does not support display: contents"),
         tf::Display::Grid => panic!("Yoga does not support CSS Grid layout"),
         tf::Display::Block => panic!("Yoga does not support CSS Block layout"),
     });
