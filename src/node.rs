@@ -350,6 +350,11 @@ impl Taffy {
         Ok(self.children[parent][child_index])
     }
 
+    /// Returns the total number of nodes in the tree
+    pub fn total_node_count(&self) -> usize {
+        self.nodes.len()
+    }
+
     /// Returns the number of children of the `parent` [`Node`]
     pub fn child_count(&self, parent: Node) -> TaffyResult<usize> {
         Ok(self.children[parent].len())
