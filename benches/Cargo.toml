@@ -14,9 +14,10 @@ license = "MIT"
 
 [dependencies]
 criterion = "0.5"
-taffy = { path = ".." }
 rand = { version = "0.8.5" }
 rand_chacha = "0.3.1"
+taffy = { path = ".." }
+taffy_03 = { package = "taffy", version = "0.3", optional = true }
 yoga = { version = "0.4.0", optional = true }
 ordered-float = { version = "3.4.0", optional = true }
 slotmap = { version = "1.0.6", optional = true }
@@ -24,6 +25,7 @@ slotmap = { version = "1.0.6", optional = true }
 [features]
 yoga = ["dep:yoga", "dep:slotmap", "dep:ordered-float"]
 yoga-super-deep = ["yoga"]
+taffy03 = ["dep:taffy_03"]
 small = []
 large = []
 

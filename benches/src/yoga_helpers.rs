@@ -30,6 +30,7 @@ pub struct YogaTreeBuilder<R: Rng, G: GenStyle<TaffyStyle>> {
 
 // Implement the BuildTree trait
 impl<R: Rng, G: GenStyle<TaffyStyle>> BuildTree<R, G> for YogaTreeBuilder<R, G> {
+    const NAME: &'static str = "Yoga";
     type Tree = yg::YogaTree;
     type Node = DefaultKey;
 
@@ -37,6 +38,14 @@ impl<R: Rng, G: GenStyle<TaffyStyle>> BuildTree<R, G> for YogaTreeBuilder<R, G> 
         let mut tree = SlotMap::new();
         let root = create_yg_node(&mut tree, &style_generator.create_root_style(&mut rng), &[]);
         YogaTreeBuilder { rng, style_generator, tree, root }
+    }
+
+    fn compute_layout_inner(&mut self, available_width: Option<f32>, available_height: Option<f32>) {
+        self.tree[self.root].calculate_layout(
+            available_width.unwrap_or(f32::INFINITY),
+            available_height.unwrap_or(f32::INFINITY),
+            yg::Direction::LTR,
+        )
     }
 
     fn random_usize(&mut self, range: impl SampleRange<usize>) -> usize {
