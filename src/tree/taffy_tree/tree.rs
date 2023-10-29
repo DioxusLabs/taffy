@@ -158,22 +158,11 @@ where
                     let node_key = node.into();
                     let style = &tree.taffy.nodes[node_key].style;
                     let needs_measure = tree.taffy.nodes[node_key].needs_measure;
-                    if needs_measure {
-                        let node_context = Some(&mut tree.taffy.node_context_data[node_key]);
-                        compute_leaf_layout(
-                            inputs,
-                            style,
-                            Some(|known_dimensions, available_space| {
-                                (tree.measure_function)(known_dimensions, available_space, node, node_context)
-                            }),
-                        )
-                    } else {
-                        /// Type inference gets confused because we're just passing None here. So we give
-                        /// it a concrete type to work with (even though we never construct the inner type)
-                        type DummyMeasureFunction = Option<fn(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32>>;
-                        let measure_function: DummyMeasureFunction = None;
-                        compute_leaf_layout(inputs, style, measure_function)
-                    }
+                    let measure_function = needs_measure.then_some(|known_dimensions, available_space| {
+                        let node_context = tree.taffy.node_context_data.get_mut(node_key);
+                        (tree.measure_function)(known_dimensions, available_space, node, node_context)
+                    });
+                    compute_leaf_layout(inputs, style, measure_function)
                 }
             }
         })
