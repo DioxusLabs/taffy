@@ -34,6 +34,8 @@ block_layout = []
 flexbox = []
 # Enables the CSS Grid layout algorithm
 grid = ["alloc", "dep:grid"]
+# Causes all algorithms to compute and output a content size for each node
+content_size = []
 
 ### Taffy Tree
 
