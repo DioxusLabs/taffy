@@ -1711,6 +1711,7 @@ fn calculate_flex_item(
     total_offset_main: &mut f32,
     total_offset_cross: f32,
     line_offset_cross: f32,
+    #[cfg(feature = "content_size")]
     total_content_size: &mut Size<f32>,
     container_size: Size<f32>,
     node_inner_size: Size<Option<f32>>,
@@ -1756,22 +1757,25 @@ fn calculate_flex_item(
 
     *total_offset_main += item.offset_main + item.margin.main_axis_sum(direction) + size.main(direction);
 
-    let size_content_size_contribution = Size {
-        width: match item.overflow.x {
-            Overflow::Visible => f32_max(size.width, content_size.width),
-            _ => size.width,
-        },
-        height: match item.overflow.y {
-            Overflow::Visible => f32_max(size.height, content_size.height),
-            _ => size.height,
-        },
-    };
-    if size_content_size_contribution.width > 0.0 && size_content_size_contribution.height > 0.0 {
-        let content_size_contribution = Size {
-            width: location.x + size_content_size_contribution.width,
-            height: location.y + size_content_size_contribution.height,
+    #[cfg(feature = "content_size")]
+    {
+        let size_content_size_contribution = Size {
+            width: match item.overflow.x {
+                Overflow::Visible => f32_max(size.width, content_size.width),
+                _ => size.width,
+            },
+            height: match item.overflow.y {
+                Overflow::Visible => f32_max(size.height, content_size.height),
+                _ => size.height,
+            },
         };
-        *total_content_size = total_content_size.f32_max(content_size_contribution);
+        if size_content_size_contribution.width > 0.0 && size_content_size_contribution.height > 0.0 {
+            let content_size_contribution = Size {
+                width: location.x + size_content_size_contribution.width,
+                height: location.y + size_content_size_contribution.height,
+            };
+            *total_content_size = total_content_size.f32_max(content_size_contribution);
+        }
     }
 }
 
@@ -1781,6 +1785,7 @@ fn calculate_layout_line(
     tree: &mut impl PartialLayoutTree,
     line: &mut FlexLine,
     total_offset_cross: &mut f32,
+    #[cfg(feature = "content_size")]
     content_size: &mut Size<f32>,
     container_size: Size<f32>,
     node_inner_size: Size<Option<f32>>,
@@ -1798,6 +1803,7 @@ fn calculate_layout_line(
                 &mut total_offset_main,
                 *total_offset_cross,
                 line_offset_cross,
+                #[cfg(feature = "content_size")]
                 content_size,
                 container_size,
                 node_inner_size,
@@ -1812,6 +1818,7 @@ fn calculate_layout_line(
                 &mut total_offset_main,
                 *total_offset_cross,
                 line_offset_cross,
+                #[cfg(feature = "content_size")]
                 content_size,
                 container_size,
                 node_inner_size,
@@ -1831,6 +1838,8 @@ fn final_layout_pass(
     constants: &AlgoConstants,
 ) -> Size<f32> {
     let mut total_offset_cross = constants.content_box_inset.cross_start(constants.dir);
+
+    #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut content_size = Size::ZERO;
 
     if constants.is_wrap_reverse {
@@ -1839,6 +1848,7 @@ fn final_layout_pass(
                 tree,
                 line,
                 &mut total_offset_cross,
+                #[cfg(feature = "content_size")]
                 &mut content_size,
                 constants.container_size,
                 constants.node_inner_size,
@@ -1852,6 +1862,7 @@ fn final_layout_pass(
                 tree,
                 line,
                 &mut total_offset_cross,
+                #[cfg(feature = "content_size")]
                 &mut content_size,
                 constants.container_size,
                 constants.node_inner_size,
@@ -1873,6 +1884,8 @@ fn perform_absolute_layout_on_absolute_children(
 ) -> Size<f32> {
     let container_width = constants.container_size.width;
     let container_height = constants.container_size.height;
+
+    #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut content_size = Size::ZERO;
 
     for order in 0..tree.child_count(node) {
@@ -1884,7 +1897,9 @@ fn perform_absolute_layout_on_absolute_children(
             continue;
         }
 
+        #[cfg(feature = "content_size")]
         let overflow = child_style.overflow;
+
         let aspect_ratio = child_style.aspect_ratio;
         let align_self = child_style.align_self.unwrap_or(constants.align_items);
         let margin = child_style.margin.map(|margin| margin.resolve_to_option(container_width));
@@ -2073,22 +2088,26 @@ fn perform_absolute_layout_on_absolute_children(
         *tree.get_unrounded_layout_mut(child) =
             Layout { order: order as u32, size: final_size, content_size: layout_output.content_size, location };
 
-        let size_content_size_contribution = Size {
-            width: match overflow.x {
-                Overflow::Visible => f32_max(final_size.width, layout_output.content_size.width),
-                _ => final_size.width,
-            },
-            height: match overflow.y {
-                Overflow::Visible => f32_max(final_size.height, layout_output.content_size.height),
-                _ => final_size.height,
-            },
-        };
-        if size_content_size_contribution.width > 0.0 && size_content_size_contribution.height > 0.0 {
-            let content_size_contribution = Size {
-                width: location.x + size_content_size_contribution.width,
-                height: location.y + size_content_size_contribution.height,
+
+        #[cfg(feature = "content_size")]
+        {   
+            let size_content_size_contribution = Size {
+                width: match overflow.x {
+                    Overflow::Visible => f32_max(final_size.width, layout_output.content_size.width),
+                    _ => final_size.width,
+                },
+                height: match overflow.y {
+                    Overflow::Visible => f32_max(final_size.height, layout_output.content_size.height),
+                    _ => final_size.height,
+                },
             };
-            content_size = content_size.f32_max(content_size_contribution);
+            if size_content_size_contribution.width > 0.0 && size_content_size_contribution.height > 0.0 {
+                let content_size_contribution = Size {
+                    width: location.x + size_content_size_contribution.width,
+                    height: location.y + size_content_size_contribution.height,
+                };
+                content_size = content_size.f32_max(content_size_contribution);
+            }
         }
     }
 
