@@ -399,6 +399,7 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
 
     // 9. Size, Align, and Position Grid Items
 
+    #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut item_content_size_contribution = Size::ZERO;
 
     // Sort items back into original order to allow them to be matched up with styles
@@ -414,6 +415,7 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
             left: columns[item.column_indexes.start as usize + 1].offset,
             right: columns[item.column_indexes.end as usize].offset,
         };
+        #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
         let content_size_contribution = align_and_position_item(
             tree,
             item.node,
@@ -422,7 +424,10 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
             container_alignment_styles,
             item.baseline_shim,
         );
-        item_content_size_contribution = item_content_size_contribution.f32_max(content_size_contribution);
+        #[cfg(feature = "content_size")]
+        {
+            item_content_size_contribution = item_content_size_contribution.f32_max(content_size_contribution);
+        }
     }
 
     // Position hidden and absolutely positioned children
@@ -480,9 +485,14 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
                     .unwrap_or(container_border_box.width - border.right),
             };
             // TODO: Baseline alignment support for absolutely positioned items (should check if is actuallty specified)
+            #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
             let content_size_contribution =
                 align_and_position_item(tree, child, order, grid_area, container_alignment_styles, 0.0);
-            item_content_size_contribution = item_content_size_contribution.f32_max(content_size_contribution);
+            #[cfg(feature = "content_size")]
+            {
+                item_content_size_contribution = item_content_size_contribution.f32_max(content_size_contribution);
+            }
+
             order += 1;
         }
     });

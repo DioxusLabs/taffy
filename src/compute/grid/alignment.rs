@@ -2,10 +2,13 @@
 use super::types::GridTrack;
 use crate::compute::common::alignment::compute_alignment_offset;
 use crate::geometry::{InBothAbsAxis, Line, Point, Rect, Size};
-use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Overflow, Position};
+use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Position};
 use crate::tree::{Layout, NodeId, PartialLayoutTree, PartialLayoutTreeExt, SizingMode};
 use crate::util::sys::f32_max;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
+
+#[cfg_attr(not(feature = "content_size"), allow(unused_imports))]
+use crate::style::Overflow;
 
 /// Align the grid tracks within the grid according to the align-content (rows) or
 /// justify-content (columns) property. This only does anything if the size of the
@@ -61,6 +64,8 @@ pub(super) fn align_and_position_item(
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
 
     let style = tree.get_style(node);
+
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let overflow = style.overflow;
     let aspect_ratio = style.aspect_ratio;
     let justify_self = style.justify_self;
@@ -206,23 +211,28 @@ pub(super) fn align_and_position_item(
         location: Point { x, y },
     };
 
-    let size_content_size_contribution = Size {
-        width: match overflow.x {
-            Overflow::Visible => f32_max(width, layout_output.content_size.width),
-            _ => width,
-        },
-        height: match overflow.y {
-            Overflow::Visible => f32_max(height, layout_output.content_size.height),
-            _ => height,
-        },
-    };
-    let content_size_contribution =
-        if size_content_size_contribution.width > 0.0 && size_content_size_contribution.height > 0.0 {
-            Size { width: x + size_content_size_contribution.width, height: y + size_content_size_contribution.height }
-        } else {
-            Size::ZERO
+    #[cfg(feature = "content_size")]
+    {
+        let size_content_size_contribution = Size {
+            width: match overflow.x {
+                Overflow::Visible => f32_max(width, layout_output.content_size.width),
+                _ => width,
+            },
+            height: match overflow.y {
+                Overflow::Visible => f32_max(height, layout_output.content_size.height),
+                _ => height,
+            },
         };
-    content_size_contribution
+        let content_size_contribution =
+            if size_content_size_contribution.width > 0.0 && size_content_size_contribution.height > 0.0 {
+                Size { width: x + size_content_size_contribution.width, height: y + size_content_size_contribution.height }
+            } else {
+                Size::ZERO
+            };
+        content_size_contribution
+    }
+    #[cfg(not(feature = "content_size"))]
+    Size::ZERO
 }
 
 /// Align and size a grid item along a single axis
