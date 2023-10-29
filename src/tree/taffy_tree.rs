@@ -1,6 +1,4 @@
-//! UI node types and related data structures.
-//!
-//! Layouts are composed of multiple nodes, which live in a tree-like data structure.
+//! Contains [Taffy](crate::tree::Taffy): the default implementation of [LayoutTree](crate::tree::LayoutTree), and the error type for Taffy.
 use slotmap::{DefaultKey, SlotMap, SparseSecondaryMap};
 
 use crate::geometry::Size;
@@ -17,7 +15,46 @@ use crate::compute::compute_flexbox_layout;
 use crate::compute::compute_grid_layout;
 use crate::compute::{compute_cached_layout, compute_hidden_layout, compute_layout, compute_leaf_layout, round_layout};
 
-use super::{TaffyError, TaffyResult};
+/// The error Taffy generates on invalid operations
+pub type TaffyResult<T> = Result<T, TaffyError>;
+
+/// An error that occurs while trying to access or modify a node's children by index.
+#[derive(Debug)]
+pub enum TaffyError {
+    /// The parent node does not have a child at `child_index`. It only has `child_count` children
+    ChildIndexOutOfBounds {
+        /// The parent node whose child was being looked up
+        parent: NodeId,
+        /// The index that was looked up
+        child_index: usize,
+        /// The total number of children the parent has
+        child_count: usize,
+    },
+    /// The parent node was not found in the [`Taffy`](crate::Taffy) instance.
+    InvalidParentNode(NodeId),
+    /// The child node was not found in the [`Taffy`](crate::Taffy) instance.
+    InvalidChildNode(NodeId),
+    /// The supplied node was not found in the [`Taffy`](crate::Taffy) instance.
+    InvalidInputNode(NodeId),
+}
+
+impl core::fmt::Display for TaffyError {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        match self {
+            TaffyError::ChildIndexOutOfBounds { parent, child_index, child_count } => {
+                write!(f, "Index (is {child_index}) should be < child_count ({child_count}) for parent node {parent:?}")
+            }
+            TaffyError::InvalidParentNode(parent) => {
+                write!(f, "Parent Node {parent:?} is not in the Taffy instance")
+            }
+            TaffyError::InvalidChildNode(child) => write!(f, "Child Node {child:?} is not in the Taffy instance"),
+            TaffyError::InvalidInputNode(node) => write!(f, "Supplied Node {node:?} is not in the Taffy instance"),
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for TaffyError {}
 
 /// Global configuration values for a Taffy instance
 pub(crate) struct TaffyConfig {
@@ -158,22 +195,11 @@ where
                     let node_key = node.into();
                     let style = &tree.taffy.nodes[node_key].style;
                     let needs_measure = tree.taffy.nodes[node_key].needs_measure;
-                    if needs_measure {
-                        let node_context = Some(&mut tree.taffy.node_context_data[node_key]);
-                        compute_leaf_layout(
-                            inputs,
-                            style,
-                            Some(|known_dimensions, available_space| {
-                                (tree.measure_function)(known_dimensions, available_space, node, node_context)
-                            }),
-                        )
-                    } else {
-                        /// Type inference gets confused because we're just passing None here. So we give
-                        /// it a concrete type to work with (even though we never construct the inner type)
-                        type DummyMeasureFunction = Option<fn(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32>>;
-                        let measure_function: DummyMeasureFunction = None;
-                        compute_leaf_layout(inputs, style, measure_function)
-                    }
+                    let measure_function = needs_measure.then_some(|known_dimensions, available_space| {
+                        let node_context = tree.taffy.node_context_data.get_mut(node_key);
+                        (tree.measure_function)(known_dimensions, available_space, node, node_context)
+                    });
+                    compute_leaf_layout(inputs, style, measure_function)
                 }
             }
         })
