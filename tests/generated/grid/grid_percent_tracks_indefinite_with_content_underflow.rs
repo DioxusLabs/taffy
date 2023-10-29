@@ -41,11 +41,13 @@ fn grid_percent_tracks_indefinite_with_content_underflow() {
     println!("\nComputed tree:");
     taffy.print_tree(node);
     println!();
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert_eq!(size.width, 100f32, "width of node {:?}. Expected {}. Actual {}", node, 100f32, size.width);
     assert_eq!(size.height, 100f32, "height of node {:?}. Expected {}. Actual {}", node, 100f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node, 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node, 0f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -54,6 +56,7 @@ fn grid_percent_tracks_indefinite_with_content_underflow() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -62,11 +65,13 @@ fn grid_percent_tracks_indefinite_with_content_underflow() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node0).unwrap();
     assert_eq!(size.width, 100f32, "width of node {:?}. Expected {}. Actual {}", node0, 100f32, size.width);
     assert_eq!(size.height, 100f32, "height of node {:?}. Expected {}. Actual {}", node0, 100f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node0, 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node0, 0f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -75,6 +80,7 @@ fn grid_percent_tracks_indefinite_with_content_underflow() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -83,11 +89,13 @@ fn grid_percent_tracks_indefinite_with_content_underflow() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node1).unwrap();
     assert_eq!(size.width, 10f32, "width of node {:?}. Expected {}. Actual {}", node1, 10f32, size.width);
     assert_eq!(size.height, 30f32, "height of node {:?}. Expected {}. Actual {}", node1, 30f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node1, 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node1, 0f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -96,6 +104,7 @@ fn grid_percent_tracks_indefinite_with_content_underflow() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -104,11 +113,13 @@ fn grid_percent_tracks_indefinite_with_content_underflow() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node2).unwrap();
     assert_eq!(size.width, 20f32, "width of node {:?}. Expected {}. Actual {}", node2, 20f32, size.width);
     assert_eq!(size.height, 30f32, "height of node {:?}. Expected {}. Actual {}", node2, 30f32, size.height);
     assert_eq!(location.x, 10f32, "x of node {:?}. Expected {}. Actual {}", node2, 10f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node2, 0f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -117,6 +128,7 @@ fn grid_percent_tracks_indefinite_with_content_underflow() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -125,11 +137,13 @@ fn grid_percent_tracks_indefinite_with_content_underflow() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node3).unwrap();
     assert_eq!(size.width, 30f32, "width of node {:?}. Expected {}. Actual {}", node3, 30f32, size.width);
     assert_eq!(size.height, 30f32, "height of node {:?}. Expected {}. Actual {}", node3, 30f32, size.height);
     assert_eq!(location.x, 30f32, "x of node {:?}. Expected {}. Actual {}", node3, 30f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node3, 0f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -138,6 +152,7 @@ fn grid_percent_tracks_indefinite_with_content_underflow() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -146,11 +161,13 @@ fn grid_percent_tracks_indefinite_with_content_underflow() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node4).unwrap();
     assert_eq!(size.width, 10f32, "width of node {:?}. Expected {}. Actual {}", node4, 10f32, size.width);
     assert_eq!(size.height, 60f32, "height of node {:?}. Expected {}. Actual {}", node4, 60f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node4, 0f32, location.x);
     assert_eq!(location.y, 30f32, "y of node {:?}. Expected {}. Actual {}", node4, 30f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -159,6 +176,7 @@ fn grid_percent_tracks_indefinite_with_content_underflow() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -167,11 +185,13 @@ fn grid_percent_tracks_indefinite_with_content_underflow() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node5).unwrap();
     assert_eq!(size.width, 20f32, "width of node {:?}. Expected {}. Actual {}", node5, 20f32, size.width);
     assert_eq!(size.height, 60f32, "height of node {:?}. Expected {}. Actual {}", node5, 60f32, size.height);
     assert_eq!(location.x, 10f32, "x of node {:?}. Expected {}. Actual {}", node5, 10f32, location.x);
     assert_eq!(location.y, 30f32, "y of node {:?}. Expected {}. Actual {}", node5, 30f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -180,6 +200,7 @@ fn grid_percent_tracks_indefinite_with_content_underflow() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -188,11 +209,13 @@ fn grid_percent_tracks_indefinite_with_content_underflow() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node6).unwrap();
     assert_eq!(size.width, 30f32, "width of node {:?}. Expected {}. Actual {}", node6, 30f32, size.width);
     assert_eq!(size.height, 60f32, "height of node {:?}. Expected {}. Actual {}", node6, 60f32, size.height);
     assert_eq!(location.x, 30f32, "x of node {:?}. Expected {}. Actual {}", node6, 30f32, location.x);
     assert_eq!(location.y, 30f32, "y of node {:?}. Expected {}. Actual {}", node6, 30f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -201,6 +224,7 @@ fn grid_percent_tracks_indefinite_with_content_underflow() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,

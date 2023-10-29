@@ -207,11 +207,13 @@ fn android_news_feed() {
     println!("\nComputed tree:");
     taffy.print_tree(node);
     println!();
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert_eq!(size.width, 1080f32, "width of node {:?}. Expected {}. Actual {}", node, 1080f32, size.width);
     assert_eq!(size.height, 240f32, "height of node {:?}. Expected {}. Actual {}", node, 240f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node, 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node, 0f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -220,6 +222,7 @@ fn android_news_feed() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -228,11 +231,13 @@ fn android_news_feed() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node0).unwrap();
     assert_eq!(size.width, 1080f32, "width of node {:?}. Expected {}. Actual {}", node0, 1080f32, size.width);
     assert_eq!(size.height, 240f32, "height of node {:?}. Expected {}. Actual {}", node0, 240f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node0, 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node0, 0f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -241,6 +246,7 @@ fn android_news_feed() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -249,11 +255,13 @@ fn android_news_feed() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node00).unwrap();
     assert_eq!(size.width, 1080f32, "width of node {:?}. Expected {}. Actual {}", node00, 1080f32, size.width);
     assert_eq!(size.height, 240f32, "height of node {:?}. Expected {}. Actual {}", node00, 240f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node00, 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node00, 0f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -262,6 +270,7 @@ fn android_news_feed() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -270,11 +279,13 @@ fn android_news_feed() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node000).unwrap();
     assert_eq!(size.width, 1080f32, "width of node {:?}. Expected {}. Actual {}", node000, 1080f32, size.width);
     assert_eq!(size.height, 144f32, "height of node {:?}. Expected {}. Actual {}", node000, 144f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node000, 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node000, 0f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -283,6 +294,7 @@ fn android_news_feed() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -291,11 +303,13 @@ fn android_news_feed() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node0000).unwrap();
     assert_eq!(size.width, 1044f32, "width of node {:?}. Expected {}. Actual {}", node0000, 1044f32, size.width);
     assert_eq!(size.height, 120f32, "height of node {:?}. Expected {}. Actual {}", node0000, 120f32, size.height);
     assert_eq!(location.x, 36f32, "x of node {:?}. Expected {}. Actual {}", node0000, 36f32, location.x);
     assert_eq!(location.y, 24f32, "y of node {:?}. Expected {}. Actual {}", node0000, 24f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -304,6 +318,7 @@ fn android_news_feed() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -312,11 +327,13 @@ fn android_news_feed() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node00000).unwrap();
     assert_eq!(size.width, 120f32, "width of node {:?}. Expected {}. Actual {}", node00000, 120f32, size.width);
     assert_eq!(size.height, 120f32, "height of node {:?}. Expected {}. Actual {}", node00000, 120f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node00000, 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node00000, 0f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -325,6 +342,7 @@ fn android_news_feed() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -333,11 +351,13 @@ fn android_news_feed() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node000000).unwrap();
     assert_eq!(size.width, 120f32, "width of node {:?}. Expected {}. Actual {}", node000000, 120f32, size.width);
     assert_eq!(size.height, 120f32, "height of node {:?}. Expected {}. Actual {}", node000000, 120f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node000000, 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node000000, 0f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -346,6 +366,7 @@ fn android_news_feed() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -354,11 +375,13 @@ fn android_news_feed() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node00001).unwrap();
     assert_eq!(size.width, 72f32, "width of node {:?}. Expected {}. Actual {}", node00001, 72f32, size.width);
     assert_eq!(size.height, 39f32, "height of node {:?}. Expected {}. Actual {}", node00001, 39f32, size.height);
     assert_eq!(location.x, 120f32, "x of node {:?}. Expected {}. Actual {}", node00001, 120f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node00001, 0f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -367,6 +390,7 @@ fn android_news_feed() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -375,11 +399,13 @@ fn android_news_feed() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node000010).unwrap();
     assert_eq!(size.width, 0f32, "width of node {:?}. Expected {}. Actual {}", node000010, 0f32, size.width);
     assert_eq!(size.height, 0f32, "height of node {:?}. Expected {}. Actual {}", node000010, 0f32, size.height);
     assert_eq!(location.x, 36f32, "x of node {:?}. Expected {}. Actual {}", node000010, 36f32, location.x);
     assert_eq!(location.y, 21f32, "y of node {:?}. Expected {}. Actual {}", node000010, 21f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -388,6 +414,7 @@ fn android_news_feed() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -396,11 +423,13 @@ fn android_news_feed() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node000011).unwrap();
     assert_eq!(size.width, 0f32, "width of node {:?}. Expected {}. Actual {}", node000011, 0f32, size.width);
     assert_eq!(size.height, 0f32, "height of node {:?}. Expected {}. Actual {}", node000011, 0f32, size.height);
     assert_eq!(location.x, 36f32, "x of node {:?}. Expected {}. Actual {}", node000011, 36f32, location.x);
     assert_eq!(location.y, 21f32, "y of node {:?}. Expected {}. Actual {}", node000011, 21f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -409,6 +438,7 @@ fn android_news_feed() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -417,11 +447,13 @@ fn android_news_feed() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node001).unwrap();
     assert_eq!(size.width, 1080f32, "width of node {:?}. Expected {}. Actual {}", node001, 1080f32, size.width);
     assert_eq!(size.height, 96f32, "height of node {:?}. Expected {}. Actual {}", node001, 96f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node001, 0f32, location.x);
     assert_eq!(location.y, 144f32, "y of node {:?}. Expected {}. Actual {}", node001, 144f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -430,6 +462,7 @@ fn android_news_feed() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -438,11 +471,13 @@ fn android_news_feed() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node0010).unwrap();
     assert_eq!(size.width, 906f32, "width of node {:?}. Expected {}. Actual {}", node0010, 906f32, size.width);
     assert_eq!(size.height, 72f32, "height of node {:?}. Expected {}. Actual {}", node0010, 72f32, size.height);
     assert_eq!(location.x, 174f32, "x of node {:?}. Expected {}. Actual {}", node0010, 174f32, location.x);
     assert_eq!(location.y, 24f32, "y of node {:?}. Expected {}. Actual {}", node0010, 24f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -451,6 +486,7 @@ fn android_news_feed() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -459,11 +495,13 @@ fn android_news_feed() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node00100).unwrap();
     assert_eq!(size.width, 72f32, "width of node {:?}. Expected {}. Actual {}", node00100, 72f32, size.width);
     assert_eq!(size.height, 72f32, "height of node {:?}. Expected {}. Actual {}", node00100, 72f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node00100, 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node00100, 0f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -472,6 +510,7 @@ fn android_news_feed() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -480,11 +519,13 @@ fn android_news_feed() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node001000).unwrap();
     assert_eq!(size.width, 72f32, "width of node {:?}. Expected {}. Actual {}", node001000, 72f32, size.width);
     assert_eq!(size.height, 72f32, "height of node {:?}. Expected {}. Actual {}", node001000, 72f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node001000, 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node001000, 0f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -493,6 +534,7 @@ fn android_news_feed() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -501,11 +543,13 @@ fn android_news_feed() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node00101).unwrap();
     assert_eq!(size.width, 72f32, "width of node {:?}. Expected {}. Actual {}", node00101, 72f32, size.width);
     assert_eq!(size.height, 39f32, "height of node {:?}. Expected {}. Actual {}", node00101, 39f32, size.height);
     assert_eq!(location.x, 72f32, "x of node {:?}. Expected {}. Actual {}", node00101, 72f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node00101, 0f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -514,6 +558,7 @@ fn android_news_feed() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -522,11 +567,13 @@ fn android_news_feed() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node001010).unwrap();
     assert_eq!(size.width, 0f32, "width of node {:?}. Expected {}. Actual {}", node001010, 0f32, size.width);
     assert_eq!(size.height, 0f32, "height of node {:?}. Expected {}. Actual {}", node001010, 0f32, size.height);
     assert_eq!(location.x, 36f32, "x of node {:?}. Expected {}. Actual {}", node001010, 36f32, location.x);
     assert_eq!(location.y, 21f32, "y of node {:?}. Expected {}. Actual {}", node001010, 21f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -535,6 +582,7 @@ fn android_news_feed() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -543,11 +591,13 @@ fn android_news_feed() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node001011).unwrap();
     assert_eq!(size.width, 0f32, "width of node {:?}. Expected {}. Actual {}", node001011, 0f32, size.width);
     assert_eq!(size.height, 0f32, "height of node {:?}. Expected {}. Actual {}", node001011, 0f32, size.height);
     assert_eq!(location.x, 36f32, "x of node {:?}. Expected {}. Actual {}", node001011, 36f32, location.x);
     assert_eq!(location.y, 21f32, "y of node {:?}. Expected {}. Actual {}", node001011, 21f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -556,6 +606,7 @@ fn android_news_feed() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,

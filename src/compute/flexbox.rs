@@ -1711,8 +1711,7 @@ fn calculate_flex_item(
     total_offset_main: &mut f32,
     total_offset_cross: f32,
     line_offset_cross: f32,
-    #[cfg(feature = "content_size")]
-    total_content_size: &mut Size<f32>,
+    #[cfg(feature = "content_size")] total_content_size: &mut Size<f32>,
     container_size: Size<f32>,
     node_inner_size: Size<Option<f32>>,
     direction: FlexDirection,
@@ -1785,8 +1784,7 @@ fn calculate_layout_line(
     tree: &mut impl PartialLayoutTree,
     line: &mut FlexLine,
     total_offset_cross: &mut f32,
-    #[cfg(feature = "content_size")]
-    content_size: &mut Size<f32>,
+    #[cfg(feature = "content_size")] content_size: &mut Size<f32>,
     container_size: Size<f32>,
     node_inner_size: Size<Option<f32>>,
     padding_border: Rect<f32>,
@@ -2088,9 +2086,8 @@ fn perform_absolute_layout_on_absolute_children(
         *tree.get_unrounded_layout_mut(child) =
             Layout { order: order as u32, size: final_size, content_size: layout_output.content_size, location };
 
-
         #[cfg(feature = "content_size")]
-        {   
+        {
             let size_content_size_contribution = Size {
                 width: match overflow.x {
                     Overflow::Visible => f32_max(final_size.width, layout_output.content_size.width),

@@ -69,11 +69,13 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
     println!("\nComputed tree:");
     taffy.print_tree(node);
     println!();
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert_eq!(size.width, 500f32, "width of node {:?}. Expected {}. Actual {}", node, 500f32, size.width);
     assert_eq!(size.height, 500f32, "height of node {:?}. Expected {}. Actual {}", node, 500f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node, 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node, 0f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -82,6 +84,7 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -90,11 +93,13 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node0).unwrap();
     assert_eq!(size.width, 85f32, "width of node {:?}. Expected {}. Actual {}", node0, 85f32, size.width);
     assert_eq!(size.height, 80f32, "height of node {:?}. Expected {}. Actual {}", node0, 80f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node0, 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node0, 0f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -103,6 +108,7 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -111,11 +117,13 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node00).unwrap();
     assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node00, 40f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node00, 40f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node00, 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node00, 0f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -124,6 +132,7 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -132,11 +141,13 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node000).unwrap();
     assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node000, 40f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node000, 40f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node000, 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node000, 0f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -145,6 +156,7 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -153,11 +165,13 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node01).unwrap();
     assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node01, 40f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node01, 40f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node01, 0f32, location.x);
     assert_eq!(location.y, 40f32, "y of node {:?}. Expected {}. Actual {}", node01, 40f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -166,6 +180,7 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -174,11 +189,13 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node010).unwrap();
     assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node010, 40f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node010, 40f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node010, 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node010, 0f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -187,6 +204,7 @@ fn wrap_nodes_with_content_sizing_overflowing_margin() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,

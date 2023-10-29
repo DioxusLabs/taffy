@@ -259,24 +259,30 @@ fn generate_assertions(ident: &str, node: &Value, use_rounding: bool) -> TokenSt
 
     if use_rounding {
         quote!(
+            #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
             let layout @ Layout { size, location, .. } = taffy.layout(#ident).unwrap();
             assert_eq!(size.width, #width, "width of node {:?}. Expected {}. Actual {}", #ident,  #width, size.width);
             assert_eq!(size.height, #height, "height of node {:?}. Expected {}. Actual {}", #ident,  #height, size.height);
             assert_eq!(location.x, #x, "x of node {:?}. Expected {}. Actual {}", #ident,  #x, location.x);
             assert_eq!(location.y, #y, "y of node {:?}. Expected {}. Actual {}", #ident,  #y, location.y);
+            #[cfg(feature = "content_size")]
             assert_eq!(layout.scroll_width(), #scroll_width, "scroll_width of node {:?}. Expected {}. Actual {}", #ident,  #scroll_width, layout.scroll_width());
+            #[cfg(feature = "content_size")]
             assert_eq!(layout.scroll_height(), #scroll_height, "scroll_height of node {:?}. Expected {}. Actual {}", #ident,  #scroll_height, layout.scroll_height());
 
             #children
         )
     } else {
         quote!(
+            #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
             let layout @ Layout { size, location, .. } = taffy.layout(#ident).unwrap();
             assert!(size.width - #width < 0.1, "width of node {:?}. Expected {}. Actual {}", #ident,  #width, size.width);
             assert!(size.height - #height < 0.1, "height of node {:?}. Expected {}. Actual {}", #ident,  #height, size.height);
             assert!(location.x - #x < 0.1, "x of node {:?}. Expected {}. Actual {}", #ident,  #x, location.x);
             assert!(location.y - #y < 0.1, "y of node {:?}. Expected {}. Actual {}", #ident,  #y, location.y);
+            #[cfg(feature = "content_size")]
             assert!(layout.scroll_width() - #scroll_width < 0.1, "scroll_width of node {:?}. Expected {}. Actual {}", #ident,  #scroll_width, layout.scroll_width());
+            #[cfg(feature = "content_size")]
             assert!(layout.scroll_height() - #scroll_height < 0.1, "scroll_height of node {:?}. Expected {}. Actual {}", #ident,  #scroll_height, layout.scroll_height());
 
             #children

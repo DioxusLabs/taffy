@@ -44,11 +44,13 @@ fn grid_justify_content_start_with_padding_border() {
     println!("\nComputed tree:");
     taffy.print_tree(node);
     println!();
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert_eq!(size.width, 200f32, "width of node {:?}. Expected {}. Actual {}", node, 200f32, size.width);
     assert_eq!(size.height, 200f32, "height of node {:?}. Expected {}. Actual {}", node, 200f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node, 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node, 0f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -57,6 +59,7 @@ fn grid_justify_content_start_with_padding_border() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -65,11 +68,13 @@ fn grid_justify_content_start_with_padding_border() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node0).unwrap();
     assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node0, 40f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node0, 40f32, size.height);
     assert_eq!(location.x, 48f32, "x of node {:?}. Expected {}. Actual {}", node0, 48f32, location.x);
     assert_eq!(location.y, 12f32, "y of node {:?}. Expected {}. Actual {}", node0, 12f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -78,6 +83,7 @@ fn grid_justify_content_start_with_padding_border() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -86,11 +92,13 @@ fn grid_justify_content_start_with_padding_border() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node1).unwrap();
     assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node1, 40f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node1, 40f32, size.height);
     assert_eq!(location.x, 88f32, "x of node {:?}. Expected {}. Actual {}", node1, 88f32, location.x);
     assert_eq!(location.y, 12f32, "y of node {:?}. Expected {}. Actual {}", node1, 12f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -99,6 +107,7 @@ fn grid_justify_content_start_with_padding_border() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -107,11 +116,13 @@ fn grid_justify_content_start_with_padding_border() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node2).unwrap();
     assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node2, 40f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node2, 40f32, size.height);
     assert_eq!(location.x, 128f32, "x of node {:?}. Expected {}. Actual {}", node2, 128f32, location.x);
     assert_eq!(location.y, 12f32, "y of node {:?}. Expected {}. Actual {}", node2, 12f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -120,6 +131,7 @@ fn grid_justify_content_start_with_padding_border() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -128,11 +140,13 @@ fn grid_justify_content_start_with_padding_border() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node3).unwrap();
     assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node3, 40f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node3, 40f32, size.height);
     assert_eq!(location.x, 48f32, "x of node {:?}. Expected {}. Actual {}", node3, 48f32, location.x);
     assert_eq!(location.y, 52f32, "y of node {:?}. Expected {}. Actual {}", node3, 52f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -141,6 +155,7 @@ fn grid_justify_content_start_with_padding_border() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -149,11 +164,13 @@ fn grid_justify_content_start_with_padding_border() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node4).unwrap();
     assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node4, 40f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node4, 40f32, size.height);
     assert_eq!(location.x, 88f32, "x of node {:?}. Expected {}. Actual {}", node4, 88f32, location.x);
     assert_eq!(location.y, 52f32, "y of node {:?}. Expected {}. Actual {}", node4, 52f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -162,6 +179,7 @@ fn grid_justify_content_start_with_padding_border() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -170,11 +188,13 @@ fn grid_justify_content_start_with_padding_border() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node5).unwrap();
     assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node5, 40f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node5, 40f32, size.height);
     assert_eq!(location.x, 128f32, "x of node {:?}. Expected {}. Actual {}", node5, 128f32, location.x);
     assert_eq!(location.y, 52f32, "y of node {:?}. Expected {}. Actual {}", node5, 52f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -183,6 +203,7 @@ fn grid_justify_content_start_with_padding_border() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -191,11 +212,13 @@ fn grid_justify_content_start_with_padding_border() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node6).unwrap();
     assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node6, 40f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node6, 40f32, size.height);
     assert_eq!(location.x, 48f32, "x of node {:?}. Expected {}. Actual {}", node6, 48f32, location.x);
     assert_eq!(location.y, 92f32, "y of node {:?}. Expected {}. Actual {}", node6, 92f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -204,6 +227,7 @@ fn grid_justify_content_start_with_padding_border() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -212,11 +236,13 @@ fn grid_justify_content_start_with_padding_border() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node7).unwrap();
     assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node7, 40f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node7, 40f32, size.height);
     assert_eq!(location.x, 88f32, "x of node {:?}. Expected {}. Actual {}", node7, 88f32, location.x);
     assert_eq!(location.y, 92f32, "y of node {:?}. Expected {}. Actual {}", node7, 92f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -225,6 +251,7 @@ fn grid_justify_content_start_with_padding_border() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,
@@ -233,11 +260,13 @@ fn grid_justify_content_start_with_padding_border() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node8).unwrap();
     assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node8, 40f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node8, 40f32, size.height);
     assert_eq!(location.x, 128f32, "x of node {:?}. Expected {}. Actual {}", node8, 128f32, location.x);
     assert_eq!(location.y, 92f32, "y of node {:?}. Expected {}. Actual {}", node8, 92f32, location.y);
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
         0f32,
@@ -246,6 +275,7 @@ fn grid_justify_content_start_with_padding_border() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
         0f32,

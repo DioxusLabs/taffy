@@ -64,6 +64,7 @@ fn grid_percent_items_nested_moderate() {
     println!("\nComputed tree:");
     taffy.print_tree(node);
     println!();
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node).unwrap();
     assert!(size.width - 200f32 < 0.1, "width of node {:?}. Expected {}. Actual {}", node, 200f32, size.width);
     assert!(
@@ -75,6 +76,7 @@ fn grid_percent_items_nested_moderate() {
     );
     assert!(location.x - 0f32 < 0.1, "x of node {:?}. Expected {}. Actual {}", node, 0f32, location.x);
     assert!(location.y - 0f32 < 0.1, "y of node {:?}. Expected {}. Actual {}", node, 0f32, location.y);
+    #[cfg(feature = "content_size")]
     assert!(
         layout.scroll_width() - 0f32 < 0.1,
         "scroll_width of node {:?}. Expected {}. Actual {}",
@@ -82,6 +84,7 @@ fn grid_percent_items_nested_moderate() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert!(
         layout.scroll_height() - 0f32 < 0.1,
         "scroll_height of node {:?}. Expected {}. Actual {}",
@@ -89,6 +92,7 @@ fn grid_percent_items_nested_moderate() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node0).unwrap();
     assert!(size.width - 97f32 < 0.1, "width of node {:?}. Expected {}. Actual {}", node0, 97f32, size.width);
     assert!(
@@ -100,6 +104,7 @@ fn grid_percent_items_nested_moderate() {
     );
     assert!(location.x - 8f32 < 0.1, "x of node {:?}. Expected {}. Actual {}", node0, 8f32, location.x);
     assert!(location.y - 8f32 < 0.1, "y of node {:?}. Expected {}. Actual {}", node0, 8f32, location.y);
+    #[cfg(feature = "content_size")]
     assert!(
         layout.scroll_width() - 0f32 < 0.1,
         "scroll_width of node {:?}. Expected {}. Actual {}",
@@ -107,6 +112,7 @@ fn grid_percent_items_nested_moderate() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert!(
         layout.scroll_height() - 0f32 < 0.1,
         "scroll_height of node {:?}. Expected {}. Actual {}",
@@ -114,6 +120,7 @@ fn grid_percent_items_nested_moderate() {
         0f32,
         layout.scroll_height()
     );
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node00).unwrap();
     assert!(
         size.width - 38.414063f32 < 0.1,
@@ -137,6 +144,7 @@ fn grid_percent_items_nested_moderate() {
         10.078125f32,
         location.y
     );
+    #[cfg(feature = "content_size")]
     assert!(
         layout.scroll_width() - 0f32 < 0.1,
         "scroll_width of node {:?}. Expected {}. Actual {}",
@@ -144,6 +152,7 @@ fn grid_percent_items_nested_moderate() {
         0f32,
         layout.scroll_width()
     );
+    #[cfg(feature = "content_size")]
     assert!(
         layout.scroll_height() - 0f32 < 0.1,
         "scroll_height of node {:?}. Expected {}. Actual {}",
