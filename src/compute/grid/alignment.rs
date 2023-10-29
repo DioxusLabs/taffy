@@ -223,9 +223,7 @@ pub(super) fn align_and_position_item(
                 _ => height,
             },
         };
-        if size_content_size_contribution.width > 0.0
-            && size_content_size_contribution.height > 0.0
-        {
+        if size_content_size_contribution.has_non_zero_area() {
             Size { width: x + size_content_size_contribution.width, height: y + size_content_size_contribution.height }
         } else {
             Size::ZERO

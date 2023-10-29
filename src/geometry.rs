@@ -531,13 +531,21 @@ impl Size<f32> {
     pub const ZERO: Size<f32> = Self { width: 0.0, height: 0.0 };
 
     /// Applies f32_max to each component separately
+    #[inline(always)]
     pub fn f32_max(self, rhs: Size<f32>) -> Size<f32> {
         Size { width: f32_max(self.width, rhs.width), height: f32_max(self.height, rhs.height) }
     }
 
     /// Applies f32_min to each component separately
+    #[inline(always)]
     pub fn f32_min(self, rhs: Size<f32>) -> Size<f32> {
         Size { width: f32_min(self.width, rhs.width), height: f32_min(self.height, rhs.height) }
+    }
+
+    /// Return true if both width and height are greater than 0 else false
+    #[inline(always)]
+    pub fn has_non_zero_area(self) -> bool {
+        self.width > 0.0 && self.height > 0.0
     }
 }
 

@@ -1768,7 +1768,7 @@ fn calculate_flex_item(
                 _ => size.height,
             },
         };
-        if size_content_size_contribution.width > 0.0 && size_content_size_contribution.height > 0.0 {
+        if size_content_size_contribution.has_non_zero_area() {
             let content_size_contribution = Size {
                 width: location.x + size_content_size_contribution.width,
                 height: location.y + size_content_size_contribution.height,
@@ -2098,7 +2098,7 @@ fn perform_absolute_layout_on_absolute_children(
                     _ => final_size.height,
                 },
             };
-            if size_content_size_contribution.width > 0.0 && size_content_size_contribution.height > 0.0 {
+            if size_content_size_contribution.has_non_zero_area() {
                 let content_size_contribution = Size {
                     width: location.x + size_content_size_contribution.width,
                     height: location.y + size_content_size_contribution.height,
