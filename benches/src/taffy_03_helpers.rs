@@ -14,7 +14,7 @@ pub struct Taffy03TreeBuilder<R: Rng, G: GenStyle<TaffyStyle>> {
 
 // Implement the BuildTree trait
 impl<R: Rng, G: GenStyle<TaffyStyle>> BuildTree<R, G> for Taffy03TreeBuilder<R, G> {
-    const NAME : &'static str = "Taffy 0.3";
+    const NAME: &'static str = "Taffy 0.3";
     type Tree = taffy_03::Taffy;
     type Node = taffy_03::prelude::Node;
 
@@ -24,8 +24,9 @@ impl<R: Rng, G: GenStyle<TaffyStyle>> BuildTree<R, G> for Taffy03TreeBuilder<R, 
         Taffy03TreeBuilder { rng, style_generator, tree, root }
     }
 
-    fn compute_layout(&mut self, available_width: Option<f32>, available_height: Option<f32>) {
-        let available_space = taffy_03::geometry::Size { width: available_width.into(), height: available_height.into() };
+    fn compute_layout_inner(&mut self, available_width: Option<f32>, available_height: Option<f32>) {
+        let available_space =
+            taffy_03::geometry::Size { width: available_width.into(), height: available_height.into() };
         self.tree.compute_layout(self.root, available_space).unwrap();
     }
 
@@ -90,8 +91,14 @@ fn convert_style(style: taffy::style::Style) -> taffy_03::style::Style {
         grid_auto_rows: Vec::new(),
         grid_auto_columns: Vec::new(),
         grid_auto_flow: taffy_03::style::GridAutoFlow::Row,
-        grid_row: taffy_03::geometry::Line { start: taffy_03::style::GridPlacement::Auto, end: taffy_03::style::GridPlacement::Auto },
-        grid_column: taffy_03::geometry::Line { start: taffy_03::style::GridPlacement::Auto, end: taffy_03::style::GridPlacement::Auto },
+        grid_row: taffy_03::geometry::Line {
+            start: taffy_03::style::GridPlacement::Auto,
+            end: taffy_03::style::GridPlacement::Auto,
+        },
+        grid_column: taffy_03::geometry::Line {
+            start: taffy_03::style::GridPlacement::Auto,
+            end: taffy_03::style::GridPlacement::Auto,
+        },
     }
 }
 
@@ -105,17 +112,11 @@ fn convert_rect<T, U, F: Fn(T) -> U>(input: taffy::geometry::Rect<T>, map: F) ->
 }
 
 fn convert_size<T, U, F: Fn(T) -> U>(input: taffy::geometry::Size<T>, map: F) -> taffy_03::geometry::Size<U> {
-    taffy_03::geometry::Size {
-        width: map(input.width),
-        height: map(input.height),
-    }
+    taffy_03::geometry::Size { width: map(input.width), height: map(input.height) }
 }
 
 fn convert_point<T, U, F: Fn(T) -> U>(input: taffy::geometry::Point<T>, map: F) -> taffy_03::geometry::Point<U> {
-    taffy_03::geometry::Point {
-        x: map(input.x),
-        y: map(input.y),
-    }
+    taffy_03::geometry::Point { x: map(input.x), y: map(input.y) }
 }
 
 fn convert_dimension(input: taffy::style::Dimension) -> taffy_03::style::Dimension {
@@ -173,4 +174,3 @@ fn convert_flex_wrap(input: taffy::style::FlexWrap) -> taffy_03::style::FlexWrap
         taffy::style::FlexWrap::WrapReverse => taffy_03::style::FlexWrap::WrapReverse,
     }
 }
-

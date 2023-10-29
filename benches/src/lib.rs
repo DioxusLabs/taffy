@@ -20,7 +20,7 @@ use taffy::style::Style as TaffyStyle;
 
 pub const STANDARD_RNG_SEED: u64 = 12345;
 
-pub trait GenStyle<Style: Default> : Clone {
+pub trait GenStyle<Style: Default>: Clone {
     fn create_leaf_style(&mut self, rng: &mut impl Rng) -> Style;
     fn create_container_style(&mut self, rng: &mut impl Rng) -> Style;
     fn create_root_style(&mut self, _rng: &mut impl Rng) -> Style {
@@ -39,14 +39,14 @@ impl GenStyle<TaffyStyle> for FixedStyleGenerator {
     }
 }
 
-pub trait BuildTree<R: Rng, G: GenStyle<TaffyStyle>>: Sized {
-    const NAME : &'static str;
+pub trait BuildTree<R: Rng, G: GenStyle<TaffyStyle>> {
+    const NAME: &'static str;
     type Tree;
     type Node: Clone;
 
     fn with_rng(rng: R, style_generator: G) -> Self;
 
-    fn compute_layout(&mut self, available_width: Option<f32>, available_height: Option<f32>);
+    fn compute_layout_inner(&mut self, available_width: Option<f32>, available_height: Option<f32>);
     fn random_usize(&mut self, range: impl SampleRange<usize>) -> usize;
     fn create_leaf_node(&mut self) -> Self::Node;
     fn create_container_node(&mut self, children: &[Self::Node]) -> Self::Node;
@@ -75,44 +75,6 @@ pub trait BuildTree<R: Rng, G: GenStyle<TaffyStyle>>: Sized {
             })
             .collect()
     }
-
-    /// A helper function to recursively construct a deep tree
-    fn build_super_deep_hierarchy(mut self, depth: u32, nodes_per_level: u32) -> (Self::Tree, Self::Node) {
-        let mut children = Vec::with_capacity(nodes_per_level as usize);
-        for _ in 0..depth {
-            let node_with_children = self.create_container_node(&children);
-
-            children.clear();
-            children.push(node_with_children);
-            for _ in 0..(nodes_per_level - 1) {
-                children.push(self.create_leaf_node())
-            }
-        }
-        self.set_root_children(&children);
-        self.into_tree_and_root()
-    }
-
-    /// A tree with a higher depth for a more realistic scenario
-    fn build_deep_hierarchy(mut self, node_count: u32, branching_factor: u32) -> (Self::Tree, Self::Node) {
-        let children = self.build_deep_tree(node_count, branching_factor);
-        self.set_root_children(&children);
-        self.into_tree_and_root()
-    }
-
-    /// A tree with many children that have shallow depth
-    fn build_flat_hierarchy(mut self, target_node_count: u32) -> (Self::Tree, Self::Node) {
-        let mut children = Vec::new();
-
-        while self.total_node_count() < target_node_count as usize {
-            let count = self.random_usize(1..=4);
-            let sub_children = self.build_n_leaf_nodes(count);
-            let node = self.create_container_node(&sub_children);
-            children.push(node);
-        }
-
-        self.set_root_children(&children);
-        self.into_tree_and_root()
-    }
 }
 
 pub trait BuildTreeExt<G: GenStyle<TaffyStyle>>: BuildTree<ChaCha8Rng, G> {
@@ -129,5 +91,45 @@ pub trait BuildTreeExt<G: GenStyle<TaffyStyle>>: BuildTree<ChaCha8Rng, G> {
         Self: Sized,
     {
         Self::with_seed(STANDARD_RNG_SEED, style_generator)
+    }
+
+    /// A helper function to recursively construct a deep tree
+    fn build_super_deep_hierarchy(&mut self, depth: u32, nodes_per_level: u32) {
+        let mut children = Vec::with_capacity(nodes_per_level as usize);
+        for _ in 0..depth {
+            let node_with_children = self.create_container_node(&children);
+
+            children.clear();
+            children.push(node_with_children);
+            for _ in 0..(nodes_per_level - 1) {
+                children.push(self.create_leaf_node())
+            }
+        }
+        self.set_root_children(&children);
+    }
+
+    /// A tree with a higher depth for a more realistic scenario
+    fn build_deep_hierarchy(&mut self, node_count: u32, branching_factor: u32) {
+        let children = self.build_deep_tree(node_count, branching_factor);
+        self.set_root_children(&children);
+    }
+
+    /// A tree with many children that have shallow depth
+    fn build_flat_hierarchy(&mut self, target_node_count: u32) {
+        let mut children = Vec::new();
+
+        while self.total_node_count() < target_node_count as usize {
+            let count = self.random_usize(1..=4);
+            let sub_children = self.build_n_leaf_nodes(count);
+            let node = self.create_container_node(&sub_children);
+            children.push(node);
+        }
+
+        self.set_root_children(&children);
+    }
+
+    /// Compute layout given a viewport size
+    fn compute_layout(&mut self, available_width: Option<f32>, available_height: Option<f32>) {
+        self.compute_layout_inner(available_width, available_height);
     }
 }

@@ -40,7 +40,7 @@ impl<R: Rng, G: GenStyle<TaffyStyle>> BuildTree<R, G> for YogaTreeBuilder<R, G> 
         YogaTreeBuilder { rng, style_generator, tree, root }
     }
 
-    fn compute_layout(&mut self, available_width: Option<f32>, available_height: Option<f32>) {
+    fn compute_layout_inner(&mut self, available_width: Option<f32>, available_height: Option<f32>) {
         self.tree[self.root].calculate_layout(
             available_width.unwrap_or(f32::INFINITY),
             available_height.unwrap_or(f32::INFINITY),

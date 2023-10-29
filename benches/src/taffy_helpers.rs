@@ -26,7 +26,7 @@ impl<R: Rng, G: GenStyle<TaffyStyle>> BuildTree<R, G> for TaffyTreeBuilder<R, G>
         TaffyTreeBuilder { rng, style_generator, tree, root }
     }
 
-    fn compute_layout(&mut self, available_width: Option<f32>, available_height: Option<f32>) {
+    fn compute_layout_inner(&mut self, available_width: Option<f32>, available_height: Option<f32>) {
         let available_space = taffy::geometry::Size { width: available_width.into(), height: available_height.into() };
         self.tree.compute_layout(self.root, available_space).unwrap();
     }
