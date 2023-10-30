@@ -1747,9 +1747,9 @@ fn calculate_flex_item(
         item.baseline = baseline_offset_main + inner_baseline;
     }
 
-    let location = Point {
-        x: if direction.is_row() { offset_main } else { offset_cross },
-        y: if direction.is_column() { offset_main } else { offset_cross },
+    let location = match direction.is_row() {
+        true => Point { x: offset_main, y: offset_cross },
+        false => Point { x: offset_cross, y: offset_main },
     };
 
     *tree.get_unrounded_layout_mut(item.node) = Layout { order: item.order, size, content_size, location };
@@ -2079,9 +2079,9 @@ fn perform_absolute_layout_on_absolute_children(
             }
         };
 
-        let location = Point {
-            x: if constants.is_row { offset_main } else { offset_cross },
-            y: if constants.is_column { offset_main } else { offset_cross },
+        let location = match constants.is_row {
+            true => Point { x: offset_main, y: offset_cross },
+            false => Point { x: offset_cross, y: offset_main },
         };
         *tree.get_unrounded_layout_mut(child) =
             Layout { order: order as u32, size: final_size, content_size: layout_output.content_size, location };
