@@ -1,7 +1,11 @@
 //! Contains both [a high-level interface to Taffy](crate::Taffy) using a ready-made node tree, and [a trait for defining a custom node trees](crate::tree::LayoutTree) / utility types to help with that.
 
 use crate::geometry::{Line, Size};
-use crate::style::{AvailableSpace, Style};
+use crate::style::{AvailableSpace, CoreStyle, Style};
+#[cfg(feature = "flexbox")]
+use crate::style::{FlexboxContainerStyle, FlexboxItemStyle};
+#[cfg(feature = "grid")]
+use crate::style::{GridContainerStyle, GridItemStyle};
 
 // Submodules
 mod cache;
@@ -57,6 +61,63 @@ pub trait LayoutTree: PartialLayoutTree {
     fn get_final_layout(&self, node_id: NodeId) -> &Layout;
     /// Get a mutable reference to the node's final layout
     fn get_final_layout_mut(&mut self, node_id: NodeId) -> &mut Layout;
+}
+
+#[cfg(feature = "flexbox")]
+/// Extends [`PartialLayoutTree`] with getters for the styles required for Flexbox layout
+pub trait FlexboxPartialLayoutTree: PartialLayoutTree {
+    /// The style type representing the Flexbox container's styles
+    type ContainerStyle<'a>: FlexboxContainerStyle
+    where
+        Self: 'a;
+    /// The style type representing each Flexbox item's styles
+    type ItemStyle<'a>: FlexboxItemStyle
+    where
+        Self: 'a;
+
+    /// Get the container's styles
+    fn get_container_style(&self, node_id: NodeId) -> Self::ContainerStyle<'_>;
+
+    /// Get the child's styles
+    fn get_child_style(&self, child_node_id: NodeId) -> Self::ItemStyle<'_>;
+}
+
+#[cfg(feature = "grid")]
+/// Extends [`PartialLayoutTree`] with getters for the styles required for CSS Grid layout
+pub trait GridPartialLayoutTree: PartialLayoutTree {
+    /// The style type representing the CSS Grid container's styles
+    type ContainerStyle<'a>: GridContainerStyle
+    where
+        Self: 'a;
+    /// The style type representing each CSS Grid item's styles
+    type ItemStyle<'a>: GridItemStyle
+    where
+        Self: 'a;
+
+    /// Get the container's styles
+    fn get_container_style(&self, node_id: NodeId) -> Self::ContainerStyle<'_>;
+
+    /// Get the child's styles
+    fn get_child_style(&self, child_node_id: NodeId) -> Self::ItemStyle<'_>;
+}
+
+#[cfg(feature = "block_layout")]
+/// Extends [`PartialLayoutTree`] with getters for the styles required for CSS Block layout
+pub trait BlockPartialLayoutTree: PartialLayoutTree {
+    /// The style type representing the CSS Block container's styles
+    type ContainerStyle<'a>: CoreStyle
+    where
+        Self: 'a;
+    /// The style type representing each CSS Block item's styles
+    type ItemStyle<'a>: CoreStyle
+    where
+        Self: 'a;
+
+    /// Get the container's styles
+    fn get_container_style(&self, node_id: NodeId) -> Self::ContainerStyle<'_>;
+
+    /// Get the child's styles
+    fn get_child_style(&self, child_node_id: NodeId) -> Self::ItemStyle<'_>;
 }
 
 /// A private trait which allows us to add extra convenience methods to types which implement

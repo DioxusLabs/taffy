@@ -1,4 +1,70 @@
 //! Style types for Flexbox layout
+use super::{AlignContent, AlignItems, AlignSelf, CoreStyle, Dimension, JustifyContent, LengthPercentage, Style};
+use crate::geometry::Size;
+
+/// The set of styles required for a Flexbox container
+pub trait FlexboxContainerStyle: CoreStyle {
+    /// Which direction does the main axis flow in?
+    #[inline(always)]
+    fn flex_direction(&self) -> FlexDirection {
+        Style::DEFAULT.flex_direction
+    }
+    /// Should elements wrap, or stay in a single line?
+    #[inline(always)]
+    fn flex_wrap(&self) -> FlexWrap {
+        Style::DEFAULT.flex_wrap
+    }
+
+    /// How large should the gaps between items in a grid or flex container be?
+    #[inline(always)]
+    fn gap(&self) -> Size<LengthPercentage> {
+        Style::DEFAULT.gap
+    }
+
+    // Alignment properties
+
+    /// How should content contained within this item be aligned in the cross/block axis
+    #[inline(always)]
+    fn align_content(&self) -> Option<AlignContent> {
+        Style::DEFAULT.align_content
+    }
+    /// How this node's children aligned in the cross/block axis?
+    #[inline(always)]
+    fn align_items(&self) -> Option<AlignItems> {
+        Style::DEFAULT.align_items
+    }
+    /// How this node's children should be aligned in the inline axis
+    #[inline(always)]
+    fn justify_content(&self) -> Option<JustifyContent> {
+        Style::DEFAULT.justify_content
+    }
+}
+
+/// The set of styles required for a Flexbox item (child of a Flexbox container)
+pub trait FlexboxItemStyle: CoreStyle {
+    /// Sets the initial main axis size of the item
+    #[inline(always)]
+    fn flex_basis(&self) -> Dimension {
+        Style::DEFAULT.flex_basis
+    }
+    /// The relative rate at which this item grows when it is expanding to fill space
+    #[inline(always)]
+    fn flex_grow(&self) -> f32 {
+        Style::DEFAULT.flex_grow
+    }
+    /// The relative rate at which this item shrinks when it is contracting to fit into space
+    #[inline(always)]
+    fn flex_shrink(&self) -> f32 {
+        Style::DEFAULT.flex_shrink
+    }
+
+    /// How this node should be aligned in the cross/block axis
+    /// Falls back to the parents [`AlignItems`] if not set
+    #[inline(always)]
+    fn align_self(&self) -> Option<AlignSelf> {
+        Style::DEFAULT.align_self
+    }
+}
 
 /// Controls whether flex items are forced onto one line or can wrap onto multiple lines.
 ///
