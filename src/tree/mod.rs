@@ -1,6 +1,6 @@
 //! Contains both [a high-level interface to Taffy](crate::Taffy) using a ready-made node tree, and [a trait for defining a custom node trees](crate::tree::LayoutTree) / utility types to help with that.
 
-use crate::geometry::{Line, Size};
+use crate::geometry::{AbsoluteAxis, Line, Size};
 use crate::style::{AvailableSpace, Style};
 
 // Submodules
@@ -15,7 +15,7 @@ mod taffy_tree;
 #[cfg(feature = "taffy_tree")]
 pub use taffy_tree::{Taffy, TaffyError, TaffyResult};
 mod layout;
-pub use layout::{CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
+pub use layout::{CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RequestedAxis, RunMode, SizingMode};
 
 /// This if the core abstraction in Taffy. Any type that *correctly* implements `PartialLayoutTree` can be laid out using Taffy's algorithms.
 ///
@@ -64,6 +64,7 @@ pub trait LayoutTree: PartialLayoutTree {
 pub(crate) trait PartialLayoutTreeExt: PartialLayoutTree {
     /// Compute the size of the node given the specified constraints
     #[inline(always)]
+    #[allow(clippy::too_many_arguments)]
     fn measure_child_size(
         &mut self,
         node_id: NodeId,
@@ -71,8 +72,9 @@ pub(crate) trait PartialLayoutTreeExt: PartialLayoutTree {
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         sizing_mode: SizingMode,
+        axis: AbsoluteAxis,
         vertical_margins_are_collapsible: Line<bool>,
-    ) -> Size<f32> {
+    ) -> f32 {
         self.compute_child_layout(
             node_id,
             LayoutInput {
@@ -80,11 +82,13 @@ pub(crate) trait PartialLayoutTreeExt: PartialLayoutTree {
                 parent_size,
                 available_space,
                 sizing_mode,
+                axis: axis.into(),
                 run_mode: RunMode::ComputeSize,
                 vertical_margins_are_collapsible,
             },
         )
         .size
+        .get_abs(axis)
     }
 
     /// Perform a full layout on the node given the specified constraints
@@ -105,6 +109,7 @@ pub(crate) trait PartialLayoutTreeExt: PartialLayoutTree {
                 parent_size,
                 available_space,
                 sizing_mode,
+                axis: RequestedAxis::Both,
                 run_mode: RunMode::PerformLayout,
                 vertical_margins_are_collapsible,
             },

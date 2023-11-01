@@ -61,10 +61,21 @@ pub enum AbstractAxis {
 
 impl AbstractAxis {
     /// Returns the other variant of the enum
+    #[inline]
     pub fn other(&self) -> AbstractAxis {
         match *self {
             AbstractAxis::Inline => AbstractAxis::Block,
             AbstractAxis::Block => AbstractAxis::Inline,
+        }
+    }
+
+    /// Convert an `AbstractAxis` into an `AbsoluteAxis` naively assuming that the Inline axis is Horizontal
+    /// This is currently always true, but will change if Taffy ever implements the `writing_mode` property
+    #[inline]
+    pub fn as_abs_naive(&self) -> AbsoluteAxis {
+        match self {
+            AbstractAxis::Inline => AbsoluteAxis::Horizontal,
+            AbstractAxis::Block => AbsoluteAxis::Vertical,
         }
     }
 }

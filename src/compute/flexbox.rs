@@ -638,16 +638,15 @@ fn determine_flex_base_size(
                 )
                 .with_cross(dir, cross_axis_available_space);
 
-            break 'flex_basis tree
-                .measure_child_size(
-                    child.node,
-                    child_known_dimensions,
-                    child_parent_size,
-                    child_available_space,
-                    SizingMode::ContentSize,
-                    Line::FALSE,
-                )
-                .main(dir);
+            break 'flex_basis tree.measure_child_size(
+                child.node,
+                child_known_dimensions,
+                child_parent_size,
+                child_available_space,
+                SizingMode::ContentSize,
+                dir.main_axis(),
+                Line::FALSE,
+            );
         };
 
         // Floor flex-basis by the padding_border_sum (floors inner_flex_basis at zero)
@@ -686,7 +685,7 @@ fn determine_flex_base_size(
             child.min_size.or(child.overflow.map(Overflow::maybe_into_automatic_min_size).into()).main(dir);
 
         child.resolved_minimum_main_size = style_min_main_size.unwrap_or({
-            let min_content_size = {
+            let min_content_main_size = {
                 let child_available_space = Size::MIN_CONTENT.with_cross(dir, cross_axis_available_space);
 
                 tree.measure_child_size(
@@ -695,14 +694,16 @@ fn determine_flex_base_size(
                     child_parent_size,
                     child_available_space,
                     SizingMode::ContentSize,
+                    dir.main_axis(),
                     Line::FALSE,
                 )
             };
 
             // 4.5. Automatic Minimum Size of Flex Items
             // https://www.w3.org/TR/css-flexbox-1/#min-size-auto
-            let clamped_min_content_size = min_content_size.maybe_min(child.size).maybe_min(child.max_size);
-            clamped_min_content_size.maybe_max(padding_border_axes_sums).main(dir)
+            let clamped_min_content_size =
+                min_content_main_size.maybe_min(child.size.main(dir)).maybe_min(child.max_size.main(dir));
+            clamped_min_content_size.maybe_max(padding_border_axes_sums.main(dir))
         });
     }
 }
@@ -899,17 +900,15 @@ fn determine_container_main_size(
 
                                 // Either the min- or max- content size depending on which constraint we are sizing under.
                                 // TODO: Optimise by using already computed values where available
-                                let content_main_size = tree
-                                    .measure_child_size(
-                                        item.node,
-                                        Size::NONE,
-                                        constants.node_inner_size,
-                                        child_available_space,
-                                        SizingMode::InherentSize,
-                                        Line::FALSE,
-                                    )
-                                    .main(constants.dir)
-                                    + item.margin.main_axis_sum(constants.dir);
+                                let content_main_size = tree.measure_child_size(
+                                    item.node,
+                                    Size::NONE,
+                                    constants.node_inner_size,
+                                    child_available_space,
+                                    SizingMode::InherentSize,
+                                    dir.main_axis(),
+                                    Line::FALSE,
+                                ) + item.margin.main_axis_sum(constants.dir);
 
                                 // This is somewhat bizarre in that it's asymetrical depending whether the flex container is a column or a row.
                                 //
@@ -1231,9 +1230,9 @@ fn determine_hypothetical_cross_size(
                     height: if constants.is_row { child_available_cross } else { child_known_main },
                 },
                 SizingMode::ContentSize,
+                constants.dir.cross_axis(),
                 Line::FALSE,
             )
-            .cross(constants.dir)
             .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir))
             .max(padding_border_sum)
         });
