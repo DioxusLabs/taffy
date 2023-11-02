@@ -42,10 +42,16 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
     let style = tree.get_style(node).clone();
     let child_styles_iter = get_child_styles_iter(node);
 
+    let preferred_size = if inputs.sizing_mode == SizingMode::InherentSize {
+        style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(style.aspect_ratio)
+    } else {
+        Size::NONE
+    };
+
     // 1. Resolve the explicit grid
     // Exactly compute the number of rows and columns in the explicit grid.
-    let explicit_col_count = compute_explicit_grid_size_in_axis(&style, AbsoluteAxis::Horizontal);
-    let explicit_row_count = compute_explicit_grid_size_in_axis(&style, AbsoluteAxis::Vertical);
+    let explicit_col_count = compute_explicit_grid_size_in_axis(&style, preferred_size, AbsoluteAxis::Horizontal);
+    let explicit_row_count = compute_explicit_grid_size_in_axis(&style, preferred_size, AbsoluteAxis::Vertical);
 
     // 2. Implicit Grid: Estimate Track Counts
     // Estimate the number of rows and columns in the implicit grid (= the entire grid)
@@ -107,7 +113,7 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
     let aspect_ratio = style.aspect_ratio;
     let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
     let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-    let size = style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let size = preferred_size;
 
     // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
     // However, the axis are switched (transposed) because a node that scrolls vertically needs
@@ -203,7 +209,7 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
     debug_log!("initial_row_sum", dbg:initial_row_sum);
 
     // 6. Compute container size
-    let resolved_style_size = known_dimensions.or(style.size.maybe_resolve(parent_size));
+    let resolved_style_size = known_dimensions.or(preferred_size);
     let container_border_box = Size {
         width: resolved_style_size
             .get(AbstractAxis::Inline)

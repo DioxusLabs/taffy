@@ -57,8 +57,11 @@ pub fn compute_block_layout(tree: &mut impl PartialLayoutTree, node_id: NodeId, 
     let padding = style.padding.resolve_or_zero(parent_size.width);
     let border = style.border.resolve_or_zero(parent_size.width);
     let padding_border_size = (padding + border).sum_axes();
-    let clamped_style_size =
-        style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
+    let clamped_style_size = if inputs.sizing_mode == SizingMode::InherentSize {
+        style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size)
+    } else {
+        Size::NONE
+    };
 
     // If both min and max in a given axis are set and max <= min then this determines the size in that axis
     let min_max_definite_size = min_size.zip_map(max_size, |min, max| match (min, max) {
