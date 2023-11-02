@@ -1,5 +1,5 @@
 //! Final data structures that represent the high-level UI layout
-use crate::geometry::{Line, Point, Size};
+use crate::geometry::{AbsoluteAxis, Line, Point, Size};
 use crate::prelude::TaffyMaxContent;
 use crate::style::AvailableSpace;
 use crate::util::sys::{f32_max, f32_min};
@@ -71,9 +71,46 @@ impl CollapsibleMarginSet {
     }
 }
 
+/// An axis that layout algorithms can be requested to compute a size for
+#[derive(Debug, Copy, Clone)]
+pub enum RequestedAxis {
+    /// The horizontal axis
+    Horizontal,
+    /// The vertical axis
+    Vertical,
+    /// Both axes
+    Both,
+}
+
+impl From<AbsoluteAxis> for RequestedAxis {
+    fn from(value: AbsoluteAxis) -> Self {
+        match value {
+            AbsoluteAxis::Horizontal => RequestedAxis::Horizontal,
+            AbsoluteAxis::Vertical => RequestedAxis::Vertical,
+        }
+    }
+}
+impl TryFrom<RequestedAxis> for AbsoluteAxis {
+    type Error = ();
+    fn try_from(value: RequestedAxis) -> Result<Self, Self::Error> {
+        match value {
+            RequestedAxis::Horizontal => Ok(AbsoluteAxis::Horizontal),
+            RequestedAxis::Vertical => Ok(AbsoluteAxis::Vertical),
+            RequestedAxis::Both => Err(()),
+        }
+    }
+}
+
 /// A struct containing the inputs constraints/hints for laying out a node, which are passed in by the parent
 #[derive(Debug, Copy, Clone)]
 pub struct LayoutInput {
+    /// Whether we only need to know the Node's size, or whe
+    pub run_mode: RunMode,
+    /// Whether a Node's style sizes should be taken into account or ignored
+    pub sizing_mode: SizingMode,
+    /// Which axis we need the size of
+    pub axis: RequestedAxis,
+
     /// Known dimensions represent dimensions (width/height) which should be taken as fixed when performing layout.
     /// For example, if known_dimensions.width is set to Some(WIDTH) then this means something like:
     ///
@@ -89,10 +126,6 @@ pub struct LayoutInput {
     /// Available space represents an amount of space to layout into, and is used as a soft constraint
     /// for the purpose of wrapping.
     pub available_space: Size<AvailableSpace>,
-    /// Whether a Node's style sizes should be taken into account or ignored
-    pub sizing_mode: SizingMode,
-    /// Whether we only need to know the Node's size, or whe
-    pub run_mode: RunMode,
     /// Specific to CSS Block layout. Used for correctly computing margin collapsing. You probably want to set this to `Line::FALSE`.
     pub vertical_margins_are_collapsible: Line<bool>,
 }
@@ -107,6 +140,7 @@ impl LayoutInput {
         parent_size: Size::NONE,
         available_space: Size::MAX_CONTENT,
         sizing_mode: SizingMode::InherentSize,
+        axis: RequestedAxis::Both,
         vertical_margins_are_collapsible: Line::FALSE,
     };
 }

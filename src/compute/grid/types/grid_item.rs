@@ -347,9 +347,9 @@ impl GridItem {
                 None => AvailableSpace::MinContent,
             }),
             SizingMode::InherentSize,
+            axis.as_abs_naive(),
             Line::FALSE,
         )
-        .get(axis)
     }
 
     /// Retrieve the item's min content contribution from the cache or compute it using the provided parameters
@@ -386,9 +386,9 @@ impl GridItem {
                 None => AvailableSpace::MaxContent,
             }),
             SizingMode::InherentSize,
+            axis.as_abs_naive(),
             Line::FALSE,
         )
-        .get(axis)
     }
 
     /// Retrieve the item's max content contribution from the cache or compute it using the provided parameters
