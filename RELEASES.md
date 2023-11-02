@@ -1,5 +1,11 @@
 # Release Notes
 
+## 0.3.18
+
+### Fixes
+
+- Fix computation of Flexbox automatic minimum size when grid or flexbox child has an explicit width/height style set (#576)
+
 ## 0.3.17
 
 ### Added
