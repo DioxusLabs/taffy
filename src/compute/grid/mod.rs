@@ -45,9 +45,9 @@ impl LayoutAlgorithm for CssGridAlgorithm {
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
-        _sizing_mode: SizingMode,
+        sizing_mode: SizingMode,
     ) -> SizeAndBaselines {
-        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::PeformLayout)
+        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::PeformLayout, sizing_mode)
     }
 
     fn measure_size(
@@ -56,9 +56,9 @@ impl LayoutAlgorithm for CssGridAlgorithm {
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
-        _sizing_mode: SizingMode,
+        sizing_mode: SizingMode,
     ) -> Size<f32> {
-        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::ComputeSize).size
+        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::ComputeSize, sizing_mode).size
     }
 }
 
@@ -75,15 +75,22 @@ pub fn compute(
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
+    sizing_mode: SizingMode,
 ) -> SizeAndBaselines {
     let get_child_styles_iter = |node| tree.children(node).map(|child_node: &Node| tree.style(*child_node));
     let style = tree.style(node).clone();
     let child_styles_iter = get_child_styles_iter(node);
 
+    let preferred_size = if sizing_mode == SizingMode::InherentSize {
+        style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(style.aspect_ratio)
+    } else {
+        Size::NONE
+    };
+
     // 1. Resolve the explicit grid
     // Exactly compute the number of rows and columns in the explicit grid.
-    let explicit_col_count = compute_explicit_grid_size_in_axis(&style, AbsoluteAxis::Horizontal);
-    let explicit_row_count = compute_explicit_grid_size_in_axis(&style, AbsoluteAxis::Vertical);
+    let explicit_col_count = compute_explicit_grid_size_in_axis(&style, preferred_size, AbsoluteAxis::Horizontal);
+    let explicit_row_count = compute_explicit_grid_size_in_axis(&style, preferred_size, AbsoluteAxis::Vertical);
 
     // 2. Implicit Grid: Estimate Track Counts
     // Estimate the number of rows and columns in the implicit grid (= the entire grid)
@@ -145,7 +152,7 @@ pub fn compute(
     let aspect_ratio = style.aspect_ratio;
     let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
     let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-    let size = style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let size = preferred_size;
 
     let constrained_available_space = known_dimensions
         .or(size)
@@ -234,7 +241,7 @@ pub fn compute(
     NODE_LOGGER.labelled_debug_log("initial_row_sum", initial_row_sum);
 
     // 6. Compute container size
-    let resolved_style_size = known_dimensions.or(style.size.maybe_resolve(parent_size));
+    let resolved_style_size = known_dimensions.or(preferred_size);
     let container_border_box = Size {
         width: resolved_style_size
             .get(AbstractAxis::Inline)
