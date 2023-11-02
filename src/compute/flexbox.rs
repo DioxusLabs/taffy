@@ -32,9 +32,9 @@ impl LayoutAlgorithm for FlexboxAlgorithm {
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
-        _sizing_mode: SizingMode,
+        sizing_mode: SizingMode,
     ) -> SizeAndBaselines {
-        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::PeformLayout)
+        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::PeformLayout, sizing_mode)
     }
 
     fn measure_size(
@@ -43,9 +43,9 @@ impl LayoutAlgorithm for FlexboxAlgorithm {
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
-        _sizing_mode: SizingMode,
+        sizing_mode: SizingMode,
     ) -> Size<f32> {
-        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::ComputeSize).size
+        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::ComputeSize, sizing_mode).size
     }
 }
 
@@ -184,6 +184,7 @@ pub fn compute(
     parent_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     run_mode: RunMode,
+    sizing_mode: SizingMode,
 ) -> SizeAndBaselines {
     let style = tree.style(node);
 
@@ -191,8 +192,11 @@ pub fn compute(
     let aspect_ratio = style.aspect_ratio;
     let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
     let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-    let clamped_style_size =
-        style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
+    let clamped_style_size = if sizing_mode == SizingMode::InherentSize {
+        style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size)
+    } else {
+        Size::NONE
+    };
 
     // If both min and max in a given axis are set and max <= min then this determines the size in that axis
     let min_max_definite_size = min_size.zip_map(max_size, |min, max| match (min, max) {
