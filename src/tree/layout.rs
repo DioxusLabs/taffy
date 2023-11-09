@@ -1,7 +1,7 @@
 //! Final data structures that represent the high-level UI layout
 use crate::geometry::{AbsoluteAxis, Line, Point, Rect, Size};
-use crate::prelude::TaffyMaxContent;
 use crate::style::AvailableSpace;
+use crate::style_helpers::TaffyMaxContent;
 use crate::util::sys::{f32_max, f32_min};
 
 /// Whether we are performing a full layout, or we merely need to size the node
