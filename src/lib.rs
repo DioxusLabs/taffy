@@ -1,7 +1,7 @@
 //! # Taffy
 //!
 //! Taffy is a flexible, high-performance library for **UI layout**.
-//! It currently implements the Flexbox and CSS Grid layout algorithms. Support for other paradigms is planned.
+//! It currently implements the Block, Flexbox and Grid layout algorithms from the CSS specification. Support for other paradigms is planned.
 //! For more information on this and other future development plans see the [roadmap issue](https://github.com/DioxusLabs/taffy/issues/345).
 //!
 //! ## Architecture
@@ -9,11 +9,11 @@
 //! Taffy is based on a tree of "UI nodes" similar to the tree of DOM nodes that one finds in web-based UI. Each node has:
 //!   - A [`Style`](crate::style::Style) struct which holds a set of CSS styles which function as the primary input to the layout computations.
 //!   - A [`Layout`](crate::tree::Layout) struct containing a position (x/y) and a size (width/height) which function as the output of the layout computations.
-//!   - Optionally, one of:
+//!   - Optionally:
 //!       - A `Vec` set of child nodes
-//!       - A [`MeasureFunc`](crate::tree::MeasureFunc) which computes the node's "intrinsic size"
+//!       - "Context": arbitary user-defined data (which you can access when using a "measure function" to integrate Taffy with other kinds of layout such as text layout)
 //!
-//! Usage of Taffy consists of constructing a tree of UI nodes (with associated styles, children and measure functions), then calling function(s)
+//! Usage of Taffy consists of constructing a tree of UI nodes (with associated styles, children and context), then calling function(s)
 //! from Taffy to translate those styles, parent-child relationships and measure functions into a size and position in 2d space for each node
 //! in the tree.
 //!
@@ -24,20 +24,20 @@
 //! We would generally recommend the high-level API for users using Taffy standalone and the low-level API for users wanting to embed Taffy as part of
 //! a wider layout system or as part of a UI framework that already has it's own node/widget tree representation.
 //!
-//! - **The high-level API** consists of the [`Taffy`](crate::Taffy) struct which contains a tree implementation and provides methods that allow you to construct
-//!   a tree of UI nodes. Once constructed, you can call the [`compute_layout`](crate::Taffy::compute_layout) method to compute the layout, and then access
-//!   the layout of each node using the [`layout`](crate::Taffy::compute_layout) method.
+//! - **The high-level API** consists of the [`Taffy`] struct which contains a tree implementation and provides methods that allow you to construct
+//!   a tree of UI nodes. Once constructed, you can call the [`compute_layout_with_measure`](crate::Taffy::compute_layout_with_measure) method to compute the layout (passing in a "measure function" closure which is used to compute the size of leaf nodes), and then access
+//!   the layout of each node using the [`layout`](crate::Taffy::layout) method.
 //!
 //!   When using the high-level API, Taffy will take care of node storage, caching and dispatching to the correct layout algorithm for a given node for you.
-//!   See the [`Taffy`](crate::Taffy) struct for more details on this API.
+//!   See the [`Taffy`] struct for more details on this API.
 //!   <br /><br />
 //!
-//! - **The low-level API** consists of the [`LayoutTree`](crate::LayoutTree) trait which defines an interface behind which you must implement your own
-//!   tree implementation, and the [`FlexboxAlgorithm`] and [`CssGridAlgorithm`] structs which contain methods which allow you to integrate Flexbox or
-//!   CSS Grid layout computation into your own layout algorithm.
+//! - **The low-level API** consists of a set of traits (notably the [`PartialLayoutTree`] trait) which define an interface behind which you must implement your own
+//!   tree implementation, and a set of functions such as [`compute_flexbox_layout`] and [`compute_grid_layout`] which implement the layout algorithms (for a single node at a time), and are designed to be flexible
+//!   and easy to integrate into a wider layout or UI system.
 //!
 //!   When using this API, you must handle node storage, caching, and dispatching to the correct layout algorithm for a given node yourself.
-//!   See the [`LayoutTree`](crate::LayoutTree) trait for more details on this API.
+//!   See the [`PartialLayoutTree`] trait for more details on this API.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(unsafe_code)]
