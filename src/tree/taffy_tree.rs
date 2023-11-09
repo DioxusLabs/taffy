@@ -68,7 +68,9 @@ impl Default for TaffyConfig {
     }
 }
 
-/// A tree of UI nodes suitable for UI layout
+/// An entire tree of UI nodes. The entry point to Taffy's high-level API.
+///
+/// Allows you to build a tree of UI nodes, run Taffy's layout algorithms over that tree, and then access the resultant layout.
 pub struct Taffy<NodeContext = ()> {
     /// The [`NodeData`] for each node stored in this tree
     pub(crate) nodes: SlotMap<DefaultKey, NodeData>,

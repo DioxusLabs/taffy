@@ -169,7 +169,7 @@ impl Overflow {
     }
 }
 
-/// The flexbox layout information for a single node.
+/// A typed representation of the CSS style information for a single node.
 ///
 /// The most important idea in flexbox is the notion of a "main" and "cross" axis, which are always perpendicular to each other.
 /// The orientation of these axes are controlled via the [`FlexDirection`] field of this struct.
