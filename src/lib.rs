@@ -7,8 +7,8 @@
 //! ## Architecture
 //!
 //! Taffy is based on a tree of "UI nodes" similar to the tree of DOM nodes that one finds in web-based UI. Each node has:
-//!   - A [`Style`](crate::style::Style) struct which holds a set of CSS styles which function as the primary input to the layout computations.
-//!   - A [`Layout`](crate::tree::Layout) struct containing a position (x/y) and a size (width/height) which function as the output of the layout computations.
+//!   - A [`Style`] struct which holds a set of CSS styles which function as the primary input to the layout computations.
+//!   - A [`Layout`] struct containing a position (x/y) and a size (width/height) which function as the output of the layout computations.
 //!   - Optionally:
 //!       - A `Vec` set of child nodes
 //!       - "Context": arbitary user-defined data (which you can access when using a "measure function" to integrate Taffy with other kinds of layout such as text layout)
@@ -72,14 +72,30 @@ mod readme_doctest {
 }
 
 #[cfg(feature = "block_layout")]
+#[doc(inline)]
 pub use crate::compute::compute_block_layout;
 #[cfg(feature = "flexbox")]
+#[doc(inline)]
 pub use crate::compute::compute_flexbox_layout;
 #[cfg(feature = "grid")]
+#[doc(inline)]
 pub use crate::compute::compute_grid_layout;
+#[doc(inline)]
 pub use crate::compute::{
     compute_cached_layout, compute_hidden_layout, compute_layout, compute_leaf_layout, round_layout,
 };
-pub use crate::tree::{LayoutTree, PartialLayoutTree};
+#[doc(inline)]
+pub use crate::style::Style;
 #[cfg(feature = "taffy_tree")]
-pub use crate::tree::{Taffy, TaffyError, TaffyResult};
+#[doc(inline)]
+pub use crate::tree::Taffy;
+#[doc(inline)]
+pub use crate::tree::{LayoutTree, PartialLayoutTree};
+#[cfg(feature = "std")]
+#[doc(inline)]
+pub use crate::util::print_tree;
+
+pub use crate::geometry::*;
+pub use crate::style::*;
+pub use crate::tree::*;
+pub use crate::util::*;
