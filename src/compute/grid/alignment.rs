@@ -7,8 +7,8 @@ use crate::tree::{Layout, NodeId, PartialLayoutTree, PartialLayoutTreeExt, Sizin
 use crate::util::sys::f32_max;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 
-#[cfg_attr(not(feature = "content_size"), allow(unused_imports))]
-use crate::style::Overflow;
+#[cfg(feature = "content_size")]
+use crate::compute::common::content_size::compute_content_size_contribution;
 
 /// Align the grid tracks within the grid according to the align-content (rows) or
 /// justify-content (columns) property. This only does anything if the size of the
@@ -207,30 +207,18 @@ pub(super) fn align_and_position_item(
     *tree.get_unrounded_layout_mut(node) = Layout {
         order,
         size: Size { width, height },
+        #[cfg(feature = "content_size")]
         content_size: layout_output.content_size,
         location: Point { x, y },
     };
 
     #[cfg(feature = "content_size")]
-    {
-        let size_content_size_contribution = Size {
-            width: match overflow.x {
-                Overflow::Visible => f32_max(width, layout_output.content_size.width),
-                _ => width,
-            },
-            height: match overflow.y {
-                Overflow::Visible => f32_max(height, layout_output.content_size.height),
-                _ => height,
-            },
-        };
-        if size_content_size_contribution.has_non_zero_area() {
-            Size { width: x + size_content_size_contribution.width, height: y + size_content_size_contribution.height }
-        } else {
-            Size::ZERO
-        }
-    }
+    let contribution =
+        compute_content_size_contribution(Point { x, y }, Size { width, height }, layout_output.content_size, overflow);
     #[cfg(not(feature = "content_size"))]
-    Size::ZERO
+    let contribution = Size::ZERO;
+
+    contribution
 }
 
 /// Align and size a grid item along a single axis

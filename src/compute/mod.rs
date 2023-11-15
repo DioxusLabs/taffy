@@ -43,7 +43,13 @@ pub fn compute_layout(tree: &mut impl PartialLayoutTree, root: NodeId, available
         Line::FALSE,
     );
 
-    let layout = Layout { order: 0, size: output.size, content_size: output.content_size, location: Point::ZERO };
+    let layout = Layout {
+        order: 0,
+        size: output.size,
+        #[cfg(feature = "content_size")]
+        content_size: output.content_size,
+        location: Point::ZERO,
+    };
     *tree.get_unrounded_layout_mut(root) = layout;
 }
 
@@ -94,10 +100,11 @@ where
 /// and write to `final_layout`.
 pub fn round_layout(tree: &mut impl LayoutTree, node_id: NodeId) {
     return round_layout_inner(tree, node_id, 0.0, 0.0);
+
     /// Recursive function to apply rounding to all descendents
     fn round_layout_inner(tree: &mut impl LayoutTree, node_id: NodeId, cumulative_x: f32, cumulative_y: f32) {
         let unrounded_layout = *tree.get_unrounded_layout_mut(node_id);
-        let layout = &mut tree.get_final_layout_mut(node_id);
+        let layout = tree.get_final_layout_mut(node_id);
 
         let cumulative_x = cumulative_x + unrounded_layout.location.x;
         let cumulative_y = cumulative_y + unrounded_layout.location.y;
@@ -106,14 +113,27 @@ pub fn round_layout(tree: &mut impl LayoutTree, node_id: NodeId) {
         layout.location.y = round(unrounded_layout.location.y);
         layout.size.width = round(cumulative_x + unrounded_layout.size.width) - round(cumulative_x);
         layout.size.height = round(cumulative_y + unrounded_layout.size.height) - round(cumulative_y);
-        layout.content_size.width = round(cumulative_x + unrounded_layout.content_size.width) - round(cumulative_x);
-        layout.content_size.height = round(cumulative_y + unrounded_layout.content_size.height) - round(cumulative_y);
+
+        #[cfg(feature = "content_size")]
+        round_content_size(layout, unrounded_layout.content_size, cumulative_x, cumulative_y);
 
         let child_count = tree.child_count(node_id);
         for index in 0..child_count {
             let child = tree.get_child_id(node_id, index);
             round_layout_inner(tree, child, cumulative_x, cumulative_y);
         }
+    }
+
+    #[cfg(feature = "content_size")]
+    #[inline(always)]
+    fn round_content_size(
+        layout: &mut Layout,
+        unrounded_content_size: Size<f32>,
+        cumulative_x: f32,
+        cumulative_y: f32,
+    ) {
+        layout.content_size.width = round(cumulative_x + unrounded_content_size.width) - round(cumulative_x);
+        layout.content_size.height = round(cumulative_y + unrounded_content_size.height) - round(cumulative_y);
     }
 }
 

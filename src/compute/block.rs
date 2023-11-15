@@ -10,6 +10,9 @@ use crate::util::sys::Vec;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 
+#[cfg(feature = "content_size")]
+use super::common::content_size::compute_content_size_contribution;
+
 /// Per-child data that is accumulated and modified over the course of the layout algorithm
 struct BlockItem {
     /// The identifier for the associated node
@@ -26,6 +29,7 @@ struct BlockItem {
     /// The maximum allowable size of this item
     max_size: Size<Option<f32>>,
 
+    #[cfg(feature = "content_size")]
     /// The overflow style of the item
     overflow: Point<Overflow>,
     /// The position style of the item
@@ -221,8 +225,12 @@ fn compute_inner(tree: &mut impl PartialLayoutTree, node_id: NodeId, inputs: Lay
     let can_be_collapsed_through =
         !has_styles_preventing_being_collapsed_through && all_in_flow_children_can_be_collapsed_through;
 
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
+    let content_size = inflow_content_size.f32_max(absolute_content_size);
+
     LayoutOutput {
         size: final_outer_size,
+        #[cfg(feature = "content_size")]
         content_size: inflow_content_size.f32_max(absolute_content_size),
         first_baselines: Point::NONE,
         top_margin: if own_margins_collapse_with_children.start {
@@ -263,6 +271,7 @@ fn generate_item_list(
                 size: child_style.size.maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
                 min_size: child_style.min_size.maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
                 max_size: child_style.max_size.maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
+                #[cfg(feature = "content_size")]
                 overflow: child_style.overflow,
                 position: child_style.position,
                 inset: child_style.inset,
@@ -329,6 +338,7 @@ fn perform_final_layout_on_in_flow_children(
     let available_space =
         Size { width: AvailableSpace::Definite(container_inner_width), height: AvailableSpace::MinContent };
 
+    #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut inflow_content_size = Size::ZERO;
     let mut committed_y_offset = resolved_content_box_inset.top;
     let mut first_child_top_margin_set = CollapsibleMarginSet::ZERO;
@@ -355,7 +365,6 @@ fn perform_final_layout_on_in_flow_children(
                 Line::TRUE,
             );
             let final_size = item_layout.size;
-            let content_size = item_layout.content_size;
 
             let top_margin_set = item_layout.top_margin.collapse_with_margin(item_margin.top.unwrap_or(0.0));
             let bottom_margin_set = item_layout.bottom_margin.collapse_with_margin(item_margin.bottom.unwrap_or(0.0));
@@ -406,25 +415,22 @@ fn perform_final_layout_on_in_flow_children(
                 y: committed_y_offset + inset_offset.y + y_margin_offset,
             };
 
-            *tree.get_unrounded_layout_mut(item.node_id) =
-                Layout { order: item.order, size: item_layout.size, content_size: item_layout.content_size, location };
-
-            let size_content_size_contribution = Size {
-                width: match item.overflow.x {
-                    Overflow::Visible => f32_max(final_size.width, content_size.width),
-                    _ => final_size.width,
-                },
-                height: match item.overflow.y {
-                    Overflow::Visible => f32_max(final_size.height, content_size.height),
-                    _ => final_size.height,
-                },
+            *tree.get_unrounded_layout_mut(item.node_id) = Layout {
+                order: item.order,
+                size: item_layout.size,
+                #[cfg(feature = "content_size")]
+                content_size: item_layout.content_size,
+                location,
             };
-            if size_content_size_contribution.width > 0.0 && size_content_size_contribution.height > 0.0 {
-                let content_size_contribution = Size {
-                    width: location.x + size_content_size_contribution.width,
-                    height: location.y + size_content_size_contribution.height,
-                };
-                inflow_content_size = inflow_content_size.f32_max(content_size_contribution);
+
+            #[cfg(feature = "content_size")]
+            {
+                inflow_content_size = inflow_content_size.f32_max(compute_content_size_contribution(
+                    location,
+                    final_size,
+                    item_layout.content_size,
+                    item.overflow,
+                ));
             }
 
             // Update first_child_top_margin_set
@@ -471,6 +477,7 @@ fn perform_absolute_layout_on_absolute_children(
     let area_width = area_size.width;
     let area_height = area_size.height;
 
+    #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut absolute_content_size = Size::ZERO;
 
     for item in items.iter().filter(|item| item.position == Position::Absolute) {
@@ -535,7 +542,6 @@ fn perform_absolute_layout_on_absolute_children(
         );
         let measured_size = layout_output.size;
         let final_size = known_dimensions.unwrap_or(measured_size).maybe_clamp(min_size, max_size);
-        let content_size = layout_output.content_size;
 
         let non_auto_margin = Rect {
             left: if left.is_some() { margin.left.unwrap_or(0.0) } else { 0.0 },
@@ -621,25 +627,22 @@ fn perform_absolute_layout_on_absolute_children(
         };
 
         let location = area_offset + item_offset;
-        *tree.get_unrounded_layout_mut(item.node_id) =
-            Layout { order: item.order, size: final_size, content_size: layout_output.content_size, location };
-
-        let size_content_size_contribution = Size {
-            width: match item.overflow.x {
-                Overflow::Visible => f32_max(final_size.width, content_size.width),
-                _ => final_size.width,
-            },
-            height: match item.overflow.y {
-                Overflow::Visible => f32_max(final_size.height, content_size.height),
-                _ => final_size.height,
-            },
+        *tree.get_unrounded_layout_mut(item.node_id) = Layout {
+            order: item.order,
+            size: final_size,
+            #[cfg(feature = "content_size")]
+            content_size: layout_output.content_size,
+            location,
         };
-        if size_content_size_contribution.width > 0.0 && size_content_size_contribution.height > 0.0 {
-            let content_size_contribution = Size {
-                width: location.x + size_content_size_contribution.width,
-                height: location.y + size_content_size_contribution.height,
-            };
-            absolute_content_size = absolute_content_size.f32_max(content_size_contribution);
+
+        #[cfg(feature = "content_size")]
+        {
+            absolute_content_size = absolute_content_size.f32_max(compute_content_size_contribution(
+                location,
+                final_size,
+                layout_output.content_size,
+                item.overflow,
+            ));
         }
     }
 

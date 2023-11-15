@@ -14,6 +14,9 @@ use crate::util::sys::{f32_max, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 
+#[cfg(feature = "content_size")]
+use super::common::content_size::compute_content_size_contribution;
+
 /// The intermediate results of a flexbox calculation for a single item
 struct FlexItem {
     /// The identifier for the associated node
@@ -1724,7 +1727,12 @@ fn calculate_flex_item(
         SizingMode::ContentSize,
         Line::FALSE,
     );
-    let LayoutOutput { size, content_size, .. } = layout_output;
+    let LayoutOutput {
+        size,
+        #[cfg(feature = "content_size")]
+        content_size,
+        ..
+    } = layout_output;
 
     let offset_main = *total_offset_main
         + item.offset_main
@@ -1752,29 +1760,20 @@ fn calculate_flex_item(
         false => Point { x: offset_cross, y: offset_main },
     };
 
-    *tree.get_unrounded_layout_mut(item.node) = Layout { order: item.order, size, content_size, location };
+    *tree.get_unrounded_layout_mut(item.node) = Layout {
+        order: item.order,
+        size,
+        #[cfg(feature = "content_size")]
+        content_size,
+        location,
+    };
 
     *total_offset_main += item.offset_main + item.margin.main_axis_sum(direction) + size.main(direction);
 
     #[cfg(feature = "content_size")]
     {
-        let size_content_size_contribution = Size {
-            width: match item.overflow.x {
-                Overflow::Visible => f32_max(size.width, content_size.width),
-                _ => size.width,
-            },
-            height: match item.overflow.y {
-                Overflow::Visible => f32_max(size.height, content_size.height),
-                _ => size.height,
-            },
-        };
-        if size_content_size_contribution.has_non_zero_area() {
-            let content_size_contribution = Size {
-                width: location.x + size_content_size_contribution.width,
-                height: location.y + size_content_size_contribution.height,
-            };
-            *total_content_size = total_content_size.f32_max(content_size_contribution);
-        }
+        *total_content_size =
+            total_content_size.f32_max(compute_content_size_contribution(location, size, content_size, item.overflow));
     }
 }
 
@@ -2083,8 +2082,13 @@ fn perform_absolute_layout_on_absolute_children(
             true => Point { x: offset_main, y: offset_cross },
             false => Point { x: offset_cross, y: offset_main },
         };
-        *tree.get_unrounded_layout_mut(child) =
-            Layout { order: order as u32, size: final_size, content_size: layout_output.content_size, location };
+        *tree.get_unrounded_layout_mut(child) = Layout {
+            order: order as u32,
+            size: final_size,
+            #[cfg(feature = "content_size")]
+            content_size: layout_output.content_size,
+            location,
+        };
 
         #[cfg(feature = "content_size")]
         {
