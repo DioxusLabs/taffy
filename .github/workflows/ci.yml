@@ -56,6 +56,15 @@ jobs:
       - run: cargo build --features serde
       - run: cargo test --features serde
 
+  test-features-default-with-content-size:
+    name: "Test Suite [Features: Default + content_size]"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --features content_size
+      - run: cargo test --features content_size
+
   test-features-no-grid-nor-flexbox:
     name: "Test Suite [Features: std (no grid or flexbox)]"
     runs-on: ubuntu-latest

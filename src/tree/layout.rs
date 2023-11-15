@@ -186,8 +186,7 @@ impl LayoutOutput {
     /// Constructor to create a `LayoutOutput` from just the size and baselines
     pub fn from_sizes_and_baselines(
         size: Size<f32>,
-        #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
-        content_size: Size<f32>,
+        #[cfg_attr(not(feature = "content_size"), allow(unused_variables))] content_size: Size<f32>,
         first_baselines: Point<Option<f32>>,
     ) -> Self {
         Self {
