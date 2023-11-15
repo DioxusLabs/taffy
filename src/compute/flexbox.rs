@@ -36,6 +36,8 @@ struct FlexItem {
 
     /// The overflow style of the item
     overflow: Point<Overflow>,
+    /// The width of the scrollbars (if it has any)
+    scrollbar_width: f32,
     /// The flex shrink style of the item
     flex_shrink: f32,
     /// The flex grow style of the item
@@ -471,6 +473,7 @@ fn generate_anonymous_flex_items(
                 border: child_style.border.resolve_or_zero(constants.node_inner_size.width),
                 align_self: child_style.align_self.unwrap_or(constants.align_items),
                 overflow: child_style.overflow,
+                scrollbar_width: child_style.scrollbar_width,
                 flex_grow: child_style.flex_grow,
                 flex_shrink: child_style.flex_shrink,
                 flex_basis: 0.0,
@@ -1759,12 +1762,17 @@ fn calculate_flex_item(
         true => Point { x: offset_main, y: offset_cross },
         false => Point { x: offset_cross, y: offset_main },
     };
+    let scrollbar_size = Size {
+        width: if item.overflow.y == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
+        height: if item.overflow.x == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
+    };
 
     *tree.get_unrounded_layout_mut(item.node) = Layout {
         order: item.order,
         size,
         #[cfg(feature = "content_size")]
         content_size,
+        scrollbar_size,
         location,
     };
 
@@ -1894,9 +1902,8 @@ fn perform_absolute_layout_on_absolute_children(
             continue;
         }
 
-        #[cfg(feature = "content_size")]
         let overflow = child_style.overflow;
-
+        let scrollbar_width = child_style.scrollbar_width;
         let aspect_ratio = child_style.aspect_ratio;
         let align_self = child_style.align_self.unwrap_or(constants.align_items);
         let margin = child_style.margin.map(|margin| margin.resolve_to_option(container_width));
@@ -2082,11 +2089,16 @@ fn perform_absolute_layout_on_absolute_children(
             true => Point { x: offset_main, y: offset_cross },
             false => Point { x: offset_cross, y: offset_main },
         };
+        let scrollbar_size = Size {
+            width: if overflow.y == Overflow::Scroll { scrollbar_width } else { 0.0 },
+            height: if overflow.x == Overflow::Scroll { scrollbar_width } else { 0.0 },
+        };
         *tree.get_unrounded_layout_mut(child) = Layout {
             order: order as u32,
             size: final_size,
             #[cfg(feature = "content_size")]
             content_size: layout_output.content_size,
+            scrollbar_size,
             location,
         };
 

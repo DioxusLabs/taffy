@@ -219,14 +219,16 @@ pub struct Layout {
     /// Nodes with a higher order should be rendered on top of those with a lower order.
     /// This is effectively a topological sort of each tree.
     pub order: u32,
+    /// The top-left corner of the node
+    pub location: Point<f32>,
     /// The width and height of the node
     pub size: Size<f32>,
     #[cfg(feature = "content_size")]
     /// The width and height of the content inside the node. This may be larger than the size of the node in the case of
     /// overflowing content and is useful for computing a "scroll width/height" for scrollable nodes
     pub content_size: Size<f32>,
-    /// The top-left corner of the node
-    pub location: Point<f32>,
+    /// The size of the scrollbars in each dimension. If there is no scrollbar then the size will be zero.
+    pub scrollbar_size: Size<f32>,
 }
 
 impl Layout {
@@ -239,10 +241,11 @@ impl Layout {
     pub const fn new() -> Self {
         Self {
             order: 0,
+            location: Point::ZERO,
             size: Size::zero(),
             #[cfg(feature = "content_size")]
             content_size: Size::zero(),
-            location: Point::ZERO,
+            scrollbar_size: Size::zero(),
         }
     }
 
@@ -255,9 +258,10 @@ impl Layout {
         Self {
             order,
             size: Size::zero(),
+            location: Point::ZERO,
             #[cfg(feature = "content_size")]
             content_size: Size::zero(),
-            location: Point::ZERO,
+            scrollbar_size: Size::zero(),
         }
     }
 }

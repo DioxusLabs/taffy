@@ -29,9 +29,11 @@ struct BlockItem {
     /// The maximum allowable size of this item
     max_size: Size<Option<f32>>,
 
-    #[cfg(feature = "content_size")]
     /// The overflow style of the item
     overflow: Point<Overflow>,
+    /// The width of the item's scrollbars (if it has scrollbars)
+    scrollbar_width: f32,
+
     /// The position style of the item
     position: Position,
     /// The final offset of this item
@@ -231,7 +233,7 @@ fn compute_inner(tree: &mut impl PartialLayoutTree, node_id: NodeId, inputs: Lay
     LayoutOutput {
         size: final_outer_size,
         #[cfg(feature = "content_size")]
-        content_size: inflow_content_size.f32_max(absolute_content_size),
+        content_size,
         first_baselines: Point::NONE,
         top_margin: if own_margins_collapse_with_children.start {
             first_child_top_margin_set
@@ -271,8 +273,8 @@ fn generate_item_list(
                 size: child_style.size.maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
                 min_size: child_style.min_size.maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
                 max_size: child_style.max_size.maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
-                #[cfg(feature = "content_size")]
                 overflow: child_style.overflow,
+                scrollbar_width: child_style.scrollbar_width,
                 position: child_style.position,
                 inset: child_style.inset,
                 margin: child_style.margin,
@@ -415,11 +417,17 @@ fn perform_final_layout_on_in_flow_children(
                 y: committed_y_offset + inset_offset.y + y_margin_offset,
             };
 
+            let scrollbar_size = Size {
+                width: if item.overflow.y == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
+                height: if item.overflow.x == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
+            };
+
             *tree.get_unrounded_layout_mut(item.node_id) = Layout {
                 order: item.order,
                 size: item_layout.size,
                 #[cfg(feature = "content_size")]
                 content_size: item_layout.content_size,
+                scrollbar_size,
                 location,
             };
 
@@ -626,12 +634,20 @@ fn perform_absolute_layout_on_absolute_children(
                 .unwrap_or(item.static_position.y + resolved_margin.top),
         };
 
+        // Note: axis intentionally switched here as scrollbars take up space in the opposite axis
+        // to the axis in which scrolling is enabled.
+        let scrollbar_size = Size {
+            width: if item.overflow.y == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
+            height: if item.overflow.x == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
+        };
+
         let location = area_offset + item_offset;
         *tree.get_unrounded_layout_mut(item.node_id) = Layout {
             order: item.order,
             size: final_size,
             #[cfg(feature = "content_size")]
             content_size: layout_output.content_size,
+            scrollbar_size,
             location,
         };
 

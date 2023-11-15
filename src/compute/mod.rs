@@ -24,7 +24,7 @@ pub use self::flexbox::compute_flexbox_layout;
 pub use self::grid::compute_grid_layout;
 
 use crate::geometry::{Line, Point, Size};
-use crate::style::AvailableSpace;
+use crate::style::{AvailableSpace, Overflow};
 use crate::tree::{
     Layout, LayoutInput, LayoutOutput, LayoutTree, NodeId, PartialLayoutTree, PartialLayoutTreeExt, SizingMode,
 };
@@ -43,12 +43,19 @@ pub fn compute_layout(tree: &mut impl PartialLayoutTree, root: NodeId, available
         Line::FALSE,
     );
 
+    let style = tree.get_style(root);
+    let scrollbar_size = Size {
+        width: if style.overflow.y == Overflow::Scroll { style.scrollbar_width } else { 0.0 },
+        height: if style.overflow.x == Overflow::Scroll { style.scrollbar_width } else { 0.0 },
+    };
+
     let layout = Layout {
         order: 0,
+        location: Point::ZERO,
         size: output.size,
         #[cfg(feature = "content_size")]
         content_size: output.content_size,
-        location: Point::ZERO,
+        scrollbar_size,
     };
     *tree.get_unrounded_layout_mut(root) = layout;
 }

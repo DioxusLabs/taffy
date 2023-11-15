@@ -2,7 +2,7 @@
 use super::types::GridTrack;
 use crate::compute::common::alignment::compute_alignment_offset;
 use crate::geometry::{InBothAbsAxis, Line, Point, Rect, Size};
-use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Position};
+use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Overflow, Position};
 use crate::tree::{Layout, NodeId, PartialLayoutTree, PartialLayoutTreeExt, SizingMode};
 use crate::util::sys::f32_max;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
@@ -65,8 +65,8 @@ pub(super) fn align_and_position_item(
 
     let style = tree.get_style(node);
 
-    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let overflow = style.overflow;
+    let scrollbar_width = style.scrollbar_width;
     let aspect_ratio = style.aspect_ratio;
     let justify_self = style.justify_self;
     let align_self = style.align_self;
@@ -204,12 +204,18 @@ pub(super) fn align_and_position_item(
         baseline_shim,
     );
 
+    let scrollbar_size = Size {
+        width: if overflow.y == Overflow::Scroll { scrollbar_width } else { 0.0 },
+        height: if overflow.x == Overflow::Scroll { scrollbar_width } else { 0.0 },
+    };
+
     *tree.get_unrounded_layout_mut(node) = Layout {
         order,
+        location: Point { x, y },
         size: Size { width, height },
         #[cfg(feature = "content_size")]
         content_size: layout_output.content_size,
-        location: Point { x, y },
+        scrollbar_size,
     };
 
     #[cfg(feature = "content_size")]
