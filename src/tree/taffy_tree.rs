@@ -488,7 +488,11 @@ impl<NodeContext> Taffy<NodeContext> {
 
     /// Return this node layout relative to its parent
     pub fn layout(&self, node: NodeId) -> TaffyResult<&Layout> {
-        Ok(&self.nodes[node.into()].final_layout)
+        if self.config.use_rounding {
+            Ok(&self.nodes[node.into()].final_layout)
+        } else {
+            Ok(&self.nodes[node.into()].unrounded_layout)
+        }
     }
 
     /// Marks the layout computation of this node and its children as outdated
