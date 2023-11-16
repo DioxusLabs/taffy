@@ -120,6 +120,8 @@ pub fn round_layout(tree: &mut impl LayoutTree, node_id: NodeId) {
         layout.location.y = round(unrounded_layout.location.y);
         layout.size.width = round(cumulative_x + unrounded_layout.size.width) - round(cumulative_x);
         layout.size.height = round(cumulative_y + unrounded_layout.size.height) - round(cumulative_y);
+        layout.scrollbar_size.width = round(unrounded_layout.scrollbar_size.width);
+        layout.scrollbar_size.height = round(unrounded_layout.scrollbar_size.height);
 
         #[cfg(feature = "content_size")]
         round_content_size(layout, unrounded_layout.content_size, cumulative_x, cumulative_y);

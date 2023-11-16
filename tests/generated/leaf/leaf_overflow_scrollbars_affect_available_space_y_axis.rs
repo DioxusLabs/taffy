@@ -37,10 +37,10 @@ fn leaf_overflow_scrollbars_affect_available_space_y_axis() {
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
-        165f32,
+        180f32,
         "scroll_width of node {:?}. Expected {}. Actual {}",
         node,
-        165f32,
+        180f32,
         layout.scroll_width()
     );
     #[cfg(feature = "content_size")]

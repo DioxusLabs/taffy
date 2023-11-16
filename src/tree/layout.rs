@@ -271,12 +271,15 @@ impl Layout {
     /// Return the scroll width of the node.
     /// The scroll width is the difference between the width and the content width, floored at zero
     pub fn scroll_width(&self) -> f32 {
-        f32_max(0.0, self.content_size.width - self.size.width)
+        f32_max(0.0, self.content_size.width + f32_min(self.scrollbar_size.width, self.size.width) - self.size.width)
     }
 
     /// Return the scroll width of the node.
     /// The scroll width is the difference between the width and the content width, floored at zero
     pub fn scroll_height(&self) -> f32 {
-        f32_max(0.0, self.content_size.height - self.size.height)
+        f32_max(
+            0.0,
+            self.content_size.height + f32_min(self.scrollbar_size.height, self.size.height) - self.size.height,
+        )
     }
 }

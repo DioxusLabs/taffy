@@ -240,10 +240,8 @@ fn generate_assertions(ident: &str, node: &Value, use_rounding: bool) -> TokenSt
     let x = read_f32("x");
     let y = read_f32("y");
 
-    // TODO: Use clientWidth/clientHeight to take into account scrollbars
-    // TODO: Handle rounding better
-    let scroll_width = (read_f32("scrollWidth") - read_naive_f32("width")).max(0.0);
-    let scroll_height = (read_f32("scrollHeight") - read_naive_f32("height")).max(0.0);
+    let scroll_width = (read_f32("scrollWidth") - read_naive_f32("clientWidth")).max(0.0);
+    let scroll_height = (read_f32("scrollHeight") - read_naive_f32("clientHeight")).max(0.0);
 
     let children = {
         let mut c = Vec::new();

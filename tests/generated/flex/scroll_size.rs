@@ -1,29 +1,28 @@
 #[test]
-fn overflow_main_axis_shrink_scroll() {
+fn scroll_size() {
     #[allow(unused_imports)]
     use taffy::{prelude::*, tree::Layout, Taffy};
     let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
     let node0 = taffy
-        .new_leaf_with_context(
+        .new_leaf(taffy::style::Style {
+            flex_shrink: 0f32,
+            size: taffy::geometry::Size {
+                width: taffy::style::Dimension::Length(100f32),
+                height: taffy::style::Dimension::Length(100f32),
+            },
+            ..Default::default()
+        })
+        .unwrap();
+    let node = taffy
+        .new_with_children(
             taffy::style::Style {
                 overflow: taffy::geometry::Point {
                     x: taffy::style::Overflow::Scroll,
                     y: taffy::style::Overflow::Scroll,
                 },
                 scrollbar_width: 15f32,
-                flex_shrink: 1f32,
-                ..Default::default()
-            },
-            crate::TextMeasure {
-                text_content: "HHHHHHHHHH",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
-        )
-        .unwrap();
-    let node = taffy
-        .new_with_children(
-            taffy::style::Style {
+                align_items: Some(taffy::style::AlignItems::Start),
+                justify_content: Some(taffy::style::JustifyContent::Start),
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::Length(50f32),
                     height: taffy::style::Dimension::Length(50f32),
@@ -46,34 +45,34 @@ fn overflow_main_axis_shrink_scroll() {
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
-        0f32,
+        65f32,
         "scroll_width of node {:?}. Expected {}. Actual {}",
         node,
-        0f32,
+        65f32,
         layout.scroll_width()
     );
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
-        0f32,
+        65f32,
         "scroll_height of node {:?}. Expected {}. Actual {}",
         node,
-        0f32,
+        65f32,
         layout.scroll_height()
     );
     #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
     let layout @ Layout { size, location, .. } = taffy.layout(node0).unwrap();
-    assert_eq!(size.width, 50f32, "width of node {:?}. Expected {}. Actual {}", node0, 50f32, size.width);
-    assert_eq!(size.height, 50f32, "height of node {:?}. Expected {}. Actual {}", node0, 50f32, size.height);
+    assert_eq!(size.width, 100f32, "width of node {:?}. Expected {}. Actual {}", node0, 100f32, size.width);
+    assert_eq!(size.height, 100f32, "height of node {:?}. Expected {}. Actual {}", node0, 100f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node0, 0f32, location.x);
     assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node0, 0f32, location.y);
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
-        65f32,
+        0f32,
         "scroll_width of node {:?}. Expected {}. Actual {}",
         node0,
-        65f32,
+        0f32,
         layout.scroll_width()
     );
     #[cfg(feature = "content_size")]

@@ -70,10 +70,10 @@ fn grid_overflow_inline_axis_scroll() {
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
-        50f32,
+        65f32,
         "scroll_width of node {:?}. Expected {}. Actual {}",
         node0,
-        50f32,
+        65f32,
         layout.scroll_width()
     );
     #[cfg(feature = "content_size")]

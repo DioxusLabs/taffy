@@ -470,6 +470,7 @@ mod rounding_inner_node_controversy_horizontal;
 mod rounding_inner_node_controversy_vertical;
 mod rounding_total_fractial;
 mod rounding_total_fractial_nested;
+mod scroll_size;
 mod simple_child;
 mod single_flex_child_after_absolute_child;
 mod size_defined_by_child;

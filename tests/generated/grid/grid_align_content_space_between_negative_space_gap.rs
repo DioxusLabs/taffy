@@ -74,10 +74,10 @@ fn grid_align_content_space_between_negative_space_gap() {
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
-        0f32,
+        20f32,
         "scroll_height of node {:?}. Expected {}. Actual {}",
         node,
-        0f32,
+        20f32,
         layout.scroll_height()
     );
     #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
