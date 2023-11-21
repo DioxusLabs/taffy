@@ -8,28 +8,27 @@ const CACHE_SIZE: usize = 9;
 
 /// Cached intermediate layout results
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct CacheEntry {
+pub(crate) struct CacheEntry<T> {
     /// The initial cached size of the node itself
     known_dimensions: Size<Option<f32>>,
     /// The initial cached size of the parent's node
     available_space: Size<AvailableSpace>,
-    /// Whether or not layout should be recomputed
-    run_mode: RunMode,
-
     /// The cached size and baselines of the item
-    cached_size_and_baselines: LayoutOutput,
+    content: T,
 }
 
 /// A cache for caching the results of a sizing a Grid Item or Flexbox Item
 pub struct Cache {
-    /// An array of entries in the cache
-    entries: [Option<CacheEntry>; CACHE_SIZE],
+    /// The cache entry for the node's final layout
+    final_layout_entry: Option<CacheEntry<LayoutOutput>>,
+    /// The cache entries for the node's preliminary size measurements
+    measure_entries: [Option<CacheEntry<Size<f32>>>; CACHE_SIZE],
 }
 
 impl Cache {
     /// Create a new empty cache
     pub const fn new() -> Self {
-        Self { entries: [None; CACHE_SIZE] }
+        Self { final_layout_entry: None, measure_entries: [None; CACHE_SIZE] }
     }
 
     /// Return the cache slot to cache the current computed result in
@@ -79,7 +78,7 @@ impl Cache {
 
         // Slot 3: height but not width known_dimension was set and the other dimension was either a MaxContent or Definite available space constraint
         // Slot 4: height but not width known_dimension was set and the other dimension was a MinContent constraint
-        if !has_known_width && has_known_height {
+        if has_known_height && !has_known_width {
             return 3 + (available_space.width == MinContent) as usize;
         }
 
@@ -104,28 +103,42 @@ impl Cache {
         available_space: Size<AvailableSpace>,
         run_mode: RunMode,
     ) -> Option<LayoutOutput> {
-        for entry in self.entries.iter().flatten() {
-            // Cached ComputeSize results are not valid if we are running in PerformLayout mode
-            if entry.run_mode == RunMode::ComputeSize && run_mode == RunMode::PerformLayout {
-                return None;
-            }
+        match run_mode {
+            RunMode::PerformLayout => self
+                .final_layout_entry
+                .filter(|entry| {
+                    let cached_size = entry.content.size;
+                    (known_dimensions.width == entry.known_dimensions.width
+                        || known_dimensions.width == Some(cached_size.width))
+                        && (known_dimensions.height == entry.known_dimensions.height
+                            || known_dimensions.height == Some(cached_size.height))
+                        && (known_dimensions.width.is_some()
+                            || entry.available_space.width.is_roughly_equal(available_space.width))
+                        && (known_dimensions.height.is_some()
+                            || entry.available_space.height.is_roughly_equal(available_space.height))
+                })
+                .map(|e| e.content),
+            RunMode::ComputeSize => {
+                for entry in self.measure_entries.iter().flatten() {
+                    let cached_size = entry.content;
 
-            let cached_size = entry.cached_size_and_baselines.size;
+                    if (known_dimensions.width == entry.known_dimensions.width
+                        || known_dimensions.width == Some(cached_size.width))
+                        && (known_dimensions.height == entry.known_dimensions.height
+                            || known_dimensions.height == Some(cached_size.height))
+                        && (known_dimensions.width.is_some()
+                            || entry.available_space.width.is_roughly_equal(available_space.width))
+                        && (known_dimensions.height.is_some()
+                            || entry.available_space.height.is_roughly_equal(available_space.height))
+                    {
+                        return Some(LayoutOutput::from(cached_size));
+                    }
+                }
 
-            if (known_dimensions.width == entry.known_dimensions.width
-                || known_dimensions.width == Some(cached_size.width))
-                && (known_dimensions.height == entry.known_dimensions.height
-                    || known_dimensions.height == Some(cached_size.height))
-                && (known_dimensions.width.is_some()
-                    || entry.available_space.width.is_roughly_equal(available_space.width))
-                && (known_dimensions.height.is_some()
-                    || entry.available_space.height.is_roughly_equal(available_space.height))
-            {
-                return Some(entry.cached_size_and_baselines);
+                None
             }
+            RunMode::PerformHiddenLayout => None,
         }
-
-        None
     }
 
     /// Store a computed size in the cache
@@ -134,20 +147,29 @@ impl Cache {
         known_dimensions: Size<Option<f32>>,
         available_space: Size<AvailableSpace>,
         run_mode: RunMode,
-        cached_size_and_baselines: LayoutOutput,
+        layout_output: LayoutOutput,
     ) {
-        let cache_slot = Self::compute_cache_slot(known_dimensions, available_space);
-        self.entries[cache_slot] =
-            Some(CacheEntry { known_dimensions, available_space, run_mode, cached_size_and_baselines });
+        match run_mode {
+            RunMode::PerformLayout => {
+                self.final_layout_entry = Some(CacheEntry { known_dimensions, available_space, content: layout_output })
+            }
+            RunMode::ComputeSize => {
+                let cache_slot = Self::compute_cache_slot(known_dimensions, available_space);
+                self.measure_entries[cache_slot] =
+                    Some(CacheEntry { known_dimensions, available_space, content: layout_output.size });
+            }
+            RunMode::PerformHiddenLayout => {}
+        }
     }
 
     /// Clear all cache entries
     pub fn clear(&mut self) {
-        self.entries = [None; CACHE_SIZE];
+        self.final_layout_entry = None;
+        self.measure_entries = [None; CACHE_SIZE];
     }
 
     /// Returns true if all cache entries are None, else false
     pub fn is_empty(&self) -> bool {
-        !self.entries.iter().any(|entry| entry.is_some())
+        self.final_layout_entry.is_none() && !self.measure_entries.iter().any(|entry| entry.is_some())
     }
 }
