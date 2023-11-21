@@ -10,6 +10,9 @@ use crate::util::sys::Vec;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 
+#[cfg(feature = "content_size")]
+use super::common::content_size::compute_content_size_contribution;
+
 /// Per-child data that is accumulated and modified over the course of the layout algorithm
 struct BlockItem {
     /// The identifier for the associated node
@@ -26,12 +29,21 @@ struct BlockItem {
     /// The maximum allowable size of this item
     max_size: Size<Option<f32>>,
 
+    /// The overflow style of the item
+    overflow: Point<Overflow>,
+    /// The width of the item's scrollbars (if it has scrollbars)
+    scrollbar_width: f32,
+
     /// The position style of the item
     position: Position,
     /// The final offset of this item
     inset: Rect<LengthPercentageAuto>,
     /// The margin of this item
     margin: Rect<LengthPercentageAuto>,
+    /// The margin of this item
+    padding: Rect<f32>,
+    /// The margin of this item
+    border: Rect<f32>,
     /// The sum of padding and border for this item
     padding_border_sum: Size<f32>,
 
@@ -83,7 +95,7 @@ pub fn compute_block_layout(tree: &mut impl PartialLayoutTree, node_id: NodeId, 
     // is ComputeSize (and thus the container's size is all that we're interested in)
     if run_mode == RunMode::ComputeSize {
         if let Size { width: Some(width), height: Some(height) } = styled_based_known_dimensions {
-            return Size { width, height }.into();
+            return LayoutOutput::from_outer_size(Size { width, height });
         }
     }
 
@@ -162,14 +174,14 @@ fn compute_inner(tree: &mut impl PartialLayoutTree, node_id: NodeId, inputs: Lay
 
     // Short-circuit if computing size and both dimensions known
     if let (RunMode::ComputeSize, Some(container_outer_height)) = (run_mode, known_dimensions.height) {
-        return Size { width: container_outer_width, height: container_outer_height }.into();
+        return LayoutOutput::from_outer_size(Size { width: container_outer_width, height: container_outer_height });
     }
 
     // 3. Perform final item layout and return content height
     let resolved_padding = raw_padding.resolve_or_zero(Some(container_outer_width));
     let resolved_border = raw_border.resolve_or_zero(Some(container_outer_width));
     let resolved_content_box_inset = resolved_padding + resolved_border + scrollbar_gutter;
-    let (intrinsic_outer_height, first_child_top_margin_set, last_child_bottom_margin_set) =
+    let (inflow_content_size, intrinsic_outer_height, first_child_top_margin_set, last_child_bottom_margin_set) =
         perform_final_layout_on_in_flow_children(
             tree,
             &mut items,
@@ -186,14 +198,15 @@ fn compute_inner(tree: &mut impl PartialLayoutTree, node_id: NodeId, inputs: Lay
 
     // Short-circuit if computing size
     if run_mode == RunMode::ComputeSize {
-        return final_outer_size.into();
+        return LayoutOutput::from_outer_size(final_outer_size);
     }
 
     // 4. Layout absolutely positioned children
     let absolute_position_inset = resolved_border + scrollbar_gutter;
     let absolute_position_area = final_outer_size - absolute_position_inset.sum_axes();
     let absolute_position_offset = Point { x: absolute_position_inset.left, y: absolute_position_inset.top };
-    perform_absolute_layout_on_absolute_children(tree, &items, absolute_position_area, absolute_position_offset);
+    let absolute_content_size =
+        perform_absolute_layout_on_absolute_children(tree, &items, absolute_position_area, absolute_position_offset);
 
     // 5. Perform hidden layout on hidden children
     let len = tree.child_count(node_id);
@@ -218,8 +231,13 @@ fn compute_inner(tree: &mut impl PartialLayoutTree, node_id: NodeId, inputs: Lay
     let can_be_collapsed_through =
         !has_styles_preventing_being_collapsed_through && all_in_flow_children_can_be_collapsed_through;
 
+    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
+    let content_size = inflow_content_size.f32_max(absolute_content_size);
+
     LayoutOutput {
         size: final_outer_size,
+        #[cfg(feature = "content_size")]
+        content_size,
         first_baselines: Point::NONE,
         top_margin: if own_margins_collapse_with_children.start {
             first_child_top_margin_set
@@ -259,9 +277,13 @@ fn generate_item_list(
                 size: child_style.size.maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
                 min_size: child_style.min_size.maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
                 max_size: child_style.max_size.maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
+                overflow: child_style.overflow,
+                scrollbar_width: child_style.scrollbar_width,
                 position: child_style.position,
                 inset: child_style.inset,
                 margin: child_style.margin,
+                padding,
+                border,
                 padding_border_sum: (padding + border).sum_axes(),
 
                 // Fields to be computed later (for now we initialise with dummy values)
@@ -317,13 +339,15 @@ fn perform_final_layout_on_in_flow_children(
     content_box_inset: Rect<f32>,
     resolved_content_box_inset: Rect<f32>,
     own_margins_collapse_with_children: Line<bool>,
-) -> (f32, CollapsibleMarginSet, CollapsibleMarginSet) {
+) -> (Size<f32>, f32, CollapsibleMarginSet, CollapsibleMarginSet) {
     // Resolve container_inner_width for sizing child nodes using intial content_box_inset
     let container_inner_width = container_outer_width - content_box_inset.horizontal_axis_sum();
     let parent_size = Size { width: Some(container_outer_width), height: None };
     let available_space =
         Size { width: AvailableSpace::Definite(container_inner_width), height: AvailableSpace::MinContent };
 
+    #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
+    let mut inflow_content_size = Size::ZERO;
     let mut committed_y_offset = resolved_content_box_inset.top;
     let mut first_child_top_margin_set = CollapsibleMarginSet::ZERO;
     let mut active_collapsible_margin_set = CollapsibleMarginSet::ZERO;
@@ -394,15 +418,36 @@ fn perform_final_layout_on_in_flow_children(
                 x: resolved_content_box_inset.left,
                 y: committed_y_offset + active_collapsible_margin_set.resolve(),
             };
+            let location = Point {
+                x: resolved_content_box_inset.left + inset_offset.x + resolved_margin.left,
+                y: committed_y_offset + inset_offset.y + y_margin_offset,
+            };
+
+            let scrollbar_size = Size {
+                width: if item.overflow.y == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
+                height: if item.overflow.x == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
+            };
 
             *tree.get_unrounded_layout_mut(item.node_id) = Layout {
                 order: item.order,
                 size: item_layout.size,
-                location: Point {
-                    x: resolved_content_box_inset.left + inset_offset.x + resolved_margin.left,
-                    y: committed_y_offset + inset_offset.y + y_margin_offset,
-                },
+                #[cfg(feature = "content_size")]
+                content_size: item_layout.content_size,
+                scrollbar_size,
+                location,
+                padding: item.padding,
+                border: item.border,
             };
+
+            #[cfg(feature = "content_size")]
+            {
+                inflow_content_size = inflow_content_size.f32_max(compute_content_size_contribution(
+                    location,
+                    final_size,
+                    item_layout.content_size,
+                    item.overflow,
+                ));
+            }
 
             // Update first_child_top_margin_set
             if is_collapsing_with_first_margin_set {
@@ -434,7 +479,7 @@ fn perform_final_layout_on_in_flow_children(
 
     committed_y_offset += resolved_content_box_inset.bottom + bottom_y_margin_offset;
     let content_height = f32_max(0.0, committed_y_offset);
-    (content_height, first_child_top_margin_set, last_child_bottom_margin_set)
+    (inflow_content_size, content_height, first_child_top_margin_set, last_child_bottom_margin_set)
 }
 
 /// Perform absolute layout on all absolutely positioned children.
@@ -444,9 +489,12 @@ fn perform_absolute_layout_on_absolute_children(
     items: &[BlockItem],
     area_size: Size<f32>,
     area_offset: Point<f32>,
-) {
+) -> Size<f32> {
     let area_width = area_size.width;
     let area_height = area_size.height;
+
+    #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
+    let mut absolute_content_size = Size::ZERO;
 
     for item in items.iter().filter(|item| item.position == Position::Absolute) {
         let child_style = tree.get_style(item.node_id);
@@ -497,7 +545,7 @@ fn perform_absolute_layout_on_absolute_children(
             known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
         }
 
-        let measured_size_and_baselines = tree.perform_child_layout(
+        let layout_output = tree.perform_child_layout(
             item.node_id,
             known_dimensions,
             area_size.map(Some),
@@ -508,7 +556,7 @@ fn perform_absolute_layout_on_absolute_children(
             SizingMode::ContentSize,
             Line::FALSE,
         );
-        let measured_size = measured_size_and_baselines.size;
+        let measured_size = layout_output.size;
         let final_size = known_dimensions.unwrap_or(measured_size).maybe_clamp(min_size, max_size);
 
         let non_auto_margin = Rect {
@@ -594,7 +642,35 @@ fn perform_absolute_layout_on_absolute_children(
                 .unwrap_or(item.static_position.y + resolved_margin.top),
         };
 
-        *tree.get_unrounded_layout_mut(item.node_id) =
-            Layout { order: item.order, size: final_size, location: area_offset + item_offset };
+        // Note: axis intentionally switched here as scrollbars take up space in the opposite axis
+        // to the axis in which scrolling is enabled.
+        let scrollbar_size = Size {
+            width: if item.overflow.y == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
+            height: if item.overflow.x == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
+        };
+
+        let location = area_offset + item_offset;
+        *tree.get_unrounded_layout_mut(item.node_id) = Layout {
+            order: item.order,
+            size: final_size,
+            #[cfg(feature = "content_size")]
+            content_size: layout_output.content_size,
+            scrollbar_size,
+            location,
+            padding,
+            border,
+        };
+
+        #[cfg(feature = "content_size")]
+        {
+            absolute_content_size = absolute_content_size.f32_max(compute_content_size_contribution(
+                location,
+                final_size,
+                layout_output.content_size,
+                item.overflow,
+            ));
+        }
     }
+
+    absolute_content_size
 }

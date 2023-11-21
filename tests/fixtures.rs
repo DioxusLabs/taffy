@@ -50,14 +50,14 @@ fn test_measure_function(
 
     let min_line_length: usize = lines.iter().map(|line| line.len()).max().unwrap_or(0);
     let max_line_length: usize = lines.iter().map(|line| line.len()).sum();
-    let inline_size =
-        known_dimensions.get_abs(inline_axis).unwrap_or_else(|| match available_space.get_abs(inline_axis) {
+    let inline_size = known_dimensions
+        .get_abs(inline_axis)
+        .unwrap_or_else(|| match available_space.get_abs(inline_axis) {
             AvailableSpace::MinContent => min_line_length as f32 * H_WIDTH,
             AvailableSpace::MaxContent => max_line_length as f32 * H_WIDTH,
-            AvailableSpace::Definite(inline_size) => {
-                inline_size.min(max_line_length as f32 * H_WIDTH).max(min_line_length as f32 * H_WIDTH)
-            }
-        });
+            AvailableSpace::Definite(inline_size) => inline_size.min(max_line_length as f32 * H_WIDTH),
+        })
+        .max(min_line_length as f32 * H_WIDTH);
     let block_size = known_dimensions.get_abs(block_axis).unwrap_or_else(|| {
         let inline_line_length = (inline_size / H_WIDTH).floor() as usize;
         let mut line_count = 1;

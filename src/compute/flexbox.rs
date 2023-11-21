@@ -10,10 +10,12 @@ use crate::style::{FlexDirection, Style};
 use crate::tree::{Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
 use crate::tree::{NodeId, PartialLayoutTree, PartialLayoutTreeExt};
 use crate::util::debug::debug_log;
-use crate::util::sys::Vec;
-use crate::util::sys::{f32_max, new_vec_with_capacity};
+use crate::util::sys::{f32_max, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
+
+#[cfg(feature = "content_size")]
+use super::common::content_size::compute_content_size_contribution;
 
 /// The intermediate results of a flexbox calculation for a single item
 struct FlexItem {
@@ -34,6 +36,8 @@ struct FlexItem {
 
     /// The overflow style of the item
     overflow: Point<Overflow>,
+    /// The width of the scrollbars (if it has any)
+    scrollbar_width: f32,
     /// The flex shrink style of the item
     flex_shrink: f32,
     /// The flex grow style of the item
@@ -173,7 +177,7 @@ pub fn compute_flexbox_layout(tree: &mut impl PartialLayoutTree, node: NodeId, i
     // is ComputeSize (and thus the container's size is all that we're interested in)
     if run_mode == RunMode::ComputeSize {
         if let Size { width: Some(width), height: Some(height) } = styled_based_known_dimensions {
-            return Size { width, height }.into();
+            return LayoutOutput::from_outer_size(Size { width, height });
         }
     }
 
@@ -313,7 +317,7 @@ fn compute_preliminary(tree: &mut impl PartialLayoutTree, node: NodeId, inputs: 
     // We have the container size.
     // If our caller does not care about performing layout we are done now.
     if run_mode == RunMode::ComputeSize {
-        return constants.container_size.into();
+        return LayoutOutput::from_outer_size(constants.container_size);
     }
 
     // 16. Align all flex lines per align-content.
@@ -322,11 +326,11 @@ fn compute_preliminary(tree: &mut impl PartialLayoutTree, node: NodeId, inputs: 
 
     // Do a final layout pass and gather the resulting layouts
     debug_log!("final_layout_pass");
-    final_layout_pass(tree, &mut flex_lines, &constants);
+    let inflow_content_size = final_layout_pass(tree, &mut flex_lines, &constants);
 
     // Before returning we perform absolute layout on all absolutely positioned children
     debug_log!("perform_absolute_layout_on_absolute_children");
-    perform_absolute_layout_on_absolute_children(tree, node, &constants);
+    let absolute_content_size = perform_absolute_layout_on_absolute_children(tree, node, &constants);
 
     debug_log!("hidden_layout");
     let len = tree.child_count(node);
@@ -361,7 +365,11 @@ fn compute_preliminary(tree: &mut impl PartialLayoutTree, node: NodeId, inputs: 
             })
     };
 
-    LayoutOutput::from_size_and_baselines(constants.container_size, Point { x: None, y: first_vertical_baseline })
+    LayoutOutput::from_sizes_and_baselines(
+        constants.container_size,
+        inflow_content_size.f32_max(absolute_content_size),
+        Point { x: None, y: first_vertical_baseline },
+    )
 }
 
 /// Compute constants that can be reused during the flexbox algorithm.
@@ -465,6 +473,7 @@ fn generate_anonymous_flex_items(
                 border: child_style.border.resolve_or_zero(constants.node_inner_size.width),
                 align_self: child_style.align_self.unwrap_or(constants.align_items),
                 overflow: child_style.overflow,
+                scrollbar_width: child_style.scrollbar_width,
                 flex_grow: child_style.flex_grow,
                 flex_shrink: child_style.flex_shrink,
                 flex_basis: 0.0,
@@ -1708,11 +1717,12 @@ fn calculate_flex_item(
     total_offset_main: &mut f32,
     total_offset_cross: f32,
     line_offset_cross: f32,
+    #[cfg(feature = "content_size")] total_content_size: &mut Size<f32>,
     container_size: Size<f32>,
     node_inner_size: Size<Option<f32>>,
     direction: FlexDirection,
 ) {
-    let preliminary_size_and_baselines = tree.perform_child_layout(
+    let layout_output = tree.perform_child_layout(
         item.node,
         item.target_size.map(|s| s.into()),
         node_inner_size,
@@ -1720,7 +1730,12 @@ fn calculate_flex_item(
         SizingMode::ContentSize,
         Line::FALSE,
     );
-    let preliminary_size = preliminary_size_and_baselines.size;
+    let LayoutOutput {
+        size,
+        #[cfg(feature = "content_size")]
+        content_size,
+        ..
+    } = layout_output;
 
     let offset_main = *total_offset_main
         + item.offset_main
@@ -1735,24 +1750,41 @@ fn calculate_flex_item(
 
     if direction.is_row() {
         let baseline_offset_cross = total_offset_cross + item.offset_cross + item.margin.cross_start(direction);
-        let inner_baseline = preliminary_size_and_baselines.first_baselines.y.unwrap_or(preliminary_size.height);
+        let inner_baseline = layout_output.first_baselines.y.unwrap_or(size.height);
         item.baseline = baseline_offset_cross + inner_baseline;
     } else {
         let baseline_offset_main = *total_offset_main + item.offset_main + item.margin.main_start(direction);
-        let inner_baseline = preliminary_size_and_baselines.first_baselines.y.unwrap_or(preliminary_size.height);
+        let inner_baseline = layout_output.first_baselines.y.unwrap_or(size.height);
         item.baseline = baseline_offset_main + inner_baseline;
     }
 
-    *tree.get_unrounded_layout_mut(item.node) = Layout {
-        order: item.order,
-        size: preliminary_size_and_baselines.size,
-        location: Point {
-            x: if direction.is_row() { offset_main } else { offset_cross },
-            y: if direction.is_column() { offset_main } else { offset_cross },
-        },
+    let location = match direction.is_row() {
+        true => Point { x: offset_main, y: offset_cross },
+        false => Point { x: offset_cross, y: offset_main },
+    };
+    let scrollbar_size = Size {
+        width: if item.overflow.y == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
+        height: if item.overflow.x == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
     };
 
-    *total_offset_main += item.offset_main + item.margin.main_axis_sum(direction) + preliminary_size.main(direction);
+    *tree.get_unrounded_layout_mut(item.node) = Layout {
+        order: item.order,
+        size,
+        #[cfg(feature = "content_size")]
+        content_size,
+        scrollbar_size,
+        location,
+        padding: item.padding,
+        border: item.border,
+    };
+
+    *total_offset_main += item.offset_main + item.margin.main_axis_sum(direction) + size.main(direction);
+
+    #[cfg(feature = "content_size")]
+    {
+        *total_content_size =
+            total_content_size.f32_max(compute_content_size_contribution(location, size, content_size, item.overflow));
+    }
 }
 
 /// Calculates the layout line
@@ -1761,6 +1793,7 @@ fn calculate_layout_line(
     tree: &mut impl PartialLayoutTree,
     line: &mut FlexLine,
     total_offset_cross: &mut f32,
+    #[cfg(feature = "content_size")] content_size: &mut Size<f32>,
     container_size: Size<f32>,
     node_inner_size: Size<Option<f32>>,
     padding_border: Rect<f32>,
@@ -1777,6 +1810,8 @@ fn calculate_layout_line(
                 &mut total_offset_main,
                 *total_offset_cross,
                 line_offset_cross,
+                #[cfg(feature = "content_size")]
+                content_size,
                 container_size,
                 node_inner_size,
                 direction,
@@ -1790,6 +1825,8 @@ fn calculate_layout_line(
                 &mut total_offset_main,
                 *total_offset_cross,
                 line_offset_cross,
+                #[cfg(feature = "content_size")]
+                content_size,
                 container_size,
                 node_inner_size,
                 direction,
@@ -1802,8 +1839,15 @@ fn calculate_layout_line(
 
 /// Do a final layout pass and collect the resulting layouts.
 #[inline]
-fn final_layout_pass(tree: &mut impl PartialLayoutTree, flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
+fn final_layout_pass(
+    tree: &mut impl PartialLayoutTree,
+    flex_lines: &mut [FlexLine],
+    constants: &AlgoConstants,
+) -> Size<f32> {
     let mut total_offset_cross = constants.content_box_inset.cross_start(constants.dir);
+
+    #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
+    let mut content_size = Size::ZERO;
 
     if constants.is_wrap_reverse {
         for line in flex_lines.iter_mut().rev() {
@@ -1811,6 +1855,8 @@ fn final_layout_pass(tree: &mut impl PartialLayoutTree, flex_lines: &mut [FlexLi
                 tree,
                 line,
                 &mut total_offset_cross,
+                #[cfg(feature = "content_size")]
+                &mut content_size,
                 constants.container_size,
                 constants.node_inner_size,
                 constants.content_box_inset,
@@ -1823,6 +1869,8 @@ fn final_layout_pass(tree: &mut impl PartialLayoutTree, flex_lines: &mut [FlexLi
                 tree,
                 line,
                 &mut total_offset_cross,
+                #[cfg(feature = "content_size")]
+                &mut content_size,
                 constants.container_size,
                 constants.node_inner_size,
                 constants.content_box_inset,
@@ -1830,6 +1878,8 @@ fn final_layout_pass(tree: &mut impl PartialLayoutTree, flex_lines: &mut [FlexLi
             );
         }
     }
+
+    content_size
 }
 
 /// Perform absolute layout on all absolutely positioned children.
@@ -1838,9 +1888,12 @@ fn perform_absolute_layout_on_absolute_children(
     tree: &mut impl PartialLayoutTree,
     node: NodeId,
     constants: &AlgoConstants,
-) {
+) -> Size<f32> {
     let container_width = constants.container_size.width;
     let container_height = constants.container_size.height;
+
+    #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
+    let mut content_size = Size::ZERO;
 
     for order in 0..tree.child_count(node) {
         let child = tree.get_child_id(node, order);
@@ -1851,6 +1904,8 @@ fn perform_absolute_layout_on_absolute_children(
             continue;
         }
 
+        let overflow = child_style.overflow;
+        let scrollbar_width = child_style.scrollbar_width;
         let aspect_ratio = child_style.aspect_ratio;
         let align_self = child_style.align_self.unwrap_or(constants.align_items);
         let margin = child_style.margin.map(|margin| margin.resolve_to_option(container_width));
@@ -1895,7 +1950,7 @@ fn perform_absolute_layout_on_absolute_children(
             known_dimensions = known_dimensions.maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
         }
 
-        let measured_size_and_baselines = tree.perform_child_layout(
+        let layout_output = tree.perform_child_layout(
             child,
             known_dimensions,
             constants.node_inner_size,
@@ -1906,7 +1961,7 @@ fn perform_absolute_layout_on_absolute_children(
             SizingMode::ContentSize,
             Line::FALSE,
         );
-        let measured_size = measured_size_and_baselines.size;
+        let measured_size = layout_output.size;
         let final_size = known_dimensions.unwrap_or(measured_size).maybe_clamp(min_size, max_size);
 
         let non_auto_margin = margin.map(|m| m.unwrap_or(0.0));
@@ -2032,15 +2087,48 @@ fn perform_absolute_layout_on_absolute_children(
             }
         };
 
+        let location = match constants.is_row {
+            true => Point { x: offset_main, y: offset_cross },
+            false => Point { x: offset_cross, y: offset_main },
+        };
+        let scrollbar_size = Size {
+            width: if overflow.y == Overflow::Scroll { scrollbar_width } else { 0.0 },
+            height: if overflow.x == Overflow::Scroll { scrollbar_width } else { 0.0 },
+        };
         *tree.get_unrounded_layout_mut(child) = Layout {
             order: order as u32,
             size: final_size,
-            location: Point {
-                x: if constants.is_row { offset_main } else { offset_cross },
-                y: if constants.is_column { offset_main } else { offset_cross },
-            },
+            #[cfg(feature = "content_size")]
+            content_size: layout_output.content_size,
+            scrollbar_size,
+            location,
+            padding,
+            border,
         };
+
+        #[cfg(feature = "content_size")]
+        {
+            let size_content_size_contribution = Size {
+                width: match overflow.x {
+                    Overflow::Visible => f32_max(final_size.width, layout_output.content_size.width),
+                    _ => final_size.width,
+                },
+                height: match overflow.y {
+                    Overflow::Visible => f32_max(final_size.height, layout_output.content_size.height),
+                    _ => final_size.height,
+                },
+            };
+            if size_content_size_contribution.has_non_zero_area() {
+                let content_size_contribution = Size {
+                    width: location.x + size_content_size_contribution.width,
+                    height: location.y + size_content_size_contribution.height,
+                };
+                content_size = content_size.f32_max(content_size_contribution);
+            }
+        }
     }
+
+    content_size
 }
 
 /// Computes the total space taken up by gaps in an axis given:

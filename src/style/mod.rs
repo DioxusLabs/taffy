@@ -131,13 +131,19 @@ impl Default for Position {
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Overflow {
-    /// The automatic minimum size of this node as a flexbox/grid item should be based on the size of it's content.
+    /// The automatic minimum size of this node as a flexbox/grid item should be based on the size of its content.
+    /// Content that overflows this node *should* contribute to the scroll region of its parent.
     #[default]
     Visible,
+    /// The automatic minimum size of this node as a flexbox/grid item should be based on the size of its content.
+    /// Content that overflows this node should *not* contribute to the scroll region of its parent.
+    Clip,
     /// The automatic minimum size of this node as a flexbox/grid item should be `0`.
+    /// Content that overflows this node should *not* contribute to the scroll region of its parent.
     Hidden,
     /// The automatic minimum size of this node as a flexbox/grid item should be `0`. Additionally, space should be reserved
     /// for a scrollbar. The amount of space reserved is controlled by the `scrollbar_width` property.
+    /// Content that overflows this node should *not* contribute to the scroll region of its parent.
     Scroll,
 }
 
@@ -146,7 +152,10 @@ impl Overflow {
     /// or else false for overflow modes that allow their contains to spill (`Overflow::Visible`).
     #[inline(always)]
     pub(crate) fn is_scroll_container(self) -> bool {
-        self != Overflow::Visible
+        match self {
+            Self::Visible | Self::Clip => false,
+            Self::Hidden | Self::Scroll => true,
+        }
     }
 
     /// Returns `Some(0.0)` if the overflow mode would cause the automatic minimum size of a Flexbox or CSS Grid item

@@ -284,6 +284,10 @@ function describeElement(e) {
       height: boundingRect.height,
       x: boundingRect.x - parentBoundingRect.x,
       y: boundingRect.y - parentBoundingRect.y,
+      scrollWidth: e.scrollWidth,
+      scrollHeight: e.scrollHeight,
+      clientWidth: e.clientWidth,
+      clientHeight: e.clientHeight,
     },
 
     // The naively rounded layout of the node. This is equivalent to calling Math.round() on
@@ -293,6 +297,10 @@ function describeElement(e) {
       height: e.offsetHeight,
       x: e.offsetLeft + e.parentNode.clientLeft,
       y: e.offsetTop + e.parentNode.clientTop,
+      scrollWidth: e.scrollWidth,
+      scrollHeight: e.scrollHeight,
+      clientWidth: e.clientWidth,
+      clientHeight: e.clientHeight,
     },
 
     // The naive rounding can result in 1px gaps in the layout, so Taffy uses a smarter algorithm to avoid this.
@@ -303,6 +311,10 @@ function describeElement(e) {
       height: Math.round(boundingRect.bottom) - Math.round(boundingRect.top),
       x: Math.round(boundingRect.x - parentBoundingRect.x),
       y: Math.round(boundingRect.y - parentBoundingRect.y),
+      scrollWidth: e.scrollWidth,
+      scrollHeight: e.scrollHeight,
+      clientWidth: e.clientWidth,
+      clientHeight: e.clientHeight,
     },
 
     // Whether the test should enable rounding
