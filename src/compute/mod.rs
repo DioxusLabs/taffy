@@ -152,6 +152,8 @@ pub fn round_layout(tree: &mut impl LayoutTree, node_id: NodeId) {
 
     #[cfg(feature = "content_size")]
     #[inline(always)]
+    /// Round content size variables.
+    /// This is split into a separate function to make it easier to feature flag.
     fn round_content_size(
         layout: &mut Layout,
         unrounded_content_size: Size<f32>,

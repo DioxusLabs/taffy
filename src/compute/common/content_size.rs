@@ -1,8 +1,10 @@
+//! Generic CSS content size code that is shared between all CSS algorithms.
 use crate::geometry::{Point, Size};
 use crate::style::Overflow;
 use crate::util::sys::f32_max;
 
 #[inline(always)]
+/// Determine how much width/height a given node contributes to it's parent's content size
 pub(crate) fn compute_content_size_contribution(
     location: Point<f32>,
     size: Size<f32>,
