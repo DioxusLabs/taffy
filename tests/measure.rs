@@ -38,7 +38,7 @@ mod measure {
 
     #[test]
     fn measure_root() {
-        let mut taffy: Taffy<FixedMeasure> = Taffy::new();
+        let mut taffy: TaffyTree<FixedMeasure> = TaffyTree::new();
         let node = taffy.new_leaf_with_context(Style::default(), FixedMeasure { width: 100.0, height: 100.0 }).unwrap();
         taffy.compute_layout_with_measure(node, Size::MAX_CONTENT, fixed_measure_function).unwrap();
 
@@ -48,7 +48,7 @@ mod measure {
 
     #[test]
     fn measure_child() {
-        let mut taffy: Taffy<FixedMeasure> = Taffy::new();
+        let mut taffy: TaffyTree<FixedMeasure> = TaffyTree::new();
 
         let child =
             taffy.new_leaf_with_context(Style::default(), FixedMeasure { width: 100.0, height: 100.0 }).unwrap();
@@ -65,7 +65,7 @@ mod measure {
 
     #[test]
     fn measure_child_constraint() {
-        let mut taffy: Taffy<FixedMeasure> = Taffy::new();
+        let mut taffy: TaffyTree<FixedMeasure> = TaffyTree::new();
         let child =
             taffy.new_leaf_with_context(Style::default(), FixedMeasure { width: 100.0, height: 100.0 }).unwrap();
 
@@ -88,7 +88,7 @@ mod measure {
 
     #[test]
     fn measure_child_constraint_padding_parent() {
-        let mut taffy: Taffy<FixedMeasure> = Taffy::new();
+        let mut taffy: TaffyTree<FixedMeasure> = TaffyTree::new();
         let child =
             taffy.new_leaf_with_context(Style::default(), FixedMeasure { width: 100.0, height: 100.0 }).unwrap();
 
@@ -122,7 +122,7 @@ mod measure {
 
     #[test]
     fn measure_child_with_flex_grow() {
-        let mut taffy: Taffy<FixedMeasure> = Taffy::new();
+        let mut taffy: TaffyTree<FixedMeasure> = TaffyTree::new();
         let child0 = taffy
             .new_leaf(Style {
                 size: Size { width: Dimension::Length(50.0), height: Dimension::Length(50.0) },
@@ -152,7 +152,7 @@ mod measure {
 
     #[test]
     fn measure_child_with_flex_shrink() {
-        let mut taffy: Taffy<FixedMeasure> = Taffy::new();
+        let mut taffy: TaffyTree<FixedMeasure> = TaffyTree::new();
         let child0 = taffy
             .new_leaf(Style {
                 size: Size { width: Dimension::Length(50.0), height: Dimension::Length(50.0) },
@@ -179,7 +179,7 @@ mod measure {
 
     #[test]
     fn remeasure_child_after_growing() {
-        let mut taffy: Taffy<AspectRatioMeasure> = Taffy::new();
+        let mut taffy: TaffyTree<AspectRatioMeasure> = TaffyTree::new();
         let child0 = taffy
             .new_leaf(Style {
                 size: Size { width: Dimension::Length(50.0), height: Dimension::Length(50.0) },
@@ -213,7 +213,7 @@ mod measure {
 
     #[test]
     fn remeasure_child_after_shrinking() {
-        let mut taffy: Taffy<AspectRatioMeasure> = Taffy::new();
+        let mut taffy: TaffyTree<AspectRatioMeasure> = TaffyTree::new();
 
         let child0 = taffy
             .new_leaf(Style {
@@ -246,7 +246,7 @@ mod measure {
 
     #[test]
     fn remeasure_child_after_stretching() {
-        let mut taffy: Taffy<()> = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
 
         fn custom_measure_function(
             known_dimensions: Size<Option<f32>>,
@@ -279,7 +279,7 @@ mod measure {
 
     #[test]
     fn width_overrides_measure() {
-        let mut taffy: Taffy<FixedMeasure> = Taffy::new();
+        let mut taffy: TaffyTree<FixedMeasure> = TaffyTree::new();
         let child = taffy
             .new_leaf_with_context(
                 Style { size: Size { width: Dimension::Length(50.0), height: auto() }, ..Default::default() },
@@ -296,7 +296,7 @@ mod measure {
 
     #[test]
     fn height_overrides_measure() {
-        let mut taffy: Taffy<FixedMeasure> = Taffy::new();
+        let mut taffy: TaffyTree<FixedMeasure> = TaffyTree::new();
         let child = taffy
             .new_leaf_with_context(
                 Style { size: Size { width: auto(), height: Dimension::Length(50.0) }, ..Default::default() },
@@ -313,7 +313,7 @@ mod measure {
 
     #[test]
     fn flex_basis_overrides_measure() {
-        let mut taffy: Taffy<FixedMeasure> = Taffy::new();
+        let mut taffy: TaffyTree<FixedMeasure> = TaffyTree::new();
         let child0 = taffy
             .new_leaf(Style { flex_basis: Dimension::Length(50.0), flex_grow: 1.0, ..Default::default() })
             .unwrap();
@@ -345,7 +345,7 @@ mod measure {
 
     #[test]
     fn stretch_overrides_measure() {
-        let mut taffy: Taffy<FixedMeasure> = Taffy::new();
+        let mut taffy: TaffyTree<FixedMeasure> = TaffyTree::new();
         let child = taffy.new_leaf_with_context(Style::default(), FixedMeasure { width: 50.0, height: 50.0 }).unwrap();
 
         let node = taffy
@@ -366,7 +366,7 @@ mod measure {
 
     #[test]
     fn measure_absolute_child() {
-        let mut taffy: Taffy<FixedMeasure> = Taffy::new();
+        let mut taffy: TaffyTree<FixedMeasure> = TaffyTree::new();
         let child = taffy
             .new_leaf_with_context(
                 Style { position: Position::Absolute, ..Default::default() },
@@ -392,7 +392,7 @@ mod measure {
 
     #[test]
     fn ignore_invalid_measure() {
-        let mut taffy: Taffy<FixedMeasure> = Taffy::new();
+        let mut taffy: TaffyTree<FixedMeasure> = TaffyTree::new();
         let child = taffy.new_leaf(Style { flex_grow: 1.0, ..Default::default() }).unwrap();
 
         let node = taffy

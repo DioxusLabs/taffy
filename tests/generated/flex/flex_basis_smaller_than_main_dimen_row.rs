@@ -1,8 +1,8 @@
 #[test]
 fn flex_basis_smaller_than_main_dimen_row() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, Taffy};
-    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
+    use taffy::{prelude::*, tree::Layout, TaffyTree};
+    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_basis: taffy::style::Dimension::Length(10f32),

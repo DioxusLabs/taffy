@@ -1,8 +1,8 @@
 #[test]
 fn align_content_stretch_column() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, Taffy};
-    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
+    use taffy::{prelude::*, tree::Layout, TaffyTree};
+    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,

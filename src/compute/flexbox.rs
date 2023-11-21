@@ -1,4 +1,4 @@
-//! Computes the [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) layout algorithm on [`Taffy`](crate::Taffy) according to the [spec](https://www.w3.org/TR/css-flexbox-1/)
+//! Computes the [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) layout algorithm on [`TaffyTree`](crate::TaffyTree) according to the [spec](https://www.w3.org/TR/css-flexbox-1/)
 use crate::compute::common::alignment::compute_alignment_offset;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
@@ -2154,13 +2154,13 @@ mod tests {
         geometry::Size,
         style::{FlexWrap, Style},
         util::{MaybeMath, ResolveOrZero},
-        Taffy,
+        TaffyTree,
     };
 
     // Make sure we get correct constants
     #[test]
     fn correct_constants() {
-        let mut tree: Taffy<()> = Taffy::with_capacity(16);
+        let mut tree: TaffyTree<()> = TaffyTree::with_capacity(16);
 
         let style = Style::default();
         let node_id = tree.new_leaf(style.clone()).unwrap();

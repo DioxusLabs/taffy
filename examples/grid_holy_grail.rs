@@ -19,7 +19,7 @@ fn default<T: Default>() -> T {
 fn main() -> Result<(), taffy::TaffyError> {
     use taffy::prelude::*;
 
-    let mut taffy: Taffy<()> = Taffy::new();
+    let mut taffy: TaffyTree<()> = TaffyTree::new();
 
     // Setup the grid
     let root_style = Style {

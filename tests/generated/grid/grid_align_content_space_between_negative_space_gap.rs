@@ -1,8 +1,8 @@
 #[test]
 fn grid_align_content_space_between_negative_space_gap() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, Taffy};
-    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
+    use taffy::{prelude::*, tree::Layout, TaffyTree};
+    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node00 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node01 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node02 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();

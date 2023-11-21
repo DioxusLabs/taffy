@@ -1,8 +1,8 @@
 #[test]
 fn aspect_ratio_flex_row_fill_min_height() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, Taffy};
-    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
+    use taffy::{prelude::*, tree::Layout, TaffyTree};
+    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(40f32), height: auto() },

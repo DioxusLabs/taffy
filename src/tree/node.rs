@@ -64,7 +64,7 @@ impl From<NodeId> for DefaultKey {
 
 /// Layout information for a given [`Node`](crate::node::Node)
 ///
-/// Stored in a [`Taffy`].
+/// Stored in a [`TaffyTree`].
 pub(crate) struct NodeData {
     /// The layout strategy used by this node
     pub(crate) style: Style,

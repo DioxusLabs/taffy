@@ -1,8 +1,8 @@
 #[test]
 fn padding_no_child() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, Taffy};
-    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
+    use taffy::{prelude::*, tree::Layout, TaffyTree};
+    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node = taffy
         .new_leaf(taffy::style::Style {
             padding: taffy::geometry::Rect {

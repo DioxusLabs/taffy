@@ -31,7 +31,7 @@ fn measure_function(
 }
 
 fn main() -> Result<(), taffy::TaffyError> {
-    let mut taffy: Taffy<NodeContext> = Taffy::new();
+    let mut taffy: TaffyTree<NodeContext> = TaffyTree::new();
 
     let font_metrics = FontMetrics { char_width: 10.0, char_height: 10.0 };
 

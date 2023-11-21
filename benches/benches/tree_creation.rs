@@ -13,13 +13,14 @@ use taffy_benchmarks::yoga_helpers;
 use yoga_helpers::yg;
 
 /// Build a random leaf node
-fn build_random_leaf(taffy: &mut Taffy) -> NodeId {
+fn build_random_leaf(taffy: &mut TaffyTree) -> NodeId {
     taffy.new_with_children(Style::DEFAULT, &[]).unwrap()
 }
 
 /// A tree with many children that have shallow depth
-fn build_taffy_flat_hierarchy(total_node_count: u32, use_with_capacity: bool) -> (Taffy, NodeId) {
-    let mut taffy = if use_with_capacity { Taffy::with_capacity(total_node_count as usize) } else { Taffy::new() };
+fn build_taffy_flat_hierarchy(total_node_count: u32, use_with_capacity: bool) -> (TaffyTree, NodeId) {
+    let mut taffy =
+        if use_with_capacity { TaffyTree::with_capacity(total_node_count as usize) } else { TaffyTree::new() };
     let mut rng = ChaCha8Rng::seed_from_u64(12345);
     let mut children = Vec::new();
     let mut node_count = 0;
@@ -72,7 +73,7 @@ fn taffy_benchmarks(c: &mut Criterion) {
                 std::hint::black_box(root);
             })
         });
-        let benchmark_id = BenchmarkId::new(format!("Taffy::new"), node_count);
+        let benchmark_id = BenchmarkId::new(format!("TaffyTree::new"), node_count);
         group.bench_with_input(benchmark_id, node_count, |b, &node_count| {
             b.iter(|| {
                 let (tree, root) = build_taffy_flat_hierarchy(node_count, false);
@@ -81,7 +82,7 @@ fn taffy_benchmarks(c: &mut Criterion) {
             })
         });
 
-        let benchmark_id = BenchmarkId::new(format!("Taffy::with_capacity"), node_count);
+        let benchmark_id = BenchmarkId::new(format!("TaffyTree::with_capacity"), node_count);
         group.bench_with_input(benchmark_id, node_count, |b, &node_count| {
             b.iter(|| {
                 let (tree, root) = build_taffy_flat_hierarchy(node_count, true);

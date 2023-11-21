@@ -23,7 +23,7 @@ mod caching {
 
     #[test]
     fn measure_count_flexbox() {
-        let mut taffy: Taffy<CountMeasure> = Taffy::new();
+        let mut taffy: TaffyTree<CountMeasure> = TaffyTree::new();
 
         let leaf = taffy.new_leaf_with_context(Style::default(), CountMeasure::new()).unwrap();
 
@@ -40,7 +40,7 @@ mod caching {
     #[test]
     #[cfg(feature = "grid")]
     fn measure_count_grid() {
-        let mut taffy: Taffy<CountMeasure> = Taffy::new();
+        let mut taffy: TaffyTree<CountMeasure> = TaffyTree::new();
 
         let style = || Style { display: Display::Grid, ..Default::default() };
         let leaf = taffy.new_leaf_with_context(style(), CountMeasure::new()).unwrap();
