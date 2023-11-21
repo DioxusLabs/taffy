@@ -148,7 +148,7 @@ where
         return LayoutOutput {
             size,
             #[cfg(feature = "content_size")]
-            content_size: measured_size,
+            content_size: measured_size + padding.sum_axes(),
             first_baselines: Point::NONE,
             top_margin: CollapsibleMarginSet::ZERO,
             bottom_margin: CollapsibleMarginSet::ZERO,
@@ -181,7 +181,7 @@ where
     LayoutOutput {
         size,
         #[cfg(feature = "content_size")]
-        content_size: padding_border.sum_axes(),
+        content_size: padding.sum_axes(),
         first_baselines: Point::NONE,
         top_margin: CollapsibleMarginSet::ZERO,
         bottom_margin: CollapsibleMarginSet::ZERO,
