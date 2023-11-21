@@ -24,20 +24,37 @@
 //! We would generally recommend the high-level API for users using Taffy standalone and the low-level API for users wanting to embed Taffy as part of
 //! a wider layout system or as part of a UI framework that already has it's own node/widget tree representation.
 //!
-//! - **The high-level API** consists of the [`Taffy`] struct which contains a tree implementation and provides methods that allow you to construct
-//!   a tree of UI nodes. Once constructed, you can call the [`compute_layout_with_measure`](crate::Taffy::compute_layout_with_measure) method to compute the layout (passing in a "measure function" closure which is used to compute the size of leaf nodes), and then access
-//!   the layout of each node using the [`layout`](crate::Taffy::layout) method.
+//! ### High-level API
 //!
-//!   When using the high-level API, Taffy will take care of node storage, caching and dispatching to the correct layout algorithm for a given node for you.
-//!   See the [`Taffy`] struct for more details on this API.
-//!   <br /><br />
+//! The high-level API** consists of the [`Taffy`] struct which contains a tree implementation and provides methods that allow you to construct
+//! a tree of UI nodes. Once constructed, you can call the [`compute_layout_with_measure`](crate::Taffy::compute_layout_with_measure) method to compute the layout (passing in a "measure function" closure which is used to compute the size of leaf nodes), and then access
+//! the layout of each node using the [`layout`](crate::Taffy::layout) method.
 //!
-//! - **The low-level API** consists of a set of traits (notably the [`PartialLayoutTree`] trait) which define an interface behind which you must implement your own
-//!   tree implementation, and a set of functions such as [`compute_flexbox_layout`] and [`compute_grid_layout`] which implement the layout algorithms (for a single node at a time), and are designed to be flexible
-//!   and easy to integrate into a wider layout or UI system.
+//! When using the high-level API, Taffy will take care of node storage, caching and dispatching to the correct layout algorithm for a given node for you.
+//! See the [`Taffy`] struct for more details on this API.
 //!
-//!   When using this API, you must handle node storage, caching, and dispatching to the correct layout algorithm for a given node yourself.
-//!   See the [`PartialLayoutTree`] trait for more details on this API.
+//! Examples which show usage of the high-level API include:
+//!
+//!   - [basic](https://github.com/DioxusLabs/taffy/blob/main/examples/basic.rs)
+//!   - [flexbox_gap](https://github.com/DioxusLabs/taffy/blob/main/examples/flexbox_gap.rs)
+//!   - [grid_holy_grail](https://github.com/DioxusLabs/taffy/blob/main/examples/basic.rs)
+//!   - [measure](https://github.com/DioxusLabs/taffy/blob/main/examples/measure.rs)
+//!
+//! In particular, the "measure" example shows how to integrate Taffy layout with other layout modalities such as text or image layout when using the high level API.
+//!
+//! ### Low-level API
+//!
+//! The low-level API consists of a set of traits (notably the [`PartialLayoutTree`] trait) which define an interface behind which you must implement your own
+//! tree implementation, and a set of functions such as [`compute_flexbox_layout`] and [`compute_grid_layout`] which implement the layout algorithms (for a single node at a time), and are designed to be flexible
+//! and easy to integrate into a wider layout or UI system.
+//!
+//! When using this API, you must handle node storage, caching, and dispatching to the correct layout algorithm for a given node yourself.
+//! See the [`PartialLayoutTree`] trait for more details on this API.
+//!
+//! Examples which show usage of the high-level API are:
+//!
+//!   - [custom_layout_tree_vec](https://github.com/DioxusLabs/taffy/blob/main/examples/custom_layout_tree_vec.rs) which implements a custom Taffy tree using a `Vec` as an arena with NodeId's being index's into the Vec.
+//!   - [custom_layout_tree_owned](https://github.com/DioxusLabs/taffy/blob/main/examples/custom_layout_tree_owned.rs) which implements a custom Taffy tree using directly owned children with NodeId's being pointers.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(unsafe_code)]
