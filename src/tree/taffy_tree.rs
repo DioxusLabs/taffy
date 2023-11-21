@@ -1,4 +1,4 @@
-//! Contains [Taffy](crate::tree::Taffy): the default implementation of [LayoutTree](crate::tree::LayoutTree), and the error type for Taffy.
+//! Contains [TaffyTree](crate::tree::TaffyTree): the default implementation of [LayoutTree](crate::tree::LayoutTree), and the error type for Taffy.
 use slotmap::{DefaultKey, SlotMap, SparseSecondaryMap};
 
 use crate::geometry::Size;
@@ -30,11 +30,11 @@ pub enum TaffyError {
         /// The total number of children the parent has
         child_count: usize,
     },
-    /// The parent node was not found in the [`Taffy`](crate::Taffy) instance.
+    /// The parent node was not found in the [`TaffyTree`](crate::TaffyTree) instance.
     InvalidParentNode(NodeId),
-    /// The child node was not found in the [`Taffy`](crate::Taffy) instance.
+    /// The child node was not found in the [`TaffyTree`](crate::TaffyTree) instance.
     InvalidChildNode(NodeId),
-    /// The supplied node was not found in the [`Taffy`](crate::Taffy) instance.
+    /// The supplied node was not found in the [`TaffyTree`](crate::TaffyTree) instance.
     InvalidInputNode(NodeId),
 }
 
@@ -45,10 +45,10 @@ impl core::fmt::Display for TaffyError {
                 write!(f, "Index (is {child_index}) should be < child_count ({child_count}) for parent node {parent:?}")
             }
             TaffyError::InvalidParentNode(parent) => {
-                write!(f, "Parent Node {parent:?} is not in the Taffy instance")
+                write!(f, "Parent Node {parent:?} is not in the TaffyTree instance")
             }
-            TaffyError::InvalidChildNode(child) => write!(f, "Child Node {child:?} is not in the Taffy instance"),
-            TaffyError::InvalidInputNode(node) => write!(f, "Supplied Node {node:?} is not in the Taffy instance"),
+            TaffyError::InvalidChildNode(child) => write!(f, "Child Node {child:?} is not in the TaffyTree instance"),
+            TaffyError::InvalidInputNode(node) => write!(f, "Supplied Node {node:?} is not in the TaffyTree instance"),
         }
     }
 }
@@ -56,7 +56,7 @@ impl core::fmt::Display for TaffyError {
 #[cfg(feature = "std")]
 impl std::error::Error for TaffyError {}
 
-/// Global configuration values for a Taffy instance
+/// Global configuration values for a TaffyTree instance
 pub(crate) struct TaffyConfig {
     /// Whether to round layout values
     pub(crate) use_rounding: bool,
@@ -71,7 +71,7 @@ impl Default for TaffyConfig {
 /// An entire tree of UI nodes. The entry point to Taffy's high-level API.
 ///
 /// Allows you to build a tree of UI nodes, run Taffy's layout algorithms over that tree, and then access the resultant layout.
-pub struct Taffy<NodeContext = ()> {
+pub struct TaffyTree<NodeContext = ()> {
     /// The [`NodeData`] for each node stored in this tree
     pub(crate) nodes: SlotMap<DefaultKey, NodeData>,
 
@@ -92,9 +92,9 @@ pub struct Taffy<NodeContext = ()> {
     pub(crate) config: TaffyConfig,
 }
 
-impl Default for Taffy {
-    fn default() -> Taffy<()> {
-        Taffy::new()
+impl Default for TaffyTree {
+    fn default() -> TaffyTree<()> {
+        TaffyTree::new()
     }
 }
 
@@ -109,14 +109,14 @@ impl<'a> Iterator for TaffyChildIter<'a> {
 }
 
 /// View over the Taffy tree that holds the tree itself along with a reference to the context
-/// and implements LayoutTree. This allows the context to be stored outside of the Taffy struct
+/// and implements LayoutTree. This allows the context to be stored outside of the TaffyTree struct
 /// which makes the lifetimes of the context much more flexible.
 pub(crate) struct TaffyView<'t, NodeContext, MeasureFunction>
 where
     MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
 {
-    /// A reference to the Taffy tree
-    pub(crate) taffy: &'t mut Taffy<NodeContext>,
+    /// A reference to the TaffyTree
+    pub(crate) taffy: &'t mut TaffyTree<NodeContext>,
     /// The context provided for passing to measure functions if layout is run over this struct
     pub(crate) measure_function: MeasureFunction,
 }
@@ -224,19 +224,19 @@ where
 }
 
 #[allow(clippy::iter_cloned_collect)] // due to no-std support, we need to use `iter_cloned` instead of `collect`
-impl<NodeContext> Taffy<NodeContext> {
-    /// Creates a new [`Taffy`]
+impl<NodeContext> TaffyTree<NodeContext> {
+    /// Creates a new [`TaffyTree`]
     ///
-    /// The default capacity of a [`Taffy`] is 16 nodes.
+    /// The default capacity of a [`TaffyTree`] is 16 nodes.
     #[must_use]
     pub fn new() -> Self {
         Self::with_capacity(16)
     }
 
-    /// Creates a new [`Taffy`] that can store `capacity` nodes before reallocation
+    /// Creates a new [`TaffyTree`] that can store `capacity` nodes before reallocation
     #[must_use]
     pub fn with_capacity(capacity: usize) -> Self {
-        Taffy {
+        TaffyTree {
             // TODO: make this method const upstream,
             // so constructors here can be const
             nodes: SlotMap::with_capacity(capacity),
@@ -557,7 +557,7 @@ impl<NodeContext> Taffy<NodeContext> {
         crate::util::print_tree(&taffy_view, root)
     }
 
-    /// Returns an instance of LayoutTree representing the Taffy
+    /// Returns an instance of LayoutTree representing the TaffyTree
     #[cfg(test)]
     pub(crate) fn as_layout_tree(&mut self) -> impl LayoutTree + '_ {
         TaffyView { taffy: self, measure_function: |_, _, _, _| Size::ZERO }
@@ -585,7 +585,7 @@ mod tests {
     #[test]
     fn new_should_allocate_default_capacity() {
         const DEFAULT_CAPACITY: usize = 16; // This is the capacity defined in the `impl Default`
-        let taffy: Taffy<()> = Taffy::new();
+        let taffy: TaffyTree<()> = TaffyTree::new();
 
         assert!(taffy.children.capacity() >= DEFAULT_CAPACITY);
         assert!(taffy.parents.capacity() >= DEFAULT_CAPACITY);
@@ -595,7 +595,7 @@ mod tests {
     #[test]
     fn test_with_capacity() {
         const CAPACITY: usize = 8;
-        let taffy: Taffy<()> = Taffy::with_capacity(CAPACITY);
+        let taffy: TaffyTree<()> = TaffyTree::with_capacity(CAPACITY);
 
         assert!(taffy.children.capacity() >= CAPACITY);
         assert!(taffy.parents.capacity() >= CAPACITY);
@@ -604,7 +604,7 @@ mod tests {
 
     #[test]
     fn test_new_leaf() {
-        let mut taffy: Taffy<()> = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
 
         let res = taffy.new_leaf(Style::default());
         assert!(res.is_ok());
@@ -616,7 +616,7 @@ mod tests {
 
     #[test]
     fn new_leaf_with_context() {
-        let mut taffy: Taffy<Size<f32>> = Taffy::new();
+        let mut taffy: TaffyTree<Size<f32>> = TaffyTree::new();
 
         let res = taffy.new_leaf_with_context(Style::default(), Size::ZERO);
         assert!(res.is_ok());
@@ -629,7 +629,7 @@ mod tests {
     /// Test that new_with_children works as expected
     #[test]
     fn test_new_with_children() {
-        let mut taffy: Taffy<()> = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
         let child0 = taffy.new_leaf(Style::default()).unwrap();
         let child1 = taffy.new_leaf(Style::default()).unwrap();
         let node = taffy.new_with_children(Style::default(), &[child0, child1]).unwrap();
@@ -642,7 +642,7 @@ mod tests {
 
     #[test]
     fn remove_node_should_remove() {
-        let mut taffy: Taffy<()> = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
 
         let node = taffy.new_leaf(Style::default()).unwrap();
 
@@ -651,7 +651,7 @@ mod tests {
 
     #[test]
     fn remove_node_should_detach_herarchy() {
-        let mut taffy: Taffy<()> = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
 
         // Build a linear tree layout: <0> <- <1> <- <2>
         let node2 = taffy.new_leaf(Style::default()).unwrap();
@@ -672,7 +672,7 @@ mod tests {
 
     #[test]
     fn remove_last_node() {
-        let mut taffy: Taffy<()> = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
 
         let parent = taffy.new_leaf(Style::default()).unwrap();
         let child = taffy.new_leaf(Style::default()).unwrap();
@@ -684,7 +684,7 @@ mod tests {
 
     #[test]
     fn set_measure() {
-        let mut taffy: Taffy<Size<f32>> = Taffy::new();
+        let mut taffy: TaffyTree<Size<f32>> = TaffyTree::new();
         let node = taffy.new_leaf_with_context(Style::default(), Size { width: 200.0, height: 200.0 }).unwrap();
         taffy.compute_layout_with_measure(node, Size::MAX_CONTENT, size_measure_function).unwrap();
         assert_eq!(taffy.layout(node).unwrap().size.width, 200.0);
@@ -696,7 +696,7 @@ mod tests {
 
     #[test]
     fn set_measure_of_previously_unmeasured_node() {
-        let mut taffy: Taffy<Size<f32>> = Taffy::new();
+        let mut taffy: TaffyTree<Size<f32>> = TaffyTree::new();
         let node = taffy.new_leaf(Style::default()).unwrap();
         taffy.compute_layout_with_measure(node, Size::MAX_CONTENT, size_measure_function).unwrap();
         assert_eq!(taffy.layout(node).unwrap().size.width, 0.0);
@@ -709,7 +709,7 @@ mod tests {
     /// Test that adding `add_child()` works
     #[test]
     fn add_child() {
-        let mut taffy: Taffy<()> = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
         let node = taffy.new_leaf(Style::default()).unwrap();
         assert_eq!(taffy.child_count(node).unwrap(), 0);
 
@@ -724,7 +724,7 @@ mod tests {
 
     #[test]
     fn insert_child_at_index() {
-        let mut taffy: Taffy<()> = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
 
         let child0 = taffy.new_leaf(Style::default()).unwrap();
         let child1 = taffy.new_leaf(Style::default()).unwrap();
@@ -751,7 +751,7 @@ mod tests {
 
     #[test]
     fn set_children() {
-        let mut taffy: Taffy<()> = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
 
         let child0 = taffy.new_leaf(Style::default()).unwrap();
         let child1 = taffy.new_leaf(Style::default()).unwrap();
@@ -773,7 +773,7 @@ mod tests {
     /// Test that removing a child works
     #[test]
     fn remove_child() {
-        let mut taffy: Taffy<()> = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
         let child0 = taffy.new_leaf(Style::default()).unwrap();
         let child1 = taffy.new_leaf(Style::default()).unwrap();
         let node = taffy.new_with_children(Style::default(), &[child0, child1]).unwrap();
@@ -790,7 +790,7 @@ mod tests {
 
     #[test]
     fn remove_child_at_index() {
-        let mut taffy: Taffy<()> = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
         let child0 = taffy.new_leaf(Style::default()).unwrap();
         let child1 = taffy.new_leaf(Style::default()).unwrap();
         let node = taffy.new_with_children(Style::default(), &[child0, child1]).unwrap();
@@ -808,7 +808,7 @@ mod tests {
     // Related to: https://github.com/DioxusLabs/taffy/issues/510
     #[test]
     fn remove_child_updates_parents() {
-        let mut taffy: Taffy<()> = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
 
         let parent = taffy.new_leaf(Style::default()).unwrap();
         let child = taffy.new_leaf(Style::default()).unwrap();
@@ -823,7 +823,7 @@ mod tests {
 
     #[test]
     fn replace_child_at_index() {
-        let mut taffy: Taffy<()> = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
 
         let child0 = taffy.new_leaf(Style::default()).unwrap();
         let child1 = taffy.new_leaf(Style::default()).unwrap();
@@ -838,7 +838,7 @@ mod tests {
     }
     #[test]
     fn test_child_at_index() {
-        let mut taffy: Taffy<()> = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
         let child0 = taffy.new_leaf(Style::default()).unwrap();
         let child1 = taffy.new_leaf(Style::default()).unwrap();
         let child2 = taffy.new_leaf(Style::default()).unwrap();
@@ -850,7 +850,7 @@ mod tests {
     }
     #[test]
     fn test_child_count() {
-        let mut taffy: Taffy<()> = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
         let child0 = taffy.new_leaf(Style::default()).unwrap();
         let child1 = taffy.new_leaf(Style::default()).unwrap();
         let node = taffy.new_with_children(Style::default(), &[child0, child1]).unwrap();
@@ -863,7 +863,7 @@ mod tests {
     #[allow(clippy::vec_init_then_push)]
     #[test]
     fn test_children() {
-        let mut taffy: Taffy<()> = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
         let child0 = taffy.new_leaf(Style::default()).unwrap();
         let child1 = taffy.new_leaf(Style::default()).unwrap();
         let node = taffy.new_with_children(Style::default(), &[child0, child1]).unwrap();
@@ -879,7 +879,7 @@ mod tests {
     }
     #[test]
     fn test_set_style() {
-        let mut taffy: Taffy<()> = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
 
         let node = taffy.new_leaf(Style::default()).unwrap();
         assert_eq!(taffy.style(node).unwrap().display, Display::Flex);
@@ -889,7 +889,7 @@ mod tests {
     }
     #[test]
     fn test_style() {
-        let mut taffy: Taffy<()> = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
 
         let style = Style { display: Display::None, flex_direction: FlexDirection::RowReverse, ..Default::default() };
 
@@ -901,7 +901,7 @@ mod tests {
     }
     #[test]
     fn test_layout() {
-        let mut taffy: Taffy<()> = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
         let node = taffy.new_leaf(Style::default()).unwrap();
 
         // TODO: Improve this test?
@@ -911,7 +911,7 @@ mod tests {
 
     #[test]
     fn test_mark_dirty() {
-        let mut taffy: Taffy<()> = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
         let child0 = taffy.new_leaf(Style::default()).unwrap();
         let child1 = taffy.new_leaf(Style::default()).unwrap();
         let node = taffy.new_with_children(Style::default(), &[child0, child1]).unwrap();
@@ -936,7 +936,7 @@ mod tests {
 
     #[test]
     fn compute_layout_should_produce_valid_result() {
-        let mut taffy: Taffy<()> = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
         let node_result = taffy.new_leaf(Style {
             size: Size { width: Dimension::Length(10f32), height: Dimension::Length(10f32) },
             ..Default::default()
@@ -954,7 +954,7 @@ mod tests {
     fn make_sure_layout_location_is_top_left() {
         use crate::prelude::Rect;
 
-        let mut taffy: Taffy<()> = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
 
         let node = taffy
             .new_leaf(Style {

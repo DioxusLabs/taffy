@@ -1,8 +1,8 @@
 #[test]
 fn wrap_nodes_with_content_sizing_overflowing_margin() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, Taffy};
-    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
+    use taffy::{prelude::*, tree::Layout, TaffyTree};
+    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node000 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {

@@ -1,8 +1,8 @@
 #[test]
 fn grid_span_2_min_content_fit_content_10px_indefinite() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, Taffy};
-    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
+    use taffy::{prelude::*, tree::Layout, TaffyTree};
+    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },

@@ -3,7 +3,7 @@ use rand::Rng;
 use rand_chacha::ChaCha8Rng;
 use taffy::style::Style as TaffyStyle;
 use taffy::tree::NodeId as TaffyNodeId;
-use taffy::Taffy as TaffyTree;
+use taffy::TaffyTree;
 
 use super::{BuildTree, BuildTreeExt, GenStyle};
 

@@ -1,8 +1,8 @@
 #[test]
 fn grid_percent_tracks_definite_overflow() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, Taffy};
-    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
+    use taffy::{prelude::*, tree::Layout, TaffyTree};
+    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node0 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node1 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node2 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();

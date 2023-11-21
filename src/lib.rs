@@ -26,12 +26,12 @@
 //!
 //! ### High-level API
 //!
-//! The high-level API** consists of the [`Taffy`] struct which contains a tree implementation and provides methods that allow you to construct
-//! a tree of UI nodes. Once constructed, you can call the [`compute_layout_with_measure`](crate::Taffy::compute_layout_with_measure) method to compute the layout (passing in a "measure function" closure which is used to compute the size of leaf nodes), and then access
-//! the layout of each node using the [`layout`](crate::Taffy::layout) method.
+//! The high-level API** consists of the [`TaffyTree`] struct which contains a tree implementation and provides methods that allow you to construct
+//! a tree of UI nodes. Once constructed, you can call the [`compute_layout_with_measure`](crate::TaffyTree::compute_layout_with_measure) method to compute the layout (passing in a "measure function" closure which is used to compute the size of leaf nodes), and then access
+//! the layout of each node using the [`layout`](crate::TaffyTree::layout) method.
 //!
 //! When using the high-level API, Taffy will take care of node storage, caching and dispatching to the correct layout algorithm for a given node for you.
-//! See the [`Taffy`] struct for more details on this API.
+//! See the [`TaffyTree`] struct for more details on this API.
 //!
 //! Examples which show usage of the high-level API include:
 //!
@@ -105,7 +105,7 @@ pub use crate::compute::{
 pub use crate::style::Style;
 #[cfg(feature = "taffy_tree")]
 #[doc(inline)]
-pub use crate::tree::Taffy;
+pub use crate::tree::TaffyTree;
 #[doc(inline)]
 pub use crate::tree::{LayoutTree, PartialLayoutTree};
 #[cfg(feature = "std")]

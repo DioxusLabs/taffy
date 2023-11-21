@@ -7,7 +7,7 @@ use taffy::prelude::*;
 use taffy::style::Style;
 
 /// Build a random leaf node
-fn build_random_leaf(taffy: &mut Taffy, _rng: &mut ChaCha8Rng) -> NodeId {
+fn build_random_leaf(taffy: &mut TaffyTree, _rng: &mut ChaCha8Rng) -> NodeId {
     taffy.new_with_children(Style { size: length(20.0), ..Default::default() }, &[]).unwrap()
 }
 
@@ -40,8 +40,8 @@ fn random_nxn_grid_style<R: Rng>(rng: &mut R, track_count: usize) -> Style {
 }
 
 /// A tree with many children that have shallow depth
-fn build_grid_flat_hierarchy(col_count: usize, row_count: usize) -> (Taffy, NodeId) {
-    let mut taffy = Taffy::new();
+fn build_grid_flat_hierarchy(col_count: usize, row_count: usize) -> (TaffyTree, NodeId) {
+    let mut taffy = TaffyTree::new();
     let mut rng = ChaCha8Rng::seed_from_u64(12345);
 
     let style = Style {
@@ -60,11 +60,11 @@ fn build_grid_flat_hierarchy(col_count: usize, row_count: usize) -> (Taffy, Node
 
 /// A helper function to recursively construct a deep tree
 pub fn build_deep_grid_tree(
-    tree: &mut Taffy,
+    tree: &mut TaffyTree,
     levels: usize,
     track_count: usize,
-    create_leaf_node: &mut impl FnMut(&mut Taffy) -> NodeId,
-    create_container_node: &mut impl FnMut(&mut Taffy, Vec<NodeId>) -> NodeId,
+    create_leaf_node: &mut impl FnMut(&mut TaffyTree) -> NodeId,
+    create_container_node: &mut impl FnMut(&mut TaffyTree, Vec<NodeId>) -> NodeId,
 ) -> Vec<NodeId> {
     // The extra one is for a position:absolute child
     let child_count = track_count * track_count;
@@ -86,15 +86,15 @@ pub fn build_deep_grid_tree(
 }
 
 /// A tree with a higher depth for a more realistic scenario
-fn build_taffy_deep_grid_hierarchy(levels: usize, track_count: usize) -> (Taffy, NodeId) {
+fn build_taffy_deep_grid_hierarchy(levels: usize, track_count: usize) -> (TaffyTree, NodeId) {
     let mut rng = ChaCha8Rng::seed_from_u64(12345);
-    let mut build_leaf_node = |taffy: &mut Taffy| build_random_leaf(taffy, &mut rng);
+    let mut build_leaf_node = |taffy: &mut TaffyTree| build_random_leaf(taffy, &mut rng);
     let mut rng = ChaCha8Rng::seed_from_u64(12345);
-    let mut build_flex_node = |taffy: &mut Taffy, children: Vec<NodeId>| {
+    let mut build_flex_node = |taffy: &mut TaffyTree, children: Vec<NodeId>| {
         taffy.new_with_children(random_nxn_grid_style(&mut rng, track_count), &children).unwrap()
     };
 
-    let mut taffy = Taffy::new();
+    let mut taffy = TaffyTree::new();
     let tree = build_deep_grid_tree(&mut taffy, levels, track_count, &mut build_leaf_node, &mut build_flex_node);
     let root = taffy.new_with_children(Style::DEFAULT, &tree).unwrap();
     (taffy, root)

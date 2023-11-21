@@ -19,13 +19,13 @@ Right now, it powers:
 ```rust
 use taffy::prelude::*;
 
-// First create an instance of Taffy
-let mut taffy : Taffy<()> = Taffy::new();
+// First create an instance of TaffyTree
+let mut tree : TaffyTree<()> = TaffyTree::new();
 
-// Create a tree of nodes using `taffy.new_leaf` and `taffy.new_with_children`.
+// Create a tree of nodes using `TaffyTree.new_leaf` and `TaffyTree.new_with_children`.
 // These functions both return a node id which can be used to refer to that node
 // The Style struct is used to specify styling information
-let header_node = taffy
+let header_node = tree
     .new_leaf(
         Style {
             size: Size { width: length(800.0), height: length(100.0) },
@@ -33,7 +33,7 @@ let header_node = taffy
         },
     ).unwrap();
 
-let body_node = taffy
+let body_node = tree
     .new_leaf(
         Style {
             size: Size { width: length(800.0), height: auto() },
@@ -42,7 +42,7 @@ let body_node = taffy
         },
     ).unwrap();
 
-let root_node = taffy
+let root_node = tree
     .new_with_children(
         Style {
             flex_direction: FlexDirection::Column,
@@ -54,15 +54,15 @@ let root_node = taffy
     .unwrap();
 
 // Call compute_layout on the root of your tree to run the layout algorithm
-taffy.compute_layout(root_node, Size::MAX_CONTENT).unwrap();
+tree.compute_layout(root_node, Size::MAX_CONTENT).unwrap();
 
-// Inspect the computed layout using taffy.layout
-assert_eq!(taffy.layout(root_node).unwrap().size.width, 800.0);
-assert_eq!(taffy.layout(root_node).unwrap().size.height, 600.0);
-assert_eq!(taffy.layout(header_node).unwrap().size.width, 800.0);
-assert_eq!(taffy.layout(header_node).unwrap().size.height, 100.0);
-assert_eq!(taffy.layout(body_node).unwrap().size.width, 800.0);
-assert_eq!(taffy.layout(body_node).unwrap().size.height, 500.0); // This value was not set explicitly, but was computed by Taffy
+// Inspect the computed layout using `TaffyTree.layout`
+assert_eq!(tree.layout(root_node).unwrap().size.width, 800.0);
+assert_eq!(tree.layout(root_node).unwrap().size.height, 600.0);
+assert_eq!(tree.layout(header_node).unwrap().size.width, 800.0);
+assert_eq!(tree.layout(header_node).unwrap().size.height, 100.0);
+assert_eq!(tree.layout(body_node).unwrap().size.width, 800.0);
+assert_eq!(tree.layout(body_node).unwrap().size.height, 500.0); // This value was not set explicitly, but was computed by Taffy
 
 ```
 

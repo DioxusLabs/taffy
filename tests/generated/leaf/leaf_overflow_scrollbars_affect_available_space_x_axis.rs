@@ -1,8 +1,8 @@
 #[test]
 fn leaf_overflow_scrollbars_affect_available_space_x_axis() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, Taffy};
-    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
+    use taffy::{prelude::*, tree::Layout, TaffyTree};
+    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node = taffy
         .new_leaf_with_context(
             taffy::style::Style {

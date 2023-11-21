@@ -1,8 +1,8 @@
 #[test]
 fn max_width_overrides_width_on_root() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, Taffy};
-    let mut taffy: Taffy<crate::TextMeasure> = Taffy::new();
+    use taffy::{prelude::*, tree::Layout, TaffyTree};
+    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },

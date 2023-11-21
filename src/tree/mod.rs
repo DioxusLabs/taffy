@@ -1,4 +1,4 @@
-//! Contains both [a high-level interface to Taffy](crate::Taffy) using a ready-made node tree, and [a trait for defining a custom node trees](crate::tree::LayoutTree) / utility types to help with that.
+//! Contains both [a high-level interface to Taffy](crate::TaffyTree) using a ready-made node tree, and [a trait for defining a custom node trees](crate::tree::LayoutTree) / utility types to help with that.
 
 use crate::geometry::{AbsoluteAxis, Line, Size};
 use crate::style::{AvailableSpace, Style};
@@ -13,7 +13,7 @@ pub use node::NodeId;
 #[cfg(feature = "taffy_tree")]
 mod taffy_tree;
 #[cfg(feature = "taffy_tree")]
-pub use taffy_tree::{Taffy, TaffyError, TaffyResult};
+pub use taffy_tree::{TaffyError, TaffyResult, TaffyTree};
 mod layout;
 pub use layout::{CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RequestedAxis, RunMode, SizingMode};
 
