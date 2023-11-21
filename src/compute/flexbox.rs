@@ -1774,6 +1774,8 @@ fn calculate_flex_item(
         content_size,
         scrollbar_size,
         location,
+        padding: item.padding,
+        border: item.border,
     };
 
     *total_offset_main += item.offset_main + item.margin.main_axis_sum(direction) + size.main(direction);
@@ -2100,6 +2102,8 @@ fn perform_absolute_layout_on_absolute_children(
             content_size: layout_output.content_size,
             scrollbar_size,
             location,
+            padding,
+            border,
         };
 
         #[cfg(feature = "content_size")]

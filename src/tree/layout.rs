@@ -1,5 +1,5 @@
 //! Final data structures that represent the high-level UI layout
-use crate::geometry::{AbsoluteAxis, Line, Point, Size};
+use crate::geometry::{AbsoluteAxis, Line, Point, Rect, Size};
 use crate::prelude::TaffyMaxContent;
 use crate::style::AvailableSpace;
 use crate::util::sys::{f32_max, f32_min};
@@ -229,6 +229,10 @@ pub struct Layout {
     pub content_size: Size<f32>,
     /// The size of the scrollbars in each dimension. If there is no scrollbar then the size will be zero.
     pub scrollbar_size: Size<f32>,
+    /// The size of the borders of the node
+    pub border: Rect<f32>,
+    /// The size of the padding of the node
+    pub padding: Rect<f32>,
 }
 
 impl Layout {
@@ -246,6 +250,8 @@ impl Layout {
             #[cfg(feature = "content_size")]
             content_size: Size::zero(),
             scrollbar_size: Size::zero(),
+            border: Rect::zero(),
+            padding: Rect::zero(),
         }
     }
 
@@ -262,6 +268,8 @@ impl Layout {
             #[cfg(feature = "content_size")]
             content_size: Size::zero(),
             scrollbar_size: Size::zero(),
+            border: Rect::zero(),
+            padding: Rect::zero(),
         }
     }
 }

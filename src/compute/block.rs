@@ -40,6 +40,10 @@ struct BlockItem {
     inset: Rect<LengthPercentageAuto>,
     /// The margin of this item
     margin: Rect<LengthPercentageAuto>,
+    /// The margin of this item
+    padding: Rect<f32>,
+    /// The margin of this item
+    border: Rect<f32>,
     /// The sum of padding and border for this item
     padding_border_sum: Size<f32>,
 
@@ -278,6 +282,8 @@ fn generate_item_list(
                 position: child_style.position,
                 inset: child_style.inset,
                 margin: child_style.margin,
+                padding,
+                border,
                 padding_border_sum: (padding + border).sum_axes(),
 
                 // Fields to be computed later (for now we initialise with dummy values)
@@ -429,6 +435,8 @@ fn perform_final_layout_on_in_flow_children(
                 content_size: item_layout.content_size,
                 scrollbar_size,
                 location,
+                padding: item.padding,
+                border: item.border,
             };
 
             #[cfg(feature = "content_size")]
@@ -649,6 +657,8 @@ fn perform_absolute_layout_on_absolute_children(
             content_size: layout_output.content_size,
             scrollbar_size,
             location,
+            padding,
+            border,
         };
 
         #[cfg(feature = "content_size")]

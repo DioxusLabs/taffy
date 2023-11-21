@@ -216,6 +216,8 @@ pub(super) fn align_and_position_item(
         #[cfg(feature = "content_size")]
         content_size: layout_output.content_size,
         scrollbar_size,
+        padding,
+        border,
     };
 
     #[cfg(feature = "content_size")]

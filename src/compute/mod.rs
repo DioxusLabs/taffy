@@ -30,6 +30,7 @@ use crate::tree::{
 };
 use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
 use crate::util::sys::round;
+use crate::util::ResolveOrZero;
 
 /// Updates the stored layout of the provided `node` and its children
 pub fn compute_layout(tree: &mut impl PartialLayoutTree, root: NodeId, available_space: Size<AvailableSpace>) {
@@ -44,6 +45,8 @@ pub fn compute_layout(tree: &mut impl PartialLayoutTree, root: NodeId, available
     );
 
     let style = tree.get_style(root);
+    let padding = style.padding.resolve_or_zero(available_space.width.into_option());
+    let border = style.border.resolve_or_zero(available_space.width.into_option());
     let scrollbar_size = Size {
         width: if style.overflow.y == Overflow::Scroll { style.scrollbar_width } else { 0.0 },
         height: if style.overflow.x == Overflow::Scroll { style.scrollbar_width } else { 0.0 },
@@ -56,6 +59,8 @@ pub fn compute_layout(tree: &mut impl PartialLayoutTree, root: NodeId, available
         #[cfg(feature = "content_size")]
         content_size: output.content_size,
         scrollbar_size,
+        padding,
+        border,
     };
     *tree.get_unrounded_layout_mut(root) = layout;
 }
@@ -122,6 +127,18 @@ pub fn round_layout(tree: &mut impl LayoutTree, node_id: NodeId) {
         layout.size.height = round(cumulative_y + unrounded_layout.size.height) - round(cumulative_y);
         layout.scrollbar_size.width = round(unrounded_layout.scrollbar_size.width);
         layout.scrollbar_size.height = round(unrounded_layout.scrollbar_size.height);
+        layout.border.left = round(cumulative_x + unrounded_layout.border.left) - round(cumulative_x);
+        layout.border.right = round(cumulative_x + unrounded_layout.size.width)
+            - round(cumulative_x + unrounded_layout.size.width - unrounded_layout.border.right);
+        layout.border.top = round(cumulative_y + unrounded_layout.border.top) - round(cumulative_y);
+        layout.border.bottom = round(cumulative_y + unrounded_layout.size.height)
+            - round(cumulative_y + unrounded_layout.size.height - unrounded_layout.border.bottom);
+        layout.padding.left = round(cumulative_x + unrounded_layout.padding.left) - round(cumulative_x);
+        layout.padding.right = round(cumulative_x + unrounded_layout.size.width)
+            - round(cumulative_x + unrounded_layout.size.width - unrounded_layout.padding.right);
+        layout.padding.top = round(cumulative_y + unrounded_layout.padding.top) - round(cumulative_y);
+        layout.padding.bottom = round(cumulative_y + unrounded_layout.size.height)
+            - round(cumulative_y + unrounded_layout.size.height - unrounded_layout.padding.bottom);
 
         #[cfg(feature = "content_size")]
         round_content_size(layout, unrounded_layout.content_size, cumulative_x, cumulative_y);
