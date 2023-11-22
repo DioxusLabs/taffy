@@ -344,7 +344,12 @@ impl<NodeContext> TaffyTree<NodeContext> {
         Ok(())
     }
 
-    /// Get's a mutable reference to the the context data associated with the node
+    /// Gets a reference to the the context data associated with the node
+    pub fn get_node_context(&self, node: NodeId) -> Option<&NodeContext> {
+        self.node_context_data.get(node.into())
+    }
+
+    /// Gets a mutable reference to the the context data associated with the node
     pub fn get_node_context_mut(&mut self, node: NodeId) -> Option<&mut NodeContext> {
         self.node_context_data.get_mut(node.into())
     }
