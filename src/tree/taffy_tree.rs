@@ -153,8 +153,8 @@ where
     }
 
     #[inline(always)]
-    fn get_unrounded_layout_mut(&mut self, node: NodeId) -> &mut Layout {
-        &mut self.taffy.nodes[node.into()].unrounded_layout
+    fn set_unrounded_layout(&mut self, node_id: NodeId, layout: &Layout) {
+        self.taffy.nodes[node_id.into()].unrounded_layout = *layout;
     }
 
     #[inline(always)]
@@ -212,6 +212,11 @@ impl<'t, NodeContext, MeasureFunction> LayoutTree for TaffyView<'t, NodeContext,
 where
     MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
 {
+    #[inline(always)]
+    fn get_unrounded_layout(&self, node: NodeId) -> &Layout {
+        &self.taffy.nodes[node.into()].unrounded_layout
+    }
+
     #[inline(always)]
     fn get_final_layout(&self, node: NodeId) -> &Layout {
         &self.taffy.nodes[node.into()].final_layout

@@ -337,7 +337,7 @@ fn compute_preliminary(tree: &mut impl PartialLayoutTree, node: NodeId, inputs: 
     for order in 0..len {
         let child = tree.get_child_id(node, order);
         if tree.get_style(child).display == Display::None {
-            *tree.get_unrounded_layout_mut(child) = Layout::with_order(order as u32);
+            tree.set_unrounded_layout(child, &Layout::with_order(order as u32));
             tree.perform_child_layout(
                 child,
                 Size::NONE,
@@ -1767,16 +1767,19 @@ fn calculate_flex_item(
         height: if item.overflow.x == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
     };
 
-    *tree.get_unrounded_layout_mut(item.node) = Layout {
-        order: item.order,
-        size,
-        #[cfg(feature = "content_size")]
-        content_size,
-        scrollbar_size,
-        location,
-        padding: item.padding,
-        border: item.border,
-    };
+    tree.set_unrounded_layout(
+        item.node,
+        &Layout {
+            order: item.order,
+            size,
+            #[cfg(feature = "content_size")]
+            content_size,
+            scrollbar_size,
+            location,
+            padding: item.padding,
+            border: item.border,
+        },
+    );
 
     *total_offset_main += item.offset_main + item.margin.main_axis_sum(direction) + size.main(direction);
 
@@ -2095,16 +2098,19 @@ fn perform_absolute_layout_on_absolute_children(
             width: if overflow.y == Overflow::Scroll { scrollbar_width } else { 0.0 },
             height: if overflow.x == Overflow::Scroll { scrollbar_width } else { 0.0 },
         };
-        *tree.get_unrounded_layout_mut(child) = Layout {
-            order: order as u32,
-            size: final_size,
-            #[cfg(feature = "content_size")]
-            content_size: layout_output.content_size,
-            scrollbar_size,
-            location,
-            padding,
-            border,
-        };
+        tree.set_unrounded_layout(
+            child,
+            &Layout {
+                order: order as u32,
+                size: final_size,
+                #[cfg(feature = "content_size")]
+                content_size: layout_output.content_size,
+                scrollbar_size,
+                location,
+                padding,
+                border,
+            },
+        );
 
         #[cfg(feature = "content_size")]
         {

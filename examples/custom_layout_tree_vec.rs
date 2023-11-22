@@ -140,8 +140,8 @@ impl PartialLayoutTree for Tree {
         &self.node_from_id(node_id).style
     }
 
-    fn get_unrounded_layout_mut(&mut self, node_id: NodeId) -> &mut Layout {
-        &mut self.node_from_id_mut(node_id).unrounded_layout
+    fn set_unrounded_layout(&mut self, node_id: NodeId, layout: &Layout) {
+        self.node_from_id_mut(node_id).unrounded_layout = *layout;
     }
 
     fn get_cache_mut(&mut self, node_id: NodeId) -> &mut Cache {
@@ -181,6 +181,10 @@ impl PartialLayoutTree for Tree {
 }
 
 impl LayoutTree for Tree {
+    fn get_unrounded_layout(&self, node_id: NodeId) -> &Layout {
+        &self.node_from_id(node_id).unrounded_layout
+    }
+
     fn get_final_layout(&self, node_id: NodeId) -> &Layout {
         &self.node_from_id(node_id).final_layout
     }

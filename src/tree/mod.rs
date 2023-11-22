@@ -40,8 +40,8 @@ pub trait PartialLayoutTree {
     /// Get a reference to the [`Style`] for this node.
     fn get_style(&self, node_id: NodeId) -> &Style;
 
-    /// Get a mutable reference to the node's unrounded layout
-    fn get_unrounded_layout_mut(&mut self, node_id: NodeId) -> &mut Layout;
+    /// Set the node's unrounded layout
+    fn set_unrounded_layout(&mut self, node_id: NodeId, layout: &Layout);
 
     /// Get a mutable reference to the [`Cache`] for this node.
     fn get_cache_mut(&mut self, node_id: NodeId) -> &mut Cache;
@@ -53,6 +53,8 @@ pub trait PartialLayoutTree {
 /// Extends [`PartialLayoutTree`] with an additional guarantee: that the child/children methods can be used to recurse
 /// infinitely down the tree. Enables Taffy's rounding and debug printing methods to be used.
 pub trait LayoutTree: PartialLayoutTree {
+    /// Get the node's unrounded layout
+    fn get_unrounded_layout(&self, node_id: NodeId) -> &Layout;
     /// Get a reference to the node's final layout
     fn get_final_layout(&self, node_id: NodeId) -> &Layout;
     /// Get a mutable reference to the node's final layout

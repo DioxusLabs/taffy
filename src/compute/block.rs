@@ -213,7 +213,7 @@ fn compute_inner(tree: &mut impl PartialLayoutTree, node_id: NodeId, inputs: Lay
     for order in 0..len {
         let child = tree.get_child_id(node_id, order);
         if tree.get_style(child).display == Display::None {
-            *tree.get_unrounded_layout_mut(child) = Layout::with_order(order as u32);
+            tree.set_unrounded_layout(child, &Layout::with_order(order as u32));
             tree.perform_child_layout(
                 child,
                 Size::NONE,
@@ -428,16 +428,19 @@ fn perform_final_layout_on_in_flow_children(
                 height: if item.overflow.x == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
             };
 
-            *tree.get_unrounded_layout_mut(item.node_id) = Layout {
-                order: item.order,
-                size: item_layout.size,
-                #[cfg(feature = "content_size")]
-                content_size: item_layout.content_size,
-                scrollbar_size,
-                location,
-                padding: item.padding,
-                border: item.border,
-            };
+            tree.set_unrounded_layout(
+                item.node_id,
+                &Layout {
+                    order: item.order,
+                    size: item_layout.size,
+                    #[cfg(feature = "content_size")]
+                    content_size: item_layout.content_size,
+                    scrollbar_size,
+                    location,
+                    padding: item.padding,
+                    border: item.border,
+                },
+            );
 
             #[cfg(feature = "content_size")]
             {
@@ -650,16 +653,19 @@ fn perform_absolute_layout_on_absolute_children(
         };
 
         let location = area_offset + item_offset;
-        *tree.get_unrounded_layout_mut(item.node_id) = Layout {
-            order: item.order,
-            size: final_size,
-            #[cfg(feature = "content_size")]
-            content_size: layout_output.content_size,
-            scrollbar_size,
-            location,
-            padding,
-            border,
-        };
+        tree.set_unrounded_layout(
+            item.node_id,
+            &Layout {
+                order: item.order,
+                size: final_size,
+                #[cfg(feature = "content_size")]
+                content_size: layout_output.content_size,
+                scrollbar_size,
+                location,
+                padding,
+                border,
+            },
+        );
 
         #[cfg(feature = "content_size")]
         {
