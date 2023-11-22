@@ -408,7 +408,7 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
     let container_alignment_styles = InBothAbsAxis { horizontal: style.justify_items, vertical: style.align_items };
 
     // Position in-flow children (stored in items vector)
-    for (index, item) in items.iter().enumerate() {
+    for (index, item) in items.iter_mut().enumerate() {
         let grid_area = Rect {
             top: rows[item.row_indexes.start as usize + 1].offset,
             bottom: rows[item.row_indexes.end as usize].offset,
@@ -416,7 +416,7 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
             right: columns[item.column_indexes.end as usize].offset,
         };
         #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
-        let content_size_contribution = align_and_position_item(
+        let (content_size_contribution, y_position, height) = align_and_position_item(
             tree,
             item.node,
             index as u32,
@@ -424,6 +424,9 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
             container_alignment_styles,
             item.baseline_shim,
         );
+        item.y_position = y_position;
+        item.height = height;
+
         #[cfg(feature = "content_size")]
         {
             item_content_size_contribution = item_content_size_contribution.f32_max(content_size_contribution);
@@ -438,7 +441,7 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
 
         // Position hidden child
         if child_style.display == Display::None {
-            *tree.get_unrounded_layout_mut(child) = Layout::with_order(order);
+            tree.set_unrounded_layout(child, &Layout::with_order(order));
             tree.perform_child_layout(
                 child,
                 Size::NONE,
@@ -486,7 +489,7 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
             };
             // TODO: Baseline alignment support for absolutely positioned items (should check if is actuallty specified)
             #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
-            let content_size_contribution =
+            let (content_size_contribution, _, _) =
                 align_and_position_item(tree, child, order, grid_area, container_alignment_styles, 0.0);
             #[cfg(feature = "content_size")]
             {
@@ -522,8 +525,7 @@ pub fn compute_grid_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inpu
             &first_row_items[0]
         };
 
-        let layout = tree.get_unrounded_layout_mut(item.node);
-        layout.location.y + item.baseline.unwrap_or(layout.size.height)
+        item.y_position + item.baseline.unwrap_or(item.height)
     };
 
     LayoutOutput::from_sizes_and_baselines(

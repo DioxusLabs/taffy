@@ -60,7 +60,7 @@ pub(super) fn align_and_position_item(
     grid_area: Rect<f32>,
     container_alignment_styles: InBothAbsAxis<Option<AlignItems>>,
     baseline_shim: f32,
-) -> Size<f32> {
+) -> (Size<f32>, f32, f32) {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
 
     let style = tree.get_style(node);
@@ -209,16 +209,19 @@ pub(super) fn align_and_position_item(
         height: if overflow.x == Overflow::Scroll { scrollbar_width } else { 0.0 },
     };
 
-    *tree.get_unrounded_layout_mut(node) = Layout {
-        order,
-        location: Point { x, y },
-        size: Size { width, height },
-        #[cfg(feature = "content_size")]
-        content_size: layout_output.content_size,
-        scrollbar_size,
-        padding,
-        border,
-    };
+    tree.set_unrounded_layout(
+        node,
+        &Layout {
+            order,
+            location: Point { x, y },
+            size: Size { width, height },
+            #[cfg(feature = "content_size")]
+            content_size: layout_output.content_size,
+            scrollbar_size,
+            padding,
+            border,
+        },
+    );
 
     #[cfg(feature = "content_size")]
     let contribution =
@@ -226,7 +229,7 @@ pub(super) fn align_and_position_item(
     #[cfg(not(feature = "content_size"))]
     let contribution = Size::ZERO;
 
-    contribution
+    (contribution, y, height)
 }
 
 /// Align and size a grid item along a single axis
