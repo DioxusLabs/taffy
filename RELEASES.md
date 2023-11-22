@@ -111,6 +111,18 @@ Example usage change:
   - All types from the `node`, `data`, `layout`, `error` and `cache` modules have been moved to the  the `tree` module.
 - Fixed misspelling: `RunMode::PeformLayout` renamed into `RunMode::PerformLayout` (added missing `r`).
 
+## 0.3.18
+
+### Fixes
+
+- Fix computation of Flexbox automatic minimum size when grid or flexbox child has an explicit width/height style set (#576)
+
+## 0.3.17
+
+### Added
+
+- Added `total_node_count` method to the `Taffy` struct. Returns the total number of nodes in the tree.
+
 ## 0.3.16
 
 ### Fixes
