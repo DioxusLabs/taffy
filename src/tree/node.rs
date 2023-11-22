@@ -12,7 +12,7 @@ use slotmap::{DefaultKey, Key, KeyData};
 ///
 /// Internally it is a wrapper around a u64 and a `NodeId` can be converted to and from
 /// and u64 if needed.
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct NodeId(u64);
 impl NodeId {
     /// Create a new NodeId from a u64 value
