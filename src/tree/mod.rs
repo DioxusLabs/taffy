@@ -58,7 +58,7 @@ pub trait LayoutTree: PartialLayoutTree {
     /// Get a reference to the node's final layout
     fn get_final_layout(&self, node_id: NodeId) -> &Layout;
     /// Get a mutable reference to the node's final layout
-    fn get_final_layout_mut(&mut self, node_id: NodeId) -> &mut Layout;
+    fn set_final_layout(&mut self, node_id: NodeId, layout: &Layout);
 }
 
 /// A private trait which allows us to add extra convenience methods to types which implement

@@ -223,8 +223,8 @@ where
     }
 
     #[inline(always)]
-    fn get_final_layout_mut(&mut self, node: NodeId) -> &mut Layout {
-        &mut self.taffy.nodes[node.into()].final_layout
+    fn set_final_layout(&mut self, node_id: NodeId, layout: &Layout) {
+        self.taffy.nodes[node_id.into()].final_layout = *layout;
     }
 }
 

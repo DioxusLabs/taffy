@@ -189,8 +189,8 @@ impl LayoutTree for Tree {
         &self.node_from_id(node_id).final_layout
     }
 
-    fn get_final_layout_mut(&mut self, node_id: NodeId) -> &mut Layout {
-        &mut self.node_from_id_mut(node_id).final_layout
+    fn set_final_layout(&mut self, node_id: NodeId, layout: &Layout) {
+        self.node_from_id_mut(node_id).final_layout = *layout;
     }
 }
 
