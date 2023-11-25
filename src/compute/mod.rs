@@ -216,11 +216,11 @@ mod tests {
 
         // Whatever size and display-mode the nodes had previously,
         // all layouts should resolve to ZERO due to the root's DISPLAY::NONE
-        for (node, _) in taffy.nodes.iter().filter(|(node, _)| *node != root.into()) {
-            if let Ok(layout) = taffy.layout(node.into()) {
-                assert_eq!(layout.size, Size::zero());
-                assert_eq!(layout.location, Point::zero());
-            }
+
+        for node in [root, child_00, child_01, grandchild_00, grandchild_01, grandchild_02] {
+            let layout = taffy.layout(node.into()).unwrap();
+            assert_eq!(layout.size, Size::zero());
+            assert_eq!(layout.location, Point::zero());
         }
     }
 }
