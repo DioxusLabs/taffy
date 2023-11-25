@@ -5,7 +5,7 @@ mod common {
 use common::image::{image_measure_function, ImageContext};
 use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode, LOREM_IPSUM};
 use taffy::{
-    compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_layout, compute_leaf_layout,
+    compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout, compute_root_layout,
     prelude::*, Cache, Layout, Style,
 };
 
@@ -77,7 +77,7 @@ impl Node {
 
     pub fn compute_layout(&mut self, available_space: Size<AvailableSpace>) {
         let root_node_id = unsafe { self.as_id() };
-        compute_layout(&mut StatelessLayoutTree, root_node_id, available_space);
+        compute_root_layout(&mut StatelessLayoutTree, root_node_id, available_space);
     }
 }
 

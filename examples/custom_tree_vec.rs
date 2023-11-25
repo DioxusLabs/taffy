@@ -6,7 +6,7 @@ use common::image::{image_measure_function, ImageContext};
 use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode, LOREM_IPSUM};
 use taffy::util::print_tree;
 use taffy::{
-    compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_layout, compute_leaf_layout,
+    compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout, compute_root_layout,
     prelude::*, round_layout, Cache,
 };
 
@@ -101,7 +101,7 @@ impl Tree {
     }
 
     pub fn compute_layout(&mut self, root: usize, available_space: Size<AvailableSpace>, use_rounding: bool) {
-        compute_layout(self, NodeId::from(root), available_space);
+        compute_root_layout(self, NodeId::from(root), available_space);
         if use_rounding {
             round_layout(self, NodeId::from(root))
         }

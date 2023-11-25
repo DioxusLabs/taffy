@@ -17,7 +17,9 @@ use crate::compute::compute_block_layout;
 use crate::compute::compute_flexbox_layout;
 #[cfg(feature = "grid")]
 use crate::compute::compute_grid_layout;
-use crate::compute::{compute_cached_layout, compute_hidden_layout, compute_layout, compute_leaf_layout, round_layout};
+use crate::compute::{
+    compute_cached_layout, compute_hidden_layout, compute_leaf_layout, compute_root_layout, round_layout,
+};
 
 /// The error Taffy generates on invalid operations
 pub type TaffyResult<T> = Result<T, TaffyError>;
@@ -652,7 +654,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
     {
         let use_rounding = self.config.use_rounding;
         let mut taffy_view = TaffyView { taffy: self, measure_function };
-        compute_layout(&mut taffy_view, node_id, available_space);
+        compute_root_layout(&mut taffy_view, node_id, available_space);
         if use_rounding {
             round_layout(&mut taffy_view, node_id);
         }

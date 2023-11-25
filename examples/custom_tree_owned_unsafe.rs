@@ -7,7 +7,7 @@ use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode,
 use taffy::tree::Cache;
 use taffy::util::print_tree;
 use taffy::{
-    compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_layout, compute_leaf_layout,
+    compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout, compute_root_layout,
     prelude::*, round_layout,
 };
 
@@ -81,7 +81,7 @@ impl Node {
 
     pub fn compute_layout(&mut self, available_space: Size<AvailableSpace>, use_rounding: bool) {
         let root_node_id = unsafe { self.as_id() };
-        compute_layout(&mut StatelessLayoutTree, root_node_id, available_space);
+        compute_root_layout(&mut StatelessLayoutTree, root_node_id, available_space);
         if use_rounding {
             round_layout(&mut StatelessLayoutTree, root_node_id)
         }

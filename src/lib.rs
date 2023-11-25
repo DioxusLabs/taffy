@@ -99,7 +99,7 @@ pub use crate::compute::compute_flexbox_layout;
 pub use crate::compute::compute_grid_layout;
 #[doc(inline)]
 pub use crate::compute::{
-    compute_cached_layout, compute_hidden_layout, compute_layout, compute_leaf_layout, round_layout,
+    compute_cached_layout, compute_hidden_layout, compute_leaf_layout, compute_root_layout, round_layout,
 };
 #[doc(inline)]
 pub use crate::style::Style;

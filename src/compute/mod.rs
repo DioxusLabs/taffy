@@ -36,8 +36,8 @@ use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_n
 use crate::util::sys::round;
 use crate::util::ResolveOrZero;
 
-/// Updates the stored layout of the provided `node` and its children
-pub fn compute_layout(tree: &mut impl LayoutPartialTree, root: NodeId, available_space: Size<AvailableSpace>) {
+/// Compute layout for the root node in the tree
+pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, available_space: Size<AvailableSpace>) {
     // Recursively compute node layout
     let output = tree.perform_child_layout(
         root,
