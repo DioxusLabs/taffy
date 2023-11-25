@@ -3,7 +3,7 @@ use super::types::GridTrack;
 use crate::compute::common::alignment::compute_alignment_offset;
 use crate::geometry::{InBothAbsAxis, Line, Point, Rect, Size};
 use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Overflow, Position};
-use crate::tree::{Layout, NodeId, PartialLayoutTree, PartialLayoutTreeExt, SizingMode};
+use crate::tree::{Layout, LayoutPartialTree, LayoutPartialTreeExt, NodeId, SizingMode};
 use crate::util::sys::f32_max;
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 
@@ -54,7 +54,7 @@ pub(super) fn align_tracks(
 
 /// Align and size a grid item into it's final position
 pub(super) fn align_and_position_item(
-    tree: &mut impl PartialLayoutTree,
+    tree: &mut impl LayoutPartialTree,
     node: NodeId,
     order: u32,
     grid_area: Rect<f32>,

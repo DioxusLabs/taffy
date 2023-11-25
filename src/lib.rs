@@ -44,12 +44,12 @@
 //!
 //! ### Low-level API
 //!
-//! The low-level API consists of a set of traits (notably the [`PartialLayoutTree`] trait) which define an interface behind which you must implement your own
+//! The low-level API consists of a set of traits (notably the [`LayoutPartialTree`] trait) which define an interface behind which you must implement your own
 //! tree implementation, and a set of functions such as [`compute_flexbox_layout`] and [`compute_grid_layout`] which implement the layout algorithms (for a single node at a time), and are designed to be flexible
 //! and easy to integrate into a wider layout or UI system.
 //!
 //! When using this API, you must handle node storage, caching, and dispatching to the correct layout algorithm for a given node yourself.
-//! See the [`PartialLayoutTree`] trait for more details on this API.
+//! See the [`LayoutPartialTree`] trait for more details on this API.
 //!
 //! Examples which show usage of the high-level API are:
 //!
@@ -103,11 +103,11 @@ pub use crate::compute::{
 };
 #[doc(inline)]
 pub use crate::style::Style;
+#[doc(inline)]
+pub use crate::tree::traits::*;
 #[cfg(feature = "taffy_tree")]
 #[doc(inline)]
 pub use crate::tree::TaffyTree;
-#[doc(inline)]
-pub use crate::tree::{LayoutTree, PartialLayoutTree};
 #[cfg(feature = "std")]
 #[doc(inline)]
 pub use crate::util::print_tree;
