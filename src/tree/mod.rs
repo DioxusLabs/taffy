@@ -5,17 +5,17 @@ use crate::style::{AvailableSpace, Style};
 
 // Submodules
 mod cache;
-pub use cache::Cache;
+mod layout;
 mod node;
-#[cfg(feature = "taffy_tree")]
-use node::NodeData;
+
+pub use cache::Cache;
+pub use layout::{CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RequestedAxis, RunMode, SizingMode};
 pub use node::NodeId;
+
 #[cfg(feature = "taffy_tree")]
 mod taffy_tree;
 #[cfg(feature = "taffy_tree")]
 pub use taffy_tree::{TaffyError, TaffyResult, TaffyTree};
-mod layout;
-pub use layout::{CollapsibleMarginSet, Layout, LayoutInput, LayoutOutput, RequestedAxis, RunMode, SizingMode};
 
 /// This if the core abstraction in Taffy. Any type that *correctly* implements `PartialLayoutTree` can be laid out using Taffy's algorithms.
 ///

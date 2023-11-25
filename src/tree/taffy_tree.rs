@@ -3,7 +3,7 @@ use slotmap::{DefaultKey, SlotMap, SparseSecondaryMap};
 
 use crate::geometry::Size;
 use crate::style::{AvailableSpace, Display, Style};
-use crate::tree::{Cache, Layout, LayoutInput, LayoutOutput, LayoutTree, NodeData, NodeId, PartialLayoutTree, RunMode};
+use crate::tree::{Cache, Layout, LayoutInput, LayoutOutput, LayoutTree, NodeId, PartialLayoutTree, RunMode};
 use crate::util::debug::{debug_log, debug_log_node};
 use crate::util::sys::{new_vec_with_capacity, ChildrenVec, Vec};
 
@@ -68,28 +68,72 @@ impl Default for TaffyConfig {
     }
 }
 
+/// Layout information for a given [`Node`](crate::node::Node)
+///
+/// Stored in a [`TaffyTree`].
+struct NodeData {
+    /// The layout strategy used by this node
+    pub(crate) style: Style,
+
+    /// The always unrounded results of the layout computation. We must store this separately from the rounded
+    /// layout to avoid errors from rounding already-rounded values. See <https://github.com/DioxusLabs/taffy/issues/501>.
+    pub(crate) unrounded_layout: Layout,
+
+    /// The final results of the layout computation.
+    /// These may be rounded or unrounded depending on what the `use_rounding` config setting is set to.
+    pub(crate) final_layout: Layout,
+
+    /// Should we try and measure this node?
+    pub(crate) needs_measure: bool,
+
+    /// The cached results of the layout computation
+    pub(crate) cache: Cache,
+}
+
+impl NodeData {
+    /// Create the data for a new node
+    #[must_use]
+    pub const fn new(style: Style) -> Self {
+        Self {
+            style,
+            cache: Cache::new(),
+            unrounded_layout: Layout::new(),
+            final_layout: Layout::new(),
+            needs_measure: false,
+        }
+    }
+
+    /// Marks a node and all of its parents (recursively) as dirty
+    ///
+    /// This clears any cached data and signals that the data must be recomputed.
+    #[inline]
+    pub fn mark_dirty(&mut self) {
+        self.cache.clear()
+    }
+}
+
 /// An entire tree of UI nodes. The entry point to Taffy's high-level API.
 ///
 /// Allows you to build a tree of UI nodes, run Taffy's layout algorithms over that tree, and then access the resultant layout.
 pub struct TaffyTree<NodeContext = ()> {
     /// The [`NodeData`] for each node stored in this tree
-    pub(crate) nodes: SlotMap<DefaultKey, NodeData>,
+    nodes: SlotMap<DefaultKey, NodeData>,
 
     /// Functions/closures that compute the intrinsic size of leaf nodes
-    pub(crate) node_context_data: SparseSecondaryMap<DefaultKey, NodeContext>,
+    node_context_data: SparseSecondaryMap<DefaultKey, NodeContext>,
 
     /// The children of each node
     ///
     /// The indexes in the outer vector correspond to the position of the parent [`NodeData`]
-    pub(crate) children: SlotMap<DefaultKey, ChildrenVec<NodeId>>,
+    children: SlotMap<DefaultKey, ChildrenVec<NodeId>>,
 
     /// The parents of each node
     ///
     /// The indexes in the outer vector correspond to the position of the child [`NodeData`]
-    pub(crate) parents: SlotMap<DefaultKey, Option<NodeId>>,
+    parents: SlotMap<DefaultKey, Option<NodeId>>,
 
     /// Layout mode configuration
-    pub(crate) config: TaffyConfig,
+    config: TaffyConfig,
 }
 
 impl Default for TaffyTree {
