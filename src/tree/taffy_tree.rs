@@ -9,7 +9,6 @@ use crate::tree::{
 };
 use crate::util::debug::{debug_log, debug_log_node};
 use crate::util::sys::{new_vec_with_capacity, ChildrenVec, Vec};
-use crate::FlexDirection;
 
 #[cfg(feature = "block_layout")]
 use crate::compute::compute_block_layout;
@@ -195,10 +194,13 @@ impl<NodeContext> PrintTree for TaffyTree<NodeContext> {
             #[cfg(feature = "block_layout")]
             (_, Display::Block) => "BLOCK",
             #[cfg(feature = "flexbox")]
-            (_, Display::Flex) => match node.style.flex_direction {
-                FlexDirection::Row | FlexDirection::RowReverse => "FLEX ROW",
-                FlexDirection::Column | FlexDirection::ColumnReverse => "FLEX COL",
-            },
+            (_, Display::Flex) => {
+                use crate::FlexDirection;
+                match node.style.flex_direction {
+                    FlexDirection::Row | FlexDirection::RowReverse => "FLEX ROW",
+                    FlexDirection::Column | FlexDirection::ColumnReverse => "FLEX COL",
+                }
+            }
             #[cfg(feature = "grid")]
             (_, Display::Grid) => "GRID",
         }
