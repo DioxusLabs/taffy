@@ -1,4 +1,8 @@
-//! The layout algorithms themselves
+//! Low-level access to the layout algorithms themselves
+//!
+//! All of the functions in this module except `round_layout` operate on the [`LayoutPartialTree`] trait. See the [`crate::tree::traits`] module for details on how to implement this trait.
+//!
+//! For a higher-level API, see the [`TaffyTree`](crate::TaffyTree) struct.
 
 pub(crate) mod common;
 pub(crate) mod leaf;
@@ -26,14 +30,14 @@ pub use self::grid::compute_grid_layout;
 use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, Overflow};
 use crate::tree::{
-    Layout, LayoutInput, LayoutOutput, LayoutTree, NodeId, PartialLayoutTree, PartialLayoutTreeExt, SizingMode,
+    Layout, LayoutInput, LayoutOutput, LayoutPartialTree, LayoutPartialTreeExt, NodeId, RoundTree, SizingMode,
 };
 use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
 use crate::util::sys::round;
 use crate::util::ResolveOrZero;
 
-/// Updates the stored layout of the provided `node` and its children
-pub fn compute_layout(tree: &mut impl PartialLayoutTree, root: NodeId, available_space: Size<AvailableSpace>) {
+/// Compute layout for the root node in the tree
+pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, available_space: Size<AvailableSpace>) {
     // Recursively compute node layout
     let output = tree.perform_child_layout(
         root,
@@ -67,9 +71,11 @@ pub fn compute_layout(tree: &mut impl PartialLayoutTree, root: NodeId, available
     );
 }
 
-/// Updates the stored layout of the provided `node` and its children
+/// Attempts to find a cached layout for the specified node and layout inputs.
+///
+/// Uses the provided closure to compute the layout (and then stores the result in the cache) if no cached layout is found.
 #[inline(always)]
-pub fn compute_cached_layout<Tree: PartialLayoutTree + ?Sized, ComputeFunction>(
+pub fn compute_cached_layout<Tree: LayoutPartialTree + ?Sized, ComputeFunction>(
     tree: &mut Tree,
     node: NodeId,
     inputs: LayoutInput,
@@ -101,7 +107,7 @@ where
     computed_size_and_baselines
 }
 
-/// Rounds the calculated [`Layout`] to exact pixel values
+/// Rounds the calculated layout to exact pixel values
 ///
 /// In order to ensure that no gaps in the layout are introduced we:
 ///   - Always round based on the cumulative x/y coordinates (relative to the viewport) rather than
@@ -112,11 +118,11 @@ where
 ///
 /// In order to prevent innacuracies caused by rounding already-rounded values, we read from `unrounded_layout`
 /// and write to `final_layout`.
-pub fn round_layout(tree: &mut impl LayoutTree, node_id: NodeId) {
+pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
     return round_layout_inner(tree, node_id, 0.0, 0.0);
 
     /// Recursive function to apply rounding to all descendents
-    fn round_layout_inner(tree: &mut impl LayoutTree, node_id: NodeId, cumulative_x: f32, cumulative_y: f32) {
+    fn round_layout_inner(tree: &mut impl RoundTree, node_id: NodeId, cumulative_x: f32, cumulative_y: f32) {
         let unrounded_layout = *tree.get_unrounded_layout(node_id);
         let mut layout = unrounded_layout;
 
@@ -171,7 +177,7 @@ pub fn round_layout(tree: &mut impl LayoutTree, node_id: NodeId) {
 
 /// Creates a layout for this node and its children, recursively.
 /// Each hidden node has zero size and is placed at the origin
-pub fn compute_hidden_layout(tree: &mut impl PartialLayoutTree, node: NodeId) -> LayoutOutput {
+pub fn compute_hidden_layout(tree: &mut impl LayoutPartialTree, node: NodeId) -> LayoutOutput {
     // Clear cache and set zeroed-out layout for the node
     tree.get_cache_mut(node).clear();
     tree.set_unrounded_layout(node, &Layout::with_order(0));

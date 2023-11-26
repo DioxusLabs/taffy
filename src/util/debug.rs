@@ -1,81 +1,9 @@
 #![allow(dead_code)]
 
-use crate::tree::NodeId;
-use crate::{style, LayoutTree};
-
 #[cfg(any(feature = "debug", feature = "profile"))]
 use core::fmt::{Debug, Display, Write};
 #[cfg(any(feature = "debug", feature = "profile"))]
 use std::sync::Mutex;
-
-/// Prints a debug representation of the computed layout for a tree of nodes, starting with the passed root node.
-#[cfg(feature = "std")]
-pub fn print_tree(tree: &impl LayoutTree, root: NodeId) {
-    println!("TREE");
-    print_node(tree, root, false, String::new());
-}
-
-#[cfg(feature = "std")]
-fn print_node(tree: &impl LayoutTree, node: NodeId, has_sibling: bool, lines_string: String) {
-    let layout = &tree.get_final_layout(node);
-    let style = &tree.get_style(node);
-    let num_children = tree.child_count(node);
-
-    let display = match (num_children, style.display) {
-        (_, style::Display::None) => "NONE",
-        (0, _) => "LEAF",
-        #[cfg(feature = "block_layout")]
-        (_, style::Display::Block) => "BLOCK",
-        #[cfg(feature = "flexbox")]
-        (_, style::Display::Flex) => "FLEX",
-        #[cfg(feature = "grid")]
-        (_, style::Display::Grid) => "GRID",
-    };
-
-    let fork_string = if has_sibling { "├── " } else { "└── " };
-    #[cfg(feature = "content_size")]
-    println!(
-            "{lines}{fork} {display} [x: {x:<4} y: {y:<4} w: {width:<4} h: {height:<4} content_w: {content_width:<4} content_h: {content_height:<4} border: l:{bl} r:{br} t:{bt} b:{bb}, padding: l:{pl} r:{pr} t:{pt} b:{pb}] ({key:?})",
-            lines = lines_string,
-            fork = fork_string,
-            display = display,
-            x = layout.location.x,
-            y = layout.location.y,
-            width = layout.size.width,
-            height = layout.size.height,
-            content_width = layout.content_size.width,
-            content_height = layout.content_size.height,
-            bl = layout.border.left,
-            br = layout.border.right,
-            bt = layout.border.top,
-            bb = layout.border.bottom,
-            pl = layout.padding.left,
-            pr = layout.padding.right,
-            pt = layout.padding.top,
-            pb = layout.padding.bottom,
-            key = node,
-        );
-    #[cfg(not(feature = "content_size"))]
-    println!(
-        "{lines}{fork} {display} [x: {x:<4} y: {y:<4} width: {width:<4} height: {height:<4}] ({key:?})",
-        lines = lines_string,
-        fork = fork_string,
-        display = display,
-        x = layout.location.x,
-        y = layout.location.y,
-        width = layout.size.width,
-        height = layout.size.height,
-        key = node,
-    );
-    let bar = if has_sibling { "│   " } else { "    " };
-    let new_string = lines_string + bar;
-
-    // Recurse into children
-    for (index, child) in tree.child_ids(node).enumerate() {
-        let has_sibling = index < num_children - 1;
-        print_node(tree, child, has_sibling, new_string.clone());
-    }
-}
 
 #[doc(hidden)]
 #[cfg(any(feature = "debug", feature = "profile"))]

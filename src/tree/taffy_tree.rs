@@ -3,7 +3,10 @@ use slotmap::{DefaultKey, SlotMap, SparseSecondaryMap};
 
 use crate::geometry::Size;
 use crate::style::{AvailableSpace, Display, Style};
-use crate::tree::{Cache, Layout, LayoutInput, LayoutOutput, LayoutTree, NodeId, PartialLayoutTree, RunMode};
+use crate::tree::{
+    Cache, Layout, LayoutInput, LayoutOutput, LayoutPartialTree, NodeId, PrintTree, RoundTree, RunMode,
+    TraversePartialTree, TraverseTree,
+};
 use crate::util::debug::{debug_log, debug_log_node};
 use crate::util::sys::{new_vec_with_capacity, ChildrenVec, Vec};
 
@@ -13,7 +16,9 @@ use crate::compute::compute_block_layout;
 use crate::compute::compute_flexbox_layout;
 #[cfg(feature = "grid")]
 use crate::compute::compute_grid_layout;
-use crate::compute::{compute_cached_layout, compute_hidden_layout, compute_layout, compute_leaf_layout, round_layout};
+use crate::compute::{
+    compute_cached_layout, compute_hidden_layout, compute_leaf_layout, compute_root_layout, round_layout,
+};
 
 /// The error Taffy generates on invalid operations
 pub type TaffyResult<T> = Result<T, TaffyError>;
@@ -143,12 +148,67 @@ impl Default for TaffyTree {
 }
 
 /// Iterator that wraps a slice of nodes, lazily converting them to u64
-pub(crate) struct TaffyChildIter<'a>(core::slice::Iter<'a, NodeId>);
-impl<'a> Iterator for TaffyChildIter<'a> {
+pub struct TaffyTreeChildIter<'a>(core::slice::Iter<'a, NodeId>);
+impl<'a> Iterator for TaffyTreeChildIter<'a> {
     type Item = NodeId;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next().copied()
+    }
+}
+
+// TraversePartialTree impl for TaffyTree
+impl<NodeContext> TraversePartialTree for TaffyTree<NodeContext> {
+    type ChildIter<'a> = TaffyTreeChildIter<'a> where Self: 'a;
+
+    #[inline(always)]
+    fn child_ids(&self, parent_node_id: NodeId) -> Self::ChildIter<'_> {
+        TaffyTreeChildIter(self.children[parent_node_id.into()].iter())
+    }
+
+    #[inline(always)]
+    fn child_count(&self, parent_node_id: NodeId) -> usize {
+        self.children[parent_node_id.into()].len()
+    }
+
+    #[inline(always)]
+    fn get_child_id(&self, parent_node_id: NodeId, id: usize) -> NodeId {
+        self.children[parent_node_id.into()][id]
+    }
+}
+
+// TraverseTree impl for TaffyTree
+impl<NodeContext> TraverseTree for TaffyTree<NodeContext> {}
+
+// PrintTree impl for TaffyTree
+impl<NodeContext> PrintTree for TaffyTree<NodeContext> {
+    #[inline(always)]
+    fn get_debug_label(&self, node_id: NodeId) -> &'static str {
+        let node = &self.nodes[node_id.into()];
+        let display = node.style.display;
+        let num_children = self.child_count(node_id);
+
+        match (num_children, display) {
+            (_, Display::None) => "NONE",
+            (0, _) => "LEAF",
+            #[cfg(feature = "block_layout")]
+            (_, Display::Block) => "BLOCK",
+            #[cfg(feature = "flexbox")]
+            (_, Display::Flex) => {
+                use crate::FlexDirection;
+                match node.style.flex_direction {
+                    FlexDirection::Row | FlexDirection::RowReverse => "FLEX ROW",
+                    FlexDirection::Column | FlexDirection::ColumnReverse => "FLEX COL",
+                }
+            }
+            #[cfg(feature = "grid")]
+            (_, Display::Grid) => "GRID",
+        }
+    }
+
+    #[inline(always)]
+    fn get_final_layout(&self, node_id: NodeId) -> &Layout {
+        &self.nodes[node_id.into()].final_layout
     }
 }
 
@@ -165,27 +225,40 @@ where
     pub(crate) measure_function: MeasureFunction,
 }
 
-impl<'t, NodeContext, MeasureFunction> PartialLayoutTree for TaffyView<'t, NodeContext, MeasureFunction>
+// TraversePartialTree impl for TaffyView
+impl<'t, NodeContext, MeasureFunction> TraversePartialTree for TaffyView<'t, NodeContext, MeasureFunction>
 where
     MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
 {
-    type ChildIter<'a> = TaffyChildIter<'a> where Self: 'a;
+    type ChildIter<'a> = TaffyTreeChildIter<'a> where Self: 'a;
 
     #[inline(always)]
-    fn child_ids(&self, node: NodeId) -> Self::ChildIter<'_> {
-        TaffyChildIter(self.taffy.children[node.into()].iter())
+    fn child_ids(&self, parent_node_id: NodeId) -> Self::ChildIter<'_> {
+        self.taffy.child_ids(parent_node_id)
     }
 
     #[inline(always)]
-    fn child_count(&self, node: NodeId) -> usize {
-        self.taffy.children[node.into()].len()
+    fn child_count(&self, parent_node_id: NodeId) -> usize {
+        self.taffy.child_count(parent_node_id)
     }
 
     #[inline(always)]
-    fn get_child_id(&self, node: NodeId, id: usize) -> NodeId {
-        self.taffy.children[node.into()][id]
+    fn get_child_id(&self, parent_node_id: NodeId, child_index: usize) -> NodeId {
+        self.taffy.get_child_id(parent_node_id, child_index)
     }
+}
 
+// TraverseTree impl for TaffyView
+impl<'t, NodeContext, MeasureFunction> TraverseTree for TaffyView<'t, NodeContext, MeasureFunction> where
+    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>
+{
+}
+
+// LayoutPartialTree impl for TaffyView
+impl<'t, NodeContext, MeasureFunction> LayoutPartialTree for TaffyView<'t, NodeContext, MeasureFunction>
+where
+    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+{
     #[inline(always)]
     fn get_style(&self, node: NodeId) -> &Style {
         &self.taffy.nodes[node.into()].style
@@ -252,18 +325,14 @@ where
     }
 }
 
-impl<'t, NodeContext, MeasureFunction> LayoutTree for TaffyView<'t, NodeContext, MeasureFunction>
+// RoundTree impl for TaffyView
+impl<'t, NodeContext, MeasureFunction> RoundTree for TaffyView<'t, NodeContext, MeasureFunction>
 where
     MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
 {
     #[inline(always)]
     fn get_unrounded_layout(&self, node: NodeId) -> &Layout {
         &self.taffy.nodes[node.into()].unrounded_layout
-    }
-
-    #[inline(always)]
-    fn get_final_layout(&self, node: NodeId) -> &Layout {
-        &self.taffy.nodes[node.into()].final_layout
     }
 
     #[inline(always)]
@@ -520,11 +589,6 @@ impl<NodeContext> TaffyTree<NodeContext> {
         self.nodes.len()
     }
 
-    /// Returns the number of children of the `parent` node
-    pub fn child_count(&self, parent: NodeId) -> TaffyResult<usize> {
-        Ok(self.children[parent.into()].len())
-    }
-
     /// Returns a list of children that belong to the parent node
     pub fn children(&self, parent: NodeId) -> TaffyResult<Vec<NodeId>> {
         Ok(self.children[parent.into()].iter().copied().collect::<_>())
@@ -592,7 +656,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
     {
         let use_rounding = self.config.use_rounding;
         let mut taffy_view = TaffyView { taffy: self, measure_function };
-        compute_layout(&mut taffy_view, node_id, available_space);
+        compute_root_layout(&mut taffy_view, node_id, available_space);
         if use_rounding {
             round_layout(&mut taffy_view, node_id);
         }
@@ -607,13 +671,12 @@ impl<NodeContext> TaffyTree<NodeContext> {
     /// Prints a debug representation of the tree's layout
     #[cfg(feature = "std")]
     pub fn print_tree(&mut self, root: NodeId) {
-        let taffy_view = TaffyView { taffy: self, measure_function: |_, _, _, _| Size::ZERO };
-        crate::util::print_tree(&taffy_view, root)
+        crate::util::print_tree(self, root)
     }
 
     /// Returns an instance of LayoutTree representing the TaffyTree
     #[cfg(test)]
-    pub(crate) fn as_layout_tree(&mut self) -> impl LayoutTree + '_ {
+    pub(crate) fn as_layout_tree(&mut self) -> impl LayoutPartialTree + '_ {
         TaffyView { taffy: self, measure_function: |_, _, _, _| Size::ZERO }
     }
 }
@@ -665,7 +728,7 @@ mod tests {
         let node = res.unwrap();
 
         // node should be in the taffy tree and have no children
-        assert!(taffy.child_count(node).unwrap() == 0);
+        assert!(taffy.child_count(node) == 0);
     }
 
     #[test]
@@ -677,7 +740,7 @@ mod tests {
         let node = res.unwrap();
 
         // node should be in the taffy tree and have no children
-        assert!(taffy.child_count(node).unwrap() == 0);
+        assert!(taffy.child_count(node) == 0);
     }
 
     /// Test that new_with_children works as expected
@@ -689,7 +752,7 @@ mod tests {
         let node = taffy.new_with_children(Style::default(), &[child0, child1]).unwrap();
 
         // node should have two children
-        assert_eq!(taffy.child_count(node).unwrap(), 2);
+        assert_eq!(taffy.child_count(node), 2);
         assert_eq!(taffy.children(node).unwrap()[0], child0);
         assert_eq!(taffy.children(node).unwrap()[1], child1);
     }
@@ -765,15 +828,15 @@ mod tests {
     fn add_child() {
         let mut taffy: TaffyTree<()> = TaffyTree::new();
         let node = taffy.new_leaf(Style::default()).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 0);
+        assert_eq!(taffy.child_count(node), 0);
 
         let child0 = taffy.new_leaf(Style::default()).unwrap();
         taffy.add_child(node, child0).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 1);
+        assert_eq!(taffy.child_count(node), 1);
 
         let child1 = taffy.new_leaf(Style::default()).unwrap();
         taffy.add_child(node, child1).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 2);
+        assert_eq!(taffy.child_count(node), 2);
     }
 
     #[test]
@@ -785,19 +848,19 @@ mod tests {
         let child2 = taffy.new_leaf(Style::default()).unwrap();
 
         let node = taffy.new_leaf(Style::default()).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 0);
+        assert_eq!(taffy.child_count(node), 0);
 
         taffy.insert_child_at_index(node, 0, child0).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 1);
+        assert_eq!(taffy.child_count(node), 1);
         assert_eq!(taffy.children(node).unwrap()[0], child0);
 
         taffy.insert_child_at_index(node, 0, child1).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 2);
+        assert_eq!(taffy.child_count(node), 2);
         assert_eq!(taffy.children(node).unwrap()[0], child1);
         assert_eq!(taffy.children(node).unwrap()[1], child0);
 
         taffy.insert_child_at_index(node, 1, child2).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 3);
+        assert_eq!(taffy.child_count(node), 3);
         assert_eq!(taffy.children(node).unwrap()[0], child1);
         assert_eq!(taffy.children(node).unwrap()[1], child2);
         assert_eq!(taffy.children(node).unwrap()[2], child0);
@@ -811,7 +874,7 @@ mod tests {
         let child1 = taffy.new_leaf(Style::default()).unwrap();
         let node = taffy.new_with_children(Style::default(), &[child0, child1]).unwrap();
 
-        assert_eq!(taffy.child_count(node).unwrap(), 2);
+        assert_eq!(taffy.child_count(node), 2);
         assert_eq!(taffy.children(node).unwrap()[0], child0);
         assert_eq!(taffy.children(node).unwrap()[1], child1);
 
@@ -819,7 +882,7 @@ mod tests {
         let child3 = taffy.new_leaf(Style::default()).unwrap();
         taffy.set_children(node, &[child2, child3]).unwrap();
 
-        assert_eq!(taffy.child_count(node).unwrap(), 2);
+        assert_eq!(taffy.child_count(node), 2);
         assert_eq!(taffy.children(node).unwrap()[0], child2);
         assert_eq!(taffy.children(node).unwrap()[1], child3);
     }
@@ -832,14 +895,14 @@ mod tests {
         let child1 = taffy.new_leaf(Style::default()).unwrap();
         let node = taffy.new_with_children(Style::default(), &[child0, child1]).unwrap();
 
-        assert_eq!(taffy.child_count(node).unwrap(), 2);
+        assert_eq!(taffy.child_count(node), 2);
 
         taffy.remove_child(node, child0).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 1);
+        assert_eq!(taffy.child_count(node), 1);
         assert_eq!(taffy.children(node).unwrap()[0], child1);
 
         taffy.remove_child(node, child1).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 0);
+        assert_eq!(taffy.child_count(node), 0);
     }
 
     #[test]
@@ -849,14 +912,14 @@ mod tests {
         let child1 = taffy.new_leaf(Style::default()).unwrap();
         let node = taffy.new_with_children(Style::default(), &[child0, child1]).unwrap();
 
-        assert_eq!(taffy.child_count(node).unwrap(), 2);
+        assert_eq!(taffy.child_count(node), 2);
 
         taffy.remove_child_at_index(node, 0).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 1);
+        assert_eq!(taffy.child_count(node), 1);
         assert_eq!(taffy.children(node).unwrap()[0], child1);
 
         taffy.remove_child_at_index(node, 0).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 0);
+        assert_eq!(taffy.child_count(node), 0);
     }
 
     // Related to: https://github.com/DioxusLabs/taffy/issues/510
@@ -883,11 +946,11 @@ mod tests {
         let child1 = taffy.new_leaf(Style::default()).unwrap();
 
         let node = taffy.new_with_children(Style::default(), &[child0]).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 1);
+        assert_eq!(taffy.child_count(node), 1);
         assert_eq!(taffy.children(node).unwrap()[0], child0);
 
         taffy.replace_child_at_index(node, 0, child1).unwrap();
-        assert_eq!(taffy.child_count(node).unwrap(), 1);
+        assert_eq!(taffy.child_count(node), 1);
         assert_eq!(taffy.children(node).unwrap()[0], child1);
     }
     #[test]
@@ -909,9 +972,9 @@ mod tests {
         let child1 = taffy.new_leaf(Style::default()).unwrap();
         let node = taffy.new_with_children(Style::default(), &[child0, child1]).unwrap();
 
-        assert!(if let Ok(count) = taffy.child_count(node) { count == 2 } else { false });
-        assert!(if let Ok(count) = taffy.child_count(child0) { count == 0 } else { false });
-        assert!(if let Ok(count) = taffy.child_count(child1) { count == 0 } else { false });
+        assert!(taffy.child_count(node) == 2);
+        assert!(taffy.child_count(child0) == 0);
+        assert!(taffy.child_count(child1) == 0);
     }
 
     #[allow(clippy::vec_init_then_push)]

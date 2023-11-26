@@ -4,11 +4,10 @@ mod common {
 }
 use common::image::{image_measure_function, ImageContext};
 use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode, LOREM_IPSUM};
-use taffy::tree::{Cache, PartialLayoutTree};
 use taffy::util::print_tree;
 use taffy::{
-    compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_layout, compute_leaf_layout,
-    prelude::*, round_layout,
+    compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout, compute_root_layout,
+    prelude::*, round_layout, Cache,
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -102,7 +101,7 @@ impl Tree {
     }
 
     pub fn compute_layout(&mut self, root: usize, available_space: Size<AvailableSpace>, use_rounding: bool) {
-        compute_layout(self, NodeId::from(root), available_space);
+        compute_root_layout(self, NodeId::from(root), available_space);
         if use_rounding {
             round_layout(self, NodeId::from(root))
         }
@@ -121,7 +120,7 @@ impl<'a> Iterator for ChildIter<'a> {
     }
 }
 
-impl PartialLayoutTree for Tree {
+impl taffy::TraversePartialTree for Tree {
     type ChildIter<'a> = ChildIter<'a>;
 
     fn child_ids(&self, node_id: NodeId) -> Self::ChildIter<'_> {
@@ -135,7 +134,11 @@ impl PartialLayoutTree for Tree {
     fn get_child_id(&self, node_id: NodeId, index: usize) -> NodeId {
         NodeId::from(self.node_from_id(node_id).children[index])
     }
+}
 
+impl taffy::TraverseTree for Tree {}
+
+impl taffy::LayoutPartialTree for Tree {
     fn get_style(&self, node_id: NodeId) -> &Style {
         &self.node_from_id(node_id).style
     }
@@ -180,17 +183,28 @@ impl PartialLayoutTree for Tree {
     }
 }
 
-impl LayoutTree for Tree {
+impl taffy::RoundTree for Tree {
     fn get_unrounded_layout(&self, node_id: NodeId) -> &Layout {
         &self.node_from_id(node_id).unrounded_layout
     }
 
-    fn get_final_layout(&self, node_id: NodeId) -> &Layout {
-        &self.node_from_id(node_id).final_layout
-    }
-
     fn set_final_layout(&mut self, node_id: NodeId, layout: &Layout) {
         self.node_from_id_mut(node_id).final_layout = *layout;
+    }
+}
+
+impl taffy::PrintTree for Tree {
+    fn get_debug_label(&self, node_id: NodeId) -> &'static str {
+        match self.node_from_id(node_id).kind {
+            NodeKind::Flexbox => "FLEX",
+            NodeKind::Grid => "GRID",
+            NodeKind::Text => "TEXT",
+            NodeKind::Image => "IMAGE",
+        }
+    }
+
+    fn get_final_layout(&self, node_id: NodeId) -> &Layout {
+        &self.node_from_id(node_id).final_layout
     }
 }
 

@@ -10,7 +10,7 @@ pub use crate::{
         auto, fit_content, length, max_content, min_content, percent, zero, FromFlex, FromLength, FromPercent,
         TaffyAuto, TaffyFitContent, TaffyMaxContent, TaffyMinContent, TaffyZero,
     },
-    tree::{Layout, LayoutTree, NodeId},
+    tree::{Layout, LayoutPartialTree, NodeId, PrintTree, RoundTree, TraversePartialTree, TraverseTree},
 };
 
 #[cfg(feature = "flexbox")]

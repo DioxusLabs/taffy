@@ -8,7 +8,7 @@ use crate::style::{
 use crate::style::{FlexDirection, Style};
 use crate::style_helpers::{TaffyMaxContent, TaffyMinContent};
 use crate::tree::{Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
-use crate::tree::{NodeId, PartialLayoutTree, PartialLayoutTreeExt};
+use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId};
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
@@ -151,8 +151,8 @@ struct AlgoConstants {
     inner_container_size: Size<f32>,
 }
 
-/// Computes the layout of [`PartialLayoutTree`] according to the flexbox algorithm
-pub fn compute_flexbox_layout(tree: &mut impl PartialLayoutTree, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
+/// Computes the layout of [`LayoutPartialTree`] according to the flexbox algorithm
+pub fn compute_flexbox_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, run_mode, .. } = inputs;
     let style = tree.get_style(node);
 
@@ -186,7 +186,7 @@ pub fn compute_flexbox_layout(tree: &mut impl PartialLayoutTree, node: NodeId, i
 }
 
 /// Compute a preliminary size for an item
-fn compute_preliminary(tree: &mut impl PartialLayoutTree, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
+fn compute_preliminary(tree: &mut impl LayoutPartialTree, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
     // Define some general constants we will need for the remainder of the algorithm.
@@ -442,7 +442,7 @@ fn compute_constants(
 /// - [**Generate anonymous flex items**](https://www.w3.org/TR/css-flexbox-1/#algo-anon-box) as described in [§4 Flex Items](https://www.w3.org/TR/css-flexbox-1/#flex-items).
 #[inline]
 fn generate_anonymous_flex_items(
-    tree: &impl PartialLayoutTree,
+    tree: &impl LayoutPartialTree,
     node: NodeId,
     constants: &AlgoConstants,
 ) -> Vec<FlexItem> {
@@ -562,7 +562,7 @@ fn determine_available_space(
 ///     (For example, an item with a specified size of zero, positive padding, and box-sizing: border-box will have an outer flex base size of zero—and hence a negative inner flex base size.)
 #[inline]
 fn determine_flex_base_size(
-    tree: &mut impl PartialLayoutTree,
+    tree: &mut impl LayoutPartialTree,
     constants: &AlgoConstants,
     available_space: Size<AvailableSpace>,
     flex_items: &mut [FlexItem],
@@ -802,7 +802,7 @@ fn collect_flex_lines<'a>(
 
 /// Determine the container's main size (if not already known)
 fn determine_container_main_size(
-    tree: &mut impl PartialLayoutTree,
+    tree: &mut impl LayoutPartialTree,
     available_space: Size<AvailableSpace>,
     lines: &mut Vec<FlexLine<'_>>,
     constants: &mut AlgoConstants,
@@ -1208,7 +1208,7 @@ fn resolve_flexible_lengths(line: &mut FlexLine, constants: &AlgoConstants, orig
 ///     by performing layout with the used main size and the available space, treating auto as fit-content.
 #[inline]
 fn determine_hypothetical_cross_size(
-    tree: &mut impl PartialLayoutTree,
+    tree: &mut impl LayoutPartialTree,
     line: &mut FlexLine,
     constants: &AlgoConstants,
     available_space: Size<AvailableSpace>,
@@ -1258,7 +1258,7 @@ fn determine_hypothetical_cross_size(
 /// Calculate the base lines of the children.
 #[inline]
 fn calculate_children_base_lines(
-    tree: &mut impl PartialLayoutTree,
+    tree: &mut impl LayoutPartialTree,
     node_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     flex_lines: &mut [FlexLine],
@@ -1443,7 +1443,7 @@ fn handle_align_content_stretch(flex_lines: &mut [FlexLine], node_size: Size<Opt
 ///
 ///     **Note that this step does not affect the main size of the flex item, even if it has an intrinsic aspect ratio**.
 #[inline]
-fn determine_used_cross_size(tree: &impl PartialLayoutTree, flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
+fn determine_used_cross_size(tree: &impl LayoutPartialTree, flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
     for line in flex_lines {
         let line_cross_size = line.cross_size;
 
@@ -1712,7 +1712,7 @@ fn align_flex_lines_per_align_content(flex_lines: &mut [FlexLine], constants: &A
 /// Calculates the layout for a flex-item
 #[allow(clippy::too_many_arguments)]
 fn calculate_flex_item(
-    tree: &mut impl PartialLayoutTree,
+    tree: &mut impl LayoutPartialTree,
     item: &mut FlexItem,
     total_offset_main: &mut f32,
     total_offset_cross: f32,
@@ -1793,7 +1793,7 @@ fn calculate_flex_item(
 /// Calculates the layout line
 #[allow(clippy::too_many_arguments)]
 fn calculate_layout_line(
-    tree: &mut impl PartialLayoutTree,
+    tree: &mut impl LayoutPartialTree,
     line: &mut FlexLine,
     total_offset_cross: &mut f32,
     #[cfg(feature = "content_size")] content_size: &mut Size<f32>,
@@ -1843,7 +1843,7 @@ fn calculate_layout_line(
 /// Do a final layout pass and collect the resulting layouts.
 #[inline]
 fn final_layout_pass(
-    tree: &mut impl PartialLayoutTree,
+    tree: &mut impl LayoutPartialTree,
     flex_lines: &mut [FlexLine],
     constants: &AlgoConstants,
 ) -> Size<f32> {
@@ -1888,7 +1888,7 @@ fn final_layout_pass(
 /// Perform absolute layout on all absolutely positioned children.
 #[inline]
 fn perform_absolute_layout_on_absolute_children(
-    tree: &mut impl PartialLayoutTree,
+    tree: &mut impl LayoutPartialTree,
     node: NodeId,
     constants: &AlgoConstants,
 ) -> Size<f32> {
