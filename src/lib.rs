@@ -26,7 +26,7 @@
 //!
 //! ### High-level API
 //!
-//! The high-level API** consists of the [`TaffyTree`] struct which contains a tree implementation and provides methods that allow you to construct
+//! The high-level API consists of the [`TaffyTree`] struct which contains a tree implementation and provides methods that allow you to construct
 //! a tree of UI nodes. Once constructed, you can call the [`compute_layout_with_measure`](crate::TaffyTree::compute_layout_with_measure) method to compute the layout (passing in a "measure function" closure which is used to compute the size of leaf nodes), and then access
 //! the layout of each node using the [`layout`](crate::TaffyTree::layout) method.
 //!
