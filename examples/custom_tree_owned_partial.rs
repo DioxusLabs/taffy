@@ -71,74 +71,81 @@ impl Node {
         self.children.push(node);
     }
 
-    unsafe fn as_id(&self) -> NodeId {
-        NodeId::from(self as *const Node as usize)
+    pub fn compute_layout(&mut self, available_space: Size<AvailableSpace>) {
+        compute_root_layout(self, NodeId::from(usize::MAX), available_space);
     }
 
-    pub fn compute_layout(&mut self, available_space: Size<AvailableSpace>) {
-        let root_node_id = unsafe { self.as_id() };
-        compute_root_layout(&mut StatelessLayoutTree, root_node_id, available_space);
+    /// The methods on LayoutPartialTree need to be able to access:
+    ///
+    ///  - The node being laid out
+    ///  - Direct children of the node being laid out
+    ///
+    /// Each must have an ID. For children we simply use it's index. For the node itself
+    /// we use usize::MAX on the assumption that there will never be that many children.
+    fn node_from_id(&self, node_id: NodeId) -> &Node {
+        let idx = usize::from(node_id);
+        if idx == usize::MAX {
+            self
+        } else {
+            &self.children[idx]
+        }
+    }
+
+    fn node_from_id_mut(&mut self, node_id: NodeId) -> &mut Node {
+        let idx = usize::from(node_id);
+        if idx == usize::MAX {
+            self
+        } else {
+            &mut self.children[idx]
+        }
     }
 }
 
-struct ChildIter<'a>(std::slice::Iter<'a, Node>);
-impl<'a> Iterator for ChildIter<'a> {
+struct ChildIter(std::ops::Range<usize>);
+impl Iterator for ChildIter {
     type Item = NodeId;
     fn next(&mut self) -> Option<Self::Item> {
-        self.0.next().map(|c| NodeId::from(c as *const Node as usize))
+        self.0.next().map(|idx| NodeId::from(idx))
     }
 }
 
-#[inline(always)]
-unsafe fn node_from_id<'a>(node_id: NodeId) -> &'a Node {
-    &*(usize::from(node_id) as *const Node)
-}
+impl taffy::TraversePartialTree for Node {
+    type ChildIter<'a> = ChildIter;
 
-#[inline(always)]
-unsafe fn node_from_id_mut<'a>(node_id: NodeId) -> &'a mut Node {
-    &mut *(usize::from(node_id) as *mut Node)
-}
-
-struct StatelessLayoutTree;
-impl taffy::TraversePartialTree for StatelessLayoutTree {
-    type ChildIter<'a> = ChildIter<'a>;
-
-    fn child_ids(&self, node_id: NodeId) -> Self::ChildIter<'_> {
-        unsafe { ChildIter(node_from_id(node_id).children.iter()) }
+    fn child_ids(&self, _node_id: NodeId) -> Self::ChildIter<'_> {
+        ChildIter(0..self.children.len())
     }
 
-    fn child_count(&self, node_id: NodeId) -> usize {
-        unsafe { node_from_id(node_id).children.len() }
+    fn child_count(&self, _node_id: NodeId) -> usize {
+        self.children.len()
     }
 
-    fn get_child_id(&self, node_id: NodeId, index: usize) -> NodeId {
-        unsafe { node_from_id(node_id).children[index].as_id() }
+    fn get_child_id(&self, _node_id: NodeId, index: usize) -> NodeId {
+        NodeId::from(index)
     }
 }
 
-impl taffy::TraverseTree for StatelessLayoutTree {}
-
-impl taffy::LayoutPartialTree for StatelessLayoutTree {
+impl taffy::LayoutPartialTree for Node {
     fn get_style(&self, node_id: NodeId) -> &Style {
-        unsafe { &node_from_id(node_id).style }
+        &self.node_from_id(node_id).style
     }
 
     fn set_unrounded_layout(&mut self, node_id: NodeId, layout: &Layout) {
-        unsafe { node_from_id_mut(node_id).layout = *layout };
+        self.node_from_id_mut(node_id).layout = *layout
     }
 
     fn get_cache_mut(&mut self, node_id: NodeId) -> &mut Cache {
-        unsafe { &mut node_from_id_mut(node_id).cache }
+        &mut self.node_from_id_mut(node_id).cache
     }
 
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: taffy::tree::LayoutInput) -> taffy::tree::LayoutOutput {
-        compute_cached_layout(self, node_id, inputs, |tree, node_id, inputs| {
-            let node = unsafe { node_from_id_mut(node_id) };
+        compute_cached_layout(self, node_id, inputs, |parent, node_id, inputs| {
+            let node = parent.node_from_id_mut(node_id);
             let font_metrics = FontMetrics { char_width: 10.0, char_height: 10.0 };
 
             match node.kind {
-                NodeKind::Flexbox => compute_flexbox_layout(tree, node_id, inputs),
-                NodeKind::Grid => compute_grid_layout(tree, node_id, inputs),
+                NodeKind::Flexbox => compute_flexbox_layout(node, node_id, inputs),
+                NodeKind::Grid => compute_grid_layout(node, node_id, inputs),
                 NodeKind::Text => compute_leaf_layout(
                     inputs,
                     &node.style,
