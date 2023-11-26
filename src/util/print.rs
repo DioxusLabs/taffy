@@ -45,7 +45,7 @@ pub fn print_tree(tree: &impl PrintTree, root: NodeId) {
             y = layout.location.y,
             width = layout.size.width,
             height = layout.size.height,
-            key = node,
+            key = node_id,
         );
         let bar = if has_sibling { "│   " } else { "    " };
         let new_string = lines_string + bar;
