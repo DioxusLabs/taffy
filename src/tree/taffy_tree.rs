@@ -1,5 +1,9 @@
 //! Contains [TaffyTree](crate::tree::TaffyTree): the default implementation of [LayoutTree](crate::tree::LayoutTree), and the error type for Taffy.
-use slotmap::{DefaultKey, SlotMap, SparseSecondaryMap};
+use slotmap::{DefaultKey, SlotMap};
+#[cfg(feature = "std")]
+use slotmap::SparseSecondaryMap as SecondaryMap;
+#[cfg(not(feature = "std"))]
+use slotmap::SecondaryMap;
 
 use crate::geometry::Size;
 use crate::style::{AvailableSpace, Display, Style};
@@ -125,7 +129,7 @@ pub struct TaffyTree<NodeContext = ()> {
     nodes: SlotMap<DefaultKey, NodeData>,
 
     /// Functions/closures that compute the intrinsic size of leaf nodes
-    node_context_data: SparseSecondaryMap<DefaultKey, NodeContext>,
+    node_context_data: SecondaryMap<DefaultKey, NodeContext>,
 
     /// The children of each node
     ///
@@ -360,7 +364,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
             nodes: SlotMap::with_capacity(capacity),
             children: SlotMap::with_capacity(capacity),
             parents: SlotMap::with_capacity(capacity),
-            node_context_data: SparseSecondaryMap::with_capacity(capacity),
+            node_context_data: SecondaryMap::with_capacity(capacity),
             config: TaffyConfig::default(),
         }
     }
