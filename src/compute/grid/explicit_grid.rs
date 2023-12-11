@@ -186,7 +186,7 @@ pub(super) fn initialize_grid_tracks(
     tracks: &mut Vec<GridTrack>,
     counts: TrackCounts,
     track_template: &GridTrackVec<TrackSizingFunction>,
-    auto_tracks: &Vec<NonRepeatedTrackSizingFunction>,
+    auto_tracks: &[NonRepeatedTrackSizingFunction],
     gap: LengthPercentage,
     track_has_items: impl Fn(usize) -> bool,
 ) {
