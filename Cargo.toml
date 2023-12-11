@@ -18,7 +18,7 @@ license = "MIT"
 arrayvec = { version = "0.7", default-features = false }
 num-traits = { version = "0.2", default-features = false }
 serde = { version = "1.0", default-features = false, optional = true, features = ["serde_derive"] }
-slotmap = { version = "1.0.6", optional = true }
+slotmap = { version = "1.0.6", default-features = false, optional = true }
 grid = { version = "0.12.0", default-features = false, optional = true }
 
 ### FEATURES #################################################################
@@ -47,7 +47,7 @@ taffy_tree = ["dep:slotmap"]
 # Add serde derives to Style structs
 serde = ["dep:serde"]
 # Allow Taffy to depend on the standard library
-std = ["num-traits/std", "grid?/std", "serde?/std"]
+std = ["num-traits/std", "grid?/std", "serde?/std", "slotmap?/std"]
 # Allow Taffy to depend on the alloc library
 alloc = ["serde?/alloc"]
 # Internal featyre for debugging
