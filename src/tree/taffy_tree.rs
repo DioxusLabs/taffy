@@ -1,9 +1,9 @@
 //! Contains [TaffyTree](crate::tree::TaffyTree): the default implementation of [LayoutTree](crate::tree::LayoutTree), and the error type for Taffy.
-use slotmap::{DefaultKey, SlotMap};
-#[cfg(feature = "std")]
-use slotmap::SparseSecondaryMap as SecondaryMap;
 #[cfg(not(feature = "std"))]
 use slotmap::SecondaryMap;
+#[cfg(feature = "std")]
+use slotmap::SparseSecondaryMap as SecondaryMap;
+use slotmap::{DefaultKey, SlotMap};
 
 use crate::geometry::Size;
 use crate::style::{AvailableSpace, Display, Style};
