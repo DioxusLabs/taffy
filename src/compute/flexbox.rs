@@ -804,7 +804,7 @@ fn collect_flex_lines<'a>(
 fn determine_container_main_size(
     tree: &mut impl LayoutPartialTree,
     available_space: Size<AvailableSpace>,
-    lines: &mut Vec<FlexLine<'_>>,
+    lines: &mut [FlexLine<'_>],
     constants: &mut AlgoConstants,
 ) {
     let dir = constants.dir;
