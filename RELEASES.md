@@ -111,6 +111,7 @@ Example usage change:
   - All types from the `node`, `data`, `layout`, `error` and `cache` modules have been moved to the  the `tree` module.
 - Fixed misspelling: `RunMode::PeformLayout` renamed into `RunMode::PerformLayout` (added missing `r`).
 - `serde` dependency has been made compatible with `no_std` environments
+- `slotmap` dependency has been made compatible with `no_std` environments
 
 ## 0.3.18
 
