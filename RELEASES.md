@@ -93,6 +93,7 @@ Example usage change:
   - `compute_leaf_layout`
   - `compute_hidden_layout`
 - Added `insert_child_at_index()` method to the `Taffy` tree. This can be used to insert a child node at any position instead of just the end.
+- Added `get_disjoint_node_context_mut()` method to the `Taffy` tree. This can be used to safely get multiple mutable borrows at the same time.
 
 ### Removed
 
