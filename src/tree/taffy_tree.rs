@@ -476,6 +476,14 @@ impl<NodeContext> TaffyTree<NodeContext> {
         self.node_context_data.get_mut(node.into())
     }
 
+    /// Gets mutable references to the the context data associated with the nodes. All keys must be valid and disjoint, otherwise None is returned.
+    pub fn get_disjoint_node_context_mut<const N: usize>(
+        &mut self,
+        keys: [NodeId; N],
+    ) -> Option<[&mut NodeContext; N]> {
+        self.node_context_data.get_disjoint_mut(keys.map(|k| k.into()))
+    }
+
     /// Adds a `child` node under the supplied `parent`
     pub fn add_child(&mut self, parent: NodeId, child: NodeId) -> TaffyResult<()> {
         let parent_key = parent.into();
