@@ -159,25 +159,17 @@ impl taffy::LayoutPartialTree for Tree {
             match node.kind {
                 NodeKind::Flexbox => compute_flexbox_layout(tree, node_id, inputs),
                 NodeKind::Grid => compute_grid_layout(tree, node_id, inputs),
-                NodeKind::Text => compute_leaf_layout(
-                    inputs,
-                    &node.style,
-                    Some(|known_dimensions, available_space| {
-                        text_measure_function(
-                            known_dimensions,
-                            available_space,
-                            node.text_data.as_ref().unwrap(),
-                            &font_metrics,
-                        )
-                    }),
-                ),
-                NodeKind::Image => compute_leaf_layout(
-                    inputs,
-                    &node.style,
-                    Some(|known_dimensions, _available_space| {
-                        image_measure_function(known_dimensions, node.image_data.as_ref().unwrap())
-                    }),
-                ),
+                NodeKind::Text => compute_leaf_layout(inputs, &node.style, |known_dimensions, available_space| {
+                    text_measure_function(
+                        known_dimensions,
+                        available_space,
+                        node.text_data.as_ref().unwrap(),
+                        &font_metrics,
+                    )
+                }),
+                NodeKind::Image => compute_leaf_layout(inputs, &node.style, |known_dimensions, _available_space| {
+                    image_measure_function(known_dimensions, node.image_data.as_ref().unwrap())
+                }),
             }
         })
     }

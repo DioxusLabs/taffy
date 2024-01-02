@@ -30,7 +30,7 @@ mod measure {
         _node_id: NodeId,
         node_context: Option<&mut AspectRatioMeasure>,
     ) -> taffy::geometry::Size<f32> {
-        let node_context = node_context.unwrap();
+        let Some(node_context) = node_context else { return Size::ZERO };
         let width = known_dimensions.width.unwrap_or(node_context.width);
         let height = known_dimensions.height.unwrap_or(width * node_context.height_ratio);
         Size { width, height }
