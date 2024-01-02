@@ -14,7 +14,7 @@ use core::unreachable;
 pub fn compute_leaf_layout<MeasureFunction>(
     inputs: LayoutInput,
     style: &Style,
-    measure_function: Option<MeasureFunction>,
+    measure_function: MeasureFunction,
 ) -> LayoutOutput
 where
     MeasureFunction: FnOnce(Size<Option<f32>>, Size<AvailableSpace>) -> Size<f32>,
@@ -80,7 +80,7 @@ where
     debug_log!("max_size ", dbg:node_max_size);
 
     // Return early if both width and height are known
-    if run_mode == RunMode::ComputeSize {
+    if run_mode == RunMode::ComputeSize && has_styles_preventing_being_collapsed_through {
         if let Size { width: Some(width), height: Some(height) } = node_size {
             let size = Size { width, height }
                 .maybe_clamp(node_min_size, node_max_size)
@@ -92,99 +92,65 @@ where
                 first_baselines: Point::NONE,
                 top_margin: CollapsibleMarginSet::ZERO,
                 bottom_margin: CollapsibleMarginSet::ZERO,
-                margins_can_collapse_through: !has_styles_preventing_being_collapsed_through
-                    && size.height == 0.0
-                    && measure_function.is_none(),
+                margins_can_collapse_through: false,
             };
         };
     }
 
-    if let Some(measure_function) = measure_function {
-        // Compute available space
-        let available_space = Size {
-            width: known_dimensions
-                .width
-                .map(AvailableSpace::from)
-                .unwrap_or(available_space.width)
-                .maybe_sub(margin.horizontal_axis_sum())
-                .maybe_set(known_dimensions.width)
-                .maybe_set(node_size.width)
-                .maybe_set(node_max_size.width)
-                .map_definite_value(|size| {
-                    size.maybe_clamp(node_min_size.width, node_max_size.width) - content_box_inset.horizontal_axis_sum()
-                }),
-            height: known_dimensions
-                .height
-                .map(AvailableSpace::from)
-                .unwrap_or(available_space.height)
-                .maybe_sub(margin.vertical_axis_sum())
-                .maybe_set(known_dimensions.height)
-                .maybe_set(node_size.height)
-                .maybe_set(node_max_size.height)
-                .map_definite_value(|size| {
-                    size.maybe_clamp(node_min_size.height, node_max_size.height) - content_box_inset.vertical_axis_sum()
-                }),
-        };
-
-        // Measure node
-        let measured_size = measure_function(
-            match run_mode {
-                RunMode::ComputeSize => known_dimensions,
-                RunMode::PerformLayout => Size::NONE,
-                RunMode::PerformHiddenLayout => unreachable!(),
-            },
-            available_space,
-        );
-        let clamped_size = known_dimensions
-            .or(node_size)
-            .unwrap_or(measured_size + content_box_inset.sum_axes())
-            .maybe_clamp(node_min_size, node_max_size);
-        let size = Size {
-            width: clamped_size.width,
-            height: f32_max(clamped_size.height, aspect_ratio.map(|ratio| clamped_size.width / ratio).unwrap_or(0.0)),
-        };
-        let size = size.maybe_max(padding_border.sum_axes().map(Some));
-
-        return LayoutOutput {
-            size,
-            #[cfg(feature = "content_size")]
-            content_size: measured_size + padding.sum_axes(),
-            first_baselines: Point::NONE,
-            top_margin: CollapsibleMarginSet::ZERO,
-            bottom_margin: CollapsibleMarginSet::ZERO,
-            margins_can_collapse_through: !has_styles_preventing_being_collapsed_through
-                && size.height == 0.0
-                && measured_size.height == 0.0,
-        };
-    }
-
-    let size = Size {
-        width: node_size
+    // Compute available space
+    let available_space = Size {
+        width: known_dimensions
             .width
-            // .unwrap_or(0.0) + padding.horizontal_axis_sum() + border.horizontal_axis_sum(), // content-box
-            .unwrap_or(content_box_inset.horizontal_axis_sum()) // border-box
-            .maybe_clamp(node_min_size.width, node_max_size.width)
-            .maybe_max(padding_border.horizontal_axis_sum().into()),
-        height: node_size
+            .map(AvailableSpace::from)
+            .unwrap_or(available_space.width)
+            .maybe_sub(margin.horizontal_axis_sum())
+            .maybe_set(known_dimensions.width)
+            .maybe_set(node_size.width)
+            .maybe_set(node_max_size.width)
+            .map_definite_value(|size| {
+                size.maybe_clamp(node_min_size.width, node_max_size.width) - content_box_inset.horizontal_axis_sum()
+            }),
+        height: known_dimensions
             .height
-            // .unwrap_or(0.0) + padding.vertical_axis_sum() + border.vertical_axis_sum(), // content-box
-            .unwrap_or(content_box_inset.vertical_axis_sum()) // border-box
-            .maybe_clamp(node_min_size.height, node_max_size.height)
-            .maybe_max(padding_border.vertical_axis_sum().into()),
+            .map(AvailableSpace::from)
+            .unwrap_or(available_space.height)
+            .maybe_sub(margin.vertical_axis_sum())
+            .maybe_set(known_dimensions.height)
+            .maybe_set(node_size.height)
+            .maybe_set(node_max_size.height)
+            .map_definite_value(|size| {
+                size.maybe_clamp(node_min_size.height, node_max_size.height) - content_box_inset.vertical_axis_sum()
+            }),
     };
 
+    // Measure node
+    let measured_size = measure_function(
+        match run_mode {
+            RunMode::ComputeSize => known_dimensions,
+            RunMode::PerformLayout => Size::NONE,
+            RunMode::PerformHiddenLayout => unreachable!(),
+        },
+        available_space,
+    );
+    let clamped_size = known_dimensions
+        .or(node_size)
+        .unwrap_or(measured_size + content_box_inset.sum_axes())
+        .maybe_clamp(node_min_size, node_max_size);
     let size = Size {
-        width: f32_max(size.width, aspect_ratio.map(|ratio| size.height * ratio).unwrap_or(0.0)),
-        height: f32_max(size.height, aspect_ratio.map(|ratio| size.width / ratio).unwrap_or(0.0)),
+        width: clamped_size.width,
+        height: f32_max(clamped_size.height, aspect_ratio.map(|ratio| clamped_size.width / ratio).unwrap_or(0.0)),
     };
+    let size = size.maybe_max(padding_border.sum_axes().map(Some));
 
     LayoutOutput {
         size,
         #[cfg(feature = "content_size")]
-        content_size: padding.sum_axes(),
+        content_size: measured_size + padding.sum_axes(),
         first_baselines: Point::NONE,
         top_margin: CollapsibleMarginSet::ZERO,
         bottom_margin: CollapsibleMarginSet::ZERO,
-        margins_can_collapse_through: !has_styles_preventing_being_collapsed_through && size.height == 0.0,
+        margins_can_collapse_through: !has_styles_preventing_being_collapsed_through
+            && size.height == 0.0
+            && measured_size.height == 0.0,
     }
 }

@@ -92,8 +92,8 @@ struct NodeData {
     /// These may be rounded or unrounded depending on what the `use_rounding` config setting is set to.
     pub(crate) final_layout: Layout,
 
-    /// Should we try and measure this node?
-    pub(crate) needs_measure: bool,
+    /// Whether the node has context data associated with it or not
+    pub(crate) has_context: bool,
 
     /// The cached results of the layout computation
     pub(crate) cache: Cache,
@@ -108,7 +108,7 @@ impl NodeData {
             cache: Cache::new(),
             unrounded_layout: Layout::new(),
             final_layout: Layout::new(),
-            needs_measure: false,
+            has_context: false,
         }
     }
 
@@ -317,11 +317,11 @@ where
                 (_, false) => {
                     let node_key = node.into();
                     let style = &tree.taffy.nodes[node_key].style;
-                    let needs_measure = tree.taffy.nodes[node_key].needs_measure;
-                    let measure_function = needs_measure.then_some(|known_dimensions, available_space| {
-                        let node_context = tree.taffy.node_context_data.get_mut(node_key);
+                    let has_context = tree.taffy.nodes[node_key].has_context;
+                    let node_context = has_context.then(|| tree.taffy.node_context_data.get_mut(node_key)).flatten();
+                    let measure_function = |known_dimensions, available_space| {
                         (tree.measure_function)(known_dimensions, available_space, node, node_context)
-                    });
+                    };
                     compute_leaf_layout(inputs, style, measure_function)
                 }
             }
@@ -393,7 +393,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
     /// Creates and adds a new leaf node with a supplied context
     pub fn new_leaf_with_context(&mut self, layout: Style, context: NodeContext) -> TaffyResult<NodeId> {
         let mut data = NodeData::new(layout);
-        data.needs_measure = true;
+        data.has_context = true;
 
         let id = self.nodes.insert(data);
         self.node_context_data.insert(id, context);
@@ -454,10 +454,10 @@ impl<NodeContext> TaffyTree<NodeContext> {
     pub fn set_node_context(&mut self, node: NodeId, measure: Option<NodeContext>) -> TaffyResult<()> {
         let key = node.into();
         if let Some(measure) = measure {
-            self.nodes[key].needs_measure = true;
+            self.nodes[key].has_context = true;
             self.node_context_data.insert(key, measure);
         } else {
-            self.nodes[key].needs_measure = false;
+            self.nodes[key].has_context = false;
             self.node_context_data.remove(key);
         }
 
