@@ -99,8 +99,8 @@ pub struct Layout {
 
 #[wasm_bindgen]
 impl Layout {
-    fn new(allocator: &Allocator, node: taffy::NodeId) -> Layout {
-        let taffy = allocator.taffy.borrow();
+    fn new(tree: &TaffyTree, node: taffy::NodeId) -> Layout {
+        let taffy = tree.taffy.borrow();
         let layout = taffy.layout(node).unwrap();
         let children = taffy.children(node).unwrap();
 
@@ -110,7 +110,7 @@ impl Layout {
             x: layout.location.x,
             y: layout.location.y,
             childCount: children.len(),
-            children: children.into_iter().map(|child| Layout::new(allocator, child)).collect(),
+            children: children.into_iter().map(|child| Layout::new(tree, child)).collect(),
         }
     }
 
@@ -132,12 +132,12 @@ impl WasmNodeContext {
 
 #[wasm_bindgen]
 #[derive(Clone)]
-pub struct Allocator {
+pub struct TaffyTree {
     taffy: Rc<RefCell<taffy::TaffyTree<WasmNodeContext>>>,
 }
 
 #[wasm_bindgen]
-impl Allocator {
+impl TaffyTree {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
         Self { taffy: Rc::new(RefCell::new(taffy::TaffyTree::new())) }
@@ -146,7 +146,7 @@ impl Allocator {
 
 #[wasm_bindgen]
 pub struct Node {
-    allocator: Allocator,
+    tree: TaffyTree,
     node: taffy::NodeId,
 
     #[wasm_bindgen(readonly)]
@@ -196,10 +196,10 @@ fn wasm_measure_function(
 #[wasm_bindgen]
 impl Node {
     #[wasm_bindgen(constructor)]
-    pub fn new(allocator: &Allocator) -> Self {
+    pub fn new(tree: &TaffyTree) -> Self {
         Self {
-            allocator: allocator.clone(),
-            node: allocator.taffy.borrow_mut().new_leaf(Style::DEFAULT).unwrap(),
+            tree: tree.clone(),
+            node: tree.taffy.borrow_mut().new_leaf(Style::DEFAULT).unwrap(),
             childCount: 0,
         }
     }
@@ -207,7 +207,7 @@ impl Node {
     #[wasm_bindgen(js_name = setMeasure)]
     pub fn set_measure(&mut self, measure: &JsValue) {
         let js_measure_func = Function::from(measure.clone());
-        self.allocator
+        self.tree
             .taffy
             .borrow_mut()
             .set_node_context(self.node, Some(WasmNodeContext::from_js_measure(js_measure_func)))
@@ -216,45 +216,45 @@ impl Node {
 
     #[wasm_bindgen(js_name = addChild)]
     pub fn add_child(&mut self, child: &Node) {
-        self.allocator.taffy.borrow_mut().add_child(self.node, child.node).unwrap();
+        self.tree.taffy.borrow_mut().add_child(self.node, child.node).unwrap();
         self.childCount += 1;
     }
 
     #[wasm_bindgen(js_name = removeChild)]
     pub fn remove_child(&mut self, child: &Node) {
-        self.allocator.taffy.borrow_mut().remove_child(self.node, child.node).unwrap();
+        self.tree.taffy.borrow_mut().remove_child(self.node, child.node).unwrap();
         self.childCount -= 1;
     }
 
     #[wasm_bindgen(js_name = replaceChildAtIndex)]
     pub fn replace_child_at_index(&mut self, index: usize, child: &Node) {
-        self.allocator.taffy.borrow_mut().replace_child_at_index(self.node, index, child.node).unwrap();
+        self.tree.taffy.borrow_mut().replace_child_at_index(self.node, index, child.node).unwrap();
     }
 
     #[wasm_bindgen(js_name = removeChildAtIndex)]
     pub fn remove_child_at_index(&mut self, index: usize) {
-        self.allocator.taffy.borrow_mut().remove_child_at_index(self.node, index).unwrap();
+        self.tree.taffy.borrow_mut().remove_child_at_index(self.node, index).unwrap();
         self.childCount -= 1;
     }
 
     #[wasm_bindgen(js_name = markDirty)]
     pub fn mark_dirty(&mut self) {
-        self.allocator.taffy.borrow_mut().mark_dirty(self.node).unwrap()
+        self.tree.taffy.borrow_mut().mark_dirty(self.node).unwrap()
     }
 
     #[wasm_bindgen(js_name = isDirty)]
     pub fn is_dirty(&self) -> bool {
-        self.allocator.taffy.borrow().dirty(self.node).unwrap()
+        self.tree.taffy.borrow().dirty(self.node).unwrap()
     }
 
     #[wasm_bindgen(js_name = childCount)]
     pub fn child_count(&mut self) -> usize {
-        self.allocator.taffy.borrow_mut().child_count(self.node)
+        self.tree.taffy.borrow_mut().child_count(self.node)
     }
 
     #[wasm_bindgen(js_name = computeLayout)]
     pub fn compute_layout(&mut self, size: &JsValue) -> Layout {
-        self.allocator
+        self.tree
             .taffy
             .borrow_mut()
             .compute_layout(
@@ -265,13 +265,13 @@ impl Node {
                 },
             )
             .unwrap();
-        Layout::new(&self.allocator, self.node)
+        Layout::new(&self.tree, self.node)
     }
 }
 
 macro_rules! get_style {
     ($self:expr, $style_ident:ident, $block:expr) => {{
-        let taffy = $self.allocator.taffy.borrow();
+        let taffy = $self.tree.taffy.borrow();
         let $style_ident = taffy.style($self.node)?;
         Ok($block)
     }};
@@ -279,7 +279,7 @@ macro_rules! get_style {
 
 macro_rules! with_style_mut {
     ($self:expr, $style_ident:ident, $block:expr) => {{
-        let mut taffy = $self.allocator.taffy.borrow_mut();
+        let mut taffy = $self.tree.taffy.borrow_mut();
         let $style_ident = taffy.style_mut($self.node)?;
         $block;
         Ok(())

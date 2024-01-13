@@ -89,12 +89,12 @@
 
       // Taffy WASM benchmark
       async function benchmark_taffy(Taffy) {
-        const { Node, Allocator, Position, AlignContent, Layout, FlexDirection } = Taffy;
+        const { Node, TaffyTree, Position, AlignContent, Layout, FlexDirection } = Taffy;
 
-        const allocator = new Allocator(0);
-        // const allocator = new Allocator(BENCH_NODE_COUNT + 10);
-        const container = new Node(allocator, {});
-        // const container = new Node(allocator, {
+        const tree = new TaffyTree(0);
+        // const tree = new TaffyTree(BENCH_NODE_COUNT + 10);
+        const container = new Node(tree, {});
+        // const container = new Node(tree, {
         //   position: Position.Absolute,
         //   width: 500,
         //   height: 500,
@@ -105,7 +105,7 @@
 
         const arr = [];
         for (let i = 0; i < BENCH_NODE_COUNT; i++) {
-          const child = new Node(allocator, {});
+          const child = new Node(tree, {});
           // for (let j = 0; j < 6; j++) {
           //   child.setFlexGrow(1);
           // }
