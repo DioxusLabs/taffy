@@ -1,24 +1,21 @@
 //! Contains GridItem used to represent a single grid item during layout
 use super::GridTrack;
-use crate::axis::AbstractAxis;
 use crate::compute::grid::OriginZeroLine;
-use crate::compute::{GenericAlgorithm, LayoutAlgorithm};
-use crate::geometry::{Line, Rect, Size};
-use crate::layout::SizingMode;
-use crate::math::MaybeMath;
-use crate::node::Node;
-use crate::prelude::LayoutTree;
-use crate::resolve::{MaybeResolve, ResolveOrZero};
+use crate::geometry::AbstractAxis;
+use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
-    AlignItems, AlignSelf, AvailableSpace, LengthPercentageAuto, MaxTrackSizingFunction, MinTrackSizingFunction, Style,
+    AlignItems, AlignSelf, AvailableSpace, Dimension, LengthPercentageAuto, MaxTrackSizingFunction,
+    MinTrackSizingFunction, Overflow, Style,
 };
+use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId, SizingMode};
+use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use core::ops::Range;
 
 /// Represents a single grid item
 #[derive(Debug)]
 pub(in super::super) struct GridItem {
-    /// The id of the Node that this item represents
-    pub node: Node,
+    /// The id of the node that this item represents
+    pub node: NodeId,
 
     /// The order of the item in the children array
     ///
@@ -33,6 +30,16 @@ pub(in super::super) struct GridItem {
     /// (in origin-zero coordinates)
     pub column: Line<OriginZeroLine>,
 
+    /// The item's overflow style
+    pub overflow: Point<Overflow>,
+    /// The item's size style
+    pub size: Size<Dimension>,
+    /// The item's min_size style
+    pub min_size: Size<Dimension>,
+    /// The item's max_size style
+    pub max_size: Size<Dimension>,
+    /// The item's aspect_ratio style
+    pub aspect_ratio: Option<f32>,
     /// The item's margin style
     pub margin: Rect<LengthPercentageAuto>,
     /// The item's align_self property, or the parent's align_items property is not set
@@ -70,12 +77,17 @@ pub(in super::super) struct GridItem {
     pub minimum_contribution_cache: Size<Option<f32>>,
     /// Cache for the max-content size
     pub max_content_contribution_cache: Size<Option<f32>>,
+
+    /// Final y position. Used to compute baseline alignment for the container.
+    pub y_position: f32,
+    /// Final height. Used to compute baseline alignment for the container.
+    pub height: f32,
 }
 
 impl GridItem {
     /// Create a new item given a concrete placement in both axes
     pub fn new_with_placement_style_and_order(
-        node: Node,
+        node: NodeId,
         col_span: Line<OriginZeroLine>,
         row_span: Line<OriginZeroLine>,
         style: &Style,
@@ -88,6 +100,11 @@ impl GridItem {
             source_order,
             row: row_span,
             column: col_span,
+            overflow: style.overflow,
+            size: style.size,
+            min_size: style.min_size,
+            max_size: style.max_size,
+            aspect_ratio: style.aspect_ratio,
             margin: style.margin,
             align_self: style.align_self.unwrap_or(parent_align_items),
             justify_self: style.justify_self.unwrap_or(parent_justify_items),
@@ -103,6 +120,8 @@ impl GridItem {
             min_content_contribution_cache: Size::NONE,
             max_content_contribution_cache: Size::NONE,
             minimum_contribution_cache: Size::NONE,
+            y_position: 0.0,
+            height: 0.0,
         }
     }
 
@@ -207,17 +226,15 @@ impl GridItem {
     /// allow percentage sizes further down the tree to resolve properly in some cases
     fn known_dimensions(
         &self,
-        tree: &mut impl LayoutTree,
         inner_node_size: Size<Option<f32>>,
         grid_area_size: Size<Option<f32>>,
     ) -> Size<Option<f32>> {
         let margins = self.margins_axis_sums_with_baseline_shims(inner_node_size.width);
 
-        let style = tree.style(self.node);
-        let aspect_ratio = style.aspect_ratio;
-        let inherent_size = style.size.maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
-        let min_size = style.min_size.maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
-        let max_size = style.max_size.maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
+        let aspect_ratio = self.aspect_ratio;
+        let inherent_size = self.size.maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
+        let min_size = self.min_size.maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
+        let max_size = self.max_size.maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
 
         let grid_area_minus_item_margins_size = grid_area_size.maybe_sub(margins);
 
@@ -228,8 +245,8 @@ impl GridItem {
             //  - Alignment style is "stretch"
             //  - The node is not absolutely positioned
             //  - The node does not have auto margins in this axis.
-            if style.margin.left != LengthPercentageAuto::Auto
-                && style.margin.right != LengthPercentageAuto::Auto
+            if self.margin.left != LengthPercentageAuto::Auto
+                && self.margin.right != LengthPercentageAuto::Auto
                 && self.justify_self == AlignSelf::Stretch
             {
                 return grid_area_minus_item_margins_size.width;
@@ -246,8 +263,8 @@ impl GridItem {
             //  - Alignment style is "stretch"
             //  - The node is not absolutely positioned
             //  - The node does not have auto margins in this axis.
-            if style.margin.top != LengthPercentageAuto::Auto
-                && style.margin.bottom != LengthPercentageAuto::Auto
+            if self.margin.top != LengthPercentageAuto::Auto
+                && self.margin.bottom != LengthPercentageAuto::Auto
                 && self.align_self == AlignSelf::Stretch
             {
                 return grid_area_minus_item_margins_size.height;
@@ -323,13 +340,12 @@ impl GridItem {
     pub fn min_content_contribution(
         &self,
         axis: AbstractAxis,
-        tree: &mut impl LayoutTree,
+        tree: &mut impl LayoutPartialTree,
         available_space: Size<Option<f32>>,
         inner_node_size: Size<Option<f32>>,
     ) -> f32 {
-        let known_dimensions = self.known_dimensions(tree, inner_node_size, available_space);
-        GenericAlgorithm::measure_size(
-            tree,
+        let known_dimensions = self.known_dimensions(inner_node_size, available_space);
+        tree.measure_child_size(
             self.node,
             known_dimensions,
             available_space,
@@ -338,8 +354,9 @@ impl GridItem {
                 None => AvailableSpace::MinContent,
             }),
             SizingMode::InherentSize,
+            axis.as_abs_naive(),
+            Line::FALSE,
         )
-        .get(axis)
     }
 
     /// Retrieve the item's min content contribution from the cache or compute it using the provided parameters
@@ -347,7 +364,7 @@ impl GridItem {
     pub fn min_content_contribution_cached(
         &mut self,
         axis: AbstractAxis,
-        tree: &mut impl LayoutTree,
+        tree: &mut impl LayoutPartialTree,
         available_space: Size<Option<f32>>,
         inner_node_size: Size<Option<f32>>,
     ) -> f32 {
@@ -362,13 +379,12 @@ impl GridItem {
     pub fn max_content_contribution(
         &self,
         axis: AbstractAxis,
-        tree: &mut impl LayoutTree,
+        tree: &mut impl LayoutPartialTree,
         available_space: Size<Option<f32>>,
         inner_node_size: Size<Option<f32>>,
     ) -> f32 {
-        let known_dimensions = self.known_dimensions(tree, inner_node_size, available_space);
-        GenericAlgorithm::measure_size(
-            tree,
+        let known_dimensions = self.known_dimensions(inner_node_size, available_space);
+        tree.measure_child_size(
             self.node,
             known_dimensions,
             available_space,
@@ -377,8 +393,9 @@ impl GridItem {
                 None => AvailableSpace::MaxContent,
             }),
             SizingMode::InherentSize,
+            axis.as_abs_naive(),
+            Line::FALSE,
         )
-        .get(axis)
     }
 
     /// Retrieve the item's max content contribution from the cache or compute it using the provided parameters
@@ -386,7 +403,7 @@ impl GridItem {
     pub fn max_content_contribution_cached(
         &mut self,
         axis: AbstractAxis,
-        tree: &mut impl LayoutTree,
+        tree: &mut impl LayoutPartialTree,
         available_space: Size<Option<f32>>,
         inner_node_size: Size<Option<f32>>,
     ) -> f32 {
@@ -406,21 +423,21 @@ impl GridItem {
     /// See: https://www.w3.org/TR/css-grid-1/#min-size-auto
     pub fn minimum_contribution(
         &mut self,
-        tree: &mut impl LayoutTree,
+        tree: &mut impl LayoutPartialTree,
         axis: AbstractAxis,
         axis_tracks: &[GridTrack],
         known_dimensions: Size<Option<f32>>,
         inner_node_size: Size<Option<f32>>,
     ) -> f32 {
-        let style = tree.style(self.node);
-        let size = style
+        let size = self
             .size
             .maybe_resolve(inner_node_size)
-            .maybe_apply_aspect_ratio(style.aspect_ratio)
+            .maybe_apply_aspect_ratio(self.aspect_ratio)
             .get(axis)
             .or_else(|| {
-                style.min_size.maybe_resolve(inner_node_size).maybe_apply_aspect_ratio(style.aspect_ratio).get(axis)
+                self.min_size.maybe_resolve(inner_node_size).maybe_apply_aspect_ratio(self.aspect_ratio).get(axis)
             })
+            .or_else(|| self.overflow.get(axis).maybe_into_automatic_min_size())
             .unwrap_or_else(|| {
                 // Automatic minimum size. See https://www.w3.org/TR/css-grid-1/#min-size-auto
 
@@ -465,7 +482,7 @@ impl GridItem {
     #[inline(always)]
     pub fn minimum_contribution_cached(
         &mut self,
-        tree: &mut impl LayoutTree,
+        tree: &mut impl LayoutPartialTree,
         axis: AbstractAxis,
         axis_tracks: &[GridTrack],
         known_dimensions: Size<Option<f32>>,

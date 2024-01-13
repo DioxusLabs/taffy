@@ -1,11 +1,12 @@
 [package]
 name = "taffy"
-version = "0.3.10"
+version = "0.3.11"
 authors = [
     "Alice Cecile <alice.i.cecile@gmail.com>",
     "Johnathan Kelley <jkelleyrtp@gmail.com>",
 ]
 edition = "2021"
+rust-version = "1.65"
 include = ["src/**/*", "Cargo.toml", "README.md"]
 description = "A flexible UI layout library "
 repository = "https://github.com/DioxusLabs/taffy"
@@ -16,54 +17,62 @@ license = "MIT"
 [dependencies]
 arrayvec = { version = "0.7", default-features = false }
 num-traits = { version = "0.2", default-features = false }
-rand = { version = "0.8.5", optional = true }
-serde = { version = "1.0", optional = true, features = ["serde_derive"] }
-slotmap = "1.0.6"
-grid = { version = "0.9.0", optional = true }
+serde = { version = "1.0", default-features = false, optional = true, features = ["serde_derive"] }
+slotmap = { version = "1.0.6", default-features = false, optional = true }
+grid = { version = "0.13.0", default-features = false, optional = true }
 wasm-bindgen = { version = "0.2.84", optional = true }
 
+### FEATURES #################################################################
+
 [features]
-default = ["std", "grid"]
+default = ["std", "taffy_tree", "flexbox", "grid", "block_layout", "content_size"]
+
+### Algorithms 
+
+# Enables the Block layout algorithm
+block_layout = []
+# Enables the Flexbox layout algorithm
+flexbox = []
+# Enables the CSS Grid layout algorithm
 grid = ["alloc", "dep:grid"]
-wasm = ["dep:wasm-bindgen"]
-alloc = []
-std = ["num-traits/std"]
+# Causes all algorithms to compute and output a content size for each node
+content_size = []
+
+### Taffy Tree
+
+# Enable the built-in Taffy node tree
+taffy_tree = ["dep:slotmap"]
+
+### Other
+
+# Add serde derives to Style structs
 serde = ["dep:serde"]
-random = ["dep:rand"]
-yoga_benchmark = []
-debug = []
-profile = []
+# Allow Taffy to depend on the standard library
+std = ["num-traits/std", "grid?/std", "serde?/std", "slotmap?/std"]
+# Allow Taffy to depend on the alloc library
+alloc = ["serde?/alloc"]
+# Enable WASM bindgen derives on core types
+wasm = ["dep:wasm-bindgen"]
+# Internal feature for debugging
+debug = ["std"]
+# Internal feature for profiling
+profile = ["std"]
 
 [dev-dependencies]
-criterion = "0.4"
-rstest = "0.17.0"
-rand = "0.8.5"
-rand_chacha = "0.3.1"
-yoga = "0.4.0"
-ordered-float = "3.4.0"
+cosmic-text = "0.10.0"
 serde_json = "1.0.93"
 
-# Enable example and test-specific features
-taffy = { path = ".", features = ["random"] }
+# Enable default features for tests and examples
+taffy = { path = "." }
 
 [profile.release]
 lto = true
 panic = 'abort'
 
 [[bench]]
-name = "tree_creation"
-path = "benches/tree_creation.rs"
-harness = false
-
-[[bench]]
-name = "flexbox"
-path = "benches/flexbox.rs"
-harness = false
-
-[[bench]]
-name = "grid"
-path = "benches/grid.rs"
+name = "dummy_benchmark"
+path = "benches/dummy_benchmark.rs"
 harness = false
 
 [workspace]
-members = ["scripts/gentest", "scripts/import-yoga-tests"]
+members = ["scripts/gentest", "scripts/format-fixtures", "scripts/import-yoga-tests", "benches"]

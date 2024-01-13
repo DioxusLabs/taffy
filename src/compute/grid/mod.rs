@@ -1,15 +1,15 @@
 //! This module is a partial implementation of the CSS Grid Level 1 specification
 //! <https://www.w3.org/TR/css-grid-1>
-use crate::axis::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
+use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
-use crate::layout::{Layout, RunMode, SizeAndBaselines, SizingMode};
-use crate::math::MaybeMath;
-use crate::node::Node;
-use crate::resolve::{MaybeResolve, ResolveOrZero};
-use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Display, Position};
+use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Display, Overflow, Position};
 use crate::style_helpers::*;
-use crate::sys::{GridTrackVec, Vec};
-use crate::tree::LayoutTree;
+use crate::tree::{Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
+use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId};
+use crate::util::debug::debug_log;
+use crate::util::sys::{f32_max, GridTrackVec, Vec};
+use crate::util::MaybeMath;
+use crate::util::{MaybeResolve, ResolveOrZero};
 use alignment::{align_and_position_item, align_tracks};
 use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks};
 use implicit_grid::compute_grid_size_estimate;
@@ -21,11 +21,6 @@ use types::{CellOccupancyMatrix, GridTrack};
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine};
 
-#[cfg(feature = "debug")]
-use crate::debug::NODE_LOGGER;
-
-use super::{GenericAlgorithm, LayoutAlgorithm};
-
 mod alignment;
 mod explicit_grid;
 mod implicit_grid;
@@ -34,56 +29,29 @@ mod track_sizing;
 mod types;
 mod util;
 
-/// The public interface to Taffy's CSS Grid algorithm implementation
-pub(crate) struct CssGridAlgorithm;
-impl LayoutAlgorithm for CssGridAlgorithm {
-    const NAME: &'static str = "CSS GRID";
-
-    fn perform_layout(
-        tree: &mut impl LayoutTree,
-        node: Node,
-        known_dimensions: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        _sizing_mode: SizingMode,
-    ) -> SizeAndBaselines {
-        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::PeformLayout)
-    }
-
-    fn measure_size(
-        tree: &mut impl LayoutTree,
-        node: Node,
-        known_dimensions: Size<Option<f32>>,
-        parent_size: Size<Option<f32>>,
-        available_space: Size<AvailableSpace>,
-        _sizing_mode: SizingMode,
-    ) -> Size<f32> {
-        compute(tree, node, known_dimensions, parent_size, available_space, RunMode::ComputeSize).size
-    }
-}
-
 /// Grid layout algorithm
 /// This consists of a few phases:
 ///   - Resolving the explicit grid
 ///   - Placing items (which also resolves the implicit grid)
 ///   - Track (row/column) sizing
 ///   - Alignment & Final item placement
-pub fn compute(
-    tree: &mut impl LayoutTree,
-    node: Node,
-    known_dimensions: Size<Option<f32>>,
-    parent_size: Size<Option<f32>>,
-    available_space: Size<AvailableSpace>,
-    run_mode: RunMode,
-) -> SizeAndBaselines {
-    let get_child_styles_iter = |node| tree.children(node).map(|child_node: &Node| tree.style(*child_node));
-    let style = tree.style(node).clone();
+pub fn compute_grid_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
+    let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
+
+    let get_child_styles_iter = |node| tree.child_ids(node).map(|child_node: NodeId| tree.get_style(child_node));
+    let style = tree.get_style(node).clone();
     let child_styles_iter = get_child_styles_iter(node);
+
+    let preferred_size = if inputs.sizing_mode == SizingMode::InherentSize {
+        style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(style.aspect_ratio)
+    } else {
+        Size::NONE
+    };
 
     // 1. Resolve the explicit grid
     // Exactly compute the number of rows and columns in the explicit grid.
-    let explicit_col_count = compute_explicit_grid_size_in_axis(&style, AbsoluteAxis::Horizontal);
-    let explicit_row_count = compute_explicit_grid_size_in_axis(&style, AbsoluteAxis::Vertical);
+    let explicit_col_count = compute_explicit_grid_size_in_axis(&style, preferred_size, AbsoluteAxis::Horizontal);
+    let explicit_row_count = compute_explicit_grid_size_in_axis(&style, preferred_size, AbsoluteAxis::Vertical);
 
     // 2. Implicit Grid: Estimate Track Counts
     // Estimate the number of rows and columns in the implicit grid (= the entire grid)
@@ -96,10 +64,9 @@ pub fn compute(
     let mut items = Vec::with_capacity(tree.child_count(node));
     let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(est_col_counts, est_row_counts);
     let in_flow_children_iter = || {
-        tree.children(node)
-            .copied()
+        tree.child_ids(node)
             .enumerate()
-            .map(|(index, child_node)| (index, child_node, tree.style(child_node)))
+            .map(|(index, child_node)| (index, child_node, tree.get_style(child_node)))
             .filter(|(_, _, style)| style.display != Display::None && style.position != Position::Absolute)
     };
     place_grid_items(
@@ -141,44 +108,50 @@ pub fn compute(
     // https://www.w3.org/TR/css-grid-1/#available-grid-space
     let padding = style.padding.resolve_or_zero(parent_size.width);
     let border = style.border.resolve_or_zero(parent_size.width);
-    let padding_border_size = (padding + border).sum_axes();
+    let padding_border = padding + border;
+    let padding_border_size = padding_border.sum_axes();
     let aspect_ratio = style.aspect_ratio;
     let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
     let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-    let size = style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let size = preferred_size;
+
+    // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
+    // However, the axis are switched (transposed) because a node that scrolls vertically needs
+    // *horizontal* space to be reserved for a scrollbar
+    let scrollbar_gutter = style.overflow.transpose().map(|overflow| match overflow {
+        Overflow::Scroll => style.scrollbar_width,
+        _ => 0.0,
+    });
+    // TODO: make side configurable based on the `direction` property
+    let mut content_box_inset = padding_border;
+    content_box_inset.right += scrollbar_gutter.x;
+    content_box_inset.bottom += scrollbar_gutter.y;
 
     let constrained_available_space = known_dimensions
         .or(size)
-        .maybe_clamp(min_size, max_size)
         .map(|size| size.map(AvailableSpace::Definite))
-        .unwrap_or(available_space.map(|space| match space {
-            // Available grid space should not depend on Definite available space as a grid is allowed
-            // to expand beyond it's available space
-            AvailableSpace::Definite(_) => AvailableSpace::MaxContent,
-            _ => space,
-        }));
+        .unwrap_or(available_space)
+        .maybe_clamp(min_size, max_size)
+        .maybe_max(padding_border_size);
 
     let available_grid_space = Size {
         width: constrained_available_space
             .width
-            .map_definite_value(|space| space - padding.horizontal_axis_sum() - border.horizontal_axis_sum()),
+            .map_definite_value(|space| space - content_box_inset.horizontal_axis_sum()),
         height: constrained_available_space
             .height
-            .map_definite_value(|space| space - padding.vertical_axis_sum() - border.vertical_axis_sum()),
+            .map_definite_value(|space| space - content_box_inset.vertical_axis_sum()),
     };
 
-    let outer_node_size = known_dimensions.or(size.maybe_clamp(min_size, max_size).or(min_size));
+    let outer_node_size = known_dimensions.or(size).maybe_clamp(min_size, max_size).maybe_max(padding_border_size);
     let mut inner_node_size = Size {
-        width: outer_node_size.width.map(|space| space - padding.horizontal_axis_sum() - border.horizontal_axis_sum()),
-        height: outer_node_size.height.map(|space| space - padding.vertical_axis_sum() - border.vertical_axis_sum()),
+        width: outer_node_size.width.map(|space| space - content_box_inset.horizontal_axis_sum()),
+        height: outer_node_size.height.map(|space| space - content_box_inset.vertical_axis_sum()),
     };
 
-    #[cfg(feature = "debug")]
-    NODE_LOGGER.labelled_debug_log("parent_size", parent_size);
-    #[cfg(feature = "debug")]
-    NODE_LOGGER.labelled_debug_log("outer_node_size", outer_node_size);
-    #[cfg(feature = "debug")]
-    NODE_LOGGER.labelled_debug_log("inner_node_size", inner_node_size);
+    debug_log!("parent_size", dbg:parent_size);
+    debug_log!("outer_node_size", dbg:outer_node_size);
+    debug_log!("inner_node_size", dbg:inner_node_size);
 
     // 5. Track Sizing
 
@@ -232,26 +205,31 @@ pub fn compute(
     let initial_row_sum = rows.iter().map(|track| track.base_size).sum::<f32>();
     inner_node_size.height = inner_node_size.height.or_else(|| initial_row_sum.into());
 
+    debug_log!("initial_column_sum", dbg:initial_column_sum);
+    debug_log!("initial_row_sum", dbg:initial_row_sum);
+
     // 6. Compute container size
-    let resolved_style_size = known_dimensions.or(style.size.maybe_resolve(parent_size));
+    let resolved_style_size = known_dimensions.or(preferred_size);
     let container_border_box = Size {
         width: resolved_style_size
             .get(AbstractAxis::Inline)
-            .unwrap_or_else(|| initial_column_sum + padding.horizontal_axis_sum() + border.horizontal_axis_sum())
+            .unwrap_or_else(|| initial_column_sum + content_box_inset.horizontal_axis_sum())
+            .maybe_clamp(min_size.width, max_size.width)
             .max(padding_border_size.width),
         height: resolved_style_size
             .get(AbstractAxis::Block)
-            .unwrap_or_else(|| initial_row_sum + padding.vertical_axis_sum() + border.vertical_axis_sum())
+            .unwrap_or_else(|| initial_row_sum + content_box_inset.vertical_axis_sum())
+            .maybe_clamp(min_size.height, max_size.height)
             .max(padding_border_size.height),
     };
     let container_content_box = Size {
-        width: container_border_box.width - padding.horizontal_axis_sum() - border.horizontal_axis_sum(),
-        height: container_border_box.height - padding.vertical_axis_sum() - border.vertical_axis_sum(),
+        width: f32_max(0.0, container_border_box.width - content_box_inset.horizontal_axis_sum()),
+        height: f32_max(0.0, container_border_box.height - content_box_inset.vertical_axis_sum()),
     };
 
     // If only the container's size has been requested
     if run_mode == RunMode::ComputeSize {
-        return container_border_box.into();
+        return LayoutOutput::from_outer_size(container_border_box);
     }
 
     // 7. Resolve percentage track base sizes
@@ -421,20 +399,24 @@ pub fn compute(
 
     // 9. Size, Align, and Position Grid Items
 
+    #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
+    let mut item_content_size_contribution = Size::ZERO;
+
     // Sort items back into original order to allow them to be matched up with styles
     items.sort_by_key(|item| item.source_order);
 
     let container_alignment_styles = InBothAbsAxis { horizontal: style.justify_items, vertical: style.align_items };
 
     // Position in-flow children (stored in items vector)
-    for (index, item) in items.iter().enumerate() {
+    for (index, item) in items.iter_mut().enumerate() {
         let grid_area = Rect {
             top: rows[item.row_indexes.start as usize + 1].offset,
             bottom: rows[item.row_indexes.end as usize].offset,
             left: columns[item.column_indexes.start as usize + 1].offset,
             right: columns[item.column_indexes.end as usize].offset,
         };
-        align_and_position_item(
+        #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
+        let (content_size_contribution, y_position, height) = align_and_position_item(
             tree,
             item.node,
             index as u32,
@@ -442,24 +424,31 @@ pub fn compute(
             container_alignment_styles,
             item.baseline_shim,
         );
+        item.y_position = y_position;
+        item.height = height;
+
+        #[cfg(feature = "content_size")]
+        {
+            item_content_size_contribution = item_content_size_contribution.f32_max(content_size_contribution);
+        }
     }
 
     // Position hidden and absolutely positioned children
     let mut order = items.len() as u32;
     (0..tree.child_count(node)).for_each(|index| {
-        let child = tree.child(node, index);
-        let child_style = tree.style(child);
+        let child = tree.get_child_id(node, index);
+        let child_style = tree.get_style(child);
 
         // Position hidden child
         if child_style.display == Display::None {
-            *tree.layout_mut(child) = Layout::with_order(order);
-            GenericAlgorithm::perform_layout(
-                tree,
+            tree.set_unrounded_layout(child, &Layout::with_order(order));
+            tree.perform_child_layout(
                 child,
                 Size::NONE,
                 Size::NONE,
                 Size::MAX_CONTENT,
                 SizingMode::InherentSize,
+                Line::FALSE,
             );
             order += 1;
             return;
@@ -499,14 +488,21 @@ pub fn compute(
                     .unwrap_or(container_border_box.width - border.right),
             };
             // TODO: Baseline alignment support for absolutely positioned items (should check if is actuallty specified)
-            align_and_position_item(tree, child, order, grid_area, container_alignment_styles, 0.0);
+            #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
+            let (content_size_contribution, _, _) =
+                align_and_position_item(tree, child, order, grid_area, container_alignment_styles, 0.0);
+            #[cfg(feature = "content_size")]
+            {
+                item_content_size_contribution = item_content_size_contribution.f32_max(content_size_contribution);
+            }
+
             order += 1;
         }
     });
 
     // If there are not items then return just the container size (no baseline)
     if items.is_empty() {
-        return SizeAndBaselines { size: container_border_box, first_baselines: Point::NONE };
+        return LayoutOutput::from_outer_size(container_border_box);
     }
 
     // Determine the grid container baseline(s) (currently we only compute the first baseline)
@@ -529,12 +525,12 @@ pub fn compute(
             &first_row_items[0]
         };
 
-        let layout = tree.layout_mut(item.node);
-        layout.location.y + item.baseline.unwrap_or(layout.size.height)
+        item.y_position + item.baseline.unwrap_or(item.height)
     };
 
-    SizeAndBaselines {
-        size: container_border_box,
-        first_baselines: Point { x: None, y: Some(grid_container_baseline) },
-    }
+    LayoutOutput::from_sizes_and_baselines(
+        container_border_box,
+        item_content_size_contribution,
+        Point { x: None, y: Some(grid_container_baseline) },
+    )
 }

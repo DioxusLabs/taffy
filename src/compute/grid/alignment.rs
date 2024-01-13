@@ -1,16 +1,14 @@
 //! Alignment of tracks and final positioning of items
 use super::types::GridTrack;
-use crate::axis::InBothAbsAxis;
 use crate::compute::common::alignment::compute_alignment_offset;
-use crate::compute::{GenericAlgorithm, LayoutAlgorithm};
-use crate::geometry::{Line, Point, Rect, Size};
-use crate::layout::{Layout, SizingMode};
-use crate::math::MaybeMath;
-use crate::node::Node;
-use crate::resolve::{MaybeResolve, ResolveOrZero};
-use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Position};
-use crate::sys::{f32_max, f32_min};
-use crate::tree::LayoutTree;
+use crate::geometry::{InBothAbsAxis, Line, Point, Rect, Size};
+use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Overflow, Position};
+use crate::tree::{Layout, LayoutPartialTree, LayoutPartialTreeExt, NodeId, SizingMode};
+use crate::util::sys::f32_max;
+use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
+
+#[cfg(feature = "content_size")]
+use crate::compute::common::content_size::compute_content_size_contribution;
 
 /// Align the grid tracks within the grid according to the align-content (rows) or
 /// justify-content (columns) property. This only does anything if the size of the
@@ -23,25 +21,8 @@ pub(super) fn align_tracks(
     track_alignment_style: AlignContent,
 ) {
     let used_size: f32 = tracks.iter().map(|track| track.base_size).sum();
-    let size_diff = grid_container_content_box_size - used_size;
-    let free_space = f32_max(size_diff, 0.0);
-    let overflow = f32_min(size_diff, 0.0);
-
-    // If the used_size > grid_container_size then the tracks must overflow their container
-    // The direction in which they do so is determined by the alignment style
-    let origin = padding.start
-        + border.start
-        + match track_alignment_style {
-            AlignContent::Start => 0.0,
-            AlignContent::FlexStart => 0.0,
-            AlignContent::End => overflow,
-            AlignContent::FlexEnd => overflow,
-            AlignContent::Center => overflow / 2.0,
-            AlignContent::Stretch => 0.0,
-            AlignContent::SpaceBetween => 0.0,
-            AlignContent::SpaceEvenly => 0.0,
-            AlignContent::SpaceAround => 0.0,
-        };
+    let free_space = grid_container_content_box_size - used_size;
+    let origin = padding.start + border.start;
 
     // Count the number of non-collapsed tracks (not counting gutters)
     let num_tracks = tracks.iter().skip(1).step_by(2).filter(|track| !track.is_collapsed).count();
@@ -73,16 +54,19 @@ pub(super) fn align_tracks(
 
 /// Align and size a grid item into it's final position
 pub(super) fn align_and_position_item(
-    tree: &mut impl LayoutTree,
-    node: Node,
+    tree: &mut impl LayoutPartialTree,
+    node: NodeId,
     order: u32,
     grid_area: Rect<f32>,
     container_alignment_styles: InBothAbsAxis<Option<AlignItems>>,
     baseline_shim: f32,
-) {
+) -> (Size<f32>, f32, f32) {
     let grid_area_size = Size { width: grid_area.right - grid_area.left, height: grid_area.bottom - grid_area.top };
 
-    let style = tree.style(node);
+    let style = tree.get_style(node);
+
+    let overflow = style.overflow;
+    let scrollbar_width = style.scrollbar_width;
     let aspect_ratio = style.aspect_ratio;
     let justify_self = style.justify_self;
     let align_self = style.align_self;
@@ -189,18 +173,17 @@ pub(super) fn align_and_position_item(
     let Size { width, height } = Size { width, height }.maybe_clamp(min_size, max_size);
 
     // Layout node
-    let measured_size_and_baselines = GenericAlgorithm::perform_layout(
-        tree,
+    let layout_output = tree.perform_child_layout(
         node,
         Size { width, height },
         grid_area_size.map(Option::Some),
         grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
         SizingMode::InherentSize,
+        Line::FALSE,
     );
 
     // Resolve final size
-    let Size { width, height } =
-        Size { width, height }.unwrap_or(measured_size_and_baselines.size).maybe_clamp(min_size, max_size);
+    let Size { width, height } = Size { width, height }.unwrap_or(layout_output.size).maybe_clamp(min_size, max_size);
 
     let x = align_item_within_area(
         Line { start: grid_area.left, end: grid_area.right },
@@ -221,7 +204,32 @@ pub(super) fn align_and_position_item(
         baseline_shim,
     );
 
-    *tree.layout_mut(node) = Layout { order, size: Size { width, height }, location: Point { x, y } };
+    let scrollbar_size = Size {
+        width: if overflow.y == Overflow::Scroll { scrollbar_width } else { 0.0 },
+        height: if overflow.x == Overflow::Scroll { scrollbar_width } else { 0.0 },
+    };
+
+    tree.set_unrounded_layout(
+        node,
+        &Layout {
+            order,
+            location: Point { x, y },
+            size: Size { width, height },
+            #[cfg(feature = "content_size")]
+            content_size: layout_output.content_size,
+            scrollbar_size,
+            padding,
+            border,
+        },
+    );
+
+    #[cfg(feature = "content_size")]
+    let contribution =
+        compute_content_size_contribution(Point { x, y }, Size { width, height }, layout_output.content_size, overflow);
+    #[cfg(not(feature = "content_size"))]
+    let contribution = Size::ZERO;
+
+    (contribution, y, height)
 }
 
 /// Align and size a grid item along a single axis

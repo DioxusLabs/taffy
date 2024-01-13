@@ -1,4 +1,5 @@
 //! Style types for Flexbox layout
+use crate::geometry::AbsoluteAxis;
 
 #[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
@@ -109,6 +110,24 @@ impl FlexDirection {
     /// Is the direction [`FlexDirection::RowReverse`] or [`FlexDirection::ColumnReverse`]?
     pub(crate) fn is_reverse(self) -> bool {
         matches!(self, Self::RowReverse | Self::ColumnReverse)
+    }
+
+    #[inline]
+    /// The `AbsoluteAxis` that corresponds to the main axis
+    pub(crate) fn main_axis(self) -> AbsoluteAxis {
+        match self {
+            Self::Row | Self::RowReverse => AbsoluteAxis::Horizontal,
+            Self::Column | Self::ColumnReverse => AbsoluteAxis::Vertical,
+        }
+    }
+
+    #[inline]
+    /// The `AbsoluteAxis` that corresponds to the cross axis
+    pub(crate) fn cross_axis(self) -> AbsoluteAxis {
+        match self {
+            Self::Row | Self::RowReverse => AbsoluteAxis::Vertical,
+            Self::Column | Self::ColumnReverse => AbsoluteAxis::Horizontal,
+        }
     }
 }
 

@@ -1,9 +1,9 @@
 //! Contains CellOccupancyMatrix used to track occupied cells during grid placement
 use super::TrackCounts;
-use crate::axis::AbsoluteAxis;
 use crate::compute::grid::OriginZeroLine;
+use crate::geometry::AbsoluteAxis;
 use crate::geometry::Line;
-use crate::sys::Vec;
+use crate::util::sys::Vec;
 use core::cmp::{max, min};
 use core::fmt::Debug;
 use core::ops::Range;
@@ -72,7 +72,7 @@ impl CellOccupancyMatrix {
 
     /// Determines whether the specified area fits within the tracks currently represented by the matrix
     pub fn is_area_in_range(
-        &mut self,
+        &self,
         primary_axis: AbsoluteAxis,
         primary_range: Range<i16>,
         secondary_range: Range<i16>,
@@ -91,10 +91,9 @@ impl CellOccupancyMatrix {
     fn expand_to_fit_range(&mut self, row_range: Range<i16>, col_range: Range<i16>) {
         // Calculate number of rows and columns missing to accomodate ranges (if any)
         let req_negative_rows = min(row_range.start, 0);
-        let req_positive_rows = max(row_range.end - self.rows.explicit as i16 - self.rows.positive_implicit as i16, 0);
+        let req_positive_rows = max(row_range.end - self.rows.len() as i16, 0);
         let req_negative_cols = min(col_range.start, 0);
-        let req_positive_cols =
-            max(col_range.end - self.columns.explicit as i16 - self.columns.positive_implicit as i16, 0);
+        let req_positive_cols = max(col_range.end - self.columns.len() as i16, 0);
 
         let old_row_count = self.rows.len();
         let old_col_count = self.columns.len();

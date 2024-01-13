@@ -1,10 +1,10 @@
 //! Style types for CSS Grid layout
 use super::{AlignContent, LengthPercentage, Style};
-use crate::axis::{AbsoluteAxis, AbstractAxis};
 use crate::compute::grid::{GridCoordinate, GridLine, OriginZeroLine};
+use crate::geometry::{AbsoluteAxis, AbstractAxis};
 use crate::geometry::{Line, MinMax};
 use crate::style_helpers::*;
-use crate::sys::GridTrackVec;
+use crate::util::sys::GridTrackVec;
 use core::cmp::{max, min};
 use core::convert::Infallible;
 
@@ -258,7 +258,7 @@ impl Default for Line<GridPlacement> {
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum MaxTrackSizingFunction {
-    /// Track maximum size should be a fixed points or percentage value
+    /// Track maximum size should be a fixed length or percentage value
     Fixed(LengthPercentage),
     /// Track maximum size should be content sized under a min-content constraint
     MinContent,
@@ -290,9 +290,9 @@ impl TaffyFitContent for MaxTrackSizingFunction {
 impl TaffyZero for MaxTrackSizingFunction {
     const ZERO: Self = Self::Fixed(LengthPercentage::ZERO);
 }
-impl FromPoints for MaxTrackSizingFunction {
-    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
-        Self::Fixed(LengthPercentage::from_points(points))
+impl FromLength for MaxTrackSizingFunction {
+    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
+        Self::Fixed(LengthPercentage::from_length(value))
     }
 }
 impl FromPercent for MaxTrackSizingFunction {
@@ -334,7 +334,7 @@ impl MaxTrackSizingFunction {
     pub fn definite_value(self, parent_size: Option<f32>) -> Option<f32> {
         use MaxTrackSizingFunction::*;
         match self {
-            Fixed(LengthPercentage::Points(size)) => Some(size),
+            Fixed(LengthPercentage::Length(size)) => Some(size),
             Fixed(LengthPercentage::Percent(fraction)) => parent_size.map(|size| fraction * size),
             MinContent | MaxContent | FitContent(_) | Auto | Fraction(_) => None,
         }
@@ -350,7 +350,7 @@ impl MaxTrackSizingFunction {
     pub fn definite_limit(self, parent_size: Option<f32>) -> Option<f32> {
         use MaxTrackSizingFunction::FitContent;
         match self {
-            FitContent(LengthPercentage::Points(size)) => Some(size),
+            FitContent(LengthPercentage::Length(size)) => Some(size),
             FitContent(LengthPercentage::Percent(fraction)) => parent_size.map(|size| fraction * size),
             _ => self.definite_value(parent_size),
         }
@@ -363,7 +363,7 @@ impl MaxTrackSizingFunction {
         use MaxTrackSizingFunction::*;
         match self {
             Fixed(LengthPercentage::Percent(fraction)) => Some(fraction * parent_size),
-            Fixed(LengthPercentage::Points(_)) | MinContent | MaxContent | FitContent(_) | Auto | Fraction(_) => None,
+            Fixed(LengthPercentage::Length(_)) | MinContent | MaxContent | FitContent(_) | Auto | Fraction(_) => None,
         }
     }
 
@@ -383,7 +383,7 @@ impl MaxTrackSizingFunction {
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum MinTrackSizingFunction {
-    /// Track minimum size should be a fixed points or percentage value
+    /// Track minimum size should be a fixed length or percentage value
     Fixed(LengthPercentage),
     /// Track minimum size should be content sized under a min-content constraint
     MinContent,
@@ -404,9 +404,9 @@ impl TaffyMaxContent for MinTrackSizingFunction {
 impl TaffyZero for MinTrackSizingFunction {
     const ZERO: Self = Self::Fixed(LengthPercentage::ZERO);
 }
-impl FromPoints for MinTrackSizingFunction {
-    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
-        Self::Fixed(LengthPercentage::from_points(points))
+impl FromLength for MinTrackSizingFunction {
+    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
+        Self::Fixed(LengthPercentage::from_length(value))
     }
 }
 impl FromPercent for MinTrackSizingFunction {
@@ -429,7 +429,7 @@ impl MinTrackSizingFunction {
     pub fn definite_value(self, parent_size: Option<f32>) -> Option<f32> {
         use MinTrackSizingFunction::*;
         match self {
-            Fixed(LengthPercentage::Points(size)) => Some(size),
+            Fixed(LengthPercentage::Length(size)) => Some(size),
             Fixed(LengthPercentage::Percent(fraction)) => parent_size.map(|size| fraction * size),
             MinContent | MaxContent | Auto => None,
         }
@@ -442,7 +442,7 @@ impl MinTrackSizingFunction {
         use MinTrackSizingFunction::*;
         match self {
             Fixed(LengthPercentage::Percent(fraction)) => Some(fraction * parent_size),
-            Fixed(LengthPercentage::Points(_)) | MinContent | MaxContent | Auto => None,
+            Fixed(LengthPercentage::Length(_)) | MinContent | MaxContent | Auto => None,
         }
     }
 
@@ -491,9 +491,9 @@ impl TaffyFitContent for NonRepeatedTrackSizingFunction {
 impl TaffyZero for NonRepeatedTrackSizingFunction {
     const ZERO: Self = Self { min: MinTrackSizingFunction::ZERO, max: MaxTrackSizingFunction::ZERO };
 }
-impl FromPoints for NonRepeatedTrackSizingFunction {
-    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
-        Self { min: MinTrackSizingFunction::from_points(points), max: MaxTrackSizingFunction::from_points(points) }
+impl FromLength for NonRepeatedTrackSizingFunction {
+    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
+        Self { min: MinTrackSizingFunction::from_length(value), max: MaxTrackSizingFunction::from_length(value) }
     }
 }
 impl FromPercent for NonRepeatedTrackSizingFunction {
@@ -586,9 +586,9 @@ impl TaffyFitContent for TrackSizingFunction {
 impl TaffyZero for TrackSizingFunction {
     const ZERO: Self = Self::Single(NonRepeatedTrackSizingFunction::ZERO);
 }
-impl FromPoints for TrackSizingFunction {
-    fn from_points<Input: Into<f32> + Copy>(points: Input) -> Self {
-        Self::Single(NonRepeatedTrackSizingFunction::from_points(points))
+impl FromLength for TrackSizingFunction {
+    fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
+        Self::Single(NonRepeatedTrackSizingFunction::from_length(value))
     }
 }
 impl FromPercent for TrackSizingFunction {

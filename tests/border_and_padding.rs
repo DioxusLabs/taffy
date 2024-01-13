@@ -9,12 +9,12 @@ fn arr_to_rect<T: Copy>(items: [T; 4]) -> Rect<T> {
 #[ignore]
 fn border_on_a_single_axis_doesnt_increase_size() {
     for i in 0..4 {
-        let mut taffy = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
         let node = taffy
             .new_leaf(Style {
                 border: {
                     let mut lengths = [LengthPercentage::ZERO; 4];
-                    lengths[i] = LengthPercentage::Points(10.);
+                    lengths[i] = LengthPercentage::Length(10.);
                     arr_to_rect(lengths)
                 },
                 ..Default::default()
@@ -24,9 +24,9 @@ fn border_on_a_single_axis_doesnt_increase_size() {
         taffy
             .compute_layout(
                 node,
-                Size { height: AvailableSpace::Definite(100.0), width: AvailableSpace::Definite(100.0) },
+                Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::Definite(100.0) },
             )
-            .ok();
+            .unwrap();
 
         let layout = taffy.layout(node).unwrap();
         assert_eq!(layout.size.width * layout.size.height, 0.);
@@ -37,12 +37,12 @@ fn border_on_a_single_axis_doesnt_increase_size() {
 #[ignore]
 fn padding_on_a_single_axis_doesnt_increase_size() {
     for i in 0..4 {
-        let mut taffy = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
         let node = taffy
             .new_leaf(Style {
                 padding: {
                     let mut lengths = [LengthPercentage::ZERO; 4];
-                    lengths[i] = LengthPercentage::Points(10.);
+                    lengths[i] = LengthPercentage::Length(10.);
                     arr_to_rect(lengths)
                 },
                 ..Default::default()
@@ -52,9 +52,9 @@ fn padding_on_a_single_axis_doesnt_increase_size() {
         taffy
             .compute_layout(
                 node,
-                Size { height: AvailableSpace::Definite(100.0), width: AvailableSpace::Definite(100.0) },
+                Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::Definite(100.0) },
             )
-            .ok();
+            .unwrap();
 
         let layout = taffy.layout(node).unwrap();
         assert_eq!(layout.size.width * layout.size.height, 0.);
@@ -65,10 +65,10 @@ fn padding_on_a_single_axis_doesnt_increase_size() {
 #[ignore]
 fn border_and_padding_on_a_single_axis_doesnt_increase_size() {
     for i in 0..4 {
-        let mut taffy = Taffy::new();
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
         let rect = {
             let mut lengths = [LengthPercentage::ZERO; 4];
-            lengths[i] = LengthPercentage::Points(10.);
+            lengths[i] = LengthPercentage::Length(10.);
             arr_to_rect(lengths)
         };
         let node = taffy.new_leaf(Style { border: rect, padding: rect, ..Default::default() }).unwrap();
@@ -76,9 +76,9 @@ fn border_and_padding_on_a_single_axis_doesnt_increase_size() {
         taffy
             .compute_layout(
                 node,
-                Size { height: AvailableSpace::Definite(100.0), width: AvailableSpace::Definite(100.0) },
+                Size { width: AvailableSpace::Definite(100.0), height: AvailableSpace::Definite(100.0) },
             )
-            .ok();
+            .unwrap();
         let layout = taffy.layout(node).unwrap();
         assert_eq!(layout.size.width * layout.size.height, 0.);
     }
@@ -87,7 +87,7 @@ fn border_and_padding_on_a_single_axis_doesnt_increase_size() {
 #[test]
 #[ignore]
 fn vertical_border_and_padding_percentage_values_use_available_space_correctly() {
-    let mut taffy = Taffy::new();
+    let mut taffy: TaffyTree<()> = TaffyTree::new();
 
     let node = taffy
         .new_leaf(Style {
@@ -98,7 +98,7 @@ fn vertical_border_and_padding_percentage_values_use_available_space_correctly()
 
     taffy
         .compute_layout(node, Size { width: AvailableSpace::Definite(200.0), height: AvailableSpace::Definite(100.0) })
-        .ok();
+        .unwrap();
 
     let layout = taffy.layout(node).unwrap();
     assert_eq!(layout.size.width, 200.0);

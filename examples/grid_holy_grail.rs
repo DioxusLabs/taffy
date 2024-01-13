@@ -16,17 +16,17 @@ fn default<T: Default>() -> T {
 }
 
 #[cfg(feature = "grid")]
-fn main() -> Result<(), taffy::error::TaffyError> {
+fn main() -> Result<(), taffy::TaffyError> {
     use taffy::prelude::*;
 
-    let mut taffy = Taffy::new();
+    let mut taffy: TaffyTree<()> = TaffyTree::new();
 
     // Setup the grid
     let root_style = Style {
         display: Display::Grid,
-        size: Size { width: points(800.0), height: points(600.0) },
-        grid_template_columns: vec![points(250.0), fr(1.0), points(250.0)],
-        grid_template_rows: vec![points(150.0), fr(1.0), points(150.0)],
+        size: Size { width: length(800.0), height: length(600.0) },
+        grid_template_columns: vec![length(250.0), fr(1.0), length(250.0)],
+        grid_template_rows: vec![length(150.0), fr(1.0), length(150.0)],
         ..default()
     };
 
@@ -41,8 +41,8 @@ fn main() -> Result<(), taffy::error::TaffyError> {
     let root = taffy.new_with_children(root_style, &[header, left_sidebar, content_area, right_sidebar, footer])?;
 
     // Compute layout and print result
-    taffy.compute_layout(root, Size { width: points(800.0), height: points(600.0) })?;
-    taffy::debug::print_tree(&taffy, root);
+    taffy.compute_layout(root, Size { width: length(800.0), height: length(600.0) })?;
+    taffy.print_tree(root);
 
     Ok(())
 }

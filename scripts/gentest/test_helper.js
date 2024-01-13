@@ -1,4 +1,13 @@
 
+function getScrollBarWidth() {
+  let el = document.createElement("div");
+  el.style.cssText = "overflow:scroll; visibility:hidden; position:absolute;";
+  document.body.appendChild(el);
+  let width = el.offsetWidth - el.clientWidth;
+  el.remove();
+  return width;
+}
+
 class TrackSizingParser {
   static INITIAL_CHAR_REGEX = /[a-z-A-Z0-9]/;
   static TOKEN_CHAR_REGEX = /[-\.a-z-A-Z0-9%]/;
@@ -27,7 +36,7 @@ class TrackSizingParser {
       // console.debug(this.index, char);
 
       // Skip whitespace
-      if (char === ' ') { this.index++; continue;}
+      if (char === ' ') { this.index++; continue; }
 
       if (TrackSizingParser.INITIAL_CHAR_REGEX.test(char)) {
         const token = this._parseItem();
@@ -42,7 +51,7 @@ class TrackSizingParser {
         }
       }
 
-      throw new Error (`Invalid start of token ${char}`);
+      throw new Error(`Invalid start of token ${char}`);
     }
   }
 
@@ -81,6 +90,20 @@ class TrackSizingParser {
 
 }
 
+function parseViewportConstraint(e) {
+  if (e.parentNode.classList.contains('viewport')) {
+    return {
+      width: parseDimension(e.parentNode.style.width || 'max-content'),
+      height: parseDimension(e.parentNode.style.height || 'max-content'),
+    }
+  } else {
+    return {
+      width: { unit: 'max-content' },
+      height: { unit: 'max-content' },
+    }
+  }
+}
+
 function parseRepetition(input) {
   if (input === "auto-fill") return { unit: 'auto-fill' };
   if (input === "auto-fit") return { unit: 'auto-fit' };
@@ -89,9 +112,9 @@ function parseRepetition(input) {
 }
 
 function parseDimension(input, options = { allowFrUnits: false }) {
-  if (options.allowFrUnits && input.endsWith('fr')) return { unit: 'fraction', value: parseFloat(input.replace('fr','')) };
-  if (input.endsWith('px')) return { unit: 'points',   value: parseFloat(input.replace('px','')) };
-  if (input.endsWith('%')) return { unit: 'percent',  value: parseFloat(input.replace('%','')) / 100 };
+  if (options.allowFrUnits && input.endsWith('fr')) return { unit: 'fraction', value: parseFloat(input.replace('fr', '')) };
+  if (input.endsWith('px')) return { unit: 'px', value: parseFloat(input.replace('px', '')) };
+  if (input.endsWith('%')) return { unit: 'percent', value: parseFloat(input.replace('%', '')) / 100 };
   if (input === 'auto') return { unit: 'auto' };
   if (input === 'min-content') return { unit: 'min-content' };
   if (input === 'max-content') return { unit: 'max-content' };
@@ -127,7 +150,7 @@ function parseEdges(edges) {
   const right = parseDimension(edges.right);
   const top = parseDimension(edges.top);
   const bottom = parseDimension(edges.bottom);
-  
+
   if (!left && !right && !top && !bottom) return undefined;
   return { left, right, top, bottom };
 }
@@ -135,7 +158,7 @@ function parseEdges(edges) {
 function parseSize(size) {
   const width = parseDimension(size.width);
   const height = parseDimension(size.height);
-  
+
   if (!width && !height) return undefined;
   return { width, height };
 }
@@ -146,7 +169,7 @@ function parseGaps(style) {
     return { row: gaps[0], column: gaps[1] ?? gaps[0] };
   }
   if (style.rowGap || style.columnGap) {
-    return { row: parseDimension(style.rowGap), column: parseDimension(style.columnGap) }
+    return { row: parseDimension(style.rowGap), column: parseDimension(style.columnGap) };
   }
   return undefined;
 }
@@ -165,9 +188,9 @@ function parseGridAutoFlow(input) {
 }
 
 function parseGridPosition(input) {
-  if (input === 'auto') return { kind: 'auto' }
-  if (/^span +\d+$/.test(input)) return { kind: 'span', value: parseInt(input.replace(/[^\d]/g, ''), 10)}
-  if (/^-?\d+$/.test(input)) return { kind: 'line', value: parseInt(input, 10)}
+  if (input === 'auto') return { kind: 'auto' };
+  if (/^span +\d+$/.test(input)) return { kind: 'span', value: parseInt(input.replace(/[^\d]/g, ''), 10) };
+  if (/^-?\d+$/.test(input)) return { kind: 'line', value: parseInt(input, 10) };
   return undefined;
 }
 
@@ -188,7 +211,9 @@ function describeElement(e) {
       writingMode: parseEnum(e.style.writingMode),
 
       flexWrap: parseEnum(e.style.flexWrap),
-      overflow: parseEnum(e.style.overflow),
+      overflowX: parseEnum(e.style.overflowX),
+      overflowY: parseEnum(e.style.overflowY),
+      scrollbarWidth: getScrollBarWidth(),
 
       alignItems: parseEnum(e.style.alignItems),
       alignSelf: parseEnum(e.style.alignSelf),
@@ -215,9 +240,9 @@ function describeElement(e) {
 
       gap: parseGaps(e.style),
 
-      size: parseSize({width: e.style.width, height: e.style.height}),
-      minSize: parseSize({width: e.style.minWidth, height: e.style.minHeight}),
-      maxSize: parseSize({width: e.style.maxWidth, height: e.style.maxHeight}),
+      size: parseSize({ width: e.style.width, height: e.style.height }),
+      minSize: parseSize({ width: e.style.minWidth, height: e.style.minHeight }),
+      maxSize: parseSize({ width: e.style.maxWidth, height: e.style.maxHeight }),
       aspectRatio: parseRatio(e.style.aspectRatio),
 
       margin: parseEdges({
@@ -259,6 +284,10 @@ function describeElement(e) {
       height: boundingRect.height,
       x: boundingRect.x - parentBoundingRect.x,
       y: boundingRect.y - parentBoundingRect.y,
+      scrollWidth: e.scrollWidth,
+      scrollHeight: e.scrollHeight,
+      clientWidth: e.clientWidth,
+      clientHeight: e.clientHeight,
     },
 
     // The naively rounded layout of the node. This is equivalent to calling Math.round() on
@@ -268,6 +297,10 @@ function describeElement(e) {
       height: e.offsetHeight,
       x: e.offsetLeft + e.parentNode.clientLeft,
       y: e.offsetTop + e.parentNode.clientTop,
+      scrollWidth: e.scrollWidth,
+      scrollHeight: e.scrollHeight,
+      clientWidth: e.clientWidth,
+      clientHeight: e.clientHeight,
     },
 
     // The naive rounding can result in 1px gaps in the layout, so Taffy uses a smarter algorithm to avoid this.
@@ -278,13 +311,19 @@ function describeElement(e) {
       height: Math.round(boundingRect.bottom) - Math.round(boundingRect.top),
       x: Math.round(boundingRect.x - parentBoundingRect.x),
       y: Math.round(boundingRect.y - parentBoundingRect.y),
+      scrollWidth: e.scrollWidth,
+      scrollHeight: e.scrollHeight,
+      clientWidth: e.clientWidth,
+      clientHeight: e.clientHeight,
     },
 
     // Whether the test should enable rounding
     useRounding: e.getAttribute("data-test-rounding") !== "false",
 
+    viewport: parseViewportConstraint(e),
+
     children: Array.from(e.children).map(c => describeElement(c)),
-  }
+  };
 }
 
 // Useful when developing this script. Logs the parsed style to the console when any test fixture is opened in a browser.
@@ -294,4 +333,4 @@ window.onload = function () {
   } catch (e) {
     console.error(e);
   }
-}
+};

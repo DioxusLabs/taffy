@@ -9,7 +9,7 @@ use js_sys::Array;
 use js_sys::Function;
 use js_sys::Reflect;
 use taffy::prelude::*;
-use taffy::tree::LayoutTree;
+use taffy::TraversePartialTree;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -33,7 +33,7 @@ impl StyleUnit {
 
     fn try_into_dimension(self, val: f32) -> Result<Dimension, ()> {
         match self {
-            StyleUnit::Px => Ok(Dimension::Points(val)),
+            StyleUnit::Px => Ok(Dimension::Length(val)),
             StyleUnit::Percent => Ok(Dimension::Percent(val)),
             StyleUnit::Auto => Ok(Dimension::Auto),
             _ => Err(()),
@@ -42,7 +42,7 @@ impl StyleUnit {
 
     fn try_into_length_percentage_auto(self, val: f32) -> Result<LengthPercentageAuto, ()> {
         match self {
-            StyleUnit::Px => Ok(LengthPercentageAuto::Points(val)),
+            StyleUnit::Px => Ok(LengthPercentageAuto::Length(val)),
             StyleUnit::Percent => Ok(LengthPercentageAuto::Percent(val)),
             StyleUnit::Auto => Ok(LengthPercentageAuto::Auto),
             _ => Err(()),
@@ -51,7 +51,7 @@ impl StyleUnit {
 
     fn try_into_length_percentage(self, val: f32) -> Result<LengthPercentage, ()> {
         match self {
-            StyleUnit::Px => Ok(LengthPercentage::Points(val)),
+            StyleUnit::Px => Ok(LengthPercentage::Length(val)),
             StyleUnit::Percent => Ok(LengthPercentage::Percent(val)),
             _ => Err(()),
         }
@@ -99,7 +99,7 @@ pub struct Layout {
 
 #[wasm_bindgen]
 impl Layout {
-    fn new(allocator: &Allocator, node: taffy::node::Node) -> Layout {
+    fn new(allocator: &Allocator, node: taffy::NodeId) -> Layout {
         let taffy = allocator.taffy.borrow();
         let layout = taffy.layout(node).unwrap();
         let children = taffy.children(node).unwrap();
@@ -120,27 +120,77 @@ impl Layout {
     }
 }
 
+struct WasmNodeContext {
+    measure_func: Function,
+}
+
+impl WasmNodeContext {
+    fn from_js_measure(measure_func: Function) -> Self {
+        Self { measure_func }
+    }
+}
+
 #[wasm_bindgen]
 #[derive(Clone)]
 pub struct Allocator {
-    taffy: Rc<RefCell<taffy::Taffy>>,
+    taffy: Rc<RefCell<taffy::TaffyTree<WasmNodeContext>>>,
 }
 
 #[wasm_bindgen]
 impl Allocator {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        Self { taffy: Rc::new(RefCell::new(taffy::Taffy::new())) }
+        Self { taffy: Rc::new(RefCell::new(taffy::TaffyTree::new())) }
     }
 }
 
 #[wasm_bindgen]
 pub struct Node {
     allocator: Allocator,
-    node: taffy::node::Node,
+    node: taffy::NodeId,
 
     #[wasm_bindgen(readonly)]
     pub childCount: usize,
+}
+
+fn wasm_measure_function(
+    known_dimensions: Size<Option<f32>>,
+    available_space: Size<AvailableSpace>,
+    _node_id: NodeId,
+    context: Option<WasmNodeContext>,
+) -> Size<f32> {
+    fn convert_available_space(val: AvailableSpace) -> JsValue {
+        match val {
+            AvailableSpace::Definite(val) => val.into(),
+            AvailableSpace::MaxContent => JsValue::from_str("max-content"),
+            AvailableSpace::MinContent => JsValue::from_str("min-content"),
+        }
+    }
+
+    let Some(context) = context else { return Size::ZERO };
+
+    let known_width = known_dimensions.width.map(|val| val.into()).unwrap_or(JsValue::UNDEFINED);
+    let known_height = known_dimensions.height.map(|val| val.into()).unwrap_or(JsValue::UNDEFINED);
+
+    let available_width = convert_available_space(available_space.width);
+    let available_height = convert_available_space(available_space.height);
+
+    let args = Array::new_with_length(4);
+    args.set(0, known_width);
+    args.set(1, known_height);
+    args.set(2, available_width);
+    args.set(3, available_height);
+
+    if let Ok(result) = context.measure_func.apply(&JsValue::UNDEFINED, &args) {
+        let width = get_f32(&result, "width");
+        let height = get_f32(&result, "height");
+
+        if width.is_some() && height.is_some() {
+            return Size { width: width.unwrap(), height: height.unwrap() };
+        }
+    }
+
+    known_dimensions.unwrap_or(Size::ZERO)
 }
 
 #[wasm_bindgen]
@@ -156,57 +206,11 @@ impl Node {
 
     #[wasm_bindgen(js_name = setMeasure)]
     pub fn set_measure(&mut self, measure: &JsValue) {
-        // let js_measure_func = Arc::new(Mutex::new(Function::from(measure.clone())));
-
-        struct FuncWrap(Function);
-        impl FuncWrap {
-            fn apply(&self, this: &JsValue, args: &Array) -> Result<JsValue, JsValue> {
-                self.0.apply(this, args)
-            }
-        }
-        // SAFETY: Wasm is single-threaded so there can't be multiple threads
-        unsafe impl Send for FuncWrap {}
-        unsafe impl Sync for FuncWrap {}
-
-        let js_measure_func = FuncWrap(Function::from(measure.clone()));
-
-        let measure_func = move |known_dimensions: Size<Option<f32>>, available_space: Size<AvailableSpace>| {
-            fn convert_available_space(val: AvailableSpace) -> JsValue {
-                match val {
-                    AvailableSpace::Definite(val) => val.into(),
-                    AvailableSpace::MaxContent => JsValue::from_str("max-content"),
-                    AvailableSpace::MinContent => JsValue::from_str("min-content"),
-                }
-            }
-
-            let known_width = known_dimensions.width.map(|val| val.into()).unwrap_or(JsValue::UNDEFINED);
-            let known_height = known_dimensions.height.map(|val| val.into()).unwrap_or(JsValue::UNDEFINED);
-
-            let available_width = convert_available_space(available_space.width);
-            let available_height = convert_available_space(available_space.height);
-
-            let args = Array::new_with_length(4);
-            args.set(0, known_width);
-            args.set(1, known_height);
-            args.set(2, available_width);
-            args.set(3, available_height);
-
-            if let Ok(result) = js_measure_func.apply(&JsValue::UNDEFINED, &args) {
-                let width = get_f32(&result, "width");
-                let height = get_f32(&result, "height");
-
-                if width.is_some() && height.is_some() {
-                    return Size { width: width.unwrap(), height: height.unwrap() };
-                }
-            }
-
-            known_dimensions.unwrap_or(Size::ZERO)
-        };
-
+        let js_measure_func = Function::from(measure.clone());
         self.allocator
             .taffy
             .borrow_mut()
-            .set_measure(self.node, Some(taffy::node::MeasureFunc::Boxed(Box::new(measure_func))))
+            .set_node_context(self.node, Some(WasmNodeContext::from_js_measure(js_measure_func)))
             .unwrap();
     }
 
@@ -243,9 +247,9 @@ impl Node {
         self.allocator.taffy.borrow().dirty(self.node).unwrap()
     }
 
-    #[wasm_bindgen(js_name = isChildless)]
-    pub fn is_childless(&mut self) -> bool {
-        self.allocator.taffy.borrow_mut().is_childless(self.node)
+    #[wasm_bindgen(js_name = childCount)]
+    pub fn child_count(&mut self) -> usize {
+        self.allocator.taffy.borrow_mut().child_count(self.node)
     }
 
     #[wasm_bindgen(js_name = computeLayout)]
@@ -548,6 +552,13 @@ fn parse_style(style: &JsValue) -> taffy::style::Style {
             bottom: try_parse_length_percentage_auto(style, "insetBottom").unwrap_or(LengthPercentageAuto::Auto),
         },
 
+        // Scroll styles
+        overflow: taffy::geometry::Point {
+            x: try_parse_from_i32(style, "overflowX").unwrap_or_default(),
+            y: try_parse_from_i32(style, "overflowY").unwrap_or_default(),
+        },
+        scrollbar_width: get_f32(style, "scrollbarWidth").unwrap_or(0.0),
+
         // Size styles
         size: taffy::geometry::Size {
             width: try_parse_dimension(style, "width").unwrap_or(Dimension::Auto),
@@ -573,27 +584,27 @@ fn parse_style(style: &JsValue) -> taffy::style::Style {
 
         // Spacing styles
         margin: taffy::geometry::Rect {
-            left: try_parse_length_percentage_auto(style, "marginLeft").unwrap_or(LengthPercentageAuto::Points(0.0)),
-            right: try_parse_length_percentage_auto(style, "marginRight").unwrap_or(LengthPercentageAuto::Points(0.0)),
-            top: try_parse_length_percentage_auto(style, "marginTop").unwrap_or(LengthPercentageAuto::Points(0.0)),
+            left: try_parse_length_percentage_auto(style, "marginLeft").unwrap_or(LengthPercentageAuto::Length(0.0)),
+            right: try_parse_length_percentage_auto(style, "marginRight").unwrap_or(LengthPercentageAuto::Length(0.0)),
+            top: try_parse_length_percentage_auto(style, "marginTop").unwrap_or(LengthPercentageAuto::Length(0.0)),
             bottom: try_parse_length_percentage_auto(style, "marginBottom")
-                .unwrap_or(LengthPercentageAuto::Points(0.0)),
+                .unwrap_or(LengthPercentageAuto::Length(0.0)),
         },
         padding: taffy::geometry::Rect {
-            left: try_parse_length_percentage(style, "paddingLeft").unwrap_or(LengthPercentage::Points(0.0)),
-            right: try_parse_length_percentage(style, "paddingRight").unwrap_or(LengthPercentage::Points(0.0)),
-            top: try_parse_length_percentage(style, "paddingTop").unwrap_or(LengthPercentage::Points(0.0)),
-            bottom: try_parse_length_percentage(style, "paddingBottom").unwrap_or(LengthPercentage::Points(0.0)),
+            left: try_parse_length_percentage(style, "paddingLeft").unwrap_or(LengthPercentage::Length(0.0)),
+            right: try_parse_length_percentage(style, "paddingRight").unwrap_or(LengthPercentage::Length(0.0)),
+            top: try_parse_length_percentage(style, "paddingTop").unwrap_or(LengthPercentage::Length(0.0)),
+            bottom: try_parse_length_percentage(style, "paddingBottom").unwrap_or(LengthPercentage::Length(0.0)),
         },
         border: taffy::geometry::Rect {
-            left: try_parse_length_percentage(style, "borderLeft").unwrap_or(LengthPercentage::Points(0.0)),
-            right: try_parse_length_percentage(style, "borderRight").unwrap_or(LengthPercentage::Points(0.0)),
-            top: try_parse_length_percentage(style, "borderTop").unwrap_or(LengthPercentage::Points(0.0)),
-            bottom: try_parse_length_percentage(style, "borderBottom").unwrap_or(LengthPercentage::Points(0.0)),
+            left: try_parse_length_percentage(style, "borderLeft").unwrap_or(LengthPercentage::Length(0.0)),
+            right: try_parse_length_percentage(style, "borderRight").unwrap_or(LengthPercentage::Length(0.0)),
+            top: try_parse_length_percentage(style, "borderTop").unwrap_or(LengthPercentage::Length(0.0)),
+            bottom: try_parse_length_percentage(style, "borderBottom").unwrap_or(LengthPercentage::Length(0.0)),
         },
         gap: taffy::geometry::Size {
-            width: try_parse_length_percentage(style, "gapWidth").unwrap_or(LengthPercentage::Points(0.0)),
-            height: try_parse_length_percentage(style, "gapHeight").unwrap_or(LengthPercentage::Points(0.0)),
+            width: try_parse_length_percentage(style, "gapWidth").unwrap_or(LengthPercentage::Length(0.0)),
+            height: try_parse_length_percentage(style, "gapHeight").unwrap_or(LengthPercentage::Length(0.0)),
         },
 
         // Flexbox styles
@@ -647,7 +658,7 @@ fn option_from_f32(value: f32) -> Option<f32> {
 fn try_parse_dimension(obj: &JsValue, key: &str) -> Option<Dimension> {
     if let Some(val) = get_key(obj, key) {
         if let Some(number) = val.as_f64() {
-            return Some(Dimension::Points(number as f32));
+            return Some(Dimension::Length(number as f32));
         }
         if let Some(string) = val.as_string() {
             return string.parse().ok();

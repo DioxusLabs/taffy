@@ -1,5 +1,183 @@
 # Release Notes
 
+## Unreleased
+
+### Breaking
+
+#### Measure function changes
+
+The "measure function" API for integrating Taffy with other measurement systems (such as text layout) has been changed to be more flexible,
+and to interact better with borrow checking (you can now borrow external data in your measure function!).
+
+- There are no longer per-node measure functions.
+- There is now a single "global" measure function, and a per-node "context" of a user-defined type
+- The `Taffy` tree is now a generic `Taffy<T>` where `T` is the "context" type.
+
+If you are not using measure functions, then the only change you will need to make is from:
+
+```rust
+let mut tree = Taffy::new();
+```
+
+to
+
+```rust
+let mut tree : Taffy<()> = Taffy::new();
+```
+
+And generally update any uses of `Taffy` in your codebase to `Taffy<()>`.
+
+If you are using measure functions then you will need to make some bigger (but straightforward) changes. The following Taffy 0.3 code:
+
+```rust
+let mut tree = Taffy::new();
+let leaf = tree.new_leaf_with_measure(
+  Style::DEFAULT,
+  |known_dimensions: Size<Option<f32>>, available_space: Size<AvailableSpace>| Size { width: 100.0, height: 200.0 }
+);
+tree.compute_layout(leaf, Size::MAX_CONTENT);
+```
+
+Should become something like the following with Taffy 0.4:
+
+```rust
+let mut tree : Taffy<Size> = Taffy::new();
+let leaf = tree.new_leaf_with_context(Style::DEFAULT, Size { width: 100.0, height: 200.0 });
+tree.compute_layout_with_measure(
+  leaf,
+  Size::MAX_CONTENT,
+  |known_dimensions: Size<Option<f32>>, available_space: Size<AvailableSpace>, node_id: NodeId, node_context: Option<Size>| {
+    node_context.unwrap_or(Size::ZERO)
+  }
+);
+```
+
+Note that:
+
+- You can choose any type instead of `Size` in the above example. This includes your own custom type (which can be an enum or a trait object).
+- If you don't need a context then you can use `()` for the context type
+- As the single "global" measure function passed to `compute_layout_with_measure` only needs to exist for the duration of a single layout run,
+  it can (mutably) borrow data from it's environment
+
+#### Many APIs have been renamed to replace `points` or `Points` with `length` or `Length`
+
+This new name better describes one-dimentional measure of space in some unspecified unit
+which is often unrelated to the PostScript point or the CSS `pt` unit.
+
+This also removes a misleading similarity with the 2D `Point`,
+whose components can have any unit and are not even necessarily absolute lengths.
+
+Example usage change:
+
+```diff
+ use taffy::prelude::*;
+
+ // …
+
+ let header_node = taffy
+     .new_leaf(
+         Style {
+-            size: Size { width: points(800.0), height: points(100.0) },
++            size: Size { width: length(800.0), height: length(100.0) },
+             ..Default::default()
+         },
+     ).unwrap();
+```
+
+### Added
+
+- Support for [CSS Block layout](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flow_Layout/Block_and_Inline_Layout_in_Normal_Flow#elements_participating_in_a_block_formatting_context) has been added. This can be used via the new `Display::Block` variant of the `Display` enum. Note that inline, inline-block and float have *not* been implemented. The use case supported is block container nodes which contain block-level children.
+- Support for running each layout algorithm individually on a single node via the following top-level functions:
+  - `compute_flexbox_layout`
+  - `compute_grid_layout`
+  - `compute_leaf_layout`
+  - `compute_hidden_layout`
+- Added `insert_child_at_index()` method to the `Taffy` tree. This can be used to insert a child node at any position instead of just the end.
+- Added `get_disjoint_node_context_mut()` method to the `Taffy` tree. This can be used to safely get multiple mutable borrows at the same time.
+
+### Removed
+
+- `layout_flexbox()` has been removed from the prelude. Use `taffy::compute_flexbox_layout` instead.
+- The following methods have been removed from the `LayoutTree` trait: `parent`, `is_childless`, `measure_node`, `needs_measure`, and `mark_dirty`. These no longer need to be implemented in custom implementations of `LayoutTree`.
+
+### Changes
+
+- The Flexbox algorithm has now been moved behind the `flexbox` feature. The `flexbox` feature is enabled by default.
+- The `justify_self` property has been moved behind the `grid` feature.
+- `taffy::node::Node` has been replaced with `taffy::tree::NodeId`. This should make it much easier to implement the `LayoutTree` trait as the underlying type backing the node id now a `u64` rather than a `slotmap::DefaultKey`.
+- Module organisation changes:
+  - The `math` module has been made private
+  - The `axis` module has been merged into the `geometry` module
+  - The debug module is no longer public. The `print_tree` function is now accesible under `util`.
+  - All types from the `node`, `data`, `layout`, `error` and `cache` modules have been moved to the  the `tree` module.
+- Fixed misspelling: `RunMode::PeformLayout` renamed into `RunMode::PerformLayout` (added missing `r`).
+- `serde` dependency has been made compatible with `no_std` environments
+- `slotmap` dependency has been made compatible with `no_std` environments
+
+## 0.3.18
+
+### Fixes
+
+- Fix computation of Flexbox automatic minimum size when grid or flexbox child has an explicit width/height style set (#576)
+
+## 0.3.17
+
+### Added
+
+- Added `total_node_count` method to the `Taffy` struct. Returns the total number of nodes in the tree.
+
+## 0.3.16
+
+### Fixes
+
+- Improve performance of flexbox columns
+
+## 0.3.15
+
+### Fixes
+
+- Fix justify-content and align-content when free space is negative (content overflows container) (#549) (#551)
+
+## 0.3.14
+
+### Fixes
+
+- Flex: Fix issue where constraints were not being propagated, causing nodes with inherent aspect-ratio (typically images) to not apply that aspect-ratio (#545) (Fixes bevyengine/bevy#9841)
+
+## 0.3.13
+
+### Fixes
+
+- Fix rounding accumulation bug (#521) (Fixes #501 and bevyengine/bevy#8911)
+- Flexbox: pass correct cross-axis available space when computing an item's intrinsic main size (#522)(Fixes bevyengine/bevy#9350)
+- Flexbox: Subtract child margin not parent margin when computing stretch-alignment known size
+- Grid: Make CSS Grid algorithm correctly apply max width/height and available space when it is the root node (#491)
+- Grid: Fix CSS Grid "auto track" / placement bugs #481
+  - Fix divide by zero when using grid_auto_rows/grid_auto_columns with zero negative implicit tracks
+  - Fix over counting of tracks (leading to incorrect container heights) when auto-placing in grids that contain negative implicit tracks.
+  - Fix axis conflation in auto-placement code when grid_auto_flow is column
+  - Fix assignment of auto track sizes when initializing negative implicit tracks
+- Leaf: Apply margins to leaf nodes when computing available space for measure functions
+- Leaf: Reserve space for padding/borders in nodes with measure functions (#497)
+  
+  **NOTE: This has the potential to break layouts relying on the old behaviour.** However, such layouts would be relying on a style having no effect, so it is judged that such layouts are unlikely to exist in the wild. If this turns out not to be true then this fix will be reverted on the 0.3.x branch.
+
+### Dependencies
+
+- Upgrade `grid` to `0.10`. This eliminates the transitive dependency on `no-std-compat`.
+
+## 0.3.12
+
+### Fixes
+
+- Fix caching issue when toggling `display:none` on and off
+
+## 0.3.11
+
+### Fixes
+
+- Fix exponential blowup when laying out trees containing nodes with min and max sizes.
+
 ## 0.3.10
 
 ### Fixes

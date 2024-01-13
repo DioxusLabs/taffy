@@ -1,4 +1,5 @@
-use std::fs;
+use std::fs::{self, OpenOptions};
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -9,187 +10,7 @@ use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote};
 use serde_json::Value;
 use syn::Ident;
-
-#[tokio::main]
-async fn main() {
-    env_logger::init();
-    // this requires being run by cargo, which is iffy
-    let root_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
-    let repo_root = root_dir.parent().and_then(Path::parent).unwrap();
-
-    let fixtures_root = repo_root.join("test_fixtures");
-    let fixtures = fs::read_dir(fixtures_root).unwrap();
-
-    info!("reading test fixtures from disk");
-    let mut fixtures: Vec<_> = fixtures
-        .into_iter()
-        .filter_map(|a| a.ok())
-        .filter(|f| !f.file_name().to_string_lossy().starts_with('x')) // ignore tests beginning with x
-        .filter(|f| f.path().is_file() && f.path().extension().map(|p| p == "html").unwrap_or(false))
-        .map(|f| {
-            let fixture_path = f.path();
-            let name = fixture_path.file_stem().unwrap().to_str().unwrap().to_string();
-            (name, fixture_path)
-        })
-        .collect();
-    fixtures.sort_unstable_by_key(|f| f.0.clone());
-
-    info!("starting webdriver instance");
-    let webdriver_url = "http://localhost:4444";
-    let mut webdriver_handle = Command::new("chromedriver")
-        .arg("--port=4444")
-        .spawn()
-        .expect("ChromeDriver not found: Make sure you have it installed and added to your PATH.");
-
-    // this is silly, but it works
-    std::thread::sleep(std::time::Duration::from_secs(1));
-
-    let mut caps = serde_json::map::Map::new();
-    let chrome_opts = serde_json::json!({ "args": ["--headless", "--disable-gpu"] });
-    caps.insert("goog:chromeOptions".to_string(), chrome_opts.clone());
-
-    info!("spawning webdriver client and collecting test descriptions");
-    let client = ClientBuilder::native().capabilities(caps.clone()).connect(webdriver_url).await.unwrap();
-
-    let mut test_descs = vec![];
-    for (name, fixture_path) in fixtures {
-        test_descs.push(test_root_element(client.clone(), name, fixture_path).await);
-    }
-
-    info!("killing webdriver instance...");
-    webdriver_handle.kill().unwrap();
-
-    info!("generating test sources and concatenating...");
-
-    let test_descs: Vec<_> = test_descs
-        .iter()
-        .map(|(name, description)| {
-            debug!("generating test contents for {}", &name);
-            (name.clone(), generate_test(name, description))
-        })
-        .collect();
-
-    let mod_statemnts = test_descs
-        .iter()
-        .map(|(name, _)| {
-            let name_ident = Ident::new(name, Span::call_site());
-            if name.starts_with("grid") {
-                quote!(#[cfg(feature = "grid")] mod #name_ident;)
-            } else {
-                quote!(mod #name_ident;)
-            }
-        })
-        .fold(quote!(), |a, b| quote!(#a #b));
-    let generic_measure_function = generate_generic_measure_function();
-
-    let test_mod_file = quote!(
-        #generic_measure_function
-        #mod_statemnts
-    );
-
-    info!("writing generated test file to disk...");
-    let tests_base_path = repo_root.join("tests").join("generated");
-    fs::remove_dir_all(&tests_base_path).unwrap();
-    fs::create_dir(&tests_base_path).unwrap();
-    for (name, test_body) in test_descs {
-        let mut test_filename = tests_base_path.join(&name);
-        test_filename.set_extension("rs");
-        debug!("writing {} to disk...", &name);
-        fs::write(test_filename, test_body.to_string()).unwrap();
-    }
-    fs::write(tests_base_path.join("mod.rs"), test_mod_file.to_string()).unwrap();
-
-    info!("formatting the source directory");
-    Command::new("cargo").arg("fmt").current_dir(repo_root).status().unwrap();
-}
-
-async fn test_root_element(client: Client, name: String, fixture_path: impl AsRef<Path>) -> (String, Value) {
-    let fixture_path = fixture_path.as_ref();
-
-    let url = format!("file://{}", fixture_path.display());
-
-    client.goto(&url).await.unwrap();
-    let description = client
-        .execute("return JSON.stringify(describeElement(document.getElementById('test-root')))", vec![])
-        .await
-        .unwrap();
-    let description_string = description.as_str().unwrap();
-    let description = serde_json::from_str(description_string).unwrap();
-    (name, description)
-}
-
-fn generate_test(name: impl AsRef<str>, description: &Value) -> TokenStream {
-    let name = name.as_ref();
-    let name = Ident::new(name, Span::call_site());
-    let use_rounding = description["useRounding"].as_bool().unwrap();
-    let assertions = generate_assertions("node", description, use_rounding);
-    let node_description = generate_node("node", description);
-
-    let set_rounding_mode = if use_rounding { quote!() } else { quote!(taffy.disable_rounding();) };
-
-    quote!(
-        #[test]
-        fn #name() {
-            #[allow(unused_imports)]
-            use taffy::{layout::Layout, prelude::*};
-            use slotmap::Key;
-            let mut taffy = taffy::Taffy::new();
-            #set_rounding_mode
-            #node_description
-            taffy.compute_layout(node, taffy::geometry::Size::MAX_CONTENT).unwrap();
-
-            println!("\nComputed tree:");
-            taffy::debug::print_tree(&taffy, node);
-            println!();
-
-            #assertions
-        }
-    )
-}
-
-fn generate_assertions(ident: &str, node: &Value, use_rounding: bool) -> TokenStream {
-    let layout = if use_rounding { &node["smartRoundedLayout"] } else { &node["unroundedLayout"] };
-
-    let read_f32 = |s: &str| layout[s].as_f64().unwrap() as f32;
-    let width = read_f32("width");
-    let height = read_f32("height");
-    let x = read_f32("x");
-    let y = read_f32("y");
-
-    let children = {
-        let mut c = Vec::new();
-        if let Value::Array(ref value) = node["children"] {
-            for (idx, child) in value.iter().enumerate() {
-                c.push(generate_assertions(&format!("{ident}{idx}"), child, use_rounding));
-            }
-        };
-        c.into_iter().fold(quote!(), |a, b| quote!(#a #b))
-    };
-
-    let ident = Ident::new(ident, Span::call_site());
-
-    if use_rounding {
-        quote!(
-            let Layout { size, location, .. } = taffy.layout(#ident).unwrap();
-            assert_eq!(size.width, #width, "width of node {:?}. Expected {}. Actual {}", #ident.data(),  #width, size.width);
-            assert_eq!(size.height, #height, "height of node {:?}. Expected {}. Actual {}", #ident.data(),  #height, size.height);
-            assert_eq!(location.x, #x, "x of node {:?}. Expected {}. Actual {}", #ident.data(),  #x, location.x);
-            assert_eq!(location.y, #y, "y of node {:?}. Expected {}. Actual {}", #ident.data(),  #y, location.y);
-
-            #children
-        )
-    } else {
-        quote!(
-            let Layout { size, location, .. } = taffy.layout(#ident).unwrap();
-            assert!(size.width - #width < 0.1, "width of node {:?}. Expected {}. Actual {}", #ident.data(),  #width, size.width);
-            assert!(size.height - #height < 0.1, "height of node {:?}. Expected {}. Actual {}", #ident.data(),  #height, size.height);
-            assert!(location.x - #x < 0.1, "x of node {:?}. Expected {}. Actual {}", #ident.data(),  #x, location.x);
-            assert!(location.y - #y < 0.1, "y of node {:?}. Expected {}. Actual {}", #ident.data(),  #y, location.y);
-
-            #children
-        )
-    }
-}
+use walkdir::WalkDir;
 
 macro_rules! dim_quoted_renamed {
     ($obj:ident, $in_name:ident, $out_name:ident, $value_mapper:ident, $default:expr) => {
@@ -230,6 +51,241 @@ macro_rules! edges_quoted {
             _ => quote!(),
         };
     };
+}
+
+#[tokio::main]
+async fn main() {
+    env_logger::init();
+    let root_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
+    let repo_root = root_dir.parent().and_then(Path::parent).unwrap();
+
+    let fixtures_root = repo_root.join("test_fixtures");
+
+    info!("reading test fixtures from disk");
+    let mut fixtures: Vec<_> = WalkDir::new(fixtures_root.clone())
+        .into_iter()
+        .filter_map(|a| a.ok())
+        .filter(|f| !f.file_name().to_string_lossy().starts_with('x')) // ignore tests beginning with x
+        .filter(|f| f.path().is_file() && f.path().extension().map(|p| p == "html").unwrap_or(false))
+        .map(|f| {
+            let fixture_path = f.path().to_path_buf();
+            let name = fixture_path.file_stem().unwrap().to_str().unwrap().to_string();
+            (name, fixture_path)
+        })
+        .collect();
+    fixtures.sort_unstable_by_key(|f| f.0.clone());
+
+    info!("starting webdriver instance");
+    let webdriver_url = "http://localhost:4444";
+    let mut webdriver_handle = Command::new("chromedriver")
+        .arg("--port=4444")
+        .spawn()
+        .expect("ChromeDriver not found: Make sure you have it installed and added to your PATH.");
+
+    // this is silly, but it works
+    std::thread::sleep(std::time::Duration::from_secs(1));
+
+    let mut caps = serde_json::map::Map::new();
+    let chrome_opts = serde_json::json!({ "args": ["--headless", "--disable-gpu"] });
+    caps.insert("goog:chromeOptions".to_string(), chrome_opts.clone());
+
+    info!("spawning webdriver client and collecting test descriptions");
+    let client = ClientBuilder::native().capabilities(caps.clone()).connect(webdriver_url).await.unwrap();
+
+    asserts_non_zero_width_scrollbars(client.clone()).await;
+
+    let mut test_descs = vec![];
+    for (name, fixture_path) in fixtures.iter() {
+        test_descs.push(test_root_element(client.clone(), name.clone(), fixture_path).await);
+    }
+
+    info!("killing webdriver instance...");
+    webdriver_handle.kill().unwrap();
+
+    info!("generating test sources and concatenating...");
+
+    let test_descs: Vec<_> = test_descs
+        .iter()
+        .map(|(name, fixture_path, description)| {
+            debug!("generating test contents for {}", &name);
+            (name.clone(), fixture_path, generate_test(name, description))
+        })
+        .collect();
+
+    info!("writing generated test file to disk...");
+    let tests_base_path = repo_root.join("tests").join("generated");
+    fs::remove_dir_all(&tests_base_path).unwrap();
+    fs::create_dir(&tests_base_path).unwrap();
+
+    // Open base mod.rs file for appending
+    let mut base_mod_file = OpenOptions::new().create(true).append(true).open(tests_base_path.join("mod.rs")).unwrap();
+
+    for (name, fixture_path, test_body) in test_descs {
+        // Create test directory if it doesn't exist
+        let test_path_stripped = fixture_path.parent().unwrap().strip_prefix(&fixtures_root).unwrap();
+        let test_path = tests_base_path.join(test_path_stripped);
+        if !test_path.exists() {
+            fs::create_dir(&test_path).unwrap();
+
+            let ident = Ident::new(test_path_stripped.to_str().unwrap(), Span::call_site());
+            let token = quote!(mod #ident;);
+            writeln!(&mut base_mod_file, "{}", token).unwrap();
+        }
+        // Open mod file in current folder
+        let mod_path = test_path.join("mod.rs");
+        let mut mod_file = OpenOptions::new().create(true).append(true).open(mod_path).unwrap();
+
+        let name_ident = Ident::new(&name, Span::call_site());
+        let token = if name.starts_with("grid") {
+            quote!(#[cfg(feature = "grid")] mod #name_ident;)
+        } else {
+            quote!(mod #name_ident;)
+        };
+        writeln!(&mut mod_file, "{}", token).unwrap();
+        let mut test_filename = test_path.join(&name);
+        test_filename.set_extension("rs");
+        debug!("writing {} to disk...", &name);
+        fs::write(test_filename, test_body.to_string()).unwrap();
+    }
+
+    info!("formatting the source directory");
+    Command::new("cargo").arg("fmt").current_dir(repo_root).status().unwrap();
+}
+
+async fn asserts_non_zero_width_scrollbars(client: Client) {
+    // Load minimal test page defined in the string
+    const TEST_PAGE: &str = r#"data:text/html;charset=utf-8,<html><body><div style="overflow:scroll" /></body></html>"#;
+    client.goto(TEST_PAGE).await.unwrap();
+
+    // Determine the width of the scrollbar
+    let scrollbar_width = client
+        .execute("return document.body.firstChild.clientWidth - document.body.firstChild.offsetWidth;", vec![])
+        .await
+        .unwrap();
+    let Value::Number(scrollbar_width) = scrollbar_width else { panic!("Error retrieving scrollbar_width") };
+    let scrollbar_width = scrollbar_width.as_f64().unwrap();
+
+    if scrollbar_width == 0.0 {
+        panic!(concat!(
+            "\n\n    Error: Scrollbar width of zero detected. This test generation script must be run with scrollbars set to take up space.\n",
+            "    On macOS this can be done by setting Show Scrollbars to 'always' in the Appearance section of the System Settings app.\n\n"
+        ))
+    }
+}
+
+async fn test_root_element(client: Client, name: String, fixture_path: impl AsRef<Path>) -> (String, PathBuf, Value) {
+    let fixture_path = fixture_path.as_ref();
+
+    let url = format!("file://{}", fixture_path.display());
+
+    client.goto(&url).await.unwrap();
+    let description = client
+        .execute("return JSON.stringify(describeElement(document.getElementById('test-root')))", vec![])
+        .await
+        .unwrap();
+    let description_string = description.as_str().unwrap();
+    let description = serde_json::from_str(description_string).unwrap();
+    (name.to_string(), fixture_path.to_path_buf(), description)
+}
+
+fn generate_test(name: impl AsRef<str>, description: &Value) -> TokenStream {
+    let name = name.as_ref();
+    let name = Ident::new(name, Span::call_site());
+    let use_rounding = description["useRounding"].as_bool().unwrap();
+    let assertions = generate_assertions("node", description, use_rounding);
+    let node_description = generate_node("node", description);
+
+    let set_rounding_mode = if use_rounding { quote!() } else { quote!(taffy.disable_rounding();) };
+
+    // Compute available space
+    let viewport = &description["viewport"];
+    let available_space = if viewport["width"]["unit"] == "max-content" && viewport["height"]["unit"] == "max-content" {
+        quote!(taffy::geometry::Size::MAX_CONTENT)
+    } else {
+        dim_quoted!(viewport, width, generate_available_space, quote!(taffy::style::AvailableSpace::MAX_CONTENT));
+        dim_quoted!(viewport, height, generate_available_space, quote!(taffy::style::AvailableSpace::MAX_CONTENT));
+        quote!(
+            taffy::geometry::Size {
+                #width #height
+            }
+        )
+    };
+
+    quote!(
+        #[test]
+        fn #name() {
+            #[allow(unused_imports)]
+            use taffy::{tree::Layout, prelude::*, TaffyTree};
+            let mut taffy : TaffyTree<crate::TextMeasure> = TaffyTree::new();
+            #set_rounding_mode
+            #node_description
+            taffy.compute_layout_with_measure(node, #available_space, crate::test_measure_function).unwrap();
+
+            println!("\nComputed tree:");
+            taffy.print_tree(node);
+            println!();
+
+            #assertions
+        }
+    )
+}
+
+fn generate_assertions(ident: &str, node: &Value, use_rounding: bool) -> TokenStream {
+    let layout = if use_rounding { &node["smartRoundedLayout"] } else { &node["unroundedLayout"] };
+
+    let read_f32 = |s: &str| layout[s].as_f64().unwrap() as f32;
+    let read_naive_f32 = |s: &str| node["naivelyRoundedLayout"][s].as_f64().unwrap() as f32;
+    let width = read_f32("width");
+    let height = read_f32("height");
+    let x = read_f32("x");
+    let y = read_f32("y");
+
+    let scroll_width = (read_f32("scrollWidth") - read_naive_f32("clientWidth")).max(0.0);
+    let scroll_height = (read_f32("scrollHeight") - read_naive_f32("clientHeight")).max(0.0);
+
+    let children = {
+        let mut c = Vec::new();
+        if let Value::Array(ref value) = node["children"] {
+            for (idx, child) in value.iter().enumerate() {
+                c.push(generate_assertions(&format!("{ident}{idx}"), child, use_rounding));
+            }
+        };
+        c.into_iter().fold(quote!(), |a, b| quote!(#a #b))
+    };
+
+    let ident = Ident::new(ident, Span::call_site());
+
+    if use_rounding {
+        quote!(
+            #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
+            let layout @ Layout { size, location, .. } = taffy.layout(#ident).unwrap();
+            assert_eq!(size.width, #width, "width of node {:?}. Expected {}. Actual {}", #ident,  #width, size.width);
+            assert_eq!(size.height, #height, "height of node {:?}. Expected {}. Actual {}", #ident,  #height, size.height);
+            assert_eq!(location.x, #x, "x of node {:?}. Expected {}. Actual {}", #ident,  #x, location.x);
+            assert_eq!(location.y, #y, "y of node {:?}. Expected {}. Actual {}", #ident,  #y, location.y);
+            #[cfg(feature = "content_size")]
+            assert_eq!(layout.scroll_width(), #scroll_width, "scroll_width of node {:?}. Expected {}. Actual {}", #ident, #scroll_width, layout.scroll_width());
+            #[cfg(feature = "content_size")]
+            assert_eq!(layout.scroll_height(), #scroll_height, "scroll_height of node {:?}. Expected {}. Actual {}", #ident, #scroll_height, layout.scroll_height());
+
+            #children
+        )
+    } else {
+        quote!(
+            #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
+            let layout @ Layout { size, location, .. } = taffy.layout(#ident).unwrap();
+            assert!((size.width - #width).abs() < 0.1, "width of node {:?}. Expected {}. Actual {}", #ident, #width, size.width);
+            assert!((size.height - #height).abs() < 0.1, "height of node {:?}. Expected {}. Actual {}", #ident, #height, size.height);
+            assert!((location.x - #x).abs() < 0.1, "x of node {:?}. Expected {}. Actual {}", #ident, #x, location.x);
+            assert!((location.y - #y).abs() < 0.1, "y of node {:?}. Expected {}. Actual {}", #ident, #y, location.y);
+            #[cfg(feature = "content_size")]
+            assert!((layout.scroll_width() - #scroll_width).abs() < 0.1, "scroll_width of node {:?}. Expected {}. Actual {}", #ident, #scroll_width, layout.scroll_width());
+            #[cfg(feature = "content_size")]
+            assert!((layout.scroll_height() - #scroll_height).abs() < 0.1, "scroll_height of node {:?}. Expected {}. Actual {}", #ident, #scroll_height, layout.scroll_height());
+
+            #children
+        )
+    }
 }
 
 fn generate_node(ident: &str, node: &Value) -> TokenStream {
@@ -310,6 +366,7 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
     let display = match style["display"] {
         Value::String(ref value) => match value.as_ref() {
             "none" => quote!(display: taffy::style::Display::None,),
+            "block" => quote!(display: taffy::style::Display::Block,),
             "grid" => quote!(display: taffy::style::Display::Grid,),
             _ => quote!(display: taffy::style::Display::Flex,),
         },
@@ -352,13 +409,27 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
         _ => quote!(),
     };
 
-    let overflow = match style["overflow"] {
-        Value::String(ref value) => match value.as_ref() {
-            "hidden" => quote!(overflow: taffy::style::Overflow::Hidden,),
-            "scroll" => quote!(overflow: taffy::style::Overflow::Scroll,),
-            _ => quote!(),
-        },
-        _ => quote!(),
+    fn quote_overflow(overflow: &Value) -> Option<TokenStream> {
+        match overflow {
+            Value::String(ref value) => match value.as_ref() {
+                "hidden" => Some(quote!(taffy::style::Overflow::Hidden)),
+                "scroll" => Some(quote!(taffy::style::Overflow::Scroll)),
+                "auto" => Some(quote!(taffy::style::Overflow::Auto)),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+    let overflow_x = quote_overflow(&style["overflowX"]);
+    let overflow_y = quote_overflow(&style["overflowY"]);
+    let (overflow, scrollbar_width) = if overflow_x.is_some() || overflow_y.is_some() {
+        let overflow_x = overflow_x.unwrap_or(quote!(taffy::style::Overflow::Visible));
+        let overflow_y = overflow_y.unwrap_or(quote!(taffy::style::Overflow::Visible));
+        let overflow = quote!(overflow: taffy::geometry::Point { x: #overflow_x, y: #overflow_y },);
+        let scrollbar_width = quote_number_prop("scrollbar_width", style, |value: f32| quote!(#value));
+        (overflow, scrollbar_width)
+    } else {
+        (quote!(), quote!())
     };
 
     let align_items = match style["alignItems"] {
@@ -499,8 +570,7 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
     let text_content = get_string_value("text_content", node);
     let writing_mode = get_string_value("writingMode", style);
     let raw_aspect_ratio = get_number_value("aspect_ratio", style);
-    let measure_func: Option<_> =
-        text_content.map(|text| generate_measure_function(text, writing_mode, raw_aspect_ratio));
+    let node_context: Option<_> = text_content.map(|text| generate_node_context(text, writing_mode, raw_aspect_ratio));
 
     edges_quoted!(style, margin, generate_length_percentage_auto, quote!(zero()));
     edges_quoted!(style, padding, generate_length_percentage, quote!(zero()));
@@ -538,6 +608,7 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
         #flex_direction
         #flex_wrap
         #overflow
+        #scrollbar_width
         #align_items
         #align_self
         #justify_items
@@ -571,8 +642,8 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
             #children_body
             let #ident = taffy.new_with_children(#style,#children).unwrap();
         )
-    } else if measure_func.is_some() {
-        quote!(let #ident = taffy.new_leaf_with_measure(#style,#measure_func,).unwrap();)
+    } else if node_context.is_some() {
+        quote!(let #ident = taffy.new_leaf_with_context(#style,#node_context,).unwrap();)
     } else {
         quote!(let #ident = taffy.new_leaf(#style).unwrap();)
     }
@@ -604,9 +675,9 @@ fn generate_length_percentage(dimen: &serde_json::Map<String, Value>) -> TokenSt
 
     match unit {
         Value::String(ref unit) => match unit.as_ref() {
-            "points" => {
+            "px" => {
                 let value = value();
-                quote!(taffy::style::LengthPercentage::Points(#value))
+                quote!(taffy::style::LengthPercentage::Length(#value))
             }
             "percent" => {
                 let value = value();
@@ -625,9 +696,9 @@ fn generate_length_percentage_auto(dimen: &serde_json::Map<String, Value>) -> To
     match unit {
         Value::String(ref unit) => match unit.as_ref() {
             "auto" => quote!(taffy::style::LengthPercentageAuto::Auto),
-            "points" => {
+            "px" => {
                 let value = value();
-                quote!(taffy::style::LengthPercentageAuto::Points(#value))
+                quote!(taffy::style::LengthPercentageAuto::Length(#value))
             }
             "percent" => {
                 let value = value();
@@ -646,13 +717,31 @@ fn generate_dimension(dimen: &serde_json::Map<String, Value>) -> TokenStream {
     match unit {
         Value::String(ref unit) => match unit.as_ref() {
             "auto" => quote!(taffy::style::Dimension::Auto),
-            "points" => {
+            "px" => {
                 let value = value();
-                quote!(taffy::style::Dimension::Points(#value))
+                quote!(taffy::style::Dimension::Length(#value))
             }
             "percent" => {
                 let value = value();
                 quote!(taffy::style::Dimension::Percent(#value))
+            }
+            _ => unreachable!(),
+        },
+        _ => unreachable!(),
+    }
+}
+
+fn generate_available_space(dimen: &serde_json::Map<String, Value>) -> TokenStream {
+    let unit = dimen.get("unit").unwrap();
+    let value = || dimen.get("value").unwrap().as_f64().unwrap() as f32;
+
+    match unit {
+        Value::String(ref unit) => match unit.as_ref() {
+            "max-content" => quote!(taffy::style::AvailableSpace::MaxContent),
+            "min-content" => quote!(taffy::style::AvailableSpace::MaxContent),
+            "px" => {
+                let value = value();
+                quote!(taffy::style::AvailableSpace::Definite(#value))
             }
             _ => unreachable!(),
         },
@@ -778,10 +867,10 @@ fn generate_scalar_definition(track_definition: &serde_json::Map<String, Value>)
         "auto" => quote!(auto()),
         "min-content" => quote!(min_content()),
         "max-content" => quote!(max_content()),
-        "points" | "percent" | "fraction" => {
+        "px" | "percent" | "fraction" => {
             let value = value();
             match unit() {
-                "points" => quote!(points(#value)),
+                "px" => quote!(length(#value)),
                 "percent" => quote!(percent(#value)),
                 "fraction" => quote!(fr(#value)),
                 _ => unreachable!(),
@@ -791,85 +880,12 @@ fn generate_scalar_definition(track_definition: &serde_json::Map<String, Value>)
     }
 }
 
-fn generate_generic_measure_function() -> TokenStream {
-    quote!(
-        // WARNING: This enum is generated by the gentest script. Do not edit directly
-        #[allow(dead_code)]
-        #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-        enum WritingMode {
-            Horizontal,
-            Vertical,
-        }
+fn generate_node_context(text_content: &str, writing_mode: Option<&str>, aspect_ratio: Option<f32>) -> TokenStream {
+    let trimmed_text_content = text_content.trim();
 
-        // WARNING: This function is generated by the gentest script. Do not edit directly
-        #[allow(dead_code)]
-        fn measure_standard_text(
-            known_dimensions: taffy::geometry::Size<Option<f32>>,
-            available_space: taffy::geometry::Size<taffy::style::AvailableSpace>,
-            text_content: &str,
-            writing_mode: WritingMode,
-            _aspect_ratio: Option<f32>,
-        ) -> taffy::geometry::Size<f32> {
-            use taffy::axis::AbsoluteAxis;
-            use taffy::prelude::*;
-            const ZWS: char = '\u{200B}';
-            const H_WIDTH: f32 = 10.0;
-            const H_HEIGHT: f32 = 10.0;
-
-            if let Size { width: Some(width), height: Some(height) } = known_dimensions {
-                return Size { width, height };
-            }
-
-            let inline_axis = match writing_mode {
-                WritingMode::Horizontal => AbsoluteAxis::Horizontal,
-                WritingMode::Vertical => AbsoluteAxis::Vertical,
-            };
-            let block_axis = inline_axis.other_axis();
-
-            let lines: Vec<&str> = text_content.split(ZWS).collect();
-            if lines.is_empty() {
-                return Size::ZERO;
-            }
-
-            let min_line_length: usize = lines.iter().map(|line| line.len()).max().unwrap_or(0);
-            let max_line_length: usize = lines.iter().map(|line| line.len()).sum();
-            let inline_size =
-                known_dimensions.get_abs(inline_axis).unwrap_or_else(|| match available_space.get_abs(inline_axis) {
-                    AvailableSpace::MinContent => min_line_length as f32 * H_WIDTH,
-                    AvailableSpace::MaxContent => max_line_length as f32 * H_WIDTH,
-                    AvailableSpace::Definite(inline_size) => {
-                        inline_size.min(max_line_length as f32 * H_WIDTH).max(min_line_length as f32 * H_WIDTH)
-                    }
-                });
-            let block_size = known_dimensions.get_abs(block_axis).unwrap_or_else(|| {
-                let inline_line_length = (inline_size / H_WIDTH).floor() as usize;
-                let mut line_count = 1;
-                let mut current_line_length = 0;
-                for line in &lines {
-                    if current_line_length + line.len() > inline_line_length {
-                        if current_line_length > 0 {
-                            line_count += 1
-                        };
-                        current_line_length = line.len();
-                    } else {
-                        current_line_length += line.len();
-                    };
-                }
-                (line_count as f32) * H_HEIGHT
-            });
-
-            match writing_mode {
-                WritingMode::Horizontal => Size { width: inline_size, height: block_size },
-                WritingMode::Vertical => Size { width: block_size, height: inline_size },
-            }
-        }
-    )
-}
-
-fn generate_measure_function(text_content: &str, writing_mode: Option<&str>, aspect_ratio: Option<f32>) -> TokenStream {
     let writing_mode_token = match writing_mode {
-        Some("vertical-rl" | "vertical-lr") => quote!(super::WritingMode::Vertical),
-        _ => quote!(super::WritingMode::Horizontal),
+        Some("vertical-rl" | "vertical-lr") => quote!(crate::WritingMode::Vertical),
+        _ => quote!(crate::WritingMode::Horizontal),
     };
 
     let aspect_ratio_token = match aspect_ratio {
@@ -878,9 +894,10 @@ fn generate_measure_function(text_content: &str, writing_mode: Option<&str>, asp
     };
 
     quote!(
-        taffy::node::MeasureFunc::Raw(|known_dimensions, available_space| {
-            const TEXT : &str = #text_content;
-            super::measure_standard_text(known_dimensions, available_space, TEXT, #writing_mode_token, #aspect_ratio_token)
-        })
+        crate::TextMeasure {
+            text_content: #trimmed_text_content,
+            writing_mode: #writing_mode_token,
+            _aspect_ratio: #aspect_ratio_token,
+        }
     )
 }

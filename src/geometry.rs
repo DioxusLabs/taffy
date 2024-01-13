@@ -1,14 +1,108 @@
 //! Geometric primitives useful for layout
 
-use crate::style::{Dimension, FlexDirection};
-use crate::sys::f32_max;
-use core::ops::Add;
+use crate::util::sys::f32_max;
+use crate::{style::Dimension, util::sys::f32_min};
+use core::ops::{Add, Sub};
 
-#[cfg(feature = "grid")]
-use crate::axis::AbstractAxis;
+#[cfg(feature = "flexbox")]
+use crate::style::FlexDirection;
+
+/// The simple absolute horizontal and vertical axis
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum AbsoluteAxis {
+    /// The horizontal axis
+    Horizontal,
+    /// The vertical axis
+    Vertical,
+}
+
+impl AbsoluteAxis {
+    /// Returns the other variant of the enum
+    #[inline]
+    pub const fn other_axis(&self) -> Self {
+        match *self {
+            AbsoluteAxis::Horizontal => AbsoluteAxis::Vertical,
+            AbsoluteAxis::Vertical => AbsoluteAxis::Horizontal,
+        }
+    }
+}
+
+impl<T> Size<T> {
+    #[inline(always)]
+    /// Get either the width or height depending on the AbsoluteAxis passed in
+    pub fn get_abs(self, axis: AbsoluteAxis) -> T {
+        match axis {
+            AbsoluteAxis::Horizontal => self.width,
+            AbsoluteAxis::Vertical => self.height,
+        }
+    }
+}
+
+impl<T: Add> Rect<T> {
+    #[inline(always)]
+    /// Get either the width or height depending on the AbsoluteAxis passed in
+    pub fn grid_axis_sum(self, axis: AbsoluteAxis) -> <T as Add>::Output {
+        match axis {
+            AbsoluteAxis::Horizontal => self.left + self.right,
+            AbsoluteAxis::Vertical => self.top + self.bottom,
+        }
+    }
+}
+
+/// The CSS abstract axis
+/// <https://www.w3.org/TR/css-writing-modes-3/#abstract-axes>
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum AbstractAxis {
+    /// The axis in the inline dimension, i.e. the horizontal axis in horizontal writing modes and the vertical axis in vertical writing modes.
+    Inline,
+    /// The axis in the block dimension, i.e. the vertical axis in horizontal writing modes and the horizontal axis in vertical writing modes.
+    Block,
+}
+
+impl AbstractAxis {
+    /// Returns the other variant of the enum
+    #[inline]
+    pub fn other(&self) -> AbstractAxis {
+        match *self {
+            AbstractAxis::Inline => AbstractAxis::Block,
+            AbstractAxis::Block => AbstractAxis::Inline,
+        }
+    }
+
+    /// Convert an `AbstractAxis` into an `AbsoluteAxis` naively assuming that the Inline axis is Horizontal
+    /// This is currently always true, but will change if Taffy ever implements the `writing_mode` property
+    #[inline]
+    pub fn as_abs_naive(&self) -> AbsoluteAxis {
+        match self {
+            AbstractAxis::Inline => AbsoluteAxis::Horizontal,
+            AbstractAxis::Block => AbsoluteAxis::Vertical,
+        }
+    }
+}
+
+/// Container that holds an item in each absolute axis without specifying
+/// what kind of item it is.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct InBothAbsAxis<T> {
+    /// The item in the horizontal axis
+    pub horizontal: T,
+    /// The item in the vertical axis
+    pub vertical: T,
+}
+
+impl<T: Copy> InBothAbsAxis<T> {
+    #[cfg(feature = "grid")]
+    /// Get the contained item based on the AbsoluteAxis passed
+    pub fn get(&self, axis: AbsoluteAxis) -> T {
+        match axis {
+            AbsoluteAxis::Horizontal => self.horizontal,
+            AbsoluteAxis::Vertical => self.vertical,
+        }
+    }
+}
 
 /// An axis-aligned UI rectangle
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Rect<T> {
     /// This can represent either the x-coordinate of the starting edge,
@@ -31,17 +125,6 @@ pub struct Rect<T> {
     pub bottom: T,
 }
 
-impl<T: Default> Default for Rect<T> {
-    fn default() -> Self {
-        Rect {
-            left: Default::default(),
-            right: Default::default(),
-            top: Default::default(),
-            bottom: Default::default(),
-        }
-    }
-}
-
 impl<U, T: Add<U>> Add<Rect<U>> for Rect<T> {
     type Output = Rect<T::Output>;
 
@@ -61,6 +144,7 @@ impl<T> Rect<T> {
     /// When applied to the left and right sides, the width is used
     /// as the second parameter of `f`.
     /// When applied to the top or bottom sides, the height is used instead.
+    #[cfg(feature = "flexbox")]
     pub(crate) fn zip_size<R, F, U>(self, size: Size<U>, f: F) -> Rect<R>
     where
         F: Fn(T, U) -> R,
@@ -81,7 +165,7 @@ impl<T> Rect<T> {
     where
         F: Fn(T) -> R,
     {
-        Rect { top: f(self.top), bottom: f(self.bottom), left: f(self.left), right: f(self.right) }
+        Rect { left: f(self.left), right: f(self.right), top: f(self.top), bottom: f(self.bottom) }
     }
 
     /// Returns a `Line<T>` representing the left and right properties of the Rect
@@ -134,6 +218,7 @@ where
     ///
     /// If the [`FlexDirection`] is [`FlexDirection::Row`] or [`FlexDirection::RowReverse`], this is [`Rect::horizontal`].
     /// Otherwise, this is [`Rect::vertical`].
+    #[cfg(feature = "flexbox")]
     pub(crate) fn main_axis_sum(&self, direction: FlexDirection) -> U {
         if direction.is_row() {
             self.horizontal_axis_sum()
@@ -146,6 +231,7 @@ where
     ///
     /// If the [`FlexDirection`] is [`FlexDirection::Row`] or [`FlexDirection::RowReverse`], this is [`Rect::vertical`].
     /// Otherwise, this is [`Rect::horizontal`].
+    #[cfg(feature = "flexbox")]
     pub(crate) fn cross_axis_sum(&self, direction: FlexDirection) -> U {
         if direction.is_row() {
             self.vertical_axis_sum()
@@ -160,6 +246,7 @@ where
     T: Copy + Clone,
 {
     /// The `start` or `top` value of the [`Rect`], from the perspective of the main layout axis
+    #[cfg(feature = "flexbox")]
     pub(crate) fn main_start(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.left
@@ -169,6 +256,7 @@ where
     }
 
     /// The `end` or `bottom` value of the [`Rect`], from the perspective of the main layout axis
+    #[cfg(feature = "flexbox")]
     pub(crate) fn main_end(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.right
@@ -178,6 +266,7 @@ where
     }
 
     /// The `start` or `top` value of the [`Rect`], from the perspective of the cross layout axis
+    #[cfg(feature = "flexbox")]
     pub(crate) fn cross_start(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.top
@@ -187,6 +276,7 @@ where
     }
 
     /// The `end` or `bottom` value of the [`Rect`], from the perspective of the main layout axis
+    #[cfg(feature = "flexbox")]
     pub(crate) fn cross_end(&self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.bottom
@@ -230,6 +320,13 @@ impl<T> Line<T> {
     }
 }
 
+impl Line<bool> {
+    /// A `Line<bool>` with both start and end set to `true`
+    pub const TRUE: Self = Line { start: true, end: true };
+    /// A `Line<bool>` with both start and end set to `false`
+    pub const FALSE: Self = Line { start: false, end: false };
+}
+
 impl<T: Add + Copy> Line<T> {
     /// Adds the start and end values together and returns the result
     pub fn sum(&self) -> <T as Add>::Output {
@@ -238,19 +335,13 @@ impl<T: Add + Copy> Line<T> {
 }
 
 /// The width and height of a [`Rect`]
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Size<T> {
     /// The x extent of the rectangle
     pub width: T,
     /// The y extent of the rectangle
     pub height: T,
-}
-
-impl<T: Default> Default for Size<T> {
-    fn default() -> Self {
-        Size { width: Default::default(), height: Default::default() }
-    }
 }
 
 // Generic Add impl for Size<T> + Size<U> where T + U has an Add impl
@@ -262,6 +353,18 @@ impl<U, T: Add<U>> Add<Size<U>> for Size<T> {
     }
 }
 
+// Generic Sub impl for Size<T> + Size<U> where T + U has an Sub impl
+impl<U, T: Sub<U>> Sub<Size<U>> for Size<T> {
+    type Output = Size<<T as Sub<U>>::Output>;
+
+    fn sub(self, rhs: Size<U>) -> Self::Output {
+        Size { width: self.width - rhs.width, height: self.height - rhs.height }
+    }
+}
+
+// Note: we allow dead_code here as we want to provide a complete API of helpers that is symetrical in all axes,
+// but sometimes we only currently have a use for the helper in a single axis
+#[allow(dead_code)]
 impl<T> Size<T> {
     /// Applies the function `f` to both the width and height
     ///
@@ -301,6 +404,7 @@ impl<T> Size<T> {
     /// Sets the extent of the main layout axis
     ///
     /// Whether this is the width or height depends on the `direction` provided
+    #[cfg(feature = "flexbox")]
     pub(crate) fn set_main(&mut self, direction: FlexDirection, value: T) {
         if direction.is_row() {
             self.width = value
@@ -312,6 +416,7 @@ impl<T> Size<T> {
     /// Sets the extent of the cross layout axis
     ///
     /// Whether this is the width or height depends on the `direction` provided
+    #[cfg(feature = "flexbox")]
     pub(crate) fn set_cross(&mut self, direction: FlexDirection, value: T) {
         if direction.is_row() {
             self.height = value
@@ -323,7 +428,7 @@ impl<T> Size<T> {
     /// Creates a new value of type Self with the main axis set to value provided
     ///
     /// Whether this is the width or height depends on the `direction` provided
-    #[allow(dead_code)]
+    #[cfg(feature = "flexbox")]
     pub(crate) fn with_main(self, direction: FlexDirection, value: T) -> Self {
         let mut new = self;
         if direction.is_row() {
@@ -337,6 +442,7 @@ impl<T> Size<T> {
     /// Creates a new value of type Self with the cross axis set to value provided
     ///
     /// Whether this is the width or height depends on the `direction` provided
+    #[cfg(feature = "flexbox")]
     pub(crate) fn with_cross(self, direction: FlexDirection, value: T) -> Self {
         let mut new = self;
         if direction.is_row() {
@@ -347,9 +453,38 @@ impl<T> Size<T> {
         new
     }
 
+    /// Creates a new value of type Self with the main axis modified by the callback provided
+    ///
+    /// Whether this is the width or height depends on the `direction` provided
+    #[cfg(feature = "flexbox")]
+    pub(crate) fn map_main(self, direction: FlexDirection, mapper: impl FnOnce(T) -> T) -> Self {
+        let mut new = self;
+        if direction.is_row() {
+            new.width = mapper(new.width);
+        } else {
+            new.height = mapper(new.height);
+        }
+        new
+    }
+
+    /// Creates a new value of type Self with the cross axis modified by the callback provided
+    ///
+    /// Whether this is the width or height depends on the `direction` provided
+    #[cfg(feature = "flexbox")]
+    pub(crate) fn map_cross(self, direction: FlexDirection, mapper: impl FnOnce(T) -> T) -> Self {
+        let mut new = self;
+        if direction.is_row() {
+            new.height = mapper(new.height);
+        } else {
+            new.width = mapper(new.width);
+        }
+        new
+    }
+
     /// Gets the extent of the main layout axis
     ///
     /// Whether this is the width or height depends on the `direction` provided
+    #[cfg(feature = "flexbox")]
     pub(crate) fn main(self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.width
@@ -361,6 +496,7 @@ impl<T> Size<T> {
     /// Gets the extent of the cross layout axis
     ///
     /// Whether this is the width or height depends on the `direction` provided
+    #[cfg(feature = "flexbox")]
     pub(crate) fn cross(self, direction: FlexDirection) -> T {
         if direction.is_row() {
             self.height
@@ -395,8 +531,21 @@ impl Size<f32> {
     pub const ZERO: Size<f32> = Self { width: 0.0, height: 0.0 };
 
     /// Applies f32_max to each component separately
+    #[inline(always)]
     pub fn f32_max(self, rhs: Size<f32>) -> Size<f32> {
         Size { width: f32_max(self.width, rhs.width), height: f32_max(self.height, rhs.height) }
+    }
+
+    /// Applies f32_min to each component separately
+    #[inline(always)]
+    pub fn f32_min(self, rhs: Size<f32>) -> Size<f32> {
+        Size { width: f32_min(self.width, rhs.width), height: f32_min(self.height, rhs.height) }
+    }
+
+    /// Return true if both width and height are greater than 0 else false
+    #[inline(always)]
+    pub fn has_non_zero_area(self) -> bool {
+        self.width > 0.0 && self.height > 0.0
     }
 }
 
@@ -446,10 +595,10 @@ impl<T> Size<Option<T>> {
 }
 
 impl Size<Dimension> {
-    /// Generates a [`Size<Dimension>`] using [`Dimension::Points`] values
+    /// Generates a [`Size<Dimension>`] using [`Dimension::Length`] values
     #[must_use]
-    pub const fn from_points(width: f32, height: f32) -> Self {
-        Size { width: Dimension::Points(width), height: Dimension::Points(height) }
+    pub const fn from_lengths(width: f32, height: f32) -> Self {
+        Size { width: Dimension::Length(width), height: Dimension::Length(height) }
     }
 
     /// Generates a [`Size<Dimension>`] using [`Dimension::Percent`] values
@@ -461,8 +610,9 @@ impl Size<Dimension> {
 
 /// A 2-dimensional coordinate.
 ///
-/// When used in association with a [`Rect`], represents the bottom-left corner.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+/// When used in association with a [`Rect`], represents the top-left corner.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Point<T> {
     /// The x-coordinate
     pub x: T,
@@ -478,6 +628,82 @@ impl Point<f32> {
 impl Point<Option<f32>> {
     /// A [`Point`] with values (None, None)
     pub const NONE: Self = Self { x: None, y: None };
+}
+
+// Generic Add impl for Point<T> + Point<U> where T + U has an Add impl
+impl<U, T: Add<U>> Add<Point<U>> for Point<T> {
+    type Output = Point<<T as Add<U>>::Output>;
+
+    fn add(self, rhs: Point<U>) -> Self::Output {
+        Point { x: self.x + rhs.x, y: self.y + rhs.y }
+    }
+}
+
+impl<T> Point<T> {
+    /// Applies the function `f` to both the x and y
+    ///
+    /// This is used to transform a `Point<T>` into a `Point<R>`.
+    pub fn map<R, F>(self, f: F) -> Point<R>
+    where
+        F: Fn(T) -> R,
+    {
+        Point { x: f(self.x), y: f(self.y) }
+    }
+
+    /// Gets the extent of the specified layout axis
+    /// Whether this is the width or height depends on the `GridAxis` provided
+    #[cfg(feature = "grid")]
+    pub fn get(self, axis: AbstractAxis) -> T {
+        match axis {
+            AbstractAxis::Inline => self.x,
+            AbstractAxis::Block => self.y,
+        }
+    }
+
+    /// Swap x and y components
+    pub fn transpose(self) -> Point<T> {
+        Point { x: self.y, y: self.x }
+    }
+
+    /// Sets the extent of the specified layout axis
+    /// Whether this is the width or height depends on the `GridAxis` provided
+    #[cfg(feature = "grid")]
+    pub fn set(&mut self, axis: AbstractAxis, value: T) {
+        match axis {
+            AbstractAxis::Inline => self.x = value,
+            AbstractAxis::Block => self.y = value,
+        }
+    }
+
+    /// Gets the component in the main layout axis
+    ///
+    /// Whether this is the x or y depends on the `direction` provided
+    #[cfg(feature = "flexbox")]
+    pub(crate) fn main(self, direction: FlexDirection) -> T {
+        if direction.is_row() {
+            self.x
+        } else {
+            self.y
+        }
+    }
+
+    /// Gets the component in the cross layout axis
+    ///
+    /// Whether this is the x or y depends on the `direction` provided
+    #[cfg(feature = "flexbox")]
+    pub(crate) fn cross(self, direction: FlexDirection) -> T {
+        if direction.is_row() {
+            self.y
+        } else {
+            self.x
+        }
+    }
+}
+
+impl<T> From<Point<T>> for Size<T> {
+    fn from(value: Point<T>) -> Self {
+        Size { width: value.x, height: value.y }
+    }
 }
 
 /// Generic struct which holds a "min" value and a "max" value

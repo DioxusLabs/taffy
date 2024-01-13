@@ -6,7 +6,7 @@
 
 Taffy is a flexible, high-performance, cross-platform UI layout library written in [Rust](https://www.rust-lang.org).
 
-It currently implements the **Flexbox** and **CSS Grid** layout algorithms. Support for other paradigms is planned. For more information on this and other future development plans see the [roadmap issue](https://github.com/DioxusLabs/taffy/issues/345).
+It currently implements the CSS **Block**, **Flexbox** and **CSS Grid** layout algorithms. Support for other paradigms is planned. For more information on this and other future development plans see the [roadmap issue](https://github.com/DioxusLabs/taffy/issues/345).
 
 This crate is a collaborative, cross-team project, and is designed to be used as a dependency for other UI and GUI libraries.
 Right now, it powers:
@@ -19,34 +19,34 @@ Right now, it powers:
 ```rust
 use taffy::prelude::*;
 
-// First create an instance of Taffy
-let mut taffy = Taffy::new();
+// First create an instance of TaffyTree
+let mut tree : TaffyTree<()> = TaffyTree::new();
 
-// Create a tree of nodes using `taffy.new_leaf` and `taffy.new_with_children`.
+// Create a tree of nodes using `TaffyTree.new_leaf` and `TaffyTree.new_with_children`.
 // These functions both return a node id which can be used to refer to that node
 // The Style struct is used to specify styling information
-let header_node = taffy
+let header_node = tree
     .new_leaf(
         Style {
-            size: Size { width: points(800.0), height: points(100.0) },
+            size: Size { width: length(800.0), height: length(100.0) },
             ..Default::default()
         },
     ).unwrap();
 
-let body_node = taffy
+let body_node = tree
     .new_leaf(
         Style {
-            size: Size { width: points(800.0), height: auto() },
+            size: Size { width: length(800.0), height: auto() },
             flex_grow: 1.0,
             ..Default::default()
         },
     ).unwrap();
 
-let root_node = taffy
+let root_node = tree
     .new_with_children(
         Style {
             flex_direction: FlexDirection::Column,
-            size: Size { width: points(800.0), height: points(600.0) },
+            size: Size { width: length(800.0), height: length(600.0) },
             ..Default::default()
         },
         &[header_node, body_node],
@@ -54,15 +54,15 @@ let root_node = taffy
     .unwrap();
 
 // Call compute_layout on the root of your tree to run the layout algorithm
-taffy.compute_layout(root_node, Size::MAX_CONTENT).unwrap();
+tree.compute_layout(root_node, Size::MAX_CONTENT).unwrap();
 
-// Inspect the computed layout using taffy.layout
-assert_eq!(taffy.layout(root_node).unwrap().size.width, 800.0);
-assert_eq!(taffy.layout(root_node).unwrap().size.height, 600.0);
-assert_eq!(taffy.layout(header_node).unwrap().size.width, 800.0);
-assert_eq!(taffy.layout(header_node).unwrap().size.height, 100.0);
-assert_eq!(taffy.layout(body_node).unwrap().size.width, 800.0);
-assert_eq!(taffy.layout(body_node).unwrap().size.height, 500.0); // This value was not set explicitly, but was computed by Taffy
+// Inspect the computed layout using `TaffyTree.layout`
+assert_eq!(tree.layout(root_node).unwrap().size.width, 800.0);
+assert_eq!(tree.layout(root_node).unwrap().size.height, 600.0);
+assert_eq!(tree.layout(header_node).unwrap().size.width, 800.0);
+assert_eq!(tree.layout(header_node).unwrap().size.height, 100.0);
+assert_eq!(tree.layout(body_node).unwrap().size.width, 800.0);
+assert_eq!(tree.layout(body_node).unwrap().size.height, 500.0); // This value was not set explicitly, but was computed by Taffy
 
 ```
 
@@ -74,7 +74,7 @@ If you are interested in guide-level documentation on CSS layout, then we recomm
 
 ### Flexbox
 
-- [Flexbox Froggy](https://flexboxfroggy.com/). This is an interactive tutorial/game that allows you to learn the essential parts of Flebox in a fun engaging way.
+- [Flexbox Froggy](https://flexboxfroggy.com/). This is an interactive tutorial/game that allows you to learn the essential parts of Flexbox in a fun engaging way.
 - [A Complete Guide To Flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) by CSS Tricks. This is detailed guide with illustrations and comphrehensive written explanation of the different Flexbox properties and how they work.
 
 ### CSS Grid

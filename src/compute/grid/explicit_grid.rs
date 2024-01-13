@@ -1,16 +1,22 @@
 //! Helper functions for intialising GridTrack's from styles
 //! This mainly consists of evaluating GridAutoTracks
 use super::types::{GridTrack, TrackCounts};
-use crate::axis::AbsoluteAxis;
-use crate::math::MaybeMath;
-use crate::resolve::ResolveOrZero;
+use crate::geometry::{AbsoluteAxis, Size};
 use crate::style::{GridTrackRepetition, LengthPercentage, NonRepeatedTrackSizingFunction, Style, TrackSizingFunction};
 use crate::style_helpers::TaffyAuto;
-use crate::sys::{GridTrackVec, Vec};
-use core::cmp::{max, min};
+use crate::util::sys::{GridTrackVec, Vec};
+use crate::util::MaybeMath;
+use crate::util::ResolveOrZero;
+
+#[cfg(not(feature = "std"))]
+use num_traits::float::FloatCore;
 
 /// Compute the number of rows and columns in the explicit grid
-pub(crate) fn compute_explicit_grid_size_in_axis(style: &Style, axis: AbsoluteAxis) -> u16 {
+pub(crate) fn compute_explicit_grid_size_in_axis(
+    style: &Style,
+    preferred_size: Size<Option<f32>>,
+    axis: AbsoluteAxis,
+) -> u16 {
     // Load the grid-template-rows or grid-template-columns definition (depending on the axis)
     let template = style.grid_template_tracks(axis);
 
@@ -86,7 +92,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis(style: &Style, axis: AbsoluteAx
     // Otherwise, if the grid container has a definite min size in the relevant axis:
     //   - then the number of repetitions is the smallest possible positive integer that fulfills that minimum requirement
     // Otherwise, the specified track list repeats only once.
-    let style_size = style.size.get_abs(axis).into_option();
+    let style_size = preferred_size.get_abs(axis);
     let style_min_size = style.min_size.get_abs(axis).into_option();
     let style_max_size = style.max_size.get_abs(axis).into_option();
 
@@ -180,7 +186,7 @@ pub(super) fn initialize_grid_tracks(
     tracks: &mut Vec<GridTrack>,
     counts: TrackCounts,
     track_template: &GridTrackVec<TrackSizingFunction>,
-    auto_tracks: &Vec<NonRepeatedTrackSizingFunction>,
+    auto_tracks: &[NonRepeatedTrackSizingFunction],
     gap: LengthPercentage,
     track_has_items: impl Fn(usize) -> bool,
 ) {
@@ -191,15 +197,15 @@ pub(super) fn initialize_grid_tracks(
     tracks.push(GridTrack::gutter(gap));
 
     // Create negative implicit tracks
-    if auto_tracks.is_empty() {
-        let iter = core::iter::repeat(NonRepeatedTrackSizingFunction::AUTO);
-        create_implicit_tracks(tracks, counts.negative_implicit, iter, gap)
-    } else {
-        let max_count = max(auto_tracks.len(), counts.negative_implicit as usize);
-        let min_count = min(auto_tracks.len(), counts.negative_implicit as usize);
-        let offset = max_count % min_count;
-        let iter = auto_tracks.iter().copied().cycle().skip(offset);
-        create_implicit_tracks(tracks, counts.negative_implicit, iter, gap)
+    if counts.negative_implicit > 0 {
+        if auto_tracks.is_empty() {
+            let iter = core::iter::repeat(NonRepeatedTrackSizingFunction::AUTO);
+            create_implicit_tracks(tracks, counts.negative_implicit, iter, gap)
+        } else {
+            let offset = auto_tracks.len() - (counts.negative_implicit as usize % auto_tracks.len());
+            let iter = auto_tracks.iter().copied().cycle().skip(offset);
+            create_implicit_tracks(tracks, counts.negative_implicit, iter, gap)
+        }
     }
 
     let mut current_track_index = (counts.negative_implicit) as usize;
@@ -286,17 +292,18 @@ fn create_implicit_tracks(
 mod test {
     use super::compute_explicit_grid_size_in_axis;
     use super::initialize_grid_tracks;
-    use crate::axis::AbsoluteAxis;
     use crate::compute::grid::types::GridTrackKind;
     use crate::compute::grid::types::TrackCounts;
     use crate::compute::grid::util::*;
+    use crate::geometry::AbsoluteAxis;
     use crate::prelude::*;
 
     #[test]
     fn explicit_grid_sizing_no_repeats() {
         let grid_style = (600.0, 600.0, 2, 4).into_grid();
-        let width = compute_explicit_grid_size_in_axis(&grid_style, AbsoluteAxis::Horizontal);
-        let height = compute_explicit_grid_size_in_axis(&grid_style, AbsoluteAxis::Vertical);
+        let preferred_size = grid_style.size.map(|s| s.into_option());
+        let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
+        let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
         assert_eq!(width, 2);
         assert_eq!(height, 4);
     }
@@ -306,13 +313,14 @@ mod test {
         use GridTrackRepetition::AutoFill;
         let grid_style = Style {
             display: Display::Grid,
-            size: Size { width: points(120.0), height: points(80.0) },
-            grid_template_columns: vec![repeat(AutoFill, vec![points(40.0)])],
-            grid_template_rows: vec![repeat(AutoFill, vec![points(20.0)])],
+            size: Size { width: length(120.0), height: length(80.0) },
+            grid_template_columns: vec![repeat(AutoFill, vec![length(40.0)])],
+            grid_template_rows: vec![repeat(AutoFill, vec![length(20.0)])],
             ..Default::default()
         };
-        let width = compute_explicit_grid_size_in_axis(&grid_style, AbsoluteAxis::Horizontal);
-        let height = compute_explicit_grid_size_in_axis(&grid_style, AbsoluteAxis::Vertical);
+        let preferred_size = grid_style.size.map(|s| s.into_option());
+        let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
+        let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
         assert_eq!(width, 3);
         assert_eq!(height, 4);
     }
@@ -322,13 +330,14 @@ mod test {
         use GridTrackRepetition::AutoFill;
         let grid_style = Style {
             display: Display::Grid,
-            size: Size { width: points(140.0), height: points(90.0) },
-            grid_template_columns: vec![repeat(AutoFill, vec![points(40.0)])],
-            grid_template_rows: vec![repeat(AutoFill, vec![points(20.0)])],
+            size: Size { width: length(140.0), height: length(90.0) },
+            grid_template_columns: vec![repeat(AutoFill, vec![length(40.0)])],
+            grid_template_rows: vec![repeat(AutoFill, vec![length(20.0)])],
             ..Default::default()
         };
-        let width = compute_explicit_grid_size_in_axis(&grid_style, AbsoluteAxis::Horizontal);
-        let height = compute_explicit_grid_size_in_axis(&grid_style, AbsoluteAxis::Vertical);
+        let preferred_size = grid_style.size.map(|s| s.into_option());
+        let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
+        let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
         assert_eq!(width, 3);
         assert_eq!(height, 4);
     }
@@ -338,13 +347,14 @@ mod test {
         use GridTrackRepetition::AutoFill;
         let grid_style = Style {
             display: Display::Grid,
-            min_size: Size { width: points(120.0), height: points(80.0) },
-            grid_template_columns: vec![repeat(AutoFill, vec![points(40.0)])],
-            grid_template_rows: vec![repeat(AutoFill, vec![points(20.0)])],
+            min_size: Size { width: length(120.0), height: length(80.0) },
+            grid_template_columns: vec![repeat(AutoFill, vec![length(40.0)])],
+            grid_template_rows: vec![repeat(AutoFill, vec![length(20.0)])],
             ..Default::default()
         };
-        let width = compute_explicit_grid_size_in_axis(&grid_style, AbsoluteAxis::Horizontal);
-        let height = compute_explicit_grid_size_in_axis(&grid_style, AbsoluteAxis::Vertical);
+        let preferred_size = grid_style.size.map(|s| s.into_option());
+        let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
+        let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
         assert_eq!(width, 3);
         assert_eq!(height, 4);
     }
@@ -354,13 +364,14 @@ mod test {
         use GridTrackRepetition::AutoFill;
         let grid_style = Style {
             display: Display::Grid,
-            min_size: Size { width: points(140.0), height: points(90.0) },
-            grid_template_columns: vec![repeat(AutoFill, vec![points(40.0)])],
-            grid_template_rows: vec![repeat(AutoFill, vec![points(20.0)])],
+            min_size: Size { width: length(140.0), height: length(90.0) },
+            grid_template_columns: vec![repeat(AutoFill, vec![length(40.0)])],
+            grid_template_rows: vec![repeat(AutoFill, vec![length(20.0)])],
             ..Default::default()
         };
-        let width = compute_explicit_grid_size_in_axis(&grid_style, AbsoluteAxis::Horizontal);
-        let height = compute_explicit_grid_size_in_axis(&grid_style, AbsoluteAxis::Vertical);
+        let preferred_size = grid_style.size.map(|s| s.into_option());
+        let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
+        let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
         assert_eq!(width, 4);
         assert_eq!(height, 5);
     }
@@ -370,13 +381,14 @@ mod test {
         use GridTrackRepetition::AutoFill;
         let grid_style = Style {
             display: Display::Grid,
-            size: Size { width: points(140.0), height: points(100.0) },
-            grid_template_columns: vec![repeat(AutoFill, vec![points(40.0), points(20.0)])],
-            grid_template_rows: vec![repeat(AutoFill, vec![points(20.0), points(10.0)])],
+            size: Size { width: length(140.0), height: length(100.0) },
+            grid_template_columns: vec![repeat(AutoFill, vec![length(40.0), length(20.0)])],
+            grid_template_rows: vec![repeat(AutoFill, vec![length(20.0), length(10.0)])],
             ..Default::default()
         };
-        let width = compute_explicit_grid_size_in_axis(&grid_style, AbsoluteAxis::Horizontal);
-        let height = compute_explicit_grid_size_in_axis(&grid_style, AbsoluteAxis::Vertical);
+        let preferred_size = grid_style.size.map(|s| s.into_option());
+        let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
+        let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
         assert_eq!(width, 4); // 2 repetitions * 2 repeated tracks = 4 tracks in total
         assert_eq!(height, 6); // 3 repetitions * 2 repeated tracks = 4 tracks in total
     }
@@ -386,14 +398,15 @@ mod test {
         use GridTrackRepetition::AutoFill;
         let grid_style = Style {
             display: Display::Grid,
-            size: Size { width: points(140.0), height: points(100.0) },
-            grid_template_columns: vec![repeat(AutoFill, vec![points(40.0)])],
-            grid_template_rows: vec![repeat(AutoFill, vec![points(20.0)])],
-            gap: points(20.0),
+            size: Size { width: length(140.0), height: length(100.0) },
+            grid_template_columns: vec![repeat(AutoFill, vec![length(40.0)])],
+            grid_template_rows: vec![repeat(AutoFill, vec![length(20.0)])],
+            gap: length(20.0),
             ..Default::default()
         };
-        let width = compute_explicit_grid_size_in_axis(&grid_style, AbsoluteAxis::Horizontal);
-        let height = compute_explicit_grid_size_in_axis(&grid_style, AbsoluteAxis::Vertical);
+        let preferred_size = grid_style.size.map(|s| s.into_option());
+        let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
+        let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
         assert_eq!(width, 2); // 2 tracks + 1 gap
         assert_eq!(height, 3); // 3 tracks + 2 gaps
     }
@@ -403,13 +416,14 @@ mod test {
         use GridTrackRepetition::AutoFill;
         let grid_style = Style {
             display: Display::Grid,
-            grid_template_columns: vec![repeat(AutoFill, vec![points(40.0), percent(0.5), points(20.0)])],
-            grid_template_rows: vec![repeat(AutoFill, vec![points(20.0)])],
-            gap: points(20.0),
+            grid_template_columns: vec![repeat(AutoFill, vec![length(40.0), percent(0.5), length(20.0)])],
+            grid_template_rows: vec![repeat(AutoFill, vec![length(20.0)])],
+            gap: length(20.0),
             ..Default::default()
         };
-        let width = compute_explicit_grid_size_in_axis(&grid_style, AbsoluteAxis::Horizontal);
-        let height = compute_explicit_grid_size_in_axis(&grid_style, AbsoluteAxis::Vertical);
+        let preferred_size = grid_style.size.map(|s| s.into_option());
+        let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
+        let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
         assert_eq!(width, 3);
         assert_eq!(height, 1);
     }
@@ -419,14 +433,15 @@ mod test {
         use GridTrackRepetition::AutoFill;
         let grid_style = Style {
             display: Display::Grid,
-            size: Size { width: points(140.0), height: points(100.0) },
-            grid_template_columns: vec![points(20.0), repeat(AutoFill, vec![points(40.0)])],
-            grid_template_rows: vec![points(40.0), repeat(AutoFill, vec![points(20.0)])],
-            gap: points(20.0),
+            size: Size { width: length(140.0), height: length(100.0) },
+            grid_template_columns: vec![length(20.0), repeat(AutoFill, vec![length(40.0)])],
+            grid_template_rows: vec![length(40.0), repeat(AutoFill, vec![length(20.0)])],
+            gap: length(20.0),
             ..Default::default()
         };
-        let width = compute_explicit_grid_size_in_axis(&grid_style, AbsoluteAxis::Horizontal);
-        let height = compute_explicit_grid_size_in_axis(&grid_style, AbsoluteAxis::Vertical);
+        let preferred_size = grid_style.size.map(|s| s.into_option());
+        let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
+        let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
         assert_eq!(width, 3); // 3 tracks + 2 gaps
         assert_eq!(height, 2); // 2 tracks + 1 gap
     }
@@ -436,29 +451,30 @@ mod test {
         use GridTrackRepetition::AutoFill;
         let grid_style = Style {
             display: Display::Grid,
-            size: Size { width: points(120.0), height: points(120.0) },
-            padding: Rect { left: points(10.0), right: points(10.0), top: points(20.0), bottom: points(20.0) },
-            grid_template_columns: vec![repeat(AutoFill, vec![points(20.0)])],
-            grid_template_rows: vec![repeat(AutoFill, vec![points(20.0)])],
+            size: Size { width: length(120.0), height: length(120.0) },
+            padding: Rect { left: length(10.0), right: length(10.0), top: length(20.0), bottom: length(20.0) },
+            grid_template_columns: vec![repeat(AutoFill, vec![length(20.0)])],
+            grid_template_rows: vec![repeat(AutoFill, vec![length(20.0)])],
             ..Default::default()
         };
-        let width = compute_explicit_grid_size_in_axis(&grid_style, AbsoluteAxis::Horizontal);
-        let height = compute_explicit_grid_size_in_axis(&grid_style, AbsoluteAxis::Vertical);
+        let preferred_size = grid_style.size.map(|s| s.into_option());
+        let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
+        let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
         assert_eq!(width, 5); // 40px horizontal padding
         assert_eq!(height, 4); // 20px vertical padding
     }
 
     #[test]
     fn test_initialize_grid_tracks() {
-        let px0 = LengthPercentage::Points(0.0);
-        let px20 = LengthPercentage::Points(20.0);
-        let px100 = LengthPercentage::Points(100.0);
+        let px0 = LengthPercentage::Length(0.0);
+        let px20 = LengthPercentage::Length(20.0);
+        let px100 = LengthPercentage::Length(100.0);
 
         // Setup test
-        let track_template = vec![points(100.0), minmax(points(100.0), fr(2.0)), fr(1.0)];
+        let track_template = vec![length(100.0), minmax(length(100.0), fr(2.0)), fr(1.0)];
         let track_counts =
             TrackCounts { negative_implicit: 3, explicit: track_template.len() as u16, positive_implicit: 3 };
-        let auto_tracks = vec![auto(), points(100.0)];
+        let auto_tracks = vec![auto(), length(100.0)];
         let gap = px20;
 
         // Call function
