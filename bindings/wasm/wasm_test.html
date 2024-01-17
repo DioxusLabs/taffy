@@ -103,26 +103,26 @@
         // });
         // container.setStyle({flexDirection: FlexDirection.Row})
 
-        const arr = [];
+        // const arr = [];
         for (let i = 0; i < BENCH_NODE_COUNT; i++) {
           const child = new Node(tree, {});
           // for (let j = 0; j < 6; j++) {
           //   child.setFlexGrow(1);
           // }
-          // for (let j = 0; j < 100; j++) {
-          //   child.setHeight(100, Taffy.StyleUnit.Percent);
-          // }
-          // for (let j = 0; j < 100; j++) {
+          for (let j = 0; j < 6; j++) {
+            child.setHeight(100, Taffy.StyleUnit.Percent);
+          }
+          // for (let j = 0; j < 6; j++) {
           //   child.setHeightStr("100%");
           // }
-          // for (let j = 0; j < 100; j++) {
+          // for (let j = 0; j < 6; j++) {
           //   setHeightWrapper(child, "100%");
           // }
-          for (let j = 0; j < 100; j++) {
-            setHeightWrapper2(child, 100, '%');
-          }
+          // for (let j = 0; j < 6; j++) {
+          //   setHeightWrapper2(child, 100, '%');
+          // }
           container.addChild(child);
-          arr.push(child);
+          // arr.push(child);
         }
       }
 
