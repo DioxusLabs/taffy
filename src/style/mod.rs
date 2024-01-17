@@ -40,8 +40,6 @@ use crate::util::sys::GridTrackVec;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub enum Display {
-    /// The children will not be laid out, and will follow absolute positioning
-    None,
     /// The children will follow the block layout algorithm
     #[cfg(feature = "block_layout")]
     Block,
@@ -51,6 +49,9 @@ pub enum Display {
     /// The children will follow the CSS Grid layout algorithm
     #[cfg(feature = "grid")]
     Grid,
+    /// The element and it's children will not be laid out and will behave as if they
+    /// did not exist.
+    None,
 }
 
 impl Display {
@@ -96,6 +97,7 @@ impl TryFrom<i32> for Display {
     fn try_from(n: i32) -> Result<Self, ()> {
         match n {
             0 => Ok(Display::None),
+            #[cfg(feature = "flex")]
             1 => Ok(Display::Flex),
             #[cfg(feature = "grid")]
             2 => Ok(Display::Grid),
