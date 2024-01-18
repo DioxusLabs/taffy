@@ -576,7 +576,7 @@ impl Node {
     }
 
     // Grid
-    // pub fn setGridAutoFlow(&mut self, value: GridAutoFlow) -> Result<(), JsError> {
-    //     with_style_mut!(self, style, style.grid_auto_flow = value)
-    // }
+    pub fn setGridAutoFlow(&mut self, value: GridAutoFlow) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.grid_auto_flow = value)
+    }
 }
