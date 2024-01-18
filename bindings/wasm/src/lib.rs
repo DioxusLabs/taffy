@@ -227,11 +227,7 @@ fn wasm_measure_function(
 impl Node {
     #[wasm_bindgen(constructor)]
     pub fn new(tree: &TaffyTree) -> Self {
-        Self {
-            tree: tree.clone(),
-            node: tree.taffy.borrow_mut().new_leaf(Style::DEFAULT).unwrap(),
-            childCount: 0,
-        }
+        Self { tree: tree.clone(), node: tree.taffy.borrow_mut().new_leaf(Style::DEFAULT).unwrap(), childCount: 0 }
     }
 
     #[wasm_bindgen(js_name = setMeasure)]
