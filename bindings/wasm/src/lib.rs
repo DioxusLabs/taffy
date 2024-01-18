@@ -348,6 +348,9 @@ impl Node {
             style.overflow.y = value;
         })
     }
+    pub fn setScrollbarWidth(&mut self, value: f32) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.scrollbar_width = value)
+    }
 
     // inset
     pub fn setInsetTop(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
