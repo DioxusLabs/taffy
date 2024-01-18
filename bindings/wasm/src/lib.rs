@@ -329,6 +329,26 @@ impl Node {
         with_style_mut!(self, style, style.position = value)
     }
 
+    // Overflow
+    pub fn getOverflowX(&mut self) -> Result<Overflow, JsError> {
+        get_style!(self, style, style.overflow.x)
+    }
+    pub fn setOverflowX(&mut self, value: Overflow) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.overflow.x = value)
+    }
+    pub fn getOverflowY(&mut self) -> Result<Overflow, JsError> {
+        get_style!(self, style, style.overflow.y)
+    }
+    pub fn setOverflowY(&mut self, value: Overflow) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.overflow.y = value)
+    }
+    pub fn setOverflow(&mut self, value: Overflow) -> Result<(), JsError> {
+        with_style_mut!(self, style, {
+            style.overflow.x = value;
+            style.overflow.y = value;
+        })
+    }
+
     // inset
     pub fn setInsetTop(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
         with_style_mut!(self, style, style.inset.top = unit.try_into_length_percentage_auto(value).unwrap())
