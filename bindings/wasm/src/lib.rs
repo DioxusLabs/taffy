@@ -521,24 +521,23 @@ impl Node {
     }
 
     // Alignment
-    // TODO: Allow None values to be set
-    pub fn setAlignContent(&mut self, value: AlignContent) -> Result<(), JsError> {
-        with_style_mut!(self, style, style.align_content = Some(value))
+    pub fn setAlignContent(&mut self, value: Option<AlignContent>) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.align_content = value)
     }
-    pub fn setJustifyContent(&mut self, value: JustifyContent) -> Result<(), JsError> {
-        with_style_mut!(self, style, style.justify_content = Some(value))
+    pub fn setJustifyContent(&mut self, value: Option<JustifyContent>) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.justify_content = value)
     }
-    pub fn setAlignItems(&mut self, value: AlignItems) -> Result<(), JsError> {
-        with_style_mut!(self, style, style.align_items = Some(value))
+    pub fn setAlignItems(&mut self, value: Option<AlignItems>) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.align_items = value)
     }
-    pub fn setJustifyItems(&mut self, value: JustifyItems) -> Result<(), JsError> {
-        with_style_mut!(self, style, style.justify_items = Some(value))
+    pub fn setJustifyItems(&mut self, value: Option<JustifyItems>) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.justify_items = value)
     }
-    pub fn setAlignSelf(&mut self, value: AlignSelf) -> Result<(), JsError> {
-        with_style_mut!(self, style, style.align_self = Some(value))
+    pub fn setAlignSelf(&mut self, value: Option<AlignSelf>) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.align_self = value)
     }
-    pub fn setJustifySelf(&mut self, value: JustifySelf) -> Result<(), JsError> {
-        with_style_mut!(self, style, style.justify_self = Some(value))
+    pub fn setJustifySelf(&mut self, value: Option<JustifySelf>) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.justify_self = value)
     }
 
     // Flex
