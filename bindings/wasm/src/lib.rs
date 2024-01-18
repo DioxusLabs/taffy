@@ -17,15 +17,6 @@ use taffy::prelude::*;
 use taffy::TraversePartialTree;
 use wasm_bindgen::prelude::*;
 
-/// Convert an f32 to an Option<f32> by mapping NaN values to None
-fn option_from_f32(value: f32) -> Option<f32> {
-    if value.is_nan() {
-        None
-    } else {
-        Some(value)
-    }
-}
-
 /// Get the value of a property named "key" from the JsValue "obj"
 fn get_key(obj: &JsValue, key: &str) -> Option<JsValue> {
     Reflect::get(obj, &key.into()).ok()
@@ -390,8 +381,8 @@ impl Node {
     pub fn setMaxHeight(&mut self, value: f32, unit: StyleUnit) -> Result<(), JsError> {
         with_style_mut!(self, style, style.max_size.height = unit.try_into_dimension(value).unwrap())
     }
-    pub fn setAspectRatio(&mut self, value: f32) -> Result<(), JsError> {
-        with_style_mut!(self, style, style.aspect_ratio = option_from_f32(value))
+    pub fn setAspectRatio(&mut self, value: Option<f32>) -> Result<(), JsError> {
+        with_style_mut!(self, style, style.aspect_ratio = value)
     }
 
     // Padding

@@ -128,6 +128,15 @@ fn try_parse_dimension(obj: &JsValue, key: &str) -> Option<Dimension> {
     None
 }
 
+/// Convert an f32 to an Option<f32> by mapping NaN values to None
+fn option_from_f32(value: f32) -> Option<f32> {
+    if value.is_nan() {
+        None
+    } else {
+        Some(value)
+    }
+}
+
 // We first parse into a Dimension then use the TryFrom impl to attempt a conversion
 fn try_parse_length_percentage_auto(obj: &JsValue, key: &str) -> Option<LengthPercentageAuto> {
     try_parse_dimension(obj, key).and_then(|dim| dim.try_into().ok())
