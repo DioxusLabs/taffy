@@ -51,5 +51,4 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
-          components: doc
       - run: cargo doc
