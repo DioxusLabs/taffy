@@ -5,7 +5,11 @@
 #![allow(non_snake_case)] // JS uses camelCase by default
 #![allow(clippy::new_without_default)] // Default is useless for WASM
 
-mod utils;
+#[allow(dead_code)]
+pub fn set_panic_hook() {
+    #[cfg(feature = "console_error_panic_hook")]
+    console_error_panic_hook::set_once();
+}
 
 use std::cell::RefCell;
 use std::rc::Rc;
