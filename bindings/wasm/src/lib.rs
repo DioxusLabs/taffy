@@ -11,6 +11,8 @@ pub fn set_panic_hook() {
     console_error_panic_hook::set_once();
 }
 
+// mod grid_track_parser;
+
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -177,9 +179,6 @@ impl TaffyTree {
 pub struct Node {
     tree: TaffyTree,
     node: taffy::NodeId,
-
-    #[wasm_bindgen(readonly)]
-    pub childCount: usize,
 }
 
 fn wasm_measure_function(
@@ -226,7 +225,7 @@ fn wasm_measure_function(
 impl Node {
     #[wasm_bindgen(constructor)]
     pub fn new(tree: &TaffyTree) -> Self {
-        Self { tree: tree.clone(), node: tree.taffy.borrow_mut().new_leaf(Style::DEFAULT).unwrap(), childCount: 0 }
+        Self { tree: tree.clone(), node: tree.taffy.borrow_mut().new_leaf(Style::DEFAULT).unwrap() }
     }
 
     #[wasm_bindgen(js_name = setMeasure)]
@@ -242,13 +241,11 @@ impl Node {
     #[wasm_bindgen(js_name = addChild)]
     pub fn add_child(&mut self, child: &Node) {
         self.tree.taffy.borrow_mut().add_child(self.node, child.node).unwrap();
-        self.childCount += 1;
     }
 
     #[wasm_bindgen(js_name = removeChild)]
     pub fn remove_child(&mut self, child: &Node) {
         self.tree.taffy.borrow_mut().remove_child(self.node, child.node).unwrap();
-        self.childCount -= 1;
     }
 
     #[wasm_bindgen(js_name = replaceChildAtIndex)]
@@ -259,7 +256,6 @@ impl Node {
     #[wasm_bindgen(js_name = removeChildAtIndex)]
     pub fn remove_child_at_index(&mut self, index: usize) {
         self.tree.taffy.borrow_mut().remove_child_at_index(self.node, index).unwrap();
-        self.childCount -= 1;
     }
 
     #[wasm_bindgen(js_name = markDirty)]
