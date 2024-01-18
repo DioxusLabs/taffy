@@ -1,0 +1,55 @@
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+name: WASM
+
+env:
+  RUSTDOCFLAGS: "-D warnings"
+  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: "sparse"
+
+jobs:
+  # Default
+  test-features-default:
+    name: "Build & Test"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build
+      - run: cargo test
+
+  fmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: rustfmt
+      - run: cargo fmt -- --check
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly
+          components: clippy
+      - run: cargo +nightly clippy -- -D warnings
+
+  doc:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: doc
+      - run: cargo doc
