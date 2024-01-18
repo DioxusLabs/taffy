@@ -186,7 +186,7 @@ fn wasm_measure_function(
     known_dimensions: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     _node_id: NodeId,
-    context: Option<WasmNodeContext>,
+    context: Option<&mut WasmNodeContext>,
 ) -> Size<f32> {
     fn convert_available_space(val: AvailableSpace) -> JsValue {
         match val {
@@ -286,12 +286,13 @@ impl Node {
         self.tree
             .taffy
             .borrow_mut()
-            .compute_layout(
+            .compute_layout_with_measure(
                 self.node,
                 taffy::geometry::Size {
                     width: try_parse_available_space(size, "width").unwrap_or(AvailableSpace::MaxContent),
                     height: try_parse_available_space(size, "height").unwrap_or(AvailableSpace::MaxContent),
                 },
+                wasm_measure_function,
             )
             .unwrap();
         Layout::new(&self.tree, self.node)
