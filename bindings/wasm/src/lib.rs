@@ -1,7 +1,7 @@
 #![deny(unsafe_code)]
 #![forbid(unsafe_code)]
-#![warn(missing_docs)]
-#![warn(clippy::missing_docs_in_private_items)]
+// #![warn(missing_docs)]
+// #![warn(clippy::missing_docs_in_private_items)]
 #![allow(non_snake_case)] // JS uses camelCase by default
 #![allow(clippy::new_without_default)] // Default is useless for WASM
 
