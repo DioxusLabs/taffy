@@ -1,4 +1,5 @@
-#![allow(non_snake_case)]
+#![allow(non_snake_case)] // JS uses camelCase by default
+#![allow(clippy::new_without_default)] // Default is useless for WASM
 
 mod utils;
 
@@ -214,8 +215,8 @@ fn wasm_measure_function(
         let width = get_f32(&result, "width");
         let height = get_f32(&result, "height");
 
-        if width.is_some() && height.is_some() {
-            return Size { width: width.unwrap(), height: height.unwrap() };
+        if let (Some(width), Some(height)) = (width, height) {
+            return Size { width, height };
         }
     }
 
@@ -318,7 +319,6 @@ macro_rules! with_style_mut {
 
 // Style getter/setter methods
 #[wasm_bindgen]
-#[clippy::allow(non_snake_case)]
 impl Node {
     // Display / Position
     pub fn getDisplay(&mut self) -> Result<Display, JsError> {
