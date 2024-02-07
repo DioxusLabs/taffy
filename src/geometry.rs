@@ -559,6 +559,17 @@ impl Size<Option<f32>> {
         Size { width: Some(width), height: Some(height) }
     }
 
+    /// Creates a new [`Size<Option<f32>>`] with either the width or height set based on the provided `direction`
+    pub fn new_with_cross(direction: FlexDirection, value: Option<f32>) -> Self {
+        let mut new = Self::NONE;
+        if direction.is_row() {
+            new.height = value
+        } else {
+            new.width = value
+        }
+        new
+    }
+
     /// Applies aspect_ratio (if one is supplied) to the Size:
     ///   - If width is `Some` but height is `None`, then height is computed from width and aspect_ratio
     ///   - If height is `Some` but width is `None`, then width is computed from height and aspect_ratio
