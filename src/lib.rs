@@ -51,7 +51,7 @@
 //! When using this API, you must handle node storage, caching, and dispatching to the correct layout algorithm for a given node yourself.
 //! See the [`crate::tree::traits`] module for more details on this API.
 //!
-//! Examples which show usage of the high-level API are:
+//! Examples which show usage of the low-level API are:
 //!
 //!   - [custom_layout_tree_vec](https://github.com/DioxusLabs/taffy/blob/main/examples/custom_layout_tree_vec.rs) which implements a custom Taffy tree using a `Vec` as an arena with NodeId's being index's into the Vec.
 //!   - [custom_layout_tree_owned](https://github.com/DioxusLabs/taffy/blob/main/examples/custom_layout_tree_owned.rs) which implements a custom Taffy tree using directly owned children with NodeId's being pointers.
