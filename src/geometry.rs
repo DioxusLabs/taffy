@@ -560,7 +560,8 @@ impl Size<Option<f32>> {
     }
 
     /// Creates a new [`Size<Option<f32>>`] with either the width or height set based on the provided `direction`
-    pub fn new_with_cross(direction: FlexDirection, value: Option<f32>) -> Self {
+    #[cfg(feature = "flexbox")]
+    pub fn from_cross(direction: FlexDirection, value: Option<f32>) -> Self {
         let mut new = Self::NONE;
         if direction.is_row() {
             new.height = value
