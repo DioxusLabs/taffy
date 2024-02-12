@@ -779,7 +779,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_node_should_detach_herarchy() {
+    fn remove_node_should_detach_hierarchy() {
         let mut taffy: TaffyTree<()> = TaffyTree::new();
 
         // Build a linear tree layout: <0> <- <1> <- <2>

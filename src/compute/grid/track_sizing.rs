@@ -1247,7 +1247,7 @@ fn find_size_of_fr(tracks: &[GridTrack], space_to_fill: f32) -> f32 {
 
     // If the product of the hypothetical fr size (computed below) and any flexible track’s flex factor
     // is less than the track’s base size, then we must restart this algorithm treating all such tracks as inflexible.
-    // We therefore wrap the entire algorithm in a loop, with an hypotherical_fr_size of INFINITY such that the above
+    // We therefore wrap the entire algorithm in a loop, with an hypothetical_fr_size of INFINITY such that the above
     // condition can never be true for the first iteration.
     let mut hypothetical_fr_size = f32::INFINITY;
     let mut previous_iter_hypothetical_fr_size;
@@ -1278,14 +1278,14 @@ fn find_size_of_fr(tracks: &[GridTrack], space_to_fill: f32) -> f32 {
         // If the product of the hypothetical fr size and a flexible track’s flex factor is less than the track’s base size,
         // restart this algorithm treating all such tracks as inflexible.
         // We keep track of the hypothetical_fr_size
-        let hypotherical_fr_size_is_valid = tracks.iter().all(|track| match track.max_track_sizing_function {
+        let hypothetical_fr_size_is_valid = tracks.iter().all(|track| match track.max_track_sizing_function {
             MaxTrackSizingFunction::Fraction(flex_factor) => {
                 flex_factor * hypothetical_fr_size >= track.base_size
                     || flex_factor * previous_iter_hypothetical_fr_size < track.base_size
             }
             _ => true,
         });
-        if hypotherical_fr_size_is_valid {
+        if hypothetical_fr_size_is_valid {
             break;
         }
     }

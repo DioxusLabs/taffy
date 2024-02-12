@@ -1,7 +1,7 @@
 //! # Taffy
 //!
 //! Taffy is a flexible, high-performance library for **UI layout**.
-//! It currently implements the Block, Flexbox and Grid layout algorithms from the CSS specification. Support for other paradigms is planned.
+//! It currently implements the Flexbox, Grid and Block layout algorithms from the CSS specification. Support for other paradigms is planned.
 //! For more information on this and other future development plans see the [roadmap issue](https://github.com/DioxusLabs/taffy/issues/345).
 //!
 //! ## Architecture
@@ -11,7 +11,7 @@
 //!   - A [`Layout`] struct containing a position (x/y) and a size (width/height) which function as the output of the layout computations.
 //!   - Optionally:
 //!       - A `Vec` set of child nodes
-//!       - "Context": arbitary user-defined data (which you can access when using a "measure function" to integrate Taffy with other kinds of layout such as text layout)
+//!       - "Context": arbitrary user-defined data (which you can access when using a "measure function" to integrate Taffy with other kinds of layout such as text layout)
 //!
 //! Usage of Taffy consists of constructing a tree of UI nodes (with associated styles, children and context), then calling function(s)
 //! from Taffy to translate those styles, parent-child relationships and measure functions into a size and position in 2d space for each node
@@ -20,7 +20,6 @@
 //! ## High-level API vs. Low-level API
 //!
 //! Taffy has two APIs: a high-level API that is simpler and easier to get started with, and a low-level API that is more flexible gives greater control.
-//!
 //! We would generally recommend the high-level API for users using Taffy standalone and the low-level API for users wanting to embed Taffy as part of
 //! a wider layout system or as part of a UI framework that already has it's own node/widget tree representation.
 //!
@@ -39,6 +38,7 @@
 //!   - [flexbox_gap](https://github.com/DioxusLabs/taffy/blob/main/examples/flexbox_gap.rs)
 //!   - [grid_holy_grail](https://github.com/DioxusLabs/taffy/blob/main/examples/basic.rs)
 //!   - [measure](https://github.com/DioxusLabs/taffy/blob/main/examples/measure.rs)
+//!   - [cosmic_text](https://github.com/DioxusLabs/taffy/blob/main/examples/cosmic_text.rs)
 //!
 //! In particular, the "measure" example shows how to integrate Taffy layout with other layout modalities such as text or image layout when using the high level API.
 //!
@@ -51,10 +51,11 @@
 //! When using this API, you must handle node storage, caching, and dispatching to the correct layout algorithm for a given node yourself.
 //! See the [`crate::tree::traits`] module for more details on this API.
 //!
-//! Examples which show usage of the high-level API are:
+//! Examples which show usage of the low-level API are:
 //!
-//!   - [custom_layout_tree_vec](https://github.com/DioxusLabs/taffy/blob/main/examples/custom_layout_tree_vec.rs) which implements a custom Taffy tree using a `Vec` as an arena with NodeId's being index's into the Vec.
-//!   - [custom_layout_tree_owned](https://github.com/DioxusLabs/taffy/blob/main/examples/custom_layout_tree_owned.rs) which implements a custom Taffy tree using directly owned children with NodeId's being pointers.
+//!   - [custom_tree_vec](https://github.com/DioxusLabs/taffy/blob/main/examples/custom_tree_vec.rs) which implements a custom Taffy tree using a `Vec` as an arena with NodeId's being index's into the Vec.
+//!   - [custom_tree_owned_partial](https://github.com/DioxusLabs/taffy/blob/main/examples/custom_tree_owned_partial.rs) which implements a custom Taffy tree using directly owned children with NodeId's being pointers.
+//!   - [custom_tree_owned_unsafe](https://github.com/DioxusLabs/taffy/blob/main/examples/custom_tree_owned_unsafe.rs) which implements a custom Taffy tree using directly owned children with NodeId's being pointers.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(unsafe_code)]
@@ -115,4 +116,3 @@ pub use crate::util::print_tree;
 pub use crate::geometry::*;
 pub use crate::style::*;
 pub use crate::tree::*;
-pub use crate::util::*;

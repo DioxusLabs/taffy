@@ -871,7 +871,7 @@ fn determine_container_main_size(
                         // not be included here), however this matches both Chrome and Firefox as of 9th March 2023.
                         //
                         // Spec: https://www.w3.org/TR/css-flexbox-1/#intrinsic-item-contributions
-                        // Spec modifcation: https://www.w3.org/TR/css-flexbox-1/#change-2016-max-contribution
+                        // Spec modification: https://www.w3.org/TR/css-flexbox-1/#change-2016-max-contribution
                         // Issue: https://github.com/w3c/csswg-drafts/issues/1435
                         // Gentest: padding_border_overrides_size_flex_basis_0.html
                         let clamping_basis = Some(item.flex_basis).maybe_max(style_preferred);
@@ -922,7 +922,7 @@ fn determine_container_main_size(
                                     Line::FALSE,
                                 ) + item.margin.main_axis_sum(constants.dir);
 
-                                // This is somewhat bizarre in that it's asymetrical depending whether the flex container is a column or a row.
+                                // This is somewhat bizarre in that it's asymmetrical depending whether the flex container is a column or a row.
                                 //
                                 // I *think* this might relate to https://drafts.csswg.org/css-flexbox-1/#algo-main-container:
                                 //

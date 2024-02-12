@@ -145,9 +145,9 @@ mod grid_aspect_ratio_fill_child_min_width;
 #[cfg(feature = "grid")]
 mod grid_aspect_ratio_fill_child_width;
 #[cfg(feature = "grid")]
-mod grid_aspect_ratio_overriden_by_explicit_sizes;
+mod grid_aspect_ratio_overridden_by_explicit_sizes;
 #[cfg(feature = "grid")]
-mod grid_aspect_ratio_overriden_by_explicit_sizes_flex;
+mod grid_aspect_ratio_overridden_by_explicit_sizes_flex;
 #[cfg(feature = "grid")]
 mod grid_auto_columns;
 #[cfg(feature = "grid")]
@@ -397,11 +397,11 @@ mod grid_overflow_inline_axis_visible;
 #[cfg(feature = "grid")]
 mod grid_overflow_rows;
 #[cfg(feature = "grid")]
-mod grid_overflow_scrollbars_overriden_by_available_space;
+mod grid_overflow_scrollbars_overridden_by_available_space;
 #[cfg(feature = "grid")]
-mod grid_overflow_scrollbars_overriden_by_max_size;
+mod grid_overflow_scrollbars_overridden_by_max_size;
 #[cfg(feature = "grid")]
-mod grid_overflow_scrollbars_overriden_by_size;
+mod grid_overflow_scrollbars_overridden_by_size;
 #[cfg(feature = "grid")]
 mod grid_overflow_scrollbars_take_up_space_both_axis;
 #[cfg(feature = "grid")]

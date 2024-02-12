@@ -1,9 +1,26 @@
-//! Low-level access to the layout algorithms themselves
+//! Low-level access to the layout algorithms themselves. For a higher-level API, see the [`TaffyTree`](crate::TaffyTree) struct.
 //!
-//! All of the functions in this module except `round_layout` operate on the [`LayoutPartialTree`] trait. See the [`crate::tree::traits`] module for details on how to implement this trait.
+//! ### Layout functions
 //!
-//! For a higher-level API, see the [`TaffyTree`](crate::TaffyTree) struct.
-
+//! The layout functions all take an [`&mut impl LayoutPartialTree`](crate::LayoutPartialTree) parameter, which represents a single container node and it's direct children.
+//!
+//! | Function                          | Purpose                                                                                                                                                                                            |
+//! | ---                               | ---                                                                                                                                                                                                |
+//! | [`compute_flexbox_layout`]        | Layout a Flexbox container and it's direct children                                                                                                                                                |
+//! | [`compute_grid_layout`]           | Layout a CSS Grid container and it's direct children                                                                                                                                               |
+//! | [`compute_block_layout`]          | Layout a Block container and it's direct children                                                                                                                                                  |
+//! | [`compute_leaf_layout`]           | Applies common properties like padding/border/aspect-ratio to a node before deferring to a passed closure to determine it's size. Can be applied to nodes like text or image nodes.                |
+//! | [`compute_root_layout`]           | Layout the root node of a tree (regardless of it's layout mode). This function is typically called once to begin a layout run.                                                                     |                                                                      |
+//! | [`compute_hidden_layout`]         | Mark a node as hidden during layout (like `Display::None`)                                                                                                                                         |
+//! | [`compute_cached_layout`]         | Attempts to find a cached layout for the specified node and layout inputs. Uses the provided closure to compute the layout (and then stores the result in the cache) if no cached layout is found. |
+//!
+//! ### Other functions
+//!
+//! | Function                          | Requires                                                                                                                                                                                           | Purpose                                                              |
+//! | ---                               | ---                                                                                                                                                                                                | ---                                                                  |
+//! | [`round_layout`]                  | [`RoundTree`]                                                                                                                                                                                      | Round a tree of float-valued layouts to integer pixels               |
+//! | [`print_tree`](crate::print_tree) | [`PrintTree`](crate::PrintTree)                                                                                                                                                                    | Print a debug representation of a node tree and it's computed layout |
+//!
 pub(crate) mod common;
 pub(crate) mod leaf;
 

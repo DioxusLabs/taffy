@@ -1,5 +1,5 @@
 #[test]
-fn leaf_overflow_scrollbars_overriden_by_max_size() {
+fn leaf_overflow_scrollbars_overridden_by_size() {
     #[allow(unused_imports)]
     use taffy::{prelude::*, tree::Layout, TaffyTree};
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
@@ -7,7 +7,7 @@ fn leaf_overflow_scrollbars_overriden_by_max_size() {
         .new_leaf(taffy::style::Style {
             overflow: taffy::geometry::Point { x: taffy::style::Overflow::Scroll, y: taffy::style::Overflow::Scroll },
             scrollbar_width: 15f32,
-            max_size: taffy::geometry::Size {
+            size: taffy::geometry::Size {
                 width: taffy::style::Dimension::Length(2f32),
                 height: taffy::style::Dimension::Length(4f32),
             },

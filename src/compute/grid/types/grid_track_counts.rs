@@ -29,14 +29,14 @@
 //!           - even indices (0, 2, 4, etc) represent lines
 //!           - odd indices (1, 3, 5, etc) represent tracks
 //!           - These is always an odd number of
-//!       - Index 1 is the leftmost track of the implict grid. Index 3 is the second leftmost track, etc.
+//!       - Index 1 is the leftmost track of the implicit grid. Index 3 is the second leftmost track, etc.
 //!       - Index 0 is the leftmost grid line. Index 2 is the second leftmost line, etc.
 //!
 use crate::{compute::grid::OriginZeroLine, geometry::Line};
 use core::ops::Range;
 
 /// Stores the number of tracks in a given dimension.
-/// Stores seperately the number of tracks in the implicit and explicit grids
+/// Stores separately the number of tracks in the implicit and explicit grids
 #[derive(Clone, Copy, Debug, PartialEq, Default)]
 pub(crate) struct TrackCounts {
     /// The number of track in the implicit grid before the explicit grid
@@ -87,7 +87,7 @@ impl TrackCounts {
     }
 
     /// Converts a track as an index into the CellOccupancyMatrix into the grid line immediately
-    /// preceeding that track in OriginZero coordinates.
+    /// preceding that track in OriginZero coordinates.
     pub fn track_to_prev_oz_line(&self, index: u16) -> OriginZeroLine {
         OriginZeroLine((index as i16) - (self.negative_implicit as i16))
     }
