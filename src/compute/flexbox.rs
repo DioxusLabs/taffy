@@ -574,7 +574,7 @@ fn determine_flex_base_size(
 
         // Parent size for child sizing
         let cross_axis_parent_size = constants.node_inner_size.cross(dir);
-        let child_parent_size = Size::NONE.with_cross(dir, cross_axis_parent_size);
+        let child_parent_size = Size::from_cross(dir, cross_axis_parent_size);
 
         // Available space for child sizing
         let cross_axis_margin_sum = constants.margin.cross_axis_sum(dir);
