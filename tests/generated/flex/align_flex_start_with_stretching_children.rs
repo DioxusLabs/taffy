@@ -8,7 +8,12 @@ fn align_flex_start_with_stretching_children() {
     let node00 = taffy
         .new_with_children(taffy::style::Style { flex_grow: 1f32, flex_shrink: 1f32, ..Default::default() }, &[node000])
         .unwrap();
-    let node0 = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[node00]).unwrap();
+    let node0 = taffy
+        .new_with_children(
+            taffy::style::Style { align_items: Some(taffy::style::AlignItems::Stretch), ..Default::default() },
+            &[node00],
+        )
+        .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
