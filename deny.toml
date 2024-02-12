@@ -28,12 +28,12 @@ wildcards = "deny"
 highlight = "all"
 # Certain crates/versions that will be skipped when doing duplicate detection.
 skip = [
-    # Bypass problems with wildcard dependencies for dev-dependncies.
+    # Bypass problems with wildcard dependencies for dev-dependencies.
     # Proper fix requires https://github.com/EmbarkStudios/cargo-deny/issues/448
     { name = "taffy" },
 
     # This dependency won't actually end up in the final binary anyway as it a sub-dependency
-    # of num-cpus and atty only when targetting the hermit unikernel OS
+    # of num-cpus and atty only when targeting the hermit unikernel OS
     # (https://github.com/hermitcore/rusty-hermit)
     { name = "hermit-abi" },
 

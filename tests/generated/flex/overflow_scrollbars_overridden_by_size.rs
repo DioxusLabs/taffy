@@ -1,24 +1,12 @@
 #[test]
-fn block_overflow_scrollbars_overriden_by_size() {
+fn overflow_scrollbars_overridden_by_size() {
     #[allow(unused_imports)]
     use taffy::{prelude::*, tree::Layout, TaffyTree};
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
-    let node0 = taffy
-        .new_leaf(taffy::style::Style {
-            position: taffy::style::Position::Absolute,
-            inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(0f32),
-                right: taffy::style::LengthPercentageAuto::Length(0f32),
-                top: taffy::style::LengthPercentageAuto::Length(0f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(0f32),
-            },
-            ..Default::default()
-        })
-        .unwrap();
+    let node0 = taffy.new_leaf(taffy::style::Style { flex_grow: 1f32, ..Default::default() }).unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                display: taffy::style::Display::Block,
                 overflow: taffy::geometry::Point {
                     x: taffy::style::Overflow::Scroll,
                     y: taffy::style::Overflow::Scroll,

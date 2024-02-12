@@ -11,7 +11,7 @@
 //!   - A [`Layout`] struct containing a position (x/y) and a size (width/height) which function as the output of the layout computations.
 //!   - Optionally:
 //!       - A `Vec` set of child nodes
-//!       - "Context": arbitary user-defined data (which you can access when using a "measure function" to integrate Taffy with other kinds of layout such as text layout)
+//!       - "Context": arbitrary user-defined data (which you can access when using a "measure function" to integrate Taffy with other kinds of layout such as text layout)
 //!
 //! Usage of Taffy consists of constructing a tree of UI nodes (with associated styles, children and context), then calling function(s)
 //! from Taffy to translate those styles, parent-child relationships and measure functions into a size and position in 2d space for each node

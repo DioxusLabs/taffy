@@ -61,7 +61,7 @@ Note that:
 
 #### Many APIs have been renamed to replace `points` or `Points` with `length` or `Length`
 
-This new name better describes one-dimentional measure of space in some unspecified unit
+This new name better describes one-dimensional measure of space in some unspecified unit
 which is often unrelated to the PostScript point or the CSS `pt` unit.
 
 This also removes a misleading similarity with the 2D `Point`,
@@ -108,7 +108,7 @@ Example usage change:
 - Module organisation changes:
   - The `math` module has been made private
   - The `axis` module has been merged into the `geometry` module
-  - The debug module is no longer public. The `print_tree` function is now accesible under `util`.
+  - The debug module is no longer public. The `print_tree` function is now accessible under `util`.
   - All types from the `node`, `data`, `layout`, `error` and `cache` modules have been moved to the  the `tree` module.
 - Fixed misspelling: `RunMode::PeformLayout` renamed into `RunMode::PerformLayout` (added missing `r`).
 - `serde` dependency has been made compatible with `no_std` environments
@@ -264,11 +264,11 @@ We very excited to report that we now have support for CSS Grid layout. This is 
 Taffy implements the CSS Grid specification faithfully, so documentation designed for the web should translate cleanly to Taffy's implementation. If you are interested in learning how to use CSS Grid, we would recommend the following resources:
 
 - [CSS Grid Garden](https://cssgridgarden.com/). This is an interactive tutorial/game that allows you to learn the essential parts of CSS Grid in a fun engaging way.
-- [A Complete Guide To CSS Grid](https://css-tricks.com/snippets/css/complete-guide-grid/) by CSS Tricks. This is detailed guide with illustrations and comphrehensive written explanation of the different Grid propertie and how they work.
+- [A Complete Guide To CSS Grid](https://css-tricks.com/snippets/css/complete-guide-grid/) by CSS Tricks. This is detailed guide with illustrations and comprehensive written explanation of the different Grid properties and how they work.
 
 #### Supported Features & Properties
 
-In addition to the usual sizing/spacing proerties (size, min_size, padding, margin, etc), the following Grid style properties are supported on Grid Containers:
+In addition to the usual sizing/spacing properties (size, min_size, padding, margin, etc), the following Grid style properties are supported on Grid Containers:
 
 | Property                  | Explanation                                                                                    |
 | ---                       | ---                                                                                            |
@@ -530,7 +530,7 @@ Two debugging features have been added:
 A number of performance improvements have landed since taffy 0.1:
 
 - Firstly, our custom `taffy::forest` storage implementation was ripped out and replaced with a much simpler implementation using the `slotmap` crate. This led to performance increases of up to 90%.
-- Secondly, the caching implementation was improved by upping the number of cache slots from 2 to 4 and tweaking how computed results are allocated to chache slots to better match the actual usage patterns of the flexbox layout algorithm. This had a particularly dramatic effect on deep hierachies (which often involve recomputing the same results repeatedly), fixing the exponential blowup that was previously exhibited on these trees and improving performance by over 1000x in some cases!
+- Secondly, the caching implementation was improved by upping the number of cache slots from 2 to 4 and tweaking how computed results are allocated to cache slots to better match the actual usage patterns of the flexbox layout algorithm. This had a particularly dramatic effect on deep hierarchies (which often involve recomputing the same results repeatedly), fixing the exponential blowup that was previously exhibited on these trees and improving performance by over 1000x in some cases!
 
 #### Benchmarks vs. Taffy 0.1
 
@@ -548,7 +548,7 @@ A number of performance improvements have landed since taffy 0.1:
 
 As you can see, we have actually regressed slightly in the "wide" benchmarks (where all nodes are siblings of a single parent node). Although it should be noted our results in these benchmarks are still very fast, especially on the 10,000 node benchmark which we consider to be the most realistic size where the result is measured in microseconds.
 
-However, in the "deep" benchmarks we see dramatic improvements. The previous version of Taffy suffered from exponential blowup in the case of deeply nested hierachies. This has resulted in somewhat silly improvements like the 10,000 node (14-level) hierachy where Taffy 0.2 is a full 1 million times faster than Taffy 0.1. We've also included results with larger numbers of nodes (although you're unlikely to need that many) to demonstrate that this scalability continues up to even deeper levels of nesting.
+However, in the "deep" benchmarks we see dramatic improvements. The previous version of Taffy suffered from exponential blowup in the case of deeply nested hierarchies. This has resulted in somewhat silly improvements like the 10,000 node (14-level) hierarchy where Taffy 0.2 is a full 1 million times faster than Taffy 0.1. We've also included results with larger numbers of nodes (although you're unlikely to need that many) to demonstrate that this scalability continues up to even deeper levels of nesting.
 
 #### Benchmarks vs. [Yoga](https://github.com/facebook/yoga)
 
@@ -584,7 +584,7 @@ While we're trying not to get too excited (there could easily be an issue with o
   - `taffy::Taffy::remove_child_at_index`
   - `taffy::Taffy::replace_child_at_index`
   - `taffy::Taffy::child_at_index`
-- `Taffy::remove` now returns a `Result<usize, Error>`, to indicate if the operation was sucessful (and if it was, which ID was invalidated).
+- `Taffy::remove` now returns a `Result<usize, Error>`, to indicate if the operation was successful (and if it was, which ID was invalidated).
 
 #### Some uses of `Option<f32>` replaced with a new `AvailableSpace` enum
 
@@ -640,7 +640,7 @@ And a different instance of it is passed as a new second parameter to `MeasureFu
 - the `order` field of `Layout` is now public, and describes the relative z-ordering of nodes
 - renamed crate from `stretch2` to `taffy`
 - updated to the latest version of all dependencies to reduce upstream pain caused by duplicate dependencies
-- renamed `stretch::node::Strech` -> `taffy::node::Taffy`
+- renamed `stretch::node::Stretch` -> `taffy::node::Taffy`
 
 ### 0.1.0 Fixed
 

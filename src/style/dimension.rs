@@ -209,7 +209,7 @@ impl AvailableSpace {
     }
 
     /// Convert to Option
-    /// Definite values become Some(value). Contraints become None.
+    /// Definite values become Some(value). Constraints become None.
     pub fn into_option(self) -> Option<f32> {
         match self {
             AvailableSpace::Definite(value) => Some(value),

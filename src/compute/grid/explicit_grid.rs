@@ -1,4 +1,4 @@
-//! Helper functions for intialising GridTrack's from styles
+//! Helper functions for initialising GridTrack's from styles
 //! This mainly consists of evaluating GridAutoTracks
 use super::types::{GridTrack, TrackCounts};
 use crate::geometry::{AbsoluteAxis, Size};
@@ -20,7 +20,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
     // Load the grid-template-rows or grid-template-columns definition (depending on the axis)
     let template = style.grid_template_tracks(axis);
 
-    // If template contains no tracks, then there are trivially zero explcit tracks
+    // If template contains no tracks, then there are trivially zero explicit tracks
     if template.is_empty() {
         return 0;
     }
@@ -165,7 +165,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
                 // If the container size is a preferred or maximum size:
                 //   Then we return the maximum number of repetitions that fit into the container without overflowing.
                 // If the container size is a minimum size:
-                //   - Then we return the minimum number of repititions required to overflow the size.
+                //   - Then we return the minimum number of repetitions required to overflow the size.
                 //
                 // In all cases we add the additional repetition that was already accounted for in the special-case computation above
                 if size_is_maximum {
@@ -485,7 +485,7 @@ mod test {
         let expected = vec![
             // Gutter
             (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px0), MaxTrackSizingFunction::Fixed(px0)),
-            // Negative implict tracks
+            // Negative implicit tracks
             (GridTrackKind::Track, MinTrackSizingFunction::Fixed(px100), MaxTrackSizingFunction::Fixed(px100)),
             (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
             (GridTrackKind::Track, MinTrackSizingFunction::Auto, MaxTrackSizingFunction::Auto),
@@ -499,7 +499,7 @@ mod test {
             (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
             (GridTrackKind::Track, MinTrackSizingFunction::Auto, MaxTrackSizingFunction::Fraction(1.0)), // Note: min sizing function of flex sizing functions is auto
             (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
-            // Positive implict tracks
+            // Positive implicit tracks
             (GridTrackKind::Track, MinTrackSizingFunction::Auto, MaxTrackSizingFunction::Auto),
             (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
             (GridTrackKind::Track, MinTrackSizingFunction::Fixed(px100), MaxTrackSizingFunction::Fixed(px100)),
