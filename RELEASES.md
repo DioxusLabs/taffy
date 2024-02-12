@@ -1,17 +1,40 @@
 # Release Notes
 
-## Unreleased
+## 0.4.0
 
-### Breaking
+### Highlights
 
-#### Measure function changes
+- Support for CSS Block layout (`display: block`)
+- Support for the `overflow` property (+ `scrollbar_width` for `overflow: scroll`)
+- Improved measure function API
+- Completely refactored low-level API
+- Simplified module hierarchy (+ most types/functions are now exported from the crate root)
+- Expanded set of examples which better document integration with other layout systems (e.g. text layout)
+- Computed values for `padding` and `border` are now output into the `Layout` struct
 
-The "measure function" API for integrating Taffy with other measurement systems (such as text layout) has been changed to be more flexible,
+### Block layout
+
+Support for [CSS Block layout](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flow_Layout/Block_and_Inline_Layout_in_Normal_Flow#elements_participating_in_a_block_formatting_context) has been added. This can be used via the new `Display::Block` variant of the `Display` enum. Note that  full flow layout: inline, inline-block and float layout have *not* been implemented. The use case supported is block container nodes which contain block-level children.
+
+### Overflow property
+
+Support has been added for a new `overflow` style property with `Visible`, `Clip`, `Hidden`, and `Scroll` values (`Auto` is not currently implemented). Additionally a `scrollbar_width` property has been added to control the size of scrollbars for nodes with `Overflow::Scroll` set.
+
+- Overflow is settable indpendently in each axis.
+- `Visible` and `Clip` will produce layouts equivalent to the Taffy 0.3. `Clip` will affect the new `content_size` output by restricting it to the available space.
+- `Hidden` and `Scroll` affect layout by changing the automatic minimum size of Flexbox and Grid children
+- `Scroll` additionally reserves `scrollbar_width` pixels for a scrollbar in the opposite axis to which scrolling is enabled. `Scroll` with `scrollbar_width` set to zero is equivalent to `Hidden`.
+
+### Measure function changes
+
+The "measure function" API for integrating Taffy with other measurement systems (such as text layout) has been changed to be more flexible
 and to interact better with borrow checking (you can now borrow external data in your measure function!).
 
 - There are no longer per-node measure functions.
 - There is now a single "global" measure function, and a per-node "context" of a user-defined type
-- The `Taffy` tree is now a generic `Taffy<T>` where `T` is the "context" type.
+- The `Taffy` tree is now a generic `TaffyTree<T>` where `T` is the "context" type.
+- The measure function is now called for all leaf nodes (nodes without children). If you wish to maintain compatibility with the previous
+  behaviour then your measure function should return `Size::ZERO` for leaf nodes whose context is `None`.
 
 If you are not using measure functions, then the only change you will need to make is from:
 
@@ -22,10 +45,10 @@ let mut tree = Taffy::new();
 to
 
 ```rust
-let mut tree : Taffy<()> = Taffy::new();
+let mut tree : TaffyTree<()> = TaffyTree::new();
 ```
 
-And generally update any uses of `Taffy` in your codebase to `Taffy<()>`.
+And generally update any uses of `Taffy` in your codebase to `TaffyTree<()>`.
 
 If you are using measure functions then you will need to make some bigger (but straightforward) changes. The following Taffy 0.3 code:
 
@@ -41,7 +64,7 @@ tree.compute_layout(leaf, Size::MAX_CONTENT);
 Should become something like the following with Taffy 0.4:
 
 ```rust
-let mut tree : Taffy<Size> = Taffy::new();
+let mut tree : TaffyTree<Size> = TaffyTree::new();
 let leaf = tree.new_leaf_with_context(Style::DEFAULT, Size { width: 100.0, height: 200.0 });
 tree.compute_layout_with_measure(
   leaf,
@@ -59,7 +82,37 @@ Note that:
 - As the single "global" measure function passed to `compute_layout_with_measure` only needs to exist for the duration of a single layout run,
   it can (mutably) borrow data from it's environment
 
-#### Many APIs have been renamed to replace `points` or `Points` with `length` or `Length`
+### Low-level API (`LayoutTree` trait) refactor
+
+The low-level API has been completely reworked:
+
+- The `LayoutTree` trait has been split into 5 smaller traits which live in the `taffy::tree:traits` module (along with their associated documentation)
+- The following methods have been removed from split `LayoutTree` traits entirely: `parent`, `is_childless`, `measure_node`, `needs_measure`, and `mark_dirty`.
+- `taffy::node::Node` has been replaced with `taffy::NodeId`. This should make it much easier to implement the low-level traits as the underlying type backing the node id now a `u64` rather than a `slotmap::DefaultKey`.
+- Support for running each layout algorithm individually on a single node via the following top-level functions:
+  - `compute_flexbox_layout`
+  - `compute_grid_layout`
+  - `compute_block_layout`
+  - `compute_leaf_layout`
+  - `compute_root_layout`
+  - `compute_hidden_layout`
+
+It is believed that nobody was previously using the low-level API so we are not providing a migration guide. However, along with the refactor we have greatly
+improved both the documentation and have added examples using the new API, both of which are linked to from the [main documentation page](https://docs.rs/taffy).
+
+### Module hierarchy changes
+
+The specific changes are detailed below. However for most users the most significant change will be that almost all types are now re-exported from the root module. This means that module specific imports like `use taffy::layout::Layout` can now in almost all cases be replaced with the simpler `use taffy::Layout`.
+
+Specific changes:
+
+- The `math` module has been made private
+- The `axis` module has been merged into the `geometry` module
+- The debug module is no longer public. The `print_tree` function is now accessible under `util`.
+- All types from the `node`, `data`, `layout`, `error` and `cache` modules have been moved to the  the `tree` module.
+- The `layout_flexbox()` function has been removed from the prelude. Use `taffy::compute_flexbox_layout` instead.
+
+### Many APIs have been renamed to replace `points` or `Points` with `length` or `Length`
 
 This new name better describes one-dimensional measure of space in some unspecified unit
 which is often unrelated to the PostScript point or the CSS `pt` unit.
@@ -84,35 +137,17 @@ Example usage change:
      ).unwrap();
 ```
 
-### Added
+### Other Changes
 
-- Support for [CSS Block layout](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flow_Layout/Block_and_Inline_Layout_in_Normal_Flow#elements_participating_in_a_block_formatting_context) has been added. This can be used via the new `Display::Block` variant of the `Display` enum. Note that inline, inline-block and float have *not* been implemented. The use case supported is block container nodes which contain block-level children.
-- Support for running each layout algorithm individually on a single node via the following top-level functions:
-  - `compute_flexbox_layout`
-  - `compute_grid_layout`
-  - `compute_leaf_layout`
-  - `compute_hidden_layout`
-- Added `insert_child_at_index()` method to the `Taffy` tree. This can be used to insert a child node at any position instead of just the end.
-- Added `get_disjoint_node_context_mut()` method to the `Taffy` tree. This can be used to safely get multiple mutable borrows at the same time.
-
-### Removed
-
-- `layout_flexbox()` has been removed from the prelude. Use `taffy::compute_flexbox_layout` instead.
-- The following methods have been removed from the `LayoutTree` trait: `parent`, `is_childless`, `measure_node`, `needs_measure`, and `mark_dirty`. These no longer need to be implemented in custom implementations of `LayoutTree`.
-
-### Changes
-
+- The `Taffy` type was renamed to `TaffyTree` and made generic of a context parameter
 - The Flexbox algorithm has now been moved behind the `flexbox` feature. The `flexbox` feature is enabled by default.
 - The `justify_self` property has been moved behind the `grid` feature.
-- `taffy::node::Node` has been replaced with `taffy::tree::NodeId`. This should make it much easier to implement the `LayoutTree` trait as the underlying type backing the node id now a `u64` rather than a `slotmap::DefaultKey`.
-- Module organisation changes:
-  - The `math` module has been made private
-  - The `axis` module has been merged into the `geometry` module
-  - The debug module is no longer public. The `print_tree` function is now accessible under `util`.
-  - All types from the `node`, `data`, `layout`, `error` and `cache` modules have been moved to the  the `tree` module.
 - Fixed misspelling: `RunMode::PeformLayout` renamed into `RunMode::PerformLayout` (added missing `r`).
 - `serde` dependency has been made compatible with `no_std` environments
 - `slotmap` dependency has been made compatible with `no_std` environments
+- Added `insert_child_at_index()` method to the `TaffyTree`. This can be used to insert a child node at any position instead of just the end.
+- Added `total_node_count()` method to the `TaffyTree` which returns the total number of nodes in the tree.
+- Added `get_disjoint_node_context_mut()` method to the `TaffyTree`. This can be used to safely get multiple mutable borrows at the same time.
 
 ## 0.3.18
 
