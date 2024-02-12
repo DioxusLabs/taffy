@@ -35,7 +35,7 @@ pub(super) fn align_tracks(
     // Compute offsets
     let mut total_offset = origin;
     tracks.iter_mut().enumerate().for_each(|(i, track)| {
-        // Odd tracks are gutters (but slices are zero-indexed, so odd tracks have even indicies)
+        // Odd tracks are gutters (but slices are zero-indexed, so odd tracks have even indices)
         let is_gutter = i % 2 == 0;
 
         // The first non-gutter track is index 1

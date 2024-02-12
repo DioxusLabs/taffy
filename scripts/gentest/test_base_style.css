@@ -35,7 +35,7 @@ body > * {
   display: flex;
   align-items: start;
   justify-content: start;
-  /* Defaults: can be overriden in individual tests */
+  /* Defaults: can be overridden in individual tests */
   width: max-content;
   height: max-content;
 }

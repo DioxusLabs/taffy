@@ -30,7 +30,7 @@ brew install chromedriver
 
 If you are Ubuntu, you will have to install `openssl` first,
 and then can follow [these instructions](https://tecadmin.net/setup-selenium-chromedriver-on-ubuntu/).
-Be sure that your Chrome vesion matches the downloaded `chromedriver` version!
+Be sure that your Chrome version matches the downloaded `chromedriver` version!
 
 Once you have chromedriver installed and available in `PATH` you can re-generate all tests by running `cargo gentest`. You should not manually update the tests in `tests/generated`. Instead, fix the script in `scripts/gentest/` and re-generate them. This can happen after a refactor. It can be helpful to commit the updated tests in a dedicated commit so that they can be easier to ignore during review.
 

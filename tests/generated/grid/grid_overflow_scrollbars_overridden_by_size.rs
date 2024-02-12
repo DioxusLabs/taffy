@@ -1,5 +1,5 @@
 #[test]
-fn grid_overflow_scrollbars_overriden_by_size() {
+fn grid_overflow_scrollbars_overridden_by_size() {
     #[allow(unused_imports)]
     use taffy::{prelude::*, tree::Layout, TaffyTree};
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();

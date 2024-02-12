@@ -1,5 +1,5 @@
 #[test]
-fn grid_aspect_ratio_overriden_by_explicit_sizes() {
+fn grid_aspect_ratio_overridden_by_explicit_sizes() {
     #[allow(unused_imports)]
     use taffy::{prelude::*, tree::Layout, TaffyTree};
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
