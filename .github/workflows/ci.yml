@@ -26,6 +26,9 @@ jobs:
   # MSRV check.
   # Taffy only guarantees "latest stable". However we have this check here to ensure that we advertise
   # our MSRV. We also make an effort not to increase MSRV in patch versions of Taffy.
+  #
+  # We only run `cargo build` (not `cargo test`) so as to avoid requiring dev-dependencies to build with the MSRV
+  # version. Building is likely sufficient as runtime errors varying between rust versions is very unlikely.
   test-features-msrv:
     name: "Test Suite [Features: Default] (Rust 1.65)"
     runs-on: ubuntu-latest
@@ -35,7 +38,6 @@ jobs:
         with:
           toolchain: 1.65
       - run: cargo build
-      - run: cargo test
 
   # Default
   test-features-default:
