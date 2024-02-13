@@ -601,6 +601,14 @@ impl<NodeContext> TaffyTree<NodeContext> {
         self.nodes.len()
     }
 
+    /// Returns the `NodeId` of the parent node of the specified node (if it exists)
+    ///
+    /// - Return None if the specified node has no parent
+    /// - Panics if the specified node does not exist
+    pub fn parent(&self, child_id: NodeId) -> Option<NodeId> {
+        self.parents[child_id.into()]
+    }
+
     /// Returns a list of children that belong to the parent node
     pub fn children(&self, parent: NodeId) -> TaffyResult<Vec<NodeId>> {
         Ok(self.children[parent.into()].iter().copied().collect::<_>())
