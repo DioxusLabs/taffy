@@ -144,7 +144,7 @@ impl<T> Rect<T> {
     /// When applied to the left and right sides, the width is used
     /// as the second parameter of `f`.
     /// When applied to the top or bottom sides, the height is used instead.
-    #[cfg(feature = "flexbox")]
+    #[cfg(any(feature = "flexbox", feature = "block_layout"))]
     pub(crate) fn zip_size<R, F, U>(self, size: Size<U>, f: F) -> Rect<R>
     where
         F: Fn(T, U) -> R,
