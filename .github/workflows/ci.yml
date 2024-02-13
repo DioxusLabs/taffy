@@ -6,7 +6,7 @@ on:
       - 0.2.x
       - 0.3.x
 
-name: Continuous integration
+name: CI
 
 env:
   RUSTDOCFLAGS: "-D warnings"
@@ -30,7 +30,7 @@ jobs:
   # We only run `cargo build` (not `cargo test`) so as to avoid requiring dev-dependencies to build with the MSRV
   # version. Building is likely sufficient as runtime errors varying between rust versions is very unlikely.
   test-features-msrv:
-    name: "Test Suite [Features: Default] (Rust 1.65)"
+    name: "MSRV Build (Rust 1.65)"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -68,7 +68,7 @@ jobs:
       - run: cargo test --no-default-features --features std,taffy_tree,grid,flexbox,block_layout
 
   test-features-no-grid-nor-flexbox:
-    name: "Test Suite [Features: std (no grid or flexbox)]"
+    name: "Test Suite [Features: std (no algorithms)]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -77,9 +77,9 @@ jobs:
       - run: cargo build --no-default-features --features std,taffy_tree
       - run: cargo test --no-default-features --features std,taffy_tree
 
-  # Flexbox
+  # With std feature
   test-features-flexbox:
-    name: "Test Suite [Features: flexbox + std]"
+    name: "Test Suite [Features: std + flexbox]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -88,9 +88,8 @@ jobs:
       - run: cargo build --no-default-features --features flexbox,std,taffy_tree
       - run: cargo test --no-default-features --features flexbox,std,taffy_tree
 
-  # Grid
   test-features-grid:
-    name: "Test Suite [Features: grid + std]"
+    name: "Test Suite [Features: std + grid]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -99,35 +98,37 @@ jobs:
       - run: cargo build --no-default-features --features grid,std,taffy_tree
       - run: cargo test --no-default-features --features grid,std,taffy_tree
 
-  test-features-grid-with-alloc:
-    name: "Test Suite [Features: grid + alloc]"
+  test-features-block:
+    name: "Test Suite [Features: std + block)]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --no-default-features --features alloc,grid
-      - run: cargo build --no-default-features --features alloc,grid,taffy_tree
-      - run: cargo test --no-default-features --features alloc,grid,taffy_tree
+      - run: cargo build --no-default-features --features block_layout,std
+      - run: cargo build --no-default-features --features block_layout,std,taffy_tree
+      - run: cargo test --no-default-features --features block_layout,std,taffy_tree
 
-  test-features-alloc:
-    name: "Test Suite [Features: alloc]"
+  # With alloc feature
+
+  test-features-grid-with-alloc:
+    name: "Test Suite [Features: alloc + no algorithms]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features alloc
       - run: cargo build --no-default-features --features alloc,taffy_tree
-      - run: cargo test  --no-default-features --features alloc,taffy_tree
+      - run: cargo test --no-default-features --features alloc,taffy_tree
 
-  test-features-default-no-grid:
-    name: "Test Suite [Features: std (no grid)]"
+  test-features-alloc:
+    name: "Test Suite [Features: alloc + all algorithms]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --no-default-features --features std
-      - run: cargo build --no-default-features --features std,taffy_tree
-      - run: cargo test --no-default-features --features std,taffy_tree
+      - run: cargo build --no-default-features --features alloc,grid,flexbox,block_layout
+      - run: cargo build --no-default-features --features alloc,grid,flexbox,block_layout,taffy_tree
+      - run: cargo test  --no-default-features --features alloc,grid,flexbox,block_layout,taffy_tree
 
   fmt:
     name: Rustfmt
