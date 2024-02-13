@@ -13,15 +13,6 @@ env:
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: "sparse"
 
 jobs:
-  # None
-  test-features-none:
-    name: "Test Suite [Features: None]"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo build --no-default-features
-      - run: cargo test --no-default-features --features taffy_tree
 
   # MSRV check.
   # Taffy only guarantees "latest stable". However we have this check here to ensure that we advertise
@@ -30,7 +21,7 @@ jobs:
   # We only run `cargo build` (not `cargo test`) so as to avoid requiring dev-dependencies to build with the MSRV
   # version. Building is likely sufficient as runtime errors varying between rust versions is very unlikely.
   test-features-msrv:
-    name: "MSRV Build (Rust 1.65)"
+    name: "MSRV Build [Rust 1.65]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -39,9 +30,19 @@ jobs:
           toolchain: 1.65
       - run: cargo build
 
+  # No features
+  test-features-none:
+    name: "Test Suite [no features]"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --no-default-features
+      - run: cargo test --no-default-features --features taffy_tree
+
   # Default
   test-features-default:
-    name: "Test Suite [Features: Default]"
+    name: "Test Suite [default features]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,7 +51,7 @@ jobs:
       - run: cargo test
 
   test-features-default-with-serde:
-    name: "Test Suite [Features: Default + serde]"
+    name: "Test Suite [default + serde]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -59,7 +60,7 @@ jobs:
       - run: cargo test --features serde
 
   test-features-default-except-content-size:
-    name: "Test Suite [Features: Default except content_size]"
+    name: "Test Suite [default except content_size]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -68,7 +69,7 @@ jobs:
       - run: cargo test --no-default-features --features std,taffy_tree,grid,flexbox,block_layout
 
   test-features-no-grid-nor-flexbox:
-    name: "Test Suite [Features: std (no algorithms)]"
+    name: "Test Suite [std (no algorithms)]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -79,7 +80,7 @@ jobs:
 
   # With std feature
   test-features-flexbox:
-    name: "Test Suite [Features: std + flexbox]"
+    name: "Test Suite [std + flexbox]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -89,7 +90,7 @@ jobs:
       - run: cargo test --no-default-features --features flexbox,std,taffy_tree
 
   test-features-grid:
-    name: "Test Suite [Features: std + grid]"
+    name: "Test Suite [std + grid]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -99,7 +100,7 @@ jobs:
       - run: cargo test --no-default-features --features grid,std,taffy_tree
 
   test-features-block:
-    name: "Test Suite [Features: std + block)]"
+    name: "Test Suite [std + block)]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -111,7 +112,7 @@ jobs:
   # With alloc feature
 
   test-features-grid-with-alloc:
-    name: "Test Suite [Features: alloc + no algorithms]"
+    name: "Test Suite [alloc + no algorithms]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -121,7 +122,7 @@ jobs:
       - run: cargo test --no-default-features --features alloc,taffy_tree
 
   test-features-alloc:
-    name: "Test Suite [Features: alloc + all algorithms]"
+    name: "Test Suite [alloc + all algorithms]"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
