@@ -13,6 +13,8 @@ Right now, it powers:
 
 - [Dioxus](https://dioxuslabs.com/): a React-like library for building fast, portable, and beautiful user interfaces with Rust
 - [Bevy](https://bevyengine.org/): an ergonomic, ECS-first Rust game engine
+- The [Lapce](https://lapce.dev/) text editor via the [Floem](https://github.com/lapce/floem) UI framework
+- The [Zed](https://zed.dev/) text editor via the [GPUI](https://github.com/zed-industries/zed/tree/main/crates/gpui) UI framework
 
 ## Usage
 
@@ -65,6 +67,12 @@ assert_eq!(tree.layout(body_node).unwrap().size.width, 800.0);
 assert_eq!(tree.layout(body_node).unwrap().size.height, 500.0); // This value was not set explicitly, but was computed by Taffy
 
 ```
+
+## Bindings to other languages
+
+- Python via [stretchable](https://github.com/mortencombat/stretchable)
+- [WIP C bindings](https://github.com/DioxusLabs/taffy/pull/404)
+- [WIP WASM bindings](https://github.com/DioxusLabs/taffy/pull/394)
 
 ## Learning Resources
 
