@@ -340,11 +340,11 @@ fn record_grid_placement(
     println!("\n");
 }
 
-#[allow(clippy::bool_assert_comparison)]
 #[cfg(test)]
+// It's more readable if the test code is uniform, so we tolerate unnecessary clones in tests
+#[allow(clippy::redundant_clone)]
+#[allow(clippy::bool_assert_comparison)]
 mod tests {
-    // It's more readable if the test code is uniform, so we tolerate unnecessary clones in tests
-    #![allow(clippy::redundant_clone)]
 
     mod test_placement_algorithm {
         use crate::compute::grid::implicit_grid::compute_grid_size_estimate;
