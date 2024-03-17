@@ -702,7 +702,6 @@ impl<NodeContext> TaffyTree<NodeContext> {
 }
 
 #[cfg(test)]
-#[allow(clippy::bool_assert_comparison)]
 mod tests {
 
     use super::*;

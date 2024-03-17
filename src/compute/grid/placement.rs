@@ -341,9 +341,6 @@ fn record_grid_placement(
 }
 
 #[cfg(test)]
-// It's more readable if the test code is uniform, so we tolerate unnecessary clones in tests
-#[allow(clippy::redundant_clone)]
-#[allow(clippy::bool_assert_comparison)]
 mod tests {
 
     mod test_placement_algorithm {
