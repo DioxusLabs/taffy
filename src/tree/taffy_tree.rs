@@ -703,7 +703,6 @@ impl<NodeContext> TaffyTree<NodeContext> {
 
 #[cfg(test)]
 mod tests {
-    #![allow(clippy::bool_assert_comparison)]
 
     use super::*;
     use crate::style::{Dimension, Display, FlexDirection};
