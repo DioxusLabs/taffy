@@ -51,13 +51,18 @@ pub fn text_measure_function(
         let mut line_count = 1;
         let mut current_line_length = 0;
         for word in &words {
-            if current_line_length + word.len() > inline_line_length {
-                if current_line_length > 0 {
-                    line_count += 1
-                };
+            if current_line_length == 0 {
+                // first word
+                current_line_length = word.len();
+            } else if current_line_length + word.len() + 1 > inline_line_length {
+                // every word past the first needs to check for line length including the space between words
+                // note: a real implementation of this should handle whitespace characters other than ' '
+                // and do something more sophisticated for long words
+                line_count += 1;
                 current_line_length = word.len();
             } else {
-                current_line_length += word.len();
+                // add the word and a space
+                current_line_length += word.len() + 1;
             };
         }
         (line_count as f32) * font_metrics.char_height
