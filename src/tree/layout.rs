@@ -235,6 +235,12 @@ pub struct Layout {
     pub padding: Rect<f32>,
 }
 
+impl Default for Layout {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Layout {
     /// Creates a new zero-[`Layout`].
     ///

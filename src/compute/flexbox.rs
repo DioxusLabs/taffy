@@ -2154,7 +2154,6 @@ fn sum_axis_gaps(gap: f32, num_items: usize) -> f32 {
 
 #[cfg(test)]
 mod tests {
-    #![allow(clippy::redundant_clone)]
 
     use crate::{
         geometry::Size,

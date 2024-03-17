@@ -25,6 +25,12 @@ pub struct Cache {
     measure_entries: [Option<CacheEntry<Size<f32>>>; CACHE_SIZE],
 }
 
+impl Default for Cache {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Cache {
     /// Create a new empty cache
     pub const fn new() -> Self {
