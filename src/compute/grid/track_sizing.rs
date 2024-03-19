@@ -680,7 +680,8 @@ fn resolve_intrinsic_track_sizes(
             let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
             if space > 0.0 {
                 if item.overflow.get(axis).is_scroll_container() {
-                    let fit_content_limit = move |track: &GridTrack| track.fit_content_limit(axis_inner_node_size);
+                    let fit_content_limit =
+                        move |track: &GridTrack| track.fit_content_limited_growth_limit(axis_inner_node_size);
                     distribute_item_space_to_base_size(
                         is_flex,
                         use_flex_factor_for_distribution,
@@ -697,7 +698,7 @@ fn resolve_intrinsic_track_sizes(
                         space,
                         tracks,
                         has_intrinsic_min_track_sizing_function,
-                        |_| f32::INFINITY,
+                        |track| track.growth_limit,
                         IntrinsicContributionType::Minimum,
                     );
                 }
@@ -717,7 +718,8 @@ fn resolve_intrinsic_track_sizes(
             let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
             if space > 0.0 {
                 if item.overflow.get(axis).is_scroll_container() {
-                    let fit_content_limit = move |track: &GridTrack| track.fit_content_limit(axis_inner_node_size);
+                    let fit_content_limit =
+                        move |track: &GridTrack| track.fit_content_limited_growth_limit(axis_inner_node_size);
                     distribute_item_space_to_base_size(
                         is_flex,
                         use_flex_factor_for_distribution,
@@ -734,7 +736,7 @@ fn resolve_intrinsic_track_sizes(
                         space,
                         tracks,
                         has_min_or_max_content_min_track_sizing_function,
-                        |_| f32::INFINITY,
+                        |track| track.growth_limit,
                         IntrinsicContributionType::Minimum,
                     );
                 }
@@ -831,7 +833,7 @@ fn resolve_intrinsic_track_sizes(
                     space,
                     tracks,
                     has_max_content_min_track_sizing_function,
-                    |_| f32::INFINITY,
+                    |track| track.growth_limit,
                     IntrinsicContributionType::Maximum,
                 );
             }
