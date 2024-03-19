@@ -30,6 +30,14 @@ jobs:
           toolchain: 1.65
       - run: cargo build
 
+  test-features-debug:
+    name: "Build [debug feature]"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --features debug
+
   # No features
   test-features-none:
     name: "Test Suite [no features]"
