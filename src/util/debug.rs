@@ -19,7 +19,7 @@ impl DebugLogger {
         Self { stack: Mutex::new(Vec::new()) }
     }
 
-    pub fn push_node(&self, new_key: NodeId) {
+    pub fn push_node(&self, new_key: crate::NodeId) {
         let mut stack = self.stack.lock().unwrap();
         let mut key_string = String::new();
         write!(&mut key_string, "{:?}", new_key).unwrap();
