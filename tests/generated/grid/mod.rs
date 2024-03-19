@@ -500,3 +500,5 @@ mod grid_span_6_all_non_flex_indefinite;
 mod grid_span_6_all_non_flex_indefinite_hidden;
 #[cfg(feature = "grid")]
 mod grid_span_8_all_track_types_indefinite;
+#[cfg(feature = "grid")]
+mod grid_taffy_issue_624;
