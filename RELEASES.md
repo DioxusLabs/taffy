@@ -1,5 +1,9 @@
 # Release Notes
 
+## 0.4.1
+
+- Fixed: CSS Grid track sizing not respecting growth limits in some circumstances (#624)
+
 ## 0.4.0
 
 ### Highlights
