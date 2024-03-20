@@ -626,6 +626,14 @@ impl<NodeContext> TaffyTree<NodeContext> {
         Ok(&self.nodes[node.into()].style)
     }
 
+    /// Gets the [`Style`] of the provided `node`
+    pub fn try_style_mut(&mut self, node_id: NodeId) -> TaffyResult<&mut Style> {
+        self.nodes
+            .get_mut(node_id.into())
+            .ok_or(TaffyError::InvalidInputNode(node_id))
+            .map(|n: &mut NodeData| &mut n.style)
+    }
+
     /// Return this node layout relative to its parent
     pub fn layout(&self, node: NodeId) -> TaffyResult<&Layout> {
         if self.config.use_rounding {

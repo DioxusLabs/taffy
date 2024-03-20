@@ -439,64 +439,75 @@ mod tests {
     fn style_sizes() {
         use super::*;
 
-        fn assert_type_size<T>(expected_size: usize) {
+        fn assert_type_size_and_align<T>(expected_size: usize, expected_align: usize) {
             let name = ::core::any::type_name::<T>();
             let name = name.replace("taffy::geometry::", "");
             let name = name.replace("taffy::style::dimension::", "");
             let name = name.replace("taffy::style::alignment::", "");
             let name = name.replace("taffy::style::flex::", "");
             let name = name.replace("taffy::style::grid::", "");
+            let name = name.replace("alloc::vec::", "");
+            let name = name.replace("taffy::compute::grid::types::coordinates::", "");
 
             assert_eq!(
                 ::core::mem::size_of::<T>(),
                 expected_size,
-                "Expected {} for be {} byte(s) but it was {} byte(s)",
+                "Expected size_of {} to be {} byte(s) but it was {} byte(s)",
                 name,
                 expected_size,
                 ::core::mem::size_of::<T>(),
             );
+
+            assert_eq!(
+                ::core::mem::align_of::<T>(),
+                expected_align,
+                "Expected align_of {} to be {} byte(s) but it was {} byte(s)",
+                name,
+                expected_align,
+                ::core::mem::align_of::<T>(),
+            );
         }
 
         // Display and Position
-        assert_type_size::<Display>(1);
-        assert_type_size::<Position>(1);
-        assert_type_size::<Overflow>(1);
+        assert_type_size_and_align::<Display>(1, 1);
+        assert_type_size_and_align::<Position>(1, 1);
+        assert_type_size_and_align::<Overflow>(1, 1);
 
         // Dimensions and aggregations of Dimensions
-        assert_type_size::<f32>(4);
-        assert_type_size::<LengthPercentage>(8);
-        assert_type_size::<LengthPercentageAuto>(8);
-        assert_type_size::<Dimension>(8);
-        assert_type_size::<Size<LengthPercentage>>(16);
-        assert_type_size::<Size<LengthPercentageAuto>>(16);
-        assert_type_size::<Size<Dimension>>(16);
-        assert_type_size::<Rect<LengthPercentage>>(32);
-        assert_type_size::<Rect<LengthPercentageAuto>>(32);
-        assert_type_size::<Rect<Dimension>>(32);
+        assert_type_size_and_align::<f32>(4, 4);
+        assert_type_size_and_align::<LengthPercentage>(8, 4);
+        assert_type_size_and_align::<LengthPercentageAuto>(8, 4);
+        assert_type_size_and_align::<Dimension>(8, 4);
+        assert_type_size_and_align::<Size<LengthPercentage>>(16, 4);
+        assert_type_size_and_align::<Size<LengthPercentageAuto>>(16, 4);
+        assert_type_size_and_align::<Size<Dimension>>(16, 4);
+        assert_type_size_and_align::<Rect<LengthPercentage>>(32, 4);
+        assert_type_size_and_align::<Rect<LengthPercentageAuto>>(32, 4);
+        assert_type_size_and_align::<Rect<Dimension>>(32, 4);
 
         // Alignment
-        assert_type_size::<AlignContent>(1);
-        assert_type_size::<AlignItems>(1);
-        assert_type_size::<Option<AlignItems>>(1);
+        assert_type_size_and_align::<AlignContent>(1, 1);
+        assert_type_size_and_align::<AlignItems>(1, 1);
+        assert_type_size_and_align::<Option<AlignItems>>(1, 1);
 
         // Flexbox Container
-        assert_type_size::<FlexDirection>(1);
-        assert_type_size::<FlexWrap>(1);
+        assert_type_size_and_align::<FlexDirection>(1, 1);
+        assert_type_size_and_align::<FlexWrap>(1, 1);
 
         // CSS Grid Container
-        assert_type_size::<GridAutoFlow>(1);
-        assert_type_size::<MinTrackSizingFunction>(8);
-        assert_type_size::<MaxTrackSizingFunction>(12);
-        assert_type_size::<NonRepeatedTrackSizingFunction>(20);
-        assert_type_size::<TrackSizingFunction>(32);
-        assert_type_size::<Vec<NonRepeatedTrackSizingFunction>>(24);
-        assert_type_size::<Vec<TrackSizingFunction>>(24);
+        assert_type_size_and_align::<GridAutoFlow>(1, 1);
+        assert_type_size_and_align::<MinTrackSizingFunction>(8, 4);
+        assert_type_size_and_align::<MaxTrackSizingFunction>(12, 4);
+        assert_type_size_and_align::<NonRepeatedTrackSizingFunction>(20, 4);
+        assert_type_size_and_align::<TrackSizingFunction>(32, 8);
+        assert_type_size_and_align::<Vec<NonRepeatedTrackSizingFunction>>(24, 8);
+        assert_type_size_and_align::<Vec<TrackSizingFunction>>(24, 8);
 
         // CSS Grid Item
-        assert_type_size::<GridPlacement>(4);
-        assert_type_size::<Line<GridPlacement>>(8);
+        assert_type_size_and_align::<GridPlacement>(4, 2);
+        assert_type_size_and_align::<Line<GridPlacement>>(8, 2);
 
         // Overall
-        assert_type_size::<Style>(352);
+        assert_type_size_and_align::<Style>(352, 8);
     }
 }
