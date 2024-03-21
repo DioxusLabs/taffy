@@ -1,0 +1,27 @@
+[package]
+name = "taffy-layout"
+version = "0.3.9"
+edition = "2021"
+
+# This crate is for WASM bindings: it should never be published to crates.io
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["console_error_panic_hook"]
+
+[dependencies]
+wasm-bindgen = "0.2.84"
+js-sys = "0.3"
+taffy = { path = "../..", features = ["wasm"] }
+console_error_panic_hook = { version = "0.1.1", optional = true }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.33"
+
+[profile.release]
+opt-level = "s"
+
+[workspace]

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+  </head>
+  <body>
+
+    <div id="output" style="padding: 0 12px;font-family: monospace;" />
+
+    <script type="text/javascript">
+      window.BENCH_NODE_COUNT = 10000;
+      window.WARMUP_ITERS = 1;
+      window.TEST_ITERS = 1;
+    </script>
+
+    <!--  -->
+    <script type="module">
+
+      const output = document.getElementById('output');
+      function log (message) {
+        let p = document.createElement('p');
+        p.textContent = message;
+        output.appendChild(p);
+      }
+
+      // Import/initialise Yoga WASM module
+      import Yoga from "https://cdn.jsdelivr.net/npm/yoga-wasm-web@0.3.3/dist/browser.js";
+
+      // Import/initialise Taffy WASM module
+      import init, * as Taffy from './pkg/taffy_layout.js';
+      await init();
+
+      // Yoga WASM benchmark
+      async function benchmark_yoga(Yoga) {
+        const page = Yoga.Node.create();
+
+        for (let i = 0; i < BENCH_NODE_COUNT; i++) {
+          const node = Yoga.Node.create();
+          // for (let j = 0; j < 6; j++) {
+          //   node.setFlexGrow(1);
+          // }
+          for (let j = 0; j < 6; j++) {
+            node.setHeight("100%");
+          }
+          page.insertChild(node, i);
+        }
+      }
+
+      function parseDimensionValue(value) {
+        switch (typeof value) {
+          case "number":
+            return value;
+          case "string":
+            return parseFloat(value)
+        }
+      }
+
+      function parseStringDimensionUnit(value) {
+        if (value.endsWith("%")) {
+          return Taffy.StyleUnit.Percent;
+        } else if (value.endsWith("px")) {
+          return Taffy.StyleUnit.Px
+        } else if (value == "auto") {
+          return Taffy.StyleUnit.Auto
+        }
+
+        return Taffy.StyleUnit.Px;
+      }
+
+      function setHeightWrapper(node, heightStr) {
+        node.setHeight(parseDimensionValue(heightStr), parseStringDimensionUnit(heightStr));
+      }
+
+      function setHeightWrapper2(node, value, unit) {
+        let actualUnit = Taffy.StyleUnit.Px;
+        switch (unit) {
+          case 'px':
+            actualUnit = Taffy.StyleUnit.Px;
+            break;
+          case '%':
+            actualUnit = Taffy.StyleUnit.Percent;
+            break;
+          case 'auto':
+            actualUnit = Taffy.StyleUnit.Auto;
+            break;
+        }
+        node.setHeight(value, actualUnit);
+      }
+
+      // Taffy WASM benchmark
+      async function benchmark_taffy(Taffy) {
+        const { Node, TaffyTree, Position, AlignContent, Layout, FlexDirection } = Taffy;
+
+        const tree = new TaffyTree(0);
+        // const tree = new TaffyTree(BENCH_NODE_COUNT + 10);
+        const container = new Node(tree, {});
+        // const container = new Node(tree, {
+        //   position: Position.Absolute,
+        //   width: 500,
+        //   height: 500,
+        //   justifyContent: AlignContent.FlexStart,
+        //   // gapWidth: 50
+        // });
+        // container.setStyle({flexDirection: FlexDirection.Row})
+
+        // const arr = [];
+        for (let i = 0; i < BENCH_NODE_COUNT; i++) {
+          const child = new Node(tree, {});
+          // for (let j = 0; j < 6; j++) {
+          //   child.setFlexGrow(1);
+          // }
+          for (let j = 0; j < 6; j++) {
+            child.setHeight(100, Taffy.StyleUnit.Percent);
+          }
+          // for (let j = 0; j < 6; j++) {
+          //   child.setHeightStr("100%");
+          // }
+          // for (let j = 0; j < 6; j++) {
+          //   setHeightWrapper(child, "100%");
+          // }
+          // for (let j = 0; j < 6; j++) {
+          //   setHeightWrapper2(child, 100, '%');
+          // }
+          container.addChild(child);
+          // arr.push(child);
+        }
+      }
+
+      function wait(delay) {
+        return new Promise((resolve) => setTimeout(() => resolve(), delay))
+      }
+
+      // Actually run benchmarks
+      async function run() {
+        let start, time;
+
+        // await wait(2000);
+        
+        log("Warming up...");
+        await Promise.all(Array(WARMUP_ITERS).fill(0).map(() => benchmark_yoga(Yoga)));
+        await Promise.all(Array(WARMUP_ITERS).fill(0).map(() => benchmark_taffy(Taffy)));
+
+        log("Testing Yoga...")
+        start = performance.now();
+        for (let i = 0; i < TEST_ITERS; i++) {
+          await benchmark_yoga(Yoga)
+        }
+        time = (performance.now() - start) / TEST_ITERS;
+        log(`Yoga: tree created in avg. of ${time}ms`);
+
+        log("Testing Taffy...")
+        start = performance.now();
+        for (let i = 0; i < TEST_ITERS; i++) {
+          await benchmark_taffy(Taffy);
+        }
+        time = (performance.now() - start) / TEST_ITERS;
+        log(`Taffy: tree created in avg. of ${time}ms`);
+
+        log("Testing Yoga...")
+        start = performance.now();
+        for (let i = 0; i < TEST_ITERS; i++) {
+          await benchmark_yoga(Yoga)
+        }
+        time = (performance.now() - start) / TEST_ITERS;
+        log(`Yoga: tree created in avg. of ${time}ms`);
+
+        log("Testing Taffy...")
+        start = performance.now();
+        for (let i = 0; i < TEST_ITERS; i++) {
+          await benchmark_taffy(Taffy);
+        }
+        time = (performance.now() - start) / TEST_ITERS;
+        log(`Taffy: tree created in avg. of ${time}ms`);
+
+        log("Testing Yoga...")
+        start = performance.now();
+        for (let i = 0; i < TEST_ITERS; i++) {
+          await benchmark_yoga(Yoga)
+        }
+        time = (performance.now() - start) / TEST_ITERS;
+        log(`Yoga: tree created in avg. of ${time}ms`);
+
+        log("Testing Taffy...")
+        start = performance.now();
+        for (let i = 0; i < TEST_ITERS; i++) {
+          await benchmark_taffy(Taffy);
+        }
+        time = (performance.now() - start) / TEST_ITERS;
+        log(`Taffy: tree created in avg. of ${time}ms`);
+
+
+      }
+
+      run();
+
+    </script>
+
+  </body>
+</html>

@@ -621,9 +621,14 @@ impl<NodeContext> TaffyTree<NodeContext> {
         Ok(())
     }
 
-    /// Gets the [`Style`] of the provided `node`
+    /// Gets a reference to the [`Style`] of the provided `node`
     pub fn style(&self, node: NodeId) -> TaffyResult<&Style> {
         Ok(&self.nodes[node.into()].style)
+    }
+
+    /// Gets a mutable reference to the [`Style`] of the provided `node`
+    pub fn style_mut(&mut self, node: NodeId) -> TaffyResult<&mut Style> {
+        Ok(&mut self.nodes[node.into()].style)
     }
 
     /// Return this node layout relative to its parent

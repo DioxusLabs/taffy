@@ -1,12 +1,17 @@
 //! Style types for controlling alignment
 
+#[cfg(feature = "wasm")]
+use wasm_bindgen::prelude::*;
+
 /// Used to control how child nodes are aligned.
 /// For Flexbox it controls alignment in the cross axis
 /// For Grid it controls alignment in the block axis
 ///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/align-items)
+#[repr(u8)]
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub enum AlignItems {
     /// Items are packed toward the start of the axis
     Start,
@@ -29,6 +34,23 @@ pub enum AlignItems {
     /// Stretch to fill the container
     Stretch,
 }
+
+impl TryFrom<i32> for AlignItems {
+    type Error = ();
+    fn try_from(n: i32) -> Result<Self, ()> {
+        match n {
+            0 => Ok(AlignItems::Start),
+            1 => Ok(AlignItems::End),
+            2 => Ok(AlignItems::FlexStart),
+            3 => Ok(AlignItems::FlexEnd),
+            4 => Ok(AlignItems::Center),
+            5 => Ok(AlignItems::Baseline),
+            6 => Ok(AlignItems::Stretch),
+            _ => Err(()),
+        }
+    }
+}
+
 /// Used to control how child nodes are aligned.
 /// Does not apply to Flexbox, and will be ignored if specified on a flex container
 /// For Grid it controls alignment in the inline axis
@@ -55,8 +77,10 @@ pub type JustifySelf = AlignItems;
 /// For Grid it controls alignment in the block axis
 ///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/align-content)
+#[repr(u8)]
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub enum AlignContent {
     /// Items are packed toward the start of the axis
     Start,
@@ -85,6 +109,24 @@ pub enum AlignContent {
     /// The gap between the first and last items is exactly HALF the gap between items.
     /// The gaps are distributed evenly in proportion to these ratios.
     SpaceAround,
+}
+
+impl TryFrom<i32> for AlignContent {
+    type Error = ();
+    fn try_from(n: i32) -> Result<Self, ()> {
+        match n {
+            0 => Ok(AlignContent::Start),
+            1 => Ok(AlignContent::End),
+            2 => Ok(AlignContent::FlexStart),
+            3 => Ok(AlignContent::FlexEnd),
+            4 => Ok(AlignContent::Center),
+            6 => Ok(AlignContent::Stretch),
+            7 => Ok(AlignContent::SpaceBetween),
+            8 => Ok(AlignContent::SpaceEvenly),
+            9 => Ok(AlignContent::SpaceAround),
+            _ => Err(()),
+        }
+    }
 }
 
 /// Sets the distribution of space between and around content items
