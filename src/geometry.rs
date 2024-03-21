@@ -144,7 +144,7 @@ impl<T> Rect<T> {
     /// When applied to the left and right sides, the width is used
     /// as the second parameter of `f`.
     /// When applied to the top or bottom sides, the height is used instead.
-    #[cfg(feature = "flexbox")]
+    #[cfg(any(feature = "flexbox", feature = "block_layout"))]
     pub(crate) fn zip_size<R, F, U>(self, size: Size<U>, f: F) -> Rect<R>
     where
         F: Fn(T, U) -> R,
@@ -362,7 +362,7 @@ impl<U, T: Sub<U>> Sub<Size<U>> for Size<T> {
     }
 }
 
-// Note: we allow dead_code here as we want to provide a complete API of helpers that is symetrical in all axes,
+// Note: we allow dead_code here as we want to provide a complete API of helpers that is symmetrical in all axes,
 // but sometimes we only currently have a use for the helper in a single axis
 #[allow(dead_code)]
 impl<T> Size<T> {
@@ -557,6 +557,18 @@ impl Size<Option<f32>> {
     #[must_use]
     pub const fn new(width: f32, height: f32) -> Self {
         Size { width: Some(width), height: Some(height) }
+    }
+
+    /// Creates a new [`Size<Option<f32>>`] with either the width or height set based on the provided `direction`
+    #[cfg(feature = "flexbox")]
+    pub fn from_cross(direction: FlexDirection, value: Option<f32>) -> Self {
+        let mut new = Self::NONE;
+        if direction.is_row() {
+            new.height = value
+        } else {
+            new.width = value
+        }
+        new
     }
 
     /// Applies aspect_ratio (if one is supplied) to the Size:

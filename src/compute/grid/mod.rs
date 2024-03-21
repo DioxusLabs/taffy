@@ -206,7 +206,9 @@ pub fn compute_grid_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inpu
     inner_node_size.height = inner_node_size.height.or_else(|| initial_row_sum.into());
 
     debug_log!("initial_column_sum", dbg:initial_column_sum);
+    debug_log!(dbg: columns.iter().map(|track| track.base_size).collect::<Vec<_>>());
     debug_log!("initial_row_sum", dbg:initial_row_sum);
+    debug_log!(dbg: rows.iter().map(|track| track.base_size).collect::<Vec<_>>());
 
     // 6. Compute container size
     let resolved_style_size = known_dimensions.or(preferred_size);

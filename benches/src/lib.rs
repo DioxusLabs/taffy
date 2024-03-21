@@ -1,4 +1,4 @@
-// As each benchmark suite is compiled as a seperate crate and uses different helpers, we end up with a bunch
+// As each benchmark suite is compiled as a separate crate and uses different helpers, we end up with a bunch
 // of false positives for this lint. So let's just disable it for this code.
 #![allow(dead_code)]
 

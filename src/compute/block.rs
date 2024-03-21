@@ -340,7 +340,7 @@ fn perform_final_layout_on_in_flow_children(
     resolved_content_box_inset: Rect<f32>,
     own_margins_collapse_with_children: Line<bool>,
 ) -> (Size<f32>, f32, CollapsibleMarginSet, CollapsibleMarginSet) {
-    // Resolve container_inner_width for sizing child nodes using intial content_box_inset
+    // Resolve container_inner_width for sizing child nodes using initial content_box_inset
     let container_inner_width = container_outer_width - content_box_inset.horizontal_axis_sum();
     let parent_size = Size { width: Some(container_outer_width), height: None };
     let available_space =

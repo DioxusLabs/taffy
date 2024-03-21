@@ -1,5 +1,5 @@
 #[test]
-fn overflow_scrollbars_overriden_by_max_size() {
+fn overflow_scrollbars_overridden_by_max_size() {
     #[allow(unused_imports)]
     use taffy::{prelude::*, tree::Layout, TaffyTree};
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();

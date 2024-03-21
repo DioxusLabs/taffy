@@ -1,9 +1,10 @@
 [package]
 name = "taffy"
-version = "0.3.11"
+version = "0.4.1"
 authors = [
     "Alice Cecile <alice.i.cecile@gmail.com>",
     "Johnathan Kelley <jkelleyrtp@gmail.com>",
+    "Nico Burns <nico@nicoburns.com>",
 ]
 edition = "2021"
 rust-version = "1.65"
@@ -59,7 +60,7 @@ debug = ["std"]
 profile = ["std"]
 
 [dev-dependencies]
-cosmic-text = "0.10.0"
+cosmic-text = "0.11.2"
 serde_json = "1.0.93"
 
 # Enable default features for tests and examples

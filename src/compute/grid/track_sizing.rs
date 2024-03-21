@@ -680,7 +680,8 @@ fn resolve_intrinsic_track_sizes(
             let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
             if space > 0.0 {
                 if item.overflow.get(axis).is_scroll_container() {
-                    let fit_content_limit = move |track: &GridTrack| track.fit_content_limit(axis_inner_node_size);
+                    let fit_content_limit =
+                        move |track: &GridTrack| track.fit_content_limited_growth_limit(axis_inner_node_size);
                     distribute_item_space_to_base_size(
                         is_flex,
                         use_flex_factor_for_distribution,
@@ -697,7 +698,7 @@ fn resolve_intrinsic_track_sizes(
                         space,
                         tracks,
                         has_intrinsic_min_track_sizing_function,
-                        |_| f32::INFINITY,
+                        |track| track.growth_limit,
                         IntrinsicContributionType::Minimum,
                     );
                 }
@@ -717,7 +718,8 @@ fn resolve_intrinsic_track_sizes(
             let tracks = &mut axis_tracks[item.track_range_excluding_lines(axis)];
             if space > 0.0 {
                 if item.overflow.get(axis).is_scroll_container() {
-                    let fit_content_limit = move |track: &GridTrack| track.fit_content_limit(axis_inner_node_size);
+                    let fit_content_limit =
+                        move |track: &GridTrack| track.fit_content_limited_growth_limit(axis_inner_node_size);
                     distribute_item_space_to_base_size(
                         is_flex,
                         use_flex_factor_for_distribution,
@@ -734,7 +736,7 @@ fn resolve_intrinsic_track_sizes(
                         space,
                         tracks,
                         has_min_or_max_content_min_track_sizing_function,
-                        |_| f32::INFINITY,
+                        |track| track.growth_limit,
                         IntrinsicContributionType::Minimum,
                     );
                 }
@@ -831,7 +833,7 @@ fn resolve_intrinsic_track_sizes(
                     space,
                     tracks,
                     has_max_content_min_track_sizing_function,
-                    |_| f32::INFINITY,
+                    |track| track.growth_limit,
                     IntrinsicContributionType::Maximum,
                 );
             }
@@ -1247,7 +1249,7 @@ fn find_size_of_fr(tracks: &[GridTrack], space_to_fill: f32) -> f32 {
 
     // If the product of the hypothetical fr size (computed below) and any flexible track’s flex factor
     // is less than the track’s base size, then we must restart this algorithm treating all such tracks as inflexible.
-    // We therefore wrap the entire algorithm in a loop, with an hypotherical_fr_size of INFINITY such that the above
+    // We therefore wrap the entire algorithm in a loop, with an hypothetical_fr_size of INFINITY such that the above
     // condition can never be true for the first iteration.
     let mut hypothetical_fr_size = f32::INFINITY;
     let mut previous_iter_hypothetical_fr_size;
@@ -1278,14 +1280,14 @@ fn find_size_of_fr(tracks: &[GridTrack], space_to_fill: f32) -> f32 {
         // If the product of the hypothetical fr size and a flexible track’s flex factor is less than the track’s base size,
         // restart this algorithm treating all such tracks as inflexible.
         // We keep track of the hypothetical_fr_size
-        let hypotherical_fr_size_is_valid = tracks.iter().all(|track| match track.max_track_sizing_function {
+        let hypothetical_fr_size_is_valid = tracks.iter().all(|track| match track.max_track_sizing_function {
             MaxTrackSizingFunction::Fraction(flex_factor) => {
                 flex_factor * hypothetical_fr_size >= track.base_size
                     || flex_factor * previous_iter_hypothetical_fr_size < track.base_size
             }
             _ => true,
         });
-        if hypotherical_fr_size_is_valid {
+        if hypothetical_fr_size_is_valid {
             break;
         }
     }

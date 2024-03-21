@@ -560,7 +560,7 @@ pub enum TrackSizingFunction {
     /// A single non-repeated track
     Single(NonRepeatedTrackSizingFunction),
     /// Automatically generate grid tracks to fit the available space using the specified definite track lengths
-    /// Only valid if every track in template (not just the repitition) has a fixed size.
+    /// Only valid if every track in template (not just the repetition) has a fixed size.
     Repeat(GridTrackRepetition, GridTrackVec<NonRepeatedTrackSizingFunction>),
 }
 impl TrackSizingFunction {

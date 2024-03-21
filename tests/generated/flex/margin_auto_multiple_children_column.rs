@@ -1,5 +1,5 @@
 #[test]
-fn margin_auto_mutiple_children_column() {
+fn margin_auto_multiple_children_column() {
     #[allow(unused_imports)]
     use taffy::{prelude::*, tree::Layout, TaffyTree};
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();

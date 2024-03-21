@@ -19,7 +19,7 @@ impl DebugLogger {
         Self { stack: Mutex::new(Vec::new()) }
     }
 
-    pub fn push_node(&self, new_key: NodeId) {
+    pub fn push_node(&self, new_key: crate::NodeId) {
         let mut stack = self.stack.lock().unwrap();
         let mut key_string = String::new();
         write!(&mut key_string, "{:?}", new_key).unwrap();
@@ -69,30 +69,30 @@ pub(crate) static NODE_LOGGER: DebugLogger = DebugLogger::new();
 
 macro_rules! debug_log {
     // String literal label with debug printing
-    ($label:literal, dbg:$item:expr) => {
+    ($label:literal, dbg:$item:expr) => {{
         #[cfg(feature = "debug")]
         $crate::util::debug::NODE_LOGGER.labelled_debug_log($label, $item);
-    };
+    }};
     // String literal label with display printing
-    ($label:literal, $item:expr) => {
+    ($label:literal, $item:expr) => {{
         #[cfg(feature = "debug")]
         $crate::util::debug::NODE_LOGGER.labelled_log($label, $item);
-    };
+    }};
     // Debug printing
-    (dbg:$item:expr) => {
+    (dbg:$item:expr) => {{
         #[cfg(feature = "debug")]
         $crate::util::debug::NODE_LOGGER.debug_log($item);
-    };
+    }};
     // Display printing
-    ($item:expr) => {
+    ($item:expr) => {{
         #[cfg(feature = "debug")]
         $crate::util::debug::NODE_LOGGER.log($item);
-    };
+    }};
     // Blank newline
-    () => {
+    () => {{
         #[cfg(feature = "debug")]
         println!();
-    };
+    }};
 }
 
 macro_rules! debug_log_node {

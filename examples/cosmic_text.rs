@@ -34,7 +34,7 @@ impl CosmicTextContext {
         self.buffer.set_size(font_system, width_constraint, f32::INFINITY);
 
         // Compute layout
-        self.buffer.shape_until_scroll(font_system);
+        self.buffer.shape_until_scroll(font_system, false);
 
         // Determine measured size of text
         let (width, total_lines) = self

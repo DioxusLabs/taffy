@@ -251,7 +251,7 @@ pub struct Style {
     #[cfg_attr(feature = "serde", serde(default = "style_helpers::auto"))]
     pub inset: Rect<LengthPercentageAuto>,
 
-    // Size properies
+    // Size properties
     /// Sets the initial size of the item
     #[cfg_attr(feature = "serde", serde(default = "style_helpers::auto"))]
     pub size: Size<Dimension>,
@@ -303,7 +303,7 @@ pub struct Style {
     #[cfg_attr(feature = "serde", serde(default = "style_helpers::zero"))]
     pub gap: Size<LengthPercentage>,
 
-    // Flexbox properies
+    // Flexbox properties
     /// Which direction does the main axis flow in?
     #[cfg(feature = "flexbox")]
     pub flex_direction: FlexDirection,
@@ -324,7 +324,7 @@ pub struct Style {
     #[cfg(feature = "flexbox")]
     pub flex_shrink: f32,
 
-    // Grid container properies
+    // Grid container properties
     /// Defines the track sizing functions (widths) of the grid rows
     #[cfg(feature = "grid")]
     pub grid_template_rows: GridTrackVec<TrackSizingFunction>,
@@ -367,7 +367,7 @@ impl Style {
         aspect_ratio: None,
         #[cfg(any(feature = "flexbox", feature = "grid"))]
         gap: Size::zero(),
-        // Aligment
+        // Alignment
         #[cfg(any(feature = "flexbox", feature = "grid"))]
         align_items: None,
         #[cfg(any(feature = "flexbox", feature = "grid"))]

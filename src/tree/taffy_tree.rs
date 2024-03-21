@@ -601,6 +601,14 @@ impl<NodeContext> TaffyTree<NodeContext> {
         self.nodes.len()
     }
 
+    /// Returns the `NodeId` of the parent node of the specified node (if it exists)
+    ///
+    /// - Return None if the specified node has no parent
+    /// - Panics if the specified node does not exist
+    pub fn parent(&self, child_id: NodeId) -> Option<NodeId> {
+        self.parents[child_id.into()]
+    }
+
     /// Returns a list of children that belong to the parent node
     pub fn children(&self, parent: NodeId) -> TaffyResult<Vec<NodeId>> {
         Ok(self.children[parent.into()].iter().copied().collect::<_>())
@@ -700,7 +708,6 @@ impl<NodeContext> TaffyTree<NodeContext> {
 
 #[cfg(test)]
 mod tests {
-    #![allow(clippy::bool_assert_comparison)]
 
     use super::*;
     use crate::style::{Dimension, Display, FlexDirection};
@@ -784,7 +791,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_node_should_detach_herarchy() {
+    fn remove_node_should_detach_hierarchy() {
         let mut taffy: TaffyTree<()> = TaffyTree::new();
 
         // Build a linear tree layout: <0> <- <1> <- <2>
