@@ -2,7 +2,7 @@
 //!
 //! ### Layout functions
 //!
-//! The layout functions all take an [`&mut impl LayoutPartialTree`](crate::LayoutPartialTree) parameter, which represents a single container node and it's direct children.
+//! The layout functions all take an [`&impl LayoutPartialTree`](crate::LayoutPartialTree) parameter, which represents a single container node and it's direct children.
 //!
 //! | Function                          | Purpose                                                                                                                                                                                            |
 //! | ---                               | ---                                                                                                                                                                                                |
@@ -54,7 +54,7 @@ use crate::util::sys::round;
 use crate::util::ResolveOrZero;
 
 /// Compute layout for the root node in the tree
-pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, available_space: Size<AvailableSpace>) {
+pub fn compute_root_layout(tree: &impl LayoutPartialTree, root: NodeId, available_space: Size<AvailableSpace>) {
     // Recursively compute node layout
     let output = tree.perform_child_layout(
         root,
@@ -93,13 +93,13 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
 /// Uses the provided closure to compute the layout (and then stores the result in the cache) if no cached layout is found.
 #[inline(always)]
 pub fn compute_cached_layout<Tree: LayoutPartialTree + ?Sized, ComputeFunction>(
-    tree: &mut Tree,
+    tree: &Tree,
     node: NodeId,
     inputs: LayoutInput,
     mut compute_uncached: ComputeFunction,
 ) -> LayoutOutput
 where
-    ComputeFunction: FnMut(&mut Tree, NodeId, LayoutInput) -> LayoutOutput,
+    ComputeFunction: FnMut(&Tree, NodeId, LayoutInput) -> LayoutOutput,
 {
     debug_push_node!(node);
     let LayoutInput { known_dimensions, available_space, run_mode, .. } = inputs;
@@ -194,7 +194,7 @@ pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
 
 /// Creates a layout for this node and its children, recursively.
 /// Each hidden node has zero size and is placed at the origin
-pub fn compute_hidden_layout(tree: &mut impl LayoutPartialTree, node: NodeId) -> LayoutOutput {
+pub fn compute_hidden_layout(tree: &impl LayoutPartialTree, node: NodeId) -> LayoutOutput {
     // Clear cache and set zeroed-out layout for the node
     tree.get_cache_mut(node).clear();
     tree.set_unrounded_layout(node, &Layout::with_order(0));

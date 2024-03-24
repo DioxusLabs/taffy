@@ -156,18 +156,18 @@ pub trait TraverseTree: TraversePartialTree {}
 ///
 /// Note that this trait extends [`TraversePartialTree`] (not [`TraverseTree`]). Taffy's algorithm implementations have been designed such that they can be used for a laying out a single
 /// node that only has access to it's immediate children.
-pub trait LayoutPartialTree: TraversePartialTree {
+pub trait LayoutPartialTree: TraversePartialTree + Send + Sync {
     /// Get a reference to the [`Style`] for this node.
     fn get_style(&self, node_id: NodeId) -> &Style;
 
     /// Set the node's unrounded layout
-    fn set_unrounded_layout(&mut self, node_id: NodeId, layout: &Layout);
+    fn set_unrounded_layout(&self, node_id: NodeId, layout: &Layout);
 
     /// Get a mutable reference to the [`Cache`] for this node.
-    fn get_cache_mut(&mut self, node_id: NodeId) -> &mut Cache;
+    fn get_cache_mut(&self, node_id: NodeId) -> &mut Cache;
 
     /// Compute the specified node's size or full layout given the specified constraints
-    fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
+    fn compute_child_layout(&self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
 }
 
 /// Trait used by the `round_layout` method which takes a tree of unrounded float-valued layouts and performs
@@ -200,7 +200,7 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
     #[inline(always)]
     #[allow(clippy::too_many_arguments)]
     fn measure_child_size(
-        &mut self,
+        &self,
         node_id: NodeId,
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,
@@ -228,7 +228,7 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
     /// Perform a full layout on the node given the specified constraints
     #[inline(always)]
     fn perform_child_layout(
-        &mut self,
+        &self,
         node_id: NodeId,
         known_dimensions: Size<Option<f32>>,
         parent_size: Size<Option<f32>>,

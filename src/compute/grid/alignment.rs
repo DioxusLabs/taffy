@@ -54,7 +54,7 @@ pub(super) fn align_tracks(
 
 /// Align and size a grid item into it's final position
 pub(super) fn align_and_position_item(
-    tree: &mut impl LayoutPartialTree,
+    tree: &impl LayoutPartialTree,
     node: NodeId,
     order: u32,
     grid_area: Rect<f32>,

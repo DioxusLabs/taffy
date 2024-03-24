@@ -22,7 +22,7 @@ fn test_measure_function(
     known_dimensions: taffy::geometry::Size<Option<f32>>,
     available_space: taffy::geometry::Size<taffy::style::AvailableSpace>,
     _node_id: taffy::tree::NodeId,
-    node_context: Option<&mut TextMeasure>,
+    node_context: Option<&TextMeasure>,
 ) -> taffy::geometry::Size<f32> {
     use taffy::geometry::AbsoluteAxis;
     use taffy::prelude::*;

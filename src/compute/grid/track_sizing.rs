@@ -71,7 +71,7 @@ where
     EstimateFunction: Fn(&GridTrack, Option<f32>) -> Option<f32>,
 {
     /// The layout tree
-    tree: &'tree mut Tree,
+    tree: &'tree Tree,
     /// The tracks in the opposite axis to the one we are currently sizing
     other_axis_tracks: &'oat [GridTrack],
     /// A function that computes an estimate of an other-axis track's size which is passed to
@@ -261,7 +261,7 @@ pub(super) fn determine_if_item_crosses_flexible_or_intrinsic_tracks(
 /// Note: Gutters are treated as empty fixed-size tracks for the purpose of the track sizing algorithm.
 #[allow(clippy::too_many_arguments)]
 pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
-    tree: &mut Tree,
+    tree: &Tree,
     axis: AbstractAxis,
     axis_min_size: Option<f32>,
     axis_max_size: Option<f32>,
@@ -435,7 +435,7 @@ fn initialize_track_sizes(axis_tracks: &mut [GridTrack], axis_inner_node_size: O
 
 /// 11.5.1 Shim baseline-aligned items so their intrinsic size contributions reflect their baseline alignment.
 fn resolve_item_baselines(
-    tree: &mut impl LayoutPartialTree,
+    tree: &impl LayoutPartialTree,
     axis: AbstractAxis,
     items: &mut [GridItem],
     inner_node_size: Size<Option<f32>>,
@@ -508,7 +508,7 @@ fn resolve_item_baselines(
 /// 11.5 Resolve Intrinsic Track Sizes
 #[allow(clippy::too_many_arguments)]
 fn resolve_intrinsic_track_sizes(
-    tree: &mut impl LayoutPartialTree,
+    tree: &impl LayoutPartialTree,
     axis: AbstractAxis,
     axis_tracks: &mut [GridTrack],
     other_axis_tracks: &[GridTrack],
@@ -1139,7 +1139,7 @@ fn maximise_tracks(
 #[allow(clippy::too_many_arguments)]
 #[inline(always)]
 fn expand_flexible_tracks(
-    tree: &mut impl LayoutPartialTree,
+    tree: &impl LayoutPartialTree,
     axis: AbstractAxis,
     axis_tracks: &mut [GridTrack],
     items: &mut [GridItem],

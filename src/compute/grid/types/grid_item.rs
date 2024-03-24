@@ -340,7 +340,7 @@ impl GridItem {
     pub fn min_content_contribution(
         &self,
         axis: AbstractAxis,
-        tree: &mut impl LayoutPartialTree,
+        tree: &impl LayoutPartialTree,
         available_space: Size<Option<f32>>,
         inner_node_size: Size<Option<f32>>,
     ) -> f32 {
@@ -364,7 +364,7 @@ impl GridItem {
     pub fn min_content_contribution_cached(
         &mut self,
         axis: AbstractAxis,
-        tree: &mut impl LayoutPartialTree,
+        tree: &impl LayoutPartialTree,
         available_space: Size<Option<f32>>,
         inner_node_size: Size<Option<f32>>,
     ) -> f32 {
@@ -379,7 +379,7 @@ impl GridItem {
     pub fn max_content_contribution(
         &self,
         axis: AbstractAxis,
-        tree: &mut impl LayoutPartialTree,
+        tree: &impl LayoutPartialTree,
         available_space: Size<Option<f32>>,
         inner_node_size: Size<Option<f32>>,
     ) -> f32 {
@@ -403,7 +403,7 @@ impl GridItem {
     pub fn max_content_contribution_cached(
         &mut self,
         axis: AbstractAxis,
-        tree: &mut impl LayoutPartialTree,
+        tree: &impl LayoutPartialTree,
         available_space: Size<Option<f32>>,
         inner_node_size: Size<Option<f32>>,
     ) -> f32 {
@@ -423,7 +423,7 @@ impl GridItem {
     /// See: https://www.w3.org/TR/css-grid-1/#min-size-auto
     pub fn minimum_contribution(
         &mut self,
-        tree: &mut impl LayoutPartialTree,
+        tree: &impl LayoutPartialTree,
         axis: AbstractAxis,
         axis_tracks: &[GridTrack],
         known_dimensions: Size<Option<f32>>,
@@ -482,7 +482,7 @@ impl GridItem {
     #[inline(always)]
     pub fn minimum_contribution_cached(
         &mut self,
-        tree: &mut impl LayoutPartialTree,
+        tree: &impl LayoutPartialTree,
         axis: AbstractAxis,
         axis_tracks: &[GridTrack],
         known_dimensions: Size<Option<f32>>,

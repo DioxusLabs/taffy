@@ -35,7 +35,7 @@ mod util;
 ///   - Placing items (which also resolves the implicit grid)
 ///   - Track (row/column) sizing
 ///   - Alignment & Final item placement
-pub fn compute_grid_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
+pub fn compute_grid_layout(tree: &impl LayoutPartialTree, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
     let get_child_styles_iter = |node| tree.child_ids(node).map(|child_node: NodeId| tree.get_style(child_node));

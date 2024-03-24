@@ -1,4 +1,6 @@
 //! Contains [TaffyTree](crate::tree::TaffyTree): the default implementation of [LayoutTree](crate::tree::LayoutTree), and the error type for Taffy.
+use core::cell::UnsafeCell;
+
 #[cfg(not(feature = "std"))]
 use slotmap::SecondaryMap;
 #[cfg(feature = "std")]
@@ -86,7 +88,7 @@ struct NodeData {
 
     /// The always unrounded results of the layout computation. We must store this separately from the rounded
     /// layout to avoid errors from rounding already-rounded values. See <https://github.com/DioxusLabs/taffy/issues/501>.
-    pub(crate) unrounded_layout: Layout,
+    pub(crate) unrounded_layout: UnsafeCell<Layout>,
 
     /// The final results of the layout computation.
     /// These may be rounded or unrounded depending on what the `use_rounding` config setting is set to.
@@ -96,8 +98,11 @@ struct NodeData {
     pub(crate) has_context: bool,
 
     /// The cached results of the layout computation
-    pub(crate) cache: Cache,
+    pub(crate) cache: UnsafeCell<Cache>,
 }
+
+unsafe impl Send for NodeData {}
+unsafe impl Sync for NodeData {}
 
 impl NodeData {
     /// Create the data for a new node
@@ -105,8 +110,8 @@ impl NodeData {
     pub const fn new(style: Style) -> Self {
         Self {
             style,
-            cache: Cache::new(),
-            unrounded_layout: Layout::new(),
+            cache: UnsafeCell::new(Cache::new()),
+            unrounded_layout: UnsafeCell::new(Layout::new()),
             final_layout: Layout::new(),
             has_context: false,
         }
@@ -116,15 +121,15 @@ impl NodeData {
     ///
     /// This clears any cached data and signals that the data must be recomputed.
     #[inline]
-    pub fn mark_dirty(&mut self) {
-        self.cache.clear()
+    pub fn mark_dirty(&self) {
+        unsafe { &mut *self.cache.get() }.clear()
     }
 }
 
 /// An entire tree of UI nodes. The entry point to Taffy's high-level API.
 ///
 /// Allows you to build a tree of UI nodes, run Taffy's layout algorithms over that tree, and then access the resultant layout.
-pub struct TaffyTree<NodeContext = ()> {
+pub struct TaffyTree<NodeContext: Send + Sync = ()> {
     /// The [`NodeData`] for each node stored in this tree
     nodes: SlotMap<DefaultKey, NodeData>,
 
@@ -162,7 +167,7 @@ impl<'a> Iterator for TaffyTreeChildIter<'a> {
 }
 
 // TraversePartialTree impl for TaffyTree
-impl<NodeContext> TraversePartialTree for TaffyTree<NodeContext> {
+impl<NodeContext: Send + Sync> TraversePartialTree for TaffyTree<NodeContext> {
     type ChildIter<'a> = TaffyTreeChildIter<'a> where Self: 'a;
 
     #[inline(always)]
@@ -182,10 +187,10 @@ impl<NodeContext> TraversePartialTree for TaffyTree<NodeContext> {
 }
 
 // TraverseTree impl for TaffyTree
-impl<NodeContext> TraverseTree for TaffyTree<NodeContext> {}
+impl<NodeContext: Send + Sync> TraverseTree for TaffyTree<NodeContext> {}
 
 // PrintTree impl for TaffyTree
-impl<NodeContext> PrintTree for TaffyTree<NodeContext> {
+impl<NodeContext: Send + Sync> PrintTree for TaffyTree<NodeContext> {
     #[inline(always)]
     fn get_debug_label(&self, node_id: NodeId) -> &'static str {
         let node = &self.nodes[node_id.into()];
@@ -221,7 +226,8 @@ impl<NodeContext> PrintTree for TaffyTree<NodeContext> {
 /// which makes the lifetimes of the context much more flexible.
 pub(crate) struct TaffyView<'t, NodeContext, MeasureFunction>
 where
-    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+    MeasureFunction: Fn(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&NodeContext>) -> Size<f32> + Send + Sync,
+    NodeContext: Send + Sync,
 {
     /// A reference to the TaffyTree
     pub(crate) taffy: &'t mut TaffyTree<NodeContext>,
@@ -232,7 +238,8 @@ where
 // TraversePartialTree impl for TaffyView
 impl<'t, NodeContext, MeasureFunction> TraversePartialTree for TaffyView<'t, NodeContext, MeasureFunction>
 where
-    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+    MeasureFunction: Fn(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&NodeContext>) -> Size<f32> + Send + Sync,
+    NodeContext: Send + Sync,
 {
     type ChildIter<'a> = TaffyTreeChildIter<'a> where Self: 'a;
 
@@ -254,14 +261,16 @@ where
 
 // TraverseTree impl for TaffyView
 impl<'t, NodeContext, MeasureFunction> TraverseTree for TaffyView<'t, NodeContext, MeasureFunction> where
-    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>
+    MeasureFunction: Fn(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&NodeContext>) -> Size<f32> + Send + Sync,
+    NodeContext: Send + Sync,
 {
 }
 
 // LayoutPartialTree impl for TaffyView
 impl<'t, NodeContext, MeasureFunction> LayoutPartialTree for TaffyView<'t, NodeContext, MeasureFunction>
 where
-    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+    MeasureFunction: Fn(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&NodeContext>) -> Size<f32> + Send + Sync,
+    NodeContext: Send + Sync,
 {
     #[inline(always)]
     fn get_style(&self, node: NodeId) -> &Style {
@@ -269,17 +278,17 @@ where
     }
 
     #[inline(always)]
-    fn get_cache_mut(&mut self, node: NodeId) -> &mut Cache {
-        &mut self.taffy.nodes[node.into()].cache
+    fn get_cache_mut(&self, node: NodeId) -> &mut Cache {
+        unsafe { &mut*self.taffy.nodes[node.into()].cache.get() }
     }
 
     #[inline(always)]
-    fn set_unrounded_layout(&mut self, node_id: NodeId, layout: &Layout) {
-        self.taffy.nodes[node_id.into()].unrounded_layout = *layout;
+    fn set_unrounded_layout(&self, node_id: NodeId, layout: &Layout) {
+        unsafe { *self.taffy.nodes[node_id.into()].unrounded_layout.get() = *layout };
     }
 
     #[inline(always)]
-    fn compute_child_layout(&mut self, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
+    fn compute_child_layout(&self, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
         // If RunMode is PerformHiddenLayout then this indicates that an ancestor node is `Display::None`
         // and thus that we should lay out this node using hidden layout regardless of it's own display style.
         if inputs.run_mode == RunMode::PerformHiddenLayout {
@@ -318,7 +327,7 @@ where
                     let node_key = node.into();
                     let style = &tree.taffy.nodes[node_key].style;
                     let has_context = tree.taffy.nodes[node_key].has_context;
-                    let node_context = has_context.then(|| tree.taffy.node_context_data.get_mut(node_key)).flatten();
+                    let node_context = has_context.then(|| tree.taffy.node_context_data.get(node_key)).flatten();
                     let measure_function = |known_dimensions, available_space| {
                         (tree.measure_function)(known_dimensions, available_space, node, node_context)
                     };
@@ -332,11 +341,12 @@ where
 // RoundTree impl for TaffyView
 impl<'t, NodeContext, MeasureFunction> RoundTree for TaffyView<'t, NodeContext, MeasureFunction>
 where
-    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+    MeasureFunction: Fn(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&NodeContext>) -> Size<f32> + Send + Sync,
+    NodeContext: Send + Sync,
 {
     #[inline(always)]
     fn get_unrounded_layout(&self, node: NodeId) -> &Layout {
-        &self.taffy.nodes[node.into()].unrounded_layout
+        unsafe { &*self.taffy.nodes[node.into()].unrounded_layout.get() }
     }
 
     #[inline(always)]
@@ -346,7 +356,7 @@ where
 }
 
 #[allow(clippy::iter_cloned_collect)] // due to no-std support, we need to use `iter_cloned` instead of `collect`
-impl<NodeContext> TaffyTree<NodeContext> {
+impl<NodeContext: Send + Sync> TaffyTree<NodeContext> {
     /// Creates a new [`TaffyTree`]
     ///
     /// The default capacity of a [`TaffyTree`] is 16 nodes.
@@ -631,7 +641,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         if self.config.use_rounding {
             Ok(&self.nodes[node.into()].final_layout)
         } else {
-            Ok(&self.nodes[node.into()].unrounded_layout)
+            Ok(unsafe { &*self.nodes[node.into()].unrounded_layout.get() })
         }
     }
 
@@ -661,7 +671,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
 
     /// Indicates whether the layout of this node (and its children) need to be recomputed
     pub fn dirty(&self, node: NodeId) -> TaffyResult<bool> {
-        Ok(self.nodes[node.into()].cache.is_empty())
+        Ok(unsafe { &*self.nodes[node.into()].cache.get() }.is_empty())
     }
 
     /// Updates the stored layout of the provided `node` and its children
@@ -672,7 +682,8 @@ impl<NodeContext> TaffyTree<NodeContext> {
         measure_function: MeasureFunction,
     ) -> Result<(), TaffyError>
     where
-        MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+        MeasureFunction: Fn(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&NodeContext>) -> Size<f32> + Send + Sync,
+        NodeContext: Send + Sync,
     {
         let use_rounding = self.config.use_rounding;
         let mut taffy_view = TaffyView { taffy: self, measure_function };
@@ -713,7 +724,7 @@ mod tests {
         known_dimensions: Size<Option<f32>>,
         _available_space: Size<AvailableSpace>,
         _node_id: NodeId,
-        node_context: Option<&mut Size<f32>>,
+        node_context: Option<&Size<f32>>,
     ) -> Size<f32> {
         known_dimensions.unwrap_or(node_context.cloned().unwrap_or(Size::ZERO))
     }

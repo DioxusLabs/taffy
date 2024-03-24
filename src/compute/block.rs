@@ -57,7 +57,7 @@ struct BlockItem {
 }
 
 /// Computes the layout of [`LayoutPartialTree`] according to the block layout algorithm
-pub fn compute_block_layout(tree: &mut impl LayoutPartialTree, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput {
+pub fn compute_block_layout(tree: &impl LayoutPartialTree, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
     let style = tree.get_style(node_id);
 
@@ -104,7 +104,7 @@ pub fn compute_block_layout(tree: &mut impl LayoutPartialTree, node_id: NodeId, 
 }
 
 /// Computes the layout of [`LayoutPartialTree`] according to the block layout algorithm
-fn compute_inner(tree: &mut impl LayoutPartialTree, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput {
+fn compute_inner(tree: &impl LayoutPartialTree, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput {
     let LayoutInput {
         known_dimensions, parent_size, available_space, run_mode, vertical_margins_are_collapsible, ..
     } = inputs;
@@ -298,7 +298,7 @@ fn generate_item_list(
 /// Compute the content-based width in the case that the width of the container is not known
 #[inline]
 fn determine_content_based_container_width(
-    tree: &mut impl LayoutPartialTree,
+    tree: &impl LayoutPartialTree,
     items: &[BlockItem],
     available_width: AvailableSpace,
 ) -> f32 {
@@ -333,7 +333,7 @@ fn determine_content_based_container_width(
 /// Compute each child's final size and position
 #[inline]
 fn perform_final_layout_on_in_flow_children(
-    tree: &mut impl LayoutPartialTree,
+    tree: &impl LayoutPartialTree,
     items: &mut [BlockItem],
     container_outer_width: f32,
     content_box_inset: Rect<f32>,
@@ -488,7 +488,7 @@ fn perform_final_layout_on_in_flow_children(
 /// Perform absolute layout on all absolutely positioned children.
 #[inline]
 fn perform_absolute_layout_on_absolute_children(
-    tree: &mut impl LayoutPartialTree,
+    tree: &impl LayoutPartialTree,
     items: &[BlockItem],
     area_size: Size<f32>,
     area_offset: Point<f32>,

@@ -13,6 +13,7 @@ use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
+use rayon::prelude::*;
 
 #[cfg(feature = "content_size")]
 use super::common::content_size::compute_content_size_contribution;
@@ -152,7 +153,7 @@ struct AlgoConstants {
 }
 
 /// Computes the layout of [`LayoutPartialTree`] according to the flexbox algorithm
-pub fn compute_flexbox_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
+pub fn compute_flexbox_layout(tree: &impl LayoutPartialTree, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, run_mode, .. } = inputs;
     let style = tree.get_style(node);
 
@@ -186,7 +187,7 @@ pub fn compute_flexbox_layout(tree: &mut impl LayoutPartialTree, node: NodeId, i
 }
 
 /// Compute a preliminary size for an item
-fn compute_preliminary(tree: &mut impl LayoutPartialTree, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
+fn compute_preliminary(tree: &impl LayoutPartialTree, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
     // Define some general constants we will need for the remainder of the algorithm.
@@ -562,14 +563,15 @@ fn determine_available_space(
 ///     (For example, an item with a specified size of zero, positive padding, and box-sizing: border-box will have an outer flex base size of zero—and hence a negative inner flex base size.)
 #[inline]
 fn determine_flex_base_size(
-    tree: &mut impl LayoutPartialTree,
+    tree: &impl LayoutPartialTree,
     constants: &AlgoConstants,
     available_space: Size<AvailableSpace>,
     flex_items: &mut [FlexItem],
 ) {
     let dir = constants.dir;
 
-    for child in flex_items.iter_mut() {
+    let block_size = (flex_items.len() / 8).max(1);
+    flex_items.par_iter_mut().by_uniform_blocks(block_size).for_each(|child| {
         let child_style = tree.get_style(child.node);
 
         // Parent size for child sizing
@@ -717,7 +719,7 @@ fn determine_flex_base_size(
                 min_content_main_size.maybe_min(child.size.main(dir)).maybe_min(child.max_size.main(dir));
             clamped_min_content_size.maybe_max(padding_border_axes_sums.main(dir))
         });
-    }
+    });
 }
 
 /// Collect flex items into flex lines.
@@ -802,7 +804,7 @@ fn collect_flex_lines<'a>(
 
 /// Determine the container's main size (if not already known)
 fn determine_container_main_size(
-    tree: &mut impl LayoutPartialTree,
+    tree: &impl LayoutPartialTree,
     available_space: Size<AvailableSpace>,
     lines: &mut [FlexLine<'_>],
     constants: &mut AlgoConstants,
@@ -1208,7 +1210,7 @@ fn resolve_flexible_lengths(line: &mut FlexLine, constants: &AlgoConstants, orig
 ///     by performing layout with the used main size and the available space, treating auto as fit-content.
 #[inline]
 fn determine_hypothetical_cross_size(
-    tree: &mut impl LayoutPartialTree,
+    tree: &impl LayoutPartialTree,
     line: &mut FlexLine,
     constants: &AlgoConstants,
     available_space: Size<AvailableSpace>,
@@ -1258,7 +1260,7 @@ fn determine_hypothetical_cross_size(
 /// Calculate the base lines of the children.
 #[inline]
 fn calculate_children_base_lines(
-    tree: &mut impl LayoutPartialTree,
+    tree: &impl LayoutPartialTree,
     node_size: Size<Option<f32>>,
     available_space: Size<AvailableSpace>,
     flex_lines: &mut [FlexLine],
@@ -1722,7 +1724,7 @@ fn align_flex_lines_per_align_content(flex_lines: &mut [FlexLine], constants: &A
 /// Calculates the layout for a flex-item
 #[allow(clippy::too_many_arguments)]
 fn calculate_flex_item(
-    tree: &mut impl LayoutPartialTree,
+    tree: &impl LayoutPartialTree,
     item: &mut FlexItem,
     total_offset_main: &mut f32,
     total_offset_cross: f32,
@@ -1803,7 +1805,7 @@ fn calculate_flex_item(
 /// Calculates the layout line
 #[allow(clippy::too_many_arguments)]
 fn calculate_layout_line(
-    tree: &mut impl LayoutPartialTree,
+    tree: &impl LayoutPartialTree,
     line: &mut FlexLine,
     total_offset_cross: &mut f32,
     #[cfg(feature = "content_size")] content_size: &mut Size<f32>,
@@ -1815,8 +1817,11 @@ fn calculate_layout_line(
     let mut total_offset_main = padding_border.main_start(direction);
     let line_offset_cross = line.offset_cross;
 
+    let block_size = (line.items.len() / 8).max(1);
     if direction.is_reverse() {
-        for item in line.items.iter_mut().rev() {
+        line.items.par_iter_mut().rev().by_uniform_blocks(block_size).for_each(|item| {
+            let mut total_offset_main = 0.0;
+            let mut content_size = &mut Size::ZERO;
             calculate_flex_item(
                 tree,
                 item,
@@ -1829,9 +1834,11 @@ fn calculate_layout_line(
                 node_inner_size,
                 direction,
             );
-        }
+        });
     } else {
-        for item in line.items.iter_mut() {
+        line.items.par_iter_mut().by_uniform_blocks(block_size).for_each(|item| {
+            let mut total_offset_main = 0.0;
+            let mut content_size = &mut Size::ZERO;
             calculate_flex_item(
                 tree,
                 item,
@@ -1844,7 +1851,7 @@ fn calculate_layout_line(
                 node_inner_size,
                 direction,
             );
-        }
+        });
     }
 
     *total_offset_cross += line_offset_cross + line.cross_size;
@@ -1853,7 +1860,7 @@ fn calculate_layout_line(
 /// Do a final layout pass and collect the resulting layouts.
 #[inline]
 fn final_layout_pass(
-    tree: &mut impl LayoutPartialTree,
+    tree: &impl LayoutPartialTree,
     flex_lines: &mut [FlexLine],
     constants: &AlgoConstants,
 ) -> Size<f32> {
@@ -1898,7 +1905,7 @@ fn final_layout_pass(
 /// Perform absolute layout on all absolutely positioned children.
 #[inline]
 fn perform_absolute_layout_on_absolute_children(
-    tree: &mut impl LayoutPartialTree,
+    tree: &impl LayoutPartialTree,
     node: NodeId,
     constants: &AlgoConstants,
 ) -> Size<f32> {
