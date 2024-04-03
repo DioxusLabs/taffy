@@ -65,10 +65,10 @@ fn grid_justify_content_space_evenly_negative_space_gap() {
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
-        10f32,
+        20f32,
         "scroll_width of node {:?}. Expected {}. Actual {}",
         node,
-        10f32,
+        20f32,
         layout.scroll_width()
     );
     #[cfg(feature = "content_size")]
@@ -89,10 +89,10 @@ fn grid_justify_content_space_evenly_negative_space_gap() {
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
-        10f32,
+        20f32,
         "scroll_width of node {:?}. Expected {}. Actual {}",
         node0,
-        10f32,
+        20f32,
         layout.scroll_width()
     );
     #[cfg(feature = "content_size")]
@@ -108,7 +108,7 @@ fn grid_justify_content_space_evenly_negative_space_gap() {
     let layout @ Layout { size, location, .. } = taffy.layout(node00).unwrap();
     assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node00, 40f32, size.width);
     assert_eq!(size.height, 20f32, "height of node {:?}. Expected {}. Actual {}", node00, 20f32, size.height);
-    assert_eq!(location.x, -10f32, "x of node {:?}. Expected {}. Actual {}", node00, -10f32, location.x);
+    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node00, 0f32, location.x);
     assert_eq!(location.y, 20f32, "y of node {:?}. Expected {}. Actual {}", node00, 20f32, location.y);
     #[cfg(feature = "content_size")]
     assert_eq!(
@@ -132,7 +132,7 @@ fn grid_justify_content_space_evenly_negative_space_gap() {
     let layout @ Layout { size, location, .. } = taffy.layout(node01).unwrap();
     assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node01, 40f32, size.width);
     assert_eq!(size.height, 20f32, "height of node {:?}. Expected {}. Actual {}", node01, 20f32, size.height);
-    assert_eq!(location.x, 40f32, "x of node {:?}. Expected {}. Actual {}", node01, 40f32, location.x);
+    assert_eq!(location.x, 50f32, "x of node {:?}. Expected {}. Actual {}", node01, 50f32, location.x);
     assert_eq!(location.y, 20f32, "y of node {:?}. Expected {}. Actual {}", node01, 20f32, location.y);
     #[cfg(feature = "content_size")]
     assert_eq!(
@@ -156,7 +156,7 @@ fn grid_justify_content_space_evenly_negative_space_gap() {
     let layout @ Layout { size, location, .. } = taffy.layout(node02).unwrap();
     assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node02, 40f32, size.width);
     assert_eq!(size.height, 20f32, "height of node {:?}. Expected {}. Actual {}", node02, 20f32, size.height);
-    assert_eq!(location.x, 90f32, "x of node {:?}. Expected {}. Actual {}", node02, 90f32, location.x);
+    assert_eq!(location.x, 100f32, "x of node {:?}. Expected {}. Actual {}", node02, 100f32, location.x);
     assert_eq!(location.y, 20f32, "y of node {:?}. Expected {}. Actual {}", node02, 20f32, location.y);
     #[cfg(feature = "content_size")]
     assert_eq!(
@@ -180,7 +180,7 @@ fn grid_justify_content_space_evenly_negative_space_gap() {
     let layout @ Layout { size, location, .. } = taffy.layout(node03).unwrap();
     assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node03, 40f32, size.width);
     assert_eq!(size.height, 20f32, "height of node {:?}. Expected {}. Actual {}", node03, 20f32, size.height);
-    assert_eq!(location.x, -10f32, "x of node {:?}. Expected {}. Actual {}", node03, -10f32, location.x);
+    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node03, 0f32, location.x);
     assert_eq!(location.y, 50f32, "y of node {:?}. Expected {}. Actual {}", node03, 50f32, location.y);
     #[cfg(feature = "content_size")]
     assert_eq!(
@@ -204,7 +204,7 @@ fn grid_justify_content_space_evenly_negative_space_gap() {
     let layout @ Layout { size, location, .. } = taffy.layout(node04).unwrap();
     assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node04, 40f32, size.width);
     assert_eq!(size.height, 20f32, "height of node {:?}. Expected {}. Actual {}", node04, 20f32, size.height);
-    assert_eq!(location.x, 40f32, "x of node {:?}. Expected {}. Actual {}", node04, 40f32, location.x);
+    assert_eq!(location.x, 50f32, "x of node {:?}. Expected {}. Actual {}", node04, 50f32, location.x);
     assert_eq!(location.y, 50f32, "y of node {:?}. Expected {}. Actual {}", node04, 50f32, location.y);
     #[cfg(feature = "content_size")]
     assert_eq!(
@@ -228,7 +228,7 @@ fn grid_justify_content_space_evenly_negative_space_gap() {
     let layout @ Layout { size, location, .. } = taffy.layout(node05).unwrap();
     assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node05, 40f32, size.width);
     assert_eq!(size.height, 20f32, "height of node {:?}. Expected {}. Actual {}", node05, 20f32, size.height);
-    assert_eq!(location.x, 90f32, "x of node {:?}. Expected {}. Actual {}", node05, 90f32, location.x);
+    assert_eq!(location.x, 100f32, "x of node {:?}. Expected {}. Actual {}", node05, 100f32, location.x);
     assert_eq!(location.y, 50f32, "y of node {:?}. Expected {}. Actual {}", node05, 50f32, location.y);
     #[cfg(feature = "content_size")]
     assert_eq!(
@@ -252,7 +252,7 @@ fn grid_justify_content_space_evenly_negative_space_gap() {
     let layout @ Layout { size, location, .. } = taffy.layout(node06).unwrap();
     assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node06, 40f32, size.width);
     assert_eq!(size.height, 20f32, "height of node {:?}. Expected {}. Actual {}", node06, 20f32, size.height);
-    assert_eq!(location.x, -10f32, "x of node {:?}. Expected {}. Actual {}", node06, -10f32, location.x);
+    assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node06, 0f32, location.x);
     assert_eq!(location.y, 80f32, "y of node {:?}. Expected {}. Actual {}", node06, 80f32, location.y);
     #[cfg(feature = "content_size")]
     assert_eq!(
@@ -276,7 +276,7 @@ fn grid_justify_content_space_evenly_negative_space_gap() {
     let layout @ Layout { size, location, .. } = taffy.layout(node07).unwrap();
     assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node07, 40f32, size.width);
     assert_eq!(size.height, 20f32, "height of node {:?}. Expected {}. Actual {}", node07, 20f32, size.height);
-    assert_eq!(location.x, 40f32, "x of node {:?}. Expected {}. Actual {}", node07, 40f32, location.x);
+    assert_eq!(location.x, 50f32, "x of node {:?}. Expected {}. Actual {}", node07, 50f32, location.x);
     assert_eq!(location.y, 80f32, "y of node {:?}. Expected {}. Actual {}", node07, 80f32, location.y);
     #[cfg(feature = "content_size")]
     assert_eq!(
@@ -300,7 +300,7 @@ fn grid_justify_content_space_evenly_negative_space_gap() {
     let layout @ Layout { size, location, .. } = taffy.layout(node08).unwrap();
     assert_eq!(size.width, 40f32, "width of node {:?}. Expected {}. Actual {}", node08, 40f32, size.width);
     assert_eq!(size.height, 20f32, "height of node {:?}. Expected {}. Actual {}", node08, 20f32, size.height);
-    assert_eq!(location.x, 90f32, "x of node {:?}. Expected {}. Actual {}", node08, 90f32, location.x);
+    assert_eq!(location.x, 100f32, "x of node {:?}. Expected {}. Actual {}", node08, 100f32, location.x);
     assert_eq!(location.y, 80f32, "y of node {:?}. Expected {}. Actual {}", node08, 80f32, location.y);
     #[cfg(feature = "content_size")]
     assert_eq!(

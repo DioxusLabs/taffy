@@ -112,10 +112,10 @@ fn justify_content_column_space_evenly_negative_space() {
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
-        25f32,
+        50f32,
         "scroll_height of node {:?}. Expected {}. Actual {}",
         node0,
-        25f32,
+        50f32,
         layout.scroll_height()
     );
     #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
@@ -123,7 +123,7 @@ fn justify_content_column_space_evenly_negative_space() {
     assert_eq!(size.width, 160f32, "width of node {:?}. Expected {}. Actual {}", node00, 160f32, size.width);
     assert_eq!(size.height, 20f32, "height of node {:?}. Expected {}. Actual {}", node00, 20f32, size.height);
     assert_eq!(location.x, 20f32, "x of node {:?}. Expected {}. Actual {}", node00, 20f32, location.x);
-    assert_eq!(location.y, -25f32, "y of node {:?}. Expected {}. Actual {}", node00, -25f32, location.y);
+    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node00, 0f32, location.y);
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
@@ -147,7 +147,7 @@ fn justify_content_column_space_evenly_negative_space() {
     assert_eq!(size.width, 160f32, "width of node {:?}. Expected {}. Actual {}", node01, 160f32, size.width);
     assert_eq!(size.height, 20f32, "height of node {:?}. Expected {}. Actual {}", node01, 20f32, size.height);
     assert_eq!(location.x, 20f32, "x of node {:?}. Expected {}. Actual {}", node01, 20f32, location.x);
-    assert_eq!(location.y, -5f32, "y of node {:?}. Expected {}. Actual {}", node01, -5f32, location.y);
+    assert_eq!(location.y, 20f32, "y of node {:?}. Expected {}. Actual {}", node01, 20f32, location.y);
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
@@ -171,7 +171,7 @@ fn justify_content_column_space_evenly_negative_space() {
     assert_eq!(size.width, 160f32, "width of node {:?}. Expected {}. Actual {}", node02, 160f32, size.width);
     assert_eq!(size.height, 20f32, "height of node {:?}. Expected {}. Actual {}", node02, 20f32, size.height);
     assert_eq!(location.x, 20f32, "x of node {:?}. Expected {}. Actual {}", node02, 20f32, location.x);
-    assert_eq!(location.y, 15f32, "y of node {:?}. Expected {}. Actual {}", node02, 15f32, location.y);
+    assert_eq!(location.y, 40f32, "y of node {:?}. Expected {}. Actual {}", node02, 40f32, location.y);
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),

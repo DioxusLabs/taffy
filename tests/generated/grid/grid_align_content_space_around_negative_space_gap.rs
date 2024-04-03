@@ -74,10 +74,10 @@ fn grid_align_content_space_around_negative_space_gap() {
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
-        10f32,
+        20f32,
         "scroll_height of node {:?}. Expected {}. Actual {}",
         node,
-        10f32,
+        20f32,
         layout.scroll_height()
     );
     #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
@@ -98,10 +98,10 @@ fn grid_align_content_space_around_negative_space_gap() {
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
-        10f32,
+        20f32,
         "scroll_height of node {:?}. Expected {}. Actual {}",
         node0,
-        10f32,
+        20f32,
         layout.scroll_height()
     );
     #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
@@ -109,7 +109,7 @@ fn grid_align_content_space_around_negative_space_gap() {
     assert_eq!(size.width, 20f32, "width of node {:?}. Expected {}. Actual {}", node00, 20f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node00, 40f32, size.height);
     assert_eq!(location.x, 20f32, "x of node {:?}. Expected {}. Actual {}", node00, 20f32, location.x);
-    assert_eq!(location.y, -10f32, "y of node {:?}. Expected {}. Actual {}", node00, -10f32, location.y);
+    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node00, 0f32, location.y);
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
@@ -133,7 +133,7 @@ fn grid_align_content_space_around_negative_space_gap() {
     assert_eq!(size.width, 20f32, "width of node {:?}. Expected {}. Actual {}", node01, 20f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node01, 40f32, size.height);
     assert_eq!(location.x, 50f32, "x of node {:?}. Expected {}. Actual {}", node01, 50f32, location.x);
-    assert_eq!(location.y, -10f32, "y of node {:?}. Expected {}. Actual {}", node01, -10f32, location.y);
+    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node01, 0f32, location.y);
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
@@ -157,7 +157,7 @@ fn grid_align_content_space_around_negative_space_gap() {
     assert_eq!(size.width, 20f32, "width of node {:?}. Expected {}. Actual {}", node02, 20f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node02, 40f32, size.height);
     assert_eq!(location.x, 80f32, "x of node {:?}. Expected {}. Actual {}", node02, 80f32, location.x);
-    assert_eq!(location.y, -10f32, "y of node {:?}. Expected {}. Actual {}", node02, -10f32, location.y);
+    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node02, 0f32, location.y);
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
@@ -181,7 +181,7 @@ fn grid_align_content_space_around_negative_space_gap() {
     assert_eq!(size.width, 20f32, "width of node {:?}. Expected {}. Actual {}", node03, 20f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node03, 40f32, size.height);
     assert_eq!(location.x, 20f32, "x of node {:?}. Expected {}. Actual {}", node03, 20f32, location.x);
-    assert_eq!(location.y, 40f32, "y of node {:?}. Expected {}. Actual {}", node03, 40f32, location.y);
+    assert_eq!(location.y, 50f32, "y of node {:?}. Expected {}. Actual {}", node03, 50f32, location.y);
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
@@ -205,7 +205,7 @@ fn grid_align_content_space_around_negative_space_gap() {
     assert_eq!(size.width, 20f32, "width of node {:?}. Expected {}. Actual {}", node04, 20f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node04, 40f32, size.height);
     assert_eq!(location.x, 50f32, "x of node {:?}. Expected {}. Actual {}", node04, 50f32, location.x);
-    assert_eq!(location.y, 40f32, "y of node {:?}. Expected {}. Actual {}", node04, 40f32, location.y);
+    assert_eq!(location.y, 50f32, "y of node {:?}. Expected {}. Actual {}", node04, 50f32, location.y);
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
@@ -229,7 +229,7 @@ fn grid_align_content_space_around_negative_space_gap() {
     assert_eq!(size.width, 20f32, "width of node {:?}. Expected {}. Actual {}", node05, 20f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node05, 40f32, size.height);
     assert_eq!(location.x, 80f32, "x of node {:?}. Expected {}. Actual {}", node05, 80f32, location.x);
-    assert_eq!(location.y, 40f32, "y of node {:?}. Expected {}. Actual {}", node05, 40f32, location.y);
+    assert_eq!(location.y, 50f32, "y of node {:?}. Expected {}. Actual {}", node05, 50f32, location.y);
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
@@ -253,7 +253,7 @@ fn grid_align_content_space_around_negative_space_gap() {
     assert_eq!(size.width, 20f32, "width of node {:?}. Expected {}. Actual {}", node06, 20f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node06, 40f32, size.height);
     assert_eq!(location.x, 20f32, "x of node {:?}. Expected {}. Actual {}", node06, 20f32, location.x);
-    assert_eq!(location.y, 90f32, "y of node {:?}. Expected {}. Actual {}", node06, 90f32, location.y);
+    assert_eq!(location.y, 100f32, "y of node {:?}. Expected {}. Actual {}", node06, 100f32, location.y);
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
@@ -277,7 +277,7 @@ fn grid_align_content_space_around_negative_space_gap() {
     assert_eq!(size.width, 20f32, "width of node {:?}. Expected {}. Actual {}", node07, 20f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node07, 40f32, size.height);
     assert_eq!(location.x, 50f32, "x of node {:?}. Expected {}. Actual {}", node07, 50f32, location.x);
-    assert_eq!(location.y, 90f32, "y of node {:?}. Expected {}. Actual {}", node07, 90f32, location.y);
+    assert_eq!(location.y, 100f32, "y of node {:?}. Expected {}. Actual {}", node07, 100f32, location.y);
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
@@ -301,7 +301,7 @@ fn grid_align_content_space_around_negative_space_gap() {
     assert_eq!(size.width, 20f32, "width of node {:?}. Expected {}. Actual {}", node08, 20f32, size.width);
     assert_eq!(size.height, 40f32, "height of node {:?}. Expected {}. Actual {}", node08, 40f32, size.height);
     assert_eq!(location.x, 80f32, "x of node {:?}. Expected {}. Actual {}", node08, 80f32, location.x);
-    assert_eq!(location.y, 90f32, "y of node {:?}. Expected {}. Actual {}", node08, 90f32, location.y);
+    assert_eq!(location.y, 100f32, "y of node {:?}. Expected {}. Actual {}", node08, 100f32, location.y);
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
