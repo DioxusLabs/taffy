@@ -260,7 +260,6 @@ pub(super) fn determine_if_item_crosses_flexible_or_intrinsic_tracks(
 /// Track sizing algorithm
 /// Note: Gutters are treated as empty fixed-size tracks for the purpose of the track sizing algorithm.
 #[allow(clippy::too_many_arguments)]
-#[inline(always)]
 pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
     tree: &mut Tree,
     axis: AbstractAxis,
@@ -272,7 +271,7 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
     axis_tracks: &mut [GridTrack],
     other_axis_tracks: &mut [GridTrack],
     items: &mut [GridItem],
-    get_track_size_estimate: impl Fn(&GridTrack, Option<f32>) -> Option<f32>,
+    get_track_size_estimate: fn(&GridTrack, Option<f32>) -> Option<f32>,
     has_baseline_aligned_item: bool,
 ) {
     // 11.4 Initialise Track sizes
@@ -297,7 +296,7 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
     let gutter_alignment_adjustment = compute_alignment_gutter_adjustment(
         other_axis_alignment,
         inner_node_size.get(axis.other()),
-        &get_track_size_estimate,
+        get_track_size_estimate,
         other_axis_tracks,
     );
     if other_axis_tracks.len() > 3 {
@@ -516,7 +515,7 @@ fn resolve_intrinsic_track_sizes(
     items: &mut [GridItem],
     axis_available_grid_space: AvailableSpace,
     inner_node_size: Size<Option<f32>>,
-    get_track_size_estimate: impl Fn(&GridTrack, Option<f32>) -> Option<f32>,
+    get_track_size_estimate: fn(&GridTrack, Option<f32>) -> Option<f32>,
 ) {
     // Step 1. Shim baseline-aligned items so their intrinsic size contributions reflect their baseline alignment.
 
