@@ -1396,6 +1396,16 @@ fn calculate_cross_size(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>
                 })
                 .fold(0.0, |acc, x| acc.max(x));
         }
+        //  If the flex container is single-line, then clamp the line’s cross-size to be within the container’s computed min and max cross sizes.
+        if flex_lines.len() == 1 {
+            let cross_axis_padding_border = constants.content_box_inset.cross_axis_sum(constants.dir);
+            let cross_min_size = constants.min_size.cross(constants.dir);
+            let cross_max_size = constants.max_size.cross(constants.dir);
+            flex_lines[0].cross_size = flex_lines[0].cross_size.maybe_clamp(
+                cross_min_size.maybe_sub(cross_axis_padding_border),
+                cross_max_size.maybe_sub(cross_axis_padding_border),
+            );
+        }
     }
 }
 
