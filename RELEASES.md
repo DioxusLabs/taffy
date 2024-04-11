@@ -1,5 +1,10 @@
 # Release Notes
 
+## 0.4.2
+
+- Fixed: single-line flex-container should clamp the line's cross-size (#638)
+- Reduced binary footprint of Taffy from around 300kb to around 150kb (#636)
+
 ## 0.4.1
 
 - Fixed: CSS Grid track sizing not respecting growth limits in some circumstances (#624)
