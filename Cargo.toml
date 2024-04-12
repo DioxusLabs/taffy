@@ -1,6 +1,6 @@
 [package]
 name = "taffy"
-version = "0.4.2"
+version = "0.4.3"
 authors = [
     "Alice Cecile <alice.i.cecile@gmail.com>",
     "Johnathan Kelley <jkelleyrtp@gmail.com>",
