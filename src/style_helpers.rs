@@ -55,7 +55,7 @@ mod repeat_fn_tests {
 pub fn evenly_sized_tracks(count: u16) -> Vec<TrackSizingFunction> {
     use crate::util::sys::new_vec_with_capacity;
     let mut repeated_tracks = new_vec_with_capacity(1);
-    repeated_tracks.push(flex(1.0));
+    repeated_tracks.push(flex(1.0f32));
     let mut tracks = new_vec_with_capacity(1);
     tracks.push(repeat(count, repeated_tracks));
     tracks
