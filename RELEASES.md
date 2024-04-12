@@ -1,5 +1,13 @@
 # Release Notes
 
+## 0.4.3
+
+### Fixes
+
+- Fix compilation error in `evenly_sized_tracks` style helper in recent versions of rustc caused by a change/regression in type
+  inference (#643). Note that 3rd-party code that call style helpers that take an `Into<f32>` parameter may still be affected by this issue,
+  but they should be able to fix on their side by clarifying the type passed in
+
 ## 0.4.2
 
 - Fixed: single-line flex-container should clamp the line's cross-size (#638)
@@ -157,6 +165,14 @@ Example usage change:
 - Added `insert_child_at_index()` method to the `TaffyTree`. This can be used to insert a child node at any position instead of just the end.
 - Added `total_node_count()` method to the `TaffyTree` which returns the total number of nodes in the tree.
 - Added `get_disjoint_node_context_mut()` method to the `TaffyTree`. This can be used to safely get multiple mutable borrows at the same time.
+
+## 0.3.19
+
+### Fixes
+
+- Fix compilation error in `evenly_sized_tracks` style helper in recent versions of rustc caused by a change/regression in type
+  inference (#643). Note that 3rd-party code that call style helpers that take an `Into<f32>` parameter may still be affected by this issue,
+  but they should be able to fix on their side by clarifying the type passed in
 
 ## 0.3.18
 
