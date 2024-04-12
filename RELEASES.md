@@ -1,5 +1,12 @@
 # Release Notes
 
+## 0.3.19
+
+### Fixes
+
+- Fix compilation error in `evenly_sized_tracks` style helper in recent versions of rustc caused by a change/regression in type
+  inference (#643)
+
 ## 0.3.18
 
 ### Fixes
