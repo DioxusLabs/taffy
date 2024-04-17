@@ -224,7 +224,9 @@ pub trait LayoutFlexboxContainer: LayoutPartialTree {
 /// Extends [`LayoutPartialTree`] with getters for the styles required for CSS Grid layout
 pub trait LayoutGridContainer: LayoutPartialTree {
     /// The style type representing the CSS Grid container's styles
-    type ContainerStyle: GridContainerStyle + Clone;
+    type ContainerStyle<'a>: GridContainerStyle
+    where
+        Self: 'a;
 
     /// The style type representing each CSS Grid item's styles
     type ItemStyle<'a>: GridItemStyle
@@ -232,7 +234,7 @@ pub trait LayoutGridContainer: LayoutPartialTree {
         Self: 'a;
 
     /// Get the container's styles
-    fn get_grid_container_style(&self, node_id: NodeId) -> &Self::ContainerStyle;
+    fn get_grid_container_style(&self, node_id: NodeId) -> Self::ContainerStyle<'_>;
 
     /// Get the child's styles
     fn get_grid_child_style(&self, child_node_id: NodeId) -> Self::ItemStyle<'_>;
