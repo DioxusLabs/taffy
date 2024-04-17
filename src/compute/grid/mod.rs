@@ -2,14 +2,14 @@
 //! <https://www.w3.org/TR/css-grid-1>
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
-use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Display, Overflow, Position};
-use crate::style_helpers::*;
-use crate::tree::{Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
-use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId};
+use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Overflow, Position};
+use crate::tree::{Layout, LayoutPartialTreeExt, NodeId};
+use crate::tree::{LayoutInput, LayoutOutput, RunMode, SizingMode};
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, GridTrackVec, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
+use crate::{style_helpers::*, BoxGenerationMode, CoreStyle, GridContainerStyle, GridItemStyle, LayoutGridContainer};
 use alignment::{align_and_position_item, align_tracks};
 use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks};
 use implicit_grid::compute_grid_size_estimate;
@@ -35,15 +35,16 @@ mod util;
 ///   - Placing items (which also resolves the implicit grid)
 ///   - Track (row/column) sizing
 ///   - Alignment & Final item placement
-pub fn compute_grid_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
+pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
-    let get_child_styles_iter = |node| tree.child_ids(node).map(|child_node: NodeId| tree.get_style(child_node));
-    let style = tree.get_style(node).clone();
+    let get_child_styles_iter =
+        |node| tree.child_ids(node).map(|child_node: NodeId| tree.get_grid_child_style(child_node));
+    let style = tree.get_grid_container_style(node).clone();
     let child_styles_iter = get_child_styles_iter(node);
 
     let preferred_size = if inputs.sizing_mode == SizingMode::InherentSize {
-        style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(style.aspect_ratio)
+        style.size().maybe_resolve(parent_size).maybe_apply_aspect_ratio(style.aspect_ratio())
     } else {
         Size::NONE
     };
@@ -66,16 +67,18 @@ pub fn compute_grid_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inpu
     let in_flow_children_iter = || {
         tree.child_ids(node)
             .enumerate()
-            .map(|(index, child_node)| (index, child_node, tree.get_style(child_node)))
-            .filter(|(_, _, style)| style.display != Display::None && style.position != Position::Absolute)
+            .map(|(index, child_node)| (index, child_node, tree.get_grid_child_style(child_node)))
+            .filter(|(_, _, style)| {
+                style.box_generation_mode() != BoxGenerationMode::None && style.position() != Position::Absolute
+            })
     };
     place_grid_items(
         &mut cell_occupancy_matrix,
         &mut items,
         in_flow_children_iter,
-        style.grid_auto_flow,
-        style.align_items.unwrap_or(AlignItems::Stretch),
-        style.justify_items.unwrap_or(AlignItems::Stretch),
+        style.grid_auto_flow(),
+        style.align_items().unwrap_or(AlignItems::Stretch),
+        style.justify_items().unwrap_or(AlignItems::Stretch),
     );
 
     // Extract track counts from previous step (auto-placement can expand the number of tracks)
@@ -90,36 +93,36 @@ pub fn compute_grid_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inpu
     initialize_grid_tracks(
         &mut columns,
         final_col_counts,
-        &style.grid_template_columns,
-        &style.grid_auto_columns,
-        style.gap.width,
+        style.grid_template_columns(),
+        style.grid_auto_columns(),
+        style.gap().width,
         |column_index| cell_occupancy_matrix.column_is_occupied(column_index),
     );
     initialize_grid_tracks(
         &mut rows,
         final_row_counts,
-        &style.grid_template_rows,
-        &style.grid_auto_rows,
-        style.gap.height,
+        style.grid_template_rows(),
+        style.grid_auto_rows(),
+        style.gap().height,
         |row_index| cell_occupancy_matrix.row_is_occupied(row_index),
     );
 
     // 4. Compute "available grid space"
     // https://www.w3.org/TR/css-grid-1/#available-grid-space
-    let padding = style.padding.resolve_or_zero(parent_size.width);
-    let border = style.border.resolve_or_zero(parent_size.width);
+    let padding = style.padding().resolve_or_zero(parent_size.width);
+    let border = style.border().resolve_or_zero(parent_size.width);
     let padding_border = padding + border;
     let padding_border_size = padding_border.sum_axes();
-    let aspect_ratio = style.aspect_ratio;
-    let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-    let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let aspect_ratio = style.aspect_ratio();
+    let min_size = style.min_size().maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let max_size = style.max_size().maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
     let size = preferred_size;
 
     // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
     // However, the axis are switched (transposed) because a node that scrolls vertically needs
     // *horizontal* space to be reserved for a scrollbar
-    let scrollbar_gutter = style.overflow.transpose().map(|overflow| match overflow {
-        Overflow::Scroll => style.scrollbar_width,
+    let scrollbar_gutter = style.overflow().transpose().map(|overflow| match overflow {
+        Overflow::Scroll => style.scrollbar_width(),
         _ => 0.0,
     });
     // TODO: make side configurable based on the `direction` property
@@ -388,7 +391,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inpu
         Line { start: padding.left, end: padding.right },
         Line { start: border.left, end: border.right },
         &mut columns,
-        style.justify_content.unwrap_or(AlignContent::Stretch),
+        style.justify_content().unwrap_or(AlignContent::Stretch),
     );
     // Align rows
     align_tracks(
@@ -396,7 +399,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inpu
         Line { start: padding.top, end: padding.bottom },
         Line { start: border.top, end: border.bottom },
         &mut rows,
-        style.align_content.unwrap_or(AlignContent::Stretch),
+        style.align_content().unwrap_or(AlignContent::Stretch),
     );
 
     // 9. Size, Align, and Position Grid Items
@@ -407,7 +410,8 @@ pub fn compute_grid_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inpu
     // Sort items back into original order to allow them to be matched up with styles
     items.sort_by_key(|item| item.source_order);
 
-    let container_alignment_styles = InBothAbsAxis { horizontal: style.justify_items, vertical: style.align_items };
+    let container_alignment_styles = InBothAbsAxis { horizontal: style.justify_items(), vertical: style.align_items() };
+    drop(style);
 
     // Position in-flow children (stored in items vector)
     for (index, item) in items.iter_mut().enumerate() {
@@ -439,10 +443,11 @@ pub fn compute_grid_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inpu
     let mut order = items.len() as u32;
     (0..tree.child_count(node)).for_each(|index| {
         let child = tree.get_child_id(node, index);
-        let child_style = tree.get_style(child);
+        let child_style = tree.get_grid_child_style(child);
 
         // Position hidden child
-        if child_style.display == Display::None {
+        if child_style.box_generation_mode() == BoxGenerationMode::None {
+            drop(child_style);
             tree.set_unrounded_layout(child, &Layout::with_order(order));
             tree.perform_child_layout(
                 child,
@@ -457,11 +462,11 @@ pub fn compute_grid_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inpu
         }
 
         // Position absolutely positioned child
-        if child_style.position == Position::Absolute {
+        if child_style.position() == Position::Absolute {
             // Convert grid-col-{start/end} into Option's of indexes into the columns vector
             // The Option is None if the style property is Auto and an unresolvable Span
             let maybe_col_indexes = child_style
-                .grid_column
+                .grid_column()
                 .into_origin_zero(final_col_counts.explicit)
                 .resolve_absolutely_positioned_grid_tracks()
                 .map(|maybe_grid_line| {
@@ -470,7 +475,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inpu
             // Convert grid-row-{start/end} into Option's of indexes into the row vector
             // The Option is None if the style property is Auto and an unresolvable Span
             let maybe_row_indexes = child_style
-                .grid_row
+                .grid_row()
                 .into_origin_zero(final_row_counts.explicit)
                 .resolve_absolutely_positioned_grid_tracks()
                 .map(|maybe_grid_line| {
@@ -489,6 +494,8 @@ pub fn compute_grid_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inpu
                     .map(|index| columns[index].offset)
                     .unwrap_or(container_border_box.width - border.right),
             };
+            drop(child_style);
+
             // TODO: Baseline alignment support for absolutely positioned items (should check if is actuallty specified)
             #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
             let (content_size_contribution, _, _) =

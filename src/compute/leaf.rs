@@ -1,19 +1,20 @@
 //! Computes size using styles and measure functions
 
 use crate::geometry::{Point, Size};
-use crate::style::{AvailableSpace, Display, Overflow, Position, Style};
+use crate::style::{AvailableSpace, Overflow, Position};
 use crate::tree::{CollapsibleMarginSet, RunMode};
 use crate::tree::{LayoutInput, LayoutOutput, SizingMode};
 use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
+use crate::CoreStyle;
 use core::unreachable;
 
 /// Compute the size of a leaf node (node with no children)
 pub fn compute_leaf_layout<MeasureFunction>(
     inputs: LayoutInput,
-    style: &Style,
+    style: &impl CoreStyle,
     measure_function: MeasureFunction,
 ) -> LayoutOutput
 where
@@ -31,10 +32,10 @@ where
             (node_size, node_min_size, node_max_size, None)
         }
         SizingMode::InherentSize => {
-            let aspect_ratio = style.aspect_ratio;
-            let style_size = style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-            let style_min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-            let style_max_size = style.max_size.maybe_resolve(parent_size);
+            let aspect_ratio = style.aspect_ratio();
+            let style_size = style.size().maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+            let style_min_size = style.min_size().maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+            let style_max_size = style.max_size().maybe_resolve(parent_size);
 
             let node_size = known_dimensions.or(style_size);
             (node_size, style_min_size, style_max_size, aspect_ratio)
@@ -43,16 +44,16 @@ where
 
     // Note: both horizontal and vertical percentage padding/borders are resolved against the container's inline size (i.e. width).
     // This is not a bug, but is how CSS is specified (see: https://developer.mozilla.org/en-US/docs/Web/CSS/padding#values)
-    let margin = style.margin.resolve_or_zero(parent_size.width);
-    let padding = style.padding.resolve_or_zero(parent_size.width);
-    let border = style.border.resolve_or_zero(parent_size.width);
+    let margin = style.margin().resolve_or_zero(parent_size.width);
+    let padding = style.padding().resolve_or_zero(parent_size.width);
+    let border = style.border().resolve_or_zero(parent_size.width);
     let padding_border = padding + border;
 
     // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
     // However, the axis are switched (transposed) because a node that scrolls vertically needs
     // *horizontal* space to be reserved for a scrollbar
-    let scrollbar_gutter = style.overflow.transpose().map(|overflow| match overflow {
-        Overflow::Scroll => style.scrollbar_width,
+    let scrollbar_gutter = style.overflow().transpose().map(|overflow| match overflow {
+        Overflow::Scroll => style.scrollbar_width(),
         _ => 0.0,
     });
     // TODO: make side configurable based on the `direction` property
@@ -60,15 +61,10 @@ where
     content_box_inset.right += scrollbar_gutter.x;
     content_box_inset.bottom += scrollbar_gutter.y;
 
-    #[cfg(feature = "block_layout")]
-    let is_block = style.display == Display::Block;
-    #[cfg(not(feature = "block_layout"))]
-    let is_block = false;
-
-    let has_styles_preventing_being_collapsed_through = !is_block
-        || style.overflow.x.is_scroll_container()
-        || style.overflow.y.is_scroll_container()
-        || style.position == Position::Absolute
+    let has_styles_preventing_being_collapsed_through = !style.is_block()
+        || style.overflow().x.is_scroll_container()
+        || style.overflow().y.is_scroll_container()
+        || style.position() == Position::Absolute
         || padding.top > 0.0
         || padding.bottom > 0.0
         || border.top > 0.0

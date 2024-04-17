@@ -40,6 +40,11 @@ pub trait CoreStyle {
     fn box_generation_mode(&self) -> BoxGenerationMode {
         BoxGenerationMode::DEFAULT
     }
+    /// Is block layout?
+    #[inline(always)]
+    fn is_block(&self) -> bool {
+        false
+    }
 
     // Overflow properties
     /// How children overflowing their container should affect layout
@@ -105,6 +110,12 @@ pub trait CoreStyle {
         Style::DEFAULT.border
     }
 }
+
+// trait BlockChildStyle : CoreStyle {
+//     fn is_block_node() -> bool {
+//         false
+//     }
+// }
 
 /// Sets the layout used for the children of this node
 ///
@@ -475,6 +486,11 @@ impl CoreStyle for Style {
         }
     }
     #[inline(always)]
+    #[cfg(feature = "block_layout")]
+    fn is_block(&self) -> bool {
+        matches!(self.display, Display::Block)
+    }
+    #[inline(always)]
     fn overflow(&self) -> Point<Overflow> {
         self.overflow
     }
@@ -520,8 +536,62 @@ impl CoreStyle for Style {
     }
 }
 
+impl<T: CoreStyle> CoreStyle for &'_ T {
+    #[inline(always)]
+    fn box_generation_mode(&self) -> BoxGenerationMode {
+        (*self).box_generation_mode()
+    }
+    fn is_block(&self) -> bool {
+        (*self).is_block()
+    }
+    #[inline(always)]
+    fn overflow(&self) -> Point<Overflow> {
+        (*self).overflow()
+    }
+    #[inline(always)]
+    fn scrollbar_width(&self) -> f32 {
+        (*self).scrollbar_width()
+    }
+    #[inline(always)]
+    fn position(&self) -> Position {
+        (*self).position()
+    }
+    #[inline(always)]
+    fn inset(&self) -> Rect<LengthPercentageAuto> {
+        (*self).inset()
+    }
+    #[inline(always)]
+    fn size(&self) -> Size<Dimension> {
+        (*self).size()
+    }
+    #[inline(always)]
+    fn min_size(&self) -> Size<Dimension> {
+        (*self).min_size()
+    }
+    #[inline(always)]
+    fn max_size(&self) -> Size<Dimension> {
+        (*self).max_size()
+    }
+    #[inline(always)]
+    fn aspect_ratio(&self) -> Option<f32> {
+        (*self).aspect_ratio()
+    }
+    #[inline(always)]
+    fn margin(&self) -> Rect<LengthPercentageAuto> {
+        (*self).margin()
+    }
+    #[inline(always)]
+    fn padding(&self) -> Rect<LengthPercentage> {
+        (*self).padding()
+    }
+    #[inline(always)]
+    fn border(&self) -> Rect<LengthPercentage> {
+        (*self).border()
+    }
+}
+
 #[cfg(feature = "flexbox")]
-impl FlexboxContainerStyle for Style {
+impl FlexboxContainerStyle for &Style {
     #[inline(always)]
     fn flex_direction(&self) -> FlexDirection {
         self.flex_direction
@@ -547,6 +617,35 @@ impl FlexboxContainerStyle for Style {
         self.justify_content
     }
 }
+
+#[cfg(feature = "flexbox")]
+impl<T: FlexboxContainerStyle> FlexboxContainerStyle for &'_ T {
+    #[inline(always)]
+    fn flex_direction(&self) -> FlexDirection {
+        (*self).flex_direction()
+    }
+    #[inline(always)]
+    fn flex_wrap(&self) -> FlexWrap {
+        (*self).flex_wrap()
+    }
+    #[inline(always)]
+    fn gap(&self) -> Size<LengthPercentage> {
+        (*self).gap()
+    }
+    #[inline(always)]
+    fn align_content(&self) -> Option<AlignContent> {
+        (*self).align_content()
+    }
+    #[inline(always)]
+    fn align_items(&self) -> Option<AlignItems> {
+        (*self).align_items()
+    }
+    #[inline(always)]
+    fn justify_content(&self) -> Option<JustifyContent> {
+        (*self).justify_content()
+    }
+}
+
 #[cfg(feature = "flexbox")]
 impl FlexboxItemStyle for Style {
     #[inline(always)]
@@ -564,6 +663,26 @@ impl FlexboxItemStyle for Style {
     #[inline(always)]
     fn align_self(&self) -> Option<AlignSelf> {
         self.align_self
+    }
+}
+
+#[cfg(feature = "flexbox")]
+impl<T: FlexboxItemStyle> FlexboxItemStyle for &'_ T {
+    #[inline(always)]
+    fn flex_basis(&self) -> Dimension {
+        (*self).flex_basis()
+    }
+    #[inline(always)]
+    fn flex_grow(&self) -> f32 {
+        (*self).flex_grow()
+    }
+    #[inline(always)]
+    fn flex_shrink(&self) -> f32 {
+        (*self).flex_shrink()
+    }
+    #[inline(always)]
+    fn align_self(&self) -> Option<AlignSelf> {
+        (*self).align_self()
     }
 }
 
@@ -610,8 +729,53 @@ impl GridContainerStyle for Style {
         self.justify_items
     }
 }
+
 #[cfg(feature = "grid")]
-impl GridItemStyle for Style {
+impl<T: GridContainerStyle> GridContainerStyle for &'_ T {
+    #[inline(always)]
+    fn grid_template_rows(&self) -> &[TrackSizingFunction] {
+        &(*self).grid_template_rows()
+    }
+    #[inline(always)]
+    fn grid_template_columns(&self) -> &[TrackSizingFunction] {
+        &(*self).grid_template_columns()
+    }
+    #[inline(always)]
+    fn grid_auto_rows(&self) -> &[NonRepeatedTrackSizingFunction] {
+        &(*self).grid_auto_rows()
+    }
+    #[inline(always)]
+    fn grid_auto_columns(&self) -> &[NonRepeatedTrackSizingFunction] {
+        &(*self).grid_auto_columns()
+    }
+    #[inline(always)]
+    fn grid_auto_flow(&self) -> GridAutoFlow {
+        (*self).grid_auto_flow()
+    }
+    #[inline(always)]
+    fn gap(&self) -> Size<LengthPercentage> {
+        (*self).gap()
+    }
+    #[inline(always)]
+    fn align_content(&self) -> Option<AlignContent> {
+        (*self).align_content()
+    }
+    #[inline(always)]
+    fn justify_content(&self) -> Option<JustifyContent> {
+        (*self).justify_content()
+    }
+    #[inline(always)]
+    fn align_items(&self) -> Option<AlignItems> {
+        (*self).align_items()
+    }
+    #[inline(always)]
+    fn justify_items(&self) -> Option<AlignItems> {
+        (*self).justify_items()
+    }
+}
+
+#[cfg(feature = "grid")]
+impl GridItemStyle for &'_ Style {
     #[inline(always)]
     fn grid_row(&self) -> Line<GridPlacement> {
         self.grid_row
@@ -627,6 +791,26 @@ impl GridItemStyle for Style {
     #[inline(always)]
     fn justify_self(&self) -> Option<AlignSelf> {
         self.justify_self
+    }
+}
+
+#[cfg(feature = "grid")]
+impl<T: GridItemStyle> GridItemStyle for &'_ T {
+    #[inline(always)]
+    fn grid_row(&self) -> Line<GridPlacement> {
+        (*self).grid_row()
+    }
+    #[inline(always)]
+    fn grid_column(&self) -> Line<GridPlacement> {
+        (*self).grid_column()
+    }
+    #[inline(always)]
+    fn align_self(&self) -> Option<AlignSelf> {
+        (*self).align_self()
+    }
+    #[inline(always)]
+    fn justify_self(&self) -> Option<AlignSelf> {
+        (*self).justify_self()
     }
 }
 

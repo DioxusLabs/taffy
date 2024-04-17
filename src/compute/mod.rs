@@ -45,7 +45,7 @@ pub use self::flexbox::compute_flexbox_layout;
 pub use self::grid::compute_grid_layout;
 
 use crate::geometry::{Line, Point, Size};
-use crate::style::{AvailableSpace, Overflow};
+use crate::style::{AvailableSpace, CoreStyle, Overflow};
 use crate::tree::{
     Layout, LayoutInput, LayoutOutput, LayoutPartialTree, LayoutPartialTreeExt, NodeId, RoundTree, SizingMode,
 };
@@ -65,13 +65,14 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
         Line::FALSE,
     );
 
-    let style = tree.get_style(root);
-    let padding = style.padding.resolve_or_zero(available_space.width.into_option());
-    let border = style.border.resolve_or_zero(available_space.width.into_option());
+    let style = tree.get_core_container_style(root);
+    let padding = style.padding().resolve_or_zero(available_space.width.into_option());
+    let border = style.border().resolve_or_zero(available_space.width.into_option());
     let scrollbar_size = Size {
-        width: if style.overflow.y == Overflow::Scroll { style.scrollbar_width } else { 0.0 },
-        height: if style.overflow.x == Overflow::Scroll { style.scrollbar_width } else { 0.0 },
+        width: if style.overflow().y == Overflow::Scroll { style.scrollbar_width() } else { 0.0 },
+        height: if style.overflow().x == Overflow::Scroll { style.scrollbar_width() } else { 0.0 },
     };
+    drop(style);
 
     tree.set_unrounded_layout(
         root,
