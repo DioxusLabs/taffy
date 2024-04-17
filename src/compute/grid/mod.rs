@@ -2,14 +2,15 @@
 //! <https://www.w3.org/TR/css-grid-1>
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
-use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Overflow, Position};
+use crate::style::{AlignItems, AlignSelf, AvailableSpace, Overflow, Position};
 use crate::tree::{Layout, LayoutInput, LayoutOutput, LayoutPartialTreeExt, NodeId, RunMode, SizingMode};
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, GridTrackVec, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{
-    style_helpers::*, BoxGenerationMode, BoxSizing, CoreStyle, GridContainerStyle, GridItemStyle, LayoutGridContainer,
+    style_helpers::*, AlignContent, BoxGenerationMode, BoxSizing, CoreStyle, GridContainerStyle, GridItemStyle,
+    JustifyContent, LayoutGridContainer,
 };
 use alignment::{align_and_position_item, align_tracks};
 use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks};
@@ -39,7 +40,7 @@ mod util;
 pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
-    let style = tree.get_grid_container_style(node).clone();
+    let style = tree.get_grid_container_style(node);
 
     // 1. Compute "available grid space"
     // https://www.w3.org/TR/css-grid-1/#available-grid-space
@@ -82,6 +83,13 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
     let mut content_box_inset = padding_border;
     content_box_inset.right += scrollbar_gutter.x;
     content_box_inset.bottom += scrollbar_gutter.y;
+
+    let align_content = style.align_content().unwrap_or(AlignContent::Stretch);
+    let justify_content = style.justify_content().unwrap_or(JustifyContent::Stretch);
+    let align_items = style.align_items();
+    let justify_items = style.justify_items();
+
+    drop(style);
 
     let constrained_available_space = known_dimensions
         .or(preferred_size)
@@ -159,8 +167,8 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
         &mut items,
         in_flow_children_iter,
         style.grid_auto_flow(),
-        style.align_items().unwrap_or(AlignItems::Stretch),
-        style.justify_items().unwrap_or(AlignItems::Stretch),
+        align_items.unwrap_or(AlignItems::Stretch),
+        justify_items.unwrap_or(AlignItems::Stretch),
     );
 
     // Extract track counts from previous step (auto-placement can expand the number of tracks)
@@ -209,7 +217,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
         AbstractAxis::Inline,
         min_size.get(AbstractAxis::Inline),
         max_size.get(AbstractAxis::Inline),
-        style.grid_align_content(AbstractAxis::Block),
+        align_content,
         available_grid_space,
         inner_node_size,
         &mut columns,
@@ -229,7 +237,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
         AbstractAxis::Block,
         min_size.get(AbstractAxis::Block),
         max_size.get(AbstractAxis::Block),
-        style.grid_align_content(AbstractAxis::Inline),
+        justify_content,
         available_grid_space,
         inner_node_size,
         &mut rows,
@@ -342,7 +350,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
             AbstractAxis::Inline,
             min_size.get(AbstractAxis::Inline),
             max_size.get(AbstractAxis::Inline),
-            style.grid_align_content(AbstractAxis::Block),
+            align_content,
             available_grid_space,
             inner_node_size,
             &mut columns,
@@ -404,7 +412,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
                 AbstractAxis::Block,
                 min_size.get(AbstractAxis::Block),
                 max_size.get(AbstractAxis::Block),
-                style.grid_align_content(AbstractAxis::Inline),
+                justify_content,
                 available_grid_space,
                 inner_node_size,
                 &mut rows,
@@ -424,7 +432,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
         Line { start: padding.left, end: padding.right },
         Line { start: border.left, end: border.right },
         &mut columns,
-        style.justify_content().unwrap_or(AlignContent::Stretch),
+        justify_content,
     );
     // Align rows
     align_tracks(
@@ -432,7 +440,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
         Line { start: padding.top, end: padding.bottom },
         Line { start: border.top, end: border.bottom },
         &mut rows,
-        style.align_content().unwrap_or(AlignContent::Stretch),
+        align_content,
     );
 
     // 9. Size, Align, and Position Grid Items
@@ -443,8 +451,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
     // Sort items back into original order to allow them to be matched up with styles
     items.sort_by_key(|item| item.source_order);
 
-    let container_alignment_styles = InBothAbsAxis { horizontal: style.justify_items(), vertical: style.align_items() };
-    drop(style);
+    let container_alignment_styles = InBothAbsAxis { horizontal: justify_items, vertical: align_items };
 
     // Position in-flow children (stored in items vector)
     for (index, item) in items.iter_mut().enumerate() {

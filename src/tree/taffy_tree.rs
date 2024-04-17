@@ -383,11 +383,11 @@ where
     MeasureFunction:
         FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
 {
-    type ContainerStyle = Style;
+    type ContainerStyle<'a> = &'a Style where Self: 'a;
     type ItemStyle<'a> = &'a Style where Self: 'a;
 
     #[inline(always)]
-    fn get_grid_container_style(&self, node_id: NodeId) -> &Self::ContainerStyle {
+    fn get_grid_container_style(&self, node_id: NodeId) -> Self::ContainerStyle<'_> {
         &self.taffy.nodes[node_id.into()].style
     }
 
