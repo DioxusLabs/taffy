@@ -1,7 +1,8 @@
 //! This module is not required for spec compliance, but is used as a performance optimisation
 //! to reduce the number of allocations required when creating a grid.
 use crate::geometry::Line;
-use crate::style::{GenericGridPlacement, GridPlacement, Style};
+use crate::style::{GenericGridPlacement, GridPlacement};
+use crate::GridItemStyle;
 use core::cmp::{max, min};
 
 use super::types::TrackCounts;
@@ -15,10 +16,10 @@ use super::OriginZeroLine;
 ///     in ways which are impossible to predict until the auto-placement algorithm is run.
 ///
 /// Note that this function internally mixes use of grid track numbers and grid line numbers
-pub(crate) fn compute_grid_size_estimate<'a>(
+pub(crate) fn compute_grid_size_estimate<'a, S: GridItemStyle + 'a>(
     explicit_col_count: u16,
     explicit_row_count: u16,
-    child_styles_iter: impl Iterator<Item = &'a Style>,
+    child_styles_iter: impl Iterator<Item = S>,
 ) -> (TrackCounts, TrackCounts) {
     // Iterate over children, producing an estimate of the min and max grid lines (in origin-zero coordinates where)
     // along with the span of each item
@@ -60,20 +61,20 @@ pub(crate) fn compute_grid_size_estimate<'a>(
 ///
 /// Min and max grid lines are returned in origin-zero coordinates)
 /// The span is measured in tracks spanned
-fn get_known_child_positions<'a>(
-    children_iter: impl Iterator<Item = &'a Style>,
+fn get_known_child_positions<'a, S: GridItemStyle + 'a>(
+    children_iter: impl Iterator<Item = S>,
     explicit_col_count: u16,
     explicit_row_count: u16,
 ) -> (OriginZeroLine, OriginZeroLine, u16, OriginZeroLine, OriginZeroLine, u16) {
     let (mut col_min, mut col_max, mut col_max_span) = (OriginZeroLine(0), OriginZeroLine(0), 0);
     let (mut row_min, mut row_max, mut row_max_span) = (OriginZeroLine(0), OriginZeroLine(0), 0);
-    children_iter.for_each(|child_style: &Style| {
+    children_iter.for_each(|child_style| {
         // Note: that the children reference the lines in between (and around) the tracks not tracks themselves,
         // and thus we must subtract 1 to get an accurate estimate of the number of tracks
         let (child_col_min, child_col_max, child_col_span) =
-            child_min_line_max_line_span(child_style.grid_column, explicit_col_count);
+            child_min_line_max_line_span(child_style.grid_column(), explicit_col_count);
         let (child_row_min, child_row_max, child_row_span) =
-            child_min_line_max_line_span(child_style.grid_row, explicit_row_count);
+            child_min_line_max_line_span(child_style.grid_row(), explicit_row_count);
         col_min = min(col_min, child_col_min);
         col_max = max(col_max, child_col_max);
         col_max_span = max(col_max_span, child_col_span);

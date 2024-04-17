@@ -63,6 +63,24 @@ pub trait GridContainerStyle: CoreStyle {
     fn justify_items(&self) -> Option<AlignItems> {
         Style::DEFAULT.justify_items
     }
+
+    /// Get a grid item's row or column placement depending on the axis passed
+    #[inline(always)]
+    fn grid_template_tracks(&self, axis: AbsoluteAxis) -> &[TrackSizingFunction] {
+        match axis {
+            AbsoluteAxis::Horizontal => self.grid_template_columns(),
+            AbsoluteAxis::Vertical => self.grid_template_rows(),
+        }
+    }
+
+    /// Get a grid container's align-content or justify-content alignment depending on the axis passed
+    #[inline(always)]
+    fn grid_align_content(&self, axis: AbstractAxis) -> AlignContent {
+        match axis {
+            AbstractAxis::Inline => self.justify_content().unwrap_or(AlignContent::Stretch),
+            AbstractAxis::Block => self.align_content().unwrap_or(AlignContent::Stretch),
+        }
+    }
 }
 
 /// The set of styles required for a CSS Grid item (child of a CSS Grid container)
@@ -89,6 +107,15 @@ pub trait GridItemStyle: CoreStyle {
     #[inline(always)]
     fn justify_self(&self) -> Option<AlignSelf> {
         Style::DEFAULT.justify_self
+    }
+
+    /// Get a grid item's row or column placement depending on the axis passed
+    #[inline(always)]
+    fn grid_placement(&self, axis: AbsoluteAxis) -> Line<GridPlacement> {
+        match axis {
+            AbsoluteAxis::Horizontal => self.grid_column(),
+            AbsoluteAxis::Vertical => self.grid_row(),
+        }
     }
 }
 
@@ -682,32 +709,5 @@ impl FromFlex for TrackSizingFunction {
 impl From<MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>> for TrackSizingFunction {
     fn from(input: MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>) -> Self {
         Self::Single(input)
-    }
-}
-
-// Grid extensions to the Style struct
-impl Style {
-    /// Get a grid item's row or column placement depending on the axis passed
-    pub(crate) fn grid_template_tracks(&self, axis: AbsoluteAxis) -> &GridTrackVec<TrackSizingFunction> {
-        match axis {
-            AbsoluteAxis::Horizontal => &self.grid_template_columns,
-            AbsoluteAxis::Vertical => &self.grid_template_rows,
-        }
-    }
-
-    /// Get a grid item's row or column placement depending on the axis passed
-    pub(crate) fn grid_placement(&self, axis: AbsoluteAxis) -> Line<GridPlacement> {
-        match axis {
-            AbsoluteAxis::Horizontal => self.grid_column,
-            AbsoluteAxis::Vertical => self.grid_row,
-        }
-    }
-
-    /// Get a grid container's align-content or justify-content alignment depending on the axis passed
-    pub(crate) fn grid_align_content(&self, axis: AbstractAxis) -> AlignContent {
-        match axis {
-            AbstractAxis::Inline => self.justify_content.unwrap_or(AlignContent::Stretch),
-            AbstractAxis::Block => self.align_content.unwrap_or(AlignContent::Stretch),
-        }
     }
 }

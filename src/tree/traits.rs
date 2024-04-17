@@ -128,7 +128,7 @@
 //!
 use super::{Cache, Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, SizingMode};
 use crate::geometry::{AbsoluteAxis, Line, Size};
-use crate::style::{AvailableSpace, CoreStyle, Style};
+use crate::style::{AvailableSpace, CoreStyle};
 #[cfg(feature = "flexbox")]
 use crate::style::{FlexboxContainerStyle, FlexboxItemStyle};
 #[cfg(feature = "grid")]
@@ -161,8 +161,14 @@ pub trait TraverseTree: TraversePartialTree {}
 /// Note that this trait extends [`TraversePartialTree`] (not [`TraverseTree`]). Taffy's algorithm implementations have been designed such that they can be used for a laying out a single
 /// node that only has access to it's immediate children.
 pub trait LayoutPartialTree: TraversePartialTree {
-    /// Get a reference to the [`Style`] for this node.
-    fn get_style(&self, node_id: NodeId) -> &Style;
+    /// The style type representing the core container styles that all containers should have
+    /// Used when laying out the root node of a tree
+    type CoreContainerStyle<'a>: CoreStyle
+    where
+        Self: 'a;
+
+    /// Get core style
+    fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_>;
 
     /// Set the node's unrounded layout
     fn set_unrounded_layout(&mut self, node_id: NodeId, layout: &Layout);
@@ -208,29 +214,28 @@ pub trait LayoutFlexboxContainer: LayoutPartialTree {
         Self: 'a;
 
     /// Get the container's styles
-    fn get_container_style(&self, node_id: NodeId) -> Self::ContainerStyle<'_>;
+    fn get_flexbox_container_style(&self, node_id: NodeId) -> Self::ContainerStyle<'_>;
 
     /// Get the child's styles
-    fn get_child_style(&self, child_node_id: NodeId) -> Self::ItemStyle<'_>;
+    fn get_flexbox_child_style(&self, child_node_id: NodeId) -> Self::ItemStyle<'_>;
 }
 
 #[cfg(feature = "grid")]
 /// Extends [`LayoutPartialTree`] with getters for the styles required for CSS Grid layout
 pub trait LayoutGridContainer: LayoutPartialTree {
     /// The style type representing the CSS Grid container's styles
-    type ContainerStyle<'a>: GridContainerStyle
-    where
-        Self: 'a;
+    type ContainerStyle: GridContainerStyle + Clone;
+
     /// The style type representing each CSS Grid item's styles
     type ItemStyle<'a>: GridItemStyle
     where
         Self: 'a;
 
     /// Get the container's styles
-    fn get_container_style(&self, node_id: NodeId) -> Self::ContainerStyle<'_>;
+    fn get_grid_container_style(&self, node_id: NodeId) -> &Self::ContainerStyle;
 
     /// Get the child's styles
-    fn get_child_style(&self, child_node_id: NodeId) -> Self::ItemStyle<'_>;
+    fn get_grid_child_style(&self, child_node_id: NodeId) -> Self::ItemStyle<'_>;
 }
 
 #[cfg(feature = "block_layout")]
@@ -246,10 +251,10 @@ pub trait LayoutBlockContainer: LayoutPartialTree {
         Self: 'a;
 
     /// Get the container's styles
-    fn get_container_style(&self, node_id: NodeId) -> Self::ContainerStyle<'_>;
+    fn get_block_container_style(&self, node_id: NodeId) -> Self::ContainerStyle<'_>;
 
     /// Get the child's styles
-    fn get_child_style(&self, child_node_id: NodeId) -> Self::ItemStyle<'_>;
+    fn get_block_child_style(&self, child_node_id: NodeId) -> Self::ItemStyle<'_>;
 }
 
 // --- PRIVATE TRAITS
