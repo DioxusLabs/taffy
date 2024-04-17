@@ -163,11 +163,9 @@ impl<'a> Iterator for TaffyTreeChildIter<'a> {
 
 // TraversePartialTree impl for TaffyTree
 impl<NodeContext> TraversePartialTree for TaffyTree<NodeContext> {
-    type ChildIter<'a> = TaffyTreeChildIter<'a> where Self: 'a;
-
     #[inline(always)]
-    fn child_ids(&self, parent_node_id: NodeId) -> Self::ChildIter<'_> {
-        TaffyTreeChildIter(self.children[parent_node_id.into()].iter())
+    fn child_ids<'a>(&'a self, parent_node_id: NodeId) -> Box<dyn Iterator<Item = NodeId> + 'a> {
+        Box::new(TaffyTreeChildIter(self.children[parent_node_id.into()].iter()))
     }
 
     #[inline(always)]
@@ -207,6 +205,7 @@ impl<NodeContext> PrintTree for TaffyTree<NodeContext> {
             }
             #[cfg(feature = "grid")]
             (_, Display::Grid) => "GRID",
+            (_, Display::Custom { name, .. }) => name,
         }
     }
 
@@ -234,11 +233,9 @@ impl<'t, NodeContext, MeasureFunction> TraversePartialTree for TaffyView<'t, Nod
 where
     MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
 {
-    type ChildIter<'a> = TaffyTreeChildIter<'a> where Self: 'a;
-
     #[inline(always)]
-    fn child_ids(&self, parent_node_id: NodeId) -> Self::ChildIter<'_> {
-        self.taffy.child_ids(parent_node_id)
+    fn child_ids<'a>(&'a self, parent_node_id: NodeId) -> Box<dyn Iterator<Item = NodeId> + 'a> {
+        Box::new(self.taffy.child_ids(parent_node_id))
     }
 
     #[inline(always)]
@@ -314,6 +311,7 @@ where
                 (Display::Flex, true) => compute_flexbox_layout(tree, node, inputs),
                 #[cfg(feature = "grid")]
                 (Display::Grid, true) => compute_grid_layout(tree, node, inputs),
+                (Display::Custom { solver, .. }, true) => solver(Box::new(tree), node, inputs),
                 (_, false) => {
                     let node_key = node.into();
                     let style = &tree.taffy.nodes[node_key].style;

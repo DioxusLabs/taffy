@@ -112,10 +112,8 @@ unsafe fn node_from_id_mut<'a>(node_id: NodeId) -> &'a mut Node {
 
 struct StatelessLayoutTree;
 impl TraversePartialTree for StatelessLayoutTree {
-    type ChildIter<'a> = ChildIter<'a>;
-
-    fn child_ids(&self, node_id: NodeId) -> Self::ChildIter<'_> {
-        unsafe { ChildIter(node_from_id(node_id).children.iter()) }
+    fn child_ids<'a>(&'a self, node_id: NodeId) -> Box<dyn Iterator<Item = NodeId> + 'a> {
+        Box::new(unsafe { ChildIter(node_from_id(node_id).children.iter()) })
     }
 
     fn child_count(&self, node_id: NodeId) -> usize {
