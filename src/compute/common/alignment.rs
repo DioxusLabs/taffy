@@ -1,6 +1,38 @@
 //! Generic CSS alignment code that is shared between both the Flexbox and CSS Grid algorithms.
 use crate::style::AlignContent;
 
+// Implement fallback alignment.
+//
+// In addition to the spec at https://www.w3.org/TR/css-align-3/ this implementation follows
+// the resolution of https://github.com/w3c/csswg-drafts/issues/10154
+pub(crate) fn apply_alignment_fallback(
+    free_space: f32,
+    num_items: usize,
+    mut alignment_mode: AlignContent,
+    mut is_safe: bool,
+) -> AlignContent {
+    // Fallback occurs in two cases:
+
+    // 1. If there is only a single item being aligned and alignment is a distributed alignment keyword
+    //    https://www.w3.org/TR/css-align-3/#distribution-values
+    if num_items <= 1 || free_space <= 0.0 {
+        (alignment_mode, is_safe) = match alignment_mode {
+            AlignContent::Stretch => (AlignContent::FlexStart, true),
+            AlignContent::SpaceBetween => (AlignContent::FlexStart, true),
+            AlignContent::SpaceAround => (AlignContent::Center, true),
+            AlignContent::SpaceEvenly => (AlignContent::Center, true),
+            _ => (alignment_mode, is_safe),
+        }
+    };
+
+    // 2. If free space is negative the "safe" alignment variants all fallback to Start alignment
+    if free_space <= 0.0 && is_safe {
+        alignment_mode = AlignContent::Start;
+    }
+
+    alignment_mode
+}
+
 /// Generic alignment function that is used:
 ///   - For both align-content and justify-content alignment
 ///   - For both the Flexbox and CSS Grid algorithms

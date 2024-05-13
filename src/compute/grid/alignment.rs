@@ -1,6 +1,6 @@
 //! Alignment of tracks and final positioning of items
 use super::types::GridTrack;
-use crate::compute::common::alignment::compute_alignment_offset;
+use crate::compute::common::alignment::{apply_alignment_fallback, compute_alignment_offset};
 use crate::geometry::{InBothAbsAxis, Line, Point, Rect, Size};
 use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Overflow, Position};
 use crate::tree::{Layout, LayoutPartialTree, LayoutPartialTreeExt, NodeId, SizingMode};
@@ -31,6 +31,8 @@ pub(super) fn align_tracks(
     // simply pass zero here. Grid layout is never reversed.
     let gap = 0.0;
     let layout_is_reversed = false;
+    let is_safe = false; // TODO: Implement safe alignment
+    let track_alignment = apply_alignment_fallback(free_space, num_tracks, track_alignment_style, is_safe);
 
     // Compute offsets
     let mut total_offset = origin;
@@ -44,7 +46,7 @@ pub(super) fn align_tracks(
         let offset = if is_gutter {
             0.0
         } else {
-            compute_alignment_offset(free_space, num_tracks, gap, track_alignment_style, layout_is_reversed, is_first)
+            compute_alignment_offset(free_space, num_tracks, gap, track_alignment, layout_is_reversed, is_first)
         };
 
         track.offset = total_offset + offset;

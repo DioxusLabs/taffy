@@ -14,6 +14,7 @@ use crate::util::sys::{f32_max, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 
+use super::common::alignment::apply_alignment_fallback;
 #[cfg(feature = "content_size")]
 use super::common::content_size::compute_content_size_contribution;
 
@@ -1539,7 +1540,10 @@ fn distribute_remaining_free_space(flex_lines: &mut [FlexLine], constants: &Algo
             let num_items = line.items.len();
             let layout_reverse = constants.dir.is_reverse();
             let gap = constants.gap.main(constants.dir);
-            let justify_content_mode = constants.justify_content.unwrap_or(JustifyContent::FlexStart);
+            let is_safe = false; // TODO: Implement safe alignment
+            let raw_justify_content_mode = constants.justify_content.unwrap_or(JustifyContent::FlexStart);
+            let justify_content_mode =
+                apply_alignment_fallback(free_space, num_items, raw_justify_content_mode, is_safe);
 
             let justify_item = |(i, child): (usize, &mut FlexItem)| {
                 child.offset_main =
@@ -1703,9 +1707,11 @@ fn determine_container_cross_size(
 fn align_flex_lines_per_align_content(flex_lines: &mut [FlexLine], constants: &AlgoConstants, total_cross_size: f32) {
     let num_lines = flex_lines.len();
     let gap = constants.gap.cross(constants.dir);
-    let align_content_mode = constants.align_content;
     let total_cross_axis_gap = sum_axis_gaps(gap, num_lines);
     let free_space = constants.inner_container_size.cross(constants.dir) - total_cross_size - total_cross_axis_gap;
+    let is_safe = false; // TODO: Implement safe alignment
+
+    let align_content_mode = apply_alignment_fallback(free_space, num_lines, constants.align_content, is_safe);
 
     let align_line = |(i, line): (usize, &mut FlexLine)| {
         line.offset_cross =
