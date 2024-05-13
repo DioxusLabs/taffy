@@ -141,8 +141,6 @@ mod grid_aspect_ratio_fill_child_max_width;
 #[cfg(feature = "grid")]
 mod grid_aspect_ratio_fill_child_min_height;
 #[cfg(feature = "grid")]
-mod grid_aspect_ratio_fill_child_min_width;
-#[cfg(feature = "grid")]
 mod grid_aspect_ratio_fill_child_width;
 #[cfg(feature = "grid")]
 mod grid_aspect_ratio_overridden_by_explicit_sizes;
