@@ -1,5 +1,11 @@
 # Release Notes
 
+## 0.4.4
+
+### Fixes
+
+- Content alignment (`align-content`/`justify-content`) behaviour was updated to match the latest spec (and Chrome 123+) (#635)
+
 ## 0.4.3
 
 ### Fixes

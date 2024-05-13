@@ -66,10 +66,10 @@ fn bevy_issue_10343_block() {
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_height(),
-        55f32,
+        110f32,
         "scroll_height of node {:?}. Expected {}. Actual {}",
         node,
-        55f32,
+        110f32,
         layout.scroll_height()
     );
     #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
@@ -77,7 +77,7 @@ fn bevy_issue_10343_block() {
     assert_eq!(size.width, 100f32, "width of node {:?}. Expected {}. Actual {}", node0, 100f32, size.width);
     assert_eq!(size.height, 210f32, "height of node {:?}. Expected {}. Actual {}", node0, 210f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node0, 0f32, location.x);
-    assert_eq!(location.y, -55f32, "y of node {:?}. Expected {}. Actual {}", node0, -55f32, location.y);
+    assert_eq!(location.y, 0f32, "y of node {:?}. Expected {}. Actual {}", node0, 0f32, location.y);
     #[cfg(feature = "content_size")]
     assert_eq!(
         layout.scroll_width(),
