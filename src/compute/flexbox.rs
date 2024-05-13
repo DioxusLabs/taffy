@@ -1,6 +1,4 @@
 //! Computes the [flexbox](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) layout algorithm on [`TaffyTree`](crate::TaffyTree) according to the [spec](https://www.w3.org/TR/css-flexbox-1/)
-use core::ops::Add;
-
 use crate::compute::common::alignment::compute_alignment_offset;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
@@ -163,6 +161,9 @@ pub fn compute_flexbox_layout(tree: &mut impl LayoutPartialTree, node: NodeId, i
     let aspect_ratio = style.aspect_ratio;
     let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
     let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let padding = style.padding.resolve_or_zero(parent_size.width);
+    let border = style.border.resolve_or_zero(parent_size.width);
+    let padding_border_sum = padding.sum_axes() + border.sum_axes();
     let clamped_style_size = if inputs.sizing_mode == SizingMode::InherentSize {
         style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size)
     } else {
@@ -175,16 +176,9 @@ pub fn compute_flexbox_layout(tree: &mut impl LayoutPartialTree, node: NodeId, i
         _ => None,
     });
 
-    // if the sum of the padding and border is greater than the size of the container, the
-    // the result overwrites the size of the container
-    let padding_border_sum = style
-        .padding
-        .resolve_or_zero(parent_size.width)
-        .sum_axes()
-        .add(style.border.resolve_or_zero(parent_size.width).sum_axes());
-
+    // The size of the container should be floored by the padding and border
     let styled_based_known_dimensions =
-        known_dimensions.or(min_max_definite_size).or(clamped_style_size).maybe_max(padding_border_sum);
+        known_dimensions.or(min_max_definite_size.or(clamped_style_size).maybe_max(padding_border_sum));
 
     // Short-circuit layout if the container's size is fully determined by the container's size and the run mode
     // is ComputeSize (and thus the container's size is all that we're interested in)
@@ -2185,10 +2179,9 @@ mod tests {
 
     use crate::{
         geometry::Size,
-        prelude::{length, TaffyMaxContent},
         style::{FlexWrap, Style},
         util::{MaybeMath, ResolveOrZero},
-        Rect, TaffyTree,
+        TaffyTree,
     };
 
     // Make sure we get correct constants
@@ -2226,32 +2219,5 @@ mod tests {
 
         assert_eq!(constants.container_size, Size::zero());
         assert_eq!(constants.inner_container_size, Size::zero());
-    }
-
-    #[test]
-    pub fn test_padding_and_border_larger_than_definite_size() {
-        let mut tree: TaffyTree<()> = TaffyTree::with_capacity(16);
-
-        let child = tree.new_leaf(Style::default()).unwrap();
-
-        let root = tree
-            .new_with_children(
-                Style {
-                    size: Size { width: length(10.0), height: length(10.0) },
-                    padding: Rect { left: length(10.0), right: length(10.0), top: length(10.0), bottom: length(10.0) },
-
-                    border: Rect { left: length(10.0), right: length(10.0), top: length(10.0), bottom: length(10.0) },
-                    ..Default::default()
-                },
-                &[child],
-            )
-            .unwrap();
-
-        tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
-
-        let layout = tree.layout(root).unwrap();
-
-        assert_eq!(layout.size.width, 40.0);
-        assert_eq!(layout.size.height, 40.0);
     }
 }

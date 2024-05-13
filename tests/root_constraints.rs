@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod root_constraints {
-    use taffy::style::AvailableSpace;
-    use taffy::TaffyTree;
+    use taffy::style_helpers::{length, TaffyMaxContent};
+    use taffy::{AvailableSpace, Rect, Size, Style, TaffyTree};
 
     #[test]
     fn root_with_percentage_size() {
@@ -77,5 +77,32 @@ mod root_constraints {
 
         assert_eq!(layout.size.width, 200.0);
         assert_eq!(layout.size.height, 200.0);
+    }
+
+    #[test]
+    fn root_padding_and_border_larger_than_definite_size() {
+        let mut tree: TaffyTree<()> = TaffyTree::with_capacity(16);
+
+        let child = tree.new_leaf(Style::default()).unwrap();
+
+        let root = tree
+            .new_with_children(
+                Style {
+                    size: Size { width: length(10.0), height: length(10.0) },
+                    padding: Rect { left: length(10.0), right: length(10.0), top: length(10.0), bottom: length(10.0) },
+
+                    border: Rect { left: length(10.0), right: length(10.0), top: length(10.0), bottom: length(10.0) },
+                    ..Default::default()
+                },
+                &[child],
+            )
+            .unwrap();
+
+        tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+        let layout = tree.layout(root).unwrap();
+
+        assert_eq!(layout.size.width, 40.0);
+        assert_eq!(layout.size.height, 40.0);
     }
 }

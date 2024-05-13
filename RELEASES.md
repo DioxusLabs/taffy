@@ -5,6 +5,7 @@
 ### Fixes
 
 - Content alignment (`align-content`/`justify-content`) behaviour was updated to match the latest spec (and Chrome 123+) (#635)
+- Ensure that root Flexbox nodes are floored by their padding-border (#651, #655)
 
 ## 0.4.3
 
