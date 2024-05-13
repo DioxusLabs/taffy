@@ -1,10 +1,10 @@
 //! Generic CSS alignment code that is shared between both the Flexbox and CSS Grid algorithms.
 use crate::style::AlignContent;
 
-// Implement fallback alignment.
-//
-// In addition to the spec at https://www.w3.org/TR/css-align-3/ this implementation follows
-// the resolution of https://github.com/w3c/csswg-drafts/issues/10154
+/// Implement fallback alignment.
+///
+/// In addition to the spec at https://www.w3.org/TR/css-align-3/ this implementation follows
+/// the resolution of https://github.com/w3c/csswg-drafts/issues/10154
 pub(crate) fn apply_alignment_fallback(
     free_space: f32,
     num_items: usize,
