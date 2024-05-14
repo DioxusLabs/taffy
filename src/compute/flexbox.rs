@@ -161,6 +161,9 @@ pub fn compute_flexbox_layout(tree: &mut impl LayoutPartialTree, node: NodeId, i
     let aspect_ratio = style.aspect_ratio;
     let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
     let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let padding = style.padding.resolve_or_zero(parent_size.width);
+    let border = style.border.resolve_or_zero(parent_size.width);
+    let padding_border_sum = padding.sum_axes() + border.sum_axes();
     let clamped_style_size = if inputs.sizing_mode == SizingMode::InherentSize {
         style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size)
     } else {
@@ -172,7 +175,10 @@ pub fn compute_flexbox_layout(tree: &mut impl LayoutPartialTree, node: NodeId, i
         (Some(min), Some(max)) if max <= min => Some(min),
         _ => None,
     });
-    let styled_based_known_dimensions = known_dimensions.or(min_max_definite_size).or(clamped_style_size);
+
+    // The size of the container should be floored by the padding and border
+    let styled_based_known_dimensions =
+        known_dimensions.or(min_max_definite_size.or(clamped_style_size).maybe_max(padding_border_sum));
 
     // Short-circuit layout if the container's size is fully determined by the container's size and the run mode
     // is ComputeSize (and thus the container's size is all that we're interested in)

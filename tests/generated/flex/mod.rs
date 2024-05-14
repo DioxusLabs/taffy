@@ -425,6 +425,7 @@ mod padding_border_overrides_min_size;
 mod padding_border_overrides_size;
 mod padding_border_overrides_size_flex_basis_0;
 mod padding_border_overrides_size_flex_basis_0_growable;
+mod padding_border_overrides_size_root;
 mod padding_center_child;
 mod padding_container_match_child;
 mod padding_flex_child;
