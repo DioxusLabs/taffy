@@ -11,6 +11,9 @@ pub use self::dimension::{AvailableSpace, Dimension, LengthPercentage, LengthPer
 #[cfg(feature = "flexbox")]
 pub use self::flex::{FlexDirection, FlexWrap};
 
+#[cfg(feature = "wasm")]
+use wasm_bindgen::prelude::*;
+
 #[cfg(feature = "grid")]
 mod grid;
 #[cfg(feature = "grid")]
@@ -32,8 +35,10 @@ use crate::util::sys::GridTrackVec;
 /// Sets the layout used for the children of this node
 ///
 /// The default values depends on on which feature flags are enabled. The order of precedence is: Flex, Grid, Block, None.
+#[repr(u8)]
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub enum Display {
     /// The children will follow the block layout algorithm
     #[cfg(feature = "block_layout")]
@@ -44,7 +49,8 @@ pub enum Display {
     /// The children will follow the CSS Grid layout algorithm
     #[cfg(feature = "grid")]
     Grid,
-    /// The children will not be laid out, and will follow absolute positioning
+    /// The element and it's children will not be laid out and will behave as if they
+    /// did not exist.
     None,
 }
 
@@ -86,6 +92,20 @@ impl Default for Display {
     }
 }
 
+impl TryFrom<i32> for Display {
+    type Error = ();
+    fn try_from(n: i32) -> Result<Self, ()> {
+        match n {
+            0 => Ok(Display::None),
+            #[cfg(feature = "flex")]
+            1 => Ok(Display::Flex),
+            #[cfg(feature = "grid")]
+            2 => Ok(Display::Grid),
+            _ => Err(()),
+        }
+    }
+}
+
 /// The positioning strategy for this item.
 ///
 /// This controls both how the origin is determined for the [`Style::position`] field,
@@ -95,8 +115,10 @@ impl Default for Display {
 /// which can be unintuitive.
 ///
 /// [`Position::Relative`] is the default value, in contrast to the default behavior in CSS.
+#[repr(u8)]
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub enum Position {
     /// The offset is computed relative to the final position given by the layout algorithm.
     /// Offsets do not affect the position of any other items; they are effectively a correction factor applied at the end.
@@ -115,6 +137,17 @@ impl Default for Position {
     }
 }
 
+impl TryFrom<i32> for Position {
+    type Error = ();
+    fn try_from(n: i32) -> Result<Self, ()> {
+        match n {
+            0 => Ok(Position::Relative),
+            1 => Ok(Position::Absolute),
+            _ => Err(()),
+        }
+    }
+}
+
 /// How children overflowing their container should affect layout
 ///
 /// In CSS the primary effect of this property is to control whether contents of a parent container that overflow that container should
@@ -128,8 +161,10 @@ impl Default for Position {
 /// a scrollbar is controlled by the `scrollbar_width` property. If this is `0` then `Scroll` behaves identically to `Hidden`.
 ///
 /// <https://developer.mozilla.org/en-US/docs/Web/CSS/overflow>
+#[repr(u8)]
 #[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub enum Overflow {
     /// The automatic minimum size of this node as a flexbox/grid item should be based on the size of its content.
     /// Content that overflows this node *should* contribute to the scroll region of its parent.
@@ -145,6 +180,19 @@ pub enum Overflow {
     /// for a scrollbar. The amount of space reserved is controlled by the `scrollbar_width` property.
     /// Content that overflows this node should *not* contribute to the scroll region of its parent.
     Scroll,
+}
+
+impl TryFrom<i32> for Overflow {
+    type Error = ();
+    fn try_from(n: i32) -> Result<Self, ()> {
+        match n {
+            0 => Ok(Overflow::Visible),
+            1 => Ok(Overflow::Clip),
+            2 => Ok(Overflow::Hidden),
+            3 => Ok(Overflow::Scroll),
+            _ => Err(()),
+        }
+    }
 }
 
 impl Overflow {

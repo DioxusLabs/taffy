@@ -1,5 +1,7 @@
 //! Style types for representing lengths / sizes
 
+use core::str::FromStr;
+
 use crate::geometry::{Rect, Size};
 use crate::style_helpers::{FromLength, FromPercent, TaffyAuto, TaffyMaxContent, TaffyMinContent, TaffyZero};
 use crate::util::sys::abs;
@@ -27,6 +29,17 @@ impl FromLength for LengthPercentage {
 impl FromPercent for LengthPercentage {
     fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
         Self::Percent(percent.into())
+    }
+}
+
+impl TryFrom<Dimension> for LengthPercentage {
+    type Error = ();
+    fn try_from(input: Dimension) -> Result<Self, ()> {
+        match input {
+            Dimension::Length(value) => Ok(Self::Length(value)),
+            Dimension::Percent(value) => Ok(Self::Percent(value)),
+            Dimension::Auto => Err(()),
+        }
     }
 }
 
@@ -70,6 +83,19 @@ impl From<LengthPercentage> for LengthPercentageAuto {
     }
 }
 
+// Currently it would be possible to implement From<Dimension> for LengthPercentageAuto, but we
+// anticipate that this won't the case in future, so for forwards compatibility we stick to a TryFrom impl here
+impl TryFrom<Dimension> for LengthPercentageAuto {
+    type Error = ();
+    fn try_from(input: Dimension) -> Result<Self, ()> {
+        match input {
+            Dimension::Length(value) => Ok(Self::Length(value)),
+            Dimension::Percent(value) => Ok(Self::Percent(value)),
+            Dimension::Auto => Ok(Self::Auto),
+        }
+    }
+}
+
 impl LengthPercentageAuto {
     /// Returns:
     ///   - Some(length) for Length variants
@@ -105,6 +131,7 @@ pub enum Dimension {
     /// The dimension should be automatically computed
     Auto,
 }
+
 impl TaffyZero for Dimension {
     const ZERO: Self = Self::Length(0.0);
 }
@@ -119,6 +146,12 @@ impl FromLength for Dimension {
 impl FromPercent for Dimension {
     fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
         Self::Percent(percent.into())
+    }
+}
+
+impl From<f32> for Dimension {
+    fn from(value: f32) -> Self {
+        Dimension::Length(value)
     }
 }
 
@@ -138,6 +171,31 @@ impl From<LengthPercentageAuto> for Dimension {
             LengthPercentageAuto::Percent(value) => Self::Percent(value),
             LengthPercentageAuto::Auto => Self::Auto,
         }
+    }
+}
+
+impl FromStr for Dimension {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let s = s.trim();
+
+        // Auto
+        if s == "auto" {
+            return Ok(Self::Auto);
+        }
+        // px
+        if s.ends_with("px") {
+            let len = s.len();
+            return s[..len - 1].trim().parse::<f32>().map(Self::Length).map_err(|_| ());
+        }
+        // percent
+        if s.ends_with('%') {
+            let len = s.len();
+            return s[..len - 1].trim().parse::<f32>().map(|number| Self::Percent(number / 100.0)).map_err(|_| ());
+        }
+        // Bare number (px)
+        s.parse::<f32>().map(Self::Length).map_err(|_| ())
     }
 }
 
@@ -299,6 +357,27 @@ impl From<Option<f32>> for AvailableSpace {
             Some(value) => Self::Definite(value),
             None => Self::MaxContent,
         }
+    }
+}
+
+impl FromStr for AvailableSpace {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let s = s.trim();
+
+        if s == "min-content" {
+            return Ok(Self::MinContent);
+        }
+        if s == "max-content" {
+            return Ok(Self::MaxContent);
+        }
+        if s.ends_with("px") {
+            let len = s.len();
+            return s[..len - 1].trim().parse::<f32>().map(AvailableSpace::Definite).map_err(|_| ());
+        }
+
+        s.parse::<f32>().map(AvailableSpace::Definite).map_err(|_| ())
     }
 }
 
