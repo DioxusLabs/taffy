@@ -37,6 +37,12 @@ mod stylo {
 
 pub struct TaffyStyloStyle(pub Arc<stylo::ComputedValues>);
 
+impl From<Arc<stylo::ComputedValues>> for TaffyStyloStyle {
+    fn from(value: Arc<stylo::ComputedValues>) -> Self {
+        Self(Arc::clone(&value))
+    }
+}
+
 impl taffy::CoreStyle for TaffyStyloStyle {
     #[inline]
     fn box_generation_mode(&self) -> taffy::BoxGenerationMode {
