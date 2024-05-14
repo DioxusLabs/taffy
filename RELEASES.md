@@ -6,6 +6,7 @@
 
 - Content alignment (`align-content`/`justify-content`) behaviour was updated to match the latest spec (and Chrome 123+) (#635)
 - Ensure that root Flexbox nodes are floored by their padding-border (#651, #655)
+- Use grid area size not available space when applying aspect ratio to grid containers (#656)
 
 ## 0.4.3
 
