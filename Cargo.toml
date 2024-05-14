@@ -101,4 +101,5 @@ members = [
     "scripts/format-fixtures",
     "scripts/import-yoga-tests",
     "benches",
+    "taffy_stylo",
 ]
