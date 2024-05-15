@@ -183,6 +183,9 @@ impl LayoutOutput {
         margins_can_collapse_through: false,
     };
 
+    /// A blank layout output
+    pub const DEFAULT: Self = Self::HIDDEN;
+
     /// Constructor to create a `LayoutOutput` from just the size and baselines
     pub fn from_sizes_and_baselines(
         size: Size<f32>,
