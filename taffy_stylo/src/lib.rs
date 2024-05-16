@@ -1,8 +1,8 @@
 //! Conversion functions from Stylo types to Taffy types
 
-pub (crate) mod t2s;
-pub (crate) mod arc;
-pub (crate) mod borrowed;
+pub(crate) mod arc;
+pub(crate) mod borrowed;
+pub(crate) mod t2s;
 
 // Module of type aliases so we can refer to stylo types with nicer names
 mod stylo {
