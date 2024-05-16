@@ -1,5 +1,5 @@
+use crate::{stylo, t2s};
 use servo_arc::Arc;
-use crate::{t2s, stylo};
 
 pub struct TaffyStyloStyle(pub Arc<stylo::ComputedValues>);
 

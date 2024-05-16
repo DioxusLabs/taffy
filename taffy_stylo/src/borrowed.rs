@@ -1,4 +1,4 @@
-use crate::{t2s, stylo};
+use crate::{stylo, t2s};
 
 pub struct TaffyStyloStyleRef<'a>(pub &'a stylo::ComputedValues);
 
