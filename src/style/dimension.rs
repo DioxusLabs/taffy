@@ -179,6 +179,7 @@ impl Rect<Dimension> {
 /// The amount of space available to a node in a given axis
 /// <https://www.w3.org/TR/css-sizing-3/#available>
 #[derive(Copy, Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 pub enum AvailableSpace {
     /// The amount of space available is the specified number of pixels
     Definite(f32),
