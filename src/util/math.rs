@@ -8,7 +8,7 @@ use crate::style::AvailableSpace;
 ///
 /// If the left-hand value is [`None`], these operations return [`None`].
 /// If the right-hand value is [`None`], it is treated as zero.
-pub(crate) trait MaybeMath<In, Out> {
+pub trait MaybeMath<In, Out> {
     /// Returns the minimum of `self` and `rhs`
     fn maybe_min(self, rhs: In) -> Out;
 

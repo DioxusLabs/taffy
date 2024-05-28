@@ -116,3 +116,4 @@ pub use crate::util::print_tree;
 pub use crate::geometry::*;
 pub use crate::style::*;
 pub use crate::tree::*;
+pub use crate::util::*;
