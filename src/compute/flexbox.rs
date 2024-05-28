@@ -1983,7 +1983,7 @@ fn perform_absolute_layout_on_absolute_children(
                 width: AvailableSpace::Definite(container_width.maybe_clamp(min_size.width, max_size.width)),
                 height: AvailableSpace::Definite(container_height.maybe_clamp(min_size.height, max_size.height)),
             },
-            SizingMode::ContentSize,
+            SizingMode::InherentSize,
             Line::FALSE,
         );
         let measured_size = layout_output.size;
