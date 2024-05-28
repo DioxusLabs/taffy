@@ -134,6 +134,7 @@ where
     ///   - If the item’s computed preferred size behaves as auto or depends on the size of its containing block in the relevant axis:
     ///     Its minimum contribution is the outer size that would result from assuming the item’s used minimum size as its preferred size;
     ///   - Else the item’s minimum contribution is its min-content contribution.
+    ///
     /// Because the minimum contribution often depends on the size of the item’s content, it is considered a type of intrinsic size contribution.
     #[inline(always)]
     fn minimum_contribution(&mut self, item: &mut GridItem, axis_tracks: &[GridTrack]) -> f32 {

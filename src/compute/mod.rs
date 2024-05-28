@@ -131,6 +131,7 @@ where
 ///     parent-relative coordinates
 ///   - Compute width/height by first rounding the top/bottom/left/right and then computing the difference
 ///     rather than rounding the width/height directly
+///
 /// See <https://github.com/facebook/yoga/commit/aa5b296ac78f7a22e1aeaf4891243c6bb76488e2> for more context
 ///
 /// In order to prevent innacuracies caused by rounding already-rounded values, we read from `unrounded_layout`
