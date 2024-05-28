@@ -16,6 +16,7 @@ mod caching {
         _available_space: Size<AvailableSpace>,
         _node_id: NodeId,
         mut node_context: Option<&mut CountMeasure>,
+        _style: &Style,
     ) -> Size<f32> {
         node_context.as_mut().unwrap().count += 1;
         Size { width: known_dimensions.width.unwrap_or(50.0), height: known_dimensions.height.unwrap_or(50.0) }

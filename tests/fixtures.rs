@@ -19,13 +19,14 @@ struct TextMeasure {
 
 #[allow(dead_code)]
 fn test_measure_function(
-    known_dimensions: taffy::geometry::Size<Option<f32>>,
-    available_space: taffy::geometry::Size<taffy::style::AvailableSpace>,
-    _node_id: taffy::tree::NodeId,
+    known_dimensions: taffy::Size<Option<f32>>,
+    available_space: taffy::Size<taffy::AvailableSpace>,
+    _node_id: taffy::NodeId,
     node_context: Option<&mut TextMeasure>,
-) -> taffy::geometry::Size<f32> {
-    use taffy::geometry::AbsoluteAxis;
+    _style: &taffy::Style,
+) -> taffy::Size<f32> {
     use taffy::prelude::*;
+    use taffy::AbsoluteAxis;
 
     const ZWS: char = '\u{200B}';
     const H_WIDTH: f32 = 10.0;

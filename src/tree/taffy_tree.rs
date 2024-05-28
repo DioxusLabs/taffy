@@ -221,7 +221,8 @@ impl<NodeContext> PrintTree for TaffyTree<NodeContext> {
 /// which makes the lifetimes of the context much more flexible.
 pub(crate) struct TaffyView<'t, NodeContext, MeasureFunction>
 where
-    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+    MeasureFunction:
+        FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
 {
     /// A reference to the TaffyTree
     pub(crate) taffy: &'t mut TaffyTree<NodeContext>,
@@ -232,7 +233,8 @@ where
 // TraversePartialTree impl for TaffyView
 impl<'t, NodeContext, MeasureFunction> TraversePartialTree for TaffyView<'t, NodeContext, MeasureFunction>
 where
-    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+    MeasureFunction:
+        FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
 {
     type ChildIter<'a> = TaffyTreeChildIter<'a> where Self: 'a;
 
@@ -254,14 +256,16 @@ where
 
 // TraverseTree impl for TaffyView
 impl<'t, NodeContext, MeasureFunction> TraverseTree for TaffyView<'t, NodeContext, MeasureFunction> where
-    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>
+    MeasureFunction:
+        FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>
 {
 }
 
 // LayoutPartialTree impl for TaffyView
 impl<'t, NodeContext, MeasureFunction> LayoutPartialTree for TaffyView<'t, NodeContext, MeasureFunction>
 where
-    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+    MeasureFunction:
+        FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
 {
     #[inline(always)]
     fn get_style(&self, node: NodeId) -> &Style {
@@ -320,7 +324,7 @@ where
                     let has_context = tree.taffy.nodes[node_key].has_context;
                     let node_context = has_context.then(|| tree.taffy.node_context_data.get_mut(node_key)).flatten();
                     let measure_function = |known_dimensions, available_space| {
-                        (tree.measure_function)(known_dimensions, available_space, node, node_context)
+                        (tree.measure_function)(known_dimensions, available_space, node, node_context, style)
                     };
                     compute_leaf_layout(inputs, style, measure_function)
                 }
@@ -332,7 +336,8 @@ where
 // RoundTree impl for TaffyView
 impl<'t, NodeContext, MeasureFunction> RoundTree for TaffyView<'t, NodeContext, MeasureFunction>
 where
-    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+    MeasureFunction:
+        FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
 {
     #[inline(always)]
     fn get_unrounded_layout(&self, node: NodeId) -> &Layout {
@@ -672,7 +677,8 @@ impl<NodeContext> TaffyTree<NodeContext> {
         measure_function: MeasureFunction,
     ) -> Result<(), TaffyError>
     where
-        MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+        MeasureFunction:
+            FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
     {
         let use_rounding = self.config.use_rounding;
         let mut taffy_view = TaffyView { taffy: self, measure_function };
@@ -685,7 +691,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
 
     /// Updates the stored layout of the provided `node` and its children
     pub fn compute_layout(&mut self, node: NodeId, available_space: Size<AvailableSpace>) -> Result<(), TaffyError> {
-        self.compute_layout_with_measure(node, available_space, |_, _, _, _| Size::ZERO)
+        self.compute_layout_with_measure(node, available_space, |_, _, _, _, _| Size::ZERO)
     }
 
     /// Prints a debug representation of the tree's layout
@@ -697,7 +703,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
     /// Returns an instance of LayoutTree representing the TaffyTree
     #[cfg(test)]
     pub(crate) fn as_layout_tree(&mut self) -> impl LayoutPartialTree + '_ {
-        TaffyView { taffy: self, measure_function: |_, _, _, _| Size::ZERO }
+        TaffyView { taffy: self, measure_function: |_, _, _, _, _| Size::ZERO }
     }
 }
 
@@ -714,6 +720,7 @@ mod tests {
         _available_space: Size<AvailableSpace>,
         _node_id: NodeId,
         node_context: Option<&mut Size<f32>>,
+        _style: &Style,
     ) -> Size<f32> {
         known_dimensions.unwrap_or(node_context.cloned().unwrap_or(Size::ZERO))
     }
