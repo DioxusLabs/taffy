@@ -84,6 +84,7 @@ mod block_margin_auto_bottom;
 mod block_margin_auto_bottom_and_top;
 mod block_margin_auto_left;
 mod block_margin_auto_left_and_right;
+mod block_margin_auto_left_and_right_with_auto_width;
 mod block_margin_auto_left_child_bigger_than_parent;
 mod block_margin_auto_left_fix_right_child_bigger_than_parent;
 mod block_margin_auto_left_right_child_bigger_than_parent;

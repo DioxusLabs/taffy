@@ -389,9 +389,7 @@ fn perform_final_layout_on_in_flow_children(
             let free_x_space = f32_max(0.0, container_inner_width - final_size.width - item_non_auto_x_margin_sum);
             let x_axis_auto_margin_size = {
                 let auto_margin_count = item_margin.left.is_none() as u8 + item_margin.right.is_none() as u8;
-                if auto_margin_count == 2 && item.size.width.is_none() {
-                    0.0
-                } else if auto_margin_count > 0 {
+                if auto_margin_count > 0 {
                     free_x_space / auto_margin_count as f32
                 } else {
                     0.0
