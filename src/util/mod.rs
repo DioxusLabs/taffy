@@ -3,8 +3,8 @@ mod math;
 mod resolve;
 pub(crate) mod sys;
 
-pub(crate) use math::MaybeMath;
-pub(crate) use resolve::{MaybeResolve, ResolveOrZero};
+pub use math::MaybeMath;
+pub use resolve::{MaybeResolve, ResolveOrZero};
 
 #[doc(hidden)]
 #[macro_use]

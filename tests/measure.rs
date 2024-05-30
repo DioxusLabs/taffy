@@ -12,6 +12,7 @@ mod measure {
         _available_space: Size<AvailableSpace>,
         _node_id: NodeId,
         node_context: Option<&mut FixedMeasure>,
+        _style: &Style,
     ) -> taffy::geometry::Size<f32> {
         let size = node_context.copied().unwrap_or(FixedMeasure { width: 0.0, height: 0.0 });
         Size {
@@ -29,6 +30,7 @@ mod measure {
         _available_space: Size<AvailableSpace>,
         _node_id: NodeId,
         node_context: Option<&mut AspectRatioMeasure>,
+        _style: &Style,
     ) -> taffy::geometry::Size<f32> {
         let Some(node_context) = node_context else { return Size::ZERO };
         let width = known_dimensions.width.unwrap_or(node_context.width);
@@ -253,6 +255,7 @@ mod measure {
             _available_space: Size<AvailableSpace>,
             _node_id: NodeId,
             _node_context: Option<&mut ()>,
+            _style: &Style,
         ) -> taffy::geometry::Size<f32> {
             let height = known_dimensions.height.unwrap_or(50.0);
             let width = known_dimensions.width.unwrap_or(height);

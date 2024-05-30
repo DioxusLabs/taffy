@@ -9,7 +9,7 @@ use crate::style_helpers::TaffyZero;
 /// a context-independent size or dimension.
 ///
 /// Will return a `None` if it unable to resolve.
-pub(crate) trait MaybeResolve<In, Out> {
+pub trait MaybeResolve<In, Out> {
     /// Resolve a dimension that might be dependent on a context, with `None` as fallback value
     fn maybe_resolve(self, context: In) -> Out;
 }
@@ -19,7 +19,7 @@ pub(crate) trait MaybeResolve<In, Out> {
 /// a context-independent size or dimension.
 ///
 /// Will return a default value if it unable to resolve.
-pub(crate) trait ResolveOrZero<TContext, TOutput: TaffyZero> {
+pub trait ResolveOrZero<TContext, TOutput: TaffyZero> {
     /// Resolve a dimension that might be dependent on a context, with a default fallback value
     fn resolve_or_zero(self, context: TContext) -> TOutput;
 }
