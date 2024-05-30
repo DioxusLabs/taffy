@@ -78,6 +78,8 @@ mod block_display_none_with_position_absolute;
 mod block_inset_fixed;
 mod block_inset_percentage;
 mod block_intrinsic_width;
+mod block_item_max_width;
+mod block_item_min_width_overrides_max_width;
 mod block_margin_auto_bottom;
 mod block_margin_auto_bottom_and_top;
 mod block_margin_auto_left;
