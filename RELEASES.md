@@ -1,5 +1,10 @@
 # Release Notes
 
+## 0.5.1
+
+- Fix: Clamp block item stretch widths by their min and max width (#664)
+- Fix: Auto margin computation in block layout (#663)
+
 ## 0.5.0
 
 The changes in 0.5 are relatively small but the new measure function parameter is a breaking change so it requires a minor version bump.
