@@ -1,5 +1,13 @@
 # Release Notes
 
+## 0.5.0
+
+The changes in 0.5 are relatively small but the new measure function parameter is a breaking change so it requires a minor version bump.
+
+- Added: A `style: &Style` parameter has been added to measure functions.
+- Added: The `MaybeMath`, `MaybeResolve`, and `ResolveOrZero` traits have been made public.
+- Fix: use SizingMode::Inherent when sizing absolute children of flexbox nodes.
+
 ## 0.4.4
 
 ### Fixes
