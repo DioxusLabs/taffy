@@ -1917,6 +1917,8 @@ fn perform_absolute_layout_on_absolute_children(
 ) -> Size<f32> {
     let container_width = constants.container_size.width;
     let container_height = constants.container_size.height;
+    let inset_relative_size =
+        constants.container_size - constants.border.sum_axes() - constants.scrollbar_gutter.into();
 
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut content_size = Size::ZERO;
@@ -1940,10 +1942,13 @@ fn perform_absolute_layout_on_absolute_children(
         let padding_border_sum = (padding + border).sum_axes();
 
         // Resolve inset
-        let left = child_style.inset.left.maybe_resolve(container_width);
-        let right = child_style.inset.right.maybe_resolve(container_width);
-        let top = child_style.inset.top.maybe_resolve(container_height);
-        let bottom = child_style.inset.bottom.maybe_resolve(container_height);
+        // Insets are resolved against the container size minus border
+        let left = child_style.inset.left.maybe_resolve(inset_relative_size.width);
+        let right =
+            child_style.inset.right.maybe_resolve(inset_relative_size.width).maybe_add(constants.scrollbar_gutter.x);
+        let top = child_style.inset.top.maybe_resolve(inset_relative_size.height);
+        let bottom =
+            child_style.inset.bottom.maybe_resolve(inset_relative_size.height).maybe_add(constants.scrollbar_gutter.y);
 
         // Compute known dimensions from min/max/inherent size styles
         let style_size =
@@ -2180,9 +2185,10 @@ mod tests {
 
     use crate::{
         geometry::Size,
+        prelude::{auto, length, percent, TaffyMaxContent},
         style::{FlexWrap, Style},
         util::{MaybeMath, ResolveOrZero},
-        TaffyTree,
+        Overflow, Point, Position, PrintTree, Rect, TaffyTree,
     };
 
     // Make sure we get correct constants
@@ -2220,5 +2226,122 @@ mod tests {
 
         assert_eq!(constants.container_size, Size::zero());
         assert_eq!(constants.inner_container_size, Size::zero());
+    }
+
+    #[test]
+    pub fn test_padding_and_border_larger_than_definite_size() {
+        let mut tree: TaffyTree<()> = TaffyTree::with_capacity(16);
+
+        let child = tree.new_leaf(Style::default()).unwrap();
+
+        let root = tree
+            .new_with_children(
+                Style {
+                    size: Size { width: length(10.0), height: length(10.0) },
+                    padding: Rect { left: length(10.0), right: length(10.0), top: length(10.0), bottom: length(10.0) },
+
+                    border: Rect { left: length(10.0), right: length(10.0), top: length(10.0), bottom: length(10.0) },
+                    ..Default::default()
+                },
+                &[child],
+            )
+            .unwrap();
+
+        tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+        let layout = tree.layout(root).unwrap();
+
+        assert_eq!(layout.size.width, 40.0);
+        assert_eq!(layout.size.height, 40.0);
+    }
+
+    #[test]
+    fn test_resolve_insets_against_container_size_minus_border() {
+        let mut tree: TaffyTree<()> = TaffyTree::with_capacity(16);
+
+        let child_style = Style {
+            size: Size { width: length(30.0), height: length(30.0) },
+            inset: Rect { left: percent(1.0), right: auto(), top: percent(0.5), bottom: auto() },
+            position: Position::Absolute,
+            ..Default::default()
+        };
+        let child = tree.new_leaf(child_style.clone()).unwrap();
+
+        let root_style = Style {
+            size: Size { width: length(100.0), height: length(100.0) },
+            padding: Rect { left: length(10.0), right: length(10.0), top: length(10.0), bottom: length(10.0) },
+            border: Rect { left: length(15.0), right: length(15.0), top: length(15.0), bottom: length(15.0) },
+            ..Default::default()
+        };
+        let root = tree.new_with_children(root_style.clone(), &[child]).unwrap();
+
+        tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+        assert_eq!(
+            tree.get_final_layout(child).location,
+            //  parent padding has no effect
+            Point {
+                // left-inset * (parent_width - l_border - r_border) + l_border
+                // -> 1 * (100 - 15 - 15) + 15 = 85
+                x: 85.0,
+                // top-inset * (parent_height - t_border - b_border) + t_border
+                // -> 0.5 * (100 - 15 - 15) + 15 = 50
+                y: 50.0,
+            }
+        );
+
+        tree.set_style(
+            root,
+            Style {
+                scrollbar_width: 5.0,
+                // Let's grow the container by the scrollbar width so math is cleaner.
+                // That means results should stay the same because the inner area of the container is the same when scrollbar is visible.
+                size: Size { width: length(100.0 + 5.0), height: length(100.0 + 5.0) },
+                overflow: Point { x: Overflow::Scroll, y: Overflow::Scroll },
+                ..root_style
+            },
+        )
+        .unwrap();
+
+        tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+        assert_eq!(
+            tree.get_final_layout(child).location,
+            //  assumes scrollbar is always on the right or bottom
+            Point {
+                // left-inset * (parent_width - l_border - r_border - r_scrollbar) + l_border
+                // -> 1 * (105 - 15 - 15 - 5) + 15 = 85
+                x: 85.0,
+                // top-inset * (parent_height - t_border - b_border - b_scrollbar) + t_border
+                // -> 0.5 * (105 - 15 - 15 - 5) + 15 = 50
+                y: 50.0,
+            }
+        );
+
+        // Now let's set the inset relative to the right and bottom, to be sure the scrollbar is taken into account.
+        tree.set_style(
+            child,
+            Style {
+                inset: Rect { left: auto(), right: percent(1.0), top: auto(), bottom: percent(0.5) },
+                ..child_style
+            },
+        )
+        .unwrap();
+
+        tree.compute_layout(root, Size::MAX_CONTENT).unwrap();
+
+        assert_eq!(
+            tree.get_final_layout(child).location,
+            Point {
+                // relative_area_width = parent_width - l_border - r_border - r_scrollbar = 105 - 15 - 15 - 5 = 70
+                // resolved_right = right-inset * relative_area_width = 1 * 70 = 70
+                // parent_width - (resolved_right + r_border + r_scrollbar + child_width) = 105 - (70 + 15 + 5 + 30) = -15
+                x: -15.0,
+                // relative_area_height = parent_height - t_border - b_border - b_scrollbar = 105 - 15 - 15 - 5 = 70
+                // resolved_bottom = bottom-inset * relative_area_height = 0.5 * 70 = 35
+                // parent_height - (resolved_bottom + b_border + b_scrollbar + child_height) = 105 - (35 + 15 + 5 + 30) = 20
+                y: 20.0,
+            }
+        );
     }
 }
