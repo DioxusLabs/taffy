@@ -7,5 +7,5 @@ edition = "2021"
 
 [dependencies]
 taffy = { path = ".." }
-style = { git = "https://github.com/servo/stylo", branch = "2024-04-16", features = ["servo"] }
-servo_arc = { git = "https://github.com/servo/stylo", branch = "2024-04-16" }
+style = { git = "https://github.com/servo/stylo", branch = "2024-05-15", features = ["servo"] }
+servo_arc = { git = "https://github.com/servo/stylo", branch = "2024-05-15" }
