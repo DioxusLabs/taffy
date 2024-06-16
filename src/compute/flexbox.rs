@@ -1951,16 +1951,14 @@ fn perform_absolute_layout_on_absolute_children(
             child_style.inset.bottom.maybe_resolve(inset_relative_size.height).maybe_add(constants.scrollbar_gutter.y);
 
         // Compute known dimensions from min/max/inherent size styles
-        let style_size =
-            child_style.size.maybe_resolve(constants.container_size).maybe_apply_aspect_ratio(aspect_ratio);
+        let style_size = child_style.size.maybe_resolve(inset_relative_size).maybe_apply_aspect_ratio(aspect_ratio);
         let min_size = child_style
             .min_size
-            .maybe_resolve(constants.container_size)
+            .maybe_resolve(inset_relative_size)
             .maybe_apply_aspect_ratio(aspect_ratio)
             .or(padding_border_sum.map(Some))
             .maybe_max(padding_border_sum);
-        let max_size =
-            child_style.max_size.maybe_resolve(constants.container_size).maybe_apply_aspect_ratio(aspect_ratio);
+        let max_size = child_style.max_size.maybe_resolve(inset_relative_size).maybe_apply_aspect_ratio(aspect_ratio);
         let mut known_dimensions = style_size.maybe_clamp(min_size, max_size);
 
         // Fill in width from left/right and reapply aspect ratio if:
