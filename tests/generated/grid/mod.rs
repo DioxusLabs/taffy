@@ -34,6 +34,8 @@ mod grid_absolute_layout_within_border;
 #[cfg(feature = "grid")]
 mod grid_absolute_layout_within_border_static;
 #[cfg(feature = "grid")]
+mod grid_absolute_resolved_insets;
+#[cfg(feature = "grid")]
 mod grid_absolute_row_end;
 #[cfg(feature = "grid")]
 mod grid_absolute_row_start;
