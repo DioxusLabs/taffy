@@ -84,6 +84,7 @@ pub mod style_helpers;
 pub mod tree;
 #[macro_use]
 pub mod util;
+pub mod calc;
 
 mod readme_doctest {
     #![doc = include_str!("../README.md")]
