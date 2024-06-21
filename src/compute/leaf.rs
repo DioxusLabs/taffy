@@ -32,9 +32,10 @@ where
         }
         SizingMode::InherentSize => {
             let aspect_ratio = style.aspect_ratio;
-            let style_size = style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-            let style_min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-            let style_max_size = style.max_size.maybe_resolve(parent_size);
+            let style_size = style.size.clone().maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+            let style_min_size =
+                style.min_size.clone().maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+            let style_max_size = style.max_size.clone().maybe_resolve(parent_size);
 
             let node_size = known_dimensions.or(style_size);
             (node_size, style_min_size, style_max_size, aspect_ratio)
@@ -43,9 +44,9 @@ where
 
     // Note: both horizontal and vertical percentage padding/borders are resolved against the container's inline size (i.e. width).
     // This is not a bug, but is how CSS is specified (see: https://developer.mozilla.org/en-US/docs/Web/CSS/padding#values)
-    let margin = style.margin.resolve_or_zero(parent_size.width);
-    let padding = style.padding.resolve_or_zero(parent_size.width);
-    let border = style.border.resolve_or_zero(parent_size.width);
+    let margin = style.margin.clone().resolve_or_zero(parent_size.width);
+    let padding = style.padding.clone().resolve_or_zero(parent_size.width);
+    let border = style.border.clone().resolve_or_zero(parent_size.width);
     let padding_border = padding + border;
 
     // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.

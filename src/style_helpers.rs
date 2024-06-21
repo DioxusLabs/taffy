@@ -337,7 +337,7 @@ pub trait TaffyFitContent {
 }
 impl<T: TaffyFitContent> TaffyFitContent for Point<T> {
     fn fit_content(argument: LengthPercentage) -> Self {
-        Point { x: T::fit_content(argument), y: T::fit_content(argument) }
+        Point { x: T::fit_content(argument.clone()), y: T::fit_content(argument) }
     }
 }
 impl<T: TaffyFitContent> Point<T> {
@@ -349,7 +349,7 @@ impl<T: TaffyFitContent> Point<T> {
 }
 impl<T: TaffyFitContent> TaffyFitContent for Line<T> {
     fn fit_content(argument: LengthPercentage) -> Self {
-        Line { start: T::fit_content(argument), end: T::fit_content(argument) }
+        Line { start: T::fit_content(argument.clone()), end: T::fit_content(argument) }
     }
 }
 impl<T: TaffyFitContent> Line<T> {
@@ -361,7 +361,7 @@ impl<T: TaffyFitContent> Line<T> {
 }
 impl<T: TaffyFitContent> TaffyFitContent for Size<T> {
     fn fit_content(argument: LengthPercentage) -> Self {
-        Size { width: T::fit_content(argument), height: T::fit_content(argument) }
+        Size { width: T::fit_content(argument.clone()), height: T::fit_content(argument) }
     }
 }
 impl<T: TaffyFitContent> Size<T> {
@@ -374,9 +374,9 @@ impl<T: TaffyFitContent> Size<T> {
 impl<T: TaffyFitContent> TaffyFitContent for Rect<T> {
     fn fit_content(argument: LengthPercentage) -> Self {
         Rect {
-            left: T::fit_content(argument),
-            right: T::fit_content(argument),
-            top: T::fit_content(argument),
+            left: T::fit_content(argument.clone()),
+            right: T::fit_content(argument.clone()),
+            top: T::fit_content(argument.clone()),
             bottom: T::fit_content(argument),
         }
     }

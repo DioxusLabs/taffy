@@ -63,14 +63,19 @@ pub fn compute_block_layout(tree: &mut impl LayoutPartialTree, node_id: NodeId, 
 
     // Pull these out earlier to avoid borrowing issues
     let aspect_ratio = style.aspect_ratio;
-    let margin = style.margin.resolve_or_zero(parent_size.width);
-    let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-    let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-    let padding = style.padding.resolve_or_zero(parent_size.width);
-    let border = style.border.resolve_or_zero(parent_size.width);
+    let margin = style.margin.clone().resolve_or_zero(parent_size.width);
+    let min_size = style.min_size.clone().maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let max_size = style.max_size.clone().maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let padding = style.padding.clone().resolve_or_zero(parent_size.width);
+    let border = style.border.clone().resolve_or_zero(parent_size.width);
     let padding_border_size = (padding + border).sum_axes();
     let clamped_style_size = if inputs.sizing_mode == SizingMode::InherentSize {
-        style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size)
+        style
+            .size
+            .clone()
+            .maybe_resolve(parent_size)
+            .maybe_apply_aspect_ratio(aspect_ratio)
+            .maybe_clamp(min_size, max_size)
     } else {
         Size::NONE
     };
@@ -110,15 +115,15 @@ fn compute_inner(tree: &mut impl LayoutPartialTree, node_id: NodeId, inputs: Lay
     } = inputs;
 
     let style = tree.get_style(node_id);
-    let raw_padding = style.padding;
-    let raw_border = style.border;
-    let raw_margin = style.margin;
+    let raw_padding = style.padding.clone();
+    let raw_border = style.border.clone();
+    let raw_margin = style.margin.clone();
     let aspect_ratio = style.aspect_ratio;
-    let size = style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-    let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-    let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-    let padding = style.padding.resolve_or_zero(parent_size.width);
-    let border = style.border.resolve_or_zero(parent_size.width);
+    let size = style.size.clone().maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let min_size = style.min_size.clone().maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let max_size = style.max_size.clone().maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let padding = style.padding.clone().resolve_or_zero(parent_size.width);
+    let border = style.border.clone().resolve_or_zero(parent_size.width);
 
     // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
     // However, the axis are switched (transposed) because a node that scrolls vertically needs
@@ -268,20 +273,28 @@ fn generate_item_list(
         .enumerate()
         .map(|(order, (child_node_id, child_style))| {
             let aspect_ratio = child_style.aspect_ratio;
-            let padding = child_style.padding.resolve_or_zero(node_inner_size);
-            let border = child_style.border.resolve_or_zero(node_inner_size);
+            let padding = child_style.padding.clone().resolve_or_zero(node_inner_size);
+            let border = child_style.border.clone().resolve_or_zero(node_inner_size);
             BlockItem {
                 node_id: child_node_id,
                 order: order as u32,
 
-                size: child_style.size.maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
-                min_size: child_style.min_size.maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
-                max_size: child_style.max_size.maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
+                size: child_style.size.clone().maybe_resolve(node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
+                min_size: child_style
+                    .min_size
+                    .clone()
+                    .maybe_resolve(node_inner_size)
+                    .maybe_apply_aspect_ratio(aspect_ratio),
+                max_size: child_style
+                    .max_size
+                    .clone()
+                    .maybe_resolve(node_inner_size)
+                    .maybe_apply_aspect_ratio(aspect_ratio),
                 overflow: child_style.overflow,
                 scrollbar_width: child_style.scrollbar_width,
                 position: child_style.position,
-                inset: child_style.inset,
-                margin: child_style.margin,
+                inset: child_style.inset.clone(),
+                margin: child_style.margin.clone(),
                 padding,
                 border,
                 padding_border_sum: (padding + border).sum_axes(),
@@ -310,7 +323,7 @@ fn determine_content_based_container_width(
 
         let width = known_dimensions.width.unwrap_or_else(|| {
             let item_x_margin_sum =
-                item.margin.resolve_or_zero(available_space.width.into_option()).horizontal_axis_sum();
+                item.margin.clone().resolve_or_zero(available_space.width.into_option()).horizontal_axis_sum();
             let size_and_baselines = tree.perform_child_layout(
                 item.node_id,
                 known_dimensions,
@@ -356,7 +369,7 @@ fn perform_final_layout_on_in_flow_children(
         if item.position == Position::Absolute {
             item.static_position.y = committed_y_offset;
         } else {
-            let item_margin = item.margin.map(|margin| margin.resolve_to_option(container_outer_width));
+            let item_margin = item.margin.clone().map(|margin| margin.resolve_to_option(container_outer_width));
             let item_non_auto_margin = item_margin.map(|m| m.unwrap_or(0.0));
             let item_non_auto_x_margin_sum = item_non_auto_margin.horizontal_axis_sum();
             let known_dimensions = item
@@ -403,8 +416,10 @@ fn perform_final_layout_on_in_flow_children(
             };
 
             // Resolve item inset
-            let inset =
-                item.inset.zip_size(Size { width: container_inner_width, height: 0.0 }, |p, s| p.maybe_resolve(s));
+            let inset = item
+                .inset
+                .clone()
+                .zip_size(Size { width: container_inner_width, height: 0.0 }, |p, s| p.maybe_resolve(s));
             let inset_offset = Point {
                 x: inset.left.or(inset.right.map(|x| -x)).unwrap_or(0.0),
                 y: inset.top.or(inset.bottom.map(|x| -x)).unwrap_or(0.0),
@@ -512,26 +527,27 @@ fn perform_absolute_layout_on_absolute_children(
         }
 
         let aspect_ratio = child_style.aspect_ratio;
-        let margin = child_style.margin.map(|margin| margin.resolve_to_option(area_width));
-        let padding = child_style.padding.resolve_or_zero(Some(area_width));
-        let border = child_style.border.resolve_or_zero(Some(area_width));
+        let margin = child_style.margin.clone().map(|margin| margin.resolve_to_option(area_width));
+        let padding = child_style.padding.clone().resolve_or_zero(Some(area_width));
+        let border = child_style.border.clone().resolve_or_zero(Some(area_width));
         let padding_border_sum = (padding + border).sum_axes();
 
         // Resolve inset
-        let left = child_style.inset.left.maybe_resolve(area_width);
-        let right = child_style.inset.right.maybe_resolve(area_width);
-        let top = child_style.inset.top.maybe_resolve(area_height);
-        let bottom = child_style.inset.bottom.maybe_resolve(area_height);
+        let left = child_style.inset.clone().left.maybe_resolve(area_width);
+        let right = child_style.inset.clone().right.maybe_resolve(area_width);
+        let top = child_style.inset.clone().top.maybe_resolve(area_height);
+        let bottom = child_style.inset.clone().bottom.maybe_resolve(area_height);
 
         // Compute known dimensions from min/max/inherent size styles
-        let style_size = child_style.size.maybe_resolve(area_size).maybe_apply_aspect_ratio(aspect_ratio);
+        let style_size = child_style.size.clone().maybe_resolve(area_size).maybe_apply_aspect_ratio(aspect_ratio);
         let min_size = child_style
             .min_size
+            .clone()
             .maybe_resolve(area_size)
             .maybe_apply_aspect_ratio(aspect_ratio)
             .or(padding_border_sum.map(Some))
             .maybe_max(padding_border_sum);
-        let max_size = child_style.max_size.maybe_resolve(area_size).maybe_apply_aspect_ratio(aspect_ratio);
+        let max_size = child_style.max_size.clone().maybe_resolve(area_size).maybe_apply_aspect_ratio(aspect_ratio);
         let mut known_dimensions = style_size.maybe_clamp(min_size, max_size);
 
         // Fill in width from left/right and reapply aspect ratio if:

@@ -93,13 +93,13 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
     //   - then the number of repetitions is the smallest possible positive integer that fulfills that minimum requirement
     // Otherwise, the specified track list repeats only once.
     let style_size = preferred_size.get_abs(axis);
-    let style_min_size = style.min_size.get_abs(axis).into_option();
-    let style_max_size = style.max_size.get_abs(axis).into_option();
+    let style_min_size = style.min_size.clone().get_abs(axis).into_option();
+    let style_max_size = style.max_size.clone().get_abs(axis).into_option();
 
     let outer_container_size = style_size.maybe_min(style_max_size).or(style_max_size).or(style_min_size);
     let inner_container_size = outer_container_size.map(|size| {
-        let padding_sum = style.padding.resolve_or_zero(outer_container_size).grid_axis_sum(axis);
-        let border_sum = style.border.resolve_or_zero(outer_container_size).grid_axis_sum(axis);
+        let padding_sum = style.padding.clone().resolve_or_zero(outer_container_size).grid_axis_sum(axis);
+        let border_sum = style.border.clone().resolve_or_zero(outer_container_size).grid_axis_sum(axis);
         size - padding_sum - border_sum
     });
     let size_is_maximum = style_size.is_some() || style_max_size.is_some();
@@ -113,8 +113,8 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
             /// ...treating each track as its max track sizing function if that is definite or as its minimum track sizing function
             /// otherwise, flooring the max track sizing function by the min track sizing function if both are definite
             fn track_definite_value(sizing_function: &NonRepeatedTrackSizingFunction, parent_size: Option<f32>) -> f32 {
-                let max_size = sizing_function.max.definite_value(parent_size);
-                let min_size = sizing_function.max.definite_value(parent_size);
+                let max_size = sizing_function.max.clone().definite_value(parent_size);
+                let min_size = sizing_function.max.clone().definite_value(parent_size);
                 max_size.map(|max| max.maybe_min(min_size)).or(min_size).unwrap()
             }
 
@@ -137,7 +137,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
                     }
                 })
                 .sum();
-            let gap_size = style.gap.get_abs(axis).resolve_or_zero(Some(inner_container_size));
+            let gap_size = style.gap.clone().get_abs(axis).resolve_or_zero(Some(inner_container_size));
 
             // Compute the amount of space that a single repetition of the repeated track list takes
             let per_repetition_track_used_space: f32 = repetition_definition
@@ -194,17 +194,17 @@ pub(super) fn initialize_grid_tracks(
     // and push the initial gutter
     tracks.clear();
     tracks.reserve((counts.len() * 2) + 1);
-    tracks.push(GridTrack::gutter(gap));
+    tracks.push(GridTrack::gutter(gap.clone()));
 
     // Create negative implicit tracks
     if counts.negative_implicit > 0 {
         if auto_tracks.is_empty() {
             let iter = core::iter::repeat(NonRepeatedTrackSizingFunction::AUTO);
-            create_implicit_tracks(tracks, counts.negative_implicit, iter, gap)
+            create_implicit_tracks(tracks, counts.negative_implicit, iter, gap.clone())
         } else {
             let offset = auto_tracks.len() - (counts.negative_implicit as usize % auto_tracks.len());
-            let iter = auto_tracks.iter().copied().cycle().skip(offset);
-            create_implicit_tracks(tracks, counts.negative_implicit, iter, gap)
+            let iter = auto_tracks.iter().cloned().cycle().skip(offset);
+            create_implicit_tracks(tracks, counts.negative_implicit, iter, gap.clone())
         }
     }
 
@@ -222,7 +222,7 @@ pub(super) fn initialize_grid_tracks(
                         sizing_function.min_sizing_function(),
                         sizing_function.max_sizing_function(),
                     ));
-                    tracks.push(GridTrack::gutter(gap));
+                    tracks.push(GridTrack::gutter(gap.clone()));
                     current_track_index += 1;
                 }
                 TrackSizingFunction::Repeat(Count(count), repeated_tracks) => {
@@ -232,17 +232,17 @@ pub(super) fn initialize_grid_tracks(
                             sizing_function.min_sizing_function(),
                             sizing_function.max_sizing_function(),
                         ));
-                        tracks.push(GridTrack::gutter(gap));
+                        tracks.push(GridTrack::gutter(gap.clone()));
                         current_track_index += 1;
                     });
                 }
                 TrackSizingFunction::Repeat(repetition_kind @ (AutoFit | AutoFill), repeated_tracks) => {
                     let auto_repeated_track_count = (counts.explicit - (track_template.len() as u16 - 1)) as usize;
-                    let iter = repeated_tracks.iter().copied().cycle();
+                    let iter = repeated_tracks.iter().cloned().cycle();
                     for track_def in iter.take(auto_repeated_track_count) {
                         let mut track =
                             GridTrack::new(track_def.min_sizing_function(), track_def.max_sizing_function());
-                        let mut gutter = GridTrack::gutter(gap);
+                        let mut gutter = GridTrack::gutter(gap.clone());
 
                         // Auto-fit tracks that don't contain should be collapsed.
                         if *repetition_kind == AutoFit && !track_has_items(current_track_index) {
@@ -263,10 +263,10 @@ pub(super) fn initialize_grid_tracks(
     // Create positive implicit tracks
     if auto_tracks.is_empty() {
         let iter = core::iter::repeat(NonRepeatedTrackSizingFunction::AUTO);
-        create_implicit_tracks(tracks, counts.positive_implicit, iter, gap)
+        create_implicit_tracks(tracks, counts.positive_implicit, iter, gap.clone())
     } else {
-        let iter = auto_tracks.iter().copied().cycle();
-        create_implicit_tracks(tracks, counts.positive_implicit, iter, gap)
+        let iter = auto_tracks.iter().cloned().cycle();
+        create_implicit_tracks(tracks, counts.positive_implicit, iter, gap.clone())
     }
 
     // Mark first and last grid lines as collapsed
@@ -284,7 +284,7 @@ fn create_implicit_tracks(
     for _ in 0..count {
         let track_def = auto_tracks_iter.next().unwrap();
         tracks.push(GridTrack::new(track_def.min_sizing_function(), track_def.max_sizing_function()));
-        tracks.push(GridTrack::gutter(gap));
+        tracks.push(GridTrack::gutter(gap.clone()));
     }
 }
 
@@ -301,7 +301,7 @@ mod test {
     #[test]
     fn explicit_grid_sizing_no_repeats() {
         let grid_style = (600.0, 600.0, 2, 4).into_grid();
-        let preferred_size = grid_style.size.map(|s| s.into_option());
+        let preferred_size = grid_style.size.clone().map(|s| s.into_option());
         let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
         let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
         assert_eq!(width, 2);
@@ -318,7 +318,7 @@ mod test {
             grid_template_rows: vec![repeat(AutoFill, vec![length(20.0)])],
             ..Default::default()
         };
-        let preferred_size = grid_style.size.map(|s| s.into_option());
+        let preferred_size = grid_style.size.clone().map(|s| s.into_option());
         let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
         let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
         assert_eq!(width, 3);
@@ -335,7 +335,7 @@ mod test {
             grid_template_rows: vec![repeat(AutoFill, vec![length(20.0)])],
             ..Default::default()
         };
-        let preferred_size = grid_style.size.map(|s| s.into_option());
+        let preferred_size = grid_style.size.clone().map(|s| s.into_option());
         let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
         let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
         assert_eq!(width, 3);
@@ -352,7 +352,7 @@ mod test {
             grid_template_rows: vec![repeat(AutoFill, vec![length(20.0)])],
             ..Default::default()
         };
-        let preferred_size = grid_style.size.map(|s| s.into_option());
+        let preferred_size = grid_style.clone().size.map(|s| s.into_option());
         let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
         let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
         assert_eq!(width, 3);
@@ -369,7 +369,7 @@ mod test {
             grid_template_rows: vec![repeat(AutoFill, vec![length(20.0)])],
             ..Default::default()
         };
-        let preferred_size = grid_style.size.map(|s| s.into_option());
+        let preferred_size = grid_style.size.clone().map(|s| s.into_option());
         let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
         let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
         assert_eq!(width, 4);
@@ -386,7 +386,7 @@ mod test {
             grid_template_rows: vec![repeat(AutoFill, vec![length(20.0), length(10.0)])],
             ..Default::default()
         };
-        let preferred_size = grid_style.size.map(|s| s.into_option());
+        let preferred_size = grid_style.size.clone().map(|s| s.into_option());
         let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
         let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
         assert_eq!(width, 4); // 2 repetitions * 2 repeated tracks = 4 tracks in total
@@ -404,8 +404,8 @@ mod test {
             gap: length(20.0),
             ..Default::default()
         };
-        let preferred_size = grid_style.size.map(|s| s.into_option());
-        let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
+        let preferred_size = grid_style.size.clone().map(|s| s.into_option());
+        let width = compute_explicit_grid_size_in_axis(&grid_style.clone(), preferred_size, AbsoluteAxis::Horizontal);
         let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
         assert_eq!(width, 2); // 2 tracks + 1 gap
         assert_eq!(height, 3); // 3 tracks + 2 gaps
@@ -421,7 +421,7 @@ mod test {
             gap: length(20.0),
             ..Default::default()
         };
-        let preferred_size = grid_style.size.map(|s| s.into_option());
+        let preferred_size = grid_style.size.clone().map(|s| s.into_option());
         let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
         let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
         assert_eq!(width, 3);
@@ -439,7 +439,7 @@ mod test {
             gap: length(20.0),
             ..Default::default()
         };
-        let preferred_size = grid_style.size.map(|s| s.into_option());
+        let preferred_size = grid_style.size.clone().map(|s| s.into_option());
         let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
         let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
         assert_eq!(width, 3); // 3 tracks + 2 gaps
@@ -457,7 +457,7 @@ mod test {
             grid_template_rows: vec![repeat(AutoFill, vec![length(20.0)])],
             ..Default::default()
         };
-        let preferred_size = grid_style.size.map(|s| s.into_option());
+        let preferred_size = grid_style.size.clone().map(|s| s.into_option());
         let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
         let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
         assert_eq!(width, 5); // 40px horizontal padding
@@ -475,7 +475,7 @@ mod test {
         let track_counts =
             TrackCounts { negative_implicit: 3, explicit: track_template.len() as u16, positive_implicit: 3 };
         let auto_tracks = vec![auto(), length(100.0)];
-        let gap = px20;
+        let gap = px20.clone();
 
         // Call function
         let mut tracks = Vec::new();
@@ -484,28 +484,84 @@ mod test {
         // Assertions
         let expected = vec![
             // Gutter
-            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px0), MaxTrackSizingFunction::Fixed(px0)),
+            (
+                GridTrackKind::Gutter,
+                MinTrackSizingFunction::Fixed(px0.clone()),
+                MaxTrackSizingFunction::Fixed(px0.clone()),
+            ),
             // Negative implicit tracks
-            (GridTrackKind::Track, MinTrackSizingFunction::Fixed(px100), MaxTrackSizingFunction::Fixed(px100)),
-            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
+            (
+                GridTrackKind::Track,
+                MinTrackSizingFunction::Fixed(px100.clone()),
+                MaxTrackSizingFunction::Fixed(px100.clone()),
+            ),
+            (
+                GridTrackKind::Gutter,
+                MinTrackSizingFunction::Fixed(px20.clone()),
+                MaxTrackSizingFunction::Fixed(px20.clone()),
+            ),
             (GridTrackKind::Track, MinTrackSizingFunction::Auto, MaxTrackSizingFunction::Auto),
-            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
-            (GridTrackKind::Track, MinTrackSizingFunction::Fixed(px100), MaxTrackSizingFunction::Fixed(px100)),
-            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
+            (
+                GridTrackKind::Gutter,
+                MinTrackSizingFunction::Fixed(px20.clone()),
+                MaxTrackSizingFunction::Fixed(px20.clone()),
+            ),
+            (
+                GridTrackKind::Track,
+                MinTrackSizingFunction::Fixed(px100.clone()),
+                MaxTrackSizingFunction::Fixed(px100.clone()),
+            ),
+            (
+                GridTrackKind::Gutter,
+                MinTrackSizingFunction::Fixed(px20.clone()),
+                MaxTrackSizingFunction::Fixed(px20.clone()),
+            ),
             // Explicit tracks
-            (GridTrackKind::Track, MinTrackSizingFunction::Fixed(px100), MaxTrackSizingFunction::Fixed(px100)),
-            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
-            (GridTrackKind::Track, MinTrackSizingFunction::Fixed(px100), MaxTrackSizingFunction::Fraction(2.0)), // Note: separate min-max functions
-            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
+            (
+                GridTrackKind::Track,
+                MinTrackSizingFunction::Fixed(px100.clone()),
+                MaxTrackSizingFunction::Fixed(px100.clone()),
+            ),
+            (
+                GridTrackKind::Gutter,
+                MinTrackSizingFunction::Fixed(px20.clone()),
+                MaxTrackSizingFunction::Fixed(px20.clone()),
+            ),
+            (GridTrackKind::Track, MinTrackSizingFunction::Fixed(px100.clone()), MaxTrackSizingFunction::Fraction(2.0)), // Note: separate min-max functions
+            (
+                GridTrackKind::Gutter,
+                MinTrackSizingFunction::Fixed(px20.clone()),
+                MaxTrackSizingFunction::Fixed(px20.clone()),
+            ),
             (GridTrackKind::Track, MinTrackSizingFunction::Auto, MaxTrackSizingFunction::Fraction(1.0)), // Note: min sizing function of flex sizing functions is auto
-            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
+            (
+                GridTrackKind::Gutter,
+                MinTrackSizingFunction::Fixed(px20.clone()),
+                MaxTrackSizingFunction::Fixed(px20.clone()),
+            ),
             // Positive implicit tracks
             (GridTrackKind::Track, MinTrackSizingFunction::Auto, MaxTrackSizingFunction::Auto),
-            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
-            (GridTrackKind::Track, MinTrackSizingFunction::Fixed(px100), MaxTrackSizingFunction::Fixed(px100)),
-            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
+            (
+                GridTrackKind::Gutter,
+                MinTrackSizingFunction::Fixed(px20.clone()),
+                MaxTrackSizingFunction::Fixed(px20.clone()),
+            ),
+            (
+                GridTrackKind::Track,
+                MinTrackSizingFunction::Fixed(px100.clone()),
+                MaxTrackSizingFunction::Fixed(px100.clone()),
+            ),
+            (
+                GridTrackKind::Gutter,
+                MinTrackSizingFunction::Fixed(px20.clone()),
+                MaxTrackSizingFunction::Fixed(px20.clone()),
+            ),
             (GridTrackKind::Track, MinTrackSizingFunction::Auto, MaxTrackSizingFunction::Auto),
-            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px0), MaxTrackSizingFunction::Fixed(px0)),
+            (
+                GridTrackKind::Gutter,
+                MinTrackSizingFunction::Fixed(px0.clone()),
+                MaxTrackSizingFunction::Fixed(px0.clone()),
+            ),
         ];
 
         assert_eq!(tracks.len(), expected.len(), "Number of tracks doesn't match");
