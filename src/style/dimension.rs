@@ -2,6 +2,7 @@
 
 use std::ops::Neg;
 use std::sync::Arc;
+use num_traits::{Signed, Zero};
 use crate::geometry::{Rect, Size};
 use crate::style_helpers::{FromLength, FromPercent, TaffyAuto, TaffyMaxContent, TaffyMinContent, TaffyZero};
 use crate::util::sys::abs;
@@ -222,6 +223,11 @@ pub enum CalcNode {
     Max(Vec<CalcNode>),
 
     Clamp { min: Box<CalcNode>, center: Box<CalcNode>, max: Box<CalcNode> },
+    Round {
+        strategy: RoundingStrategy,
+        value: Box<CalcNode>,
+        interval: Box<CalcNode>
+    }
 }
 impl CalcNode {
     fn resolve(&self, percentage_length: f32) -> f32 {
@@ -247,6 +253,78 @@ impl CalcNode {
                 let min = min.min(max);
                 min
             }
+
+            CalcNode::Round { strategy, value, interval } => {
+                // https://developer.mozilla.org/en-US/docs/Web/CSS/round#return_value
+                // https://drafts.csswg.org/css-values/#funcdef-round
+                
+                let value = value.resolve(percentage_length);
+                let interval = interval.resolve(percentage_length);
+                
+                // todo: The argument calculations can resolve to <number>, <dimension>, or 
+                // <percentage>, but must have the same type, or else the function is invalid; the 
+                // result will have the same type as the arguments.
+                
+                if interval.is_zero() {
+                    return f32::NAN;
+                }
+                if value.is_infinite() {
+                    if interval.is_infinite() {
+                        return value
+                    }
+                    return f32::NAN;
+                }
+                
+                if interval.is_infinite() {
+                    return match strategy {
+                        RoundingStrategy::Up => {
+                            if value.is_positive() && !value.is_zero() {
+                                f32::INFINITY
+                            } else if value.is_positive() {
+                                0.0
+                            } else {
+                                -0.0
+                            }
+                        }
+                        RoundingStrategy::Down => {
+                            if value.is_negative() && !value.is_zero() {
+                                f32::NEG_INFINITY
+                            } else if value.is_negative() {
+                                -0.0
+                            } else {
+                                0.0
+                            }
+                        }
+                        RoundingStrategy::Nearest |
+                        RoundingStrategy::ToZero => {
+                            if value.is_positive() { 0.0 } else { -0.0 }
+                        }
+                    }
+                }
+
+                let div = value / interval;
+                let lower_bound = div.floor() * interval;
+                let upper_bound = div.ceil() * interval;
+
+                match strategy {
+                    RoundingStrategy::Up => upper_bound,
+                    RoundingStrategy::Down => lower_bound,
+                    RoundingStrategy::Nearest => {
+                        if value - lower_bound < upper_bound - value {
+                            lower_bound
+                        } else {
+                            upper_bound
+                        }
+                    },
+                    RoundingStrategy::ToZero => {
+                        if lower_bound.abs() < upper_bound.abs() {
+                            lower_bound
+                        } else {
+                            upper_bound
+                        }
+                    },
+                }
+            }
         }
     }
 
@@ -255,6 +333,15 @@ impl CalcNode {
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum RoundingStrategy {
+    Up,
+    Down,
+    #[default]
+    Nearest,
+    ToZero
+}
 
 /// The amount of space available to a node in a given axis
 /// <https://www.w3.org/TR/css-sizing-3/#available>
