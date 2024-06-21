@@ -464,15 +464,15 @@ mod tests {
 
         // Dimensions and aggregations of Dimensions
         assert_type_size::<f32>(4);
-        assert_type_size::<LengthPercentage>(8);
-        assert_type_size::<LengthPercentageAuto>(8);
-        assert_type_size::<Dimension>(8);
-        assert_type_size::<Size<LengthPercentage>>(16);
-        assert_type_size::<Size<LengthPercentageAuto>>(16);
-        assert_type_size::<Size<Dimension>>(16);
-        assert_type_size::<Rect<LengthPercentage>>(32);
-        assert_type_size::<Rect<LengthPercentageAuto>>(32);
-        assert_type_size::<Rect<Dimension>>(32);
+        assert_type_size::<LengthPercentage>(16);
+        assert_type_size::<LengthPercentageAuto>(16);
+        assert_type_size::<Dimension>(16);
+        assert_type_size::<Size<LengthPercentage>>(32);
+        assert_type_size::<Size<LengthPercentageAuto>>(32);
+        assert_type_size::<Size<Dimension>>(32);
+        assert_type_size::<Rect<LengthPercentage>>(64);
+        assert_type_size::<Rect<LengthPercentageAuto>>(64);
+        assert_type_size::<Rect<Dimension>>(64);
 
         // Alignment
         assert_type_size::<AlignContent>(1);
@@ -485,10 +485,10 @@ mod tests {
 
         // CSS Grid Container
         assert_type_size::<GridAutoFlow>(1);
-        assert_type_size::<MinTrackSizingFunction>(8);
-        assert_type_size::<MaxTrackSizingFunction>(12);
-        assert_type_size::<NonRepeatedTrackSizingFunction>(20);
-        assert_type_size::<TrackSizingFunction>(32);
+        assert_type_size::<MinTrackSizingFunction>(16);
+        assert_type_size::<MaxTrackSizingFunction>(24);
+        assert_type_size::<NonRepeatedTrackSizingFunction>(40);
+        assert_type_size::<TrackSizingFunction>(40);
         assert_type_size::<Vec<NonRepeatedTrackSizingFunction>>(24);
         assert_type_size::<Vec<TrackSizingFunction>>(24);
 
@@ -497,6 +497,6 @@ mod tests {
         assert_type_size::<Line<GridPlacement>>(8);
 
         // Overall
-        assert_type_size::<Style>(352);
+        assert_type_size::<Style>(552);
     }
 }
