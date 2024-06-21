@@ -31,6 +31,7 @@ impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentage {
         match self {
             LengthPercentage::Length(length) => Some(length),
             LengthPercentage::Percent(percent) => context.map(|dim| dim * percent),
+            LengthPercentage::Calculation(calc) => context.map(|dim| calc.resolve(dim)),
         }
     }
 }
@@ -42,6 +43,7 @@ impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentageAuto {
         match self {
             LengthPercentageAuto::Length(length) => Some(length),
             LengthPercentageAuto::Percent(percent) => context.map(|dim| dim * percent),
+            LengthPercentageAuto::Calculation(calc) => context.map(|dim| calc.resolve(dim)),
             LengthPercentageAuto::Auto => None,
         }
     }
@@ -55,6 +57,7 @@ impl MaybeResolve<Option<f32>, Option<f32>> for Dimension {
         match self {
             Dimension::Length(length) => Some(length),
             Dimension::Percent(percent) => context.map(|dim| dim * percent),
+            Dimension::Calculation(calc) => context.map(|dim| calc.resolve(dim)),
             Dimension::Auto => None,
         }
     }

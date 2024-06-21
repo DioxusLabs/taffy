@@ -1,5 +1,6 @@
 //! Style types for representing lengths / sizes
 
+use crate::calc::Calc;
 use crate::geometry::{Rect, Size};
 use crate::style_helpers::{FromLength, FromPercent, TaffyAuto, TaffyMaxContent, TaffyMinContent, TaffyZero};
 use crate::util::sys::abs;
@@ -7,7 +8,7 @@ use crate::util::sys::abs;
 /// A unit of linear measurement
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum LengthPercentage {
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
@@ -15,6 +16,8 @@ pub enum LengthPercentage {
     Length(f32),
     /// The dimension is stored in percentage relative to the parent item.
     Percent(f32),
+    /// todo
+    Calculation(Calc),
 }
 impl TaffyZero for LengthPercentage {
     const ZERO: Self = Self::Length(0.0);
@@ -33,7 +36,7 @@ impl FromPercent for LengthPercentage {
 /// A unit of linear measurement
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum LengthPercentageAuto {
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
@@ -41,6 +44,8 @@ pub enum LengthPercentageAuto {
     Length(f32),
     /// The dimension is stored in percentage relative to the parent item.
     Percent(f32),
+    /// todo
+    Calculation(Calc),
     /// The dimension should be automatically computed
     Auto,
 }
@@ -66,6 +71,7 @@ impl From<LengthPercentage> for LengthPercentageAuto {
         match input {
             LengthPercentage::Length(value) => Self::Length(value),
             LengthPercentage::Percent(value) => Self::Percent(value),
+            LengthPercentage::Calculation(calc) => Self::Calculation(calc),
         }
     }
 }
@@ -74,12 +80,14 @@ impl LengthPercentageAuto {
     /// Returns:
     ///   - Some(length) for Length variants
     ///   - Some(resolved) using the provided context for Percent variants
+    ///   - Some(calculation) todo
     ///   - None for Auto variants
     #[inline(always)]
     pub fn resolve_to_option(self, context: f32) -> Option<f32> {
         match self {
             Self::Length(length) => Some(length),
             Self::Percent(percent) => Some(context * percent),
+            Self::Calculation(calc) => Some(calc.resolve(context)),
             Self::Auto => None,
         }
     }
@@ -94,7 +102,7 @@ impl LengthPercentageAuto {
 /// A unit of linear measurement
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum Dimension {
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
@@ -102,6 +110,8 @@ pub enum Dimension {
     Length(f32),
     /// The dimension is stored in percentage relative to the parent item.
     Percent(f32),
+    /// todo
+    Calculation(Calc),
     /// The dimension should be automatically computed
     Auto,
 }
@@ -127,6 +137,7 @@ impl From<LengthPercentage> for Dimension {
         match input {
             LengthPercentage::Length(value) => Self::Length(value),
             LengthPercentage::Percent(value) => Self::Percent(value),
+            LengthPercentage::Calculation(value) => Self::Calculation(value),
         }
     }
 }
@@ -136,6 +147,7 @@ impl From<LengthPercentageAuto> for Dimension {
         match input {
             LengthPercentageAuto::Length(value) => Self::Length(value),
             LengthPercentageAuto::Percent(value) => Self::Percent(value),
+            LengthPercentageAuto::Calculation(value) => Self::Calculation(value),
             LengthPercentageAuto::Auto => Self::Auto,
         }
     }
