@@ -2,10 +2,10 @@
 
 use crate::geometry::{Rect, Size};
 use crate::style_helpers::{FromLength, FromPercent, TaffyAuto, TaffyMaxContent, TaffyMinContent, TaffyZero};
+use crate::sys::{Arc, Box, Vec};
 use crate::util::sys::abs;
+use core::ops::Neg;
 use num_traits::{Signed, Zero};
-use std::ops::Neg;
-use std::sync::Arc;
 
 /// A unit of linear measurement
 ///
@@ -207,6 +207,11 @@ impl Calc {
         self.0.resolve(percentage_length)
     }
 }
+impl From<CalcNode> for Calc {
+    fn from(value: CalcNode) -> Self {
+        Self(Arc::new(value))
+    }
+}
 
 #[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -222,7 +227,7 @@ pub enum CalcNode {
     Min(Vec<CalcNode>),
     Max(Vec<CalcNode>),
 
-    Clamp { min: Box<CalcNode>, center: Box<CalcNode>, max: Box<CalcNode> },
+    Clamp { min: Box<CalcNode>, value: Box<CalcNode>, max: Box<CalcNode> },
     Round { strategy: RoundingStrategy, value: Box<CalcNode>, interval: Box<CalcNode> },
 }
 impl CalcNode {
@@ -240,7 +245,7 @@ impl CalcNode {
             CalcNode::Max(nodes) => {
                 nodes.iter().map(|node| node.resolve(percentage_length)).reduce(f32::max).unwrap_or_default()
             }
-            CalcNode::Clamp { min, center: value, max } => {
+            CalcNode::Clamp { min, value, max } => {
                 let min = min.resolve(percentage_length);
                 let value = value.resolve(percentage_length);
                 let max = max.resolve(percentage_length);
@@ -326,9 +331,10 @@ impl CalcNode {
             }
         }
     }
-
-    fn into_calc(self) -> Calc {
-        Calc(Arc::new(self))
+}
+impl From<LengthPercentage> for CalcNode {
+    fn from(value: LengthPercentage) -> Self {
+        CalcNode::Leaf(value)
     }
 }
 
