@@ -19,6 +19,15 @@ pub enum LengthPercentage {
     /// todo
     Calculation(Calc),
 }
+impl LengthPercentage {
+    pub fn resolve(&self, percentage_length: f32) -> f32 {
+        match self {
+            LengthPercentage::Length(length) => *length,
+            LengthPercentage::Percent(fraction) => fraction * percentage_length,
+            LengthPercentage::Calculation(calc) => calc.resolve(percentage_length),
+        }
+    }
+}
 impl TaffyZero for LengthPercentage {
     const ZERO: Self = Self::Length(0.0);
 }

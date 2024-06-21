@@ -1,5 +1,6 @@
 use std::ops::Neg;
 use std::sync::Arc;
+use crate::LengthPercentage;
 
 #[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -10,25 +11,10 @@ impl Calc {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-enum LengthPercentage {
-    Percentage(f32),
-    Length(f32),
-}
-impl LengthPercentage {
-    pub fn resolve(&self, percentage_length: f32) -> f32 {
-        match self {
-            LengthPercentage::Percentage(percentage) => percentage * percentage_length,
-            LengthPercentage::Length(length) => *length,
-        }
-    }
-}
-
 #[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum CalcNode {
-    Leaf(LengthPercentage), // TODO: replace with actual type
+    Leaf(LengthPercentage),
 
     Sum(Box<CalcNode>, Box<CalcNode>),
     Difference(Box<CalcNode>, Box<CalcNode>),
