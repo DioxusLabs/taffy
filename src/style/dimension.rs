@@ -226,9 +226,13 @@ pub enum CalcNode {
     Negate(Box<CalcNode>),
     Min(Vec<CalcNode>),
     Max(Vec<CalcNode>),
-
     Clamp { min: Box<CalcNode>, value: Box<CalcNode>, max: Box<CalcNode> },
     Round { strategy: RoundingStrategy, value: Box<CalcNode>, interval: Box<CalcNode> },
+    Rem { dividend: Box<CalcNode>, divisor: Box<CalcNode> },
+    Mod { dividend: Box<CalcNode>, divisor: Box<CalcNode> },
+    Hypot(Vec<CalcNode>),
+    Sign(Box<CalcNode>),
+    Abs(Box<CalcNode>),
 }
 impl CalcNode {
     fn resolve(&self, percentage_length: f32) -> f32 {
@@ -258,7 +262,6 @@ impl CalcNode {
                 let min = min.min(max);
                 min
             }
-
             CalcNode::Round { strategy, value, interval } => {
                 // https://developer.mozilla.org/en-US/docs/Web/CSS/round#return_value
                 // https://drafts.csswg.org/css-values/#funcdef-round
@@ -329,6 +332,36 @@ impl CalcNode {
                     }
                 }
             }
+            CalcNode::Rem { dividend, divisor } => {
+                let dividend = dividend.resolve(percentage_length);
+                let divisor = divisor.resolve(percentage_length);
+
+                let rem = dividend - divisor * (dividend / divisor).trunc();
+                if rem == 0.0 && dividend.is_negative() {
+                    -0.0
+                } else {
+                    rem
+                }
+            }
+            CalcNode::Mod { dividend, divisor } => {
+                let dividend = dividend.resolve(percentage_length);
+                let divisor = divisor.resolve(percentage_length);
+
+                if divisor.is_infinite() && dividend.is_negative() != divisor.is_negative() {
+                    return f32::NAN;
+                }
+                let modulo = dividend - divisor * (dividend / divisor).floor();
+                if modulo == 0.0 && dividend.is_negative() {
+                    -0.0
+                } else {
+                    modulo
+                }
+            }
+            CalcNode::Hypot(nodes) => {
+                nodes.iter().map(|node| node.resolve(percentage_length)).map(|len| len.powi(2)).sum::<f32>().sqrt()
+            }
+            CalcNode::Sign(value) => value.resolve(percentage_length).signum(),
+            CalcNode::Abs(value) => value.resolve(percentage_length).abs(),
         }
     }
 }
