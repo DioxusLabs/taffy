@@ -338,7 +338,8 @@ where
 
 impl<'t, NodeContext, MeasureFunction> LayoutBlockContainer for TaffyView<'t, NodeContext, MeasureFunction>
 where
-    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+    MeasureFunction:
+        FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
 {
     type ContainerStyle<'a> = &'a Style where Self: 'a;
     type ItemStyle<'a> = &'a Style where Self: 'a;
@@ -356,7 +357,8 @@ where
 
 impl<'t, NodeContext, MeasureFunction> LayoutFlexboxContainer for TaffyView<'t, NodeContext, MeasureFunction>
 where
-    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+    MeasureFunction:
+        FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
 {
     type ContainerStyle<'a> = &'a Style where Self: 'a;
     type ItemStyle<'a> = &'a Style where Self: 'a;
@@ -374,7 +376,8 @@ where
 
 impl<'t, NodeContext, MeasureFunction> LayoutGridContainer for TaffyView<'t, NodeContext, MeasureFunction>
 where
-    MeasureFunction: FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>) -> Size<f32>,
+    MeasureFunction:
+        FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
 {
     type ContainerStyle<'a> = &'a Style where Self: 'a;
     type ItemStyle<'a> = &'a Style where Self: 'a;
