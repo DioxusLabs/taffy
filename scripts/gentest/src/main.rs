@@ -1,3 +1,5 @@
+mod calc;
+
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -704,6 +706,11 @@ fn generate_length_percentage_auto(dimen: &serde_json::Map<String, Value>) -> To
                 let value = value();
                 quote!(taffy::style::LengthPercentageAuto::Percent(#value))
             }
+            "calc" => {
+                let value = dimen.get("value").unwrap().as_str().unwrap();
+                let quoted_calc_tree = calc::parse_calc_expression(value);
+                quote!(taffy::style::LengthPercentageAuto::Calculation(#quoted_calc_tree))
+            }
             _ => unreachable!(),
         },
         _ => unreachable!(),
@@ -724,6 +731,11 @@ fn generate_dimension(dimen: &serde_json::Map<String, Value>) -> TokenStream {
             "percent" => {
                 let value = value();
                 quote!(taffy::style::Dimension::Percent(#value))
+            }
+            "calc" => {
+                let value = dimen.get("value").unwrap().as_str().unwrap();
+                let quoted_calc_tree = calc::parse_calc_expression(value);
+                quote!(taffy::style::Dimension::Calculation(#quoted_calc_tree))
             }
             _ => unreachable!(),
         },

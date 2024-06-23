@@ -115,6 +115,7 @@ function parseDimension(input, options = { allowFrUnits: false }) {
   if (options.allowFrUnits && input.endsWith('fr')) return { unit: 'fraction', value: parseFloat(input.replace('fr', '')) };
   if (input.endsWith('px')) return { unit: 'px', value: parseFloat(input.replace('px', '')) };
   if (input.endsWith('%')) return { unit: 'percent', value: parseFloat(input.replace('%', '')) / 100 };
+  if (input.startsWith('calc')) return { unit: 'calc', value: input }
   if (input === 'auto') return { unit: 'auto' };
   if (input === 'min-content') return { unit: 'min-content' };
   if (input === 'max-content') return { unit: 'max-content' };
