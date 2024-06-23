@@ -318,7 +318,7 @@ impl MaxTrackSizingFunction {
         match self {
             Fixed(LengthPercentage::Length(size)) => Some(size),
             Fixed(LengthPercentage::Percent(fraction)) => parent_size.map(|size| fraction * size),
-            Fixed(LengthPercentage::Calculation(calc)) => parent_size.map(|size| calc.resolve(size)),
+            Fixed(LengthPercentage::Calc(calc)) => parent_size.map(|size| calc.resolve(size)),
             MinContent | MaxContent | FitContent(_) | Auto | Fraction(_) => None,
         }
     }
@@ -346,7 +346,7 @@ impl MaxTrackSizingFunction {
         use MaxTrackSizingFunction::*;
         match self {
             Fixed(LengthPercentage::Percent(fraction)) => Some(fraction * parent_size),
-            Fixed(LengthPercentage::Calculation(_)) => {
+            Fixed(LengthPercentage::Calc(_)) => {
                 todo!()
             }
             Fixed(LengthPercentage::Length(_)) | MinContent | MaxContent | FitContent(_) | Auto | Fraction(_) => None,
@@ -417,7 +417,7 @@ impl MinTrackSizingFunction {
         match self {
             Fixed(LengthPercentage::Length(size)) => Some(size),
             Fixed(LengthPercentage::Percent(fraction)) => parent_size.map(|size| fraction * size),
-            Fixed(LengthPercentage::Calculation(calc)) => parent_size.map(|size| calc.resolve(size)),
+            Fixed(LengthPercentage::Calc(calc)) => parent_size.map(|size| calc.resolve(size)),
             MinContent | MaxContent | Auto => None,
         }
     }
@@ -429,7 +429,7 @@ impl MinTrackSizingFunction {
         use MinTrackSizingFunction::*;
         match self {
             Fixed(LengthPercentage::Percent(fraction)) => Some(fraction * parent_size),
-            Fixed(LengthPercentage::Calculation(calc)) => todo!(),
+            Fixed(LengthPercentage::Calc(calc)) => todo!(),
             Fixed(LengthPercentage::Length(_)) | MinContent | MaxContent | Auto => None,
         }
     }

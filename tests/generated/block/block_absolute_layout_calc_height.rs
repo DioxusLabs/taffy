@@ -7,15 +7,15 @@ fn block_absolute_layout_calc_height() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Calculation(taffy::style::Calc::from(taffy::style::CalcNode::Leaf(
+                width: taffy::style::Dimension::Calc(taffy::style::Calc::from(taffy::style::CalcNode::Leaf(
                     LengthPercentage::Percent(0.05f32),
                 ))),
-                height: taffy::style::Dimension::Calculation(taffy::style::Calc::from(taffy::style::CalcNode::Leaf(
+                height: taffy::style::Dimension::Calc(taffy::style::Calc::from(taffy::style::CalcNode::Leaf(
                     LengthPercentage::Length(59f32),
                 ))),
             },
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Calculation(taffy::style::Calc::from(
+                left: taffy::style::LengthPercentageAuto::Calc(taffy::style::Calc::from(
                     taffy::style::CalcNode::Difference(
                         Box::new(taffy::style::CalcNode::Leaf(LengthPercentage::Percent(0.25f32))),
                         Box::new(taffy::style::CalcNode::Leaf(LengthPercentage::Length(5f32))),

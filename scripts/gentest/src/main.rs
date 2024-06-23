@@ -685,6 +685,11 @@ fn generate_length_percentage(dimen: &serde_json::Map<String, Value>) -> TokenSt
                 let value = value();
                 quote!(taffy::style::LengthPercentage::Percent(#value))
             }
+            "calc" => {
+                let value = dimen.get("value").unwrap().as_str().unwrap();
+                let quoted_calc_tree = calc::parse_calc_expression(value);
+                quote!(taffy::style::LengthPercentageAuto::Calc(#quoted_calc_tree))
+            }
             _ => unreachable!(),
         },
         _ => unreachable!(),
@@ -709,7 +714,7 @@ fn generate_length_percentage_auto(dimen: &serde_json::Map<String, Value>) -> To
             "calc" => {
                 let value = dimen.get("value").unwrap().as_str().unwrap();
                 let quoted_calc_tree = calc::parse_calc_expression(value);
-                quote!(taffy::style::LengthPercentageAuto::Calculation(#quoted_calc_tree))
+                quote!(taffy::style::LengthPercentageAuto::Calc(#quoted_calc_tree))
             }
             _ => unreachable!(),
         },
@@ -735,7 +740,7 @@ fn generate_dimension(dimen: &serde_json::Map<String, Value>) -> TokenStream {
             "calc" => {
                 let value = dimen.get("value").unwrap().as_str().unwrap();
                 let quoted_calc_tree = calc::parse_calc_expression(value);
-                quote!(taffy::style::Dimension::Calculation(#quoted_calc_tree))
+                quote!(taffy::style::Dimension::Calc(#quoted_calc_tree))
             }
             _ => unreachable!(),
         },

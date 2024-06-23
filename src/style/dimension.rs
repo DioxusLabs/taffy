@@ -19,14 +19,14 @@ pub enum LengthPercentage {
     /// The dimension is stored in percentage relative to the parent item.
     Percent(f32),
     /// todo
-    Calculation(Calc),
+    Calc(Calc),
 }
 impl LengthPercentage {
     pub fn resolve(&self, percentage_length: f32) -> f32 {
         match self {
             LengthPercentage::Length(length) => *length,
             LengthPercentage::Percent(fraction) => fraction * percentage_length,
-            LengthPercentage::Calculation(calc) => calc.resolve(percentage_length),
+            LengthPercentage::Calc(calc) => calc.resolve(percentage_length),
         }
     }
 }
@@ -56,7 +56,7 @@ pub enum LengthPercentageAuto {
     /// The dimension is stored in percentage relative to the parent item.
     Percent(f32),
     /// todo
-    Calculation(Calc),
+    Calc(Calc),
     /// The dimension should be automatically computed
     Auto,
 }
@@ -82,7 +82,7 @@ impl From<LengthPercentage> for LengthPercentageAuto {
         match input {
             LengthPercentage::Length(value) => Self::Length(value),
             LengthPercentage::Percent(value) => Self::Percent(value),
-            LengthPercentage::Calculation(calc) => Self::Calculation(calc),
+            LengthPercentage::Calc(calc) => Self::Calc(calc),
         }
     }
 }
@@ -98,7 +98,7 @@ impl LengthPercentageAuto {
         match self {
             Self::Length(length) => Some(length),
             Self::Percent(percent) => Some(context * percent),
-            Self::Calculation(calc) => Some(calc.resolve(context)),
+            Self::Calc(calc) => Some(calc.resolve(context)),
             Self::Auto => None,
         }
     }
@@ -122,7 +122,7 @@ pub enum Dimension {
     /// The dimension is stored in percentage relative to the parent item.
     Percent(f32),
     /// todo
-    Calculation(Calc),
+    Calc(Calc),
     /// The dimension should be automatically computed
     Auto,
 }
@@ -148,7 +148,7 @@ impl From<LengthPercentage> for Dimension {
         match input {
             LengthPercentage::Length(value) => Self::Length(value),
             LengthPercentage::Percent(value) => Self::Percent(value),
-            LengthPercentage::Calculation(value) => Self::Calculation(value),
+            LengthPercentage::Calc(value) => Self::Calc(value),
         }
     }
 }
@@ -158,7 +158,7 @@ impl From<LengthPercentageAuto> for Dimension {
         match input {
             LengthPercentageAuto::Length(value) => Self::Length(value),
             LengthPercentageAuto::Percent(value) => Self::Percent(value),
-            LengthPercentageAuto::Calculation(value) => Self::Calculation(value),
+            LengthPercentageAuto::Calc(value) => Self::Calc(value),
             LengthPercentageAuto::Auto => Self::Auto,
         }
     }
