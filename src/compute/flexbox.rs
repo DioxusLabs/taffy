@@ -1483,7 +1483,7 @@ fn determine_used_cross_size(tree: &impl LayoutPartialTree, flex_lines: &mut [Fl
                 if child.align_self == AlignSelf::Stretch
                     && !child.margin_is_auto.cross_start(constants.dir)
                     && !child.margin_is_auto.cross_end(constants.dir)
-                    && child_style.size.clone().cross(constants.dir) == Dimension::Auto
+                    && child_style.size.clone().cross(constants.dir).is_auto()
                 {
                     // For some reason this particular usage of max_width is an exception to the rule that max_width's transfer
                     // using the aspect_ratio (if set). Both Chrome and Firefox agree on this. And reading the spec, it seems like
