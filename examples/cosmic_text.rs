@@ -14,7 +14,7 @@ struct CosmicTextContext {
 impl CosmicTextContext {
     fn new(metrics: Metrics, text: &str, attrs: Attrs, font_system: &mut FontSystem) -> Self {
         let mut buffer = Buffer::new_empty(metrics);
-        buffer.set_size(font_system, f32::INFINITY, f32::INFINITY);
+        buffer.set_size(font_system, None, None);
         buffer.set_text(font_system, text, attrs, Shaping::Advanced);
         Self { buffer }
     }
@@ -26,12 +26,12 @@ impl CosmicTextContext {
         font_system: &mut FontSystem,
     ) -> taffy::Size<f32> {
         // Set width constraint
-        let width_constraint = known_dimensions.width.unwrap_or_else(|| match available_space.width {
-            AvailableSpace::MinContent => 0.0,
-            AvailableSpace::MaxContent => f32::INFINITY,
-            AvailableSpace::Definite(width) => width,
+        let width_constraint = known_dimensions.width.or_else(|| match available_space.width {
+            AvailableSpace::MinContent => Some(0.0),
+            AvailableSpace::MaxContent => None,
+            AvailableSpace::Definite(width) => Some(width),
         });
-        self.buffer.set_size(font_system, width_constraint, f32::INFINITY);
+        self.buffer.set_size(font_system, width_constraint, None);
 
         // Compute layout
         self.buffer.shape_until_scroll(font_system, false);
