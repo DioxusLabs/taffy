@@ -269,6 +269,7 @@ where
         FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
 {
     type CoreContainerStyle<'a> = &'a Style where Self : 'a;
+    type CacheMut<'b> = &'b mut Cache where Self : 'b;
 
     #[inline(always)]
     fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_> {
