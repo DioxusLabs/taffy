@@ -133,6 +133,7 @@ use crate::style::{AvailableSpace, CoreStyle};
 use crate::style::{FlexboxContainerStyle, FlexboxItemStyle};
 #[cfg(feature = "grid")]
 use crate::style::{GridContainerStyle, GridItemStyle};
+use core::ops::{Deref, DerefMut};
 
 /// This trait is Taffy's abstraction for downward tree traversal.
 /// However, this trait does *not* require access to any node's other than a single container node's immediate children unless you also intend to implement `TraverseTree`.
@@ -167,6 +168,12 @@ pub trait LayoutPartialTree: TraversePartialTree {
     where
         Self: 'a;
 
+    /// A mutable reference to the cache. This is an associated type to allow for different
+    /// types of mutable reference such as mutex or refcell guards
+    type CacheMut<'b>: Deref<Target = Cache> + DerefMut
+    where
+        Self: 'b;
+
     /// Get core style
     fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_>;
 
@@ -174,7 +181,7 @@ pub trait LayoutPartialTree: TraversePartialTree {
     fn set_unrounded_layout(&mut self, node_id: NodeId, layout: &Layout);
 
     /// Get a mutable reference to the [`Cache`] for this node.
-    fn get_cache_mut(&mut self, node_id: NodeId) -> &mut Cache;
+    fn get_cache_mut(&mut self, node_id: NodeId) -> Self::CacheMut<'_>;
 
     /// Compute the specified node's size or full layout given the specified constraints
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
