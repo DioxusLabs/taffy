@@ -9,6 +9,7 @@ use crate::style_helpers::TaffyMinContent;
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, SizingMode};
 use crate::util::sys::{f32_max, f32_min, Vec};
 use crate::util::{MaybeMath, ResolveOrZero};
+use crate::LengthPercentageInner;
 use core::cmp::Ordering;
 
 /// Takes an axis, and a list of grid items sorted firstly by whether they cross a flex track
@@ -563,7 +564,7 @@ fn resolve_intrinsic_track_sizes(
                     }
                     // If the container size is indefinite and has not yet been resolved then percentage sized
                     // tracks should be treated as min-content (this matches Chrome's behaviour and seems sensible)
-                    MinTrackSizingFunction::Fixed(LengthPercentage::Percent(_)) => {
+                    MinTrackSizingFunction::Fixed(fixed) if fixed.is_percent() => {
                         if axis_inner_node_size.is_none() {
                             f32_max(track.base_size, item_sizer.min_content_contribution(item))
                         } else {

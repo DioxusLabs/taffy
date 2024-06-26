@@ -30,7 +30,6 @@ mod std {
     }
 
     pub(crate) type Box<A> = std::boxed::Box<A>;
-    pub(crate) type Arc<A> = std::sync::Arc<A>;
 
     /// Rounds to the nearest whole number
     #[must_use]
@@ -80,7 +79,6 @@ mod alloc {
     }
 
     pub(crate) type Box<A> = alloc::boxed::Box<A>;
-    pub(crate) type Arc<A> = alloc::sync::Arc<A>;
 
     /// Rounds to the nearest whole number
     #[must_use]

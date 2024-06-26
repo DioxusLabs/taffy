@@ -679,16 +679,16 @@ fn generate_length_percentage(dimen: &serde_json::Map<String, Value>) -> TokenSt
         Value::String(ref unit) => match unit.as_ref() {
             "px" => {
                 let value = value();
-                quote!(taffy::style::LengthPercentage::Length(#value))
+                quote!(taffy::style::LengthPercentage::length(#value))
             }
             "percent" => {
                 let value = value();
-                quote!(taffy::style::LengthPercentage::Percent(#value))
+                quote!(taffy::style::LengthPercentage::percent(#value))
             }
             "calc" => {
                 let value = dimen.get("value").unwrap().as_str().unwrap();
                 let quoted_calc_tree = calc::parse_calc_expression(value);
-                quote!(taffy::style::LengthPercentageAuto::Calc(#quoted_calc_tree))
+                quote!(taffy::style::LengthPercentageAuto::calc(#quoted_calc_tree))
             }
             _ => unreachable!(),
         },
@@ -702,19 +702,19 @@ fn generate_length_percentage_auto(dimen: &serde_json::Map<String, Value>) -> To
 
     match unit {
         Value::String(ref unit) => match unit.as_ref() {
-            "auto" => quote!(taffy::style::LengthPercentageAuto::Auto),
+            "auto" => quote!(taffy::style::LengthPercentageAuto::auto()),
             "px" => {
                 let value = value();
-                quote!(taffy::style::LengthPercentageAuto::Length(#value))
+                quote!(taffy::style::LengthPercentageAuto::length(#value))
             }
             "percent" => {
                 let value = value();
-                quote!(taffy::style::LengthPercentageAuto::Percent(#value))
+                quote!(taffy::style::LengthPercentageAuto::percent(#value))
             }
             "calc" => {
                 let value = dimen.get("value").unwrap().as_str().unwrap();
                 let quoted_calc_tree = calc::parse_calc_expression(value);
-                quote!(taffy::style::LengthPercentageAuto::Calc(#quoted_calc_tree))
+                quote!(taffy::style::LengthPercentageAuto::calc(#quoted_calc_tree))
             }
             _ => unreachable!(),
         },
@@ -728,19 +728,19 @@ fn generate_dimension(dimen: &serde_json::Map<String, Value>) -> TokenStream {
 
     match unit {
         Value::String(ref unit) => match unit.as_ref() {
-            "auto" => quote!(taffy::style::Dimension::Auto),
+            "auto" => quote!(taffy::style::Dimension::auto()),
             "px" => {
                 let value = value();
-                quote!(taffy::style::Dimension::Length(#value))
+                quote!(taffy::style::Dimension::length(#value))
             }
             "percent" => {
                 let value = value();
-                quote!(taffy::style::Dimension::Percent(#value))
+                quote!(taffy::style::Dimension::percent(#value))
             }
             "calc" => {
                 let value = dimen.get("value").unwrap().as_str().unwrap();
                 let quoted_calc_tree = calc::parse_calc_expression(value);
-                quote!(taffy::style::Dimension::Calc(#quoted_calc_tree))
+                quote!(taffy::style::Dimension::calc(#quoted_calc_tree))
             }
             _ => unreachable!(),
         },
