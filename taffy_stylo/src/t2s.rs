@@ -43,7 +43,7 @@ pub(crate) fn max_size_dimension(val: &stylo::MaxSize) -> taffy::Dimension {
 #[inline]
 pub(crate) fn is_block(input: stylo::Display) -> bool {
     matches!(input.outside(), stylo::DisplayOutside::Block)
-    // && matches!(input.inside(), stylo::DisplayInside::Flow | stylo::DisplayInside::FlowRoot)
+        && matches!(input.inside(), stylo::DisplayInside::Flow | stylo::DisplayInside::FlowRoot)
 }
 
 #[inline]
