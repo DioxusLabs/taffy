@@ -158,7 +158,7 @@ impl taffy::FlexboxItemStyle for TaffyStyloStyleRef<'_> {
 
     #[inline]
     fn flex_shrink(&self) -> f32 {
-        self.0.get_position().flex_grow.0
+        self.0.get_position().flex_shrink.0
     }
 
     #[inline]
