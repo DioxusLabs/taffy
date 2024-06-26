@@ -610,13 +610,13 @@ impl Size<Dimension> {
     /// Generates a [`Size<Dimension>`] using [`Dimension::Length`] values
     #[must_use]
     pub const fn from_lengths(width: f32, height: f32) -> Self {
-        Size { width: Dimension::Length(width), height: Dimension::Length(height) }
+        Size { width: Dimension::length(width), height: Dimension::length(height) }
     }
 
     /// Generates a [`Size<Dimension>`] using [`Dimension::Percent`] values
     #[must_use]
     pub const fn from_percent(width: f32, height: f32) -> Self {
-        Size { width: Dimension::Percent(width), height: Dimension::Percent(height) }
+        Size { width: Dimension::percent(width), height: Dimension::percent(height) }
     }
 }
 

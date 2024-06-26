@@ -1,40 +1,137 @@
 //! Style types for representing lengths / sizes
 
-use core::fmt::{Debug, Formatter, Pointer};
 use crate::geometry::{Rect, Size};
 use crate::style_helpers::{FromLength, FromPercent, TaffyAuto, TaffyMaxContent, TaffyMinContent, TaffyZero};
 use crate::sys::{Arc, Box, Vec};
 use crate::util::sys::abs;
+use core::fmt::{Debug, Formatter, Pointer};
 use core::ops::Neg;
+use num_traits::{Signed, Zero};
 use std::mem::ManuallyDrop;
 use std::ptr::NonNull;
-use num_traits::{Signed, Zero};
 
-macro_rules! impl_drop {
-    ($ty:ident) => {
-        impl Drop for $ty {
-            fn drop(&mut self) {
-                unsafe { if let Some(ptr) = self.ptr {
-                    let _ = Box::from_raw(ptr.as_ptr());
-                }}
-            }
-        }
-    }
-}
 macro_rules! impl_debug {
     ($ty:ident, $name:literal) => {
         impl Debug for $ty {
             fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
                 unsafe {
-                    f.debug_tuple($name).field(match self.ptr {
-                        None => &self.inner,
-                        Some(ptr) => ptr.as_ref()
-                    }).finish()
+                    f.debug_tuple($name)
+                        .field(match self.is_calc() {
+                            false => &self.inner,
+                            true => self.ptr.as_ref(),
+                        })
+                        .finish()
                 }
             }
         }
     };
 }
+
+macro_rules! impl_measurement {
+    ($ty:ident, $inner_ty:ident) => {
+        impl $ty {
+            #[inline(always)]
+            pub const fn get_inner(&self) -> &$inner_ty {
+                unsafe { &self.inner }
+            }
+            pub const fn get_length(&self) -> Option<f32> {
+                if let $inner_ty::Length(float) = unsafe { self.inner } {
+                    Some(float)
+                } else {
+                    None
+                }
+            }
+            pub const fn get_percent(&self) -> Option<f32> {
+                if let $inner_ty::Percent(float) = unsafe { self.inner } {
+                    Some(float)
+                } else {
+                    None
+                }
+            }
+            pub const fn is_percent(&self) -> bool {
+                if let $inner_ty::Percent(_) = unsafe { self.inner } {
+                    true
+                } else {
+                    false
+                }
+            }
+
+            pub const fn length(length: f32) -> Self {
+                Self { inner: $inner_ty::Length(length) }
+            }
+            pub const fn percent(percent: f32) -> Self {
+                Self { inner: $inner_ty::Percent(percent) }
+            }
+            #[cfg(feature = "calc")]
+            pub fn calc(calc: CalcNode) -> Self {
+                Self::static_calc(Box::leak(Box::new(calc)))
+            }
+            #[cfg(feature = "calc")]
+            pub const fn static_calc(calc: &'static CalcNode) -> Self {
+                let ptr = std::ptr::from_ref(calc) as *mut CalcNode;
+                Self { ptr: unsafe { NonNull::new_unchecked(ptr) } }
+            }
+            #[cfg(feature = "calc")]
+            pub const fn calc_from_ptr(calc_ptr: CalcPtr) -> Self {
+                Self { ptr: calc_ptr }
+            }
+            #[cfg(feature = "calc")]
+            pub const fn is_calc(&self) -> bool {
+                match self.get_inner() {
+                    $inner_ty::Calc => true,
+                    _ => false,
+                }
+            }
+            #[cfg(feature = "calc")]
+            pub const fn get_calc(&self) -> Option<&CalcNode> {
+                unsafe {
+                    if self.is_calc() {
+                        Some(self.ptr.as_ref())
+                    } else {
+                        None
+                    }
+                }
+            }
+            #[cfg(feature = "calc")]
+            pub unsafe fn get_calc_ptr(self) -> CalcPtr {
+                self.ptr
+            }
+        }
+        impl PartialEq for $ty {
+            fn eq(&self, other: &Self) -> bool {
+                #[cfg(not(feature = "calc"))]
+                {
+                    self.get_inner() == other.get_inner()
+                }
+                #[cfg(feature = "calc")]
+                if self.get_inner() == other.get_inner() && !self.is_calc() {
+                    true
+                } else {
+                    self.get_calc() == other.get_calc()
+                }
+            }
+        }
+    };
+    ($ty:ident, $inner_ty:ident, auto) => {
+        impl_measurement!($ty, $inner_ty);
+        impl $ty {
+            /// Returns true if value is LengthPercentageAuto::Auto
+            pub const fn is_auto(&self) -> bool {
+                if let $inner_ty::Auto = unsafe { self.inner } {
+                    true
+                } else {
+                    false
+                }
+            }
+            pub const fn auto() -> Self {
+                Self { inner: $inner_ty::Auto }
+            }
+        }
+    };
+}
+
+#[cfg(feature = "calc")]
+type CalcPtr = NonNull<CalcNode>;
 
 /// A unit of linear measurement
 ///
@@ -43,6 +140,7 @@ macro_rules! impl_debug {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u32)]
 pub enum LengthPercentageInner {
+    #[cfg(feature = "calc")]
     /// todo
     Calc = 0,
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
@@ -52,64 +150,20 @@ pub enum LengthPercentageInner {
     Percent(f32),
 }
 
+#[derive(Copy, Clone)]
 pub union LengthPercentage {
     inner: LengthPercentageInner,
     #[cfg(feature = "calc")]
     ptr: CalcPtr,
 }
-impl_drop!(LengthPercentage);
 impl_debug!(LengthPercentage, "LengthPercentage");
-impl LengthPercentage {
-    pub const fn get_inner(&self) -> &LengthPercentageInner {
-        unsafe { &self.inner }
-    }
-    pub const fn get_length(&self) -> Option<f32> {
-        if let LengthPercentageInner::Length(float) = unsafe { self.inner } {
-            Some(float)
-        } else { None }
-    }
-    pub const fn get_percent(&self) -> Option<f32> {
-        if let LengthPercentageInner::Percent(float) = unsafe { self.inner } {
-            Some(float)
-        } else { None }
-    }
-    pub const fn length(length: f32) -> Self {
-        Self { inner: LengthPercentageInner::Length(length) }
-    }
-    pub const fn percent(percent: f32) -> Self {
-        Self { inner: LengthPercentageInner::Percent(percent) }
-    }
-    #[cfg(feature = "calc")]
-    pub fn calc(calc: CalcNode) -> Self {
-        Self::static_calc(Box::leak(Box::new(calc)))
-    }
-    #[cfg(feature = "calc")]
-    pub const fn static_calc(calc: &'static CalcNode) -> Self {
-        let ptr = std::ptr::from_ref(calc) as *mut CalcNode;
-        Self { ptr: Some( unsafe { NonNull::new_unchecked(ptr) } )}
-    }
-    #[cfg(feature = "calc")]
-    pub const fn calc_from_ptr(calc_ptr: CalcPtr) -> Self {
-        Self { ptr: calc_ptr }
-    }
-    #[cfg(feature = "calc")]
-    pub const fn get_calc(&self) -> Option<&CalcNode> {
-        unsafe {
-            if let Some(ptr) = self.ptr {
-                Some(ptr.as_ref())
-            } else { None }
-        }
-    }
-    #[cfg(feature = "calc")]
-    pub unsafe fn get_calc_ptr(mut self) -> CalcPtr {
-        self.ptr.take()
-    }
-}
+impl_measurement!(LengthPercentage, LengthPercentageInner);
 impl LengthPercentage {
     pub fn resolve(&self, percentage_length: f32) -> f32 {
         match self.get_inner() {
             LengthPercentageInner::Length(length) => *length,
             LengthPercentageInner::Percent(fraction) => fraction * percentage_length,
+            #[cfg(feature = "calc")]
             LengthPercentageInner::Calc => self.get_calc().expect("Should be calc variant").resolve(percentage_length),
         }
     }
@@ -135,6 +189,7 @@ impl FromPercent for LengthPercentage {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u32)]
 pub enum LengthPercentageAutoInner {
+    #[cfg(feature = "calc")]
     /// todo
     Calc = 0,
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
@@ -146,68 +201,15 @@ pub enum LengthPercentageAutoInner {
     Auto,
 }
 
+#[derive(Copy, Clone)]
 pub union LengthPercentageAuto {
     inner: LengthPercentageAutoInner,
     #[cfg(feature = "calc")]
     ptr: CalcPtr,
 }
-impl_drop!(LengthPercentageAuto);
 impl_debug!(LengthPercentageAuto, "LengthPercentageAuto");
-impl LengthPercentageAuto {
-    pub const fn get_inner(&self) -> &LengthPercentageAutoInner {
-        unsafe { &self.inner }
-    }
-    pub const fn get_length(&self) -> Option<f32> {
-        if let LengthPercentageAutoInner::Length(float) = unsafe { self.inner } {
-            Some(float)
-        } else { None }
-    }
-    pub const fn get_percent(&self) -> Option<f32> {
-        if let LengthPercentageAutoInner::Percent(float) = unsafe { self.inner } {
-            Some(float)
-        } else { None }
-    }
-    /// Returns true if value is LengthPercentageAuto::Auto
-    pub const fn is_auto(&self) -> bool {
-        if let LengthPercentageAutoInner::Auto = unsafe { self.inner } {
-            true
-        } else { false }
-    }
-    pub const fn length(length: f32) -> Self {
-        Self { inner: LengthPercentageAutoInner::Length(length) }
-    }
-    pub const fn percent(percent: f32) -> Self {
-        Self { inner: LengthPercentageAutoInner::Percent(percent) }
-    }
-    pub const fn auto() -> Self {
-        Self { inner: LengthPercentageAutoInner::Auto }
-    }
-    #[cfg(feature = "calc")]
-    pub fn calc(calc: CalcNode) -> Self {
-        Self::static_calc(Box::leak(Box::new(calc)))
-    }
-    #[cfg(feature = "calc")]
-    pub const fn static_calc(calc: &'static CalcNode) -> Self {
-        let ptr = std::ptr::from_ref(calc) as *mut CalcNode;
-        Self { ptr: Some( unsafe { NonNull::new_unchecked(ptr) } )}
-    }
-    #[cfg(feature = "calc")]
-    pub const fn calc_from_ptr(calc_ptr: CalcPtr) -> Self {
-        Self { ptr: calc_ptr }
-    }
-    #[cfg(feature = "calc")]
-    pub const fn get_calc(&self) -> Option<&CalcNode> {
-        unsafe {
-            if let Some(ptr) = self.ptr {
-                Some(ptr.as_ref())
-            } else { None }
-        }
-    }
-    #[cfg(feature = "calc")]
-    pub unsafe fn get_calc_ptr(mut self) -> CalcPtr {
-        self.ptr.take()
-    }
-}
+impl_measurement!(LengthPercentageAuto, LengthPercentageAutoInner, auto);
+
 impl TaffyZero for LengthPercentageAuto {
     const ZERO: Self = Self::length(0.0);
 }
@@ -230,7 +232,8 @@ impl From<LengthPercentage> for LengthPercentageAuto {
         match input.get_inner() {
             LengthPercentageInner::Length(value) => Self::length(*value),
             LengthPercentageInner::Percent(value) => Self::percent(*value),
-            LengthPercentageInner::Calc => Self::calc_from_ptr( unsafe { input.get_calc_ptr() }),
+            #[cfg(feature = "calc")]
+            LengthPercentageInner::Calc => Self::calc_from_ptr(unsafe { input.get_calc_ptr() }),
         }
     }
 }
@@ -269,73 +272,20 @@ impl LengthPercentageAuto {
 //    Auto,
 //}
 
-#[cfg(feature = "calc")]
-type CalcPtr = Option<NonNull<CalcNode>>;
+#[derive(Copy, Clone)]
 pub union Dimension {
     inner: DimensionInner,
     #[cfg(feature = "calc")]
     ptr: CalcPtr,
 }
-impl_drop!(Dimension);
 impl_debug!(Dimension, "Dimension");
-impl Dimension {
-    pub const fn get_inner(&self) -> &DimensionInner {
-        unsafe { &self.inner }
-    }
-    pub const fn get_length(&self) -> Option<f32> {
-        if let DimensionInner::Length(float) = unsafe { self.inner } {
-            Some(float)
-        } else { None }
-    }
-    pub const fn get_percent(&self) -> Option<f32> {
-        if let DimensionInner::Percent(float) = unsafe { self.inner } {
-            Some(float)
-        } else { None }
-    }
-    pub const fn is_auto(&self) -> bool {
-        if let DimensionInner::Auto = unsafe { self.inner } {
-            true
-        } else { false }
-    }
-    pub const fn length(length: f32) -> Self {
-        Self { inner: DimensionInner::Length(length) }
-    }
-    pub const fn percent(percent: f32) -> Self {
-        Self { inner: DimensionInner::Percent(percent) }
-    }
-    pub const fn auto() -> Self {
-        Self { inner: DimensionInner::Auto }
-    }
-    #[cfg(feature = "calc")]
-    pub fn calc(calc: CalcNode) -> Self {
-        Self::static_calc(Box::leak(Box::new(calc)))
-    }
-    #[cfg(feature = "calc")]
-    pub const fn static_calc(calc: &'static CalcNode) -> Self {
-        let ptr = std::ptr::from_ref(calc) as *mut CalcNode;
-        Self { ptr: Some( unsafe { NonNull::new_unchecked(ptr) } )}
-    }
-    #[cfg(feature = "calc")]
-    pub const fn calc_from_ptr(calc_ptr: CalcPtr) -> Self {
-        Self { ptr: calc_ptr }
-    }
-    #[cfg(feature = "calc")]
-    pub const fn get_calc(&self) -> Option<&CalcNode> {
-        unsafe {
-            if let Some(ptr) = self.ptr {
-                Some(ptr.as_ref())
-            } else { None }
-        }
-    }
-    #[cfg(feature = "calc")]
-    pub unsafe fn get_calc_ptr(mut self) -> CalcPtr {
-        self.ptr.take()
-    }
-}
-#[repr(u64)]
+impl_measurement!(Dimension, DimensionInner, auto);
+
+#[repr(u32)]
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-enum DimensionInner {
+pub enum DimensionInner {
+    #[cfg(feature = "calc")]
     /// todo
     Calc = 0,
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
@@ -368,6 +318,7 @@ impl From<LengthPercentage> for Dimension {
         match input.get_inner() {
             LengthPercentageInner::Length(value) => Self::length(*value),
             LengthPercentageInner::Percent(value) => Self::percent(*value),
+            #[cfg(feature = "calc")]
             LengthPercentageInner::Calc => Self::calc_from_ptr(unsafe { input.get_calc_ptr() }),
         }
     }
@@ -378,7 +329,8 @@ impl From<LengthPercentageAuto> for Dimension {
         match input.get_inner() {
             LengthPercentageAutoInner::Length(value) => Self::length(*value),
             LengthPercentageAutoInner::Percent(value) => Self::percent(*value),
-            LengthPercentageAutoInner::Calc => Self::calc_from_ptr( unsafe { input.get_calc_ptr() }),
+            #[cfg(feature = "calc")]
+            LengthPercentageAutoInner::Calc => Self::calc_from_ptr(unsafe { input.get_calc_ptr() }),
             LengthPercentageAutoInner::Auto => Self::auto(),
         }
     }
@@ -388,8 +340,8 @@ impl Dimension {
     /// Get Length value if value is Length variant
     #[cfg(feature = "grid")]
     pub fn into_option(self) -> Option<f32> {
-        match self {
-            Dimension::Length(value) => Some(value),
+        match self.get_inner() {
+            DimensionInner::Length(value) => Some(*value),
             _ => None,
         }
     }
@@ -400,10 +352,10 @@ impl Rect<Dimension> {
     #[must_use]
     pub const fn from_length(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Rect {
-            left: Dimension::Length(start),
-            right: Dimension::Length(end),
-            top: Dimension::Length(top),
-            bottom: Dimension::Length(bottom),
+            left: Dimension::length(start),
+            right: Dimension::length(end),
+            top: Dimension::length(top),
+            bottom: Dimension::length(bottom),
         }
     }
 
@@ -420,7 +372,7 @@ impl Rect<Dimension> {
 }
 
 #[cfg(feature = "calc")]
-#[derive(Debug, /*PartialEq*/)]
+#[derive(Debug, PartialEq)]
 //#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum CalcNode {
     Leaf(LengthPercentage),
@@ -443,7 +395,7 @@ pub enum CalcNode {
 }
 #[cfg(feature = "calc")]
 impl CalcNode {
-    fn resolve(&self, percentage_length: f32) -> f32 {
+    pub fn resolve(&self, percentage_length: f32) -> f32 {
         match self {
             CalcNode::Leaf(leaf) => leaf.resolve(percentage_length),
             CalcNode::Sum(lhs, rhs) => lhs.resolve(percentage_length) + rhs.resolve(percentage_length),

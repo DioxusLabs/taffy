@@ -66,8 +66,8 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
     );
 
     let style = tree.get_style(root);
-    let padding = style.padding.clone().resolve_or_zero(available_space.width.into_option());
-    let border = style.border.clone().resolve_or_zero(available_space.width.into_option());
+    let padding = style.padding.resolve_or_zero(available_space.width.into_option());
+    let border = style.border.resolve_or_zero(available_space.width.into_option());
     let scrollbar_size = Size {
         width: if style.overflow.y == Overflow::Scroll { style.scrollbar_width } else { 0.0 },
         height: if style.overflow.x == Overflow::Scroll { style.scrollbar_width } else { 0.0 },

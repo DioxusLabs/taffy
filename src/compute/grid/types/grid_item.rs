@@ -101,11 +101,11 @@ impl GridItem {
             row: row_span,
             column: col_span,
             overflow: style.overflow,
-            size: style.size.clone(),
-            min_size: style.min_size.clone(),
-            max_size: style.max_size.clone(),
+            size: style.size,
+            min_size: style.min_size,
+            max_size: style.max_size,
             aspect_ratio: style.aspect_ratio,
-            margin: style.margin.clone(),
+            margin: style.margin,
             align_self: style.align_self.unwrap_or(parent_align_items),
             justify_self: style.justify_self.unwrap_or(parent_justify_items),
             baseline: None,
@@ -232,9 +232,9 @@ impl GridItem {
         let margins = self.margins_axis_sums_with_baseline_shims(inner_node_size.width);
 
         let aspect_ratio = self.aspect_ratio;
-        let inherent_size = self.size.clone().maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
-        let min_size = self.min_size.clone().maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
-        let max_size = self.max_size.clone().maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
+        let inherent_size = self.size.maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
+        let min_size = self.min_size.maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
+        let max_size = self.max_size.maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
 
         let grid_area_minus_item_margins_size = grid_area_size.maybe_sub(margins);
 
@@ -245,10 +245,7 @@ impl GridItem {
             //  - Alignment style is "stretch"
             //  - The node is not absolutely positioned
             //  - The node does not have auto margins in this axis.
-            if self.margin.left != LengthPercentageAuto::Auto
-                && self.margin.right != LengthPercentageAuto::Auto
-                && self.justify_self == AlignSelf::Stretch
-            {
+            if !self.margin.left.is_auto() && !self.margin.right.is_auto() && self.justify_self == AlignSelf::Stretch {
                 return grid_area_minus_item_margins_size.width;
             }
 
@@ -263,10 +260,7 @@ impl GridItem {
             //  - Alignment style is "stretch"
             //  - The node is not absolutely positioned
             //  - The node does not have auto margins in this axis.
-            if self.margin.top != LengthPercentageAuto::Auto
-                && self.margin.bottom != LengthPercentageAuto::Auto
-                && self.align_self == AlignSelf::Stretch
-            {
+            if !self.margin.top.is_auto() && !self.margin.bottom.is_auto() && self.align_self == AlignSelf::Stretch {
                 return grid_area_minus_item_margins_size.height;
             }
 
@@ -328,10 +322,10 @@ impl GridItem {
     #[inline(always)]
     pub fn margins_axis_sums_with_baseline_shims(&self, inner_node_width: Option<f32>) -> Size<f32> {
         Rect {
-            left: self.margin.left.clone().resolve_or_zero(Some(0.0)),
-            right: self.margin.right.clone().resolve_or_zero(Some(0.0)),
-            top: self.margin.top.clone().resolve_or_zero(inner_node_width) + self.baseline_shim,
-            bottom: self.margin.bottom.clone().resolve_or_zero(inner_node_width),
+            left: self.margin.left.resolve_or_zero(Some(0.0)),
+            right: self.margin.right.resolve_or_zero(Some(0.0)),
+            top: self.margin.top.resolve_or_zero(inner_node_width) + self.baseline_shim,
+            bottom: self.margin.bottom.resolve_or_zero(inner_node_width),
         }
         .sum_axes()
     }
@@ -432,16 +426,11 @@ impl GridItem {
     ) -> f32 {
         let size = self
             .size
-            .clone()
             .maybe_resolve(inner_node_size)
             .maybe_apply_aspect_ratio(self.aspect_ratio)
             .get(axis)
             .or_else(|| {
-                self.min_size
-                    .clone()
-                    .maybe_resolve(inner_node_size)
-                    .maybe_apply_aspect_ratio(self.aspect_ratio)
-                    .get(axis)
+                self.min_size.maybe_resolve(inner_node_size).maybe_apply_aspect_ratio(self.aspect_ratio).get(axis)
             })
             .or_else(|| self.overflow.get(axis).maybe_into_automatic_min_size())
             .unwrap_or_else(|| {

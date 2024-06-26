@@ -43,7 +43,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inpu
     let child_styles_iter = get_child_styles_iter(node);
 
     let preferred_size = if inputs.sizing_mode == SizingMode::InherentSize {
-        style.size.clone().maybe_resolve(parent_size).maybe_apply_aspect_ratio(style.aspect_ratio)
+        style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(style.aspect_ratio)
     } else {
         Size::NONE
     };
@@ -92,7 +92,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inpu
         final_col_counts,
         &style.grid_template_columns,
         &style.grid_auto_columns,
-        style.gap.width.clone(),
+        style.gap.width,
         |column_index| cell_occupancy_matrix.column_is_occupied(column_index),
     );
     initialize_grid_tracks(
@@ -100,25 +100,25 @@ pub fn compute_grid_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inpu
         final_row_counts,
         &style.grid_template_rows,
         &style.grid_auto_rows,
-        style.gap.height.clone(),
+        style.gap.height,
         |row_index| cell_occupancy_matrix.row_is_occupied(row_index),
     );
 
     // 4. Compute "available grid space"
     // https://www.w3.org/TR/css-grid-1/#available-grid-space
-    let padding = style.padding.clone().resolve_or_zero(parent_size.width);
-    let border = style.border.clone().resolve_or_zero(parent_size.width);
+    let padding = style.padding.resolve_or_zero(parent_size.width);
+    let border = style.border.resolve_or_zero(parent_size.width);
     let padding_border = padding + border;
     let padding_border_size = padding_border.sum_axes();
     let aspect_ratio = style.aspect_ratio;
-    let min_size = style.min_size.clone().maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-    let max_size = style.max_size.clone().maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
     let size = preferred_size;
 
     // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
     // However, the axis are switched (transposed) because a node that scrolls vertically needs
     // *horizontal* space to be reserved for a scrollbar
-    let scrollbar_gutter = style.overflow.clone().transpose().map(|overflow| match overflow {
+    let scrollbar_gutter = style.overflow.transpose().map(|overflow| match overflow {
         Overflow::Scroll => style.scrollbar_width,
         _ => 0.0,
     });

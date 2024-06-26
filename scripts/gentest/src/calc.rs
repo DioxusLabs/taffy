@@ -48,9 +48,9 @@ fn parse_leaf(input: &mut &str) -> PResult<TokenStream> {
         .map(|(inner, is_percentage): (f32, Option<bool>)| {
             if is_percentage.is_some_and(|t| t) {
                 let inner = inner / 100.0;
-                quote! { taffy::style::CalcNode::Leaf(LengthPercentage::Percent(#inner)) }
+                quote! { taffy::style::CalcNode::Leaf(LengthPercentage::percent(#inner)) }
             } else {
-                quote! { taffy::style::CalcNode::Leaf(LengthPercentage::Length(#inner)) }
+                quote! { taffy::style::CalcNode::Leaf(LengthPercentage::length(#inner)) }
             }
         })
         .parse_next(input)
@@ -108,8 +108,5 @@ fn parse_term(input: &mut &str) -> PResult<TokenStream> {
 pub fn parse_calc_expression(input: &str) -> TokenStream {
     let mut inner = input.trim_start_matches("calc(").trim_end_matches(')');
     let outer_most = parse_expr(&mut inner).unwrap();
-    let out = quote! {
-        taffy::style::Calc::from(#outer_most)
-    };
-    out
+    outer_most
 }

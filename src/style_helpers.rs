@@ -374,9 +374,9 @@ impl<T: TaffyFitContent> Size<T> {
 impl<T: TaffyFitContent> TaffyFitContent for Rect<T> {
     fn fit_content(argument: LengthPercentage) -> Self {
         Rect {
-            left: T::fit_content(argument.clone()),
-            right: T::fit_content(argument.clone()),
-            top: T::fit_content(argument.clone()),
+            left: T::fit_content(argument),
+            right: T::fit_content(argument),
+            top: T::fit_content(argument),
             bottom: T::fit_content(argument),
         }
     }

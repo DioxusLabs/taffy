@@ -5,6 +5,7 @@ use crate::geometry::{AbsoluteAxis, AbstractAxis};
 use crate::geometry::{Line, MinMax};
 use crate::style_helpers::*;
 use crate::util::sys::GridTrackVec;
+use crate::MaybeResolve;
 use core::cmp::{max, min};
 use core::convert::Infallible;
 
@@ -316,9 +317,7 @@ impl MaxTrackSizingFunction {
     pub fn definite_value(self, parent_size: Option<f32>) -> Option<f32> {
         use MaxTrackSizingFunction::*;
         match self {
-            Fixed(LengthPercentage::Length(size)) => Some(size),
-            Fixed(LengthPercentage::Percent(fraction)) => parent_size.map(|size| fraction * size),
-            Fixed(LengthPercentage::Calc(calc)) => parent_size.map(|size| calc.resolve(size)),
+            Fixed(length) => length.maybe_resolve(parent_size),
             MinContent | MaxContent | FitContent(_) | Auto | Fraction(_) => None,
         }
     }
@@ -333,8 +332,7 @@ impl MaxTrackSizingFunction {
     pub fn definite_limit(self, parent_size: Option<f32>) -> Option<f32> {
         use MaxTrackSizingFunction::FitContent;
         match self {
-            FitContent(LengthPercentage::Length(size)) => Some(size),
-            FitContent(LengthPercentage::Percent(fraction)) => parent_size.map(|size| fraction * size),
+            FitContent(length) => length.maybe_resolve(parent_size),
             _ => self.definite_value(parent_size),
         }
     }
@@ -345,11 +343,8 @@ impl MaxTrackSizingFunction {
     pub fn resolved_percentage_size(self, parent_size: f32) -> Option<f32> {
         use MaxTrackSizingFunction::*;
         match self {
-            Fixed(LengthPercentage::Percent(fraction)) => Some(fraction * parent_size),
-            Fixed(LengthPercentage::Calc(_)) => {
-                todo!()
-            }
-            Fixed(LengthPercentage::Length(_)) | MinContent | MaxContent | FitContent(_) | Auto | Fraction(_) => None,
+            Fixed(length) if length.is_percent() => length.maybe_resolve(parent_size),
+            Fixed(_) | MinContent | MaxContent | FitContent(_) | Auto | Fraction(_) => None,
         }
     }
 
@@ -357,7 +352,10 @@ impl MaxTrackSizingFunction {
     #[inline(always)]
     pub fn uses_percentage(self) -> bool {
         use MaxTrackSizingFunction::*;
-        matches!(self, Fixed(LengthPercentage::Percent(_)) | FitContent(LengthPercentage::Percent(_)))
+        match self {
+            Fixed(length) | FitContent(length) => length.is_percent(),
+            _ => false,
+        }
     }
 }
 
@@ -415,9 +413,7 @@ impl MinTrackSizingFunction {
     pub fn definite_value(self, parent_size: Option<f32>) -> Option<f32> {
         use MinTrackSizingFunction::*;
         match self {
-            Fixed(LengthPercentage::Length(size)) => Some(size),
-            Fixed(LengthPercentage::Percent(fraction)) => parent_size.map(|size| fraction * size),
-            Fixed(LengthPercentage::Calc(calc)) => parent_size.map(|size| calc.resolve(size)),
+            Fixed(length) => length.maybe_resolve(parent_size),
             MinContent | MaxContent | Auto => None,
         }
     }
@@ -428,9 +424,8 @@ impl MinTrackSizingFunction {
     pub fn resolved_percentage_size(self, parent_size: f32) -> Option<f32> {
         use MinTrackSizingFunction::*;
         match self {
-            Fixed(LengthPercentage::Percent(fraction)) => Some(fraction * parent_size),
-            Fixed(LengthPercentage::Calc(calc)) => todo!(),
-            Fixed(LengthPercentage::Length(_)) | MinContent | MaxContent | Auto => None,
+            Fixed(length) if length.is_percent() => length.maybe_resolve(parent_size),
+            Fixed(_) | MinContent | MaxContent | Auto => None,
         }
     }
 
@@ -438,7 +433,10 @@ impl MinTrackSizingFunction {
     #[inline(always)]
     pub fn uses_percentage(self) -> bool {
         use MinTrackSizingFunction::*;
-        matches!(self, Fixed(LengthPercentage::Percent(_)))
+        match self {
+            Fixed(length) => length.is_percent() || length.is_calc(),
+            _ => false,
+        }
     }
 }
 
