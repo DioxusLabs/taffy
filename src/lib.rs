@@ -57,6 +57,10 @@
 //!   - [custom_tree_owned_partial](https://github.com/DioxusLabs/taffy/blob/main/examples/custom_tree_owned_partial.rs) which implements a custom Taffy tree using directly owned children with NodeId's being pointers.
 //!   - [custom_tree_owned_unsafe](https://github.com/DioxusLabs/taffy/blob/main/examples/custom_tree_owned_unsafe.rs) which implements a custom Taffy tree using directly owned children with NodeId's being pointers.
 
+// document the feature flags for the crate
+#![cfg_attr(feature = "document-features", doc = document_features::document_features!())]
+// document required feature flags on each item (gated by docsrs flag as this requires the nightly toolchain)
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(unsafe_code)]
 #![forbid(unsafe_code)]
