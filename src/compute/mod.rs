@@ -57,18 +57,20 @@ use crate::{MaybeMath, MaybeResolve};
 /// Compute layout for the root node in the tree
 pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, available_space: Size<AvailableSpace>) {
     let parent_size = available_space.into_options();
-    let style = tree.get_style(root);
+    let style = tree.get_core_container_style(root);
 
     // Pull these out earlier to avoid borrowing issues
-    let aspect_ratio = style.aspect_ratio;
-    let margin = style.margin.resolve_or_zero(parent_size.width);
-    let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-    let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-    let padding = style.padding.resolve_or_zero(parent_size.width);
-    let border = style.border.resolve_or_zero(parent_size.width);
+    let aspect_ratio = style.aspect_ratio();
+    let margin = style.margin().resolve_or_zero(parent_size.width);
+    let min_size = style.min_size().maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let max_size = style.max_size().maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let padding = style.padding().resolve_or_zero(parent_size.width);
+    let border = style.border().resolve_or_zero(parent_size.width);
     let padding_border_size = (padding + border).sum_axes();
     let clamped_style_size =
-        style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
+        style.size().maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
+
+    drop(style);
 
     // If both min and max in a given axis are set and max <= min then this determines the size in that axis
     let min_max_definite_size = min_size.zip_map(max_size, |min, max| match (min, max) {
