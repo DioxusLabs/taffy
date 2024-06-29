@@ -107,11 +107,13 @@ where
     // First we check if we have a cached result for the given input
     let cache_entry = tree.get_cache_mut(node).get(known_dimensions, available_space, run_mode);
     if let Some(cached_size_and_baselines) = cache_entry {
-        debug_log!("CACHE", dbg:cached_size_and_baselines.size);
         debug_log_node!(known_dimensions, inputs.parent_size, available_space, run_mode, inputs.sizing_mode);
+        debug_log!("RESULT (CACHED)", dbg:cached_size_and_baselines.size);
         debug_pop_node!();
         return cached_size_and_baselines;
     }
+
+    debug_log_node!(known_dimensions, inputs.parent_size, available_space, run_mode, inputs.sizing_mode);
 
     let computed_size_and_baselines = compute_uncached(tree, node, inputs);
 
