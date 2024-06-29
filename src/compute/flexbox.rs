@@ -920,12 +920,26 @@ fn determine_container_main_size(
 
                                 let child_available_space = available_space.with_cross(dir, cross_axis_available_space);
 
+                                // Known dimensions for child sizing
+                                let child_known_dimensions = {
+                                    let mut ckd = item.size.with_main(dir, None);
+                                    if item.align_self == AlignSelf::Stretch && ckd.cross(dir).is_none() {
+                                        ckd.set_cross(
+                                            dir,
+                                            cross_axis_available_space
+                                                .into_option()
+                                                .maybe_sub(item.margin.cross_axis_sum(dir)),
+                                        );
+                                    }
+                                    ckd
+                                };
+
                                 // Either the min- or max- content size depending on which constraint we are sizing under.
                                 // TODO: Optimise by using already computed values where available
                                 debug_log!("COMPUTE CHILD BASE SIZE (for intrinsic main size):");
                                 let content_main_size = tree.measure_child_size(
                                     item.node,
-                                    Size::NONE,
+                                    child_known_dimensions,
                                     constants.node_inner_size,
                                     child_available_space,
                                     SizingMode::InherentSize,
