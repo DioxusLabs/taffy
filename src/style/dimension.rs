@@ -19,7 +19,7 @@ macro_rules! impl_debug {
                     f.debug_tuple($name)
                         .field(match self.is_calc() {
                             false => &self.inner,
-                            true => self.ptr.ptr().as_ref(),
+                            true => self.ptr.ptr.as_ref(),
                         })
                         .finish()
                 }
@@ -36,28 +36,12 @@ macro_rules! impl_measurement {
                 unsafe { self.inner }
             }
             #[inline]
-            pub const fn get_length(&self) -> Option<f32> {
-                if let $inner_ty::Length(float) = self.get_inner() {
-                    Some(float)
-                } else {
-                    None
-                }
-            }
-            #[inline]
-            pub const fn get_percent(&self) -> Option<f32> {
-                if let $inner_ty::Percent(float) = self.get_inner() {
-                    Some(float)
-                } else {
-                    None
-                }
-            }
-            #[inline]
             pub const fn is_percent(&self) -> bool {
-                if let $inner_ty::Percent(_) = self.get_inner() {
-                    true
-                } else {
-                    false
-                }
+                matches!(self.get_inner(), $inner_ty::Percent(_))
+            }
+            #[inline]
+            pub const fn is_length(&self) -> bool {
+                matches!(self.get_inner(), $inner_ty::Length(_))
             }
             
             #[inline]
@@ -81,7 +65,7 @@ macro_rules! impl_measurement {
             }
             #[cfg(feature = "calc")]
             #[inline]
-            pub const fn calc_from_ptr(calc_ptr: CalcPtr) -> Self {
+            const fn calc_from_calc_ptr(calc_ptr: CalcPtr) -> Self {
                 unsafe { Self { ptr: calc_ptr } }
             }
             #[cfg(feature = "calc")]
@@ -96,20 +80,15 @@ macro_rules! impl_measurement {
             #[cfg(feature = "calc")]
             #[inline]
             pub const fn is_calc(&self) -> bool {
-                match self.get_inner() {
-                    $inner_ty::Calc => true,
-                    _ => false,
-                }
+                matches!(self.get_inner(), $inner_ty::Calc)
             }
             #[cfg(feature = "calc")]
             #[inline]
             pub fn get_calc(&self) -> Option<&CalcNode> {
-                unsafe {
-                    if self.is_calc() {
-                        Some(&*self.get_calc_ptr())
-                    } else {
-                        None
-                    }
+                if self.is_calc() {
+                    Some( unsafe { &*self.get_calc_ptr() } )
+                } else {
+                    None
                 }
             }
             #[cfg(feature = "calc")]
@@ -118,8 +97,9 @@ macro_rules! impl_measurement {
                 #[cfg(target_pointer_width = "64")]
                 return (self.bits >> 8) as *mut CalcNode;
                 #[cfg(target_pointer_width = "32")]
-                return self.ptr.ptr().as_ptr();
+                return self.ptr.ptr.as_ptr();
             }
+            #[cfg(feature = "calc")]
             #[inline]
             const unsafe fn get_calc_ptr_data(self) -> CalcPtr {
                 self.ptr
@@ -147,11 +127,7 @@ macro_rules! impl_measurement {
             /// Returns true if value is LengthPercentageAuto::Auto
             #[inline]
             pub const fn is_auto(&self) -> bool {
-                if let $inner_ty::Auto = unsafe { self.inner } {
-                    true
-                } else {
-                    false
-                }
+                matches!(self.get_inner(), $inner_ty::Auto)
             }
             #[inline]
             pub const fn auto() -> Self {
@@ -174,10 +150,6 @@ struct CalcPtr {
 }
 #[cfg(feature = "calc")]
 impl CalcPtr {
-    #[inline]
-    const fn ptr(&self) -> NonNull<CalcNode> {
-        self.ptr
-    }
     #[inline]
     const fn new(ptr: NonNull<CalcNode>) -> Self {
         #[cfg(target_pointer_width = "64")]
@@ -294,7 +266,7 @@ impl From<LengthPercentage> for LengthPercentageAuto {
             LengthPercentageInner::Length(value) => Self::length(value),
             LengthPercentageInner::Percent(value) => Self::percent(value),
             #[cfg(feature = "calc")]
-            LengthPercentageInner::Calc => Self::calc_from_ptr(unsafe { input.get_calc_ptr_data() }),
+            LengthPercentageInner::Calc => Self::calc_from_calc_ptr(unsafe { input.get_calc_ptr_data() }),
         }
     }
 }
@@ -392,7 +364,7 @@ impl From<LengthPercentage> for Dimension {
             LengthPercentageInner::Length(value) => Self::length(value),
             LengthPercentageInner::Percent(value) => Self::percent(value),
             #[cfg(feature = "calc")]
-            LengthPercentageInner::Calc => Self::calc_from_ptr(unsafe { input.get_calc_ptr_data() }),
+            LengthPercentageInner::Calc => Self::calc_from_calc_ptr(unsafe { input.get_calc_ptr_data() }),
         }
     }
 }
@@ -403,7 +375,7 @@ impl From<LengthPercentageAuto> for Dimension {
             LengthPercentageAutoInner::Length(value) => Self::length(value),
             LengthPercentageAutoInner::Percent(value) => Self::percent(value),
             #[cfg(feature = "calc")]
-            LengthPercentageAutoInner::Calc => Self::calc_from_ptr(unsafe { input.get_calc_ptr_data() }),
+            LengthPercentageAutoInner::Calc => Self::calc_from_calc_ptr(unsafe { input.get_calc_ptr_data() }),
             LengthPercentageAutoInner::Auto => Self::auto(),
         }
     }
