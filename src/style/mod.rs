@@ -8,7 +8,7 @@ mod flex;
 pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, JustifyItems, JustifySelf};
 pub use self::dimension::{
     AvailableSpace, CalcNode, Dimension, DimensionInner, LengthPercentage, LengthPercentageAuto,
-    LengthPercentageAutoInner, LengthPercentageInner,
+    LengthPercentageAutoInner, LengthPercentageInner, RoundingStrategy,
 };
 
 #[cfg(feature = "flexbox")]
