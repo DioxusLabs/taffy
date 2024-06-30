@@ -8,13 +8,13 @@ fn block_absolute_layout_within_border() {
             display: taffy::style::Display::Block,
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::length(50f32),
+                height: taffy::style::Dimension::length(50f32),
             },
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(0f32),
+                left: taffy::style::LengthPercentageAuto::length(0f32),
                 right: auto(),
-                top: taffy::style::LengthPercentageAuto::Length(0f32),
+                top: taffy::style::LengthPercentageAuto::length(0f32),
                 bottom: auto(),
             },
             ..Default::default()
@@ -25,14 +25,14 @@ fn block_absolute_layout_within_border() {
             display: taffy::style::Display::Block,
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::length(50f32),
+                height: taffy::style::Dimension::length(50f32),
             },
             inset: taffy::geometry::Rect {
                 left: auto(),
-                right: taffy::style::LengthPercentageAuto::Length(0f32),
+                right: taffy::style::LengthPercentageAuto::length(0f32),
                 top: auto(),
-                bottom: taffy::style::LengthPercentageAuto::Length(0f32),
+                bottom: taffy::style::LengthPercentageAuto::length(0f32),
             },
             ..Default::default()
         })
@@ -42,19 +42,19 @@ fn block_absolute_layout_within_border() {
             display: taffy::style::Display::Block,
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::length(50f32),
+                height: taffy::style::Dimension::length(50f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(10f32),
-                right: taffy::style::LengthPercentageAuto::Length(10f32),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
+                left: taffy::style::LengthPercentageAuto::length(10f32),
+                right: taffy::style::LengthPercentageAuto::length(10f32),
+                top: taffy::style::LengthPercentageAuto::length(10f32),
+                bottom: taffy::style::LengthPercentageAuto::length(10f32),
             },
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(0f32),
+                left: taffy::style::LengthPercentageAuto::length(0f32),
                 right: auto(),
-                top: taffy::style::LengthPercentageAuto::Length(0f32),
+                top: taffy::style::LengthPercentageAuto::length(0f32),
                 bottom: auto(),
             },
             ..Default::default()
@@ -65,20 +65,20 @@ fn block_absolute_layout_within_border() {
             display: taffy::style::Display::Block,
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::length(50f32),
+                height: taffy::style::Dimension::length(50f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(10f32),
-                right: taffy::style::LengthPercentageAuto::Length(10f32),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
+                left: taffy::style::LengthPercentageAuto::length(10f32),
+                right: taffy::style::LengthPercentageAuto::length(10f32),
+                top: taffy::style::LengthPercentageAuto::length(10f32),
+                bottom: taffy::style::LengthPercentageAuto::length(10f32),
             },
             inset: taffy::geometry::Rect {
                 left: auto(),
-                right: taffy::style::LengthPercentageAuto::Length(0f32),
+                right: taffy::style::LengthPercentageAuto::length(0f32),
                 top: auto(),
-                bottom: taffy::style::LengthPercentageAuto::Length(0f32),
+                bottom: taffy::style::LengthPercentageAuto::length(0f32),
             },
             ..Default::default()
         })
@@ -88,20 +88,20 @@ fn block_absolute_layout_within_border() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::length(100f32),
+                    height: taffy::style::Dimension::length(100f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(10f32),
-                    right: taffy::style::LengthPercentage::Length(10f32),
-                    top: taffy::style::LengthPercentage::Length(10f32),
-                    bottom: taffy::style::LengthPercentage::Length(10f32),
+                    left: taffy::style::LengthPercentage::length(10f32),
+                    right: taffy::style::LengthPercentage::length(10f32),
+                    top: taffy::style::LengthPercentage::length(10f32),
+                    bottom: taffy::style::LengthPercentage::length(10f32),
                 },
                 border: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(10f32),
-                    right: taffy::style::LengthPercentage::Length(10f32),
-                    top: taffy::style::LengthPercentage::Length(10f32),
-                    bottom: taffy::style::LengthPercentage::Length(10f32),
+                    left: taffy::style::LengthPercentage::length(10f32),
+                    right: taffy::style::LengthPercentage::length(10f32),
+                    top: taffy::style::LengthPercentage::length(10f32),
+                    bottom: taffy::style::LengthPercentage::length(10f32),
                 },
                 ..Default::default()
             },

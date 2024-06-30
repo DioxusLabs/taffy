@@ -7,7 +7,7 @@ fn bevy_issue_8017_reduced() {
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(0.5f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::percent(0.5f32) },
                 ..Default::default()
             },
             &[node00],
@@ -17,7 +17,7 @@ fn bevy_issue_8017_reduced() {
     let node1 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(0.5f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::percent(0.5f32) },
                 ..Default::default()
             },
             &[node10],
@@ -28,12 +28,12 @@ fn bevy_issue_8017_reduced() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 gap: taffy::geometry::Size {
-                    width: taffy::style::LengthPercentage::Length(8f32),
-                    height: taffy::style::LengthPercentage::Length(8f32),
+                    width: taffy::style::LengthPercentage::length(8f32),
+                    height: taffy::style::LengthPercentage::length(8f32),
                 },
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(400f32),
+                    width: taffy::style::Dimension::length(200f32),
+                    height: taffy::style::Dimension::length(400f32),
                 },
                 ..Default::default()
             },

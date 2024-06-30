@@ -7,7 +7,7 @@ fn percentage_sizes_should_not_prevent_flex_shrinking() {
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1.2f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::percent(1.2f32), height: auto() },
                 ..Default::default()
             },
             &[node00],
@@ -17,8 +17,8 @@ fn percentage_sizes_should_not_prevent_flex_shrinking() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::length(200f32),
+                    height: taffy::style::Dimension::length(200f32),
                 },
                 ..Default::default()
             },

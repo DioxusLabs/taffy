@@ -186,11 +186,11 @@ impl GridItem {
         let spanned_tracks = &axis_tracks[self.track_range_excluding_lines(axis)];
         let tracks_all_fixed = spanned_tracks
             .iter()
-            .all(|track| track.max_track_sizing_function.definite_limit(axis_parent_size).is_some());
+            .all(|track| track.max_track_sizing_function.clone().definite_limit(axis_parent_size).is_some());
         if tracks_all_fixed {
             let limit: f32 = spanned_tracks
                 .iter()
-                .map(|track| track.max_track_sizing_function.definite_limit(axis_parent_size).unwrap())
+                .map(|track| track.max_track_sizing_function.clone().definite_limit(axis_parent_size).unwrap())
                 .sum();
             Some(limit)
         } else {
@@ -209,11 +209,11 @@ impl GridItem {
         let spanned_tracks = &axis_tracks[self.track_range_excluding_lines(axis)];
         let tracks_all_fixed = spanned_tracks
             .iter()
-            .all(|track| track.max_track_sizing_function.definite_value(axis_parent_size).is_some());
+            .all(|track| track.max_track_sizing_function.clone().definite_value(axis_parent_size).is_some());
         if tracks_all_fixed {
             let limit: f32 = spanned_tracks
                 .iter()
-                .map(|track| track.max_track_sizing_function.definite_value(axis_parent_size).unwrap())
+                .map(|track| track.max_track_sizing_function.clone().definite_value(axis_parent_size).unwrap())
                 .sum();
             Some(limit)
         } else {
@@ -245,10 +245,7 @@ impl GridItem {
             //  - Alignment style is "stretch"
             //  - The node is not absolutely positioned
             //  - The node does not have auto margins in this axis.
-            if self.margin.left != LengthPercentageAuto::Auto
-                && self.margin.right != LengthPercentageAuto::Auto
-                && self.justify_self == AlignSelf::Stretch
-            {
+            if !self.margin.left.is_auto() && !self.margin.right.is_auto() && self.justify_self == AlignSelf::Stretch {
                 return grid_area_minus_item_margins_size.width;
             }
 
@@ -263,10 +260,7 @@ impl GridItem {
             //  - Alignment style is "stretch"
             //  - The node is not absolutely positioned
             //  - The node does not have auto margins in this axis.
-            if self.margin.top != LengthPercentageAuto::Auto
-                && self.margin.bottom != LengthPercentageAuto::Auto
-                && self.align_self == AlignSelf::Stretch
-            {
+            if !self.margin.top.is_auto() && !self.margin.bottom.is_auto() && self.align_self == AlignSelf::Stretch {
                 return grid_area_minus_item_margins_size.height;
             }
 

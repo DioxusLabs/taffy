@@ -6,12 +6,12 @@ fn grid_min_content_flex_single_item_margin_fixed() {
     let node0 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(10f32), height: auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::length(10f32), height: auto() },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(20f32),
-                right: taffy::style::LengthPercentageAuto::Length(10f32),
-                top: taffy::style::LengthPercentageAuto::Length(5f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(15f32),
+                left: taffy::style::LengthPercentageAuto::length(20f32),
+                right: taffy::style::LengthPercentageAuto::length(10f32),
+                top: taffy::style::LengthPercentageAuto::length(5f32),
+                bottom: taffy::style::LengthPercentageAuto::length(15f32),
             },
             ..Default::default()
         })
@@ -26,10 +26,10 @@ fn grid_min_content_flex_single_item_margin_fixed() {
                     end: taffy::style::GridPlacement::Auto,
                 },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Length(20f32),
-                    right: taffy::style::LengthPercentageAuto::Length(10f32),
-                    top: taffy::style::LengthPercentageAuto::Length(5f32),
-                    bottom: taffy::style::LengthPercentageAuto::Length(15f32),
+                    left: taffy::style::LengthPercentageAuto::length(20f32),
+                    right: taffy::style::LengthPercentageAuto::length(10f32),
+                    top: taffy::style::LengthPercentageAuto::length(5f32),
+                    bottom: taffy::style::LengthPercentageAuto::length(15f32),
                 },
                 ..Default::default()
             },

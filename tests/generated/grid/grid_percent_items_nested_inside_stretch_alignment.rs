@@ -9,7 +9,7 @@ fn grid_percent_items_nested_inside_stretch_alignment() {
             padding: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
-                top: taffy::style::LengthPercentage::Percent(0.2f32),
+                top: taffy::style::LengthPercentage::percent(0.2f32),
                 bottom: zero(),
             },
             ..Default::default()
@@ -25,7 +25,7 @@ fn grid_percent_items_nested_inside_stretch_alignment() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::length(200f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

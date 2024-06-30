@@ -7,10 +7,10 @@ fn block_overflow_scrollbars_overridden_by_available_space() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(0f32),
-                right: taffy::style::LengthPercentageAuto::Length(0f32),
-                top: taffy::style::LengthPercentageAuto::Length(0f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(0f32),
+                left: taffy::style::LengthPercentageAuto::length(0f32),
+                right: taffy::style::LengthPercentageAuto::length(0f32),
+                top: taffy::style::LengthPercentageAuto::length(0f32),
+                bottom: taffy::style::LengthPercentageAuto::length(0f32),
             },
             ..Default::default()
         })
@@ -34,8 +34,8 @@ fn block_overflow_scrollbars_overridden_by_available_space() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(2f32),
-                    height: taffy::style::Dimension::Length(4f32),
+                    width: taffy::style::Dimension::length(2f32),
+                    height: taffy::style::Dimension::length(4f32),
                 },
                 ..Default::default()
             },

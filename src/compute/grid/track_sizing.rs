@@ -9,6 +9,7 @@ use crate::style_helpers::TaffyMinContent;
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, SizingMode};
 use crate::util::sys::{f32_max, f32_min, Vec};
 use crate::util::{MaybeMath, ResolveOrZero};
+use crate::LengthPercentageInner;
 use core::cmp::Ordering;
 
 /// Takes an axis, and a list of grid items sorted firstly by whether they cross a flex track
@@ -415,7 +416,7 @@ fn initialize_track_sizes(axis_tracks: &mut [GridTrack], axis_inner_node_size: O
         //     Note: Indefinite lengths cannot occur, as they’re treated as auto.
         // - An intrinsic sizing function
         //     Use an initial base size of zero.
-        track.base_size = track.min_track_sizing_function.definite_value(axis_inner_node_size).unwrap_or(0.0);
+        track.base_size = track.min_track_sizing_function.clone().definite_value(axis_inner_node_size).unwrap_or(0.0);
 
         // For each track, if the track’s max track sizing function is:
         // - A fixed sizing function
@@ -425,7 +426,7 @@ fn initialize_track_sizes(axis_tracks: &mut [GridTrack], axis_inner_node_size: O
         // - A flexible sizing function
         //     Use an initial growth limit of infinity.
         track.growth_limit =
-            track.max_track_sizing_function.definite_value(axis_inner_node_size).unwrap_or(f32::INFINITY);
+            track.max_track_sizing_function.clone().definite_value(axis_inner_node_size).unwrap_or(f32::INFINITY);
 
         // In all cases, if the growth limit is less than the base size, increase the growth limit to match the base size.
         if track.growth_limit < track.base_size {
@@ -492,7 +493,8 @@ fn resolve_item_baselines(
             let baseline = measured_size_and_baselines.first_baselines.y;
             let height = measured_size_and_baselines.size.height;
 
-            item.baseline = Some(baseline.unwrap_or(height) + item.margin.top.resolve_or_zero(inner_node_size.width));
+            item.baseline =
+                Some(baseline.unwrap_or(height) + item.margin.top.clone().resolve_or_zero(inner_node_size.width));
         }
 
         // Compute the max baseline of all items in the row
@@ -562,7 +564,7 @@ fn resolve_intrinsic_track_sizes(
                     }
                     // If the container size is indefinite and has not yet been resolved then percentage sized
                     // tracks should be treated as min-content (this matches Chrome's behaviour and seems sensible)
-                    MinTrackSizingFunction::Fixed(LengthPercentage::Percent(_)) => {
+                    MinTrackSizingFunction::Fixed(fixed) if fixed.is_percent() => {
                         if axis_inner_node_size.is_none() {
                             f32_max(track.base_size, item_sizer.min_content_contribution(item))
                         } else {
@@ -587,7 +589,8 @@ fn resolve_intrinsic_track_sizes(
                             {
                                 let axis_minimum_size = item_sizer.minimum_contribution(item, axis_tracks);
                                 let axis_min_content_size = item_sizer.min_content_contribution(item);
-                                let limit = track.max_track_sizing_function.definite_limit(axis_inner_node_size);
+                                let limit =
+                                    track.max_track_sizing_function.clone().definite_limit(axis_inner_node_size);
                                 axis_min_content_size.maybe_min(limit).max(axis_minimum_size)
                             }
                             _ => item_sizer.minimum_contribution(item, axis_tracks),
@@ -620,7 +623,7 @@ fn resolve_intrinsic_track_sizes(
                     track.growth_limit_planned_increase =
                         f32_max(track.growth_limit_planned_increase, max_content_contribution);
                 } else if track.max_track_sizing_function.is_max_content_alike()
-                    || track.max_track_sizing_function.uses_percentage() && axis_inner_node_size.is_none()
+                    || track.max_track_sizing_function.clone().uses_percentage() && axis_inner_node_size.is_none()
                 {
                     // If the container size is indefinite and has not yet been resolved then percentage sized
                     // tracks should be treated as auto (this matches Chrome's behaviour and seems sensible)
@@ -654,8 +657,9 @@ fn resolve_intrinsic_track_sizes(
 
         // 1. For intrinsic minimums:
         // First increase the base size of tracks with an intrinsic min track sizing function
-        let has_intrinsic_min_track_sizing_function =
-            move |track: &GridTrack| track.min_track_sizing_function.definite_value(axis_inner_node_size).is_none();
+        let has_intrinsic_min_track_sizing_function = move |track: &GridTrack| {
+            track.min_track_sizing_function.clone().definite_value(axis_inner_node_size).is_none()
+        };
         for item in batch.iter_mut().filter(|item| item.crosses_intrinsic_track(axis)) {
             // ...by distributing extra space as needed to accommodate these items’ minimum contributions.
             //
@@ -852,8 +856,9 @@ fn resolve_intrinsic_track_sizes(
         if !is_flex {
             // 5. For intrinsic maximums: Next increase the growth limit of tracks with an intrinsic max track sizing function by
             // distributing extra space as needed to account for these items' min-content contributions.
-            let has_intrinsic_max_track_sizing_function =
-                move |track: &GridTrack| track.max_track_sizing_function.definite_value(axis_inner_node_size).is_none();
+            let has_intrinsic_max_track_sizing_function = move |track: &GridTrack| {
+                track.max_track_sizing_function.clone().definite_value(axis_inner_node_size).is_none()
+            };
             for item in batch.iter_mut() {
                 let axis_min_content_size = item_sizer.min_content_contribution(item);
                 let space = axis_min_content_size;
@@ -875,7 +880,7 @@ fn resolve_intrinsic_track_sizes(
             // fit-content() tracks by their fit-content() argument.
             let has_max_content_max_track_sizing_function = |track: &GridTrack| {
                 track.max_track_sizing_function.is_max_content_alike()
-                    || (track.max_track_sizing_function.uses_percentage() && axis_inner_node_size.is_none())
+                    || (track.max_track_sizing_function.clone().uses_percentage() && axis_inner_node_size.is_none())
             };
             for item in batch.iter_mut() {
                 let axis_max_content_size = item_sizer.max_content_contribution(item);

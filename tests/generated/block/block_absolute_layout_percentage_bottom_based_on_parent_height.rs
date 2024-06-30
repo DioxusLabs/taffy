@@ -8,13 +8,13 @@ fn block_absolute_layout_percentage_bottom_based_on_parent_height() {
             display: taffy::style::Display::Block,
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::length(10f32),
+                height: taffy::style::Dimension::length(10f32),
             },
             inset: taffy::geometry::Rect {
                 left: auto(),
                 right: auto(),
-                top: taffy::style::LengthPercentageAuto::Percent(0.5f32),
+                top: taffy::style::LengthPercentageAuto::percent(0.5f32),
                 bottom: auto(),
             },
             ..Default::default()
@@ -25,14 +25,14 @@ fn block_absolute_layout_percentage_bottom_based_on_parent_height() {
             display: taffy::style::Display::Block,
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::length(10f32),
+                height: taffy::style::Dimension::length(10f32),
             },
             inset: taffy::geometry::Rect {
                 left: auto(),
                 right: auto(),
                 top: auto(),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.5f32),
+                bottom: taffy::style::LengthPercentageAuto::percent(0.5f32),
             },
             ..Default::default()
         })
@@ -41,12 +41,12 @@ fn block_absolute_layout_percentage_bottom_based_on_parent_height() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             position: taffy::style::Position::Absolute,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(10f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::length(10f32), height: auto() },
             inset: taffy::geometry::Rect {
                 left: auto(),
                 right: auto(),
-                top: taffy::style::LengthPercentageAuto::Percent(0.1f32),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.1f32),
+                top: taffy::style::LengthPercentageAuto::percent(0.1f32),
+                bottom: taffy::style::LengthPercentageAuto::percent(0.1f32),
             },
             ..Default::default()
         })
@@ -56,8 +56,8 @@ fn block_absolute_layout_percentage_bottom_based_on_parent_height() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::length(100f32),
+                    height: taffy::style::Dimension::length(200f32),
                 },
                 ..Default::default()
             },

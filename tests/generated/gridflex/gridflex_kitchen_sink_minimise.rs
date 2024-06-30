@@ -5,7 +5,7 @@ fn gridflex_kitchen_sink_minimise() {
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();

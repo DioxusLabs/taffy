@@ -6,7 +6,7 @@ fn block_absolute_aspect_ratio_fill_min_height() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::length(50f32), height: auto() },
             aspect_ratio: Some(3f32),
             ..Default::default()
         })
@@ -16,8 +16,8 @@ fn block_absolute_aspect_ratio_fill_min_height() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(400f32),
-                    height: taffy::style::Dimension::Length(300f32),
+                    width: taffy::style::Dimension::length(400f32),
+                    height: taffy::style::Dimension::length(300f32),
                 },
                 ..Default::default()
             },

@@ -6,8 +6,8 @@ fn percentage_width_height() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(0.3f32),
-                height: taffy::style::Dimension::Percent(0.3f32),
+                width: taffy::style::Dimension::percent(0.3f32),
+                height: taffy::style::Dimension::percent(0.3f32),
             },
             ..Default::default()
         })
@@ -16,8 +16,8 @@ fn percentage_width_height() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(400f32),
+                    width: taffy::style::Dimension::length(200f32),
+                    height: taffy::style::Dimension::length(400f32),
                 },
                 ..Default::default()
             },

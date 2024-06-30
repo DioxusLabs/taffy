@@ -9,14 +9,14 @@ fn bevy_issue_10343_grid() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::length(200f32),
+                    height: taffy::style::Dimension::length(200f32),
                 },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Length(5f32),
-                    right: taffy::style::LengthPercentageAuto::Length(5f32),
-                    top: taffy::style::LengthPercentageAuto::Length(5f32),
-                    bottom: taffy::style::LengthPercentageAuto::Length(5f32),
+                    left: taffy::style::LengthPercentageAuto::length(5f32),
+                    right: taffy::style::LengthPercentageAuto::length(5f32),
+                    top: taffy::style::LengthPercentageAuto::length(5f32),
+                    bottom: taffy::style::LengthPercentageAuto::length(5f32),
                 },
                 ..Default::default()
             },
@@ -36,8 +36,8 @@ fn bevy_issue_10343_grid() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 justify_content: Some(taffy::style::JustifyContent::SpaceAround),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::length(100f32),
+                    height: taffy::style::Dimension::length(100f32),
                 },
                 ..Default::default()
             },

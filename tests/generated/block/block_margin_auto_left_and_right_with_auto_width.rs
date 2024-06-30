@@ -7,13 +7,13 @@ fn block_margin_auto_left_and_right_with_auto_width() {
         .new_leaf_with_context(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Auto,
-                    height: taffy::style::Dimension::Length(50f32),
+                    width: taffy::style::Dimension::auto(),
+                    height: taffy::style::Dimension::length(50f32),
                 },
-                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
+                max_size: taffy::geometry::Size { width: taffy::style::Dimension::length(100f32), height: auto() },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Auto,
-                    right: taffy::style::LengthPercentageAuto::Auto,
+                    left: taffy::style::LengthPercentageAuto::auto(),
+                    right: taffy::style::LengthPercentageAuto::auto(),
                     top: zero(),
                     bottom: zero(),
                 },
@@ -27,8 +27,8 @@ fn block_margin_auto_left_and_right_with_auto_width() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::length(200f32),
+                    height: taffy::style::Dimension::length(200f32),
                 },
                 ..Default::default()
             },

@@ -6,7 +6,10 @@ mod dimension;
 mod flex;
 
 pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, JustifyItems, JustifySelf};
-pub use self::dimension::{AvailableSpace, Dimension, LengthPercentage, LengthPercentageAuto};
+pub use self::dimension::{
+    AvailableSpace, CalcNode, Dimension, DimensionInner, LengthPercentage, LengthPercentageAuto,
+    LengthPercentageAutoInner, LengthPercentageInner, RoundingStrategy,
+};
 
 #[cfg(feature = "flexbox")]
 pub use self::flex::{FlexDirection, FlexWrap};
@@ -342,7 +345,7 @@ impl Style {
         #[cfg(feature = "flexbox")]
         flex_shrink: 1.0,
         #[cfg(feature = "flexbox")]
-        flex_basis: Dimension::Auto,
+        flex_basis: Dimension::auto(),
         // Grid
         #[cfg(feature = "grid")]
         grid_template_rows: GridTrackVec::new(),
@@ -408,7 +411,7 @@ mod tests {
             #[cfg(feature = "flexbox")]
             flex_shrink: 1.0,
             #[cfg(feature = "flexbox")]
-            flex_basis: super::Dimension::Auto,
+            flex_basis: super::Dimension::auto(),
             size: Size::auto(),
             min_size: Size::auto(),
             max_size: Size::auto(),
@@ -485,10 +488,10 @@ mod tests {
 
         // CSS Grid Container
         assert_type_size::<GridAutoFlow>(1);
-        assert_type_size::<MinTrackSizingFunction>(8);
-        assert_type_size::<MaxTrackSizingFunction>(12);
-        assert_type_size::<NonRepeatedTrackSizingFunction>(20);
-        assert_type_size::<TrackSizingFunction>(32);
+        assert_type_size::<MinTrackSizingFunction>(16);
+        assert_type_size::<MaxTrackSizingFunction>(16);
+        assert_type_size::<NonRepeatedTrackSizingFunction>(32);
+        assert_type_size::<TrackSizingFunction>(40);
         assert_type_size::<Vec<NonRepeatedTrackSizingFunction>>(24);
         assert_type_size::<Vec<TrackSizingFunction>>(24);
 

@@ -5,7 +5,7 @@ fn bevy_issue_7976_reduced() {
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(40f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::length(40f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -13,7 +13,7 @@ fn bevy_issue_7976_reduced() {
         .new_with_children(
             taffy::style::Style {
                 align_content: Some(taffy::style::AlignContent::Start),
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(200f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(200f32) },
                 ..Default::default()
             },
             &[node0],

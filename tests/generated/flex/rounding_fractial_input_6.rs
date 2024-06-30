@@ -6,8 +6,8 @@ fn rounding_fractial_input_6() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(2f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::length(2f32),
+                height: taffy::style::Dimension::length(10f32),
             },
             ..Default::default()
         })
@@ -15,8 +15,8 @@ fn rounding_fractial_input_6() {
     let node01 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(2f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::length(2f32),
+                height: taffy::style::Dimension::length(10f32),
             },
             ..Default::default()
         })
@@ -25,7 +25,7 @@ fn rounding_fractial_input_6() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.5f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::percent(0.5f32), height: auto() },
                 ..Default::default()
             },
             &[node00, node01],
@@ -34,8 +34,8 @@ fn rounding_fractial_input_6() {
     let node10 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(2f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::length(2f32),
+                height: taffy::style::Dimension::length(10f32),
             },
             ..Default::default()
         })
@@ -43,8 +43,8 @@ fn rounding_fractial_input_6() {
     let node11 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(2f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::length(2f32),
+                height: taffy::style::Dimension::length(10f32),
             },
             ..Default::default()
         })
@@ -53,7 +53,7 @@ fn rounding_fractial_input_6() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.5f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::percent(0.5f32), height: auto() },
                 ..Default::default()
             },
             &[node10, node11],
@@ -62,7 +62,7 @@ fn rounding_fractial_input_6() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(7f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::length(7f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1],

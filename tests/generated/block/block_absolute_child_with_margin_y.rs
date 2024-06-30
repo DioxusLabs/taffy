@@ -7,13 +7,13 @@ fn block_absolute_child_with_margin_y() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(9f32),
-                height: taffy::style::Dimension::Length(9f32),
+                width: taffy::style::Dimension::length(9f32),
+                height: taffy::style::Dimension::length(9f32),
             },
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
-                top: taffy::style::LengthPercentageAuto::Length(7f32),
+                top: taffy::style::LengthPercentageAuto::length(7f32),
                 bottom: zero(),
             },
             ..Default::default()
@@ -23,14 +23,14 @@ fn block_absolute_child_with_margin_y() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(9f32),
-                height: taffy::style::Dimension::Length(9f32),
+                width: taffy::style::Dimension::length(9f32),
+                height: taffy::style::Dimension::length(9f32),
             },
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
                 top: zero(),
-                bottom: taffy::style::LengthPercentageAuto::Length(7f32),
+                bottom: taffy::style::LengthPercentageAuto::length(7f32),
             },
             ..Default::default()
         })
@@ -39,14 +39,14 @@ fn block_absolute_child_with_margin_y() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(9f32),
-                height: taffy::style::Dimension::Length(9f32),
+                width: taffy::style::Dimension::length(9f32),
+                height: taffy::style::Dimension::length(9f32),
             },
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(5f32),
+                top: taffy::style::LengthPercentageAuto::length(10f32),
+                bottom: taffy::style::LengthPercentageAuto::length(5f32),
             },
             ..Default::default()
         })
@@ -56,8 +56,8 @@ fn block_absolute_child_with_margin_y() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(20f32),
-                    height: taffy::style::Dimension::Length(37f32),
+                    width: taffy::style::Dimension::length(20f32),
+                    height: taffy::style::Dimension::length(37f32),
                 },
                 ..Default::default()
             },

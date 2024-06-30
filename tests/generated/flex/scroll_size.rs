@@ -7,8 +7,8 @@ fn scroll_size() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(100f32),
-                height: taffy::style::Dimension::Length(100f32),
+                width: taffy::style::Dimension::length(100f32),
+                height: taffy::style::Dimension::length(100f32),
             },
             ..Default::default()
         })
@@ -24,8 +24,8 @@ fn scroll_size() {
                 align_items: Some(taffy::style::AlignItems::Start),
                 justify_content: Some(taffy::style::JustifyContent::Start),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Length(50f32),
+                    width: taffy::style::Dimension::length(50f32),
+                    height: taffy::style::Dimension::length(50f32),
                 },
                 ..Default::default()
             },

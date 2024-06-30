@@ -5,6 +5,7 @@ use crate::geometry::{AbsoluteAxis, AbstractAxis};
 use crate::geometry::{Line, MinMax};
 use crate::style_helpers::*;
 use crate::util::sys::GridTrackVec;
+use crate::MaybeResolve;
 use core::cmp::{max, min};
 use core::convert::Infallible;
 
@@ -249,7 +250,7 @@ impl Default for Line<GridPlacement> {
 /// Specifies the maximum size of a grid track. A grid track will automatically size between it's minimum and maximum size based
 /// on the size of it's contents, the amount of available space, and the sizing constraint the grid is being size under.
 /// See <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns>
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum MaxTrackSizingFunction {
     /// Track maximum size should be a fixed length or percentage value
@@ -328,8 +329,7 @@ impl MaxTrackSizingFunction {
     pub fn definite_value(self, parent_size: Option<f32>) -> Option<f32> {
         use MaxTrackSizingFunction::*;
         match self {
-            Fixed(LengthPercentage::Length(size)) => Some(size),
-            Fixed(LengthPercentage::Percent(fraction)) => parent_size.map(|size| fraction * size),
+            Fixed(length) => length.maybe_resolve(parent_size),
             MinContent | MaxContent | FitContent(_) | Auto | Fraction(_) => None,
         }
     }
@@ -344,8 +344,7 @@ impl MaxTrackSizingFunction {
     pub fn definite_limit(self, parent_size: Option<f32>) -> Option<f32> {
         use MaxTrackSizingFunction::FitContent;
         match self {
-            FitContent(LengthPercentage::Length(size)) => Some(size),
-            FitContent(LengthPercentage::Percent(fraction)) => parent_size.map(|size| fraction * size),
+            FitContent(length) => length.maybe_resolve(parent_size),
             _ => self.definite_value(parent_size),
         }
     }
@@ -356,8 +355,8 @@ impl MaxTrackSizingFunction {
     pub fn resolved_percentage_size(self, parent_size: f32) -> Option<f32> {
         use MaxTrackSizingFunction::*;
         match self {
-            Fixed(LengthPercentage::Percent(fraction)) => Some(fraction * parent_size),
-            Fixed(LengthPercentage::Length(_)) | MinContent | MaxContent | FitContent(_) | Auto | Fraction(_) => None,
+            Fixed(length) if length.is_percent() => length.maybe_resolve(parent_size),
+            Fixed(_) | MinContent | MaxContent | FitContent(_) | Auto | Fraction(_) => None,
         }
     }
 
@@ -365,7 +364,10 @@ impl MaxTrackSizingFunction {
     #[inline(always)]
     pub fn uses_percentage(self) -> bool {
         use MaxTrackSizingFunction::*;
-        matches!(self, Fixed(LengthPercentage::Percent(_)) | FitContent(LengthPercentage::Percent(_)))
+        match self {
+            Fixed(length) | FitContent(length) => length.is_percent(),
+            _ => false,
+        }
     }
 }
 
@@ -374,7 +376,7 @@ impl MaxTrackSizingFunction {
 /// Specifies the minimum size of a grid track. A grid track will automatically size between it's minimum and maximum size based
 /// on the size of it's contents, the amount of available space, and the sizing constraint the grid is being size under.
 /// See <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns>
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum MinTrackSizingFunction {
     /// Track minimum size should be a fixed length or percentage value
@@ -423,8 +425,7 @@ impl MinTrackSizingFunction {
     pub fn definite_value(self, parent_size: Option<f32>) -> Option<f32> {
         use MinTrackSizingFunction::*;
         match self {
-            Fixed(LengthPercentage::Length(size)) => Some(size),
-            Fixed(LengthPercentage::Percent(fraction)) => parent_size.map(|size| fraction * size),
+            Fixed(length) => length.maybe_resolve(parent_size),
             MinContent | MaxContent | Auto => None,
         }
     }
@@ -435,8 +436,8 @@ impl MinTrackSizingFunction {
     pub fn resolved_percentage_size(self, parent_size: f32) -> Option<f32> {
         use MinTrackSizingFunction::*;
         match self {
-            Fixed(LengthPercentage::Percent(fraction)) => Some(fraction * parent_size),
-            Fixed(LengthPercentage::Length(_)) | MinContent | MaxContent | Auto => None,
+            Fixed(length) if length.is_percent() => length.maybe_resolve(parent_size),
+            Fixed(_) | MinContent | MaxContent | Auto => None,
         }
     }
 
@@ -444,7 +445,10 @@ impl MinTrackSizingFunction {
     #[inline(always)]
     pub fn uses_percentage(self) -> bool {
         use MinTrackSizingFunction::*;
-        matches!(self, Fixed(LengthPercentage::Percent(_)))
+        match self {
+            Fixed(length) => length.is_percent() || length.is_calc(),
+            _ => false,
+        }
     }
 }
 
@@ -455,11 +459,11 @@ pub type NonRepeatedTrackSizingFunction = MinMax<MinTrackSizingFunction, MaxTrac
 impl NonRepeatedTrackSizingFunction {
     /// Extract the min track sizing function
     pub fn min_sizing_function(&self) -> MinTrackSizingFunction {
-        self.min
+        self.min.clone()
     }
     /// Extract the max track sizing function
     pub fn max_sizing_function(&self) -> MaxTrackSizingFunction {
-        self.max
+        self.max.clone()
     }
     /// Determine whether at least one of the components ("min" and "max") are fixed sizing function
     pub fn has_fixed_component(&self) -> bool {

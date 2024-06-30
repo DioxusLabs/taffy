@@ -6,8 +6,8 @@ fn blockflex_flex_in_block() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::length(50f32),
+                height: taffy::style::Dimension::length(50f32),
             },
             ..Default::default()
         })
@@ -22,8 +22,8 @@ fn blockflex_flex_in_block() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::length(50f32),
+                height: taffy::style::Dimension::length(20f32),
             },
             ..Default::default()
         })
@@ -32,7 +32,7 @@ fn blockflex_flex_in_block() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::length(200f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1],

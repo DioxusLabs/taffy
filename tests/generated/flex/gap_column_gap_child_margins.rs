@@ -7,10 +7,10 @@ fn gap_column_gap_child_margins() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0f32),
+            flex_basis: taffy::style::Dimension::percent(0f32),
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(2f32),
-                right: taffy::style::LengthPercentageAuto::Length(2f32),
+                left: taffy::style::LengthPercentageAuto::length(2f32),
+                right: taffy::style::LengthPercentageAuto::length(2f32),
                 top: zero(),
                 bottom: zero(),
             },
@@ -21,10 +21,10 @@ fn gap_column_gap_child_margins() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0f32),
+            flex_basis: taffy::style::Dimension::percent(0f32),
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(10f32),
-                right: taffy::style::LengthPercentageAuto::Length(10f32),
+                left: taffy::style::LengthPercentageAuto::length(10f32),
+                right: taffy::style::LengthPercentageAuto::length(10f32),
                 top: zero(),
                 bottom: zero(),
             },
@@ -35,10 +35,10 @@ fn gap_column_gap_child_margins() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0f32),
+            flex_basis: taffy::style::Dimension::percent(0f32),
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(15f32),
-                right: taffy::style::LengthPercentageAuto::Length(15f32),
+                left: taffy::style::LengthPercentageAuto::length(15f32),
+                right: taffy::style::LengthPercentageAuto::length(15f32),
                 top: zero(),
                 bottom: zero(),
             },
@@ -48,10 +48,10 @@ fn gap_column_gap_child_margins() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::Length(10f32), height: zero() },
+                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::length(10f32), height: zero() },
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(80f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::length(80f32),
+                    height: taffy::style::Dimension::length(100f32),
                 },
                 ..Default::default()
             },

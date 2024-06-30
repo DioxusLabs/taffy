@@ -8,8 +8,8 @@ fn grid_taffy_issue_624() {
             grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Span(2u16) },
             grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(100f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::length(100f32),
+                height: taffy::style::Dimension::length(50f32),
             },
             ..Default::default()
         })
@@ -19,8 +19,8 @@ fn grid_taffy_issue_624() {
             grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Span(2u16) },
             grid_column: taffy::geometry::Line { start: line(2i16), end: taffy::style::GridPlacement::Span(2u16) },
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(30f32),
+                width: taffy::style::Dimension::length(40f32),
+                height: taffy::style::Dimension::length(30f32),
             },
             ..Default::default()
         })
@@ -30,8 +30,8 @@ fn grid_taffy_issue_624() {
             grid_row: taffy::geometry::Line { start: line(3i16), end: taffy::style::GridPlacement::Span(1u16) },
             grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Span(2u16) },
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(120f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::length(120f32),
+                height: taffy::style::Dimension::length(20f32),
             },
             ..Default::default()
         })
@@ -45,8 +45,8 @@ fn grid_taffy_issue_624() {
                 grid_template_rows: vec![auto(), auto(), auto(), fr(1f32)],
                 grid_template_columns: vec![auto(), auto(), fr(1f32)],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(320f32),
-                    height: taffy::style::Dimension::Length(640f32),
+                    width: taffy::style::Dimension::length(320f32),
+                    height: taffy::style::Dimension::length(640f32),
                 },
                 ..Default::default()
             },

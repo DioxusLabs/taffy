@@ -3,14 +3,14 @@ fn block_absolute_aspect_ratio_fill_max_height() {
     #[allow(unused_imports)]
     use taffy::{prelude::*, tree::Layout, TaffyTree};
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
-    let node0 = taffy . new_leaf_with_context (taffy :: style :: Style { position : taffy :: style :: Position :: Absolute , max_size : taffy :: geometry :: Size { width : taffy :: style :: Dimension :: Length (50f32) , height : auto () , } , aspect_ratio : Some (3f32) , .. Default :: default () } , crate :: TextMeasure { text_content : "HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH" , writing_mode : crate :: WritingMode :: Horizontal , _aspect_ratio : Some (3f32) , } ,) . unwrap () ;
+    let node0 = taffy . new_leaf_with_context (taffy :: style :: Style { position : taffy :: style :: Position :: Absolute , max_size : taffy :: geometry :: Size { width : taffy :: style :: Dimension :: length (50f32) , height : auto () , } , aspect_ratio : Some (3f32) , .. Default :: default () } , crate :: TextMeasure { text_content : "HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH" , writing_mode : crate :: WritingMode :: Horizontal , _aspect_ratio : Some (3f32) , } ,) . unwrap () ;
     let node = taffy
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(400f32),
-                    height: taffy::style::Dimension::Length(300f32),
+                    width: taffy::style::Dimension::length(400f32),
+                    height: taffy::style::Dimension::length(300f32),
                 },
                 ..Default::default()
             },

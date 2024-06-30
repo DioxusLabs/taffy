@@ -3,14 +3,14 @@ fn aspect_ratio_flex_row_stretch_fill_max_height() {
     #[allow(unused_imports)]
     use taffy::{prelude::*, tree::Layout, TaffyTree};
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
-    let node0 = taffy . new_leaf_with_context (taffy :: style :: Style { max_size : taffy :: geometry :: Size { width : taffy :: style :: Dimension :: Length (40f32) , height : auto () , } , aspect_ratio : Some (2f32) , .. Default :: default () } , crate :: TextMeasure { text_content : "HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH" , writing_mode : crate :: WritingMode :: Horizontal , _aspect_ratio : Some (2f32) , } ,) . unwrap () ;
+    let node0 = taffy . new_leaf_with_context (taffy :: style :: Style { max_size : taffy :: geometry :: Size { width : taffy :: style :: Dimension :: length (40f32) , height : auto () , } , aspect_ratio : Some (2f32) , .. Default :: default () } , crate :: TextMeasure { text_content : "HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH" , writing_mode : crate :: WritingMode :: Horizontal , _aspect_ratio : Some (2f32) , } ,) . unwrap () ;
     let node = taffy
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::length(100f32),
+                    height: taffy::style::Dimension::length(100f32),
                 },
                 ..Default::default()
             },

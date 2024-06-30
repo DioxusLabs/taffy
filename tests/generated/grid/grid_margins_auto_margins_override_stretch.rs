@@ -15,10 +15,10 @@ fn grid_margins_auto_margins_override_stretch() {
                 align_self: Some(taffy::style::AlignSelf::Stretch),
                 justify_self: Some(taffy::style::JustifySelf::Stretch),
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Auto,
-                    right: taffy::style::LengthPercentageAuto::Auto,
-                    top: taffy::style::LengthPercentageAuto::Auto,
-                    bottom: taffy::style::LengthPercentageAuto::Auto,
+                    left: taffy::style::LengthPercentageAuto::auto(),
+                    right: taffy::style::LengthPercentageAuto::auto(),
+                    top: taffy::style::LengthPercentageAuto::auto(),
+                    bottom: taffy::style::LengthPercentageAuto::auto(),
                 },
                 ..Default::default()
             },
@@ -38,10 +38,10 @@ fn grid_margins_auto_margins_override_stretch() {
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(40f32),
-                    right: taffy::style::LengthPercentage::Length(20f32),
-                    top: taffy::style::LengthPercentage::Length(10f32),
-                    bottom: taffy::style::LengthPercentage::Length(30f32),
+                    left: taffy::style::LengthPercentage::length(40f32),
+                    right: taffy::style::LengthPercentage::length(20f32),
+                    top: taffy::style::LengthPercentage::length(10f32),
+                    bottom: taffy::style::LengthPercentage::length(30f32),
                 },
                 ..Default::default()
             },

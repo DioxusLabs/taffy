@@ -7,7 +7,7 @@ fn gap_column_gap_percentage_flexible_with_padding() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0f32),
+            flex_basis: taffy::style::Dimension::percent(0f32),
             ..Default::default()
         })
         .unwrap();
@@ -15,7 +15,7 @@ fn gap_column_gap_percentage_flexible_with_padding() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0f32),
+            flex_basis: taffy::style::Dimension::percent(0f32),
             ..Default::default()
         })
         .unwrap();
@@ -23,7 +23,7 @@ fn gap_column_gap_percentage_flexible_with_padding() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0f32),
+            flex_basis: taffy::style::Dimension::percent(0f32),
             ..Default::default()
         })
         .unwrap();
@@ -31,18 +31,18 @@ fn gap_column_gap_percentage_flexible_with_padding() {
         .new_with_children(
             taffy::style::Style {
                 gap: taffy::geometry::Size {
-                    width: taffy::style::LengthPercentage::Percent(0.1f32),
-                    height: taffy::style::LengthPercentage::Length(20f32),
+                    width: taffy::style::LengthPercentage::percent(0.1f32),
+                    height: taffy::style::LengthPercentage::length(20f32),
                 },
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::length(100f32),
+                    height: taffy::style::Dimension::length(100f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(10f32),
-                    right: taffy::style::LengthPercentage::Length(10f32),
-                    top: taffy::style::LengthPercentage::Length(10f32),
-                    bottom: taffy::style::LengthPercentage::Length(10f32),
+                    left: taffy::style::LengthPercentage::length(10f32),
+                    right: taffy::style::LengthPercentage::length(10f32),
+                    top: taffy::style::LengthPercentage::length(10f32),
+                    bottom: taffy::style::LengthPercentage::length(10f32),
                 },
                 ..Default::default()
             },

@@ -6,7 +6,7 @@ fn block_aspect_ratio_fill_width() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(40f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(40f32) },
             aspect_ratio: Some(2f32),
             ..Default::default()
         })
@@ -16,8 +16,8 @@ fn block_aspect_ratio_fill_width() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::length(100f32),
+                    height: taffy::style::Dimension::length(100f32),
                 },
                 ..Default::default()
             },

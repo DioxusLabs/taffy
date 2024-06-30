@@ -5,7 +5,7 @@ fn align_content_stretch_row_with_flex() {
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -13,14 +13,14 @@ fn align_content_stretch_row_with_flex() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0f32),
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+            flex_basis: taffy::style::Dimension::percent(0f32),
+            size: taffy::geometry::Size { width: taffy::style::Dimension::length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -28,14 +28,14 @@ fn align_content_stretch_row_with_flex() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0f32),
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+            flex_basis: taffy::style::Dimension::percent(0f32),
+            size: taffy::geometry::Size { width: taffy::style::Dimension::length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node4 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -45,8 +45,8 @@ fn align_content_stretch_row_with_flex() {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(150f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::length(150f32),
+                    height: taffy::style::Dimension::length(100f32),
                 },
                 ..Default::default()
             },

@@ -5,12 +5,12 @@ fn grid_percent_items_nested_with_margin() {
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.45f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::percent(0.45f32), height: auto() },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                right: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                top: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.05f32),
+                left: taffy::style::LengthPercentageAuto::percent(0.05f32),
+                right: taffy::style::LengthPercentageAuto::percent(0.05f32),
+                top: taffy::style::LengthPercentageAuto::percent(0.05f32),
+                bottom: taffy::style::LengthPercentageAuto::percent(0.05f32),
             },
             ..Default::default()
         })
@@ -19,7 +19,7 @@ fn grid_percent_items_nested_with_margin() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.5f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::percent(0.5f32), height: auto() },
                 ..Default::default()
             },
             &[node00],
@@ -29,7 +29,7 @@ fn grid_percent_items_nested_with_margin() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::length(200f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

@@ -5,13 +5,13 @@ fn percent_absolute_position() {
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::percent(1f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node01 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::percent(1f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -20,11 +20,11 @@ fn percent_absolute_position() {
             taffy::style::Style {
                 position: taffy::style::Position::Absolute,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(1f32),
-                    height: taffy::style::Dimension::Length(50f32),
+                    width: taffy::style::Dimension::percent(1f32),
+                    height: taffy::style::Dimension::length(50f32),
                 },
                 inset: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Percent(0.5f32),
+                    left: taffy::style::LengthPercentageAuto::percent(0.5f32),
                     right: auto(),
                     top: auto(),
                     bottom: auto(),
@@ -39,8 +39,8 @@ fn percent_absolute_position() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(60f32),
-                    height: taffy::style::Dimension::Length(50f32),
+                    width: taffy::style::Dimension::length(60f32),
+                    height: taffy::style::Dimension::length(50f32),
                 },
                 ..Default::default()
             },

@@ -27,7 +27,7 @@ fn bevy_issue_9530_reduced() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(40f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::length(40f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

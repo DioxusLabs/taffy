@@ -18,12 +18,12 @@ fn bevy_issue_9530_reduced2() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 1f32,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(80f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::length(80f32), height: auto() },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Length(20f32),
-                    right: taffy::style::LengthPercentageAuto::Length(20f32),
-                    top: taffy::style::LengthPercentageAuto::Length(0f32),
-                    bottom: taffy::style::LengthPercentageAuto::Length(0f32),
+                    left: taffy::style::LengthPercentageAuto::length(20f32),
+                    right: taffy::style::LengthPercentageAuto::length(20f32),
+                    top: taffy::style::LengthPercentageAuto::length(0f32),
+                    bottom: taffy::style::LengthPercentageAuto::length(0f32),
                 },
                 ..Default::default()
             },

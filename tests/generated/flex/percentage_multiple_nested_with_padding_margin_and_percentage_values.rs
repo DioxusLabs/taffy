@@ -5,18 +5,18 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node000 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.45f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::percent(0.45f32), height: auto() },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                right: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                top: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.05f32),
+                left: taffy::style::LengthPercentageAuto::percent(0.05f32),
+                right: taffy::style::LengthPercentageAuto::percent(0.05f32),
+                top: taffy::style::LengthPercentageAuto::percent(0.05f32),
+                bottom: taffy::style::LengthPercentageAuto::percent(0.05f32),
             },
             padding: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Length(3f32),
-                right: taffy::style::LengthPercentage::Length(3f32),
-                top: taffy::style::LengthPercentage::Length(3f32),
-                bottom: taffy::style::LengthPercentage::Length(3f32),
+                left: taffy::style::LengthPercentage::length(3f32),
+                right: taffy::style::LengthPercentage::length(3f32),
+                top: taffy::style::LengthPercentage::length(3f32),
+                bottom: taffy::style::LengthPercentage::length(3f32),
             },
             ..Default::default()
         })
@@ -25,18 +25,18 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.5f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::percent(0.5f32), height: auto() },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Length(5f32),
-                    right: taffy::style::LengthPercentageAuto::Length(5f32),
-                    top: taffy::style::LengthPercentageAuto::Length(5f32),
-                    bottom: taffy::style::LengthPercentageAuto::Length(5f32),
+                    left: taffy::style::LengthPercentageAuto::length(5f32),
+                    right: taffy::style::LengthPercentageAuto::length(5f32),
+                    top: taffy::style::LengthPercentageAuto::length(5f32),
+                    bottom: taffy::style::LengthPercentageAuto::length(5f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Percent(0.03f32),
-                    right: taffy::style::LengthPercentage::Percent(0.03f32),
-                    top: taffy::style::LengthPercentage::Percent(0.03f32),
-                    bottom: taffy::style::LengthPercentage::Percent(0.03f32),
+                    left: taffy::style::LengthPercentage::percent(0.03f32),
+                    right: taffy::style::LengthPercentage::percent(0.03f32),
+                    top: taffy::style::LengthPercentage::percent(0.03f32),
+                    bottom: taffy::style::LengthPercentage::percent(0.03f32),
                 },
                 ..Default::default()
             },
@@ -48,19 +48,19 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 1f32,
-                flex_basis: taffy::style::Dimension::Percent(0.1f32),
-                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.6f32), height: auto() },
+                flex_basis: taffy::style::Dimension::percent(0.1f32),
+                min_size: taffy::geometry::Size { width: taffy::style::Dimension::percent(0.6f32), height: auto() },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Length(5f32),
-                    right: taffy::style::LengthPercentageAuto::Length(5f32),
-                    top: taffy::style::LengthPercentageAuto::Length(5f32),
-                    bottom: taffy::style::LengthPercentageAuto::Length(5f32),
+                    left: taffy::style::LengthPercentageAuto::length(5f32),
+                    right: taffy::style::LengthPercentageAuto::length(5f32),
+                    top: taffy::style::LengthPercentageAuto::length(5f32),
+                    bottom: taffy::style::LengthPercentageAuto::length(5f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(3f32),
-                    right: taffy::style::LengthPercentage::Length(3f32),
-                    top: taffy::style::LengthPercentage::Length(3f32),
-                    bottom: taffy::style::LengthPercentage::Length(3f32),
+                    left: taffy::style::LengthPercentage::length(3f32),
+                    right: taffy::style::LengthPercentage::length(3f32),
+                    top: taffy::style::LengthPercentage::length(3f32),
+                    bottom: taffy::style::LengthPercentage::length(3f32),
                 },
                 ..Default::default()
             },
@@ -70,8 +70,8 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 4f32,
-            flex_basis: taffy::style::Dimension::Percent(0.15f32),
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.2f32), height: auto() },
+            flex_basis: taffy::style::Dimension::percent(0.15f32),
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::percent(0.2f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -80,8 +80,8 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::length(200f32),
+                    height: taffy::style::Dimension::length(200f32),
                 },
                 ..Default::default()
             },

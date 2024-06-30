@@ -9,7 +9,7 @@ fn grid_fr_span_2_proportion() {
                 start: taffy::style::GridPlacement::Span(2u16),
                 end: taffy::style::GridPlacement::Auto,
             },
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::length(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();

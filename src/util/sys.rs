@@ -29,6 +29,8 @@ mod std {
         Vec::with_capacity(capacity)
     }
 
+    pub(crate) type Box<A> = std::boxed::Box<A>;
+
     /// Rounds to the nearest whole number
     #[must_use]
     #[inline(always)]
@@ -75,6 +77,8 @@ mod alloc {
     pub(crate) fn new_vec_with_capacity<A>(capacity: usize) -> Vec<A> {
         Vec::with_capacity(capacity)
     }
+
+    pub(crate) type Box<A> = alloc::boxed::Box<A>;
 
     /// Rounds to the nearest whole number
     #[must_use]

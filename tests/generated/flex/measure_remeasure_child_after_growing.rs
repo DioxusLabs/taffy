@@ -6,8 +6,8 @@ fn measure_remeasure_child_after_growing() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::length(50f32),
+                height: taffy::style::Dimension::length(50f32),
             },
             ..Default::default()
         })
@@ -27,8 +27,8 @@ fn measure_remeasure_child_after_growing() {
             taffy::style::Style {
                 align_items: Some(taffy::style::AlignItems::Start),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Auto,
+                    width: taffy::style::Dimension::length(100f32),
+                    height: taffy::style::Dimension::auto(),
                 },
                 ..Default::default()
             },

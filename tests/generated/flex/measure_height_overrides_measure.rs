@@ -6,7 +6,7 @@ fn measure_height_overrides_measure() {
     let node0 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(5f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(5f32) },
                 ..Default::default()
             },
             crate::TextMeasure { text_content: "H", writing_mode: crate::WritingMode::Horizontal, _aspect_ratio: None },

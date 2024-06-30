@@ -12,6 +12,7 @@ mod block_absolute_aspect_ratio_width_overrides_inset;
 mod block_absolute_child_with_margin_x;
 mod block_absolute_child_with_margin_y;
 mod block_absolute_child_with_max_height;
+mod block_absolute_layout_calc_height;
 mod block_absolute_layout_child_order;
 mod block_absolute_layout_no_size;
 mod block_absolute_layout_percentage_bottom_based_on_parent_height;
