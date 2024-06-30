@@ -39,15 +39,18 @@ macro_rules! impl_measurement {
             pub const fn is_percent(&self) -> bool {
                 matches!(self.get_inner(), $inner_ty::Percent(_))
             }
+            /// Returns true if value is Length variant.
             #[inline]
             pub const fn is_length(&self) -> bool {
                 matches!(self.get_inner(), $inner_ty::Length(_))
             }
-            
+
+            /// Creates an Length variant.
             #[inline]
             pub const fn length(length: f32) -> Self {
                 Self { inner: $inner_ty::Length(length) }
             }
+            /// Creates an Percent variant.
             #[inline]
             pub const fn percent(percent: f32) -> Self {
                 Self { inner: $inner_ty::Percent(percent) }
@@ -61,7 +64,7 @@ macro_rules! impl_measurement {
             #[inline]
             pub const fn static_calc(calc: &'static CalcNode) -> Self {
                 let ptr = std::ptr::from_ref(calc) as *mut CalcNode;
-                unsafe { Self { ptr: CalcPtr::new(NonNull::new_unchecked(ptr)) }.set_calc_tag() } 
+                unsafe { Self { ptr: CalcPtr::new(NonNull::new_unchecked(ptr)) }.set_calc_tag() }
             }
             #[cfg(feature = "calc")]
             #[inline]
@@ -72,8 +75,10 @@ macro_rules! impl_measurement {
             #[inline]
             const unsafe fn set_calc_tag(mut self) -> Self {
                 #[cfg(target_pointer_width = "64")]
-                { self.bits = self.bits << 8 };
-                
+                {
+                    self.bits = self.bits << 8
+                };
+
                 self.tag.0 = 0;
                 self
             }
@@ -86,7 +91,7 @@ macro_rules! impl_measurement {
             #[inline]
             pub fn get_calc(&self) -> Option<&CalcNode> {
                 if self.is_calc() {
-                    Some( unsafe { &*self.get_calc_ptr() } )
+                    Some(unsafe { &*self.get_calc_ptr() })
                 } else {
                     None
                 }
@@ -124,11 +129,12 @@ macro_rules! impl_measurement {
     ($ty:ident, $inner_ty:ident, auto) => {
         impl_measurement!($ty, $inner_ty);
         impl $ty {
-            /// Returns true if value is LengthPercentageAuto::Auto
+            /// Returns true if value is Auto variant.
             #[inline]
             pub const fn is_auto(&self) -> bool {
                 matches!(self.get_inner(), $inner_ty::Auto)
             }
+            /// Creates an Auto variant.
             #[inline]
             pub const fn auto() -> Self {
                 Self { inner: $inner_ty::Auto }
@@ -146,7 +152,7 @@ struct Tag(u8);
 struct CalcPtr {
     #[cfg(target_pointer_width = "32")]
     _space: u32,
-    ptr: NonNull<CalcNode> 
+    ptr: NonNull<CalcNode>,
 }
 #[cfg(feature = "calc")]
 impl CalcPtr {
@@ -158,7 +164,6 @@ impl CalcPtr {
         return Self { ptr, _space: 0 };
     }
 }
-
 
 /// A unit of linear measurement
 ///
@@ -275,7 +280,7 @@ impl LengthPercentageAuto {
     /// Returns:
     ///   - Some(length) for Length variants
     ///   - Some(resolved) using the provided context for Percent variants
-    ///   - Some(calculation) todo
+    ///   - Some(calculation) resolve calculations using the provided context
     ///   - None for Auto variants
     #[inline(always)]
     pub fn resolve_to_option(self, context: f32) -> Option<f32> {
@@ -393,7 +398,7 @@ impl Dimension {
 }
 
 impl Rect<Dimension> {
-    /// Create a new Rect with [`Dimension::Length`]
+    /// Create a new Rect with [`Dimension::length()`]
     #[must_use]
     pub const fn from_length(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Rect {
@@ -404,7 +409,7 @@ impl Rect<Dimension> {
         }
     }
 
-    /// Create a new Rect with [`Dimension::Percent`]
+    /// Create a new Rect with [`Dimension::percent()`]
     #[must_use]
     pub const fn from_percent(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Rect {
@@ -416,30 +421,71 @@ impl Rect<Dimension> {
     }
 }
 
+/// todo
 #[cfg(feature = "calc")]
 #[derive(Debug, PartialEq)]
 //#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum CalcNode {
     Leaf(LengthPercentage),
 
+    /// Add the two values.
     Sum(Box<CalcNode>, Box<CalcNode>),
+    /// Subtract the second value from the first.
     Difference(Box<CalcNode>, Box<CalcNode>),
+    /// Multiplies the two values.
     Product(Box<CalcNode>, Box<CalcNode>),
+    /// Divides the first value by the second.
     Quotient(Box<CalcNode>, Box<CalcNode>),
 
+    /// Negates the value.
     Negate(Box<CalcNode>),
+
+    /// Return the smallest value.
+    /// <https://www.w3.org/TR/css-values-4/#funcdef-min>
     Min(Vec<CalcNode>),
+    /// Returns the largest value.
+    /// <https://www.w3.org/TR/css-values-4/#funcdef-max>
     Max(Vec<CalcNode>),
-    Clamp { min: Box<CalcNode>, value: Box<CalcNode>, max: Box<CalcNode> },
-    Round { strategy: RoundingStrategy, value: Box<CalcNode>, interval: Box<CalcNode> },
-    Rem { dividend: Box<CalcNode>, divisor: Box<CalcNode> },
-    Mod { dividend: Box<CalcNode>, divisor: Box<CalcNode> },
+    /// Clamps value between min and max
+    /// <https://www.w3.org/TR/css-values-4/#funcdef-clamp>
+    Clamp {
+        min: Box<CalcNode>,
+        value: Box<CalcNode>,
+        max: Box<CalcNode>,
+    },
+    /// Rounds value as defined by [RoundingStrategy].
+    /// <https://www.w3.org/TR/css-values-4/#funcdef-round>
+    Round {
+        strategy: RoundingStrategy,
+        value: Box<CalcNode>,
+        interval: Box<CalcNode>,
+    },
+    /// Returns the remainder left over when the `dividend` is divided by the `divisor`.
+    /// <https://www.w3.org/TR/css-values-4/#funcdef-rem>
+    Rem {
+        dividend: Box<CalcNode>,
+        divisor: Box<CalcNode>,
+    },
+    /// Returns the modulus left over when the `dividend` is divided by the `divisor`.
+    /// <https://www.w3.org/TR/css-values-4/#funcdef-mod>
+    Mod {
+        dividend: Box<CalcNode>,
+        divisor: Box<CalcNode>,
+    },
+    /// Returns the square root of the sum of squares of its parameters.
+    /// <https://www.w3.org/TR/css-values-4/#funcdef-hypot>
     Hypot(Vec<CalcNode>),
+    /// Return `+1` for any positive value and `-1` for any negative value.
+    /// Except for `-0` and `+0` in which themselves are return.
+    /// <https://www.w3.org/TR/css-values-4/#funcdef-sign>
     Sign(Box<CalcNode>),
+    /// Return the absolute value.
+    /// <https://www.w3.org/TR/css-values-4/#funcdef-abs>
     Abs(Box<CalcNode>),
 }
 #[cfg(feature = "calc")]
 impl CalcNode {
+    /// Resolves the size of this [CalcNode]
     pub fn resolve(&self, percentage_length: f32) -> f32 {
         match self {
             CalcNode::Leaf(leaf) => leaf.resolve(percentage_length),
@@ -455,17 +501,15 @@ impl CalcNode {
                 nodes.iter().map(|node| node.resolve(percentage_length)).reduce(f32::max).unwrap_or_default()
             }
             CalcNode::Clamp { min, value, max } => {
-                let min = min.resolve(percentage_length);
+                let min_bound = min.resolve(percentage_length);
                 let value = value.resolve(percentage_length);
-                let max = max.resolve(percentage_length);
+                let max_bound = max.resolve(percentage_length);
 
-                if min.is_nan() || value.is_nan() || max.is_nan() {
+                if min_bound.is_nan() || value.is_nan() || max_bound.is_nan() {
                     return f32::NAN;
                 }
 
-                let max = value.max(max);
-                let min = min.min(max);
-                min
+                value.max(max_bound).min(min_bound)
             }
             CalcNode::Round { strategy, value, interval } => {
                 // https://developer.mozilla.org/en-US/docs/Web/CSS/round#return_value
@@ -576,14 +620,27 @@ impl From<LengthPercentage> for CalcNode {
         CalcNode::Leaf(value)
     }
 }
+
+/// Rounding strategy used by an [CSS round()](https://www.w3.org/TR/css-values-4/#funcdef-round)
+/// <https://www.w3.org/TR/css-values-4/#typedef-rounding-strategy>
 #[cfg(feature = "calc")]
 #[derive(Debug, Copy, Clone, PartialEq, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum RoundingStrategy {
+    /// Round `value` up to the nearest integer multiple of `interval`
+    /// (if the value is negative, it will become "more positive").
     Up,
+    /// Round `value` down to the nearest integer multiple of `interval`
+    /// (if the value is negative, it will become "more negative").
     Down,
+    /// Round `value` to the nearest integer multiple of `interval`,
+    /// which may be either above or below the value.
+    /// If the `value` is halfway between the rounding targets above and below (neither is "nearest"),
+    /// it will be rounded up.
     #[default]
     Nearest,
+    /// Round `value` to the nearest integer multiple of `interval` closer to/towards zero
+    /// (a positive number will decrease, while a negative value will become "less negative").
     ToZero,
 }
 

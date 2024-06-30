@@ -607,13 +607,13 @@ impl<T> Size<Option<T>> {
 }
 
 impl Size<Dimension> {
-    /// Generates a [`Size<Dimension>`] using [`Dimension::Length`] values
+    /// Generates a [`Size<Dimension>`] using [`Dimension::length`] values
     #[must_use]
     pub const fn from_lengths(width: f32, height: f32) -> Self {
         Size { width: Dimension::length(width), height: Dimension::length(height) }
     }
 
-    /// Generates a [`Size<Dimension>`] using [`Dimension::Percent`] values
+    /// Generates a [`Size<Dimension>`] using [`Dimension::percent`] values
     #[must_use]
     pub const fn from_percent(width: f32, height: f32) -> Self {
         Size { width: Dimension::percent(width), height: Dimension::percent(height) }
