@@ -6,8 +6,8 @@ fn min_height_with_nested_fixed_height() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(40f32),
+                width: taffy::style::Dimension::length(40f32),
+                height: taffy::style::Dimension::length(40f32),
             },
             ..Default::default()
         })
@@ -18,12 +18,12 @@ fn min_height_with_nested_fixed_height() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_self: Some(taffy::style::AlignSelf::FlexStart),
                 flex_shrink: 0f32,
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(28f32) },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(28f32) },
                 margin: taffy::geometry::Rect {
                     left: zero(),
                     right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(8f32),
-                    bottom: taffy::style::LengthPercentageAuto::Length(9f32),
+                    top: taffy::style::LengthPercentageAuto::length(8f32),
+                    bottom: taffy::style::LengthPercentageAuto::length(9f32),
                 },
                 ..Default::default()
             },
@@ -33,11 +33,11 @@ fn min_height_with_nested_fixed_height() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(320f32), height: auto() },
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(44f32) },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::length(320f32), height: auto() },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(44f32) },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(16f32),
-                    right: taffy::style::LengthPercentage::Length(16f32),
+                    left: taffy::style::LengthPercentage::length(16f32),
+                    right: taffy::style::LengthPercentage::length(16f32),
                     top: zero(),
                     bottom: zero(),
                 },

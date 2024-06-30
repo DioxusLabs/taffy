@@ -8,10 +8,10 @@ fn bevy_issue_9530_reduced3() {
             taffy::style::Style {
                 flex_grow: 1f32,
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Length(20f32),
-                    right: taffy::style::LengthPercentageAuto::Length(20f32),
-                    top: taffy::style::LengthPercentageAuto::Length(0f32),
-                    bottom: taffy::style::LengthPercentageAuto::Length(0f32),
+                    left: taffy::style::LengthPercentageAuto::length(20f32),
+                    right: taffy::style::LengthPercentageAuto::length(20f32),
+                    top: taffy::style::LengthPercentageAuto::length(0f32),
+                    bottom: taffy::style::LengthPercentageAuto::length(0f32),
                 },
                 ..Default::default()
             },
@@ -26,7 +26,7 @@ fn bevy_issue_9530_reduced3() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(80f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::length(80f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

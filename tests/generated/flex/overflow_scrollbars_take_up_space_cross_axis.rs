@@ -13,8 +13,8 @@ fn overflow_scrollbars_take_up_space_cross_axis() {
                 },
                 scrollbar_width: 15f32,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Length(50f32),
+                    width: taffy::style::Dimension::length(50f32),
+                    height: taffy::style::Dimension::length(50f32),
                 },
                 ..Default::default()
             },

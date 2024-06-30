@@ -37,8 +37,8 @@ fn blockflex_overflow_hidden() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(20f32),
-                    height: taffy::style::Dimension::Length(50f32),
+                    width: taffy::style::Dimension::length(20f32),
+                    height: taffy::style::Dimension::length(50f32),
                 },
                 ..Default::default()
             },

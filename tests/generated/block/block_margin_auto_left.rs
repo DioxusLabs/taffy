@@ -6,11 +6,11 @@ fn block_margin_auto_left() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::length(50f32),
+                height: taffy::style::Dimension::length(50f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Auto,
+                left: taffy::style::LengthPercentageAuto::auto(),
                 right: zero(),
                 top: zero(),
                 bottom: zero(),
@@ -21,8 +21,8 @@ fn block_margin_auto_left() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::length(50f32),
+                height: taffy::style::Dimension::length(50f32),
             },
             ..Default::default()
         })
@@ -32,8 +32,8 @@ fn block_margin_auto_left() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::length(200f32),
+                    height: taffy::style::Dimension::length(200f32),
                 },
                 ..Default::default()
             },

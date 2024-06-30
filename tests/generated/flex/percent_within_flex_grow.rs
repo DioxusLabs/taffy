@@ -5,13 +5,13 @@ fn percent_within_flex_grow() {
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::length(100f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node10 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::percent(1f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -27,7 +27,7 @@ fn percent_within_flex_grow() {
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::length(100f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -35,8 +35,8 @@ fn percent_within_flex_grow() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(350f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::length(350f32),
+                    height: taffy::style::Dimension::length(100f32),
                 },
                 ..Default::default()
             },

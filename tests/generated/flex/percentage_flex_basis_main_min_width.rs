@@ -6,16 +6,16 @@ fn percentage_flex_basis_main_min_width() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0.15f32),
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.6f32), height: auto() },
+            flex_basis: taffy::style::Dimension::percent(0.15f32),
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::percent(0.6f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 4f32,
-            flex_basis: taffy::style::Dimension::Percent(0.1f32),
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.2f32), height: auto() },
+            flex_basis: taffy::style::Dimension::percent(0.1f32),
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::percent(0.2f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -23,8 +23,8 @@ fn percentage_flex_basis_main_min_width() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(400f32),
+                    width: taffy::style::Dimension::length(200f32),
+                    height: taffy::style::Dimension::length(400f32),
                 },
                 ..Default::default()
             },

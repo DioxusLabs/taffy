@@ -6,7 +6,7 @@ fn block_padding_border_percentage_intrinsic_size() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -15,10 +15,10 @@ fn block_padding_border_percentage_intrinsic_size() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Percent(0.04f32),
-                    right: taffy::style::LengthPercentage::Percent(0.02f32),
-                    top: taffy::style::LengthPercentage::Percent(0.01f32),
-                    bottom: taffy::style::LengthPercentage::Percent(0.03f32),
+                    left: taffy::style::LengthPercentage::percent(0.04f32),
+                    right: taffy::style::LengthPercentage::percent(0.02f32),
+                    top: taffy::style::LengthPercentage::percent(0.01f32),
+                    bottom: taffy::style::LengthPercentage::percent(0.03f32),
                 },
                 ..Default::default()
             },

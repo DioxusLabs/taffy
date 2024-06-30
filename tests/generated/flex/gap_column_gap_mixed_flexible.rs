@@ -5,7 +5,7 @@ fn gap_column_gap_mixed_flexible() {
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -13,23 +13,23 @@ fn gap_column_gap_mixed_flexible() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0f32),
+            flex_basis: taffy::style::Dimension::percent(0f32),
             ..Default::default()
         })
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::Length(10f32), height: zero() },
+                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::length(10f32), height: zero() },
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(80f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::length(80f32),
+                    height: taffy::style::Dimension::length(100f32),
                 },
                 ..Default::default()
             },

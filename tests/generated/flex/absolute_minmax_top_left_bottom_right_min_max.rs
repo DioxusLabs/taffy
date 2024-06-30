@@ -7,18 +7,18 @@ fn absolute_minmax_top_left_bottom_right_min_max() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             min_size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(60f32),
+                width: taffy::style::Dimension::length(50f32),
+                height: taffy::style::Dimension::length(60f32),
             },
             max_size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(30f32),
+                width: taffy::style::Dimension::length(40f32),
+                height: taffy::style::Dimension::length(30f32),
             },
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(10f32),
-                right: taffy::style::LengthPercentageAuto::Length(10f32),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
+                left: taffy::style::LengthPercentageAuto::length(10f32),
+                right: taffy::style::LengthPercentageAuto::length(10f32),
+                top: taffy::style::LengthPercentageAuto::length(10f32),
+                bottom: taffy::style::LengthPercentageAuto::length(10f32),
             },
             ..Default::default()
         })
@@ -27,8 +27,8 @@ fn absolute_minmax_top_left_bottom_right_min_max() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::length(100f32),
+                    height: taffy::style::Dimension::length(100f32),
                 },
                 ..Default::default()
             },

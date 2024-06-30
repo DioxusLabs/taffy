@@ -6,11 +6,11 @@ fn justify_content_row_min_width_and_margin() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::length(20f32),
+                height: taffy::style::Dimension::length(20f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(10f32),
+                left: taffy::style::LengthPercentageAuto::length(10f32),
                 right: zero(),
                 top: zero(),
                 bottom: zero(),
@@ -22,7 +22,7 @@ fn justify_content_row_min_width_and_margin() {
         .new_with_children(
             taffy::style::Style {
                 justify_content: Some(taffy::style::JustifyContent::Center),
-                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+                min_size: taffy::geometry::Size { width: taffy::style::Dimension::length(50f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

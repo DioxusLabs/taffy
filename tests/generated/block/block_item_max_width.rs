@@ -5,15 +5,15 @@ fn block_item_max_width() {
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(50f32) },
-            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(50f32) },
+            max_size: taffy::geometry::Size { width: taffy::style::Dimension::length(100f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(50f32) },
-            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(300f32), height: auto() },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(50f32) },
+            max_size: taffy::geometry::Size { width: taffy::style::Dimension::length(300f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -22,8 +22,8 @@ fn block_item_max_width() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::length(200f32),
+                    height: taffy::style::Dimension::length(200f32),
                 },
                 ..Default::default()
             },

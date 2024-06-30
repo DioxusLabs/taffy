@@ -10,8 +10,8 @@ fn grid_aspect_ratio_absolute_fill_width_from_inset() {
             inset: taffy::geometry::Rect {
                 left: auto(),
                 right: auto(),
-                top: taffy::style::LengthPercentageAuto::Percent(0.3f32),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.5f32),
+                top: taffy::style::LengthPercentageAuto::percent(0.3f32),
+                bottom: taffy::style::LengthPercentageAuto::percent(0.5f32),
             },
             ..Default::default()
         })
@@ -21,8 +21,8 @@ fn grid_aspect_ratio_absolute_fill_width_from_inset() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(400f32),
-                    height: taffy::style::Dimension::Length(300f32),
+                    width: taffy::style::Dimension::length(400f32),
+                    height: taffy::style::Dimension::length(300f32),
                 },
                 ..Default::default()
             },

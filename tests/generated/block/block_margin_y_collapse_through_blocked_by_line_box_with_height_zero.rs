@@ -6,12 +6,12 @@ fn block_margin_y_collapse_through_blocked_by_line_box_with_height_zero() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(10f32) },
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
                 top: zero(),
-                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
+                bottom: taffy::style::LengthPercentageAuto::length(10f32),
             },
             ..Default::default()
         })
@@ -20,12 +20,12 @@ fn block_margin_y_collapse_through_blocked_by_line_box_with_height_zero() {
         .new_leaf_with_context(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(0f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(0f32) },
                 margin: taffy::geometry::Rect {
                     left: zero(),
                     right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(10f32),
-                    bottom: taffy::style::LengthPercentageAuto::Length(10f32),
+                    top: taffy::style::LengthPercentageAuto::length(10f32),
+                    bottom: taffy::style::LengthPercentageAuto::length(10f32),
                 },
                 ..Default::default()
             },
@@ -39,11 +39,11 @@ fn block_margin_y_collapse_through_blocked_by_line_box_with_height_zero() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(10f32) },
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
+                top: taffy::style::LengthPercentageAuto::length(10f32),
                 bottom: zero(),
             },
             ..Default::default()
@@ -53,7 +53,7 @@ fn block_margin_y_collapse_through_blocked_by_line_box_with_height_zero() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::length(50f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2],

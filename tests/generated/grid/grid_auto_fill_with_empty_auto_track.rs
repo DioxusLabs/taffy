@@ -13,8 +13,8 @@ fn grid_auto_fill_with_empty_auto_track() {
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![repeat(GridTrackRepetition::AutoFill, vec![length(40f32)])],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(120f32),
-                    height: taffy::style::Dimension::Length(120f32),
+                    width: taffy::style::Dimension::length(120f32),
+                    height: taffy::style::Dimension::length(120f32),
                 },
                 ..Default::default()
             },

@@ -12,8 +12,8 @@ fn leaf_overflow_scrollbars_affect_available_space_x_axis() {
                 },
                 scrollbar_width: 15f32,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(45f32),
-                    height: taffy::style::Dimension::Length(45f32),
+                    width: taffy::style::Dimension::length(45f32),
+                    height: taffy::style::Dimension::length(45f32),
                 },
                 ..Default::default()
             },

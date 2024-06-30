@@ -6,7 +6,7 @@ fn overflow_scroll_main_axis_justify_content_end() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::length(200f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -15,8 +15,8 @@ fn overflow_scroll_main_axis_justify_content_end() {
             taffy::style::Style {
                 justify_content: Some(taffy::style::JustifyContent::End),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::length(100f32),
+                    height: taffy::style::Dimension::length(100f32),
                 },
                 ..Default::default()
             },

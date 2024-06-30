@@ -7,8 +7,8 @@ fn block_absolute_no_styles() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::length(50f32),
+                height: taffy::style::Dimension::length(10f32),
             },
             ..Default::default()
         })

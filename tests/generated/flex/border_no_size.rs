@@ -7,10 +7,10 @@ fn border_no_size() {
         .new_leaf(taffy::style::Style {
             flex_direction: taffy::style::FlexDirection::Column,
             border: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Length(10f32),
-                right: taffy::style::LengthPercentage::Length(10f32),
-                top: taffy::style::LengthPercentage::Length(10f32),
-                bottom: taffy::style::LengthPercentage::Length(10f32),
+                left: taffy::style::LengthPercentage::length(10f32),
+                right: taffy::style::LengthPercentage::length(10f32),
+                top: taffy::style::LengthPercentage::length(10f32),
+                bottom: taffy::style::LengthPercentage::length(10f32),
             },
             ..Default::default()
         })

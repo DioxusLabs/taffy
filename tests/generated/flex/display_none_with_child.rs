@@ -7,7 +7,7 @@ fn display_none_with_child() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0f32),
+            flex_basis: taffy::style::Dimension::percent(0f32),
             ..Default::default()
         })
         .unwrap();
@@ -15,8 +15,8 @@ fn display_none_with_child() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0f32),
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
+            flex_basis: taffy::style::Dimension::percent(0f32),
+            size: taffy::geometry::Size { width: taffy::style::Dimension::length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -27,7 +27,7 @@ fn display_none_with_child() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 1f32,
                 flex_shrink: 1f32,
-                flex_basis: taffy::style::Dimension::Percent(0f32),
+                flex_basis: taffy::style::Dimension::percent(0f32),
                 ..Default::default()
             },
             &[node10],
@@ -37,7 +37,7 @@ fn display_none_with_child() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0f32),
+            flex_basis: taffy::style::Dimension::percent(0f32),
             ..Default::default()
         })
         .unwrap();
@@ -45,8 +45,8 @@ fn display_none_with_child() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::length(100f32),
+                    height: taffy::style::Dimension::length(100f32),
                 },
                 ..Default::default()
             },

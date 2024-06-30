@@ -8,10 +8,10 @@ fn block_absolute_aspect_ratio_aspect_ratio_overrides_height_of_full_inset() {
             position: taffy::style::Position::Absolute,
             aspect_ratio: Some(3f32),
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                right: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                top: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.05f32),
+                left: taffy::style::LengthPercentageAuto::percent(0.05f32),
+                right: taffy::style::LengthPercentageAuto::percent(0.05f32),
+                top: taffy::style::LengthPercentageAuto::percent(0.05f32),
+                bottom: taffy::style::LengthPercentageAuto::percent(0.05f32),
             },
             ..Default::default()
         })
@@ -21,8 +21,8 @@ fn block_absolute_aspect_ratio_aspect_ratio_overrides_height_of_full_inset() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(400f32),
-                    height: taffy::style::Dimension::Length(300f32),
+                    width: taffy::style::Dimension::length(400f32),
+                    height: taffy::style::Dimension::length(300f32),
                 },
                 ..Default::default()
             },

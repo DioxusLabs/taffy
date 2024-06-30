@@ -7,8 +7,8 @@ fn block_absolute_child_with_max_height() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(100f32),
-                height: taffy::style::Dimension::Length(150f32),
+                width: taffy::style::Dimension::length(100f32),
+                height: taffy::style::Dimension::length(150f32),
             },
             ..Default::default()
         })
@@ -18,12 +18,12 @@ fn block_absolute_child_with_max_height() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 position: taffy::style::Position::Absolute,
-                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(100f32) },
                 inset: taffy::geometry::Rect {
                     left: auto(),
                     right: auto(),
                     top: auto(),
-                    bottom: taffy::style::LengthPercentageAuto::Length(20f32),
+                    bottom: taffy::style::LengthPercentageAuto::length(20f32),
                 },
                 ..Default::default()
             },
@@ -35,8 +35,8 @@ fn block_absolute_child_with_max_height() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::length(100f32),
+                    height: taffy::style::Dimension::length(200f32),
                 },
                 ..Default::default()
             },

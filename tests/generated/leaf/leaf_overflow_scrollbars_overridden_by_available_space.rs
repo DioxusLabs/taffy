@@ -15,8 +15,8 @@ fn leaf_overflow_scrollbars_overridden_by_available_space() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(2f32),
-                    height: taffy::style::Dimension::Length(4f32),
+                    width: taffy::style::Dimension::length(2f32),
+                    height: taffy::style::Dimension::length(4f32),
                 },
                 ..Default::default()
             },

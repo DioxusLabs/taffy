@@ -9,7 +9,7 @@ fn grid_fr_fixed_size_single_item() {
     let node3 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node4 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::length(100f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -24,8 +24,8 @@ fn grid_fr_fixed_size_single_item() {
                 grid_template_rows: vec![length(40f32), fr(1f32), fr(1f32)],
                 grid_template_columns: vec![length(40f32), fr(1f32), fr(1f32)],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::length(200f32),
+                    height: taffy::style::Dimension::length(200f32),
                 },
                 ..Default::default()
             },

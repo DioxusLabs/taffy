@@ -5,8 +5,8 @@ fn min_width_larger_than_width() {
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(25f32), height: auto() },
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::length(25f32), height: auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -15,8 +15,8 @@ fn min_width_larger_than_width() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::length(100f32),
+                    height: taffy::style::Dimension::length(100f32),
                 },
                 ..Default::default()
             },

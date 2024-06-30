@@ -6,12 +6,12 @@ fn blockflex_margin_y_collapse_through_blocked_by_flex() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(10f32) },
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
                 top: zero(),
-                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
+                bottom: taffy::style::LengthPercentageAuto::length(10f32),
             },
             ..Default::default()
         })
@@ -22,8 +22,8 @@ fn blockflex_margin_y_collapse_through_blocked_by_flex() {
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
+                top: taffy::style::LengthPercentageAuto::length(10f32),
+                bottom: taffy::style::LengthPercentageAuto::length(10f32),
             },
             ..Default::default()
         })
@@ -31,11 +31,11 @@ fn blockflex_margin_y_collapse_through_blocked_by_flex() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(10f32) },
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
+                top: taffy::style::LengthPercentageAuto::length(10f32),
                 bottom: zero(),
             },
             ..Default::default()
@@ -45,7 +45,7 @@ fn blockflex_margin_y_collapse_through_blocked_by_flex() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::length(50f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2],

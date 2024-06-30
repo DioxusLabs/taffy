@@ -7,8 +7,8 @@ fn justify_content_column_end_negative_space_gap() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(0.8f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::percent(0.8f32),
+                height: taffy::style::Dimension::length(20f32),
             },
             ..Default::default()
         })
@@ -17,8 +17,8 @@ fn justify_content_column_end_negative_space_gap() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(0.8f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::percent(0.8f32),
+                height: taffy::style::Dimension::length(20f32),
             },
             ..Default::default()
         })
@@ -27,8 +27,8 @@ fn justify_content_column_end_negative_space_gap() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(0.8f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::percent(0.8f32),
+                height: taffy::style::Dimension::length(20f32),
             },
             ..Default::default()
         })
@@ -41,10 +41,10 @@ fn justify_content_column_end_negative_space_gap() {
                 align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::End),
                 gap: taffy::geometry::Size {
-                    width: taffy::style::LengthPercentage::Length(10f32),
-                    height: taffy::style::LengthPercentage::Length(10f32),
+                    width: taffy::style::LengthPercentage::length(10f32),
+                    height: taffy::style::LengthPercentage::length(10f32),
                 },
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(10f32) },
                 ..Default::default()
             },
             &[node00, node01, node02],
@@ -56,14 +56,14 @@ fn justify_content_column_end_negative_space_gap() {
                 display: taffy::style::Display::Flex,
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(320f32),
-                    height: taffy::style::Dimension::Length(320f32),
+                    width: taffy::style::Dimension::length(320f32),
+                    height: taffy::style::Dimension::length(320f32),
                 },
                 border: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(60f32),
-                    right: taffy::style::LengthPercentage::Length(60f32),
-                    top: taffy::style::LengthPercentage::Length(60f32),
-                    bottom: taffy::style::LengthPercentage::Length(60f32),
+                    left: taffy::style::LengthPercentage::length(60f32),
+                    right: taffy::style::LengthPercentage::length(60f32),
+                    top: taffy::style::LengthPercentage::length(60f32),
+                    bottom: taffy::style::LengthPercentage::length(60f32),
                 },
                 ..Default::default()
             },

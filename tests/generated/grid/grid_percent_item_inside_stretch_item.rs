@@ -6,7 +6,7 @@ fn grid_percent_item_inside_stretch_item() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.5f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::percent(0.5f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -21,8 +21,8 @@ fn grid_percent_item_inside_stretch_item() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::length(100f32),
+                    height: taffy::style::Dimension::length(100f32),
                 },
                 ..Default::default()
             },

@@ -6,7 +6,7 @@ fn percentage_different_width_height_column() {
     let node0 = taffy.new_leaf(taffy::style::Style { flex_grow: 1f32, ..Default::default() }).unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(0.3f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::percent(0.3f32) },
             ..Default::default()
         })
         .unwrap();
@@ -15,8 +15,8 @@ fn percentage_different_width_height_column() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(300f32),
+                    width: taffy::style::Dimension::length(200f32),
+                    height: taffy::style::Dimension::length(300f32),
                 },
                 ..Default::default()
             },

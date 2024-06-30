@@ -5,12 +5,12 @@ fn grid_percent_items_width_and_padding() {
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.5f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::percent(0.5f32), height: auto() },
             padding: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Percent(0.03f32),
-                right: taffy::style::LengthPercentage::Percent(0.03f32),
-                top: taffy::style::LengthPercentage::Percent(0.03f32),
-                bottom: taffy::style::LengthPercentage::Percent(0.03f32),
+                left: taffy::style::LengthPercentage::percent(0.03f32),
+                right: taffy::style::LengthPercentage::percent(0.03f32),
+                top: taffy::style::LengthPercentage::percent(0.03f32),
+                bottom: taffy::style::LengthPercentage::percent(0.03f32),
             },
             ..Default::default()
         })
@@ -19,7 +19,7 @@ fn grid_percent_items_width_and_padding() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::length(200f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

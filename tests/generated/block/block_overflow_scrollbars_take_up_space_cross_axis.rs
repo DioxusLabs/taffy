@@ -7,10 +7,10 @@ fn block_overflow_scrollbars_take_up_space_cross_axis() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(0f32),
-                right: taffy::style::LengthPercentageAuto::Length(0f32),
-                top: taffy::style::LengthPercentageAuto::Length(0f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(0f32),
+                left: taffy::style::LengthPercentageAuto::length(0f32),
+                right: taffy::style::LengthPercentageAuto::length(0f32),
+                top: taffy::style::LengthPercentageAuto::length(0f32),
+                bottom: taffy::style::LengthPercentageAuto::length(0f32),
             },
             ..Default::default()
         })
@@ -25,8 +25,8 @@ fn block_overflow_scrollbars_take_up_space_cross_axis() {
                 },
                 scrollbar_width: 15f32,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Length(50f32),
+                    width: taffy::style::Dimension::length(50f32),
+                    height: taffy::style::Dimension::length(50f32),
                 },
                 ..Default::default()
             },

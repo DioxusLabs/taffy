@@ -8,7 +8,7 @@ fn blockflex_block_in_flex_row() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -17,8 +17,8 @@ fn blockflex_block_in_flex_row() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(50f32),
+                    width: taffy::style::Dimension::length(200f32),
+                    height: taffy::style::Dimension::length(50f32),
                 },
                 ..Default::default()
             },

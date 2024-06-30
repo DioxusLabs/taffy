@@ -6,14 +6,14 @@ fn percentage_position_bottom_right() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(0.55f32),
-                height: taffy::style::Dimension::Percent(0.15f32),
+                width: taffy::style::Dimension::percent(0.55f32),
+                height: taffy::style::Dimension::percent(0.15f32),
             },
             inset: taffy::geometry::Rect {
                 left: auto(),
-                right: taffy::style::LengthPercentageAuto::Percent(0.2f32),
+                right: taffy::style::LengthPercentageAuto::percent(0.2f32),
                 top: auto(),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.1f32),
+                bottom: taffy::style::LengthPercentageAuto::percent(0.1f32),
             },
             ..Default::default()
         })
@@ -22,8 +22,8 @@ fn percentage_position_bottom_right() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(500f32),
-                    height: taffy::style::Dimension::Length(500f32),
+                    width: taffy::style::Dimension::length(500f32),
+                    height: taffy::style::Dimension::length(500f32),
                 },
                 ..Default::default()
             },

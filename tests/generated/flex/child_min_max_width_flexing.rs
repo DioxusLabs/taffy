@@ -7,8 +7,8 @@ fn child_min_max_width_flexing() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 0f32,
-            flex_basis: taffy::style::Dimension::Length(0f32),
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+            flex_basis: taffy::style::Dimension::length(0f32),
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::length(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -16,8 +16,8 @@ fn child_min_max_width_flexing() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 0f32,
-            flex_basis: taffy::style::Dimension::Percent(0.5f32),
-            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
+            flex_basis: taffy::style::Dimension::percent(0.5f32),
+            max_size: taffy::geometry::Size { width: taffy::style::Dimension::length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -26,8 +26,8 @@ fn child_min_max_width_flexing() {
             taffy::style::Style {
                 align_items: Some(taffy::style::AlignItems::Stretch),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(120f32),
-                    height: taffy::style::Dimension::Length(50f32),
+                    width: taffy::style::Dimension::length(120f32),
+                    height: taffy::style::Dimension::length(50f32),
                 },
                 ..Default::default()
             },

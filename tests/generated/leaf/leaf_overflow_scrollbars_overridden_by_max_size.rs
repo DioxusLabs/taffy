@@ -8,8 +8,8 @@ fn leaf_overflow_scrollbars_overridden_by_max_size() {
             overflow: taffy::geometry::Point { x: taffy::style::Overflow::Scroll, y: taffy::style::Overflow::Scroll },
             scrollbar_width: 15f32,
             max_size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(2f32),
-                height: taffy::style::Dimension::Length(4f32),
+                width: taffy::style::Dimension::length(2f32),
+                height: taffy::style::Dimension::length(4f32),
             },
             ..Default::default()
         })

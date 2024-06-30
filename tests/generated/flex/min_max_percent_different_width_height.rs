@@ -7,12 +7,12 @@ fn min_max_percent_different_width_height() {
         .new_leaf_with_context(
             taffy::style::Style {
                 min_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(0.1f32),
-                    height: taffy::style::Dimension::Percent(0.1f32),
+                    width: taffy::style::Dimension::percent(0.1f32),
+                    height: taffy::style::Dimension::percent(0.1f32),
                 },
                 max_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(0.1f32),
-                    height: taffy::style::Dimension::Percent(0.1f32),
+                    width: taffy::style::Dimension::percent(0.1f32),
+                    height: taffy::style::Dimension::percent(0.1f32),
                 },
                 ..Default::default()
             },
@@ -25,8 +25,8 @@ fn min_max_percent_different_width_height() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_items: Some(taffy::style::AlignItems::FlexStart),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::length(100f32),
+                    height: taffy::style::Dimension::length(200f32),
                 },
                 ..Default::default()
             },

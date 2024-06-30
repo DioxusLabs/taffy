@@ -5,10 +5,10 @@ fn block_margin_x_percentage_fixed_size_positive() {
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(10f32) },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Percent(0.2f32),
-                right: taffy::style::LengthPercentageAuto::Percent(0.1f32),
+                left: taffy::style::LengthPercentageAuto::percent(0.2f32),
+                right: taffy::style::LengthPercentageAuto::percent(0.1f32),
                 top: zero(),
                 bottom: zero(),
             },
@@ -17,7 +17,7 @@ fn block_margin_x_percentage_fixed_size_positive() {
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -25,7 +25,7 @@ fn block_margin_x_percentage_fixed_size_positive() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::length(50f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1],
