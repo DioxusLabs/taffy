@@ -5,11 +5,11 @@ fn block_inset_percentage() {
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(10f32) },
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Percent(0.02f32),
+                left: taffy::style::LengthPercentageAuto::percent(0.02f32),
                 right: auto(),
-                top: taffy::style::LengthPercentageAuto::Percent(0.04f32),
+                top: taffy::style::LengthPercentageAuto::percent(0.04f32),
                 bottom: auto(),
             },
             ..Default::default()
@@ -17,24 +17,24 @@ fn block_inset_percentage() {
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(10f32) },
             inset: taffy::geometry::Rect {
                 left: auto(),
-                right: taffy::style::LengthPercentageAuto::Percent(0.06f32),
+                right: taffy::style::LengthPercentageAuto::percent(0.06f32),
                 top: auto(),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.08f32),
+                bottom: taffy::style::LengthPercentageAuto::percent(0.08f32),
             },
             ..Default::default()
         })
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(10f32) },
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Percent(0.02f32),
-                right: taffy::style::LengthPercentageAuto::Percent(0.06f32),
-                top: taffy::style::LengthPercentageAuto::Percent(0.04f32),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.08f32),
+                left: taffy::style::LengthPercentageAuto::percent(0.02f32),
+                right: taffy::style::LengthPercentageAuto::percent(0.06f32),
+                top: taffy::style::LengthPercentageAuto::percent(0.04f32),
+                bottom: taffy::style::LengthPercentageAuto::percent(0.08f32),
             },
             ..Default::default()
         })
@@ -43,7 +43,7 @@ fn block_inset_percentage() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::length(50f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2],

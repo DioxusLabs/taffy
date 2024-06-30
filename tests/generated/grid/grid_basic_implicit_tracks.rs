@@ -7,8 +7,8 @@ fn grid_basic_implicit_tracks() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(35f32),
-                height: taffy::style::Dimension::Length(35f32),
+                width: taffy::style::Dimension::length(35f32),
+                height: taffy::style::Dimension::length(35f32),
             },
             ..Default::default()
         })

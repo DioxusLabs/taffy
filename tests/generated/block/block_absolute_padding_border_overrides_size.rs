@@ -8,20 +8,20 @@ fn block_absolute_padding_border_overrides_size() {
             display: taffy::style::Display::Block,
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(12f32),
-                height: taffy::style::Dimension::Length(12f32),
+                width: taffy::style::Dimension::length(12f32),
+                height: taffy::style::Dimension::length(12f32),
             },
             padding: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Length(8f32),
-                right: taffy::style::LengthPercentage::Length(4f32),
-                top: taffy::style::LengthPercentage::Length(2f32),
-                bottom: taffy::style::LengthPercentage::Length(6f32),
+                left: taffy::style::LengthPercentage::length(8f32),
+                right: taffy::style::LengthPercentage::length(4f32),
+                top: taffy::style::LengthPercentage::length(2f32),
+                bottom: taffy::style::LengthPercentage::length(6f32),
             },
             border: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Length(7f32),
-                right: taffy::style::LengthPercentage::Length(3f32),
-                top: taffy::style::LengthPercentage::Length(1f32),
-                bottom: taffy::style::LengthPercentage::Length(5f32),
+                left: taffy::style::LengthPercentage::length(7f32),
+                right: taffy::style::LengthPercentage::length(3f32),
+                top: taffy::style::LengthPercentage::length(1f32),
+                bottom: taffy::style::LengthPercentage::length(5f32),
             },
             ..Default::default()
         })

@@ -19,14 +19,14 @@ fn grid_justify_content_space_between_negative_space_gap() {
                 align_content: Some(taffy::style::AlignContent::Center),
                 justify_content: Some(taffy::style::JustifyContent::SpaceBetween),
                 gap: taffy::geometry::Size {
-                    width: taffy::style::LengthPercentage::Length(10f32),
-                    height: taffy::style::LengthPercentage::Length(10f32),
+                    width: taffy::style::LengthPercentage::length(10f32),
+                    height: taffy::style::LengthPercentage::length(10f32),
                 },
                 grid_template_rows: vec![length(20f32), length(20f32), length(20f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(120f32),
-                    height: taffy::style::Dimension::Length(120f32),
+                    width: taffy::style::Dimension::length(120f32),
+                    height: taffy::style::Dimension::length(120f32),
                 },
                 ..Default::default()
             },
@@ -38,14 +38,14 @@ fn grid_justify_content_space_between_negative_space_gap() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(240f32),
-                    height: taffy::style::Dimension::Length(240f32),
+                    width: taffy::style::Dimension::length(240f32),
+                    height: taffy::style::Dimension::length(240f32),
                 },
                 border: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(60f32),
-                    right: taffy::style::LengthPercentage::Length(60f32),
-                    top: taffy::style::LengthPercentage::Length(60f32),
-                    bottom: taffy::style::LengthPercentage::Length(60f32),
+                    left: taffy::style::LengthPercentage::length(60f32),
+                    right: taffy::style::LengthPercentage::length(60f32),
+                    top: taffy::style::LengthPercentage::length(60f32),
+                    bottom: taffy::style::LengthPercentage::length(60f32),
                 },
                 ..Default::default()
             },

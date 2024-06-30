@@ -19,10 +19,10 @@ fn grid_basic_with_padding() {
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(40f32),
-                    right: taffy::style::LengthPercentage::Length(20f32),
-                    top: taffy::style::LengthPercentage::Length(10f32),
-                    bottom: taffy::style::LengthPercentage::Length(30f32),
+                    left: taffy::style::LengthPercentage::length(40f32),
+                    right: taffy::style::LengthPercentage::length(20f32),
+                    top: taffy::style::LengthPercentage::length(10f32),
+                    bottom: taffy::style::LengthPercentage::length(30f32),
                 },
                 ..Default::default()
             },

@@ -8,12 +8,12 @@ fn grid_margins_auto_margins() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             justify_self: Some(taffy::style::JustifySelf::Start),
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::length(20f32), height: auto() },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Auto,
-                right: taffy::style::LengthPercentageAuto::Auto,
-                top: taffy::style::LengthPercentageAuto::Length(0f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(0f32),
+                left: taffy::style::LengthPercentageAuto::auto(),
+                right: taffy::style::LengthPercentageAuto::auto(),
+                top: taffy::style::LengthPercentageAuto::length(0f32),
+                bottom: taffy::style::LengthPercentageAuto::length(0f32),
             },
             ..Default::default()
         })
@@ -22,12 +22,12 @@ fn grid_margins_auto_margins() {
     let node4 = taffy
         .new_leaf(taffy::style::Style {
             align_self: Some(taffy::style::AlignSelf::Start),
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(20f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(20f32) },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(0f32),
-                right: taffy::style::LengthPercentageAuto::Length(0f32),
-                top: taffy::style::LengthPercentageAuto::Auto,
-                bottom: taffy::style::LengthPercentageAuto::Auto,
+                left: taffy::style::LengthPercentageAuto::length(0f32),
+                right: taffy::style::LengthPercentageAuto::length(0f32),
+                top: taffy::style::LengthPercentageAuto::auto(),
+                bottom: taffy::style::LengthPercentageAuto::auto(),
             },
             ..Default::default()
         })
@@ -38,14 +38,14 @@ fn grid_margins_auto_margins() {
             align_self: Some(taffy::style::AlignSelf::Start),
             justify_self: Some(taffy::style::JustifySelf::Start),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::length(20f32),
+                height: taffy::style::Dimension::length(20f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Auto,
-                right: taffy::style::LengthPercentageAuto::Auto,
-                top: taffy::style::LengthPercentageAuto::Auto,
-                bottom: taffy::style::LengthPercentageAuto::Auto,
+                left: taffy::style::LengthPercentageAuto::auto(),
+                right: taffy::style::LengthPercentageAuto::auto(),
+                top: taffy::style::LengthPercentageAuto::auto(),
+                bottom: taffy::style::LengthPercentageAuto::auto(),
             },
             ..Default::default()
         })
@@ -59,10 +59,10 @@ fn grid_margins_auto_margins() {
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(40f32),
-                    right: taffy::style::LengthPercentage::Length(20f32),
-                    top: taffy::style::LengthPercentage::Length(10f32),
-                    bottom: taffy::style::LengthPercentage::Length(30f32),
+                    left: taffy::style::LengthPercentage::length(40f32),
+                    right: taffy::style::LengthPercentage::length(20f32),
+                    top: taffy::style::LengthPercentage::length(10f32),
+                    bottom: taffy::style::LengthPercentage::length(30f32),
                 },
                 ..Default::default()
             },

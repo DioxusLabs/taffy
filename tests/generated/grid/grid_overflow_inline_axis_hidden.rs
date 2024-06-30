@@ -25,8 +25,8 @@ fn grid_overflow_inline_axis_hidden() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Length(50f32),
+                    width: taffy::style::Dimension::length(50f32),
+                    height: taffy::style::Dimension::length(50f32),
                 },
                 ..Default::default()
             },

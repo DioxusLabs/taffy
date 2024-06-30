@@ -5,8 +5,8 @@ fn flex_basis_unconstraint_row() {
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            flex_basis: taffy::style::Dimension::Length(50f32),
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+            flex_basis: taffy::style::Dimension::length(50f32),
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(100f32) },
             ..Default::default()
         })
         .unwrap();

@@ -8,8 +8,8 @@ fn grid_justify_items_sized_start() {
             grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::length(20f32),
+                height: taffy::style::Dimension::length(20f32),
             },
             ..Default::default()
         })
@@ -19,8 +19,8 @@ fn grid_justify_items_sized_start() {
             grid_row: taffy::geometry::Line { start: line(3i16), end: taffy::style::GridPlacement::Auto },
             grid_column: taffy::geometry::Line { start: line(3i16), end: taffy::style::GridPlacement::Auto },
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(60f32),
-                height: taffy::style::Dimension::Length(60f32),
+                width: taffy::style::Dimension::length(60f32),
+                height: taffy::style::Dimension::length(60f32),
             },
             ..Default::default()
         })
@@ -33,8 +33,8 @@ fn grid_justify_items_sized_start() {
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(120f32),
-                    height: taffy::style::Dimension::Length(120f32),
+                    width: taffy::style::Dimension::length(120f32),
+                    height: taffy::style::Dimension::length(120f32),
                 },
                 ..Default::default()
             },

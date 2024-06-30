@@ -8,8 +8,8 @@ fn grid_absolute_with_padding() {
             position: taffy::style::Position::Absolute,
             inset: taffy::geometry::Rect {
                 left: auto(),
-                right: taffy::style::LengthPercentageAuto::Length(0f32),
-                top: taffy::style::LengthPercentageAuto::Length(0f32),
+                right: taffy::style::LengthPercentageAuto::length(0f32),
+                top: taffy::style::LengthPercentageAuto::length(0f32),
                 bottom: auto(),
             },
             ..Default::default()
@@ -19,10 +19,10 @@ fn grid_absolute_with_padding() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(10f32),
+                left: taffy::style::LengthPercentageAuto::length(10f32),
                 right: auto(),
                 top: auto(),
-                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
+                bottom: taffy::style::LengthPercentageAuto::length(10f32),
             },
             ..Default::default()
         })
@@ -41,10 +41,10 @@ fn grid_absolute_with_padding() {
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(40f32),
-                    right: taffy::style::LengthPercentage::Length(20f32),
-                    top: taffy::style::LengthPercentage::Length(10f32),
-                    bottom: taffy::style::LengthPercentage::Length(30f32),
+                    left: taffy::style::LengthPercentage::length(40f32),
+                    right: taffy::style::LengthPercentage::length(20f32),
+                    top: taffy::style::LengthPercentage::length(10f32),
+                    bottom: taffy::style::LengthPercentage::length(30f32),
                 },
                 ..Default::default()
             },

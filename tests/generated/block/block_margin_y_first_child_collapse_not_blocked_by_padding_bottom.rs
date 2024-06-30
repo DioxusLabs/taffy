@@ -5,7 +5,7 @@ fn block_margin_y_first_child_collapse_not_blocked_by_padding_bottom() {
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node000 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -16,7 +16,7 @@ fn block_margin_y_first_child_collapse_not_blocked_by_padding_bottom() {
                 margin: taffy::geometry::Rect {
                     left: zero(),
                     right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(10f32),
+                    top: taffy::style::LengthPercentageAuto::length(10f32),
                     bottom: zero(),
                 },
                 ..Default::default()
@@ -31,14 +31,14 @@ fn block_margin_y_first_child_collapse_not_blocked_by_padding_bottom() {
                 margin: taffy::geometry::Rect {
                     left: zero(),
                     right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(10f32),
+                    top: taffy::style::LengthPercentageAuto::length(10f32),
                     bottom: zero(),
                 },
                 padding: taffy::geometry::Rect {
                     left: zero(),
                     right: zero(),
                     top: zero(),
-                    bottom: taffy::style::LengthPercentage::Length(1f32),
+                    bottom: taffy::style::LengthPercentage::length(1f32),
                 },
                 ..Default::default()
             },
@@ -49,7 +49,7 @@ fn block_margin_y_first_child_collapse_not_blocked_by_padding_bottom() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::length(50f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

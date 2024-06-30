@@ -6,22 +6,22 @@ fn percentage_size_of_flex_basis() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(1f32),
-                height: taffy::style::Dimension::Length(100f32),
+                width: taffy::style::Dimension::percent(1f32),
+                height: taffy::style::Dimension::length(100f32),
             },
             ..Default::default()
         })
         .unwrap();
     let node0 = taffy
         .new_with_children(
-            taffy::style::Style { flex_basis: taffy::style::Dimension::Length(50f32), ..Default::default() },
+            taffy::style::Style { flex_basis: taffy::style::Dimension::length(50f32), ..Default::default() },
             &[node00],
         )
         .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::length(100f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

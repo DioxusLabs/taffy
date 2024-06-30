@@ -7,8 +7,8 @@ fn gap_column_gap_start_index() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::length(20f32),
+                height: taffy::style::Dimension::length(20f32),
             },
             ..Default::default()
         })
@@ -16,8 +16,8 @@ fn gap_column_gap_start_index() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::length(20f32),
+                height: taffy::style::Dimension::length(20f32),
             },
             ..Default::default()
         })
@@ -25,8 +25,8 @@ fn gap_column_gap_start_index() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::length(20f32),
+                height: taffy::style::Dimension::length(20f32),
             },
             ..Default::default()
         })
@@ -34,8 +34,8 @@ fn gap_column_gap_start_index() {
     let node3 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::length(20f32),
+                height: taffy::style::Dimension::length(20f32),
             },
             ..Default::default()
         })
@@ -45,10 +45,10 @@ fn gap_column_gap_start_index() {
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 gap: taffy::geometry::Size {
-                    width: taffy::style::LengthPercentage::Length(10f32),
-                    height: taffy::style::LengthPercentage::Length(20f32),
+                    width: taffy::style::LengthPercentage::length(10f32),
+                    height: taffy::style::LengthPercentage::length(20f32),
                 },
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(80f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::length(80f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2, node3],

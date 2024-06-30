@@ -9,13 +9,13 @@ fn content_size() {
                 position: taffy::style::Position::Absolute,
                 flex_shrink: 0f32,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(1f32),
-                    height: taffy::style::Dimension::Length(20f32),
+                    width: taffy::style::Dimension::percent(1f32),
+                    height: taffy::style::Dimension::length(20f32),
                 },
                 inset: taffy::geometry::Rect {
                     left: auto(),
                     right: auto(),
-                    top: taffy::style::LengthPercentageAuto::Length(-10f32),
+                    top: taffy::style::LengthPercentageAuto::length(-10f32),
                     bottom: auto(),
                 },
                 ..Default::default()
@@ -30,7 +30,7 @@ fn content_size() {
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(30f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(30f32) },
                 ..Default::default()
             },
             &[node00],
@@ -47,8 +47,8 @@ fn content_size() {
                 },
                 scrollbar_width: 15f32,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::length(100f32),
+                    height: taffy::style::Dimension::length(100f32),
                 },
                 ..Default::default()
             },

@@ -6,12 +6,12 @@ fn margin_auto_left_fix_right_child_bigger_than_parent() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(72f32),
-                height: taffy::style::Dimension::Length(72f32),
+                width: taffy::style::Dimension::length(72f32),
+                height: taffy::style::Dimension::length(72f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Auto,
-                right: taffy::style::LengthPercentageAuto::Length(10f32),
+                left: taffy::style::LengthPercentageAuto::auto(),
+                right: taffy::style::LengthPercentageAuto::length(10f32),
                 top: zero(),
                 bottom: zero(),
             },
@@ -23,8 +23,8 @@ fn margin_auto_left_fix_right_child_bigger_than_parent() {
             taffy::style::Style {
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(52f32),
-                    height: taffy::style::Dimension::Length(52f32),
+                    width: taffy::style::Dimension::length(52f32),
+                    height: taffy::style::Dimension::length(52f32),
                 },
                 ..Default::default()
             },

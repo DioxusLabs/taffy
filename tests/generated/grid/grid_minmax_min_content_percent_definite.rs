@@ -19,7 +19,7 @@ fn grid_minmax_min_content_percent_definite() {
                 display: taffy::style::Display::Grid,
                 grid_template_rows: vec![length(40f32)],
                 grid_template_columns: vec![minmax(min_content(), percent(0.2f32))],
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::length(100f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

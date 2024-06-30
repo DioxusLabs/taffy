@@ -6,7 +6,7 @@ fn measure_stretch_overrides_measure() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            flex_basis: taffy::style::Dimension::Length(5f32),
+            flex_basis: taffy::style::Dimension::length(5f32),
             ..Default::default()
         })
         .unwrap();
@@ -14,7 +14,7 @@ fn measure_stretch_overrides_measure() {
         .new_leaf_with_context(
             taffy::style::Style {
                 flex_grow: 1f32,
-                flex_basis: taffy::style::Dimension::Length(5f32),
+                flex_basis: taffy::style::Dimension::length(5f32),
                 ..Default::default()
             },
             crate::TextMeasure { text_content: "H", writing_mode: crate::WritingMode::Horizontal, _aspect_ratio: None },
@@ -24,8 +24,8 @@ fn measure_stretch_overrides_measure() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(20f32),
-                    height: taffy::style::Dimension::Length(10f32),
+                    width: taffy::style::Dimension::length(20f32),
+                    height: taffy::style::Dimension::length(10f32),
                 },
                 ..Default::default()
             },

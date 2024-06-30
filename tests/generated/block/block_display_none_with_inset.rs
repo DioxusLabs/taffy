@@ -5,18 +5,18 @@ fn block_display_none_with_inset() {
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(10f32) },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::None,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(10f32) },
             inset: taffy::geometry::Rect {
                 left: auto(),
                 right: auto(),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
+                top: taffy::style::LengthPercentageAuto::length(10f32),
                 bottom: auto(),
             },
             ..Default::default()
@@ -27,8 +27,8 @@ fn block_display_none_with_inset() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::length(100f32),
+                    height: taffy::style::Dimension::length(100f32),
                 },
                 ..Default::default()
             },

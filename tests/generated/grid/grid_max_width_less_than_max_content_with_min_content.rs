@@ -28,7 +28,7 @@ fn grid_max_width_less_than_max_content_with_min_content() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 grid_template_columns: vec![auto(), auto()],
-                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(80f32), height: auto() },
+                max_size: taffy::geometry::Size { width: taffy::style::Dimension::length(80f32), height: auto() },
                 ..Default::default()
             },
             &[node00, node01],

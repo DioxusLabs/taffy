@@ -6,8 +6,8 @@ fn bevy_issue_8017() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(1f32),
-                height: taffy::style::Dimension::Percent(1f32),
+                width: taffy::style::Dimension::percent(1f32),
+                height: taffy::style::Dimension::percent(1f32),
             },
             ..Default::default()
         })
@@ -15,8 +15,8 @@ fn bevy_issue_8017() {
     let node01 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(1f32),
-                height: taffy::style::Dimension::Percent(1f32),
+                width: taffy::style::Dimension::percent(1f32),
+                height: taffy::style::Dimension::percent(1f32),
             },
             ..Default::default()
         })
@@ -26,12 +26,12 @@ fn bevy_issue_8017() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 gap: taffy::geometry::Size {
-                    width: taffy::style::LengthPercentage::Length(8f32),
-                    height: taffy::style::LengthPercentage::Length(8f32),
+                    width: taffy::style::LengthPercentage::length(8f32),
+                    height: taffy::style::LengthPercentage::length(8f32),
                 },
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(1f32),
-                    height: taffy::style::Dimension::Percent(0.5f32),
+                    width: taffy::style::Dimension::percent(1f32),
+                    height: taffy::style::Dimension::percent(0.5f32),
                 },
                 ..Default::default()
             },
@@ -41,8 +41,8 @@ fn bevy_issue_8017() {
     let node10 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(1f32),
-                height: taffy::style::Dimension::Percent(1f32),
+                width: taffy::style::Dimension::percent(1f32),
+                height: taffy::style::Dimension::percent(1f32),
             },
             ..Default::default()
         })
@@ -50,8 +50,8 @@ fn bevy_issue_8017() {
     let node11 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(1f32),
-                height: taffy::style::Dimension::Percent(1f32),
+                width: taffy::style::Dimension::percent(1f32),
+                height: taffy::style::Dimension::percent(1f32),
             },
             ..Default::default()
         })
@@ -61,12 +61,12 @@ fn bevy_issue_8017() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 gap: taffy::geometry::Size {
-                    width: taffy::style::LengthPercentage::Length(8f32),
-                    height: taffy::style::LengthPercentage::Length(8f32),
+                    width: taffy::style::LengthPercentage::length(8f32),
+                    height: taffy::style::LengthPercentage::length(8f32),
                 },
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(1f32),
-                    height: taffy::style::Dimension::Percent(0.5f32),
+                    width: taffy::style::Dimension::percent(1f32),
+                    height: taffy::style::Dimension::percent(0.5f32),
                 },
                 ..Default::default()
             },
@@ -79,18 +79,18 @@ fn bevy_issue_8017() {
                 display: taffy::style::Display::Flex,
                 flex_direction: taffy::style::FlexDirection::Column,
                 gap: taffy::geometry::Size {
-                    width: taffy::style::LengthPercentage::Length(8f32),
-                    height: taffy::style::LengthPercentage::Length(8f32),
+                    width: taffy::style::LengthPercentage::length(8f32),
+                    height: taffy::style::LengthPercentage::length(8f32),
                 },
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(400f32),
-                    height: taffy::style::Dimension::Length(400f32),
+                    width: taffy::style::Dimension::length(400f32),
+                    height: taffy::style::Dimension::length(400f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(8f32),
-                    right: taffy::style::LengthPercentage::Length(8f32),
-                    top: taffy::style::LengthPercentage::Length(8f32),
-                    bottom: taffy::style::LengthPercentage::Length(8f32),
+                    left: taffy::style::LengthPercentage::length(8f32),
+                    right: taffy::style::LengthPercentage::length(8f32),
+                    top: taffy::style::LengthPercentage::length(8f32),
+                    bottom: taffy::style::LengthPercentage::length(8f32),
                 },
                 ..Default::default()
             },

@@ -7,10 +7,10 @@ fn leaf_with_content_and_border() {
         .new_leaf_with_context(
             taffy::style::Style {
                 border: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(8f32),
-                    right: taffy::style::LengthPercentage::Length(4f32),
-                    top: taffy::style::LengthPercentage::Length(2f32),
-                    bottom: taffy::style::LengthPercentage::Length(6f32),
+                    left: taffy::style::LengthPercentage::length(8f32),
+                    right: taffy::style::LengthPercentage::length(4f32),
+                    top: taffy::style::LengthPercentage::length(2f32),
+                    bottom: taffy::style::LengthPercentage::length(6f32),
                 },
                 ..Default::default()
             },

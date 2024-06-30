@@ -6,13 +6,13 @@ fn absolute_aspect_ratio_height_overrides_inset() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(0.1f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::percent(0.1f32) },
             aspect_ratio: Some(3f32),
             inset: taffy::geometry::Rect {
                 left: auto(),
                 right: auto(),
-                top: taffy::style::LengthPercentageAuto::Percent(0.3f32),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.5f32),
+                top: taffy::style::LengthPercentageAuto::percent(0.3f32),
+                bottom: taffy::style::LengthPercentageAuto::percent(0.5f32),
             },
             ..Default::default()
         })
@@ -22,8 +22,8 @@ fn absolute_aspect_ratio_height_overrides_inset() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(400f32),
-                    height: taffy::style::Dimension::Length(300f32),
+                    width: taffy::style::Dimension::length(400f32),
+                    height: taffy::style::Dimension::length(300f32),
                 },
                 ..Default::default()
             },

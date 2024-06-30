@@ -7,7 +7,7 @@ fn block_aspect_ratio_fill_max_width() {
         .new_leaf_with_context(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(20f32) },
+                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(20f32) },
                 aspect_ratio: Some(2f32),
                 ..Default::default()
             },
@@ -23,8 +23,8 @@ fn block_aspect_ratio_fill_max_width() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::length(100f32),
+                    height: taffy::style::Dimension::length(100f32),
                 },
                 ..Default::default()
             },

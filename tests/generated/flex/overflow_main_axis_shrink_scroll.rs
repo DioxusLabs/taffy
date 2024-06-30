@@ -25,8 +25,8 @@ fn overflow_main_axis_shrink_scroll() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Length(50f32),
+                    width: taffy::style::Dimension::length(50f32),
+                    height: taffy::style::Dimension::length(50f32),
                 },
                 ..Default::default()
             },

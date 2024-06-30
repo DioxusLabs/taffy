@@ -7,14 +7,14 @@ fn block_align_baseline_child_margin_percent() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::length(50f32),
+                height: taffy::style::Dimension::length(50f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                right: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                top: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.05f32),
+                left: taffy::style::LengthPercentageAuto::percent(0.05f32),
+                right: taffy::style::LengthPercentageAuto::percent(0.05f32),
+                top: taffy::style::LengthPercentageAuto::percent(0.05f32),
+                bottom: taffy::style::LengthPercentageAuto::percent(0.05f32),
             },
             ..Default::default()
         })
@@ -23,14 +23,14 @@ fn block_align_baseline_child_margin_percent() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::length(50f32),
+                height: taffy::style::Dimension::length(10f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Percent(0.01f32),
-                right: taffy::style::LengthPercentageAuto::Percent(0.01f32),
-                top: taffy::style::LengthPercentageAuto::Percent(0.01f32),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.01f32),
+                left: taffy::style::LengthPercentageAuto::percent(0.01f32),
+                right: taffy::style::LengthPercentageAuto::percent(0.01f32),
+                top: taffy::style::LengthPercentageAuto::percent(0.01f32),
+                bottom: taffy::style::LengthPercentageAuto::percent(0.01f32),
             },
             ..Default::default()
         })
@@ -40,8 +40,8 @@ fn block_align_baseline_child_margin_percent() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Length(20f32),
+                    width: taffy::style::Dimension::length(50f32),
+                    height: taffy::style::Dimension::length(20f32),
                 },
                 ..Default::default()
             },
@@ -53,8 +53,8 @@ fn block_align_baseline_child_margin_percent() {
             taffy::style::Style {
                 align_items: Some(taffy::style::AlignItems::Baseline),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::length(100f32),
+                    height: taffy::style::Dimension::length(100f32),
                 },
                 ..Default::default()
             },

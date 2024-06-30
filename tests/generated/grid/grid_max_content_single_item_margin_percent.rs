@@ -8,10 +8,10 @@ fn grid_max_content_single_item_margin_percent() {
         .new_leaf_with_context(
             taffy::style::Style {
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Percent(0.2f32),
-                    right: taffy::style::LengthPercentageAuto::Percent(0.1f32),
-                    top: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                    bottom: taffy::style::LengthPercentageAuto::Percent(0.15f32),
+                    left: taffy::style::LengthPercentageAuto::percent(0.2f32),
+                    right: taffy::style::LengthPercentageAuto::percent(0.1f32),
+                    top: taffy::style::LengthPercentageAuto::percent(0.05f32),
+                    bottom: taffy::style::LengthPercentageAuto::percent(0.15f32),
                 },
                 ..Default::default()
             },

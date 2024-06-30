@@ -5,10 +5,10 @@ fn block_margin_x_intrinsic_size_negative() {
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(10f32) },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(-10f32),
-                right: taffy::style::LengthPercentageAuto::Length(-5f32),
+                left: taffy::style::LengthPercentageAuto::length(-10f32),
+                right: taffy::style::LengthPercentageAuto::length(-5f32),
                 top: zero(),
                 bottom: zero(),
             },
@@ -17,7 +17,7 @@ fn block_margin_x_intrinsic_size_negative() {
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(10f32) },
             ..Default::default()
         })
         .unwrap();

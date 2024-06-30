@@ -6,8 +6,8 @@ fn percentage_container_in_wrapping_container() {
     let node000 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::length(50f32),
+                height: taffy::style::Dimension::length(50f32),
             },
             ..Default::default()
         })
@@ -15,8 +15,8 @@ fn percentage_container_in_wrapping_container() {
     let node001 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::length(50f32),
+                height: taffy::style::Dimension::length(50f32),
             },
             ..Default::default()
         })
@@ -25,7 +25,7 @@ fn percentage_container_in_wrapping_container() {
         .new_with_children(
             taffy::style::Style {
                 justify_content: Some(taffy::style::JustifyContent::Center),
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::percent(1f32), height: auto() },
                 ..Default::default()
             },
             &[node000, node001],
@@ -44,8 +44,8 @@ fn percentage_container_in_wrapping_container() {
                 align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::length(200f32),
+                    height: taffy::style::Dimension::length(200f32),
                 },
                 ..Default::default()
             },

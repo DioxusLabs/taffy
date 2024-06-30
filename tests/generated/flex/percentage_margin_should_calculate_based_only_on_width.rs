@@ -6,8 +6,8 @@ fn percentage_margin_should_calculate_based_only_on_width() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::length(10f32),
+                height: taffy::style::Dimension::length(10f32),
             },
             ..Default::default()
         })
@@ -18,10 +18,10 @@ fn percentage_margin_should_calculate_based_only_on_width() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 1f32,
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Percent(0.1f32),
-                    right: taffy::style::LengthPercentageAuto::Percent(0.1f32),
-                    top: taffy::style::LengthPercentageAuto::Percent(0.1f32),
-                    bottom: taffy::style::LengthPercentageAuto::Percent(0.1f32),
+                    left: taffy::style::LengthPercentageAuto::percent(0.1f32),
+                    right: taffy::style::LengthPercentageAuto::percent(0.1f32),
+                    top: taffy::style::LengthPercentageAuto::percent(0.1f32),
+                    bottom: taffy::style::LengthPercentageAuto::percent(0.1f32),
                 },
                 ..Default::default()
             },
@@ -33,8 +33,8 @@ fn percentage_margin_should_calculate_based_only_on_width() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::length(200f32),
+                    height: taffy::style::Dimension::length(100f32),
                 },
                 ..Default::default()
             },

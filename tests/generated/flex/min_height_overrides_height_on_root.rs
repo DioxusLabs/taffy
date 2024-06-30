@@ -5,8 +5,8 @@ fn min_height_overrides_height_on_root() {
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(50f32) },
-            min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(50f32) },
+            min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(100f32) },
             ..Default::default()
         })
         .unwrap();

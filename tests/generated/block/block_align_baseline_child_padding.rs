@@ -7,8 +7,8 @@ fn block_align_baseline_child_padding() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::length(50f32),
+                height: taffy::style::Dimension::length(50f32),
             },
             ..Default::default()
         })
@@ -17,8 +17,8 @@ fn block_align_baseline_child_padding() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::length(50f32),
+                height: taffy::style::Dimension::length(10f32),
             },
             ..Default::default()
         })
@@ -28,14 +28,14 @@ fn block_align_baseline_child_padding() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Length(20f32),
+                    width: taffy::style::Dimension::length(50f32),
+                    height: taffy::style::Dimension::length(20f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(5f32),
-                    right: taffy::style::LengthPercentage::Length(5f32),
-                    top: taffy::style::LengthPercentage::Length(5f32),
-                    bottom: taffy::style::LengthPercentage::Length(5f32),
+                    left: taffy::style::LengthPercentage::length(5f32),
+                    right: taffy::style::LengthPercentage::length(5f32),
+                    top: taffy::style::LengthPercentage::length(5f32),
+                    bottom: taffy::style::LengthPercentage::length(5f32),
                 },
                 ..Default::default()
             },
@@ -47,14 +47,14 @@ fn block_align_baseline_child_padding() {
             taffy::style::Style {
                 align_items: Some(taffy::style::AlignItems::Baseline),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::length(100f32),
+                    height: taffy::style::Dimension::length(100f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(5f32),
-                    right: taffy::style::LengthPercentage::Length(5f32),
-                    top: taffy::style::LengthPercentage::Length(5f32),
-                    bottom: taffy::style::LengthPercentage::Length(5f32),
+                    left: taffy::style::LengthPercentage::length(5f32),
+                    right: taffy::style::LengthPercentage::length(5f32),
+                    top: taffy::style::LengthPercentage::length(5f32),
+                    bottom: taffy::style::LengthPercentage::length(5f32),
                 },
                 ..Default::default()
             },

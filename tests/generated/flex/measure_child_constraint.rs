@@ -8,8 +8,8 @@ fn measure_child_constraint() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Auto,
+                    width: taffy::style::Dimension::length(50f32),
+                    height: taffy::style::Dimension::auto(),
                 },
                 ..Default::default()
             },

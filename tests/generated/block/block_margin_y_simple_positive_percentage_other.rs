@@ -5,12 +5,12 @@ fn block_margin_y_simple_positive_percentage_other() {
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(10f32) },
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
-                top: taffy::style::LengthPercentageAuto::Percent(0.1f32),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.1f32),
+                top: taffy::style::LengthPercentageAuto::percent(0.1f32),
+                bottom: taffy::style::LengthPercentageAuto::percent(0.1f32),
             },
             ..Default::default()
         })
@@ -18,8 +18,8 @@ fn block_margin_y_simple_positive_percentage_other() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::length(50f32),
+                height: taffy::style::Dimension::length(10f32),
             },
             ..Default::default()
         })

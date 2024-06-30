@@ -5,7 +5,7 @@ fn block_margin_y_last_child_collapse_positive_parent_smaller() {
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node000 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -17,7 +17,7 @@ fn block_margin_y_last_child_collapse_positive_parent_smaller() {
                     left: zero(),
                     right: zero(),
                     top: zero(),
-                    bottom: taffy::style::LengthPercentageAuto::Length(10f32),
+                    bottom: taffy::style::LengthPercentageAuto::length(10f32),
                 },
                 ..Default::default()
             },
@@ -32,7 +32,7 @@ fn block_margin_y_last_child_collapse_positive_parent_smaller() {
                     left: zero(),
                     right: zero(),
                     top: zero(),
-                    bottom: taffy::style::LengthPercentageAuto::Length(5f32),
+                    bottom: taffy::style::LengthPercentageAuto::length(5f32),
                 },
                 ..Default::default()
             },
@@ -43,7 +43,7 @@ fn block_margin_y_last_child_collapse_positive_parent_smaller() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::length(50f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

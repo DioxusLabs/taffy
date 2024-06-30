@@ -5,36 +5,36 @@ fn gap_row_gap_row_wrap_child_margins() {
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::length(60f32), height: auto() },
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
-                top: taffy::style::LengthPercentageAuto::Length(2f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(2f32),
+                top: taffy::style::LengthPercentageAuto::length(2f32),
+                bottom: taffy::style::LengthPercentageAuto::length(2f32),
             },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::length(60f32), height: auto() },
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
+                top: taffy::style::LengthPercentageAuto::length(10f32),
+                bottom: taffy::style::LengthPercentageAuto::length(10f32),
             },
             ..Default::default()
         })
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::length(60f32), height: auto() },
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
-                top: taffy::style::LengthPercentageAuto::Length(15f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(15f32),
+                top: taffy::style::LengthPercentageAuto::length(15f32),
+                bottom: taffy::style::LengthPercentageAuto::length(15f32),
             },
             ..Default::default()
         })
@@ -43,10 +43,10 @@ fn gap_row_gap_row_wrap_child_margins() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                gap: taffy::geometry::Size { width: zero(), height: taffy::style::LengthPercentage::Length(10f32) },
+                gap: taffy::geometry::Size { width: zero(), height: taffy::style::LengthPercentage::length(10f32) },
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::length(100f32),
+                    height: taffy::style::Dimension::length(200f32),
                 },
                 ..Default::default()
             },

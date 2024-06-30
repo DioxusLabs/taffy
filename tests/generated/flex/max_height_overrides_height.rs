@@ -5,8 +5,8 @@ fn max_height_overrides_height() {
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(200f32) },
-            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(200f32) },
+            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(100f32) },
             ..Default::default()
         })
         .unwrap();

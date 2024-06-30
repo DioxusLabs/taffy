@@ -5,10 +5,10 @@ fn flex_basis_smaller_than_main_dimen_column() {
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            flex_basis: taffy::style::Dimension::Length(10f32),
+            flex_basis: taffy::style::Dimension::length(10f32),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::length(50f32),
+                height: taffy::style::Dimension::length(50f32),
             },
             ..Default::default()
         })
@@ -17,7 +17,7 @@ fn flex_basis_smaller_than_main_dimen_column() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(100f32) },
                 ..Default::default()
             },
             &[node0],

@@ -6,12 +6,12 @@ fn margin_auto_multiple_children_row() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::length(50f32),
+                height: taffy::style::Dimension::length(50f32),
             },
             margin: taffy::geometry::Rect {
                 left: zero(),
-                right: taffy::style::LengthPercentageAuto::Auto,
+                right: taffy::style::LengthPercentageAuto::auto(),
                 top: zero(),
                 bottom: zero(),
             },
@@ -21,12 +21,12 @@ fn margin_auto_multiple_children_row() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::length(50f32),
+                height: taffy::style::Dimension::length(50f32),
             },
             margin: taffy::geometry::Rect {
                 left: zero(),
-                right: taffy::style::LengthPercentageAuto::Auto,
+                right: taffy::style::LengthPercentageAuto::auto(),
                 top: zero(),
                 bottom: zero(),
             },
@@ -36,8 +36,8 @@ fn margin_auto_multiple_children_row() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::length(50f32),
+                height: taffy::style::Dimension::length(50f32),
             },
             ..Default::default()
         })
@@ -47,8 +47,8 @@ fn margin_auto_multiple_children_row() {
             taffy::style::Style {
                 align_items: Some(taffy::style::AlignItems::Center),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::length(200f32),
+                    height: taffy::style::Dimension::length(200f32),
                 },
                 ..Default::default()
             },

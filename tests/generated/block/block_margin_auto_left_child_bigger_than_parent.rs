@@ -6,11 +6,11 @@ fn block_margin_auto_left_child_bigger_than_parent() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(72f32),
-                height: taffy::style::Dimension::Length(72f32),
+                width: taffy::style::Dimension::length(72f32),
+                height: taffy::style::Dimension::length(72f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Auto,
+                left: taffy::style::LengthPercentageAuto::auto(),
                 right: zero(),
                 top: zero(),
                 bottom: zero(),
@@ -23,8 +23,8 @@ fn block_margin_auto_left_child_bigger_than_parent() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(52f32),
-                    height: taffy::style::Dimension::Length(52f32),
+                    width: taffy::style::Dimension::length(52f32),
+                    height: taffy::style::Dimension::length(52f32),
                 },
                 ..Default::default()
             },

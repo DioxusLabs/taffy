@@ -8,13 +8,13 @@ fn block_absolute_layout_width_height_start_top() {
             display: taffy::style::Display::Block,
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::length(10f32),
+                height: taffy::style::Dimension::length(10f32),
             },
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(10f32),
+                left: taffy::style::LengthPercentageAuto::length(10f32),
                 right: auto(),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
+                top: taffy::style::LengthPercentageAuto::length(10f32),
                 bottom: auto(),
             },
             ..Default::default()
@@ -25,8 +25,8 @@ fn block_absolute_layout_width_height_start_top() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::length(100f32),
+                    height: taffy::style::Dimension::length(100f32),
                 },
                 ..Default::default()
             },

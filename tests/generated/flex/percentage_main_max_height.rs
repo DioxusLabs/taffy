@@ -4,12 +4,12 @@ fn percentage_main_max_height() {
     use taffy::{prelude::*, tree::Layout, TaffyTree};
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
     let node00 = taffy
-        .new_leaf(taffy::style::Style { flex_basis: taffy::style::Dimension::Length(15f32), ..Default::default() })
+        .new_leaf(taffy::style::Style { flex_basis: taffy::style::Dimension::length(15f32), ..Default::default() })
         .unwrap();
     let node01 = taffy
         .new_leaf(taffy::style::Style {
-            flex_basis: taffy::style::Dimension::Length(48f32),
-            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(0.33f32) },
+            flex_basis: taffy::style::Dimension::length(48f32),
+            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::percent(0.33f32) },
             ..Default::default()
         })
         .unwrap();
@@ -18,7 +18,7 @@ fn percentage_main_max_height() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_items: Some(taffy::style::AlignItems::FlexStart),
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(151f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(151f32) },
                 ..Default::default()
             },
             &[node00, node01],
@@ -28,7 +28,7 @@ fn percentage_main_max_height() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(71f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::length(71f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

@@ -7,7 +7,7 @@ fn gap_column_gap_flexible_undefined_parent() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0f32),
+            flex_basis: taffy::style::Dimension::percent(0f32),
             ..Default::default()
         })
         .unwrap();
@@ -15,7 +15,7 @@ fn gap_column_gap_flexible_undefined_parent() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0f32),
+            flex_basis: taffy::style::Dimension::percent(0f32),
             ..Default::default()
         })
         .unwrap();
@@ -23,7 +23,7 @@ fn gap_column_gap_flexible_undefined_parent() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0f32),
+            flex_basis: taffy::style::Dimension::percent(0f32),
             ..Default::default()
         })
         .unwrap();
@@ -31,10 +31,10 @@ fn gap_column_gap_flexible_undefined_parent() {
         .new_with_children(
             taffy::style::Style {
                 gap: taffy::geometry::Size {
-                    width: taffy::style::LengthPercentage::Length(10f32),
-                    height: taffy::style::LengthPercentage::Length(20f32),
+                    width: taffy::style::LengthPercentage::length(10f32),
+                    height: taffy::style::LengthPercentage::length(20f32),
                 },
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::length(100f32) },
                 ..Default::default()
             },
             &[node0, node1, node2],
