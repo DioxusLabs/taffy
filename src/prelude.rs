@@ -3,8 +3,9 @@
 pub use crate::{
     geometry::{Line, Rect, Size},
     style::{
-        AlignContent, AlignItems, AlignSelf, AvailableSpace, Dimension, Display, JustifyContent, JustifyItems,
-        JustifySelf, LengthPercentage, LengthPercentageAuto, Position, Style,
+        AlignContent, AlignItems, AlignSelf, AvailableSpace, Dimension, DimensionInner, Display, JustifyContent,
+        JustifyItems, JustifySelf, LengthPercentage, LengthPercentageAuto, LengthPercentageAutoInner,
+        LengthPercentageInner, Position, Style,
     },
     style_helpers::{
         auto, fit_content, length, max_content, min_content, percent, zero, FromFlex, FromLength, FromPercent,
@@ -28,3 +29,6 @@ pub use crate::style_helpers::{
 
 #[cfg(feature = "taffy_tree")]
 pub use crate::TaffyTree;
+
+#[cfg(feature = "calc")]
+pub use crate::style::{CalcNode, RoundingStrategy};
