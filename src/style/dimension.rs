@@ -2,19 +2,22 @@
 
 use core::fmt::{Debug, Formatter};
 use core::ops::Neg;
-use std::ptr::NonNull;
+use core::ptr::NonNull;
 
 use num_traits::{Signed, Zero};
 
 use crate::geometry::{Rect, Size};
 use crate::style_helpers::{FromLength, FromPercent, TaffyAuto, TaffyMaxContent, TaffyMinContent, TaffyZero};
-use crate::sys::{Box, Vec};
+#[cfg(feature = "calc")]
+use crate::sys::Box;
+use crate::sys::Vec;
 use crate::util::sys::abs;
 
 macro_rules! impl_debug {
     ($ty:ident, $name:literal) => {
         impl Debug for $ty {
             fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+                #[cfg(feature = "calc")]
                 unsafe {
                     f.debug_tuple($name)
                         .field(match self.is_calc() {
@@ -23,6 +26,8 @@ macro_rules! impl_debug {
                         })
                         .finish()
                 }
+                #[cfg(not(feature = "calc"))]
+                f.debug_tuple($name).field(unsafe { &self.inner }).finish()
             }
         }
     };
@@ -287,6 +292,7 @@ impl LengthPercentageAuto {
         match self.get_inner() {
             LengthPercentageAutoInner::Length(length) => Some(length),
             LengthPercentageAutoInner::Percent(percent) => Some(context * percent),
+            #[cfg(feature = "calc")]
             LengthPercentageAutoInner::Calc => self.get_calc().map(|calc| calc.resolve(context)),
             LengthPercentageAutoInner::Auto => None,
         }
