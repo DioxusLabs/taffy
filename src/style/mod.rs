@@ -7,9 +7,11 @@ mod flex;
 
 pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, JustifyItems, JustifySelf};
 pub use self::dimension::{
-    AvailableSpace, CalcNode, Dimension, DimensionInner, LengthPercentage, LengthPercentageAuto,
-    LengthPercentageAutoInner, LengthPercentageInner, RoundingStrategy,
+    AvailableSpace, Dimension, DimensionInner, LengthPercentage, LengthPercentageAuto, LengthPercentageAutoInner,
+    LengthPercentageInner,
 };
+#[cfg(feature = "calc")]
+pub use self::dimension::{CalcNode, RoundingStrategy};
 
 #[cfg(feature = "flexbox")]
 pub use self::flex::{FlexDirection, FlexWrap};
@@ -502,7 +504,7 @@ mod tests {
         // Overall
         assert_type_size::<Style>(352);
     }
-    
+
     #[cfg(feature = "calc")]
     #[test]
     fn calc_variants_discriminant_is_zero() {

@@ -434,7 +434,12 @@ impl MinTrackSizingFunction {
     pub fn uses_percentage(self) -> bool {
         use MinTrackSizingFunction::*;
         match self {
-            Fixed(length) => length.is_percent() || length.is_calc(),
+            Fixed(length) => {
+                #[cfg(feature = "calc")]
+                return length.is_percent() || length.is_calc();
+                #[cfg(not(feature = "calc"))]
+                return length.is_percent();
+            }
             _ => false,
         }
     }
