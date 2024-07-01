@@ -502,4 +502,15 @@ mod tests {
         // Overall
         assert_type_size::<Style>(352);
     }
+    
+    #[cfg(feature = "calc")]
+    #[test]
+    fn calc_variants_discriminant_is_zero() {
+        fn discriminant<T>(e: T) -> u8 {
+            unsafe { *<*const _>::from(&e).cast::<u8>() }
+        }
+        assert_eq!(0, discriminant(crate::DimensionInner::Calc));
+        assert_eq!(0, discriminant(crate::LengthPercentageInner::Calc));
+        assert_eq!(0, discriminant(crate::LengthPercentageAutoInner::Calc));
+    }
 }

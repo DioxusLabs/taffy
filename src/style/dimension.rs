@@ -63,7 +63,7 @@ macro_rules! impl_measurement {
             #[cfg(feature = "calc")]
             #[inline]
             pub const fn static_calc(calc: &'static CalcNode) -> Self {
-                let ptr = std::ptr::from_ref(calc) as *mut CalcNode;
+                let ptr = calc as *const CalcNode as *mut CalcNode;
                 unsafe { Self { ptr: CalcPtr::new(NonNull::new_unchecked(ptr)) }.set_calc_tag() }
             }
             #[cfg(feature = "calc")]
@@ -174,7 +174,7 @@ impl CalcPtr {
 pub enum LengthPercentageInner {
     #[cfg(feature = "calc")]
     /// todo
-    Calc = 0,
+    Calc,
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
     /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
     Length(f32),
@@ -226,7 +226,7 @@ impl FromPercent for LengthPercentage {
 pub enum LengthPercentageAutoInner {
     #[cfg(feature = "calc")]
     /// todo
-    Calc = 0,
+    Calc,
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
     /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
     Length(f32),
@@ -321,23 +321,14 @@ pub union Dimension {
 }
 impl_debug!(Dimension, "Dimension");
 impl_measurement!(Dimension, DimensionInner, auto);
-impl Dimension {
-    const fn layout() {
-        const {
-            assert!(core::mem::size_of::<Dimension>() == 8);
-            assert!(core::mem::size_of::<DimensionInner>() == 8);
-            #[cfg(feature = "calc")]
-            assert!(core::mem::size_of::<CalcPtr>() == 8);
-        }
-    }
-}
+
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8, C, align(8))]
 pub enum DimensionInner {
     #[cfg(feature = "calc")]
     /// todo
-    Calc = 0,
+    Calc,
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
     /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
     Length(f32),
