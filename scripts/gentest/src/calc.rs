@@ -39,6 +39,74 @@ fn parse_clamp(input: &mut &str) -> PResult<TokenStream> {
         taffy::style::CalcNode::Clamp { min: Box::new(#min), value: Box::new(#val), max: Box::new(#max) }
     })
 }
+fn parse_abs(input: &mut &str) -> PResult<TokenStream> {
+    let out = parse_fn(input, "abs", parse_expr)?;
+    Ok(quote! {
+        taffy::style::CalcNode::Abs(Box::new(#out))
+    })
+}
+fn parse_sign(input: &mut &str) -> PResult<TokenStream> {
+    let out = parse_fn(input, "sign", parse_expr)?;
+    Ok(quote! {
+        taffy::style::CalcNode::Sign(Box::new(#out))
+    })
+}
+fn parse_hypot(input: &mut &str) -> PResult<TokenStream> {
+    let out: Vec<TokenStream> = parse_fn(input, "hypot", separated(1.., parse_expr, (',', multispace0)))?;
+    Ok(quote! {
+        taffy::style::CalcNode::Hypot(Vec::from[#(Box::new(#out)),*])
+    })
+}
+fn parse_mod(input: &mut &str) -> PResult<TokenStream> {
+    let out: Vec<TokenStream> = parse_fn(input, "mod", separated(2, parse_expr, (',', multispace0)))?;
+    let did = &out[0];
+    let dis = &out[1];
+    Ok(quote! {
+        taffy::style::CalcNode::Mod {
+            dividend: Box::new(#did),
+            divisor: Box::new(#dis),
+        }
+    })
+}
+fn parse_round(input: &mut &str) -> PResult<TokenStream> {
+    fn strategy(input: &mut &str) -> PResult<TokenStream> {
+        let res = alt((
+            literal("up").map(|_| quote! {Up}),
+            literal("down").map(|_| quote! {Down}),
+            literal("nearest").map(|_| quote! {Nearest}),
+            literal("to-zero").map(|_| quote! {ToZero}),
+        ))
+        .parse_next(input)?;
+        Ok(quote! {
+            taffy::style::RoundingStrategy::#res
+        })
+    }
+    let (strategy, _, out): (TokenStream, _, Vec<TokenStream>) = parse_fn(
+        input,
+        "round",
+        (strategy, (literal(','), multispace0), separated(2, parse_expr, (',', multispace0))),
+    )?;
+    let value = &out[0];
+    let interval = &out[1];
+    Ok(quote! {
+        taffy::style::CalcNode::Round {
+            strategy: #strategy,
+            value: Box::new(#value),
+            interval: Box::new(#interval),
+        }
+    })
+}
+fn parse_rem(input: &mut &str) -> PResult<TokenStream> {
+    let out: Vec<TokenStream> = parse_fn(input, "rem", separated(2, parse_expr, (',', multispace0)))?;
+    let did = &out[0];
+    let dis = &out[1];
+    Ok(quote! {
+        taffy::style::CalcNode::Rem {
+            dividend: Box::new(#did),
+            divisor: Box::new(#dis),
+        }
+    })
+}
 fn parse_leaf(input: &mut &str) -> PResult<TokenStream> {
     fn parse_float(input: &mut &str) -> PResult<f32> {
         alt((float, digit1.map(|digits| f32::from(i16::from_str(digits).unwrap())))).parse_next(input)
@@ -66,7 +134,8 @@ fn parse_parens(i: &mut &str) -> PResult<TokenStream> {
 }
 
 fn parse_atom(input: &mut &str) -> PResult<TokenStream> {
-    alt((parse_parens, parse_clamp, parse_min, parse_max, parse_leaf)).parse_next(input)
+    alt((parse_parens, parse_clamp, parse_min, parse_max, parse_hypot, parse_abs, parse_sign, parse_leaf, parse_negate))
+        .parse_next(input)
 }
 fn parse_expr(input: &mut &str) -> PResult<TokenStream> {
     let lhs = parse_term.parse_next(input)?;
@@ -107,6 +176,5 @@ fn parse_term(input: &mut &str) -> PResult<TokenStream> {
 
 pub fn parse_calc_expression(input: &str) -> TokenStream {
     let mut inner = input.trim_start_matches("calc(").trim_end_matches(')');
-    let outer_most = parse_expr(&mut inner).unwrap();
-    outer_most
+    parse_expr(&mut inner).unwrap()
 }
