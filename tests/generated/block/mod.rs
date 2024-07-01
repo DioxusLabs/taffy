@@ -52,6 +52,7 @@ mod block_absolute_minmax_top_left_bottom_right_min_max;
 mod block_absolute_no_styles;
 mod block_absolute_padding_border_overrides_max_size;
 mod block_absolute_padding_border_overrides_size;
+mod block_absolute_resolved_insets;
 mod block_align_baseline_child;
 mod block_align_baseline_child_margin;
 mod block_align_baseline_child_margin_percent;

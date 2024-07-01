@@ -482,12 +482,12 @@ pub fn compute_grid_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inpu
                 bottom: maybe_row_indexes
                     .end
                     .map(|index| rows[index].offset)
-                    .unwrap_or(container_border_box.height - border.bottom),
+                    .unwrap_or(container_border_box.height - border.bottom - scrollbar_gutter.y),
                 left: maybe_col_indexes.start.map(|index| columns[index].offset).unwrap_or(border.left),
                 right: maybe_col_indexes
                     .end
                     .map(|index| columns[index].offset)
-                    .unwrap_or(container_border_box.width - border.right),
+                    .unwrap_or(container_border_box.width - border.right - scrollbar_gutter.x),
             };
             // TODO: Baseline alignment support for absolutely positioned items (should check if is actuallty specified)
             #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
