@@ -128,11 +128,11 @@ fn set_node_children(tree: &mut yg::YogaTree, node_id: yg::DefaultKey, children:
 }
 
 fn into_yg_units(dim: impl Into<tf::Dimension>) -> yg::StyleUnit {
-    match dim.into().get_inner() {
-        tf::DimensionInner::Auto => yg::StyleUnit::Auto,
-        tf::DimensionInner::Length(val) => yg::StyleUnit::Point(yg::OrderedFloat(val)),
-        tf::DimensionInner::Percent(val) => yg::StyleUnit::Percent(yg::OrderedFloat(val)),
-        tf::DimensionInner::Calc => unimplemented!(),
+    match dim.into() {
+        tf::Dimension::Auto => yg::StyleUnit::Auto,
+        tf::Dimension::Length(val) => yg::StyleUnit::Point(yg::OrderedFloat(val)),
+        tf::Dimension::Percent(val) => yg::StyleUnit::Percent(yg::OrderedFloat(val)),
+        tf::Dimension::Calc => unimplemented!(),
     }
 }
 

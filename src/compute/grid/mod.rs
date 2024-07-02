@@ -179,9 +179,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inpu
         &mut columns,
         &mut rows,
         &mut items,
-        |track: &GridTrack, parent_size: Option<f32>| {
-            track.max_track_sizing_function.clone().definite_value(parent_size)
-        },
+        |track: &GridTrack, parent_size: Option<f32>| track.max_track_sizing_function.definite_value(parent_size),
         has_baseline_aligned_item,
     );
     let initial_column_sum = columns.iter().map(|track| track.base_size).sum::<f32>();
@@ -242,18 +240,16 @@ pub fn compute_grid_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inpu
     if !available_grid_space.width.is_definite() {
         for column in &mut columns {
             let min: Option<f32> =
-                column.min_track_sizing_function.clone().resolved_percentage_size(container_content_box.width);
+                column.min_track_sizing_function.resolved_percentage_size(container_content_box.width);
             let max: Option<f32> =
-                column.max_track_sizing_function.clone().resolved_percentage_size(container_content_box.width);
+                column.max_track_sizing_function.resolved_percentage_size(container_content_box.width);
             column.base_size = column.base_size.maybe_clamp(min, max);
         }
     }
     if !available_grid_space.height.is_definite() {
         for row in &mut rows {
-            let min: Option<f32> =
-                row.min_track_sizing_function.clone().resolved_percentage_size(container_content_box.height);
-            let max: Option<f32> =
-                row.max_track_sizing_function.clone().resolved_percentage_size(container_content_box.height);
+            let min: Option<f32> = row.min_track_sizing_function.resolved_percentage_size(container_content_box.height);
+            let max: Option<f32> = row.max_track_sizing_function.resolved_percentage_size(container_content_box.height);
             row.base_size = row.base_size.maybe_clamp(min, max);
         }
     }

@@ -1,9 +1,7 @@
 //! Helper trait to calculate dimensions during layout resolution
 
 use crate::geometry::{Rect, Size};
-use crate::style::{
-    Dimension, DimensionInner, LengthPercentage, LengthPercentageAuto, LengthPercentageAutoInner, LengthPercentageInner,
-};
+use crate::style::{Dimension, LengthPercentage, LengthPercentageAuto};
 use crate::style_helpers::TaffyZero;
 
 /// Trait to encapsulate behaviour where we need to resolve from a
@@ -30,11 +28,11 @@ impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentage {
     /// Converts the given [`LengthPercentage`] into an absolute length
     /// Can return `None`
     fn maybe_resolve(&self, context: Option<f32>) -> Option<f32> {
-        match self.get_inner() {
-            LengthPercentageInner::Length(length) => Some(length),
-            LengthPercentageInner::Percent(percent) => context.map(|dim| dim * percent),
+        match self {
+            LengthPercentage::Length(length) => Some(*length),
+            LengthPercentage::Percent(percent) => context.map(|dim| dim * percent),
             #[cfg(feature = "calc")]
-            LengthPercentageInner::Calc => context.zip(self.get_calc()).map(|(dim, calc)| calc.resolve(dim)),
+            LengthPercentage::Calc => context.zip(self.get_calc()).map(|(dim, calc)| calc.resolve(dim)),
         }
     }
 }
@@ -43,12 +41,12 @@ impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentageAuto {
     /// Converts the given [`LengthPercentageAuto`] into an absolute length
     /// Can return `None`
     fn maybe_resolve(&self, context: Option<f32>) -> Option<f32> {
-        match self.get_inner() {
-            LengthPercentageAutoInner::Length(length) => Some(length),
-            LengthPercentageAutoInner::Percent(percent) => context.map(|dim| dim * percent),
+        match self {
+            LengthPercentageAuto::Length(length) => Some(*length),
+            LengthPercentageAuto::Percent(percent) => context.map(|dim| dim * percent),
             #[cfg(feature = "calc")]
-            LengthPercentageAutoInner::Calc => context.zip(self.get_calc()).map(|(dim, calc)| calc.resolve(dim)),
-            LengthPercentageAutoInner::Auto => None,
+            LengthPercentageAuto::Calc => context.zip(self.get_calc()).map(|(dim, calc)| calc.resolve(dim)),
+            LengthPercentageAuto::Auto => None,
         }
     }
 }
@@ -58,12 +56,12 @@ impl MaybeResolve<Option<f32>, Option<f32>> for Dimension {
     ///
     /// Can return `None`
     fn maybe_resolve(&self, context: Option<f32>) -> Option<f32> {
-        match self.get_inner() {
-            DimensionInner::Length(length) => Some(length),
-            DimensionInner::Percent(percent) => context.map(|dim| dim * percent),
+        match self {
+            Dimension::Length(length) => Some(*length),
+            Dimension::Percent(percent) => context.map(|dim| dim * percent),
             #[cfg(feature = "calc")]
-            DimensionInner::Calc => context.zip(self.get_calc()).map(|(dim, calc)| calc.resolve(dim)),
-            DimensionInner::Auto => None,
+            Dimension::Calc => context.zip(self.get_calc()).map(|(dim, calc)| calc.resolve(dim)),
+            Dimension::Auto => None,
         }
     }
 }
@@ -174,10 +172,10 @@ mod tests {
         /// The parent / context should not affect the outcome.
         #[test]
         fn resolve_auto() {
-            mr_case(Dimension::auto(), None, None);
-            mr_case(Dimension::auto(), Some(5.0), None);
-            mr_case(Dimension::auto(), Some(-5.0), None);
-            mr_case(Dimension::auto(), Some(0.), None);
+            mr_case(Dimension::Auto, None, None);
+            mr_case(Dimension::Auto, Some(5.0), None);
+            mr_case(Dimension::Auto, Some(-5.0), None);
+            mr_case(Dimension::Auto, Some(0.), None);
         }
 
         /// `Dimension::Length` should always return `Some(f32)`
@@ -186,10 +184,10 @@ mod tests {
         /// The parent / context should not affect the outcome.
         #[test]
         fn resolve_length() {
-            mr_case(Dimension::length(1.0), None, Some(1.0));
-            mr_case(Dimension::length(1.0), Some(5.0), Some(1.0));
-            mr_case(Dimension::length(1.0), Some(-5.0), Some(1.0));
-            mr_case(Dimension::length(1.0), Some(0.), Some(1.0));
+            mr_case(Dimension::Length(1.0), None, Some(1.0));
+            mr_case(Dimension::Length(1.0), Some(5.0), Some(1.0));
+            mr_case(Dimension::Length(1.0), Some(-5.0), Some(1.0));
+            mr_case(Dimension::Length(1.0), Some(0.), Some(1.0));
         }
 
         /// `Dimension::Percent` should return `None` if context is  `None`.
@@ -199,10 +197,10 @@ mod tests {
         /// The parent / context __should__ affect the outcome.
         #[test]
         fn resolve_percent() {
-            mr_case(Dimension::percent(1.0), None, None);
-            mr_case(Dimension::percent(1.0), Some(5.0), Some(5.0));
-            mr_case(Dimension::percent(1.0), Some(-5.0), Some(-5.0));
-            mr_case(Dimension::percent(1.0), Some(50.0), Some(50.0));
+            mr_case(Dimension::Percent(1.0), None, None);
+            mr_case(Dimension::Percent(1.0), Some(5.0), Some(5.0));
+            mr_case(Dimension::Percent(1.0), Some(-5.0), Some(-5.0));
+            mr_case(Dimension::Percent(1.0), Some(50.0), Some(50.0));
         }
     }
 
@@ -254,24 +252,24 @@ mod tests {
 
         #[test]
         fn resolve_or_zero_auto() {
-            roz_case(Dimension::auto(), None, 0.0);
-            roz_case(Dimension::auto(), Some(5.0), 0.0);
-            roz_case(Dimension::auto(), Some(-5.0), 0.0);
-            roz_case(Dimension::auto(), Some(0.0), 0.0);
+            roz_case(Dimension::Auto, None, 0.0);
+            roz_case(Dimension::Auto, Some(5.0), 0.0);
+            roz_case(Dimension::Auto, Some(-5.0), 0.0);
+            roz_case(Dimension::Auto, Some(0.0), 0.0);
         }
         #[test]
         fn resolve_or_zero_length() {
-            roz_case(Dimension::length(5.0), None, 5.0);
-            roz_case(Dimension::length(5.0), Some(5.0), 5.0);
-            roz_case(Dimension::length(5.0), Some(-5.0), 5.0);
-            roz_case(Dimension::length(5.0), Some(0.0), 5.0);
+            roz_case(Dimension::Length(5.0), None, 5.0);
+            roz_case(Dimension::Length(5.0), Some(5.0), 5.0);
+            roz_case(Dimension::Length(5.0), Some(-5.0), 5.0);
+            roz_case(Dimension::Length(5.0), Some(0.0), 5.0);
         }
         #[test]
         fn resolve_or_zero_percent() {
-            roz_case(Dimension::percent(5.0), None, 0.0);
-            roz_case(Dimension::percent(5.0), Some(5.0), 25.0);
-            roz_case(Dimension::percent(5.0), Some(-5.0), -25.0);
-            roz_case(Dimension::percent(5.0), Some(0.0), 0.0);
+            roz_case(Dimension::Percent(5.0), None, 0.0);
+            roz_case(Dimension::Percent(5.0), Some(5.0), 25.0);
+            roz_case(Dimension::Percent(5.0), Some(-5.0), -25.0);
+            roz_case(Dimension::Percent(5.0), Some(0.0), 0.0);
         }
     }
 

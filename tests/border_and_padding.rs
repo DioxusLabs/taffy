@@ -1,8 +1,8 @@
 use taffy::prelude::*;
 use taffy::style_helpers::TaffyZero;
 
-fn clone_arr_to_rect<T: Clone>(items: [T; 4]) -> Rect<T> {
-    Rect { left: items[0].clone(), right: items[1].clone(), top: items[2].clone(), bottom: items[3].clone() }
+fn arr_to_rect<T: Copy>(items: [T; 4]) -> Rect<T> {
+    Rect { left: items[0], right: items[1], top: items[2], bottom: items[3] }
 }
 
 #[test]
@@ -14,8 +14,8 @@ fn border_on_a_single_axis_doesnt_increase_size() {
             .new_leaf(Style {
                 border: {
                     let mut lengths = [LengthPercentage::ZERO; 4];
-                    lengths[i] = LengthPercentage::length(10.);
-                    clone_arr_to_rect(lengths)
+                    lengths[i] = LengthPercentage::Length(10.);
+                    arr_to_rect(lengths)
                 },
                 ..Default::default()
             })
@@ -42,8 +42,8 @@ fn padding_on_a_single_axis_doesnt_increase_size() {
             .new_leaf(Style {
                 padding: {
                     let mut lengths = [LengthPercentage::ZERO; 4];
-                    lengths[i] = LengthPercentage::length(10.);
-                    clone_arr_to_rect(lengths)
+                    lengths[i] = LengthPercentage::Length(10.);
+                    arr_to_rect(lengths)
                 },
                 ..Default::default()
             })
@@ -68,8 +68,8 @@ fn border_and_padding_on_a_single_axis_doesnt_increase_size() {
         let mut taffy: TaffyTree<()> = TaffyTree::new();
         let rect = {
             let mut lengths = [LengthPercentage::ZERO; 4];
-            lengths[i] = LengthPercentage::length(10.);
-            clone_arr_to_rect(lengths)
+            lengths[i] = LengthPercentage::Length(10.);
+            arr_to_rect(lengths)
         };
         let node = taffy.new_leaf(Style { border: rect.clone(), padding: rect, ..Default::default() }).unwrap();
 

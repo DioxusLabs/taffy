@@ -1,9 +1,9 @@
 //! Style types for representing lengths / sizes
 
-use core::fmt::{Debug, Formatter};
-use core::ops::Neg;
-use core::ptr::NonNull;
-use std::mem::transmute;
+use core::fmt::Debug;
+
+#[cfg(feature = "calc")]
+use core::{mem::transmute, ops::Neg, ptr::NonNull};
 use num_traits::{Signed, Zero};
 
 use crate::geometry::{Rect, Size};
@@ -65,15 +65,14 @@ union CalcVariant {
 #[cfg(feature = "calc")]
 impl CalcVariant {
     const fn new(ptr: *mut CalcNode) -> Self {
-        unsafe { 
-            Self { ptr: CalcPtr::new( NonNull::new_unchecked(ptr) )}
-                .set_calc_tag() 
-        }
+        unsafe { Self { ptr: CalcPtr::new(NonNull::new_unchecked(ptr)) }.set_calc_tag() }
     }
     const unsafe fn set_calc_tag(mut self) -> Self {
         // Shift 8 bits to make space for the tag
         #[cfg(target_pointer_width = "64")]
-        { self.bits <<= 8; }
+        {
+            self.bits <<= 8;
+        }
         self.tag.0 = 0;
         self
     }
@@ -84,9 +83,9 @@ impl CalcVariant {
         return self.ptr.ptr.as_ptr();
     }
     const fn get_calc(&self) -> Option<&CalcNode> {
-        unsafe { 
-            if self.bits == 0 || self.tag.0 != 0 { 
-                None 
+        unsafe {
+            if self.bits == 0 || self.tag.0 != 0 {
+                None
             } else {
                 Some(&*(self.get_ptr() as *const CalcNode))
             }
@@ -152,10 +151,7 @@ impl LengthPercentage {
             LengthPercentage::Length(length) => *length,
             LengthPercentage::Percent(fraction) => fraction * percentage_length,
             #[cfg(feature = "calc")]
-            LengthPercentage::Calc => unsafe { 
-                (&*self.get_calc_ptr())
-                    .resolve(percentage_length) 
-            },
+            LengthPercentage::Calc => unsafe { (*self.get_calc_ptr()).resolve(percentage_length) },
         }
     }
 }
@@ -169,7 +165,7 @@ impl FromLength for LengthPercentage {
 }
 impl FromPercent for LengthPercentage {
     fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Self::Length(percent.into())
+        Self::Percent(percent.into())
     }
 }
 
@@ -277,7 +273,6 @@ pub enum Dimension {
 }
 impl_calc!(Dimension);
 
-
 impl TaffyZero for Dimension {
     const ZERO: Self = Self::Length(0.0);
 }
@@ -335,7 +330,7 @@ impl Dimension {
 }
 
 impl Rect<Dimension> {
-    /// Create a new Rect with [`Dimension::length()`]
+    /// Create a new Rect with [`Dimension::Length`]
     #[must_use]
     pub const fn from_length(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Rect {
@@ -346,7 +341,7 @@ impl Rect<Dimension> {
         }
     }
 
-    /// Create a new Rect with [`Dimension::percent()`]
+    /// Create a new Rect with [`Dimension::Percent`]
     #[must_use]
     pub const fn from_percent(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Rect {

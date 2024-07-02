@@ -6,7 +6,7 @@ fn rounding_doesnt_leave_gaps() {
     let mut taffy: TaffyTree<()> = TaffyTree::new();
 
     let w_square = Size { width: length(100.3), height: length(100.3) };
-    let child_a = taffy.new_leaf(Style { size: w_square.clone(), ..Default::default() }).unwrap();
+    let child_a = taffy.new_leaf(Style { size: w_square, ..Default::default() }).unwrap();
     let child_b = taffy.new_leaf(Style { size: w_square, ..Default::default() }).unwrap();
 
     let root_node = taffy

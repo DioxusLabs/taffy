@@ -113,8 +113,8 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
             /// ...treating each track as its max track sizing function if that is definite or as its minimum track sizing function
             /// otherwise, flooring the max track sizing function by the min track sizing function if both are definite
             fn track_definite_value(sizing_function: &NonRepeatedTrackSizingFunction, parent_size: Option<f32>) -> f32 {
-                let max_size = sizing_function.max.clone().definite_value(parent_size);
-                let min_size = sizing_function.max.clone().definite_value(parent_size);
+                let max_size = sizing_function.max.definite_value(parent_size);
+                let min_size = sizing_function.max.definite_value(parent_size);
                 max_size.map(|max| max.maybe_min(min_size)).or(min_size).unwrap()
             }
 
@@ -203,7 +203,7 @@ pub(super) fn initialize_grid_tracks(
             create_implicit_tracks(tracks, counts.negative_implicit, iter, gap)
         } else {
             let offset = auto_tracks.len() - (counts.negative_implicit as usize % auto_tracks.len());
-            let iter = auto_tracks.iter().cloned().cycle().skip(offset);
+            let iter = auto_tracks.iter().copied().cycle().skip(offset);
             create_implicit_tracks(tracks, counts.negative_implicit, iter, gap)
         }
     }
@@ -238,7 +238,7 @@ pub(super) fn initialize_grid_tracks(
                 }
                 TrackSizingFunction::Repeat(repetition_kind @ (AutoFit | AutoFill), repeated_tracks) => {
                     let auto_repeated_track_count = (counts.explicit - (track_template.len() as u16 - 1)) as usize;
-                    let iter = repeated_tracks.iter().cloned().cycle();
+                    let iter = repeated_tracks.iter().copied().cycle();
                     for track_def in iter.take(auto_repeated_track_count) {
                         let mut track =
                             GridTrack::new(track_def.min_sizing_function(), track_def.max_sizing_function());
@@ -265,7 +265,7 @@ pub(super) fn initialize_grid_tracks(
         let iter = core::iter::repeat(NonRepeatedTrackSizingFunction::AUTO);
         create_implicit_tracks(tracks, counts.positive_implicit, iter, gap)
     } else {
-        let iter = auto_tracks.iter().cloned().cycle();
+        let iter = auto_tracks.iter().copied().cycle();
         create_implicit_tracks(tracks, counts.positive_implicit, iter, gap)
     }
 
@@ -466,9 +466,9 @@ mod test {
 
     #[test]
     fn test_initialize_grid_tracks() {
-        let px0 = LengthPercentage::length(0.0);
-        let px20 = LengthPercentage::length(20.0);
-        let px100 = LengthPercentage::length(100.0);
+        let px0 = LengthPercentage::Length(0.0);
+        let px20 = LengthPercentage::Length(20.0);
+        let px100 = LengthPercentage::Length(100.0);
 
         // Setup test
         let track_template = vec![length(100.0), minmax(length(100.0), fr(2.0)), fr(1.0)];

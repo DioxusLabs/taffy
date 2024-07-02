@@ -6,10 +6,7 @@ mod dimension;
 mod flex;
 
 pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, JustifyItems, JustifySelf};
-pub use self::dimension::{
-    AvailableSpace, Dimension, DimensionInner, LengthPercentage, LengthPercentageAuto, LengthPercentageAutoInner,
-    LengthPercentageInner,
-};
+pub use self::dimension::{AvailableSpace, Dimension, LengthPercentage, LengthPercentageAuto};
 #[cfg(feature = "calc")]
 pub use self::dimension::{CalcNode, RoundingStrategy};
 
@@ -347,7 +344,7 @@ impl Style {
         #[cfg(feature = "flexbox")]
         flex_shrink: 1.0,
         #[cfg(feature = "flexbox")]
-        flex_basis: Dimension::auto(),
+        flex_basis: Dimension::Auto,
         // Grid
         #[cfg(feature = "grid")]
         grid_template_rows: GridTrackVec::new(),
@@ -413,7 +410,7 @@ mod tests {
             #[cfg(feature = "flexbox")]
             flex_shrink: 1.0,
             #[cfg(feature = "flexbox")]
-            flex_basis: super::Dimension::auto(),
+            flex_basis: super::Dimension::Auto,
             size: Size::auto(),
             min_size: Size::auto(),
             max_size: Size::auto(),
@@ -490,10 +487,10 @@ mod tests {
 
         // CSS Grid Container
         assert_type_size::<GridAutoFlow>(1);
-        assert_type_size::<MinTrackSizingFunction>(16);
+        assert_type_size::<MinTrackSizingFunction>(8);
         assert_type_size::<MaxTrackSizingFunction>(16);
-        assert_type_size::<NonRepeatedTrackSizingFunction>(32);
-        assert_type_size::<TrackSizingFunction>(40);
+        assert_type_size::<NonRepeatedTrackSizingFunction>(24);
+        assert_type_size::<TrackSizingFunction>(32);
         assert_type_size::<Vec<NonRepeatedTrackSizingFunction>>(24);
         assert_type_size::<Vec<TrackSizingFunction>>(24);
 
@@ -511,8 +508,8 @@ mod tests {
         fn discriminant<T>(e: T) -> u8 {
             unsafe { *<*const _>::from(&e).cast::<u8>() }
         }
-        assert_eq!(0, discriminant(crate::DimensionInner::Calc));
-        assert_eq!(0, discriminant(crate::LengthPercentageInner::Calc));
-        assert_eq!(0, discriminant(crate::LengthPercentageAutoInner::Calc));
+        assert_eq!(0, discriminant(crate::Dimension::Calc));
+        assert_eq!(0, discriminant(crate::LengthPercentage::Calc));
+        assert_eq!(0, discriminant(crate::LengthPercentageAuto::Calc));
     }
 }

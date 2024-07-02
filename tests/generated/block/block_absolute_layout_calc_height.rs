@@ -7,16 +7,16 @@ fn block_absolute_layout_calc_height() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::calc(taffy::style::CalcNode::Leaf(LengthPercentage::percent(0.05f32))),
-                height: taffy::style::Dimension::calc(taffy::style::CalcNode::Leaf(LengthPercentage::length(59f32))),
+                width: taffy::style::Dimension::calc(taffy::style::CalcNode::Leaf(LengthPercentage::Percent(0.05f32))),
+                height: taffy::style::Dimension::calc(taffy::style::CalcNode::Leaf(LengthPercentage::Length(59f32))),
             },
             inset: taffy::geometry::Rect {
                 left: taffy::style::LengthPercentageAuto::calc(taffy::style::CalcNode::Difference(
-                    Box::new(taffy::style::CalcNode::Leaf(LengthPercentage::percent(0.25f32))),
-                    Box::new(taffy::style::CalcNode::Leaf(LengthPercentage::length(5f32))),
+                    Box::new(taffy::style::CalcNode::Leaf(LengthPercentage::Percent(0.25f32))),
+                    Box::new(taffy::style::CalcNode::Leaf(LengthPercentage::Length(5f32))),
                 )),
                 right: auto(),
-                top: taffy::style::LengthPercentageAuto::length(10f32),
+                top: taffy::style::LengthPercentageAuto::Length(10f32),
                 bottom: auto(),
             },
             ..Default::default()
@@ -27,8 +27,8 @@ fn block_absolute_layout_calc_height() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::length(200f32),
-                    height: taffy::style::Dimension::length(350f32),
+                    width: taffy::style::Dimension::Length(200f32),
+                    height: taffy::style::Dimension::Length(350f32),
                 },
                 ..Default::default()
             },

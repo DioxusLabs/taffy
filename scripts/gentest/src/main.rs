@@ -679,11 +679,11 @@ fn generate_length_percentage(dimen: &serde_json::Map<String, Value>) -> TokenSt
         Value::String(ref unit) => match unit.as_ref() {
             "px" => {
                 let value = value();
-                quote!(taffy::style::LengthPercentage::length(#value))
+                quote!(taffy::style::LengthPercentage::Length(#value))
             }
             "percent" => {
                 let value = value();
-                quote!(taffy::style::LengthPercentage::percent(#value))
+                quote!(taffy::style::LengthPercentage::Percent(#value))
             }
             "calc" => {
                 let value = dimen.get("value").unwrap().as_str().unwrap();
@@ -702,14 +702,14 @@ fn generate_length_percentage_auto(dimen: &serde_json::Map<String, Value>) -> To
 
     match unit {
         Value::String(ref unit) => match unit.as_ref() {
-            "auto" => quote!(taffy::style::LengthPercentageAuto::auto()),
+            "auto" => quote!(taffy::style::LengthPercentageAuto::Auto),
             "px" => {
                 let value = value();
-                quote!(taffy::style::LengthPercentageAuto::length(#value))
+                quote!(taffy::style::LengthPercentageAuto::Length(#value))
             }
             "percent" => {
                 let value = value();
-                quote!(taffy::style::LengthPercentageAuto::percent(#value))
+                quote!(taffy::style::LengthPercentageAuto::Percent(#value))
             }
             "calc" => {
                 let value = dimen.get("value").unwrap().as_str().unwrap();
@@ -728,14 +728,14 @@ fn generate_dimension(dimen: &serde_json::Map<String, Value>) -> TokenStream {
 
     match unit {
         Value::String(ref unit) => match unit.as_ref() {
-            "auto" => quote!(taffy::style::Dimension::auto()),
+            "auto" => quote!(taffy::style::Dimension::Auto),
             "px" => {
                 let value = value();
-                quote!(taffy::style::Dimension::length(#value))
+                quote!(taffy::style::Dimension::Length(#value))
             }
             "percent" => {
                 let value = value();
-                quote!(taffy::style::Dimension::percent(#value))
+                quote!(taffy::style::Dimension::Percent(#value))
             }
             "calc" => {
                 let value = dimen.get("value").unwrap().as_str().unwrap();

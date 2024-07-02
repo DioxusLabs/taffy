@@ -120,9 +120,9 @@ fn parse_leaf(input: &mut &str) -> PResult<TokenStream> {
         .map(|(inner, is_percentage): (f32, Option<bool>)| {
             if is_percentage.is_some_and(|t| t) {
                 let inner = inner / 100.0;
-                quote! { taffy::style::CalcNode::Leaf(LengthPercentage::percent(#inner)) }
+                quote! { taffy::style::CalcNode::Leaf(LengthPercentage::Percent(#inner)) }
             } else {
-                quote! { taffy::style::CalcNode::Leaf(LengthPercentage::length(#inner)) }
+                quote! { taffy::style::CalcNode::Leaf(LengthPercentage::Length(#inner)) }
             }
         })
         .parse_next(input)
