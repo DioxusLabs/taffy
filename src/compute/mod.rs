@@ -45,60 +45,45 @@ pub use self::flexbox::compute_flexbox_layout;
 pub use self::grid::compute_grid_layout;
 
 use crate::geometry::{Line, Point, Size};
-use crate::style::{AvailableSpace, Overflow};
+use crate::style::{AvailableSpace, CoreStyle, Overflow};
 use crate::tree::{
     Layout, LayoutInput, LayoutOutput, LayoutPartialTree, LayoutPartialTreeExt, NodeId, RoundTree, SizingMode,
 };
 use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
 use crate::util::sys::round;
 use crate::util::ResolveOrZero;
-use crate::{Display, MaybeMath, MaybeResolve};
+use crate::{MaybeMath, MaybeResolve};
 
 /// Compute layout for the root node in the tree
 pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, available_space: Size<AvailableSpace>) {
-    let mut known_dimensions = Size::NONE;
+    let parent_size = available_space.into_options();
+    let style = tree.get_core_container_style(root);
 
-    #[cfg(feature = "block_layout")]
-    {
-        let parent_size = available_space.into_options();
-        let style = tree.get_style(root);
+    // Pull these out earlier to avoid borrowing issues
+    let aspect_ratio = style.aspect_ratio();
+    let margin = style.margin().resolve_or_zero(parent_size.width);
+    let min_size = style.min_size().maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let max_size = style.max_size().maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let padding = style.padding().resolve_or_zero(parent_size.width);
+    let border = style.border().resolve_or_zero(parent_size.width);
+    let padding_border_size = (padding + border).sum_axes();
+    let clamped_style_size =
+        style.size().maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size);
 
-        if style.display == Display::Block {
-            // Pull these out earlier to avoid borrowing issues
-            let aspect_ratio = style.aspect_ratio;
-            let margin = style.margin.resolve_or_zero(parent_size.width);
-            let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-            let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-            let padding = style.padding.resolve_or_zero(parent_size.width);
-            let border = style.border.resolve_or_zero(parent_size.width);
-            let padding_border_size = (padding + border).sum_axes();
-            let clamped_style_size = style
-                .size
-                .maybe_resolve(parent_size)
-                .maybe_apply_aspect_ratio(aspect_ratio)
-                .maybe_clamp(min_size, max_size);
+    drop(style);
 
-            // If both min and max in a given axis are set and max <= min then this determines the size in that axis
-            let min_max_definite_size = min_size.zip_map(max_size, |min, max| match (min, max) {
-                (Some(min), Some(max)) if max <= min => Some(min),
-                _ => None,
-            });
+    // If both min and max in a given axis are set and max <= min then this determines the size in that axis
+    let min_max_definite_size = min_size.zip_map(max_size, |min, max| match (min, max) {
+        (Some(min), Some(max)) if max <= min => Some(min),
+        _ => None,
+    });
 
-            // Block nodes automatically stretch fit their width to fit available space if available space is definite
-            let available_space_based_size = Size {
-                width: available_space.width.into_option().maybe_sub(margin.horizontal_axis_sum()),
-                height: None,
-            };
+    // The root node should automatically stretch fit it's width to fit available space if available space is definite
+    let available_space_based_size =
+        Size { width: available_space.width.into_option().maybe_sub(margin.horizontal_axis_sum()), height: None };
 
-            let styled_based_known_dimensions = known_dimensions
-                .or(min_max_definite_size)
-                .or(clamped_style_size)
-                .or(available_space_based_size)
-                .maybe_max(padding_border_size);
-
-            known_dimensions = styled_based_known_dimensions;
-        }
-    }
+    let known_dimensions =
+        min_max_definite_size.or(clamped_style_size).or(available_space_based_size).maybe_max(padding_border_size);
 
     // Recursively compute node layout
     let output = tree.perform_child_layout(
@@ -110,13 +95,14 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
         Line::FALSE,
     );
 
-    let style = tree.get_style(root);
-    let padding = style.padding.resolve_or_zero(available_space.width.into_option());
-    let border = style.border.resolve_or_zero(available_space.width.into_option());
+    let style = tree.get_core_container_style(root);
+    let padding = style.padding().resolve_or_zero(available_space.width.into_option());
+    let border = style.border().resolve_or_zero(available_space.width.into_option());
     let scrollbar_size = Size {
-        width: if style.overflow.y == Overflow::Scroll { style.scrollbar_width } else { 0.0 },
-        height: if style.overflow.x == Overflow::Scroll { style.scrollbar_width } else { 0.0 },
+        width: if style.overflow().y == Overflow::Scroll { style.scrollbar_width() } else { 0.0 },
+        height: if style.overflow().x == Overflow::Scroll { style.scrollbar_width() } else { 0.0 },
     };
+    drop(style);
 
     tree.set_unrounded_layout(
         root,

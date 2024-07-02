@@ -1,12 +1,123 @@
 //! Style types for CSS Grid layout
-use super::{AlignContent, LengthPercentage, Style};
+use super::{AlignContent, AlignItems, AlignSelf, CoreStyle, JustifyContent, LengthPercentage, Style};
 use crate::compute::grid::{GridCoordinate, GridLine, OriginZeroLine};
-use crate::geometry::{AbsoluteAxis, AbstractAxis};
-use crate::geometry::{Line, MinMax};
+use crate::geometry::{AbsoluteAxis, AbstractAxis, Line, MinMax, Size};
 use crate::style_helpers::*;
 use crate::util::sys::GridTrackVec;
 use core::cmp::{max, min};
 use core::convert::Infallible;
+
+/// The set of styles required for a CSS Grid container
+pub trait GridContainerStyle: CoreStyle {
+    /// Defines the track sizing functions (heights) of the grid rows
+    #[inline(always)]
+    fn grid_template_rows(&self) -> &[TrackSizingFunction] {
+        &[]
+    }
+    /// Defines the track sizing functions (widths) of the grid columns
+    #[inline(always)]
+    fn grid_template_columns(&self) -> &[TrackSizingFunction] {
+        &[]
+    }
+    /// Defines the size of implicitly created rows
+    #[inline(always)]
+    fn grid_auto_rows(&self) -> &[NonRepeatedTrackSizingFunction] {
+        &[]
+    }
+    /// Defined the size of implicitly created columns
+    #[inline(always)]
+    fn grid_auto_columns(&self) -> &[NonRepeatedTrackSizingFunction] {
+        &[]
+    }
+    /// Controls how items get placed into the grid for auto-placed items
+    #[inline(always)]
+    fn grid_auto_flow(&self) -> GridAutoFlow {
+        Style::DEFAULT.grid_auto_flow
+    }
+
+    /// How large should the gaps between items in a grid or flex container be?
+    #[inline(always)]
+    fn gap(&self) -> Size<LengthPercentage> {
+        Style::DEFAULT.gap
+    }
+
+    // Alignment properties
+
+    /// How should content contained within this item be aligned in the cross/block axis
+    #[inline(always)]
+    fn align_content(&self) -> Option<AlignContent> {
+        Style::DEFAULT.align_content
+    }
+    /// How should contained within this item be aligned in the main/inline axis
+    #[inline(always)]
+    fn justify_content(&self) -> Option<JustifyContent> {
+        Style::DEFAULT.justify_content
+    }
+    /// How this node's children aligned in the cross/block axis?
+    #[inline(always)]
+    fn align_items(&self) -> Option<AlignItems> {
+        Style::DEFAULT.align_items
+    }
+    /// How this node's children should be aligned in the inline axis
+    #[inline(always)]
+    fn justify_items(&self) -> Option<AlignItems> {
+        Style::DEFAULT.justify_items
+    }
+
+    /// Get a grid item's row or column placement depending on the axis passed
+    #[inline(always)]
+    fn grid_template_tracks(&self, axis: AbsoluteAxis) -> &[TrackSizingFunction] {
+        match axis {
+            AbsoluteAxis::Horizontal => self.grid_template_columns(),
+            AbsoluteAxis::Vertical => self.grid_template_rows(),
+        }
+    }
+
+    /// Get a grid container's align-content or justify-content alignment depending on the axis passed
+    #[inline(always)]
+    fn grid_align_content(&self, axis: AbstractAxis) -> AlignContent {
+        match axis {
+            AbstractAxis::Inline => self.justify_content().unwrap_or(AlignContent::Stretch),
+            AbstractAxis::Block => self.align_content().unwrap_or(AlignContent::Stretch),
+        }
+    }
+}
+
+/// The set of styles required for a CSS Grid item (child of a CSS Grid container)
+pub trait GridItemStyle: CoreStyle {
+    /// Defines which row in the grid the item should start and end at
+    #[inline(always)]
+    fn grid_row(&self) -> Line<GridPlacement> {
+        Style::DEFAULT.grid_row
+    }
+    /// Defines which column in the grid the item should start and end at
+    #[inline(always)]
+    fn grid_column(&self) -> Line<GridPlacement> {
+        Style::DEFAULT.grid_column
+    }
+
+    /// How this node should be aligned in the cross/block axis
+    /// Falls back to the parents [`AlignItems`] if not set
+    #[inline(always)]
+    fn align_self(&self) -> Option<AlignSelf> {
+        Style::DEFAULT.align_self
+    }
+    /// How this node should be aligned in the inline axis
+    /// Falls back to the parents [`super::JustifyItems`] if not set
+    #[inline(always)]
+    fn justify_self(&self) -> Option<AlignSelf> {
+        Style::DEFAULT.justify_self
+    }
+
+    /// Get a grid item's row or column placement depending on the axis passed
+    #[inline(always)]
+    fn grid_placement(&self, axis: AbsoluteAxis) -> Line<GridPlacement> {
+        match axis {
+            AbsoluteAxis::Horizontal => self.grid_column(),
+            AbsoluteAxis::Vertical => self.grid_row(),
+        }
+    }
+}
 
 /// Controls whether grid items are placed row-wise or column-wise. And whether the sparse or dense packing algorithm is used.
 ///
@@ -598,32 +709,5 @@ impl FromFlex for TrackSizingFunction {
 impl From<MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>> for TrackSizingFunction {
     fn from(input: MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>) -> Self {
         Self::Single(input)
-    }
-}
-
-// Grid extensions to the Style struct
-impl Style {
-    /// Get a grid item's row or column placement depending on the axis passed
-    pub(crate) fn grid_template_tracks(&self, axis: AbsoluteAxis) -> &GridTrackVec<TrackSizingFunction> {
-        match axis {
-            AbsoluteAxis::Horizontal => &self.grid_template_columns,
-            AbsoluteAxis::Vertical => &self.grid_template_rows,
-        }
-    }
-
-    /// Get a grid item's row or column placement depending on the axis passed
-    pub(crate) fn grid_placement(&self, axis: AbsoluteAxis) -> Line<GridPlacement> {
-        match axis {
-            AbsoluteAxis::Horizontal => self.grid_column,
-            AbsoluteAxis::Vertical => self.grid_row,
-        }
-    }
-
-    /// Get a grid container's align-content or justify-content alignment depending on the axis passed
-    pub(crate) fn grid_align_content(&self, axis: AbstractAxis) -> AlignContent {
-        match axis {
-            AbstractAxis::Inline => self.justify_content.unwrap_or(AlignContent::Stretch),
-            AbstractAxis::Block => self.align_content.unwrap_or(AlignContent::Stretch),
-        }
     }
 }
