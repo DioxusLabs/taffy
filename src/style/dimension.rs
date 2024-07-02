@@ -3,7 +3,7 @@
 use core::fmt::{Debug, Formatter};
 use core::ops::Neg;
 use core::ptr::NonNull;
-
+use std::mem::transmute;
 use num_traits::{Signed, Zero};
 
 use crate::geometry::{Rect, Size};
@@ -33,120 +33,6 @@ macro_rules! impl_debug {
     };
 }
 
-macro_rules! impl_measurement {
-    ($ty:ident, $inner_ty:ident) => {
-        impl $ty {
-            #[inline(always)]
-            pub const fn get_inner(&self) -> $inner_ty {
-                unsafe { self.inner }
-            }
-            #[inline]
-            pub const fn is_percent(&self) -> bool {
-                matches!(self.get_inner(), $inner_ty::Percent(_))
-            }
-            /// Returns true if value is Length variant.
-            #[inline]
-            pub const fn is_length(&self) -> bool {
-                matches!(self.get_inner(), $inner_ty::Length(_))
-            }
-
-            /// Creates an Length variant.
-            #[inline]
-            pub const fn length(length: f32) -> Self {
-                Self { inner: $inner_ty::Length(length) }
-            }
-            /// Creates an Percent variant.
-            #[inline]
-            pub const fn percent(percent: f32) -> Self {
-                Self { inner: $inner_ty::Percent(percent) }
-            }
-            #[cfg(feature = "calc")]
-            #[inline]
-            pub fn calc(calc: CalcNode) -> Self {
-                Self::static_calc(Box::leak(Box::new(calc)))
-            }
-            #[cfg(feature = "calc")]
-            #[inline]
-            pub const fn static_calc(calc: &'static CalcNode) -> Self {
-                let ptr = calc as *const CalcNode as *mut CalcNode;
-                unsafe { Self { ptr: CalcPtr::new(NonNull::new_unchecked(ptr)) }.set_calc_tag() }
-            }
-            #[cfg(feature = "calc")]
-            #[inline]
-            const fn calc_from_calc_ptr(calc_ptr: CalcPtr) -> Self {
-                unsafe { Self { ptr: calc_ptr } }
-            }
-            #[cfg(feature = "calc")]
-            #[inline]
-            const unsafe fn set_calc_tag(mut self) -> Self {
-                #[cfg(target_pointer_width = "64")]
-                {
-                    self.bits = self.bits << 8
-                };
-
-                self.tag.0 = 0;
-                self
-            }
-            #[cfg(feature = "calc")]
-            #[inline]
-            pub const fn is_calc(&self) -> bool {
-                matches!(self.get_inner(), $inner_ty::Calc)
-            }
-            #[cfg(feature = "calc")]
-            #[inline]
-            pub fn get_calc(&self) -> Option<&CalcNode> {
-                if self.is_calc() {
-                    Some(unsafe { &*self.get_calc_ptr() })
-                } else {
-                    None
-                }
-            }
-            #[cfg(feature = "calc")]
-            #[inline]
-            pub const unsafe fn get_calc_ptr(&self) -> *mut CalcNode {
-                #[cfg(target_pointer_width = "64")]
-                return (self.bits >> 8) as *mut CalcNode;
-                #[cfg(target_pointer_width = "32")]
-                return self.ptr.ptr.as_ptr();
-            }
-            #[cfg(feature = "calc")]
-            #[inline]
-            const unsafe fn get_calc_ptr_data(self) -> CalcPtr {
-                self.ptr
-            }
-        }
-        impl PartialEq for $ty {
-            #[inline]
-            fn eq(&self, other: &Self) -> bool {
-                #[cfg(not(feature = "calc"))]
-                {
-                    self.get_inner() == other.get_inner()
-                }
-                #[cfg(feature = "calc")]
-                if self.get_inner() == other.get_inner() && !self.is_calc() {
-                    true
-                } else {
-                    self.get_calc() == other.get_calc()
-                }
-            }
-        }
-    };
-    ($ty:ident, $inner_ty:ident, auto) => {
-        impl_measurement!($ty, $inner_ty);
-        impl $ty {
-            /// Returns true if value is Auto variant.
-            #[inline]
-            pub const fn is_auto(&self) -> bool {
-                matches!(self.get_inner(), $inner_ty::Auto)
-            }
-            /// Creates an Auto variant.
-            #[inline]
-            pub const fn auto() -> Self {
-                Self { inner: $inner_ty::Auto }
-            }
-        }
-    };
-}
 #[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Debug)]
 #[repr(align(8), C)]
 struct Tag(u8);
@@ -170,13 +56,86 @@ impl CalcPtr {
     }
 }
 
+#[cfg(feature = "calc")]
+union CalcVariant {
+    ptr: CalcPtr,
+    tag: Tag,
+    bits: u64,
+}
+#[cfg(feature = "calc")]
+impl CalcVariant {
+    const fn new(ptr: *mut CalcNode) -> Self {
+        unsafe { 
+            Self { ptr: CalcPtr::new( NonNull::new_unchecked(ptr) )}
+                .set_calc_tag() 
+        }
+    }
+    const unsafe fn set_calc_tag(mut self) -> Self {
+        // Shift 8 bits to make space for the tag
+        #[cfg(target_pointer_width = "64")]
+        { self.bits <<= 8; }
+        self.tag.0 = 0;
+        self
+    }
+    const unsafe fn get_ptr(&self) -> *mut CalcNode {
+        #[cfg(target_pointer_width = "64")]
+        return (self.bits >> 8) as *mut CalcNode;
+        #[cfg(target_pointer_width = "32")]
+        return self.ptr.ptr.as_ptr();
+    }
+    const fn get_calc(&self) -> Option<&CalcNode> {
+        unsafe { 
+            if self.bits == 0 || self.tag.0 != 0 { 
+                None 
+            } else {
+                Some(&*(self.get_ptr() as *const CalcNode))
+            }
+        }
+    }
+}
+macro_rules! impl_calc {
+    ($t:ident) => {
+        #[cfg(feature = "calc")]
+        impl $t {
+            #[inline]
+            pub fn calc(calc: CalcNode) -> Self {
+                Self::static_calc(Box::leak(Box::new(calc)))
+            }
+            #[inline]
+            pub const fn static_calc(calc: &'static CalcNode) -> Self {
+                let ptr = calc as *const CalcNode as *mut CalcNode;
+                unsafe {
+                    let cv = CalcVariant::new(ptr);
+                    transmute::<CalcVariant, Self>(cv)
+                }
+            }
+            #[inline]
+            const fn calc_from_calc_variant(cv: CalcVariant) -> Self {
+                unsafe { transmute::<CalcVariant, Self>(cv) }
+            }
+            #[inline]
+            pub fn get_calc(&self) -> Option<&CalcNode> {
+                unsafe { transmute::<&Self, &CalcVariant>(self).get_calc() }
+            }
+            #[inline]
+            pub const unsafe fn get_calc_ptr(&self) -> *mut CalcNode {
+                transmute::<&Self, &CalcVariant>(self).get_ptr()
+            }
+            #[inline]
+            const unsafe fn get_calc_variant(self) -> CalcVariant {
+                transmute::<Self, CalcVariant>(self)
+            }
+        }
+    };
+}
+
 /// A unit of linear measurement
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8, C, align(8))]
-pub enum LengthPercentageInner {
+pub enum LengthPercentage {
     #[cfg(feature = "calc")]
     /// todo
     Calc,
@@ -186,39 +145,31 @@ pub enum LengthPercentageInner {
     /// The dimension is stored in percentage relative to the parent item.
     Percent(f32),
 }
-
-#[derive(Copy, Clone)]
-pub union LengthPercentage {
-    inner: LengthPercentageInner,
-    #[cfg(feature = "calc")]
-    ptr: CalcPtr,
-
-    tag: Tag,
-    bits: u64,
-}
-impl_debug!(LengthPercentage, "LengthPercentage");
-impl_measurement!(LengthPercentage, LengthPercentageInner);
+impl_calc!(LengthPercentage);
 impl LengthPercentage {
     pub fn resolve(&self, percentage_length: f32) -> f32 {
-        match self.get_inner() {
-            LengthPercentageInner::Length(length) => length,
-            LengthPercentageInner::Percent(fraction) => fraction * percentage_length,
+        match self {
+            LengthPercentage::Length(length) => *length,
+            LengthPercentage::Percent(fraction) => fraction * percentage_length,
             #[cfg(feature = "calc")]
-            LengthPercentageInner::Calc => unsafe { self.get_calc_ptr().read().resolve(percentage_length) },
+            LengthPercentage::Calc => unsafe { 
+                (&*self.get_calc_ptr())
+                    .resolve(percentage_length) 
+            },
         }
     }
 }
 impl TaffyZero for LengthPercentage {
-    const ZERO: Self = Self::length(0.0);
+    const ZERO: Self = Self::Length(0.0);
 }
 impl FromLength for LengthPercentage {
     fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::length(value.into())
+        Self::Length(value.into())
     }
 }
 impl FromPercent for LengthPercentage {
     fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Self::percent(percent.into())
+        Self::Length(percent.into())
     }
 }
 
@@ -228,7 +179,7 @@ impl FromPercent for LengthPercentage {
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8, C, align(8))]
-pub enum LengthPercentageAutoInner {
+pub enum LengthPercentageAuto {
     #[cfg(feature = "calc")]
     /// todo
     Calc,
@@ -240,43 +191,32 @@ pub enum LengthPercentageAutoInner {
     /// The dimension should be automatically computed
     Auto,
 }
-
-#[derive(Copy, Clone)]
-pub union LengthPercentageAuto {
-    inner: LengthPercentageAutoInner,
-    #[cfg(feature = "calc")]
-    ptr: CalcPtr,
-
-    tag: Tag,
-    bits: u64,
-}
-impl_debug!(LengthPercentageAuto, "LengthPercentageAuto");
-impl_measurement!(LengthPercentageAuto, LengthPercentageAutoInner, auto);
+impl_calc!(LengthPercentageAuto);
 
 impl TaffyZero for LengthPercentageAuto {
-    const ZERO: Self = Self::length(0.0);
+    const ZERO: Self = Self::Length(0.0);
 }
 impl TaffyAuto for LengthPercentageAuto {
-    const AUTO: Self = Self::auto();
+    const AUTO: Self = Self::Auto;
 }
 impl FromLength for LengthPercentageAuto {
     fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::length(value.into())
+        Self::Length(value.into())
     }
 }
 impl FromPercent for LengthPercentageAuto {
     fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Self::percent(percent.into())
+        Self::Percent(percent.into())
     }
 }
 
 impl From<LengthPercentage> for LengthPercentageAuto {
     fn from(input: LengthPercentage) -> Self {
-        match input.get_inner() {
-            LengthPercentageInner::Length(value) => Self::length(value),
-            LengthPercentageInner::Percent(value) => Self::percent(value),
+        match input {
+            LengthPercentage::Length(value) => Self::Length(value),
+            LengthPercentage::Percent(value) => Self::Percent(value),
             #[cfg(feature = "calc")]
-            LengthPercentageInner::Calc => Self::calc_from_calc_ptr(unsafe { input.get_calc_ptr_data() }),
+            LengthPercentage::Calc => Self::calc_from_calc_variant(unsafe { input.get_calc_variant() }),
         }
     }
 }
@@ -284,18 +224,22 @@ impl From<LengthPercentage> for LengthPercentageAuto {
 impl LengthPercentageAuto {
     /// Returns:
     ///   - Some(length) for Length variants
-    ///   - Some(resolved) using the provided context for Percent variants
-    ///   - Some(calculation) resolve calculations using the provided context
+    ///   - Some(resolved) using the provided context for Percent or Calc variants
     ///   - None for Auto variants
     #[inline(always)]
     pub fn resolve_to_option(self, context: f32) -> Option<f32> {
-        match self.get_inner() {
-            LengthPercentageAutoInner::Length(length) => Some(length),
-            LengthPercentageAutoInner::Percent(percent) => Some(context * percent),
+        match self {
+            LengthPercentageAuto::Length(length) => Some(length),
+            LengthPercentageAuto::Percent(percent) => Some(context * percent),
             #[cfg(feature = "calc")]
-            LengthPercentageAutoInner::Calc => self.get_calc().map(|calc| calc.resolve(context)),
-            LengthPercentageAutoInner::Auto => None,
+            LengthPercentageAuto::Calc => self.get_calc().map(|calc| calc.resolve(context)),
+            LengthPercentageAuto::Auto => None,
         }
+    }
+    /// Returns true if value is LengthPercentageAuto::Auto
+    #[inline(always)]
+    pub fn is_auto(self) -> bool {
+        self == Self::Auto
     }
 }
 
@@ -316,22 +260,10 @@ impl LengthPercentageAuto {
 //    Auto,
 //}
 
-#[derive(Copy, Clone)]
-pub union Dimension {
-    inner: DimensionInner,
-    #[cfg(feature = "calc")]
-    ptr: CalcPtr,
-
-    tag: Tag,
-    bits: u64,
-}
-impl_debug!(Dimension, "Dimension");
-impl_measurement!(Dimension, DimensionInner, auto);
-
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8, C, align(8))]
-pub enum DimensionInner {
+pub enum Dimension {
     #[cfg(feature = "calc")]
     /// todo
     Calc,
@@ -343,42 +275,45 @@ pub enum DimensionInner {
     /// The dimension should be automatically computed
     Auto,
 }
+impl_calc!(Dimension);
+
+
 impl TaffyZero for Dimension {
-    const ZERO: Self = Self::length(0.0);
+    const ZERO: Self = Self::Length(0.0);
 }
 impl TaffyAuto for Dimension {
-    const AUTO: Self = Self::auto();
+    const AUTO: Self = Self::Auto;
 }
 impl FromLength for Dimension {
     fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::length(value.into())
+        Self::Length(value.into())
     }
 }
 impl FromPercent for Dimension {
     fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Self::percent(percent.into())
+        Self::Percent(percent.into())
     }
 }
 
 impl From<LengthPercentage> for Dimension {
     fn from(input: LengthPercentage) -> Self {
-        match input.get_inner() {
-            LengthPercentageInner::Length(value) => Self::length(value),
-            LengthPercentageInner::Percent(value) => Self::percent(value),
+        match input {
+            LengthPercentage::Length(value) => Self::Length(value),
+            LengthPercentage::Percent(value) => Self::Percent(value),
             #[cfg(feature = "calc")]
-            LengthPercentageInner::Calc => Self::calc_from_calc_ptr(unsafe { input.get_calc_ptr_data() }),
+            LengthPercentage::Calc => Self::calc_from_calc_variant(unsafe { input.get_calc_variant() }),
         }
     }
 }
 
 impl From<LengthPercentageAuto> for Dimension {
     fn from(input: LengthPercentageAuto) -> Self {
-        match input.get_inner() {
-            LengthPercentageAutoInner::Length(value) => Self::length(value),
-            LengthPercentageAutoInner::Percent(value) => Self::percent(value),
+        match input {
+            LengthPercentageAuto::Length(value) => Self::Length(value),
+            LengthPercentageAuto::Percent(value) => Self::Percent(value),
             #[cfg(feature = "calc")]
-            LengthPercentageAutoInner::Calc => Self::calc_from_calc_ptr(unsafe { input.get_calc_ptr_data() }),
-            LengthPercentageAutoInner::Auto => Self::auto(),
+            LengthPercentageAuto::Calc => Self::calc_from_calc_variant(unsafe { input.get_calc_variant() }),
+            LengthPercentageAuto::Auto => Self::Auto,
         }
     }
 }
@@ -387,10 +322,15 @@ impl Dimension {
     /// Get Length value if value is Length variant
     #[cfg(feature = "grid")]
     pub fn into_option(self) -> Option<f32> {
-        match self.get_inner() {
-            DimensionInner::Length(value) => Some(value),
+        match self {
+            Dimension::Length(value) => Some(value),
             _ => None,
         }
+    }
+    /// Returns true if value is Dimension::Auto
+    #[inline(always)]
+    pub fn is_auto(self) -> bool {
+        self == Self::Auto
     }
 }
 
@@ -399,10 +339,10 @@ impl Rect<Dimension> {
     #[must_use]
     pub const fn from_length(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Rect {
-            left: Dimension::length(start),
-            right: Dimension::length(end),
-            top: Dimension::length(top),
-            bottom: Dimension::length(bottom),
+            left: Dimension::Length(start),
+            right: Dimension::Length(end),
+            top: Dimension::Length(top),
+            bottom: Dimension::Length(bottom),
         }
     }
 
@@ -410,10 +350,10 @@ impl Rect<Dimension> {
     #[must_use]
     pub const fn from_percent(start: f32, end: f32, top: f32, bottom: f32) -> Self {
         Rect {
-            left: Dimension::percent(start),
-            right: Dimension::percent(end),
-            top: Dimension::percent(top),
-            bottom: Dimension::percent(bottom),
+            left: Dimension::Percent(start),
+            right: Dimension::Percent(end),
+            top: Dimension::Percent(top),
+            bottom: Dimension::Percent(bottom),
         }
     }
 }
