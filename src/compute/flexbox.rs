@@ -1818,6 +1818,7 @@ fn calculate_flex_item(
             location,
             padding: item.padding,
             border: item.border,
+            margin: item.margin,
         },
     );
 
@@ -2149,6 +2150,7 @@ fn perform_absolute_layout_on_absolute_children(
                 location,
                 padding,
                 border,
+                margin: resolved_margin,
             },
         );
 
