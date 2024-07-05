@@ -21,6 +21,7 @@ num-traits = { version = "0.2", default-features = false }
 serde = { version = "1.0", default-features = false, optional = true, features = ["rc", "serde_derive"] }
 slotmap = { version = "1.0.6", default-features = false, optional = true }
 grid = { version = "0.14.0", default-features = false, optional = true }
+sptr = { version = "0.3.2", optional = true }
 
 ### FEATURES #################################################################
 
@@ -46,7 +47,7 @@ taffy_tree = ["dep:slotmap"]
 ### Other
 
 # Add css calc to sizes
-calc = ["alloc"]
+calc = ["alloc", "dep:sptr"]
 # Add serde derives to Style structs
 serde = ["dep:serde"]
 # Allow Taffy to depend on the standard library

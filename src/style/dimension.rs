@@ -13,6 +13,9 @@ use crate::sys::Box;
 use crate::sys::Vec;
 use crate::util::sys::abs;
 
+#[cfg(feature = "calc")]
+use sptr::{from_exposed_addr_mut, Strict};
+
 macro_rules! impl_debug {
     ($ty:ident, $name:literal) => {
         impl Debug for $ty {
@@ -64,25 +67,25 @@ union CalcVariant {
 }
 #[cfg(feature = "calc")]
 impl CalcVariant {
-    const fn new(ptr: *mut CalcNode) -> Self {
+    const PTR_SHIFT: u8 = 5;
+    fn new(ptr: *mut CalcNode) -> Self {
         unsafe { Self { ptr: CalcPtr::new(NonNull::new_unchecked(ptr)) }.set_calc_tag() }
     }
-    const unsafe fn set_calc_tag(mut self) -> Self {
-        // Shift 8 bits to make space for the tag
+    unsafe fn set_calc_tag(mut self) -> Self {
         #[cfg(target_pointer_width = "64")]
         {
-            self.bits <<= 8;
+            self.bits = (self.ptr.ptr.as_ptr().expose_addr() as u64) << Self::PTR_SHIFT as u64;
         }
         self.tag.0 = 0;
         self
     }
-    const unsafe fn get_ptr(&self) -> *mut CalcNode {
+    unsafe fn get_ptr(&self) -> *mut CalcNode {
         #[cfg(target_pointer_width = "64")]
-        return (self.bits >> 8) as *mut CalcNode;
+        return from_exposed_addr_mut((self.bits >> Self::PTR_SHIFT) as usize);
         #[cfg(target_pointer_width = "32")]
         return self.ptr.ptr.as_ptr();
     }
-    const fn get_calc(&self) -> Option<&CalcNode> {
+    fn get_calc(&self) -> Option<&CalcNode> {
         unsafe {
             if self.bits == 0 || self.tag.0 != 0 {
                 None
@@ -101,7 +104,7 @@ macro_rules! impl_calc {
                 Self::static_calc(Box::leak(Box::new(calc)))
             }
             #[inline]
-            pub const fn static_calc(calc: &'static CalcNode) -> Self {
+            pub fn static_calc(calc: &'static CalcNode) -> Self {
                 let ptr = calc as *const CalcNode as *mut CalcNode;
                 unsafe {
                     let cv = CalcVariant::new(ptr);
@@ -117,7 +120,7 @@ macro_rules! impl_calc {
                 unsafe { transmute::<&Self, &CalcVariant>(self).get_calc() }
             }
             #[inline]
-            pub const unsafe fn get_calc_ptr(&self) -> *mut CalcNode {
+            pub unsafe fn get_calc_ptr(&self) -> *mut CalcNode {
                 transmute::<&Self, &CalcVariant>(self).get_ptr()
             }
             #[inline]
