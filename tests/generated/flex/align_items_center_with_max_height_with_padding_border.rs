@@ -92,7 +92,7 @@ fn align_items_center_with_max_height_with_padding_border() {
         .unwrap();
     let node = taffy
         .new_with_children(
-            taffy::style::Style { display: taffy::style::Display::Block, ..Default::default() },
+            taffy::style::Style { flex_direction: taffy::style::FlexDirection::Column, ..Default::default() },
             &[node0, node1],
         )
         .unwrap();
