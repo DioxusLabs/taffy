@@ -8,5 +8,5 @@ license = "MIT OR Apache-2.0"
 
 [dependencies]
 taffy = { path = ".." }
-style = { git = "https://github.com/servo/stylo", branch = "2024-05-31", features = ["servo"] }
-servo_arc = { git = "https://github.com/servo/stylo", branch = "2024-05-31" }
+style = { git = "https://github.com/dioxuslabs/stylo", branch = "blitz", features = ["servo"] }
+servo_arc = { git = "https://github.com/dioxuslabs/stylo", branch = "blitz" }

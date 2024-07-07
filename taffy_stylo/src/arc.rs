@@ -129,25 +129,22 @@ impl taffy::FlexboxContainerStyle for TaffyStyloStyle {
     #[inline]
     fn gap(&self) -> taffy::Size<taffy::LengthPercentage> {
         let position_styles = self.0.get_position();
-        taffy::Size {
-            width: t2s::gap(&position_styles.column_gap),
-            height: taffy::LengthPercentage::Length(0.0), // TODO: enable row_gap in stylo
-        }
+        taffy::Size { width: t2s::gap(&position_styles.column_gap), height: t2s::gap(&position_styles.row_gap) }
     }
 
     #[inline]
     fn align_content(&self) -> Option<taffy::AlignContent> {
-        t2s::align_content(self.0.get_position().align_content)
+        t2s::content_alignment(self.0.get_position().align_content.0)
     }
 
     #[inline]
     fn align_items(&self) -> Option<taffy::AlignItems> {
-        t2s::align_items(self.0.get_position().align_items)
+        t2s::item_alignment(self.0.get_position().align_items.0)
     }
 
     #[inline]
     fn justify_content(&self) -> Option<taffy::JustifyContent> {
-        t2s::justify_content(self.0.get_position().justify_content)
+        t2s::content_alignment(self.0.get_position().justify_content.0)
     }
 }
 
@@ -169,6 +166,6 @@ impl taffy::FlexboxItemStyle for TaffyStyloStyle {
 
     #[inline]
     fn align_self(&self) -> Option<taffy::AlignSelf> {
-        t2s::align_self(self.0.get_position().align_self)
+        t2s::item_alignment(self.0.get_position().align_self.0 .0)
     }
 }

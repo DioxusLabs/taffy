@@ -136,55 +136,38 @@ pub(crate) fn flex_wrap(input: stylo::FlexWrap) -> taffy::FlexWrap {
 }
 
 #[inline]
-pub(crate) fn justify_content(input: stylo::JustifyContent) -> Option<taffy::JustifyContent> {
-    match input {
-        stylo::JustifyContent::Start => Some(taffy::JustifyContent::Start),
-        stylo::JustifyContent::End => Some(taffy::JustifyContent::End),
-        stylo::JustifyContent::FlexStart => Some(taffy::JustifyContent::FlexStart),
-        stylo::JustifyContent::FlexEnd => Some(taffy::JustifyContent::FlexEnd),
-        stylo::JustifyContent::Stretch => Some(taffy::JustifyContent::Stretch),
-        stylo::JustifyContent::Center => Some(taffy::JustifyContent::Center),
-        stylo::JustifyContent::SpaceBetween => Some(taffy::JustifyContent::SpaceBetween),
-        stylo::JustifyContent::SpaceAround => Some(taffy::JustifyContent::SpaceAround),
-        stylo::JustifyContent::SpaceEvenly => Some(taffy::JustifyContent::SpaceEvenly),
+pub(crate) fn content_alignment(input: stylo::ContentDistribution) -> Option<taffy::AlignContent> {
+    match input.primary().value() {
+        stylo::AlignFlags::NORMAL => None,
+        stylo::AlignFlags::AUTO => None,
+        stylo::AlignFlags::START => Some(taffy::AlignContent::Start),
+        stylo::AlignFlags::END => Some(taffy::AlignContent::End),
+        stylo::AlignFlags::FLEX_START => Some(taffy::AlignContent::FlexStart),
+        stylo::AlignFlags::STRETCH => Some(taffy::AlignContent::Stretch),
+        stylo::AlignFlags::FLEX_END => Some(taffy::AlignContent::FlexEnd),
+        stylo::AlignFlags::CENTER => Some(taffy::AlignContent::Center),
+        stylo::AlignFlags::SPACE_BETWEEN => Some(taffy::AlignContent::SpaceBetween),
+        stylo::AlignFlags::SPACE_AROUND => Some(taffy::AlignContent::SpaceAround),
+        stylo::AlignFlags::SPACE_EVENLY => Some(taffy::AlignContent::SpaceEvenly),
+        // Should never be hit. But no real reason to panic here.
+        _ => None,
     }
 }
 
 #[inline]
-pub(crate) fn align_content(input: stylo::AlignContent) -> Option<taffy::AlignContent> {
-    match input {
-        stylo::AlignContent::Start => Some(taffy::AlignContent::Start),
-        stylo::AlignContent::End => Some(taffy::AlignContent::End),
-        stylo::AlignContent::FlexStart => Some(taffy::AlignContent::FlexStart),
-        stylo::AlignContent::FlexEnd => Some(taffy::AlignContent::FlexEnd),
-        stylo::AlignContent::Center => Some(taffy::AlignContent::Center),
-        stylo::AlignContent::Stretch => Some(taffy::AlignContent::Stretch),
-        stylo::AlignContent::SpaceBetween => Some(taffy::AlignContent::SpaceBetween),
-        stylo::AlignContent::SpaceAround => Some(taffy::AlignContent::SpaceAround),
-        stylo::AlignContent::SpaceEvenly => Some(taffy::AlignContent::SpaceEvenly),
-    }
-}
-
-#[inline]
-pub(crate) fn align_items(input: stylo::AlignItems) -> Option<taffy::AlignItems> {
-    match input {
-        stylo::AlignItems::Stretch => Some(taffy::AlignItems::Stretch),
-        stylo::AlignItems::FlexStart => Some(taffy::AlignItems::FlexStart),
-        stylo::AlignItems::FlexEnd => Some(taffy::AlignItems::FlexEnd),
-        stylo::AlignItems::Center => Some(taffy::AlignItems::Center),
-        stylo::AlignItems::Baseline => Some(taffy::AlignItems::Baseline),
-    }
-}
-
-#[inline]
-pub(crate) fn align_self(input: stylo::AlignSelf) -> Option<taffy::AlignSelf> {
-    match input {
-        stylo::AlignSelf::Auto => None,
-        stylo::AlignSelf::Stretch => Some(taffy::AlignSelf::Stretch),
-        stylo::AlignSelf::FlexStart => Some(taffy::AlignSelf::FlexStart),
-        stylo::AlignSelf::FlexEnd => Some(taffy::AlignSelf::FlexEnd),
-        stylo::AlignSelf::Center => Some(taffy::AlignSelf::Center),
-        stylo::AlignSelf::Baseline => Some(taffy::AlignSelf::Baseline),
+pub(crate) fn item_alignment(input: stylo::AlignFlags) -> Option<taffy::AlignItems> {
+    match input.value() {
+        stylo::AlignFlags::NORMAL => None,
+        stylo::AlignFlags::AUTO => None,
+        stylo::AlignFlags::STRETCH => Some(taffy::AlignItems::Stretch),
+        stylo::AlignFlags::FLEX_START => Some(taffy::AlignItems::FlexStart),
+        stylo::AlignFlags::FLEX_END => Some(taffy::AlignItems::FlexEnd),
+        stylo::AlignFlags::START => Some(taffy::AlignItems::Start),
+        stylo::AlignFlags::END => Some(taffy::AlignItems::End),
+        stylo::AlignFlags::CENTER => Some(taffy::AlignItems::Center),
+        stylo::AlignFlags::BASELINE => Some(taffy::AlignItems::Baseline),
+        // Should never be hit. But no real reason to panic here.
+        _ => None,
     }
 }
 

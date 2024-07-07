@@ -6,17 +6,13 @@ pub(crate) mod t2s;
 
 // Module of type aliases so we can refer to stylo types with nicer names
 mod stylo {
-    pub(crate) use style::computed_values::align_content::T as AlignContent;
-    pub(crate) use style::computed_values::align_items::T as AlignItems;
-    pub(crate) use style::computed_values::align_self::T as AlignSelf;
     pub(crate) use style::computed_values::flex_direction::T as FlexDirection;
     pub(crate) use style::computed_values::flex_wrap::T as FlexWrap;
-    pub(crate) use style::computed_values::justify_content::T as JustifyContent;
-    // pub(crate) use style::computed_values::justify_items::T as JustifyItems;
-    // pub(crate) use style::computed_values::justify_self::T as JustifySelf;
+    pub(crate) use style::properties::generated::longhands::box_sizing::computed_value::T as BoxSizing;
     pub(crate) use style::properties::longhands::aspect_ratio::computed_value::T as AspectRatio;
     pub(crate) use style::properties::longhands::position::computed_value::T as Position;
-    pub(crate) use style::properties::generated::longhands::box_sizing::computed_value::T as BoxSizing;
+    pub(crate) use style::values::specified::align::AlignFlags;
+    pub(crate) use style::values::specified::align::ContentDistribution;
     // pub(crate) use style::properties::style_structs::{Margin, Padding};
     pub(crate) use style::values::computed::LengthPercentage;
     pub(crate) use style::values::generics::flex::GenericFlexBasis;
