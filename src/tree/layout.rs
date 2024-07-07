@@ -233,6 +233,8 @@ pub struct Layout {
     pub border: Rect<f32>,
     /// The size of the padding of the node
     pub padding: Rect<f32>,
+    /// The size of the margin of the node
+    pub margin: Rect<f32>,
 }
 
 impl Default for Layout {
@@ -258,6 +260,7 @@ impl Layout {
             scrollbar_size: Size::zero(),
             border: Rect::zero(),
             padding: Rect::zero(),
+            margin: Rect::zero(),
         }
     }
 
@@ -276,6 +279,7 @@ impl Layout {
             scrollbar_size: Size::zero(),
             border: Rect::zero(),
             padding: Rect::zero(),
+            margin: Rect::zero(),
         }
     }
 }

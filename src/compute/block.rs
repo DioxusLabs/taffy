@@ -437,6 +437,7 @@ fn perform_final_layout_on_in_flow_children(
                     location,
                     padding: item.padding,
                     border: item.border,
+                    margin: resolved_margin,
                 },
             );
 
@@ -662,6 +663,7 @@ fn perform_absolute_layout_on_absolute_children(
                 location,
                 padding,
                 border,
+                margin: resolved_margin,
             },
         );
 

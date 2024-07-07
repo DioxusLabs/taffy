@@ -187,7 +187,7 @@ pub(super) fn align_and_position_item(
     // Resolve final size
     let Size { width, height } = Size { width, height }.unwrap_or(layout_output.size).maybe_clamp(min_size, max_size);
 
-    let x = align_item_within_area(
+    let (x, x_margin) = align_item_within_area(
         Line { start: grid_area.left, end: grid_area.right },
         justify_self.unwrap_or(alignment_styles.horizontal),
         width,
@@ -196,7 +196,7 @@ pub(super) fn align_and_position_item(
         margin.horizontal_components(),
         0.0,
     );
-    let y = align_item_within_area(
+    let (y, y_margin) = align_item_within_area(
         Line { start: grid_area.top, end: grid_area.bottom },
         align_self.unwrap_or(alignment_styles.vertical),
         height,
@@ -211,6 +211,8 @@ pub(super) fn align_and_position_item(
         height: if overflow.x == Overflow::Scroll { scrollbar_width } else { 0.0 },
     };
 
+    let resolved_margin = Rect { left: x_margin.start, right: x_margin.end, top: y_margin.start, bottom: y_margin.end };
+
     tree.set_unrounded_layout(
         node,
         &Layout {
@@ -222,6 +224,7 @@ pub(super) fn align_and_position_item(
             scrollbar_size,
             padding,
             border,
+            margin: resolved_margin,
         },
     );
 
@@ -243,7 +246,7 @@ pub(super) fn align_item_within_area(
     inset: Line<Option<f32>>,
     margin: Line<Option<f32>>,
     baseline_shim: f32,
-) -> f32 {
+) -> (f32, Line<f32>) {
     // Calculate grid area dimension in the axis
     let non_auto_margin = Line { start: margin.start.unwrap_or(0.0) + baseline_shim, end: margin.end.unwrap_or(0.0) };
     let grid_area_size = f32_max(grid_area.end - grid_area.start, 0.0);
@@ -284,5 +287,5 @@ pub(super) fn align_item_within_area(
         start += inset.start.or(inset.end.map(|pos| -pos)).unwrap_or(0.0);
     }
 
-    start
+    (start, resolved_margin)
 }
