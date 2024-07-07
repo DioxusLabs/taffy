@@ -9,6 +9,7 @@ use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 
 #[cfg(feature = "content_size")]
 use crate::compute::common::content_size::compute_content_size_contribution;
+use crate::BoxSizing;
 
 /// Align the grid tracks within the grid according to the align-content (rows) or
 /// justify-content (columns) property. This only does anything if the size of the
@@ -79,14 +80,25 @@ pub(super) fn align_and_position_item(
     let padding = style.padding.map(|p| p.resolve_or_zero(Some(grid_area_size.width)));
     let border = style.border.map(|p| p.resolve_or_zero(Some(grid_area_size.width)));
     let padding_border_size = (padding + border).sum_axes();
-    let inherent_size = style.size.maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let box_sizing_adjustment =
+        if style.box_sizing == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
+    let inherent_size = style
+        .size
+        .maybe_resolve(grid_area_size)
+        .maybe_apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment);
     let min_size = style
         .min_size
         .maybe_resolve(grid_area_size)
+        .maybe_add(box_sizing_adjustment)
         .or(padding_border_size.map(Some))
         .maybe_max(padding_border_size)
         .maybe_apply_aspect_ratio(aspect_ratio);
-    let max_size = style.max_size.maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
+    let max_size = style
+        .max_size
+        .maybe_resolve(grid_area_size)
+        .maybe_apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment);
 
     // Resolve default alignment styles if they are set on neither the parent or the node itself
     // Note: if the child has a preferred aspect ratio but neither width or height are set, then the width is stretched
