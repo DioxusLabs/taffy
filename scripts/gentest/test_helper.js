@@ -200,9 +200,12 @@ function describeElement(e) {
   let boundingRect = e.getBoundingClientRect();
   let parentBoundingRect = e.parentNode.getBoundingClientRect();
 
+  const computedStyle = getComputedStyle(e);
+
   return {
     style: {
       display: parseEnum(e.style.display),
+      boxSizing: parseEnum(computedStyle.boxSizing),
 
       position: parseEnum(e.style.position),
       direction: parseEnum(e.style.direction),

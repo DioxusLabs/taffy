@@ -373,6 +373,14 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
         _ => quote!(),
     };
 
+    let box_sizing = match style["boxSizing"] {
+        Value::String(ref value) => match value.as_ref() {
+            "content-box" => quote!(box_sizing: taffy::style::BoxSizing::ContentBox,),
+            _ => quote!(),
+        },
+        _ => quote!(),
+    };
+
     let position = match style["position"] {
         Value::String(ref value) => match value.as_ref() {
             "absolute" => quote!(position: taffy::style::Position::Absolute,),
@@ -603,6 +611,7 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
 
     let style = quote!(taffy::style::Style {
         #display
+        #box_sizing
         #direction
         #position
         #flex_direction
