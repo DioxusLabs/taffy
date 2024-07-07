@@ -108,7 +108,13 @@ async fn main() {
         .iter()
         .map(|(name, fixture_path, description)| {
             debug!("generating test contents for {}", &name);
-            (name.clone(), fixture_path, generate_test(name, description))
+
+            let border_box_test = generate_test(format!("{name}__border_box"), &description["borderBoxData"]);
+            let content_box_test = generate_test(format!("{name}__content_box"), &description["contentBoxData"]);
+
+            let test_file_content = [border_box_test, content_box_test].map(|test| test.to_string()).join("\n\n");
+
+            (name.clone(), fixture_path, test_file_content)
         })
         .collect();
 
@@ -145,7 +151,7 @@ async fn main() {
         let mut test_filename = test_path.join(&name);
         test_filename.set_extension("rs");
         debug!("writing {} to disk...", &name);
-        fs::write(test_filename, test_body.to_string()).unwrap();
+        fs::write(test_filename, test_body).unwrap();
     }
 
     info!("formatting the source directory");
@@ -179,10 +185,7 @@ async fn test_root_element(client: Client, name: String, fixture_path: impl AsRe
     let url = format!("file://{}", fixture_path.display());
 
     client.goto(&url).await.unwrap();
-    let description = client
-        .execute("return JSON.stringify(describeElement(document.getElementById('test-root')))", vec![])
-        .await
-        .unwrap();
+    let description = client.execute("return getTestData()", vec![]).await.unwrap();
     let description_string = description.as_str().unwrap();
     let description = serde_json::from_str(description_string).unwrap();
     (name.to_string(), fixture_path.to_path_buf(), description)
@@ -213,6 +216,7 @@ fn generate_test(name: impl AsRef<str>, description: &Value) -> TokenStream {
 
     quote!(
         #[test]
+        #[allow(non_snake_case)]
         fn #name() {
             #[allow(unused_imports)]
             use taffy::{tree::Layout, prelude::*, TaffyTree};

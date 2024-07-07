@@ -329,6 +329,15 @@ function describeElement(e) {
   };
 }
 
+function getTestData() {
+  document.body.className = "border-box";
+  const borderBoxData = describeElement(document.getElementById('test-root'));
+  document.body.className = "content-box";
+  const contentBoxData = describeElement(document.getElementById('test-root'));
+
+  return JSON.stringify({ borderBoxData, contentBoxData });
+}
+
 // Useful when developing this script. Logs the parsed style to the console when any test fixture is opened in a browser.
 window.onload = function () {
   try {
