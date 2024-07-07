@@ -8,6 +8,7 @@ use crate::util::debug::debug_log;
 use crate::util::sys::f32_max;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
+use crate::BoxSizing;
 use core::unreachable;
 
 /// Compute the size of a leaf node (node with no children)
@@ -21,6 +22,15 @@ where
 {
     let LayoutInput { known_dimensions, parent_size, available_space, sizing_mode, run_mode, .. } = inputs;
 
+    // Note: both horizontal and vertical percentage padding/borders are resolved against the container's inline size (i.e. width).
+    // This is not a bug, but is how CSS is specified (see: https://developer.mozilla.org/en-US/docs/Web/CSS/padding#values)
+    let margin = style.margin.resolve_or_zero(parent_size.width);
+    let padding = style.padding.resolve_or_zero(parent_size.width);
+    let border = style.border.resolve_or_zero(parent_size.width);
+    let padding_border = padding + border;
+    let pb_sum = padding_border.sum_axes();
+    let box_sizing_adjustment = if style.box_sizing == BoxSizing::ContentBox { pb_sum } else { Size::ZERO };
+
     // Resolve node's preferred/min/max sizes (width/heights) against the available space (percentages resolve to pixel values)
     // For ContentSize mode, we pretend that the node has no size styles as these should be ignored.
     let (node_size, node_min_size, node_max_size, aspect_ratio) = match sizing_mode {
@@ -32,21 +42,22 @@ where
         }
         SizingMode::InherentSize => {
             let aspect_ratio = style.aspect_ratio;
-            let style_size = style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-            let style_min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-            let style_max_size = style.max_size.maybe_resolve(parent_size);
+            let style_size = style
+                .size
+                .maybe_resolve(parent_size)
+                .maybe_apply_aspect_ratio(aspect_ratio)
+                .maybe_add(box_sizing_adjustment);
+            let style_min_size = style
+                .min_size
+                .maybe_resolve(parent_size)
+                .maybe_apply_aspect_ratio(aspect_ratio)
+                .maybe_add(box_sizing_adjustment);
+            let style_max_size = style.max_size.maybe_resolve(parent_size).maybe_add(box_sizing_adjustment);
 
             let node_size = known_dimensions.or(style_size);
             (node_size, style_min_size, style_max_size, aspect_ratio)
         }
     };
-
-    // Note: both horizontal and vertical percentage padding/borders are resolved against the container's inline size (i.e. width).
-    // This is not a bug, but is how CSS is specified (see: https://developer.mozilla.org/en-US/docs/Web/CSS/padding#values)
-    let margin = style.margin.resolve_or_zero(parent_size.width);
-    let padding = style.padding.resolve_or_zero(parent_size.width);
-    let border = style.border.resolve_or_zero(parent_size.width);
-    let padding_border = padding + border;
 
     // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
     // However, the axis are switched (transposed) because a node that scrolls vertically needs
