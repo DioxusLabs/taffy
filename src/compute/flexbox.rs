@@ -625,7 +625,6 @@ fn determine_flex_base_size(
 
     for child in flex_items.iter_mut() {
         let child_style = tree.get_flexbox_child_style(child.node);
-        let flex_basis = child_style.flex_basis().maybe_resolve(constants.node_inner_size.main(dir));
 
         // Parent size for child sizing
         let cross_axis_parent_size = constants.node_inner_size.cross(dir);
@@ -652,6 +651,17 @@ fn determine_flex_base_size(
             ckd
         };
 
+        let container_width = constants.node_inner_size.main(dir);
+        let box_sizing_adjustment = if child_style.box_sizing() == BoxSizing::ContentBox {
+            let padding = child_style.padding().resolve_or_zero(container_width);
+            let border = child_style.border().resolve_or_zero(container_width);
+            (padding + border).sum_axes()
+        } else {
+            Size::ZERO
+        }
+        .main(dir);
+        let flex_basis = child_style.flex_basis().maybe_resolve(container_width).maybe_add(box_sizing_adjustment);
+
         drop(child_style);
 
         child.flex_basis = 'flex_basis: {
@@ -664,17 +674,6 @@ fn determine_flex_base_size(
 
             // Note: `child.size` has already been resolved against aspect_ratio in generate_anonymous_flex_items
             // So B will just work here by using main_size without special handling for aspect_ratio
-
-            let container_width = constants.node_inner_size.main(dir);
-            let box_sizing_adjustment = if child_style.box_sizing() == BoxSizing::ContentBox {
-                let padding = child_style.padding().resolve_or_zero(container_width);
-                let border = child_style.border().resolve_or_zero(container_width);
-                (padding + border).sum_axes()
-            } else {
-                Size::ZERO
-            }
-            .main(dir);
-            let flex_basis = child_style.flex_basis().maybe_resolve(container_width).maybe_add(box_sizing_adjustment);
             let main_size = child.size.main(dir);
             if let Some(flex_basis) = flex_basis.or(main_size) {
                 break 'flex_basis flex_basis;
@@ -2031,7 +2030,7 @@ fn perform_absolute_layout_on_absolute_children(
         let border = child_style.border().resolve_or_zero(Some(inset_relative_size.width));
         let padding_border_sum = (padding + border).sum_axes();
         let box_sizing_adjustment =
-            if child_style.box_sizing == BoxSizing::ContentBox { padding_border_sum } else { Size::ZERO };
+            if child_style.box_sizing() == BoxSizing::ContentBox { padding_border_sum } else { Size::ZERO };
 
         // Resolve inset
         // Insets are resolved against the container size minus border

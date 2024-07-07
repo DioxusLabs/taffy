@@ -89,8 +89,6 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
     let align_items = style.align_items();
     let justify_items = style.justify_items();
 
-    drop(style);
-
     let constrained_available_space = known_dimensions
         .or(preferred_size)
         .map(|size| size.map(AvailableSpace::Definite))
@@ -196,6 +194,8 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
         style.gap().height,
         |row_index| cell_occupancy_matrix.row_is_occupied(row_index),
     );
+
+    drop(style);
 
     // 6. Track Sizing
 
