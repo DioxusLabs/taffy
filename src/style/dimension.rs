@@ -1,131 +1,121 @@
 //! Style types for representing lengths / sizes
 
 use core::fmt::Debug;
-
 #[cfg(feature = "calc")]
-use core::{mem::transmute, ops::Neg, ptr::NonNull};
-use num_traits::{Signed, Zero};
+use core::{
+    mem::{transmute, transmute_copy},
+    ops::Neg,
+};
+
+use num_traits::Signed;
+#[cfg(feature = "calc")]
+use num_traits::Zero;
+#[cfg(feature = "calc")]
+use sptr::{from_exposed_addr, Strict};
 
 use crate::geometry::{Rect, Size};
 use crate::style_helpers::{FromLength, FromPercent, TaffyAuto, TaffyMaxContent, TaffyMinContent, TaffyZero};
 #[cfg(feature = "calc")]
-use crate::sys::Box;
-use crate::sys::Vec;
+use crate::sys::{Arc, Box};
 use crate::util::sys::abs;
 
 #[cfg(feature = "calc")]
-use sptr::{from_exposed_addr_mut, Strict};
-
-macro_rules! impl_debug {
-    ($ty:ident, $name:literal) => {
-        impl Debug for $ty {
-            fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
-                #[cfg(feature = "calc")]
-                unsafe {
-                    f.debug_tuple($name)
-                        .field(match self.is_calc() {
-                            false => &self.inner,
-                            true => self.ptr.ptr.as_ref(),
-                        })
-                        .finish()
-                }
-                #[cfg(not(feature = "calc"))]
-                f.debug_tuple($name).field(unsafe { &self.inner }).finish()
-            }
-        }
-    };
-}
-
-#[derive(Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Debug)]
-#[repr(align(8), C)]
-struct Tag(u8);
-
-#[cfg(feature = "calc")]
-#[derive(Copy, Clone)]
-#[repr(transparent)]
-struct CalcPtr {
+pub(super) union CalcVariant {
     #[cfg(target_pointer_width = "32")]
-    _space: u32,
-    ptr: NonNull<CalcNode>,
-}
-#[cfg(feature = "calc")]
-impl CalcPtr {
-    #[inline]
-    const fn new(ptr: NonNull<CalcNode>) -> Self {
-        #[cfg(target_pointer_width = "64")]
-        return Self { ptr };
-        #[cfg(target_pointer_width = "32")]
-        return Self { ptr, _space: 0 };
-    }
-}
+    ptr: (u32, *const CalcNode),
+    #[cfg(target_pointer_width = "64")]
+    ptr: u64,
 
-#[cfg(feature = "calc")]
-union CalcVariant {
-    ptr: CalcPtr,
-    tag: Tag,
-    bits: u64,
+    tag: u8,
 }
 #[cfg(feature = "calc")]
 impl CalcVariant {
     const PTR_SHIFT: u8 = 5;
-    fn new(ptr: *mut CalcNode) -> Self {
-        unsafe { Self { ptr: CalcPtr::new(NonNull::new_unchecked(ptr)) }.set_calc_tag() }
-    }
-    unsafe fn set_calc_tag(mut self) -> Self {
+    const CALC_VARIANT_DISCRIMINANT: u8 = 0;
+
+    #[inline]
+    fn new(calc_node: CalcNode) -> Self {
+        let arc_ptr = Arc::into_raw(Arc::new(calc_node));
+
+        #[cfg(target_pointer_width = "32")]
+        return Self { ptr: (0, arc_ptr) }.set_tag();
         #[cfg(target_pointer_width = "64")]
-        {
-            self.bits = (self.ptr.ptr.as_ptr().expose_addr() as u64) << Self::PTR_SHIFT as u64;
-        }
-        self.tag.0 = 0;
+        return Self { ptr: (arc_ptr.expose_addr() as u64) << Self::PTR_SHIFT }.set_tag();
+    }
+    #[inline]
+    const fn set_tag(mut self) -> Self {
+        self.tag = Self::CALC_VARIANT_DISCRIMINANT;
         self
     }
-    unsafe fn get_ptr(&self) -> *mut CalcNode {
-        #[cfg(target_pointer_width = "64")]
-        return from_exposed_addr_mut((self.bits >> Self::PTR_SHIFT) as usize);
+    #[inline]
+    unsafe fn get_ptr(&self) -> *const CalcNode {
         #[cfg(target_pointer_width = "32")]
-        return self.ptr.ptr.as_ptr();
+        return self.ptr.1;
+        #[cfg(target_pointer_width = "64")]
+        return from_exposed_addr((self.ptr >> Self::PTR_SHIFT) as usize);
     }
+    #[inline]
     fn get_calc(&self) -> Option<&CalcNode> {
         unsafe {
-            if self.bits == 0 || self.tag.0 != 0 {
-                None
+            if self.tag == Self::CALC_VARIANT_DISCRIMINANT {
+                Some(&*self.get_ptr())
             } else {
-                Some(&*(self.get_ptr() as *const CalcNode))
+                None
             }
         }
     }
+    #[inline]
+    unsafe fn increment_strong_count(&self) {
+        Arc::increment_strong_count(self.get_ptr());
+    }
+    #[inline]
+    unsafe fn decrement_strong_count(&self) {
+        Arc::decrement_strong_count(self.get_ptr());
+    }
 }
+
 macro_rules! impl_calc {
-    ($t:ident) => {
-        #[cfg(feature = "calc")]
-        impl $t {
+    ($ty:ident) => {
+        impl $ty {
             #[inline]
-            pub fn calc(calc: CalcNode) -> Self {
-                Self::static_calc(Box::leak(Box::new(calc)))
-            }
-            #[inline]
-            pub fn static_calc(calc: &'static CalcNode) -> Self {
-                let ptr = calc as *const CalcNode as *mut CalcNode;
-                unsafe {
-                    let cv = CalcVariant::new(ptr);
-                    transmute::<CalcVariant, Self>(cv)
-                }
-            }
-            #[inline]
-            const fn calc_from_calc_variant(cv: CalcVariant) -> Self {
-                unsafe { transmute::<CalcVariant, Self>(cv) }
+            pub fn calc(calc_node: CalcNode) -> Self {
+                unsafe { Self::from_calc_variant(CalcVariant::new(calc_node)) }
             }
             #[inline]
             pub fn get_calc(&self) -> Option<&CalcNode> {
-                unsafe { transmute::<&Self, &CalcVariant>(self).get_calc() }
+                unsafe { self.to_calc_variant() }.get_calc()
             }
             #[inline]
-            pub unsafe fn get_calc_ptr(&self) -> *mut CalcNode {
-                transmute::<&Self, &CalcVariant>(self).get_ptr()
+            pub unsafe fn get_calc_unchecked(&self) -> &CalcNode {
+                unsafe { &*self.to_calc_variant().get_ptr() }
             }
             #[inline]
-            const unsafe fn get_calc_variant(self) -> CalcVariant {
+            const fn from_calc_variant(cv: CalcVariant) -> Self {
+                unsafe { transmute::<CalcVariant, Self>(cv) }
+            }
+            #[inline]
+            const unsafe fn into_calc_variant(self) -> CalcVariant {
                 transmute::<Self, CalcVariant>(self)
+            }
+            #[inline]
+            const unsafe fn to_calc_variant(&self) -> &CalcVariant {
+                transmute::<&Self, &CalcVariant>(self)
+            }
+        }
+
+        impl Clone for $ty {
+            fn clone(&self) -> Self {
+                if let $ty::Calc = self {
+                    unsafe { self.to_calc_variant().increment_strong_count() };
+                }
+                unsafe { transmute_copy(self) }
+            }
+        }
+        impl Drop for $ty {
+            fn drop(&mut self) {
+                if let $ty::Calc = self {
+                    unsafe { self.to_calc_variant().decrement_strong_count() };
+                }
             }
         }
     };
@@ -134,13 +124,17 @@ macro_rules! impl_calc {
 /// A unit of linear measurement
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(PartialEq, Debug)]
+#[cfg_attr(not(feature = "calc"), derive(Clone))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8, C, align(8))]
 pub enum LengthPercentage {
     #[cfg(feature = "calc")]
-    /// todo
-    Calc,
+    /// Represents an CSS calc() <https://www.w3.org/TR/css-values-4/#funcdef-calc>
+    /// # Safety
+    /// Only construct this variant with the associated [LengthPercentage::calc()] function.
+    /// Constructing this from the enum Variant can cause unexpected behaviour like program crashes.
+    Calc = CalcVariant::CALC_VARIANT_DISCRIMINANT,
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
     /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
     Length(f32),
@@ -154,7 +148,7 @@ impl LengthPercentage {
             LengthPercentage::Length(length) => *length,
             LengthPercentage::Percent(fraction) => fraction * percentage_length,
             #[cfg(feature = "calc")]
-            LengthPercentage::Calc => unsafe { (*self.get_calc_ptr()).resolve(percentage_length) },
+            LengthPercentage::Calc => unsafe { self.get_calc_unchecked().resolve(percentage_length) },
         }
     }
 }
@@ -175,13 +169,17 @@ impl FromPercent for LengthPercentage {
 /// A unit of linear measurement
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(PartialEq, Debug)]
+#[cfg_attr(not(feature = "calc"), derive(Clone))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8, C, align(8))]
 pub enum LengthPercentageAuto {
     #[cfg(feature = "calc")]
-    /// todo
-    Calc,
+    /// Represents an CSS calc() <https://www.w3.org/TR/css-values-4/#funcdef-calc>
+    /// # Safety
+    /// Only construct this variant with the associated [LengthPercentageAuto::calc()] function.
+    /// Constructing this from the enum Variant can cause unexpected behaviour like program crashes.
+    Calc = CalcVariant::CALC_VARIANT_DISCRIMINANT,
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
     /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
     Length(f32),
@@ -215,7 +213,7 @@ impl From<LengthPercentage> for LengthPercentageAuto {
             LengthPercentage::Length(value) => Self::Length(value),
             LengthPercentage::Percent(value) => Self::Percent(value),
             #[cfg(feature = "calc")]
-            LengthPercentage::Calc => Self::calc_from_calc_variant(unsafe { input.get_calc_variant() }),
+            LengthPercentage::Calc => Self::from_calc_variant(unsafe { input.into_calc_variant() }),
         }
     }
 }
@@ -237,35 +235,25 @@ impl LengthPercentageAuto {
     }
     /// Returns true if value is LengthPercentageAuto::Auto
     #[inline(always)]
-    pub fn is_auto(self) -> bool {
-        self == Self::Auto
+    pub fn is_auto(&self) -> bool {
+        self == &Self::Auto
     }
 }
 
 /// A unit of linear measurement
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`].
-//#[derive(Clone, PartialEq, Debug)]
-//#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-//pub enum Dimension {
-//    /// An absolute length in some abstract units. Users of Taffy may define what they correspond
-//    /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
-//    Length(f32),
-//    /// The dimension is stored in percentage relative to the parent item.
-//    Percent(f32),
-//    /// todo
-//    Calc(Calc),
-//    /// The dimension should be automatically computed
-//    Auto,
-//}
-
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(PartialEq, Debug)]
+#[cfg_attr(not(feature = "calc"), derive(Clone))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(u8, C, align(8))]
 pub enum Dimension {
     #[cfg(feature = "calc")]
-    /// todo
-    Calc,
+    /// Represents an CSS calc() <https://www.w3.org/TR/css-values-4/#funcdef-calc>
+    /// # Safety
+    /// Only construct this variant with the associated [Dimension::calc()] function.
+    /// Constructing this from the enum Variant can cause unexpected behaviour like program crashes.
+    Calc = CalcVariant::CALC_VARIANT_DISCRIMINANT,
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
     /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
     Length(f32),
@@ -299,7 +287,7 @@ impl From<LengthPercentage> for Dimension {
             LengthPercentage::Length(value) => Self::Length(value),
             LengthPercentage::Percent(value) => Self::Percent(value),
             #[cfg(feature = "calc")]
-            LengthPercentage::Calc => Self::calc_from_calc_variant(unsafe { input.get_calc_variant() }),
+            LengthPercentage::Calc => Self::from_calc_variant(unsafe { input.into_calc_variant() }),
         }
     }
 }
@@ -310,7 +298,7 @@ impl From<LengthPercentageAuto> for Dimension {
             LengthPercentageAuto::Length(value) => Self::Length(value),
             LengthPercentageAuto::Percent(value) => Self::Percent(value),
             #[cfg(feature = "calc")]
-            LengthPercentageAuto::Calc => Self::calc_from_calc_variant(unsafe { input.get_calc_variant() }),
+            LengthPercentageAuto::Calc => Self::from_calc_variant(unsafe { input.into_calc_variant() }),
             LengthPercentageAuto::Auto => Self::Auto,
         }
     }
@@ -322,6 +310,13 @@ impl Dimension {
     pub fn into_option(self) -> Option<f32> {
         match self {
             Dimension::Length(value) => Some(value),
+            _ => None,
+        }
+    }
+    #[cfg(feature = "grid")]
+    pub fn to_option(&self) -> Option<f32> {
+        match self {
+            Dimension::Length(value) => Some(*value),
             _ => None,
         }
     }
@@ -356,10 +351,10 @@ impl Rect<Dimension> {
     }
 }
 
-/// todo
+/// A tree of nodes that can be found in an CSS calc() function.
 #[cfg(feature = "calc")]
 #[derive(Debug, PartialEq)]
-//#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum CalcNode {
     Leaf(LengthPercentage),
 
