@@ -74,10 +74,12 @@ pub(super) fn align_and_position_item(
     let align_self = style.align_self;
 
     let position = style.position;
-    let inset_horizontal = style.inset.horizontal_components().map(|size| size.resolve_to_option(grid_area_size.width));
-    let inset_vertical = style.inset.vertical_components().map(|size| size.resolve_to_option(grid_area_size.height));
-    let padding = style.padding.map(|p| p.resolve_or_zero(Some(grid_area_size.width)));
-    let border = style.border.map(|p| p.resolve_or_zero(Some(grid_area_size.width)));
+    let inset_horizontal =
+        style.inset.clone().horizontal_components().map(|size| size.resolve_to_option(grid_area_size.width));
+    let inset_vertical =
+        style.inset.clone().vertical_components().map(|size| size.resolve_to_option(grid_area_size.height));
+    let padding = style.padding.clone().map(|p| p.resolve_or_zero(Some(grid_area_size.width)));
+    let border = style.border.clone().map(|p| p.resolve_or_zero(Some(grid_area_size.width)));
     let padding_border_size = (padding + border).sum_axes();
     let inherent_size = style.size.maybe_resolve(grid_area_size).maybe_apply_aspect_ratio(aspect_ratio);
     let min_size = style
@@ -111,7 +113,7 @@ pub(super) fn align_and_position_item(
 
     // Note: This is not a bug. It is part of the CSS spec that both horizontal and vertical margins
     // resolve against the WIDTH of the grid area.
-    let margin = style.margin.map(|margin| margin.resolve_to_option(grid_area_size.width));
+    let margin = style.margin.clone().map(|margin| margin.resolve_to_option(grid_area_size.width));
 
     let grid_area_minus_item_margins_size = Size {
         width: grid_area_size.width.maybe_sub(margin.left).maybe_sub(margin.right),

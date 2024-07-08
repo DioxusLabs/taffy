@@ -1,8 +1,8 @@
 use taffy::prelude::*;
 use taffy::style_helpers::TaffyZero;
 
-fn arr_to_rect<T: Copy>(items: [T; 4]) -> Rect<T> {
-    Rect { left: items[0], right: items[1], top: items[2], bottom: items[3] }
+fn arr_to_rect<T: Clone>(items: [T; 4]) -> Rect<T> {
+    Rect { left: items[0].clone(), right: items[1].clone(), top: items[2].clone(), bottom: items[3].clone() }
 }
 
 #[test]

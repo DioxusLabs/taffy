@@ -2,8 +2,7 @@
 use crate::compute::common::alignment::compute_alignment_offset;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
-    AlignContent, AlignItems, AlignSelf, AvailableSpace, Dimension, Display, FlexWrap, JustifyContent,
-    LengthPercentageAuto, Overflow, Position,
+    AlignContent, AlignItems, AlignSelf, AvailableSpace, Display, FlexWrap, JustifyContent, Overflow, Position,
 };
 use crate::style::{FlexDirection, Style};
 use crate::style_helpers::{TaffyMaxContent, TaffyMinContent};
@@ -255,7 +254,7 @@ fn compute_preliminary(tree: &mut impl LayoutPartialTree, node: NodeId, inputs: 
         // Re-resolve percentage gaps
         let style = tree.get_style(node);
         let inner_container_size = constants.inner_container_size.main(constants.dir);
-        let new_gap = style.gap.main(constants.dir).maybe_resolve(inner_container_size).unwrap_or(0.0);
+        let new_gap = style.gap.clone().main(constants.dir).maybe_resolve(inner_container_size).unwrap_or(0.0);
         constants.gap.set_main(constants.dir, new_gap);
     }
 
@@ -473,9 +472,9 @@ fn generate_anonymous_flex_items(
                     .maybe_resolve(constants.node_inner_size)
                     .maybe_apply_aspect_ratio(aspect_ratio),
 
-                inset: child_style.inset.zip_size(constants.node_inner_size, |p, s| p.maybe_resolve(s)),
+                inset: child_style.inset.clone().zip_size(constants.node_inner_size, |p, s| p.maybe_resolve(s)),
                 margin: child_style.margin.resolve_or_zero(constants.node_inner_size.width),
-                margin_is_auto: child_style.margin.map(|m| m.is_auto()),
+                margin_is_auto: child_style.margin.clone().map(|m| m.is_auto()),
                 padding: child_style.padding.resolve_or_zero(constants.node_inner_size.width),
                 border: child_style.border.resolve_or_zero(constants.node_inner_size.width),
                 align_self: child_style.align_self.unwrap_or(constants.align_items),
@@ -1472,7 +1471,7 @@ fn determine_used_cross_size(tree: &impl LayoutPartialTree, flex_lines: &mut [Fl
                 if child.align_self == AlignSelf::Stretch
                     && !child.margin_is_auto.cross_start(constants.dir)
                     && !child.margin_is_auto.cross_end(constants.dir)
-                    && child_style.size.cross(constants.dir).is_auto()
+                    && child_style.size.clone().cross(constants.dir).is_auto()
                 {
                     // For some reason this particular usage of max_width is an exception to the rule that max_width's transfer
                     // using the aspect_ratio (if set). Both Chrome and Firefox agree on this. And reading the spec, it seems like
@@ -1934,7 +1933,7 @@ fn perform_absolute_layout_on_absolute_children(
         let scrollbar_width = child_style.scrollbar_width;
         let aspect_ratio = child_style.aspect_ratio;
         let align_self = child_style.align_self.unwrap_or(constants.align_items);
-        let margin = child_style.margin.map(|margin| margin.resolve_to_option(container_width));
+        let margin = child_style.margin.clone().map(|margin| margin.resolve_to_option(container_width));
         let padding = child_style.padding.resolve_or_zero(Some(container_width));
         let border = child_style.border.resolve_or_zero(Some(container_width));
         let padding_border_sum = (padding + border).sum_axes();

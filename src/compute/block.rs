@@ -110,9 +110,9 @@ fn compute_inner(tree: &mut impl LayoutPartialTree, node_id: NodeId, inputs: Lay
     } = inputs;
 
     let style = tree.get_style(node_id);
-    let raw_padding = style.padding;
-    let raw_border = style.border;
-    let raw_margin = style.margin;
+    let raw_padding = style.padding.clone();
+    let raw_border = style.border.clone();
+    let raw_margin = style.margin.clone();
     let aspect_ratio = style.aspect_ratio;
     let size = style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
     let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
@@ -279,8 +279,8 @@ fn generate_item_list(
                 overflow: child_style.overflow,
                 scrollbar_width: child_style.scrollbar_width,
                 position: child_style.position,
-                inset: child_style.inset,
-                margin: child_style.margin,
+                inset: child_style.inset.clone(),
+                margin: child_style.margin.clone(),
                 padding,
                 border,
                 padding_border_sum: (padding + border).sum_axes(),
@@ -355,7 +355,7 @@ fn perform_final_layout_on_in_flow_children(
         if item.position == Position::Absolute {
             item.static_position.y = committed_y_offset;
         } else {
-            let item_margin = item.margin.map(|margin| margin.resolve_to_option(container_outer_width));
+            let item_margin = item.margin.clone().map(|margin| margin.resolve_to_option(container_outer_width));
             let item_non_auto_margin = item_margin.map(|m| m.unwrap_or(0.0));
             let item_non_auto_x_margin_sum = item_non_auto_margin.horizontal_axis_sum();
             let known_dimensions = item
@@ -402,8 +402,10 @@ fn perform_final_layout_on_in_flow_children(
             };
 
             // Resolve item inset
-            let inset =
-                item.inset.zip_size(Size { width: container_inner_width, height: 0.0 }, |p, s| p.maybe_resolve(s));
+            let inset = item
+                .inset
+                .clone()
+                .zip_size(Size { width: container_inner_width, height: 0.0 }, |p, s| p.maybe_resolve(s));
             let inset_offset = Point {
                 x: inset.left.or(inset.right.map(|x| -x)).unwrap_or(0.0),
                 y: inset.top.or(inset.bottom.map(|x| -x)).unwrap_or(0.0),
@@ -511,7 +513,7 @@ fn perform_absolute_layout_on_absolute_children(
         }
 
         let aspect_ratio = child_style.aspect_ratio;
-        let margin = child_style.margin.map(|margin| margin.resolve_to_option(area_width));
+        let margin = child_style.margin.clone().map(|margin| margin.resolve_to_option(area_width));
         let padding = child_style.padding.resolve_or_zero(Some(area_width));
         let border = child_style.border.resolve_or_zero(Some(area_width));
         let padding_border_sum = (padding + border).sum_axes();

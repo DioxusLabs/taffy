@@ -719,7 +719,7 @@ impl<T> From<Point<T>> for Size<T> {
 }
 
 /// Generic struct which holds a "min" value and a "max" value
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MinMax<Min, Max> {
     /// The value representing the minimum

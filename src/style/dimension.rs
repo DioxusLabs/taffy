@@ -74,36 +74,54 @@ impl CalcVariant {
     }
 }
 
+/// Implements Calc related functions for `$ty`,
+/// `$ty` needs to uphold these conditions:
+///  - Size of 64bits
+///  - [repr(u8)]() and repr(align(8))
+///  - a variant called `Calc`
+///     with an [explicit discriminant](https://doc.rust-lang.org/reference/items/enumerations.html#explicit-discriminants) of [CalcVariant::CALC_VARIANT_DISCRIMINANT]
 macro_rules! impl_calc {
     ($ty:ident) => {
         impl $ty {
             #[inline]
+            /// Creates an Calc Variant
             pub fn calc(calc_node: CalcNode) -> Self {
                 unsafe { Self::from_calc_variant(CalcVariant::new(calc_node)) }
             }
             #[inline]
+            /// Get underling [CalcNode], this checks if enum has the rigth variant.
             pub fn get_calc(&self) -> Option<&CalcNode> {
                 unsafe { self.to_calc_variant() }.get_calc()
             }
             #[inline]
+            /// Get underling [CalcNode].
+            /// # Safety
+            /// This doesn't check if enum is rigth variant and is undefined behaviour when not checked properly.
             pub unsafe fn get_calc_unchecked(&self) -> &CalcNode {
                 unsafe { &*self.to_calc_variant().get_ptr() }
             }
             #[inline]
+            /// Create an [Self] from an [CalcVariant]
             const fn from_calc_variant(cv: CalcVariant) -> Self {
                 unsafe { transmute::<CalcVariant, Self>(cv) }
             }
             #[inline]
+            /// Converts [Self] to an [CalcVariant] unchecked
             const unsafe fn into_calc_variant(self) -> CalcVariant {
                 transmute::<Self, CalcVariant>(self)
             }
             #[inline]
+            /// Interprets [Self] as an [CalcVariant] unchecked
             const unsafe fn to_calc_variant(&self) -> &CalcVariant {
                 transmute::<&Self, &CalcVariant>(self)
             }
         }
 
         impl Clone for $ty {
+            /// Copies bytes from `&self`. And increases strong count in underling `Arc` when `Self` is [Self::Calc].
+            /// # Safety
+            /// When [Self::Calc] is created by the enum variant and not by [Self::calc()] 
+            /// this is undefined behaviour. 
             fn clone(&self) -> Self {
                 if let $ty::Calc = self {
                     unsafe { self.to_calc_variant().increment_strong_count() };
@@ -112,6 +130,10 @@ macro_rules! impl_calc {
             }
         }
         impl Drop for $ty {
+            /// Drops the underling arc when [Self::Calc] variant.
+            /// # Safety
+            /// When [Self::Calc] is created by the enum variant and not by [Self::calc()] 
+            /// this is undefined behaviour and can create pretty hard to debug bugs. 
             fn drop(&mut self) {
                 if let $ty::Calc = self {
                     unsafe { self.to_calc_variant().decrement_strong_count() };

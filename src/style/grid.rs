@@ -238,7 +238,7 @@ impl Default for Line<GridPlacement> {
 /// Specifies the maximum size of a grid track. A grid track will automatically size between it's minimum and maximum size based
 /// on the size of it's contents, the amount of available space, and the sizing constraint the grid is being size under.
 /// See <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns>
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum MaxTrackSizingFunction {
     /// Track maximum size should be a fixed length or percentage value
@@ -361,7 +361,7 @@ impl MaxTrackSizingFunction {
 /// Specifies the minimum size of a grid track. A grid track will automatically size between it's minimum and maximum size based
 /// on the size of it's contents, the amount of available space, and the sizing constraint the grid is being size under.
 /// See <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns>
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum MinTrackSizingFunction {
     /// Track minimum size should be a fixed length or percentage value
@@ -444,11 +444,11 @@ pub type NonRepeatedTrackSizingFunction = MinMax<MinTrackSizingFunction, MaxTrac
 impl NonRepeatedTrackSizingFunction {
     /// Extract the min track sizing function
     pub fn min_sizing_function(&self) -> MinTrackSizingFunction {
-        self.min
+        self.min.clone()
     }
     /// Extract the max track sizing function
     pub fn max_sizing_function(&self) -> MaxTrackSizingFunction {
-        self.max
+        self.max.clone()
     }
     /// Determine whether at least one of the components ("min" and "max") are fixed sizing function
     pub fn has_fixed_component(&self) -> bool {

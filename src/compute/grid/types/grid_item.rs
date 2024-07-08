@@ -101,11 +101,11 @@ impl GridItem {
             row: row_span,
             column: col_span,
             overflow: style.overflow,
-            size: style.size,
-            min_size: style.min_size,
-            max_size: style.max_size,
+            size: style.size.clone(),
+            min_size: style.min_size.clone(),
+            max_size: style.max_size.clone(),
             aspect_ratio: style.aspect_ratio,
-            margin: style.margin,
+            margin: style.margin.clone(),
             align_self: style.align_self.unwrap_or(parent_align_items),
             justify_self: style.justify_self.unwrap_or(parent_justify_items),
             baseline: None,
@@ -186,11 +186,11 @@ impl GridItem {
         let spanned_tracks = &axis_tracks[self.track_range_excluding_lines(axis)];
         let tracks_all_fixed = spanned_tracks
             .iter()
-            .all(|track| track.max_track_sizing_function.definite_limit(axis_parent_size).is_some());
+            .all(|track| track.max_track_sizing_function.clone().definite_limit(axis_parent_size).is_some());
         if tracks_all_fixed {
             let limit: f32 = spanned_tracks
                 .iter()
-                .map(|track| track.max_track_sizing_function.definite_limit(axis_parent_size).unwrap())
+                .map(|track| track.max_track_sizing_function.clone().definite_limit(axis_parent_size).unwrap())
                 .sum();
             Some(limit)
         } else {
@@ -209,11 +209,11 @@ impl GridItem {
         let spanned_tracks = &axis_tracks[self.track_range_excluding_lines(axis)];
         let tracks_all_fixed = spanned_tracks
             .iter()
-            .all(|track| track.max_track_sizing_function.definite_value(axis_parent_size).is_some());
+            .all(|track| track.max_track_sizing_function.clone().definite_value(axis_parent_size).is_some());
         if tracks_all_fixed {
             let limit: f32 = spanned_tracks
                 .iter()
-                .map(|track| track.max_track_sizing_function.definite_value(axis_parent_size).unwrap())
+                .map(|track| track.max_track_sizing_function.clone().definite_value(axis_parent_size).unwrap())
                 .sum();
             Some(limit)
         } else {
