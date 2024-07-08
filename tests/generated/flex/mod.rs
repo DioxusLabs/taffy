@@ -235,6 +235,7 @@ mod flex_direction_column_reverse_no_height;
 mod flex_direction_row;
 mod flex_direction_row_no_width;
 mod flex_direction_row_reverse;
+mod flex_grow_0_min_size;
 mod flex_grow_child;
 mod flex_grow_flex_basis_percent_min_max;
 mod flex_grow_height_maximized;

@@ -744,14 +744,6 @@ fn determine_flex_base_size(
             child.flex_basis - child.padding.main_axis_sum(constants.dir) - child.border.main_axis_sum(constants.dir);
 
         let padding_border_axes_sums = (child.padding + child.border).sum_axes().map(Some);
-        let hypothetical_inner_min_main =
-            child.min_size.main(constants.dir).maybe_max(padding_border_axes_sums.main(constants.dir));
-        let hypothetical_inner_size =
-            child.flex_basis.maybe_clamp(hypothetical_inner_min_main, child.max_size.main(constants.dir));
-        let hypothetical_outer_size = hypothetical_inner_size + child.margin.main_axis_sum(constants.dir);
-
-        child.hypothetical_inner_size.set_main(constants.dir, hypothetical_inner_size);
-        child.hypothetical_outer_size.set_main(constants.dir, hypothetical_outer_size);
 
         // Note that it is important that the `parent_size` parameter in the main axis is not set for this
         // function call as it used for resolving percentages, and percentage size in an axis should not contribute
@@ -784,6 +776,15 @@ fn determine_flex_base_size(
                 min_content_main_size.maybe_min(child.size.main(dir)).maybe_min(child.max_size.main(dir));
             clamped_min_content_size.maybe_max(padding_border_axes_sums.main(dir))
         });
+
+        let hypothetical_inner_min_main =
+            child.resolved_minimum_main_size.maybe_max(padding_border_axes_sums.main(constants.dir));
+        let hypothetical_inner_size =
+            child.flex_basis.maybe_clamp(Some(hypothetical_inner_min_main), child.max_size.main(constants.dir));
+        let hypothetical_outer_size = hypothetical_inner_size + child.margin.main_axis_sum(constants.dir);
+
+        child.hypothetical_inner_size.set_main(constants.dir, hypothetical_inner_size);
+        child.hypothetical_outer_size.set_main(constants.dir, hypothetical_outer_size);
     }
 }
 
