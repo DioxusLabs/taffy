@@ -165,10 +165,10 @@ pub enum LengthPercentage {
 }
 impl_calc!(LengthPercentage);
 impl LengthPercentage {
-    pub fn resolve(&self, percentage_length: f32) -> f32 {
+    pub fn resolve(&self, percentage_length: Option<f32> ) -> f32 {
         match self {
             LengthPercentage::Length(length) => *length,
-            LengthPercentage::Percent(fraction) => fraction * percentage_length,
+            LengthPercentage::Percent(fraction) => percentage_length.map(|pl| fraction * pl).unwrap_or(0.0),
             #[cfg(feature = "calc")]
             LengthPercentage::Calc => unsafe { self.get_calc_unchecked().resolve(percentage_length) },
         }
@@ -251,7 +251,7 @@ impl LengthPercentageAuto {
             LengthPercentageAuto::Length(length) => Some(length),
             LengthPercentageAuto::Percent(percent) => Some(context * percent),
             #[cfg(feature = "calc")]
-            LengthPercentageAuto::Calc => self.get_calc().map(|calc| calc.resolve(context)),
+            LengthPercentageAuto::Calc => self.get_calc().map(|calc| calc.resolve(Some(context))),
             LengthPercentageAuto::Auto => None,
         }
     }
@@ -438,7 +438,7 @@ pub enum CalcNode {
 #[cfg(feature = "calc")]
 impl CalcNode {
     /// Resolves the size of this [CalcNode]
-    pub fn resolve(&self, percentage_length: f32) -> f32 {
+    pub fn resolve(&self, percentage_length: Option<f32>) -> f32 {
         match self {
             CalcNode::Leaf(leaf) => leaf.resolve(percentage_length),
             CalcNode::Sum(lhs, rhs) => lhs.resolve(percentage_length) + rhs.resolve(percentage_length),

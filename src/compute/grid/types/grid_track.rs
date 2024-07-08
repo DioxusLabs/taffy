@@ -114,7 +114,8 @@ impl GridTrack {
     #[inline(always)]
     /// Returns true if the track is flexible (has a Flex MaxTrackSizingFunction), else false.
     pub fn uses_percentage(&self) -> bool {
-        self.min_track_sizing_function.clone().uses_percentage() || self.max_track_sizing_function.clone().uses_percentage()
+        self.min_track_sizing_function.clone().uses_percentage()
+            || self.max_track_sizing_function.clone().uses_percentage()
     }
 
     #[inline(always)]

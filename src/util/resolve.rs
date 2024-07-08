@@ -32,7 +32,7 @@ impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentage {
             LengthPercentage::Length(length) => Some(*length),
             LengthPercentage::Percent(percent) => context.map(|dim| dim * percent),
             #[cfg(feature = "calc")]
-            LengthPercentage::Calc => context.zip(self.get_calc()).map(|(dim, calc)| calc.resolve(dim)),
+            LengthPercentage::Calc => self.get_calc().map(|c| c.resolve(context)),
         }
     }
 }
@@ -45,7 +45,7 @@ impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentageAuto {
             LengthPercentageAuto::Length(length) => Some(*length),
             LengthPercentageAuto::Percent(percent) => context.map(|dim| dim * percent),
             #[cfg(feature = "calc")]
-            LengthPercentageAuto::Calc => context.zip(self.get_calc()).map(|(dim, calc)| calc.resolve(dim)),
+            LengthPercentageAuto::Calc => self.get_calc().map(|c| c.resolve(context)),
             LengthPercentageAuto::Auto => None,
         }
     }
@@ -60,7 +60,7 @@ impl MaybeResolve<Option<f32>, Option<f32>> for Dimension {
             Dimension::Length(length) => Some(*length),
             Dimension::Percent(percent) => context.map(|dim| dim * percent),
             #[cfg(feature = "calc")]
-            Dimension::Calc => context.zip(self.get_calc()).map(|(dim, calc)| calc.resolve(dim)),
+            Dimension::Calc => self.get_calc().map(|c| c.resolve(context)),
             Dimension::Auto => None,
         }
     }
