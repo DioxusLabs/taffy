@@ -20,20 +20,30 @@ use crate::sys::{Arc, Box};
 use crate::util::sys::abs;
 
 #[cfg(feature = "calc")]
+/// A tagged [alloc::sync::Arc]-pointer that can be used in a 64bit enum witch is repr(u8, align(8)).
+/// # Safety
+/// This may not work as desired in future 64bit cpu implementations,
+/// as this relies on onto free space not used by pointers.
 pub(super) union CalcVariant {
     #[cfg(target_pointer_width = "32")]
+    /// Arc Pointer and 32bit space
     ptr: (u32, *const CalcNode),
     #[cfg(target_pointer_width = "64")]
+    /// Shifted ArcPointer
     ptr: u64,
-
+    /// Enum tag
     tag: u8,
 }
 #[cfg(feature = "calc")]
 impl CalcVariant {
+    /// Amount of bits by witch we shift the pointer to make space for the discriminant.
+    ///
     const PTR_SHIFT: u8 = 5;
+    /// Discriminant that has to be used by the enum, so we can ensure safety.
     const CALC_VARIANT_DISCRIMINANT: u8 = 0;
 
     #[inline]
+    /// Create a new [CalcVariant] from an [CalcNode]
     fn new(calc_node: CalcNode) -> Self {
         let arc_ptr = Arc::into_raw(Arc::new(calc_node));
 
@@ -43,11 +53,15 @@ impl CalcVariant {
         return Self { ptr: (arc_ptr.expose_addr() as u64) << Self::PTR_SHIFT }.set_tag();
     }
     #[inline]
+    /// Sets tag to [Self::CALC_VARIANT_DISCRIMINANT]
     const fn set_tag(mut self) -> Self {
         self.tag = Self::CALC_VARIANT_DISCRIMINANT;
         self
     }
     #[inline]
+    /// Gets a raw pointer to a [CalcNode]
+    /// # Safety
+    /// Self should be a calc variant or undefined behaviour can happen.
     unsafe fn get_ptr(&self) -> *const CalcNode {
         #[cfg(target_pointer_width = "32")]
         return self.ptr.1;
@@ -55,6 +69,10 @@ impl CalcVariant {
         return from_exposed_addr((self.ptr >> Self::PTR_SHIFT) as usize);
     }
     #[inline]
+    /// Get underling [CalcNode].
+    /// # Safety
+    /// This doesn't check if enum is a right variant
+    /// and is undefined behaviour when not checked properly.
     fn get_calc(&self) -> Option<&CalcNode> {
         unsafe {
             if self.tag == Self::CALC_VARIANT_DISCRIMINANT {
@@ -65,10 +83,12 @@ impl CalcVariant {
         }
     }
     #[inline]
+    /// Increments strong count of arc as described in [Arc::increment_strong_count()]
     unsafe fn increment_strong_count(&self) {
         Arc::increment_strong_count(self.get_ptr());
     }
     #[inline]
+    /// Decrements strong count of arc as described in [Arc::decrement_strong_count()]
     unsafe fn decrement_strong_count(&self) {
         Arc::decrement_strong_count(self.get_ptr());
     }
@@ -86,7 +106,7 @@ macro_rules! impl_calc {
             #[inline]
             /// Creates an Calc Variant
             pub fn calc(calc_node: CalcNode) -> Self {
-                unsafe { Self::from_calc_variant(CalcVariant::new(calc_node)) }
+                Self::from_calc_variant(CalcVariant::new(calc_node))
             }
             #[inline]
             /// Get underling [CalcNode], this checks if enum has the rigth variant.
@@ -96,7 +116,8 @@ macro_rules! impl_calc {
             #[inline]
             /// Get underling [CalcNode].
             /// # Safety
-            /// This doesn't check if enum is rigth variant and is undefined behaviour when not checked properly.
+            /// This doesn't check if enum is a right variant
+            /// and is undefined behaviour when not checked properly.
             pub unsafe fn get_calc_unchecked(&self) -> &CalcNode {
                 unsafe { &*self.to_calc_variant().get_ptr() }
             }
@@ -105,6 +126,7 @@ macro_rules! impl_calc {
             const fn from_calc_variant(cv: CalcVariant) -> Self {
                 unsafe { transmute::<CalcVariant, Self>(cv) }
             }
+            #[allow(dead_code)]
             #[inline]
             /// Converts [Self] to an [CalcVariant] unchecked
             const unsafe fn into_calc_variant(self) -> CalcVariant {
@@ -118,10 +140,11 @@ macro_rules! impl_calc {
         }
 
         impl Clone for $ty {
+            #[inline(always)]
             /// Copies bytes from `&self`. And increases strong count in underling `Arc` when `Self` is [Self::Calc].
             /// # Safety
-            /// When [Self::Calc] is created by the enum variant and not by [Self::calc()] 
-            /// this is undefined behaviour. 
+            /// When [Self::Calc] is created by the enum variant and not by [Self::calc()]
+            /// this is undefined behaviour.
             fn clone(&self) -> Self {
                 if let $ty::Calc = self {
                     unsafe { self.to_calc_variant().increment_strong_count() };
@@ -130,10 +153,11 @@ macro_rules! impl_calc {
             }
         }
         impl Drop for $ty {
+            #[inline(always)]
             /// Drops the underling arc when [Self::Calc] variant.
             /// # Safety
-            /// When [Self::Calc] is created by the enum variant and not by [Self::calc()] 
-            /// this is undefined behaviour and can create pretty hard to debug bugs. 
+            /// When [Self::Calc] is created by the enum variant and not by [Self::calc()]
+            /// this is undefined behaviour and can create pretty hard to debug bugs.
             fn drop(&mut self) {
                 if let $ty::Calc = self {
                     unsafe { self.to_calc_variant().decrement_strong_count() };
@@ -165,7 +189,8 @@ pub enum LengthPercentage {
 }
 impl_calc!(LengthPercentage);
 impl LengthPercentage {
-    pub fn resolve(&self, percentage_length: Option<f32> ) -> f32 {
+    /// Resolve size using the provided context.
+    pub(crate) fn resolve(&self, percentage_length: Option<f32>) -> f32 {
         match self {
             LengthPercentage::Length(length) => *length,
             LengthPercentage::Percent(fraction) => percentage_length.map(|pl| fraction * pl).unwrap_or(0.0),
@@ -335,17 +360,10 @@ impl Dimension {
             _ => None,
         }
     }
-    #[cfg(feature = "grid")]
-    pub fn to_option(&self) -> Option<f32> {
-        match self {
-            Dimension::Length(value) => Some(*value),
-            _ => None,
-        }
-    }
     /// Returns true if value is Dimension::Auto
     #[inline(always)]
-    pub fn is_auto(self) -> bool {
-        self == Self::Auto
+    pub fn is_auto(&self) -> bool {
+        *self == Self::Auto
     }
 }
 
@@ -378,6 +396,7 @@ impl Rect<Dimension> {
 #[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum CalcNode {
+    /// A leaf/atom in a CalcExpr.
     Leaf(LengthPercentage),
 
     /// Add the two values.
@@ -401,27 +420,37 @@ pub enum CalcNode {
     /// Clamps value between min and max
     /// <https://www.w3.org/TR/css-values-4/#funcdef-clamp>
     Clamp {
+        #[allow(missing_docs)]
         min: Box<CalcNode>,
+        #[allow(missing_docs)]
         value: Box<CalcNode>,
+        #[allow(missing_docs)]
         max: Box<CalcNode>,
     },
     /// Rounds value as defined by [RoundingStrategy].
     /// <https://www.w3.org/TR/css-values-4/#funcdef-round>
     Round {
+        #[allow(missing_docs)]
         strategy: RoundingStrategy,
+        #[allow(missing_docs)]
         value: Box<CalcNode>,
+        #[allow(missing_docs)]
         interval: Box<CalcNode>,
     },
     /// Returns the remainder left over when the `dividend` is divided by the `divisor`.
     /// <https://www.w3.org/TR/css-values-4/#funcdef-rem>
     Rem {
+        #[allow(missing_docs)]
         dividend: Box<CalcNode>,
+        #[allow(missing_docs)]
         divisor: Box<CalcNode>,
     },
     /// Returns the modulus left over when the `dividend` is divided by the `divisor`.
     /// <https://www.w3.org/TR/css-values-4/#funcdef-mod>
     Mod {
+        #[allow(missing_docs)]
         dividend: Box<CalcNode>,
+        #[allow(missing_docs)]
         divisor: Box<CalcNode>,
     },
     /// Returns the square root of the sum of squares of its parameters.

@@ -29,7 +29,9 @@ mod std {
         Vec::with_capacity(capacity)
     }
 
+    /// A pointer to an owned heap allocated value.
     pub(crate) type Box<A> = std::boxed::Box<A>;
+    /// A thread-safe reference-counting pointer.
     pub(crate) type Arc<A> = std::sync::Arc<A>;
 
     /// Rounds to the nearest whole number
@@ -79,7 +81,9 @@ mod alloc {
         Vec::with_capacity(capacity)
     }
 
+    /// A pointer to an owned heap allocated value.
     pub(crate) type Box<A> = alloc::boxed::Box<A>;
+    /// A thread-safe reference-counting pointer.
     pub(crate) type Arc<A> = alloc::sync::Arc<A>;
 
     /// Rounds to the nearest whole number
