@@ -340,13 +340,13 @@ fn perform_final_layout_on_in_flow_children(
 
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut inflow_content_size = Size::ZERO;
-    let mut committed_offset = Point { x: resolved_content_box_inset.left, y: resolved_content_box_inset.top };
+    let mut committed_y_offset = resolved_content_box_inset.top;
     let mut first_child_top_margin_set = CollapsibleMarginSet::ZERO;
     let mut active_collapsible_margin_set = CollapsibleMarginSet::ZERO;
     let mut is_collapsing_with_first_margin_set = true;
     for item in items.iter_mut() {
         if item.position == Position::Absolute {
-            item.static_position = committed_offset
+            item.static_position = Point { x: resolved_content_box_inset.left, y: committed_y_offset }
         } else {
             let item_margin = item.margin.map(|margin| margin.resolve_to_option(container_outer_width));
             let item_non_auto_margin = item_margin.map(|m| m.unwrap_or(0.0));
@@ -414,11 +414,11 @@ fn perform_final_layout_on_in_flow_children(
             item.can_be_collapsed_through = item_layout.margins_can_collapse_through;
             item.static_position = Point {
                 x: resolved_content_box_inset.left,
-                y: committed_offset.y + active_collapsible_margin_set.resolve(),
+                y: committed_y_offset + active_collapsible_margin_set.resolve(),
             };
             let location = Point {
                 x: resolved_content_box_inset.left + inset_offset.x + resolved_margin.left,
-                y: committed_offset.y + inset_offset.y + y_margin_offset,
+                y: committed_y_offset + inset_offset.y + y_margin_offset,
             };
 
             let scrollbar_size = Size {
@@ -469,7 +469,7 @@ fn perform_final_layout_on_in_flow_children(
                     .collapse_with_set(top_margin_set)
                     .collapse_with_set(bottom_margin_set);
             } else {
-                committed_offset.y += item_layout.size.height + y_margin_offset;
+                committed_y_offset += item_layout.size.height + y_margin_offset;
                 active_collapsible_margin_set = bottom_margin_set;
             }
         }
@@ -479,8 +479,8 @@ fn perform_final_layout_on_in_flow_children(
     let bottom_y_margin_offset =
         if own_margins_collapse_with_children.end { 0.0 } else { last_child_bottom_margin_set.resolve() };
 
-    committed_offset.y += resolved_content_box_inset.bottom + bottom_y_margin_offset;
-    let content_height = f32_max(0.0, committed_offset.y);
+    committed_y_offset += resolved_content_box_inset.bottom + bottom_y_margin_offset;
+    let content_height = f32_max(0.0, committed_y_offset);
     (inflow_content_size, content_height, first_child_top_margin_set, last_child_bottom_margin_set)
 }
 
