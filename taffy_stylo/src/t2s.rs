@@ -171,23 +171,106 @@ pub(crate) fn item_alignment(input: stylo::AlignFlags) -> Option<taffy::AlignIte
     }
 }
 
-// pub(crate) fn justify_items(input: stylo::JustifyItems) -> Option<taffy::JustifyItems> {
-//     match input {
-//         stylo::JustifyItems::Stretch => Some(taffy::JustifyItems::Stretch),
-//         stylo::JustifyItems::FlexStart => Some(taffy::JustifyItems::FlexStart),
-//         stylo::JustifyItems::FlexEnd => Some(taffy::JustifyItems::FlexEnd),
-//         stylo::JustifyItems::Center => Some(taffy::JustifyItems::Center),
-//         stylo::JustifyItems::Baseline => Some(taffy::JustifyItems::Baseline),
-//     }
-// }
+#[inline]
+pub(crate) fn grid_auto_flow(input: stylo::GridAutoFlow) -> taffy::GridAutoFlow {
+    let is_row = input.contains(stylo::GridAutoFlow::ROW);
+    let is_dense = input.contains(stylo::GridAutoFlow::DENSE);
 
-// pub(crate) fn justify_self(input: stylo::JustifySelf) -> Option<taffy::JustifySelf> {
-//     match input {
-//         stylo::JustifySelf::Auto => None,
-//         stylo::JustifySelf::Stretch => Some(taffy::JustifySelf::Stretch),
-//         stylo::JustifySelf::FlexStart => Some(taffy::JustifySelf::FlexStart),
-//         stylo::JustifySelf::FlexEnd => Some(taffy::JustifySelf::FlexEnd),
-//         stylo::JustifySelf::Center => Some(taffy::JustifySelf::Center),
-//         stylo::JustifySelf::Baseline => Some(taffy::JustifySelf::Baseline),
-//     }
-// }
+    match (is_row, is_dense) {
+        (true, false) => taffy::GridAutoFlow::Row,
+        (true, true) => taffy::GridAutoFlow::RowDense,
+        (false, false) => taffy::GridAutoFlow::Column,
+        (false, true) => taffy::GridAutoFlow::ColumnDense,
+    }
+}
+
+#[inline]
+pub(crate) fn grid_line(input: &stylo::GridLine) -> taffy::GridPlacement {
+    if input.is_auto() {
+        taffy::GridPlacement::Auto
+    } else if input.is_span {
+        taffy::style_helpers::span(input.line_num.try_into().unwrap())
+    } else if input.line_num == 0 {
+        taffy::GridPlacement::Auto
+    } else {
+        taffy::style_helpers::line(input.line_num.try_into().unwrap())
+    }
+}
+
+#[inline]
+pub(crate) fn grid_template_tracks(input: &stylo::GridTemplateComponent) -> Vec<taffy::TrackSizingFunction> {
+    match input {
+        stylo::GenericGridTemplateComponent::None => Vec::new(),
+        stylo::GenericGridTemplateComponent::TrackList(list) => list
+            .values
+            .iter()
+            .map(|track| match track {
+                stylo::TrackListValue::TrackSize(size) => taffy::TrackSizingFunction::Single(track_size(&size)),
+                stylo::TrackListValue::TrackRepeat(repeat) => taffy::TrackSizingFunction::Repeat(
+                    track_repeat(repeat.count),
+                    repeat.track_sizes.iter().map(track_size).collect(),
+                ),
+            })
+            .collect(),
+
+        // TODO: Implement subgrid and masonry
+        stylo::GenericGridTemplateComponent::Subgrid(_) => Vec::new(),
+        stylo::GenericGridTemplateComponent::Masonry => Vec::new(),
+    }
+}
+
+#[inline]
+pub(crate) fn grid_auto_tracks(input: &stylo::ImplicitGridTracks) -> Vec<taffy::NonRepeatedTrackSizingFunction> {
+    input.0.iter().map(track_size).collect()
+}
+
+#[inline]
+pub(crate) fn track_repeat(input: stylo::RepeatCount<i32>) -> taffy::GridTrackRepetition {
+    match input {
+        stylo::RepeatCount::Number(val) => taffy::GridTrackRepetition::Count(val.try_into().unwrap()),
+        stylo::RepeatCount::AutoFill => taffy::GridTrackRepetition::AutoFill,
+        stylo::RepeatCount::AutoFit => taffy::GridTrackRepetition::AutoFit,
+    }
+}
+
+#[inline]
+pub(crate) fn track_size(input: &stylo::TrackSize<stylo::LengthPercentage>) -> taffy::NonRepeatedTrackSizingFunction {
+    match input {
+        stylo::TrackSize::Breadth(breadth) => taffy::MinMax { min: min_track(breadth), max: max_track(breadth) },
+        stylo::TrackSize::Minmax(min, max) => taffy::MinMax { min: min_track(min), max: max_track(max) },
+        stylo::TrackSize::FitContent(limit) => taffy::MinMax {
+            min: taffy::MinTrackSizingFunction::Auto,
+            max: taffy::MaxTrackSizingFunction::FitContent(match limit {
+                stylo::TrackBreadth::Breadth(lp) => length_percentage(lp),
+
+                // Are these valid? Taffy doesn't support this in any case
+                stylo::TrackBreadth::Fr(_) => unreachable!(),
+                stylo::TrackBreadth::Auto => unreachable!(),
+                stylo::TrackBreadth::MinContent => unreachable!(),
+                stylo::TrackBreadth::MaxContent => unreachable!(),
+            }),
+        },
+    }
+}
+
+#[inline]
+pub(crate) fn min_track(input: &stylo::TrackBreadth<stylo::LengthPercentage>) -> taffy::MinTrackSizingFunction {
+    match input {
+        stylo::TrackBreadth::Breadth(lp) => taffy::MinTrackSizingFunction::Fixed(length_percentage(lp)),
+        stylo::TrackBreadth::Fr(_) => taffy::MinTrackSizingFunction::Auto,
+        stylo::TrackBreadth::Auto => taffy::MinTrackSizingFunction::Auto,
+        stylo::TrackBreadth::MinContent => taffy::MinTrackSizingFunction::MinContent,
+        stylo::TrackBreadth::MaxContent => taffy::MinTrackSizingFunction::MaxContent,
+    }
+}
+
+#[inline]
+pub(crate) fn max_track(input: &stylo::TrackBreadth<stylo::LengthPercentage>) -> taffy::MaxTrackSizingFunction {
+    match input {
+        stylo::TrackBreadth::Breadth(lp) => taffy::MaxTrackSizingFunction::Fixed(length_percentage(lp)),
+        stylo::TrackBreadth::Fr(val) => taffy::MaxTrackSizingFunction::Fraction(*val),
+        stylo::TrackBreadth::Auto => taffy::MaxTrackSizingFunction::Auto,
+        stylo::TrackBreadth::MinContent => taffy::MaxTrackSizingFunction::MinContent,
+        stylo::TrackBreadth::MaxContent => taffy::MaxTrackSizingFunction::MaxContent,
+    }
+}

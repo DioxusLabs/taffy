@@ -168,3 +168,89 @@ impl taffy::FlexboxItemStyle for TaffyStyloStyleRef<'_> {
         t2s::item_alignment(self.0.get_position().align_self.0 .0)
     }
 }
+
+impl taffy::GridContainerStyle for TaffyStyloStyleRef<'_> {
+    type TemplateTrackList<'a> = Vec<taffy::TrackSizingFunction> where Self: 'a;
+    type AutoTrackList<'a> = Vec<taffy::NonRepeatedTrackSizingFunction> where Self: 'a;
+
+    #[inline]
+    fn grid_template_rows(&self) -> Self::TemplateTrackList<'_> {
+        t2s::grid_template_tracks(&self.0.get_position().grid_template_rows)
+    }
+
+    #[inline]
+    fn grid_template_columns(&self) -> Self::TemplateTrackList<'_> {
+        t2s::grid_template_tracks(&self.0.get_position().grid_template_columns)
+    }
+
+    #[inline]
+    fn grid_auto_rows(&self) -> Self::AutoTrackList<'_> {
+        t2s::grid_auto_tracks(&self.0.get_position().grid_auto_rows)
+    }
+
+    #[inline]
+    fn grid_auto_columns(&self) -> Self::AutoTrackList<'_> {
+        t2s::grid_auto_tracks(&self.0.get_position().grid_auto_columns)
+    }
+
+    #[inline]
+    fn grid_auto_flow(&self) -> taffy::GridAutoFlow {
+        t2s::grid_auto_flow(self.0.get_position().grid_auto_flow)
+    }
+
+    #[inline]
+    fn gap(&self) -> taffy::Size<taffy::LengthPercentage> {
+        let position_styles = self.0.get_position();
+        taffy::Size { width: t2s::gap(&position_styles.column_gap), height: t2s::gap(&position_styles.row_gap) }
+    }
+
+    #[inline]
+    fn align_content(&self) -> Option<taffy::AlignContent> {
+        t2s::content_alignment(self.0.get_position().align_content.0)
+    }
+
+    #[inline]
+    fn justify_content(&self) -> Option<taffy::JustifyContent> {
+        t2s::content_alignment(self.0.get_position().justify_content.0)
+    }
+
+    #[inline]
+    fn align_items(&self) -> Option<taffy::AlignItems> {
+        t2s::item_alignment(self.0.get_position().align_items.0)
+    }
+
+    #[inline]
+    fn justify_items(&self) -> Option<taffy::AlignItems> {
+        t2s::item_alignment(self.0.get_position().justify_items.computed.0)
+    }
+}
+
+impl taffy::GridItemStyle for TaffyStyloStyleRef<'_> {
+    #[inline]
+    fn grid_row(&self) -> taffy::Line<taffy::GridPlacement> {
+        let position_styles = self.0.get_position();
+        taffy::Line {
+            start: t2s::grid_line(&position_styles.grid_row_start),
+            end: t2s::grid_line(&position_styles.grid_row_end),
+        }
+    }
+
+    #[inline]
+    fn grid_column(&self) -> taffy::Line<taffy::GridPlacement> {
+        let position_styles = self.0.get_position();
+        taffy::Line {
+            start: t2s::grid_line(&position_styles.grid_column_start),
+            end: t2s::grid_line(&position_styles.grid_column_end),
+        }
+    }
+
+    #[inline]
+    fn align_self(&self) -> Option<taffy::AlignSelf> {
+        t2s::item_alignment(self.0.get_position().align_self.0 .0)
+    }
+
+    #[inline]
+    fn justify_self(&self) -> Option<taffy::AlignSelf> {
+        t2s::item_alignment(self.0.get_position().justify_self.0 .0)
+    }
+}
