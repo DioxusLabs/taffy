@@ -212,7 +212,11 @@ impl<NodeContext> PrintTree for TaffyTree<NodeContext> {
 
     #[inline(always)]
     fn get_final_layout(&self, node_id: NodeId) -> &Layout {
-        &self.nodes[node_id.into()].final_layout
+        if self.config.use_rounding {
+            &self.nodes[node_id.into()].final_layout
+        } else {
+            &self.nodes[node_id.into()].unrounded_layout
+        }
     }
 }
 
