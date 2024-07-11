@@ -227,7 +227,6 @@ fn place_indefinitely_positioned_item(
     let primary_placement_style = placement.get(primary_axis);
     let secondary_placement_style = placement.get(primary_axis.other_axis());
 
-    let primary_span = primary_placement_style.indefinite_span();
     let secondary_span = secondary_placement_style.indefinite_span();
     let has_definite_primary_axis_position = primary_placement_style.is_definite();
     let primary_axis_grid_start_line = cell_occupancy_matrix.track_counts(primary_axis).implicit_start_line();
@@ -256,7 +255,7 @@ fn place_indefinitely_positioned_item(
         // Item has fixed primary axis position: so we simply increment the secondary axis position
         // until we find a space that the item fits in
         loop {
-            let primary_span = Line { start: primary_idx, end: primary_idx + primary_span };
+            let primary_span = Line { start: primary_idx, end: primary_idx + definite_primary_placement.span() };
             let secondary_span = Line { start: secondary_idx, end: secondary_idx + secondary_span };
 
             // If area is occupied, increment the index and try again
@@ -269,6 +268,8 @@ fn place_indefinitely_positioned_item(
             return (primary_span, secondary_span);
         }
     } else {
+        let primary_span = primary_placement_style.indefinite_span();
+
         // Item does not have any fixed axis, so we search along the primary axis until we hit the end of the already
         // existent tracks, and then we reset the primary axis back to zero and increment the secondary axis index.
         // We continue in this vein until we find a space that the item fits in.
