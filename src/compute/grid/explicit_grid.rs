@@ -106,7 +106,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
             /// otherwise, flooring the max track sizing function by the min track sizing function if both are definite
             fn track_definite_value(sizing_function: &NonRepeatedTrackSizingFunction, parent_size: Option<f32>) -> f32 {
                 let max_size = sizing_function.max.definite_value(parent_size);
-                let min_size = sizing_function.max.definite_value(parent_size);
+                let min_size = sizing_function.min.definite_value(parent_size);
                 max_size.map(|max| max.maybe_min(min_size)).or(min_size).unwrap()
             }
 
