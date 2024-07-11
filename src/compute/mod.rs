@@ -52,13 +52,58 @@ use crate::tree::{
 use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
 use crate::util::sys::round;
 use crate::util::ResolveOrZero;
+use crate::{Display, MaybeMath, MaybeResolve};
 
 /// Compute layout for the root node in the tree
 pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, available_space: Size<AvailableSpace>) {
+    let mut known_dimensions = Size::NONE;
+
+    #[cfg(feature = "block_layout")]
+    {
+        let parent_size = available_space.into_options();
+        let style = tree.get_style(root);
+
+        if style.display == Display::Block {
+            // Pull these out earlier to avoid borrowing issues
+            let aspect_ratio = style.aspect_ratio;
+            let margin = style.margin.resolve_or_zero(parent_size.width);
+            let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+            let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
+            let padding = style.padding.resolve_or_zero(parent_size.width);
+            let border = style.border.resolve_or_zero(parent_size.width);
+            let padding_border_size = (padding + border).sum_axes();
+            let clamped_style_size = style
+                .size
+                .maybe_resolve(parent_size)
+                .maybe_apply_aspect_ratio(aspect_ratio)
+                .maybe_clamp(min_size, max_size);
+
+            // If both min and max in a given axis are set and max <= min then this determines the size in that axis
+            let min_max_definite_size = min_size.zip_map(max_size, |min, max| match (min, max) {
+                (Some(min), Some(max)) if max <= min => Some(min),
+                _ => None,
+            });
+
+            // Block nodes automatically stretch fit their width to fit available space if available space is definite
+            let available_space_based_size = Size {
+                width: available_space.width.into_option().maybe_sub(margin.horizontal_axis_sum()),
+                height: None,
+            };
+
+            let styled_based_known_dimensions = known_dimensions
+                .or(min_max_definite_size)
+                .or(clamped_style_size)
+                .or(available_space_based_size)
+                .maybe_max(padding_border_size);
+
+            known_dimensions = styled_based_known_dimensions;
+        }
+    }
+
     // Recursively compute node layout
     let output = tree.perform_child_layout(
         root,
-        Size::NONE,
+        known_dimensions,
         available_space.into_options(),
         available_space,
         SizingMode::InherentSize,
@@ -68,6 +113,7 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
     let style = tree.get_style(root);
     let padding = style.padding.resolve_or_zero(available_space.width.into_option());
     let border = style.border.resolve_or_zero(available_space.width.into_option());
+    let margin = style.margin.resolve_or_zero(available_space.width.into_option());
     let scrollbar_size = Size {
         width: if style.overflow.y == Overflow::Scroll { style.scrollbar_width } else { 0.0 },
         height: if style.overflow.x == Overflow::Scroll { style.scrollbar_width } else { 0.0 },
@@ -84,6 +130,8 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
             scrollbar_size,
             padding,
             border,
+            // TODO: support auto margins for root node?
+            margin,
         },
     );
 }
@@ -107,11 +155,13 @@ where
     // First we check if we have a cached result for the given input
     let cache_entry = tree.get_cache_mut(node).get(known_dimensions, available_space, run_mode);
     if let Some(cached_size_and_baselines) = cache_entry {
-        debug_log!("CACHE", dbg:cached_size_and_baselines.size);
         debug_log_node!(known_dimensions, inputs.parent_size, available_space, run_mode, inputs.sizing_mode);
+        debug_log!("RESULT (CACHED)", dbg:cached_size_and_baselines.size);
         debug_pop_node!();
         return cached_size_and_baselines;
     }
+
+    debug_log_node!(known_dimensions, inputs.parent_size, available_space, run_mode, inputs.sizing_mode);
 
     let computed_size_and_baselines = compute_uncached(tree, node, inputs);
 

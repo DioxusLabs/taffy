@@ -58,12 +58,11 @@ struct BlockItem {
 
 /// Computes the layout of [`LayoutPartialTree`] according to the block layout algorithm
 pub fn compute_block_layout(tree: &mut impl LayoutPartialTree, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput {
-    let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
+    let LayoutInput { known_dimensions, parent_size, run_mode, .. } = inputs;
     let style = tree.get_style(node_id);
 
     // Pull these out earlier to avoid borrowing issues
     let aspect_ratio = style.aspect_ratio;
-    let margin = style.margin.resolve_or_zero(parent_size.width);
     let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
     let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
     let padding = style.padding.resolve_or_zero(parent_size.width);
@@ -81,15 +80,8 @@ pub fn compute_block_layout(tree: &mut impl LayoutPartialTree, node_id: NodeId, 
         _ => None,
     });
 
-    // Block nodes automatically stretch fit their width to fit available space if available space is definite
-    let available_space_based_size =
-        Size { width: available_space.width.into_option().maybe_sub(margin.horizontal_axis_sum()), height: None };
-
-    let styled_based_known_dimensions = known_dimensions
-        .or(min_max_definite_size)
-        .or(clamped_style_size)
-        .or(available_space_based_size)
-        .maybe_max(padding_border_size);
+    let styled_based_known_dimensions =
+        known_dimensions.or(min_max_definite_size).or(clamped_style_size).maybe_max(padding_border_size);
 
     // Short-circuit layout if the container's size is fully determined by the container's size and the run mode
     // is ComputeSize (and thus the container's size is all that we're interested in)
@@ -362,6 +354,8 @@ fn perform_final_layout_on_in_flow_children(
             let known_dimensions = item
                 .size
                 .map_width(|width| {
+                    // TODO: Allow stretch-sizing to be conditional, as there are exceptions.
+                    // e.g. Table children of blocks do not stretch fit
                     Some(
                         width
                             .unwrap_or(container_inner_width - item_non_auto_x_margin_sum)
@@ -443,6 +437,7 @@ fn perform_final_layout_on_in_flow_children(
                     location,
                     padding: item.padding,
                     border: item.border,
+                    margin: resolved_margin,
                 },
             );
 
@@ -668,6 +663,7 @@ fn perform_absolute_layout_on_absolute_children(
                 location,
                 padding,
                 border,
+                margin: resolved_margin,
             },
         );
 

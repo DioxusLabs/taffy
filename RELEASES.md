@@ -1,5 +1,13 @@
 # Release Notes
 
+## 0.5.2
+
+- Fix block stretch sizing (don't always apply stretch sizing to block containers) (#674)
+- Fix computation of intrinsic main size when it depends on a child's known cross size (#673)
+- Fix panic when GridLine 0 is specified (#671)
+- Docs: Document feature flags and scrape examples (#672)
+- Docs: Update cosmic-text example to cosmic-text 0.12 (#670)
+
 ## 0.5.1
 
 - Fix: Clamp block item stretch widths by their min and max width (#664)

@@ -188,7 +188,7 @@ pub fn compute_flexbox_layout(tree: &mut impl LayoutPartialTree, node: NodeId, i
         }
     }
 
-    debug_log!("FLEX: single-pass");
+    debug_log!("FLEX:", dbg:style.flex_direction);
     compute_preliminary(tree, node, LayoutInput { known_dimensions: styled_based_known_dimensions, ..inputs })
 }
 
@@ -658,6 +658,7 @@ fn determine_flex_base_size(
                 )
                 .with_cross(dir, cross_axis_available_space);
 
+            debug_log!("COMPUTE CHILD BASE SIZE:");
             break 'flex_basis tree.measure_child_size(
                 child.node,
                 child_known_dimensions,
@@ -708,6 +709,7 @@ fn determine_flex_base_size(
             let min_content_main_size = {
                 let child_available_space = Size::MIN_CONTENT.with_cross(dir, cross_axis_available_space);
 
+                debug_log!("COMPUTE CHILD MIN SIZE:");
                 tree.measure_child_size(
                     child.node,
                     child_known_dimensions,
@@ -918,11 +920,26 @@ fn determine_container_main_size(
 
                                 let child_available_space = available_space.with_cross(dir, cross_axis_available_space);
 
+                                // Known dimensions for child sizing
+                                let child_known_dimensions = {
+                                    let mut ckd = item.size.with_main(dir, None);
+                                    if item.align_self == AlignSelf::Stretch && ckd.cross(dir).is_none() {
+                                        ckd.set_cross(
+                                            dir,
+                                            cross_axis_available_space
+                                                .into_option()
+                                                .maybe_sub(item.margin.cross_axis_sum(dir)),
+                                        );
+                                    }
+                                    ckd
+                                };
+
                                 // Either the min- or max- content size depending on which constraint we are sizing under.
                                 // TODO: Optimise by using already computed values where available
+                                debug_log!("COMPUTE CHILD BASE SIZE (for intrinsic main size):");
                                 let content_main_size = tree.measure_child_size(
                                     item.node,
-                                    Size::NONE,
+                                    child_known_dimensions,
                                     constants.node_inner_size,
                                     child_available_space,
                                     SizingMode::InherentSize,
@@ -1801,6 +1818,7 @@ fn calculate_flex_item(
             location,
             padding: item.padding,
             border: item.border,
+            margin: item.margin,
         },
     );
 
@@ -2135,6 +2153,7 @@ fn perform_absolute_layout_on_absolute_children(
                 location,
                 padding,
                 border,
+                margin: resolved_margin,
             },
         );
 

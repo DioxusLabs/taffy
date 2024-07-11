@@ -1,6 +1,6 @@
 [package]
 name = "taffy"
-version = "0.5.1"
+version = "0.5.2"
 authors = [
     "Alice Cecile <alice.i.cecile@gmail.com>",
     "Johnathan Kelley <jkelleyrtp@gmail.com>",
@@ -8,7 +8,7 @@ authors = [
 ]
 edition = "2021"
 rust-version = "1.65"
-include = ["src/**/*", "Cargo.toml", "README.md"]
+include = ["src/**/*", "examples/**/*", "Cargo.toml", "README.md"]
 description = "A flexible UI layout library "
 repository = "https://github.com/DioxusLabs/taffy"
 keywords = ["cross-platform", "layout", "flexbox", "css-grid", "grid"]
@@ -17,43 +17,61 @@ license = "MIT"
 
 [dependencies]
 arrayvec = { version = "0.7", default-features = false }
+document-features = { version = "0.2.7", optional = true }
 num-traits = { version = "0.2", default-features = false }
-serde = { version = "1.0", default-features = false, optional = true, features = ["serde_derive"] }
+serde = { version = "1.0", default-features = false, optional = true, features = [
+    "serde_derive",
+] }
 slotmap = { version = "1.0.6", default-features = false, optional = true }
 grid = { version = "0.14.0", default-features = false, optional = true }
 
-### FEATURES #################################################################
+[package.metadata.docs.rs]
+# To test all the documentation related features, run:
+# RUSTDOCFLAGS="--cfg docsrs" cargo +nightly doc -Zunstable-options -Zrustdoc-scrape-examples --all-features --no-deps --open
+
+all-features = true
+# see https://doc.rust-lang.org/nightly/rustdoc/scraped-examples.html
+cargo-args = ["-Zunstable-options", "-Zrustdoc-scrape-examples"]
+rustdoc-args = ["--cfg", "docsrs"]
 
 [features]
-default = ["std", "taffy_tree", "flexbox", "grid", "block_layout", "content_size"]
+default = [
+    "std",
+    "taffy_tree",
+    "flexbox",
+    "grid",
+    "block_layout",
+    "content_size",
+]
+#! ## Feature Flags
+#!
+#! ### Algorithms 
 
-### Algorithms 
-
-# Enables the Block layout algorithm
+## Enables the Block layout algorithm. See [`compute_block_layout`](crate::compute_block_layout).
 block_layout = []
-# Enables the Flexbox layout algorithm
+## Enables the Flexbox layout algorithm. See [`compute_flexbox_layout`](crate::compute_flexbox_layout).
 flexbox = []
-# Enables the CSS Grid layout algorithm
+## Enables the CSS Grid layout algorithm. See [`compute_grid_layout`](crate::compute_grid_layout).
 grid = ["alloc", "dep:grid"]
-# Causes all algorithms to compute and output a content size for each node
+## Causes all algorithms to compute and output a content size for each node
 content_size = []
 
-### Taffy Tree
+#! ### Taffy Tree
 
-# Enable the built-in Taffy node tree
+## Enable the built-in Taffy node tree. See [`TaffyTree`](crate::TaffyTree).
 taffy_tree = ["dep:slotmap"]
 
-### Other
+#! ### Other
 
-# Add serde derives to Style structs
+## Add [`serde`] derives to Style structs
 serde = ["dep:serde"]
-# Allow Taffy to depend on the standard library
+## Allow Taffy to depend on the [`Rust Standard Library`](std)
 std = ["num-traits/std", "grid?/std", "serde?/std", "slotmap?/std"]
-# Allow Taffy to depend on the alloc library
+## Allow Taffy to depend on the alloc library
 alloc = ["serde?/alloc"]
-# Internal feature for debugging
+## Internal feature for debugging
 debug = ["std"]
-# Internal feature for profiling
+## Internal feature for profiling
 profile = ["std"]
 
 [dev-dependencies]
@@ -72,5 +90,15 @@ name = "dummy_benchmark"
 path = "benches/dummy_benchmark.rs"
 harness = false
 
+[[example]]
+name = "basic"
+# This causes all the examples to be scraped for documentation, not just the basic example
+doc-scrape-examples = true
+
 [workspace]
-members = ["scripts/gentest", "scripts/format-fixtures", "scripts/import-yoga-tests", "benches"]
+members = [
+    "scripts/gentest",
+    "scripts/format-fixtures",
+    "scripts/import-yoga-tests",
+    "benches",
+]

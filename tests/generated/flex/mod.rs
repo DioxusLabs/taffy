@@ -187,6 +187,7 @@ mod bevy_issue_9530_reduced;
 mod bevy_issue_9530_reduced2;
 mod bevy_issue_9530_reduced3;
 mod bevy_issue_9530_reduced4;
+mod blitz_issue_88;
 mod border_center_child;
 mod border_container_match_child;
 mod border_flex_child;
