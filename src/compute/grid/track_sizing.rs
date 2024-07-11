@@ -399,16 +399,7 @@ fn flush_planned_growth_limit_increases(tracks: &mut [GridTrack], set_infinitely
 /// Initialize each track’s base size and growth limit.
 #[inline(always)]
 fn initialize_track_sizes(axis_tracks: &mut [GridTrack], axis_inner_node_size: Option<f32>) {
-    let last_track_idx = axis_tracks.len() - 1;
-
-    // First and last grid lines are always zero-sized.
-    axis_tracks[0].base_size = 0.0;
-    axis_tracks[0].growth_limit = 0.0;
-    axis_tracks[last_track_idx].base_size = 0.0;
-    axis_tracks[last_track_idx].growth_limit = 0.0;
-
-    let all_but_first_and_last = 1..last_track_idx;
-    for track in axis_tracks[all_but_first_and_last].iter_mut() {
+    for track in axis_tracks.iter_mut() {
         // For each track, if the track’s min track sizing function is:
         // - A fixed sizing function
         //     Resolve to an absolute length and use that size as the track’s initial base size.
