@@ -44,6 +44,7 @@ mod absolute_minmax_top_left_bottom_right_max;
 mod absolute_minmax_top_left_bottom_right_min_max;
 mod absolute_padding_border_overrides_max_size;
 mod absolute_padding_border_overrides_size;
+mod absolute_resolved_insets;
 mod align_baseline;
 mod align_baseline_child;
 mod align_baseline_child_margin;

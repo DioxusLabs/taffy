@@ -340,13 +340,13 @@ fn perform_final_layout_on_in_flow_children(
 
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut inflow_content_size = Size::ZERO;
-    let mut committed_y_offset = resolved_content_box_inset.top;
+    let mut committed_offset = Point { x: resolved_content_box_inset.left, y: resolved_content_box_inset.top };
     let mut first_child_top_margin_set = CollapsibleMarginSet::ZERO;
     let mut active_collapsible_margin_set = CollapsibleMarginSet::ZERO;
     let mut is_collapsing_with_first_margin_set = true;
     for item in items.iter_mut() {
         if item.position == Position::Absolute {
-            item.static_position.y = committed_y_offset;
+            item.static_position = committed_offset
         } else {
             let item_margin = item.margin.map(|margin| margin.resolve_to_option(container_outer_width));
             let item_non_auto_margin = item_margin.map(|m| m.unwrap_or(0.0));
@@ -414,11 +414,11 @@ fn perform_final_layout_on_in_flow_children(
             item.can_be_collapsed_through = item_layout.margins_can_collapse_through;
             item.static_position = Point {
                 x: resolved_content_box_inset.left,
-                y: committed_y_offset + active_collapsible_margin_set.resolve(),
+                y: committed_offset.y + active_collapsible_margin_set.resolve(),
             };
             let location = Point {
                 x: resolved_content_box_inset.left + inset_offset.x + resolved_margin.left,
-                y: committed_y_offset + inset_offset.y + y_margin_offset,
+                y: committed_offset.y + inset_offset.y + y_margin_offset,
             };
 
             let scrollbar_size = Size {
@@ -469,7 +469,7 @@ fn perform_final_layout_on_in_flow_children(
                     .collapse_with_set(top_margin_set)
                     .collapse_with_set(bottom_margin_set);
             } else {
-                committed_y_offset += item_layout.size.height + y_margin_offset;
+                committed_offset.y += item_layout.size.height + y_margin_offset;
                 active_collapsible_margin_set = bottom_margin_set;
             }
         }
@@ -479,8 +479,8 @@ fn perform_final_layout_on_in_flow_children(
     let bottom_y_margin_offset =
         if own_margins_collapse_with_children.end { 0.0 } else { last_child_bottom_margin_set.resolve() };
 
-    committed_y_offset += resolved_content_box_inset.bottom + bottom_y_margin_offset;
-    let content_height = f32_max(0.0, committed_y_offset);
+    committed_offset.y += resolved_content_box_inset.bottom + bottom_y_margin_offset;
+    let content_height = f32_max(0.0, committed_offset.y);
     (inflow_content_size, content_height, first_child_top_margin_set, last_child_bottom_margin_set)
 }
 
@@ -633,17 +633,18 @@ fn perform_absolute_layout_on_absolute_children(
             bottom: margin.bottom.unwrap_or(auto_margin.bottom),
         };
 
-        let item_offset = Point {
+        let location = Point {
             x: left
                 .map(|left| left + resolved_margin.left)
                 .or(right.map(|right| area_size.width - final_size.width - right - resolved_margin.right))
-                .unwrap_or(resolved_margin.left),
+                .maybe_add(area_offset.x)
+                .unwrap_or(item.static_position.x + resolved_margin.left),
             y: top
                 .map(|top| top + resolved_margin.top)
                 .or(bottom.map(|bottom| area_size.height - final_size.height - bottom - resolved_margin.bottom))
+                .maybe_add(area_offset.y)
                 .unwrap_or(item.static_position.y + resolved_margin.top),
         };
-
         // Note: axis intentionally switched here as scrollbars take up space in the opposite axis
         // to the axis in which scrolling is enabled.
         let scrollbar_size = Size {
@@ -651,7 +652,6 @@ fn perform_absolute_layout_on_absolute_children(
             height: if item.overflow.x == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
         };
 
-        let location = area_offset + item_offset;
         tree.set_unrounded_layout(
             item.node_id,
             &Layout {
