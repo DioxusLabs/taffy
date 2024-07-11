@@ -777,6 +777,9 @@ impl<T: FlexboxItemStyle> FlexboxItemStyle for &'_ T {
 
 #[cfg(feature = "grid")]
 impl GridContainerStyle for Style {
+    type TemplateTrackList<'a> = &'a [TrackSizingFunction] where Self: 'a;
+    type AutoTrackList<'a> = &'a [NonRepeatedTrackSizingFunction] where Self: 'a;
+
     #[inline(always)]
     fn grid_template_rows(&self) -> &[TrackSizingFunction] {
         &self.grid_template_rows
@@ -821,20 +824,23 @@ impl GridContainerStyle for Style {
 
 #[cfg(feature = "grid")]
 impl<T: GridContainerStyle> GridContainerStyle for &'_ T {
+    type TemplateTrackList<'a> = T::TemplateTrackList<'a> where Self: 'a;
+    type AutoTrackList<'a> = T::AutoTrackList<'a> where Self: 'a;
+
     #[inline(always)]
-    fn grid_template_rows(&self) -> &[TrackSizingFunction] {
+    fn grid_template_rows(&self) -> Self::TemplateTrackList<'_> {
         (*self).grid_template_rows()
     }
     #[inline(always)]
-    fn grid_template_columns(&self) -> &[TrackSizingFunction] {
+    fn grid_template_columns(&self) -> Self::TemplateTrackList<'_> {
         (*self).grid_template_columns()
     }
     #[inline(always)]
-    fn grid_auto_rows(&self) -> &[NonRepeatedTrackSizingFunction] {
+    fn grid_auto_rows(&self) -> Self::AutoTrackList<'_> {
         (*self).grid_auto_rows()
     }
     #[inline(always)]
-    fn grid_auto_columns(&self) -> &[NonRepeatedTrackSizingFunction] {
+    fn grid_auto_columns(&self) -> Self::AutoTrackList<'_> {
         (*self).grid_auto_columns()
     }
     #[inline(always)]

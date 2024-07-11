@@ -4,31 +4,33 @@ use crate::compute::grid::{GridCoordinate, GridLine, OriginZeroLine};
 use crate::geometry::{AbsoluteAxis, AbstractAxis, Line, MinMax, Size};
 use crate::style_helpers::*;
 use crate::util::sys::GridTrackVec;
+use core::borrow::Borrow;
 use core::cmp::{max, min};
 use core::convert::Infallible;
 
 /// The set of styles required for a CSS Grid container
 pub trait GridContainerStyle: CoreStyle {
+    /// The type returned by grid_template_rows and grid_template_columns
+    type TemplateTrackList<'a>: Borrow<[TrackSizingFunction]>
+    where
+        Self: 'a;
+    /// The type returned by grid_auto_rows and grid_auto_columns
+    type AutoTrackList<'a>: Borrow<[NonRepeatedTrackSizingFunction]>
+    where
+        Self: 'a;
+
+    // FIXME: re-add default implemenations for grid_{template,auto}_{rows,columns} once the
+    // associated_type_defaults feature (https://github.com/rust-lang/rust/issues/29661) is stabilised.
+
     /// Defines the track sizing functions (heights) of the grid rows
-    #[inline(always)]
-    fn grid_template_rows(&self) -> &[TrackSizingFunction] {
-        &[]
-    }
+    fn grid_template_rows(&self) -> Self::TemplateTrackList<'_>;
     /// Defines the track sizing functions (widths) of the grid columns
-    #[inline(always)]
-    fn grid_template_columns(&self) -> &[TrackSizingFunction] {
-        &[]
-    }
+    fn grid_template_columns(&self) -> Self::TemplateTrackList<'_>;
     /// Defines the size of implicitly created rows
-    #[inline(always)]
-    fn grid_auto_rows(&self) -> &[NonRepeatedTrackSizingFunction] {
-        &[]
-    }
+    fn grid_auto_rows(&self) -> Self::AutoTrackList<'_>;
     /// Defined the size of implicitly created columns
-    #[inline(always)]
-    fn grid_auto_columns(&self) -> &[NonRepeatedTrackSizingFunction] {
-        &[]
-    }
+    fn grid_auto_columns(&self) -> Self::AutoTrackList<'_>;
+
     /// Controls how items get placed into the grid for auto-placed items
     #[inline(always)]
     fn grid_auto_flow(&self) -> GridAutoFlow {
@@ -66,7 +68,7 @@ pub trait GridContainerStyle: CoreStyle {
 
     /// Get a grid item's row or column placement depending on the axis passed
     #[inline(always)]
-    fn grid_template_tracks(&self, axis: AbsoluteAxis) -> &[TrackSizingFunction] {
+    fn grid_template_tracks(&self, axis: AbsoluteAxis) -> Self::TemplateTrackList<'_> {
         match axis {
             AbsoluteAxis::Horizontal => self.grid_template_columns(),
             AbsoluteAxis::Vertical => self.grid_template_rows(),
