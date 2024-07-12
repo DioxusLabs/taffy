@@ -271,9 +271,9 @@ impl LengthPercentageAuto {
     ///   - Some(resolved) using the provided context for Percent or Calc variants
     ///   - None for Auto variants
     #[inline(always)]
-    pub fn resolve_to_option(self, context: f32) -> Option<f32> {
+    pub fn resolve_to_option(&self, context: f32) -> Option<f32> {
         match self {
-            LengthPercentageAuto::Length(length) => Some(length),
+            LengthPercentageAuto::Length(length) => Some(*length),
             LengthPercentageAuto::Percent(percent) => Some(context * percent),
             #[cfg(feature = "calc")]
             LengthPercentageAuto::Calc => self.get_calc().map(|calc| calc.resolve(Some(context))),
@@ -357,6 +357,13 @@ impl Dimension {
     pub fn into_option(self) -> Option<f32> {
         match self {
             Dimension::Length(value) => Some(value),
+            _ => None,
+        }
+    }
+    #[cfg(feature = "grid")]
+    pub fn to_option(&self) -> Option<f32> {
+        match self {
+            Dimension::Length(value) => Some(*value),
             _ => None,
         }
     }

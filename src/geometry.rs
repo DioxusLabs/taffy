@@ -30,10 +30,10 @@ impl AbsoluteAxis {
 impl<T> Size<T> {
     #[inline(always)]
     /// Get either the width or height depending on the AbsoluteAxis passed in
-    pub fn get_abs(self, axis: AbsoluteAxis) -> T {
+    pub fn get_abs(&self, axis: AbsoluteAxis) -> &T {
         match axis {
-            AbsoluteAxis::Horizontal => self.width,
-            AbsoluteAxis::Vertical => self.height,
+            AbsoluteAxis::Horizontal => &self.width,
+            AbsoluteAxis::Vertical => &self.height,
         }
     }
 }
@@ -158,6 +158,25 @@ impl<T> Rect<T> {
         }
     }
 
+    /// Applies the function `f` to all four sides of the rect
+    ///
+    /// When applied to the left and right sides, the width is used
+    /// as the second parameter of `f`.
+    /// When applied to the top or bottom sides, the height is used instead.
+    #[cfg(any(feature = "flexbox", feature = "block_layout"))]
+    pub(crate) fn zip_size_ref<R, F, U>(&self, size: Size<U>, f: F) -> Rect<R>
+    where
+        F: Fn(&T, U) -> R,
+        U: Copy,
+    {
+        Rect {
+            left: f(&self.left, size.width),
+            right: f(&self.right, size.width),
+            top: f(&self.top, size.height),
+            bottom: f(&self.bottom, size.height),
+        }
+    }
+
     /// Applies the function `f` to the left, right, top, and bottom properties
     ///
     /// This is used to transform a `Rect<T>` into a `Rect<R>`.
@@ -168,14 +187,24 @@ impl<T> Rect<T> {
         Rect { left: f(self.left), right: f(self.right), top: f(self.top), bottom: f(self.bottom) }
     }
 
+    /// Applies the function `f` to the left, right, top, and bottom properties
+    ///
+    /// This is used to transform a `&Rect<T>` into a `Rect<R>`.
+    pub fn map_ref<R, F>(&self, f: F) -> Rect<R>
+    where
+        F: Fn(&T) -> R,
+    {
+        Rect { left: f(&self.left), right: f(&self.right), top: f(&self.top), bottom: f(&self.bottom) }
+    }
+
     /// Returns a `Line<T>` representing the left and right properties of the Rect
-    pub fn horizontal_components(self) -> Line<T> {
-        Line { start: self.left, end: self.right }
+    pub fn horizontal_components(&self) -> Line<&T> {
+        Line { start: &self.left, end: &self.right }
     }
 
     /// Returns a `Line<T>` containing the top and bottom properties of the Rect
-    pub fn vertical_components(self) -> Line<T> {
-        Line { start: self.top, end: self.bottom }
+    pub fn vertical_components(&self) -> Line<&T> {
+        Line { start: &self.top, end: &self.bottom }
     }
 }
 
@@ -376,6 +405,17 @@ impl<T> Size<T> {
         Size { width: f(self.width), height: f(self.height) }
     }
 
+    /// Applies the function `f` to both the width and height
+    ///
+    /// This is used to transform a `&Size<T>` into a `Size<R>`.
+    pub fn map_ref<R, F>(&self, f: F) -> Size<R>
+    where
+        F: Fn(&T) -> R,
+    {
+        Size { width: f(&self.width), height: f(&self.height) }
+    }
+
+
     /// Applies the function `f` to the width
     pub fn map_width<F>(self, f: F) -> Size<T>
     where
@@ -485,11 +525,11 @@ impl<T> Size<T> {
     ///
     /// Whether this is the width or height depends on the `direction` provided
     #[cfg(feature = "flexbox")]
-    pub(crate) fn main(self, direction: FlexDirection) -> T {
+    pub(crate) fn main(&self, direction: FlexDirection) -> &T {
         if direction.is_row() {
-            self.width
+            &self.width
         } else {
-            self.height
+            &self.height
         }
     }
 
@@ -497,11 +537,11 @@ impl<T> Size<T> {
     ///
     /// Whether this is the width or height depends on the `direction` provided
     #[cfg(feature = "flexbox")]
-    pub(crate) fn cross(self, direction: FlexDirection) -> T {
+    pub(crate) fn cross(&self, direction: FlexDirection) -> &T {
         if direction.is_row() {
-            self.height
+            &self.height
         } else {
-            self.width
+            &self.width
         }
     }
 

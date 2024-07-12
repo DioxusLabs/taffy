@@ -186,11 +186,11 @@ impl GridItem {
         let spanned_tracks = &axis_tracks[self.track_range_excluding_lines(axis)];
         let tracks_all_fixed = spanned_tracks
             .iter()
-            .all(|track| track.max_track_sizing_function.clone().definite_limit(axis_parent_size).is_some());
+            .all(|track| track.max_track_sizing_function.definite_limit(axis_parent_size).is_some());
         if tracks_all_fixed {
             let limit: f32 = spanned_tracks
                 .iter()
-                .map(|track| track.max_track_sizing_function.clone().definite_limit(axis_parent_size).unwrap())
+                .map(|track| track.max_track_sizing_function.definite_limit(axis_parent_size).unwrap())
                 .sum();
             Some(limit)
         } else {
@@ -209,11 +209,11 @@ impl GridItem {
         let spanned_tracks = &axis_tracks[self.track_range_excluding_lines(axis)];
         let tracks_all_fixed = spanned_tracks
             .iter()
-            .all(|track| track.max_track_sizing_function.clone().definite_value(axis_parent_size).is_some());
+            .all(|track| track.max_track_sizing_function.definite_value(axis_parent_size).is_some());
         if tracks_all_fixed {
             let limit: f32 = spanned_tracks
                 .iter()
-                .map(|track| track.max_track_sizing_function.clone().definite_value(axis_parent_size).unwrap())
+                .map(|track| track.max_track_sizing_function.definite_value(axis_parent_size).unwrap())
                 .sum();
             Some(limit)
         } else {

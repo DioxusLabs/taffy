@@ -209,7 +209,7 @@ pub(crate) trait LayoutPartialTreeExt: LayoutPartialTree {
         axis: AbsoluteAxis,
         vertical_margins_are_collapsible: Line<bool>,
     ) -> f32 {
-        self.compute_child_layout(
+        *self.compute_child_layout(
             node_id,
             LayoutInput {
                 known_dimensions,
