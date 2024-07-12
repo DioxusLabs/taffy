@@ -13,7 +13,6 @@ env:
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: "sparse"
 
 jobs:
-
   # MSRV check.
   # Taffy only guarantees "latest stable". However we have this check here to ensure that we advertise
   # our MSRV. We also make an effort not to increase MSRV in patch versions of Taffy.
@@ -161,16 +160,21 @@ jobs:
           components: clippy
       - run: cargo +nightly clippy --workspace -- -D warnings
 
+  # Run rustdoc with the `docsrs` cfg to ensure that the documentation is compatible with docs.rs.
+  # This enables the doc_auto_cfg feature, which requires the nightly toolchain.
+  # Also checks that the examples can be scraped.
   doc:
     name: Documentation
     runs-on: ubuntu-latest
+    env:
+      RUSTDOCFLAGS: "--cfg docsrs"
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: stable
+          toolchain: nightly
           components: clippy
-      - run: cargo doc
+      - run: cargo +nightly doc -Zunstable-options -Zrustdoc-scrape-examples --all-features --no-deps
 
   markdownlint:
     name: Markdown Lint
@@ -180,7 +184,7 @@ jobs:
       - name: Run Markdown Lint
         uses: DavidAnson/markdownlint-cli2-action@v16
         with:
-          globs: '**/*.md'
+          globs: "**/*.md"
 
   fixture-format:
     name: Test Fixture Formatting
@@ -207,7 +211,7 @@ jobs:
       - run: cargo xbench --no-run
         name: Build benchmarks
         env:
-          RUSTFLAGS: "-C opt-level=0" 
+          RUSTFLAGS: "-C opt-level=0"
 
   benchmarks-with-yoga:
     name: Build Benchmarks (w/ yoga)
@@ -218,4 +222,4 @@ jobs:
       - run: cargo xbench --no-run --features yoga
         name: Build benchmarks (w/yoga)
         env:
-            RUSTFLAGS: "-C opt-level=0" 
+          RUSTFLAGS: "-C opt-level=0"

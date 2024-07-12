@@ -129,13 +129,6 @@ impl GridPlacement {
 }
 
 impl<T: GridCoordinate> Line<GenericGridPlacement<T>> {
-    #[inline]
-    /// Whether the track position is definite in this axis (or the item will need auto placement)
-    /// The track position is definite if least one of the start and end positions is a track index
-    pub fn is_definite(&self) -> bool {
-        matches!((self.start, self.end), (GenericGridPlacement::Line(_), _) | (_, GenericGridPlacement::Line(_)))
-    }
-
     /// Resolves the span for an indefinite placement (a placement that does not consist of two `Track`s).
     /// Panics if called on a definite placement
     pub fn indefinite_span(&self) -> u16 {
@@ -155,6 +148,18 @@ impl<T: GridCoordinate> Line<GenericGridPlacement<T>> {
 }
 
 impl Line<GridPlacement> {
+    #[inline]
+    /// Whether the track position is definite in this axis (or the item will need auto placement)
+    /// The track position is definite if least one of the start and end positions is a NON-ZERO track index
+    /// (0 is an invalid line in GridLine coordinates, and falls back to "auto" which is indefinite)
+    pub fn is_definite(&self) -> bool {
+        match (self.start, self.end) {
+            (GenericGridPlacement::Line(line), _) if line.as_i16() != 0 => true,
+            (_, GenericGridPlacement::Line(line)) if line.as_i16() != 0 => true,
+            _ => false,
+        }
+    }
+
     /// Apply a mapping function if the [`GridPlacement`] is a `Track`. Otherwise return `self` unmodified.
     pub fn into_origin_zero(&self, explicit_track_count: u16) -> Line<OriginZeroGridPlacement> {
         Line {
@@ -165,6 +170,13 @@ impl Line<GridPlacement> {
 }
 
 impl Line<OriginZeroGridPlacement> {
+    #[inline]
+    /// Whether the track position is definite in this axis (or the item will need auto placement)
+    /// The track position is definite if least one of the start and end positions is a track index
+    pub fn is_definite(&self) -> bool {
+        matches!((self.start, self.end), (GenericGridPlacement::Line(_), _) | (_, GenericGridPlacement::Line(_)))
+    }
+
     /// If at least one of the of the start and end positions is a track index then the other end can be resolved
     /// into a track index purely based on the information contained with the placement specification
     pub fn resolve_definite_grid_lines(&self) -> Line<OriginZeroLine> {
