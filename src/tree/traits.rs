@@ -133,13 +133,8 @@ use crate::style::{AvailableSpace, Style};
 /// This trait is Taffy's abstraction for downward tree traversal.
 /// However, this trait does *not* require access to any node's other than a single container node's immediate children unless you also intend to implement `TraverseTree`.
 pub trait TraversePartialTree {
-    /// Type representing an iterator of the children of a node
-    type ChildIter<'a>: Iterator<Item = NodeId>
-    where
-        Self: 'a;
-
     /// Get the list of children IDs for the given node
-    fn child_ids(&self, parent_node_id: NodeId) -> Self::ChildIter<'_>;
+    fn child_ids<'a>(&'a self, parent_node_id: NodeId) -> Box<dyn Iterator<Item = NodeId> + 'a>;
 
     /// Get the number of children for the given node
     fn child_count(&self, parent_node_id: NodeId) -> usize;

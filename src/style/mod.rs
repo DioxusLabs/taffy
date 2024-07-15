@@ -44,6 +44,17 @@ pub enum Display {
     /// The children will follow the CSS Grid layout algorithm
     #[cfg(feature = "grid")]
     Grid,
+    /// The children will follow the algorithm provided by the user
+    Custom {
+        /// name for this custom display
+        name: &'static str,
+        /// solver for this custom display
+        solver: fn(
+            tree: Box<&mut dyn crate::LayoutPartialTree>,
+            node: crate::NodeId,
+            inputs: crate::LayoutInput,
+        ) -> crate::LayoutOutput,
+    },
     /// The children will not be laid out, and will follow absolute positioning
     None,
 }
@@ -76,6 +87,7 @@ impl core::fmt::Display for Display {
             Display::Flex => write!(f, "FLEX"),
             #[cfg(feature = "grid")]
             Display::Grid => write!(f, "GRID"),
+            Display::Custom { name, .. } => write!(f, "{name}"),
         }
     }
 }

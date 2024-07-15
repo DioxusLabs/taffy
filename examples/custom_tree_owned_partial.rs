@@ -110,10 +110,8 @@ impl Iterator for ChildIter {
 }
 
 impl taffy::TraversePartialTree for Node {
-    type ChildIter<'a> = ChildIter;
-
-    fn child_ids(&self, _node_id: NodeId) -> Self::ChildIter<'_> {
-        ChildIter(0..self.children.len())
+    fn child_ids<'a>(&'a self, _node_id: NodeId) -> Box<dyn Iterator<Item = NodeId> + 'a> {
+        Box::new(ChildIter(0..self.children.len()))
     }
 
     fn child_count(&self, _node_id: NodeId) -> usize {
