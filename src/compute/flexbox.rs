@@ -1412,34 +1412,11 @@ fn calculate_children_base_lines(
 /// # [9.4. Cross Size Determination](https://www.w3.org/TR/css-flexbox-1/#cross-sizing)
 ///
 /// - [**Calculate the cross size of each flex line**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-line).
-///
-///     If the flex container is single-line and has a definite cross size, the cross size of the flex line is the flex container’s inner cross size.
-///
-///     Otherwise, for each flex line:
-///
-///     1. Collect all the flex items whose inline-axis is parallel to the main-axis, whose align-self is baseline, and whose cross-axis margins are both non-auto.
-///         Find the largest of the distances between each item’s baseline and its hypothetical outer cross-start edge,
-///         and the largest of the distances between each item’s baseline and its hypothetical outer cross-end edge, and sum these two values.
-///
-///     2. Among all the items not collected by the previous step, find the largest outer hypothetical cross size.
-///
-///     3. The used cross-size of the flex line is the largest of the numbers found in the previous two steps and zero.
-///
-///         If the flex container is single-line, then clamp the line’s cross-size to be within the container’s computed min and max cross sizes.
-///         **Note that if CSS 2.1’s definition of min/max-width/height applied more generally, this behavior would fall out automatically**.
 #[inline]
 fn calculate_cross_size(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>>, constants: &AlgoConstants) {
-    // Note: AlignContent::SpaceEvenly and AlignContent::SpaceAround behave like AlignContent::Stretch when there is only
-    // a single flex line in the container. See: https://www.w3.org/TR/css-flexbox-1/#align-content-property
-    // Also: align_content is ignored entirely (and thus behaves like Stretch) when `flex_wrap` is set to `nowrap`.
-    if flex_lines.len() == 1
-        && node_size.cross(constants.dir).is_some()
-        && (!constants.is_wrap
-            || matches!(
-                constants.align_content,
-                AlignContent::Stretch | AlignContent::SpaceEvenly | AlignContent::SpaceAround
-            ))
-    {
+    // If the flex container is single-line and has a definite cross size,
+    // the cross size of the flex line is the flex container’s inner cross size.
+    if !constants.is_wrap && node_size.cross(constants.dir).is_some() {
         let cross_axis_padding_border = constants.content_box_inset.cross_axis_sum(constants.dir);
         let cross_min_size = constants.min_size.cross(constants.dir);
         let cross_max_size = constants.max_size.cross(constants.dir);
@@ -1450,19 +1427,20 @@ fn calculate_cross_size(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>
             .maybe_max(0.0)
             .unwrap_or(0.0);
     } else {
+        // Otherwise, for each flex line:
+        //
+        //    1. Collect all the flex items whose inline-axis is parallel to the main-axis, whose
+        //       align-self is baseline, and whose cross-axis margins are both non-auto. Find the
+        //       largest of the distances between each item’s baseline and its hypothetical outer
+        //       cross-start edge, and the largest of the distances between each item’s baseline
+        //       and its hypothetical outer cross-end edge, and sum these two values.
+
+        //    2. Among all the items not collected by the previous step, find the largest
+        //       outer hypothetical cross size.
+
+        //    3. The used cross-size of the flex line is the largest of the numbers found in the
+        //       previous two steps and zero.
         for line in flex_lines.iter_mut() {
-            //    1. Collect all the flex items whose inline-axis is parallel to the main-axis, whose
-            //       align-self is baseline, and whose cross-axis margins are both non-auto. Find the
-            //       largest of the distances between each item’s baseline and its hypothetical outer
-            //       cross-start edge, and the largest of the distances between each item’s baseline
-            //       and its hypothetical outer cross-end edge, and sum these two values.
-
-            //    2. Among all the items not collected by the previous step, find the largest
-            //       outer hypothetical cross size.
-
-            //    3. The used cross-size of the flex line is the largest of the numbers found in the
-            //       previous two steps and zero.
-
             let max_baseline: f32 = line.items.iter().map(|child| child.baseline).fold(0.0, |acc, x| acc.max(x));
             line.cross_size = line
                 .items
@@ -1479,7 +1457,9 @@ fn calculate_cross_size(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>
                 })
                 .fold(0.0, |acc, x| acc.max(x));
         }
-        //  If the flex container is single-line, then clamp the line’s cross-size to be within the container’s computed min and max cross sizes.
+
+        // If the flex container is single-line, then clamp the line’s cross-size to be within the container’s computed min and max cross sizes.
+        // Note that if CSS 2.1’s definition of min/max-width/height applied more generally, this behavior would fall out automatically.
         if !constants.is_wrap {
             let cross_axis_padding_border = constants.content_box_inset.cross_axis_sum(constants.dir);
             let cross_min_size = constants.min_size.cross(constants.dir);
