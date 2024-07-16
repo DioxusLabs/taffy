@@ -14,16 +14,15 @@ use crate::tree::{
 use crate::util::debug::{debug_log, debug_log_node};
 use crate::util::sys::{new_vec_with_capacity, ChildrenVec, Vec};
 
-#[cfg(feature = "block_layout")]
-use crate::compute::compute_block_layout;
-#[cfg(feature = "flexbox")]
-use crate::compute::compute_flexbox_layout;
-#[cfg(feature = "grid")]
-use crate::compute::compute_grid_layout;
 use crate::compute::{
     compute_cached_layout, compute_hidden_layout, compute_leaf_layout, compute_root_layout, round_layout,
 };
-use crate::{LayoutBlockContainer, LayoutFlexboxContainer, LayoutGridContainer};
+#[cfg(feature = "block_layout")]
+use crate::{compute::compute_block_layout, LayoutBlockContainer};
+#[cfg(feature = "flexbox")]
+use crate::{compute::compute_flexbox_layout, LayoutFlexboxContainer};
+#[cfg(feature = "grid")]
+use crate::{compute::compute_grid_layout, LayoutGridContainer};
 
 /// The error Taffy generates on invalid operations
 pub type TaffyResult<T> = Result<T, TaffyError>;
@@ -341,6 +340,7 @@ where
     }
 }
 
+#[cfg(feature = "block_layout")]
 impl<'t, NodeContext, MeasureFunction> LayoutBlockContainer for TaffyView<'t, NodeContext, MeasureFunction>
 where
     MeasureFunction:
@@ -360,6 +360,7 @@ where
     }
 }
 
+#[cfg(feature = "flexbox")]
 impl<'t, NodeContext, MeasureFunction> LayoutFlexboxContainer for TaffyView<'t, NodeContext, MeasureFunction>
 where
     MeasureFunction:
@@ -379,6 +380,7 @@ where
     }
 }
 
+#[cfg(feature = "grid")]
 impl<'t, NodeContext, MeasureFunction> LayoutGridContainer for TaffyView<'t, NodeContext, MeasureFunction>
 where
     MeasureFunction:
