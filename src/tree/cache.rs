@@ -19,6 +19,7 @@ pub(crate) struct CacheEntry<T> {
 }
 
 /// A cache for caching the results of a sizing a Grid Item or Flexbox Item
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct Cache {
     /// The cache entry for the node's final layout
