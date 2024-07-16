@@ -1154,8 +1154,11 @@ fn resolve_flexible_lengths(line: &mut FlexLine, constants: &AlgoConstants) {
             .items
             .iter()
             .map(|child| {
-                child.margin.main_axis_sum(constants.dir)
-                    + if child.frozen { child.outer_target_size.main(constants.dir) } else { child.flex_basis }
+                if child.frozen {
+                    child.outer_target_size.main(constants.dir)
+                } else {
+                    child.flex_basis + child.margin.main_axis_sum(constants.dir)
+                }
             })
             .sum::<f32>();
 
@@ -1182,8 +1185,11 @@ fn resolve_flexible_lengths(line: &mut FlexLine, constants: &AlgoConstants) {
                 .items
                 .iter()
                 .map(|child| {
-                    child.margin.main_axis_sum(constants.dir)
-                        + if child.frozen { child.outer_target_size.main(constants.dir) } else { child.flex_basis }
+                    if child.frozen {
+                        child.outer_target_size.main(constants.dir)
+                    } else {
+                        child.flex_basis + child.margin.main_axis_sum(constants.dir)
+                    }
                 })
                 .sum::<f32>();
 
