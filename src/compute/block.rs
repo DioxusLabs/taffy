@@ -179,7 +179,7 @@ fn compute_inner(tree: &mut impl LayoutBlockContainer, node_id: NodeId, inputs: 
             && border.bottom == 0.0
             && size.height.is_none(),
     };
-    let has_styles_preventing_being_collapsed_through = false//style.display != Display::Block
+    let has_styles_preventing_being_collapsed_through = !style.is_block()
         || style.overflow().x.is_scroll_container()
         || style.overflow().y.is_scroll_container()
         || style.position() == Position::Absolute
