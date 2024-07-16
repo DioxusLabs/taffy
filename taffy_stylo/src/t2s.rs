@@ -112,7 +112,7 @@ pub(crate) fn flex_basis(input: &stylo::FlexBasis) -> taffy::Dimension {
     // TODO: Support flex-basis: content in Taffy
     match input {
         stylo::FlexBasis::Content => taffy::Dimension::Auto,
-        stylo::FlexBasis::Size(size) => dimension(&size).into(),
+        stylo::FlexBasis::Size(size) => dimension(size),
     }
 }
 
@@ -205,7 +205,7 @@ pub(crate) fn grid_template_tracks(input: &stylo::GridTemplateComponent) -> Vec<
             .values
             .iter()
             .map(|track| match track {
-                stylo::TrackListValue::TrackSize(size) => taffy::TrackSizingFunction::Single(track_size(&size)),
+                stylo::TrackListValue::TrackSize(size) => taffy::TrackSizingFunction::Single(track_size(size)),
                 stylo::TrackListValue::TrackRepeat(repeat) => taffy::TrackSizingFunction::Repeat(
                     track_repeat(repeat.count),
                     repeat.track_sizes.iter().map(track_size).collect(),
