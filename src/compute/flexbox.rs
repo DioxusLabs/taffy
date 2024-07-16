@@ -13,6 +13,7 @@ use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
+use crate::BoxSizing;
 
 use super::common::alignment::apply_alignment_fallback;
 #[cfg(feature = "content_size")]
@@ -159,13 +160,28 @@ pub fn compute_flexbox_layout(tree: &mut impl LayoutPartialTree, node: NodeId, i
 
     // Pull these out earlier to avoid borrowing issues
     let aspect_ratio = style.aspect_ratio;
-    let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-    let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
     let padding = style.padding.resolve_or_zero(parent_size.width);
     let border = style.border.resolve_or_zero(parent_size.width);
     let padding_border_sum = padding.sum_axes() + border.sum_axes();
+    let box_sizing_adjustment = if style.box_sizing == BoxSizing::ContentBox { padding_border_sum } else { Size::ZERO };
+
+    let min_size = style
+        .min_size
+        .maybe_resolve(parent_size)
+        .maybe_apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment);
+    let max_size = style
+        .max_size
+        .maybe_resolve(parent_size)
+        .maybe_apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment);
     let clamped_style_size = if inputs.sizing_mode == SizingMode::InherentSize {
-        style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio).maybe_clamp(min_size, max_size)
+        style
+            .size
+            .maybe_resolve(parent_size)
+            .maybe_apply_aspect_ratio(aspect_ratio)
+            .maybe_add(box_sizing_adjustment)
+            .maybe_clamp(min_size, max_size)
     } else {
         Size::NONE
     };
@@ -396,6 +412,9 @@ fn compute_constants(
     let margin = style.margin.resolve_or_zero(parent_size.width);
     let padding = style.padding.resolve_or_zero(parent_size.width);
     let border = style.border.resolve_or_zero(parent_size.width);
+    let padding_border_sum = padding.sum_axes() + border.sum_axes();
+    let box_sizing_adjustment = if style.box_sizing == BoxSizing::ContentBox { padding_border_sum } else { Size::ZERO };
+
     let align_items = style.align_items.unwrap_or(AlignItems::Stretch);
     let align_content = style.align_content.unwrap_or(AlignContent::Stretch);
     let justify_content = style.justify_content;
@@ -425,8 +444,16 @@ fn compute_constants(
         is_column,
         is_wrap,
         is_wrap_reverse,
-        min_size: style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio),
-        max_size: style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio),
+        min_size: style
+            .min_size
+            .maybe_resolve(parent_size)
+            .maybe_apply_aspect_ratio(aspect_ratio)
+            .maybe_add(box_sizing_adjustment),
+        max_size: style
+            .max_size
+            .maybe_resolve(parent_size)
+            .maybe_apply_aspect_ratio(aspect_ratio)
+            .maybe_add(box_sizing_adjustment),
         margin,
         border,
         gap,
@@ -460,18 +487,29 @@ fn generate_anonymous_flex_items(
         .filter(|(_, _, style)| style.display != Display::None)
         .map(|(index, child, child_style)| {
             let aspect_ratio = child_style.aspect_ratio;
+            let padding = child_style.padding.resolve_or_zero(constants.node_inner_size.width);
+            let border = child_style.border.resolve_or_zero(constants.node_inner_size.width);
+            let pb_sum = (padding + border).sum_axes();
+            let box_sizing_adjustment =
+                if child_style.box_sizing == BoxSizing::ContentBox { pb_sum } else { Size::ZERO };
             FlexItem {
                 node: child,
                 order: index as u32,
-                size: child_style.size.maybe_resolve(constants.node_inner_size).maybe_apply_aspect_ratio(aspect_ratio),
+                size: child_style
+                    .size
+                    .maybe_resolve(constants.node_inner_size)
+                    .maybe_apply_aspect_ratio(aspect_ratio)
+                    .maybe_add(box_sizing_adjustment),
                 min_size: child_style
                     .min_size
                     .maybe_resolve(constants.node_inner_size)
-                    .maybe_apply_aspect_ratio(aspect_ratio),
+                    .maybe_apply_aspect_ratio(aspect_ratio)
+                    .maybe_add(box_sizing_adjustment),
                 max_size: child_style
                     .max_size
                     .maybe_resolve(constants.node_inner_size)
-                    .maybe_apply_aspect_ratio(aspect_ratio),
+                    .maybe_apply_aspect_ratio(aspect_ratio)
+                    .maybe_add(box_sizing_adjustment),
 
                 inset: child_style.inset.zip_size(constants.node_inner_size, |p, s| p.maybe_resolve(s)),
                 margin: child_style.margin.resolve_or_zero(constants.node_inner_size.width),
@@ -616,7 +654,16 @@ fn determine_flex_base_size(
             // Note: `child.size` has already been resolved against aspect_ratio in generate_anonymous_flex_items
             // So B will just work here by using main_size without special handling for aspect_ratio
 
-            let flex_basis = child_style.flex_basis.maybe_resolve(constants.node_inner_size.main(dir));
+            let container_width = constants.node_inner_size.main(dir);
+            let box_sizing_adjustment = if child_style.box_sizing == BoxSizing::ContentBox {
+                let padding = child_style.padding.resolve_or_zero(container_width);
+                let border = child_style.border.resolve_or_zero(container_width);
+                (padding + border).sum_axes()
+            } else {
+                Size::ZERO
+            }
+            .main(dir);
+            let flex_basis = child_style.flex_basis.maybe_resolve(container_width).maybe_add(box_sizing_adjustment);
             let main_size = child.size.main(dir);
             if let Some(flex_basis) = flex_basis.or(main_size) {
                 break 'flex_basis flex_basis;
@@ -1494,7 +1541,15 @@ fn determine_used_cross_size(tree: &impl LayoutPartialTree, flex_lines: &mut [Fl
                     // For some reason this particular usage of max_width is an exception to the rule that max_width's transfer
                     // using the aspect_ratio (if set). Both Chrome and Firefox agree on this. And reading the spec, it seems like
                     // a reasonable interpretation. Although it seems to me that the spec *should* apply aspect_ratio here.
-                    let max_size_ignoring_aspect_ratio = child_style.max_size.maybe_resolve(constants.node_inner_size);
+
+                    let padding = child_style.padding.resolve_or_zero(constants.node_inner_size);
+                    let border = child_style.border.resolve_or_zero(constants.node_inner_size);
+                    let pb_sum = (padding + border).sum_axes();
+                    let box_sizing_adjustment =
+                        if child_style.box_sizing == BoxSizing::ContentBox { pb_sum } else { Size::ZERO };
+
+                    let max_size_ignoring_aspect_ratio =
+                        child_style.max_size.maybe_resolve(constants.node_inner_size).maybe_add(box_sizing_adjustment);
 
                     (line_cross_size - child.margin.cross_axis_sum(constants.dir)).maybe_clamp(
                         child.min_size.cross(constants.dir),
@@ -1958,6 +2013,8 @@ fn perform_absolute_layout_on_absolute_children(
         let padding = child_style.padding.resolve_or_zero(Some(container_width));
         let border = child_style.border.resolve_or_zero(Some(container_width));
         let padding_border_sum = (padding + border).sum_axes();
+        let box_sizing_adjustment =
+            if child_style.box_sizing == BoxSizing::ContentBox { padding_border_sum } else { Size::ZERO };
 
         // Resolve inset
         // Insets are resolved against the container size minus border
@@ -1969,14 +2026,23 @@ fn perform_absolute_layout_on_absolute_children(
             child_style.inset.bottom.maybe_resolve(inset_relative_size.height).maybe_add(constants.scrollbar_gutter.y);
 
         // Compute known dimensions from min/max/inherent size styles
-        let style_size = child_style.size.maybe_resolve(inset_relative_size).maybe_apply_aspect_ratio(aspect_ratio);
+        let style_size = child_style
+            .size
+            .maybe_resolve(inset_relative_size)
+            .maybe_apply_aspect_ratio(aspect_ratio)
+            .maybe_add(box_sizing_adjustment);
         let min_size = child_style
             .min_size
             .maybe_resolve(inset_relative_size)
             .maybe_apply_aspect_ratio(aspect_ratio)
+            .maybe_add(box_sizing_adjustment)
             .or(padding_border_sum.map(Some))
             .maybe_max(padding_border_sum);
-        let max_size = child_style.max_size.maybe_resolve(inset_relative_size).maybe_apply_aspect_ratio(aspect_ratio);
+        let max_size = child_style
+            .max_size
+            .maybe_resolve(inset_relative_size)
+            .maybe_apply_aspect_ratio(aspect_ratio)
+            .maybe_add(box_sizing_adjustment);
         let mut known_dimensions = style_size.maybe_clamp(min_size, max_size);
 
         // Fill in width from left/right and reapply aspect ratio if:

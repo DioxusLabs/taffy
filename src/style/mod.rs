@@ -115,6 +115,34 @@ impl Default for Position {
     }
 }
 
+/// Specifies whether size styles for this node are assigned to the node's "content box" or "border box"
+///
+/// - The "content box" is the node's inner size excluding padding, border and margin
+/// - The "border box" is the node's outer size including padding and border (but still excluding margin)
+///
+/// This property modifies the application of the following styles:
+///
+///   - `size`
+///   - `min_size`
+///   - `max_size`
+///   - `flex_basis`
+///
+/// See h<ttps://developer.mozilla.org/en-US/docs/Web/CSS/box-sizing>
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum BoxSizing {
+    /// Size styles such size, min_size, max_size specify the box's "content box" (the size excluding padding/border/margin)
+    BorderBox,
+    /// Size styles such size, min_size, max_size specify the box's "border box" (the size excluding margin but including padding/border)
+    ContentBox,
+}
+
+impl Default for BoxSizing {
+    fn default() -> Self {
+        Self::BorderBox
+    }
+}
+
 /// How children overflowing their container should affect layout
 ///
 /// In CSS the primary effect of this property is to control whether contents of a parent container that overflow that container should
@@ -189,6 +217,8 @@ impl Overflow {
 pub struct Style {
     /// What layout strategy should be used?
     pub display: Display,
+    /// Should size styles apply to the content box or the border box of the node
+    pub box_sizing: BoxSizing,
 
     // Overflow properties
     /// How children overflowing their container should affect layout
@@ -306,6 +336,7 @@ impl Style {
     /// The [`Default`] layout, in a form that can be used in const functions
     pub const DEFAULT: Style = Style {
         display: Display::DEFAULT,
+        box_sizing: BoxSizing::BorderBox,
         overflow: Point { x: Overflow::Visible, y: Overflow::Visible },
         scrollbar_width: 0.0,
         position: Position::Relative,
@@ -379,6 +410,7 @@ mod tests {
 
         let old_defaults = Style {
             display: Default::default(),
+            box_sizing: Default::default(),
             overflow: Default::default(),
             scrollbar_width: 0.0,
             position: Default::default(),
@@ -459,6 +491,7 @@ mod tests {
 
         // Display and Position
         assert_type_size::<Display>(1);
+        assert_type_size::<BoxSizing>(1);
         assert_type_size::<Position>(1);
         assert_type_size::<Overflow>(1);
 

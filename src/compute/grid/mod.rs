@@ -3,13 +3,13 @@
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignContent, AlignItems, AlignSelf, AvailableSpace, Display, Overflow, Position};
-use crate::style_helpers::*;
 use crate::tree::{Layout, LayoutInput, LayoutOutput, RunMode, SizingMode};
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId};
 use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, GridTrackVec, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
+use crate::{style_helpers::*, BoxSizing};
 use alignment::{align_and_position_item, align_tracks};
 use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks};
 use implicit_grid::compute_grid_size_estimate;
@@ -38,28 +38,109 @@ mod util;
 pub fn compute_grid_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
-    let get_child_styles_iter = |node| tree.child_ids(node).map(|child_node: NodeId| tree.get_style(child_node));
     let style = tree.get_style(node).clone();
-    let child_styles_iter = get_child_styles_iter(node);
 
+    // 1. Compute "available grid space"
+    // https://www.w3.org/TR/css-grid-1/#available-grid-space
+    let aspect_ratio = style.aspect_ratio;
+    let padding = style.padding.resolve_or_zero(parent_size.width);
+    let border = style.border.resolve_or_zero(parent_size.width);
+    let padding_border = padding + border;
+    let padding_border_size = padding_border.sum_axes();
+    let box_sizing_adjustment =
+        if style.box_sizing == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
+
+    let min_size = style
+        .min_size
+        .maybe_resolve(parent_size)
+        .maybe_apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment);
+    let max_size = style
+        .max_size
+        .maybe_resolve(parent_size)
+        .maybe_apply_aspect_ratio(aspect_ratio)
+        .maybe_add(box_sizing_adjustment);
     let preferred_size = if inputs.sizing_mode == SizingMode::InherentSize {
-        style.size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(style.aspect_ratio)
+        style
+            .size
+            .maybe_resolve(parent_size)
+            .maybe_apply_aspect_ratio(style.aspect_ratio)
+            .maybe_add(box_sizing_adjustment)
     } else {
         Size::NONE
     };
 
-    // 1. Resolve the explicit grid
-    // Exactly compute the number of rows and columns in the explicit grid.
-    let explicit_col_count = compute_explicit_grid_size_in_axis(&style, preferred_size, AbsoluteAxis::Horizontal);
-    let explicit_row_count = compute_explicit_grid_size_in_axis(&style, preferred_size, AbsoluteAxis::Vertical);
+    // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
+    // However, the axis are switched (transposed) because a node that scrolls vertically needs
+    // *horizontal* space to be reserved for a scrollbar
+    let scrollbar_gutter = style.overflow.transpose().map(|overflow| match overflow {
+        Overflow::Scroll => style.scrollbar_width,
+        _ => 0.0,
+    });
+    // TODO: make side configurable based on the `direction` property
+    let mut content_box_inset = padding_border;
+    content_box_inset.right += scrollbar_gutter.x;
+    content_box_inset.bottom += scrollbar_gutter.y;
 
-    // 2. Implicit Grid: Estimate Track Counts
+    let constrained_available_space = known_dimensions
+        .or(preferred_size)
+        .map(|size| size.map(AvailableSpace::Definite))
+        .unwrap_or(available_space)
+        .maybe_clamp(min_size, max_size)
+        .maybe_max(padding_border_size);
+
+    let available_grid_space = Size {
+        width: constrained_available_space
+            .width
+            .map_definite_value(|space| space - content_box_inset.horizontal_axis_sum()),
+        height: constrained_available_space
+            .height
+            .map_definite_value(|space| space - content_box_inset.vertical_axis_sum()),
+    };
+
+    let outer_node_size =
+        known_dimensions.or(preferred_size).maybe_clamp(min_size, max_size).maybe_max(padding_border_size);
+    let mut inner_node_size = Size {
+        width: outer_node_size.width.map(|space| space - content_box_inset.horizontal_axis_sum()),
+        height: outer_node_size.height.map(|space| space - content_box_inset.vertical_axis_sum()),
+    };
+
+    debug_log!("parent_size", dbg:parent_size);
+    debug_log!("outer_node_size", dbg:outer_node_size);
+    debug_log!("inner_node_size", dbg:inner_node_size);
+
+    if let (RunMode::ComputeSize, Some(width), Some(height)) = (run_mode, outer_node_size.width, outer_node_size.height)
+    {
+        return LayoutOutput::from_outer_size(Size { width, height });
+    }
+
+    let get_child_styles_iter = |node| tree.child_ids(node).map(|child_node: NodeId| tree.get_style(child_node));
+    let child_styles_iter = get_child_styles_iter(node);
+
+    // 2. Resolve the explicit grid
+
+    // This is very similar to the inner_node_size except if the inner_node_size is not definite but the node
+    // has a min- or max- size style then that will be used in it's place.
+    let auto_fit_container_size = outer_node_size
+        .or(max_size)
+        .or(min_size)
+        .maybe_clamp(min_size, max_size)
+        .maybe_max(padding_border_size)
+        .maybe_sub(content_box_inset.sum_axes());
+
+    // Exactly compute the number of rows and columns in the explicit grid.
+    let explicit_col_count =
+        compute_explicit_grid_size_in_axis(&style, auto_fit_container_size, AbsoluteAxis::Horizontal);
+    let explicit_row_count =
+        compute_explicit_grid_size_in_axis(&style, auto_fit_container_size, AbsoluteAxis::Vertical);
+
+    // 3. Implicit Grid: Estimate Track Counts
     // Estimate the number of rows and columns in the implicit grid (= the entire grid)
     // This is necessary as part of placement. Doing it early here is a perf optimisation to reduce allocations.
     let (est_col_counts, est_row_counts) =
         compute_grid_size_estimate(explicit_col_count, explicit_row_count, child_styles_iter);
 
-    // 2. Grid Item Placement
+    // 4. Grid Item Placement
     // Match items (children) to a definite grid position (row start/end and column start/end position)
     let mut items = Vec::with_capacity(tree.child_count(node));
     let mut cell_occupancy_matrix = CellOccupancyMatrix::with_track_counts(est_col_counts, est_row_counts);
@@ -82,7 +163,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inpu
     let final_col_counts = *cell_occupancy_matrix.track_counts(AbsoluteAxis::Horizontal);
     let final_row_counts = *cell_occupancy_matrix.track_counts(AbsoluteAxis::Vertical);
 
-    // 3. Initialize Tracks
+    // 5. Initialize Tracks
     // Initialize (explicit and implicit) grid tracks (and gutters)
     // This resolves the min and max track sizing functions for all tracks and gutters
     let mut columns = GridTrackVec::new();
@@ -104,56 +185,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutPartialTree, node: NodeId, inpu
         |row_index| cell_occupancy_matrix.row_is_occupied(row_index),
     );
 
-    // 4. Compute "available grid space"
-    // https://www.w3.org/TR/css-grid-1/#available-grid-space
-    let padding = style.padding.resolve_or_zero(parent_size.width);
-    let border = style.border.resolve_or_zero(parent_size.width);
-    let padding_border = padding + border;
-    let padding_border_size = padding_border.sum_axes();
-    let aspect_ratio = style.aspect_ratio;
-    let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-    let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-    let size = preferred_size;
-
-    // Scrollbar gutters are reserved when the `overflow` property is set to `Overflow::Scroll`.
-    // However, the axis are switched (transposed) because a node that scrolls vertically needs
-    // *horizontal* space to be reserved for a scrollbar
-    let scrollbar_gutter = style.overflow.transpose().map(|overflow| match overflow {
-        Overflow::Scroll => style.scrollbar_width,
-        _ => 0.0,
-    });
-    // TODO: make side configurable based on the `direction` property
-    let mut content_box_inset = padding_border;
-    content_box_inset.right += scrollbar_gutter.x;
-    content_box_inset.bottom += scrollbar_gutter.y;
-
-    let constrained_available_space = known_dimensions
-        .or(size)
-        .map(|size| size.map(AvailableSpace::Definite))
-        .unwrap_or(available_space)
-        .maybe_clamp(min_size, max_size)
-        .maybe_max(padding_border_size);
-
-    let available_grid_space = Size {
-        width: constrained_available_space
-            .width
-            .map_definite_value(|space| space - content_box_inset.horizontal_axis_sum()),
-        height: constrained_available_space
-            .height
-            .map_definite_value(|space| space - content_box_inset.vertical_axis_sum()),
-    };
-
-    let outer_node_size = known_dimensions.or(size).maybe_clamp(min_size, max_size).maybe_max(padding_border_size);
-    let mut inner_node_size = Size {
-        width: outer_node_size.width.map(|space| space - content_box_inset.horizontal_axis_sum()),
-        height: outer_node_size.height.map(|space| space - content_box_inset.vertical_axis_sum()),
-    };
-
-    debug_log!("parent_size", dbg:parent_size);
-    debug_log!("outer_node_size", dbg:outer_node_size);
-    debug_log!("inner_node_size", dbg:inner_node_size);
-
-    // 5. Track Sizing
+    // 6. Track Sizing
 
     // Convert grid placements in origin-zero coordinates to indexes into the GridTrack (rows and columns) vectors
     // This computation is relatively trivial, but it requires the final number of negative (implicit) tracks in

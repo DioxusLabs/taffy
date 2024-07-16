@@ -23,6 +23,9 @@ div, span, img {
   border: 0 solid red;
   margin: 0;
   padding: 0;
+}
+
+div {
   display: flex;
 }
 
@@ -45,6 +48,14 @@ body > * {
   line-height: 1;
   font-size: 10px;
   color: green;
+}
+
+.border-box, .border-box * {
+  box-sizing: border-box;
+}
+
+.content-box, .content-box * {
+  box-sizing: content-box;
 }
 
 div {

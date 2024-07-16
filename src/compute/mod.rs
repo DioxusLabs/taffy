@@ -52,7 +52,7 @@ use crate::tree::{
 use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
 use crate::util::sys::round;
 use crate::util::ResolveOrZero;
-use crate::{Display, MaybeMath, MaybeResolve};
+use crate::{BoxSizing, Display, MaybeMath, MaybeResolve};
 
 /// Compute layout for the root node in the tree
 pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, available_space: Size<AvailableSpace>) {
@@ -67,15 +67,27 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
             // Pull these out earlier to avoid borrowing issues
             let aspect_ratio = style.aspect_ratio;
             let margin = style.margin.resolve_or_zero(parent_size.width);
-            let min_size = style.min_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
-            let max_size = style.max_size.maybe_resolve(parent_size).maybe_apply_aspect_ratio(aspect_ratio);
             let padding = style.padding.resolve_or_zero(parent_size.width);
             let border = style.border.resolve_or_zero(parent_size.width);
             let padding_border_size = (padding + border).sum_axes();
+            let box_sizing_adjustment =
+                if style.box_sizing == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
+
+            let min_size = style
+                .min_size
+                .maybe_resolve(parent_size)
+                .maybe_apply_aspect_ratio(aspect_ratio)
+                .maybe_add(box_sizing_adjustment);
+            let max_size = style
+                .max_size
+                .maybe_resolve(parent_size)
+                .maybe_apply_aspect_ratio(aspect_ratio)
+                .maybe_add(box_sizing_adjustment);
             let clamped_style_size = style
                 .size
                 .maybe_resolve(parent_size)
                 .maybe_apply_aspect_ratio(aspect_ratio)
+                .maybe_add(box_sizing_adjustment)
                 .maybe_clamp(min_size, max_size);
 
             // If both min and max in a given axis are set and max <= min then this determines the size in that axis
