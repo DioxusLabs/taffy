@@ -45,14 +45,14 @@ pub use self::flexbox::compute_flexbox_layout;
 pub use self::grid::compute_grid_layout;
 
 use crate::geometry::{Line, Point, Size};
-use crate::style::{AvailableSpace, Overflow};
+use crate::style::{AvailableSpace, CoreStyle, Overflow};
 use crate::tree::{
     Layout, LayoutInput, LayoutOutput, LayoutPartialTree, LayoutPartialTreeExt, NodeId, RoundTree, SizingMode,
 };
 use crate::util::debug::{debug_log, debug_log_node, debug_pop_node, debug_push_node};
 use crate::util::sys::round;
 use crate::util::ResolveOrZero;
-use crate::{BoxSizing, Display, MaybeMath, MaybeResolve};
+use crate::{BoxSizing, MaybeMath, MaybeResolve};
 
 /// Compute layout for the root node in the tree
 pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, available_space: Size<AvailableSpace>) {
@@ -61,30 +61,30 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
     #[cfg(feature = "block_layout")]
     {
         let parent_size = available_space.into_options();
-        let style = tree.get_style(root);
+        let style = tree.get_core_container_style(root);
 
-        if style.display == Display::Block {
+        if style.is_block() {
             // Pull these out earlier to avoid borrowing issues
-            let aspect_ratio = style.aspect_ratio;
-            let margin = style.margin.resolve_or_zero(parent_size.width);
-            let padding = style.padding.resolve_or_zero(parent_size.width);
-            let border = style.border.resolve_or_zero(parent_size.width);
+            let aspect_ratio = style.aspect_ratio();
+            let margin = style.margin().resolve_or_zero(parent_size.width);
+            let padding = style.padding().resolve_or_zero(parent_size.width);
+            let border = style.border().resolve_or_zero(parent_size.width);
             let padding_border_size = (padding + border).sum_axes();
             let box_sizing_adjustment =
-                if style.box_sizing == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
+                if style.box_sizing() == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
 
             let min_size = style
-                .min_size
+                .min_size()
                 .maybe_resolve(parent_size)
                 .maybe_apply_aspect_ratio(aspect_ratio)
                 .maybe_add(box_sizing_adjustment);
             let max_size = style
-                .max_size
+                .max_size()
                 .maybe_resolve(parent_size)
                 .maybe_apply_aspect_ratio(aspect_ratio)
                 .maybe_add(box_sizing_adjustment);
             let clamped_style_size = style
-                .size
+                .size()
                 .maybe_resolve(parent_size)
                 .maybe_apply_aspect_ratio(aspect_ratio)
                 .maybe_add(box_sizing_adjustment)
@@ -122,14 +122,15 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
         Line::FALSE,
     );
 
-    let style = tree.get_style(root);
-    let padding = style.padding.resolve_or_zero(available_space.width.into_option());
-    let border = style.border.resolve_or_zero(available_space.width.into_option());
-    let margin = style.margin.resolve_or_zero(available_space.width.into_option());
+    let style = tree.get_core_container_style(root);
+    let padding = style.padding().resolve_or_zero(available_space.width.into_option());
+    let border = style.border().resolve_or_zero(available_space.width.into_option());
+    let margin = style.margin().resolve_or_zero(available_space.width.into_option());
     let scrollbar_size = Size {
-        width: if style.overflow.y == Overflow::Scroll { style.scrollbar_width } else { 0.0 },
-        height: if style.overflow.x == Overflow::Scroll { style.scrollbar_width } else { 0.0 },
+        width: if style.overflow().y == Overflow::Scroll { style.scrollbar_width() } else { 0.0 },
+        height: if style.overflow().x == Overflow::Scroll { style.scrollbar_width() } else { 0.0 },
     };
+    drop(style);
 
     tree.set_unrounded_layout(
         root,
