@@ -261,7 +261,6 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     // If container size is undefined, determine the container's main size
     // and then re-resolve gaps based on newly determined size
     debug_log!("determine_container_main_size");
-    let original_gap = constants.gap;
     if let Some(inner_main_size) = constants.node_inner_size.main(constants.dir) {
         let outer_main_size = inner_main_size + constants.content_box_inset.main_axis_sum(constants.dir);
         constants.inner_container_size.set_main(constants.dir, inner_main_size);
@@ -285,7 +284,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     // 6. Resolve the flexible lengths of all the flex items to find their used main size.
     debug_log!("resolve_flexible_lengths");
     for line in &mut flex_lines {
-        resolve_flexible_lengths(line, &constants, original_gap);
+        resolve_flexible_lengths(line, &constants);
     }
 
     // 9.4. Cross Size Determination
@@ -1105,8 +1104,7 @@ fn determine_container_main_size(
 ///
 /// # [9.7. Resolving Flexible Lengths](https://www.w3.org/TR/css-flexbox-1/#resolve-flexible-lengths)
 #[inline]
-fn resolve_flexible_lengths(line: &mut FlexLine, constants: &AlgoConstants, original_gap: Size<f32>) {
-    let total_original_main_axis_gap = sum_axis_gaps(original_gap.main(constants.dir), line.items.len());
+fn resolve_flexible_lengths(line: &mut FlexLine, constants: &AlgoConstants) {
     let total_main_axis_gap = sum_axis_gaps(constants.gap.main(constants.dir), line.items.len());
 
     // 1. Determine the used flex factor. Sum the outer hypothetical main sizes of all
@@ -1116,9 +1114,10 @@ fn resolve_flexible_lengths(line: &mut FlexLine, constants: &AlgoConstants, orig
 
     let total_hypothetical_outer_main_size =
         line.items.iter().map(|child| child.hypothetical_outer_size.main(constants.dir)).sum::<f32>();
-    let used_flex_factor: f32 = total_original_main_axis_gap + total_hypothetical_outer_main_size;
+    let used_flex_factor: f32 = total_main_axis_gap + total_hypothetical_outer_main_size;
     let growing = used_flex_factor < constants.node_inner_size.main(constants.dir).unwrap_or(0.0);
-    let shrinking = !growing;
+    let shrinking = used_flex_factor > constants.node_inner_size.main(constants.dir).unwrap_or(0.0);
+    let exactly_sized = !growing & !shrinking;
 
     // 2. Size inflexible items. Freeze, setting its target main size to its hypothetical main size
     //    - Any item that has a flex factor of zero
@@ -1131,7 +1130,8 @@ fn resolve_flexible_lengths(line: &mut FlexLine, constants: &AlgoConstants, orig
         let inner_target_size = child.hypothetical_inner_size.main(constants.dir);
         child.target_size.set_main(constants.dir, inner_target_size);
 
-        if (child.flex_grow == 0.0 && child.flex_shrink == 0.0)
+        if exactly_sized
+            || (child.flex_grow == 0.0 && child.flex_shrink == 0.0)
             || (growing && child.flex_basis > child.hypothetical_inner_size.main(constants.dir))
             || (shrinking && child.flex_basis < child.hypothetical_inner_size.main(constants.dir))
         {
@@ -1139,6 +1139,10 @@ fn resolve_flexible_lengths(line: &mut FlexLine, constants: &AlgoConstants, orig
             let outer_target_size = inner_target_size + child.margin.main_axis_sum(constants.dir);
             child.outer_target_size.set_main(constants.dir, outer_target_size);
         }
+    }
+
+    if exactly_sized {
+        return;
     }
 
     // 3. Calculate initial free space. Sum the outer sizes of all items on the line,
