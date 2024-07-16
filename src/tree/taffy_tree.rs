@@ -346,16 +346,16 @@ where
     MeasureFunction:
         FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
 {
-    type ContainerStyle<'a> = &'a Style where Self: 'a;
-    type ItemStyle<'a> = &'a Style where Self: 'a;
+    type BlockContainerStyle<'a> = &'a Style where Self: 'a;
+    type BlockItemStyle<'a> = &'a Style where Self: 'a;
 
     #[inline(always)]
-    fn get_block_container_style(&self, node_id: NodeId) -> Self::ContainerStyle<'_> {
+    fn get_block_container_style(&self, node_id: NodeId) -> Self::BlockContainerStyle<'_> {
         self.get_core_container_style(node_id)
     }
 
     #[inline(always)]
-    fn get_block_child_style(&self, child_node_id: NodeId) -> Self::ItemStyle<'_> {
+    fn get_block_child_style(&self, child_node_id: NodeId) -> Self::BlockItemStyle<'_> {
         self.get_core_container_style(child_node_id)
     }
 }
@@ -366,16 +366,16 @@ where
     MeasureFunction:
         FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
 {
-    type ContainerStyle<'a> = &'a Style where Self: 'a;
-    type ItemStyle<'a> = &'a Style where Self: 'a;
+    type FlexboxContainerStyle<'a> = &'a Style where Self: 'a;
+    type FlexboxItemStyle<'a> = &'a Style where Self: 'a;
 
     #[inline(always)]
-    fn get_flexbox_container_style(&self, node_id: NodeId) -> Self::ContainerStyle<'_> {
+    fn get_flexbox_container_style(&self, node_id: NodeId) -> Self::FlexboxContainerStyle<'_> {
         &self.taffy.nodes[node_id.into()].style
     }
 
     #[inline(always)]
-    fn get_flexbox_child_style(&self, child_node_id: NodeId) -> Self::ItemStyle<'_> {
+    fn get_flexbox_child_style(&self, child_node_id: NodeId) -> Self::FlexboxItemStyle<'_> {
         &self.taffy.nodes[child_node_id.into()].style
     }
 }
@@ -386,16 +386,16 @@ where
     MeasureFunction:
         FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
 {
-    type ContainerStyle<'a> = &'a Style where Self: 'a;
-    type ItemStyle<'a> = &'a Style where Self: 'a;
+    type GridContainerStyle<'a> = &'a Style where Self: 'a;
+    type GridItemStyle<'a> = &'a Style where Self: 'a;
 
     #[inline(always)]
-    fn get_grid_container_style(&self, node_id: NodeId) -> Self::ContainerStyle<'_> {
+    fn get_grid_container_style(&self, node_id: NodeId) -> Self::GridContainerStyle<'_> {
         &self.taffy.nodes[node_id.into()].style
     }
 
     #[inline(always)]
-    fn get_grid_child_style(&self, child_node_id: NodeId) -> Self::ItemStyle<'_> {
+    fn get_grid_child_style(&self, child_node_id: NodeId) -> Self::GridItemStyle<'_> {
         &self.taffy.nodes[child_node_id.into()].style
     }
 }

@@ -172,33 +172,33 @@ impl LayoutPartialTree for StatelessLayoutTree {
 }
 
 impl taffy::LayoutFlexboxContainer for StatelessLayoutTree {
-    type ContainerStyle<'a> = &'a Style where
+    type FlexboxContainerStyle<'a> = &'a Style where
         Self: 'a;
 
-    type ItemStyle<'a> = &'a Style where
+    type FlexboxItemStyle<'a> = &'a Style where
         Self: 'a;
 
-    fn get_flexbox_container_style(&self, node_id: NodeId) -> Self::ContainerStyle<'_> {
+    fn get_flexbox_container_style(&self, node_id: NodeId) -> Self::FlexboxContainerStyle<'_> {
         unsafe { &node_from_id(node_id).style }
     }
 
-    fn get_flexbox_child_style(&self, child_node_id: NodeId) -> Self::ItemStyle<'_> {
+    fn get_flexbox_child_style(&self, child_node_id: NodeId) -> Self::FlexboxItemStyle<'_> {
         unsafe { &node_from_id(child_node_id).style }
     }
 }
 
 impl taffy::LayoutGridContainer for StatelessLayoutTree {
-    type ContainerStyle<'a> = &'a Style where
+    type GridContainerStyle<'a> = &'a Style where
         Self: 'a;
 
-    type ItemStyle<'a> = &'a Style where
+    type GridItemStyle<'a> = &'a Style where
         Self: 'a;
 
-    fn get_grid_container_style(&self, node_id: NodeId) -> Self::ContainerStyle<'_> {
+    fn get_grid_container_style(&self, node_id: NodeId) -> Self::GridContainerStyle<'_> {
         unsafe { &node_from_id(node_id).style }
     }
 
-    fn get_grid_child_style(&self, child_node_id: NodeId) -> Self::ItemStyle<'_> {
+    fn get_grid_child_style(&self, child_node_id: NodeId) -> Self::GridItemStyle<'_> {
         unsafe { &node_from_id(child_node_id).style }
     }
 }
