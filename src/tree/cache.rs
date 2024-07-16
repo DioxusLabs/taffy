@@ -8,6 +8,7 @@ const CACHE_SIZE: usize = 9;
 
 /// Cached intermediate layout results
 #[derive(Debug, Clone, Copy)]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 pub(crate) struct CacheEntry<T> {
     /// The initial cached size of the node itself
     known_dimensions: Size<Option<f32>>,
@@ -18,6 +19,7 @@ pub(crate) struct CacheEntry<T> {
 }
 
 /// A cache for caching the results of a sizing a Grid Item or Flexbox Item
+#[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct Cache {
     /// The cache entry for the node's final layout
     final_layout_entry: Option<CacheEntry<LayoutOutput>>,
