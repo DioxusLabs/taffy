@@ -186,7 +186,9 @@ fn compute_inner(tree: &mut impl LayoutBlockContainer, node_id: NodeId, inputs: 
         || padding.top > 0.0
         || padding.bottom > 0.0
         || border.top > 0.0
-        || border.bottom > 0.0;
+        || border.bottom > 0.0
+        || matches!(size.height, Some(h) if h > 0.0)
+        || matches!(min_size.height, Some(h) if h > 0.0);
 
     drop(style);
 

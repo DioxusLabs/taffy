@@ -78,7 +78,9 @@ where
         || padding.top > 0.0
         || padding.bottom > 0.0
         || border.top > 0.0
-        || border.bottom > 0.0;
+        || border.bottom > 0.0
+        || matches!(node_size.height, Some(h) if h > 0.0)
+        || matches!(node_min_size.height, Some(h) if h > 0.0);
 
     debug_log!("LEAF");
     debug_log!("node_size", dbg:node_size);
