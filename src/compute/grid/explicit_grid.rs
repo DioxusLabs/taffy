@@ -2,18 +2,19 @@
 //! This mainly consists of evaluating GridAutoTracks
 use super::types::{GridTrack, TrackCounts};
 use crate::geometry::{AbsoluteAxis, Size};
-use crate::style::{GridTrackRepetition, LengthPercentage, NonRepeatedTrackSizingFunction, Style, TrackSizingFunction};
+use crate::style::{GridTrackRepetition, LengthPercentage, NonRepeatedTrackSizingFunction, TrackSizingFunction};
 use crate::style_helpers::TaffyAuto;
-use crate::util::sys::{GridTrackVec, Vec};
+use crate::util::sys::Vec;
 use crate::util::MaybeMath;
 use crate::util::ResolveOrZero;
+use crate::GridContainerStyle;
 
 #[cfg(not(feature = "std"))]
 use num_traits::float::FloatCore;
 
 /// Compute the number of rows and columns in the explicit grid
 pub(crate) fn compute_explicit_grid_size_in_axis(
-    style: &Style,
+    style: &impl GridContainerStyle,
     inner_container_size: Size<Option<f32>>,
     axis: AbsoluteAxis,
 ) -> u16 {
@@ -93,7 +94,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
     //   - then the number of repetitions is the smallest possible positive integer that fulfills that minimum requirement
     // Otherwise, the specified track list repeats only once.
     let size_is_maximum =
-        style.size.get_abs(axis).into_option().is_some() || style.max_size.get_abs(axis).into_option().is_some();
+        style.size().get_abs(axis).into_option().is_some() || style.max_size().get_abs(axis).into_option().is_some();
 
     // Determine the number of repetitions
     let num_repetitions: u16 = match inner_container_size.get_abs(axis) {
@@ -128,7 +129,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
                     }
                 })
                 .sum();
-            let gap_size = style.gap.get_abs(axis).resolve_or_zero(Some(inner_container_size));
+            let gap_size = style.gap().get_abs(axis).resolve_or_zero(Some(inner_container_size));
 
             // Compute the amount of space that a single repetition of the repeated track list takes
             let per_repetition_track_used_space: f32 = repetition_definition
@@ -176,7 +177,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
 pub(super) fn initialize_grid_tracks(
     tracks: &mut Vec<GridTrack>,
     counts: TrackCounts,
-    track_template: &GridTrackVec<TrackSizingFunction>,
+    track_template: &[TrackSizingFunction],
     auto_tracks: &[NonRepeatedTrackSizingFunction],
     gap: LengthPercentage,
     track_has_items: impl Fn(usize) -> bool,

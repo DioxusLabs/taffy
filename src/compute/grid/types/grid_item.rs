@@ -5,11 +5,11 @@ use crate::geometry::AbstractAxis;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
     AlignItems, AlignSelf, AvailableSpace, Dimension, LengthPercentageAuto, MaxTrackSizingFunction,
-    MinTrackSizingFunction, Overflow, Style,
+    MinTrackSizingFunction, Overflow,
 };
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId, SizingMode};
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
-use crate::{BoxSizing, LengthPercentage};
+use crate::{BoxSizing, GridItemStyle, LengthPercentage};
 use core::ops::Range;
 
 /// Represents a single grid item
@@ -93,11 +93,11 @@ pub(in super::super) struct GridItem {
 
 impl GridItem {
     /// Create a new item given a concrete placement in both axes
-    pub fn new_with_placement_style_and_order(
+    pub fn new_with_placement_style_and_order<S: GridItemStyle>(
         node: NodeId,
         col_span: Line<OriginZeroLine>,
         row_span: Line<OriginZeroLine>,
-        style: &Style,
+        style: S,
         parent_align_items: AlignItems,
         parent_justify_items: AlignItems,
         source_order: u16,
@@ -107,17 +107,17 @@ impl GridItem {
             source_order,
             row: row_span,
             column: col_span,
-            overflow: style.overflow,
-            box_sizing: style.box_sizing,
-            size: style.size,
-            min_size: style.min_size,
-            max_size: style.max_size,
-            aspect_ratio: style.aspect_ratio,
-            padding: style.padding,
-            border: style.border,
-            margin: style.margin,
-            align_self: style.align_self.unwrap_or(parent_align_items),
-            justify_self: style.justify_self.unwrap_or(parent_justify_items),
+            overflow: style.overflow(),
+            box_sizing: style.box_sizing(),
+            size: style.size(),
+            min_size: style.min_size(),
+            max_size: style.max_size(),
+            aspect_ratio: style.aspect_ratio(),
+            padding: style.padding(),
+            border: style.border(),
+            margin: style.margin(),
+            align_self: style.align_self().unwrap_or(parent_align_items),
+            justify_self: style.justify_self().unwrap_or(parent_justify_items),
             baseline: None,
             baseline_shim: 0.0,
             row_indexes: Line { start: 0, end: 0 }, // Properly initialised later

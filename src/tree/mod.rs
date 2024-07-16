@@ -15,6 +15,15 @@ pub use node::NodeId;
 pub(crate) use traits::LayoutPartialTreeExt;
 pub use traits::{LayoutPartialTree, PrintTree, RoundTree, TraversePartialTree, TraverseTree};
 
+#[cfg(feature = "flexbox")]
+pub use traits::LayoutFlexboxContainer;
+
+#[cfg(feature = "grid")]
+pub use traits::LayoutGridContainer;
+
+#[cfg(feature = "block_layout")]
+pub use traits::LayoutBlockContainer;
+
 #[cfg(feature = "taffy_tree")]
 mod taffy_tree;
 #[cfg(feature = "taffy_tree")]

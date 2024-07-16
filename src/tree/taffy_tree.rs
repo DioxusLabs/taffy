@@ -14,15 +14,15 @@ use crate::tree::{
 use crate::util::debug::{debug_log, debug_log_node};
 use crate::util::sys::{new_vec_with_capacity, ChildrenVec, Vec};
 
-#[cfg(feature = "block_layout")]
-use crate::compute::compute_block_layout;
-#[cfg(feature = "flexbox")]
-use crate::compute::compute_flexbox_layout;
-#[cfg(feature = "grid")]
-use crate::compute::compute_grid_layout;
 use crate::compute::{
     compute_cached_layout, compute_hidden_layout, compute_leaf_layout, compute_root_layout, round_layout,
 };
+#[cfg(feature = "block_layout")]
+use crate::{compute::compute_block_layout, LayoutBlockContainer};
+#[cfg(feature = "flexbox")]
+use crate::{compute::compute_flexbox_layout, LayoutFlexboxContainer};
+#[cfg(feature = "grid")]
+use crate::{compute::compute_grid_layout, LayoutGridContainer};
 
 /// The error Taffy generates on invalid operations
 pub type TaffyResult<T> = Result<T, TaffyError>;
@@ -271,9 +271,12 @@ where
     MeasureFunction:
         FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
 {
+    type CoreContainerStyle<'a> = &'a Style where Self : 'a;
+    type CacheMut<'b> = &'b mut Cache where Self : 'b;
+
     #[inline(always)]
-    fn get_style(&self, node: NodeId) -> &Style {
-        &self.taffy.nodes[node.into()].style
+    fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_> {
+        &self.taffy.nodes[node_id.into()].style
     }
 
     #[inline(always)]
@@ -301,7 +304,7 @@ where
         //
         // If there was no cache match and a new result needs to be computed then that result will be added to the cache
         compute_cached_layout(self, node, inputs, |tree, node, inputs| {
-            let display_mode = tree.get_style(node).display;
+            let display_mode = tree.taffy.nodes[node.into()].style.display;
             let has_children = tree.child_count(node) > 0;
 
             debug_log!(display_mode);
@@ -334,6 +337,66 @@ where
                 }
             }
         })
+    }
+}
+
+#[cfg(feature = "block_layout")]
+impl<'t, NodeContext, MeasureFunction> LayoutBlockContainer for TaffyView<'t, NodeContext, MeasureFunction>
+where
+    MeasureFunction:
+        FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
+{
+    type BlockContainerStyle<'a> = &'a Style where Self: 'a;
+    type BlockItemStyle<'a> = &'a Style where Self: 'a;
+
+    #[inline(always)]
+    fn get_block_container_style(&self, node_id: NodeId) -> Self::BlockContainerStyle<'_> {
+        self.get_core_container_style(node_id)
+    }
+
+    #[inline(always)]
+    fn get_block_child_style(&self, child_node_id: NodeId) -> Self::BlockItemStyle<'_> {
+        self.get_core_container_style(child_node_id)
+    }
+}
+
+#[cfg(feature = "flexbox")]
+impl<'t, NodeContext, MeasureFunction> LayoutFlexboxContainer for TaffyView<'t, NodeContext, MeasureFunction>
+where
+    MeasureFunction:
+        FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
+{
+    type FlexboxContainerStyle<'a> = &'a Style where Self: 'a;
+    type FlexboxItemStyle<'a> = &'a Style where Self: 'a;
+
+    #[inline(always)]
+    fn get_flexbox_container_style(&self, node_id: NodeId) -> Self::FlexboxContainerStyle<'_> {
+        &self.taffy.nodes[node_id.into()].style
+    }
+
+    #[inline(always)]
+    fn get_flexbox_child_style(&self, child_node_id: NodeId) -> Self::FlexboxItemStyle<'_> {
+        &self.taffy.nodes[child_node_id.into()].style
+    }
+}
+
+#[cfg(feature = "grid")]
+impl<'t, NodeContext, MeasureFunction> LayoutGridContainer for TaffyView<'t, NodeContext, MeasureFunction>
+where
+    MeasureFunction:
+        FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
+{
+    type GridContainerStyle<'a> = &'a Style where Self: 'a;
+    type GridItemStyle<'a> = &'a Style where Self: 'a;
+
+    #[inline(always)]
+    fn get_grid_container_style(&self, node_id: NodeId) -> Self::GridContainerStyle<'_> {
+        &self.taffy.nodes[node_id.into()].style
+    }
+
+    #[inline(always)]
+    fn get_grid_child_style(&self, child_node_id: NodeId) -> Self::GridItemStyle<'_> {
+        &self.taffy.nodes[child_node_id.into()].style
     }
 }
 
