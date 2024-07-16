@@ -815,7 +815,18 @@ fn collect_flex_lines<'a>(
         lines.push(FlexLine { items: flex_items.as_mut_slice(), cross_size: 0.0, offset_cross: 0.0 });
         lines
     } else {
-        match available_space.main(constants.dir) {
+        let main_axis_available_space = match constants.max_size.main(constants.dir) {
+            Some(max_size) => AvailableSpace::Definite(
+                available_space
+                    .main(constants.dir)
+                    .into_option()
+                    .unwrap_or(max_size)
+                    .maybe_max(constants.min_size.main(constants.dir)),
+            ),
+            None => available_space.main(constants.dir),
+        };
+
+        match main_axis_available_space {
             // If we're sizing under a max-content constraint then the flex items will never wrap
             // (at least for now - future extensions to the CSS spec may add provisions for forced wrap points)
             AvailableSpace::MaxContent => {

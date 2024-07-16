@@ -411,6 +411,7 @@ mod min_width_larger_than_width;
 mod min_width_overrides_max_width;
 mod min_width_overrides_width;
 mod min_width_overrides_width_on_root;
+mod multiline_column_max_height;
 mod multiline_min_max_12;
 mod multiline_min_max_13;
 mod multiline_min_max_14;
