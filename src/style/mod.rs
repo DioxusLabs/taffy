@@ -773,19 +773,19 @@ impl GridContainerStyle for Style {
 impl<T: GridContainerStyle> GridContainerStyle for &'_ T {
     #[inline(always)]
     fn grid_template_rows(&self) -> &[TrackSizingFunction] {
-        &(*self).grid_template_rows()
+        (*self).grid_template_rows()
     }
     #[inline(always)]
     fn grid_template_columns(&self) -> &[TrackSizingFunction] {
-        &(*self).grid_template_columns()
+        (*self).grid_template_columns()
     }
     #[inline(always)]
     fn grid_auto_rows(&self) -> &[NonRepeatedTrackSizingFunction] {
-        &(*self).grid_auto_rows()
+        (*self).grid_auto_rows()
     }
     #[inline(always)]
     fn grid_auto_columns(&self) -> &[NonRepeatedTrackSizingFunction] {
-        &(*self).grid_auto_columns()
+        (*self).grid_auto_columns()
     }
     #[inline(always)]
     fn grid_auto_flow(&self) -> GridAutoFlow {
