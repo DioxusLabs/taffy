@@ -2,17 +2,20 @@
 mod alignment;
 mod dimension;
 
+#[cfg(feature = "block_layout")]
+mod block;
 #[cfg(feature = "flexbox")]
 mod flex;
+#[cfg(feature = "grid")]
+mod grid;
 
 pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, JustifyItems, JustifySelf};
 pub use self::dimension::{AvailableSpace, Dimension, LengthPercentage, LengthPercentageAuto};
 
+#[cfg(feature = "block_layout")]
+pub use self::block::{BlockContainerStyle, TextAlign};
 #[cfg(feature = "flexbox")]
 pub use self::flex::{FlexDirection, FlexWrap, FlexboxContainerStyle, FlexboxItemStyle};
-
-#[cfg(feature = "grid")]
-mod grid;
 #[cfg(feature = "grid")]
 pub(crate) use self::grid::{GenericGridPlacement, OriginZeroGridPlacement};
 #[cfg(feature = "grid")]
@@ -20,6 +23,7 @@ pub use self::grid::{
     GridAutoFlow, GridContainerStyle, GridItemStyle, GridPlacement, GridTrackRepetition, MaxTrackSizingFunction,
     MinTrackSizingFunction, NonRepeatedTrackSizingFunction, TrackSizingFunction,
 };
+
 use crate::geometry::{Point, Rect, Size};
 
 #[cfg(feature = "grid")]
@@ -394,13 +398,20 @@ pub struct Style {
     #[cfg_attr(feature = "serde", serde(default = "style_helpers::zero"))]
     pub gap: Size<LengthPercentage>,
 
-    // Flexbox properties
+    // Block container properties
+    /// How items elements should aligned in the inline axis
+    #[cfg(feature = "block_layout")]
+    pub text_align: TextAlign,
+
+    // Flexbox container properties
     /// Which direction does the main axis flow in?
     #[cfg(feature = "flexbox")]
     pub flex_direction: FlexDirection,
     /// Should elements wrap, or stay in a single line?
     #[cfg(feature = "flexbox")]
     pub flex_wrap: FlexWrap,
+
+    // Flexbox item properties
     /// Sets the initial main axis size of the item
     #[cfg(feature = "flexbox")]
     pub flex_basis: Dimension,
@@ -472,6 +483,9 @@ impl Style {
         align_content: None,
         #[cfg(any(feature = "flexbox", feature = "grid"))]
         justify_content: None,
+        // Block
+        #[cfg(feature = "block_layout")]
+        text_align: TextAlign::Auto,
         // Flexbox
         #[cfg(feature = "flexbox")]
         flex_direction: FlexDirection::Row,
@@ -626,6 +640,22 @@ impl<T: CoreStyle> CoreStyle for &'_ T {
     #[inline(always)]
     fn border(&self) -> Rect<LengthPercentage> {
         (*self).border()
+    }
+}
+
+#[cfg(feature = "block_layout")]
+impl BlockContainerStyle for &Style {
+    #[inline(always)]
+    fn text_align(&self) -> TextAlign {
+        self.text_align
+    }
+}
+
+#[cfg(feature = "block_layout")]
+impl<T: BlockContainerStyle> BlockContainerStyle for &'_ T {
+    #[inline(always)]
+    fn text_align(&self) -> TextAlign {
+        (*self).text_align()
     }
 }
 
@@ -890,6 +920,8 @@ mod tests {
             padding: Rect::zero(),
             border: Rect::zero(),
             gap: Size::zero(),
+            #[cfg(feature = "block_layout")]
+            text_align: Default::default(),
             #[cfg(feature = "flexbox")]
             flex_grow: 0.0,
             #[cfg(feature = "flexbox")]
