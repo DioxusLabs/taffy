@@ -7,7 +7,7 @@ use crate::tree::{LayoutOutput, RunMode};
 const CACHE_SIZE: usize = 9;
 
 /// Cached intermediate layout results
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub(crate) struct CacheEntry<T> {
     /// The initial cached size of the node itself
@@ -19,7 +19,7 @@ pub(crate) struct CacheEntry<T> {
 }
 
 /// A cache for caching the results of a sizing a Grid Item or Flexbox Item
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct Cache {
     /// The cache entry for the node's final layout

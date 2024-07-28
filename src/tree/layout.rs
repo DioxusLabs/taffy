@@ -75,7 +75,7 @@ impl CollapsibleMarginSet {
 }
 
 /// An axis that layout algorithms can be requested to compute a size for
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub enum RequestedAxis {
     /// The horizontal axis
@@ -106,7 +106,7 @@ impl TryFrom<RequestedAxis> for AbsoluteAxis {
 }
 
 /// A struct containing the inputs constraints/hints for laying out a node, which are passed in by the parent
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct LayoutInput {
     /// Whether we only need to know the Node's size, or whe
@@ -156,7 +156,7 @@ impl LayoutInput {
 /// children that may be text nodes. See <https://www.w3.org/TR/css-writing-modes-3/#intro-baselines> for details.
 /// If your node does not have a baseline (or you are unsure how to compute it), then simply return `Point::NONE`
 /// for the first_baselines field
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct LayoutOutput {
     /// The size of the node
@@ -221,7 +221,7 @@ impl LayoutOutput {
 }
 
 /// The final result of a layout algorithm for a single node.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct Layout {
     /// The relative ordering of the node

@@ -66,6 +66,7 @@ impl core::fmt::Display for TaffyError {
 impl std::error::Error for TaffyError {}
 
 /// Global configuration values for a TaffyTree instance
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct TaffyConfig {
     /// Whether to round layout values
     pub(crate) use_rounding: bool,
@@ -80,6 +81,7 @@ impl Default for TaffyConfig {
 /// Layout information for a given [`Node`](crate::node::Node)
 ///
 /// Stored in a [`TaffyTree`].
+#[derive(Debug, Clone, PartialEq)]
 struct NodeData {
     /// The layout strategy used by this node
     pub(crate) style: Style,
@@ -123,7 +125,8 @@ impl NodeData {
 
 /// An entire tree of UI nodes. The entry point to Taffy's high-level API.
 ///
-/// Allows you to build a tree of UI nodes, run Taffy's layout algorithms over that tree, and then access the resultant layout.
+/// Allows you to build a tree of UI nodes, run Taffy's layout algorithms over that tree, and then access the resultant layout.]
+#[derive(Debug, Clone)]
 pub struct TaffyTree<NodeContext = ()> {
     /// The [`NodeData`] for each node stored in this tree
     nodes: SlotMap<DefaultKey, NodeData>,
