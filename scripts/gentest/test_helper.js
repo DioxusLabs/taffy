@@ -209,10 +209,12 @@ function describeElement(e) {
 
       position: parseEnum(e.style.position),
       direction: parseEnum(e.style.direction),
-      flexDirection: parseEnum(e.style.flexDirection),
 
       writingMode: parseEnum(e.style.writingMode),
 
+      textAlign: parseEnum(e.style.textAlign),
+
+      flexDirection: parseEnum(e.style.flexDirection),
       flexWrap: parseEnum(e.style.flexWrap),
       overflowX: parseEnum(e.style.overflowX),
       overflowY: parseEnum(e.style.overflowY),
