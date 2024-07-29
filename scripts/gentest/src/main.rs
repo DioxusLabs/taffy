@@ -444,6 +444,16 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
         (quote!(), quote!())
     };
 
+    let text_align = match style["textAlign"] {
+        Value::String(ref value) => match value.as_ref() {
+            "-webkit-left" => quote!(text_align: taffy::style::TextAlign::LegacyLeft,),
+            "-webkit-right" => quote!(text_align: taffy::style::TextAlign::LegacyRight,),
+            "-webkit-center" => quote!(text_align: taffy::style::TextAlign::LegacyCenter,),
+            _ => quote!(),
+        },
+        _ => quote!(),
+    };
+
     let align_items = match style["alignItems"] {
         Value::String(ref value) => match value.as_ref() {
             "start" => quote!(align_items: Some(taffy::style::AlignItems::Start),),
@@ -618,6 +628,7 @@ fn generate_node(ident: &str, node: &Value) -> TokenStream {
         #box_sizing
         #direction
         #position
+        #text_align
         #flex_direction
         #flex_wrap
         #overflow

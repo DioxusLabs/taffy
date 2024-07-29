@@ -9,7 +9,7 @@ use crate::util::sys::f32_max;
 use crate::util::sys::Vec;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
-use crate::{BoxGenerationMode, BoxSizing, LayoutBlockContainer};
+use crate::{BlockContainerStyle, BoxGenerationMode, BoxSizing, LayoutBlockContainer, TextAlign};
 
 #[cfg(feature = "content_size")]
 use super::common::content_size::compute_content_size_contribution;
@@ -190,6 +190,8 @@ fn compute_inner(tree: &mut impl LayoutBlockContainer, node_id: NodeId, inputs: 
         || matches!(size.height, Some(h) if h > 0.0)
         || matches!(min_size.height, Some(h) if h > 0.0);
 
+    let text_align = style.text_align();
+
     drop(style);
 
     // 1. Generate items
@@ -219,6 +221,7 @@ fn compute_inner(tree: &mut impl LayoutBlockContainer, node_id: NodeId, inputs: 
             container_outer_width,
             content_box_inset,
             resolved_content_box_inset,
+            text_align,
             own_margins_collapse_with_children,
         );
     let container_outer_height = known_dimensions
@@ -383,6 +386,7 @@ fn perform_final_layout_on_in_flow_children(
     container_outer_width: f32,
     content_box_inset: Rect<f32>,
     resolved_content_box_inset: Rect<f32>,
+    text_align: TextAlign,
     own_margins_collapse_with_children: Line<bool>,
 ) -> (Size<f32>, f32, CollapsibleMarginSet, CollapsibleMarginSet) {
     // Resolve container_inner_width for sizing child nodes using initial content_box_inset
@@ -469,10 +473,25 @@ fn perform_final_layout_on_in_flow_children(
                 x: resolved_content_box_inset.left,
                 y: committed_y_offset + active_collapsible_margin_set.resolve(),
             };
-            let location = Point {
+            let mut location = Point {
                 x: resolved_content_box_inset.left + inset_offset.x + resolved_margin.left,
                 y: committed_y_offset + inset_offset.y + y_margin_offset,
             };
+
+            // Apply alignment
+            let item_outer_width = item_layout.size.width + resolved_margin.horizontal_axis_sum();
+            if item_outer_width < container_inner_width {
+                match text_align {
+                    TextAlign::Auto => {
+                        // Do nothing
+                    }
+                    TextAlign::LegacyLeft => {
+                        // Do nothing. Left aligned by default.
+                    }
+                    TextAlign::LegacyRight => location.x += container_inner_width - item_outer_width,
+                    TextAlign::LegacyCenter => location.x += (container_inner_width - item_outer_width) / 2.0,
+                }
+            }
 
             let scrollbar_size = Size {
                 width: if item.overflow.y == Overflow::Scroll { item.scrollbar_width } else { 0.0 },

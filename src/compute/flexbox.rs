@@ -153,7 +153,7 @@ struct AlgoConstants {
     inner_container_size: Size<f32>,
 }
 
-/// Computes the layout of [`LayoutPartialTree`] according to the flexbox algorithm
+/// Computes the layout of a box according to the flexbox algorithm
 pub fn compute_flexbox_layout(
     tree: &mut impl LayoutFlexboxContainer,
     node: NodeId,
