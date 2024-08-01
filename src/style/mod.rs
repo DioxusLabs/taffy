@@ -660,7 +660,7 @@ impl<T: BlockContainerStyle> BlockContainerStyle for &'_ T {
 }
 
 #[cfg(feature = "flexbox")]
-impl FlexboxContainerStyle for &Style {
+impl FlexboxContainerStyle for Style {
     #[inline(always)]
     fn flex_direction(&self) -> FlexDirection {
         self.flex_direction
