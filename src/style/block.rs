@@ -1,12 +1,21 @@
 //! Style types for Block layout
 use crate::{CoreStyle, Style};
 
-/// The set of styles required for a CSS Grid item (child of a CSS Grid container)
+/// The set of styles required for a Block layout container
 pub trait BlockContainerStyle: CoreStyle {
     /// Defines which row in the grid the item should start and end at
     #[inline(always)]
     fn text_align(&self) -> TextAlign {
         Style::DEFAULT.text_align
+    }
+}
+
+/// The set of styles required for a Block layout item (child of a Block container)
+pub trait BlockItemStyle: CoreStyle {
+    /// Whether the item is a table. Table children are handled specially in block layout.
+    #[inline(always)]
+    fn is_table(&self) -> bool {
+        false
     }
 }
 

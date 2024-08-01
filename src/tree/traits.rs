@@ -134,7 +134,7 @@ use crate::style::{FlexboxContainerStyle, FlexboxItemStyle};
 #[cfg(feature = "grid")]
 use crate::style::{GridContainerStyle, GridItemStyle};
 #[cfg(feature = "block_layout")]
-use crate::BlockContainerStyle;
+use crate::{BlockContainerStyle, BlockItemStyle};
 use core::ops::{Deref, DerefMut};
 
 /// This trait is Taffy's abstraction for downward tree traversal.
@@ -257,7 +257,7 @@ pub trait LayoutBlockContainer: LayoutPartialTree {
     where
         Self: 'a;
     /// The style type representing each CSS Block item's styles
-    type BlockItemStyle<'a>: CoreStyle
+    type BlockItemStyle<'a>: BlockItemStyle
     where
         Self: 'a;
 

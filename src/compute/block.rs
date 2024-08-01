@@ -9,7 +9,7 @@ use crate::util::sys::f32_max;
 use crate::util::sys::Vec;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
-use crate::{BlockContainerStyle, BoxGenerationMode, BoxSizing, LayoutBlockContainer, TextAlign};
+use crate::{BlockContainerStyle, BlockItemStyle, BoxGenerationMode, BoxSizing, LayoutBlockContainer, TextAlign};
 
 #[cfg(feature = "content_size")]
 use super::common::content_size::compute_content_size_contribution;
@@ -22,6 +22,9 @@ struct BlockItem {
     /// The "source order" of the item. This is the index of the item within the children iterator,
     /// and controls the order in which the nodes are placed
     order: u32,
+
+    /// Items that are tables don't have stretch sizing applied to them
+    is_table: bool,
 
     /// The base size of this item
     size: Size<Option<f32>>,
@@ -310,6 +313,7 @@ fn generate_item_list(
             BlockItem {
                 node_id: child_node_id,
                 order: order as u32,
+                is_table: child_style.is_table(),
                 size: child_style
                     .size()
                     .maybe_resolve(node_inner_size)
@@ -408,18 +412,21 @@ fn perform_final_layout_on_in_flow_children(
             let item_margin = item.margin.map(|margin| margin.resolve_to_option(container_outer_width));
             let item_non_auto_margin = item_margin.map(|m| m.unwrap_or(0.0));
             let item_non_auto_x_margin_sum = item_non_auto_margin.horizontal_axis_sum();
-            let known_dimensions = item
-                .size
-                .map_width(|width| {
-                    // TODO: Allow stretch-sizing to be conditional, as there are exceptions.
-                    // e.g. Table children of blocks do not stretch fit
-                    Some(
-                        width
-                            .unwrap_or(container_inner_width - item_non_auto_x_margin_sum)
-                            .maybe_clamp(item.min_size.width, item.max_size.width),
-                    )
-                })
-                .maybe_clamp(item.min_size, item.max_size);
+            let known_dimensions = if item.is_table {
+                Size::NONE
+            } else {
+                item.size
+                    .map_width(|width| {
+                        // TODO: Allow stretch-sizing to be conditional, as there are exceptions.
+                        // e.g. Table children of blocks do not stretch fit
+                        Some(
+                            width
+                                .unwrap_or(container_inner_width - item_non_auto_x_margin_sum)
+                                .maybe_clamp(item.min_size.width, item.max_size.width),
+                        )
+                    })
+                    .maybe_clamp(item.min_size, item.max_size)
+            };
 
             let item_layout = tree.perform_child_layout(
                 item.node_id,

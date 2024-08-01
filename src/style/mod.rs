@@ -13,7 +13,7 @@ pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, J
 pub use self::dimension::{AvailableSpace, Dimension, LengthPercentage, LengthPercentageAuto};
 
 #[cfg(feature = "block_layout")]
-pub use self::block::{BlockContainerStyle, TextAlign};
+pub use self::block::{BlockContainerStyle, BlockItemStyle, TextAlign};
 #[cfg(feature = "flexbox")]
 pub use self::flex::{FlexDirection, FlexWrap, FlexboxContainerStyle, FlexboxItemStyle};
 #[cfg(feature = "grid")]
@@ -330,6 +330,9 @@ impl Overflow {
 pub struct Style {
     /// What layout strategy should be used?
     pub display: Display,
+    /// Whether a child is display:table or not. This affects children of block layouts.
+    /// This should really be part of `Display`, but it is currently seperate because table layout isn't implemented
+    pub item_is_table: bool,
     /// Should size styles apply to the content box or the border box of the node
     pub box_sizing: BoxSizing,
 
@@ -456,6 +459,7 @@ impl Style {
     /// The [`Default`] layout, in a form that can be used in const functions
     pub const DEFAULT: Style = Style {
         display: Display::DEFAULT,
+        item_is_table: false,
         box_sizing: BoxSizing::BorderBox,
         overflow: Point { x: Overflow::Visible, y: Overflow::Visible },
         scrollbar_width: 0.0,
@@ -656,6 +660,22 @@ impl<T: BlockContainerStyle> BlockContainerStyle for &'_ T {
     #[inline(always)]
     fn text_align(&self) -> TextAlign {
         (*self).text_align()
+    }
+}
+
+#[cfg(feature = "block_layout")]
+impl BlockItemStyle for Style {
+    #[inline(always)]
+    fn is_table(&self) -> bool {
+        self.item_is_table
+    }
+}
+
+#[cfg(feature = "block_layout")]
+impl<T: BlockItemStyle> BlockItemStyle for &'_ T {
+    #[inline(always)]
+    fn is_table(&self) -> bool {
+        (*self).is_table()
     }
 }
 
@@ -895,6 +915,7 @@ mod tests {
 
         let old_defaults = Style {
             display: Default::default(),
+            item_is_table: false,
             box_sizing: Default::default(),
             overflow: Default::default(),
             scrollbar_width: 0.0,
