@@ -88,7 +88,7 @@ impl Node {
     }
 
     pub fn print_tree(&mut self) {
-        print_tree(&mut StatelessLayoutTree, unsafe { self.as_id() });
+        print_tree(&StatelessLayoutTree, unsafe { self.as_id() });
     }
 }
 

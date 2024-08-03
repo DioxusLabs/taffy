@@ -27,30 +27,6 @@ where
 }
 
 #[cfg(feature = "grid")]
-#[cfg(test)]
-mod repeat_fn_tests {
-    use super::repeat;
-    use crate::style::{GridTrackRepetition, NonRepeatedTrackSizingFunction, TrackSizingFunction};
-
-    const TEST_VEC: Vec<NonRepeatedTrackSizingFunction> = Vec::new();
-
-    #[test]
-    fn test_repeat_u16() {
-        assert_eq!(repeat(123, TEST_VEC), TrackSizingFunction::Repeat(GridTrackRepetition::Count(123), TEST_VEC));
-    }
-
-    #[test]
-    fn test_repeat_auto_fit_str() {
-        assert_eq!(repeat("auto-fit", TEST_VEC), TrackSizingFunction::Repeat(GridTrackRepetition::AutoFit, TEST_VEC));
-    }
-
-    #[test]
-    fn test_repeat_auto_fill_str() {
-        assert_eq!(repeat("auto-fill", TEST_VEC), TrackSizingFunction::Repeat(GridTrackRepetition::AutoFill, TEST_VEC));
-    }
-}
-
-#[cfg(feature = "grid")]
 /// Returns a grid template containing `count` evenly sized tracks
 pub fn evenly_sized_tracks(count: u16) -> Vec<TrackSizingFunction> {
     use crate::util::sys::new_vec_with_capacity;
@@ -543,4 +519,28 @@ pub fn fr<Input: Into<f32> + Copy, T: FromFlex>(flex: Input) -> T {
 pub trait FromFlex {
     /// Converts into an `Into<f32>` into Self
     fn from_flex<Input: Into<f32> + Copy>(flex: Input) -> Self;
+}
+
+#[cfg(feature = "grid")]
+#[cfg(test)]
+mod repeat_fn_tests {
+    use super::repeat;
+    use crate::style::{GridTrackRepetition, NonRepeatedTrackSizingFunction, TrackSizingFunction};
+
+    const TEST_VEC: Vec<NonRepeatedTrackSizingFunction> = Vec::new();
+
+    #[test]
+    fn test_repeat_u16() {
+        assert_eq!(repeat(123, TEST_VEC), TrackSizingFunction::Repeat(GridTrackRepetition::Count(123), TEST_VEC));
+    }
+
+    #[test]
+    fn test_repeat_auto_fit_str() {
+        assert_eq!(repeat("auto-fit", TEST_VEC), TrackSizingFunction::Repeat(GridTrackRepetition::AutoFit, TEST_VEC));
+    }
+
+    #[test]
+    fn test_repeat_auto_fill_str() {
+        assert_eq!(repeat("auto-fill", TEST_VEC), TrackSizingFunction::Repeat(GridTrackRepetition::AutoFill, TEST_VEC));
+    }
 }

@@ -105,7 +105,7 @@ struct ChildIter(std::ops::Range<usize>);
 impl Iterator for ChildIter {
     type Item = NodeId;
     fn next(&mut self) -> Option<Self::Item> {
-        self.0.next().map(|idx| NodeId::from(idx))
+        self.0.next().map(NodeId::from)
     }
 }
 

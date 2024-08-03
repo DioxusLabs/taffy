@@ -28,7 +28,7 @@ use crate::{compute::compute_grid_layout, LayoutGridContainer};
 pub type TaffyResult<T> = Result<T, TaffyError>;
 
 /// An error that occurs while trying to access or modify a node's children by index.
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TaffyError {
     /// The parent node does not have a child at `child_index`. It only has `child_count` children
     ChildIndexOutOfBounds {
@@ -1131,20 +1131,20 @@ mod tests {
 
         taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
 
-        assert_eq!(taffy.dirty(child0).unwrap(), false);
-        assert_eq!(taffy.dirty(child1).unwrap(), false);
-        assert_eq!(taffy.dirty(node).unwrap(), false);
+        assert_eq!(taffy.dirty(child0), Ok(false));
+        assert_eq!(taffy.dirty(child1), Ok(false));
+        assert_eq!(taffy.dirty(node), Ok(false));
 
         taffy.mark_dirty(node).unwrap();
-        assert_eq!(taffy.dirty(child0).unwrap(), false);
-        assert_eq!(taffy.dirty(child1).unwrap(), false);
-        assert_eq!(taffy.dirty(node).unwrap(), true);
+        assert_eq!(taffy.dirty(child0), Ok(false));
+        assert_eq!(taffy.dirty(child1), Ok(false));
+        assert_eq!(taffy.dirty(node), Ok(true));
 
         taffy.compute_layout(node, Size::MAX_CONTENT).unwrap();
         taffy.mark_dirty(child0).unwrap();
-        assert_eq!(taffy.dirty(child0).unwrap(), true);
-        assert_eq!(taffy.dirty(child1).unwrap(), false);
-        assert_eq!(taffy.dirty(node).unwrap(), true);
+        assert_eq!(taffy.dirty(child0), Ok(true));
+        assert_eq!(taffy.dirty(child1), Ok(false));
+        assert_eq!(taffy.dirty(node), Ok(true));
     }
 
     #[test]
