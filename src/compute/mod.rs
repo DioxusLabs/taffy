@@ -299,13 +299,13 @@ mod tests {
             )
             .unwrap();
 
-        compute_hidden_layout(&mut taffy.as_layout_tree(), root.into());
+        compute_hidden_layout(&mut taffy.as_layout_tree(), root);
 
         // Whatever size and display-mode the nodes had previously,
         // all layouts should resolve to ZERO due to the root's DISPLAY::NONE
 
         for node in [root, child_00, child_01, grandchild_00, grandchild_01, grandchild_02] {
-            let layout = taffy.layout(node.into()).unwrap();
+            let layout = taffy.layout(node).unwrap();
             assert_eq!(layout.size, Size::zero());
             assert_eq!(layout.location, Point::zero());
         }

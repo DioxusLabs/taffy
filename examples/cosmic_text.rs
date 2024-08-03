@@ -26,7 +26,7 @@ impl CosmicTextContext {
         font_system: &mut FontSystem,
     ) -> taffy::Size<f32> {
         // Set width constraint
-        let width_constraint = known_dimensions.width.or_else(|| match available_space.width {
+        let width_constraint = known_dimensions.width.or(match available_space.width {
             AvailableSpace::MinContent => Some(0.0),
             AvailableSpace::MaxContent => None,
             AvailableSpace::Definite(width) => Some(width),
