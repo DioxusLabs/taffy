@@ -1,5 +1,7 @@
 //! This module is a partial implementation of the CSS Grid Level 1 specification
 //! <https://www.w3.org/TR/css-grid-1>
+use core::borrow::Borrow;
+
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignItems, AlignSelf, AvailableSpace, Overflow, Position};
@@ -89,6 +91,13 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
     let align_items = style.align_items();
     let justify_items = style.justify_items();
 
+    // Note: we avoid accessing the grid rows/columns methods more than once as this can
+    // cause an expensive-ish computation
+    let grid_template_columms = style.grid_template_columns();
+    let grid_template_rows = style.grid_template_rows();
+    let grid_auto_columms = style.grid_auto_columns();
+    let grid_auto_rows = style.grid_auto_rows();
+
     let constrained_available_space = known_dimensions
         .or(preferred_size)
         .map(|size| size.map(AvailableSpace::Definite))
@@ -137,10 +146,18 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
         .maybe_sub(content_box_inset.sum_axes());
 
     // Exactly compute the number of rows and columns in the explicit grid.
-    let explicit_col_count =
-        compute_explicit_grid_size_in_axis(&style, auto_fit_container_size, AbsoluteAxis::Horizontal);
-    let explicit_row_count =
-        compute_explicit_grid_size_in_axis(&style, auto_fit_container_size, AbsoluteAxis::Vertical);
+    let explicit_col_count = compute_explicit_grid_size_in_axis(
+        &style,
+        grid_template_columms.borrow(),
+        auto_fit_container_size,
+        AbsoluteAxis::Horizontal,
+    );
+    let explicit_row_count = compute_explicit_grid_size_in_axis(
+        &style,
+        grid_template_rows.borrow(),
+        auto_fit_container_size,
+        AbsoluteAxis::Vertical,
+    );
 
     // 3. Implicit Grid: Estimate Track Counts
     // Estimate the number of rows and columns in the implicit grid (= the entire grid)
@@ -181,20 +198,24 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
     initialize_grid_tracks(
         &mut columns,
         final_col_counts,
-        style.grid_template_columns(),
-        style.grid_auto_columns(),
+        grid_template_columms.borrow(),
+        grid_auto_columms.borrow(),
         style.gap().width,
         |column_index| cell_occupancy_matrix.column_is_occupied(column_index),
     );
     initialize_grid_tracks(
         &mut rows,
         final_row_counts,
-        style.grid_template_rows(),
-        style.grid_auto_rows(),
+        grid_template_rows.borrow(),
+        grid_auto_rows.borrow(),
         style.gap().height,
         |row_index| cell_occupancy_matrix.row_is_occupied(row_index),
     );
 
+    drop(grid_template_rows);
+    drop(grid_template_columms);
+    drop(grid_auto_rows);
+    drop(grid_auto_columms);
     drop(style);
 
     // 6. Track Sizing

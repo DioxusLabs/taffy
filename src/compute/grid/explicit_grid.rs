@@ -15,12 +15,10 @@ use num_traits::float::FloatCore;
 /// Compute the number of rows and columns in the explicit grid
 pub(crate) fn compute_explicit_grid_size_in_axis(
     style: &impl GridContainerStyle,
+    template: &[TrackSizingFunction],
     inner_container_size: Size<Option<f32>>,
     axis: AbsoluteAxis,
 ) -> u16 {
-    // Load the grid-template-rows or grid-template-columns definition (depending on the axis)
-    let template = style.grid_template_tracks(axis);
-
     // If template contains no tracks, then there are trivially zero explicit tracks
     if template.is_empty() {
         return 0;
@@ -294,8 +292,18 @@ mod test {
     fn explicit_grid_sizing_no_repeats() {
         let grid_style = (600.0, 600.0, 2, 4).into_grid();
         let preferred_size = grid_style.size.map(|s| s.into_option());
-        let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
-        let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
+        let width = compute_explicit_grid_size_in_axis(
+            &grid_style,
+            &grid_style.grid_template_columns,
+            preferred_size,
+            AbsoluteAxis::Horizontal,
+        );
+        let height = compute_explicit_grid_size_in_axis(
+            &grid_style,
+            &grid_style.grid_template_rows,
+            preferred_size,
+            AbsoluteAxis::Vertical,
+        );
         assert_eq!(width, 2);
         assert_eq!(height, 4);
     }
@@ -311,8 +319,18 @@ mod test {
             ..Default::default()
         };
         let preferred_size = grid_style.size.map(|s| s.into_option());
-        let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
-        let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
+        let width = compute_explicit_grid_size_in_axis(
+            &grid_style,
+            &grid_style.grid_template_columns,
+            preferred_size,
+            AbsoluteAxis::Horizontal,
+        );
+        let height = compute_explicit_grid_size_in_axis(
+            &grid_style,
+            &grid_style.grid_template_rows,
+            preferred_size,
+            AbsoluteAxis::Vertical,
+        );
         assert_eq!(width, 3);
         assert_eq!(height, 4);
     }
@@ -328,8 +346,18 @@ mod test {
             ..Default::default()
         };
         let preferred_size = grid_style.size.map(|s| s.into_option());
-        let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
-        let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
+        let width = compute_explicit_grid_size_in_axis(
+            &grid_style,
+            &grid_style.grid_template_columns,
+            preferred_size,
+            AbsoluteAxis::Horizontal,
+        );
+        let height = compute_explicit_grid_size_in_axis(
+            &grid_style,
+            &grid_style.grid_template_rows,
+            preferred_size,
+            AbsoluteAxis::Vertical,
+        );
         assert_eq!(width, 3);
         assert_eq!(height, 4);
     }
@@ -345,8 +373,18 @@ mod test {
             ..Default::default()
         };
         let inner_container_size = Size { width: Some(120.0), height: Some(80.0) };
-        let width = compute_explicit_grid_size_in_axis(&grid_style, inner_container_size, AbsoluteAxis::Horizontal);
-        let height = compute_explicit_grid_size_in_axis(&grid_style, inner_container_size, AbsoluteAxis::Vertical);
+        let width = compute_explicit_grid_size_in_axis(
+            &grid_style,
+            &grid_style.grid_template_columns,
+            inner_container_size,
+            AbsoluteAxis::Horizontal,
+        );
+        let height = compute_explicit_grid_size_in_axis(
+            &grid_style,
+            &grid_style.grid_template_rows,
+            inner_container_size,
+            AbsoluteAxis::Vertical,
+        );
         assert_eq!(width, 3);
         assert_eq!(height, 4);
     }
@@ -362,8 +400,18 @@ mod test {
             ..Default::default()
         };
         let inner_container_size = Size { width: Some(140.0), height: Some(90.0) };
-        let width = compute_explicit_grid_size_in_axis(&grid_style, inner_container_size, AbsoluteAxis::Horizontal);
-        let height = compute_explicit_grid_size_in_axis(&grid_style, inner_container_size, AbsoluteAxis::Vertical);
+        let width = compute_explicit_grid_size_in_axis(
+            &grid_style,
+            &grid_style.grid_template_columns,
+            inner_container_size,
+            AbsoluteAxis::Horizontal,
+        );
+        let height = compute_explicit_grid_size_in_axis(
+            &grid_style,
+            &grid_style.grid_template_rows,
+            inner_container_size,
+            AbsoluteAxis::Vertical,
+        );
         assert_eq!(width, 4);
         assert_eq!(height, 5);
     }
@@ -379,8 +427,18 @@ mod test {
             ..Default::default()
         };
         let preferred_size = grid_style.size.map(|s| s.into_option());
-        let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
-        let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
+        let width = compute_explicit_grid_size_in_axis(
+            &grid_style,
+            &grid_style.grid_template_columns,
+            preferred_size,
+            AbsoluteAxis::Horizontal,
+        );
+        let height = compute_explicit_grid_size_in_axis(
+            &grid_style,
+            &grid_style.grid_template_rows,
+            preferred_size,
+            AbsoluteAxis::Vertical,
+        );
         assert_eq!(width, 4); // 2 repetitions * 2 repeated tracks = 4 tracks in total
         assert_eq!(height, 6); // 3 repetitions * 2 repeated tracks = 4 tracks in total
     }
@@ -397,8 +455,18 @@ mod test {
             ..Default::default()
         };
         let preferred_size = grid_style.size.map(|s| s.into_option());
-        let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
-        let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
+        let width = compute_explicit_grid_size_in_axis(
+            &grid_style,
+            &grid_style.grid_template_columns,
+            preferred_size,
+            AbsoluteAxis::Horizontal,
+        );
+        let height = compute_explicit_grid_size_in_axis(
+            &grid_style,
+            &grid_style.grid_template_rows,
+            preferred_size,
+            AbsoluteAxis::Vertical,
+        );
         assert_eq!(width, 2); // 2 tracks + 1 gap
         assert_eq!(height, 3); // 3 tracks + 2 gaps
     }
@@ -414,8 +482,18 @@ mod test {
             ..Default::default()
         };
         let preferred_size = grid_style.size.map(|s| s.into_option());
-        let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
-        let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
+        let width = compute_explicit_grid_size_in_axis(
+            &grid_style,
+            &grid_style.grid_template_columns,
+            preferred_size,
+            AbsoluteAxis::Horizontal,
+        );
+        let height = compute_explicit_grid_size_in_axis(
+            &grid_style,
+            &grid_style.grid_template_rows,
+            preferred_size,
+            AbsoluteAxis::Vertical,
+        );
         assert_eq!(width, 3);
         assert_eq!(height, 1);
     }
@@ -432,8 +510,18 @@ mod test {
             ..Default::default()
         };
         let preferred_size = grid_style.size.map(|s| s.into_option());
-        let width = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Horizontal);
-        let height = compute_explicit_grid_size_in_axis(&grid_style, preferred_size, AbsoluteAxis::Vertical);
+        let width = compute_explicit_grid_size_in_axis(
+            &grid_style,
+            &grid_style.grid_template_columns,
+            preferred_size,
+            AbsoluteAxis::Horizontal,
+        );
+        let height = compute_explicit_grid_size_in_axis(
+            &grid_style,
+            &grid_style.grid_template_rows,
+            preferred_size,
+            AbsoluteAxis::Vertical,
+        );
         assert_eq!(width, 3); // 3 tracks + 2 gaps
         assert_eq!(height, 2); // 2 tracks + 1 gap
     }
@@ -450,8 +538,18 @@ mod test {
             ..Default::default()
         };
         let inner_container_size = Size { width: Some(100.0), height: Some(80.0) };
-        let width = compute_explicit_grid_size_in_axis(&grid_style, inner_container_size, AbsoluteAxis::Horizontal);
-        let height = compute_explicit_grid_size_in_axis(&grid_style, inner_container_size, AbsoluteAxis::Vertical);
+        let width = compute_explicit_grid_size_in_axis(
+            &grid_style,
+            &grid_style.grid_template_columns,
+            inner_container_size,
+            AbsoluteAxis::Horizontal,
+        );
+        let height = compute_explicit_grid_size_in_axis(
+            &grid_style,
+            &grid_style.grid_template_rows,
+            inner_container_size,
+            AbsoluteAxis::Vertical,
+        );
         assert_eq!(width, 5); // 40px horizontal padding
         assert_eq!(height, 4); // 20px vertical padding
     }

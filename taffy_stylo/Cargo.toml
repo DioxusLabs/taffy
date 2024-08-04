@@ -1,0 +1,12 @@
+[package]
+name = "taffy_stylo"
+version = "0.0.1"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+taffy = { path = ".." }
+style = { git = "https://github.com/servo/stylo", branch = "2024-07-16", features = ["servo"] }
+servo_arc = { git = "https://github.com/servo/stylo", branch = "2024-07-16" }
