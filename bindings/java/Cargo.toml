@@ -1,0 +1,19 @@
+[package]
+name = "jtaffy"
+version = "0.0.1"
+authors = [
+    "Arby Djabaev <contact@arby.be>"
+]
+edition = "2021"
+include = ["src/**/*", "Cargo.toml"]
+description = "Java bindings to Taffy (A flexible UI layout library)"
+repository = "https://github.com/DioxusLabs/taffy"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib"]
+name = "jtaffy"
+
+[dependencies]
+jni = "0.21.1"
+taffy = { path = "../.." }
