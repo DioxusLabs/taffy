@@ -1,8 +1,10 @@
-use jni::JNIEnv;
-use jni::objects::{JObject, JValueOwned};
-use taffy::{AlignContent, AlignItems, BoxSizing, Display, FlexDirection, FlexWrap, GridAutoFlow, Overflow, Position, TextAlign};
 use crate::conversions::f_get_value;
 use crate::primitives::f_i32_from_primitive;
+use jni::objects::{JObject, JValueOwned};
+use jni::JNIEnv;
+use taffy::{
+    AlignContent, AlignItems, BoxSizing, Display, FlexDirection, FlexWrap, GridAutoFlow, Overflow, Position, TextAlign,
+};
 
 pub fn get_overflow<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'local>) -> Overflow {
     let obj = &value.l().unwrap();
@@ -16,7 +18,7 @@ pub fn get_overflow<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'local>
         0 => Overflow::Visible,
         1 => Overflow::Clip,
         2 => Overflow::Hidden,
-        _ => Overflow::Scroll
+        _ => Overflow::Scroll,
     }
 }
 
@@ -37,7 +39,7 @@ pub fn get_position<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'local>
 
     match internal {
         0 => Position::Relative,
-        _ => Position::Absolute
+        _ => Position::Absolute,
     }
 }
 
@@ -47,7 +49,11 @@ pub fn f_get_position<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>, 
     get_position(env, obj)
 }
 
-pub fn get_text_align<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'local>, def: fn() -> TextAlign) -> TextAlign {
+pub fn get_text_align<'local>(
+    env: &mut JNIEnv<'local>,
+    value: JValueOwned<'local>,
+    def: fn() -> TextAlign,
+) -> TextAlign {
     let obj = &value.l().unwrap();
     if obj.is_null() {
         return def();
@@ -59,7 +65,7 @@ pub fn get_text_align<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'loca
         0 => TextAlign::Auto,
         1 => TextAlign::LegacyLeft,
         2 => TextAlign::LegacyRight,
-        _ => TextAlign::LegacyCenter
+        _ => TextAlign::LegacyCenter,
     }
 }
 
@@ -69,7 +75,11 @@ pub fn f_get_text_align<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>
     get_text_align(env, obj, TextAlign::default)
 }
 
-pub fn get_flex_direction<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'local>, def: fn() -> FlexDirection) -> FlexDirection {
+pub fn get_flex_direction<'local>(
+    env: &mut JNIEnv<'local>,
+    value: JValueOwned<'local>,
+    def: fn() -> FlexDirection,
+) -> FlexDirection {
     let obj = &value.l().unwrap();
     if obj.is_null() {
         return def();
@@ -81,7 +91,7 @@ pub fn get_flex_direction<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'
         0 => FlexDirection::Row,
         1 => FlexDirection::Column,
         2 => FlexDirection::RowReverse,
-        _ => FlexDirection::ColumnReverse
+        _ => FlexDirection::ColumnReverse,
     }
 }
 
@@ -102,7 +112,7 @@ pub fn get_flex_wrap<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'local
     match internal {
         0 => FlexWrap::NoWrap,
         1 => FlexWrap::Wrap,
-        _ => FlexWrap::WrapReverse
+        _ => FlexWrap::WrapReverse,
     }
 }
 
@@ -112,7 +122,11 @@ pub fn f_get_flex_wrap<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>,
     get_flex_wrap(env, obj, FlexWrap::default)
 }
 
-pub fn get_grid_auto_flow<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'local>, def: fn() -> GridAutoFlow) -> GridAutoFlow {
+pub fn get_grid_auto_flow<'local>(
+    env: &mut JNIEnv<'local>,
+    value: JValueOwned<'local>,
+    def: fn() -> GridAutoFlow,
+) -> GridAutoFlow {
     let obj = &value.l().unwrap();
     if obj.is_null() {
         return def();
@@ -124,7 +138,7 @@ pub fn get_grid_auto_flow<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'
         0 => GridAutoFlow::Row,
         1 => GridAutoFlow::Column,
         2 => GridAutoFlow::RowDense,
-        _ => GridAutoFlow::ColumnDense
+        _ => GridAutoFlow::ColumnDense,
     }
 }
 
@@ -149,7 +163,7 @@ pub fn get_align_items<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'loc
         3 => Some(AlignItems::FlexEnd),
         4 => Some(AlignItems::Center),
         5 => Some(AlignItems::Baseline),
-        _ => Some(AlignItems::Stretch)
+        _ => Some(AlignItems::Stretch),
     }
 }
 
@@ -176,11 +190,15 @@ pub fn get_align_content<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'l
         5 => Some(AlignContent::Stretch),
         6 => Some(AlignContent::SpaceBetween),
         7 => Some(AlignContent::SpaceEvenly),
-        _ => Some(AlignContent::SpaceAround)
+        _ => Some(AlignContent::SpaceAround),
     }
 }
 
-pub fn f_get_align_content<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>, field: &str) -> Option<AlignContent> {
+pub fn f_get_align_content<'local>(
+    env: &mut JNIEnv<'local>,
+    base: &JObject<'local>,
+    field: &str,
+) -> Option<AlignContent> {
     let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/style/TaffyAlignContent;");
 
     get_align_content(env, obj)
@@ -218,7 +236,7 @@ pub fn get_box_sizing<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'loca
 
     match internal {
         0 => BoxSizing::BorderBox,
-        _ => BoxSizing::ContentBox
+        _ => BoxSizing::ContentBox,
     }
 }
 

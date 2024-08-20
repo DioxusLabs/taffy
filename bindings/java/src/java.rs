@@ -1,6 +1,6 @@
-use jni::JNIEnv;
 use jni::objects::{JObject, JValue};
 use jni::sys::jobject;
+use jni::JNIEnv;
 use taffy::{Layout, Point, Rect, Size};
 
 pub fn to_java_layout<'local>(env: &mut JNIEnv<'local>, layout: &Layout) -> jobject {
@@ -32,14 +32,7 @@ pub fn f32_point_to_java<'local>(env: &mut JNIEnv<'local>, point: Point<f32>) ->
     let a = &f32_to_java(env, point.x);
     let b = &f32_to_java(env, point.y);
 
-    env.new_object(
-        class,
-        "(Ljava/lang/Object;Ljava/lang/Object;)V",
-        &[
-            JValue::Object(a),
-            JValue::Object(b),
-        ],
-    ).unwrap()
+    env.new_object(class, "(Ljava/lang/Object;Ljava/lang/Object;)V", &[JValue::Object(a), JValue::Object(b)]).unwrap()
 }
 
 pub fn f32_size_to_java<'local>(env: &mut JNIEnv<'local>, size: Size<f32>) -> JObject<'local> {
@@ -48,19 +41,11 @@ pub fn f32_size_to_java<'local>(env: &mut JNIEnv<'local>, size: Size<f32>) -> JO
     let a = &f32_to_java(env, size.width);
     let b = &f32_to_java(env, size.height);
 
-    env.new_object(
-        class,
-        "(Ljava/lang/Object;Ljava/lang/Object;)V",
-        &[
-            JValue::Object(a),
-            JValue::Object(b),
-        ],
-    ).unwrap()
+    env.new_object(class, "(Ljava/lang/Object;Ljava/lang/Object;)V", &[JValue::Object(a), JValue::Object(b)]).unwrap()
 }
 
 pub fn f32_rect_to_java<'local>(env: &mut JNIEnv<'local>, rect: Rect<f32>) -> JObject<'local> {
     let class = &env.find_class("com/dioxuslabs/taffy/geom/TaffyRect").unwrap();
-
 
     let a = &f32_to_java(env, rect.left);
     let b = &f32_to_java(env, rect.right);
@@ -70,21 +55,13 @@ pub fn f32_rect_to_java<'local>(env: &mut JNIEnv<'local>, rect: Rect<f32>) -> JO
     env.new_object(
         class,
         "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)V",
-        &[
-            JValue::Object(a),
-            JValue::Object(b),
-            JValue::Object(c),
-            JValue::Object(d),
-        ],
-    ).unwrap()
+        &[JValue::Object(a), JValue::Object(b), JValue::Object(c), JValue::Object(d)],
+    )
+    .unwrap()
 }
 
 pub fn f32_to_java<'local>(env: &mut JNIEnv<'local>, value: f32) -> JObject<'local> {
     let class = &env.find_class("java/lang/Float").unwrap();
 
-    env.new_object(
-        class,
-        "(F)V",
-        &[JValue::Float(value)],
-    ).unwrap()
+    env.new_object(class, "(F)V", &[JValue::Float(value)]).unwrap()
 }
