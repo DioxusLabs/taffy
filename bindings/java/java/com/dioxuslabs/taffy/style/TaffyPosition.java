@@ -24,5 +24,11 @@ public enum TaffyPosition {
      * <p>
      * WARNING: to opt-out of layouting entirely, you must use {@link TaffyDisplay#NONE} instead on your {@link TaffyStyle} object.
      */
-    ABSOLUTE
+    ABSOLUTE;
+
+    private final int internal;
+
+    TaffyPosition() {
+        internal = ordinal();
+    }
 }

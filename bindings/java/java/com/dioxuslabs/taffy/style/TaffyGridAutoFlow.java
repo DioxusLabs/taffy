@@ -25,5 +25,11 @@ public enum TaffyGridAutoFlow {
     /**
      * Combines COLUMN with the dense packing algorithm.
      */
-    COLUMN_DENSE
+    COLUMN_DENSE;
+
+    private final int internal;
+
+    TaffyGridAutoFlow() {
+        internal = ordinal();
+    }
 }

@@ -19,5 +19,11 @@ public enum TaffyTextAlign {
     /**
      * Corresponds to `-webkit-center` or `-moz-center` in browsers
      */
-    LEGACY_CENTER
+    LEGACY_CENTER;
+
+    private final int internal;
+
+    TaffyTextAlign() {
+        internal = ordinal();
+    }
 }

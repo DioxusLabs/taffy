@@ -37,5 +37,11 @@ public enum TaffyFlexDirection {
      * <p>
      * Items will be added from bottom to top in a column.
      */
-    COLUMN_REVERSE
+    COLUMN_REVERSE;
+
+    private final int internal;
+
+    TaffyFlexDirection() {
+        internal = ordinal();
+    }
 }

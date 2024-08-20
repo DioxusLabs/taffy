@@ -43,5 +43,11 @@ public enum TaffyAlignItems {
     /**
      * Stretch to fill the container
      */
-    STRETCH
+    STRETCH;
+
+    private final int internal;
+
+    TaffyAlignItems() {
+        internal = ordinal();
+    }
 }

@@ -25,10 +25,34 @@ JNIEXPORT jlong JNICALL Java_com_dioxuslabs_taffy_TaffyTree_newLeaf
 
 /*
  * Class:     com_dioxuslabs_taffy_TaffyTree
+ * Method:    newWithChildren
+ * Signature: (JLcom/dioxuslabs/taffy/style/TaffyStyle;Ljava/util/List;)J
+ */
+JNIEXPORT jlong JNICALL Java_com_dioxuslabs_taffy_TaffyTree_newWithChildren
+  (JNIEnv *, jclass, jlong, jobject, jobject);
+
+/*
+ * Class:     com_dioxuslabs_taffy_TaffyTree
  * Method:    childCount
  * Signature: (JJ)I
  */
 JNIEXPORT jint JNICALL Java_com_dioxuslabs_taffy_TaffyTree_childCount
+  (JNIEnv *, jclass, jlong, jlong);
+
+/*
+ * Class:     com_dioxuslabs_taffy_TaffyTree
+ * Method:    computeLayout
+ * Signature: (JJLcom/dioxuslabs/taffy/geom/TaffySize;)V
+ */
+JNIEXPORT void JNICALL Java_com_dioxuslabs_taffy_TaffyTree_computeLayout
+  (JNIEnv *, jclass, jlong, jlong, jobject);
+
+/*
+ * Class:     com_dioxuslabs_taffy_TaffyTree
+ * Method:    layout
+ * Signature: (JJ)Lcom/dioxuslabs/taffy/tree/TaffyLayout;
+ */
+JNIEXPORT jobject JNICALL Java_com_dioxuslabs_taffy_TaffyTree_layout
   (JNIEnv *, jclass, jlong, jlong);
 
 #ifdef __cplusplus

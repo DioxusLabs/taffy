@@ -19,5 +19,11 @@ public enum TaffyFlexWrap {
     /**
      * Items will wrap in the opposite direction to this item's {@link TaffyFlexDirection}
      */
-    WRAP_REVERSE
+    WRAP_REVERSE;
+
+    private final int internal;
+
+    TaffyFlexWrap() {
+        internal = ordinal();
+    }
 }

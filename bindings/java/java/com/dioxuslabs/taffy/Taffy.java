@@ -1,10 +1,10 @@
 package com.dioxuslabs.taffy;
 
-import com.dioxuslabs.taffy.geom.TaffyPoint;
 import com.dioxuslabs.taffy.geom.TaffyRect;
-import com.dioxuslabs.taffy.geom.measure.TaffyLengthPercentageAuto;
-import com.dioxuslabs.taffy.style.TaffyOverflow;
+import com.dioxuslabs.taffy.geom.TaffySize;
+import com.dioxuslabs.taffy.geom.measure.TaffyLengthPercentage;
 import com.dioxuslabs.taffy.style.TaffyStyle;
+import com.dioxuslabs.taffy.tree.TaffyLayout;
 
 class Taffy {
     static {
@@ -12,18 +12,22 @@ class Taffy {
     }
 
     public static void main(String[] args) {
-        TaffyTree tree = new TaffyTree();
-        System.out.println(tree.ptr);
-
-        long id = tree.newLeaf(TaffyStyle.builder()
-                .overflow(new TaffyPoint<>(TaffyOverflow.SCROLL, TaffyOverflow.HIDDEN))
-                .inset(new TaffyRect<>(TaffyLengthPercentageAuto.auto(), TaffyLengthPercentageAuto.length(1), TaffyLengthPercentageAuto.length(1), TaffyLengthPercentageAuto.length(1)))
+        TaffyTree taffy = new TaffyTree();
+        long node = taffy.newLeaf(TaffyStyle.builder()
+                .padding(new TaffyRect<>(
+                        TaffyLengthPercentage.percentage(1f),
+                        TaffyLengthPercentage.length(0f),
+                        TaffyLengthPercentage.percentage(1f),
+                        TaffyLengthPercentage.length(0f)
+                ))
         );
 
-        System.out.println("Leaf id: " + id);
+        taffy.computeLayout(node, TaffySize.definiteAvailableSize(200, 100));
 
-        int children = tree.childCount(id);
+        System.out.println("Getting the layout of nodes");
 
-        System.out.println("Child count: " + children);
+        TaffyLayout layout = taffy.layout(node);
+        System.out.println("Width: " + layout.size().width() + " = 200.0");
+        System.out.println("Height: " + layout.size().height() + " = 200.0");
     }
 }

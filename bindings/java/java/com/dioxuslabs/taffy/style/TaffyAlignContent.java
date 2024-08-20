@@ -54,5 +54,11 @@ public enum TaffyAlignContent {
      * The gap between the first and last items is exactly <b>HALF</b> the gap between items.
      * The gaps are distributed evenly in proportion to these ratios.
      */
-    SPACE_AROUND
+    SPACE_AROUND;
+
+    private final int internal;
+
+    TaffyAlignContent() {
+        internal = ordinal();
+    }
 }
