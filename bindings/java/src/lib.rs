@@ -28,6 +28,7 @@ pub extern "system" fn Java_com_dioxuslabs_taffy_TaffyTree_newTaffyTree<'local>(
 }
 
 #[no_mangle]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "system" fn Java_com_dioxuslabs_taffy_TaffyTree_newLeaf<'local>(
     mut env: JNIEnv<'local>,
     _class: JClass<'local>,
@@ -48,6 +49,7 @@ pub extern "system" fn Java_com_dioxuslabs_taffy_TaffyTree_newLeaf<'local>(
 }
 
 #[no_mangle]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "system" fn Java_com_dioxuslabs_taffy_TaffyTree_newWithChildren<'local>(
     mut env: JNIEnv<'local>,
     _class: JClass<'local>,
@@ -71,6 +73,7 @@ pub extern "system" fn Java_com_dioxuslabs_taffy_TaffyTree_newWithChildren<'loca
 }
 
 #[no_mangle]
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 pub extern "system" fn Java_com_dioxuslabs_taffy_TaffyTree_computeLayout<'local>(
     mut env: JNIEnv<'local>,
     _class: JClass<'local>,

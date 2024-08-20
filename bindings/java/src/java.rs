@@ -3,7 +3,7 @@ use jni::sys::jobject;
 use jni::JNIEnv;
 use taffy::{Layout, Point, Rect, Size};
 
-pub fn to_java_layout<'local>(env: &mut JNIEnv<'local>, layout: &Layout) -> jobject {
+pub fn to_java_layout(env: &mut JNIEnv, layout: &Layout) -> jobject {
     let layout_class = &env.find_class("com/dioxuslabs/taffy/tree/TaffyLayout").unwrap();
 
     let location = &f32_point_to_java(env, layout.location);

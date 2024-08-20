@@ -23,16 +23,16 @@ pub unsafe fn get_style<'local>(env: &mut JNIEnv<'local>, style: &JObject<'local
     let scrollbar_width = f_f32_from_primitive(env, style, "scrollbarWidth", || 0.0);
 
     let position = f_get_position(env, style, "position");
-    let inset = f_get_rect(env, style, "inset", get_length_percentage_auto, || Rect::auto());
+    let inset = f_get_rect(env, style, "inset", get_length_percentage_auto, Rect::auto);
 
-    let size = f_get_size(env, style, "size", get_dimension, || Size::auto());
-    let min_size = f_get_size(env, style, "minSize", get_dimension, || Size::auto());
-    let max_size = f_get_size(env, style, "maxSize", get_dimension, || Size::auto());
+    let size = f_get_size(env, style, "size", get_dimension, Size::auto);
+    let min_size = f_get_size(env, style, "minSize", get_dimension, Size::auto);
+    let max_size = f_get_size(env, style, "maxSize", get_dimension, Size::auto);
     let aspect_ratio = f_opt_f32_from_object(env, style, "aspectRatio", || None);
 
-    let margin = f_get_rect(env, style, "margin", get_length_percentage_auto, || Rect::zero());
-    let padding = f_get_rect(env, style, "padding", get_length_percentage, || Rect::zero());
-    let border = f_get_rect(env, style, "border", get_length_percentage, || Rect::zero());
+    let margin = f_get_rect(env, style, "margin", get_length_percentage_auto, Rect::zero);
+    let padding = f_get_rect(env, style, "padding", get_length_percentage, Rect::zero);
+    let border = f_get_rect(env, style, "border", get_length_percentage, Rect::zero);
 
     let align_items = f_get_align_items(env, style, "alignItems");
     let align_self = f_get_align_items(env, style, "alignSelf");
@@ -40,7 +40,7 @@ pub unsafe fn get_style<'local>(env: &mut JNIEnv<'local>, style: &JObject<'local
     let justify_self = f_get_align_items(env, style, "justifySelf");
     let align_content = f_get_align_content(env, style, "alignContent");
     let justify_content = f_get_align_content(env, style, "justifyContent");
-    let gap = f_get_size(env, style, "gap", get_length_percentage, || Size::zero());
+    let gap = f_get_size(env, style, "gap", get_length_percentage, Size::zero);
 
     let text_align = f_get_text_align(env, style, "textAlign");
     let flex_direction = f_get_flex_direction(env, style, "flexDirection");
@@ -119,5 +119,5 @@ pub fn f_get_value<'local>(
     field: &str,
     jtype: &str,
 ) -> JValueOwned<'local> {
-    env.get_field(object, field, jtype).expect(format!("Couldn't get field {}, {}", field, jtype).as_str())
+    env.get_field(object, field, jtype).unwrap_or_else(|_| panic!("Couldn't get field {}, {}", field, jtype))
 }

@@ -17,7 +17,7 @@ pub fn f32_from_object<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'loc
         return def();
     }
 
-    env.call_method(object, "floatValue", "()F", &[]).unwrap().f().unwrap() as f32
+    env.call_method(object, "floatValue", "()F", &[]).unwrap().f().unwrap()
 }
 
 /// Convert Java Float object to Option<f32>
@@ -37,7 +37,7 @@ pub fn opt_f32_from_object<'local>(
 
 /// Convert Java byte to i8
 pub fn i8_from_primitive<'local>(_env: &mut JNIEnv<'local>, value: JValueOwned<'local>, def: fn() -> i8) -> i8 {
-    value.b().unwrap_or(def()) as i8
+    value.b().unwrap_or(def())
 }
 
 /// Convert Java Byte object to i8
@@ -49,12 +49,12 @@ pub fn i8_from_object<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'loca
         return def();
     }
 
-    env.call_method(object, "byteValue", "()B", &[]).unwrap().b().unwrap() as i8
+    env.call_method(object, "byteValue", "()B", &[]).unwrap().b().unwrap()
 }
 
 /// Convert Java short to i16
 pub fn i16_from_primitive<'local>(_env: &mut JNIEnv<'local>, value: JValueOwned<'local>, def: fn() -> i16) -> i16 {
-    value.s().unwrap_or(def()) as i16
+    value.s().unwrap_or(def())
 }
 
 /// Convert Java Short object to i16
@@ -66,12 +66,12 @@ pub fn i16_from_object<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'loc
         return def();
     }
 
-    env.call_method(object, "shortValue", "()S", &[]).unwrap().s().unwrap() as i16
+    env.call_method(object, "shortValue", "()S", &[]).unwrap().s().unwrap()
 }
 
 /// Convert Java int to i32
 pub fn i32_from_primitive<'local>(_env: &mut JNIEnv<'local>, value: JValueOwned<'local>, def: fn() -> i32) -> i32 {
-    value.i().unwrap_or(def()) as i32
+    value.i().unwrap_or(def())
 }
 
 /// Convert Java Integer object to i32
@@ -83,13 +83,13 @@ pub fn i32_from_object<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'loc
         return def();
     }
 
-    env.call_method(object, "intValue", "()I", &[]).unwrap().i().unwrap() as i32
+    env.call_method(object, "intValue", "()I", &[]).unwrap().i().unwrap()
 }
 
 /// Convert Java long to i64
 #[allow(dead_code)]
 pub fn i64_from_primitive<'local>(_env: &mut JNIEnv<'local>, value: JValueOwned<'local>, def: fn() -> i64) -> i64 {
-    value.j().unwrap_or(def()) as i64
+    value.j().unwrap_or(def())
 }
 
 /// Convert Java Long object to i64
@@ -101,7 +101,7 @@ pub fn i64_from_object<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'loc
         return def();
     }
 
-    env.call_method(object, "longValue", "()J", &[]).unwrap().j().unwrap() as i64
+    env.call_method(object, "longValue", "()J", &[]).unwrap().j().unwrap()
 }
 
 /// Convert Java Long object to Option<i64>
@@ -112,7 +112,7 @@ pub fn opt_i64_from_object<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<
         return None;
     }
 
-    Some(env.call_method(object, "longValue", "()J", &[]).unwrap().j().unwrap() as i64)
+    Some(env.call_method(object, "longValue", "()J", &[]).unwrap().j().unwrap())
 }
 
 /// Convert Java boolean to bool

@@ -23,8 +23,8 @@ where
         let element = env.call_method(&list, "get", "(I)Ljava/lang/Object;", &[JValue::Int(i)]).unwrap();
 
         let value = f(env, element);
-        if value.is_some() {
-            vec.push(value.unwrap());
+        if let Some(value) = value {
+            vec.push(value);
         }
     }
 
