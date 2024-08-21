@@ -13,7 +13,7 @@ public class TaffyLengthPercentage {
         return new TaffyLengthPercentage((byte) 0, value);
     }
 
-    public static TaffyLengthPercentage percentage(float value) {
+    public static TaffyLengthPercentage percent(float value) {
         return new TaffyLengthPercentage((byte) 1, value);
     }
 

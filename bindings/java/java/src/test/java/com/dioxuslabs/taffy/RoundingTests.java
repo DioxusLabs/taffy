@@ -28,7 +28,7 @@ public class RoundingTests {
 
         long rootNode = taffy.newWithChildren(
                 TaffyStyle.builder()
-                        .size(TaffySize.lengthDimension(963.3333f, 1000f))
+                        .size(TaffySize.length(TaffyDimension.class, 963.3333f, 1000f))
                         .justifyContent(TaffyAlignContent.CENTER),
                 Arrays.asList(childA, childB)
         );

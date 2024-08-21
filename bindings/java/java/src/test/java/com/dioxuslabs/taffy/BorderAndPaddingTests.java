@@ -92,9 +92,9 @@ public class BorderAndPaddingTests {
         TaffyTree taffy = new TaffyTree();
         long node = taffy.newLeaf(TaffyStyle.builder()
                 .padding(new TaffyRect<>(
-                        TaffyLengthPercentage.percentage(1f),
+                        TaffyLengthPercentage.percent(1f),
                         TaffyLengthPercentage.length(0f),
-                        TaffyLengthPercentage.percentage(1f),
+                        TaffyLengthPercentage.percent(1f),
                         TaffyLengthPercentage.length(0f)
                 ))
         );
