@@ -315,7 +315,7 @@ pub extern "system" fn Java_com_dioxuslabs_taffy_TaffyTree_nvParent<'local>(
     mut env: JNIEnv<'local>,
     _class: JClass<'local>,
     pointer: jlong,
-    child_id: jlong
+    child_id: jlong,
 ) -> jlong {
     unsafe {
         let raw_ptr: *mut TaffyTree<()> = pointer as *mut TaffyTree<()>;
@@ -378,7 +378,7 @@ pub extern "system" fn Java_com_dioxuslabs_taffy_TaffyTree_nvPrintTree<'local>(
     mut env: JNIEnv<'local>,
     _class: JClass<'local>,
     pointer: jlong,
-    node: jlong
+    node: jlong,
 ) {
     unsafe {
         let raw_ptr: *mut TaffyTree<()> = pointer as *mut TaffyTree<()>;
