@@ -1,10 +1,9 @@
 package com.dioxuslabs.taffy;
 
-import com.dioxuslabs.taffy.geom.TaffySize;
-import com.dioxuslabs.taffy.geom.measure.TaffyAvailableSpace;
-import com.dioxuslabs.taffy.style.TaffyStyle;
-import com.dioxuslabs.taffy.tree.TaffyLayout;
-import com.sun.jdi.NativeMethodException;
+import com.dioxuslabs.taffy.geom.Size;
+import com.dioxuslabs.taffy.geom.measure.AvailableSpace;
+import com.dioxuslabs.taffy.style.Style;
+import com.dioxuslabs.taffy.tree.Layout;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,11 +27,11 @@ public class TaffyTree {
         nvDisableRounding(this.ptr);
     }
 
-    public long newLeaf(TaffyStyle style) {
+    public long newLeaf(Style style) {
         return nvNewLeaf(this.ptr, style);
     }
 
-    public long newWithChildren(TaffyStyle style, List<Long> children) {
+    public long newWithChildren(Style style, List<Long> children) {
         return nvNewWithChildren(this.ptr, style, children);
     }
 
@@ -94,19 +93,19 @@ public class TaffyTree {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
-    public void setStyle(long node, TaffyStyle style) {
+    public void setStyle(long node, Style style) {
         nvSetStyle(this.ptr, node, style);
     }
 
-    public TaffyStyle style(long node) {
+    public Style style(long node) {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
-    public TaffyLayout layout(long node) {
+    public Layout layout(long node) {
         return nvLayout(this.ptr, node);
     }
 
-    public void computeLayout(long node, TaffySize<TaffyAvailableSpace> availableSize) {
+    public void computeLayout(long node, Size<AvailableSpace> availableSize) {
         nvComputeLayout(this.ptr, node, availableSize);
     }
 
@@ -122,9 +121,9 @@ public class TaffyTree {
 
     private static native void nvDisableRounding(long pointer);
 
-    private static native long nvNewLeaf(long pointer, TaffyStyle style);
+    private static native long nvNewLeaf(long pointer, Style style);
 
-    private static native long nvNewWithChildren(long pointer, TaffyStyle style, List<Long> children);
+    private static native long nvNewWithChildren(long pointer, Style style, List<Long> children);
 
     private static native int nvChildCount(long pointer, long nodeId);
 
@@ -152,13 +151,13 @@ public class TaffyTree {
 
     private static native List<Long> nvChildren(long pointer, long nodeId);
 
-    private static native void nvSetStyle(long pointer, long node, TaffyStyle style);
+    private static native void nvSetStyle(long pointer, long node, Style style);
 
-    private static native TaffyStyle nvStyle(long pointer, long node);
+    private static native Style nvStyle(long pointer, long node);
 
-    private static native void nvComputeLayout(long pointer, long node, TaffySize<TaffyAvailableSpace> availableSize);
+    private static native void nvComputeLayout(long pointer, long node, Size<AvailableSpace> availableSize);
 
     private static native void nvPrintTree(long pointer, long node);
 
-    private static native TaffyLayout nvLayout(long pointer, long node);
+    private static native Layout nvLayout(long pointer, long node);
 }

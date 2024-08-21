@@ -3,7 +3,7 @@ package com.dioxuslabs.taffy.style;
 /**
  * Used by block layout to implement the legacy behaviour of `<center>` and `<div align="left | right | center">`
  */
-public enum TaffyTextAlign {
+public enum TextAlign {
     /**
      * No special legacy text align behaviour.
      */
@@ -23,7 +23,7 @@ public enum TaffyTextAlign {
 
     private final int internal;
 
-    TaffyTextAlign() {
+    TextAlign() {
         internal = ordinal();
     }
 }

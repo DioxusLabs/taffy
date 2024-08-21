@@ -42,7 +42,7 @@ JNIEXPORT void JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvDisableRounding
 /*
  * Class:     com_dioxuslabs_taffy_TaffyTree
  * Method:    nvNewLeaf
- * Signature: (JLcom/dioxuslabs/taffy/style/TaffyStyle;)J
+ * Signature: (JLcom/dioxuslabs/taffy/style/Style;)J
  */
 JNIEXPORT jlong JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvNewLeaf
   (JNIEnv *, jclass, jlong, jobject);
@@ -50,7 +50,7 @@ JNIEXPORT jlong JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvNewLeaf
 /*
  * Class:     com_dioxuslabs_taffy_TaffyTree
  * Method:    nvNewWithChildren
- * Signature: (JLcom/dioxuslabs/taffy/style/TaffyStyle;Ljava/util/List;)J
+ * Signature: (JLcom/dioxuslabs/taffy/style/Style;Ljava/util/List;)J
  */
 JNIEXPORT jlong JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvNewWithChildren
   (JNIEnv *, jclass, jlong, jobject, jobject);
@@ -162,7 +162,7 @@ JNIEXPORT jobject JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvChildren
 /*
  * Class:     com_dioxuslabs_taffy_TaffyTree
  * Method:    nvSetStyle
- * Signature: (JJLcom/dioxuslabs/taffy/style/TaffyStyle;)V
+ * Signature: (JJLcom/dioxuslabs/taffy/style/Style;)V
  */
 JNIEXPORT void JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvSetStyle
   (JNIEnv *, jclass, jlong, jlong, jobject);
@@ -170,7 +170,7 @@ JNIEXPORT void JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvSetStyle
 /*
  * Class:     com_dioxuslabs_taffy_TaffyTree
  * Method:    nvStyle
- * Signature: (JJ)Lcom/dioxuslabs/taffy/style/TaffyStyle;
+ * Signature: (JJ)Lcom/dioxuslabs/taffy/style/Style;
  */
 JNIEXPORT jobject JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvStyle
   (JNIEnv *, jclass, jlong, jlong);
@@ -178,7 +178,7 @@ JNIEXPORT jobject JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvStyle
 /*
  * Class:     com_dioxuslabs_taffy_TaffyTree
  * Method:    nvComputeLayout
- * Signature: (JJLcom/dioxuslabs/taffy/geom/TaffySize;)V
+ * Signature: (JJLcom/dioxuslabs/taffy/geom/Size;)V
  */
 JNIEXPORT void JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvComputeLayout
   (JNIEnv *, jclass, jlong, jlong, jobject);
@@ -194,7 +194,7 @@ JNIEXPORT void JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvPrintTree
 /*
  * Class:     com_dioxuslabs_taffy_TaffyTree
  * Method:    nvLayout
- * Signature: (JJ)Lcom/dioxuslabs/taffy/tree/TaffyLayout;
+ * Signature: (JJ)Lcom/dioxuslabs/taffy/tree/Layout;
  */
 JNIEXPORT jobject JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvLayout
   (JNIEnv *, jclass, jlong, jlong);

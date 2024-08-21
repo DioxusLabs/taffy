@@ -1,8 +1,8 @@
 package com.dioxuslabs.taffy.tree;
 
-import com.dioxuslabs.taffy.geom.TaffyPoint;
-import com.dioxuslabs.taffy.geom.TaffyRect;
-import com.dioxuslabs.taffy.geom.TaffySize;
+import com.dioxuslabs.taffy.geom.Point;
+import com.dioxuslabs.taffy.geom.Rect;
+import com.dioxuslabs.taffy.geom.Size;
 
 /**
  * The final result of a layout algorithm for a single node.
@@ -21,14 +21,14 @@ import com.dioxuslabs.taffy.geom.TaffySize;
  * @param padding The size of the padding of the node
  * @param margin The size of the margin of the node
  */
-public record TaffyLayout(
+public record Layout(
         int order,
-        TaffyPoint<Float> location,
-        TaffySize<Float> size,
-        TaffySize<Float> contentSize,
-        TaffySize<Float> scrollbarSize,
-        TaffyRect<Float> border,
-        TaffyRect<Float> padding,
-        TaffyRect<Float> margin
+        Point<Float> location,
+        Size<Float> size,
+        Size<Float> contentSize,
+        Size<Float> scrollbarSize,
+        Rect<Float> border,
+        Rect<Float> padding,
+        Rect<Float> margin
 ) {
 }

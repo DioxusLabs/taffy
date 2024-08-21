@@ -15,7 +15,7 @@ package com.dioxuslabs.taffy.style;
  * <p>
  * <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/overflow">...</a>
  */
-public enum TaffyOverflow {
+public enum Overflow {
     /**
      * The automatic minimum size of this node as a flexbox/grid item should be based on the size of its content.
      * Content that overflows this node *should* contribute to the scroll region of its parent.
@@ -40,7 +40,7 @@ public enum TaffyOverflow {
 
     private final int internal;
 
-    TaffyOverflow() {
+    Overflow() {
         internal = ordinal();
     }
 }

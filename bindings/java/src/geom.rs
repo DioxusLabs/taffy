@@ -100,8 +100,8 @@ pub fn get_non_repeated_track_sizing_function<'local>(
         panic!("NonRepeatedTrackSizingFunction cannot be null");
     }
 
-    let n_val = f_get_value(env, nrtsf_object, "min", "Lcom/dioxuslabs/taffy/geom/grid/TaffyMinTrackSizingFunction;");
-    let x_val = f_get_value(env, nrtsf_object, "max", "Lcom/dioxuslabs/taffy/geom/grid/TaffyMaxTrackSizingFunction;");
+    let n_val = f_get_value(env, nrtsf_object, "min", "Lcom/dioxuslabs/taffy/geom/grid/MinTrackSizingFunction;");
+    let x_val = f_get_value(env, nrtsf_object, "max", "Lcom/dioxuslabs/taffy/geom/grid/MaxTrackSizingFunction;");
 
     let min = get_min_track_sizing_function(env, n_val, || MinTrackSizingFunction::Auto);
     let max = get_max_track_sizing_function(env, x_val, || MaxTrackSizingFunction::Auto);
@@ -119,8 +119,8 @@ pub fn get_opt_non_repeated_track_sizing_function<'local>(
         return None;
     }
 
-    let n_val = f_get_value(env, nrtsf_object, "min", "Lcom/dioxuslabs/taffy/geom/grid/TaffyMinTrackSizingFunction;");
-    let x_val = f_get_value(env, nrtsf_object, "max", "Lcom/dioxuslabs/taffy/geom/grid/TaffyMaxTrackSizingFunction;");
+    let n_val = f_get_value(env, nrtsf_object, "min", "Lcom/dioxuslabs/taffy/geom/grid/MinTrackSizingFunction;");
+    let x_val = f_get_value(env, nrtsf_object, "max", "Lcom/dioxuslabs/taffy/geom/grid/MaxTrackSizingFunction;");
 
     let min = get_min_track_sizing_function(env, n_val, || MinTrackSizingFunction::Auto);
     let max = get_max_track_sizing_function(env, x_val, || MaxTrackSizingFunction::Auto);
@@ -139,7 +139,7 @@ pub fn f_get_point<'local, T, F>(
 where
     F: Fn(&mut JNIEnv<'local>, JValueOwned<'local>) -> T,
 {
-    let point_field = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/geom/TaffyPoint;");
+    let point_field = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/geom/Point;");
 
     get_point(env, point_field, f, def)
 }
@@ -155,7 +155,7 @@ pub fn f_get_rect<'local, T, F>(
 where
     F: Fn(&mut JNIEnv<'local>, JValueOwned<'local>) -> T,
 {
-    let point_field = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/geom/TaffyRect;");
+    let point_field = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/geom/Rect;");
 
     get_rect(env, point_field, f, def)
 }
@@ -171,7 +171,7 @@ pub fn f_get_size<'local, T, F>(
 where
     F: Fn(&mut JNIEnv<'local>, JValueOwned<'local>) -> T,
 {
-    let point_field = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/geom/TaffySize;");
+    let point_field = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/geom/Size;");
 
     get_size(env, point_field, f, def)
 }
@@ -187,7 +187,7 @@ pub fn f_get_line<'local, T, F>(
 where
     F: Fn(&mut JNIEnv<'local>, JValueOwned<'local>) -> T,
 {
-    let point_field = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/geom/TaffyLine;");
+    let point_field = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/geom/Line;");
 
     get_line(env, point_field, f, def)
 }
@@ -199,7 +199,7 @@ pub fn f_get_non_repeated_track_sizing_function<'local>(
     field: &str,
 ) -> NonRepeatedTrackSizingFunction {
     let nrtsft_field =
-        f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/geom/grid/TaffyNonRepeatedTrackSizingFunction;");
+        f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/geom/grid/NonRepeatedTrackSizingFunction;");
 
     get_non_repeated_track_sizing_function(env, nrtsft_field)
 }

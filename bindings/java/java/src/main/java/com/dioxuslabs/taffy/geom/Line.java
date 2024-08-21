@@ -5,7 +5,7 @@ package com.dioxuslabs.taffy.geom;
  * @param start The start position of a line
  * @param end The end position of a line
  */
-public record TaffyLine<T>(
+public record Line<T>(
         T start,
         T end
 ) {

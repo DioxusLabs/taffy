@@ -3,9 +3,9 @@ package com.dioxuslabs.taffy.geom;
 /**
  * A 2-dimensional coordinate.
  * <p>
- * When used in association with a {@link TaffyRect}, represents the top-left corner.
+ * When used in association with a {@link Rect}, represents the top-left corner.
  */
-public class TaffyPoint<T> {
+public class Point<T> {
     /**
      * The x-coordinate
      */
@@ -15,7 +15,7 @@ public class TaffyPoint<T> {
      */
     private T y;
 
-    public TaffyPoint(T x, T y) {
+    public Point(T x, T y) {
         this.x = x;
         this.y = y;
     }

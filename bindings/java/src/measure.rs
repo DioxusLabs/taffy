@@ -197,14 +197,14 @@ pub fn f_get_length_percentage<'local>(
     base: &JObject<'local>,
     field: &str,
 ) -> LengthPercentage {
-    let value = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/geom/measure/TaffyLengthPercentage;");
+    let value = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/geom/measure/LengthPercentage;");
 
     get_length_percentage(env, value)
 }
 
 #[allow(dead_code)]
 pub fn f_get_dimension<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>, field: &str) -> Dimension {
-    let value = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/geom/measure/TaffyDimension;");
+    let value = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/geom/measure/Dimension;");
 
     get_dimension(env, value)
 }
@@ -215,7 +215,7 @@ pub fn f_get_dimension_or<'local>(
     field: &str,
     f: fn() -> Dimension,
 ) -> Dimension {
-    let value = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/geom/measure/TaffyDimension;");
+    let value = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/geom/measure/Dimension;");
 
     get_dimension_or(env, value, f)
 }
@@ -225,7 +225,7 @@ pub fn f_get_grid_track_repetition<'local>(
     base: &JObject<'local>,
     field: &str,
 ) -> GridTrackRepetition {
-    let value = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/geom/grid/TaffyGridTrackRepetition;");
+    let value = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/geom/grid/GridTrackRepetition;");
 
     get_grid_track_repetition(env, value)
 }

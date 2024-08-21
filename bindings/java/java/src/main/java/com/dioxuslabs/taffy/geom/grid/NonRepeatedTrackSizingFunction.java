@@ -8,8 +8,8 @@ package com.dioxuslabs.taffy.geom.grid;
  * @param min The value representing the minimum
  * @param max The value representing the maximum
  */
-public record TaffyNonRepeatedTrackSizingFunction(
-        TaffyMinTrackSizingFunction min,
-        TaffyMaxTrackSizingFunction max
+public record NonRepeatedTrackSizingFunction(
+        MinTrackSizingFunction min,
+        MaxTrackSizingFunction max
 ) {
 }

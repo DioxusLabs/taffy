@@ -15,7 +15,7 @@ package com.dioxuslabs.taffy.style;
  * <p
  * See <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/box-sizing">...</a>
  */
-public enum TaffyBoxSizing {
+public enum BoxSizing {
     /**
      * Size styles such size, min_size, max_size specify the box's "content box" (the size excluding padding/border/margin)
      */
@@ -27,7 +27,7 @@ public enum TaffyBoxSizing {
 
     private final int internal;
 
-    TaffyBoxSizing() {
+    BoxSizing() {
         internal = ordinal();
     }
 }

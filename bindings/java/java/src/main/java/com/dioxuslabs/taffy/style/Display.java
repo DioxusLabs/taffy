@@ -5,7 +5,7 @@ package com.dioxuslabs.taffy.style;
  * <p>
  * The default values depends on on which feature flags are enabled. The order of precedence is: Flex, Grid, Block, None.
  */
-public enum TaffyDisplay {
+public enum Display {
     /**
      * The children will follow the block layout algorithm
      */
@@ -25,7 +25,7 @@ public enum TaffyDisplay {
 
     private final int internal;
 
-    TaffyDisplay() {
+    Display() {
         internal = ordinal();
     }
 }

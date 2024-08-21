@@ -4,7 +4,7 @@ use jni::JNIEnv;
 use taffy::{Layout, Point, Rect, Size};
 
 pub fn to_java_layout(env: &mut JNIEnv, layout: &Layout) -> jobject {
-    let layout_class = &env.find_class("com/dioxuslabs/taffy/tree/TaffyLayout").unwrap();
+    let layout_class = &env.find_class("com/dioxuslabs/taffy/tree/Layout").unwrap();
 
     let location = &f32_point_to_java(env, layout.location);
     let size = &f32_size_to_java(env, layout.size);
@@ -14,7 +14,7 @@ pub fn to_java_layout(env: &mut JNIEnv, layout: &Layout) -> jobject {
     let padding = &f32_rect_to_java(env, layout.padding);
     let margin = &f32_rect_to_java(env, layout.margin);
 
-    *env.new_object(layout_class, "(ILcom/dioxuslabs/taffy/geom/TaffyPoint;Lcom/dioxuslabs/taffy/geom/TaffySize;Lcom/dioxuslabs/taffy/geom/TaffySize;Lcom/dioxuslabs/taffy/geom/TaffySize;Lcom/dioxuslabs/taffy/geom/TaffyRect;Lcom/dioxuslabs/taffy/geom/TaffyRect;Lcom/dioxuslabs/taffy/geom/TaffyRect;)V", &[
+    *env.new_object(layout_class, "(ILcom/dioxuslabs/taffy/geom/Point;Lcom/dioxuslabs/taffy/geom/Size;Lcom/dioxuslabs/taffy/geom/Size;Lcom/dioxuslabs/taffy/geom/Size;Lcom/dioxuslabs/taffy/geom/Rect;Lcom/dioxuslabs/taffy/geom/Rect;Lcom/dioxuslabs/taffy/geom/Rect;)V", &[
         JValue::Int(layout.order as i32),
         JValue::Object(location),
         JValue::Object(size),
@@ -27,7 +27,7 @@ pub fn to_java_layout(env: &mut JNIEnv, layout: &Layout) -> jobject {
 }
 
 pub fn f32_point_to_java<'local>(env: &mut JNIEnv<'local>, point: Point<f32>) -> JObject<'local> {
-    let class = &env.find_class("com/dioxuslabs/taffy/geom/TaffyPoint").unwrap();
+    let class = &env.find_class("com/dioxuslabs/taffy/geom/Point").unwrap();
 
     let a = &f32_to_java(env, point.x);
     let b = &f32_to_java(env, point.y);
@@ -36,7 +36,7 @@ pub fn f32_point_to_java<'local>(env: &mut JNIEnv<'local>, point: Point<f32>) ->
 }
 
 pub fn f32_size_to_java<'local>(env: &mut JNIEnv<'local>, size: Size<f32>) -> JObject<'local> {
-    let class = &env.find_class("com/dioxuslabs/taffy/geom/TaffySize").unwrap();
+    let class = &env.find_class("com/dioxuslabs/taffy/geom/Size").unwrap();
 
     let a = &f32_to_java(env, size.width);
     let b = &f32_to_java(env, size.height);
@@ -45,7 +45,7 @@ pub fn f32_size_to_java<'local>(env: &mut JNIEnv<'local>, size: Size<f32>) -> JO
 }
 
 pub fn f32_rect_to_java<'local>(env: &mut JNIEnv<'local>, rect: Rect<f32>) -> JObject<'local> {
-    let class = &env.find_class("com/dioxuslabs/taffy/geom/TaffyRect").unwrap();
+    let class = &env.find_class("com/dioxuslabs/taffy/geom/Rect").unwrap();
 
     let a = &f32_to_java(env, rect.left);
     let b = &f32_to_java(env, rect.right);

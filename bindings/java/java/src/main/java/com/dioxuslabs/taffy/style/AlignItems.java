@@ -7,7 +7,7 @@ package com.dioxuslabs.taffy.style;
  * <p>
  * <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/align-items">MDN</a>
  */
-public enum TaffyAlignItems {
+public enum AlignItems {
     /**
      * Items are packed toward the start of the axis
      */
@@ -19,17 +19,17 @@ public enum TaffyAlignItems {
     /**
      * Items are packed towards the flex-relative start of the axis.
      * <p>
-     * For flex containers with {@link TaffyFlexDirection#ROW_REVERSE} or {@link TaffyFlexDirection#COLUMN_REVERSE}
-     * this is equivalent to {@link TaffyAlignItems#END}. In all other cases it is equivalent to
-     * {@link TaffyAlignItems#START}.
+     * For flex containers with {@link FlexDirection#ROW_REVERSE} or {@link FlexDirection#COLUMN_REVERSE}
+     * this is equivalent to {@link AlignItems#END}. In all other cases it is equivalent to
+     * {@link AlignItems#START}.
      */
     FLEX_START,
     /**
      * Items are packed towards the flex-relative end of the axis.
      * <p>
-     * For flex containers with {@link TaffyFlexDirection#ROW_REVERSE} or {@link TaffyFlexDirection#COLUMN_REVERSE}
-     * this is equivalent to {@link TaffyAlignItems#START}. In all other cases it is equivalent to
-     * {@link TaffyAlignItems#END}.
+     * For flex containers with {@link FlexDirection#ROW_REVERSE} or {@link FlexDirection#COLUMN_REVERSE}
+     * this is equivalent to {@link AlignItems#START}. In all other cases it is equivalent to
+     * {@link AlignItems#END}.
      */
     FLEX_END,
     /**
@@ -47,7 +47,7 @@ public enum TaffyAlignItems {
 
     private final int internal;
 
-    TaffyAlignItems() {
+    AlignItems() {
         internal = ordinal();
     }
 }

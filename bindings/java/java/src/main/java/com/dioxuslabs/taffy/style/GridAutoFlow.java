@@ -9,7 +9,7 @@ package com.dioxuslabs.taffy.style;
  * <p>
  * <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/grid-auto-flow">MDN</a>
  */
-public enum TaffyGridAutoFlow {
+public enum GridAutoFlow {
     /**
      * Items are placed by filling each row in turn, adding new rows as necessary
      */
@@ -29,7 +29,7 @@ public enum TaffyGridAutoFlow {
 
     private final int internal;
 
-    TaffyGridAutoFlow() {
+    GridAutoFlow() {
         internal = ordinal();
     }
 }

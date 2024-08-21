@@ -9,11 +9,11 @@ package com.dioxuslabs.taffy.style;
  * <p>
  * Items are always aligned relative to the cross axis, and justified relative to the main axis.
  * <p>
- * The default behavior is {@link TaffyFlexDirection#ROW}.
+ * The default behavior is {@link FlexDirection#ROW}.
  * <p>
  * <a href="https://www.w3.org/TR/css-flexbox-1/#flex-direction-property">Specification</a>
  */
-public enum TaffyFlexDirection {
+public enum FlexDirection {
     /**
      * Defines +x as the main axis
      * <p>
@@ -41,7 +41,7 @@ public enum TaffyFlexDirection {
 
     private final int internal;
 
-    TaffyFlexDirection() {
+    FlexDirection() {
         internal = ordinal();
     }
 }

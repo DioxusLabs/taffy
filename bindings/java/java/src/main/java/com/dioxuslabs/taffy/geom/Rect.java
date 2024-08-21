@@ -3,7 +3,7 @@ package com.dioxuslabs.taffy.geom;
 /**
  * An axis-aligned UI rectangle
  */
-public class TaffyRect<T>{
+public class Rect<T>{
     /**
      * This can represent either the x-coordinate of the starting edge,
      *  or the amount of padding on the starting side.
@@ -28,7 +28,7 @@ public class TaffyRect<T>{
      */
     private T bottom;
 
-    public TaffyRect(T left, T right, T top, T bottom) {
+    public Rect(T left, T right, T top, T bottom) {
         this.left = left;
         this.right = right;
         this.top = top;

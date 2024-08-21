@@ -1,6 +1,6 @@
 package com.dioxuslabs.taffy.geom.grid;
 
-import com.dioxuslabs.taffy.style.TaffyGridAutoFlow;
+import com.dioxuslabs.taffy.style.GridAutoFlow;
 
 /**
  * A grid line placement specification which is generic over the coordinate system that it uses to define
@@ -11,39 +11,39 @@ import com.dioxuslabs.taffy.style.TaffyGridAutoFlow;
  * <p>
  * See [`crate::compute::grid::type::coordinates`] for documentation on the different coordinate systems.
  */
-public class TaffyGenericGridPlacement {
+public class GenericGridPlacement {
     private final byte type;
     private final short value;
 
-    private TaffyGenericGridPlacement(byte type, short value) {
+    private GenericGridPlacement(byte type, short value) {
         this.type = type;
         this.value = value;
     }
 
     /**
-     * Place item according to the auto-placement algorithm, and the parent's {@link TaffyGridAutoFlow} property
+     * Place item according to the auto-placement algorithm, and the parent's {@link GridAutoFlow} property
      */
-    public static TaffyGenericGridPlacement auto() {
-        return new TaffyGenericGridPlacement((byte) 0, (short) 0);
+    public static GenericGridPlacement auto() {
+        return new GenericGridPlacement((byte) 0, (short) 0);
     }
 
     /**
      * Place item at specified line (column or row) index
      */
-    public static TaffyGenericGridPlacement line(short value) {
-        return new TaffyGenericGridPlacement((byte) 1, value);
+    public static GenericGridPlacement line(short value) {
+        return new GenericGridPlacement((byte) 1, value);
     }
 
     /**
      * Item should span specified number of tracks (columns or rows)
      */
-    public static TaffyGenericGridPlacement span(short value) {
-        return new TaffyGenericGridPlacement((byte) 2, value);
+    public static GenericGridPlacement span(short value) {
+        return new GenericGridPlacement((byte) 2, value);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof TaffyGenericGridPlacement gpg)) {
+        if (!(obj instanceof GenericGridPlacement gpg)) {
             return false;
         }
         return type == gpg.type && value == gpg.value;

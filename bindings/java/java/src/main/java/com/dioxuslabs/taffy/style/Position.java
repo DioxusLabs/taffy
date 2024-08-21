@@ -9,9 +9,9 @@ package com.dioxuslabs.taffy.style;
  * WARNING: this enum follows the behavior of <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/position">CSS's `position` property</a>,
  * which can be unintuitive.
  * <p>
- * {@link TaffyPosition#RELATIVE} is the default value, in contrast to the default behavior in CSS.
+ * {@link Position#RELATIVE} is the default value, in contrast to the default behavior in CSS.
  */
-public enum TaffyPosition {
+public enum Position {
     /**
      * The offset is computed relative to the final position given by the layout algorithm.
      * Offsets do not affect the position of any other items; they are effectively a correction factor applied at the end.
@@ -22,13 +22,13 @@ public enum TaffyPosition {
      * Otherwise, it is placed relative to the origin.
      * No space is created for the item in the page layout, and its size will not be altered.
      * <p>
-     * WARNING: to opt-out of layouting entirely, you must use {@link TaffyDisplay#NONE} instead on your {@link TaffyStyle} object.
+     * WARNING: to opt-out of layouting entirely, you must use {@link Display#NONE} instead on your {@link Style} object.
      */
     ABSOLUTE;
 
     private final int internal;
 
-    TaffyPosition() {
+    Position() {
         internal = ordinal();
     }
 }
