@@ -9,50 +9,194 @@ extern "C" {
 #endif
 /*
  * Class:     com_dioxuslabs_taffy_TaffyTree
- * Method:    newTaffyTree
+ * Method:    nvNewTaffyTree
  * Signature: ()J
  */
-JNIEXPORT jlong JNICALL Java_com_dioxuslabs_taffy_TaffyTree_newTaffyTree
+JNIEXPORT jlong JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvNewTaffyTree
   (JNIEnv *, jclass);
 
 /*
  * Class:     com_dioxuslabs_taffy_TaffyTree
- * Method:    newLeaf
+ * Method:    nvNewTaffyTreeWithCapacity
+ * Signature: (I)J
+ */
+JNIEXPORT jlong JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvNewTaffyTreeWithCapacity
+  (JNIEnv *, jclass, jint);
+
+/*
+ * Class:     com_dioxuslabs_taffy_TaffyTree
+ * Method:    nvEnableRounding
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvEnableRounding
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     com_dioxuslabs_taffy_TaffyTree
+ * Method:    nvDisableRounding
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvDisableRounding
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     com_dioxuslabs_taffy_TaffyTree
+ * Method:    nvNewLeaf
  * Signature: (JLcom/dioxuslabs/taffy/style/TaffyStyle;)J
  */
-JNIEXPORT jlong JNICALL Java_com_dioxuslabs_taffy_TaffyTree_newLeaf
+JNIEXPORT jlong JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvNewLeaf
   (JNIEnv *, jclass, jlong, jobject);
 
 /*
  * Class:     com_dioxuslabs_taffy_TaffyTree
- * Method:    newWithChildren
+ * Method:    nvNewWithChildren
  * Signature: (JLcom/dioxuslabs/taffy/style/TaffyStyle;Ljava/util/List;)J
  */
-JNIEXPORT jlong JNICALL Java_com_dioxuslabs_taffy_TaffyTree_newWithChildren
+JNIEXPORT jlong JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvNewWithChildren
   (JNIEnv *, jclass, jlong, jobject, jobject);
 
 /*
  * Class:     com_dioxuslabs_taffy_TaffyTree
- * Method:    childCount
+ * Method:    nvChildCount
  * Signature: (JJ)I
  */
-JNIEXPORT jint JNICALL Java_com_dioxuslabs_taffy_TaffyTree_childCount
+JNIEXPORT jint JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvChildCount
   (JNIEnv *, jclass, jlong, jlong);
 
 /*
  * Class:     com_dioxuslabs_taffy_TaffyTree
- * Method:    computeLayout
- * Signature: (JJLcom/dioxuslabs/taffy/geom/TaffySize;)V
+ * Method:    nvClear
+ * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_com_dioxuslabs_taffy_TaffyTree_computeLayout
+JNIEXPORT void JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvClear
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     com_dioxuslabs_taffy_TaffyTree
+ * Method:    nvRemove
+ * Signature: (JJ)J
+ */
+JNIEXPORT jlong JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvRemove
+  (JNIEnv *, jclass, jlong, jlong);
+
+/*
+ * Class:     com_dioxuslabs_taffy_TaffyTree
+ * Method:    nvAddChild
+ * Signature: (JJJ)V
+ */
+JNIEXPORT void JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvAddChild
+  (JNIEnv *, jclass, jlong, jlong, jlong);
+
+/*
+ * Class:     com_dioxuslabs_taffy_TaffyTree
+ * Method:    nvInsertChildAtIndex
+ * Signature: (JJIJ)V
+ */
+JNIEXPORT void JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvInsertChildAtIndex
+  (JNIEnv *, jclass, jlong, jlong, jint, jlong);
+
+/*
+ * Class:     com_dioxuslabs_taffy_TaffyTree
+ * Method:    nvSetChildren
+ * Signature: (JJLjava/util/List;)V
+ */
+JNIEXPORT void JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvSetChildren
   (JNIEnv *, jclass, jlong, jlong, jobject);
 
 /*
  * Class:     com_dioxuslabs_taffy_TaffyTree
- * Method:    layout
+ * Method:    nvRemoveChild
+ * Signature: (JJJ)J
+ */
+JNIEXPORT jlong JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvRemoveChild
+  (JNIEnv *, jclass, jlong, jlong, jlong);
+
+/*
+ * Class:     com_dioxuslabs_taffy_TaffyTree
+ * Method:    nvRemoveChildAtIndex
+ * Signature: (JJI)J
+ */
+JNIEXPORT jlong JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvRemoveChildAtIndex
+  (JNIEnv *, jclass, jlong, jlong, jint);
+
+/*
+ * Class:     com_dioxuslabs_taffy_TaffyTree
+ * Method:    nvReplaceChildAtIndex
+ * Signature: (JJIJ)J
+ */
+JNIEXPORT jlong JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvReplaceChildAtIndex
+  (JNIEnv *, jclass, jlong, jlong, jint, jlong);
+
+/*
+ * Class:     com_dioxuslabs_taffy_TaffyTree
+ * Method:    nvChildAtIndex
+ * Signature: (JJI)J
+ */
+JNIEXPORT jlong JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvChildAtIndex
+  (JNIEnv *, jclass, jlong, jlong, jint);
+
+/*
+ * Class:     com_dioxuslabs_taffy_TaffyTree
+ * Method:    nvTotalNodeCount
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvTotalNodeCount
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     com_dioxuslabs_taffy_TaffyTree
+ * Method:    nvParent
+ * Signature: (JJ)J
+ */
+JNIEXPORT jlong JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvParent
+  (JNIEnv *, jclass, jlong, jlong);
+
+/*
+ * Class:     com_dioxuslabs_taffy_TaffyTree
+ * Method:    nvChildren
+ * Signature: (JJ)Ljava/util/List;
+ */
+JNIEXPORT jobject JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvChildren
+  (JNIEnv *, jclass, jlong, jlong);
+
+/*
+ * Class:     com_dioxuslabs_taffy_TaffyTree
+ * Method:    nvSetStyle
+ * Signature: (JJLcom/dioxuslabs/taffy/style/TaffyStyle;)V
+ */
+JNIEXPORT void JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvSetStyle
+  (JNIEnv *, jclass, jlong, jlong, jobject);
+
+/*
+ * Class:     com_dioxuslabs_taffy_TaffyTree
+ * Method:    nvStyle
+ * Signature: (JJ)Lcom/dioxuslabs/taffy/style/TaffyStyle;
+ */
+JNIEXPORT jobject JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvStyle
+  (JNIEnv *, jclass, jlong, jlong);
+
+/*
+ * Class:     com_dioxuslabs_taffy_TaffyTree
+ * Method:    nvComputeLayout
+ * Signature: (JJLcom/dioxuslabs/taffy/geom/TaffySize;)V
+ */
+JNIEXPORT void JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvComputeLayout
+  (JNIEnv *, jclass, jlong, jlong, jobject);
+
+/*
+ * Class:     com_dioxuslabs_taffy_TaffyTree
+ * Method:    nvPrintTree
+ * Signature: (JJ)V
+ */
+JNIEXPORT void JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvPrintTree
+  (JNIEnv *, jclass, jlong, jlong);
+
+/*
+ * Class:     com_dioxuslabs_taffy_TaffyTree
+ * Method:    nvLayout
  * Signature: (JJ)Lcom/dioxuslabs/taffy/tree/TaffyLayout;
  */
-JNIEXPORT jobject JNICALL Java_com_dioxuslabs_taffy_TaffyTree_layout
+JNIEXPORT jobject JNICALL Java_com_dioxuslabs_taffy_TaffyTree_nvLayout
   (JNIEnv *, jclass, jlong, jlong);
 
 #ifdef __cplusplus
