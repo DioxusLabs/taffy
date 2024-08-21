@@ -351,7 +351,7 @@ pub extern "system" fn Java_com_dioxuslabs_taffy_TaffyTree_nvSetStyle<'local>(
 
 #[no_mangle]
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
-pub extern "system" fn Java_com_dioxuslabs_taffy_TaffyTree_computeLayout<'local>(
+pub extern "system" fn Java_com_dioxuslabs_taffy_TaffyTree_nvComputeLayout<'local>(
     mut env: JNIEnv<'local>,
     _class: JClass<'local>,
     pointer: jlong,
@@ -392,7 +392,7 @@ pub extern "system" fn Java_com_dioxuslabs_taffy_TaffyTree_nvPrintTree<'local>(
 }
 
 #[no_mangle]
-pub extern "system" fn Java_com_dioxuslabs_taffy_TaffyTree_layout<'local>(
+pub extern "system" fn Java_com_dioxuslabs_taffy_TaffyTree_nvLayout<'local>(
     mut env: JNIEnv<'local>,
     _class: JClass<'local>,
     pointer: jlong,

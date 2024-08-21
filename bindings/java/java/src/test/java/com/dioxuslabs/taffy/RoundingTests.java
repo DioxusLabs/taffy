@@ -34,6 +34,7 @@ public class RoundingTests {
         );
 
         taffy.computeLayout(rootNode, TaffySize.maxContentAvailableSize());
+        taffy.printTree(rootNode);
 
         TaffyLayout layoutA = taffy.layout(childA);
         TaffyLayout layoutB = taffy.layout(childB);
