@@ -14,6 +14,11 @@ fn main() {
     enums.insert("GridAutoFlow", vec!["Row", "Column", "RowDense", "ColumnDense"]);
     enums.insert("FlexWrap", vec!["NoWrap", "Wrap", "WrapReverse"]);
     enums.insert("FlexDirection", vec!["Row", "Column", "RowReverse", "ColumnReverse"]);
+    enums.insert(
+        "AlignContent",
+        vec!["Start", "End", "FlexStart", "FlexEnd", "Center", "Stretch", "SpaceBetween", "SpaceEvenly", "SpaceAround"],
+    );
+    enums.insert("AlignItems", vec!["Start", "End", "FlexStart", "FlexEnd", "Center", "Baseline", "Stretch"]);
 
     for (key, value) in enums.into_iter() {
         create_enum(key, value);

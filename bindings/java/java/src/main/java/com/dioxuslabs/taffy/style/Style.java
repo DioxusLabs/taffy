@@ -1,5 +1,6 @@
 package com.dioxuslabs.taffy.style;
 
+import com.dioxuslabs.taffy.enums.*;
 import com.dioxuslabs.taffy.geom.Line;
 import com.dioxuslabs.taffy.geom.Point;
 import com.dioxuslabs.taffy.geom.Rect;

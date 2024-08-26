@@ -2,3 +2,5 @@
 *.iml
 out
 *.class
+/target
+/java/target

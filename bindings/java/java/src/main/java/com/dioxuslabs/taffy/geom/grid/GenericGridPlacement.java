@@ -1,6 +1,6 @@
 package com.dioxuslabs.taffy.geom.grid;
 
-import com.dioxuslabs.taffy.style.GridAutoFlow;
+import com.dioxuslabs.taffy.enums.GridAutoFlow;
 
 /**
  * A grid line placement specification which is generic over the coordinate system that it uses to define

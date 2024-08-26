@@ -1,8 +1,8 @@
 package com.dioxuslabs.taffy;
 
+import com.dioxuslabs.taffy.enums.AlignContent;
 import com.dioxuslabs.taffy.geom.Size;
 import com.dioxuslabs.taffy.geom.measure.Dimension;
-import com.dioxuslabs.taffy.style.AlignContent;
 import com.dioxuslabs.taffy.style.Style;
 import com.dioxuslabs.taffy.tree.Layout;
 import org.junit.jupiter.api.Test;
