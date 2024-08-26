@@ -29,13 +29,10 @@ fn create_java_enum(name: &str, values: Vec<&str>) -> String {
 
     let mut result = format!("package {};\n\npublic enum {} {{\n", package, enum_name);
 
-    for (index, value) in values.iter().enumerate() {
-        let java_value = value.to_case(Case::UpperSnake);
+    for value in values.iter() {
         result.push_str("    ");
-        result.push_str(&java_value);
-        result.push('(');
-        result.push_str(&index.to_string());
-        result.push_str("),\n");
+        result.push_str(&value.to_case(Case::UpperSnake));
+        result.push_str(",\n");
     }
 
     // eliminate the last comma
