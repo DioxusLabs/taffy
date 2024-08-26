@@ -198,8 +198,7 @@ pub fn f_get_non_repeated_track_sizing_function<'local>(
     base: &JObject<'local>,
     field: &str,
 ) -> NonRepeatedTrackSizingFunction {
-    let nrtsft_field =
-        f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/geom/grid/NonRepeatedTrackSizingFunction;");
+    let nrtsft_field = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/geom/grid/NonRepeatedTrackSizingFunction;");
 
     get_non_repeated_track_sizing_function(env, nrtsft_field)
 }

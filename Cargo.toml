@@ -102,5 +102,6 @@ members = [
     "scripts/import-yoga-tests",
     "benches",
     "taffy_stylo",
-    "bindings/java"
+    "bindings/java",
+    "bindings/scripts"
 ]
