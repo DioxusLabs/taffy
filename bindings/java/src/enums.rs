@@ -24,7 +24,7 @@ pub fn get_overflow<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'local>
 
 #[allow(dead_code)]
 pub fn f_get_overflow<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>, field: &str) -> Overflow {
-    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/style/Overflow;");
+    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/enums/Overflow;");
 
     get_overflow(env, obj)
 }
@@ -44,7 +44,7 @@ pub fn get_position<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'local>
 }
 
 pub fn f_get_position<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>, field: &str) -> Position {
-    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/style/Position;");
+    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/enums/Position;");
 
     get_position(env, obj)
 }
@@ -70,7 +70,7 @@ pub fn get_text_align<'local>(
 }
 
 pub fn f_get_text_align<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>, field: &str) -> TextAlign {
-    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/style/TextAlign;");
+    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/enums/TextAlign;");
 
     get_text_align(env, obj, TextAlign::default)
 }
@@ -96,7 +96,7 @@ pub fn get_flex_direction<'local>(
 }
 
 pub fn f_get_flex_direction<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>, field: &str) -> FlexDirection {
-    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/style/FlexDirection;");
+    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/enums/FlexDirection;");
 
     get_flex_direction(env, obj, FlexDirection::default)
 }
@@ -117,7 +117,7 @@ pub fn get_flex_wrap<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'local
 }
 
 pub fn f_get_flex_wrap<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>, field: &str) -> FlexWrap {
-    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/style/FlexWrap;");
+    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/enums/FlexWrap;");
 
     get_flex_wrap(env, obj, FlexWrap::default)
 }
@@ -143,7 +143,7 @@ pub fn get_grid_auto_flow<'local>(
 }
 
 pub fn f_get_grid_auto_flow<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>, field: &str) -> GridAutoFlow {
-    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/style/GridAutoFlow;");
+    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/enums/GridAutoFlow;");
 
     get_grid_auto_flow(env, obj, GridAutoFlow::default)
 }
@@ -168,7 +168,7 @@ pub fn get_align_items<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'loc
 }
 
 pub fn f_get_align_items<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>, field: &str) -> Option<AlignItems> {
-    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/style/AlignItems;");
+    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/enums/AlignItems;");
 
     get_align_items(env, obj)
 }
@@ -199,7 +199,7 @@ pub fn f_get_align_content<'local>(
     base: &JObject<'local>,
     field: &str,
 ) -> Option<AlignContent> {
-    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/style/AlignContent;");
+    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/enums/AlignContent;");
 
     get_align_content(env, obj)
 }
@@ -221,7 +221,7 @@ pub fn get_display<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'local>)
 }
 
 pub fn f_get_display<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>, field: &str) -> Display {
-    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/style/Display;");
+    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/enums/Display;");
 
     get_display(env, obj)
 }
@@ -241,7 +241,7 @@ pub fn get_box_sizing<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'loca
 }
 
 pub fn f_get_box_sizing<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>, field: &str) -> BoxSizing {
-    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/style/BoxSizing;");
+    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/enums/BoxSizing;");
 
     get_box_sizing(env, obj)
 }
