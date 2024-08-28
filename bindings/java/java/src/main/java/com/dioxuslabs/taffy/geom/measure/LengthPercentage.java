@@ -17,6 +17,10 @@ public class LengthPercentage {
         return new LengthPercentage((byte) 1, value);
     }
 
+    public static LengthPercentage zero() {
+        return length(0);
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof LengthPercentage lpo)) {
