@@ -7,7 +7,8 @@ import com.dioxuslabs.taffy.geom.measure.LengthPercentageAuto;
 
 /**
  * The width and height of a {@link Rect}
- * @param width The x extent of the rectangle
+ *
+ * @param width  The x extent of the rectangle
  * @param height The y extent of the rectangle
  */
 public record Size<T>(
@@ -17,11 +18,11 @@ public record Size<T>(
     /**
      * Dynamic function to create a {@link Size} with a fixed width and height
      *
-     * @param clazz The type of the {@link Size}
-     * @param width The width
+     * @param clazz  The type of the {@link Size}
+     * @param width  The width
      * @param height The height
+     * @param <T>    The type between {@link Dimension}, {@link AvailableSpace}, {@link LengthPercentage} and {@link LengthPercentageAuto}
      * @return A new {@link Size} with the given width and height
-     * @param <T> The type between {@link Dimension}, {@link AvailableSpace}, {@link LengthPercentage} and {@link LengthPercentageAuto}
      */
     @SuppressWarnings("unchecked")
     public static <T> Size<T> length(Class<T> clazz, float width, float height) {
@@ -40,11 +41,11 @@ public record Size<T>(
     /**
      * Dynamic function to create a {@link Size} with a percentage width and height
      *
-     * @param clazz The type of the {@link Size}
-     * @param width The width
+     * @param clazz  The type of the {@link Size}
+     * @param width  The width
      * @param height The height
+     * @param <T>    The type between {@link Dimension}, {@link LengthPercentage} and {@link LengthPercentageAuto}
      * @return A new {@link Size} with the given width and height
-     * @param <T> The type between {@link Dimension}, {@link LengthPercentage} and {@link LengthPercentageAuto}
      */
     @SuppressWarnings("unchecked")
     public static <T> Size<T> percent(Class<T> clazz, float width, float height) {
@@ -62,8 +63,8 @@ public record Size<T>(
      * Dynamic function to create a {@link Size} with auto as values
      *
      * @param clazz The type of the {@link Size}
+     * @param <T>   The type between {@link Dimension} and {@link LengthPercentageAuto}
      * @return A new {@link Size} with auto as width and height
-     * @param <T> The type between {@link Dimension} and {@link LengthPercentageAuto}
      */
     @SuppressWarnings("unchecked")
     public static <T> Size<T> auto(Class<T> clazz) {
@@ -77,7 +78,8 @@ public record Size<T>(
 
     /**
      * Creates a {@link LengthPercentageAuto} {@link Size} with a fixed width and height
-     * @param width The width
+     *
+     * @param width  The width
      * @param height The height
      * @return A new {@link Size} with the given width and height
      */
@@ -87,7 +89,8 @@ public record Size<T>(
 
     /**
      * Creates a {@link LengthPercentageAuto} {@link Size} with a percentage width and height
-     * @param width The width
+     *
+     * @param width  The width
      * @param height The height
      * @return A new {@link Size} with the given width and height
      */
@@ -97,6 +100,7 @@ public record Size<T>(
 
     /**
      * Creates a {@link LengthPercentageAuto} {@link Size} with auto as width and height
+     *
      * @return A new {@link Size} with auto as width and height
      */
     public static Size<LengthPercentageAuto> autoLengthPercentageAuto() {
@@ -105,7 +109,8 @@ public record Size<T>(
 
     /**
      * Creates a {@link LengthPercentage} {@link Size} with a fixed width and height
-     * @param width The width
+     *
+     * @param width  The width
      * @param height The height
      * @return A new {@link Size} with the given width and height
      */
@@ -115,7 +120,8 @@ public record Size<T>(
 
     /**
      * Creates a {@link LengthPercentage} {@link Size} with a percentage width and height
-     * @param width The width
+     *
+     * @param width  The width
      * @param height The height
      * @return A new {@link Size} with the given width and height
      */
@@ -125,7 +131,8 @@ public record Size<T>(
 
     /**
      * Creates a {@link Dimension} {@link Size} with a fixed width and height
-     * @param width The width
+     *
+     * @param width  The width
      * @param height The height
      * @return A new {@link Size} with the given width and height
      */
@@ -135,7 +142,8 @@ public record Size<T>(
 
     /**
      * Creates a {@link Dimension} {@link Size} with a fixed width and height
-     * @param width The width
+     *
+     * @param width  The width
      * @param height The height
      * @return A new {@link Size} with the given width and height
      */
@@ -145,6 +153,7 @@ public record Size<T>(
 
     /**
      * Creates a {@link Dimension} {@link Size} with auto as width and height
+     *
      * @return A new {@link Size} with auto as width and height
      */
     public static Size<Dimension> autoDimension() {
@@ -153,7 +162,8 @@ public record Size<T>(
 
     /**
      * Creates a {@link AvailableSpace} {@link Size} with a fixed width and height
-     * @param width The width
+     *
+     * @param width  The width
      * @param height The height
      * @return A new {@link Size} with the given width and height
      */
@@ -163,6 +173,7 @@ public record Size<T>(
 
     /**
      * Creates a {@link Dimension} {@link Size} with MinContent as width and height
+     *
      * @return A new {@link Size} with MinContent as width and height
      */
     public static Size<AvailableSpace> minContentAvailableSize() {
@@ -171,9 +182,20 @@ public record Size<T>(
 
     /**
      * Creates a {@link Dimension} {@link Size} with MaxContent as width and height
+     *
      * @return A new {@link Size} with MaxContent as width and height
      */
     public static Size<AvailableSpace> maxContentAvailableSize() {
         return new Size<>(AvailableSpace.maxContent(), AvailableSpace.maxContent());
+    }
+
+    @Override
+    public String toString() {
+        return String.format("""
+                        Size {
+                            width: %s,
+                            height: %s,
+                        }""",
+                width, height);
     }
 }

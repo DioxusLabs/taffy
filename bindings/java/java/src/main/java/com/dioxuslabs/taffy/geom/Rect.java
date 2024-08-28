@@ -3,10 +3,10 @@ package com.dioxuslabs.taffy.geom;
 /**
  * An axis-aligned UI rectangle
  */
-public class Rect<T>{
+public class Rect<T> {
     /**
      * This can represent either the x-coordinate of the starting edge,
-     *  or the amount of padding on the starting side.
+     * or the amount of padding on the starting side.
      * <p>
      * The starting edge is the left edge when working with LTR text,
      * and the right edge when working with RTL text.
@@ -65,5 +65,17 @@ public class Rect<T>{
 
     public void bottom(T bottom) {
         this.bottom = bottom;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("""
+                        Rect {
+                            left: %s,
+                            right: %s,
+                            top: %s,
+                            bottom: %s,
+                        }""",
+                left, right, top, bottom);
     }
 }
