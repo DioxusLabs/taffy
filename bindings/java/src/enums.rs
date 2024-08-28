@@ -247,5 +247,5 @@ pub fn f_get_box_sizing<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>
 }
 
 fn get_enum_value<'local>(env: &mut JNIEnv<'local>, object: &JObject<'local>) -> i32 {
-    f_i32_from_primitive(env, object, "internal", || 0)
+    f_i32_from_primitive(env, object, "ordinal", || 0)
 }
