@@ -1,5 +1,6 @@
 package com.dioxuslabs.taffy.geom;
 
+import com.dioxuslabs.taffy.enums.AbsoluteAxis;
 import com.dioxuslabs.taffy.geom.measure.AvailableSpace;
 import com.dioxuslabs.taffy.geom.measure.Dimension;
 import com.dioxuslabs.taffy.geom.measure.LengthPercentage;
@@ -36,6 +37,17 @@ public record Size<T>(
             return (Size<T>) lengthLengthPercentageAuto(width, height);
         }
         return null;
+    }
+
+    /**
+     * Dynamic function to create a {@link Size} with fixed zero width and height
+     *
+     * @param clazz  The type of the {@link Size}
+     * @param <T>    The type between {@link Dimension}, {@link AvailableSpace}, {@link LengthPercentage} and {@link LengthPercentageAuto}
+     * @return A new {@link Size} with the given width and height
+     */
+    public static <T> Size<T> zero(Class<T> clazz) {
+        return length(clazz, 0, 0);
     }
 
     /**
@@ -197,5 +209,9 @@ public record Size<T>(
                             height: %s,
                         }""",
                 width, height);
+    }
+
+    public T getAbs(AbsoluteAxis axis) {
+        return axis == AbsoluteAxis.HORIZONTAL ? width : height;
     }
 }

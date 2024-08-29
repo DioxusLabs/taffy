@@ -19,6 +19,7 @@ fn main() {
         vec!["Start", "End", "FlexStart", "FlexEnd", "Center", "Stretch", "SpaceBetween", "SpaceEvenly", "SpaceAround"],
     );
     enums.insert("AlignItems", vec!["Start", "End", "FlexStart", "FlexEnd", "Center", "Baseline", "Stretch"]);
+    enums.insert("AbsoluteAxis", vec!["Horizontal", "Vertical"]);
 
     for (key, value) in enums.into_iter() {
         create_enum(key, value);
