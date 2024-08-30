@@ -17,6 +17,13 @@ pub trait BlockItemStyle: CoreStyle {
     fn is_table(&self) -> bool {
         false
     }
+
+    /// Whether the item is a floated
+    #[cfg(feature = "float_layout")]
+    #[inline(always)]
+    fn float(&self) -> super::Float {
+        super::Float::None
+    }
 }
 
 /// Used by block layout to implement the legacy behaviour of `<center>` and `<div align="left | right | center">`
