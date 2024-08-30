@@ -27,6 +27,9 @@ pub(crate) mod leaf;
 #[cfg(feature = "block_layout")]
 pub(crate) mod block;
 
+#[cfg(feature = "float_layout")]
+pub(crate) mod float;
+
 #[cfg(feature = "flexbox")]
 pub(crate) mod flexbox;
 
