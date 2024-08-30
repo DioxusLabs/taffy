@@ -38,6 +38,7 @@ default = [
     "flexbox",
     "grid",
     "block_layout",
+    "float_layout",
     "calc",
     "content_size",
     "detailed_layout_info",
@@ -48,6 +49,8 @@ default = [
 
 ## Enables the Block layout algorithm. See [`compute_block_layout`](crate::compute_block_layout).
 block_layout = []
+## Enables the Float layout algorithm. This is a sub-feature of block layout.
+float_layout = []
 ## Enables the Flexbox layout algorithm. See [`compute_flexbox_layout`](crate::compute_flexbox_layout).
 flexbox = []
 ## Enables the CSS Grid layout algorithm. See [`compute_grid_layout`](crate::compute_grid_layout).
