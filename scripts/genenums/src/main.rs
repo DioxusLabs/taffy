@@ -5,9 +5,8 @@ use std::io::Write;
 use std::path::Path;
 
 fn main() {
-    fs::remove_file("./bindings/java/src/enums.rs")
-        .expect("Error: Unable to remove java/src/enums.rs file");
-    
+    fs::remove_file("./bindings/java/src/enums.rs").expect("Error: Unable to remove java/src/enums.rs file");
+
     let mut enums: HashMap<&str, Vec<&str>> = HashMap::new();
     enums.insert("Display", vec!["Block", "Flex", "Grid", "None"]);
     enums.insert("BoxGenerationMode", vec!["Normal", "None"]);
@@ -116,7 +115,7 @@ fn create_java_tranformer(name: &str, values: &[&str]) {
         "use taffy::{name};
 {file_content}
 
-impl FromJavaEnum for {name} {{
+impl FromJavaEnum<{name}> for {name} {{
     const JAVA_CLASS: &'static str = \"Lcom/dioxuslabs/taffy/enums/{name};\";
 
     fn from_ordinal(internal: i32) -> Option<{name}> {{
