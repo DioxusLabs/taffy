@@ -1,39 +1,27 @@
 use taffy::AbsoluteAxis;
-use taffy::AlignItems;
 use taffy::AlignContent;
+use taffy::AlignItems;
+use taffy::BoxGenerationMode;
+use taffy::BoxSizing;
+use taffy::Display;
 use taffy::FlexDirection;
 use taffy::FlexWrap;
 use taffy::GridAutoFlow;
-use taffy::TextAlign;
 use taffy::Overflow;
-use taffy::BoxSizing;
 use taffy::Position;
-use taffy::BoxGenerationMode;
-use taffy::Display;
+use taffy::TextAlign;
 use crate::traits::FromJavaEnum;
 
-impl FromJavaEnum<Display> for Display {
-    const JAVA_CLASS: &'static str = "Lcom/dioxuslabs/taffy/enums/Display;";
+impl FromJavaEnum<TextAlign> for TextAlign {
+    const JAVA_CLASS: &'static str = "Lcom/dioxuslabs/taffy/enums/TextAlign;";
 
-    fn from_ordinal(internal: i32) -> Option<Display> {
+    fn from_ordinal(internal: i32) -> Option<TextAlign> {
         Some(match internal {
-            0 => Display::Block,
-            1 => Display::Flex,
-            2 => Display::Grid,
-            3 => Display::None,
-            _ => Display::default(),
-        })
-    }
-}
-
-impl FromJavaEnum<BoxGenerationMode> for BoxGenerationMode {
-    const JAVA_CLASS: &'static str = "Lcom/dioxuslabs/taffy/enums/BoxGenerationMode;";
-
-    fn from_ordinal(internal: i32) -> Option<BoxGenerationMode> {
-        Some(match internal {
-            0 => BoxGenerationMode::Normal,
-            1 => BoxGenerationMode::None,
-            _ => BoxGenerationMode::default(),
+            0 => TextAlign::Auto,
+            1 => TextAlign::LegacyLeft,
+            2 => TextAlign::LegacyRight,
+            3 => TextAlign::LegacyCenter,
+            _ => TextAlign::default(),
         })
     }
 }
@@ -50,18 +38,6 @@ impl FromJavaEnum<Position> for Position {
     }
 }
 
-impl FromJavaEnum<BoxSizing> for BoxSizing {
-    const JAVA_CLASS: &'static str = "Lcom/dioxuslabs/taffy/enums/BoxSizing;";
-
-    fn from_ordinal(internal: i32) -> Option<BoxSizing> {
-        Some(match internal {
-            0 => BoxSizing::BorderBox,
-            1 => BoxSizing::ContentBox,
-            _ => BoxSizing::default(),
-        })
-    }
-}
-
 impl FromJavaEnum<Overflow> for Overflow {
     const JAVA_CLASS: &'static str = "Lcom/dioxuslabs/taffy/enums/Overflow;";
 
@@ -72,20 +48,6 @@ impl FromJavaEnum<Overflow> for Overflow {
             2 => Overflow::Hidden,
             3 => Overflow::Scroll,
             _ => Overflow::default(),
-        })
-    }
-}
-
-impl FromJavaEnum<TextAlign> for TextAlign {
-    const JAVA_CLASS: &'static str = "Lcom/dioxuslabs/taffy/enums/TextAlign;";
-
-    fn from_ordinal(internal: i32) -> Option<TextAlign> {
-        Some(match internal {
-            0 => TextAlign::Auto,
-            1 => TextAlign::LegacyLeft,
-            2 => TextAlign::LegacyRight,
-            3 => TextAlign::LegacyCenter,
-            _ => TextAlign::default(),
         })
     }
 }
@@ -131,21 +93,40 @@ impl FromJavaEnum<FlexDirection> for FlexDirection {
     }
 }
 
-impl FromJavaEnum<AlignContent> for AlignContent {
-    const JAVA_CLASS: &'static str = "Lcom/dioxuslabs/taffy/enums/AlignContent;";
+impl FromJavaEnum<Display> for Display {
+    const JAVA_CLASS: &'static str = "Lcom/dioxuslabs/taffy/enums/Display;";
 
-    fn from_ordinal(internal: i32) -> Option<AlignContent> {
+    fn from_ordinal(internal: i32) -> Option<Display> {
         Some(match internal {
-            0 => AlignContent::Start,
-            1 => AlignContent::End,
-            2 => AlignContent::FlexStart,
-            3 => AlignContent::FlexEnd,
-            4 => AlignContent::Center,
-            5 => AlignContent::Stretch,
-            6 => AlignContent::SpaceBetween,
-            7 => AlignContent::SpaceEvenly,
-            8 => AlignContent::SpaceAround,
-            _ => panic!("Invalid value: {internal}"),
+            0 => Display::Block,
+            1 => Display::Flex,
+            2 => Display::Grid,
+            3 => Display::None,
+            _ => Display::default(),
+        })
+    }
+}
+
+impl FromJavaEnum<BoxSizing> for BoxSizing {
+    const JAVA_CLASS: &'static str = "Lcom/dioxuslabs/taffy/enums/BoxSizing;";
+
+    fn from_ordinal(internal: i32) -> Option<BoxSizing> {
+        Some(match internal {
+            0 => BoxSizing::BorderBox,
+            1 => BoxSizing::ContentBox,
+            _ => BoxSizing::default(),
+        })
+    }
+}
+
+impl FromJavaEnum<BoxGenerationMode> for BoxGenerationMode {
+    const JAVA_CLASS: &'static str = "Lcom/dioxuslabs/taffy/enums/BoxGenerationMode;";
+
+    fn from_ordinal(internal: i32) -> Option<BoxGenerationMode> {
+        Some(match internal {
+            0 => BoxGenerationMode::Normal,
+            1 => BoxGenerationMode::None,
+            _ => BoxGenerationMode::default(),
         })
     }
 }
@@ -162,6 +143,25 @@ impl FromJavaEnum<AlignItems> for AlignItems {
             4 => AlignItems::Center,
             5 => AlignItems::Baseline,
             6 => AlignItems::Stretch,
+            _ => panic!("Invalid value: {internal}"),
+        })
+    }
+}
+
+impl FromJavaEnum<AlignContent> for AlignContent {
+    const JAVA_CLASS: &'static str = "Lcom/dioxuslabs/taffy/enums/AlignContent;";
+
+    fn from_ordinal(internal: i32) -> Option<AlignContent> {
+        Some(match internal {
+            0 => AlignContent::Start,
+            1 => AlignContent::End,
+            2 => AlignContent::FlexStart,
+            3 => AlignContent::FlexEnd,
+            4 => AlignContent::Center,
+            5 => AlignContent::Stretch,
+            6 => AlignContent::SpaceBetween,
+            7 => AlignContent::SpaceEvenly,
+            8 => AlignContent::SpaceAround,
             _ => panic!("Invalid value: {internal}"),
         })
     }
