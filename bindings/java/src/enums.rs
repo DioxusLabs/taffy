@@ -1,251 +1,180 @@
-use crate::conversions::f_get_value;
-use crate::primitives::f_i32_from_primitive;
-use jni::objects::{JObject, JValueOwned};
-use jni::JNIEnv;
-use taffy::{
-    AlignContent, AlignItems, BoxSizing, Display, FlexDirection, FlexWrap, GridAutoFlow, Overflow, Position, TextAlign,
-};
+use taffy::TextAlign;
+use taffy::BoxSizing;
+use taffy::AlignContent;
+use taffy::GridAutoFlow;
+use taffy::FlexDirection;
+use taffy::AbsoluteAxis;
+use taffy::AlignItems;
+use taffy::FlexWrap;
+use taffy::BoxGenerationMode;
+use taffy::Display;
+use taffy::Overflow;
+use taffy::Position;
+use crate::traits::FromJavaEnum;
 
-pub fn get_overflow<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'local>) -> Overflow {
-    let obj = &value.l().unwrap();
-    if obj.is_null() {
-        return Overflow::default();
-    }
+impl FromJavaEnum for Position {
+    const JAVA_CLASS: &'static str = "Lcom/dioxuslabs/taffy/enums/Position;";
 
-    let internal = get_enum_value(env, obj);
-
-    match internal {
-        0 => Overflow::Visible,
-        1 => Overflow::Clip,
-        2 => Overflow::Hidden,
-        _ => Overflow::Scroll,
-    }
-}
-
-#[allow(dead_code)]
-pub fn f_get_overflow<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>, field: &str) -> Overflow {
-    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/enums/Overflow;");
-
-    get_overflow(env, obj)
-}
-
-pub fn get_position<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'local>) -> Position {
-    let obj = &value.l().unwrap();
-    if obj.is_null() {
-        return Position::default();
-    }
-
-    let internal = get_enum_value(env, obj);
-
-    match internal {
-        0 => Position::Relative,
-        _ => Position::Absolute,
+    fn from_ordinal(internal: i32) -> Option<Position> {
+        Some(match internal {
+            0 => Position::Relative,
+            1 => Position::Absolute,
+            _ => panic!("Invalid value: {internal}"),
+        })
     }
 }
 
-pub fn f_get_position<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>, field: &str) -> Position {
-    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/enums/Position;");
+impl FromJavaEnum for Overflow {
+    const JAVA_CLASS: &'static str = "Lcom/dioxuslabs/taffy/enums/Overflow;";
 
-    get_position(env, obj)
-}
-
-pub fn get_text_align<'local>(
-    env: &mut JNIEnv<'local>,
-    value: JValueOwned<'local>,
-    def: fn() -> TextAlign,
-) -> TextAlign {
-    let obj = &value.l().unwrap();
-    if obj.is_null() {
-        return def();
-    }
-
-    let internal = get_enum_value(env, obj);
-
-    match internal {
-        0 => TextAlign::Auto,
-        1 => TextAlign::LegacyLeft,
-        2 => TextAlign::LegacyRight,
-        _ => TextAlign::LegacyCenter,
+    fn from_ordinal(internal: i32) -> Option<Overflow> {
+        Some(match internal {
+            0 => Overflow::Visible,
+            1 => Overflow::Clip,
+            2 => Overflow::Hidden,
+            3 => Overflow::Scroll,
+            _ => panic!("Invalid value: {internal}"),
+        })
     }
 }
 
-pub fn f_get_text_align<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>, field: &str) -> TextAlign {
-    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/enums/TextAlign;");
+impl FromJavaEnum for Display {
+    const JAVA_CLASS: &'static str = "Lcom/dioxuslabs/taffy/enums/Display;";
 
-    get_text_align(env, obj, TextAlign::default)
-}
-
-pub fn get_flex_direction<'local>(
-    env: &mut JNIEnv<'local>,
-    value: JValueOwned<'local>,
-    def: fn() -> FlexDirection,
-) -> FlexDirection {
-    let obj = &value.l().unwrap();
-    if obj.is_null() {
-        return def();
-    }
-
-    let internal = get_enum_value(env, obj);
-
-    match internal {
-        0 => FlexDirection::Row,
-        1 => FlexDirection::Column,
-        2 => FlexDirection::RowReverse,
-        _ => FlexDirection::ColumnReverse,
+    fn from_ordinal(internal: i32) -> Option<Display> {
+        Some(match internal {
+            0 => Display::Block,
+            1 => Display::Flex,
+            2 => Display::Grid,
+            3 => Display::None,
+            _ => panic!("Invalid value: {internal}"),
+        })
     }
 }
 
-pub fn f_get_flex_direction<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>, field: &str) -> FlexDirection {
-    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/enums/FlexDirection;");
+impl FromJavaEnum for BoxGenerationMode {
+    const JAVA_CLASS: &'static str = "Lcom/dioxuslabs/taffy/enums/BoxGenerationMode;";
 
-    get_flex_direction(env, obj, FlexDirection::default)
-}
-
-pub fn get_flex_wrap<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'local>, def: fn() -> FlexWrap) -> FlexWrap {
-    let obj = &value.l().unwrap();
-    if obj.is_null() {
-        return def();
-    }
-
-    let internal = get_enum_value(env, obj);
-
-    match internal {
-        0 => FlexWrap::NoWrap,
-        1 => FlexWrap::Wrap,
-        _ => FlexWrap::WrapReverse,
+    fn from_ordinal(internal: i32) -> Option<BoxGenerationMode> {
+        Some(match internal {
+            0 => BoxGenerationMode::Normal,
+            1 => BoxGenerationMode::None,
+            _ => panic!("Invalid value: {internal}"),
+        })
     }
 }
 
-pub fn f_get_flex_wrap<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>, field: &str) -> FlexWrap {
-    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/enums/FlexWrap;");
+impl FromJavaEnum for FlexWrap {
+    const JAVA_CLASS: &'static str = "Lcom/dioxuslabs/taffy/enums/FlexWrap;";
 
-    get_flex_wrap(env, obj, FlexWrap::default)
-}
-
-pub fn get_grid_auto_flow<'local>(
-    env: &mut JNIEnv<'local>,
-    value: JValueOwned<'local>,
-    def: fn() -> GridAutoFlow,
-) -> GridAutoFlow {
-    let obj = &value.l().unwrap();
-    if obj.is_null() {
-        return def();
-    }
-
-    let internal = get_enum_value(env, obj);
-
-    match internal {
-        0 => GridAutoFlow::Row,
-        1 => GridAutoFlow::Column,
-        2 => GridAutoFlow::RowDense,
-        _ => GridAutoFlow::ColumnDense,
+    fn from_ordinal(internal: i32) -> Option<FlexWrap> {
+        Some(match internal {
+            0 => FlexWrap::NoWrap,
+            1 => FlexWrap::Wrap,
+            2 => FlexWrap::WrapReverse,
+            _ => panic!("Invalid value: {internal}"),
+        })
     }
 }
 
-pub fn f_get_grid_auto_flow<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>, field: &str) -> GridAutoFlow {
-    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/enums/GridAutoFlow;");
+impl FromJavaEnum for AlignItems {
+    const JAVA_CLASS: &'static str = "Lcom/dioxuslabs/taffy/enums/AlignItems;";
 
-    get_grid_auto_flow(env, obj, GridAutoFlow::default)
-}
-
-pub fn get_align_items<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'local>) -> Option<AlignItems> {
-    let obj = &value.l().unwrap();
-    if obj.is_null() {
-        return None;
-    }
-
-    let internal = get_enum_value(env, obj);
-
-    match internal {
-        0 => Some(AlignItems::Start),
-        1 => Some(AlignItems::End),
-        2 => Some(AlignItems::FlexStart),
-        3 => Some(AlignItems::FlexEnd),
-        4 => Some(AlignItems::Center),
-        5 => Some(AlignItems::Baseline),
-        _ => Some(AlignItems::Stretch),
+    fn from_ordinal(internal: i32) -> Option<AlignItems> {
+        Some(match internal {
+            0 => AlignItems::Start,
+            1 => AlignItems::End,
+            2 => AlignItems::FlexStart,
+            3 => AlignItems::FlexEnd,
+            4 => AlignItems::Center,
+            5 => AlignItems::Baseline,
+            6 => AlignItems::Stretch,
+            _ => panic!("Invalid value: {internal}"),
+        })
     }
 }
 
-pub fn f_get_align_items<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>, field: &str) -> Option<AlignItems> {
-    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/enums/AlignItems;");
+impl FromJavaEnum for AbsoluteAxis {
+    const JAVA_CLASS: &'static str = "Lcom/dioxuslabs/taffy/enums/AbsoluteAxis;";
 
-    get_align_items(env, obj)
-}
-
-pub fn get_align_content<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'local>) -> Option<AlignContent> {
-    let obj = &value.l().unwrap();
-    if obj.is_null() {
-        return None;
-    }
-
-    let internal = get_enum_value(env, obj);
-
-    match internal {
-        0 => Some(AlignContent::Start),
-        1 => Some(AlignContent::End),
-        2 => Some(AlignContent::FlexStart),
-        3 => Some(AlignContent::FlexEnd),
-        4 => Some(AlignContent::Center),
-        5 => Some(AlignContent::Stretch),
-        6 => Some(AlignContent::SpaceBetween),
-        7 => Some(AlignContent::SpaceEvenly),
-        _ => Some(AlignContent::SpaceAround),
+    fn from_ordinal(internal: i32) -> Option<AbsoluteAxis> {
+        Some(match internal {
+            0 => AbsoluteAxis::Horizontal,
+            1 => AbsoluteAxis::Vertical,
+            _ => panic!("Invalid value: {internal}"),
+        })
     }
 }
 
-pub fn f_get_align_content<'local>(
-    env: &mut JNIEnv<'local>,
-    base: &JObject<'local>,
-    field: &str,
-) -> Option<AlignContent> {
-    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/enums/AlignContent;");
+impl FromJavaEnum for FlexDirection {
+    const JAVA_CLASS: &'static str = "Lcom/dioxuslabs/taffy/enums/FlexDirection;";
 
-    get_align_content(env, obj)
-}
-
-pub fn get_display<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'local>) -> Display {
-    let obj = &value.l().unwrap();
-    if obj.is_null() {
-        return Display::default();
-    }
-
-    let internal = get_enum_value(env, obj);
-
-    match internal {
-        0 => Display::Block,
-        1 => Display::Flex,
-        2 => Display::Grid,
-        _ => Display::None,
+    fn from_ordinal(internal: i32) -> Option<FlexDirection> {
+        Some(match internal {
+            0 => FlexDirection::Row,
+            1 => FlexDirection::Column,
+            2 => FlexDirection::RowReverse,
+            3 => FlexDirection::ColumnReverse,
+            _ => panic!("Invalid value: {internal}"),
+        })
     }
 }
 
-pub fn f_get_display<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>, field: &str) -> Display {
-    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/enums/Display;");
+impl FromJavaEnum for GridAutoFlow {
+    const JAVA_CLASS: &'static str = "Lcom/dioxuslabs/taffy/enums/GridAutoFlow;";
 
-    get_display(env, obj)
-}
-
-pub fn get_box_sizing<'local>(env: &mut JNIEnv<'local>, value: JValueOwned<'local>) -> BoxSizing {
-    let obj = &value.l().unwrap();
-    if obj.is_null() {
-        return BoxSizing::default();
-    }
-
-    let internal = get_enum_value(env, obj);
-
-    match internal {
-        0 => BoxSizing::BorderBox,
-        _ => BoxSizing::ContentBox,
+    fn from_ordinal(internal: i32) -> Option<GridAutoFlow> {
+        Some(match internal {
+            0 => GridAutoFlow::Row,
+            1 => GridAutoFlow::Column,
+            2 => GridAutoFlow::RowDense,
+            3 => GridAutoFlow::ColumnDense,
+            _ => panic!("Invalid value: {internal}"),
+        })
     }
 }
 
-pub fn f_get_box_sizing<'local>(env: &mut JNIEnv<'local>, base: &JObject<'local>, field: &str) -> BoxSizing {
-    let obj = f_get_value(env, base, field, "Lcom/dioxuslabs/taffy/enums/BoxSizing;");
+impl FromJavaEnum for AlignContent {
+    const JAVA_CLASS: &'static str = "Lcom/dioxuslabs/taffy/enums/AlignContent;";
 
-    get_box_sizing(env, obj)
+    fn from_ordinal(internal: i32) -> Option<AlignContent> {
+        Some(match internal {
+            0 => AlignContent::Start,
+            1 => AlignContent::End,
+            2 => AlignContent::FlexStart,
+            3 => AlignContent::FlexEnd,
+            4 => AlignContent::Center,
+            5 => AlignContent::Stretch,
+            6 => AlignContent::SpaceBetween,
+            7 => AlignContent::SpaceEvenly,
+            8 => AlignContent::SpaceAround,
+            _ => panic!("Invalid value: {internal}"),
+        })
+    }
 }
 
-fn get_enum_value<'local>(env: &mut JNIEnv<'local>, object: &JObject<'local>) -> i32 {
-    f_i32_from_primitive(env, object, "ordinal", || 0)
+impl FromJavaEnum for BoxSizing {
+    const JAVA_CLASS: &'static str = "Lcom/dioxuslabs/taffy/enums/BoxSizing;";
+
+    fn from_ordinal(internal: i32) -> Option<BoxSizing> {
+        Some(match internal {
+            0 => BoxSizing::BorderBox,
+            1 => BoxSizing::ContentBox,
+            _ => panic!("Invalid value: {internal}"),
+        })
+    }
+}
+
+impl FromJavaEnum for TextAlign {
+    const JAVA_CLASS: &'static str = "Lcom/dioxuslabs/taffy/enums/TextAlign;";
+
+    fn from_ordinal(internal: i32) -> Option<TextAlign> {
+        Some(match internal {
+            0 => TextAlign::Auto,
+            1 => TextAlign::LegacyLeft,
+            2 => TextAlign::LegacyRight,
+            3 => TextAlign::LegacyCenter,
+            _ => panic!("Invalid value: {internal}"),
+        })
+    }
 }

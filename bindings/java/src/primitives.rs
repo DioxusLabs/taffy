@@ -1,4 +1,5 @@
 use crate::conversions::f_get_value;
+use crate::traits::FromJavaEnum;
 use jni::objects::{JObject, JValueOwned};
 use jni::JNIEnv;
 use taffy::NodeId;
@@ -253,4 +254,33 @@ pub fn f_bool_from_primitive<'local>(
     let value = f_get_value(env, base, field, "Z");
 
     bool_from_primitive(env, value, def)
+}
+
+/// Enums are here as these are basically represented by integers which are primitives
+
+/// Get enum value T from a JValueOwned (as well as a JNIEnv which is required by JNI)
+pub fn get_enum<T: FromJavaEnum + Default>(env: &mut JNIEnv, value: JValueOwned) -> T {
+    let obj = &value.l().unwrap();
+    if obj.is_null() {
+        return T::default();
+    }
+
+    let internal = get_enum_value(env, obj);
+    T::from_ordinal(internal)
+}
+
+/// Get enum value T from a JObject and a field name (as well as a JNIEnv which is required by JNI)
+pub fn f_get_enum<'local, T: FromJavaEnum + Default>(
+    env: &mut JNIEnv<'local>,
+    base: &JObject<'local>,
+    field: &str,
+) -> T {
+    let obj = f_get_value(env, base, field, T::JAVA_CLASS);
+
+    get_enum(env, obj)
+}
+
+/// Internal method that gets the ordinal int
+fn get_enum_value<'local>(env: &mut JNIEnv<'local>, object: &JObject<'local>) -> i32 {
+    f_i32_from_primitive(env, object, "ordinal", || 0)
 }

@@ -5,6 +5,7 @@ mod geom;
 mod java;
 mod measure;
 mod primitives;
+mod traits;
 
 use crate::collections::get_list;
 use crate::conversions::get_style;
