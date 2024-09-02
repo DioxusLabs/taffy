@@ -1,5 +1,5 @@
 [package]
-name = "bindings_scripts"
+name = "genenums"
 version = "0.0.1"
 authors = [
     "Arby Djabaev <contact@arby.be>"

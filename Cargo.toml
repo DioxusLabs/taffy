@@ -103,5 +103,5 @@ members = [
     "benches",
     "taffy_stylo",
     "bindings/java",
-    "bindings/scripts"
+    "scripts/genenums"
 ]
