@@ -1,8 +1,9 @@
 use std::fs;
 use std::fs::File;
+use std::io::Write;
 use std::path::Path;
 
-pub(crate) fn create_java_tranformer(name: &str, values: &[&str]) {
+pub(crate) fn create_java_tranformer(name: &str, values: &[&str], default: bool) {
     let mut file_content: String = "use crate::traits::FromJavaEnum;".to_string();
 
     if Path::new("./bindings/java/src/enums.rs").exists() {
@@ -13,7 +14,11 @@ pub(crate) fn create_java_tranformer(name: &str, values: &[&str]) {
     for (index, value) in values.iter().enumerate() {
         enum_values.push_str(format!("\n            {index} => {name}::{value},").as_str());
     }
-    enum_values.push_str("\n            _ => panic!(\"Invalid value: {internal}\"),");
+    if default {
+        enum_values.push_str(format!("\n            _ => {name}::default(),").as_str());
+    } else {
+        enum_values.push_str("\n            _ => panic!(\"Invalid value: {internal}\"),");
+    }
 
     file_content = format!(
         "use taffy::{name};

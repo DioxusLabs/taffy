@@ -1,7 +1,6 @@
 use std::fs;
 use std::fs::File;
 use std::io::Write;
-use std::path::Path;
 
 pub(crate) fn create_java_enum(name: &str, values: &[&str]) {
     use convert_case::{Case, Casing};
