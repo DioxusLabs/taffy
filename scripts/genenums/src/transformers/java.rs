@@ -4,7 +4,7 @@ use std::io::Write;
 use std::path::Path;
 
 pub(crate) fn create_java_tranformer(name: &str, values: &[&str], default: bool) {
-    let mut file_content: String = "use crate::traits::FromJavaEnum;\n".to_string();
+    let mut file_content: String = "use crate::traits::FromJavaEnum;\n/// FromJavaEnum implementations for Enums that need it\n".to_string();
 
     if Path::new("./bindings/java/src/enums.rs").exists() {
         file_content = fs::read_to_string(Path::new("./bindings/java/src/enums.rs")).unwrap()
@@ -20,9 +20,16 @@ pub(crate) fn create_java_tranformer(name: &str, values: &[&str], default: bool)
         enum_values.push_str("\n            _ => panic!(\"Invalid value: {internal}\"),");
     }
 
-    file_content = format!(
-        "use taffy::{name};
-{file_content}
+    file_content = file_content.replace(
+        "\n/// FromJavaEnum implementations for Enums that need it",
+        format!(
+            "\nuse taffy::{name};
+/// FromJavaEnum implementations for Enums that need it"
+        )
+        .as_str(),
+    );
+
+    file_content = format!("{file_content}
 impl FromJavaEnum<{name}> for {name} {{
     const JAVA_CLASS: &'static str = \"Lcom/dioxuslabs/taffy/enums/{name};\";
 

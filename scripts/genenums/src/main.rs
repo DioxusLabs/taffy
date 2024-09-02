@@ -51,9 +51,8 @@ fn main() {
         RustEnum { name: "AbsoluteAxis", values: vec!["Horizontal", "Vertical"], default: false },
     ];
 
-    // Might look inverted at first, but it is needed for rustfmt to not throw formatting errors
-    // (also known as ensuring alphabetical order in imports) 
-    enums.sort_by(|a, b| b.name.cmp(a.name));
+    // Sort to ensure consistency
+    enums.sort_by(|a, b| a.name.cmp(b.name));
 
     for value in enums.into_iter() {
         create_enum(value.name, &value.values);
