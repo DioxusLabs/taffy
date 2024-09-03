@@ -24,6 +24,7 @@ public enum {} {{
         auto_gen_comment, package, enum_name
     );
 
+    // Todo: Consider using https://doc.rust-lang.org/stable/std/iter/trait.Iterator.html#method.intersperse (ONCE STABLE) to insert the commas to avoid needing this special case.
     for value in values.iter() {
         result.push_str("    ");
         result.push_str(&value.to_case(Case::UpperSnake));
