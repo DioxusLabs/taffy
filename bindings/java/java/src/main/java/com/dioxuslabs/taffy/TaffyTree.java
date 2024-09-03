@@ -10,6 +10,7 @@ import java.util.Optional;
 
 public class TaffyTree {
     public final long ptr;
+    public Object context;
 
     public TaffyTree() {
         this.ptr = nvNewTaffyTree();
@@ -28,6 +29,11 @@ public class TaffyTree {
     }
 
     public long newLeaf(Style style) {
+        return nvNewLeaf(this.ptr, style);
+    }
+
+    public long newLeafWithContext(Style style, Object context) {
+        this.context = context;
         return nvNewLeaf(this.ptr, style);
     }
 

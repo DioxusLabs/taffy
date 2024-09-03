@@ -46,7 +46,53 @@ public class Text {
         AtomicInteger maxLineLength = new AtomicInteger();
         Arrays.stream(words).forEach(line -> maxLineLength.addAndGet(line.length()));
 
-        float inlineSize =
-                knownDimensions.getAbs(inlineAxis)
+        Float abs = knownDimensions.getAbs(inlineAxis);
+        float inlineSize;
+        if (abs == null) {
+            AvailableSpace as = availableSpace.getAbs(inlineAxis);
+            if (as.isMinContent()) {
+                inlineSize = minLineLength * fontMetrics.charWidth;
+            } else if (as.isMaxContent()) {
+                inlineSize = maxLineLength.get() * fontMetrics.charWidth;
+            } else {
+                inlineSize = Math.max(Math.min(as.val(), maxLineLength.get() * fontMetrics.charWidth), minLineLength * fontMetrics.charWidth);
+            }
+        } else {
+            inlineSize = abs;
+        }
+
+        abs = knownDimensions.getAbs(blockAxis);
+        float blockSize;
+        if (abs == null) {
+            int inlineLineLength = (int) Math.floor(inlineSize / fontMetrics.charWidth);
+            int lineCount = 1;
+            int currentLineLength = 0;
+
+            for (String word : words) {
+                if (currentLineLength == 0) {
+                    // first word
+                    currentLineLength = word.length();
+                } else if (currentLineLength + word.length() + 1 > inlineLineLength) {
+                    // every word past the first needs to check for line length including the space between words
+                    // note: a real implementation of this should handle whitespace characters other than ' '
+                    // and do something more sophisticated for long words
+                    lineCount += 1;
+                    currentLineLength = word.length();
+                } else {
+                    // add the word and a space
+                    currentLineLength += word.length() + 1;
+                }
+            }
+
+            blockSize = lineCount * fontMetrics.charHeight;
+        } else {
+            blockSize = abs;
+        }
+
+        if (textContext.writingMode == WritingMode.HORIZONTAL) {
+            return new Size<>(inlineSize, blockSize);
+        } else {
+            return new Size<>(blockSize, inlineSize);
+        }
     }
 }

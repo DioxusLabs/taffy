@@ -65,6 +65,10 @@ public class Style {
         return new Style();
     }
 
+    public static Style def() {
+        return new Style();
+    }
+
     public Style display(Display display) {
         this.display = display;
         return this;

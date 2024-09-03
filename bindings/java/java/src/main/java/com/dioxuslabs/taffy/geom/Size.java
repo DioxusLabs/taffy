@@ -35,6 +35,8 @@ public record Size<T>(
             return (Size<T>) lengthLengthPercentage(width, height);
         } else if (clazz == LengthPercentageAuto.class) {
             return (Size<T>) lengthLengthPercentageAuto(width, height);
+        } else if (clazz == Float.class) {
+            return (Size<T>) new Size<>(width, height);
         }
         return null;
     }
@@ -213,5 +215,9 @@ public record Size<T>(
 
     public T getAbs(AbsoluteAxis axis) {
         return axis == AbsoluteAxis.HORIZONTAL ? width : height;
+    }
+
+    public boolean bothAxisDefined() {
+        return width != null && height != null;
     }
 }

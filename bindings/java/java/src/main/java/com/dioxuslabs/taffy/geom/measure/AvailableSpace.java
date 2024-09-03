@@ -28,4 +28,20 @@ public class AvailableSpace {
         }
         return type == as.type && value == as.value;
     }
+
+    public boolean isDefinite() {
+        return type == 0;
+    }
+
+    public boolean isMinContent() {
+        return type == 1;
+    }
+
+    public boolean isMaxContent() {
+        return type == 2;
+    }
+
+    public float val() {
+        return value;
+    }
 }
