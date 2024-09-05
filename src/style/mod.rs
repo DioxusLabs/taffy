@@ -8,6 +8,8 @@ mod dimension;
 mod block;
 #[cfg(feature = "flexbox")]
 mod flex;
+#[cfg(feature = "float_layout")]
+mod float;
 #[cfg(feature = "grid")]
 mod grid;
 
@@ -18,6 +20,8 @@ pub use self::dimension::{Dimension, LengthPercentage, LengthPercentageAuto};
 
 #[cfg(feature = "block_layout")]
 pub use self::block::{BlockContainerStyle, BlockItemStyle, TextAlign};
+#[cfg(feature = "float_layout")]
+pub use self::float::Float;
 #[cfg(feature = "flexbox")]
 pub use self::flex::{FlexDirection, FlexWrap, FlexboxContainerStyle, FlexboxItemStyle};
 #[cfg(feature = "grid")]
@@ -356,6 +360,10 @@ pub struct Style {
     /// How much space (in points) should be reserved for the scrollbars of `Overflow::Scroll` and `Overflow::Auto` nodes.
     pub scrollbar_width: f32,
 
+    #[cfg(feature = "float_layout")]
+    /// Should the box be floated
+    pub float: Float,
+
     // Position properties
     /// What should the `position` value of this struct use as a base offset?
     pub position: Position,
@@ -478,6 +486,8 @@ impl Style {
         box_sizing: BoxSizing::BorderBox,
         overflow: Point { x: Overflow::Visible, y: Overflow::Visible },
         scrollbar_width: 0.0,
+        #[cfg(feature = "float_layout")]
+        float: Float::None,
         position: Position::Relative,
         inset: Rect::auto(),
         margin: Rect::zero(),
@@ -959,6 +969,7 @@ mod tests {
             item_is_table: false,
             item_is_replaced: false,
             box_sizing: Default::default(),
+            float: Default::default(),
             overflow: Default::default(),
             scrollbar_width: 0.0,
             position: Default::default(),
