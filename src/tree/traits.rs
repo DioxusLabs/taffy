@@ -137,7 +137,8 @@ use crate::style::{GridContainerStyle, GridItemStyle};
 use crate::{BlockContainerStyle, BlockItemStyle};
 use core::ops::{Deref, DerefMut};
 
-/// This trait is Taffy's abstraction for downward tree traversal.
+/// Taffy's abstraction for downward tree traversal.
+///
 /// However, this trait does *not* require access to any node's other than a single container node's immediate children unless you also intend to implement `TraverseTree`.
 pub trait TraversePartialTree {
     /// Type representing an iterator of the children of a node
@@ -155,7 +156,9 @@ pub trait TraversePartialTree {
     fn get_child_id(&self, parent_node_id: NodeId, child_index: usize) -> NodeId;
 }
 
-/// A marker trait which extends `TraversePartialTree` with the additional guarantee that the child/children methods can be used to recurse
+/// A marker trait which extends `TraversePartialTree`
+///
+/// Implementing this trait implies the additional guarantee that the child/children methods can be used to recurse
 /// infinitely down the tree. Is required by the `RoundTree` and the `PrintTree` traits.
 pub trait TraverseTree: TraversePartialTree {}
 
