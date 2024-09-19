@@ -561,7 +561,8 @@ impl MinTrackSizingFunction {
     }
 }
 
-/// The sizing function for a grid track (row/column) (either auto-track or template track)
+/// The sizing function for a grid track (row/column)
+///
 /// May either be a MinMax variant which specifies separate values for the min-/max- track sizing functions
 /// or a scalar value which applies to both track sizing functions.
 pub type NonRepeatedTrackSizingFunction = MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>;

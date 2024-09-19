@@ -35,14 +35,16 @@ pub enum AlignItems {
 ///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/justify-items)
 pub type JustifyItems = AlignItems;
-/// Used to control how the specified nodes is aligned.
+/// Controls alignment of an individual node
+///
 /// Overrides the parent Node's `AlignItems` property.
 /// For Flexbox it controls alignment in the cross axis
 /// For Grid it controls alignment in the block axis
 ///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/align-self)
 pub type AlignSelf = AlignItems;
-/// Used to control how the specified nodes is aligned.
+/// Controls alignment of an individual node
+///
 /// Overrides the parent Node's `JustifyItems` property.
 /// Does not apply to Flexbox, and will be ignored if specified on a flex child
 /// For Grid it controls alignment in the inline axis
