@@ -1,5 +1,32 @@
 # Release Notes
 
+## 0.6.0
+
+### Highlights
+
+- The `Style` struct has been "traitified". This supports Taffy's integration in Servo and generally makes Taffy more flexible. The
+  `Style` struct still exists and implements the new traits so existing uses of Taffy will continue to work as before.
+- The `box-sizing` style is supported
+- Computed margins are output in `Layout`
+
+### Fixes
+
+- Fix `print_tree()` when rounding is disabled (#680)
+- Absolute Insets should be resolved against the container size minus border (#666)
+- Fix flooring hypothetical_main_size by computed min size (#689)
+- Fix flex line cross-size determination (#690)
+- Fix panics in the grid algorithm (#691)
+- Fix resolving flexible lengths (WPT css/flexbox-multiline-min-max test) (#692)
+- Fix wrapping when a max main size style is present (#694)
+- Fix case where Taffy allowed margins to collapse through an element when it shouldn't have (#695)
+
+### Added
+
+- Legacy text align (for laying out `<center>` and `<div align="..">`) is supported
+- Add `is_table` for block items (#701)
+- Impl `Debug` and `Clone` for `Cache` (#688)
+- Implement `Debug` and `PartialEq` for tree types (#697)
+
 ## 0.5.2
 
 - Fix block stretch sizing (don't always apply stretch sizing to block containers) (#674)
