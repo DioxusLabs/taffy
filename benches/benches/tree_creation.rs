@@ -73,7 +73,7 @@ fn taffy_benchmarks(c: &mut Criterion) {
                 std::hint::black_box(root);
             })
         });
-        let benchmark_id = BenchmarkId::new(format!("TaffyTree::new"), node_count);
+        let benchmark_id = BenchmarkId::new("TaffyTree::new".to_string(), node_count);
         group.bench_with_input(benchmark_id, node_count, |b, &node_count| {
             b.iter(|| {
                 let (tree, root) = build_taffy_flat_hierarchy(node_count, false);
@@ -82,7 +82,7 @@ fn taffy_benchmarks(c: &mut Criterion) {
             })
         });
 
-        let benchmark_id = BenchmarkId::new(format!("TaffyTree::with_capacity"), node_count);
+        let benchmark_id = BenchmarkId::new("TaffyTree::with_capacity".to_string(), node_count);
         group.bench_with_input(benchmark_id, node_count, |b, &node_count| {
             b.iter(|| {
                 let (tree, root) = build_taffy_flat_hierarchy(node_count, true);

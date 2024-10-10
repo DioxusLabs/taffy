@@ -83,7 +83,7 @@ where
     inner_node_size: Size<Option<f32>>,
 }
 
-impl<'tree, 'oat, Tree, EstimateFunction> IntrisicSizeMeasurer<'tree, 'oat, Tree, EstimateFunction>
+impl<Tree, EstimateFunction> IntrisicSizeMeasurer<'_, '_, Tree, EstimateFunction>
 where
     Tree: LayoutPartialTree,
     EstimateFunction: Fn(&GridTrack, Option<f32>) -> Option<f32>,

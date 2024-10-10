@@ -1,3 +1,6 @@
+// This is a spurious warning. See https://github.com/rust-lang/rust-clippy/issues/13535
+#![allow(clippy::needless_return)]
+
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -77,6 +80,9 @@ async fn main() {
 
     info!("starting webdriver instance");
     let webdriver_url = "http://localhost:4444";
+
+    // TODO: call `.wait()` at an appropriate time (probably at the end of the process?)
+    #[allow(clippy::zombie_processes)]
     let mut webdriver_handle = Command::new("chromedriver")
         .arg("--port=4444")
         .spawn()

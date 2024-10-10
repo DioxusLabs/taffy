@@ -156,7 +156,7 @@ impl Default for TaffyTree {
 
 /// Iterator that wraps a slice of nodes, lazily converting them to u64
 pub struct TaffyTreeChildIter<'a>(core::slice::Iter<'a, NodeId>);
-impl<'a> Iterator for TaffyTreeChildIter<'a> {
+impl Iterator for TaffyTreeChildIter<'_> {
     type Item = NodeId;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -238,7 +238,7 @@ where
 }
 
 // TraversePartialTree impl for TaffyView
-impl<'t, NodeContext, MeasureFunction> TraversePartialTree for TaffyView<'t, NodeContext, MeasureFunction>
+impl<NodeContext, MeasureFunction> TraversePartialTree for TaffyView<'_, NodeContext, MeasureFunction>
 where
     MeasureFunction:
         FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
@@ -262,14 +262,14 @@ where
 }
 
 // TraverseTree impl for TaffyView
-impl<'t, NodeContext, MeasureFunction> TraverseTree for TaffyView<'t, NodeContext, MeasureFunction> where
+impl<NodeContext, MeasureFunction> TraverseTree for TaffyView<'_, NodeContext, MeasureFunction> where
     MeasureFunction:
         FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>
 {
 }
 
 // LayoutPartialTree impl for TaffyView
-impl<'t, NodeContext, MeasureFunction> LayoutPartialTree for TaffyView<'t, NodeContext, MeasureFunction>
+impl<NodeContext, MeasureFunction> LayoutPartialTree for TaffyView<'_, NodeContext, MeasureFunction>
 where
     MeasureFunction:
         FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
@@ -344,7 +344,7 @@ where
 }
 
 #[cfg(feature = "block_layout")]
-impl<'t, NodeContext, MeasureFunction> LayoutBlockContainer for TaffyView<'t, NodeContext, MeasureFunction>
+impl<NodeContext, MeasureFunction> LayoutBlockContainer for TaffyView<'_, NodeContext, MeasureFunction>
 where
     MeasureFunction:
         FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
@@ -364,7 +364,7 @@ where
 }
 
 #[cfg(feature = "flexbox")]
-impl<'t, NodeContext, MeasureFunction> LayoutFlexboxContainer for TaffyView<'t, NodeContext, MeasureFunction>
+impl<NodeContext, MeasureFunction> LayoutFlexboxContainer for TaffyView<'_, NodeContext, MeasureFunction>
 where
     MeasureFunction:
         FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
@@ -384,7 +384,7 @@ where
 }
 
 #[cfg(feature = "grid")]
-impl<'t, NodeContext, MeasureFunction> LayoutGridContainer for TaffyView<'t, NodeContext, MeasureFunction>
+impl<NodeContext, MeasureFunction> LayoutGridContainer for TaffyView<'_, NodeContext, MeasureFunction>
 where
     MeasureFunction:
         FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
@@ -404,7 +404,7 @@ where
 }
 
 // RoundTree impl for TaffyView
-impl<'t, NodeContext, MeasureFunction> RoundTree for TaffyView<'t, NodeContext, MeasureFunction>
+impl<NodeContext, MeasureFunction> RoundTree for TaffyView<'_, NodeContext, MeasureFunction>
 where
     MeasureFunction:
         FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,

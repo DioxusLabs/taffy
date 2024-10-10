@@ -649,7 +649,7 @@ impl core::fmt::Display for InvalidStringRepetitionValue {
         f.write_str("&str can only be converted to GridTrackRepetition if it's value is 'auto-fit' or 'auto-fill'")
     }
 }
-impl<'a> TryFrom<&'a str> for GridTrackRepetition {
+impl TryFrom<&str> for GridTrackRepetition {
     type Error = InvalidStringRepetitionValue;
     fn try_from(value: &str) -> Result<Self, InvalidStringRepetitionValue> {
         match value {
