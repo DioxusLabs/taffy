@@ -113,7 +113,7 @@ impl Tree {
 }
 
 struct ChildIter<'a>(std::slice::Iter<'a, usize>);
-impl<'a> Iterator for ChildIter<'a> {
+impl Iterator for ChildIter<'_> {
     type Item = NodeId;
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next().copied().map(NodeId::from)
