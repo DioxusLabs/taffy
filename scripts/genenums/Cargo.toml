@@ -1,0 +1,13 @@
+[package]
+name = "genenums"
+version = "0.0.1"
+authors = [
+    "Arby Djabaev <contact@arby.be>"
+]
+edition = "2021"
+description = "Scripts to generate bindings related stuff for Taffy (A flexible UI layout library)"
+repository = "https://github.com/DioxusLabs/taffy"
+license = "MIT"
+
+[dependencies]
+convert_case = "0.6.0"
