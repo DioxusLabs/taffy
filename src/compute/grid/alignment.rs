@@ -189,6 +189,9 @@ pub(super) fn align_and_position_item(
     // Clamp size by min and max width/height
     let Size { width, height } = Size { width, height }.maybe_clamp(min_size, max_size);
 
+    // Direction
+    let direction = style.direction();
+
     // Layout node
     drop(style);
     let layout_output = tree.perform_child_layout(
@@ -197,6 +200,7 @@ pub(super) fn align_and_position_item(
         grid_area_size.map(Option::Some),
         grid_area_minus_item_margins_size.map(AvailableSpace::Definite),
         SizingMode::InherentSize,
+        direction,
         Line::FALSE,
     );
 

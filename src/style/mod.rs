@@ -55,6 +55,12 @@ pub trait CoreStyle {
         BoxSizing::BorderBox
     }
 
+    /// Which direction
+    #[inline(always)]
+    fn direction(&self) -> Direction {
+        Style::DEFAULT.direction
+    }
+
     // Overflow properties
     /// How children overflowing their container should affect layout
     #[inline(always)]
@@ -256,6 +262,17 @@ impl Default for BoxSizing {
     }
 }
 
+/// TODO: Documentation
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum Direction {
+    #[default]
+    /// Left-to-right
+    Ltr,
+    /// Right-to-left
+    Rtl,
+}
+
 /// How children overflowing their container should affect layout
 ///
 /// In CSS the primary effect of this property is to control whether contents of a parent container that overflow that container should
@@ -335,6 +352,8 @@ pub struct Style {
     pub item_is_table: bool,
     /// Should size styles apply to the content box or the border box of the node
     pub box_sizing: BoxSizing,
+    /// The direction of text, table columns, and horizontal overflow
+    pub direction: Direction,
 
     // Overflow properties
     /// How children overflowing their container should affect layout
@@ -461,6 +480,7 @@ impl Style {
         display: Display::DEFAULT,
         item_is_table: false,
         box_sizing: BoxSizing::BorderBox,
+        direction: Direction::Ltr,
         overflow: Point { x: Overflow::Visible, y: Overflow::Visible },
         scrollbar_width: 0.0,
         position: Position::Relative,
@@ -543,6 +563,10 @@ impl CoreStyle for Style {
         self.box_sizing
     }
     #[inline(always)]
+    fn direction(&self) -> Direction {
+        self.direction
+    }
+    #[inline(always)]
     fn overflow(&self) -> Point<Overflow> {
         self.overflow
     }
@@ -600,6 +624,10 @@ impl<T: CoreStyle> CoreStyle for &'_ T {
     #[inline(always)]
     fn box_sizing(&self) -> BoxSizing {
         (*self).box_sizing()
+    }
+    #[inline(always)]
+    fn direction(&self) -> Direction {
+        (*self).direction()
     }
     #[inline(always)]
     fn overflow(&self) -> Point<Overflow> {
@@ -777,8 +805,14 @@ impl<T: FlexboxItemStyle> FlexboxItemStyle for &'_ T {
 
 #[cfg(feature = "grid")]
 impl GridContainerStyle for Style {
-    type TemplateTrackList<'a> = &'a [TrackSizingFunction] where Self: 'a;
-    type AutoTrackList<'a> = &'a [NonRepeatedTrackSizingFunction] where Self: 'a;
+    type TemplateTrackList<'a>
+        = &'a [TrackSizingFunction]
+    where
+        Self: 'a;
+    type AutoTrackList<'a>
+        = &'a [NonRepeatedTrackSizingFunction]
+    where
+        Self: 'a;
 
     #[inline(always)]
     fn grid_template_rows(&self) -> &[TrackSizingFunction] {
@@ -824,8 +858,14 @@ impl GridContainerStyle for Style {
 
 #[cfg(feature = "grid")]
 impl<T: GridContainerStyle> GridContainerStyle for &'_ T {
-    type TemplateTrackList<'a> = T::TemplateTrackList<'a> where Self: 'a;
-    type AutoTrackList<'a> = T::AutoTrackList<'a> where Self: 'a;
+    type TemplateTrackList<'a>
+        = T::TemplateTrackList<'a>
+    where
+        Self: 'a;
+    type AutoTrackList<'a>
+        = T::AutoTrackList<'a>
+    where
+        Self: 'a;
 
     #[inline(always)]
     fn grid_template_rows(&self) -> Self::TemplateTrackList<'_> {
@@ -923,6 +963,7 @@ mod tests {
             display: Default::default(),
             item_is_table: false,
             box_sizing: Default::default(),
+            direction: Default::default(),
             overflow: Default::default(),
             scrollbar_width: 0.0,
             position: Default::default(),

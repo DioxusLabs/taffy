@@ -11,8 +11,8 @@ use crate::util::sys::{f32_max, GridTrackVec, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{
-    style_helpers::*, AlignContent, BoxGenerationMode, BoxSizing, CoreStyle, GridContainerStyle, GridItemStyle,
-    JustifyContent, LayoutGridContainer,
+    style_helpers::*, AlignContent, BoxGenerationMode, BoxSizing, CoreStyle, Direction, GridContainerStyle,
+    GridItemStyle, JustifyContent, LayoutGridContainer,
 };
 use alignment::{align_and_position_item, align_tracks};
 use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks};
@@ -476,11 +476,22 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
 
     // Position in-flow children (stored in items vector)
     for (index, item) in items.iter_mut().enumerate() {
+        let (left, right) = match item.direction {
+            Direction::Ltr => (
+                columns[item.column_indexes.start as usize + 1].offset,
+                columns[item.column_indexes.end as usize].offset,
+            ),
+            Direction::Rtl => (
+                container_border_box.width - columns[item.column_indexes.end as usize].offset,
+                container_border_box.width - columns[item.column_indexes.start as usize + 1].offset,
+            ),
+        };
+
         let grid_area = Rect {
             top: rows[item.row_indexes.start as usize + 1].offset,
             bottom: rows[item.row_indexes.end as usize].offset,
-            left: columns[item.column_indexes.start as usize + 1].offset,
-            right: columns[item.column_indexes.end as usize].offset,
+            left,
+            right,
         };
         #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
         let (content_size_contribution, y_position, height) = align_and_position_item(
@@ -508,6 +519,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
 
         // Position hidden child
         if child_style.box_generation_mode() == BoxGenerationMode::None {
+            let direction = child_style.direction();
             drop(child_style);
             tree.set_unrounded_layout(child, &Layout::with_order(order));
             tree.perform_child_layout(
@@ -516,6 +528,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
                 Size::NONE,
                 Size::MAX_CONTENT,
                 SizingMode::InherentSize,
+                direction,
                 Line::FALSE,
             );
             order += 1;

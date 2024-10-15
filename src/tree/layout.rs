@@ -3,6 +3,7 @@ use crate::geometry::{AbsoluteAxis, Line, Point, Rect, Size};
 use crate::style::AvailableSpace;
 use crate::style_helpers::TaffyMaxContent;
 use crate::util::sys::{f32_max, f32_min};
+use crate::Direction;
 
 /// Whether we are performing a full layout, or we merely need to size the node
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -115,6 +116,8 @@ pub struct LayoutInput {
     pub sizing_mode: SizingMode,
     /// Which axis we need the size of
     pub axis: RequestedAxis,
+    /// TODO: documentation
+    pub direction: Direction,
 
     /// Known dimensions represent dimensions (width/height) which should be taken as fixed when performing layout.
     /// For example, if known_dimensions.width is set to Some(WIDTH) then this means something like:
@@ -146,6 +149,7 @@ impl LayoutInput {
         available_space: Size::MAX_CONTENT,
         sizing_mode: SizingMode::InherentSize,
         axis: RequestedAxis::Both,
+        direction: Direction::Ltr,
         vertical_margins_are_collapsible: Line::FALSE,
     };
 }

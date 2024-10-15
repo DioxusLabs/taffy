@@ -13,7 +13,7 @@ use crate::util::debug::debug_log;
 use crate::util::sys::{f32_max, new_vec_with_capacity, Vec};
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
-use crate::{BoxGenerationMode, BoxSizing};
+use crate::{BoxGenerationMode, BoxSizing, Direction};
 
 use super::common::alignment::apply_alignment_fallback;
 #[cfg(feature = "content_size")]
@@ -26,6 +26,9 @@ struct FlexItem {
 
     /// The order of the node relative to it's siblings
     order: u32,
+
+    /// Direction (LTR or RTL)
+    direction: Direction,
 
     /// The base size of this item
     size: Size<Option<f32>>,
@@ -365,7 +368,11 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
     let len = tree.child_count(node);
     for order in 0..len {
         let child = tree.get_child_id(node, order);
-        if tree.get_flexbox_child_style(child).box_generation_mode() == BoxGenerationMode::None {
+        let child_style = tree.get_flexbox_child_style(child);
+        let direction = child_style.direction();
+        let box_generation_mode = child_style.box_generation_mode();
+        drop(child_style);
+        if box_generation_mode == BoxGenerationMode::None {
             tree.set_unrounded_layout(child, &Layout::with_order(order as u32));
             tree.perform_child_layout(
                 child,
@@ -373,6 +380,7 @@ fn compute_preliminary(tree: &mut impl LayoutFlexboxContainer, node: NodeId, inp
                 Size::NONE,
                 Size::MAX_CONTENT,
                 SizingMode::InherentSize,
+                direction,
                 Line::FALSE,
             );
         }
@@ -502,6 +510,7 @@ fn generate_anonymous_flex_items(
             FlexItem {
                 node: child,
                 order: index as u32,
+                direction: child_style.direction(),
                 size: child_style
                     .size()
                     .maybe_resolve(constants.node_inner_size)
@@ -722,6 +731,7 @@ fn determine_flex_base_size(
                 child_available_space,
                 SizingMode::ContentSize,
                 dir.main_axis(),
+                child.direction,
                 Line::FALSE,
             );
         };
@@ -765,6 +775,7 @@ fn determine_flex_base_size(
                     child_available_space,
                     SizingMode::ContentSize,
                     dir.main_axis(),
+                    child.direction,
                     Line::FALSE,
                 )
             };
@@ -1012,6 +1023,7 @@ fn determine_container_main_size(
                                     child_available_space,
                                     SizingMode::InherentSize,
                                     dir.main_axis(),
+                                    item.direction,
                                     Line::FALSE,
                                 ) + item.margin.main_axis_sum(constants.dir);
 
@@ -1347,6 +1359,7 @@ fn determine_hypothetical_cross_size(
                 },
                 SizingMode::ContentSize,
                 constants.dir.cross_axis(),
+                child.direction,
                 Line::FALSE,
             )
             .maybe_clamp(child.min_size.cross(constants.dir), child.max_size.cross(constants.dir))
@@ -1417,6 +1430,7 @@ fn calculate_children_base_lines(
                     },
                 },
                 SizingMode::ContentSize,
+                child.direction,
                 Line::FALSE,
             );
 
@@ -1840,6 +1854,7 @@ fn calculate_flex_item(
         node_inner_size,
         container_size.map(|s| s.into()),
         SizingMode::ContentSize,
+        item.direction,
         Line::FALSE,
     );
     let LayoutOutput {
@@ -2060,6 +2075,7 @@ fn perform_absolute_layout_on_absolute_children(
             .maybe_apply_aspect_ratio(aspect_ratio)
             .maybe_add(box_sizing_adjustment);
         let mut known_dimensions = style_size.maybe_clamp(min_size, max_size);
+        let direction = child_style.direction();
 
         drop(child_style);
 
@@ -2090,6 +2106,7 @@ fn perform_absolute_layout_on_absolute_children(
                 height: AvailableSpace::Definite(container_height.maybe_clamp(min_size.height, max_size.height)),
             },
             SizingMode::InherentSize,
+            direction,
             Line::FALSE,
         );
         let measured_size = layout_output.size;

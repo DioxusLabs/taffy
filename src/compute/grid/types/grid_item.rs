@@ -9,7 +9,7 @@ use crate::style::{
 };
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId, SizingMode};
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
-use crate::{BoxSizing, GridItemStyle, LengthPercentage};
+use crate::{BoxSizing, Direction, GridItemStyle, LengthPercentage};
 use core::ops::Range;
 
 /// Represents a single grid item
@@ -23,6 +23,8 @@ pub(in super::super) struct GridItem {
     /// We sort the list of grid items during track sizing. This field allows us to sort back the original order
     /// for final positioning
     pub source_order: u16,
+
+    pub direction: Direction,
 
     /// The item's definite row-start and row-end, as resolved by the placement algorithm
     /// (in origin-zero coordinates)
@@ -105,6 +107,7 @@ impl GridItem {
         GridItem {
             node,
             source_order,
+            direction: style.direction(),
             row: row_span,
             column: col_span,
             overflow: style.overflow(),
@@ -382,6 +385,7 @@ impl GridItem {
             }),
             SizingMode::InherentSize,
             axis.as_abs_naive(),
+            self.direction,
             Line::FALSE,
         )
     }
@@ -421,6 +425,7 @@ impl GridItem {
             }),
             SizingMode::InherentSize,
             axis.as_abs_naive(),
+            self.direction,
             Line::FALSE,
         )
     }
