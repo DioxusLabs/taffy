@@ -40,7 +40,7 @@ mod util;
 ///   - Track (row/column) sizing
 ///   - Alignment & Final item placement
 pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
-    let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
+    let LayoutInput { direction, known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
     let style = tree.get_grid_container_style(node);
 
@@ -81,15 +81,26 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
         Overflow::Scroll => style.scrollbar_width(),
         _ => 0.0,
     });
-    // TODO: make side configurable based on the `direction` property
+
     let mut content_box_inset = padding_border;
-    content_box_inset.right += scrollbar_gutter.x;
+    match direction {
+        Direction::Ltr => content_box_inset.right += scrollbar_gutter.x,
+        Direction::Rtl => content_box_inset.left += scrollbar_gutter.x,
+    };
     content_box_inset.bottom += scrollbar_gutter.y;
 
     let align_content = style.align_content().unwrap_or(AlignContent::Stretch);
-    let justify_content = style.justify_content().unwrap_or(JustifyContent::Stretch);
+    let mut justify_content = style.justify_content().unwrap_or(JustifyContent::Stretch);
     let align_items = style.align_items();
-    let justify_items = style.justify_items();
+    let mut justify_items = style.justify_items();
+
+    match direction {
+        Direction::Rtl => {
+            justify_content.flip();
+            justify_items.as_mut().map(|x| x.flip());
+        }
+        _ => (),
+    }
 
     // Note: we avoid accessing the grid rows/columns methods more than once as this can
     // cause an expensive-ish computation

@@ -95,3 +95,31 @@ pub enum AlignContent {
 ///
 /// [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/justify-content)
 pub type JustifyContent = AlignContent;
+
+impl AlignItems {
+    /// TODO: documentation
+    #[inline]
+    pub fn flip(&mut self) {
+        *self = match self {
+            Self::Start => Self::End,
+            Self::End => Self::Start,
+            Self::FlexStart => Self::FlexEnd,
+            Self::FlexEnd => Self::FlexStart,
+            _ => return,
+        }
+    }
+}
+
+impl AlignContent {
+    /// TODO: documentation
+    #[inline]
+    pub fn flip(&mut self) {
+        *self = match self {
+            Self::Start => Self::End,
+            Self::End => Self::Start,
+            Self::FlexStart => Self::FlexEnd,
+            Self::FlexEnd => Self::FlexStart,
+            _ => return,
+        }
+    }
+}
