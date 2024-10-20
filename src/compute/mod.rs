@@ -47,6 +47,9 @@ pub use self::flexbox::compute_flexbox_layout;
 #[cfg(feature = "grid")]
 pub use self::grid::compute_grid_layout;
 
+#[cfg(feature = "float_layout")]
+pub use self::float::{FloatContext, FloatedBox};
+
 use crate::geometry::{Line, Point, Size};
 use crate::style::{AvailableSpace, CoreStyle, Overflow};
 use crate::tree::{
