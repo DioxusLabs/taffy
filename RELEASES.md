@@ -1,5 +1,11 @@
 # Release Notes
 
+## Unreleased
+
+### Fixes
+
+- Fix calculation of `auto-fill`/`auto-fit` repetition count when container has a definite percentage size (#722)
+
 ## 0.6.0
 
 ### Highlights
