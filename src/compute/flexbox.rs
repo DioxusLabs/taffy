@@ -98,6 +98,7 @@ struct FlexItem {
 }
 
 impl FlexItem {
+    /// Returns true if the item is a <https://www.w3.org/TR/css-overflow-3/#scroll-container>
     fn is_scroll_container(&self) -> bool {
         self.overflow.x.is_scroll_container() | self.overflow.y.is_scroll_container()
     }
