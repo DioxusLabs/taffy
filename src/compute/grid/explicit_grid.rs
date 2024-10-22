@@ -7,7 +7,7 @@ use crate::style_helpers::TaffyAuto;
 use crate::util::sys::Vec;
 use crate::util::MaybeMath;
 use crate::util::ResolveOrZero;
-use crate::GridContainerStyle;
+use crate::{GridContainerStyle, MaybeResolve};
 
 #[cfg(not(feature = "std"))]
 use num_traits::float::FloatCore;
@@ -91,8 +91,10 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
     // Otherwise, if the grid container has a definite min size in the relevant axis:
     //   - then the number of repetitions is the smallest possible positive integer that fulfills that minimum requirement
     // Otherwise, the specified track list repeats only once.
-    let size_is_maximum =
-        style.size().get_abs(axis).into_option().is_some() || style.max_size().get_abs(axis).into_option().is_some();
+    let style_size_is_definite = style.size().get_abs(axis).maybe_resolve(inner_container_size.get_abs(axis)).is_some();
+    let style_max_size_is_definite =
+        style.max_size().get_abs(axis).maybe_resolve(inner_container_size.get_abs(axis)).is_some();
+    let size_is_maximum = style_size_is_definite | style_max_size_is_definite;
 
     // Determine the number of repetitions
     let num_repetitions: u16 = match inner_container_size.get_abs(axis) {
