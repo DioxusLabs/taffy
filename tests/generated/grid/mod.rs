@@ -158,6 +158,8 @@ mod grid_auto_fill_fixed_size;
 #[cfg(feature = "grid")]
 mod grid_auto_fill_with_empty_auto_track;
 #[cfg(feature = "grid")]
+mod grid_auto_fit_definite_percentage;
+#[cfg(feature = "grid")]
 mod grid_auto_fit_with_empty_auto_track;
 #[cfg(feature = "grid")]
 mod grid_auto_rows;
@@ -501,6 +503,8 @@ mod grid_span_6_all_non_flex_indefinite;
 mod grid_span_6_all_non_flex_indefinite_hidden;
 #[cfg(feature = "grid")]
 mod grid_span_8_all_track_types_indefinite;
+#[cfg(feature = "grid")]
+mod grid_taffy_issue_591;
 #[cfg(feature = "grid")]
 mod grid_taffy_issue_624;
 mod taffy_issue_721;
