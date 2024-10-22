@@ -97,6 +97,12 @@ struct FlexItem {
     offset_cross: f32,
 }
 
+impl FlexItem {
+    fn is_scroll_container(&self) -> bool {
+        self.overflow.x.is_scroll_container() | self.overflow.y.is_scroll_container()
+    }
+}
+
 /// A line of [`FlexItem`] used for intermediate computation
 struct FlexLine<'a> {
     /// The slice of items to iterate over during computation of this line
@@ -975,8 +981,12 @@ fn determine_container_main_size(
                                 pref.min(max).max(min) + item.margin.main_axis_sum(constants.dir)
                             }
                             (min, _, max) if max <= min => min + item.margin.main_axis_sum(constants.dir),
+
                             // Else compute the min- or -max content size and apply the full formula for computing the
-                            // min- or max- content contributuon
+                            // min- or max- content contribution
+                            _ if item.is_scroll_container() => {
+                                item.flex_basis + item.margin.main_axis_sum(constants.dir)
+                            }
                             _ => {
                                 // Parent size for child sizing
                                 let cross_axis_parent_size = constants.node_inner_size.cross(dir);
