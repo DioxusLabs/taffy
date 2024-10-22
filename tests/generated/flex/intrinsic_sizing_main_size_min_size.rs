@@ -1,6 +1,6 @@
 #[test]
 #[allow(non_snake_case)]
-fn grid_taffy_issue_591__border_box() {
+fn intrinsic_sizing_main_size_min_size__border_box() {
     #[allow(unused_imports)]
     use taffy::{prelude::*, tree::Layout, TaffyTree};
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
@@ -141,7 +141,7 @@ fn grid_taffy_issue_591__border_box() {
 
 #[test]
 #[allow(non_snake_case)]
-fn grid_taffy_issue_591__content_box() {
+fn intrinsic_sizing_main_size_min_size__content_box() {
     #[allow(unused_imports)]
     use taffy::{prelude::*, tree::Layout, TaffyTree};
     let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();

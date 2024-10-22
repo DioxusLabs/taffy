@@ -302,6 +302,7 @@ mod intrinsic_sizing_cross_size_column;
 mod intrinsic_sizing_main_size_column;
 mod intrinsic_sizing_main_size_column_nested;
 mod intrinsic_sizing_main_size_column_wrap;
+mod intrinsic_sizing_main_size_min_size;
 mod intrinsic_sizing_main_size_row;
 mod intrinsic_sizing_main_size_row_nested;
 mod intrinsic_sizing_main_size_row_wrap;
