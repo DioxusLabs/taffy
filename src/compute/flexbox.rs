@@ -900,7 +900,9 @@ fn determine_container_main_size(
                             .iter()
                             .map(|child| {
                                 let padding_border_sum = (child.padding + child.border).main_axis_sum(constants.dir);
-                                (child.flex_basis + child.margin.main_axis_sum(constants.dir)).max(padding_border_sum)
+                                (child.flex_basis.maybe_max(child.min_size.main(constants.dir))
+                                    + child.margin.main_axis_sum(constants.dir))
+                                .max(padding_border_sum)
                             })
                             .sum::<f32>();
                         total_target_size + line_main_axis_gap
@@ -924,7 +926,9 @@ fn determine_container_main_size(
                             .iter()
                             .map(|child| {
                                 let padding_border_sum = (child.padding + child.border).main_axis_sum(constants.dir);
-                                (child.flex_basis + child.margin.main_axis_sum(constants.dir)).max(padding_border_sum)
+                                (child.flex_basis.maybe_max(child.min_size.main(constants.dir))
+                                    + child.margin.main_axis_sum(constants.dir))
+                                .max(padding_border_sum)
                             })
                             .sum::<f32>();
                         total_target_size + line_main_axis_gap
