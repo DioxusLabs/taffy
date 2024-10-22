@@ -1999,6 +1999,9 @@ fn final_layout_pass(
         }
     }
 
+    content_size.width += constants.content_box_inset.right - constants.border.right - constants.scrollbar_gutter.x;
+    content_size.height += constants.content_box_inset.bottom - constants.border.bottom - constants.scrollbar_gutter.y;
+
     content_size
 }
 

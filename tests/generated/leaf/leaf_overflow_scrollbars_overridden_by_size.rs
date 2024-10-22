@@ -19,8 +19,8 @@ fn leaf_overflow_scrollbars_overridden_by_size__border_box() {
     println!("\nComputed tree:");
     taffy.print_tree(node);
     println!();
-    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
-    let layout @ Layout { size, location, .. } = taffy.layout(node).unwrap();
+    let layout = taffy.layout(node).unwrap();
+    let Layout { size, location, .. } = layout;
     assert_eq!(size.width, 2f32, "width of node {:?}. Expected {}. Actual {}", node, 2f32, size.width);
     assert_eq!(size.height, 4f32, "height of node {:?}. Expected {}. Actual {}", node, 4f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node, 0f32, location.x);
@@ -67,8 +67,8 @@ fn leaf_overflow_scrollbars_overridden_by_size__content_box() {
     println!("\nComputed tree:");
     taffy.print_tree(node);
     println!();
-    #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
-    let layout @ Layout { size, location, .. } = taffy.layout(node).unwrap();
+    let layout = taffy.layout(node).unwrap();
+    let Layout { size, location, .. } = layout;
     assert_eq!(size.width, 2f32, "width of node {:?}. Expected {}. Actual {}", node, 2f32, size.width);
     assert_eq!(size.height, 4f32, "height of node {:?}. Expected {}. Actual {}", node, 4f32, size.height);
     assert_eq!(location.x, 0f32, "x of node {:?}. Expected {}. Actual {}", node, 0f32, location.x);
