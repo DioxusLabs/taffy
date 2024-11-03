@@ -114,6 +114,8 @@ struct FlexLine<'a> {
 struct AlgoConstants {
     /// The direction of the current segment being laid out
     dir: FlexDirection,
+    /// The direction of the current layout (left-to-right or right-to-left)
+    layout_direction: Direction,
     /// Is this segment a row
     is_row: bool,
     /// Is this segment a column
@@ -417,6 +419,7 @@ fn compute_constants(
     parent_size: Size<Option<f32>>,
 ) -> AlgoConstants {
     let dir = style.flex_direction();
+    let layout_direction = style.direction();
     let is_row = dir.is_row();
     let is_column = dir.is_column();
     let is_wrap = matches!(style.flex_wrap(), FlexWrap::Wrap | FlexWrap::WrapReverse);
@@ -455,6 +458,7 @@ fn compute_constants(
 
     AlgoConstants {
         dir,
+        layout_direction,
         is_row,
         is_column,
         is_wrap,
@@ -1731,10 +1735,12 @@ fn align_flex_items_along_cross_axis(
     max_baseline: f32,
     constants: &AlgoConstants,
 ) -> f32 {
+    println!("{:?}\tcas = {:?}\tsize= {:?}", child.node, child.align_self, child.size);
+    let is_layout_direction_reverse = constants.is_column && matches!(constants.layout_direction, Direction::Rtl);
     match child.align_self {
         AlignSelf::Start => 0.0,
         AlignSelf::FlexStart => {
-            if constants.is_wrap_reverse {
+            if constants.is_wrap_reverse ^ is_layout_direction_reverse {
                 free_space
             } else {
                 0.0
@@ -1742,7 +1748,7 @@ fn align_flex_items_along_cross_axis(
         }
         AlignSelf::End => free_space,
         AlignSelf::FlexEnd => {
-            if constants.is_wrap_reverse {
+            if constants.is_wrap_reverse ^ is_layout_direction_reverse {
                 0.0
             } else {
                 free_space
@@ -1755,7 +1761,7 @@ fn align_flex_items_along_cross_axis(
             } else {
                 // Until we support vertical writing modes, baseline alignment only makes sense if
                 // the constants.direction is row, so we treat it as flex-start alignment in columns.
-                if constants.is_wrap_reverse {
+                if constants.is_wrap_reverse ^ is_layout_direction_reverse {
                     free_space
                 } else {
                     0.0
@@ -1763,7 +1769,7 @@ fn align_flex_items_along_cross_axis(
             }
         }
         AlignSelf::Stretch => {
-            if constants.is_wrap_reverse {
+            if constants.is_wrap_reverse ^ is_layout_direction_reverse {
                 free_space
             } else {
                 0.0
@@ -1847,6 +1853,7 @@ fn calculate_flex_item(
     container_size: Size<f32>,
     node_inner_size: Size<Option<f32>>,
     direction: FlexDirection,
+    layout_direction: Direction,
 ) {
     let layout_output = tree.perform_child_layout(
         item.node,
@@ -1885,13 +1892,19 @@ fn calculate_flex_item(
         item.baseline = baseline_offset_main + inner_baseline;
     }
 
-    let location = match direction.is_row() {
-        true => Point { x: offset_main, y: offset_cross },
-        false => Point { x: offset_cross, y: offset_main },
-    };
     let scrollbar_size = Size {
         width: if item.overflow.y == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
         height: if item.overflow.x == Overflow::Scroll { item.scrollbar_width } else { 0.0 },
+    };
+    let location = match direction.is_row() {
+        true => Point {
+            x: match layout_direction {
+                Direction::Ltr => offset_main,
+                Direction::Rtl => container_size.width - (offset_main + size.width) + scrollbar_size.width,
+            },
+            y: offset_cross,
+        },
+        false => Point { x: offset_cross, y: offset_main },
     };
 
     tree.set_unrounded_layout(
@@ -1929,6 +1942,7 @@ fn calculate_layout_line(
     node_inner_size: Size<Option<f32>>,
     padding_border: Rect<f32>,
     direction: FlexDirection,
+    layout_direction: Direction,
 ) {
     let mut total_offset_main = padding_border.main_start(direction);
     let line_offset_cross = line.offset_cross;
@@ -1946,6 +1960,7 @@ fn calculate_layout_line(
                 container_size,
                 node_inner_size,
                 direction,
+                layout_direction,
             );
         }
     } else {
@@ -1961,6 +1976,7 @@ fn calculate_layout_line(
                 container_size,
                 node_inner_size,
                 direction,
+                layout_direction,
             );
         }
     }
@@ -1992,6 +2008,7 @@ fn final_layout_pass(
                 constants.node_inner_size,
                 constants.content_box_inset,
                 constants.dir,
+                constants.layout_direction,
             );
         }
     } else {
@@ -2006,6 +2023,7 @@ fn final_layout_pass(
                 constants.node_inner_size,
                 constants.content_box_inset,
                 constants.dir,
+                constants.layout_direction,
             );
         }
     }

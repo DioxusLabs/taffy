@@ -567,17 +567,30 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
                     maybe_grid_line.map(|line: OriginZeroLine| line.into_track_vec_index(final_row_counts))
                 });
 
+            let (left, right) = match direction {
+                Direction::Ltr => (
+                    maybe_col_indexes.start.map(|index| columns[index].offset).unwrap_or(border.left),
+                    maybe_col_indexes
+                        .end
+                        .map(|index| columns[index].offset)
+                        .unwrap_or(container_border_box.width - border.right - scrollbar_gutter.x),
+                ),
+                Direction::Rtl => (
+                    maybe_col_indexes
+                        .start
+                        .map(|index| columns[index].offset + border.left + scrollbar_gutter.x)
+                        .unwrap_or(border.left),
+                    maybe_col_indexes.end.map(|index| columns[index].offset).unwrap_or(container_border_box.width),
+                ),
+            };
             let grid_area = Rect {
                 top: maybe_row_indexes.start.map(|index| rows[index].offset).unwrap_or(border.top),
                 bottom: maybe_row_indexes
                     .end
                     .map(|index| rows[index].offset)
                     .unwrap_or(container_border_box.height - border.bottom - scrollbar_gutter.y),
-                left: maybe_col_indexes.start.map(|index| columns[index].offset).unwrap_or(border.left),
-                right: maybe_col_indexes
-                    .end
-                    .map(|index| columns[index].offset)
-                    .unwrap_or(container_border_box.width - border.right - scrollbar_gutter.x),
+                left,
+                right,
             };
             drop(child_style);
 
