@@ -1,3 +1,10 @@
+//! ## Example: Partial Tree with Directly Owned Children
+//!
+//! The following example demonstrate an implementation of Taffy's Partial trait and usage of the low-level compute APIs.
+//! This example uses directly owned children with NodeId's being index's into vec on parent node.
+//! Since an iterator created from a node can't access grandchildren, we are limited to only implement `TraversePartialTree`.
+//! See the [`crate::tree::traits`] module for more details about the low-level traits.
+
 mod common {
     pub mod image;
     pub mod text;
