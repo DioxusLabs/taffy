@@ -273,6 +273,18 @@ pub enum Direction {
     Rtl,
 }
 
+impl Direction {
+    #[inline]
+    pub(crate) fn is_ltr(&self) -> bool {
+        matches!(self, Direction::Rtl)
+    }
+
+    #[inline]
+    pub(crate) fn is_rtl(&self) -> bool {
+        matches!(self, Direction::Rtl)
+    }
+}
+
 /// How children overflowing their container should affect layout
 ///
 /// In CSS the primary effect of this property is to control whether contents of a parent container that overflow that container should

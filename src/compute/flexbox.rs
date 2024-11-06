@@ -1736,11 +1736,11 @@ fn align_flex_items_along_cross_axis(
     constants: &AlgoConstants,
 ) -> f32 {
     println!("{:?}\tcas = {:?}\tsize= {:?}", child.node, child.align_self, child.size);
-    let is_layout_direction_reverse = constants.is_column && matches!(constants.layout_direction, Direction::Rtl);
+    let cross_axis_should_reverse = constants.is_column && matches!(constants.layout_direction, Direction::Rtl);
     match child.align_self {
         AlignSelf::Start => 0.0,
         AlignSelf::FlexStart => {
-            if constants.is_wrap_reverse ^ is_layout_direction_reverse {
+            if constants.is_wrap_reverse ^ cross_axis_should_reverse {
                 free_space
             } else {
                 0.0
@@ -1748,7 +1748,7 @@ fn align_flex_items_along_cross_axis(
         }
         AlignSelf::End => free_space,
         AlignSelf::FlexEnd => {
-            if constants.is_wrap_reverse ^ is_layout_direction_reverse {
+            if constants.is_wrap_reverse ^ cross_axis_should_reverse {
                 0.0
             } else {
                 free_space
@@ -1761,7 +1761,7 @@ fn align_flex_items_along_cross_axis(
             } else {
                 // Until we support vertical writing modes, baseline alignment only makes sense if
                 // the constants.direction is row, so we treat it as flex-start alignment in columns.
-                if constants.is_wrap_reverse ^ is_layout_direction_reverse {
+                if constants.is_wrap_reverse ^ cross_axis_should_reverse {
                     free_space
                 } else {
                     0.0
@@ -1769,7 +1769,7 @@ fn align_flex_items_along_cross_axis(
             }
         }
         AlignSelf::Stretch => {
-            if constants.is_wrap_reverse ^ is_layout_direction_reverse {
+            if constants.is_wrap_reverse ^ cross_axis_should_reverse {
                 free_space
             } else {
                 0.0
@@ -1871,16 +1871,31 @@ fn calculate_flex_item(
         ..
     } = layout_output;
 
-    let offset_main = *total_offset_main
-        + item.offset_main
-        + item.margin.main_start(direction)
-        + (item.inset.main_start(direction).or(item.inset.main_end(direction).map(|pos| -pos)).unwrap_or(0.0));
+    let offset_main = if direction.is_row() && layout_direction.is_rtl() {
+        *total_offset_main
+            - item.offset_main
+            - item.margin.main_end(direction)
+            - (item.inset.main_end(direction).or(item.inset.main_start(direction).map(|pos| -pos)).unwrap_or(0.0))
+    } else {
+        *total_offset_main
+            + item.offset_main
+            + item.margin.main_start(direction)
+            + (item.inset.main_start(direction).or(item.inset.main_end(direction).map(|pos| -pos)).unwrap_or(0.0))
+    };
 
-    let offset_cross = total_offset_cross
-        + item.offset_cross
-        + line_offset_cross
-        + item.margin.cross_start(direction)
-        + (item.inset.cross_start(direction).or(item.inset.cross_end(direction).map(|pos| -pos)).unwrap_or(0.0));
+    let offset_cross = if false && direction.is_column() && layout_direction.is_rtl() {
+        total_offset_cross
+            - item.offset_cross
+            - line_offset_cross
+            - item.margin.cross_end(direction)
+            - (item.inset.cross_end(direction).or(item.inset.cross_start(direction).map(|pos| -pos)).unwrap_or(0.0))
+    } else {
+        total_offset_cross
+            + item.offset_cross
+            + line_offset_cross
+            + item.margin.cross_start(direction)
+            + (item.inset.cross_start(direction).or(item.inset.cross_end(direction).map(|pos| -pos)).unwrap_or(0.0))
+    };
 
     if direction.is_row() {
         let baseline_offset_cross = total_offset_cross + item.offset_cross + item.margin.cross_start(direction);
@@ -1898,9 +1913,10 @@ fn calculate_flex_item(
     };
     let location = match direction.is_row() {
         true => Point {
-            x: match layout_direction {
-                Direction::Ltr => offset_main,
-                Direction::Rtl => container_size.width - (offset_main + size.width) + scrollbar_size.width,
+            x: if layout_direction.is_rtl() {
+                container_size.width - (offset_main + size.width) + scrollbar_size.width
+            } else {
+                offset_main
             },
             y: offset_cross,
         },
@@ -1944,8 +1960,17 @@ fn calculate_layout_line(
     direction: FlexDirection,
     layout_direction: Direction,
 ) {
-    let mut total_offset_main = padding_border.main_start(direction);
+    let mut total_offset_main = if layout_direction.is_rtl() && direction.is_row() {
+        padding_border.main_end(direction)
+    } else {
+        padding_border.main_start(direction)
+    };
     let line_offset_cross = line.offset_cross;
+
+    let is_rtl_column = layout_direction.is_rtl() && direction.is_column();
+    if is_rtl_column {
+        *total_offset_cross -= line_offset_cross + line.cross_size;
+    }
 
     if direction.is_reverse() {
         for item in line.items.iter_mut().rev() {
@@ -1981,7 +2006,9 @@ fn calculate_layout_line(
         }
     }
 
-    *total_offset_cross += line_offset_cross + line.cross_size;
+    if !is_rtl_column {
+        *total_offset_cross += line_offset_cross + line.cross_size;
+    }
 }
 
 /// Do a final layout pass and collect the resulting layouts.
@@ -1991,7 +2018,11 @@ fn final_layout_pass(
     flex_lines: &mut [FlexLine],
     constants: &AlgoConstants,
 ) -> Size<f32> {
-    let mut total_offset_cross = constants.content_box_inset.cross_start(constants.dir);
+    let mut total_offset_cross = if constants.is_column && constants.layout_direction.is_rtl() {
+        constants.container_size.width - constants.content_box_inset.cross_end(constants.dir)
+    } else {
+        constants.content_box_inset.cross_start(constants.dir)
+    };
 
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut content_size = Size::ZERO;
