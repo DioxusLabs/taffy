@@ -1750,7 +1750,6 @@ fn align_flex_items_along_cross_axis(
     max_baseline: f32,
     constants: &AlgoConstants,
 ) -> f32 {
-    println!("{:?}\tcas = {:?}\tsize= {:?}", child.node, child.align_self, child.size);
     let cross_axis_should_reverse = constants.is_column && matches!(constants.layout_direction, Direction::Rtl);
     match child.align_self {
         AlignSelf::Start => 0.0,
