@@ -310,8 +310,8 @@ impl Layout {
         )
     }
 
-    /// Return the scroll width of the node.
-    /// The scroll width is the difference between the width and the content width, floored at zero
+    /// Return the scroll height of the node.
+    /// The scroll height is the difference between the height and the content height, floored at zero
     pub fn scroll_height(&self) -> f32 {
         f32_max(
             0.0,

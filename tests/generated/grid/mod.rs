@@ -158,6 +158,8 @@ mod grid_auto_fill_fixed_size;
 #[cfg(feature = "grid")]
 mod grid_auto_fill_with_empty_auto_track;
 #[cfg(feature = "grid")]
+mod grid_auto_fit_definite_percentage;
+#[cfg(feature = "grid")]
 mod grid_auto_fit_with_empty_auto_track;
 #[cfg(feature = "grid")]
 mod grid_auto_rows;

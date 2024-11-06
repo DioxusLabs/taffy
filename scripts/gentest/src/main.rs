@@ -1,6 +1,3 @@
-// This is a spurious warning. See https://github.com/rust-lang/rust-clippy/issues/13535
-#![allow(clippy::needless_return)]
-
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -80,9 +77,6 @@ async fn main() {
 
     info!("starting webdriver instance");
     let webdriver_url = "http://localhost:4444";
-
-    // TODO: call `.wait()` at an appropriate time (probably at the end of the process?)
-    #[allow(clippy::zombie_processes)]
     let mut webdriver_handle = Command::new("chromedriver")
         .arg("--port=4444")
         .spawn()
@@ -107,6 +101,7 @@ async fn main() {
 
     info!("killing webdriver instance...");
     webdriver_handle.kill().unwrap();
+    webdriver_handle.wait().unwrap();
 
     info!("generating test sources and concatenating...");
 
@@ -243,6 +238,14 @@ fn generate_test(name: impl AsRef<str>, description: &Value) -> TokenStream {
 fn generate_assertions(ident: &str, node: &Value, use_rounding: bool) -> TokenStream {
     let layout = if use_rounding { &node["smartRoundedLayout"] } else { &node["unroundedLayout"] };
 
+    fn is_scrollable(overflow: &Value) -> bool {
+        match overflow {
+            Value::String(ref value) => matches!(value.as_ref(), "hidden" | "scroll" | "auto"),
+            _ => false,
+        }
+    }
+    let is_scroll_container = is_scrollable(&node["style"]["overflowX"]) || is_scrollable(&node["style"]["overflowY"]);
+
     let read_f32 = |s: &str| layout[s].as_f64().unwrap() as f32;
     let read_naive_f32 = |s: &str| node["naivelyRoundedLayout"][s].as_f64().unwrap() as f32;
     let width = read_f32("width");
@@ -265,33 +268,40 @@ fn generate_assertions(ident: &str, node: &Value, use_rounding: bool) -> TokenSt
 
     let ident = Ident::new(ident, Span::call_site());
 
-    if use_rounding {
+    // The scrollWidth reading from chrome is only accurate if the node is scroll container. So only assert in that case.
+    // TODO: accurately test content size in the non-scroll-container case.
+    let scroll_assertions = if is_scroll_container {
         quote!(
-            #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
-            let layout @ Layout { size, location, .. } = taffy.layout(#ident).unwrap();
-            assert_eq!(size.width, #width, "width of node {:?}. Expected {}. Actual {}", #ident,  #width, size.width);
-            assert_eq!(size.height, #height, "height of node {:?}. Expected {}. Actual {}", #ident,  #height, size.height);
-            assert_eq!(location.x, #x, "x of node {:?}. Expected {}. Actual {}", #ident,  #x, location.x);
-            assert_eq!(location.y, #y, "y of node {:?}. Expected {}. Actual {}", #ident,  #y, location.y);
             #[cfg(feature = "content_size")]
             assert_eq!(layout.scroll_width(), #scroll_width, "scroll_width of node {:?}. Expected {}. Actual {}", #ident, #scroll_width, layout.scroll_width());
             #[cfg(feature = "content_size")]
             assert_eq!(layout.scroll_height(), #scroll_height, "scroll_height of node {:?}. Expected {}. Actual {}", #ident, #scroll_height, layout.scroll_height());
+        )
+    } else {
+        quote!()
+    };
+
+    if use_rounding {
+        quote!(
+            let layout = taffy.layout(#ident).unwrap();
+            let Layout { size, location, .. } = layout;
+            assert_eq!(size.width, #width, "width of node {:?}. Expected {}. Actual {}", #ident,  #width, size.width);
+            assert_eq!(size.height, #height, "height of node {:?}. Expected {}. Actual {}", #ident,  #height, size.height);
+            assert_eq!(location.x, #x, "x of node {:?}. Expected {}. Actual {}", #ident,  #x, location.x);
+            assert_eq!(location.y, #y, "y of node {:?}. Expected {}. Actual {}", #ident,  #y, location.y);
+            #scroll_assertions
 
             #children
         )
     } else {
         quote!(
-            #[cfg_attr(not(feature = "content_size"), allow(unused_variables))]
-            let layout @ Layout { size, location, .. } = taffy.layout(#ident).unwrap();
+            let layout = taffy.layout(#ident).unwrap();
+            let Layout { size, location, .. } = layout;
             assert!((size.width - #width).abs() < 0.1, "width of node {:?}. Expected {}. Actual {}", #ident, #width, size.width);
             assert!((size.height - #height).abs() < 0.1, "height of node {:?}. Expected {}. Actual {}", #ident, #height, size.height);
             assert!((location.x - #x).abs() < 0.1, "x of node {:?}. Expected {}. Actual {}", #ident, #x, location.x);
             assert!((location.y - #y).abs() < 0.1, "y of node {:?}. Expected {}. Actual {}", #ident, #y, location.y);
-            #[cfg(feature = "content_size")]
-            assert!((layout.scroll_width() - #scroll_width).abs() < 0.1, "scroll_width of node {:?}. Expected {}. Actual {}", #ident, #scroll_width, layout.scroll_width());
-            #[cfg(feature = "content_size")]
-            assert!((layout.scroll_height() - #scroll_height).abs() < 0.1, "scroll_height of node {:?}. Expected {}. Actual {}", #ident, #scroll_height, layout.scroll_height());
+            #scroll_assertions
 
             #children
         )

@@ -114,7 +114,7 @@ impl NodeData {
         }
     }
 
-    /// Marks a node and all of its parents (recursively) as dirty
+    /// Marks a node and all of its ancestors as requiring relayout
     ///
     /// This clears any cached data and signals that the data must be recomputed.
     #[inline]
@@ -740,11 +740,9 @@ impl<NodeContext> TaffyTree<NodeContext> {
         }
     }
 
-    /// Marks the layout computation of this node and its children as outdated
+    /// Marks the layout of this node and its ancestors as outdated
     ///
-    /// Performs a recursive depth-first search up the tree until the root node is reached
-    ///
-    /// WARNING: this will stack-overflow if the tree contains a cycle
+    /// WARNING: this may stack-overflow if the tree contains a cycle
     pub fn mark_dirty(&mut self, node: NodeId) -> TaffyResult<()> {
         /// WARNING: this will stack-overflow if the tree contains a cycle
         fn mark_dirty_recursive(
@@ -764,7 +762,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
         Ok(())
     }
 
-    /// Indicates whether the layout of this node (and its children) need to be recomputed
+    /// Indicates whether the layout of this node needs to be recomputed
     pub fn dirty(&self, node: NodeId) -> TaffyResult<bool> {
         Ok(self.nodes[node.into()].cache.is_empty())
     }

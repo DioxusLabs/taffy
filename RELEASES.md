@@ -1,5 +1,14 @@
 # Release Notes
 
+## 0.6.1
+
+### Fixes
+
+- Fix calculation of `auto-fill`/`auto-fit` repetition count when container has a definite percentage size (#722)
+- Fix min-size style not affecting intrinsic sizes (#723)
+- Fix documentation of dirty and mark_dirty functions (#724)
+- Fix intrinsic size of scroll containers that have a small explicit flex-basis (#728)
+
 ## 0.6.0
 
 ### Highlights
