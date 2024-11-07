@@ -166,7 +166,10 @@ impl Iterator for TaffyTreeChildIter<'_> {
 
 // TraversePartialTree impl for TaffyTree
 impl<NodeContext> TraversePartialTree for TaffyTree<NodeContext> {
-    type ChildIter<'a> = TaffyTreeChildIter<'a> where Self: 'a;
+    type ChildIter<'a>
+        = TaffyTreeChildIter<'a>
+    where
+        Self: 'a;
 
     #[inline(always)]
     fn child_ids(&self, parent_node_id: NodeId) -> Self::ChildIter<'_> {
@@ -243,7 +246,10 @@ where
     MeasureFunction:
         FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
 {
-    type ChildIter<'a> = TaffyTreeChildIter<'a> where Self: 'a;
+    type ChildIter<'a>
+        = TaffyTreeChildIter<'a>
+    where
+        Self: 'a;
 
     #[inline(always)]
     fn child_ids(&self, parent_node_id: NodeId) -> Self::ChildIter<'_> {
@@ -274,8 +280,14 @@ where
     MeasureFunction:
         FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
 {
-    type CoreContainerStyle<'a> = &'a Style where Self : 'a;
-    type CacheMut<'b> = &'b mut Cache where Self : 'b;
+    type CoreContainerStyle<'a>
+        = &'a Style
+    where
+        Self: 'a;
+    type CacheMut<'b>
+        = &'b mut Cache
+    where
+        Self: 'b;
 
     #[inline(always)]
     fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_> {
@@ -349,8 +361,14 @@ where
     MeasureFunction:
         FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
 {
-    type BlockContainerStyle<'a> = &'a Style where Self: 'a;
-    type BlockItemStyle<'a> = &'a Style where Self: 'a;
+    type BlockContainerStyle<'a>
+        = &'a Style
+    where
+        Self: 'a;
+    type BlockItemStyle<'a>
+        = &'a Style
+    where
+        Self: 'a;
 
     #[inline(always)]
     fn get_block_container_style(&self, node_id: NodeId) -> Self::BlockContainerStyle<'_> {
@@ -369,8 +387,14 @@ where
     MeasureFunction:
         FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
 {
-    type FlexboxContainerStyle<'a> = &'a Style where Self: 'a;
-    type FlexboxItemStyle<'a> = &'a Style where Self: 'a;
+    type FlexboxContainerStyle<'a>
+        = &'a Style
+    where
+        Self: 'a;
+    type FlexboxItemStyle<'a>
+        = &'a Style
+    where
+        Self: 'a;
 
     #[inline(always)]
     fn get_flexbox_container_style(&self, node_id: NodeId) -> Self::FlexboxContainerStyle<'_> {
@@ -389,8 +413,14 @@ where
     MeasureFunction:
         FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
 {
-    type GridContainerStyle<'a> = &'a Style where Self: 'a;
-    type GridItemStyle<'a> = &'a Style where Self: 'a;
+    type GridContainerStyle<'a>
+        = &'a Style
+    where
+        Self: 'a;
+    type GridItemStyle<'a>
+        = &'a Style
+    where
+        Self: 'a;
 
     #[inline(always)]
     fn get_grid_container_style(&self, node_id: NodeId) -> Self::GridContainerStyle<'_> {

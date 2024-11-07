@@ -175,8 +175,14 @@ impl taffy::FlexboxItemStyle for TaffyStyloStyle {
 }
 
 impl taffy::GridContainerStyle for TaffyStyloStyle {
-    type TemplateTrackList<'a> = Vec<taffy::TrackSizingFunction> where Self: 'a;
-    type AutoTrackList<'a> = Vec<taffy::NonRepeatedTrackSizingFunction> where Self: 'a;
+    type TemplateTrackList<'a>
+        = Vec<taffy::TrackSizingFunction>
+    where
+        Self: 'a;
+    type AutoTrackList<'a>
+        = Vec<taffy::NonRepeatedTrackSizingFunction>
+    where
+        Self: 'a;
 
     #[inline]
     fn grid_template_rows(&self) -> Self::TemplateTrackList<'_> {
