@@ -139,10 +139,15 @@ impl taffy::TraversePartialTree for Tree {
 impl taffy::TraverseTree for Tree {}
 
 impl taffy::LayoutPartialTree for Tree {
-    type CoreContainerStyle<'a> = &'a Style where
+    type CoreContainerStyle<'a>
+        = &'a Style
+    where
         Self: 'a;
 
-    type CacheMut<'b> = &'b mut Cache where Self: 'b;
+    type CacheMut<'b>
+        = &'b mut Cache
+    where
+        Self: 'b;
 
     fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_> {
         &self.node_from_id(node_id).style
@@ -181,10 +186,14 @@ impl taffy::LayoutPartialTree for Tree {
 }
 
 impl taffy::LayoutFlexboxContainer for Tree {
-    type FlexboxContainerStyle<'a> = &'a Style where
+    type FlexboxContainerStyle<'a>
+        = &'a Style
+    where
         Self: 'a;
 
-    type FlexboxItemStyle<'a> = &'a Style where
+    type FlexboxItemStyle<'a>
+        = &'a Style
+    where
         Self: 'a;
 
     fn get_flexbox_container_style(&self, node_id: NodeId) -> Self::FlexboxContainerStyle<'_> {
@@ -197,10 +206,14 @@ impl taffy::LayoutFlexboxContainer for Tree {
 }
 
 impl taffy::LayoutGridContainer for Tree {
-    type GridContainerStyle<'a> = &'a Style where
+    type GridContainerStyle<'a>
+        = &'a Style
+    where
         Self: 'a;
 
-    type GridItemStyle<'a> = &'a Style where
+    type GridItemStyle<'a>
+        = &'a Style
+    where
         Self: 'a;
 
     fn get_grid_container_style(&self, node_id: NodeId) -> Self::GridContainerStyle<'_> {
