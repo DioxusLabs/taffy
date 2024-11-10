@@ -9,7 +9,9 @@ use crate::util::sys::f32_max;
 use crate::util::sys::Vec;
 use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
-use crate::{BlockContainerStyle, BlockItemStyle, BoxGenerationMode, BoxSizing, LayoutBlockContainer, TextAlign};
+use crate::{
+    BlockContainerStyle, BlockItemStyle, BoxGenerationMode, BoxSizing, Direction, LayoutBlockContainer, TextAlign,
+};
 
 #[cfg(feature = "content_size")]
 use super::common::content_size::compute_content_size_contribution;
@@ -25,6 +27,9 @@ struct BlockItem {
 
     /// Items that are tables don't have stretch sizing applied to them
     is_table: bool,
+
+    /// Direction (LTR or RTL)
+    direction: Direction,
 
     /// The base size of this item
     size: Size<Option<f32>>,
@@ -194,6 +199,7 @@ fn compute_inner(tree: &mut impl LayoutBlockContainer, node_id: NodeId, inputs: 
         || matches!(min_size.height, Some(h) if h > 0.0);
 
     let text_align = style.text_align();
+    let direction = style.direction();
 
     drop(style);
 
@@ -257,6 +263,7 @@ fn compute_inner(tree: &mut impl LayoutBlockContainer, node_id: NodeId, inputs: 
                 Size::NONE,
                 Size::MAX_CONTENT,
                 SizingMode::InherentSize,
+                direction,
                 Line::FALSE,
             );
         }
@@ -314,6 +321,7 @@ fn generate_item_list(
                 node_id: child_node_id,
                 order: order as u32,
                 is_table: child_style.is_table(),
+                direction: child_style.direction(),
                 size: child_style
                     .size()
                     .maybe_resolve(node_inner_size)
@@ -369,6 +377,7 @@ fn determine_content_based_container_width(
                 Size::NONE,
                 available_space.map_width(|w| w.maybe_sub(item_x_margin_sum)),
                 SizingMode::InherentSize,
+                item.direction,
                 Line::TRUE,
             );
 
@@ -434,6 +443,7 @@ fn perform_final_layout_on_in_flow_children(
                 parent_size,
                 available_space.map_width(|w| w.maybe_sub(item_non_auto_x_margin_sum)),
                 SizingMode::InherentSize,
+                item.direction,
                 Line::TRUE,
             );
             let final_size = item_layout.size;
@@ -649,6 +659,7 @@ fn perform_absolute_layout_on_absolute_children(
                 height: AvailableSpace::Definite(area_height.maybe_clamp(min_size.height, max_size.height)),
             },
             SizingMode::ContentSize,
+            item.direction,
             Line::FALSE,
         );
         let measured_size = layout_output.size;

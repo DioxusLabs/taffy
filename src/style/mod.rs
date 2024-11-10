@@ -55,6 +55,12 @@ pub trait CoreStyle {
         BoxSizing::BorderBox
     }
 
+    /// Which direction
+    #[inline(always)]
+    fn direction(&self) -> Direction {
+        Style::DEFAULT.direction
+    }
+
     // Overflow properties
     /// How children overflowing their container should affect layout
     #[inline(always)]
@@ -256,6 +262,29 @@ impl Default for BoxSizing {
     }
 }
 
+/// TODO: Documentation
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum Direction {
+    #[default]
+    /// Left-to-right
+    Ltr,
+    /// Right-to-left
+    Rtl,
+}
+
+impl Direction {
+    #[inline]
+    pub(crate) fn is_ltr(&self) -> bool {
+        matches!(self, Direction::Rtl)
+    }
+
+    #[inline]
+    pub(crate) fn is_rtl(&self) -> bool {
+        matches!(self, Direction::Rtl)
+    }
+}
+
 /// How children overflowing their container should affect layout
 ///
 /// In CSS the primary effect of this property is to control whether contents of a parent container that overflow that container should
@@ -335,6 +364,8 @@ pub struct Style {
     pub item_is_table: bool,
     /// Should size styles apply to the content box or the border box of the node
     pub box_sizing: BoxSizing,
+    /// The direction of text, table columns, and horizontal overflow
+    pub direction: Direction,
 
     // Overflow properties
     /// How children overflowing their container should affect layout
@@ -461,6 +492,7 @@ impl Style {
         display: Display::DEFAULT,
         item_is_table: false,
         box_sizing: BoxSizing::BorderBox,
+        direction: Direction::Ltr,
         overflow: Point { x: Overflow::Visible, y: Overflow::Visible },
         scrollbar_width: 0.0,
         position: Position::Relative,
@@ -543,6 +575,10 @@ impl CoreStyle for Style {
         self.box_sizing
     }
     #[inline(always)]
+    fn direction(&self) -> Direction {
+        self.direction
+    }
+    #[inline(always)]
     fn overflow(&self) -> Point<Overflow> {
         self.overflow
     }
@@ -600,6 +636,10 @@ impl<T: CoreStyle> CoreStyle for &'_ T {
     #[inline(always)]
     fn box_sizing(&self) -> BoxSizing {
         (*self).box_sizing()
+    }
+    #[inline(always)]
+    fn direction(&self) -> Direction {
+        (*self).direction()
     }
     #[inline(always)]
     fn overflow(&self) -> Point<Overflow> {
@@ -935,6 +975,7 @@ mod tests {
             display: Default::default(),
             item_is_table: false,
             box_sizing: Default::default(),
+            direction: Default::default(),
             overflow: Default::default(),
             scrollbar_width: 0.0,
             position: Default::default(),

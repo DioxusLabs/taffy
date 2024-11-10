@@ -1,3 +1,9 @@
+[unstable]
+codegen-backend = true
+
+[profile.dev]
+codegen-backend = "cranelift"
+
 [alias]
 gentest = "run --release --package gentest --"
 import-yoga-tests = "run --package import-yoga-tests --"
