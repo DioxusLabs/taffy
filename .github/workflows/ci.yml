@@ -200,7 +200,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run format script
-        run: cargo format-fixtures
+        run: cargo run -p format-fixtures
       - name: Ensure no changes
         run: |
           if [ -z "$(git status --porcelain)" ]; then 
@@ -216,7 +216,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo xbench --no-run
+      - run: cargo bench -p taffy_benchmarks --no-run
         name: Build benchmarks
         env:
           RUSTFLAGS: "-C opt-level=0"
@@ -227,7 +227,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo xbench --no-run --features yoga
+      - run: cargo bench -p taffy_benchmarks --no-run --features yoga
         name: Build benchmarks (w/yoga)
         env:
           RUSTFLAGS: "-C opt-level=0"
