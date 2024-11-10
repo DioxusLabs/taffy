@@ -20,10 +20,10 @@ pub use self::dimension::{Dimension, LengthPercentage, LengthPercentageAuto};
 
 #[cfg(feature = "block_layout")]
 pub use self::block::{BlockContainerStyle, BlockItemStyle, TextAlign};
-#[cfg(feature = "float_layout")]
-pub use self::float::Float;
 #[cfg(feature = "flexbox")]
 pub use self::flex::{FlexDirection, FlexWrap, FlexboxContainerStyle, FlexboxItemStyle};
+#[cfg(feature = "float_layout")]
+pub use self::float::{Clear, Float};
 #[cfg(feature = "grid")]
 pub(crate) use self::grid::{GenericGridPlacement, OriginZeroGridPlacement};
 #[cfg(feature = "grid")]
