@@ -1,3 +1,4 @@
+use std::ffi::OsStr;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -65,6 +66,7 @@ async fn main() {
     let mut fixtures: Vec<_> = WalkDir::new(fixtures_root.clone())
         .into_iter()
         .filter_map(|a| a.ok())
+        .filter(|f| !f.path().components().any(|c| c.as_os_str() == OsStr::new("_scratch")))
         .filter(|f| !f.file_name().to_string_lossy().starts_with('x')) // ignore tests beginning with x
         .filter(|f| f.path().is_file() && f.path().extension().map(|p| p == "html").unwrap_or(false))
         .map(|f| {

@@ -330,10 +330,8 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
     rerun_column_sizing = parent_width_indefinite && has_percentage_column;
 
     if !rerun_column_sizing {
-        let min_content_contribution_changed = items
-            .iter_mut()
-            .filter(|item| item.crosses_intrinsic_column)
-            .map(|item| {
+        let min_content_contribution_changed =
+            items.iter_mut().filter(|item| item.crosses_intrinsic_column).any(|item| {
                 let available_space = item.available_space(
                     AbstractAxis::Inline,
                     &rows,
@@ -351,8 +349,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
                 item.minimum_contribution_cache.width = None;
 
                 has_changed
-            })
-            .any(|has_changed| has_changed);
+            });
         rerun_column_sizing = min_content_contribution_changed;
     } else {
         // Clear intrisic width caches
@@ -392,10 +389,8 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
         rerun_row_sizing = parent_height_indefinite && has_percentage_row;
 
         if !rerun_row_sizing {
-            let min_content_contribution_changed = items
-                .iter_mut()
-                .filter(|item| item.crosses_intrinsic_column)
-                .map(|item| {
+            let min_content_contribution_changed =
+                items.iter_mut().filter(|item| item.crosses_intrinsic_column).any(|item| {
                     let available_space = item.available_space(
                         AbstractAxis::Block,
                         &columns,
@@ -413,8 +408,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
                     item.minimum_contribution_cache.height = None;
 
                     has_changed
-                })
-                .any(|has_changed| has_changed);
+                });
             rerun_row_sizing = min_content_contribution_changed;
         } else {
             items.iter_mut().for_each(|item| {
