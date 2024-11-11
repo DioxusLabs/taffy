@@ -11,6 +11,30 @@ use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{BlockContainerStyle, BlockItemStyle, BoxGenerationMode, BoxSizing, LayoutBlockContainer, TextAlign};
 
+#[cfg(feature = "float_layout")]
+use super::{FloatContext, FloatDirection, FloatedBox};
+
+/// Context for positioning Block and Float boxes within a Block Formatting Context
+pub struct BlockFormattingContext {
+    #[cfg(feature = "float_layout")]
+    float_context: super::FloatContext,
+}
+
+impl BlockFormattingContext {
+    /// Create a new `BlockFormattingContext` with the specified width constraint
+    pub fn new(available_space: AvailableSpace) -> Self {
+        Self {
+            #[cfg(feature = "float_layout")]
+            float_context: FloatContext::new(available_space),
+        }
+    }
+
+    #[cfg(feature = "float_layout")]
+    pub fn place_floated_box(&mut self, floated_box: FloatedBox, float_direction: FloatDirection) -> Point<f32> {
+        self.float_context.place_floated_box(floated_box, float_direction)
+    }
+}
+
 #[cfg(feature = "content_size")]
 use super::common::content_size::compute_content_size_contribution;
 
@@ -65,6 +89,7 @@ pub fn compute_block_layout(
     tree: &mut impl LayoutBlockContainer,
     node_id: NodeId,
     inputs: LayoutInput,
+    bfc: Option<&mut BlockFormattingContext>,
 ) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, run_mode, .. } = inputs;
     let style = tree.get_block_container_style(node_id);
@@ -117,12 +142,28 @@ pub fn compute_block_layout(
         }
     }
 
+    // Unwrap the block formatting context if one was passed, or else create a new one
+    let mut new_bfc: BlockFormattingContext;
+    let bfc_ref: &mut BlockFormattingContext;
+    match bfc {
+        Some(inherited_bfc) => bfc_ref = inherited_bfc,
+        None => {
+            new_bfc = BlockFormattingContext::new(inputs.available_space.width);
+            bfc_ref = &mut new_bfc;
+        }
+    }
+
     debug_log!("BLOCK");
-    compute_inner(tree, node_id, LayoutInput { known_dimensions: styled_based_known_dimensions, ..inputs })
+    compute_inner(tree, node_id, LayoutInput { known_dimensions: styled_based_known_dimensions, ..inputs }, bfc_ref)
 }
 
 /// Computes the layout of [`LayoutBlockContainer`] according to the block layout algorithm
-fn compute_inner(tree: &mut impl LayoutBlockContainer, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput {
+fn compute_inner(
+    tree: &mut impl LayoutBlockContainer,
+    node_id: NodeId,
+    inputs: LayoutInput,
+    bfc: &mut BlockFormattingContext,
+) -> LayoutOutput {
     let LayoutInput {
         known_dimensions, parent_size, available_space, run_mode, vertical_margins_are_collapsible, ..
     } = inputs;

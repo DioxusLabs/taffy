@@ -26,11 +26,12 @@
 //!
 //! <https://www.w3.org/TR/CSS22/visuren.html#floats>
 
-use crate::AvailableSpace;
+use crate::{AvailableSpace, Point};
 
 /// A context for placing floated boxes
+#[derive(Debug, Clone)]
 pub struct FloatContext {
-    available_width: f32,
+    available_space: AvailableSpace,
     /// A list of left-floated boxes within the context
     left_floats: Vec<PlacedFloatedBox>,
     /// A list of right-floated boxes within the context
@@ -40,13 +41,14 @@ pub struct FloatContext {
     segments: Vec<Segment>,
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum FloatDirection {
     Left,
     Right,
 }
 
 /// A floated box to place within the context
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct FloatedBox {
     /// A user defined ID for the box
     id: u64,
@@ -55,19 +57,23 @@ pub struct FloatedBox {
 }
 
 /// A floated box
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 struct PlacedFloatedBox {
+    /// A user defined ID for the box
+    id: u64,
+    width: f32,
+    height: f32,
     /// Distance from the edge of the container that the box is floated towards
     /// (distance from the left for left floats, from the right for right floats)
     x_inset: f32,
     y: f32,
-    inner: FloatedBox,
 }
 
 impl PlacedFloatedBox {
-    const DEFAULT: Self = Self { x_inset: 0.0, y: 0.0, inner: FloatedBox { id: 0, width: 0.0, height: 0.0 } };
+    const DEFAULT: Self = Self { id: 0, width: 0.0, height: 0.0, x_inset: 0.0, y: 0.0 };
 }
 
+#[derive(Debug, Clone)]
 struct Segment {
     y_start: f32,
     y_end: f32,
@@ -77,18 +83,57 @@ struct Segment {
 
 impl FloatContext {
     /// Create a new empty `FloatContext`
-    pub fn new(available_width: f32) -> Self {
-        Self { available_width, left_floats: Vec::new(), right_floats: Vec::new(), segments: Vec::new() }
+    pub fn new(available_space: AvailableSpace) -> Self {
+        Self { available_space, left_floats: Vec::new(), right_floats: Vec::new(), segments: Vec::new() }
     }
 
     /// Position a floated box with the context
-    pub fn place_box(&mut self, floated_box: FloatedBox, float_direction: FloatDirection) {
+    pub fn place_floated_box(&mut self, floated_box: FloatedBox, float_direction: FloatDirection) -> Point<f32> {
         let last_float = self.get_float_list(float_direction).last().unwrap_or(&PlacedFloatedBox::DEFAULT);
 
-        let y_threshold = if self.available_width - last_float.inner.width < 0.0 {
-            last_float.y + last_float.inner.height
-        } else {
-            last_float.y
+        let (x_inset, y): (f32, f32) = match self.available_space {
+            AvailableSpace::MinContent => {
+                let x_inset = 0.0;
+                let y = last_float.y + last_float.height;
+                (x_inset, y)
+            }
+            AvailableSpace::MaxContent => {
+                let x_inset = last_float.x_inset + last_float.width;
+                let y = last_float.y;
+                (x_inset, y)
+            }
+            AvailableSpace::Definite(available_width) => {
+                let line_available_width = available_width - last_float.x_inset - last_float.width;
+
+                if line_available_width < floated_box.width {
+                    let x_inset = 0.0;
+                    let y = last_float.y + last_float.height;
+                    (x_inset, y)
+                } else {
+                    let x_inset = last_float.x_inset + last_float.width;
+                    let y = last_float.y;
+                    (x_inset, y)
+                }
+            }
+        };
+
+        let placed_floated_box =
+            PlacedFloatedBox { id: floated_box.id, width: floated_box.width, height: floated_box.height, x_inset, y };
+
+        match float_direction {
+            FloatDirection::Left => self.left_floats.push(placed_floated_box),
+            FloatDirection::Right => self.right_floats.push(placed_floated_box),
+        }
+
+        // Return the (x, y) coordinates of the positioned box
+        return match self.available_space {
+            // Position won't actually be used if we're layouting under a min-content
+            // or max-content constraint, so just return (0, 0)
+            AvailableSpace::MinContent | AvailableSpace::MaxContent => Point::ZERO,
+            AvailableSpace::Definite(width) => match float_direction {
+                FloatDirection::Left => Point { x: x_inset, y },
+                FloatDirection::Right => Point { x: width - x_inset, y },
+            },
         };
     }
 
