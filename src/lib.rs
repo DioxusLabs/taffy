@@ -118,6 +118,7 @@ pub use crate::tree::TaffyTree;
 #[doc(inline)]
 pub use crate::util::print_tree;
 
+pub use crate::compute::*;
 pub use crate::geometry::*;
 pub use crate::style::*;
 pub use crate::tree::*;
