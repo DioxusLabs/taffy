@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="../../scripts/gentest/test_helper.js"></script>
+  <link rel="stylesheet" type="text/css" href="../../scripts/gentest/test_base_style.css">
+  <title>
+    min width causing height issues
+  </title>
+</head>
+<body>
+
+<div id="test-root" style="display: flex; background-color: grey;">
+  <div style="display: flex; flex-direction: column; width: 50px;">
+    <div style="display: flex; min-width: 50px; flex-wrap: wrap; gap: 10px; background-color: blue;">
+      <div style="width: 20px; height: 40px; background-color: red;"></div>
+      <div style="width: 20px; height: 40px; background-color: red;"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

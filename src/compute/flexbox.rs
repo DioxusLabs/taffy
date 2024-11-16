@@ -640,10 +640,21 @@ fn determine_flex_base_size(
         let cross_axis_margin_sum = constants.margin.cross_axis_sum(dir);
         let child_min_cross = child.min_size.cross(dir).maybe_add(cross_axis_margin_sum);
         let child_max_cross = child.max_size.cross(dir).maybe_add(cross_axis_margin_sum);
-        let cross_axis_available_space: AvailableSpace = available_space
-            .cross(dir)
-            .map_definite_value(|val| cross_axis_parent_size.unwrap_or(val))
-            .maybe_clamp(child_min_cross, child_max_cross);
+
+        // Clamp available space by min- and max- size
+        let cross_axis_available_space: AvailableSpace = match available_space.cross(dir) {
+            AvailableSpace::Definite(val) => AvailableSpace::Definite(
+                cross_axis_parent_size.unwrap_or(val).maybe_clamp(child_min_cross, child_max_cross),
+            ),
+            AvailableSpace::MinContent => match child_min_cross {
+                Some(min) => AvailableSpace::Definite(min),
+                None => AvailableSpace::MinContent,
+            },
+            AvailableSpace::MaxContent => match child_max_cross {
+                Some(max) => AvailableSpace::Definite(max),
+                None => AvailableSpace::MaxContent,
+            },
+        };
 
         // Known dimensions for child sizing
         let child_known_dimensions = {
