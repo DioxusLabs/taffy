@@ -1,5 +1,11 @@
 # Release Notes
 
+## 0.6.2
+
+### Fixes
+
+- Fix: clamp indefinite available space by min- and max- size as appropriate (#742)
+
 ## 0.6.1
 
 ### Fixes
