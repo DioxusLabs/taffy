@@ -626,8 +626,12 @@ impl<NodeContext> TaffyTree<NodeContext> {
         }
 
         // Build up relation node <-> child
-        for child in children {
-            self.parents[(*child).into()] = Some(parent);
+        for &child in children {
+            // Remove child from previous parent
+            if let Some(previous_parent) = self.parents[child.into()] {
+                self.remove_child(previous_parent, child).unwrap();
+            }
+            self.parents[child.into()] = Some(parent);
         }
 
         let parent_children = &mut self.children[parent_key];
