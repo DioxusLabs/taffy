@@ -1238,4 +1238,16 @@ mod tests {
         assert_eq!(layout.location.x, 10f32);
         assert_eq!(layout.location.y, 30f32);
     }
+
+    #[test]
+    fn set_children_reparents() {
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
+        let child = taffy.new_leaf(Style::default()).unwrap();
+        let old_parent = taffy.new_with_children(Style::default(), &[child]).unwrap();
+
+        let new_parent = taffy.new_leaf(Style::default()).unwrap();
+        taffy.set_children(new_parent, &[child]).unwrap();
+
+        assert!(taffy.children(old_parent).unwrap().is_empty());
+    }
 }
