@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn block_margin_y_simple_negative_percentage_other__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
@@ -63,8 +63,8 @@ fn block_margin_y_simple_negative_percentage_other__border_box() {
 #[allow(non_snake_case)]
 fn block_margin_y_simple_negative_percentage_other__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,

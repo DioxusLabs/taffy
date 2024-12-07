@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn block_absolute_margin_auto_left_right_child_bigger_than_parent_with_inset__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
@@ -61,8 +61,8 @@ fn block_absolute_margin_auto_left_right_child_bigger_than_parent_with_inset__bo
 #[allow(non_snake_case)]
 fn block_absolute_margin_auto_left_right_child_bigger_than_parent_with_inset__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,

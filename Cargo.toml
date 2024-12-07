@@ -76,6 +76,7 @@ profile = ["std"]
 
 [dev-dependencies]
 serde_json = "1.0.93"
+taffy_test_helpers = { path = "tests/common"}
 
 # Enable default features for tests and examples
 taffy = { path = "." }
@@ -99,5 +100,5 @@ members = [
     "scripts/gentest",
     "scripts/format-fixtures",
     "scripts/import-yoga-tests",
-    "benches", "examples/cosmic_text",
+    "benches", "examples/cosmic_text", "tests/common",
 ]

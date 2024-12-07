@@ -2,9 +2,9 @@
 #[allow(non_snake_case)]
 fn measure_child_constraint_padding_parent__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
-    let node0 = taffy . new_leaf_with_context (taffy :: style :: Style { .. Default :: default () } , crate :: TextMeasure { text_content : "HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH" , writing_mode : crate :: WritingMode :: Horizontal , _aspect_ratio : None , } ,) . unwrap () ;
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
+    let node0 = taffy . new_leaf_with_context (taffy :: style :: Style { .. Default :: default () } , crate :: TestNodeContext :: ahem_text ("HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH" , crate :: WritingMode :: Horizontal) ,) . unwrap () ;
     let node = taffy
         .new_with_children(
             taffy::style::Style {
@@ -45,9 +45,9 @@ fn measure_child_constraint_padding_parent__border_box() {
 #[allow(non_snake_case)]
 fn measure_child_constraint_padding_parent__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
-    let node0 = taffy . new_leaf_with_context (taffy :: style :: Style { box_sizing : taffy :: style :: BoxSizing :: ContentBox , .. Default :: default () } , crate :: TextMeasure { text_content : "HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH" , writing_mode : crate :: WritingMode :: Horizontal , _aspect_ratio : None , } ,) . unwrap () ;
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
+    let node0 = taffy . new_leaf_with_context (taffy :: style :: Style { box_sizing : taffy :: style :: BoxSizing :: ContentBox , .. Default :: default () } , crate :: TestNodeContext :: ahem_text ("HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH\u{200b}HHHHHHHHHH" , crate :: WritingMode :: Horizontal) ,) . unwrap () ;
     let node = taffy
         .new_with_children(
             taffy::style::Style {

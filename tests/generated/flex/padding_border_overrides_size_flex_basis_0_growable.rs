@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn padding_border_overrides_size_flex_basis_0_growable__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
@@ -67,8 +67,8 @@ fn padding_border_overrides_size_flex_basis_0_growable__border_box() {
 #[allow(non_snake_case)]
 fn padding_border_overrides_size_flex_basis_0_growable__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,

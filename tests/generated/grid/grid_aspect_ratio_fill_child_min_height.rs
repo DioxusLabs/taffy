@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn grid_aspect_ratio_fill_child_min_height__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
@@ -46,8 +46,8 @@ fn grid_aspect_ratio_fill_child_min_height__border_box() {
 #[allow(non_snake_case)]
 fn grid_aspect_ratio_fill_child_min_height__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,

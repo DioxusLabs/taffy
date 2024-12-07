@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
@@ -92,8 +92,8 @@ fn do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent_
 #[allow(non_snake_case)]
 fn do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,

@@ -2,26 +2,18 @@
 #[allow(non_snake_case)]
 fn grid_max_width_less_than_max_content_with_min_content__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf_with_context(
             taffy::style::Style { ..Default::default() },
-            crate::TextMeasure {
-                text_content: "HH\u{200b}HH\u{200b}HH\u{200b}HH",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("HH\u{200b}HH\u{200b}HH\u{200b}HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node01 = taffy
         .new_leaf_with_context(
             taffy::style::Style { ..Default::default() },
-            crate::TextMeasure {
-                text_content: "HH\u{200b}HH\u{200b}HH\u{200b}HH",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("HH\u{200b}HH\u{200b}HH\u{200b}HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node0 = taffy
@@ -79,26 +71,18 @@ fn grid_max_width_less_than_max_content_with_min_content__border_box() {
 #[allow(non_snake_case)]
 fn grid_max_width_less_than_max_content_with_min_content__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf_with_context(
             taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
-            crate::TextMeasure {
-                text_content: "HH\u{200b}HH\u{200b}HH\u{200b}HH",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("HH\u{200b}HH\u{200b}HH\u{200b}HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node01 = taffy
         .new_leaf_with_context(
             taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
-            crate::TextMeasure {
-                text_content: "HH\u{200b}HH\u{200b}HH\u{200b}HH",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("HH\u{200b}HH\u{200b}HH\u{200b}HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node0 = taffy

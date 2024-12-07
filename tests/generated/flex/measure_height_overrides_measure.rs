@@ -2,15 +2,15 @@
 #[allow(non_snake_case)]
 fn measure_height_overrides_measure__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
                 size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(5f32) },
                 ..Default::default()
             },
-            crate::TextMeasure { text_content: "H", writing_mode: crate::WritingMode::Horizontal, _aspect_ratio: None },
+            crate::TestNodeContext::ahem_text("H", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node = taffy.new_with_children(taffy::style::Style { ..Default::default() }, &[node0]).unwrap();
@@ -36,8 +36,8 @@ fn measure_height_overrides_measure__border_box() {
 #[allow(non_snake_case)]
 fn measure_height_overrides_measure__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
@@ -45,7 +45,7 @@ fn measure_height_overrides_measure__content_box() {
                 size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(5f32) },
                 ..Default::default()
             },
-            crate::TextMeasure { text_content: "H", writing_mode: crate::WritingMode::Horizontal, _aspect_ratio: None },
+            crate::TestNodeContext::ahem_text("H", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node = taffy

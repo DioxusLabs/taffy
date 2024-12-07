@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn blitz_issue_88__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node000 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
@@ -12,11 +12,10 @@ fn blitz_issue_88__border_box() {
                 flex_basis: taffy::style::Dimension::Length(0f32),
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text(
+                "HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH",
+                crate::WritingMode::Horizontal,
+            ),
         )
         .unwrap();
     let node00 = taffy
@@ -80,8 +79,8 @@ fn blitz_issue_88__border_box() {
 #[allow(non_snake_case)]
 fn blitz_issue_88__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node000 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
@@ -91,11 +90,10 @@ fn blitz_issue_88__content_box() {
                 flex_basis: taffy::style::Dimension::Length(0f32),
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text(
+                "HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH\u{200b}HHHH",
+                crate::WritingMode::Horizontal,
+            ),
         )
         .unwrap();
     let node00 = taffy

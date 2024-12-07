@@ -1,10 +1,11 @@
 #[cfg(test)]
 mod min_max_overrides {
     use taffy::prelude::*;
+    use taffy_test_helpers::new_test_tree;
 
     #[test]
     fn min_overrides_max() {
-        let mut taffy: TaffyTree<()> = TaffyTree::new();
+        let mut taffy = new_test_tree();
 
         let child = taffy
             .new_leaf(Style {
@@ -27,7 +28,7 @@ mod min_max_overrides {
 
     #[test]
     fn max_overrides_size() {
-        let mut taffy: TaffyTree<()> = TaffyTree::new();
+        let mut taffy = new_test_tree();
 
         let child = taffy
             .new_leaf(Style {
@@ -49,7 +50,7 @@ mod min_max_overrides {
 
     #[test]
     fn min_overrides_size() {
-        let mut taffy: TaffyTree<()> = TaffyTree::new();
+        let mut taffy = new_test_tree();
 
         let child = taffy
             .new_leaf(Style {

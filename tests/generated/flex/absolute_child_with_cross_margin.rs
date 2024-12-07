@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn absolute_child_with_cross_margin__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             align_content: Some(taffy::style::AlignContent::Stretch),
@@ -33,7 +33,7 @@ fn absolute_child_with_cross_margin__border_box() {
                 },
                 ..Default::default()
             },
-            crate::TextMeasure { text_content: "", writing_mode: crate::WritingMode::Horizontal, _aspect_ratio: None },
+            crate::TestNodeContext::ahem_text("", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node2 = taffy
@@ -97,8 +97,8 @@ fn absolute_child_with_cross_margin__border_box() {
 #[allow(non_snake_case)]
 fn absolute_child_with_cross_margin__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
@@ -130,7 +130,7 @@ fn absolute_child_with_cross_margin__content_box() {
                 },
                 ..Default::default()
             },
-            crate::TextMeasure { text_content: "", writing_mode: crate::WritingMode::Horizontal, _aspect_ratio: None },
+            crate::TestNodeContext::ahem_text("", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node2 = taffy

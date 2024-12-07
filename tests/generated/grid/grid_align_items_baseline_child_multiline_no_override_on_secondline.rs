@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn grid_align_items_baseline_child_multiline_no_override_on_secondline__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
@@ -135,8 +135,8 @@ fn grid_align_items_baseline_child_multiline_no_override_on_secondline__border_b
 #[allow(non_snake_case)]
 fn grid_align_items_baseline_child_multiline_no_override_on_secondline__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,

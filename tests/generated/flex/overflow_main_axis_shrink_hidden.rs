@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn overflow_main_axis_shrink_hidden__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
@@ -15,11 +15,7 @@ fn overflow_main_axis_shrink_hidden__border_box() {
                 flex_shrink: 1f32,
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "HHHHHHHHHH",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("HHHHHHHHHH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node = taffy
@@ -74,8 +70,8 @@ fn overflow_main_axis_shrink_hidden__border_box() {
 #[allow(non_snake_case)]
 fn overflow_main_axis_shrink_hidden__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
@@ -88,11 +84,7 @@ fn overflow_main_axis_shrink_hidden__content_box() {
                 flex_shrink: 1f32,
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "HHHHHHHHHH",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("HHHHHHHHHH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node = taffy
