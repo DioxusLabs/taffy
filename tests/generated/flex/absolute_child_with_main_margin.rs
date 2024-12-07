@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn absolute_child_with_main_margin__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
@@ -54,8 +54,8 @@ fn absolute_child_with_main_margin__border_box() {
 #[allow(non_snake_case)]
 fn absolute_child_with_main_margin__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,

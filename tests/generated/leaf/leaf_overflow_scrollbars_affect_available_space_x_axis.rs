@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn leaf_overflow_scrollbars_affect_available_space_x_axis__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node = taffy
         .new_leaf_with_context(
             taffy::style::Style {
@@ -18,11 +18,7 @@ fn leaf_overflow_scrollbars_affect_available_space_x_axis__border_box() {
                 },
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "HHHHHHHHHHHHHHHHHHHHH",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("HHHHHHHHHHHHHHHHHHHHH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
@@ -59,8 +55,8 @@ fn leaf_overflow_scrollbars_affect_available_space_x_axis__border_box() {
 #[allow(non_snake_case)]
 fn leaf_overflow_scrollbars_affect_available_space_x_axis__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node = taffy
         .new_leaf_with_context(
             taffy::style::Style {
@@ -76,11 +72,7 @@ fn leaf_overflow_scrollbars_affect_available_space_x_axis__content_box() {
                 },
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "HHHHHHHHHHHHHHHHHHHHH",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("HHHHHHHHHHHHHHHHHHHHH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();

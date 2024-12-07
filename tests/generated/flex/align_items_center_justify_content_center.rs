@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn align_items_center_justify_content_center__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node000 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
@@ -13,7 +13,7 @@ fn align_items_center_justify_content_center__border_box() {
                 },
                 ..Default::default()
             },
-            crate::TextMeasure { text_content: "", writing_mode: crate::WritingMode::Horizontal, _aspect_ratio: None },
+            crate::TestNodeContext::ahem_text("", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node00 = taffy
@@ -93,8 +93,8 @@ fn align_items_center_justify_content_center__border_box() {
 #[allow(non_snake_case)]
 fn align_items_center_justify_content_center__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node000 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
@@ -105,7 +105,7 @@ fn align_items_center_justify_content_center__content_box() {
                 },
                 ..Default::default()
             },
-            crate::TextMeasure { text_content: "", writing_mode: crate::WritingMode::Horizontal, _aspect_ratio: None },
+            crate::TestNodeContext::ahem_text("", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node00 = taffy

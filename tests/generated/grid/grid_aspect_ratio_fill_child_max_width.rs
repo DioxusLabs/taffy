@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn grid_aspect_ratio_fill_child_max_width__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
@@ -11,11 +11,7 @@ fn grid_aspect_ratio_fill_child_max_width__border_box() {
                 aspect_ratio: Some(2f32),
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "HH\u{200b}HH\u{200b}HH\u{200b}HH",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: Some(2f32),
-            },
+            crate::TestNodeContext::ahem_text("HH\u{200b}HH\u{200b}HH\u{200b}HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node = taffy
@@ -53,8 +49,8 @@ fn grid_aspect_ratio_fill_child_max_width__border_box() {
 #[allow(non_snake_case)]
 fn grid_aspect_ratio_fill_child_max_width__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
@@ -63,11 +59,7 @@ fn grid_aspect_ratio_fill_child_max_width__content_box() {
                 aspect_ratio: Some(2f32),
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "HH\u{200b}HH\u{200b}HH\u{200b}HH",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: Some(2f32),
-            },
+            crate::TestNodeContext::ahem_text("HH\u{200b}HH\u{200b}HH\u{200b}HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node = taffy

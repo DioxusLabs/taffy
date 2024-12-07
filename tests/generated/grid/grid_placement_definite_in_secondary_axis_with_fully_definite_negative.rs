@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn grid_placement_definite_in_secondary_axis_with_fully_definite_negative__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             grid_row: taffy::geometry::Line { start: line(2i16), end: taffy::style::GridPlacement::Auto },
@@ -72,8 +72,8 @@ fn grid_placement_definite_in_secondary_axis_with_fully_definite_negative__borde
 #[allow(non_snake_case)]
 fn grid_placement_definite_in_secondary_axis_with_fully_definite_negative__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,

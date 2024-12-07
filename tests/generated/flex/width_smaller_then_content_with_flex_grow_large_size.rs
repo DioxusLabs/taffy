@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn width_smaller_then_content_with_flex_grow_large_size__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
@@ -93,8 +93,8 @@ fn width_smaller_then_content_with_flex_grow_large_size__border_box() {
 #[allow(non_snake_case)]
 fn width_smaller_then_content_with_flex_grow_large_size__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,

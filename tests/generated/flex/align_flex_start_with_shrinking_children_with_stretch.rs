@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn align_flex_start_with_shrinking_children_with_stretch__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node000 =
         taffy.new_leaf(taffy::style::Style { flex_grow: 1f32, flex_shrink: 1f32, ..Default::default() }).unwrap();
     let node00 = taffy
@@ -69,8 +69,8 @@ fn align_flex_start_with_shrinking_children_with_stretch__border_box() {
 #[allow(non_snake_case)]
 fn align_flex_start_with_shrinking_children_with_stretch__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node000 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,

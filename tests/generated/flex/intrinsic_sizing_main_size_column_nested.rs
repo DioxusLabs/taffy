@@ -2,16 +2,12 @@
 #[allow(non_snake_case)]
 fn intrinsic_sizing_main_size_column_nested__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf_with_context(
             taffy::style::Style { flex_direction: taffy::style::FlexDirection::Column, ..Default::default() },
-            crate::TextMeasure {
-                text_content: "HH\u{200b}HH",
-                writing_mode: crate::WritingMode::Vertical,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("HH\u{200b}HH", crate::WritingMode::Vertical),
         )
         .unwrap();
     let node = taffy
@@ -42,8 +38,8 @@ fn intrinsic_sizing_main_size_column_nested__border_box() {
 #[allow(non_snake_case)]
 fn intrinsic_sizing_main_size_column_nested__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
@@ -51,11 +47,7 @@ fn intrinsic_sizing_main_size_column_nested__content_box() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "HH\u{200b}HH",
-                writing_mode: crate::WritingMode::Vertical,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("HH\u{200b}HH", crate::WritingMode::Vertical),
         )
         .unwrap();
     let node = taffy

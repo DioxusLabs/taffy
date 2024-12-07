@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn measure_stretch_overrides_measure__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
@@ -18,7 +18,7 @@ fn measure_stretch_overrides_measure__border_box() {
                 flex_basis: taffy::style::Dimension::Length(5f32),
                 ..Default::default()
             },
-            crate::TextMeasure { text_content: "H", writing_mode: crate::WritingMode::Horizontal, _aspect_ratio: None },
+            crate::TestNodeContext::ahem_text("H", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node = taffy
@@ -61,8 +61,8 @@ fn measure_stretch_overrides_measure__border_box() {
 #[allow(non_snake_case)]
 fn measure_stretch_overrides_measure__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
@@ -79,7 +79,7 @@ fn measure_stretch_overrides_measure__content_box() {
                 flex_basis: taffy::style::Dimension::Length(5f32),
                 ..Default::default()
             },
-            crate::TextMeasure { text_content: "H", writing_mode: crate::WritingMode::Horizontal, _aspect_ratio: None },
+            crate::TestNodeContext::ahem_text("H", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node = taffy

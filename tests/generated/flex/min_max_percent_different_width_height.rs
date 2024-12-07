@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn min_max_percent_different_width_height__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
@@ -17,7 +17,7 @@ fn min_max_percent_different_width_height__border_box() {
                 },
                 ..Default::default()
             },
-            crate::TextMeasure { text_content: "", writing_mode: crate::WritingMode::Horizontal, _aspect_ratio: None },
+            crate::TestNodeContext::ahem_text("", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node = taffy
@@ -56,8 +56,8 @@ fn min_max_percent_different_width_height__border_box() {
 #[allow(non_snake_case)]
 fn min_max_percent_different_width_height__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
@@ -72,7 +72,7 @@ fn min_max_percent_different_width_height__content_box() {
                 },
                 ..Default::default()
             },
-            crate::TextMeasure { text_content: "", writing_mode: crate::WritingMode::Horizontal, _aspect_ratio: None },
+            crate::TestNodeContext::ahem_text("", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node = taffy

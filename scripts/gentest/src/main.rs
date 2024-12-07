@@ -222,8 +222,8 @@ fn generate_test(name: impl AsRef<str>, description: &Value) -> TokenStream {
         #[allow(non_snake_case)]
         fn #name() {
             #[allow(unused_imports)]
-            use taffy::{tree::Layout, prelude::*, TaffyTree};
-            let mut taffy : TaffyTree<crate::TextMeasure> = TaffyTree::new();
+            use taffy::{Layout, prelude::*};
+            let mut taffy = crate::new_test_tree();
             #set_rounding_mode
             #node_description
             taffy.compute_layout_with_measure(node, #available_space, crate::test_measure_function).unwrap();
@@ -930,16 +930,12 @@ fn generate_node_context(text_content: &str, writing_mode: Option<&str>, aspect_
         _ => quote!(crate::WritingMode::Horizontal),
     };
 
-    let aspect_ratio_token = match aspect_ratio {
+    let _aspect_ratio_token = match aspect_ratio {
         Some(ratio) => quote!(Some(#ratio)),
         None => quote!(None),
     };
 
     quote!(
-        crate::TextMeasure {
-            text_content: #trimmed_text_content,
-            writing_mode: #writing_mode_token,
-            _aspect_ratio: #aspect_ratio_token,
-        }
+        crate::TestNodeContext::ahem_text(#trimmed_text_content, #writing_mode_token)
     )
 }

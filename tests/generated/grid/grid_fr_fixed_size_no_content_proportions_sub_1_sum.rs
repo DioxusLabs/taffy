@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn grid_fr_fixed_size_no_content_proportions_sub_1_sum__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node1 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node = taffy
@@ -46,8 +46,8 @@ fn grid_fr_fixed_size_no_content_proportions_sub_1_sum__border_box() {
 #[allow(non_snake_case)]
 fn grid_fr_fixed_size_no_content_proportions_sub_1_sum__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() })
         .unwrap();

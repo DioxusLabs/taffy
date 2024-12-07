@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn percentage_multiple_nested_with_padding_margin_and_percentage_values__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node000 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.45f32), height: auto() },
@@ -129,8 +129,8 @@ fn percentage_multiple_nested_with_padding_margin_and_percentage_values__border_
 #[allow(non_snake_case)]
 fn percentage_multiple_nested_with_padding_margin_and_percentage_values__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node000 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,

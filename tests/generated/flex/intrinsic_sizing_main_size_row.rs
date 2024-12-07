@@ -2,16 +2,12 @@
 #[allow(non_snake_case)]
 fn intrinsic_sizing_main_size_row__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node = taffy
         .new_leaf_with_context(
             taffy::style::Style { ..Default::default() },
-            crate::TextMeasure {
-                text_content: "HH\u{200b}HH",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("HH\u{200b}HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();
@@ -30,16 +26,12 @@ fn intrinsic_sizing_main_size_row__border_box() {
 #[allow(non_snake_case)]
 fn intrinsic_sizing_main_size_row__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node = taffy
         .new_leaf_with_context(
             taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() },
-            crate::TextMeasure {
-                text_content: "HH\u{200b}HH",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("HH\u{200b}HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     taffy.compute_layout_with_measure(node, taffy::geometry::Size::MAX_CONTENT, crate::test_measure_function).unwrap();

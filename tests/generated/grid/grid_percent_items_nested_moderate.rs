@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn grid_percent_items_nested_moderate__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     taffy.disable_rounding();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
@@ -119,8 +119,8 @@ fn grid_percent_items_nested_moderate__border_box() {
 #[allow(non_snake_case)]
 fn grid_percent_items_nested_moderate__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     taffy.disable_rounding();
     let node00 = taffy
         .new_leaf(taffy::style::Style {

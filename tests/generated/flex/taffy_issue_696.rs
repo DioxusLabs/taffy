@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn taffy_issue_696__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Flex,
@@ -92,8 +92,8 @@ fn taffy_issue_696__border_box() {
 #[allow(non_snake_case)]
 fn taffy_issue_696__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Flex,
