@@ -626,8 +626,12 @@ impl<NodeContext> TaffyTree<NodeContext> {
         }
 
         // Build up relation node <-> child
-        for child in children {
-            self.parents[(*child).into()] = Some(parent);
+        for &child in children {
+            // Remove child from previous parent
+            if let Some(previous_parent) = self.parents[child.into()] {
+                self.remove_child(previous_parent, child).unwrap();
+            }
+            self.parents[child.into()] = Some(parent);
         }
 
         let parent_children = &mut self.children[parent_key];
@@ -1233,5 +1237,17 @@ mod tests {
         let layout = taffy.layout(node).unwrap();
         assert_eq!(layout.location.x, 10f32);
         assert_eq!(layout.location.y, 30f32);
+    }
+
+    #[test]
+    fn set_children_reparents() {
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
+        let child = taffy.new_leaf(Style::default()).unwrap();
+        let old_parent = taffy.new_with_children(Style::default(), &[child]).unwrap();
+
+        let new_parent = taffy.new_leaf(Style::default()).unwrap();
+        taffy.set_children(new_parent, &[child]).unwrap();
+
+        assert!(taffy.children(old_parent).unwrap().is_empty());
     }
 }
