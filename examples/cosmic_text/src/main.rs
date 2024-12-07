@@ -1,8 +1,6 @@
-mod common {
-    pub mod image;
-}
-use common::image::{image_measure_function, ImageContext};
+mod image;
 use cosmic_text::{Attrs, Buffer, FontSystem, Metrics, Shaping};
+use image::{image_measure_function, ImageContext};
 use taffy::prelude::*;
 
 pub const LOREM_IPSUM : &str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";

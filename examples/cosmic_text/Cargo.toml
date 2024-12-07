@@ -1,0 +1,8 @@
+[package]
+name = "cosmic-text-example"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+taffy = { path = "../.." }
+cosmic-text = "0.12"
