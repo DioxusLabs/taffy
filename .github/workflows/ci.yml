@@ -44,6 +44,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --examples
+      - run: cargo build -p cosmic-text-example
 
   # No features
   test-features-none:

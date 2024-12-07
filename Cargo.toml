@@ -75,7 +75,6 @@ debug = ["std"]
 profile = ["std"]
 
 [dev-dependencies]
-cosmic-text = "0.12"
 serde_json = "1.0.93"
 
 # Enable default features for tests and examples
@@ -100,5 +99,5 @@ members = [
     "scripts/gentest",
     "scripts/format-fixtures",
     "scripts/import-yoga-tests",
-    "benches",
+    "benches", "examples/cosmic_text",
 ]
