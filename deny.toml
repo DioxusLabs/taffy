@@ -23,21 +23,6 @@ multiple-versions = "deny"
 wildcards = "deny"
 allow-wildcard-paths = true
 highlight = "all"
-# Certain crates/versions that will be skipped when doing duplicate detection.
-skip = [
-    # Bypass problems with wildcard dependencies for dev-dependencies.
-    # Proper fix requires https://github.com/EmbarkStudios/cargo-deny/issues/448
-    { name = "taffy" },
-
-    # This dependency won't actually end up in the final binary anyway as it a sub-dependency
-    # of num-cpus and atty only when targeting the hermit unikernel OS
-    # (https://github.com/hermitcore/rusty-hermit)
-    { name = "hermit-abi" },
-
-    # Long-term we'll want to re-ban this. However it's going to take a while for the ecosystem to
-    # transition over to syn 2 and we don't want to block Taffy releases in the meantime.
-    { name = "syn" },
-]
 
 [sources]
 unknown-registry = "deny"
