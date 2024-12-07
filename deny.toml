@@ -21,6 +21,7 @@ allow = [
 [bans]
 multiple-versions = "deny"
 wildcards = "deny"
+allow-wildcard-paths = true
 highlight = "all"
 # Certain crates/versions that will be skipped when doing duplicate detection.
 skip = [
