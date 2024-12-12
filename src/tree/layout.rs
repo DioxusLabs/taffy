@@ -292,6 +292,34 @@ impl Layout {
             margin: Rect::zero(),
         }
     }
+
+    /// Get the width of the node's content box
+    #[inline]
+    pub fn content_box_width(&self) -> f32 {
+        self.size.width - self.padding.left - self.padding.right - self.border.left - self.border.right
+    }
+
+    /// Get the height of the node's content box
+    #[inline]
+    pub fn content_box_height(&self) -> f32 {
+        self.size.height - self.padding.top - self.padding.bottom - self.border.top - self.border.bottom
+    }
+
+    /// Get the size of the node's content box
+    #[inline]
+    pub fn content_box_size(&self) -> Size<f32> {
+        Size { width: self.content_box_width(), height: self.content_box_height() }
+    }
+
+    /// Get x offset of the node's content box relative to it's parent's border box
+    pub fn content_box_x(&self) -> f32 {
+        self.location.x + self.border.left + self.padding.left
+    }
+
+    /// Get x offset of the node's content box relative to it's parent's border box
+    pub fn content_box_y(&self) -> f32 {
+        self.location.y + self.border.top + self.padding.top
+    }
 }
 
 #[cfg(feature = "content_size")]
