@@ -7,7 +7,7 @@ use common::text::{text_measure_function, FontMetrics, TextContext, WritingMode,
 use taffy::util::print_tree;
 use taffy::{
     compute_cached_layout, compute_flexbox_layout, compute_grid_layout, compute_leaf_layout, compute_root_layout,
-    prelude::*, round_layout, Cache,
+    prelude::*, round_layout, Cache, CacheTree,
 };
 
 #[derive(Debug, Copy, Clone)]
@@ -144,21 +144,12 @@ impl taffy::LayoutPartialTree for Tree {
     where
         Self: 'a;
 
-    type CacheMut<'b>
-        = &'b mut Cache
-    where
-        Self: 'b;
-
     fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_> {
         &self.node_from_id(node_id).style
     }
 
     fn set_unrounded_layout(&mut self, node_id: NodeId, layout: &Layout) {
         self.node_from_id_mut(node_id).unrounded_layout = *layout;
-    }
-
-    fn get_cache_mut(&mut self, node_id: NodeId) -> &mut Cache {
-        &mut self.node_from_id_mut(node_id).cache
     }
 
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: taffy::tree::LayoutInput) -> taffy::tree::LayoutOutput {
@@ -182,6 +173,33 @@ impl taffy::LayoutPartialTree for Tree {
                 }),
             }
         })
+    }
+}
+
+impl CacheTree for Tree {
+    fn cache_get(
+        &self,
+        node_id: NodeId,
+        known_dimensions: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        run_mode: taffy::RunMode,
+    ) -> Option<taffy::LayoutOutput> {
+        self.node_from_id(node_id).cache.get(known_dimensions, available_space, run_mode)
+    }
+
+    fn cache_store(
+        &mut self,
+        node_id: NodeId,
+        known_dimensions: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        run_mode: taffy::RunMode,
+        layout_output: taffy::LayoutOutput,
+    ) {
+        self.node_from_id_mut(node_id).cache.store(known_dimensions, available_space, run_mode, layout_output)
+    }
+
+    fn cache_clear(&mut self, node_id: NodeId) {
+        self.node_from_id_mut(node_id).cache.clear()
     }
 }
 
