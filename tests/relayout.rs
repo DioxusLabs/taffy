@@ -1,8 +1,9 @@
 use taffy::prelude::*;
+use taffy_test_helpers::new_test_tree;
 
 #[test]
 fn relayout() {
-    let mut taffy: TaffyTree<()> = taffy::TaffyTree::new();
+    let mut taffy = new_test_tree();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size { width: length(8.0), height: length(80.0) },
@@ -69,7 +70,7 @@ fn toggle_root_display_none() {
     };
 
     // Setup
-    let mut taffy: TaffyTree<()> = taffy::TaffyTree::new();
+    let mut taffy = new_test_tree();
     let node = taffy.new_leaf(hidden_style.clone()).unwrap();
 
     // Layout 1 (None)
@@ -103,7 +104,7 @@ fn toggle_root_display_none() {
 fn toggle_root_display_none_with_children() {
     use taffy::prelude::*;
 
-    let mut taffy: TaffyTree<()> = taffy::TaffyTree::new();
+    let mut taffy = new_test_tree();
 
     let child = taffy
         .new_leaf(Style { size: Size { width: length(800.0), height: length(100.0) }, ..Default::default() })
@@ -149,7 +150,7 @@ fn toggle_flex_child_display_none() {
     };
 
     // Setup
-    let mut taffy: TaffyTree<()> = taffy::TaffyTree::new();
+    let mut taffy = new_test_tree();
     let node = taffy.new_leaf(hidden_style.clone()).unwrap();
     let root = taffy.new_with_children(flex_style.clone(), &[node]).unwrap();
 
@@ -195,7 +196,7 @@ fn toggle_flex_container_display_none() {
     };
 
     // Setup
-    let mut taffy: TaffyTree<()> = taffy::TaffyTree::new();
+    let mut taffy = new_test_tree();
     let node = taffy.new_leaf(hidden_style.clone()).unwrap();
     let root = taffy.new_with_children(hidden_style.clone(), &[node]).unwrap();
 
@@ -241,7 +242,7 @@ fn toggle_grid_child_display_none() {
     };
 
     // Setup
-    let mut taffy: TaffyTree<()> = taffy::TaffyTree::new();
+    let mut taffy = new_test_tree();
     let node = taffy.new_leaf(hidden_style.clone()).unwrap();
     let root = taffy.new_with_children(grid_style.clone(), &[node]).unwrap();
 
@@ -287,7 +288,7 @@ fn toggle_grid_container_display_none() {
     };
 
     // Setup
-    let mut taffy: TaffyTree<()> = taffy::TaffyTree::new();
+    let mut taffy = new_test_tree();
     let node = taffy.new_leaf(hidden_style.clone()).unwrap();
     let root = taffy.new_with_children(hidden_style.clone(), &[node]).unwrap();
 
@@ -320,7 +321,7 @@ fn toggle_grid_container_display_none() {
 
 #[test]
 fn relayout_is_stable_with_rounding() {
-    let mut taffy: TaffyTree<()> = taffy::TaffyTree::new();
+    let mut taffy = new_test_tree();
     taffy.enable_rounding();
 
     // <div style="width: 1920px; height: 1080px">

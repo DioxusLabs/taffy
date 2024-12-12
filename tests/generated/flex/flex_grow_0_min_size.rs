@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn flex_grow_0_min_size__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
@@ -12,11 +12,7 @@ fn flex_grow_0_min_size__border_box() {
                 flex_basis: taffy::style::Dimension::Percent(0f32),
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "one",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("one", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node1 = taffy
@@ -27,11 +23,7 @@ fn flex_grow_0_min_size__border_box() {
                 flex_basis: taffy::style::Dimension::Percent(0f32),
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "two",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("two", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node2 = taffy
@@ -42,11 +34,7 @@ fn flex_grow_0_min_size__border_box() {
                 flex_basis: taffy::style::Dimension::Percent(0f32),
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "three",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("three", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node3 = taffy
@@ -57,11 +45,7 @@ fn flex_grow_0_min_size__border_box() {
                 flex_basis: taffy::style::Dimension::Percent(0f32),
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "four",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("four", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node = taffy
@@ -123,8 +107,8 @@ fn flex_grow_0_min_size__border_box() {
 #[allow(non_snake_case)]
 fn flex_grow_0_min_size__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
@@ -134,11 +118,7 @@ fn flex_grow_0_min_size__content_box() {
                 flex_basis: taffy::style::Dimension::Percent(0f32),
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "one",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("one", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node1 = taffy
@@ -150,11 +130,7 @@ fn flex_grow_0_min_size__content_box() {
                 flex_basis: taffy::style::Dimension::Percent(0f32),
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "two",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("two", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node2 = taffy
@@ -166,11 +142,7 @@ fn flex_grow_0_min_size__content_box() {
                 flex_basis: taffy::style::Dimension::Percent(0f32),
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "three",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("three", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node3 = taffy
@@ -182,11 +154,7 @@ fn flex_grow_0_min_size__content_box() {
                 flex_basis: taffy::style::Dimension::Percent(0f32),
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "four",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("four", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node = taffy

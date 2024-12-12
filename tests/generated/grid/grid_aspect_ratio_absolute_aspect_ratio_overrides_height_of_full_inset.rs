@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn grid_aspect_ratio_absolute_aspect_ratio_overrides_height_of_full_inset__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
@@ -52,8 +52,8 @@ fn grid_aspect_ratio_absolute_aspect_ratio_overrides_height_of_full_inset__borde
 #[allow(non_snake_case)]
 fn grid_aspect_ratio_absolute_aspect_ratio_overrides_height_of_full_inset__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,

@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn gap_row_gap_row_wrap_child_margins__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
@@ -88,8 +88,8 @@ fn gap_row_gap_row_wrap_child_margins__border_box() {
 #[allow(non_snake_case)]
 fn gap_row_gap_row_wrap_child_margins__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,

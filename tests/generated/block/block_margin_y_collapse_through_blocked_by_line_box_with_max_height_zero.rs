@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn block_margin_y_collapse_through_blocked_by_line_box_with_max_height_zero__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
@@ -30,11 +30,7 @@ fn block_margin_y_collapse_through_blocked_by_line_box_with_max_height_zero__bor
                 },
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "HH",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node2 = taffy
@@ -94,8 +90,8 @@ fn block_margin_y_collapse_through_blocked_by_line_box_with_max_height_zero__bor
 #[allow(non_snake_case)]
 fn block_margin_y_collapse_through_blocked_by_line_box_with_max_height_zero__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
@@ -124,11 +120,7 @@ fn block_margin_y_collapse_through_blocked_by_line_box_with_max_height_zero__con
                 },
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "HH",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node2 = taffy

@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn align_items_center_with_max_height_percentage_with_align_content_flex_start__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
@@ -84,8 +84,8 @@ fn align_items_center_with_max_height_percentage_with_align_content_flex_start__
 #[allow(non_snake_case)]
 fn align_items_center_with_max_height_percentage_with_align_content_flex_start__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,

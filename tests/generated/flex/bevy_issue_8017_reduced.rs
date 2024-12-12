@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn bevy_issue_8017_reduced__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node00 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node0 = taffy
         .new_with_children(
@@ -81,8 +81,8 @@ fn bevy_issue_8017_reduced__border_box() {
 #[allow(non_snake_case)]
 fn bevy_issue_8017_reduced__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf(taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() })
         .unwrap();

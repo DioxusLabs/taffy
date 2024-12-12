@@ -402,12 +402,13 @@ fn perform_final_layout_on_in_flow_children(
     #[cfg_attr(not(feature = "content_size"), allow(unused_mut))]
     let mut inflow_content_size = Size::ZERO;
     let mut committed_y_offset = resolved_content_box_inset.top;
+    let mut y_offset_for_absolute = resolved_content_box_inset.top;
     let mut first_child_top_margin_set = CollapsibleMarginSet::ZERO;
     let mut active_collapsible_margin_set = CollapsibleMarginSet::ZERO;
     let mut is_collapsing_with_first_margin_set = true;
     for item in items.iter_mut() {
         if item.position == Position::Absolute {
-            item.static_position = Point { x: resolved_content_box_inset.left, y: committed_y_offset }
+            item.static_position = Point { x: resolved_content_box_inset.left, y: y_offset_for_absolute }
         } else {
             let item_margin = item.margin.map(|margin| margin.resolve_to_option(container_outer_width));
             let item_non_auto_margin = item_margin.map(|m| m.unwrap_or(0.0));
@@ -547,8 +548,10 @@ fn perform_final_layout_on_in_flow_children(
                 active_collapsible_margin_set = active_collapsible_margin_set
                     .collapse_with_set(top_margin_set)
                     .collapse_with_set(bottom_margin_set);
+                y_offset_for_absolute = committed_y_offset + item_layout.size.height + y_margin_offset;
             } else {
                 committed_y_offset += item_layout.size.height + y_margin_offset;
+                y_offset_for_absolute = committed_y_offset;
                 active_collapsible_margin_set = bottom_margin_set;
             }
         }

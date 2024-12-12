@@ -2,9 +2,9 @@
 #[allow(non_snake_case)]
 fn block_aspect_ratio_fill_max_height__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
-    let node0 = taffy . new_leaf_with_context (taffy :: style :: Style { display : taffy :: style :: Display :: Block , max_size : taffy :: geometry :: Size { width : taffy :: style :: Dimension :: Length (40f32) , height : auto () , } , aspect_ratio : Some (2f32) , .. Default :: default () } , crate :: TextMeasure { text_content : "HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH" , writing_mode : crate :: WritingMode :: Horizontal , _aspect_ratio : Some (2f32) , } ,) . unwrap () ;
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
+    let node0 = taffy . new_leaf_with_context (taffy :: style :: Style { display : taffy :: style :: Display :: Block , max_size : taffy :: geometry :: Size { width : taffy :: style :: Dimension :: Length (40f32) , height : auto () , } , aspect_ratio : Some (2f32) , .. Default :: default () } , crate :: TestNodeContext :: ahem_text ("HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH" , crate :: WritingMode :: Horizontal) ,) . unwrap () ;
     let node = taffy
         .new_with_children(
             taffy::style::Style {
@@ -40,9 +40,9 @@ fn block_aspect_ratio_fill_max_height__border_box() {
 #[allow(non_snake_case)]
 fn block_aspect_ratio_fill_max_height__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
-    let node0 = taffy . new_leaf_with_context (taffy :: style :: Style { display : taffy :: style :: Display :: Block , box_sizing : taffy :: style :: BoxSizing :: ContentBox , max_size : taffy :: geometry :: Size { width : taffy :: style :: Dimension :: Length (40f32) , height : auto () , } , aspect_ratio : Some (2f32) , .. Default :: default () } , crate :: TextMeasure { text_content : "HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH" , writing_mode : crate :: WritingMode :: Horizontal , _aspect_ratio : Some (2f32) , } ,) . unwrap () ;
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
+    let node0 = taffy . new_leaf_with_context (taffy :: style :: Style { display : taffy :: style :: Display :: Block , box_sizing : taffy :: style :: BoxSizing :: ContentBox , max_size : taffy :: geometry :: Size { width : taffy :: style :: Dimension :: Length (40f32) , height : auto () , } , aspect_ratio : Some (2f32) , .. Default :: default () } , crate :: TestNodeContext :: ahem_text ("HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH\u{200b}HH" , crate :: WritingMode :: Horizontal) ,) . unwrap () ;
     let node = taffy
         .new_with_children(
             taffy::style::Style {

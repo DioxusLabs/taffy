@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn grid_max_content_single_item_span_2_gap_percent_definite__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node1 = taffy
         .new_leaf_with_context(
@@ -14,11 +14,7 @@ fn grid_max_content_single_item_span_2_gap_percent_definite__border_box() {
                 },
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "HH\u{200b}HH\u{200b}HH",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("HH\u{200b}HH\u{200b}HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node2 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
@@ -111,8 +107,8 @@ fn grid_max_content_single_item_span_2_gap_percent_definite__border_box() {
 #[allow(non_snake_case)]
 fn grid_max_content_single_item_span_2_gap_percent_definite__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style { box_sizing: taffy::style::BoxSizing::ContentBox, ..Default::default() })
         .unwrap();
@@ -126,11 +122,7 @@ fn grid_max_content_single_item_span_2_gap_percent_definite__content_box() {
                 },
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "HH\u{200b}HH\u{200b}HH",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("HH\u{200b}HH\u{200b}HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node2 = taffy

@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn position_root_with_rtl_should_position_withoutdirection__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
@@ -42,8 +42,8 @@ fn position_root_with_rtl_should_position_withoutdirection__border_box() {
 #[allow(non_snake_case)]
 fn position_root_with_rtl_should_position_withoutdirection__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,

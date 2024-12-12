@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.3
+
+### Fixes
+
+- Block: ignore margin collapsing when computing static position of abspos items (#747)
+
 ## 0.6.2
 
 ### Fixes

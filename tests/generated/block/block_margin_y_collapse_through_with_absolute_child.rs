@@ -2,8 +2,8 @@
 #[allow(non_snake_case)]
 fn block_margin_y_collapse_through_with_absolute_child__border_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
@@ -20,11 +20,7 @@ fn block_margin_y_collapse_through_with_absolute_child__border_box() {
     let node10 = taffy
         .new_leaf_with_context(
             taffy::style::Style { position: taffy::style::Position::Absolute, ..Default::default() },
-            crate::TextMeasure {
-                text_content: "HH",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node1 = taffy
@@ -105,8 +101,8 @@ fn block_margin_y_collapse_through_with_absolute_child__border_box() {
 #[allow(non_snake_case)]
 fn block_margin_y_collapse_through_with_absolute_child__content_box() {
     #[allow(unused_imports)]
-    use taffy::{prelude::*, tree::Layout, TaffyTree};
-    let mut taffy: TaffyTree<crate::TextMeasure> = TaffyTree::new();
+    use taffy::{prelude::*, Layout};
+    let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
@@ -128,11 +124,7 @@ fn block_margin_y_collapse_through_with_absolute_child__content_box() {
                 position: taffy::style::Position::Absolute,
                 ..Default::default()
             },
-            crate::TextMeasure {
-                text_content: "HH",
-                writing_mode: crate::WritingMode::Horizontal,
-                _aspect_ratio: None,
-            },
+            crate::TestNodeContext::ahem_text("HH", crate::WritingMode::Horizontal),
         )
         .unwrap();
     let node1 = taffy
