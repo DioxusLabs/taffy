@@ -16,7 +16,7 @@ pub struct TaffyTreeBuilder<R: Rng, G: GenStyle<TaffyStyle>> {
 
 // Implement the BuildTree trait
 impl<R: Rng, G: GenStyle<TaffyStyle>> BuildTree<R, G> for TaffyTreeBuilder<R, G> {
-    const NAME: &'static str = "Taffy 0.4";
+    const NAME: &'static str = "Taffy 0.7";
     type Tree = TaffyTree;
     type Node = TaffyNodeId;
 

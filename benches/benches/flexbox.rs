@@ -55,7 +55,7 @@ macro_rules! benchmark_each_library {
         #[cfg(feature = "taffy03")]
         run_benchmark!(Taffy03TreeBuilder<_, _>, "Taffy 0.3", $benchmark_name, $group, $builder, $params, $generate_style, $generate_tree);
 
-        run_benchmark!(TaffyTreeBuilder<_, _>, "Taffy 0.4", $benchmark_name, $group, $builder, $params, $generate_style, $generate_tree);
+        run_benchmark!(TaffyTreeBuilder<_, _>, "Taffy 0.7", $benchmark_name, $group, $builder, $params, $generate_style, $generate_tree);
     };
 }
 
@@ -206,7 +206,7 @@ fn super_deep_benchmarks(c: &mut Criterion) {
 
         run_benchmark!(
             TaffyTreeBuilder<_,_>,
-            "Taffy 0.4",
+            "Taffy 0.7",
             "",
             group,
             builder,
