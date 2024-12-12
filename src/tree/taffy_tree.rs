@@ -17,6 +17,7 @@ use crate::util::sys::{new_vec_with_capacity, ChildrenVec, Vec};
 use crate::compute::{
     compute_cached_layout, compute_hidden_layout, compute_leaf_layout, compute_root_layout, round_layout,
 };
+use crate::CacheTree;
 #[cfg(feature = "block_layout")]
 use crate::{compute::compute_block_layout, LayoutBlockContainer};
 #[cfg(feature = "flexbox")]
@@ -190,6 +191,34 @@ impl<NodeContext> TraversePartialTree for TaffyTree<NodeContext> {
 // TraverseTree impl for TaffyTree
 impl<NodeContext> TraverseTree for TaffyTree<NodeContext> {}
 
+// CacheTree impl for TaffyTree
+impl<NodeContext> CacheTree for TaffyTree<NodeContext> {
+    fn cache_get(
+        &self,
+        node_id: NodeId,
+        known_dimensions: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        run_mode: RunMode,
+    ) -> Option<LayoutOutput> {
+        self.nodes[node_id.into()].cache.get(known_dimensions, available_space, run_mode)
+    }
+
+    fn cache_store(
+        &mut self,
+        node_id: NodeId,
+        known_dimensions: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        run_mode: RunMode,
+        layout_output: LayoutOutput,
+    ) {
+        self.nodes[node_id.into()].cache.store(known_dimensions, available_space, run_mode, layout_output)
+    }
+
+    fn cache_clear(&mut self, node_id: NodeId) {
+        self.nodes[node_id.into()].cache.clear()
+    }
+}
+
 // PrintTree impl for TaffyTree
 impl<NodeContext> PrintTree for TaffyTree<NodeContext> {
     #[inline(always)]
@@ -284,19 +313,10 @@ where
         = &'a Style
     where
         Self: 'a;
-    type CacheMut<'b>
-        = &'b mut Cache
-    where
-        Self: 'b;
 
     #[inline(always)]
     fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_> {
         &self.taffy.nodes[node_id.into()].style
-    }
-
-    #[inline(always)]
-    fn get_cache_mut(&mut self, node: NodeId) -> &mut Cache {
-        &mut self.taffy.nodes[node.into()].cache
     }
 
     #[inline(always)]
@@ -352,6 +372,37 @@ where
                 }
             }
         })
+    }
+}
+
+impl<NodeContext, MeasureFunction> CacheTree for TaffyView<'_, NodeContext, MeasureFunction>
+where
+    MeasureFunction:
+        FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
+{
+    fn cache_get(
+        &self,
+        node_id: NodeId,
+        known_dimensions: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        run_mode: RunMode,
+    ) -> Option<LayoutOutput> {
+        self.taffy.nodes[node_id.into()].cache.get(known_dimensions, available_space, run_mode)
+    }
+
+    fn cache_store(
+        &mut self,
+        node_id: NodeId,
+        known_dimensions: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        run_mode: RunMode,
+        layout_output: LayoutOutput,
+    ) {
+        self.taffy.nodes[node_id.into()].cache.store(known_dimensions, available_space, run_mode, layout_output)
+    }
+
+    fn cache_clear(&mut self, node_id: NodeId) {
+        self.taffy.nodes[node_id.into()].cache.clear()
     }
 }
 
@@ -804,7 +855,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
 
     /// Returns an instance of LayoutTree representing the TaffyTree
     #[cfg(test)]
-    pub(crate) fn as_layout_tree(&mut self) -> impl LayoutPartialTree + '_ {
+    pub(crate) fn as_layout_tree(&mut self) -> impl LayoutPartialTree + CacheTree + '_ {
         TaffyView { taffy: self, measure_function: |_, _, _, _, _| Size::ZERO }
     }
 }

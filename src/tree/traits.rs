@@ -126,7 +126,7 @@
 //! }
 //! ```
 //!
-use super::{Cache, Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, SizingMode};
+use super::{Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, SizingMode};
 use crate::geometry::{AbsoluteAxis, Line, Size};
 use crate::style::{AvailableSpace, CoreStyle};
 #[cfg(feature = "flexbox")]
@@ -135,7 +135,6 @@ use crate::style::{FlexboxContainerStyle, FlexboxItemStyle};
 use crate::style::{GridContainerStyle, GridItemStyle};
 #[cfg(feature = "block_layout")]
 use crate::{BlockContainerStyle, BlockItemStyle};
-use core::ops::{Deref, DerefMut};
 
 /// Taffy's abstraction for downward tree traversal.
 ///
@@ -173,23 +172,41 @@ pub trait LayoutPartialTree: TraversePartialTree {
     where
         Self: 'a;
 
-    /// A mutable reference to the cache. This is an associated type to allow for different
-    /// types of mutable reference such as mutex or refcell guards
-    type CacheMut<'b>: Deref<Target = Cache> + DerefMut
-    where
-        Self: 'b;
-
     /// Get core style
     fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_>;
 
     /// Set the node's unrounded layout
     fn set_unrounded_layout(&mut self, node_id: NodeId, layout: &Layout);
 
-    /// Get a mutable reference to the [`Cache`] for this node.
-    fn get_cache_mut(&mut self, node_id: NodeId) -> Self::CacheMut<'_>;
-
     /// Compute the specified node's size or full layout given the specified constraints
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
+}
+
+/// Trait used by the `compute_cached_layout` method which allows cached layout results to be stored and retrieved.
+///
+/// The `Cache` struct implements a per-node cache that is compatible with this trait.
+pub trait CacheTree {
+    /// Try to retrieve a cached result from the cache
+    fn cache_get(
+        &self,
+        node_id: NodeId,
+        known_dimensions: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        run_mode: RunMode,
+    ) -> Option<LayoutOutput>;
+
+    /// Store a computed size in the cache
+    fn cache_store(
+        &mut self,
+        node_id: NodeId,
+        known_dimensions: Size<Option<f32>>,
+        available_space: Size<AvailableSpace>,
+        run_mode: RunMode,
+        layout_output: LayoutOutput,
+    );
+
+    /// Clear all cache entries for the node
+    fn cache_clear(&mut self, node_id: NodeId);
 }
 
 /// Trait used by the `round_layout` method which takes a tree of unrounded float-valued layouts and performs
