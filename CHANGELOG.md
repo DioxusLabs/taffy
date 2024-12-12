@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.0
+
+### Changed
+
+- BREAKING: The `cache_mut` method on the `LayoutPartialTree` trait has been replaced with a separate `CacheTree` trait. This allows
+  Taffy to be more easily used without caching or with a custom cache implementation.
+- BREAKING: the `TaffyTree::set_children` method now removes the children from their previous parent (if they have one).
+
+### Added
+
+- Helper methods to retrieve content-box sizes were added to `Layout`
+
 ## 0.6.3
 
 ### Fixes
