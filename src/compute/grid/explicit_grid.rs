@@ -4,13 +4,10 @@ use super::types::{GridTrack, TrackCounts};
 use crate::geometry::{AbsoluteAxis, Size};
 use crate::style::{GridTrackRepetition, LengthPercentage, NonRepeatedTrackSizingFunction, TrackSizingFunction};
 use crate::style_helpers::TaffyAuto;
-use crate::util::sys::Vec;
+use crate::util::sys::{ceil, floor, Vec};
 use crate::util::MaybeMath;
 use crate::util::ResolveOrZero;
 use crate::{GridContainerStyle, MaybeResolve};
-
-#[cfg(not(feature = "std"))]
-use num_traits::float::FloatCore;
 
 /// Compute the number of rows and columns in the explicit grid
 pub(crate) fn compute_explicit_grid_size_in_axis(
@@ -161,9 +158,9 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
                 //
                 // In all cases we add the additional repetition that was already accounted for in the special-case computation above
                 if size_is_maximum {
-                    (num_repetition_that_fit.floor() as u16) + 1
+                    (floor(num_repetition_that_fit) as u16) + 1
                 } else {
-                    (num_repetition_that_fit.ceil() as u16) + 1
+                    (ceil(num_repetition_that_fit) as u16) + 1
                 }
             }
         }
