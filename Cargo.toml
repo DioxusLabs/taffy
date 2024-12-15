@@ -18,7 +18,6 @@ license = "MIT"
 [dependencies]
 arrayvec = { version = "0.7", default-features = false }
 document-features = { version = "0.2.7", optional = true }
-num-traits = { version = "0.2", default-features = false }
 serde = { version = "1.0", default-features = false, optional = true, features = [
     "serde_derive",
 ] }
@@ -66,7 +65,7 @@ taffy_tree = ["dep:slotmap"]
 ## Add [`serde`] derives to Style structs
 serde = ["dep:serde"]
 ## Allow Taffy to depend on the [`Rust Standard Library`](std)
-std = ["num-traits/std", "grid?/std", "serde?/std", "slotmap?/std"]
+std = ["grid?/std", "serde?/std", "slotmap?/std"]
 ## Allow Taffy to depend on the alloc library
 alloc = ["serde?/alloc"]
 ## Internal feature for debugging

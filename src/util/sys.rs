@@ -36,6 +36,20 @@ mod std {
         value.round()
     }
 
+    /// Rounds up to the nearest whole number
+    #[must_use]
+    #[inline(always)]
+    pub(crate) fn ceil(value: f32) -> f32 {
+        value.ceil()
+    }
+
+    /// Rounds down to the nearest whole number
+    #[must_use]
+    #[inline(always)]
+    pub(crate) fn floor(value: f32) -> f32 {
+        value.floor()
+    }
+
     /// Computes the absolute value
     #[must_use]
     #[inline(always)]
@@ -78,6 +92,12 @@ mod alloc {
 
     /// Rounds to the nearest whole number
     pub(crate) use super::polyfill::round;
+
+    /// Rounds up to the nearest whole number
+    pub(crate) use super::polyfill::ceil;
+
+    /// Rounds down to the nearest whole number
+    pub(crate) use super::polyfill::floor;
 
     /// Computes the absolute value
     pub(crate) use super::polyfill::abs;
@@ -145,9 +165,10 @@ mod core {
 
 /// Implementations of float functions for no_std and alloc builds
 /// Copied from `num-traits` crate
+#[cfg(not(feature = "std"))]
 mod polyfill {
+    #[must_use]
     #[inline(always)]
-    #[cfg(not(feature = "std"))]
     fn fract(value: f32) -> f32 {
         if value == 0.0 {
             0.0
@@ -158,7 +179,6 @@ mod polyfill {
 
     #[must_use]
     #[inline(always)]
-    #[cfg(not(feature = "std"))]
     pub(crate) fn round(value: f32) -> f32 {
         let f = fract(value);
         if f.is_nan() || f == 0.0 {
@@ -176,10 +196,35 @@ mod polyfill {
         }
     }
 
+    #[must_use]
+    #[inline(always)]
+    pub(crate) fn floor(value: f32) -> f32 {
+        let f = fract(value);
+        if f.is_nan() || f == 0.0 {
+            value
+        } else if value < 0.0 {
+            value - f - 1.0
+        } else {
+            value - f
+        }
+    }
+
+    #[must_use]
+    #[inline(always)]
+    pub(crate) fn ceil(value: f32) -> f32 {
+        let f = fract(value);
+        if f.is_nan() || f == 0.0 {
+            value
+        } else if value > 0.0 {
+            value - f + 1.0
+        } else {
+            value - f
+        }
+    }
+
     /// Computes the absolute value
     #[must_use]
     #[inline(always)]
-    #[cfg(not(feature = "std"))]
     pub(crate) fn abs(value: f32) -> f32 {
         if value.is_sign_positive() {
             return value;
