@@ -13,7 +13,9 @@ pub enum LengthPercentage {
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
     /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
     Length(f32),
-    /// The dimension is stored in percentage relative to the parent item.
+    /// A percentage length relative to the size of the containing block.
+    ///
+    /// **NOTE: percentages are represented as a f32 value in the range [0.0, 1.0] NOT the range [0.0, 100.0]**
     Percent(f32),
 }
 impl TaffyZero for LengthPercentage {
@@ -39,7 +41,9 @@ pub enum LengthPercentageAuto {
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
     /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
     Length(f32),
-    /// The dimension is stored in percentage relative to the parent item.
+    /// A percentage length relative to the size of the containing block.
+    ///
+    /// **NOTE: percentages are represented as a f32 value in the range [0.0, 1.0] NOT the range [0.0, 100.0]**
     Percent(f32),
     /// The dimension should be automatically computed
     Auto,
@@ -100,7 +104,9 @@ pub enum Dimension {
     /// An absolute length in some abstract units. Users of Taffy may define what they correspond
     /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
     Length(f32),
-    /// The dimension is stored in percentage relative to the parent item.
+    /// A percentage length relative to the size of the containing block.
+    ///
+    /// **NOTE: percentages are represented as a f32 value in the range [0.0, 1.0] NOT the range [0.0, 100.0]**
     Percent(f32),
     /// The dimension should be automatically computed
     Auto,
