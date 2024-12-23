@@ -795,6 +795,11 @@ impl<NodeContext> TaffyTree<NodeContext> {
         }
     }
 
+    /// Returns this node layout with unrounded values relative to its parent.
+    pub fn unrounded_layout(&self, node: NodeId) -> &Layout {
+        &self.nodes[node.into()].unrounded_layout
+    }
+
     /// Marks the layout of this node and its ancestors as outdated
     ///
     /// WARNING: this may stack-overflow if the tree contains a cycle
