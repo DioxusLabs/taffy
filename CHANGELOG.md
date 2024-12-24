@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.1
+
+### Fixed
+
+- Improve interaction of abspos children of block containers with margin collapsing (#760)
+
+### Added
+
+- Add `TaffyTree::unrounded_layout` getter (#765)
+
+### Removed
+
+- The `num-traits` dependency was removed (#761) (#762)
+
 ## 0.7.0
 
 ### Changed
