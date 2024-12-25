@@ -1,7 +1,9 @@
 //! Contains GridTrack used to represent a single grid track (row/column) during layout
 use crate::{
+    prelude::TaffyZero,
     style::{LengthPercentage, MaxTrackSizingFunction, MinTrackSizingFunction},
     util::sys::f32_min,
+    CompactLength,
 };
 
 /// Whether a GridTrack represents an actual track or a gutter.
@@ -92,8 +94,8 @@ impl GridTrack {
     pub fn gutter(size: LengthPercentage) -> GridTrack {
         Self::new_with_kind(
             GridTrackKind::Gutter,
-            MinTrackSizingFunction::Fixed(size),
-            MaxTrackSizingFunction::Fixed(size),
+            MinTrackSizingFunction::from(size),
+            MaxTrackSizingFunction::from(size),
         )
     }
 
@@ -101,14 +103,14 @@ impl GridTrack {
     /// to fixed zero-sized sizing functions.
     pub fn collapse(&mut self) {
         self.is_collapsed = true;
-        self.min_track_sizing_function = MinTrackSizingFunction::Fixed(LengthPercentage::Length(0.0));
-        self.max_track_sizing_function = MaxTrackSizingFunction::Fixed(LengthPercentage::Length(0.0));
+        self.min_track_sizing_function = MinTrackSizingFunction::ZERO;
+        self.max_track_sizing_function = MaxTrackSizingFunction::ZERO;
     }
 
     #[inline(always)]
     /// Returns true if the track is flexible (has a Flex MaxTrackSizingFunction), else false.
     pub fn is_flexible(&self) -> bool {
-        matches!(self.max_track_sizing_function, MaxTrackSizingFunction::Fraction(_))
+        self.max_track_sizing_function.is_fr()
     }
 
     #[inline(always)]
@@ -126,14 +128,12 @@ impl GridTrack {
     #[inline]
     /// Returns true if the track is flexible (has a Flex MaxTrackSizingFunction), else false.
     pub fn fit_content_limit(&self, axis_available_grid_space: Option<f32>) -> f32 {
-        match self.max_track_sizing_function {
-            MaxTrackSizingFunction::FitContent(LengthPercentage::Length(limit)) => limit,
-            MaxTrackSizingFunction::FitContent(LengthPercentage::Percent(fraction)) => {
-                match axis_available_grid_space {
-                    Some(space) => space * fraction,
-                    None => f32::INFINITY,
-                }
-            }
+        match self.max_track_sizing_function.0.tag() {
+            CompactLength::FIT_CONTENT_PX_TAG => self.max_track_sizing_function.0.value(),
+            CompactLength::FIT_CONTENT_PERCENT_TAG => match axis_available_grid_space {
+                Some(space) => space * self.max_track_sizing_function.0.value(),
+                None => f32::INFINITY,
+            },
             _ => f32::INFINITY,
         }
     }
@@ -147,9 +147,10 @@ impl GridTrack {
     #[inline]
     /// Returns the track's flex factor if it is a flex track, else 0.
     pub fn flex_factor(&self) -> f32 {
-        match self.max_track_sizing_function {
-            MaxTrackSizingFunction::Fraction(flex_factor) => flex_factor,
-            _ => 0.0,
+        if self.max_track_sizing_function.is_fr() {
+            self.max_track_sizing_function.0.value()
+        } else {
+            0.0
         }
     }
 }

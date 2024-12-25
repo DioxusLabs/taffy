@@ -1,3 +1,4 @@
+//! Style type for representing available space as a sizing constraint
 use crate::{
     prelude::{FromLength, TaffyMaxContent, TaffyMinContent, TaffyZero},
     sys::abs,

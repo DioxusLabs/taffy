@@ -2,8 +2,8 @@
 use crate::compute::common::alignment::compute_alignment_offset;
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{
-    AlignContent, AlignItems, AlignSelf, AvailableSpace, Dimension, FlexWrap, JustifyContent, LengthPercentageAuto,
-    Overflow, Position,
+    AlignContent, AlignItems, AlignSelf, AvailableSpace, FlexWrap, JustifyContent, LengthPercentageAuto, Overflow,
+    Position,
 };
 use crate::style::{CoreStyle, FlexDirection, FlexboxContainerStyle, FlexboxItemStyle};
 use crate::style_helpers::{TaffyMaxContent, TaffyMinContent};
@@ -527,7 +527,7 @@ fn generate_anonymous_flex_items(
 
                 inset: child_style.inset().zip_size(constants.node_inner_size, |p, s| p.maybe_resolve(s)),
                 margin: child_style.margin().resolve_or_zero(constants.node_inner_size.width),
-                margin_is_auto: child_style.margin().map(|m| m == LengthPercentageAuto::Auto),
+                margin_is_auto: child_style.margin().map(LengthPercentageAuto::is_auto),
                 padding: child_style.padding().resolve_or_zero(constants.node_inner_size.width),
                 border: child_style.border().resolve_or_zero(constants.node_inner_size.width),
                 align_self: child_style.align_self().unwrap_or(constants.align_items),
@@ -1578,7 +1578,7 @@ fn determine_used_cross_size(
                 if child.align_self == AlignSelf::Stretch
                     && !child.margin_is_auto.cross_start(constants.dir)
                     && !child.margin_is_auto.cross_end(constants.dir)
-                    && child_style.size().cross(constants.dir) == Dimension::Auto
+                    && child_style.size().cross(constants.dir).is_auto()
                 {
                     // For some reason this particular usage of max_width is an exception to the rule that max_width's transfer
                     // using the aspect_ratio (if set). Both Chrome and Firefox agree on this. And reading the spec, it seems like
