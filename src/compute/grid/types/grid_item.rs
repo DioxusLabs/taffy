@@ -3,10 +3,7 @@ use super::GridTrack;
 use crate::compute::grid::OriginZeroLine;
 use crate::geometry::AbstractAxis;
 use crate::geometry::{Line, Point, Rect, Size};
-use crate::style::{
-    AlignItems, AlignSelf, AvailableSpace, Dimension, LengthPercentageAuto, MaxTrackSizingFunction,
-    MinTrackSizingFunction, Overflow,
-};
+use crate::style::{AlignItems, AlignSelf, AvailableSpace, Dimension, LengthPercentageAuto, Overflow};
 use crate::tree::{LayoutPartialTree, LayoutPartialTreeExt, NodeId, SizingMode};
 use crate::util::{MaybeMath, MaybeResolve, ResolveOrZero};
 use crate::{BoxSizing, GridItemStyle, LengthPercentage};
@@ -272,10 +269,7 @@ impl GridItem {
             //  - Alignment style is "stretch"
             //  - The node is not absolutely positioned
             //  - The node does not have auto margins in this axis.
-            if self.margin.left != LengthPercentageAuto::Auto
-                && self.margin.right != LengthPercentageAuto::Auto
-                && self.justify_self == AlignSelf::Stretch
-            {
+            if !self.margin.left.is_auto() && !self.margin.right.is_auto() && self.justify_self == AlignSelf::Stretch {
                 return grid_area_minus_item_margins_size.width;
             }
 
@@ -290,10 +284,7 @@ impl GridItem {
             //  - Alignment style is "stretch"
             //  - The node is not absolutely positioned
             //  - The node does not have auto margins in this axis.
-            if self.margin.top != LengthPercentageAuto::Auto
-                && self.margin.bottom != LengthPercentageAuto::Auto
-                && self.align_self == AlignSelf::Stretch
-            {
+            if !self.margin.top.is_auto() && !self.margin.bottom.is_auto() && self.align_self == AlignSelf::Stretch {
                 return grid_area_minus_item_margins_size.height;
             }
 
@@ -490,13 +481,11 @@ impl GridItem {
                 let spans_auto_min_track = axis_tracks
                     .iter()
                     // TODO: should this be 'behaves as auto' rather than just literal auto?
-                    .any(|track| track.min_track_sizing_function == MinTrackSizingFunction::Auto);
+                    .any(|track| track.min_track_sizing_function.is_auto());
 
                 // if it spans more than one track in that axis, none of those tracks are flexible
                 let only_span_one_track = item_axis_tracks.len() == 1;
-                let spans_a_flexible_track = axis_tracks
-                    .iter()
-                    .any(|track| matches!(track.max_track_sizing_function, MaxTrackSizingFunction::Fraction(_)));
+                let spans_a_flexible_track = axis_tracks.iter().any(|track| track.max_track_sizing_function.is_fr());
 
                 let use_content_based_minimum =
                     spans_auto_min_track && (only_span_one_track || !spans_a_flexible_track);

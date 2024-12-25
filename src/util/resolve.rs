@@ -3,6 +3,7 @@
 use crate::geometry::{Rect, Size};
 use crate::style::{Dimension, LengthPercentage, LengthPercentageAuto};
 use crate::style_helpers::TaffyZero;
+use crate::CompactLength;
 
 /// Trait to encapsulate behaviour where we need to resolve from a
 /// potentially context-dependent size or dimension into
@@ -28,9 +29,10 @@ impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentage {
     /// Converts the given [`LengthPercentage`] into an absolute length
     /// Can return `None`
     fn maybe_resolve(self, context: Option<f32>) -> Option<f32> {
-        match self {
-            LengthPercentage::Length(length) => Some(length),
-            LengthPercentage::Percent(percent) => context.map(|dim| dim * percent),
+        match self.0.tag() {
+            CompactLength::LENGTH_TAG => Some(self.0.value()),
+            CompactLength::PERCENT_TAG => context.map(|dim| dim * self.0.value()),
+            _ => unreachable!(),
         }
     }
 }
@@ -39,10 +41,11 @@ impl MaybeResolve<Option<f32>, Option<f32>> for LengthPercentageAuto {
     /// Converts the given [`LengthPercentageAuto`] into an absolute length
     /// Can return `None`
     fn maybe_resolve(self, context: Option<f32>) -> Option<f32> {
-        match self {
-            LengthPercentageAuto::Length(length) => Some(length),
-            LengthPercentageAuto::Percent(percent) => context.map(|dim| dim * percent),
-            LengthPercentageAuto::Auto => None,
+        match self.0.tag() {
+            CompactLength::LENGTH_TAG => Some(self.0.value()),
+            CompactLength::PERCENT_TAG => context.map(|dim| dim * self.0.value()),
+            CompactLength::AUTO_TAG => None,
+            _ => unreachable!(),
         }
     }
 }
@@ -52,10 +55,11 @@ impl MaybeResolve<Option<f32>, Option<f32>> for Dimension {
     ///
     /// Can return `None`
     fn maybe_resolve(self, context: Option<f32>) -> Option<f32> {
-        match self {
-            Dimension::Length(length) => Some(length),
-            Dimension::Percent(percent) => context.map(|dim| dim * percent),
-            Dimension::Auto => None,
+        match self.0.tag() {
+            CompactLength::LENGTH_TAG => Some(self.0.value()),
+            CompactLength::PERCENT_TAG => context.map(|dim| dim * self.0.value()),
+            CompactLength::AUTO_TAG => None,
+            _ => unreachable!(),
         }
     }
 }
