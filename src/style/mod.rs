@@ -1,6 +1,7 @@
 //! A typed representation of [CSS style properties](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust. Used as input to layout computation.
 mod alignment;
 mod dimension;
+mod available_space;
 
 #[cfg(feature = "block_layout")]
 mod block;
@@ -10,7 +11,8 @@ mod flex;
 mod grid;
 
 pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, JustifyItems, JustifySelf};
-pub use self::dimension::{AvailableSpace, Dimension, LengthPercentage, LengthPercentageAuto};
+pub use self::dimension::{Dimension, LengthPercentage, LengthPercentageAuto};
+pub use self::available_space::AvailableSpace;
 
 #[cfg(feature = "block_layout")]
 pub use self::block::{BlockContainerStyle, BlockItemStyle, TextAlign};
