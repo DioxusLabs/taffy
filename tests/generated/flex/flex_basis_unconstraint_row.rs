@@ -6,8 +6,8 @@ fn flex_basis_unconstraint_row__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            flex_basis: taffy::style::Dimension::Length(50f32),
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+            flex_basis: taffy::style::Dimension::from_length(50f32),
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
             ..Default::default()
         })
         .unwrap();
@@ -39,8 +39,8 @@ fn flex_basis_unconstraint_row__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            flex_basis: taffy::style::Dimension::Length(50f32),
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+            flex_basis: taffy::style::Dimension::from_length(50f32),
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
             ..Default::default()
         })
         .unwrap();

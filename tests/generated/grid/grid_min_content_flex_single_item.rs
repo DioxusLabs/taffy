@@ -7,7 +7,7 @@ fn grid_min_content_flex_single_item__border_box() {
     let node0 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(10f32), height: auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(10f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -111,7 +111,7 @@ fn grid_min_content_flex_single_item__content_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(10f32), height: auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(10f32), height: auto() },
             ..Default::default()
         })
         .unwrap();

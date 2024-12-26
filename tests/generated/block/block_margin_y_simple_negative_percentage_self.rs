@@ -7,21 +7,21 @@ fn block_margin_y_simple_negative_percentage_self__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
-                top: taffy::style::LengthPercentageAuto::Percent(-0.1f32),
-                bottom: taffy::style::LengthPercentageAuto::Percent(-0.1f32),
+                top: percent(-0.1f32),
+                bottom: percent(-0.1f32),
             },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -29,7 +29,7 @@ fn block_margin_y_simple_negative_percentage_self__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1],
@@ -69,14 +69,14 @@ fn block_margin_y_simple_negative_percentage_self__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
-                top: taffy::style::LengthPercentageAuto::Percent(-0.1f32),
-                bottom: taffy::style::LengthPercentageAuto::Percent(-0.1f32),
+                top: percent(-0.1f32),
+                bottom: percent(-0.1f32),
             },
             ..Default::default()
         })
@@ -84,7 +84,7 @@ fn block_margin_y_simple_negative_percentage_self__content_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -93,7 +93,7 @@ fn block_margin_y_simple_negative_percentage_self__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1],

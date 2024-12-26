@@ -7,8 +7,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -16,8 +16,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
     let node01 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -29,8 +29,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 align_items: Some(taffy::style::AlignItems::Center),
                 align_content: Some(taffy::style::AlignContent::FlexStart),
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
                 ..Default::default()
             },
             &[node00, node01],
@@ -39,8 +39,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
     let node10 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -48,8 +48,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
     let node11 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -60,8 +60,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
                 display: taffy::style::Display::Flex,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 align_items: Some(taffy::style::AlignItems::Center),
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
                 ..Default::default()
             },
             &[node10, node11],
@@ -70,8 +70,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
     let node20 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -79,8 +79,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
     let node21 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -90,8 +90,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 align_items: Some(taffy::style::AlignItems::Center),
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
                 ..Default::default()
             },
             &[node20, node21],
@@ -100,8 +100,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
     let node30 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -109,8 +109,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
     let node31 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -121,8 +121,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__b
                 display: taffy::style::Display::Flex,
                 align_items: Some(taffy::style::AlignItems::Center),
                 align_content: Some(taffy::style::AlignContent::FlexStart),
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
                 ..Default::default()
             },
             &[node30, node31],
@@ -224,8 +224,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -234,8 +234,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -248,8 +248,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 align_items: Some(taffy::style::AlignItems::Center),
                 align_content: Some(taffy::style::AlignContent::FlexStart),
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
                 ..Default::default()
             },
             &[node00, node01],
@@ -259,8 +259,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -269,8 +269,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -282,8 +282,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 align_items: Some(taffy::style::AlignItems::Center),
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
                 ..Default::default()
             },
             &[node10, node11],
@@ -293,8 +293,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -303,8 +303,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -315,8 +315,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 align_items: Some(taffy::style::AlignItems::Center),
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
                 ..Default::default()
             },
             &[node20, node21],
@@ -326,8 +326,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -336,8 +336,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -349,8 +349,8 @@ fn align_items_center_with_min_height_with_align_content_flex_start_with_wrap__c
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 align_items: Some(taffy::style::AlignItems::Center),
                 align_content: Some(taffy::style::AlignContent::FlexStart),
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
                 ..Default::default()
             },
             &[node30, node31],

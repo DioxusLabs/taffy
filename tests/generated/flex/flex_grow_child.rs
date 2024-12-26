@@ -7,8 +7,8 @@ fn flex_grow_child__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            flex_basis: taffy::style::Dimension::Length(0f32),
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+            flex_basis: taffy::style::Dimension::from_length(0f32),
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
             ..Default::default()
         })
         .unwrap();
@@ -41,8 +41,8 @@ fn flex_grow_child__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 1f32,
-            flex_basis: taffy::style::Dimension::Length(0f32),
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+            flex_basis: taffy::style::Dimension::from_length(0f32),
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
             ..Default::default()
         })
         .unwrap();

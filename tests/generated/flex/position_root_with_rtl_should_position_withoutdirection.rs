@@ -7,15 +7,10 @@ fn position_root_with_rtl_should_position_withoutdirection__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(52f32),
-                height: taffy::style::Dimension::Length(52f32),
+                width: taffy::style::Dimension::from_length(52f32),
+                height: taffy::style::Dimension::from_length(52f32),
             },
-            inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(72f32),
-                right: auto(),
-                top: auto(),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: length(72f32), right: auto(), top: auto(), bottom: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -48,15 +43,10 @@ fn position_root_with_rtl_should_position_withoutdirection__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(52f32),
-                height: taffy::style::Dimension::Length(52f32),
+                width: taffy::style::Dimension::from_length(52f32),
+                height: taffy::style::Dimension::from_length(52f32),
             },
-            inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(72f32),
-                right: auto(),
-                top: auto(),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: length(72f32), right: auto(), top: auto(), bottom: auto() },
             ..Default::default()
         })
         .unwrap();

@@ -8,9 +8,9 @@ fn flex_grow_flex_basis_percent_min_max__border_box() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 0f32,
-            flex_basis: taffy::style::Dimension::Length(0f32),
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(20f32) },
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+            flex_basis: taffy::style::Dimension::from_length(0f32),
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(20f32) },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -18,19 +18,19 @@ fn flex_grow_flex_basis_percent_min_max__border_box() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 0f32,
-            flex_basis: taffy::style::Dimension::Percent(0.5f32),
+            flex_basis: taffy::style::Dimension::from_percent(0.5f32),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
-            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
+            max_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(120f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(120f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1],
@@ -71,9 +71,9 @@ fn flex_grow_flex_basis_percent_min_max__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 1f32,
             flex_shrink: 0f32,
-            flex_basis: taffy::style::Dimension::Length(0f32),
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(20f32) },
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+            flex_basis: taffy::style::Dimension::from_length(0f32),
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(20f32) },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -82,12 +82,12 @@ fn flex_grow_flex_basis_percent_min_max__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 1f32,
             flex_shrink: 0f32,
-            flex_basis: taffy::style::Dimension::Percent(0.5f32),
+            flex_basis: taffy::style::Dimension::from_percent(0.5f32),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
-            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
+            max_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -95,7 +95,7 @@ fn flex_grow_flex_basis_percent_min_max__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(120f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(120f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1],

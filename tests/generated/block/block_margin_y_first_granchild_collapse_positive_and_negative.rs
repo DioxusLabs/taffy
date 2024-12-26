@@ -6,7 +6,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0000 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -14,12 +14,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(-10f32),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(-10f32), bottom: zero() },
                 ..Default::default()
             },
             &[node0000],
@@ -29,12 +24,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(10f32),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(10f32), bottom: zero() },
                 ..Default::default()
             },
             &[node000],
@@ -44,12 +34,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(-10f32),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(-10f32), bottom: zero() },
                 ..Default::default()
             },
             &[node00],
@@ -57,7 +42,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__border_box() {
         .unwrap();
     let node1000 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -65,12 +50,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(-2f32),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(-2f32), bottom: zero() },
                 ..Default::default()
             },
             &[node1000],
@@ -80,12 +60,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(5f32),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(5f32), bottom: zero() },
                 ..Default::default()
             },
             &[node100],
@@ -95,12 +70,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(-10f32),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(-10f32), bottom: zero() },
                 ..Default::default()
             },
             &[node10],
@@ -108,7 +78,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__border_box() {
         .unwrap();
     let node2000 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -116,12 +86,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(15f32),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(15f32), bottom: zero() },
                 ..Default::default()
             },
             &[node2000],
@@ -131,12 +96,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(5f32),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(5f32), bottom: zero() },
                 ..Default::default()
             },
             &[node200],
@@ -146,12 +106,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(-10f32),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(-10f32), bottom: zero() },
                 ..Default::default()
             },
             &[node20],
@@ -161,7 +116,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2],
@@ -260,7 +215,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__content_box() 
     let node0000 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -269,12 +224,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__content_box() 
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(-10f32),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(-10f32), bottom: zero() },
                 ..Default::default()
             },
             &[node0000],
@@ -285,12 +235,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__content_box() 
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(10f32),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(10f32), bottom: zero() },
                 ..Default::default()
             },
             &[node000],
@@ -301,12 +246,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__content_box() 
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(-10f32),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(-10f32), bottom: zero() },
                 ..Default::default()
             },
             &[node00],
@@ -315,7 +255,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__content_box() 
     let node1000 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -324,12 +264,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__content_box() 
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(-2f32),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(-2f32), bottom: zero() },
                 ..Default::default()
             },
             &[node1000],
@@ -340,12 +275,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__content_box() 
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(5f32),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(5f32), bottom: zero() },
                 ..Default::default()
             },
             &[node100],
@@ -356,12 +286,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__content_box() 
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(-10f32),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(-10f32), bottom: zero() },
                 ..Default::default()
             },
             &[node10],
@@ -370,7 +295,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__content_box() 
     let node2000 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -379,12 +304,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__content_box() 
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(15f32),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(15f32), bottom: zero() },
                 ..Default::default()
             },
             &[node2000],
@@ -395,12 +315,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__content_box() 
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(5f32),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(5f32), bottom: zero() },
                 ..Default::default()
             },
             &[node200],
@@ -411,12 +326,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__content_box() 
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(-10f32),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(-10f32), bottom: zero() },
                 ..Default::default()
             },
             &[node20],
@@ -427,7 +337,7 @@ fn block_margin_y_first_granchild_collapse_positive_and_negative__content_box() 
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2],

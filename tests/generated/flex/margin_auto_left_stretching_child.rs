@@ -8,9 +8,9 @@ fn margin_auto_left_stretching_child__border_box() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0f32),
+            flex_basis: taffy::style::Dimension::from_percent(0f32),
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Auto,
+                left: taffy::style::LengthPercentageAuto::AUTO,
                 right: zero(),
                 top: zero(),
                 bottom: zero(),
@@ -21,8 +21,8 @@ fn margin_auto_left_stretching_child__border_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             ..Default::default()
         })
@@ -32,8 +32,8 @@ fn margin_auto_left_stretching_child__border_box() {
             taffy::style::Style {
                 align_items: Some(taffy::style::AlignItems::Center),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },
@@ -75,9 +75,9 @@ fn margin_auto_left_stretching_child__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0f32),
+            flex_basis: taffy::style::Dimension::from_percent(0f32),
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Auto,
+                left: taffy::style::LengthPercentageAuto::AUTO,
                 right: zero(),
                 top: zero(),
                 bottom: zero(),
@@ -89,8 +89,8 @@ fn margin_auto_left_stretching_child__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             ..Default::default()
         })
@@ -101,8 +101,8 @@ fn margin_auto_left_stretching_child__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 align_items: Some(taffy::style::AlignItems::Center),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },

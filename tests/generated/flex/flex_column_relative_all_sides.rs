@@ -6,12 +6,12 @@ fn flex_column_relative_all_sides__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(40f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(40f32), height: auto() },
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(10f32),
-                right: taffy::style::LengthPercentageAuto::Length(10f32),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
+                left: length(10f32),
+                right: length(10f32),
+                top: length(10f32),
+                bottom: length(10f32),
             },
             ..Default::default()
         })
@@ -21,8 +21,8 @@ fn flex_column_relative_all_sides__border_box() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },
@@ -56,12 +56,12 @@ fn flex_column_relative_all_sides__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(40f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(40f32), height: auto() },
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(10f32),
-                right: taffy::style::LengthPercentageAuto::Length(10f32),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
+                left: length(10f32),
+                right: length(10f32),
+                top: length(10f32),
+                bottom: length(10f32),
             },
             ..Default::default()
         })
@@ -72,8 +72,8 @@ fn flex_column_relative_all_sides__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },

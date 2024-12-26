@@ -9,12 +9,7 @@ fn display_none_with_position__border_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::None,
             flex_grow: 1f32,
-            inset: taffy::geometry::Rect {
-                left: auto(),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: auto(), right: auto(), top: length(10f32), bottom: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -22,8 +17,8 @@ fn display_none_with_position__border_box() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },
@@ -72,12 +67,7 @@ fn display_none_with_position__content_box() {
             display: taffy::style::Display::None,
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 1f32,
-            inset: taffy::geometry::Rect {
-                left: auto(),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: auto(), right: auto(), top: length(10f32), bottom: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -86,8 +76,8 @@ fn display_none_with_position__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },

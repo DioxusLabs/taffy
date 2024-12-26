@@ -7,8 +7,8 @@ fn percentage_width_height_undefined_parent_size__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(0.5f32),
-                height: taffy::style::Dimension::Percent(0.5f32),
+                width: taffy::style::Dimension::from_percent(0.5f32),
+                height: taffy::style::Dimension::from_percent(0.5f32),
             },
             ..Default::default()
         })
@@ -47,8 +47,8 @@ fn percentage_width_height_undefined_parent_size__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(0.5f32),
-                height: taffy::style::Dimension::Percent(0.5f32),
+                width: taffy::style::Dimension::from_percent(0.5f32),
+                height: taffy::style::Dimension::from_percent(0.5f32),
             },
             ..Default::default()
         })

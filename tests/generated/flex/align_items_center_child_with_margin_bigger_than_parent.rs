@@ -7,15 +7,10 @@ fn align_items_center_child_with_margin_bigger_than_parent__border_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
-            margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(10f32),
-                right: taffy::style::LengthPercentageAuto::Length(10f32),
-                top: zero(),
-                bottom: zero(),
-            },
+            margin: taffy::geometry::Rect { left: length(10f32), right: length(10f32), top: zero(), bottom: zero() },
             ..Default::default()
         })
         .unwrap();
@@ -31,8 +26,8 @@ fn align_items_center_child_with_margin_bigger_than_parent__border_box() {
                 align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Length(50f32),
+                    width: taffy::style::Dimension::from_length(50f32),
+                    height: taffy::style::Dimension::from_length(50f32),
                 },
                 ..Default::default()
             },
@@ -73,15 +68,10 @@ fn align_items_center_child_with_margin_bigger_than_parent__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
-            margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(10f32),
-                right: taffy::style::LengthPercentageAuto::Length(10f32),
-                top: zero(),
-                bottom: zero(),
-            },
+            margin: taffy::geometry::Rect { left: length(10f32), right: length(10f32), top: zero(), bottom: zero() },
             ..Default::default()
         })
         .unwrap();
@@ -102,8 +92,8 @@ fn align_items_center_child_with_margin_bigger_than_parent__content_box() {
                 align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Length(50f32),
+                    width: taffy::style::Dimension::from_length(50f32),
+                    height: taffy::style::Dimension::from_length(50f32),
                 },
                 ..Default::default()
             },

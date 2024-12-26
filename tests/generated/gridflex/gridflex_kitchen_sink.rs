@@ -6,13 +6,13 @@ fn gridflex_kitchen_sink__border_box() {
     let mut taffy = crate::new_test_tree();
     let node000 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node00100 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -34,7 +34,7 @@ fn gridflex_kitchen_sink__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_grow: 1f32,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },
             &[node0010],
@@ -164,14 +164,14 @@ fn gridflex_kitchen_sink__content_box() {
     let node000 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node00100 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -201,7 +201,7 @@ fn gridflex_kitchen_sink__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_grow: 1f32,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },
             &[node0010],

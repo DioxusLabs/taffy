@@ -7,15 +7,10 @@ fn percentage_position_bottom_right__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(0.55f32),
-                height: taffy::style::Dimension::Percent(0.15f32),
+                width: taffy::style::Dimension::from_percent(0.55f32),
+                height: taffy::style::Dimension::from_percent(0.15f32),
             },
-            inset: taffy::geometry::Rect {
-                left: auto(),
-                right: taffy::style::LengthPercentageAuto::Percent(0.2f32),
-                top: auto(),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.1f32),
-            },
+            inset: taffy::geometry::Rect { left: auto(), right: percent(0.2f32), top: auto(), bottom: percent(0.1f32) },
             ..Default::default()
         })
         .unwrap();
@@ -23,8 +18,8 @@ fn percentage_position_bottom_right__border_box() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(500f32),
-                    height: taffy::style::Dimension::Length(500f32),
+                    width: taffy::style::Dimension::from_length(500f32),
+                    height: taffy::style::Dimension::from_length(500f32),
                 },
                 ..Default::default()
             },
@@ -59,15 +54,10 @@ fn percentage_position_bottom_right__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(0.55f32),
-                height: taffy::style::Dimension::Percent(0.15f32),
+                width: taffy::style::Dimension::from_percent(0.55f32),
+                height: taffy::style::Dimension::from_percent(0.15f32),
             },
-            inset: taffy::geometry::Rect {
-                left: auto(),
-                right: taffy::style::LengthPercentageAuto::Percent(0.2f32),
-                top: auto(),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.1f32),
-            },
+            inset: taffy::geometry::Rect { left: auto(), right: percent(0.2f32), top: auto(), bottom: percent(0.1f32) },
             ..Default::default()
         })
         .unwrap();
@@ -76,8 +66,8 @@ fn percentage_position_bottom_right__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(500f32),
-                    height: taffy::style::Dimension::Length(500f32),
+                    width: taffy::style::Dimension::from_length(500f32),
+                    height: taffy::style::Dimension::from_length(500f32),
                 },
                 ..Default::default()
             },

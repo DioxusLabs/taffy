@@ -8,8 +8,8 @@ fn align_items_center_justify_content_center__border_box() {
         .new_leaf_with_context(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(10f32),
-                    height: taffy::style::Dimension::Length(10f32),
+                    width: taffy::style::Dimension::from_length(10f32),
+                    height: taffy::style::Dimension::from_length(10f32),
                 },
                 ..Default::default()
             },
@@ -22,10 +22,10 @@ fn align_items_center_justify_content_center__border_box() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(1f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(1f32) },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Length(10f32),
-                    right: taffy::style::LengthPercentageAuto::Length(10f32),
+                    left: length(10f32),
+                    right: length(10f32),
                     top: zero(),
                     bottom: zero(),
                 },
@@ -40,7 +40,7 @@ fn align_items_center_justify_content_center__border_box() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(50f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(50f32) },
                 ..Default::default()
             },
             &[node00],
@@ -51,8 +51,8 @@ fn align_items_center_justify_content_center__border_box() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(500f32),
-                    height: taffy::style::Dimension::Length(500f32),
+                    width: taffy::style::Dimension::from_length(500f32),
+                    height: taffy::style::Dimension::from_length(500f32),
                 },
                 ..Default::default()
             },
@@ -100,8 +100,8 @@ fn align_items_center_justify_content_center__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(10f32),
-                    height: taffy::style::Dimension::Length(10f32),
+                    width: taffy::style::Dimension::from_length(10f32),
+                    height: taffy::style::Dimension::from_length(10f32),
                 },
                 ..Default::default()
             },
@@ -115,10 +115,10 @@ fn align_items_center_justify_content_center__content_box() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(1f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(1f32) },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Length(10f32),
-                    right: taffy::style::LengthPercentageAuto::Length(10f32),
+                    left: length(10f32),
+                    right: length(10f32),
                     top: zero(),
                     bottom: zero(),
                 },
@@ -134,7 +134,7 @@ fn align_items_center_justify_content_center__content_box() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(50f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(50f32) },
                 ..Default::default()
             },
             &[node00],
@@ -146,8 +146,8 @@ fn align_items_center_justify_content_center__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(500f32),
-                    height: taffy::style::Dimension::Length(500f32),
+                    width: taffy::style::Dimension::from_length(500f32),
+                    height: taffy::style::Dimension::from_length(500f32),
                 },
                 ..Default::default()
             },

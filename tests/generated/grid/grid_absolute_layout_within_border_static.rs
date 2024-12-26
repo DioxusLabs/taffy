@@ -10,8 +10,8 @@ fn grid_absolute_layout_within_border_static__border_box() {
             align_self: Some(taffy::style::AlignSelf::Start),
             justify_self: Some(taffy::style::JustifySelf::Start),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             ..Default::default()
         })
@@ -22,8 +22,8 @@ fn grid_absolute_layout_within_border_static__border_box() {
             align_self: Some(taffy::style::AlignSelf::End),
             justify_self: Some(taffy::style::JustifySelf::End),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             ..Default::default()
         })
@@ -34,14 +34,14 @@ fn grid_absolute_layout_within_border_static__border_box() {
             align_self: Some(taffy::style::AlignSelf::Start),
             justify_self: Some(taffy::style::JustifySelf::Start),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(10f32),
-                right: taffy::style::LengthPercentageAuto::Length(10f32),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
+                left: length(10f32),
+                right: length(10f32),
+                top: length(10f32),
+                bottom: length(10f32),
             },
             ..Default::default()
         })
@@ -52,14 +52,14 @@ fn grid_absolute_layout_within_border_static__border_box() {
             align_self: Some(taffy::style::AlignSelf::End),
             justify_self: Some(taffy::style::JustifySelf::End),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(10f32),
-                right: taffy::style::LengthPercentageAuto::Length(10f32),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
+                left: length(10f32),
+                right: length(10f32),
+                top: length(10f32),
+                bottom: length(10f32),
             },
             ..Default::default()
         })
@@ -69,20 +69,20 @@ fn grid_absolute_layout_within_border_static__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(10f32),
-                    right: taffy::style::LengthPercentage::Length(10f32),
-                    top: taffy::style::LengthPercentage::Length(10f32),
-                    bottom: taffy::style::LengthPercentage::Length(10f32),
+                    left: length(10f32),
+                    right: length(10f32),
+                    top: length(10f32),
+                    bottom: length(10f32),
                 },
                 border: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(10f32),
-                    right: taffy::style::LengthPercentage::Length(10f32),
-                    top: taffy::style::LengthPercentage::Length(10f32),
-                    bottom: taffy::style::LengthPercentage::Length(10f32),
+                    left: length(10f32),
+                    right: length(10f32),
+                    top: length(10f32),
+                    bottom: length(10f32),
                 },
                 ..Default::default()
             },
@@ -138,8 +138,8 @@ fn grid_absolute_layout_within_border_static__content_box() {
             align_self: Some(taffy::style::AlignSelf::Start),
             justify_self: Some(taffy::style::JustifySelf::Start),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             ..Default::default()
         })
@@ -151,8 +151,8 @@ fn grid_absolute_layout_within_border_static__content_box() {
             align_self: Some(taffy::style::AlignSelf::End),
             justify_self: Some(taffy::style::JustifySelf::End),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             ..Default::default()
         })
@@ -164,14 +164,14 @@ fn grid_absolute_layout_within_border_static__content_box() {
             align_self: Some(taffy::style::AlignSelf::Start),
             justify_self: Some(taffy::style::JustifySelf::Start),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(10f32),
-                right: taffy::style::LengthPercentageAuto::Length(10f32),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
+                left: length(10f32),
+                right: length(10f32),
+                top: length(10f32),
+                bottom: length(10f32),
             },
             ..Default::default()
         })
@@ -183,14 +183,14 @@ fn grid_absolute_layout_within_border_static__content_box() {
             align_self: Some(taffy::style::AlignSelf::End),
             justify_self: Some(taffy::style::JustifySelf::End),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(10f32),
-                right: taffy::style::LengthPercentageAuto::Length(10f32),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
+                left: length(10f32),
+                right: length(10f32),
+                top: length(10f32),
+                bottom: length(10f32),
             },
             ..Default::default()
         })
@@ -201,20 +201,20 @@ fn grid_absolute_layout_within_border_static__content_box() {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(10f32),
-                    right: taffy::style::LengthPercentage::Length(10f32),
-                    top: taffy::style::LengthPercentage::Length(10f32),
-                    bottom: taffy::style::LengthPercentage::Length(10f32),
+                    left: length(10f32),
+                    right: length(10f32),
+                    top: length(10f32),
+                    bottom: length(10f32),
                 },
                 border: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(10f32),
-                    right: taffy::style::LengthPercentage::Length(10f32),
-                    top: taffy::style::LengthPercentage::Length(10f32),
-                    bottom: taffy::style::LengthPercentage::Length(10f32),
+                    left: length(10f32),
+                    right: length(10f32),
+                    top: length(10f32),
+                    bottom: length(10f32),
                 },
                 ..Default::default()
             },

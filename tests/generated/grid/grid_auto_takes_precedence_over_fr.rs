@@ -13,8 +13,8 @@ fn grid_auto_takes_precedence_over_fr__border_box() {
                 grid_template_rows: vec![length(40f32)],
                 grid_template_columns: vec![auto(), fr(1f32)],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },
@@ -65,8 +65,8 @@ fn grid_auto_takes_precedence_over_fr__content_box() {
                 grid_template_rows: vec![length(40f32)],
                 grid_template_columns: vec![auto(), fr(1f32)],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },

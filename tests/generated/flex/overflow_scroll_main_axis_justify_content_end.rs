@@ -7,7 +7,7 @@ fn overflow_scroll_main_axis_justify_content_end__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -16,8 +16,8 @@ fn overflow_scroll_main_axis_justify_content_end__border_box() {
             taffy::style::Style {
                 justify_content: Some(taffy::style::JustifyContent::End),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },
@@ -52,7 +52,7 @@ fn overflow_scroll_main_axis_justify_content_end__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -62,8 +62,8 @@ fn overflow_scroll_main_axis_justify_content_end__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 justify_content: Some(taffy::style::JustifyContent::End),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },

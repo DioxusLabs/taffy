@@ -6,8 +6,8 @@ fn undefined_height_with_min_max__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(0f32) },
-            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+            min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(0f32) },
+            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
             ..Default::default()
         })
         .unwrap();
@@ -15,8 +15,8 @@ fn undefined_height_with_min_max__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(320f32), height: auto() },
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(0f32) },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(320f32), height: auto() },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(0f32) },
                 ..Default::default()
             },
             &[node0],
@@ -49,8 +49,8 @@ fn undefined_height_with_min_max__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(0f32) },
-            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+            min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(0f32) },
+            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
             ..Default::default()
         })
         .unwrap();
@@ -59,8 +59,8 @@ fn undefined_height_with_min_max__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(320f32), height: auto() },
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(0f32) },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(320f32), height: auto() },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(0f32) },
                 ..Default::default()
             },
             &[node0],

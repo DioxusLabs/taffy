@@ -6,7 +6,7 @@ fn bevy_issue_7976_reduced__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(40f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(40f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -14,7 +14,7 @@ fn bevy_issue_7976_reduced__border_box() {
         .new_with_children(
             taffy::style::Style {
                 align_content: Some(taffy::style::AlignContent::Start),
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(200f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(200f32) },
                 ..Default::default()
             },
             &[node0],
@@ -47,7 +47,7 @@ fn bevy_issue_7976_reduced__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(40f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(40f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -56,7 +56,7 @@ fn bevy_issue_7976_reduced__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 align_content: Some(taffy::style::AlignContent::Start),
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(200f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(200f32) },
                 ..Default::default()
             },
             &[node0],

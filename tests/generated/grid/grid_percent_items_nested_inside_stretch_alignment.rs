@@ -7,12 +7,7 @@ fn grid_percent_items_nested_inside_stretch_alignment__border_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
-            padding: taffy::geometry::Rect {
-                left: zero(),
-                right: zero(),
-                top: taffy::style::LengthPercentage::Percent(0.2f32),
-                bottom: zero(),
-            },
+            padding: taffy::geometry::Rect { left: zero(), right: zero(), top: percent(0.2f32), bottom: zero() },
             ..Default::default()
         })
         .unwrap();
@@ -26,7 +21,7 @@ fn grid_percent_items_nested_inside_stretch_alignment__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
                 ..Default::default()
             },
             &[node0],
@@ -66,12 +61,7 @@ fn grid_percent_items_nested_inside_stretch_alignment__content_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            padding: taffy::geometry::Rect {
-                left: zero(),
-                right: zero(),
-                top: taffy::style::LengthPercentage::Percent(0.2f32),
-                bottom: zero(),
-            },
+            padding: taffy::geometry::Rect { left: zero(), right: zero(), top: percent(0.2f32), bottom: zero() },
             ..Default::default()
         })
         .unwrap();
@@ -90,7 +80,7 @@ fn grid_percent_items_nested_inside_stretch_alignment__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
                 ..Default::default()
             },
             &[node0],
