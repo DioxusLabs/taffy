@@ -7,14 +7,14 @@ fn child_with_padding_align_end__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(100f32),
-                height: taffy::style::Dimension::Length(100f32),
+                width: taffy::style::Dimension::from_length(100f32),
+                height: taffy::style::Dimension::from_length(100f32),
             },
             padding: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Length(20f32),
-                right: taffy::style::LengthPercentage::Length(20f32),
-                top: taffy::style::LengthPercentage::Length(20f32),
-                bottom: taffy::style::LengthPercentage::Length(20f32),
+                left: length(20f32),
+                right: length(20f32),
+                top: length(20f32),
+                bottom: length(20f32),
             },
             ..Default::default()
         })
@@ -26,8 +26,8 @@ fn child_with_padding_align_end__border_box() {
                 align_items: Some(taffy::style::AlignItems::FlexEnd),
                 justify_content: Some(taffy::style::JustifyContent::FlexEnd),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },
@@ -62,14 +62,14 @@ fn child_with_padding_align_end__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(100f32),
-                height: taffy::style::Dimension::Length(100f32),
+                width: taffy::style::Dimension::from_length(100f32),
+                height: taffy::style::Dimension::from_length(100f32),
             },
             padding: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Length(20f32),
-                right: taffy::style::LengthPercentage::Length(20f32),
-                top: taffy::style::LengthPercentage::Length(20f32),
-                bottom: taffy::style::LengthPercentage::Length(20f32),
+                left: length(20f32),
+                right: length(20f32),
+                top: length(20f32),
+                bottom: length(20f32),
             },
             ..Default::default()
         })
@@ -82,8 +82,8 @@ fn child_with_padding_align_end__content_box() {
                 align_items: Some(taffy::style::AlignItems::FlexEnd),
                 justify_content: Some(taffy::style::JustifyContent::FlexEnd),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },

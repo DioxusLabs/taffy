@@ -7,35 +7,35 @@ fn gap_column_gap_wrap_align_stretch__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node3 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node4 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -44,10 +44,10 @@ fn gap_column_gap_wrap_align_stretch__border_box() {
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 align_content: Some(taffy::style::AlignContent::Stretch),
-                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::Length(5f32), height: zero() },
+                gap: taffy::geometry::Size { width: length(5f32), height: zero() },
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(300f32),
-                    height: taffy::style::Dimension::Length(300f32),
+                    width: taffy::style::Dimension::from_length(300f32),
+                    height: taffy::style::Dimension::from_length(300f32),
                 },
                 ..Default::default()
             },
@@ -106,7 +106,7 @@ fn gap_column_gap_wrap_align_stretch__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 1f32,
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -114,7 +114,7 @@ fn gap_column_gap_wrap_align_stretch__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 1f32,
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -122,7 +122,7 @@ fn gap_column_gap_wrap_align_stretch__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 1f32,
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -130,7 +130,7 @@ fn gap_column_gap_wrap_align_stretch__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 1f32,
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -138,7 +138,7 @@ fn gap_column_gap_wrap_align_stretch__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 1f32,
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -148,10 +148,10 @@ fn gap_column_gap_wrap_align_stretch__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 align_content: Some(taffy::style::AlignContent::Stretch),
-                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::Length(5f32), height: zero() },
+                gap: taffy::geometry::Size { width: length(5f32), height: zero() },
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(300f32),
-                    height: taffy::style::Dimension::Length(300f32),
+                    width: taffy::style::Dimension::from_length(300f32),
+                    height: taffy::style::Dimension::from_length(300f32),
                 },
                 ..Default::default()
             },

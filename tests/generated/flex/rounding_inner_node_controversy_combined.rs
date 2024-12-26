@@ -7,21 +7,21 @@ fn rounding_inner_node_controversy_combined__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(1f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(1f32) },
             ..Default::default()
         })
         .unwrap();
     let node10 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(1f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node110 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(1f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -30,7 +30,7 @@ fn rounding_inner_node_controversy_combined__border_box() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 1f32,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(1f32), height: auto() },
                 ..Default::default()
             },
             &[node110],
@@ -39,7 +39,7 @@ fn rounding_inner_node_controversy_combined__border_box() {
     let node12 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(1f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -48,7 +48,7 @@ fn rounding_inner_node_controversy_combined__border_box() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 1f32,
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(1f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(1f32) },
                 ..Default::default()
             },
             &[node10, node11, node12],
@@ -57,7 +57,7 @@ fn rounding_inner_node_controversy_combined__border_box() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(1f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(1f32) },
             ..Default::default()
         })
         .unwrap();
@@ -65,8 +65,8 @@ fn rounding_inner_node_controversy_combined__border_box() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(640f32),
-                    height: taffy::style::Dimension::Length(320f32),
+                    width: taffy::style::Dimension::from_length(640f32),
+                    height: taffy::style::Dimension::from_length(320f32),
                 },
                 ..Default::default()
             },
@@ -137,7 +137,7 @@ fn rounding_inner_node_controversy_combined__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 1f32,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(1f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(1f32) },
             ..Default::default()
         })
         .unwrap();
@@ -145,7 +145,7 @@ fn rounding_inner_node_controversy_combined__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 1f32,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(1f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -153,7 +153,7 @@ fn rounding_inner_node_controversy_combined__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 1f32,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(1f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -163,7 +163,7 @@ fn rounding_inner_node_controversy_combined__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 1f32,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(1f32), height: auto() },
                 ..Default::default()
             },
             &[node110],
@@ -173,7 +173,7 @@ fn rounding_inner_node_controversy_combined__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 1f32,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(1f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -183,7 +183,7 @@ fn rounding_inner_node_controversy_combined__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_grow: 1f32,
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(1f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(1f32) },
                 ..Default::default()
             },
             &[node10, node11, node12],
@@ -193,7 +193,7 @@ fn rounding_inner_node_controversy_combined__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 1f32,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(1f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(1f32) },
             ..Default::default()
         })
         .unwrap();
@@ -202,8 +202,8 @@ fn rounding_inner_node_controversy_combined__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(640f32),
-                    height: taffy::style::Dimension::Length(320f32),
+                    width: taffy::style::Dimension::from_length(640f32),
+                    height: taffy::style::Dimension::from_length(320f32),
                 },
                 ..Default::default()
             },

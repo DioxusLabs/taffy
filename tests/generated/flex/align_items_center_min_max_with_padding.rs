@@ -7,8 +7,8 @@ fn align_items_center_min_max_with_padding__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(62f32),
-                height: taffy::style::Dimension::Length(62f32),
+                width: taffy::style::Dimension::from_length(62f32),
+                height: taffy::style::Dimension::from_length(62f32),
             },
             ..Default::default()
         })
@@ -18,19 +18,14 @@ fn align_items_center_min_max_with_padding__border_box() {
             taffy::style::Style {
                 align_items: Some(taffy::style::AlignItems::Center),
                 min_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(320f32),
-                    height: taffy::style::Dimension::Length(72f32),
+                    width: taffy::style::Dimension::from_length(320f32),
+                    height: taffy::style::Dimension::from_length(72f32),
                 },
                 max_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(320f32),
-                    height: taffy::style::Dimension::Length(504f32),
+                    width: taffy::style::Dimension::from_length(320f32),
+                    height: taffy::style::Dimension::from_length(504f32),
                 },
-                padding: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentage::Length(8f32),
-                    bottom: taffy::style::LengthPercentage::Length(8f32),
-                },
+                padding: taffy::geometry::Rect { left: zero(), right: zero(), top: length(8f32), bottom: length(8f32) },
                 ..Default::default()
             },
             &[node0],
@@ -64,8 +59,8 @@ fn align_items_center_min_max_with_padding__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(62f32),
-                height: taffy::style::Dimension::Length(62f32),
+                width: taffy::style::Dimension::from_length(62f32),
+                height: taffy::style::Dimension::from_length(62f32),
             },
             ..Default::default()
         })
@@ -76,19 +71,14 @@ fn align_items_center_min_max_with_padding__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 align_items: Some(taffy::style::AlignItems::Center),
                 min_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(320f32),
-                    height: taffy::style::Dimension::Length(72f32),
+                    width: taffy::style::Dimension::from_length(320f32),
+                    height: taffy::style::Dimension::from_length(72f32),
                 },
                 max_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(320f32),
-                    height: taffy::style::Dimension::Length(504f32),
+                    width: taffy::style::Dimension::from_length(320f32),
+                    height: taffy::style::Dimension::from_length(504f32),
                 },
-                padding: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentage::Length(8f32),
-                    bottom: taffy::style::LengthPercentage::Length(8f32),
-                },
+                padding: taffy::geometry::Rect { left: zero(), right: zero(), top: length(8f32), bottom: length(8f32) },
                 ..Default::default()
             },
             &[node0],

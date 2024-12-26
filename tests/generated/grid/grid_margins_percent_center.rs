@@ -9,14 +9,14 @@ fn grid_margins_percent_center__border_box() {
             align_self: Some(taffy::style::AlignSelf::Center),
             justify_self: Some(taffy::style::JustifySelf::Center),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Percent(0.2f32),
-                right: taffy::style::LengthPercentageAuto::Percent(0.1f32),
-                top: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.15f32),
+                left: percent(0.2f32),
+                right: percent(0.1f32),
+                top: percent(0.05f32),
+                bottom: percent(0.15f32),
             },
             ..Default::default()
         })
@@ -97,14 +97,14 @@ fn grid_margins_percent_center__content_box() {
             align_self: Some(taffy::style::AlignSelf::Center),
             justify_self: Some(taffy::style::JustifySelf::Center),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Percent(0.2f32),
-                right: taffy::style::LengthPercentageAuto::Percent(0.1f32),
-                top: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.15f32),
+                left: percent(0.2f32),
+                right: percent(0.1f32),
+                top: percent(0.05f32),
+                bottom: percent(0.15f32),
             },
             ..Default::default()
         })

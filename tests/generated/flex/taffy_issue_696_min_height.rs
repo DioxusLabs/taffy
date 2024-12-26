@@ -8,7 +8,7 @@ fn taffy_issue_696_min_height__border_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Flex,
             flex_shrink: 0f32,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(200f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(200f32) },
             ..Default::default()
         })
         .unwrap();
@@ -17,13 +17,13 @@ fn taffy_issue_696_min_height__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 flex_direction: taffy::style::FlexDirection::Column,
-                flex_basis: taffy::style::Dimension::Length(0f32),
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+                flex_basis: taffy::style::Dimension::from_length(0f32),
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(20f32),
-                    right: taffy::style::LengthPercentage::Length(20f32),
-                    top: taffy::style::LengthPercentage::Length(20f32),
-                    bottom: taffy::style::LengthPercentage::Length(20f32),
+                    left: length(20f32),
+                    right: length(20f32),
+                    top: length(20f32),
+                    bottom: length(20f32),
                 },
                 ..Default::default()
             },
@@ -35,7 +35,7 @@ fn taffy_issue_696_min_height__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
                 ..Default::default()
             },
             &[node0],
@@ -76,7 +76,7 @@ fn taffy_issue_696_min_height__content_box() {
             display: taffy::style::Display::Flex,
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(200f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(200f32) },
             ..Default::default()
         })
         .unwrap();
@@ -86,13 +86,13 @@ fn taffy_issue_696_min_height__content_box() {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
-                flex_basis: taffy::style::Dimension::Length(0f32),
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+                flex_basis: taffy::style::Dimension::from_length(0f32),
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(20f32),
-                    right: taffy::style::LengthPercentage::Length(20f32),
-                    top: taffy::style::LengthPercentage::Length(20f32),
-                    bottom: taffy::style::LengthPercentage::Length(20f32),
+                    left: length(20f32),
+                    right: length(20f32),
+                    top: length(20f32),
+                    bottom: length(20f32),
                 },
                 ..Default::default()
             },
@@ -105,7 +105,7 @@ fn taffy_issue_696_min_height__content_box() {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

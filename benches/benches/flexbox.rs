@@ -14,9 +14,9 @@ use taffy_benchmarks::yoga_helpers::YogaTreeBuilder;
 
 fn random_dimension(rng: &mut impl Rng) -> Dimension {
     match rng.gen_range(0.0..=1.0) {
-        rand if rand < 0.2 => Dimension::Auto,
-        rand if rand < 0.8 => Dimension::Length(rng.gen_range(0.0..500.0)),
-        _ => Dimension::Percent(rng.gen_range(0.0..1.0)),
+        rand if rand < 0.2 => auto(),
+        rand if rand < 0.8 => length(rng.gen_range(0.0..500.0)),
+        _ => percent(rng.gen_range(0.0..1.0)),
     }
 }
 

@@ -10,8 +10,8 @@ fn grid_out_of_order_items__border_box() {
         .new_leaf(taffy::style::Style {
             grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(35f32),
-                height: taffy::style::Dimension::Length(35f32),
+                width: taffy::style::Dimension::from_length(35f32),
+                height: taffy::style::Dimension::from_length(35f32),
             },
             ..Default::default()
         })
@@ -23,8 +23,8 @@ fn grid_out_of_order_items__border_box() {
             grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -34,8 +34,8 @@ fn grid_out_of_order_items__border_box() {
         .new_leaf(taffy::style::Style {
             grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -49,8 +49,8 @@ fn grid_out_of_order_items__border_box() {
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 grid_auto_flow: taffy::style::GridAutoFlow::RowDense,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(120f32),
-                    height: taffy::style::Dimension::Length(120f32),
+                    width: taffy::style::Dimension::from_length(120f32),
+                    height: taffy::style::Dimension::from_length(120f32),
                 },
                 ..Default::default()
             },
@@ -140,8 +140,8 @@ fn grid_out_of_order_items__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(35f32),
-                height: taffy::style::Dimension::Length(35f32),
+                width: taffy::style::Dimension::from_length(35f32),
+                height: taffy::style::Dimension::from_length(35f32),
             },
             ..Default::default()
         })
@@ -158,8 +158,8 @@ fn grid_out_of_order_items__content_box() {
             grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -172,8 +172,8 @@ fn grid_out_of_order_items__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -190,8 +190,8 @@ fn grid_out_of_order_items__content_box() {
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 grid_auto_flow: taffy::style::GridAutoFlow::RowDense,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(120f32),
-                    height: taffy::style::Dimension::Length(120f32),
+                    width: taffy::style::Dimension::from_length(120f32),
+                    height: taffy::style::Dimension::from_length(120f32),
                 },
                 ..Default::default()
             },

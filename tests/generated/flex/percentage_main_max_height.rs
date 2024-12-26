@@ -5,12 +5,12 @@ fn percentage_main_max_height__border_box() {
     use taffy::{prelude::*, Layout};
     let mut taffy = crate::new_test_tree();
     let node00 = taffy
-        .new_leaf(taffy::style::Style { flex_basis: taffy::style::Dimension::Length(15f32), ..Default::default() })
+        .new_leaf(taffy::style::Style { flex_basis: taffy::style::Dimension::from_length(15f32), ..Default::default() })
         .unwrap();
     let node01 = taffy
         .new_leaf(taffy::style::Style {
-            flex_basis: taffy::style::Dimension::Length(48f32),
-            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(0.33f32) },
+            flex_basis: taffy::style::Dimension::from_length(48f32),
+            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(0.33f32) },
             ..Default::default()
         })
         .unwrap();
@@ -19,7 +19,7 @@ fn percentage_main_max_height__border_box() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_items: Some(taffy::style::AlignItems::FlexStart),
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(151f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(151f32) },
                 ..Default::default()
             },
             &[node00, node01],
@@ -29,7 +29,7 @@ fn percentage_main_max_height__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(71f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(71f32), height: auto() },
                 ..Default::default()
             },
             &[node0],
@@ -74,15 +74,15 @@ fn percentage_main_max_height__content_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            flex_basis: taffy::style::Dimension::Length(15f32),
+            flex_basis: taffy::style::Dimension::from_length(15f32),
             ..Default::default()
         })
         .unwrap();
     let node01 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            flex_basis: taffy::style::Dimension::Length(48f32),
-            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(0.33f32) },
+            flex_basis: taffy::style::Dimension::from_length(48f32),
+            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(0.33f32) },
             ..Default::default()
         })
         .unwrap();
@@ -92,7 +92,7 @@ fn percentage_main_max_height__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_items: Some(taffy::style::AlignItems::FlexStart),
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(151f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(151f32) },
                 ..Default::default()
             },
             &[node00, node01],
@@ -103,7 +103,7 @@ fn percentage_main_max_height__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(71f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(71f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

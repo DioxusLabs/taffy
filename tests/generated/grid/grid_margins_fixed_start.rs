@@ -9,14 +9,14 @@ fn grid_margins_fixed_start__border_box() {
             align_self: Some(taffy::style::AlignSelf::Start),
             justify_self: Some(taffy::style::JustifySelf::Start),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(4f32),
-                right: taffy::style::LengthPercentageAuto::Length(2f32),
-                top: taffy::style::LengthPercentageAuto::Length(1f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(3f32),
+                left: length(4f32),
+                right: length(2f32),
+                top: length(1f32),
+                bottom: length(3f32),
             },
             ..Default::default()
         })
@@ -33,10 +33,10 @@ fn grid_margins_fixed_start__border_box() {
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(40f32),
-                    right: taffy::style::LengthPercentage::Length(20f32),
-                    top: taffy::style::LengthPercentage::Length(10f32),
-                    bottom: taffy::style::LengthPercentage::Length(30f32),
+                    left: length(40f32),
+                    right: length(20f32),
+                    top: length(10f32),
+                    bottom: length(30f32),
                 },
                 ..Default::default()
             },
@@ -103,14 +103,14 @@ fn grid_margins_fixed_start__content_box() {
             align_self: Some(taffy::style::AlignSelf::Start),
             justify_self: Some(taffy::style::JustifySelf::Start),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(4f32),
-                right: taffy::style::LengthPercentageAuto::Length(2f32),
-                top: taffy::style::LengthPercentageAuto::Length(1f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(3f32),
+                left: length(4f32),
+                right: length(2f32),
+                top: length(1f32),
+                bottom: length(3f32),
             },
             ..Default::default()
         })
@@ -138,10 +138,10 @@ fn grid_margins_fixed_start__content_box() {
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(40f32),
-                    right: taffy::style::LengthPercentage::Length(20f32),
-                    top: taffy::style::LengthPercentage::Length(10f32),
-                    bottom: taffy::style::LengthPercentage::Length(30f32),
+                    left: length(40f32),
+                    right: length(20f32),
+                    top: length(10f32),
+                    bottom: length(30f32),
                 },
                 ..Default::default()
             },

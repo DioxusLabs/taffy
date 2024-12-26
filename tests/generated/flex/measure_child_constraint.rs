@@ -9,8 +9,8 @@ fn measure_child_constraint__border_box() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Auto,
+                    width: taffy::style::Dimension::from_length(50f32),
+                    height: taffy::style::Dimension::AUTO,
                 },
                 ..Default::default()
             },
@@ -47,8 +47,8 @@ fn measure_child_constraint__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Auto,
+                    width: taffy::style::Dimension::from_length(50f32),
+                    height: taffy::style::Dimension::AUTO,
                 },
                 ..Default::default()
             },

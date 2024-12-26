@@ -30,8 +30,8 @@ fn grid_placement_definite_in_secondary_axis_with_fully_definite_negative__borde
                 grid_template_rows: vec![length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32)],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(120f32),
-                    height: taffy::style::Dimension::Length(120f32),
+                    width: taffy::style::Dimension::from_length(120f32),
+                    height: taffy::style::Dimension::from_length(120f32),
                 },
                 ..Default::default()
             },
@@ -104,8 +104,8 @@ fn grid_placement_definite_in_secondary_axis_with_fully_definite_negative__conte
                 grid_template_rows: vec![length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32)],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(120f32),
-                    height: taffy::style::Dimension::Length(120f32),
+                    width: taffy::style::Dimension::from_length(120f32),
+                    height: taffy::style::Dimension::from_length(120f32),
                 },
                 ..Default::default()
             },

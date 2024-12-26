@@ -7,14 +7,9 @@ fn block_absolute_aspect_ratio_height_overrides_inset__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(0.1f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(0.1f32) },
             aspect_ratio: Some(3f32),
-            inset: taffy::geometry::Rect {
-                left: auto(),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Percent(0.3f32),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.5f32),
-            },
+            inset: taffy::geometry::Rect { left: auto(), right: auto(), top: percent(0.3f32), bottom: percent(0.5f32) },
             ..Default::default()
         })
         .unwrap();
@@ -23,8 +18,8 @@ fn block_absolute_aspect_ratio_height_overrides_inset__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(400f32),
-                    height: taffy::style::Dimension::Length(300f32),
+                    width: taffy::style::Dimension::from_length(400f32),
+                    height: taffy::style::Dimension::from_length(300f32),
                 },
                 ..Default::default()
             },
@@ -59,14 +54,9 @@ fn block_absolute_aspect_ratio_height_overrides_inset__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(0.1f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(0.1f32) },
             aspect_ratio: Some(3f32),
-            inset: taffy::geometry::Rect {
-                left: auto(),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Percent(0.3f32),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.5f32),
-            },
+            inset: taffy::geometry::Rect { left: auto(), right: auto(), top: percent(0.3f32), bottom: percent(0.5f32) },
             ..Default::default()
         })
         .unwrap();
@@ -76,8 +66,8 @@ fn block_absolute_aspect_ratio_height_overrides_inset__content_box() {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(400f32),
-                    height: taffy::style::Dimension::Length(300f32),
+                    width: taffy::style::Dimension::from_length(400f32),
+                    height: taffy::style::Dimension::from_length(300f32),
                 },
                 ..Default::default()
             },

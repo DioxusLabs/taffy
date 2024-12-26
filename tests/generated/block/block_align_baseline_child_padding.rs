@@ -8,8 +8,8 @@ fn block_align_baseline_child_padding__border_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             ..Default::default()
         })
@@ -18,8 +18,8 @@ fn block_align_baseline_child_padding__border_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -29,14 +29,14 @@ fn block_align_baseline_child_padding__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Length(20f32),
+                    width: taffy::style::Dimension::from_length(50f32),
+                    height: taffy::style::Dimension::from_length(20f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(5f32),
-                    right: taffy::style::LengthPercentage::Length(5f32),
-                    top: taffy::style::LengthPercentage::Length(5f32),
-                    bottom: taffy::style::LengthPercentage::Length(5f32),
+                    left: length(5f32),
+                    right: length(5f32),
+                    top: length(5f32),
+                    bottom: length(5f32),
                 },
                 ..Default::default()
             },
@@ -48,14 +48,14 @@ fn block_align_baseline_child_padding__border_box() {
             taffy::style::Style {
                 align_items: Some(taffy::style::AlignItems::Baseline),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(5f32),
-                    right: taffy::style::LengthPercentage::Length(5f32),
-                    top: taffy::style::LengthPercentage::Length(5f32),
-                    bottom: taffy::style::LengthPercentage::Length(5f32),
+                    left: length(5f32),
+                    right: length(5f32),
+                    top: length(5f32),
+                    bottom: length(5f32),
                 },
                 ..Default::default()
             },
@@ -103,8 +103,8 @@ fn block_align_baseline_child_padding__content_box() {
             display: taffy::style::Display::Block,
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             ..Default::default()
         })
@@ -114,8 +114,8 @@ fn block_align_baseline_child_padding__content_box() {
             display: taffy::style::Display::Block,
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -126,14 +126,14 @@ fn block_align_baseline_child_padding__content_box() {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Length(20f32),
+                    width: taffy::style::Dimension::from_length(50f32),
+                    height: taffy::style::Dimension::from_length(20f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(5f32),
-                    right: taffy::style::LengthPercentage::Length(5f32),
-                    top: taffy::style::LengthPercentage::Length(5f32),
-                    bottom: taffy::style::LengthPercentage::Length(5f32),
+                    left: length(5f32),
+                    right: length(5f32),
+                    top: length(5f32),
+                    bottom: length(5f32),
                 },
                 ..Default::default()
             },
@@ -146,14 +146,14 @@ fn block_align_baseline_child_padding__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 align_items: Some(taffy::style::AlignItems::Baseline),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(5f32),
-                    right: taffy::style::LengthPercentage::Length(5f32),
-                    top: taffy::style::LengthPercentage::Length(5f32),
-                    bottom: taffy::style::LengthPercentage::Length(5f32),
+                    left: length(5f32),
+                    right: length(5f32),
+                    top: length(5f32),
+                    bottom: length(5f32),
                 },
                 ..Default::default()
             },

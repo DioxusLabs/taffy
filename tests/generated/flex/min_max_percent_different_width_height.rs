@@ -8,12 +8,12 @@ fn min_max_percent_different_width_height__border_box() {
         .new_leaf_with_context(
             taffy::style::Style {
                 min_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(0.1f32),
-                    height: taffy::style::Dimension::Percent(0.1f32),
+                    width: taffy::style::Dimension::from_percent(0.1f32),
+                    height: taffy::style::Dimension::from_percent(0.1f32),
                 },
                 max_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(0.1f32),
-                    height: taffy::style::Dimension::Percent(0.1f32),
+                    width: taffy::style::Dimension::from_percent(0.1f32),
+                    height: taffy::style::Dimension::from_percent(0.1f32),
                 },
                 ..Default::default()
             },
@@ -26,8 +26,8 @@ fn min_max_percent_different_width_height__border_box() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_items: Some(taffy::style::AlignItems::FlexStart),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },
@@ -63,12 +63,12 @@ fn min_max_percent_different_width_height__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 min_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(0.1f32),
-                    height: taffy::style::Dimension::Percent(0.1f32),
+                    width: taffy::style::Dimension::from_percent(0.1f32),
+                    height: taffy::style::Dimension::from_percent(0.1f32),
                 },
                 max_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(0.1f32),
-                    height: taffy::style::Dimension::Percent(0.1f32),
+                    width: taffy::style::Dimension::from_percent(0.1f32),
+                    height: taffy::style::Dimension::from_percent(0.1f32),
                 },
                 ..Default::default()
             },
@@ -82,8 +82,8 @@ fn min_max_percent_different_width_height__content_box() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_items: Some(taffy::style::AlignItems::FlexStart),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },

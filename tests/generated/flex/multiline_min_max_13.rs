@@ -8,15 +8,10 @@ fn multiline_min_max_13__border_box() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Length(600f32),
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
-            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(300f32), height: auto() },
-            border: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Length(10f32),
-                right: zero(),
-                top: zero(),
-                bottom: zero(),
-            },
+            flex_basis: taffy::style::Dimension::from_length(600f32),
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
+            max_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(300f32), height: auto() },
+            border: taffy::geometry::Rect { left: length(10f32), right: zero(), top: zero(), bottom: zero() },
             ..Default::default()
         })
         .unwrap();
@@ -24,10 +19,10 @@ fn multiline_min_max_13__border_box() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Auto,
+            flex_basis: taffy::style::Dimension::AUTO,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(100f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(100f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -36,10 +31,10 @@ fn multiline_min_max_13__border_box() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Auto,
+            flex_basis: taffy::style::Dimension::AUTO,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(100f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(100f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -48,10 +43,10 @@ fn multiline_min_max_13__border_box() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Auto,
+            flex_basis: taffy::style::Dimension::AUTO,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(100f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(100f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -63,14 +58,14 @@ fn multiline_min_max_13__border_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(600f32),
-                    height: taffy::style::Dimension::Length(20f32),
+                    width: taffy::style::Dimension::from_length(600f32),
+                    height: taffy::style::Dimension::from_length(20f32),
                 },
                 border: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(5f32),
-                    right: taffy::style::LengthPercentage::Length(5f32),
-                    top: taffy::style::LengthPercentage::Length(5f32),
-                    bottom: taffy::style::LengthPercentage::Length(5f32),
+                    left: length(5f32),
+                    right: length(5f32),
+                    top: length(5f32),
+                    bottom: length(5f32),
                 },
                 ..Default::default()
             },
@@ -123,15 +118,10 @@ fn multiline_min_max_13__content_box() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Length(600f32),
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
-            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(300f32), height: auto() },
-            border: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Length(10f32),
-                right: zero(),
-                top: zero(),
-                bottom: zero(),
-            },
+            flex_basis: taffy::style::Dimension::from_length(600f32),
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
+            max_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(300f32), height: auto() },
+            border: taffy::geometry::Rect { left: length(10f32), right: zero(), top: zero(), bottom: zero() },
             ..Default::default()
         })
         .unwrap();
@@ -139,10 +129,10 @@ fn multiline_min_max_13__content_box() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Auto,
+            flex_basis: taffy::style::Dimension::AUTO,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(100f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(100f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -151,10 +141,10 @@ fn multiline_min_max_13__content_box() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Auto,
+            flex_basis: taffy::style::Dimension::AUTO,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(100f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(100f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -163,10 +153,10 @@ fn multiline_min_max_13__content_box() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Auto,
+            flex_basis: taffy::style::Dimension::AUTO,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(100f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(100f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -178,14 +168,14 @@ fn multiline_min_max_13__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(600f32),
-                    height: taffy::style::Dimension::Length(20f32),
+                    width: taffy::style::Dimension::from_length(600f32),
+                    height: taffy::style::Dimension::from_length(20f32),
                 },
                 border: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(5f32),
-                    right: taffy::style::LengthPercentage::Length(5f32),
-                    top: taffy::style::LengthPercentage::Length(5f32),
-                    bottom: taffy::style::LengthPercentage::Length(5f32),
+                    left: length(5f32),
+                    right: length(5f32),
+                    top: length(5f32),
+                    bottom: length(5f32),
                 },
                 ..Default::default()
             },

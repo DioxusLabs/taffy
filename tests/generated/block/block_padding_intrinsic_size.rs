@@ -7,15 +7,15 @@ fn block_padding_intrinsic_size__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -24,10 +24,10 @@ fn block_padding_intrinsic_size__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(8f32),
-                    right: taffy::style::LengthPercentage::Length(4f32),
-                    top: taffy::style::LengthPercentage::Length(2f32),
-                    bottom: taffy::style::LengthPercentage::Length(6f32),
+                    left: length(8f32),
+                    right: length(4f32),
+                    top: length(2f32),
+                    bottom: length(6f32),
                 },
                 ..Default::default()
             },
@@ -68,8 +68,8 @@ fn block_padding_intrinsic_size__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -77,7 +77,7 @@ fn block_padding_intrinsic_size__content_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -87,10 +87,10 @@ fn block_padding_intrinsic_size__content_box() {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(8f32),
-                    right: taffy::style::LengthPercentage::Length(4f32),
-                    top: taffy::style::LengthPercentage::Length(2f32),
-                    bottom: taffy::style::LengthPercentage::Length(6f32),
+                    left: length(8f32),
+                    right: length(4f32),
+                    top: length(2f32),
+                    bottom: length(6f32),
                 },
                 ..Default::default()
             },

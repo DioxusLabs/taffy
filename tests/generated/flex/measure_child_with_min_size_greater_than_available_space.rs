@@ -7,7 +7,7 @@ fn measure_child_with_min_size_greater_than_available_space__border_box() {
     let node0 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
-                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+                min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("HHHHHHHH\u{200b}HHHHHHHH", crate::WritingMode::Horizontal),
@@ -18,7 +18,7 @@ fn measure_child_with_min_size_greater_than_available_space__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
                 ..Default::default()
             },
             &[node0],
@@ -52,7 +52,7 @@ fn measure_child_with_min_size_greater_than_available_space__content_box() {
         .new_leaf_with_context(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+                min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("HHHHHHHH\u{200b}HHHHHHHH", crate::WritingMode::Horizontal),
@@ -64,7 +64,7 @@ fn measure_child_with_min_size_greater_than_available_space__content_box() {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

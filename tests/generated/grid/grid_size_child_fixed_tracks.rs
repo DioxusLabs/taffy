@@ -39,7 +39,7 @@ fn grid_size_child_fixed_tracks__border_box() {
             taffy::style::Style {
                 align_self: Some(taffy::style::AlignSelf::Start),
                 justify_self: Some(taffy::style::JustifySelf::Start),
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(20f32), height: auto() },
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("HH\u{200b}HH\u{200b}HH\u{200b}HH", crate::WritingMode::Horizontal),
@@ -50,7 +50,7 @@ fn grid_size_child_fixed_tracks__border_box() {
             taffy::style::Style {
                 align_self: Some(taffy::style::AlignSelf::Start),
                 justify_self: Some(taffy::style::JustifySelf::Start),
-                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(30f32), height: auto() },
+                max_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(30f32), height: auto() },
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("HH\u{200b}HH\u{200b}HH\u{200b}HH", crate::WritingMode::Horizontal),
@@ -63,8 +63,8 @@ fn grid_size_child_fixed_tracks__border_box() {
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(120f32),
-                    height: taffy::style::Dimension::Length(120f32),
+                    width: taffy::style::Dimension::from_length(120f32),
+                    height: taffy::style::Dimension::from_length(120f32),
                 },
                 ..Default::default()
             },
@@ -158,7 +158,7 @@ fn grid_size_child_fixed_tracks__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 align_self: Some(taffy::style::AlignSelf::Start),
                 justify_self: Some(taffy::style::JustifySelf::Start),
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(20f32), height: auto() },
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("HH\u{200b}HH\u{200b}HH\u{200b}HH", crate::WritingMode::Horizontal),
@@ -170,7 +170,7 @@ fn grid_size_child_fixed_tracks__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 align_self: Some(taffy::style::AlignSelf::Start),
                 justify_self: Some(taffy::style::JustifySelf::Start),
-                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(30f32), height: auto() },
+                max_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(30f32), height: auto() },
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("HH\u{200b}HH\u{200b}HH\u{200b}HH", crate::WritingMode::Horizontal),
@@ -184,8 +184,8 @@ fn grid_size_child_fixed_tracks__content_box() {
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(120f32),
-                    height: taffy::style::Dimension::Length(120f32),
+                    width: taffy::style::Dimension::from_length(120f32),
+                    height: taffy::style::Dimension::from_length(120f32),
                 },
                 ..Default::default()
             },

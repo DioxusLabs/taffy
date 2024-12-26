@@ -13,7 +13,7 @@ fn grid_fr_fixed_size_no_content_proportions__border_box() {
                 display: taffy::style::Display::Grid,
                 grid_template_rows: vec![length(40f32)],
                 grid_template_columns: vec![fr(1f32), fr(2f32), fr(3f32)],
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2],
@@ -71,7 +71,7 @@ fn grid_fr_fixed_size_no_content_proportions__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 grid_template_rows: vec![length(40f32)],
                 grid_template_columns: vec![fr(1f32), fr(2f32), fr(3f32)],
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2],

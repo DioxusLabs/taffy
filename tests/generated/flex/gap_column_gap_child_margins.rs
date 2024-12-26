@@ -8,13 +8,8 @@ fn gap_column_gap_child_margins__border_box() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0f32),
-            margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(2f32),
-                right: taffy::style::LengthPercentageAuto::Length(2f32),
-                top: zero(),
-                bottom: zero(),
-            },
+            flex_basis: taffy::style::Dimension::from_percent(0f32),
+            margin: taffy::geometry::Rect { left: length(2f32), right: length(2f32), top: zero(), bottom: zero() },
             ..Default::default()
         })
         .unwrap();
@@ -22,13 +17,8 @@ fn gap_column_gap_child_margins__border_box() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0f32),
-            margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(10f32),
-                right: taffy::style::LengthPercentageAuto::Length(10f32),
-                top: zero(),
-                bottom: zero(),
-            },
+            flex_basis: taffy::style::Dimension::from_percent(0f32),
+            margin: taffy::geometry::Rect { left: length(10f32), right: length(10f32), top: zero(), bottom: zero() },
             ..Default::default()
         })
         .unwrap();
@@ -36,23 +26,18 @@ fn gap_column_gap_child_margins__border_box() {
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0f32),
-            margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(15f32),
-                right: taffy::style::LengthPercentageAuto::Length(15f32),
-                top: zero(),
-                bottom: zero(),
-            },
+            flex_basis: taffy::style::Dimension::from_percent(0f32),
+            margin: taffy::geometry::Rect { left: length(15f32), right: length(15f32), top: zero(), bottom: zero() },
             ..Default::default()
         })
         .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::Length(10f32), height: zero() },
+                gap: taffy::geometry::Size { width: length(10f32), height: zero() },
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(80f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(80f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },
@@ -100,13 +85,8 @@ fn gap_column_gap_child_margins__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0f32),
-            margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(2f32),
-                right: taffy::style::LengthPercentageAuto::Length(2f32),
-                top: zero(),
-                bottom: zero(),
-            },
+            flex_basis: taffy::style::Dimension::from_percent(0f32),
+            margin: taffy::geometry::Rect { left: length(2f32), right: length(2f32), top: zero(), bottom: zero() },
             ..Default::default()
         })
         .unwrap();
@@ -115,13 +95,8 @@ fn gap_column_gap_child_margins__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0f32),
-            margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(10f32),
-                right: taffy::style::LengthPercentageAuto::Length(10f32),
-                top: zero(),
-                bottom: zero(),
-            },
+            flex_basis: taffy::style::Dimension::from_percent(0f32),
+            margin: taffy::geometry::Rect { left: length(10f32), right: length(10f32), top: zero(), bottom: zero() },
             ..Default::default()
         })
         .unwrap();
@@ -130,13 +105,8 @@ fn gap_column_gap_child_margins__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 1f32,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0f32),
-            margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(15f32),
-                right: taffy::style::LengthPercentageAuto::Length(15f32),
-                top: zero(),
-                bottom: zero(),
-            },
+            flex_basis: taffy::style::Dimension::from_percent(0f32),
+            margin: taffy::geometry::Rect { left: length(15f32), right: length(15f32), top: zero(), bottom: zero() },
             ..Default::default()
         })
         .unwrap();
@@ -144,10 +114,10 @@ fn gap_column_gap_child_margins__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::Length(10f32), height: zero() },
+                gap: taffy::geometry::Size { width: length(10f32), height: zero() },
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(80f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(80f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },

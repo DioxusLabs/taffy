@@ -16,8 +16,8 @@ fn leaf_overflow_scrollbars_overridden_by_available_space__border_box() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(2f32),
-                    height: taffy::style::Dimension::Length(4f32),
+                    width: taffy::style::Dimension::from_length(2f32),
+                    height: taffy::style::Dimension::from_length(4f32),
                 },
                 ..Default::default()
             },
@@ -80,8 +80,8 @@ fn leaf_overflow_scrollbars_overridden_by_available_space__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(2f32),
-                    height: taffy::style::Dimension::Length(4f32),
+                    width: taffy::style::Dimension::from_length(2f32),
+                    height: taffy::style::Dimension::from_length(4f32),
                 },
                 ..Default::default()
             },

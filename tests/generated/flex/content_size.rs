@@ -10,15 +10,10 @@ fn content_size__border_box() {
                 position: taffy::style::Position::Absolute,
                 flex_shrink: 0f32,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(1f32),
-                    height: taffy::style::Dimension::Length(20f32),
+                    width: taffy::style::Dimension::from_percent(1f32),
+                    height: taffy::style::Dimension::from_length(20f32),
                 },
-                inset: taffy::geometry::Rect {
-                    left: auto(),
-                    right: auto(),
-                    top: taffy::style::LengthPercentageAuto::Length(-10f32),
-                    bottom: auto(),
-                },
+                inset: taffy::geometry::Rect { left: auto(), right: auto(), top: length(-10f32), bottom: auto() },
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("HHHH\u{200b}HHHH", crate::WritingMode::Horizontal),
@@ -27,7 +22,7 @@ fn content_size__border_box() {
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(30f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(30f32) },
                 ..Default::default()
             },
             &[node00],
@@ -44,8 +39,8 @@ fn content_size__border_box() {
                 },
                 scrollbar_width: 15f32,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },
@@ -107,15 +102,10 @@ fn content_size__content_box() {
                 position: taffy::style::Position::Absolute,
                 flex_shrink: 0f32,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(1f32),
-                    height: taffy::style::Dimension::Length(20f32),
+                    width: taffy::style::Dimension::from_percent(1f32),
+                    height: taffy::style::Dimension::from_length(20f32),
                 },
-                inset: taffy::geometry::Rect {
-                    left: auto(),
-                    right: auto(),
-                    top: taffy::style::LengthPercentageAuto::Length(-10f32),
-                    bottom: auto(),
-                },
+                inset: taffy::geometry::Rect { left: auto(), right: auto(), top: length(-10f32), bottom: auto() },
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("HHHH\u{200b}HHHH", crate::WritingMode::Horizontal),
@@ -125,7 +115,7 @@ fn content_size__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(30f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(30f32) },
                 ..Default::default()
             },
             &[node00],
@@ -143,8 +133,8 @@ fn content_size__content_box() {
                 },
                 scrollbar_width: 15f32,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },

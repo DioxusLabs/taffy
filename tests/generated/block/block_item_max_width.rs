@@ -6,15 +6,15 @@ fn block_item_max_width__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(50f32) },
-            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(50f32) },
+            max_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(50f32) },
-            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(300f32), height: auto() },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(50f32) },
+            max_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(300f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -23,8 +23,8 @@ fn block_item_max_width__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },
@@ -64,16 +64,16 @@ fn block_item_max_width__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(50f32) },
-            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(50f32) },
+            max_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(50f32) },
-            max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(300f32), height: auto() },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(50f32) },
+            max_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(300f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -83,8 +83,8 @@ fn block_item_max_width__content_box() {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },

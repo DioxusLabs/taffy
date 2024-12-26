@@ -7,24 +7,24 @@ fn wrapped_column_max_height__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(100f32),
-                height: taffy::style::Dimension::Length(500f32),
+                width: taffy::style::Dimension::from_length(100f32),
+                height: taffy::style::Dimension::from_length(500f32),
             },
-            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(200f32) },
+            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(200f32) },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(200f32),
-                height: taffy::style::Dimension::Length(200f32),
+                width: taffy::style::Dimension::from_length(200f32),
+                height: taffy::style::Dimension::from_length(200f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(20f32),
-                right: taffy::style::LengthPercentageAuto::Length(20f32),
-                top: taffy::style::LengthPercentageAuto::Length(20f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(20f32),
+                left: length(20f32),
+                right: length(20f32),
+                top: length(20f32),
+                bottom: length(20f32),
             },
             ..Default::default()
         })
@@ -32,8 +32,8 @@ fn wrapped_column_max_height__border_box() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(100f32),
-                height: taffy::style::Dimension::Length(100f32),
+                width: taffy::style::Dimension::from_length(100f32),
+                height: taffy::style::Dimension::from_length(100f32),
             },
             ..Default::default()
         })
@@ -47,8 +47,8 @@ fn wrapped_column_max_height__border_box() {
                 align_content: Some(taffy::style::AlignContent::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(700f32),
-                    height: taffy::style::Dimension::Length(500f32),
+                    width: taffy::style::Dimension::from_length(700f32),
+                    height: taffy::style::Dimension::from_length(500f32),
                 },
                 ..Default::default()
             },
@@ -95,10 +95,10 @@ fn wrapped_column_max_height__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(100f32),
-                height: taffy::style::Dimension::Length(500f32),
+                width: taffy::style::Dimension::from_length(100f32),
+                height: taffy::style::Dimension::from_length(500f32),
             },
-            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(200f32) },
+            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(200f32) },
             ..Default::default()
         })
         .unwrap();
@@ -106,14 +106,14 @@ fn wrapped_column_max_height__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(200f32),
-                height: taffy::style::Dimension::Length(200f32),
+                width: taffy::style::Dimension::from_length(200f32),
+                height: taffy::style::Dimension::from_length(200f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(20f32),
-                right: taffy::style::LengthPercentageAuto::Length(20f32),
-                top: taffy::style::LengthPercentageAuto::Length(20f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(20f32),
+                left: length(20f32),
+                right: length(20f32),
+                top: length(20f32),
+                bottom: length(20f32),
             },
             ..Default::default()
         })
@@ -122,8 +122,8 @@ fn wrapped_column_max_height__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(100f32),
-                height: taffy::style::Dimension::Length(100f32),
+                width: taffy::style::Dimension::from_length(100f32),
+                height: taffy::style::Dimension::from_length(100f32),
             },
             ..Default::default()
         })
@@ -138,8 +138,8 @@ fn wrapped_column_max_height__content_box() {
                 align_content: Some(taffy::style::AlignContent::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(700f32),
-                    height: taffy::style::Dimension::Length(500f32),
+                    width: taffy::style::Dimension::from_length(700f32),
+                    height: taffy::style::Dimension::from_length(500f32),
                 },
                 ..Default::default()
             },

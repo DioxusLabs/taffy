@@ -19,7 +19,7 @@ fn grid_minmax_column_fixed_width_above_range__border_box() {
                 display: taffy::style::Display::Grid,
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), minmax(length(20f32), length(40f32)), length(40f32)],
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(140f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(140f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2, node3, node4, node5, node6, node7, node8],
@@ -131,7 +131,7 @@ fn grid_minmax_column_fixed_width_above_range__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), minmax(length(20f32), length(40f32)), length(40f32)],
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(140f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(140f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2, node3, node4, node5, node6, node7, node8],

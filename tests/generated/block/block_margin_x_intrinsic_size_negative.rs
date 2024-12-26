@@ -6,19 +6,14 @@ fn block_margin_x_intrinsic_size_negative__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
-            margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(-10f32),
-                right: taffy::style::LengthPercentageAuto::Length(-5f32),
-                top: zero(),
-                bottom: zero(),
-            },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
+            margin: taffy::geometry::Rect { left: length(-10f32), right: length(-5f32), top: zero(), bottom: zero() },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -61,20 +56,15 @@ fn block_margin_x_intrinsic_size_negative__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
-            margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(-10f32),
-                right: taffy::style::LengthPercentageAuto::Length(-5f32),
-                top: zero(),
-                bottom: zero(),
-            },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
+            margin: taffy::geometry::Rect { left: length(-10f32), right: length(-5f32), top: zero(), bottom: zero() },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
         .unwrap();

@@ -9,15 +9,10 @@ fn block_absolute_layout_percentage_bottom_based_on_parent_height__border_box() 
             display: taffy::style::Display::Block,
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
-            inset: taffy::geometry::Rect {
-                left: auto(),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Percent(0.5f32),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: auto(), right: auto(), top: percent(0.5f32), bottom: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -26,15 +21,10 @@ fn block_absolute_layout_percentage_bottom_based_on_parent_height__border_box() 
             display: taffy::style::Display::Block,
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
-            inset: taffy::geometry::Rect {
-                left: auto(),
-                right: auto(),
-                top: auto(),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.5f32),
-            },
+            inset: taffy::geometry::Rect { left: auto(), right: auto(), top: auto(), bottom: percent(0.5f32) },
             ..Default::default()
         })
         .unwrap();
@@ -42,13 +32,8 @@ fn block_absolute_layout_percentage_bottom_based_on_parent_height__border_box() 
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             position: taffy::style::Position::Absolute,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(10f32), height: auto() },
-            inset: taffy::geometry::Rect {
-                left: auto(),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Percent(0.1f32),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.1f32),
-            },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(10f32), height: auto() },
+            inset: taffy::geometry::Rect { left: auto(), right: auto(), top: percent(0.1f32), bottom: percent(0.1f32) },
             ..Default::default()
         })
         .unwrap();
@@ -57,8 +42,8 @@ fn block_absolute_layout_percentage_bottom_based_on_parent_height__border_box() 
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },
@@ -107,15 +92,10 @@ fn block_absolute_layout_percentage_bottom_based_on_parent_height__content_box()
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
-            inset: taffy::geometry::Rect {
-                left: auto(),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Percent(0.5f32),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: auto(), right: auto(), top: percent(0.5f32), bottom: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -125,15 +105,10 @@ fn block_absolute_layout_percentage_bottom_based_on_parent_height__content_box()
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
-            inset: taffy::geometry::Rect {
-                left: auto(),
-                right: auto(),
-                top: auto(),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.5f32),
-            },
+            inset: taffy::geometry::Rect { left: auto(), right: auto(), top: auto(), bottom: percent(0.5f32) },
             ..Default::default()
         })
         .unwrap();
@@ -142,13 +117,8 @@ fn block_absolute_layout_percentage_bottom_based_on_parent_height__content_box()
             display: taffy::style::Display::Block,
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(10f32), height: auto() },
-            inset: taffy::geometry::Rect {
-                left: auto(),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Percent(0.1f32),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.1f32),
-            },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(10f32), height: auto() },
+            inset: taffy::geometry::Rect { left: auto(), right: auto(), top: percent(0.1f32), bottom: percent(0.1f32) },
             ..Default::default()
         })
         .unwrap();
@@ -158,8 +128,8 @@ fn block_absolute_layout_percentage_bottom_based_on_parent_height__content_box()
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },

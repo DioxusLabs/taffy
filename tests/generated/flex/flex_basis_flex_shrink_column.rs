@@ -5,18 +5,21 @@ fn flex_basis_flex_shrink_column__border_box() {
     use taffy::{prelude::*, Layout};
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
-        .new_leaf(taffy::style::Style { flex_basis: taffy::style::Dimension::Length(100f32), ..Default::default() })
+        .new_leaf(taffy::style::Style {
+            flex_basis: taffy::style::Dimension::from_length(100f32),
+            ..Default::default()
+        })
         .unwrap();
     let node1 = taffy
-        .new_leaf(taffy::style::Style { flex_basis: taffy::style::Dimension::Length(50f32), ..Default::default() })
+        .new_leaf(taffy::style::Style { flex_basis: taffy::style::Dimension::from_length(50f32), ..Default::default() })
         .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },
@@ -56,14 +59,14 @@ fn flex_basis_flex_shrink_column__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            flex_basis: taffy::style::Dimension::Length(100f32),
+            flex_basis: taffy::style::Dimension::from_length(100f32),
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            flex_basis: taffy::style::Dimension::Length(50f32),
+            flex_basis: taffy::style::Dimension::from_length(50f32),
             ..Default::default()
         })
         .unwrap();
@@ -73,8 +76,8 @@ fn flex_basis_flex_shrink_column__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },

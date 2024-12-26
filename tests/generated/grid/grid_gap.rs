@@ -17,15 +17,12 @@ fn grid_gap__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                gap: taffy::geometry::Size {
-                    width: taffy::style::LengthPercentage::Length(40f32),
-                    height: taffy::style::LengthPercentage::Length(40f32),
-                },
+                gap: taffy::geometry::Size { width: length(40f32), height: length(40f32) },
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },
@@ -136,15 +133,12 @@ fn grid_gap__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                gap: taffy::geometry::Size {
-                    width: taffy::style::LengthPercentage::Length(40f32),
-                    height: taffy::style::LengthPercentage::Length(40f32),
-                },
+                gap: taffy::geometry::Size { width: length(40f32), height: length(40f32) },
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },

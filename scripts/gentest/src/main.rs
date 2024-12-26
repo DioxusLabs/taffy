@@ -719,11 +719,11 @@ fn generate_length_percentage(dimen: &serde_json::Map<String, Value>) -> TokenSt
         Value::String(ref unit) => match unit.as_ref() {
             "px" => {
                 let value = value();
-                quote!(taffy::style::LengthPercentage::Length(#value))
+                quote!(length(#value))
             }
             "percent" => {
                 let value = value();
-                quote!(taffy::style::LengthPercentage::Percent(#value))
+                quote!(percent(#value))
             }
             _ => unreachable!(),
         },
@@ -737,14 +737,14 @@ fn generate_length_percentage_auto(dimen: &serde_json::Map<String, Value>) -> To
 
     match unit {
         Value::String(ref unit) => match unit.as_ref() {
-            "auto" => quote!(taffy::style::LengthPercentageAuto::Auto),
+            "auto" => quote!(taffy::style::LengthPercentageAuto::AUTO),
             "px" => {
                 let value = value();
-                quote!(taffy::style::LengthPercentageAuto::Length(#value))
+                quote!(length(#value))
             }
             "percent" => {
                 let value = value();
-                quote!(taffy::style::LengthPercentageAuto::Percent(#value))
+                quote!(percent(#value))
             }
             _ => unreachable!(),
         },
@@ -758,14 +758,14 @@ fn generate_dimension(dimen: &serde_json::Map<String, Value>) -> TokenStream {
 
     match unit {
         Value::String(ref unit) => match unit.as_ref() {
-            "auto" => quote!(taffy::style::Dimension::Auto),
+            "auto" => quote!(taffy::style::Dimension::AUTO),
             "px" => {
                 let value = value();
-                quote!(taffy::style::Dimension::Length(#value))
+                quote!(taffy::style::Dimension::from_length(#value))
             }
             "percent" => {
                 let value = value();
-                quote!(taffy::style::Dimension::Percent(#value))
+                quote!(taffy::style::Dimension::from_percent(#value))
             }
             _ => unreachable!(),
         },

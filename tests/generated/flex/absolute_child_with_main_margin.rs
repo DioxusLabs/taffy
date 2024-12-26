@@ -8,15 +8,10 @@ fn absolute_child_with_main_margin__border_box() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(9f32),
-                height: taffy::style::Dimension::Length(9f32),
+                width: taffy::style::Dimension::from_length(9f32),
+                height: taffy::style::Dimension::from_length(9f32),
             },
-            margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(7f32),
-                right: zero(),
-                top: zero(),
-                bottom: zero(),
-            },
+            margin: taffy::geometry::Rect { left: length(7f32), right: zero(), top: zero(), bottom: zero() },
             ..Default::default()
         })
         .unwrap();
@@ -24,8 +19,8 @@ fn absolute_child_with_main_margin__border_box() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(20f32),
-                    height: taffy::style::Dimension::Length(37f32),
+                    width: taffy::style::Dimension::from_length(20f32),
+                    height: taffy::style::Dimension::from_length(37f32),
                 },
                 ..Default::default()
             },
@@ -61,15 +56,10 @@ fn absolute_child_with_main_margin__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(9f32),
-                height: taffy::style::Dimension::Length(9f32),
+                width: taffy::style::Dimension::from_length(9f32),
+                height: taffy::style::Dimension::from_length(9f32),
             },
-            margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(7f32),
-                right: zero(),
-                top: zero(),
-                bottom: zero(),
-            },
+            margin: taffy::geometry::Rect { left: length(7f32), right: zero(), top: zero(), bottom: zero() },
             ..Default::default()
         })
         .unwrap();
@@ -78,8 +68,8 @@ fn absolute_child_with_main_margin__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(20f32),
-                    height: taffy::style::Dimension::Length(37f32),
+                    width: taffy::style::Dimension::from_length(20f32),
+                    height: taffy::style::Dimension::from_length(37f32),
                 },
                 ..Default::default()
             },

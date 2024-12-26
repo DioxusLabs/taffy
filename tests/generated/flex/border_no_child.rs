@@ -7,10 +7,10 @@ fn border_no_child__border_box() {
     let node = taffy
         .new_leaf(taffy::style::Style {
             border: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Length(10f32),
-                right: taffy::style::LengthPercentage::Length(10f32),
-                top: taffy::style::LengthPercentage::Length(10f32),
-                bottom: taffy::style::LengthPercentage::Length(10f32),
+                left: length(10f32),
+                right: length(10f32),
+                top: length(10f32),
+                bottom: length(10f32),
             },
             ..Default::default()
         })
@@ -37,10 +37,10 @@ fn border_no_child__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             border: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Length(10f32),
-                right: taffy::style::LengthPercentage::Length(10f32),
-                top: taffy::style::LengthPercentage::Length(10f32),
-                bottom: taffy::style::LengthPercentage::Length(10f32),
+                left: length(10f32),
+                right: length(10f32),
+                top: length(10f32),
+                bottom: length(10f32),
             },
             ..Default::default()
         })

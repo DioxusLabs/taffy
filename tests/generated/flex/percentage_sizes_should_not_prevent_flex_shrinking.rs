@@ -8,7 +8,7 @@ fn percentage_sizes_should_not_prevent_flex_shrinking__border_box() {
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1.2f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(1.2f32), height: auto() },
                 ..Default::default()
             },
             &[node00],
@@ -18,8 +18,8 @@ fn percentage_sizes_should_not_prevent_flex_shrinking__border_box() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },
@@ -63,7 +63,7 @@ fn percentage_sizes_should_not_prevent_flex_shrinking__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1.2f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(1.2f32), height: auto() },
                 ..Default::default()
             },
             &[node00],
@@ -74,8 +74,8 @@ fn percentage_sizes_should_not_prevent_flex_shrinking__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },

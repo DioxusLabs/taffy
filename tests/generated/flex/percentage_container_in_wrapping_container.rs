@@ -7,8 +7,8 @@ fn percentage_container_in_wrapping_container__border_box() {
     let node000 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             ..Default::default()
         })
@@ -16,8 +16,8 @@ fn percentage_container_in_wrapping_container__border_box() {
     let node001 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             ..Default::default()
         })
@@ -26,7 +26,7 @@ fn percentage_container_in_wrapping_container__border_box() {
         .new_with_children(
             taffy::style::Style {
                 justify_content: Some(taffy::style::JustifyContent::Center),
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(1f32), height: auto() },
                 ..Default::default()
             },
             &[node000, node001],
@@ -45,8 +45,8 @@ fn percentage_container_in_wrapping_container__border_box() {
                 align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },
@@ -99,8 +99,8 @@ fn percentage_container_in_wrapping_container__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             ..Default::default()
         })
@@ -109,8 +109,8 @@ fn percentage_container_in_wrapping_container__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             ..Default::default()
         })
@@ -120,7 +120,7 @@ fn percentage_container_in_wrapping_container__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 justify_content: Some(taffy::style::JustifyContent::Center),
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(1f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(1f32), height: auto() },
                 ..Default::default()
             },
             &[node000, node001],
@@ -144,8 +144,8 @@ fn percentage_container_in_wrapping_container__content_box() {
                 align_items: Some(taffy::style::AlignItems::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },

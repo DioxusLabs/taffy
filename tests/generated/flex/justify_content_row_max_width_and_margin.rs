@@ -7,15 +7,10 @@ fn justify_content_row_max_width_and_margin__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
-            margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(100f32),
-                right: zero(),
-                top: zero(),
-                bottom: zero(),
-            },
+            margin: taffy::geometry::Rect { left: length(100f32), right: zero(), top: zero(), bottom: zero() },
             ..Default::default()
         })
         .unwrap();
@@ -23,8 +18,8 @@ fn justify_content_row_max_width_and_margin__border_box() {
         .new_with_children(
             taffy::style::Style {
                 justify_content: Some(taffy::style::JustifyContent::Center),
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
-                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(80f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
+                max_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(80f32), height: auto() },
                 ..Default::default()
             },
             &[node0],
@@ -58,15 +53,10 @@ fn justify_content_row_max_width_and_margin__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
-            margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(100f32),
-                right: zero(),
-                top: zero(),
-                bottom: zero(),
-            },
+            margin: taffy::geometry::Rect { left: length(100f32), right: zero(), top: zero(), bottom: zero() },
             ..Default::default()
         })
         .unwrap();
@@ -75,8 +65,8 @@ fn justify_content_row_max_width_and_margin__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 justify_content: Some(taffy::style::JustifyContent::Center),
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
-                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(80f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
+                max_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(80f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

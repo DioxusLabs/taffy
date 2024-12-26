@@ -6,7 +6,7 @@ fn block_margin_y_last_child_collapse_not_blocked_by_padding_top__border_box() {
     let mut taffy = crate::new_test_tree();
     let node000 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -14,12 +14,7 @@ fn block_margin_y_last_child_collapse_not_blocked_by_padding_top__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: zero(),
-                    bottom: taffy::style::LengthPercentageAuto::Length(10f32),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: zero(), bottom: length(10f32) },
                 ..Default::default()
             },
             &[node000],
@@ -29,18 +24,8 @@ fn block_margin_y_last_child_collapse_not_blocked_by_padding_top__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: zero(),
-                    bottom: taffy::style::LengthPercentageAuto::Length(10f32),
-                },
-                padding: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentage::Length(1f32),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: zero(), bottom: length(10f32) },
+                padding: taffy::geometry::Rect { left: zero(), right: zero(), top: length(1f32), bottom: zero() },
                 ..Default::default()
             },
             &[node00],
@@ -50,7 +35,7 @@ fn block_margin_y_last_child_collapse_not_blocked_by_padding_top__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },
             &[node0],
@@ -95,7 +80,7 @@ fn block_margin_y_last_child_collapse_not_blocked_by_padding_top__content_box() 
     let node000 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -104,12 +89,7 @@ fn block_margin_y_last_child_collapse_not_blocked_by_padding_top__content_box() 
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: zero(),
-                    bottom: taffy::style::LengthPercentageAuto::Length(10f32),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: zero(), bottom: length(10f32) },
                 ..Default::default()
             },
             &[node000],
@@ -120,18 +100,8 @@ fn block_margin_y_last_child_collapse_not_blocked_by_padding_top__content_box() 
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: zero(),
-                    bottom: taffy::style::LengthPercentageAuto::Length(10f32),
-                },
-                padding: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentage::Length(1f32),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: zero(), bottom: length(10f32) },
+                padding: taffy::geometry::Rect { left: zero(), right: zero(), top: length(1f32), bottom: zero() },
                 ..Default::default()
             },
             &[node00],
@@ -142,7 +112,7 @@ fn block_margin_y_last_child_collapse_not_blocked_by_padding_top__content_box() 
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

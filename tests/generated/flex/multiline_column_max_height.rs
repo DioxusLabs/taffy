@@ -8,8 +8,8 @@ fn multiline_column_max_height__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -18,8 +18,8 @@ fn multiline_column_max_height__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -28,8 +28,8 @@ fn multiline_column_max_height__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -38,8 +38,8 @@ fn multiline_column_max_height__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -48,8 +48,8 @@ fn multiline_column_max_height__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -58,8 +58,8 @@ fn multiline_column_max_height__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -68,8 +68,8 @@ fn multiline_column_max_height__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -78,8 +78,8 @@ fn multiline_column_max_height__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -88,8 +88,8 @@ fn multiline_column_max_height__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -98,8 +98,8 @@ fn multiline_column_max_height__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -108,8 +108,8 @@ fn multiline_column_max_height__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -118,8 +118,8 @@ fn multiline_column_max_height__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -128,8 +128,8 @@ fn multiline_column_max_height__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -138,8 +138,8 @@ fn multiline_column_max_height__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -148,8 +148,8 @@ fn multiline_column_max_height__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -158,8 +158,8 @@ fn multiline_column_max_height__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -168,8 +168,8 @@ fn multiline_column_max_height__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -178,8 +178,8 @@ fn multiline_column_max_height__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -188,8 +188,8 @@ fn multiline_column_max_height__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -198,8 +198,8 @@ fn multiline_column_max_height__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -210,7 +210,7 @@ fn multiline_column_max_height__border_box() {
                 display: taffy::style::Display::Flex,
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(200f32) },
+                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(200f32) },
                 ..Default::default()
             },
             &[
@@ -362,8 +362,8 @@ fn multiline_column_max_height__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -373,8 +373,8 @@ fn multiline_column_max_height__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -384,8 +384,8 @@ fn multiline_column_max_height__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -395,8 +395,8 @@ fn multiline_column_max_height__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -406,8 +406,8 @@ fn multiline_column_max_height__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -417,8 +417,8 @@ fn multiline_column_max_height__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -428,8 +428,8 @@ fn multiline_column_max_height__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -439,8 +439,8 @@ fn multiline_column_max_height__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -450,8 +450,8 @@ fn multiline_column_max_height__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -461,8 +461,8 @@ fn multiline_column_max_height__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -472,8 +472,8 @@ fn multiline_column_max_height__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -483,8 +483,8 @@ fn multiline_column_max_height__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -494,8 +494,8 @@ fn multiline_column_max_height__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -505,8 +505,8 @@ fn multiline_column_max_height__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -516,8 +516,8 @@ fn multiline_column_max_height__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -527,8 +527,8 @@ fn multiline_column_max_height__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -538,8 +538,8 @@ fn multiline_column_max_height__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -549,8 +549,8 @@ fn multiline_column_max_height__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -560,8 +560,8 @@ fn multiline_column_max_height__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -571,8 +571,8 @@ fn multiline_column_max_height__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -584,7 +584,7 @@ fn multiline_column_max_height__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(200f32) },
+                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(200f32) },
                 ..Default::default()
             },
             &[
