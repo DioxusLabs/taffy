@@ -66,26 +66,26 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
         if style.is_block() {
             // Pull these out earlier to avoid borrowing issues
             let aspect_ratio = style.aspect_ratio();
-            let margin = style.margin().resolve_or_zero(parent_size.width);
-            let padding = style.padding().resolve_or_zero(parent_size.width);
-            let border = style.border().resolve_or_zero(parent_size.width);
+            let margin = style.margin().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
+            let padding = style.padding().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
+            let border = style.border().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
             let padding_border_size = (padding + border).sum_axes();
             let box_sizing_adjustment =
                 if style.box_sizing() == BoxSizing::ContentBox { padding_border_size } else { Size::ZERO };
 
             let min_size = style
                 .min_size()
-                .maybe_resolve(parent_size)
+                .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
                 .maybe_apply_aspect_ratio(aspect_ratio)
                 .maybe_add(box_sizing_adjustment);
             let max_size = style
                 .max_size()
-                .maybe_resolve(parent_size)
+                .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
                 .maybe_apply_aspect_ratio(aspect_ratio)
                 .maybe_add(box_sizing_adjustment);
             let clamped_style_size = style
                 .size()
-                .maybe_resolve(parent_size)
+                .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
                 .maybe_apply_aspect_ratio(aspect_ratio)
                 .maybe_add(box_sizing_adjustment)
                 .maybe_clamp(min_size, max_size);
@@ -123,9 +123,12 @@ pub fn compute_root_layout(tree: &mut impl LayoutPartialTree, root: NodeId, avai
     );
 
     let style = tree.get_core_container_style(root);
-    let padding = style.padding().resolve_or_zero(available_space.width.into_option());
-    let border = style.border().resolve_or_zero(available_space.width.into_option());
-    let margin = style.margin().resolve_or_zero(available_space.width.into_option());
+    let padding =
+        style.padding().resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis));
+    let border =
+        style.border().resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis));
+    let margin =
+        style.margin().resolve_or_zero(available_space.width.into_option(), |val, basis| tree.calc(val, basis));
     let scrollbar_size = Size {
         width: if style.overflow().y == Overflow::Scroll { style.scrollbar_width() } else { 0.0 },
         height: if style.overflow().x == Overflow::Scroll { style.scrollbar_width() } else { 0.0 },

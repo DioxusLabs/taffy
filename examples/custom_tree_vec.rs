@@ -152,25 +152,39 @@ impl taffy::LayoutPartialTree for Tree {
         self.node_from_id_mut(node_id).unrounded_layout = *layout;
     }
 
+    fn resolve_calc_value(&self, _val: u64, _basis: f32) -> f32 {
+        0.0
+    }
+
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: taffy::tree::LayoutInput) -> taffy::tree::LayoutOutput {
         compute_cached_layout(self, node_id, inputs, |tree, node_id, inputs| {
-            let node = tree.node_from_id_mut(node_id);
+            let node = &mut tree.nodes[usize::from(node_id)];
             let font_metrics = FontMetrics { char_width: 10.0, char_height: 10.0 };
 
             match node.kind {
                 NodeKind::Flexbox => compute_flexbox_layout(tree, node_id, inputs),
                 NodeKind::Grid => compute_grid_layout(tree, node_id, inputs),
-                NodeKind::Text => compute_leaf_layout(inputs, &node.style, |known_dimensions, available_space| {
-                    text_measure_function(
-                        known_dimensions,
-                        available_space,
-                        node.text_data.as_ref().unwrap(),
-                        &font_metrics,
-                    )
-                }),
-                NodeKind::Image => compute_leaf_layout(inputs, &node.style, |known_dimensions, _available_space| {
-                    image_measure_function(known_dimensions, node.image_data.as_ref().unwrap())
-                }),
+                NodeKind::Text => compute_leaf_layout(
+                    inputs,
+                    &node.style,
+                    |_val, _basis| 0.0,
+                    |known_dimensions, available_space| {
+                        text_measure_function(
+                            known_dimensions,
+                            available_space,
+                            node.text_data.as_ref().unwrap(),
+                            &font_metrics,
+                        )
+                    },
+                ),
+                NodeKind::Image => compute_leaf_layout(
+                    inputs,
+                    &node.style,
+                    |_val, _basis| 0.0,
+                    |known_dimensions, _available_space| {
+                        image_measure_function(known_dimensions, node.image_data.as_ref().unwrap())
+                    },
+                ),
             }
         })
     }

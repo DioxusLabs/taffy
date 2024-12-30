@@ -12,8 +12,10 @@ pub struct CompactLength(u64);
 impl CompactLength {
     // Masks
 
-    /// The low bytes (8 bits)
+    /// The low byte (8 bits)
     pub const TAG_MASK: u64 = 0b11111111;
+    /// The low 3 bits
+    pub const CALC_TAG_MASK: u64 = 0b111;
     /// The high 63 bits
     pub const CALC_PTR_MASK: u64 = u64::MAX ^ 0b111;
 
@@ -55,16 +57,16 @@ impl CompactLength {
         Self(((val.to_bits() as u64) << 32) | Self::PERCENT_TAG)
     }
 
-    // /// A `calc()` value. The value passed here is treated as an opaque handle to
-    // /// the actual calc representation and may be a pointer, index, etc.
-    // ///
-    // /// The low 3 bits are used as a tag value and will be returned as 0.
-    // #[inline]
-    // pub fn calc(ptr: *const ()) -> Self {
-    //     assert_ne!(ptr as u64, 0);
-    //     assert_eq!(ptr as u64 & Self::CALC_PTR_MASK, 0);
-    //     Self(ptr as u64 & Self::CALC_TAG)
-    // }
+    /// A `calc()` value. The value passed here is treated as an opaque handle to
+    /// the actual calc representation and may be a pointer, index, etc.
+    ///
+    /// The low 3 bits are used as a tag value and will be returned as 0.
+    #[inline]
+    pub fn calc(ptr: *const ()) -> Self {
+        assert_ne!(ptr as u64, 0);
+        assert_eq!(ptr as u64 & 0b111, 0);
+        Self(ptr as u64 | Self::CALC_TAG)
+    }
 
     /// The dimension should be automatically computed according to algorithm-specific rules
     /// regarding the default size of boxes.
@@ -123,6 +125,12 @@ impl CompactLength {
         Self(((limit.to_bits() as u64) << 32) | Self::FIT_CONTENT_PERCENT_TAG)
     }
 
+    /// Get the primary tag
+    #[inline(always)]
+    pub const fn tag(self) -> u64 {
+        self.0 & Self::TAG_MASK
+    }
+
     /// Get the numeric value associated with the `CompactLength`
     /// (e.g. the pixel value for a LENGTH variant)
     #[inline(always)]
@@ -130,10 +138,17 @@ impl CompactLength {
         f32::from_bits((self.0 >> 32) as u32)
     }
 
-    /// Get the primary tag
+    /// Get the numeric value associated with the `CompactLength`
+    /// (e.g. the pixel value for a LENGTH variant)
     #[inline(always)]
-    pub const fn tag(self) -> u64 {
-        self.0 & Self::TAG_MASK
+    pub const fn calc_value(self) -> u64 {
+        self.0
+    }
+
+    /// Returns true if the value is 0 px
+    #[inline(always)]
+    pub const fn is_calc(self) -> bool {
+        self.0 & Self::CALC_TAG_MASK == 0
     }
 
     /// Returns true if the value is 0 px
@@ -221,15 +236,16 @@ impl CompactLength {
     #[inline(always)]
     pub const fn uses_percentage(self) -> bool {
         // TODO: handle calc() values
-        matches!(self.tag(), CompactLength::PERCENT_TAG | CompactLength::FIT_CONTENT_PERCENT_TAG)
+        matches!(self.tag(), CompactLength::PERCENT_TAG | CompactLength::FIT_CONTENT_PERCENT_TAG) || self.is_calc()
     }
 
     /// Resolve percentage values against the passed parent_size, returning Some(value)
     /// Non-percentage values always return None.
     #[inline(always)]
-    pub fn resolved_percentage_size(self, parent_size: f32) -> Option<f32> {
+    pub fn resolved_percentage_size(self, parent_size: f32, calc_resolver: impl Fn(u64, f32) -> f32) -> Option<f32> {
         match self.tag() {
             CompactLength::PERCENT_TAG => Some(self.value() * parent_size),
+            _ if self.is_calc() => Some(calc_resolver(self.0, parent_size)),
             _ => None,
         }
     }
@@ -293,9 +309,17 @@ impl FromPercent for LengthPercentage {
     }
 }
 impl LengthPercentage {
-    /// Get the raw bit representation of the value
+    /// Get the underlying `CompactLength` representation of the value
     pub fn into_raw(self) -> CompactLength {
         self.0
+    }
+
+    /// Create a LengthPercentage from a raw `CompactLength`.
+    /// # Safety
+    /// CompactLength must represent a valid variant for LengthPercentage
+    #[allow(unsafe_code)]
+    pub unsafe fn from_raw(val: CompactLength) -> Self {
+        Self(val)
     }
 }
 
@@ -326,12 +350,6 @@ impl From<LengthPercentage> for LengthPercentageAuto {
         Self(input.0)
     }
 }
-impl LengthPercentageAuto {
-    /// Get the raw bit representation of the value
-    pub fn into_raw(self) -> CompactLength {
-        self.0
-    }
-}
 
 impl LengthPercentageAuto {
     /// Returns:
@@ -339,11 +357,12 @@ impl LengthPercentageAuto {
     ///   - Some(resolved) using the provided context for Percent variants
     ///   - None for Auto variants
     #[inline(always)]
-    pub fn resolve_to_option(self, context: f32) -> Option<f32> {
+    pub fn resolve_to_option(self, context: f32, calc_resolver: impl Fn(u64, f32) -> f32) -> Option<f32> {
         match self.0.tag() {
             CompactLength::LENGTH_TAG => Some(self.0.value()),
             CompactLength::PERCENT_TAG => Some(context * self.0.value()),
             CompactLength::AUTO_TAG => None,
+            _ if self.0.is_calc() => Some(calc_resolver(self.0.calc_value(), context)),
             _ => unreachable!("LengthPercentageAuto values cannot be constructed with other tags"),
         }
     }
@@ -352,6 +371,19 @@ impl LengthPercentageAuto {
     #[inline(always)]
     pub fn is_auto(self) -> bool {
         self.0.is_auto()
+    }
+
+    /// Get the underlying `CompactLength` representation of the value
+    pub fn into_raw(self) -> CompactLength {
+        self.0
+    }
+
+    /// Create a LengthPercentageAuto from a raw `CompactLength`.
+    /// # Safety
+    /// CompactLength must represent a valid variant for LengthPercentageAuto
+    #[allow(unsafe_code)]
+    pub unsafe fn from_raw(val: CompactLength) -> Self {
+        Self(val)
     }
 }
 
@@ -403,9 +435,27 @@ impl Dimension {
         self.0.is_auto()
     }
 
-    /// Get the raw bit representation of the value
+    /// Get the raw `CompactLength` tag
+    pub fn tag(self) -> u64 {
+        self.0.tag()
+    }
+
+    /// Get the raw `CompactLength` value for non-calc variants that have a numeric parameter
+    pub fn value(self) -> f32 {
+        self.0.value()
+    }
+
+    /// Get the underlying `CompactLength` representation of the value
     pub fn into_raw(self) -> CompactLength {
         self.0
+    }
+
+    /// Create a Dimension from a raw `CompactLength`.
+    /// # Safety
+    ///  CompactLength must represent a valid variant for Dimension
+    #[allow(unsafe_code)]
+    pub unsafe fn from_raw(val: CompactLength) -> Self {
+        Self(val)
     }
 }
 
