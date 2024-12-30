@@ -336,6 +336,11 @@ where
     }
 
     #[inline(always)]
+    fn resolve_calc_value(&self, _val: u64, _basis: f32) -> f32 {
+        0.0
+    }
+
+    #[inline(always)]
     fn compute_child_layout(&mut self, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
         // If RunMode is PerformHiddenLayout then this indicates that an ancestor node is `Display::None`
         // and thus that we should lay out this node using hidden layout regardless of it's own display style.
@@ -379,7 +384,8 @@ where
                     let measure_function = |known_dimensions, available_space| {
                         (tree.measure_function)(known_dimensions, available_space, node, node_context, style)
                     };
-                    compute_leaf_layout(inputs, style, measure_function)
+                    // TODO: implement calc() in high-level API
+                    compute_leaf_layout(inputs, style, |_, _| 0.0, measure_function)
                 }
             }
         })
