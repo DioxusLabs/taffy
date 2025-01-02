@@ -26,7 +26,7 @@ use types::{CellOccupancyMatrix, GridTrack};
 #[cfg(feature = "computed_layout_info")]
 use crate::ComputedLayoutInfo;
 #[cfg(feature = "computed_layout_info")]
-use types::{GridTrackKind, TrackCounts, GridItem};
+use types::{GridItem, GridTrackKind, TrackCounts};
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine};
 
@@ -598,11 +598,14 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
     };
 
     #[cfg(feature = "computed_layout_info")]
-    tree.set_computed_layout_info(node, ComputedLayoutInfo::Grid(ComputedGridInfo {
-        rows: ComputedGridTracksInfo::from_grid_tracks_and_track_count(final_row_counts, rows),
-        columns: ComputedGridTracksInfo::from_grid_tracks_and_track_count(final_col_counts, columns),
-        areas: items.iter().map(ComputedGridAreaInfo::from_grid_item).collect(),
-    }));
+    tree.set_computed_layout_info(
+        node,
+        ComputedLayoutInfo::Grid(ComputedGridInfo {
+            rows: ComputedGridTracksInfo::from_grid_tracks_and_track_count(final_row_counts, rows),
+            columns: ComputedGridTracksInfo::from_grid_tracks_and_track_count(final_col_counts, columns),
+            areas: items.iter().map(ComputedGridAreaInfo::from_grid_item).collect(),
+        }),
+    );
 
     LayoutOutput::from_sizes_and_baselines(
         container_border_box,
@@ -640,20 +643,17 @@ pub struct ComputedGridTracksInfo {
     pub sizes: Vec<f32>,
 }
 
-
 #[cfg(feature = "computed_layout_info")]
 impl ComputedGridTracksInfo {
     #[inline(always)]
     fn grid_track_base_size_of_kind(grid_tracks: &Vec<GridTrack>, kind: types::GridTrackKind) -> Vec<f32> {
         grid_tracks
             .iter()
-            .filter_map(|track| {
-                match track.kind == kind {
-                    true => Some(track.base_size),
-                    false => None,
-                }
-            }
-        ).collect()
+            .filter_map(|track| match track.kind == kind {
+                true => Some(track.base_size),
+                false => None,
+            })
+            .collect()
     }
 
     #[inline(always)]
