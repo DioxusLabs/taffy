@@ -136,6 +136,9 @@ use crate::style::{GridContainerStyle, GridItemStyle};
 #[cfg(feature = "block_layout")]
 use crate::{BlockContainerStyle, BlockItemStyle};
 
+#[cfg(feature = "computed_layout_info")]
+use super::ComputedLayoutInfo;
+
 /// Taffy's abstraction for downward tree traversal.
 ///
 /// However, this trait does *not* require access to any node's other than a single container node's immediate children unless you also intend to implement `TraverseTree`.
@@ -180,6 +183,14 @@ pub trait LayoutPartialTree: TraversePartialTree {
 
     /// Compute the specified node's size or full layout given the specified constraints
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
+
+    #[cfg(feature = "computed_layout_info")]
+    /// Set the node's computed layout information
+    fn set_computed_layout_info(&mut self, node_id: NodeId, computed_layout_info: ComputedLayoutInfo);
+
+    #[cfg(feature = "computed_layout_info")]
+    /// Get the node's computed layout information
+    fn get_computed_layout_info(&mut self, node_id: NodeId) -> &ComputedLayoutInfo;
 }
 
 /// Trait used by the `compute_cached_layout` method which allows cached layout results to be stored and retrieved.
