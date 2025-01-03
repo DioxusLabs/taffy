@@ -274,6 +274,9 @@ pub trait LayoutGridContainer: LayoutPartialTree {
     fn get_grid_child_style(&self, child_node_id: NodeId) -> Self::GridItemStyle<'_>;
 
     /// Set the node's detailed grid information
+    ///
+    /// Implementing this method is optional. Doing so allows you to access details about the the grid such as
+    /// the computed size of each grid track and the computed placement of each grid item.
     #[cfg(feature = "detailed_layout_info")]
     fn set_detailed_grid_info(&mut self, _node_id: NodeId, _detailed_grid_info: DetailedGridInfo) {
         debug_log!("LayoutGridContainer::set_detailed_grid_info called");
