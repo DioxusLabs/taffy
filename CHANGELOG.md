@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.2
+
+### Added
+
+- The ability to access computed track sizes and item positions of a CSS Grid layout (#772).
+  This information can be accessed using the `LayoutGridContainer::set_detailed_grid_info` method
+  in the low-level API or the `TaffyTree::detailed_layout_info` method in the high-level API.
+
 ## 0.7.1
 
 ### Fixed
