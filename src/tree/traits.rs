@@ -127,6 +127,7 @@
 //! ```
 //!
 use super::{Layout, LayoutInput, LayoutOutput, NodeId, RequestedAxis, RunMode, SizingMode};
+use crate::debug::debug_log;
 use crate::geometry::{AbsoluteAxis, Line, Size};
 use crate::style::{AvailableSpace, CoreStyle};
 #[cfg(feature = "flexbox")]
@@ -137,7 +138,7 @@ use crate::style::{GridContainerStyle, GridItemStyle};
 use crate::{BlockContainerStyle, BlockItemStyle};
 
 #[cfg(feature = "computed_layout_info")]
-use super::ComputedLayoutInfo;
+use crate::compute::grid::ComputedGridInfo;
 
 /// Taffy's abstraction for downward tree traversal.
 ///
@@ -183,14 +184,6 @@ pub trait LayoutPartialTree: TraversePartialTree {
 
     /// Compute the specified node's size or full layout given the specified constraints
     fn compute_child_layout(&mut self, node_id: NodeId, inputs: LayoutInput) -> LayoutOutput;
-
-    #[cfg(feature = "computed_layout_info")]
-    /// Set the node's computed layout information
-    fn set_computed_layout_info(&mut self, node_id: NodeId, computed_layout_info: ComputedLayoutInfo);
-
-    #[cfg(feature = "computed_layout_info")]
-    /// Get the node's computed layout information
-    fn get_computed_layout_info(&mut self, node_id: NodeId) -> &ComputedLayoutInfo;
 }
 
 /// Trait used by the `compute_cached_layout` method which allows cached layout results to be stored and retrieved.
@@ -278,6 +271,12 @@ pub trait LayoutGridContainer: LayoutPartialTree {
 
     /// Get the child's styles
     fn get_grid_child_style(&self, child_node_id: NodeId) -> Self::GridItemStyle<'_>;
+
+    /// Set the node's computed layout information
+    #[cfg(feature = "computed_layout_info")]
+    fn set_computed_grid_info(&mut self, _node_id: NodeId, _computed_layout_info: Box<ComputedGridInfo>) {
+        debug_log!("LayoutGridContainer::set_computed_layout_info called");
+    }
 }
 
 #[cfg(feature = "block_layout")]

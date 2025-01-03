@@ -353,7 +353,7 @@ impl Layout {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ComputedLayoutInfo {
     /// Enum variant for ComputedGridInfo
-    Grid(ComputedGridInfo),
+    Grid(Box<ComputedGridInfo>),
     /// For node that hasn't had any computed information yet
-    UNSPECIFIED,
+    NONE,
 }

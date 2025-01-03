@@ -27,6 +27,8 @@ use crate::{compute::compute_grid_layout, LayoutGridContainer};
 
 #[cfg(feature = "computed_layout_info")]
 use crate::tree::layout::ComputedLayoutInfo;
+#[cfg(feature = "computed_layout_info")]
+use crate::compute::grid::ComputedGridInfo;
 
 /// The error Taffy generates on invalid operations
 pub type TaffyResult<T> = Result<T, TaffyError>;
@@ -120,7 +122,7 @@ impl NodeData {
             final_layout: Layout::new(),
             has_context: false,
             #[cfg(feature = "computed_layout_info")]
-            computed_layout_info: ComputedLayoutInfo::UNSPECIFIED,
+            computed_layout_info: ComputedLayoutInfo::NONE,
         }
     }
 
@@ -382,18 +384,6 @@ where
             }
         })
     }
-
-    #[inline(always)]
-    #[cfg(feature = "computed_layout_info")]
-    fn set_computed_layout_info(&mut self, node_id: NodeId, computed_layout_info: ComputedLayoutInfo) {
-        self.taffy.nodes[node_id.into()].computed_layout_info = computed_layout_info;
-    }
-
-    #[inline(always)]
-    #[cfg(feature = "computed_layout_info")]
-    fn get_computed_layout_info(&mut self, node_id: NodeId) -> &ComputedLayoutInfo {
-        &self.taffy.nodes[node_id.into()].computed_layout_info
-    }
 }
 
 impl<NodeContext, MeasureFunction> CacheTree for TaffyView<'_, NodeContext, MeasureFunction>
@@ -502,6 +492,12 @@ where
     #[inline(always)]
     fn get_grid_child_style(&self, child_node_id: NodeId) -> Self::GridItemStyle<'_> {
         &self.taffy.nodes[child_node_id.into()].style
+    }
+
+    #[inline(always)]
+    #[cfg(feature = "computed_layout_info")]
+    fn set_computed_grid_info(&mut self, node_id: NodeId, computed_grid_info: Box<ComputedGridInfo>) {
+        self.taffy.nodes[node_id.into()].computed_layout_info = ComputedLayoutInfo::Grid(computed_grid_info);
     }
 }
 
