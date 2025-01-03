@@ -9,7 +9,7 @@ fn flex_grow_0_min_size__border_box() {
             taffy::style::Style {
                 flex_grow: 0f32,
                 flex_shrink: 0f32,
-                flex_basis: taffy::style::Dimension::Percent(0f32),
+                flex_basis: taffy::style::Dimension::from_percent(0f32),
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("one", crate::WritingMode::Horizontal),
@@ -20,7 +20,7 @@ fn flex_grow_0_min_size__border_box() {
             taffy::style::Style {
                 flex_grow: 0f32,
                 flex_shrink: 0f32,
-                flex_basis: taffy::style::Dimension::Percent(0f32),
+                flex_basis: taffy::style::Dimension::from_percent(0f32),
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("two", crate::WritingMode::Horizontal),
@@ -31,7 +31,7 @@ fn flex_grow_0_min_size__border_box() {
             taffy::style::Style {
                 flex_grow: 0f32,
                 flex_shrink: 0f32,
-                flex_basis: taffy::style::Dimension::Percent(0f32),
+                flex_basis: taffy::style::Dimension::from_percent(0f32),
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("three", crate::WritingMode::Horizontal),
@@ -42,7 +42,7 @@ fn flex_grow_0_min_size__border_box() {
             taffy::style::Style {
                 flex_grow: 0f32,
                 flex_shrink: 0f32,
-                flex_basis: taffy::style::Dimension::Percent(0f32),
+                flex_basis: taffy::style::Dimension::from_percent(0f32),
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("four", crate::WritingMode::Horizontal),
@@ -53,14 +53,14 @@ fn flex_grow_0_min_size__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(400f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(400f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 border: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(1f32),
-                    right: taffy::style::LengthPercentage::Length(1f32),
-                    top: taffy::style::LengthPercentage::Length(1f32),
-                    bottom: taffy::style::LengthPercentage::Length(1f32),
+                    left: length(1f32),
+                    right: length(1f32),
+                    top: length(1f32),
+                    bottom: length(1f32),
                 },
                 ..Default::default()
             },
@@ -115,7 +115,7 @@ fn flex_grow_0_min_size__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_grow: 0f32,
                 flex_shrink: 0f32,
-                flex_basis: taffy::style::Dimension::Percent(0f32),
+                flex_basis: taffy::style::Dimension::from_percent(0f32),
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("one", crate::WritingMode::Horizontal),
@@ -127,7 +127,7 @@ fn flex_grow_0_min_size__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_grow: 0f32,
                 flex_shrink: 0f32,
-                flex_basis: taffy::style::Dimension::Percent(0f32),
+                flex_basis: taffy::style::Dimension::from_percent(0f32),
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("two", crate::WritingMode::Horizontal),
@@ -139,7 +139,7 @@ fn flex_grow_0_min_size__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_grow: 0f32,
                 flex_shrink: 0f32,
-                flex_basis: taffy::style::Dimension::Percent(0f32),
+                flex_basis: taffy::style::Dimension::from_percent(0f32),
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("three", crate::WritingMode::Horizontal),
@@ -151,7 +151,7 @@ fn flex_grow_0_min_size__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_grow: 0f32,
                 flex_shrink: 0f32,
-                flex_basis: taffy::style::Dimension::Percent(0f32),
+                flex_basis: taffy::style::Dimension::from_percent(0f32),
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("four", crate::WritingMode::Horizontal),
@@ -163,14 +163,14 @@ fn flex_grow_0_min_size__content_box() {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(400f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(400f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 border: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(1f32),
-                    right: taffy::style::LengthPercentage::Length(1f32),
-                    top: taffy::style::LengthPercentage::Length(1f32),
-                    bottom: taffy::style::LengthPercentage::Length(1f32),
+                    left: length(1f32),
+                    right: length(1f32),
+                    top: length(1f32),
+                    bottom: length(1f32),
                 },
                 ..Default::default()
             },

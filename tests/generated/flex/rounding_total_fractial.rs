@@ -7,22 +7,22 @@ fn rounding_total_fractial__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 0.7f32,
-            flex_basis: taffy::style::Dimension::Length(50.3f32),
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(20.3f32) },
+            flex_basis: taffy::style::Dimension::from_length(50.3f32),
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(20.3f32) },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1.6f32,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1.1f32,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10.7f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10.7f32) },
             ..Default::default()
         })
         .unwrap();
@@ -31,8 +31,8 @@ fn rounding_total_fractial__border_box() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(87.4f32),
-                    height: taffy::style::Dimension::Length(113.4f32),
+                    width: taffy::style::Dimension::from_length(87.4f32),
+                    height: taffy::style::Dimension::from_length(113.4f32),
                 },
                 ..Default::default()
             },
@@ -79,8 +79,8 @@ fn rounding_total_fractial__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 0.7f32,
-            flex_basis: taffy::style::Dimension::Length(50.3f32),
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(20.3f32) },
+            flex_basis: taffy::style::Dimension::from_length(50.3f32),
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(20.3f32) },
             ..Default::default()
         })
         .unwrap();
@@ -88,7 +88,7 @@ fn rounding_total_fractial__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 1.6f32,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -96,7 +96,7 @@ fn rounding_total_fractial__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 1.1f32,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10.7f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10.7f32) },
             ..Default::default()
         })
         .unwrap();
@@ -106,8 +106,8 @@ fn rounding_total_fractial__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(87.4f32),
-                    height: taffy::style::Dimension::Length(113.4f32),
+                    width: taffy::style::Dimension::from_length(87.4f32),
+                    height: taffy::style::Dimension::from_length(113.4f32),
                 },
                 ..Default::default()
             },

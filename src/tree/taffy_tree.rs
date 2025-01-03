@@ -1265,7 +1265,7 @@ mod tests {
     fn compute_layout_should_produce_valid_result() {
         let mut taffy: TaffyTree<()> = TaffyTree::new();
         let node_result = taffy.new_leaf(Style {
-            size: Size { width: Dimension::Length(10f32), height: Dimension::Length(10f32) },
+            size: Size { width: Dimension::from_length(10f32), height: Dimension::from_length(10f32) },
             ..Default::default()
         });
         assert!(node_result.is_ok());
@@ -1279,13 +1279,13 @@ mod tests {
 
     #[test]
     fn make_sure_layout_location_is_top_left() {
-        use crate::prelude::Rect;
+        use crate::prelude::*;
 
         let mut taffy: TaffyTree<()> = TaffyTree::new();
 
         let node = taffy
             .new_leaf(Style {
-                size: Size { width: Dimension::Percent(1f32), height: Dimension::Percent(1f32) },
+                size: Size { width: Dimension::from_percent(1f32), height: Dimension::from_percent(1f32) },
                 ..Default::default()
             })
             .unwrap();
@@ -1293,7 +1293,7 @@ mod tests {
         let root = taffy
             .new_with_children(
                 Style {
-                    size: Size { width: Dimension::Length(100f32), height: Dimension::Length(100f32) },
+                    size: Size { width: Dimension::from_length(100f32), height: Dimension::from_length(100f32) },
                     padding: Rect {
                         left: length(10f32),
                         right: length(20f32),

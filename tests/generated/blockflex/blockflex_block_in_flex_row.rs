@@ -9,7 +9,7 @@ fn blockflex_block_in_flex_row__border_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -18,8 +18,8 @@ fn blockflex_block_in_flex_row__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(50f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(50f32),
                 },
                 ..Default::default()
             },
@@ -67,7 +67,7 @@ fn blockflex_block_in_flex_row__content_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -77,8 +77,8 @@ fn blockflex_block_in_flex_row__content_box() {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(50f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(50f32),
                 },
                 ..Default::default()
             },

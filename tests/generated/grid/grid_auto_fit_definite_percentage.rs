@@ -24,23 +24,20 @@ fn grid_auto_fit_definite_percentage__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                gap: taffy::geometry::Size {
-                    width: taffy::style::LengthPercentage::Length(10f32),
-                    height: taffy::style::LengthPercentage::Length(10f32),
-                },
+                gap: taffy::geometry::Size { width: length(10f32), height: length(10f32) },
                 grid_template_columns: vec![repeat(
                     GridTrackRepetition::AutoFill,
                     vec![minmax(length(150f32), fr(1f32))],
                 )],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(1f32),
-                    height: taffy::style::Dimension::Percent(1f32),
+                    width: taffy::style::Dimension::from_percent(1f32),
+                    height: taffy::style::Dimension::from_percent(1f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(10f32),
-                    right: taffy::style::LengthPercentage::Length(10f32),
-                    top: taffy::style::LengthPercentage::Length(10f32),
-                    bottom: taffy::style::LengthPercentage::Length(10f32),
+                    left: length(10f32),
+                    right: length(10f32),
+                    top: length(10f32),
+                    bottom: length(10f32),
                 },
                 ..Default::default()
             },
@@ -51,8 +48,8 @@ fn grid_auto_fit_definite_percentage__border_box() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(730f32),
-                    height: taffy::style::Dimension::Length(300f32),
+                    width: taffy::style::Dimension::from_length(730f32),
+                    height: taffy::style::Dimension::from_length(300f32),
                 },
                 ..Default::default()
             },
@@ -192,23 +189,20 @@ fn grid_auto_fit_definite_percentage__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                gap: taffy::geometry::Size {
-                    width: taffy::style::LengthPercentage::Length(10f32),
-                    height: taffy::style::LengthPercentage::Length(10f32),
-                },
+                gap: taffy::geometry::Size { width: length(10f32), height: length(10f32) },
                 grid_template_columns: vec![repeat(
                     GridTrackRepetition::AutoFill,
                     vec![minmax(length(150f32), fr(1f32))],
                 )],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(1f32),
-                    height: taffy::style::Dimension::Percent(1f32),
+                    width: taffy::style::Dimension::from_percent(1f32),
+                    height: taffy::style::Dimension::from_percent(1f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(10f32),
-                    right: taffy::style::LengthPercentage::Length(10f32),
-                    top: taffy::style::LengthPercentage::Length(10f32),
-                    bottom: taffy::style::LengthPercentage::Length(10f32),
+                    left: length(10f32),
+                    right: length(10f32),
+                    top: length(10f32),
+                    bottom: length(10f32),
                 },
                 ..Default::default()
             },
@@ -220,8 +214,8 @@ fn grid_auto_fit_definite_percentage__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(730f32),
-                    height: taffy::style::Dimension::Length(300f32),
+                    width: taffy::style::Dimension::from_length(730f32),
+                    height: taffy::style::Dimension::from_length(300f32),
                 },
                 ..Default::default()
             },

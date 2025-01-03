@@ -7,13 +7,13 @@ fn flex_grow_within_constrained_max_column__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Length(100f32),
+            flex_basis: taffy::style::Dimension::from_length(100f32),
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(50f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(50f32) },
             ..Default::default()
         })
         .unwrap();
@@ -21,8 +21,8 @@ fn flex_grow_within_constrained_max_column__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
-                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
+                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
                 ..Default::default()
             },
             &[node0, node1],
@@ -62,14 +62,14 @@ fn flex_grow_within_constrained_max_column__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 1f32,
-            flex_basis: taffy::style::Dimension::Length(100f32),
+            flex_basis: taffy::style::Dimension::from_length(100f32),
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(50f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(50f32) },
             ..Default::default()
         })
         .unwrap();
@@ -78,8 +78,8 @@ fn flex_grow_within_constrained_max_column__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
-                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
+                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
                 ..Default::default()
             },
             &[node0, node1],

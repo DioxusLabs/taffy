@@ -511,14 +511,14 @@ impl<T: FromPercent> Rect<T> {
 
 /// Create a `Fraction` track sizing function (`fr` in CSS)
 #[cfg(feature = "grid")]
-pub fn fr<Input: Into<f32> + Copy, T: FromFlex>(flex: Input) -> T {
-    T::from_flex(flex)
+pub fn fr<Input: Into<f32> + Copy, T: FromFr>(flex: Input) -> T {
+    T::from_fr(flex)
 }
 
 /// Trait to create constant percent values from plain numbers
-pub trait FromFlex {
+pub trait FromFr {
     /// Converts into an `Into<f32>` into Self
-    fn from_flex<Input: Into<f32> + Copy>(flex: Input) -> Self;
+    fn from_fr<Input: Into<f32> + Copy>(flex: Input) -> Self;
 }
 
 #[cfg(feature = "grid")]

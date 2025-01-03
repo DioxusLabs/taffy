@@ -7,13 +7,13 @@ fn margin_auto_multiple_children_column__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
-                top: taffy::style::LengthPercentageAuto::Auto,
+                top: taffy::style::LengthPercentageAuto::AUTO,
                 bottom: zero(),
             },
             ..Default::default()
@@ -22,13 +22,13 @@ fn margin_auto_multiple_children_column__border_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
-                top: taffy::style::LengthPercentageAuto::Auto,
+                top: taffy::style::LengthPercentageAuto::AUTO,
                 bottom: zero(),
             },
             ..Default::default()
@@ -37,8 +37,8 @@ fn margin_auto_multiple_children_column__border_box() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             ..Default::default()
         })
@@ -49,8 +49,8 @@ fn margin_auto_multiple_children_column__border_box() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_items: Some(taffy::style::AlignItems::Center),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },
@@ -97,13 +97,13 @@ fn margin_auto_multiple_children_column__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
-                top: taffy::style::LengthPercentageAuto::Auto,
+                top: taffy::style::LengthPercentageAuto::AUTO,
                 bottom: zero(),
             },
             ..Default::default()
@@ -113,13 +113,13 @@ fn margin_auto_multiple_children_column__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             margin: taffy::geometry::Rect {
                 left: zero(),
                 right: zero(),
-                top: taffy::style::LengthPercentageAuto::Auto,
+                top: taffy::style::LengthPercentageAuto::AUTO,
                 bottom: zero(),
             },
             ..Default::default()
@@ -129,8 +129,8 @@ fn margin_auto_multiple_children_column__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             ..Default::default()
         })
@@ -142,8 +142,8 @@ fn margin_auto_multiple_children_column__content_box() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_items: Some(taffy::style::AlignItems::Center),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },

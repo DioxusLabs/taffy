@@ -7,18 +7,18 @@ fn percentage_moderate_complexity__border_box() {
     taffy.disable_rounding();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.45f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.45f32), height: auto() },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                right: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                top: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.05f32),
+                left: percent(0.05f32),
+                right: percent(0.05f32),
+                top: percent(0.05f32),
+                bottom: percent(0.05f32),
             },
             padding: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Length(3f32),
-                right: taffy::style::LengthPercentage::Length(3f32),
-                top: taffy::style::LengthPercentage::Length(3f32),
-                bottom: taffy::style::LengthPercentage::Length(3f32),
+                left: length(3f32),
+                right: length(3f32),
+                top: length(3f32),
+                bottom: length(3f32),
             },
             ..Default::default()
         })
@@ -28,18 +28,18 @@ fn percentage_moderate_complexity__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.5f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.5f32), height: auto() },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Length(5f32),
-                    right: taffy::style::LengthPercentageAuto::Length(5f32),
-                    top: taffy::style::LengthPercentageAuto::Length(5f32),
-                    bottom: taffy::style::LengthPercentageAuto::Length(5f32),
+                    left: length(5f32),
+                    right: length(5f32),
+                    top: length(5f32),
+                    bottom: length(5f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Percent(0.03f32),
-                    right: taffy::style::LengthPercentage::Percent(0.03f32),
-                    top: taffy::style::LengthPercentage::Percent(0.03f32),
-                    bottom: taffy::style::LengthPercentage::Percent(0.03f32),
+                    left: percent(0.03f32),
+                    right: percent(0.03f32),
+                    top: percent(0.03f32),
+                    bottom: percent(0.03f32),
                 },
                 ..Default::default()
             },
@@ -51,12 +51,12 @@ fn percentage_moderate_complexity__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(3f32),
-                    right: taffy::style::LengthPercentage::Length(3f32),
-                    top: taffy::style::LengthPercentage::Length(3f32),
-                    bottom: taffy::style::LengthPercentage::Length(3f32),
+                    left: length(3f32),
+                    right: length(3f32),
+                    top: length(3f32),
+                    bottom: length(3f32),
                 },
                 ..Default::default()
             },
@@ -127,18 +127,18 @@ fn percentage_moderate_complexity__content_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.45f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.45f32), height: auto() },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                right: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                top: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.05f32),
+                left: percent(0.05f32),
+                right: percent(0.05f32),
+                top: percent(0.05f32),
+                bottom: percent(0.05f32),
             },
             padding: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Length(3f32),
-                right: taffy::style::LengthPercentage::Length(3f32),
-                top: taffy::style::LengthPercentage::Length(3f32),
-                bottom: taffy::style::LengthPercentage::Length(3f32),
+                left: length(3f32),
+                right: length(3f32),
+                top: length(3f32),
+                bottom: length(3f32),
             },
             ..Default::default()
         })
@@ -149,18 +149,18 @@ fn percentage_moderate_complexity__content_box() {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.5f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.5f32), height: auto() },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Length(5f32),
-                    right: taffy::style::LengthPercentageAuto::Length(5f32),
-                    top: taffy::style::LengthPercentageAuto::Length(5f32),
-                    bottom: taffy::style::LengthPercentageAuto::Length(5f32),
+                    left: length(5f32),
+                    right: length(5f32),
+                    top: length(5f32),
+                    bottom: length(5f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Percent(0.03f32),
-                    right: taffy::style::LengthPercentage::Percent(0.03f32),
-                    top: taffy::style::LengthPercentage::Percent(0.03f32),
-                    bottom: taffy::style::LengthPercentage::Percent(0.03f32),
+                    left: percent(0.03f32),
+                    right: percent(0.03f32),
+                    top: percent(0.03f32),
+                    bottom: percent(0.03f32),
                 },
                 ..Default::default()
             },
@@ -173,12 +173,12 @@ fn percentage_moderate_complexity__content_box() {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(3f32),
-                    right: taffy::style::LengthPercentage::Length(3f32),
-                    top: taffy::style::LengthPercentage::Length(3f32),
-                    bottom: taffy::style::LengthPercentage::Length(3f32),
+                    left: length(3f32),
+                    right: length(3f32),
+                    top: length(3f32),
+                    bottom: length(3f32),
                 },
                 ..Default::default()
             },

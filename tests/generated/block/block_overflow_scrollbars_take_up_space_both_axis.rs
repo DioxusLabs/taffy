@@ -8,10 +8,10 @@ fn block_overflow_scrollbars_take_up_space_both_axis__border_box() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(0f32),
-                right: taffy::style::LengthPercentageAuto::Length(0f32),
-                top: taffy::style::LengthPercentageAuto::Length(0f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(0f32),
+                left: length(0f32),
+                right: length(0f32),
+                top: length(0f32),
+                bottom: length(0f32),
             },
             ..Default::default()
         })
@@ -26,8 +26,8 @@ fn block_overflow_scrollbars_take_up_space_both_axis__border_box() {
                 },
                 scrollbar_width: 15f32,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Length(50f32),
+                    width: taffy::style::Dimension::from_length(50f32),
+                    height: taffy::style::Dimension::from_length(50f32),
                 },
                 ..Default::default()
             },
@@ -81,10 +81,10 @@ fn block_overflow_scrollbars_take_up_space_both_axis__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(0f32),
-                right: taffy::style::LengthPercentageAuto::Length(0f32),
-                top: taffy::style::LengthPercentageAuto::Length(0f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(0f32),
+                left: length(0f32),
+                right: length(0f32),
+                top: length(0f32),
+                bottom: length(0f32),
             },
             ..Default::default()
         })
@@ -100,8 +100,8 @@ fn block_overflow_scrollbars_take_up_space_both_axis__content_box() {
                 },
                 scrollbar_width: 15f32,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Length(50f32),
+                    width: taffy::style::Dimension::from_length(50f32),
+                    height: taffy::style::Dimension::from_length(50f32),
                 },
                 ..Default::default()
             },

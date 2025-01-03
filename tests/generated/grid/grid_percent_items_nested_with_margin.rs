@@ -6,12 +6,12 @@ fn grid_percent_items_nested_with_margin__border_box() {
     let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.45f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.45f32), height: auto() },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                right: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                top: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.05f32),
+                left: percent(0.05f32),
+                right: percent(0.05f32),
+                top: percent(0.05f32),
+                bottom: percent(0.05f32),
             },
             ..Default::default()
         })
@@ -20,7 +20,7 @@ fn grid_percent_items_nested_with_margin__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.5f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.5f32), height: auto() },
                 ..Default::default()
             },
             &[node00],
@@ -30,7 +30,7 @@ fn grid_percent_items_nested_with_margin__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
                 ..Default::default()
             },
             &[node0],
@@ -69,12 +69,12 @@ fn grid_percent_items_nested_with_margin__content_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.45f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.45f32), height: auto() },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                right: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                top: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                bottom: taffy::style::LengthPercentageAuto::Percent(0.05f32),
+                left: percent(0.05f32),
+                right: percent(0.05f32),
+                top: percent(0.05f32),
+                bottom: percent(0.05f32),
             },
             ..Default::default()
         })
@@ -84,7 +84,7 @@ fn grid_percent_items_nested_with_margin__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.5f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.5f32), height: auto() },
                 ..Default::default()
             },
             &[node00],
@@ -95,7 +95,7 @@ fn grid_percent_items_nested_with_margin__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

@@ -8,8 +8,8 @@ fn grid_align_items_baseline_child_multiline_no_override_on_secondline__border_b
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(60f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(60f32),
             },
             ..Default::default()
         })
@@ -18,8 +18,8 @@ fn grid_align_items_baseline_child_multiline_no_override_on_secondline__border_b
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(25f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(25f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -28,8 +28,8 @@ fn grid_align_items_baseline_child_multiline_no_override_on_secondline__border_b
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(25f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(25f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -38,8 +38,8 @@ fn grid_align_items_baseline_child_multiline_no_override_on_secondline__border_b
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(25f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(25f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -49,8 +49,8 @@ fn grid_align_items_baseline_child_multiline_no_override_on_secondline__border_b
             display: taffy::style::Display::Grid,
             align_self: Some(taffy::style::AlignSelf::Baseline),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(25f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(25f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -61,8 +61,8 @@ fn grid_align_items_baseline_child_multiline_no_override_on_secondline__border_b
                 display: taffy::style::Display::Grid,
                 grid_template_columns: vec![auto(), auto()],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Length(25f32),
+                    width: taffy::style::Dimension::from_length(50f32),
+                    height: taffy::style::Dimension::from_length(25f32),
                 },
                 ..Default::default()
             },
@@ -75,8 +75,8 @@ fn grid_align_items_baseline_child_multiline_no_override_on_secondline__border_b
                 display: taffy::style::Display::Grid,
                 align_items: Some(taffy::style::AlignItems::Baseline),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },
@@ -142,8 +142,8 @@ fn grid_align_items_baseline_child_multiline_no_override_on_secondline__content_
             display: taffy::style::Display::Grid,
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(60f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(60f32),
             },
             ..Default::default()
         })
@@ -153,8 +153,8 @@ fn grid_align_items_baseline_child_multiline_no_override_on_secondline__content_
             display: taffy::style::Display::Grid,
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(25f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(25f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -164,8 +164,8 @@ fn grid_align_items_baseline_child_multiline_no_override_on_secondline__content_
             display: taffy::style::Display::Grid,
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(25f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(25f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -175,8 +175,8 @@ fn grid_align_items_baseline_child_multiline_no_override_on_secondline__content_
             display: taffy::style::Display::Grid,
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(25f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(25f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -187,8 +187,8 @@ fn grid_align_items_baseline_child_multiline_no_override_on_secondline__content_
             box_sizing: taffy::style::BoxSizing::ContentBox,
             align_self: Some(taffy::style::AlignSelf::Baseline),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(25f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(25f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -200,8 +200,8 @@ fn grid_align_items_baseline_child_multiline_no_override_on_secondline__content_
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 grid_template_columns: vec![auto(), auto()],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Length(25f32),
+                    width: taffy::style::Dimension::from_length(50f32),
+                    height: taffy::style::Dimension::from_length(25f32),
                 },
                 ..Default::default()
             },
@@ -215,8 +215,8 @@ fn grid_align_items_baseline_child_multiline_no_override_on_secondline__content_
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 align_items: Some(taffy::style::AlignItems::Baseline),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },

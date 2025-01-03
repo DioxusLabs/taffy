@@ -21,7 +21,7 @@ fn grid_max_width_smaller_than_min_content__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 grid_template_columns: vec![auto(), auto()],
-                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+                max_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(60f32), height: auto() },
                 ..Default::default()
             },
             &[node00, node01],
@@ -91,7 +91,7 @@ fn grid_max_width_smaller_than_min_content__content_box() {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 grid_template_columns: vec![auto(), auto()],
-                max_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+                max_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(60f32), height: auto() },
                 ..Default::default()
             },
             &[node00, node01],

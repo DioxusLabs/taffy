@@ -8,8 +8,8 @@ fn align_content_stretch_is_not_overriding_align_items__border_box() {
         .new_leaf(taffy::style::Style {
             align_content: Some(taffy::style::AlignContent::Stretch),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -20,8 +20,8 @@ fn align_content_stretch_is_not_overriding_align_items__border_box() {
                 align_items: Some(taffy::style::AlignItems::Center),
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },
@@ -69,8 +69,8 @@ fn align_content_stretch_is_not_overriding_align_items__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             align_content: Some(taffy::style::AlignContent::Stretch),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(10f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(10f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -82,8 +82,8 @@ fn align_content_stretch_is_not_overriding_align_items__content_box() {
                 align_items: Some(taffy::style::AlignItems::Center),
                 align_content: Some(taffy::style::AlignContent::Stretch),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },

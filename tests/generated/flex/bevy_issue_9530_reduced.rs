@@ -24,7 +24,7 @@ fn bevy_issue_9530_reduced__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(40f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(40f32), height: auto() },
                 ..Default::default()
             },
             &[node0],
@@ -86,7 +86,7 @@ fn bevy_issue_9530_reduced__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(40f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(40f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

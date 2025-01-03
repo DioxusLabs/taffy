@@ -8,8 +8,8 @@ fn grid_align_self_sized_all__border_box() {
         .new_leaf(taffy::style::Style {
             align_self: Some(taffy::style::AlignSelf::Start),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -18,8 +18,8 @@ fn grid_align_self_sized_all__border_box() {
         .new_leaf(taffy::style::Style {
             align_self: Some(taffy::style::AlignSelf::Start),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(60f32),
-                height: taffy::style::Dimension::Length(60f32),
+                width: taffy::style::Dimension::from_length(60f32),
+                height: taffy::style::Dimension::from_length(60f32),
             },
             ..Default::default()
         })
@@ -28,8 +28,8 @@ fn grid_align_self_sized_all__border_box() {
         .new_leaf(taffy::style::Style {
             align_self: Some(taffy::style::AlignSelf::End),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -38,8 +38,8 @@ fn grid_align_self_sized_all__border_box() {
         .new_leaf(taffy::style::Style {
             align_self: Some(taffy::style::AlignSelf::End),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(60f32),
-                height: taffy::style::Dimension::Length(60f32),
+                width: taffy::style::Dimension::from_length(60f32),
+                height: taffy::style::Dimension::from_length(60f32),
             },
             ..Default::default()
         })
@@ -48,8 +48,8 @@ fn grid_align_self_sized_all__border_box() {
         .new_leaf(taffy::style::Style {
             align_self: Some(taffy::style::AlignSelf::Center),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -58,8 +58,8 @@ fn grid_align_self_sized_all__border_box() {
         .new_leaf(taffy::style::Style {
             align_self: Some(taffy::style::AlignSelf::Center),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(60f32),
-                height: taffy::style::Dimension::Length(60f32),
+                width: taffy::style::Dimension::from_length(60f32),
+                height: taffy::style::Dimension::from_length(60f32),
             },
             ..Default::default()
         })
@@ -68,8 +68,8 @@ fn grid_align_self_sized_all__border_box() {
         .new_leaf(taffy::style::Style {
             align_self: Some(taffy::style::AlignSelf::Stretch),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -78,8 +78,8 @@ fn grid_align_self_sized_all__border_box() {
         .new_leaf(taffy::style::Style {
             align_self: Some(taffy::style::AlignSelf::Stretch),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(60f32),
-                height: taffy::style::Dimension::Length(60f32),
+                width: taffy::style::Dimension::from_length(60f32),
+                height: taffy::style::Dimension::from_length(60f32),
             },
             ..Default::default()
         })
@@ -91,8 +91,8 @@ fn grid_align_self_sized_all__border_box() {
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(120f32),
-                    height: taffy::style::Dimension::Length(120f32),
+                    width: taffy::style::Dimension::from_length(120f32),
+                    height: taffy::style::Dimension::from_length(120f32),
                 },
                 ..Default::default()
             },
@@ -170,8 +170,8 @@ fn grid_align_self_sized_all__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             align_self: Some(taffy::style::AlignSelf::Start),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -181,8 +181,8 @@ fn grid_align_self_sized_all__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             align_self: Some(taffy::style::AlignSelf::Start),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(60f32),
-                height: taffy::style::Dimension::Length(60f32),
+                width: taffy::style::Dimension::from_length(60f32),
+                height: taffy::style::Dimension::from_length(60f32),
             },
             ..Default::default()
         })
@@ -192,8 +192,8 @@ fn grid_align_self_sized_all__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             align_self: Some(taffy::style::AlignSelf::End),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -203,8 +203,8 @@ fn grid_align_self_sized_all__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             align_self: Some(taffy::style::AlignSelf::End),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(60f32),
-                height: taffy::style::Dimension::Length(60f32),
+                width: taffy::style::Dimension::from_length(60f32),
+                height: taffy::style::Dimension::from_length(60f32),
             },
             ..Default::default()
         })
@@ -214,8 +214,8 @@ fn grid_align_self_sized_all__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             align_self: Some(taffy::style::AlignSelf::Center),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -225,8 +225,8 @@ fn grid_align_self_sized_all__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             align_self: Some(taffy::style::AlignSelf::Center),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(60f32),
-                height: taffy::style::Dimension::Length(60f32),
+                width: taffy::style::Dimension::from_length(60f32),
+                height: taffy::style::Dimension::from_length(60f32),
             },
             ..Default::default()
         })
@@ -236,8 +236,8 @@ fn grid_align_self_sized_all__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             align_self: Some(taffy::style::AlignSelf::Stretch),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -247,8 +247,8 @@ fn grid_align_self_sized_all__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             align_self: Some(taffy::style::AlignSelf::Stretch),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(60f32),
-                height: taffy::style::Dimension::Length(60f32),
+                width: taffy::style::Dimension::from_length(60f32),
+                height: taffy::style::Dimension::from_length(60f32),
             },
             ..Default::default()
         })
@@ -261,8 +261,8 @@ fn grid_align_self_sized_all__content_box() {
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(120f32),
-                    height: taffy::style::Dimension::Length(120f32),
+                    width: taffy::style::Dimension::from_length(120f32),
+                    height: taffy::style::Dimension::from_length(120f32),
                 },
                 ..Default::default()
             },

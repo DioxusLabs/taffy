@@ -555,16 +555,20 @@ mod test {
 
     #[test]
     fn test_initialize_grid_tracks() {
-        let px0 = LengthPercentage::Length(0.0);
-        let px20 = LengthPercentage::Length(20.0);
-        let px100 = LengthPercentage::Length(100.0);
+        let minpx0 = MinTrackSizingFunction::from_length(0.0);
+        let minpx20 = MinTrackSizingFunction::from_length(20.0);
+        let minpx100 = MinTrackSizingFunction::from_length(100.0);
+
+        let maxpx0 = MaxTrackSizingFunction::from_length(0.0);
+        let maxpx20 = MaxTrackSizingFunction::from_length(20.0);
+        let maxpx100 = MaxTrackSizingFunction::from_length(100.0);
 
         // Setup test
         let track_template = vec![length(100.0), minmax(length(100.0), fr(2.0)), fr(1.0)];
         let track_counts =
             TrackCounts { negative_implicit: 3, explicit: track_template.len() as u16, positive_implicit: 3 };
         let auto_tracks = vec![auto(), length(100.0)];
-        let gap = px20;
+        let gap = LengthPercentage::from_length(20.0);
 
         // Call function
         let mut tracks = Vec::new();
@@ -573,28 +577,28 @@ mod test {
         // Assertions
         let expected = vec![
             // Gutter
-            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px0), MaxTrackSizingFunction::Fixed(px0)),
+            (GridTrackKind::Gutter, minpx0, maxpx0),
             // Negative implicit tracks
-            (GridTrackKind::Track, MinTrackSizingFunction::Fixed(px100), MaxTrackSizingFunction::Fixed(px100)),
-            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
-            (GridTrackKind::Track, MinTrackSizingFunction::Auto, MaxTrackSizingFunction::Auto),
-            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
-            (GridTrackKind::Track, MinTrackSizingFunction::Fixed(px100), MaxTrackSizingFunction::Fixed(px100)),
-            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
+            (GridTrackKind::Track, minpx100, maxpx100),
+            (GridTrackKind::Gutter, minpx20, maxpx20),
+            (GridTrackKind::Track, auto(), auto()),
+            (GridTrackKind::Gutter, minpx20, maxpx20),
+            (GridTrackKind::Track, minpx100, maxpx100),
+            (GridTrackKind::Gutter, minpx20, maxpx20),
             // Explicit tracks
-            (GridTrackKind::Track, MinTrackSizingFunction::Fixed(px100), MaxTrackSizingFunction::Fixed(px100)),
-            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
-            (GridTrackKind::Track, MinTrackSizingFunction::Fixed(px100), MaxTrackSizingFunction::Fraction(2.0)), // Note: separate min-max functions
-            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
-            (GridTrackKind::Track, MinTrackSizingFunction::Auto, MaxTrackSizingFunction::Fraction(1.0)), // Note: min sizing function of flex sizing functions is auto
-            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
+            (GridTrackKind::Track, minpx100, maxpx100),
+            (GridTrackKind::Gutter, minpx20, maxpx20),
+            (GridTrackKind::Track, minpx100, MaxTrackSizingFunction::from_fr(2.0)), // Note: separate min-max functions
+            (GridTrackKind::Gutter, minpx20, maxpx20),
+            (GridTrackKind::Track, auto(), MaxTrackSizingFunction::from_fr(1.0)), // Note: min sizing function of flex sizing functions is AUTO
+            (GridTrackKind::Gutter, minpx20, maxpx20),
             // Positive implicit tracks
-            (GridTrackKind::Track, MinTrackSizingFunction::Auto, MaxTrackSizingFunction::Auto),
-            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
-            (GridTrackKind::Track, MinTrackSizingFunction::Fixed(px100), MaxTrackSizingFunction::Fixed(px100)),
-            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px20), MaxTrackSizingFunction::Fixed(px20)),
-            (GridTrackKind::Track, MinTrackSizingFunction::Auto, MaxTrackSizingFunction::Auto),
-            (GridTrackKind::Gutter, MinTrackSizingFunction::Fixed(px0), MaxTrackSizingFunction::Fixed(px0)),
+            (GridTrackKind::Track, auto(), auto()),
+            (GridTrackKind::Gutter, minpx20, maxpx20),
+            (GridTrackKind::Track, minpx100, maxpx100),
+            (GridTrackKind::Gutter, minpx20, maxpx20),
+            (GridTrackKind::Track, auto(), auto()),
+            (GridTrackKind::Gutter, minpx0, maxpx0),
         ];
 
         assert_eq!(tracks.len(), expected.len(), "Number of tracks doesn't match");
