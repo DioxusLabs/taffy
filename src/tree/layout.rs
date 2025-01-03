@@ -349,7 +349,7 @@ impl Layout {
 #[cfg(feature = "detailed_layout_info")]
 #[derive(Debug, Clone, PartialEq)]
 pub enum DetailedLayoutInfo {
-    /// Enum variant for [`DetailedGridInfo`]
+    /// Enum variant for [`DetailedGridInfo`](crate::compute::grid::DetailedGridInfo)
     #[cfg(feature = "grid")]
     Grid(Box<crate::compute::grid::DetailedGridInfo>),
     /// For node that hasn't had any detailed information yet
