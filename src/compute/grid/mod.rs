@@ -23,6 +23,9 @@ use track_sizing::{
 };
 use types::{CellOccupancyMatrix, GridTrack};
 
+#[cfg(feature = "detailed_layout_info")]
+use types::{GridItem, GridTrackKind, TrackCounts};
+
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine};
 
 mod alignment;
@@ -592,9 +595,122 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
         item.y_position + item.baseline.unwrap_or(item.height)
     };
 
+    #[cfg(feature = "detailed_layout_info")]
+    tree.set_detailed_grid_info(
+        node,
+        DetailedGridInfo {
+            rows: DetailedGridTracksInfo::from_grid_tracks_and_track_count(final_row_counts, rows),
+            columns: DetailedGridTracksInfo::from_grid_tracks_and_track_count(final_col_counts, columns),
+            items: items.iter().map(DetailedGridItemsInfo::from_grid_item).collect(),
+        },
+    );
+
     LayoutOutput::from_sizes_and_baselines(
         container_border_box,
         item_content_size_contribution,
         Point { x: None, y: Some(grid_container_baseline) },
     )
+}
+
+/// Information from the computation of grid
+#[derive(Debug, Clone, PartialEq)]
+#[cfg(feature = "detailed_layout_info")]
+pub struct DetailedGridInfo {
+    /// <https://drafts.csswg.org/css-grid-1/#grid-row>
+    pub rows: DetailedGridTracksInfo,
+    /// <https://drafts.csswg.org/css-grid-1/#grid-column>
+    pub columns: DetailedGridTracksInfo,
+    /// <https://drafts.csswg.org/css-grid-1/#grid-items>
+    pub items: Vec<DetailedGridItemsInfo>,
+}
+
+/// Information from the computation of grids tracks
+#[derive(Debug, Clone, PartialEq)]
+#[cfg(feature = "detailed_layout_info")]
+pub struct DetailedGridTracksInfo {
+    /// Number of leading implicit grid tracks
+    pub negative_implicit_tracks: u16,
+    /// Number of explicit grid tracks
+    pub explicit_tracks: u16,
+    /// Number of trailing implicit grid tracks
+    pub positive_implicit_tracks: u16,
+
+    /// Gutters between tracks
+    pub gutters: Vec<f32>,
+    /// The used size of the tracks
+    pub sizes: Vec<f32>,
+}
+
+#[cfg(feature = "detailed_layout_info")]
+impl DetailedGridTracksInfo {
+    /// Get the base_size of [`GridTrack`] with a kind [`types::GridTrackKind`]
+    #[inline(always)]
+    fn grid_track_base_size_of_kind(grid_tracks: &[GridTrack], kind: GridTrackKind) -> Vec<f32> {
+        grid_tracks
+            .iter()
+            .filter_map(|track| match track.kind == kind {
+                true => Some(track.base_size),
+                false => None,
+            })
+            .collect()
+    }
+
+    /// Get the sizes of the gutters
+    fn gutters_from_grid_track_layout(grid_tracks: &[GridTrack]) -> Vec<f32> {
+        DetailedGridTracksInfo::grid_track_base_size_of_kind(grid_tracks, GridTrackKind::Gutter)
+    }
+
+    /// Get the sizes of the tracks
+    fn sizes_from_grid_track_layout(grid_tracks: &[GridTrack]) -> Vec<f32> {
+        DetailedGridTracksInfo::grid_track_base_size_of_kind(grid_tracks, GridTrackKind::Track)
+    }
+
+    /// Construct DetailedGridTracksInfo from TrackCounts and GridTracks
+    fn from_grid_tracks_and_track_count(track_count: TrackCounts, grid_tracks: Vec<GridTrack>) -> Self {
+        DetailedGridTracksInfo {
+            negative_implicit_tracks: track_count.negative_implicit,
+            explicit_tracks: track_count.explicit,
+            positive_implicit_tracks: track_count.positive_implicit,
+            gutters: DetailedGridTracksInfo::gutters_from_grid_track_layout(&grid_tracks),
+            sizes: DetailedGridTracksInfo::sizes_from_grid_track_layout(&grid_tracks),
+        }
+    }
+}
+
+/// Grid area information from the placement algorithm
+///
+/// The values is 1-indexed grid line numbers bounding the area.
+/// This matches the Chrome and Firefox's format as of 2nd Jan 2024.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg(feature = "detailed_layout_info")]
+pub struct DetailedGridItemsInfo {
+    /// row-start with 1-indexed grid line numbers
+    pub row_start: u16,
+    /// row-end with 1-indexed grid line numbers
+    pub row_end: u16,
+    /// column-start with 1-indexed grid line numbers
+    pub column_start: u16,
+    /// column-end with 1-indexed grid line numbers
+    pub column_end: u16,
+}
+
+/// Grid area information from the placement algorithm
+#[cfg(feature = "detailed_layout_info")]
+impl DetailedGridItemsInfo {
+    /// Construct from GridItems
+    #[inline(always)]
+    fn from_grid_item(grid_item: &GridItem) -> Self {
+        /// Conversion from the indexes of Vec<GridTrack> into 1-indexed grid line numbers. See [`GridItem::row_indexes`] or [`GridItem::column_indexes`]
+        #[inline(always)]
+        fn to_one_indexed_grid_line(grid_track_index: u16) -> u16 {
+            grid_track_index / 2 + 1
+        }
+
+        DetailedGridItemsInfo {
+            row_start: to_one_indexed_grid_line(grid_item.row_indexes.start),
+            row_end: to_one_indexed_grid_line(grid_item.row_indexes.end),
+            column_start: to_one_indexed_grid_line(grid_item.column_indexes.start),
+            column_end: to_one_indexed_grid_line(grid_item.column_indexes.end),
+        }
+    }
 }

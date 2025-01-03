@@ -25,6 +25,11 @@ use crate::{compute::compute_flexbox_layout, LayoutFlexboxContainer};
 #[cfg(feature = "grid")]
 use crate::{compute::compute_grid_layout, LayoutGridContainer};
 
+#[cfg(all(feature = "detailed_layout_info", feature = "grid"))]
+use crate::compute::grid::DetailedGridInfo;
+#[cfg(feature = "detailed_layout_info")]
+use crate::tree::layout::DetailedLayoutInfo;
+
 /// The error Taffy generates on invalid operations
 pub type TaffyResult<T> = Result<T, TaffyError>;
 
@@ -100,6 +105,10 @@ struct NodeData {
 
     /// The cached results of the layout computation
     pub(crate) cache: Cache,
+
+    /// The computation result from layout algorithm
+    #[cfg(feature = "detailed_layout_info")]
+    pub(crate) detailed_layout_info: DetailedLayoutInfo,
 }
 
 impl NodeData {
@@ -112,6 +121,8 @@ impl NodeData {
             unrounded_layout: Layout::new(),
             final_layout: Layout::new(),
             has_context: false,
+            #[cfg(feature = "detailed_layout_info")]
+            detailed_layout_info: DetailedLayoutInfo::None,
         }
     }
 
@@ -481,6 +492,12 @@ where
     #[inline(always)]
     fn get_grid_child_style(&self, child_node_id: NodeId) -> Self::GridItemStyle<'_> {
         &self.taffy.nodes[child_node_id.into()].style
+    }
+
+    #[inline(always)]
+    #[cfg(feature = "detailed_layout_info")]
+    fn set_detailed_grid_info(&mut self, node_id: NodeId, detailed_grid_info: DetailedGridInfo) {
+        self.taffy.nodes[node_id.into()].detailed_layout_info = DetailedLayoutInfo::Grid(Box::new(detailed_grid_info));
     }
 }
 
