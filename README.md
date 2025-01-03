@@ -11,7 +11,8 @@ It currently implements the CSS **Block**, **Flexbox** and **CSS Grid** layout a
 This crate is a collaborative, cross-team project, and is designed to be used as a dependency for other UI and GUI libraries.
 Right now, it powers:
 
-- [Dioxus](https://dioxuslabs.com/): a React-like library for building fast, portable, and beautiful user interfaces with Rust
+- [Servo](https://github.com/servo/servo): an alternative web browser
+- [Blitz](https://github.com/DioxusLabs/blitz): a radically modular web engine
 - [Bevy](https://bevyengine.org/): an ergonomic, ECS-first Rust game engine
 - The [Lapce](https://lapce.dev/) text editor via the [Floem](https://github.com/lapce/floem) UI framework
 - The [Zed](https://zed.dev/) text editor via the [GPUI](https://github.com/zed-industries/zed/tree/main/crates/gpui) UI framework
