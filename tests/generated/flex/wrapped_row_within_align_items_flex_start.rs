@@ -7,8 +7,8 @@ fn wrapped_row_within_align_items_flex_start__border_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(150f32),
-                height: taffy::style::Dimension::Length(80f32),
+                width: taffy::style::Dimension::from_length(150f32),
+                height: taffy::style::Dimension::from_length(80f32),
             },
             ..Default::default()
         })
@@ -16,8 +16,8 @@ fn wrapped_row_within_align_items_flex_start__border_box() {
     let node01 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(80f32),
-                height: taffy::style::Dimension::Length(80f32),
+                width: taffy::style::Dimension::from_length(80f32),
+                height: taffy::style::Dimension::from_length(80f32),
             },
             ..Default::default()
         })
@@ -34,8 +34,8 @@ fn wrapped_row_within_align_items_flex_start__border_box() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_items: Some(taffy::style::AlignItems::FlexStart),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },
@@ -82,8 +82,8 @@ fn wrapped_row_within_align_items_flex_start__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(150f32),
-                height: taffy::style::Dimension::Length(80f32),
+                width: taffy::style::Dimension::from_length(150f32),
+                height: taffy::style::Dimension::from_length(80f32),
             },
             ..Default::default()
         })
@@ -92,8 +92,8 @@ fn wrapped_row_within_align_items_flex_start__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(80f32),
-                height: taffy::style::Dimension::Length(80f32),
+                width: taffy::style::Dimension::from_length(80f32),
+                height: taffy::style::Dimension::from_length(80f32),
             },
             ..Default::default()
         })
@@ -115,8 +115,8 @@ fn wrapped_row_within_align_items_flex_start__content_box() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_items: Some(taffy::style::AlignItems::FlexStart),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },

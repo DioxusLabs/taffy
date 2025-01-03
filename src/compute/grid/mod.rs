@@ -42,7 +42,11 @@ mod util;
 ///   - Placing items (which also resolves the implicit grid)
 ///   - Track (row/column) sizing
 ///   - Alignment & Final item placement
-pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, inputs: LayoutInput) -> LayoutOutput {
+pub fn compute_grid_layout<Tree: LayoutGridContainer>(
+    tree: &mut Tree,
+    node: NodeId,
+    inputs: LayoutInput,
+) -> LayoutOutput {
     let LayoutInput { known_dimensions, parent_size, available_space, run_mode, .. } = inputs;
 
     let style = tree.get_grid_container_style(node);
@@ -50,8 +54,8 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
     // 1. Compute "available grid space"
     // https://www.w3.org/TR/css-grid-1/#available-grid-space
     let aspect_ratio = style.aspect_ratio();
-    let padding = style.padding().resolve_or_zero(parent_size.width);
-    let border = style.border().resolve_or_zero(parent_size.width);
+    let padding = style.padding().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
+    let border = style.border().resolve_or_zero(parent_size.width, |val, basis| tree.calc(val, basis));
     let padding_border = padding + border;
     let padding_border_size = padding_border.sum_axes();
     let box_sizing_adjustment =
@@ -59,18 +63,18 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
 
     let min_size = style
         .min_size()
-        .maybe_resolve(parent_size)
+        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
     let max_size = style
         .max_size()
-        .maybe_resolve(parent_size)
+        .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
         .maybe_apply_aspect_ratio(aspect_ratio)
         .maybe_add(box_sizing_adjustment);
     let preferred_size = if inputs.sizing_mode == SizingMode::InherentSize {
         style
             .size()
-            .maybe_resolve(parent_size)
+            .maybe_resolve(parent_size, |val, basis| tree.calc(val, basis))
             .maybe_apply_aspect_ratio(style.aspect_ratio())
             .maybe_add(box_sizing_adjustment)
     } else {
@@ -153,12 +157,14 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
         &style,
         grid_template_columms.borrow(),
         auto_fit_container_size,
+        |val, basis| tree.calc(val, basis),
         AbsoluteAxis::Horizontal,
     );
     let explicit_row_count = compute_explicit_grid_size_in_axis(
         &style,
         grid_template_rows.borrow(),
         auto_fit_container_size,
+        |val, basis| tree.calc(val, basis),
         AbsoluteAxis::Vertical,
     );
 
@@ -247,7 +253,9 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
         &mut columns,
         &mut rows,
         &mut items,
-        |track: &GridTrack, parent_size: Option<f32>| track.max_track_sizing_function.definite_value(parent_size),
+        |track: &GridTrack, parent_size: Option<f32>, tree: &Tree| {
+            track.max_track_sizing_function.definite_value(parent_size, |val, basis| tree.calc(val, basis))
+        },
         has_baseline_aligned_item,
     );
     let initial_column_sum = columns.iter().map(|track| track.base_size).sum::<f32>();
@@ -267,7 +275,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
         &mut rows,
         &mut columns,
         &mut items,
-        |track: &GridTrack, _| Some(track.base_size),
+        |track: &GridTrack, _, _| Some(track.base_size),
         false, // TODO: Support baseline alignment in the vertical axis
     );
     let initial_row_sum = rows.iter().map(|track| track.base_size).sum::<f32>();
@@ -307,17 +315,23 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
     // and therefore need to be re-resolved here based on the content-sized content box of the container
     if !available_grid_space.width.is_definite() {
         for column in &mut columns {
-            let min: Option<f32> =
-                column.min_track_sizing_function.resolved_percentage_size(container_content_box.width);
-            let max: Option<f32> =
-                column.max_track_sizing_function.resolved_percentage_size(container_content_box.width);
+            let min: Option<f32> = column
+                .min_track_sizing_function
+                .resolved_percentage_size(container_content_box.width, |val, basis| tree.calc(val, basis));
+            let max: Option<f32> = column
+                .max_track_sizing_function
+                .resolved_percentage_size(container_content_box.width, |val, basis| tree.calc(val, basis));
             column.base_size = column.base_size.maybe_clamp(min, max);
         }
     }
     if !available_grid_space.height.is_definite() {
         for row in &mut rows {
-            let min: Option<f32> = row.min_track_sizing_function.resolved_percentage_size(container_content_box.height);
-            let max: Option<f32> = row.max_track_sizing_function.resolved_percentage_size(container_content_box.height);
+            let min: Option<f32> = row
+                .min_track_sizing_function
+                .resolved_percentage_size(container_content_box.height, |val, basis| tree.calc(val, basis));
+            let max: Option<f32> = row
+                .max_track_sizing_function
+                .resolved_percentage_size(container_content_box.height, |val, basis| tree.calc(val, basis));
             row.base_size = row.base_size.maybe_clamp(min, max);
         }
     }
@@ -377,7 +391,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
             &mut columns,
             &mut rows,
             &mut items,
-            |track: &GridTrack, _| Some(track.base_size),
+            |track: &GridTrack, _, _| Some(track.base_size),
             has_baseline_aligned_item,
         );
 
@@ -436,7 +450,7 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
                 &mut rows,
                 &mut columns,
                 &mut items,
-                |track: &GridTrack, _| Some(track.base_size),
+                |track: &GridTrack, _, _| Some(track.base_size),
                 false, // TODO: Support baseline alignment in the vertical axis
             );
         }

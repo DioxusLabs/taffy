@@ -6,13 +6,13 @@ fn flex_wrap_align_stretch_fits_one_row__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -21,8 +21,8 @@ fn flex_wrap_align_stretch_fits_one_row__border_box() {
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(150f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(150f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },
@@ -62,14 +62,14 @@ fn flex_wrap_align_stretch_fits_one_row__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -79,8 +79,8 @@ fn flex_wrap_align_stretch_fits_one_row__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(150f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(150f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },

@@ -1,5 +1,6 @@
 //! A typed representation of [CSS style properties](https://css-tricks.com/snippets/css/a-guide-to-flexbox/) in Rust. Used as input to layout computation.
 mod alignment;
+mod available_space;
 mod dimension;
 
 #[cfg(feature = "block_layout")]
@@ -10,7 +11,8 @@ mod flex;
 mod grid;
 
 pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, JustifyItems, JustifySelf};
-pub use self::dimension::{AvailableSpace, Dimension, LengthPercentage, LengthPercentageAuto};
+pub use self::available_space::AvailableSpace;
+pub use self::dimension::{CompactLength, Dimension, LengthPercentage, LengthPercentageAuto};
 
 #[cfg(feature = "block_layout")]
 pub use self::block::{BlockContainerStyle, BlockItemStyle, TextAlign};
@@ -25,6 +27,7 @@ pub use self::grid::{
 };
 
 use crate::geometry::{Point, Rect, Size};
+use crate::style_helpers::TaffyAuto as _;
 
 #[cfg(feature = "grid")]
 use crate::geometry::Line;
@@ -500,7 +503,7 @@ impl Style {
         #[cfg(feature = "flexbox")]
         flex_shrink: 1.0,
         #[cfg(feature = "flexbox")]
-        flex_basis: Dimension::Auto,
+        flex_basis: Dimension::AUTO,
         // Grid
         #[cfg(feature = "grid")]
         grid_template_rows: GridTrackVec::new(),
@@ -924,7 +927,7 @@ impl<T: GridItemStyle> GridItemStyle for &'_ T {
 #[cfg(test)]
 mod tests {
     use super::Style;
-    use crate::geometry::*;
+    use crate::{geometry::*, style_helpers::TaffyAuto as _};
 
     #[test]
     fn defaults_match() {
@@ -966,7 +969,7 @@ mod tests {
             #[cfg(feature = "flexbox")]
             flex_shrink: 1.0,
             #[cfg(feature = "flexbox")]
-            flex_basis: super::Dimension::Auto,
+            flex_basis: super::Dimension::AUTO,
             size: Size::auto(),
             min_size: Size::auto(),
             max_size: Size::auto(),
@@ -1045,8 +1048,8 @@ mod tests {
         // CSS Grid Container
         assert_type_size::<GridAutoFlow>(1);
         assert_type_size::<MinTrackSizingFunction>(8);
-        assert_type_size::<MaxTrackSizingFunction>(12);
-        assert_type_size::<NonRepeatedTrackSizingFunction>(20);
+        assert_type_size::<MaxTrackSizingFunction>(8);
+        assert_type_size::<NonRepeatedTrackSizingFunction>(16);
         assert_type_size::<TrackSizingFunction>(32);
         assert_type_size::<Vec<NonRepeatedTrackSizingFunction>>(24);
         assert_type_size::<Vec<TrackSizingFunction>>(24);

@@ -7,7 +7,7 @@ fn measure_width_overrides_measure__border_box() {
     let node0 = taffy
         .new_leaf_with_context(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("HHHHHHHHHH", crate::WritingMode::Horizontal),
@@ -42,7 +42,7 @@ fn measure_width_overrides_measure__content_box() {
         .new_leaf_with_context(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("HHHHHHHHHH", crate::WritingMode::Horizontal),

@@ -7,13 +7,8 @@ fn grid_absolute_top_overrides_bottom__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
-            inset: taffy::geometry::Rect {
-                left: auto(),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Length(2f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(5f32),
-            },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
+            inset: taffy::geometry::Rect { left: auto(), right: auto(), top: length(2f32), bottom: length(5f32) },
             ..Default::default()
         })
         .unwrap();
@@ -32,10 +27,10 @@ fn grid_absolute_top_overrides_bottom__border_box() {
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(40f32),
-                    right: taffy::style::LengthPercentage::Length(20f32),
-                    top: taffy::style::LengthPercentage::Length(10f32),
-                    bottom: taffy::style::LengthPercentage::Length(30f32),
+                    left: length(40f32),
+                    right: length(20f32),
+                    top: length(10f32),
+                    bottom: length(30f32),
                 },
                 ..Default::default()
             },
@@ -118,13 +113,8 @@ fn grid_absolute_top_overrides_bottom__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
-            inset: taffy::geometry::Rect {
-                left: auto(),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Length(2f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(5f32),
-            },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
+            inset: taffy::geometry::Rect { left: auto(), right: auto(), top: length(2f32), bottom: length(5f32) },
             ..Default::default()
         })
         .unwrap();
@@ -160,10 +150,10 @@ fn grid_absolute_top_overrides_bottom__content_box() {
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(40f32),
-                    right: taffy::style::LengthPercentage::Length(20f32),
-                    top: taffy::style::LengthPercentage::Length(10f32),
-                    bottom: taffy::style::LengthPercentage::Length(30f32),
+                    left: length(40f32),
+                    right: length(20f32),
+                    top: length(10f32),
+                    bottom: length(30f32),
                 },
                 ..Default::default()
             },

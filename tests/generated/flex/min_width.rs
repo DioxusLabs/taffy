@@ -7,7 +7,7 @@ fn min_width__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -16,8 +16,8 @@ fn min_width__border_box() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },
@@ -58,7 +58,7 @@ fn min_width__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 1f32,
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -74,8 +74,8 @@ fn min_width__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },

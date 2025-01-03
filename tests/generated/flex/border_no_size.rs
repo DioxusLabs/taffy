@@ -8,10 +8,10 @@ fn border_no_size__border_box() {
         .new_leaf(taffy::style::Style {
             flex_direction: taffy::style::FlexDirection::Column,
             border: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Length(10f32),
-                right: taffy::style::LengthPercentage::Length(10f32),
-                top: taffy::style::LengthPercentage::Length(10f32),
-                bottom: taffy::style::LengthPercentage::Length(10f32),
+                left: length(10f32),
+                right: length(10f32),
+                top: length(10f32),
+                bottom: length(10f32),
             },
             ..Default::default()
         })
@@ -39,10 +39,10 @@ fn border_no_size__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_direction: taffy::style::FlexDirection::Column,
             border: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Length(10f32),
-                right: taffy::style::LengthPercentage::Length(10f32),
-                top: taffy::style::LengthPercentage::Length(10f32),
-                bottom: taffy::style::LengthPercentage::Length(10f32),
+                left: length(10f32),
+                right: length(10f32),
+                top: length(10f32),
+                bottom: length(10f32),
             },
             ..Default::default()
         })

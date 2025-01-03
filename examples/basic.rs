@@ -4,13 +4,13 @@ fn main() -> Result<(), taffy::TaffyError> {
     let mut taffy: TaffyTree<()> = TaffyTree::new();
 
     let child = taffy.new_leaf(Style {
-        size: Size { width: Dimension::Percent(0.5), height: Dimension::Auto },
+        size: Size { width: Dimension::from_percent(0.5), height: Dimension::AUTO },
         ..Default::default()
     })?;
 
     let node = taffy.new_with_children(
         Style {
-            size: Size { width: Dimension::Length(100.0), height: Dimension::Length(100.0) },
+            size: Size { width: Dimension::from_length(100.0), height: Dimension::from_length(100.0) },
             justify_content: Some(JustifyContent::Center),
             ..Default::default()
         },

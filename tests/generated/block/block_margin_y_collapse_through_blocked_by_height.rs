@@ -7,39 +7,24 @@ fn block_margin_y_collapse_through_blocked_by_height__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
-            margin: taffy::geometry::Rect {
-                left: zero(),
-                right: zero(),
-                top: zero(),
-                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
-            },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
+            margin: taffy::geometry::Rect { left: zero(), right: zero(), top: zero(), bottom: length(10f32) },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(1f32) },
-            margin: taffy::geometry::Rect {
-                left: zero(),
-                right: zero(),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
-            },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(1f32) },
+            margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(10f32), bottom: length(10f32) },
             ..Default::default()
         })
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
-            margin: taffy::geometry::Rect {
-                left: zero(),
-                right: zero(),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
-                bottom: zero(),
-            },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
+            margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(10f32), bottom: zero() },
             ..Default::default()
         })
         .unwrap();
@@ -47,7 +32,7 @@ fn block_margin_y_collapse_through_blocked_by_height__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2],
@@ -93,13 +78,8 @@ fn block_margin_y_collapse_through_blocked_by_height__content_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
-            margin: taffy::geometry::Rect {
-                left: zero(),
-                right: zero(),
-                top: zero(),
-                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
-            },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
+            margin: taffy::geometry::Rect { left: zero(), right: zero(), top: zero(), bottom: length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -107,13 +87,8 @@ fn block_margin_y_collapse_through_blocked_by_height__content_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(1f32) },
-            margin: taffy::geometry::Rect {
-                left: zero(),
-                right: zero(),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
-            },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(1f32) },
+            margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(10f32), bottom: length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -121,13 +96,8 @@ fn block_margin_y_collapse_through_blocked_by_height__content_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
-            margin: taffy::geometry::Rect {
-                left: zero(),
-                right: zero(),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
-                bottom: zero(),
-            },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
+            margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(10f32), bottom: zero() },
             ..Default::default()
         })
         .unwrap();
@@ -136,7 +106,7 @@ fn block_margin_y_collapse_through_blocked_by_height__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2],

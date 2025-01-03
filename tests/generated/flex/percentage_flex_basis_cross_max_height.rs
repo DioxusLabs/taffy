@@ -7,16 +7,16 @@ fn percentage_flex_basis_cross_max_height__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0.1f32),
-            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(0.6f32) },
+            flex_basis: taffy::style::Dimension::from_percent(0.1f32),
+            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(0.6f32) },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             flex_grow: 4f32,
-            flex_basis: taffy::style::Dimension::Percent(0.1f32),
-            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(0.2f32) },
+            flex_basis: taffy::style::Dimension::from_percent(0.1f32),
+            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(0.2f32) },
             ..Default::default()
         })
         .unwrap();
@@ -25,8 +25,8 @@ fn percentage_flex_basis_cross_max_height__border_box() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(400f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(400f32),
                 },
                 ..Default::default()
             },
@@ -67,8 +67,8 @@ fn percentage_flex_basis_cross_max_height__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 1f32,
-            flex_basis: taffy::style::Dimension::Percent(0.1f32),
-            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(0.6f32) },
+            flex_basis: taffy::style::Dimension::from_percent(0.1f32),
+            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(0.6f32) },
             ..Default::default()
         })
         .unwrap();
@@ -76,8 +76,8 @@ fn percentage_flex_basis_cross_max_height__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 4f32,
-            flex_basis: taffy::style::Dimension::Percent(0.1f32),
-            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(0.2f32) },
+            flex_basis: taffy::style::Dimension::from_percent(0.1f32),
+            max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(0.2f32) },
             ..Default::default()
         })
         .unwrap();
@@ -87,8 +87,8 @@ fn percentage_flex_basis_cross_max_height__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(400f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(400f32),
                 },
                 ..Default::default()
             },

@@ -5,13 +5,13 @@ fn main() -> Result<(), taffy::TaffyError> {
 
     // left
     let child_t1 = taffy.new_leaf(Style {
-        size: Size { width: Dimension::Length(5.0), height: Dimension::Length(5.0) },
+        size: Size { width: Dimension::from_length(5.0), height: Dimension::from_length(5.0) },
         ..Default::default()
     })?;
 
     let div1 = taffy.new_with_children(
         Style {
-            size: Size { width: Dimension::Percent(0.5), height: Dimension::Percent(1.0) },
+            size: Size { width: Dimension::from_percent(0.5), height: Dimension::from_percent(1.0) },
             // justify_content: JustifyContent::Center,
             ..Default::default()
         },
@@ -20,13 +20,13 @@ fn main() -> Result<(), taffy::TaffyError> {
 
     // right
     let child_t2 = taffy.new_leaf(Style {
-        size: Size { width: Dimension::Length(5.0), height: Dimension::Length(5.0) },
+        size: Size { width: Dimension::from_length(5.0), height: Dimension::from_length(5.0) },
         ..Default::default()
     })?;
 
     let div2 = taffy.new_with_children(
         Style {
-            size: Size { width: Dimension::Percent(0.5), height: Dimension::Percent(1.0) },
+            size: Size { width: Dimension::from_percent(0.5), height: Dimension::from_percent(1.0) },
             // justify_content: JustifyContent::Center,
             ..Default::default()
         },
@@ -34,7 +34,10 @@ fn main() -> Result<(), taffy::TaffyError> {
     )?;
 
     let container = taffy.new_with_children(
-        Style { size: Size { width: Dimension::Percent(1.0), height: Dimension::Percent(1.0) }, ..Default::default() },
+        Style {
+            size: Size { width: Dimension::from_percent(1.0), height: Dimension::from_percent(1.0) },
+            ..Default::default()
+        },
         &[div1, div2],
     )?;
 

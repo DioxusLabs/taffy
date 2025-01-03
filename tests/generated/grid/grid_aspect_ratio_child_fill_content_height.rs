@@ -12,7 +12,7 @@ fn grid_aspect_ratio_child_fill_content_height__border_box() {
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(20f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(20f32) },
             ..Default::default()
         })
         .unwrap();
@@ -65,7 +65,7 @@ fn grid_aspect_ratio_child_fill_content_height__content_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(20f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(20f32) },
             ..Default::default()
         })
         .unwrap();

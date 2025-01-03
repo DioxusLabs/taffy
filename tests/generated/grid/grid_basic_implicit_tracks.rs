@@ -8,8 +8,8 @@ fn grid_basic_implicit_tracks__border_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(35f32),
-                height: taffy::style::Dimension::Length(35f32),
+                width: taffy::style::Dimension::from_length(35f32),
+                height: taffy::style::Dimension::from_length(35f32),
             },
             ..Default::default()
         })
@@ -62,8 +62,8 @@ fn grid_basic_implicit_tracks__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(35f32),
-                height: taffy::style::Dimension::Length(35f32),
+                width: taffy::style::Dimension::from_length(35f32),
+                height: taffy::style::Dimension::from_length(35f32),
             },
             ..Default::default()
         })

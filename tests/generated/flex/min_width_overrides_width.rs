@@ -6,8 +6,8 @@ fn min_width_overrides_width__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -39,8 +39,8 @@ fn min_width_overrides_width__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
             ..Default::default()
         })
         .unwrap();

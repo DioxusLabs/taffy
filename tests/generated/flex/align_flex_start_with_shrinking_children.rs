@@ -19,8 +19,8 @@ fn align_flex_start_with_shrinking_children__border_box() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(500f32),
-                    height: taffy::style::Dimension::Length(500f32),
+                    width: taffy::style::Dimension::from_length(500f32),
+                    height: taffy::style::Dimension::from_length(500f32),
                 },
                 ..Default::default()
             },
@@ -97,8 +97,8 @@ fn align_flex_start_with_shrinking_children__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(500f32),
-                    height: taffy::style::Dimension::Length(500f32),
+                    width: taffy::style::Dimension::from_length(500f32),
+                    height: taffy::style::Dimension::from_length(500f32),
                 },
                 ..Default::default()
             },

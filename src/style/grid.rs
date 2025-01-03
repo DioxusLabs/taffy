@@ -1,5 +1,8 @@
 //! Style types for CSS Grid layout
-use super::{AlignContent, AlignItems, AlignSelf, CoreStyle, JustifyContent, LengthPercentage, Style};
+use super::{
+    AlignContent, AlignItems, AlignSelf, CompactLength, CoreStyle, Dimension, JustifyContent, LengthPercentage,
+    LengthPercentageAuto, Style,
+};
 use crate::compute::grid::{GridCoordinate, GridLine, OriginZeroLine};
 use crate::geometry::{AbsoluteAxis, AbstractAxis, Line, MinMax, Size};
 use crate::style_helpers::*;
@@ -364,60 +367,73 @@ impl Default for Line<GridPlacement> {
 /// See <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns>
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum MaxTrackSizingFunction {
-    /// Track maximum size should be a fixed length or percentage value
-    Fixed(LengthPercentage),
-    /// Track maximum size should be content sized under a min-content constraint
-    MinContent,
-    /// Track maximum size should be content sized under a max-content constraint
-    MaxContent,
-    /// Track maximum size should be sized according to the fit-content formula
-    FitContent(LengthPercentage),
-    /// Track maximum size should be automatically sized
-    Auto,
-    /// The dimension as a fraction of the total available grid space (`fr` units in CSS)
-    /// Specified value is the numerator of the fraction. Denominator is the sum of all fraction specified in that grid dimension
-    /// Spec: <https://www.w3.org/TR/css3-grid-layout/#fr-unit>
-    Fraction(f32),
+pub struct MaxTrackSizingFunction(pub(crate) CompactLength);
+impl TaffyZero for MaxTrackSizingFunction {
+    const ZERO: Self = Self(CompactLength::ZERO);
 }
 impl TaffyAuto for MaxTrackSizingFunction {
-    const AUTO: Self = Self::Auto;
+    const AUTO: Self = Self(CompactLength::AUTO);
 }
 impl TaffyMinContent for MaxTrackSizingFunction {
-    const MIN_CONTENT: Self = Self::MinContent;
+    const MIN_CONTENT: Self = Self(CompactLength::MIN_CONTENT);
 }
 impl TaffyMaxContent for MaxTrackSizingFunction {
-    const MAX_CONTENT: Self = Self::MaxContent;
-}
-impl TaffyFitContent for MaxTrackSizingFunction {
-    fn fit_content(argument: LengthPercentage) -> Self {
-        Self::FitContent(argument)
-    }
-}
-impl TaffyZero for MaxTrackSizingFunction {
-    const ZERO: Self = Self::Fixed(LengthPercentage::ZERO);
+    const MAX_CONTENT: Self = Self(CompactLength::MAX_CONTENT);
 }
 impl FromLength for MaxTrackSizingFunction {
     fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::Fixed(LengthPercentage::from_length(value))
+        Self(CompactLength::from_length(value))
     }
 }
 impl FromPercent for MaxTrackSizingFunction {
     fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Self::Fixed(LengthPercentage::from_percent(percent))
+        Self(CompactLength::from_percent(percent))
     }
 }
-impl FromFlex for MaxTrackSizingFunction {
-    fn from_flex<Input: Into<f32> + Copy>(flex: Input) -> Self {
-        Self::Fraction(flex.into())
+impl TaffyFitContent for MaxTrackSizingFunction {
+    fn fit_content(argument: LengthPercentage) -> Self {
+        Self(CompactLength::fit_content(argument))
+    }
+}
+impl FromFr for MaxTrackSizingFunction {
+    fn from_fr<Input: Into<f32> + Copy>(fr: Input) -> Self {
+        Self(CompactLength::from_fr(fr))
+    }
+}
+impl From<LengthPercentage> for MaxTrackSizingFunction {
+    fn from(input: LengthPercentage) -> Self {
+        Self(input.0)
+    }
+}
+impl From<LengthPercentageAuto> for MaxTrackSizingFunction {
+    fn from(input: LengthPercentageAuto) -> Self {
+        Self(input.0)
+    }
+}
+impl From<Dimension> for MaxTrackSizingFunction {
+    fn from(input: Dimension) -> Self {
+        Self(input.0)
     }
 }
 
 impl MaxTrackSizingFunction {
+    /// Get the underlying `CompactLength` representation of the value
+    pub fn into_raw(self) -> CompactLength {
+        self.0
+    }
+
+    /// Create a MaxTrackSizingFunction from a raw `CompactLength`.
+    /// # Safety
+    /// CompactLength must represent a valid variant for MaxTrackSizingFunction
+    #[allow(unsafe_code)]
+    pub unsafe fn from_raw(val: CompactLength) -> Self {
+        Self(val)
+    }
+
     /// Returns true if the max track sizing function is `MinContent`, `MaxContent`, `FitContent` or `Auto`, else false.
     #[inline(always)]
     pub fn is_intrinsic(&self) -> bool {
-        matches!(self, Self::MinContent | Self::MaxContent | Self::FitContent(_) | Self::Auto)
+        self.0.is_intrinsic()
     }
 
     /// Returns true if the max track sizing function is `MaxContent`, `FitContent` or `Auto` else false.
@@ -425,25 +441,66 @@ impl MaxTrackSizingFunction {
     /// See: <https://www.w3.org/TR/css-grid-1/#algo-terms>
     #[inline(always)]
     pub fn is_max_content_alike(&self) -> bool {
-        matches!(self, Self::MaxContent | Self::FitContent(_) | Self::Auto)
+        self.0.is_max_content_alike()
     }
 
-    /// Returns true if the max track sizing function is `Flex`, else false.
+    /// Returns true if the an Fr value, else false.
     #[inline(always)]
-    pub fn is_flexible(&self) -> bool {
-        matches!(self, Self::Fraction(_))
+    pub fn is_fr(&self) -> bool {
+        self.0.is_fr()
+    }
+
+    /// Returns true if the is `Auto`, else false.
+    #[inline(always)]
+    pub fn is_auto(&self) -> bool {
+        self.0.is_auto()
+    }
+
+    /// Returns true if value is MinContent
+    #[inline(always)]
+    pub fn is_min_content(&self) -> bool {
+        self.0.is_min_content()
+    }
+
+    /// Returns true if value is MaxContent
+    #[inline(always)]
+    pub fn is_max_content(&self) -> bool {
+        self.0.is_max_content()
+    }
+
+    /// Returns true if value is FitContent(...)
+    #[inline(always)]
+    pub fn is_fit_content(&self) -> bool {
+        self.0.is_fit_content()
+    }
+
+    /// Returns true if value is MaxContent or FitContent(...)
+    #[inline(always)]
+    pub fn is_max_or_fit_content(&self) -> bool {
+        self.0.is_max_or_fit_content()
+    }
+
+    /// Returns whether the value can be resolved using `Self::definite_value`
+    #[inline(always)]
+    pub fn has_definite_value(self, parent_size: Option<f32>) -> bool {
+        match self.0.tag() {
+            CompactLength::LENGTH_TAG => true,
+            CompactLength::PERCENT_TAG => parent_size.is_some(),
+            _ if self.0.is_calc() => parent_size.is_some(),
+            _ => false,
+        }
     }
 
     /// Returns fixed point values directly. Attempts to resolve percentage values against
     /// the passed available_space and returns if this results in a concrete value (which it
     /// will if the available_space is `Some`). Otherwise returns None.
     #[inline(always)]
-    pub fn definite_value(self, parent_size: Option<f32>) -> Option<f32> {
-        use MaxTrackSizingFunction::*;
-        match self {
-            Fixed(LengthPercentage::Length(size)) => Some(size),
-            Fixed(LengthPercentage::Percent(fraction)) => parent_size.map(|size| fraction * size),
-            MinContent | MaxContent | FitContent(_) | Auto | Fraction(_) => None,
+    pub fn definite_value(self, parent_size: Option<f32>, calc_resolver: impl Fn(u64, f32) -> f32) -> Option<f32> {
+        match self.0.tag() {
+            CompactLength::LENGTH_TAG => Some(self.0.value()),
+            CompactLength::PERCENT_TAG => parent_size.map(|size| self.0.value() * size),
+            _ if self.0.is_calc() => parent_size.map(|size| calc_resolver(self.0.calc_value(), size)),
+            _ => None,
         }
     }
 
@@ -454,31 +511,25 @@ impl MaxTrackSizingFunction {
     ///     - A fit-content sizing function with percentage argument (with definite available space)
     /// All other kinds of track sizing function return None.
     #[inline(always)]
-    pub fn definite_limit(self, parent_size: Option<f32>) -> Option<f32> {
-        use MaxTrackSizingFunction::FitContent;
-        match self {
-            FitContent(LengthPercentage::Length(size)) => Some(size),
-            FitContent(LengthPercentage::Percent(fraction)) => parent_size.map(|size| fraction * size),
-            _ => self.definite_value(parent_size),
+    pub fn definite_limit(self, parent_size: Option<f32>, calc_resolver: impl Fn(u64, f32) -> f32) -> Option<f32> {
+        match self.0.tag() {
+            CompactLength::FIT_CONTENT_PX_TAG => Some(self.0.value()),
+            CompactLength::FIT_CONTENT_PERCENT_TAG => parent_size.map(|size| self.0.value() * size),
+            _ => self.definite_value(parent_size, calc_resolver),
         }
     }
 
     /// Resolve percentage values against the passed parent_size, returning Some(value)
     /// Non-percentage values always return None.
     #[inline(always)]
-    pub fn resolved_percentage_size(self, parent_size: f32) -> Option<f32> {
-        use MaxTrackSizingFunction::*;
-        match self {
-            Fixed(LengthPercentage::Percent(fraction)) => Some(fraction * parent_size),
-            Fixed(LengthPercentage::Length(_)) | MinContent | MaxContent | FitContent(_) | Auto | Fraction(_) => None,
-        }
+    pub fn resolved_percentage_size(self, parent_size: f32, calc_resolver: impl Fn(u64, f32) -> f32) -> Option<f32> {
+        self.0.resolved_percentage_size(parent_size, calc_resolver)
     }
 
     /// Whether the track sizing functions depends on the size of the parent node
     #[inline(always)]
     pub fn uses_percentage(self) -> bool {
-        use MaxTrackSizingFunction::*;
-        matches!(self, Fixed(LengthPercentage::Percent(_)) | FitContent(LengthPercentage::Percent(_)))
+        self.0.uses_percentage()
     }
 }
 
@@ -489,75 +540,119 @@ impl MaxTrackSizingFunction {
 /// See <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns>
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum MinTrackSizingFunction {
-    /// Track minimum size should be a fixed length or percentage value
-    Fixed(LengthPercentage),
-    /// Track minimum size should be content sized under a min-content constraint
-    MinContent,
-    /// Track minimum size should be content sized under a max-content constraint
-    MaxContent,
-    /// Track minimum size should be automatically sized
-    Auto,
+pub struct MinTrackSizingFunction(pub(crate) CompactLength);
+impl TaffyZero for MinTrackSizingFunction {
+    const ZERO: Self = Self(CompactLength::ZERO);
 }
 impl TaffyAuto for MinTrackSizingFunction {
-    const AUTO: Self = Self::Auto;
+    const AUTO: Self = Self(CompactLength::AUTO);
 }
 impl TaffyMinContent for MinTrackSizingFunction {
-    const MIN_CONTENT: Self = Self::MinContent;
+    const MIN_CONTENT: Self = Self(CompactLength::MIN_CONTENT);
 }
 impl TaffyMaxContent for MinTrackSizingFunction {
-    const MAX_CONTENT: Self = Self::MaxContent;
-}
-impl TaffyZero for MinTrackSizingFunction {
-    const ZERO: Self = Self::Fixed(LengthPercentage::ZERO);
+    const MAX_CONTENT: Self = Self(CompactLength::MAX_CONTENT);
 }
 impl FromLength for MinTrackSizingFunction {
     fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::Fixed(LengthPercentage::from_length(value))
+        Self(CompactLength::from_length(value))
     }
 }
 impl FromPercent for MinTrackSizingFunction {
     fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Self::Fixed(LengthPercentage::from_percent(percent))
+        Self(CompactLength::from_percent(percent))
+    }
+}
+impl From<LengthPercentage> for MinTrackSizingFunction {
+    fn from(input: LengthPercentage) -> Self {
+        Self(input.0)
+    }
+}
+impl From<LengthPercentageAuto> for MinTrackSizingFunction {
+    fn from(input: LengthPercentageAuto) -> Self {
+        Self(input.0)
+    }
+}
+impl From<Dimension> for MinTrackSizingFunction {
+    fn from(input: Dimension) -> Self {
+        Self(input.0)
     }
 }
 
 impl MinTrackSizingFunction {
+    /// Get the underlying `CompactLength` representation of the value
+    pub fn into_raw(self) -> CompactLength {
+        self.0
+    }
+
+    /// Create a MinTrackSizingFunction from a raw `CompactLength`.
+    /// # Safety
+    /// CompactLength must represent a valid variant for MinTrackSizingFunction
+    #[allow(unsafe_code)]
+    pub unsafe fn from_raw(val: CompactLength) -> Self {
+        Self(val)
+    }
+
     /// Returns true if the min track sizing function is `MinContent`, `MaxContent` or `Auto`, else false.
     #[inline(always)]
     pub fn is_intrinsic(&self) -> bool {
-        matches!(self, Self::MinContent | Self::MaxContent | Self::Auto)
+        self.0.is_intrinsic()
+    }
+
+    /// Returns true if the min track sizing function is `MinContent` or `MaxContent`, else false.
+    #[inline(always)]
+    pub fn is_min_or_max_content(&self) -> bool {
+        self.0.is_min_or_max_content()
+    }
+
+    /// Returns true if the value is an fr value
+    #[inline(always)]
+    pub fn is_fr(&self) -> bool {
+        self.0.is_fr()
+    }
+
+    /// Returns true if the is `Auto`, else false.
+    #[inline(always)]
+    pub fn is_auto(&self) -> bool {
+        self.0.is_auto()
+    }
+
+    /// Returns true if value is MinContent
+    #[inline(always)]
+    pub fn is_min_content(&self) -> bool {
+        self.0.is_min_content()
+    }
+
+    /// Returns true if value is MaxContent
+    #[inline(always)]
+    pub fn is_max_content(&self) -> bool {
+        self.0.is_max_content()
     }
 
     /// Returns fixed point values directly. Attempts to resolve percentage values against
     /// the passed available_space and returns if this results in a concrete value (which it
     /// will if the available_space is `Some`). Otherwise returns `None`.
     #[inline(always)]
-    pub fn definite_value(self, parent_size: Option<f32>) -> Option<f32> {
-        use MinTrackSizingFunction::*;
-        match self {
-            Fixed(LengthPercentage::Length(size)) => Some(size),
-            Fixed(LengthPercentage::Percent(fraction)) => parent_size.map(|size| fraction * size),
-            MinContent | MaxContent | Auto => None,
+    pub fn definite_value(self, parent_size: Option<f32>, calc_resolver: impl Fn(u64, f32) -> f32) -> Option<f32> {
+        match self.0.tag() {
+            CompactLength::LENGTH_TAG => Some(self.0.value()),
+            CompactLength::PERCENT_TAG => parent_size.map(|size| self.0.value() * size),
+            _ if self.0.is_calc() => parent_size.map(|size| calc_resolver(self.0.calc_value(), size)),
+            _ => None,
         }
     }
 
     /// Resolve percentage values against the passed parent_size, returning Some(value)
     /// Non-percentage values always return None.
     #[inline(always)]
-    pub fn resolved_percentage_size(self, parent_size: f32) -> Option<f32> {
-        use MinTrackSizingFunction::*;
-        match self {
-            Fixed(LengthPercentage::Percent(fraction)) => Some(fraction * parent_size),
-            Fixed(LengthPercentage::Length(_)) | MinContent | MaxContent | Auto => None,
-        }
+    pub fn resolved_percentage_size(self, parent_size: f32, calc_resolver: impl Fn(u64, f32) -> f32) -> Option<f32> {
+        self.0.resolved_percentage_size(parent_size, calc_resolver)
     }
 
     /// Whether the track sizing functions depends on the size of the parent node
     #[inline(always)]
     pub fn uses_percentage(self) -> bool {
-        use MinTrackSizingFunction::*;
-        matches!(self, Fixed(LengthPercentage::Percent(_)))
+        matches!(self.0.tag(), CompactLength::PERCENT_TAG) || self.0.is_calc()
     }
 }
 
@@ -577,7 +672,7 @@ impl NonRepeatedTrackSizingFunction {
     }
     /// Determine whether at least one of the components ("min" and "max") are fixed sizing function
     pub fn has_fixed_component(&self) -> bool {
-        matches!(self.min, MinTrackSizingFunction::Fixed(_)) || matches!(self.max, MaxTrackSizingFunction::Fixed(_))
+        self.min.0.is_length_or_percentage() || self.max.0.is_length_or_percentage()
     }
 }
 impl TaffyAuto for NonRepeatedTrackSizingFunction {
@@ -593,7 +688,7 @@ impl TaffyMaxContent for NonRepeatedTrackSizingFunction {
 }
 impl TaffyFitContent for NonRepeatedTrackSizingFunction {
     fn fit_content(argument: LengthPercentage) -> Self {
-        Self { min: MinTrackSizingFunction::AUTO, max: MaxTrackSizingFunction::FitContent(argument) }
+        Self { min: MinTrackSizingFunction::AUTO, max: MaxTrackSizingFunction::fit_content(argument) }
     }
 }
 impl TaffyZero for NonRepeatedTrackSizingFunction {
@@ -609,9 +704,24 @@ impl FromPercent for NonRepeatedTrackSizingFunction {
         Self { min: MinTrackSizingFunction::from_percent(percent), max: MaxTrackSizingFunction::from_percent(percent) }
     }
 }
-impl FromFlex for NonRepeatedTrackSizingFunction {
-    fn from_flex<Input: Into<f32> + Copy>(flex: Input) -> Self {
-        Self { min: MinTrackSizingFunction::AUTO, max: MaxTrackSizingFunction::from_flex(flex) }
+impl FromFr for NonRepeatedTrackSizingFunction {
+    fn from_fr<Input: Into<f32> + Copy>(flex: Input) -> Self {
+        Self { min: MinTrackSizingFunction::AUTO, max: MaxTrackSizingFunction::from_fr(flex) }
+    }
+}
+impl From<LengthPercentage> for NonRepeatedTrackSizingFunction {
+    fn from(input: LengthPercentage) -> Self {
+        Self { min: input.into(), max: input.into() }
+    }
+}
+impl From<LengthPercentageAuto> for NonRepeatedTrackSizingFunction {
+    fn from(input: LengthPercentageAuto) -> Self {
+        Self { min: input.into(), max: input.into() }
+    }
+}
+impl From<Dimension> for NonRepeatedTrackSizingFunction {
+    fn from(input: Dimension) -> Self {
+        Self { min: input.into(), max: input.into() }
     }
 }
 
@@ -704,9 +814,9 @@ impl FromPercent for TrackSizingFunction {
         Self::Single(NonRepeatedTrackSizingFunction::from_percent(percent))
     }
 }
-impl FromFlex for TrackSizingFunction {
-    fn from_flex<Input: Into<f32> + Copy>(flex: Input) -> Self {
-        Self::Single(NonRepeatedTrackSizingFunction::from_flex(flex))
+impl FromFr for TrackSizingFunction {
+    fn from_fr<Input: Into<f32> + Copy>(flex: Input) -> Self {
+        Self::Single(NonRepeatedTrackSizingFunction::from_fr(flex))
     }
 }
 impl From<MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>> for TrackSizingFunction {

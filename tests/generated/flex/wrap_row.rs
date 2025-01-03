@@ -7,8 +7,8 @@ fn wrap_row__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(31f32),
-                height: taffy::style::Dimension::Length(30f32),
+                width: taffy::style::Dimension::from_length(31f32),
+                height: taffy::style::Dimension::from_length(30f32),
             },
             ..Default::default()
         })
@@ -16,8 +16,8 @@ fn wrap_row__border_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(32f32),
-                height: taffy::style::Dimension::Length(30f32),
+                width: taffy::style::Dimension::from_length(32f32),
+                height: taffy::style::Dimension::from_length(30f32),
             },
             ..Default::default()
         })
@@ -25,8 +25,8 @@ fn wrap_row__border_box() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(33f32),
-                height: taffy::style::Dimension::Length(30f32),
+                width: taffy::style::Dimension::from_length(33f32),
+                height: taffy::style::Dimension::from_length(30f32),
             },
             ..Default::default()
         })
@@ -34,8 +34,8 @@ fn wrap_row__border_box() {
     let node3 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(34f32),
-                height: taffy::style::Dimension::Length(30f32),
+                width: taffy::style::Dimension::from_length(34f32),
+                height: taffy::style::Dimension::from_length(30f32),
             },
             ..Default::default()
         })
@@ -44,7 +44,7 @@ fn wrap_row__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2, node3],
@@ -96,8 +96,8 @@ fn wrap_row__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(31f32),
-                height: taffy::style::Dimension::Length(30f32),
+                width: taffy::style::Dimension::from_length(31f32),
+                height: taffy::style::Dimension::from_length(30f32),
             },
             ..Default::default()
         })
@@ -106,8 +106,8 @@ fn wrap_row__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(32f32),
-                height: taffy::style::Dimension::Length(30f32),
+                width: taffy::style::Dimension::from_length(32f32),
+                height: taffy::style::Dimension::from_length(30f32),
             },
             ..Default::default()
         })
@@ -116,8 +116,8 @@ fn wrap_row__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(33f32),
-                height: taffy::style::Dimension::Length(30f32),
+                width: taffy::style::Dimension::from_length(33f32),
+                height: taffy::style::Dimension::from_length(30f32),
             },
             ..Default::default()
         })
@@ -126,8 +126,8 @@ fn wrap_row__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(34f32),
-                height: taffy::style::Dimension::Length(30f32),
+                width: taffy::style::Dimension::from_length(34f32),
+                height: taffy::style::Dimension::from_length(30f32),
             },
             ..Default::default()
         })
@@ -137,7 +137,7 @@ fn wrap_row__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2, node3],

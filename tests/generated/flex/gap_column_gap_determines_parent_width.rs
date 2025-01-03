@@ -6,19 +6,19 @@ fn gap_column_gap_determines_parent_width__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(10f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(10f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(30f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(30f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -26,8 +26,8 @@ fn gap_column_gap_determines_parent_width__border_box() {
         .new_with_children(
             taffy::style::Style {
                 align_items: Some(taffy::style::AlignItems::Stretch),
-                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::Length(10f32), height: zero() },
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+                gap: taffy::geometry::Size { width: length(10f32), height: zero() },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
                 ..Default::default()
             },
             &[node0, node1, node2],
@@ -72,21 +72,21 @@ fn gap_column_gap_determines_parent_width__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(10f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(10f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(20f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(20f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(30f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(30f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -95,8 +95,8 @@ fn gap_column_gap_determines_parent_width__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 align_items: Some(taffy::style::AlignItems::Stretch),
-                gap: taffy::geometry::Size { width: taffy::style::LengthPercentage::Length(10f32), height: zero() },
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
+                gap: taffy::geometry::Size { width: length(10f32), height: zero() },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
                 ..Default::default()
             },
             &[node0, node1, node2],

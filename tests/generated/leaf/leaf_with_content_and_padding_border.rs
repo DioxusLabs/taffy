@@ -8,16 +8,16 @@ fn leaf_with_content_and_padding_border__border_box() {
         .new_leaf_with_context(
             taffy::style::Style {
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(8f32),
-                    right: taffy::style::LengthPercentage::Length(4f32),
-                    top: taffy::style::LengthPercentage::Length(2f32),
-                    bottom: taffy::style::LengthPercentage::Length(6f32),
+                    left: length(8f32),
+                    right: length(4f32),
+                    top: length(2f32),
+                    bottom: length(6f32),
                 },
                 border: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(7f32),
-                    right: taffy::style::LengthPercentage::Length(3f32),
-                    top: taffy::style::LengthPercentage::Length(1f32),
-                    bottom: taffy::style::LengthPercentage::Length(5f32),
+                    left: length(7f32),
+                    right: length(3f32),
+                    top: length(1f32),
+                    bottom: length(5f32),
                 },
                 ..Default::default()
             },
@@ -47,16 +47,16 @@ fn leaf_with_content_and_padding_border__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(8f32),
-                    right: taffy::style::LengthPercentage::Length(4f32),
-                    top: taffy::style::LengthPercentage::Length(2f32),
-                    bottom: taffy::style::LengthPercentage::Length(6f32),
+                    left: length(8f32),
+                    right: length(4f32),
+                    top: length(2f32),
+                    bottom: length(6f32),
                 },
                 border: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(7f32),
-                    right: taffy::style::LengthPercentage::Length(3f32),
-                    top: taffy::style::LengthPercentage::Length(1f32),
-                    bottom: taffy::style::LengthPercentage::Length(5f32),
+                    left: length(7f32),
+                    right: length(3f32),
+                    top: length(1f32),
+                    bottom: length(5f32),
                 },
                 ..Default::default()
             },

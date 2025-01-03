@@ -20,10 +20,10 @@ fn grid_basic_with_padding__border_box() {
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(40f32),
-                    right: taffy::style::LengthPercentage::Length(20f32),
-                    top: taffy::style::LengthPercentage::Length(10f32),
-                    bottom: taffy::style::LengthPercentage::Length(30f32),
+                    left: length(40f32),
+                    right: length(20f32),
+                    top: length(10f32),
+                    bottom: length(30f32),
                 },
                 ..Default::default()
             },
@@ -137,10 +137,10 @@ fn grid_basic_with_padding__content_box() {
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), length(40f32), length(40f32)],
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(40f32),
-                    right: taffy::style::LengthPercentage::Length(20f32),
-                    top: taffy::style::LengthPercentage::Length(10f32),
-                    bottom: taffy::style::LengthPercentage::Length(30f32),
+                    left: length(40f32),
+                    right: length(20f32),
+                    top: length(10f32),
+                    bottom: length(30f32),
                 },
                 ..Default::default()
             },

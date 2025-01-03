@@ -7,15 +7,10 @@ fn justify_content_column_min_height_and_margin_bottom__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
-            margin: taffy::geometry::Rect {
-                left: zero(),
-                right: zero(),
-                top: zero(),
-                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
-            },
+            margin: taffy::geometry::Rect { left: zero(), right: zero(), top: zero(), bottom: length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -24,7 +19,7 @@ fn justify_content_column_min_height_and_margin_bottom__border_box() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 justify_content: Some(taffy::style::JustifyContent::Center),
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(50f32) },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(50f32) },
                 ..Default::default()
             },
             &[node0],
@@ -58,15 +53,10 @@ fn justify_content_column_min_height_and_margin_bottom__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
-            margin: taffy::geometry::Rect {
-                left: zero(),
-                right: zero(),
-                top: zero(),
-                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
-            },
+            margin: taffy::geometry::Rect { left: zero(), right: zero(), top: zero(), bottom: length(10f32) },
             ..Default::default()
         })
         .unwrap();
@@ -76,7 +66,7 @@ fn justify_content_column_min_height_and_margin_bottom__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
                 justify_content: Some(taffy::style::JustifyContent::Center),
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(50f32) },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(50f32) },
                 ..Default::default()
             },
             &[node0],

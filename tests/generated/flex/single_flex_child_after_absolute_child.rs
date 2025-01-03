@@ -8,8 +8,8 @@ fn single_flex_child_after_absolute_child__border_box() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(1f32),
-                height: taffy::style::Dimension::Percent(1f32),
+                width: taffy::style::Dimension::from_percent(1f32),
+                height: taffy::style::Dimension::from_percent(1f32),
             },
             ..Default::default()
         })
@@ -19,7 +19,7 @@ fn single_flex_child_after_absolute_child__border_box() {
     let node2 = taffy
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
-            flex_basis: taffy::style::Dimension::Length(174f32),
+            flex_basis: taffy::style::Dimension::from_length(174f32),
             ..Default::default()
         })
         .unwrap();
@@ -28,8 +28,8 @@ fn single_flex_child_after_absolute_child__border_box() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(428f32),
-                    height: taffy::style::Dimension::Length(845f32),
+                    width: taffy::style::Dimension::from_length(428f32),
+                    height: taffy::style::Dimension::from_length(845f32),
                 },
                 ..Default::default()
             },
@@ -77,8 +77,8 @@ fn single_flex_child_after_absolute_child__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(1f32),
-                height: taffy::style::Dimension::Percent(1f32),
+                width: taffy::style::Dimension::from_percent(1f32),
+                height: taffy::style::Dimension::from_percent(1f32),
             },
             ..Default::default()
         })
@@ -95,7 +95,7 @@ fn single_flex_child_after_absolute_child__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
-            flex_basis: taffy::style::Dimension::Length(174f32),
+            flex_basis: taffy::style::Dimension::from_length(174f32),
             ..Default::default()
         })
         .unwrap();
@@ -105,8 +105,8 @@ fn single_flex_child_after_absolute_child__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(428f32),
-                    height: taffy::style::Dimension::Length(845f32),
+                    width: taffy::style::Dimension::from_length(428f32),
+                    height: taffy::style::Dimension::from_length(845f32),
                 },
                 ..Default::default()
             },

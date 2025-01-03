@@ -1,6 +1,7 @@
 //! Geometric primitives useful for layout
 
 use crate::util::sys::f32_max;
+use crate::CompactLength;
 use crate::{style::Dimension, util::sys::f32_min};
 use core::ops::{Add, Sub};
 
@@ -607,16 +608,16 @@ impl<T> Size<Option<T>> {
 }
 
 impl Size<Dimension> {
-    /// Generates a [`Size<Dimension>`] using [`Dimension::Length`] values
+    /// Generates a [`Size<Dimension>`] using length values
     #[must_use]
     pub const fn from_lengths(width: f32, height: f32) -> Self {
-        Size { width: Dimension::Length(width), height: Dimension::Length(height) }
+        Size { width: Dimension(CompactLength::length(width)), height: Dimension(CompactLength::length(height)) }
     }
 
-    /// Generates a [`Size<Dimension>`] using [`Dimension::Percent`] values
+    /// Generates a [`Size<Dimension>`] using percentage values
     #[must_use]
     pub const fn from_percent(width: f32, height: f32) -> Self {
-        Size { width: Dimension::Percent(width), height: Dimension::Percent(height) }
+        Size { width: Dimension(CompactLength::percent(width)), height: Dimension(CompactLength::percent(height)) }
     }
 }
 

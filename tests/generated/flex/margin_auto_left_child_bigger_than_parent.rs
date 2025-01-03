@@ -7,11 +7,11 @@ fn margin_auto_left_child_bigger_than_parent__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(72f32),
-                height: taffy::style::Dimension::Length(72f32),
+                width: taffy::style::Dimension::from_length(72f32),
+                height: taffy::style::Dimension::from_length(72f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Auto,
+                left: taffy::style::LengthPercentageAuto::AUTO,
                 right: zero(),
                 top: zero(),
                 bottom: zero(),
@@ -24,8 +24,8 @@ fn margin_auto_left_child_bigger_than_parent__border_box() {
             taffy::style::Style {
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(52f32),
-                    height: taffy::style::Dimension::Length(52f32),
+                    width: taffy::style::Dimension::from_length(52f32),
+                    height: taffy::style::Dimension::from_length(52f32),
                 },
                 ..Default::default()
             },
@@ -60,11 +60,11 @@ fn margin_auto_left_child_bigger_than_parent__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(72f32),
-                height: taffy::style::Dimension::Length(72f32),
+                width: taffy::style::Dimension::from_length(72f32),
+                height: taffy::style::Dimension::from_length(72f32),
             },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Auto,
+                left: taffy::style::LengthPercentageAuto::AUTO,
                 right: zero(),
                 top: zero(),
                 bottom: zero(),
@@ -78,8 +78,8 @@ fn margin_auto_left_child_bigger_than_parent__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 justify_content: Some(taffy::style::JustifyContent::Center),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(52f32),
-                    height: taffy::style::Dimension::Length(52f32),
+                    width: taffy::style::Dimension::from_length(52f32),
+                    height: taffy::style::Dimension::from_length(52f32),
                 },
                 ..Default::default()
             },

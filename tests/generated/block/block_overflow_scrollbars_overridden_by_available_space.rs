@@ -8,10 +8,10 @@ fn block_overflow_scrollbars_overridden_by_available_space__border_box() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(0f32),
-                right: taffy::style::LengthPercentageAuto::Length(0f32),
-                top: taffy::style::LengthPercentageAuto::Length(0f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(0f32),
+                left: length(0f32),
+                right: length(0f32),
+                top: length(0f32),
+                bottom: length(0f32),
             },
             ..Default::default()
         })
@@ -35,8 +35,8 @@ fn block_overflow_scrollbars_overridden_by_available_space__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(2f32),
-                    height: taffy::style::Dimension::Length(4f32),
+                    width: taffy::style::Dimension::from_length(2f32),
+                    height: taffy::style::Dimension::from_length(4f32),
                 },
                 ..Default::default()
             },
@@ -96,10 +96,10 @@ fn block_overflow_scrollbars_overridden_by_available_space__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(0f32),
-                right: taffy::style::LengthPercentageAuto::Length(0f32),
-                top: taffy::style::LengthPercentageAuto::Length(0f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(0f32),
+                left: length(0f32),
+                right: length(0f32),
+                top: length(0f32),
+                bottom: length(0f32),
             },
             ..Default::default()
         })
@@ -125,8 +125,8 @@ fn block_overflow_scrollbars_overridden_by_available_space__content_box() {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(2f32),
-                    height: taffy::style::Dimension::Length(4f32),
+                    width: taffy::style::Dimension::from_length(2f32),
+                    height: taffy::style::Dimension::from_length(4f32),
                 },
                 ..Default::default()
             },
