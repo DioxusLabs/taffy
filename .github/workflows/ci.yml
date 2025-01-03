@@ -125,6 +125,17 @@ jobs:
       - run: cargo build --no-default-features --features block_layout,std,taffy_tree
       - run: cargo test --tests --no-default-features --features block_layout,std,taffy_tree
 
+  # With detailed layout info
+  test-features-grid-detailed-info:
+    name: "Test Suite [std + grid + detailed_layout_info]"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --no-default-features --features grid,detailed_layout_info,std
+      - run: cargo build --no-default-features --features grid,detailed_layout_info,std,taffy_tree
+      - run: cargo test --tests --no-default-features --features grid,detailed_layout_info,std,taffy_tree
+
   # With alloc feature
 
   test-features-grid-with-alloc:

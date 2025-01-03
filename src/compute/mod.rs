@@ -275,6 +275,7 @@ pub fn compute_hidden_layout(tree: &mut (impl LayoutPartialTree + CacheTree), no
 /// A module for unified re-exports of detailed layout info structs, used by low level API
 #[cfg(feature = "detailed_layout_info")]
 pub mod detailed_info {
+    #[cfg(feature = "grid")]
     pub use super::grid::DetailedGridInfo;
 }
 

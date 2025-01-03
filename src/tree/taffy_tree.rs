@@ -25,7 +25,7 @@ use crate::{compute::compute_flexbox_layout, LayoutFlexboxContainer};
 #[cfg(feature = "grid")]
 use crate::{compute::compute_grid_layout, LayoutGridContainer};
 
-#[cfg(feature = "detailed_layout_info")]
+#[cfg(all(feature = "detailed_layout_info", feature = "grid"))]
 use crate::compute::grid::DetailedGridInfo;
 #[cfg(feature = "detailed_layout_info")]
 use crate::tree::layout::DetailedLayoutInfo;
@@ -122,7 +122,7 @@ impl NodeData {
             final_layout: Layout::new(),
             has_context: false,
             #[cfg(feature = "detailed_layout_info")]
-            detailed_layout_info: DetailedLayoutInfo::NONE,
+            detailed_layout_info: DetailedLayoutInfo::None,
         }
     }
 
@@ -496,8 +496,8 @@ where
 
     #[inline(always)]
     #[cfg(feature = "detailed_layout_info")]
-    fn set_detailed_grid_info(&mut self, node_id: NodeId, detailed_grid_info: Box<DetailedGridInfo>) {
-        self.taffy.nodes[node_id.into()].detailed_layout_info = DetailedLayoutInfo::Grid(detailed_grid_info);
+    fn set_detailed_grid_info(&mut self, node_id: NodeId, detailed_grid_info: DetailedGridInfo) {
+        self.taffy.nodes[node_id.into()].detailed_layout_info = DetailedLayoutInfo::Grid(Box::new(detailed_grid_info));
     }
 }
 
