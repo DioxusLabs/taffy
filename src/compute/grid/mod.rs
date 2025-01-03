@@ -23,7 +23,7 @@ use track_sizing::{
 };
 use types::{CellOccupancyMatrix, GridTrack};
 
-#[cfg(feature = "computed_layout_info")]
+#[cfg(feature = "detailed_layout_info")]
 use types::{GridItem, GridTrackKind, TrackCounts};
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine};
@@ -595,13 +595,13 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
         item.y_position + item.baseline.unwrap_or(item.height)
     };
 
-    #[cfg(feature = "computed_layout_info")]
-    tree.set_computed_grid_info(
+    #[cfg(feature = "detailed_layout_info")]
+    tree.set_detailed_grid_info(
         node,
-        Box::new(ComputedGridInfo {
-            rows: ComputedGridTracksInfo::from_grid_tracks_and_track_count(final_row_counts, rows),
-            columns: ComputedGridTracksInfo::from_grid_tracks_and_track_count(final_col_counts, columns),
-            items: items.iter().map(ComputedGridItemsInfo::from_grid_item).collect(),
+        Box::new(DetailedGridInfo {
+            rows: DetailedGridTracksInfo::from_grid_tracks_and_track_count(final_row_counts, rows),
+            columns: DetailedGridTracksInfo::from_grid_tracks_and_track_count(final_col_counts, columns),
+            items: items.iter().map(DetailedGridItemsInfo::from_grid_item).collect(),
         }),
     );
 
@@ -614,20 +614,20 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
 
 /// Information from the computation of grid
 #[derive(Debug, Clone, PartialEq)]
-#[cfg(feature = "computed_layout_info")]
-pub struct ComputedGridInfo {
+#[cfg(feature = "detailed_layout_info")]
+pub struct DetailedGridInfo {
     /// <https://drafts.csswg.org/css-grid-1/#grid-row>
-    pub rows: ComputedGridTracksInfo,
+    pub rows: DetailedGridTracksInfo,
     /// <https://drafts.csswg.org/css-grid-1/#grid-column>
-    pub columns: ComputedGridTracksInfo,
+    pub columns: DetailedGridTracksInfo,
     /// <https://drafts.csswg.org/css-grid-1/#grid-items>
-    pub items: Vec<ComputedGridItemsInfo>,
+    pub items: Vec<DetailedGridItemsInfo>,
 }
 
 /// Information from the computation of grids tracks
 #[derive(Debug, Clone, PartialEq)]
-#[cfg(feature = "computed_layout_info")]
-pub struct ComputedGridTracksInfo {
+#[cfg(feature = "detailed_layout_info")]
+pub struct DetailedGridTracksInfo {
     /// Number of leading implicit grid tracks
     pub negative_implicit_tracks: u16,
     /// Number of explicit grid tracks
@@ -641,8 +641,8 @@ pub struct ComputedGridTracksInfo {
     pub sizes: Vec<f32>,
 }
 
-#[cfg(feature = "computed_layout_info")]
-impl ComputedGridTracksInfo {
+#[cfg(feature = "detailed_layout_info")]
+impl DetailedGridTracksInfo {
     #[inline(always)]
     fn grid_track_base_size_of_kind(grid_tracks: &Vec<GridTrack>, kind: types::GridTrackKind) -> Vec<f32> {
         grid_tracks
@@ -655,20 +655,20 @@ impl ComputedGridTracksInfo {
     }
 
     fn gutters_from_grid_track_layout(grid_tracks: &Vec<GridTrack>) -> Vec<f32> {
-        ComputedGridTracksInfo::grid_track_base_size_of_kind(grid_tracks, GridTrackKind::Gutter)
+        DetailedGridTracksInfo::grid_track_base_size_of_kind(grid_tracks, GridTrackKind::Gutter)
     }
 
     fn sizes_from_grid_track_layout(grid_tracks: &Vec<GridTrack>) -> Vec<f32> {
-        ComputedGridTracksInfo::grid_track_base_size_of_kind(grid_tracks, GridTrackKind::Track)
+        DetailedGridTracksInfo::grid_track_base_size_of_kind(grid_tracks, GridTrackKind::Track)
     }
 
     fn from_grid_tracks_and_track_count(track_count: TrackCounts, grid_tracks: Vec<GridTrack>) -> Self {
-        ComputedGridTracksInfo {
+        DetailedGridTracksInfo {
             negative_implicit_tracks: track_count.negative_implicit,
             explicit_tracks: track_count.explicit,
             positive_implicit_tracks: track_count.positive_implicit,
-            gutters: ComputedGridTracksInfo::gutters_from_grid_track_layout(&grid_tracks),
-            sizes: ComputedGridTracksInfo::sizes_from_grid_track_layout(&grid_tracks),
+            gutters: DetailedGridTracksInfo::gutters_from_grid_track_layout(&grid_tracks),
+            sizes: DetailedGridTracksInfo::sizes_from_grid_track_layout(&grid_tracks),
         }
     }
 }
@@ -678,8 +678,8 @@ impl ComputedGridTracksInfo {
 /// The values is 1-indexed line numbers bounding the area.
 /// This matches the Chrome and Firefox's format as of 2nd Jan 2024.
 #[derive(Debug, Clone, PartialEq)]
-#[cfg(feature = "computed_layout_info")]
-pub struct ComputedGridItemsInfo {
+#[cfg(feature = "detailed_layout_info")]
+pub struct DetailedGridItemsInfo {
     /// row-start with 1-indexed line numbers
     pub row_start: u16,
     /// row-end with 1-indexed line numbers
@@ -691,8 +691,8 @@ pub struct ComputedGridItemsInfo {
 }
 
 /// Grid area information from the placement algorithm
-#[cfg(feature = "computed_layout_info")]
-impl ComputedGridItemsInfo {
+#[cfg(feature = "detailed_layout_info")]
+impl DetailedGridItemsInfo {
     #[inline(always)]
     fn from_grid_item(grid_item: &GridItem) -> Self {
         #[inline(always)]
@@ -700,7 +700,7 @@ impl ComputedGridItemsInfo {
             grid_track_index / 2 + 1
         }
 
-        ComputedGridItemsInfo {
+        DetailedGridItemsInfo {
             row_start: to_one_indexed_grid_line(grid_item.row_indexes.start),
             row_end: to_one_indexed_grid_line(grid_item.row_indexes.end),
             column_start: to_one_indexed_grid_line(grid_item.column_indexes.start),

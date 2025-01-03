@@ -41,6 +41,7 @@ default = [
     "grid",
     "block_layout",
     "content_size",
+    "detailed_layout_info",
 ]
 #! ## Feature Flags
 #!
@@ -54,8 +55,8 @@ flexbox = []
 grid = ["alloc", "dep:grid"]
 ## Causes all algorithms to compute and output a content size for each node
 content_size = []
-## Causes algorithms to stores computation info in TaffyTree, with only CSS Grid supporting this.
-computed_layout_info = []
+## Causes algorithms to stores detailed information of the nodes in TaffyTree, with only CSS Grid supporting this.
+detailed_layout_info = []
 
 #! ### Taffy Tree
 

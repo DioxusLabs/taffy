@@ -25,10 +25,10 @@ use crate::{compute::compute_flexbox_layout, LayoutFlexboxContainer};
 #[cfg(feature = "grid")]
 use crate::{compute::compute_grid_layout, LayoutGridContainer};
 
-#[cfg(feature = "computed_layout_info")]
-use crate::compute::grid::ComputedGridInfo;
-#[cfg(feature = "computed_layout_info")]
-use crate::tree::layout::ComputedLayoutInfo;
+#[cfg(feature = "detailed_layout_info")]
+use crate::compute::grid::DetailedGridInfo;
+#[cfg(feature = "detailed_layout_info")]
+use crate::tree::layout::DetailedLayoutInfo;
 
 /// The error Taffy generates on invalid operations
 pub type TaffyResult<T> = Result<T, TaffyError>;
@@ -107,8 +107,8 @@ struct NodeData {
     pub(crate) cache: Cache,
 
     /// The computation result from layout algorithm
-    #[cfg(feature = "computed_layout_info")]
-    pub(crate) computed_layout_info: ComputedLayoutInfo,
+    #[cfg(feature = "detailed_layout_info")]
+    pub(crate) detailed_layout_info: DetailedLayoutInfo,
 }
 
 impl NodeData {
@@ -121,8 +121,8 @@ impl NodeData {
             unrounded_layout: Layout::new(),
             final_layout: Layout::new(),
             has_context: false,
-            #[cfg(feature = "computed_layout_info")]
-            computed_layout_info: ComputedLayoutInfo::NONE,
+            #[cfg(feature = "detailed_layout_info")]
+            detailed_layout_info: DetailedLayoutInfo::NONE,
         }
     }
 
@@ -495,9 +495,9 @@ where
     }
 
     #[inline(always)]
-    #[cfg(feature = "computed_layout_info")]
-    fn set_computed_grid_info(&mut self, node_id: NodeId, computed_grid_info: Box<ComputedGridInfo>) {
-        self.taffy.nodes[node_id.into()].computed_layout_info = ComputedLayoutInfo::Grid(computed_grid_info);
+    #[cfg(feature = "detailed_layout_info")]
+    fn set_detailed_grid_info(&mut self, node_id: NodeId, detailed_grid_info: Box<DetailedGridInfo>) {
+        self.taffy.nodes[node_id.into()].detailed_layout_info = DetailedLayoutInfo::Grid(detailed_grid_info);
     }
 }
 

@@ -137,8 +137,8 @@ use crate::style::{GridContainerStyle, GridItemStyle};
 #[cfg(feature = "block_layout")]
 use crate::{BlockContainerStyle, BlockItemStyle};
 
-#[cfg(feature = "computed_layout_info")]
-use crate::compute::grid::ComputedGridInfo;
+#[cfg(feature = "detailed_layout_info")]
+use crate::compute::grid::DetailedGridInfo;
 
 /// Taffy's abstraction for downward tree traversal.
 ///
@@ -272,10 +272,10 @@ pub trait LayoutGridContainer: LayoutPartialTree {
     /// Get the child's styles
     fn get_grid_child_style(&self, child_node_id: NodeId) -> Self::GridItemStyle<'_>;
 
-    /// Set the node's computed layout information
-    #[cfg(feature = "computed_layout_info")]
-    fn set_computed_grid_info(&mut self, _node_id: NodeId, _computed_layout_info: Box<ComputedGridInfo>) {
-        debug_log!("LayoutGridContainer::set_computed_layout_info called");
+    /// Set the node's detailed layout information
+    #[cfg(feature = "detailed_layout_info")]
+    fn set_detailed_grid_info(&mut self, _node_id: NodeId, _detailed_grid_info: Box<DetailedGridInfo>) {
+        debug_log!("LayoutGridContainer::set_detailed_grid_info called");
     }
 }
 

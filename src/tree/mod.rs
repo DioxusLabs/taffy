@@ -29,5 +29,5 @@ mod taffy_tree;
 #[cfg(feature = "taffy_tree")]
 pub use taffy_tree::{TaffyError, TaffyResult, TaffyTree};
 
-#[cfg(feature = "computed_layout_info")]
-pub use layout::ComputedLayoutInfo;
+#[cfg(feature = "detailed_layout_info")]
+pub use layout::DetailedLayoutInfo;

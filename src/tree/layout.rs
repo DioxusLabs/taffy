@@ -4,8 +4,8 @@ use crate::style::AvailableSpace;
 use crate::style_helpers::TaffyMaxContent;
 use crate::util::sys::{f32_max, f32_min};
 
-#[cfg(feature = "computed_layout_info")]
-use crate::compute::grid::ComputedGridInfo;
+#[cfg(feature = "detailed_layout_info")]
+use crate::compute::grid::DetailedGridInfo;
 
 /// Whether we are performing a full layout, or we merely need to size the node
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -348,12 +348,12 @@ impl Layout {
     }
 }
 
-/// The additional computation information from layout algorithm
-#[cfg(feature = "computed_layout_info")]
+/// The additional information from layout algorithm
+#[cfg(feature = "detailed_layout_info")]
 #[derive(Debug, Clone, PartialEq)]
-pub enum ComputedLayoutInfo {
-    /// Enum variant for ComputedGridInfo
-    Grid(Box<ComputedGridInfo>),
-    /// For node that hasn't had any computed information yet
+pub enum DetailedLayoutInfo {
+    /// Enum variant for [`DetailedGridInfo`]
+    Grid(Box<DetailedGridInfo>),
+    /// For node that hasn't had any detailed information yet
     NONE,
 }
