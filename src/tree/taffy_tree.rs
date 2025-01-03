@@ -817,6 +817,15 @@ impl<NodeContext> TaffyTree<NodeContext> {
         &self.nodes[node.into()].unrounded_layout
     }
 
+    /// Get the "detailed layout info" for a node.
+    ///
+    /// Currently this is only implemented for CSS Grid containers where it contains
+    /// the computed size of each grid track and the computed placement of each grid item
+    #[cfg(feature = "detailed_layout_info")]
+    pub fn detailed_layout_info(&mut self, node_id: NodeId) -> &DetailedLayoutInfo {
+        &self.nodes[node_id.into()].detailed_layout_info
+    }
+
     /// Marks the layout of this node and its ancestors as outdated
     ///
     /// WARNING: this may stack-overflow if the tree contains a cycle
