@@ -102,6 +102,9 @@ pub use crate::compute::compute_flexbox_layout;
 #[cfg(feature = "grid")]
 #[doc(inline)]
 pub use crate::compute::compute_grid_layout;
+#[cfg(feature = "computed_layout_info")]
+#[doc(inline)]
+pub use crate::compute::computed_info::*;
 #[doc(inline)]
 pub use crate::compute::{
     compute_cached_layout, compute_hidden_layout, compute_leaf_layout, compute_root_layout, round_layout,

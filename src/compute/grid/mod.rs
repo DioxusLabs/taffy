@@ -24,8 +24,6 @@ use track_sizing::{
 use types::{CellOccupancyMatrix, GridTrack};
 
 #[cfg(feature = "computed_layout_info")]
-use crate::ComputedLayoutInfo;
-#[cfg(feature = "computed_layout_info")]
 use types::{GridItem, GridTrackKind, TrackCounts};
 
 pub(crate) use types::{GridCoordinate, GridLine, OriginZeroLine};

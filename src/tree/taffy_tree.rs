@@ -26,9 +26,9 @@ use crate::{compute::compute_flexbox_layout, LayoutFlexboxContainer};
 use crate::{compute::compute_grid_layout, LayoutGridContainer};
 
 #[cfg(feature = "computed_layout_info")]
-use crate::tree::layout::ComputedLayoutInfo;
-#[cfg(feature = "computed_layout_info")]
 use crate::compute::grid::ComputedGridInfo;
+#[cfg(feature = "computed_layout_info")]
+use crate::tree::layout::ComputedLayoutInfo;
 
 /// The error Taffy generates on invalid operations
 pub type TaffyResult<T> = Result<T, TaffyError>;
