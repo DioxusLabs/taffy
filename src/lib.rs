@@ -36,7 +36,7 @@
 //!
 //!   - [basic](https://github.com/DioxusLabs/taffy/blob/main/examples/basic.rs)
 //!   - [flexbox_gap](https://github.com/DioxusLabs/taffy/blob/main/examples/flexbox_gap.rs)
-//!   - [grid_holy_grail](https://github.com/DioxusLabs/taffy/blob/main/examples/basic.rs)
+//!   - [grid_holy_grail](https://github.com/DioxusLabs/taffy/blob/main/examples/grid_holy_grail.rs)
 //!   - [measure](https://github.com/DioxusLabs/taffy/blob/main/examples/measure.rs)
 //!   - [cosmic_text](https://github.com/DioxusLabs/taffy/blob/main/examples/cosmic_text.rs)
 //!

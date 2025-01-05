@@ -393,7 +393,7 @@ pub struct Style {
     /// How should content contained within this item be aligned in the cross/block axis
     #[cfg(any(feature = "flexbox", feature = "grid"))]
     pub align_content: Option<AlignContent>,
-    /// How should contained within this item be aligned in the main/inline axis
+    /// How should content contained within this item be aligned in the main/inline axis
     #[cfg(any(feature = "flexbox", feature = "grid"))]
     pub justify_content: Option<JustifyContent>,
     /// How large should the gaps between items in a grid or flex container be?
