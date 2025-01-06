@@ -7,22 +7,22 @@ fn percentage_size_of_flex_basis__border_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(1f32),
-                height: taffy::style::Dimension::Length(100f32),
+                width: taffy::style::Dimension::from_percent(1f32),
+                height: taffy::style::Dimension::from_length(100f32),
             },
             ..Default::default()
         })
         .unwrap();
     let node0 = taffy
         .new_with_children(
-            taffy::style::Style { flex_basis: taffy::style::Dimension::Length(50f32), ..Default::default() },
+            taffy::style::Style { flex_basis: taffy::style::Dimension::from_length(50f32), ..Default::default() },
             &[node00],
         )
         .unwrap();
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
                 ..Default::default()
             },
             &[node0],
@@ -62,8 +62,8 @@ fn percentage_size_of_flex_basis__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(1f32),
-                height: taffy::style::Dimension::Length(100f32),
+                width: taffy::style::Dimension::from_percent(1f32),
+                height: taffy::style::Dimension::from_length(100f32),
             },
             ..Default::default()
         })
@@ -72,7 +72,7 @@ fn percentage_size_of_flex_basis__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                flex_basis: taffy::style::Dimension::Length(50f32),
+                flex_basis: taffy::style::Dimension::from_length(50f32),
                 ..Default::default()
             },
             &[node00],
@@ -82,7 +82,7 @@ fn percentage_size_of_flex_basis__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

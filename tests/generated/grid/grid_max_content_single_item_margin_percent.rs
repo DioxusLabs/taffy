@@ -9,10 +9,10 @@ fn grid_max_content_single_item_margin_percent__border_box() {
         .new_leaf_with_context(
             taffy::style::Style {
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Percent(0.2f32),
-                    right: taffy::style::LengthPercentageAuto::Percent(0.1f32),
-                    top: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                    bottom: taffy::style::LengthPercentageAuto::Percent(0.15f32),
+                    left: percent(0.2f32),
+                    right: percent(0.1f32),
+                    top: percent(0.05f32),
+                    bottom: percent(0.15f32),
                 },
                 ..Default::default()
             },
@@ -117,10 +117,10 @@ fn grid_max_content_single_item_margin_percent__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Percent(0.2f32),
-                    right: taffy::style::LengthPercentageAuto::Percent(0.1f32),
-                    top: taffy::style::LengthPercentageAuto::Percent(0.05f32),
-                    bottom: taffy::style::LengthPercentageAuto::Percent(0.15f32),
+                    left: percent(0.2f32),
+                    right: percent(0.1f32),
+                    top: percent(0.05f32),
+                    bottom: percent(0.15f32),
                 },
                 ..Default::default()
             },

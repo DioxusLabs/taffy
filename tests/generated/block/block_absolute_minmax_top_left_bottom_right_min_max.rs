@@ -9,18 +9,18 @@ fn block_absolute_minmax_top_left_bottom_right_min_max__border_box() {
             display: taffy::style::Display::Block,
             position: taffy::style::Position::Absolute,
             min_size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(60f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(60f32),
             },
             max_size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(30f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(30f32),
             },
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(10f32),
-                right: taffy::style::LengthPercentageAuto::Length(10f32),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
+                left: length(10f32),
+                right: length(10f32),
+                top: length(10f32),
+                bottom: length(10f32),
             },
             ..Default::default()
         })
@@ -30,8 +30,8 @@ fn block_absolute_minmax_top_left_bottom_right_min_max__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },
@@ -68,18 +68,18 @@ fn block_absolute_minmax_top_left_bottom_right_min_max__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
             min_size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(60f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(60f32),
             },
             max_size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(30f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(30f32),
             },
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(10f32),
-                right: taffy::style::LengthPercentageAuto::Length(10f32),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
-                bottom: taffy::style::LengthPercentageAuto::Length(10f32),
+                left: length(10f32),
+                right: length(10f32),
+                top: length(10f32),
+                bottom: length(10f32),
             },
             ..Default::default()
         })
@@ -90,8 +90,8 @@ fn block_absolute_minmax_top_left_bottom_right_min_max__content_box() {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },

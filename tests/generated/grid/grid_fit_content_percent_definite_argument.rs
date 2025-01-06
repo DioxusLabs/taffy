@@ -16,7 +16,7 @@ fn grid_fit_content_percent_definite_argument__border_box() {
                 display: taffy::style::Display::Grid,
                 grid_template_rows: vec![length(40f32)],
                 grid_template_columns: vec![fit_content(percent(0.5f32))],
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(60f32), height: auto() },
                 ..Default::default()
             },
             &[node0],
@@ -59,7 +59,7 @@ fn grid_fit_content_percent_definite_argument__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 grid_template_rows: vec![length(40f32)],
                 grid_template_columns: vec![fit_content(percent(0.5f32))],
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(60f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

@@ -9,8 +9,8 @@ fn grid_percent_tracks_indefinite_with_content_underflow__border_box() {
             grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(100f32),
-                height: taffy::style::Dimension::Length(100f32),
+                width: taffy::style::Dimension::from_length(100f32),
+                height: taffy::style::Dimension::from_length(100f32),
             },
             ..Default::default()
         })
@@ -104,8 +104,8 @@ fn grid_percent_tracks_indefinite_with_content_underflow__content_box() {
             grid_row: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             grid_column: taffy::geometry::Line { start: line(1i16), end: taffy::style::GridPlacement::Auto },
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(100f32),
-                height: taffy::style::Dimension::Length(100f32),
+                width: taffy::style::Dimension::from_length(100f32),
+                height: taffy::style::Dimension::from_length(100f32),
             },
             ..Default::default()
         })

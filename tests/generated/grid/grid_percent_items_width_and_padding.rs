@@ -6,12 +6,12 @@ fn grid_percent_items_width_and_padding__border_box() {
     let mut taffy = crate::new_test_tree();
     let node0 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.5f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.5f32), height: auto() },
             padding: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Percent(0.03f32),
-                right: taffy::style::LengthPercentage::Percent(0.03f32),
-                top: taffy::style::LengthPercentage::Percent(0.03f32),
-                bottom: taffy::style::LengthPercentage::Percent(0.03f32),
+                left: percent(0.03f32),
+                right: percent(0.03f32),
+                top: percent(0.03f32),
+                bottom: percent(0.03f32),
             },
             ..Default::default()
         })
@@ -20,7 +20,7 @@ fn grid_percent_items_width_and_padding__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
                 ..Default::default()
             },
             &[node0],
@@ -53,12 +53,12 @@ fn grid_percent_items_width_and_padding__content_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Percent(0.5f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_percent(0.5f32), height: auto() },
             padding: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentage::Percent(0.03f32),
-                right: taffy::style::LengthPercentage::Percent(0.03f32),
-                top: taffy::style::LengthPercentage::Percent(0.03f32),
-                bottom: taffy::style::LengthPercentage::Percent(0.03f32),
+                left: percent(0.03f32),
+                right: percent(0.03f32),
+                top: percent(0.03f32),
+                bottom: percent(0.03f32),
             },
             ..Default::default()
         })
@@ -68,7 +68,7 @@ fn grid_percent_items_width_and_padding__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

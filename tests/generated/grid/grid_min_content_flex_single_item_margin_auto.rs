@@ -7,12 +7,12 @@ fn grid_min_content_flex_single_item_margin_auto__border_box() {
     let node0 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(10f32), height: auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(10f32), height: auto() },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Auto,
-                right: taffy::style::LengthPercentageAuto::Auto,
-                top: taffy::style::LengthPercentageAuto::Auto,
-                bottom: taffy::style::LengthPercentageAuto::Auto,
+                left: taffy::style::LengthPercentageAuto::AUTO,
+                right: taffy::style::LengthPercentageAuto::AUTO,
+                top: taffy::style::LengthPercentageAuto::AUTO,
+                bottom: taffy::style::LengthPercentageAuto::AUTO,
             },
             ..Default::default()
         })
@@ -27,10 +27,10 @@ fn grid_min_content_flex_single_item_margin_auto__border_box() {
                     end: taffy::style::GridPlacement::Auto,
                 },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Auto,
-                    right: taffy::style::LengthPercentageAuto::Auto,
-                    top: taffy::style::LengthPercentageAuto::Auto,
-                    bottom: taffy::style::LengthPercentageAuto::Auto,
+                    left: taffy::style::LengthPercentageAuto::AUTO,
+                    right: taffy::style::LengthPercentageAuto::AUTO,
+                    top: taffy::style::LengthPercentageAuto::AUTO,
+                    bottom: taffy::style::LengthPercentageAuto::AUTO,
                 },
                 ..Default::default()
             },
@@ -123,12 +123,12 @@ fn grid_min_content_flex_single_item_margin_auto__content_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(10f32), height: auto() },
+            min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(10f32), height: auto() },
             margin: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Auto,
-                right: taffy::style::LengthPercentageAuto::Auto,
-                top: taffy::style::LengthPercentageAuto::Auto,
-                bottom: taffy::style::LengthPercentageAuto::Auto,
+                left: taffy::style::LengthPercentageAuto::AUTO,
+                right: taffy::style::LengthPercentageAuto::AUTO,
+                top: taffy::style::LengthPercentageAuto::AUTO,
+                bottom: taffy::style::LengthPercentageAuto::AUTO,
             },
             ..Default::default()
         })
@@ -148,10 +148,10 @@ fn grid_min_content_flex_single_item_margin_auto__content_box() {
                     end: taffy::style::GridPlacement::Auto,
                 },
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Auto,
-                    right: taffy::style::LengthPercentageAuto::Auto,
-                    top: taffy::style::LengthPercentageAuto::Auto,
-                    bottom: taffy::style::LengthPercentageAuto::Auto,
+                    left: taffy::style::LengthPercentageAuto::AUTO,
+                    right: taffy::style::LengthPercentageAuto::AUTO,
+                    top: taffy::style::LengthPercentageAuto::AUTO,
+                    bottom: taffy::style::LengthPercentageAuto::AUTO,
                 },
                 ..Default::default()
             },

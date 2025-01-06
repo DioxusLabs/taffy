@@ -7,8 +7,8 @@ fn min_height_with_nested_fixed_height__border_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(40f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(40f32),
             },
             ..Default::default()
         })
@@ -19,13 +19,8 @@ fn min_height_with_nested_fixed_height__border_box() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_self: Some(taffy::style::AlignSelf::FlexStart),
                 flex_shrink: 0f32,
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(28f32) },
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(8f32),
-                    bottom: taffy::style::LengthPercentageAuto::Length(9f32),
-                },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(28f32) },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(8f32), bottom: length(9f32) },
                 ..Default::default()
             },
             &[node00],
@@ -34,11 +29,11 @@ fn min_height_with_nested_fixed_height__border_box() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(320f32), height: auto() },
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(44f32) },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(320f32), height: auto() },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(44f32) },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(16f32),
-                    right: taffy::style::LengthPercentage::Length(16f32),
+                    left: length(16f32),
+                    right: length(16f32),
                     top: zero(),
                     bottom: zero(),
                 },
@@ -81,8 +76,8 @@ fn min_height_with_nested_fixed_height__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(40f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(40f32),
             },
             ..Default::default()
         })
@@ -94,13 +89,8 @@ fn min_height_with_nested_fixed_height__content_box() {
                 flex_direction: taffy::style::FlexDirection::Column,
                 align_self: Some(taffy::style::AlignSelf::FlexStart),
                 flex_shrink: 0f32,
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(28f32) },
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(8f32),
-                    bottom: taffy::style::LengthPercentageAuto::Length(9f32),
-                },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(28f32) },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(8f32), bottom: length(9f32) },
                 ..Default::default()
             },
             &[node00],
@@ -110,11 +100,11 @@ fn min_height_with_nested_fixed_height__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(320f32), height: auto() },
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(44f32) },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(320f32), height: auto() },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(44f32) },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(16f32),
-                    right: taffy::style::LengthPercentage::Length(16f32),
+                    left: length(16f32),
+                    right: length(16f32),
                     top: zero(),
                     bottom: zero(),
                 },

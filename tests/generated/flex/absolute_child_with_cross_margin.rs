@@ -8,8 +8,8 @@ fn absolute_child_with_cross_margin__border_box() {
         .new_leaf(taffy::style::Style {
             align_content: Some(taffy::style::AlignContent::Stretch),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(28f32),
-                height: taffy::style::Dimension::Length(27f32),
+                width: taffy::style::Dimension::from_length(28f32),
+                height: taffy::style::Dimension::from_length(27f32),
             },
             ..Default::default()
         })
@@ -22,15 +22,10 @@ fn absolute_child_with_cross_margin__border_box() {
                 flex_grow: 0f32,
                 flex_shrink: 1f32,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(1f32),
-                    height: taffy::style::Dimension::Length(15f32),
+                    width: taffy::style::Dimension::from_percent(1f32),
+                    height: taffy::style::Dimension::from_length(15f32),
                 },
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(4f32),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(4f32), bottom: zero() },
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("", crate::WritingMode::Horizontal),
@@ -40,8 +35,8 @@ fn absolute_child_with_cross_margin__border_box() {
         .new_leaf(taffy::style::Style {
             align_content: Some(taffy::style::AlignContent::Stretch),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(25f32),
-                height: taffy::style::Dimension::Length(27f32),
+                width: taffy::style::Dimension::from_length(25f32),
+                height: taffy::style::Dimension::from_length(27f32),
             },
             ..Default::default()
         })
@@ -51,12 +46,12 @@ fn absolute_child_with_cross_margin__border_box() {
             taffy::style::Style {
                 justify_content: Some(taffy::style::JustifyContent::SpaceBetween),
                 min_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(311f32),
-                    height: taffy::style::Dimension::Length(0f32),
+                    width: taffy::style::Dimension::from_length(311f32),
+                    height: taffy::style::Dimension::from_length(0f32),
                 },
                 max_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(311f32),
-                    height: taffy::style::Dimension::Length(36893500000000000000f32),
+                    width: taffy::style::Dimension::from_length(311f32),
+                    height: taffy::style::Dimension::from_length(36893500000000000000f32),
                 },
                 ..Default::default()
             },
@@ -104,8 +99,8 @@ fn absolute_child_with_cross_margin__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             align_content: Some(taffy::style::AlignContent::Stretch),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(28f32),
-                height: taffy::style::Dimension::Length(27f32),
+                width: taffy::style::Dimension::from_length(28f32),
+                height: taffy::style::Dimension::from_length(27f32),
             },
             ..Default::default()
         })
@@ -119,15 +114,10 @@ fn absolute_child_with_cross_margin__content_box() {
                 flex_grow: 0f32,
                 flex_shrink: 1f32,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(1f32),
-                    height: taffy::style::Dimension::Length(15f32),
+                    width: taffy::style::Dimension::from_percent(1f32),
+                    height: taffy::style::Dimension::from_length(15f32),
                 },
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: zero(),
-                    top: taffy::style::LengthPercentageAuto::Length(4f32),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: zero(), top: length(4f32), bottom: zero() },
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text("", crate::WritingMode::Horizontal),
@@ -138,8 +128,8 @@ fn absolute_child_with_cross_margin__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             align_content: Some(taffy::style::AlignContent::Stretch),
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(25f32),
-                height: taffy::style::Dimension::Length(27f32),
+                width: taffy::style::Dimension::from_length(25f32),
+                height: taffy::style::Dimension::from_length(27f32),
             },
             ..Default::default()
         })
@@ -150,12 +140,12 @@ fn absolute_child_with_cross_margin__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 justify_content: Some(taffy::style::JustifyContent::SpaceBetween),
                 min_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(311f32),
-                    height: taffy::style::Dimension::Length(0f32),
+                    width: taffy::style::Dimension::from_length(311f32),
+                    height: taffy::style::Dimension::from_length(0f32),
                 },
                 max_size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(311f32),
-                    height: taffy::style::Dimension::Length(36893500000000000000f32),
+                    width: taffy::style::Dimension::from_length(311f32),
+                    height: taffy::style::Dimension::from_length(36893500000000000000f32),
                 },
                 ..Default::default()
             },

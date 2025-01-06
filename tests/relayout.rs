@@ -14,7 +14,7 @@ fn relayout() {
         .new_with_children(
             taffy::style::Style {
                 align_self: Some(taffy::prelude::AlignSelf::Center),
-                size: taffy::geometry::Size { width: Dimension::Auto, height: Dimension::Auto },
+                size: taffy::geometry::Size { width: Dimension::AUTO, height: Dimension::AUTO },
                 // size: taffy::geometry::Size { width: Dimension::Percent(1.0), height: Dimension::Percent(1.0) },
                 ..Default::default()
             },
@@ -24,7 +24,10 @@ fn relayout() {
     let node = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: Dimension::Percent(1f32), height: Dimension::Percent(1f32) },
+                size: taffy::geometry::Size {
+                    width: Dimension::from_percent(1f32),
+                    height: Dimension::from_percent(1f32),
+                },
                 ..Default::default()
             },
             &[node0],

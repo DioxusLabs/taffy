@@ -9,7 +9,7 @@ fn blitz_issue_88__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 flex_grow: 1f32,
-                flex_basis: taffy::style::Dimension::Length(0f32),
+                flex_basis: taffy::style::Dimension::from_length(0f32),
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text(
@@ -39,7 +39,7 @@ fn blitz_issue_88__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(600f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(600f32), height: auto() },
                 ..Default::default()
             },
             &[node0],
@@ -87,7 +87,7 @@ fn blitz_issue_88__content_box() {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_grow: 1f32,
-                flex_basis: taffy::style::Dimension::Length(0f32),
+                flex_basis: taffy::style::Dimension::from_length(0f32),
                 ..Default::default()
             },
             crate::TestNodeContext::ahem_text(
@@ -124,7 +124,7 @@ fn blitz_issue_88__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(600f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(600f32), height: auto() },
                 ..Default::default()
             },
             &[node0],

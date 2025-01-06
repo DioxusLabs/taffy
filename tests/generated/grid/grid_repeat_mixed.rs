@@ -28,8 +28,8 @@ fn grid_repeat_mixed__border_box() {
                     repeat(GridTrackRepetition::AutoFill, vec![length(40f32)]),
                 ],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(120f32),
-                    height: taffy::style::Dimension::Length(120f32),
+                    width: taffy::style::Dimension::from_length(120f32),
+                    height: taffy::style::Dimension::from_length(120f32),
                 },
                 ..Default::default()
             },
@@ -151,8 +151,8 @@ fn grid_repeat_mixed__content_box() {
                     repeat(GridTrackRepetition::AutoFill, vec![length(40f32)]),
                 ],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(120f32),
-                    height: taffy::style::Dimension::Length(120f32),
+                    width: taffy::style::Dimension::from_length(120f32),
+                    height: taffy::style::Dimension::from_length(120f32),
                 },
                 ..Default::default()
             },

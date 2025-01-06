@@ -7,7 +7,7 @@ fn grid_auto_single_item_fixed_width_with_definite_width__border_box() {
     let node0 = taffy.new_leaf(taffy::style::Style { ..Default::default() }).unwrap();
     let node1 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -24,7 +24,7 @@ fn grid_auto_single_item_fixed_width_with_definite_width__border_box() {
                 display: taffy::style::Display::Grid,
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), auto(), auto()],
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2, node3, node4, node5, node6, node7, node8],
@@ -108,7 +108,7 @@ fn grid_auto_single_item_fixed_width_with_definite_width__content_box() {
     let node1 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(100f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(100f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -140,7 +140,7 @@ fn grid_auto_single_item_fixed_width_with_definite_width__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
                 grid_template_columns: vec![length(40f32), auto(), auto()],
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1, node2, node3, node4, node5, node6, node7, node8],

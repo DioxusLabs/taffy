@@ -9,14 +9,14 @@ fn measure_child_constraint_padding_parent__border_box() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Auto,
+                    width: taffy::style::Dimension::from_length(50f32),
+                    height: taffy::style::Dimension::AUTO,
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(10f32),
-                    right: taffy::style::LengthPercentage::Length(10f32),
-                    top: taffy::style::LengthPercentage::Length(10f32),
-                    bottom: taffy::style::LengthPercentage::Length(10f32),
+                    left: length(10f32),
+                    right: length(10f32),
+                    top: length(10f32),
+                    bottom: length(10f32),
                 },
                 ..Default::default()
             },
@@ -53,14 +53,14 @@ fn measure_child_constraint_padding_parent__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Auto,
+                    width: taffy::style::Dimension::from_length(50f32),
+                    height: taffy::style::Dimension::AUTO,
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(10f32),
-                    right: taffy::style::LengthPercentage::Length(10f32),
-                    top: taffy::style::LengthPercentage::Length(10f32),
-                    bottom: taffy::style::LengthPercentage::Length(10f32),
+                    left: length(10f32),
+                    right: length(10f32),
+                    top: length(10f32),
+                    bottom: length(10f32),
                 },
                 ..Default::default()
             },

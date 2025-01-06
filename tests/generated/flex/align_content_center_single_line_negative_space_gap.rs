@@ -8,8 +8,8 @@ fn align_content_center_single_line_negative_space_gap__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(0.8f32),
-                height: taffy::style::Dimension::Length(60f32),
+                width: taffy::style::Dimension::from_percent(0.8f32),
+                height: taffy::style::Dimension::from_length(60f32),
             },
             ..Default::default()
         })
@@ -20,11 +20,8 @@ fn align_content_center_single_line_negative_space_gap__border_box() {
                 display: taffy::style::Display::Flex,
                 align_content: Some(taffy::style::AlignContent::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
-                gap: taffy::geometry::Size {
-                    width: taffy::style::LengthPercentage::Length(10f32),
-                    height: taffy::style::LengthPercentage::Length(10f32),
-                },
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+                gap: taffy::geometry::Size { width: length(10f32), height: length(10f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
                 ..Default::default()
             },
             &[node00],
@@ -36,14 +33,14 @@ fn align_content_center_single_line_negative_space_gap__border_box() {
                 display: taffy::style::Display::Flex,
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(320f32),
-                    height: taffy::style::Dimension::Length(320f32),
+                    width: taffy::style::Dimension::from_length(320f32),
+                    height: taffy::style::Dimension::from_length(320f32),
                 },
                 border: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(60f32),
-                    right: taffy::style::LengthPercentage::Length(60f32),
-                    top: taffy::style::LengthPercentage::Length(60f32),
-                    bottom: taffy::style::LengthPercentage::Length(60f32),
+                    left: length(60f32),
+                    right: length(60f32),
+                    top: length(60f32),
+                    bottom: length(60f32),
                 },
                 ..Default::default()
             },
@@ -85,8 +82,8 @@ fn align_content_center_single_line_negative_space_gap__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(0.8f32),
-                height: taffy::style::Dimension::Length(60f32),
+                width: taffy::style::Dimension::from_percent(0.8f32),
+                height: taffy::style::Dimension::from_length(60f32),
             },
             ..Default::default()
         })
@@ -98,11 +95,8 @@ fn align_content_center_single_line_negative_space_gap__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 align_content: Some(taffy::style::AlignContent::Center),
                 justify_content: Some(taffy::style::JustifyContent::Center),
-                gap: taffy::geometry::Size {
-                    width: taffy::style::LengthPercentage::Length(10f32),
-                    height: taffy::style::LengthPercentage::Length(10f32),
-                },
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(10f32) },
+                gap: taffy::geometry::Size { width: length(10f32), height: length(10f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(10f32) },
                 ..Default::default()
             },
             &[node00],
@@ -115,14 +109,14 @@ fn align_content_center_single_line_negative_space_gap__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(320f32),
-                    height: taffy::style::Dimension::Length(320f32),
+                    width: taffy::style::Dimension::from_length(320f32),
+                    height: taffy::style::Dimension::from_length(320f32),
                 },
                 border: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(60f32),
-                    right: taffy::style::LengthPercentage::Length(60f32),
-                    top: taffy::style::LengthPercentage::Length(60f32),
-                    bottom: taffy::style::LengthPercentage::Length(60f32),
+                    left: length(60f32),
+                    right: length(60f32),
+                    top: length(60f32),
+                    bottom: length(60f32),
                 },
                 ..Default::default()
             },

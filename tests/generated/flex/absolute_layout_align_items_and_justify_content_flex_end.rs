@@ -8,8 +8,8 @@ fn absolute_layout_align_items_and_justify_content_flex_end__border_box() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(60f32),
-                height: taffy::style::Dimension::Length(40f32),
+                width: taffy::style::Dimension::from_length(60f32),
+                height: taffy::style::Dimension::from_length(40f32),
             },
             ..Default::default()
         })
@@ -20,8 +20,8 @@ fn absolute_layout_align_items_and_justify_content_flex_end__border_box() {
                 align_items: Some(taffy::style::AlignItems::FlexEnd),
                 justify_content: Some(taffy::style::JustifyContent::FlexEnd),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(110f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(110f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },
@@ -57,8 +57,8 @@ fn absolute_layout_align_items_and_justify_content_flex_end__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(60f32),
-                height: taffy::style::Dimension::Length(40f32),
+                width: taffy::style::Dimension::from_length(60f32),
+                height: taffy::style::Dimension::from_length(40f32),
             },
             ..Default::default()
         })
@@ -70,8 +70,8 @@ fn absolute_layout_align_items_and_justify_content_flex_end__content_box() {
                 align_items: Some(taffy::style::AlignItems::FlexEnd),
                 justify_content: Some(taffy::style::JustifyContent::FlexEnd),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(110f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(110f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },

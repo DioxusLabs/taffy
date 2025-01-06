@@ -7,23 +7,18 @@ fn align_baseline_child_top__border_box() {
     let node0 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
-            inset: taffy::geometry::Rect {
-                left: auto(),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: auto(), right: auto(), top: length(10f32), bottom: auto() },
             ..Default::default()
         })
         .unwrap();
     let node10 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -33,8 +28,8 @@ fn align_baseline_child_top__border_box() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Length(20f32),
+                    width: taffy::style::Dimension::from_length(50f32),
+                    height: taffy::style::Dimension::from_length(20f32),
                 },
                 ..Default::default()
             },
@@ -46,8 +41,8 @@ fn align_baseline_child_top__border_box() {
             taffy::style::Style {
                 align_items: Some(taffy::style::AlignItems::Baseline),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },
@@ -94,15 +89,10 @@ fn align_baseline_child_top__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
-            inset: taffy::geometry::Rect {
-                left: auto(),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Length(10f32),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: auto(), right: auto(), top: length(10f32), bottom: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -110,8 +100,8 @@ fn align_baseline_child_top__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -122,8 +112,8 @@ fn align_baseline_child_top__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Length(20f32),
+                    width: taffy::style::Dimension::from_length(50f32),
+                    height: taffy::style::Dimension::from_length(20f32),
                 },
                 ..Default::default()
             },
@@ -136,8 +126,8 @@ fn align_baseline_child_top__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 align_items: Some(taffy::style::AlignItems::Baseline),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },

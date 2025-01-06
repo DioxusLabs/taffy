@@ -30,8 +30,8 @@ fn blockflex_overflow_hidden__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(20f32),
-                    height: taffy::style::Dimension::Length(50f32),
+                    width: taffy::style::Dimension::from_length(20f32),
+                    height: taffy::style::Dimension::from_length(50f32),
                 },
                 ..Default::default()
             },
@@ -119,8 +119,8 @@ fn blockflex_overflow_hidden__content_box() {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(20f32),
-                    height: taffy::style::Dimension::Length(50f32),
+                    width: taffy::style::Dimension::from_length(20f32),
+                    height: taffy::style::Dimension::from_length(50f32),
                 },
                 ..Default::default()
             },

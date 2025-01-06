@@ -14,8 +14,8 @@ fn overflow_scrollbars_overridden_by_size__border_box() {
                 },
                 scrollbar_width: 15f32,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(2f32),
-                    height: taffy::style::Dimension::Length(4f32),
+                    width: taffy::style::Dimension::from_length(2f32),
+                    height: taffy::style::Dimension::from_length(4f32),
                 },
                 ..Default::default()
             },
@@ -81,8 +81,8 @@ fn overflow_scrollbars_overridden_by_size__content_box() {
                 },
                 scrollbar_width: 15f32,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(2f32),
-                    height: taffy::style::Dimension::Length(4f32),
+                    width: taffy::style::Dimension::from_length(2f32),
+                    height: taffy::style::Dimension::from_length(4f32),
                 },
                 ..Default::default()
             },

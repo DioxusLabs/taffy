@@ -7,8 +7,8 @@ fn wrap_nodes_with_content_sizing_overflowing_margin__border_box() {
     let node000 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(40f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(40f32),
             },
             ..Default::default()
         })
@@ -22,8 +22,8 @@ fn wrap_nodes_with_content_sizing_overflowing_margin__border_box() {
     let node010 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(40f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(40f32),
             },
             ..Default::default()
         })
@@ -32,12 +32,7 @@ fn wrap_nodes_with_content_sizing_overflowing_margin__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: taffy::style::LengthPercentageAuto::Length(10f32),
-                    top: zero(),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: length(10f32), top: zero(), bottom: zero() },
                 ..Default::default()
             },
             &[node010],
@@ -47,7 +42,7 @@ fn wrap_nodes_with_content_sizing_overflowing_margin__border_box() {
         .new_with_children(
             taffy::style::Style {
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(85f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(85f32), height: auto() },
                 ..Default::default()
             },
             &[node00, node01],
@@ -58,8 +53,8 @@ fn wrap_nodes_with_content_sizing_overflowing_margin__border_box() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(500f32),
-                    height: taffy::style::Dimension::Length(500f32),
+                    width: taffy::style::Dimension::from_length(500f32),
+                    height: taffy::style::Dimension::from_length(500f32),
                 },
                 ..Default::default()
             },
@@ -118,8 +113,8 @@ fn wrap_nodes_with_content_sizing_overflowing_margin__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(40f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(40f32),
             },
             ..Default::default()
         })
@@ -138,8 +133,8 @@ fn wrap_nodes_with_content_sizing_overflowing_margin__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(40f32),
-                height: taffy::style::Dimension::Length(40f32),
+                width: taffy::style::Dimension::from_length(40f32),
+                height: taffy::style::Dimension::from_length(40f32),
             },
             ..Default::default()
         })
@@ -149,12 +144,7 @@ fn wrap_nodes_with_content_sizing_overflowing_margin__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
-                margin: taffy::geometry::Rect {
-                    left: zero(),
-                    right: taffy::style::LengthPercentageAuto::Length(10f32),
-                    top: zero(),
-                    bottom: zero(),
-                },
+                margin: taffy::geometry::Rect { left: zero(), right: length(10f32), top: zero(), bottom: zero() },
                 ..Default::default()
             },
             &[node010],
@@ -165,7 +155,7 @@ fn wrap_nodes_with_content_sizing_overflowing_margin__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(85f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(85f32), height: auto() },
                 ..Default::default()
             },
             &[node00, node01],
@@ -177,8 +167,8 @@ fn wrap_nodes_with_content_sizing_overflowing_margin__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(500f32),
-                    height: taffy::style::Dimension::Length(500f32),
+                    width: taffy::style::Dimension::from_length(500f32),
+                    height: taffy::style::Dimension::from_length(500f32),
                 },
                 ..Default::default()
             },

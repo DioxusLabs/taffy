@@ -10,7 +10,7 @@ fn grid_fr_span_2_proportion__border_box() {
                 start: taffy::style::GridPlacement::Span(2u16),
                 end: taffy::style::GridPlacement::Auto,
             },
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -70,7 +70,7 @@ fn grid_fr_span_2_proportion__content_box() {
                 start: taffy::style::GridPlacement::Span(2u16),
                 end: taffy::style::GridPlacement::Auto,
             },
-            size: taffy::geometry::Size { width: taffy::style::Dimension::Length(60f32), height: auto() },
+            size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(60f32), height: auto() },
             ..Default::default()
         })
         .unwrap();

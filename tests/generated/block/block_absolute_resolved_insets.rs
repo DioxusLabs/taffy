@@ -8,9 +8,9 @@ fn block_absolute_resolved_insets__border_box() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Auto,
+                left: taffy::style::LengthPercentageAuto::AUTO,
                 right: auto(),
-                top: taffy::style::LengthPercentageAuto::Auto,
+                top: taffy::style::LengthPercentageAuto::AUTO,
                 bottom: auto(),
             },
             ..Default::default()
@@ -19,48 +19,28 @@ fn block_absolute_resolved_insets__border_box() {
     let node01 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
-            inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(0f32),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Length(0f32),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: length(0f32), right: auto(), top: length(0f32), bottom: auto() },
             ..Default::default()
         })
         .unwrap();
     let node02 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
-            inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Percent(1f32),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Percent(1f32),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: percent(1f32), right: auto(), top: percent(1f32), bottom: auto() },
             ..Default::default()
         })
         .unwrap();
     let node03 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
-            inset: taffy::geometry::Rect {
-                left: auto(),
-                right: taffy::style::LengthPercentageAuto::Percent(1f32),
-                top: auto(),
-                bottom: taffy::style::LengthPercentageAuto::Percent(1f32),
-            },
+            inset: taffy::geometry::Rect { left: auto(), right: percent(1f32), top: auto(), bottom: percent(1f32) },
             ..Default::default()
         })
         .unwrap();
     let node04 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
-            inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(30f32),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Length(30f32),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: length(30f32), right: auto(), top: length(30f32), bottom: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -68,15 +48,10 @@ fn block_absolute_resolved_insets__border_box() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(1f32),
-                height: taffy::style::Dimension::Percent(1f32),
+                width: taffy::style::Dimension::from_percent(1f32),
+                height: taffy::style::Dimension::from_percent(1f32),
             },
-            inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(0f32),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Length(0f32),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: length(0f32), right: auto(), top: length(0f32), bottom: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -85,20 +60,20 @@ fn block_absolute_resolved_insets__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(15f32),
-                    right: taffy::style::LengthPercentage::Length(15f32),
-                    top: taffy::style::LengthPercentage::Length(15f32),
-                    bottom: taffy::style::LengthPercentage::Length(15f32),
+                    left: length(15f32),
+                    right: length(15f32),
+                    top: length(15f32),
+                    bottom: length(15f32),
                 },
                 border: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(20f32),
-                    right: taffy::style::LengthPercentage::Length(20f32),
-                    top: taffy::style::LengthPercentage::Length(20f32),
-                    bottom: taffy::style::LengthPercentage::Length(20f32),
+                    left: length(20f32),
+                    right: length(20f32),
+                    top: length(20f32),
+                    bottom: length(20f32),
                 },
                 ..Default::default()
             },
@@ -109,9 +84,9 @@ fn block_absolute_resolved_insets__border_box() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Auto,
+                left: taffy::style::LengthPercentageAuto::AUTO,
                 right: auto(),
-                top: taffy::style::LengthPercentageAuto::Auto,
+                top: taffy::style::LengthPercentageAuto::AUTO,
                 bottom: auto(),
             },
             ..Default::default()
@@ -120,48 +95,28 @@ fn block_absolute_resolved_insets__border_box() {
     let node11 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
-            inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(0f32),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Length(0f32),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: length(0f32), right: auto(), top: length(0f32), bottom: auto() },
             ..Default::default()
         })
         .unwrap();
     let node12 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
-            inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Percent(1f32),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Percent(1f32),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: percent(1f32), right: auto(), top: percent(1f32), bottom: auto() },
             ..Default::default()
         })
         .unwrap();
     let node13 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
-            inset: taffy::geometry::Rect {
-                left: auto(),
-                right: taffy::style::LengthPercentageAuto::Percent(1f32),
-                top: auto(),
-                bottom: taffy::style::LengthPercentageAuto::Percent(1f32),
-            },
+            inset: taffy::geometry::Rect { left: auto(), right: percent(1f32), top: auto(), bottom: percent(1f32) },
             ..Default::default()
         })
         .unwrap();
     let node14 = taffy
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
-            inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(30f32),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Length(30f32),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: length(30f32), right: auto(), top: length(30f32), bottom: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -169,15 +124,10 @@ fn block_absolute_resolved_insets__border_box() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(1f32),
-                height: taffy::style::Dimension::Percent(1f32),
+                width: taffy::style::Dimension::from_percent(1f32),
+                height: taffy::style::Dimension::from_percent(1f32),
             },
-            inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(0f32),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Length(0f32),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: length(0f32), right: auto(), top: length(0f32), bottom: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -191,20 +141,20 @@ fn block_absolute_resolved_insets__border_box() {
                 },
                 scrollbar_width: 15f32,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(15f32),
-                    right: taffy::style::LengthPercentage::Length(15f32),
-                    top: taffy::style::LengthPercentage::Length(15f32),
-                    bottom: taffy::style::LengthPercentage::Length(15f32),
+                    left: length(15f32),
+                    right: length(15f32),
+                    top: length(15f32),
+                    bottom: length(15f32),
                 },
                 border: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(20f32),
-                    right: taffy::style::LengthPercentage::Length(20f32),
-                    top: taffy::style::LengthPercentage::Length(20f32),
-                    bottom: taffy::style::LengthPercentage::Length(20f32),
+                    left: length(20f32),
+                    right: length(20f32),
+                    top: length(20f32),
+                    bottom: length(20f32),
                 },
                 ..Default::default()
             },
@@ -215,8 +165,8 @@ fn block_absolute_resolved_insets__border_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -225,9 +175,9 @@ fn block_absolute_resolved_insets__border_box() {
         .new_leaf(taffy::style::Style {
             position: taffy::style::Position::Absolute,
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Auto,
+                left: taffy::style::LengthPercentageAuto::AUTO,
                 right: auto(),
-                top: taffy::style::LengthPercentageAuto::Auto,
+                top: taffy::style::LengthPercentageAuto::AUTO,
                 bottom: auto(),
             },
             ..Default::default()
@@ -238,20 +188,20 @@ fn block_absolute_resolved_insets__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(15f32),
-                    right: taffy::style::LengthPercentage::Length(15f32),
-                    top: taffy::style::LengthPercentage::Length(15f32),
-                    bottom: taffy::style::LengthPercentage::Length(15f32),
+                    left: length(15f32),
+                    right: length(15f32),
+                    top: length(15f32),
+                    bottom: length(15f32),
                 },
                 border: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(20f32),
-                    right: taffy::style::LengthPercentage::Length(20f32),
-                    top: taffy::style::LengthPercentage::Length(20f32),
-                    bottom: taffy::style::LengthPercentage::Length(20f32),
+                    left: length(20f32),
+                    right: length(20f32),
+                    top: length(20f32),
+                    bottom: length(20f32),
                 },
                 ..Default::default()
             },
@@ -402,9 +352,9 @@ fn block_absolute_resolved_insets__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Auto,
+                left: taffy::style::LengthPercentageAuto::AUTO,
                 right: auto(),
-                top: taffy::style::LengthPercentageAuto::Auto,
+                top: taffy::style::LengthPercentageAuto::AUTO,
                 bottom: auto(),
             },
             ..Default::default()
@@ -414,12 +364,7 @@ fn block_absolute_resolved_insets__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
-            inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(0f32),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Length(0f32),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: length(0f32), right: auto(), top: length(0f32), bottom: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -427,12 +372,7 @@ fn block_absolute_resolved_insets__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
-            inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Percent(1f32),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Percent(1f32),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: percent(1f32), right: auto(), top: percent(1f32), bottom: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -440,12 +380,7 @@ fn block_absolute_resolved_insets__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
-            inset: taffy::geometry::Rect {
-                left: auto(),
-                right: taffy::style::LengthPercentageAuto::Percent(1f32),
-                top: auto(),
-                bottom: taffy::style::LengthPercentageAuto::Percent(1f32),
-            },
+            inset: taffy::geometry::Rect { left: auto(), right: percent(1f32), top: auto(), bottom: percent(1f32) },
             ..Default::default()
         })
         .unwrap();
@@ -453,12 +388,7 @@ fn block_absolute_resolved_insets__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
-            inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(30f32),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Length(30f32),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: length(30f32), right: auto(), top: length(30f32), bottom: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -467,15 +397,10 @@ fn block_absolute_resolved_insets__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(1f32),
-                height: taffy::style::Dimension::Percent(1f32),
+                width: taffy::style::Dimension::from_percent(1f32),
+                height: taffy::style::Dimension::from_percent(1f32),
             },
-            inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(0f32),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Length(0f32),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: length(0f32), right: auto(), top: length(0f32), bottom: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -485,20 +410,20 @@ fn block_absolute_resolved_insets__content_box() {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(15f32),
-                    right: taffy::style::LengthPercentage::Length(15f32),
-                    top: taffy::style::LengthPercentage::Length(15f32),
-                    bottom: taffy::style::LengthPercentage::Length(15f32),
+                    left: length(15f32),
+                    right: length(15f32),
+                    top: length(15f32),
+                    bottom: length(15f32),
                 },
                 border: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(20f32),
-                    right: taffy::style::LengthPercentage::Length(20f32),
-                    top: taffy::style::LengthPercentage::Length(20f32),
-                    bottom: taffy::style::LengthPercentage::Length(20f32),
+                    left: length(20f32),
+                    right: length(20f32),
+                    top: length(20f32),
+                    bottom: length(20f32),
                 },
                 ..Default::default()
             },
@@ -510,9 +435,9 @@ fn block_absolute_resolved_insets__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Auto,
+                left: taffy::style::LengthPercentageAuto::AUTO,
                 right: auto(),
-                top: taffy::style::LengthPercentageAuto::Auto,
+                top: taffy::style::LengthPercentageAuto::AUTO,
                 bottom: auto(),
             },
             ..Default::default()
@@ -522,12 +447,7 @@ fn block_absolute_resolved_insets__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
-            inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(0f32),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Length(0f32),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: length(0f32), right: auto(), top: length(0f32), bottom: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -535,12 +455,7 @@ fn block_absolute_resolved_insets__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
-            inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Percent(1f32),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Percent(1f32),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: percent(1f32), right: auto(), top: percent(1f32), bottom: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -548,12 +463,7 @@ fn block_absolute_resolved_insets__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
-            inset: taffy::geometry::Rect {
-                left: auto(),
-                right: taffy::style::LengthPercentageAuto::Percent(1f32),
-                top: auto(),
-                bottom: taffy::style::LengthPercentageAuto::Percent(1f32),
-            },
+            inset: taffy::geometry::Rect { left: auto(), right: percent(1f32), top: auto(), bottom: percent(1f32) },
             ..Default::default()
         })
         .unwrap();
@@ -561,12 +471,7 @@ fn block_absolute_resolved_insets__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
-            inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(30f32),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Length(30f32),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: length(30f32), right: auto(), top: length(30f32), bottom: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -575,15 +480,10 @@ fn block_absolute_resolved_insets__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Percent(1f32),
-                height: taffy::style::Dimension::Percent(1f32),
+                width: taffy::style::Dimension::from_percent(1f32),
+                height: taffy::style::Dimension::from_percent(1f32),
             },
-            inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Length(0f32),
-                right: auto(),
-                top: taffy::style::LengthPercentageAuto::Length(0f32),
-                bottom: auto(),
-            },
+            inset: taffy::geometry::Rect { left: length(0f32), right: auto(), top: length(0f32), bottom: auto() },
             ..Default::default()
         })
         .unwrap();
@@ -598,20 +498,20 @@ fn block_absolute_resolved_insets__content_box() {
                 },
                 scrollbar_width: 15f32,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(15f32),
-                    right: taffy::style::LengthPercentage::Length(15f32),
-                    top: taffy::style::LengthPercentage::Length(15f32),
-                    bottom: taffy::style::LengthPercentage::Length(15f32),
+                    left: length(15f32),
+                    right: length(15f32),
+                    top: length(15f32),
+                    bottom: length(15f32),
                 },
                 border: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(20f32),
-                    right: taffy::style::LengthPercentage::Length(20f32),
-                    top: taffy::style::LengthPercentage::Length(20f32),
-                    bottom: taffy::style::LengthPercentage::Length(20f32),
+                    left: length(20f32),
+                    right: length(20f32),
+                    top: length(20f32),
+                    bottom: length(20f32),
                 },
                 ..Default::default()
             },
@@ -623,8 +523,8 @@ fn block_absolute_resolved_insets__content_box() {
             display: taffy::style::Display::Block,
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(10f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(10f32),
             },
             ..Default::default()
         })
@@ -634,9 +534,9 @@ fn block_absolute_resolved_insets__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             position: taffy::style::Position::Absolute,
             inset: taffy::geometry::Rect {
-                left: taffy::style::LengthPercentageAuto::Auto,
+                left: taffy::style::LengthPercentageAuto::AUTO,
                 right: auto(),
-                top: taffy::style::LengthPercentageAuto::Auto,
+                top: taffy::style::LengthPercentageAuto::AUTO,
                 bottom: auto(),
             },
             ..Default::default()
@@ -648,20 +548,20 @@ fn block_absolute_resolved_insets__content_box() {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 padding: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(15f32),
-                    right: taffy::style::LengthPercentage::Length(15f32),
-                    top: taffy::style::LengthPercentage::Length(15f32),
-                    bottom: taffy::style::LengthPercentage::Length(15f32),
+                    left: length(15f32),
+                    right: length(15f32),
+                    top: length(15f32),
+                    bottom: length(15f32),
                 },
                 border: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentage::Length(20f32),
-                    right: taffy::style::LengthPercentage::Length(20f32),
-                    top: taffy::style::LengthPercentage::Length(20f32),
-                    bottom: taffy::style::LengthPercentage::Length(20f32),
+                    left: length(20f32),
+                    right: length(20f32),
+                    top: length(20f32),
+                    bottom: length(20f32),
                 },
                 ..Default::default()
             },

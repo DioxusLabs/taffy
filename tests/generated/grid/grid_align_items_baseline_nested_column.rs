@@ -8,8 +8,8 @@ fn grid_align_items_baseline_nested_column__border_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(60f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(60f32),
             },
             ..Default::default()
         })
@@ -18,8 +18,8 @@ fn grid_align_items_baseline_nested_column__border_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(30f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(30f32),
             },
             ..Default::default()
         })
@@ -28,8 +28,8 @@ fn grid_align_items_baseline_nested_column__border_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Grid,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(40f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(40f32),
             },
             ..Default::default()
         })
@@ -39,8 +39,8 @@ fn grid_align_items_baseline_nested_column__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Length(80f32),
+                    width: taffy::style::Dimension::from_length(50f32),
+                    height: taffy::style::Dimension::from_length(80f32),
                 },
                 ..Default::default()
             },
@@ -59,8 +59,8 @@ fn grid_align_items_baseline_nested_column__border_box() {
                 display: taffy::style::Display::Grid,
                 align_items: Some(taffy::style::AlignItems::Baseline),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },
@@ -120,8 +120,8 @@ fn grid_align_items_baseline_nested_column__content_box() {
             display: taffy::style::Display::Grid,
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(60f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(60f32),
             },
             ..Default::default()
         })
@@ -131,8 +131,8 @@ fn grid_align_items_baseline_nested_column__content_box() {
             display: taffy::style::Display::Grid,
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(30f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(30f32),
             },
             ..Default::default()
         })
@@ -142,8 +142,8 @@ fn grid_align_items_baseline_nested_column__content_box() {
             display: taffy::style::Display::Grid,
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(40f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(40f32),
             },
             ..Default::default()
         })
@@ -154,8 +154,8 @@ fn grid_align_items_baseline_nested_column__content_box() {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(50f32),
-                    height: taffy::style::Dimension::Length(80f32),
+                    width: taffy::style::Dimension::from_length(50f32),
+                    height: taffy::style::Dimension::from_length(80f32),
                 },
                 ..Default::default()
             },
@@ -179,8 +179,8 @@ fn grid_align_items_baseline_nested_column__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 align_items: Some(taffy::style::AlignItems::Baseline),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(100f32),
-                    height: taffy::style::Dimension::Length(100f32),
+                    width: taffy::style::Dimension::from_length(100f32),
+                    height: taffy::style::Dimension::from_length(100f32),
                 },
                 ..Default::default()
             },

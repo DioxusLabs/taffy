@@ -7,8 +7,8 @@ fn blockgrid_grid_in_block__border_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             ..Default::default()
         })
@@ -23,8 +23,8 @@ fn blockgrid_grid_in_block__border_box() {
         .new_leaf(taffy::style::Style {
             display: taffy::style::Display::Block,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -33,7 +33,7 @@ fn blockgrid_grid_in_block__border_box() {
         .new_with_children(
             taffy::style::Style {
                 display: taffy::style::Display::Block,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1],
@@ -79,8 +79,8 @@ fn blockgrid_grid_in_block__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             ..Default::default()
         })
@@ -100,8 +100,8 @@ fn blockgrid_grid_in_block__content_box() {
             display: taffy::style::Display::Block,
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(20f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(20f32),
             },
             ..Default::default()
         })
@@ -111,7 +111,7 @@ fn blockgrid_grid_in_block__content_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Block,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(200f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(200f32), height: auto() },
                 ..Default::default()
             },
             &[node0, node1],

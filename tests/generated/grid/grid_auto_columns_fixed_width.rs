@@ -27,8 +27,8 @@ fn grid_auto_columns_fixed_width__border_box() {
                 grid_template_rows: vec![length(40f32), auto(), length(40f32), auto()],
                 grid_template_columns: vec![length(40f32), auto(), length(40f32), auto()],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },
@@ -208,8 +208,8 @@ fn grid_auto_columns_fixed_width__content_box() {
                 grid_template_rows: vec![length(40f32), auto(), length(40f32), auto()],
                 grid_template_columns: vec![length(40f32), auto(), length(40f32), auto()],
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(200f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(200f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },

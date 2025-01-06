@@ -9,10 +9,10 @@ fn grid_max_content_single_item_margin_auto__border_box() {
         .new_leaf_with_context(
             taffy::style::Style {
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Auto,
-                    right: taffy::style::LengthPercentageAuto::Auto,
-                    top: taffy::style::LengthPercentageAuto::Auto,
-                    bottom: taffy::style::LengthPercentageAuto::Auto,
+                    left: taffy::style::LengthPercentageAuto::AUTO,
+                    right: taffy::style::LengthPercentageAuto::AUTO,
+                    top: taffy::style::LengthPercentageAuto::AUTO,
+                    bottom: taffy::style::LengthPercentageAuto::AUTO,
                 },
                 ..Default::default()
             },
@@ -117,10 +117,10 @@ fn grid_max_content_single_item_margin_auto__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 margin: taffy::geometry::Rect {
-                    left: taffy::style::LengthPercentageAuto::Auto,
-                    right: taffy::style::LengthPercentageAuto::Auto,
-                    top: taffy::style::LengthPercentageAuto::Auto,
-                    bottom: taffy::style::LengthPercentageAuto::Auto,
+                    left: taffy::style::LengthPercentageAuto::AUTO,
+                    right: taffy::style::LengthPercentageAuto::AUTO,
+                    top: taffy::style::LengthPercentageAuto::AUTO,
+                    bottom: taffy::style::LengthPercentageAuto::AUTO,
                 },
                 ..Default::default()
             },

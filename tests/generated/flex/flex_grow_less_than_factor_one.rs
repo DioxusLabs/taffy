@@ -8,7 +8,7 @@ fn flex_grow_less_than_factor_one__border_box() {
         .new_leaf(taffy::style::Style {
             flex_grow: 0.2f32,
             flex_shrink: 0f32,
-            flex_basis: taffy::style::Dimension::Length(40f32),
+            flex_basis: taffy::style::Dimension::from_length(40f32),
             ..Default::default()
         })
         .unwrap();
@@ -20,8 +20,8 @@ fn flex_grow_less_than_factor_one__border_box() {
         .new_with_children(
             taffy::style::Style {
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(500f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(500f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },
@@ -69,7 +69,7 @@ fn flex_grow_less_than_factor_one__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_grow: 0.2f32,
             flex_shrink: 0f32,
-            flex_basis: taffy::style::Dimension::Length(40f32),
+            flex_basis: taffy::style::Dimension::from_length(40f32),
             ..Default::default()
         })
         .unwrap();
@@ -94,8 +94,8 @@ fn flex_grow_less_than_factor_one__content_box() {
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(500f32),
-                    height: taffy::style::Dimension::Length(200f32),
+                    width: taffy::style::Dimension::from_length(500f32),
+                    height: taffy::style::Dimension::from_length(200f32),
                 },
                 ..Default::default()
             },

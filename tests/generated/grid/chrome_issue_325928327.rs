@@ -6,7 +6,7 @@ fn chrome_issue_325928327__border_box() {
     let mut taffy = crate::new_test_tree();
     let node00 = taffy
         .new_leaf(taffy::style::Style {
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(1f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(1f32) },
             aspect_ratio: Some(1f32),
             ..Default::default()
         })
@@ -14,7 +14,7 @@ fn chrome_issue_325928327__border_box() {
     let node0 = taffy
         .new_with_children(
             taffy::style::Style {
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(1f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(1f32) },
                 ..Default::default()
             },
             &[node00],
@@ -26,8 +26,8 @@ fn chrome_issue_325928327__border_box() {
                 display: taffy::style::Display::Grid,
                 justify_items: Some(taffy::style::JustifyItems::Center),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(1f32),
-                    height: taffy::style::Dimension::Length(40f32),
+                    width: taffy::style::Dimension::from_percent(1f32),
+                    height: taffy::style::Dimension::from_length(40f32),
                 },
                 ..Default::default()
             },
@@ -67,7 +67,7 @@ fn chrome_issue_325928327__content_box() {
     let node00 = taffy
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
-            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(1f32) },
+            size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(1f32) },
             aspect_ratio: Some(1f32),
             ..Default::default()
         })
@@ -76,7 +76,7 @@ fn chrome_issue_325928327__content_box() {
         .new_with_children(
             taffy::style::Style {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
-                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Percent(1f32) },
+                size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_percent(1f32) },
                 ..Default::default()
             },
             &[node00],
@@ -89,8 +89,8 @@ fn chrome_issue_325928327__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 justify_items: Some(taffy::style::JustifyItems::Center),
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Percent(1f32),
-                    height: taffy::style::Dimension::Length(40f32),
+                    width: taffy::style::Dimension::from_percent(1f32),
+                    height: taffy::style::Dimension::from_length(40f32),
                 },
                 ..Default::default()
             },

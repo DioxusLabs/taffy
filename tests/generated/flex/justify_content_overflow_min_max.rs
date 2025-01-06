@@ -8,8 +8,8 @@ fn justify_content_overflow_min_max__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             ..Default::default()
         })
@@ -18,8 +18,8 @@ fn justify_content_overflow_min_max__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             ..Default::default()
         })
@@ -28,8 +28,8 @@ fn justify_content_overflow_min_max__border_box() {
         .new_leaf(taffy::style::Style {
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             ..Default::default()
         })
@@ -39,8 +39,8 @@ fn justify_content_overflow_min_max__border_box() {
             taffy::style::Style {
                 flex_direction: taffy::style::FlexDirection::Column,
                 justify_content: Some(taffy::style::JustifyContent::Center),
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
-                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(110f32) },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
+                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(110f32) },
                 ..Default::default()
             },
             &[node0, node1, node2],
@@ -87,8 +87,8 @@ fn justify_content_overflow_min_max__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             ..Default::default()
         })
@@ -98,8 +98,8 @@ fn justify_content_overflow_min_max__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             ..Default::default()
         })
@@ -109,8 +109,8 @@ fn justify_content_overflow_min_max__content_box() {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             flex_shrink: 0f32,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(50f32),
-                height: taffy::style::Dimension::Length(50f32),
+                width: taffy::style::Dimension::from_length(50f32),
+                height: taffy::style::Dimension::from_length(50f32),
             },
             ..Default::default()
         })
@@ -121,8 +121,8 @@ fn justify_content_overflow_min_max__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
                 justify_content: Some(taffy::style::JustifyContent::Center),
-                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(100f32) },
-                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::Length(110f32) },
+                min_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(100f32) },
+                max_size: taffy::geometry::Size { width: auto(), height: taffy::style::Dimension::from_length(110f32) },
                 ..Default::default()
             },
             &[node0, node1, node2],

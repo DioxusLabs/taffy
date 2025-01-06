@@ -7,8 +7,8 @@ fn bevy_issue_16304__border_box() {
     let node000 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(40f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(40f32),
             },
             ..Default::default()
         })
@@ -16,8 +16,8 @@ fn bevy_issue_16304__border_box() {
     let node001 = taffy
         .new_leaf(taffy::style::Style {
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(40f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(40f32),
             },
             ..Default::default()
         })
@@ -27,11 +27,8 @@ fn bevy_issue_16304__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                gap: taffy::geometry::Size {
-                    width: taffy::style::LengthPercentage::Length(10f32),
-                    height: taffy::style::LengthPercentage::Length(10f32),
-                },
-                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+                gap: taffy::geometry::Size { width: length(10f32), height: length(10f32) },
+                min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },
             &[node000, node001],
@@ -42,7 +39,7 @@ fn bevy_issue_16304__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Flex,
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },
             &[node00],
@@ -97,8 +94,8 @@ fn bevy_issue_16304__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(40f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(40f32),
             },
             ..Default::default()
         })
@@ -107,8 +104,8 @@ fn bevy_issue_16304__content_box() {
         .new_leaf(taffy::style::Style {
             box_sizing: taffy::style::BoxSizing::ContentBox,
             size: taffy::geometry::Size {
-                width: taffy::style::Dimension::Length(20f32),
-                height: taffy::style::Dimension::Length(40f32),
+                width: taffy::style::Dimension::from_length(20f32),
+                height: taffy::style::Dimension::from_length(40f32),
             },
             ..Default::default()
         })
@@ -119,11 +116,8 @@ fn bevy_issue_16304__content_box() {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_wrap: taffy::style::FlexWrap::Wrap,
-                gap: taffy::geometry::Size {
-                    width: taffy::style::LengthPercentage::Length(10f32),
-                    height: taffy::style::LengthPercentage::Length(10f32),
-                },
-                min_size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+                gap: taffy::geometry::Size { width: length(10f32), height: length(10f32) },
+                min_size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },
             &[node000, node001],
@@ -135,7 +129,7 @@ fn bevy_issue_16304__content_box() {
                 display: taffy::style::Display::Flex,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 flex_direction: taffy::style::FlexDirection::Column,
-                size: taffy::geometry::Size { width: taffy::style::Dimension::Length(50f32), height: auto() },
+                size: taffy::geometry::Size { width: taffy::style::Dimension::from_length(50f32), height: auto() },
                 ..Default::default()
             },
             &[node00],

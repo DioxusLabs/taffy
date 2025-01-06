@@ -13,8 +13,8 @@ fn leaf_overflow_scrollbars_affect_available_space_x_axis__border_box() {
                 },
                 scrollbar_width: 15f32,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(45f32),
-                    height: taffy::style::Dimension::Length(45f32),
+                    width: taffy::style::Dimension::from_length(45f32),
+                    height: taffy::style::Dimension::from_length(45f32),
                 },
                 ..Default::default()
             },
@@ -67,8 +67,8 @@ fn leaf_overflow_scrollbars_affect_available_space_x_axis__content_box() {
                 },
                 scrollbar_width: 15f32,
                 size: taffy::geometry::Size {
-                    width: taffy::style::Dimension::Length(45f32),
-                    height: taffy::style::Dimension::Length(45f32),
+                    width: taffy::style::Dimension::from_length(45f32),
+                    height: taffy::style::Dimension::from_length(45f32),
                 },
                 ..Default::default()
             },
