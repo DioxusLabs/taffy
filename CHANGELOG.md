@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.3
+
+### Fixed
+
+- Make `TaffyTree::detailed_layout_info` take `&self` rather than `&mut self` (#779)
+
 ## 0.7.2
 
 ### Added
