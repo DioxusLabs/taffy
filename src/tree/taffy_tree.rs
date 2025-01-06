@@ -822,7 +822,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
     /// Currently this is only implemented for CSS Grid containers where it contains
     /// the computed size of each grid track and the computed placement of each grid item
     #[cfg(feature = "detailed_layout_info")]
-    pub fn detailed_layout_info(&mut self, node_id: NodeId) -> &DetailedLayoutInfo {
+    pub fn detailed_layout_info(&self, node_id: NodeId) -> &DetailedLayoutInfo {
         &self.nodes[node_id.into()].detailed_layout_info
     }
 
