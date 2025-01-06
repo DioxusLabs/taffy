@@ -14,6 +14,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
     style: &impl GridContainerStyle,
     template: &[TrackSizingFunction],
     inner_container_size: Size<Option<f32>>,
+    resolve_calc_value: impl Fn(u64, f32) -> f32,
     axis: AbsoluteAxis,
 ) -> u16 {
     // If template contains no tracks, then there are trivially zero explicit tracks
@@ -88,9 +89,10 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
     // Otherwise, if the grid container has a definite min size in the relevant axis:
     //   - then the number of repetitions is the smallest possible positive integer that fulfills that minimum requirement
     // Otherwise, the specified track list repeats only once.
-    let style_size_is_definite = style.size().get_abs(axis).maybe_resolve(inner_container_size.get_abs(axis)).is_some();
+    let style_size_is_definite =
+        style.size().get_abs(axis).maybe_resolve(inner_container_size.get_abs(axis), &resolve_calc_value).is_some();
     let style_max_size_is_definite =
-        style.max_size().get_abs(axis).maybe_resolve(inner_container_size.get_abs(axis)).is_some();
+        style.max_size().get_abs(axis).maybe_resolve(inner_container_size.get_abs(axis), &resolve_calc_value).is_some();
     let size_is_maximum = style_size_is_definite | style_max_size_is_definite;
 
     // Determine the number of repetitions
@@ -101,9 +103,13 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
 
             /// ...treating each track as its max track sizing function if that is definite or as its minimum track sizing function
             /// otherwise, flooring the max track sizing function by the min track sizing function if both are definite
-            fn track_definite_value(sizing_function: &NonRepeatedTrackSizingFunction, parent_size: Option<f32>) -> f32 {
-                let max_size = sizing_function.max.definite_value(parent_size);
-                let min_size = sizing_function.min.definite_value(parent_size);
+            fn track_definite_value(
+                sizing_function: &NonRepeatedTrackSizingFunction,
+                parent_size: Option<f32>,
+                calc_resolver: impl Fn(u64, f32) -> f32,
+            ) -> f32 {
+                let max_size = sizing_function.max.definite_value(parent_size, &calc_resolver);
+                let min_size = sizing_function.min.definite_value(parent_size, &calc_resolver);
                 max_size.map(|max| max.maybe_min(min_size)).or(min_size).unwrap()
             }
 
@@ -113,12 +119,14 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
                     use GridTrackRepetition::{AutoFill, AutoFit, Count};
                     match track_def {
                         TrackSizingFunction::Single(sizing_function) => {
-                            track_definite_value(sizing_function, parent_size)
+                            track_definite_value(sizing_function, parent_size, &resolve_calc_value)
                         }
                         TrackSizingFunction::Repeat(Count(count), repeated_tracks) => {
                             let sum = repeated_tracks
                                 .iter()
-                                .map(|sizing_function| track_definite_value(sizing_function, parent_size))
+                                .map(|sizing_function| {
+                                    track_definite_value(sizing_function, parent_size, &resolve_calc_value)
+                                })
                                 .sum::<f32>();
                             sum * (*count as f32)
                         }
@@ -126,12 +134,12 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
                     }
                 })
                 .sum();
-            let gap_size = style.gap().get_abs(axis).resolve_or_zero(Some(inner_container_size));
+            let gap_size = style.gap().get_abs(axis).resolve_or_zero(Some(inner_container_size), &resolve_calc_value);
 
             // Compute the amount of space that a single repetition of the repeated track list takes
             let per_repetition_track_used_space: f32 = repetition_definition
                 .iter()
-                .map(|sizing_function| track_definite_value(sizing_function, parent_size))
+                .map(|sizing_function| track_definite_value(sizing_function, parent_size, &resolve_calc_value))
                 .sum::<f32>();
 
             // We special case the first repetition here because the number of gaps in the first repetition
@@ -295,12 +303,14 @@ mod test {
             &grid_style,
             &grid_style.grid_template_columns,
             preferred_size,
+            |_, _| 42.42,
             AbsoluteAxis::Horizontal,
         );
         let height = compute_explicit_grid_size_in_axis(
             &grid_style,
             &grid_style.grid_template_rows,
             preferred_size,
+            |_, _| 42.42,
             AbsoluteAxis::Vertical,
         );
         assert_eq!(width, 2);
@@ -322,12 +332,14 @@ mod test {
             &grid_style,
             &grid_style.grid_template_columns,
             preferred_size,
+            |_, _| 42.42,
             AbsoluteAxis::Horizontal,
         );
         let height = compute_explicit_grid_size_in_axis(
             &grid_style,
             &grid_style.grid_template_rows,
             preferred_size,
+            |_, _| 42.42,
             AbsoluteAxis::Vertical,
         );
         assert_eq!(width, 3);
@@ -349,12 +361,14 @@ mod test {
             &grid_style,
             &grid_style.grid_template_columns,
             preferred_size,
+            |_, _| 42.42,
             AbsoluteAxis::Horizontal,
         );
         let height = compute_explicit_grid_size_in_axis(
             &grid_style,
             &grid_style.grid_template_rows,
             preferred_size,
+            |_, _| 42.42,
             AbsoluteAxis::Vertical,
         );
         assert_eq!(width, 3);
@@ -376,12 +390,14 @@ mod test {
             &grid_style,
             &grid_style.grid_template_columns,
             inner_container_size,
+            |_, _| 42.42,
             AbsoluteAxis::Horizontal,
         );
         let height = compute_explicit_grid_size_in_axis(
             &grid_style,
             &grid_style.grid_template_rows,
             inner_container_size,
+            |_, _| 42.42,
             AbsoluteAxis::Vertical,
         );
         assert_eq!(width, 3);
@@ -403,12 +419,14 @@ mod test {
             &grid_style,
             &grid_style.grid_template_columns,
             inner_container_size,
+            |_, _| 42.42,
             AbsoluteAxis::Horizontal,
         );
         let height = compute_explicit_grid_size_in_axis(
             &grid_style,
             &grid_style.grid_template_rows,
             inner_container_size,
+            |_, _| 42.42,
             AbsoluteAxis::Vertical,
         );
         assert_eq!(width, 4);
@@ -430,12 +448,14 @@ mod test {
             &grid_style,
             &grid_style.grid_template_columns,
             preferred_size,
+            |_, _| 42.42,
             AbsoluteAxis::Horizontal,
         );
         let height = compute_explicit_grid_size_in_axis(
             &grid_style,
             &grid_style.grid_template_rows,
             preferred_size,
+            |_, _| 42.42,
             AbsoluteAxis::Vertical,
         );
         assert_eq!(width, 4); // 2 repetitions * 2 repeated tracks = 4 tracks in total
@@ -458,12 +478,14 @@ mod test {
             &grid_style,
             &grid_style.grid_template_columns,
             preferred_size,
+            |_, _| 42.42,
             AbsoluteAxis::Horizontal,
         );
         let height = compute_explicit_grid_size_in_axis(
             &grid_style,
             &grid_style.grid_template_rows,
             preferred_size,
+            |_, _| 42.42,
             AbsoluteAxis::Vertical,
         );
         assert_eq!(width, 2); // 2 tracks + 1 gap
@@ -485,12 +507,14 @@ mod test {
             &grid_style,
             &grid_style.grid_template_columns,
             preferred_size,
+            |_, _| 42.42,
             AbsoluteAxis::Horizontal,
         );
         let height = compute_explicit_grid_size_in_axis(
             &grid_style,
             &grid_style.grid_template_rows,
             preferred_size,
+            |_, _| 42.42,
             AbsoluteAxis::Vertical,
         );
         assert_eq!(width, 3);
@@ -513,12 +537,14 @@ mod test {
             &grid_style,
             &grid_style.grid_template_columns,
             preferred_size,
+            |_, _| 42.42,
             AbsoluteAxis::Horizontal,
         );
         let height = compute_explicit_grid_size_in_axis(
             &grid_style,
             &grid_style.grid_template_rows,
             preferred_size,
+            |_, _| 42.42,
             AbsoluteAxis::Vertical,
         );
         assert_eq!(width, 3); // 3 tracks + 2 gaps
@@ -541,12 +567,14 @@ mod test {
             &grid_style,
             &grid_style.grid_template_columns,
             inner_container_size,
+            |_, _| 42.42,
             AbsoluteAxis::Horizontal,
         );
         let height = compute_explicit_grid_size_in_axis(
             &grid_style,
             &grid_style.grid_template_rows,
             inner_container_size,
+            |_, _| 42.42,
             AbsoluteAxis::Vertical,
         );
         assert_eq!(width, 5); // 40px horizontal padding

@@ -63,7 +63,6 @@
 #![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(unsafe_code)]
-#![forbid(unsafe_code)]
 #![warn(missing_docs)]
 #![warn(clippy::missing_docs_in_private_items)]
 
