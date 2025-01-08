@@ -4,6 +4,26 @@ use crate::style_helpers::{
     FromFr, FromLength, FromPercent, TaffyAuto, TaffyFitContent, TaffyMaxContent, TaffyMinContent, TaffyZero,
 };
 
+// Note: these two functions are copied directly from the std (core) library. But by duplicating them
+// here we can reduce MSRV from 1.83 all the way down to 1.65 while retaining const constructors.
+
+/// Raw transmutation from `f32` to `u32`.
+const fn to_bits(val: f32) -> u32 {
+    // SAFETY: `u32` is a plain old datatype so we can always transmute to it.
+    #[allow(unsafe_code)]
+    unsafe {
+        core::mem::transmute(val)
+    }
+}
+/// Raw transmutation from `u32` to `f32`.
+const fn from_bits(v: u32) -> f32 {
+    // SAFETY: `u32` is a plain old datatype so we can always transmute from it.
+    #[allow(unsafe_code)]
+    unsafe {
+        core::mem::transmute(v)
+    }
+}
+
 /// A representation of a length as a compact 64-bit tagged pointer
 #[derive(Copy, Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -46,7 +66,7 @@ impl CompactLength {
     /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
     #[inline(always)]
     pub const fn length(val: f32) -> Self {
-        Self(((val.to_bits() as u64) << 32) | Self::LENGTH_TAG)
+        Self(((to_bits(val) as u64) << 32) | Self::LENGTH_TAG)
     }
 
     /// A percentage length relative to the size of the containing block.
@@ -54,7 +74,7 @@ impl CompactLength {
     /// **NOTE: percentages are represented as a f32 value in the range [0.0, 1.0] NOT the range [0.0, 100.0]**
     #[inline(always)]
     pub const fn percent(val: f32) -> Self {
-        Self(((val.to_bits() as u64) << 32) | Self::PERCENT_TAG)
+        Self(((to_bits(val) as u64) << 32) | Self::PERCENT_TAG)
     }
 
     /// A `calc()` value. The value passed here is treated as an opaque handle to
@@ -80,7 +100,7 @@ impl CompactLength {
     /// Spec: <https://www.w3.org/TR/css3-grid-layout/#fr-unit>
     #[inline(always)]
     pub const fn fr(val: f32) -> Self {
-        Self(((val.to_bits() as u64) << 32) | Self::FR_TAG)
+        Self(((to_bits(val) as u64) << 32) | Self::FR_TAG)
     }
 
     /// The size should be the "min-content" size.
@@ -108,7 +128,7 @@ impl CompactLength {
     /// by the min-content and max-content sizes.
     #[inline(always)]
     pub const fn fit_content_px(limit: f32) -> Self {
-        Self(((limit.to_bits() as u64) << 32) | Self::FIT_CONTENT_PX_TAG)
+        Self(((to_bits(limit) as u64) << 32) | Self::FIT_CONTENT_PX_TAG)
     }
 
     /// The size should be computed according to the "fit content" formula:
@@ -122,7 +142,7 @@ impl CompactLength {
     /// by the min-content and max-content sizes.
     #[inline(always)]
     pub const fn fit_content_percent(limit: f32) -> Self {
-        Self(((limit.to_bits() as u64) << 32) | Self::FIT_CONTENT_PERCENT_TAG)
+        Self(((to_bits(limit) as u64) << 32) | Self::FIT_CONTENT_PERCENT_TAG)
     }
 
     /// Get the primary tag
@@ -135,7 +155,7 @@ impl CompactLength {
     /// (e.g. the pixel value for a LENGTH variant)
     #[inline(always)]
     pub const fn value(self) -> f32 {
-        f32::from_bits((self.0 >> 32) as u32)
+        from_bits((self.0 >> 32) as u32)
     }
 
     /// Get the numeric value associated with the `CompactLength`
@@ -154,7 +174,7 @@ impl CompactLength {
     /// Returns true if the value is 0 px
     #[inline(always)]
     pub const fn is_zero(self) -> bool {
-        matches!(self, Self::ZERO)
+        self.0 == Self::ZERO.0
     }
 
     /// Returns true if the value is a length or percentage value
