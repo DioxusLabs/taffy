@@ -567,6 +567,17 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
         }
     });
 
+    // Set detailed grid information
+    #[cfg(feature = "detailed_layout_info")]
+    tree.set_detailed_grid_info(
+        node,
+        DetailedGridInfo {
+            rows: DetailedGridTracksInfo::from_grid_tracks_and_track_count(final_row_counts, rows),
+            columns: DetailedGridTracksInfo::from_grid_tracks_and_track_count(final_col_counts, columns),
+            items: items.iter().map(DetailedGridItemsInfo::from_grid_item).collect(),
+        },
+    );
+
     // If there are not items then return just the container size (no baseline)
     if items.is_empty() {
         return LayoutOutput::from_outer_size(container_border_box);
@@ -594,16 +605,6 @@ pub fn compute_grid_layout(tree: &mut impl LayoutGridContainer, node: NodeId, in
 
         item.y_position + item.baseline.unwrap_or(item.height)
     };
-
-    #[cfg(feature = "detailed_layout_info")]
-    tree.set_detailed_grid_info(
-        node,
-        DetailedGridInfo {
-            rows: DetailedGridTracksInfo::from_grid_tracks_and_track_count(final_row_counts, rows),
-            columns: DetailedGridTracksInfo::from_grid_tracks_and_track_count(final_col_counts, columns),
-            items: items.iter().map(DetailedGridItemsInfo::from_grid_item).collect(),
-        },
-    );
 
     LayoutOutput::from_sizes_and_baselines(
         container_border_box,
