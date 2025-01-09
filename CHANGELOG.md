@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.4
+
+### Fixed
+
+- Fix detailed grid info for empty grid (#782)
+
 ## 0.7.3
 
 ### Fixed
