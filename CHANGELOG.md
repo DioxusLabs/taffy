@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.5
+
+### Fixed
+
+- Grid: only stretch auto tracks if content-alignment is stretch (#783)
+
 ## 0.7.4
 
 ### Fixed
