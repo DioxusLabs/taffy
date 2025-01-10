@@ -880,7 +880,7 @@ fn resolve_intrinsic_track_sizes<Tree: LayoutPartialTree>(
             // 5. For intrinsic maximums: Next increase the growth limit of tracks with an intrinsic max track sizing function by
             // distributing extra space as needed to account for these items' min-content contributions.
             let has_intrinsic_max_track_sizing_function =
-                move |track: &GridTrack| track.max_track_sizing_function.has_definite_value(axis_inner_node_size);
+                move |track: &GridTrack| !track.max_track_sizing_function.has_definite_value(axis_inner_node_size);
             for item in batch.iter_mut() {
                 let axis_min_content_size = item_sizer.min_content_contribution(item);
                 let space = axis_min_content_size;
