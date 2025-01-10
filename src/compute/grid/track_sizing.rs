@@ -271,6 +271,7 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
     axis: AbstractAxis,
     axis_min_size: Option<f32>,
     axis_max_size: Option<f32>,
+    axis_alignment: AlignContent,
     other_axis_alignment: AlignContent,
     available_grid_space: Size<AvailableSpace>,
     inner_node_size: Size<Option<f32>>,
@@ -357,7 +358,9 @@ pub(super) fn track_sizing_algorithm<Tree: LayoutPartialTree>(
 
     // 11.8. Stretch auto Tracks
     // This step expands tracks that have an auto max track sizing function by dividing any remaining positive, definite free space equally amongst them.
-    stretch_auto_tracks(axis_tracks, axis_min_size, axis_available_space_for_expansion);
+    if axis_alignment == AlignContent::Stretch {
+        stretch_auto_tracks(axis_tracks, axis_min_size, axis_available_space_for_expansion);
+    }
 }
 
 /// Whether it is a minimum or maximum size's space being distributed
