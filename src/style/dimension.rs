@@ -139,7 +139,7 @@ impl LengthPercentageAuto {
     ///   - Some(resolved) using the provided context for Percent variants
     ///   - None for Auto variants
     #[inline(always)]
-    pub fn resolve_to_option(self, context: f32, calc_resolver: impl Fn(u64, f32) -> f32) -> Option<f32> {
+    pub fn resolve_to_option(self, context: f32, calc_resolver: impl Fn(*const (), f32) -> f32) -> Option<f32> {
         match self.0.tag() {
             CompactLength::LENGTH_TAG => Some(self.0.value()),
             CompactLength::PERCENT_TAG => Some(context * self.0.value()),
@@ -249,7 +249,7 @@ impl Dimension {
     }
 
     /// Get the raw `CompactLength` tag
-    pub fn tag(self) -> u64 {
+    pub fn tag(self) -> usize {
         self.0.tag()
     }
 
