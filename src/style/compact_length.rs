@@ -6,7 +6,8 @@ use crate::style_helpers::{
 };
 
 /// Note: these two functions are copied directly from the std (core) library. But by duplicating them
-/// here we can reduce MSRV from 1.83 all the way down to 1.65 while retaining const constructors.
+/// here we can reduce MSRV from 1.84 all the way down to 1.65 while retaining const constructors and
+/// strict pointer provenance
 mod compat {
     #![allow(unsafe_code)]
 
@@ -20,6 +21,20 @@ mod compat {
         // SAFETY: `u32` is a plain old datatype so we can always transmute from it.
         unsafe { core::mem::transmute(v) }
     }
+
+    /// Tag a pointer preserving provenance (requires Rust 1.84)
+    #[inline(always)]
+    #[cfg(all(target_pointer_width = "64", feature = "strict_provenance"))]
+    pub fn tag_ptr(ptr: *const (), tag: usize) -> *const () {
+        ptr.map_addr(|a| a | tag)
+    }
+
+    /// Tag a pointer exposing provenance (works back to Rust 1.0)
+    #[inline(always)]
+    #[cfg(all(target_pointer_width = "64", not(feature = "strict_provenance")))]
+    pub fn tag_ptr(ptr: *const (), tag: usize) -> *const () {
+        (ptr as usize | tag) as *const ()
+    }
 }
 
 #[cfg(not(any(target_pointer_width = "32", target_pointer_width = "64")))]
@@ -28,7 +43,7 @@ std::compile_error!("Taffy only supports targets with a pointer width of 32 or 6
 /// CompactLengthInner implementation for 64 bit platforms
 #[cfg(target_pointer_width = "64")]
 mod inner {
-    use super::compat::{f32_from_bits, f32_to_bits};
+    use super::compat::{f32_from_bits, f32_to_bits, tag_ptr};
 
     /// The low byte (8 bits)
     const TAG_MASK: usize = 0b11111111;
@@ -50,7 +65,7 @@ mod inner {
         /// Construct a `CompactLengthInner` from a tag and pointer
         #[inline(always)]
         pub(super) fn from_ptr(ptr: *const (), tag: usize) -> Self {
-            let tagged_ptr = (ptr as usize | tag) as *const ();
+            let tagged_ptr = tag_ptr(ptr, tag);
             Self { tagged_ptr }
         }
 
