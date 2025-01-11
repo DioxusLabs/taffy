@@ -28,9 +28,6 @@ pub(in super::super) struct GridItem {
     /// (in origin-zero coordinates)
     pub column: Line<OriginZeroLine>,
 
-    /// Is it a compressible replaced element?
-    /// https://drafts.csswg.org/css-sizing-3/#min-content-zero
-    pub is_compressible_replaced: bool,
     /// The item's overflow style
     pub overflow: Point<Overflow>,
     /// The item's box_sizing style
@@ -107,7 +104,6 @@ impl GridItem {
             source_order,
             row: row_span,
             column: col_span,
-            is_compressible_replaced: style.is_compressible_replaced(),
             overflow: style.overflow(),
             box_sizing: style.box_sizing(),
             size: style.size(),
@@ -508,20 +504,7 @@ impl GridItem {
 
                 // Otherwise, the automatic minimum size is zero, as usual.
                 if use_content_based_minimum {
-                    let mut minimum_contribution =
-                        self.min_content_contribution_cached(axis, tree, known_dimensions, inner_node_size);
-
-                    // If the item is a compressible replaced element, and has a definite preferred size or maximum size in the
-                    // relevant axis, the size suggestion is capped by those sizes; for this purpose, any indefinite percentages\
-                    // in these sizes are resolved against zero (and considered definite).
-                    if self.is_compressible_replaced {
-                        let size = self.size.get(axis).maybe_resolve(Some(0.0), |val, basis| tree.calc(val, basis));
-                        let max_size =
-                            self.max_size.get(axis).maybe_resolve(Some(0.0), |val, basis| tree.calc(val, basis));
-                        minimum_contribution = minimum_contribution.maybe_min(size).maybe_min(max_size);
-                    }
-
-                    minimum_contribution
+                    self.min_content_contribution_cached(axis, tree, known_dimensions, inner_node_size)
                 } else {
                     0.0
                 }
