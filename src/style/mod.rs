@@ -52,6 +52,12 @@ pub trait CoreStyle {
     fn is_block(&self) -> bool {
         false
     }
+    /// Is it a compressible replaced element?
+    /// https://drafts.csswg.org/css-sizing-3/#min-content-zero
+    #[inline(always)]
+    fn is_compressible_replaced(&self) -> bool {
+        false
+    }
     /// Which box do size styles apply to
     #[inline(always)]
     fn box_sizing(&self) -> BoxSizing {
@@ -336,6 +342,9 @@ pub struct Style {
     /// Whether a child is display:table or not. This affects children of block layouts.
     /// This should really be part of `Display`, but it is currently seperate because table layout isn't implemented
     pub item_is_table: bool,
+    /// Is it a replaced element like an image or form field?
+    /// https://drafts.csswg.org/css-sizing-3/#min-content-zero
+    pub item_is_replaced: bool,
     /// Should size styles apply to the content box or the border box of the node
     pub box_sizing: BoxSizing,
 
@@ -463,6 +472,7 @@ impl Style {
     pub const DEFAULT: Style = Style {
         display: Display::DEFAULT,
         item_is_table: false,
+        item_is_replaced: false,
         box_sizing: BoxSizing::BorderBox,
         overflow: Point { x: Overflow::Visible, y: Overflow::Visible },
         scrollbar_width: 0.0,
@@ -542,6 +552,10 @@ impl CoreStyle for Style {
         matches!(self.display, Display::Block)
     }
     #[inline(always)]
+    fn is_compressible_replaced(&self) -> bool {
+        self.item_is_replaced
+    }
+    #[inline(always)]
     fn box_sizing(&self) -> BoxSizing {
         self.box_sizing
     }
@@ -599,6 +613,10 @@ impl<T: CoreStyle> CoreStyle for &'_ T {
     #[inline(always)]
     fn is_block(&self) -> bool {
         (*self).is_block()
+    }
+    #[inline(always)]
+    fn is_compressible_replaced(&self) -> bool {
+        (*self).is_compressible_replaced()
     }
     #[inline(always)]
     fn box_sizing(&self) -> BoxSizing {
@@ -937,6 +955,7 @@ mod tests {
         let old_defaults = Style {
             display: Default::default(),
             item_is_table: false,
+            item_is_replaced: false,
             box_sizing: Default::default(),
             overflow: Default::default(),
             scrollbar_width: 0.0,
