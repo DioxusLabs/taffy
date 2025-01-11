@@ -382,12 +382,12 @@ impl TaffyMaxContent for MaxTrackSizingFunction {
 }
 impl FromLength for MaxTrackSizingFunction {
     fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self(CompactLength::from_length(value))
+        Self::length(value.into())
     }
 }
 impl FromPercent for MaxTrackSizingFunction {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Self(CompactLength::from_percent(percent))
+    fn from_percent<Input: Into<f32> + Copy>(value: Input) -> Self {
+        Self::percent(value.into())
     }
 }
 impl TaffyFitContent for MaxTrackSizingFunction {
@@ -396,8 +396,8 @@ impl TaffyFitContent for MaxTrackSizingFunction {
     }
 }
 impl FromFr for MaxTrackSizingFunction {
-    fn from_fr<Input: Into<f32> + Copy>(fr: Input) -> Self {
-        Self(CompactLength::from_fr(fr))
+    fn from_fr<Input: Into<f32> + Copy>(value: Input) -> Self {
+        Self::fr(value.into())
     }
 }
 impl From<LengthPercentage> for MaxTrackSizingFunction {
@@ -415,19 +415,105 @@ impl From<Dimension> for MaxTrackSizingFunction {
         Self(input.0)
     }
 }
+impl From<MinTrackSizingFunction> for MaxTrackSizingFunction {
+    fn from(input: MinTrackSizingFunction) -> Self {
+        Self(input.0)
+    }
+}
 
 impl MaxTrackSizingFunction {
-    /// Get the underlying `CompactLength` representation of the value
-    pub fn into_raw(self) -> CompactLength {
-        self.0
+    /// An absolute length in some abstract units. Users of Taffy may define what they correspond
+    /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
+    #[inline(always)]
+    pub const fn length(val: f32) -> Self {
+        Self(CompactLength::length(val))
     }
 
-    /// Create a MaxTrackSizingFunction from a raw `CompactLength`.
+    /// A percentage length relative to the size of the containing block.
+    ///
+    /// **NOTE: percentages are represented as a f32 value in the range [0.0, 1.0] NOT the range [0.0, 100.0]**
+    #[inline(always)]
+    pub const fn percent(val: f32) -> Self {
+        Self(CompactLength::percent(val))
+    }
+
+    /// The dimension should be automatically computed according to algorithm-specific rules
+    /// regarding the default size of boxes.
+    #[inline(always)]
+    pub const fn auto() -> Self {
+        Self(CompactLength::auto())
+    }
+
+    /// The size should be the "min-content" size.
+    /// This is the smallest size that can fit the item's contents with ALL soft line-wrapping opportunities taken
+    #[inline(always)]
+    pub const fn min_content() -> Self {
+        Self(CompactLength::min_content())
+    }
+
+    /// The size should be the "max-content" size.
+    /// This is the smallest size that can fit the item's contents with NO soft line-wrapping opportunities taken
+    #[inline(always)]
+    pub const fn max_content() -> Self {
+        Self(CompactLength::max_content())
+    }
+
+    /// The size should be computed according to the "fit content" formula:
+    ///    `max(min_content, min(max_content, limit))`
+    /// where:
+    ///    - `min_content` is the [min-content](Self::min_content) size
+    ///    - `max_content` is the [max-content](Self::max_content) size
+    ///    - `limit` is a LENGTH value passed to this function
+    ///
+    /// The effect of this is that the item takes the size of `limit` clamped
+    /// by the min-content and max-content sizes.
+    #[inline(always)]
+    pub const fn fit_content_px(limit: f32) -> Self {
+        Self(CompactLength::fit_content_px(limit))
+    }
+
+    /// The size should be computed according to the "fit content" formula:
+    ///    `max(min_content, min(max_content, limit))`
+    /// where:
+    ///    - `min_content` is the [min-content](Self::min_content) size
+    ///    - `max_content` is the [max-content](Self::max_content) size
+    ///    - `limit` is a PERCENTAGE value passed to this function
+    ///
+    /// The effect of this is that the item takes the size of `limit` clamped
+    /// by the min-content and max-content sizes.
+    #[inline(always)]
+    pub const fn fit_content_percent(limit: f32) -> Self {
+        Self(CompactLength::fit_content_percent(limit))
+    }
+
+    /// The dimension as a fraction of the total available grid space (`fr` units in CSS)
+    /// Specified value is the numerator of the fraction. Denominator is the sum of all fraction specified in that grid dimension
+    /// Spec: <https://www.w3.org/TR/css3-grid-layout/#fr-unit>
+    #[inline(always)]
+    pub const fn fr(val: f32) -> Self {
+        Self(CompactLength::fr(val))
+    }
+
+    /// A `calc()` value. The value passed here is treated as an opaque handle to
+    /// the actual calc representation and may be a pointer, index, etc.
+    ///
+    /// The low 3 bits are used as a tag value and will be returned as 0.
+    #[inline]
+    pub fn calc(ptr: *const ()) -> Self {
+        Self(CompactLength::calc(ptr))
+    }
+
+    /// Create a LengthPercentageAuto from a raw `CompactLength`.
     /// # Safety
-    /// CompactLength must represent a valid variant for MaxTrackSizingFunction
+    /// CompactLength must represent a valid variant for LengthPercentageAuto
     #[allow(unsafe_code)]
     pub unsafe fn from_raw(val: CompactLength) -> Self {
         Self(val)
+    }
+
+    /// Get the underlying `CompactLength` representation of the value
+    pub fn into_raw(self) -> CompactLength {
+        self.0
     }
 
     /// Returns true if the max track sizing function is `MinContent`, `MaxContent`, `FitContent` or `Auto`, else false.
@@ -555,12 +641,12 @@ impl TaffyMaxContent for MinTrackSizingFunction {
 }
 impl FromLength for MinTrackSizingFunction {
     fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self(CompactLength::from_length(value))
+        Self::length(value.into())
     }
 }
 impl FromPercent for MinTrackSizingFunction {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Self(CompactLength::from_percent(percent))
+    fn from_percent<Input: Into<f32> + Copy>(value: Input) -> Self {
+        Self::percent(value.into())
     }
 }
 impl From<LengthPercentage> for MinTrackSizingFunction {
@@ -580,17 +666,62 @@ impl From<Dimension> for MinTrackSizingFunction {
 }
 
 impl MinTrackSizingFunction {
-    /// Get the underlying `CompactLength` representation of the value
-    pub fn into_raw(self) -> CompactLength {
-        self.0
+    /// An absolute length in some abstract units. Users of Taffy may define what they correspond
+    /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
+    #[inline(always)]
+    pub const fn length(val: f32) -> Self {
+        Self(CompactLength::length(val))
     }
 
-    /// Create a MinTrackSizingFunction from a raw `CompactLength`.
+    /// A percentage length relative to the size of the containing block.
+    ///
+    /// **NOTE: percentages are represented as a f32 value in the range [0.0, 1.0] NOT the range [0.0, 100.0]**
+    #[inline(always)]
+    pub const fn percent(val: f32) -> Self {
+        Self(CompactLength::percent(val))
+    }
+
+    /// The dimension should be automatically computed according to algorithm-specific rules
+    /// regarding the default size of boxes.
+    #[inline(always)]
+    pub const fn auto() -> Self {
+        Self(CompactLength::auto())
+    }
+
+    /// The size should be the "min-content" size.
+    /// This is the smallest size that can fit the item's contents with ALL soft line-wrapping opportunities taken
+    #[inline(always)]
+    pub const fn min_content() -> Self {
+        Self(CompactLength::min_content())
+    }
+
+    /// The size should be the "max-content" size.
+    /// This is the smallest size that can fit the item's contents with NO soft line-wrapping opportunities taken
+    #[inline(always)]
+    pub const fn max_content() -> Self {
+        Self(CompactLength::max_content())
+    }
+
+    /// A `calc()` value. The value passed here is treated as an opaque handle to
+    /// the actual calc representation and may be a pointer, index, etc.
+    ///
+    /// The low 3 bits are used as a tag value and will be returned as 0.
+    #[inline]
+    pub fn calc(ptr: *const ()) -> Self {
+        Self(CompactLength::calc(ptr))
+    }
+
+    /// Create a LengthPercentageAuto from a raw `CompactLength`.
     /// # Safety
-    /// CompactLength must represent a valid variant for MinTrackSizingFunction
+    /// CompactLength must represent a valid variant for LengthPercentageAuto
     #[allow(unsafe_code)]
     pub unsafe fn from_raw(val: CompactLength) -> Self {
         Self(val)
+    }
+
+    /// Get the underlying `CompactLength` representation of the value
+    pub fn into_raw(self) -> CompactLength {
+        self.0
     }
 
     /// Returns true if the min track sizing function is `MinContent`, `MaxContent` or `Auto`, else false.

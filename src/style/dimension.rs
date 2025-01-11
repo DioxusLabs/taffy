@@ -14,18 +14,37 @@ impl TaffyZero for LengthPercentage {
 }
 impl FromLength for LengthPercentage {
     fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self(CompactLength::from_length(value))
+        Self::length(value.into())
     }
 }
 impl FromPercent for LengthPercentage {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Self(CompactLength::from_percent(percent))
+    fn from_percent<Input: Into<f32> + Copy>(value: Input) -> Self {
+        Self::percent(value.into())
     }
 }
 impl LengthPercentage {
-    /// Get the underlying `CompactLength` representation of the value
-    pub fn into_raw(self) -> CompactLength {
-        self.0
+    /// An absolute length in some abstract units. Users of Taffy may define what they correspond
+    /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
+    #[inline(always)]
+    pub const fn length(val: f32) -> Self {
+        Self(CompactLength::length(val))
+    }
+
+    /// A percentage length relative to the size of the containing block.
+    ///
+    /// **NOTE: percentages are represented as a f32 value in the range [0.0, 1.0] NOT the range [0.0, 100.0]**
+    #[inline(always)]
+    pub const fn percent(val: f32) -> Self {
+        Self(CompactLength::percent(val))
+    }
+
+    /// A `calc()` value. The value passed here is treated as an opaque handle to
+    /// the actual calc representation and may be a pointer, index, etc.
+    ///
+    /// The low 3 bits are used as a tag value and will be returned as 0.
+    #[inline]
+    pub fn calc(ptr: *const ()) -> Self {
+        Self(CompactLength::calc(ptr))
     }
 
     /// Create a LengthPercentage from a raw `CompactLength`.
@@ -34,6 +53,11 @@ impl LengthPercentage {
     #[allow(unsafe_code)]
     pub unsafe fn from_raw(val: CompactLength) -> Self {
         Self(val)
+    }
+
+    /// Get the underlying `CompactLength` representation of the value
+    pub fn into_raw(self) -> CompactLength {
+        self.0
     }
 }
 
@@ -51,12 +75,12 @@ impl TaffyAuto for LengthPercentageAuto {
 }
 impl FromLength for LengthPercentageAuto {
     fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self(CompactLength::from_length(value))
+        Self::length(value.into())
     }
 }
 impl FromPercent for LengthPercentageAuto {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Self(CompactLength::from_percent(percent))
+    fn from_percent<Input: Into<f32> + Copy>(value: Input) -> Self {
+        Self::percent(value.into())
     }
 }
 impl From<LengthPercentage> for LengthPercentageAuto {
@@ -66,6 +90,50 @@ impl From<LengthPercentage> for LengthPercentageAuto {
 }
 
 impl LengthPercentageAuto {
+    /// An absolute length in some abstract units. Users of Taffy may define what they correspond
+    /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
+    #[inline(always)]
+    pub const fn length(val: f32) -> Self {
+        Self(CompactLength::length(val))
+    }
+
+    /// A percentage length relative to the size of the containing block.
+    ///
+    /// **NOTE: percentages are represented as a f32 value in the range [0.0, 1.0] NOT the range [0.0, 100.0]**
+    #[inline(always)]
+    pub const fn percent(val: f32) -> Self {
+        Self(CompactLength::percent(val))
+    }
+
+    /// The dimension should be automatically computed according to algorithm-specific rules
+    /// regarding the default size of boxes.
+    #[inline(always)]
+    pub const fn auto() -> Self {
+        Self(CompactLength::auto())
+    }
+
+    /// A `calc()` value. The value passed here is treated as an opaque handle to
+    /// the actual calc representation and may be a pointer, index, etc.
+    ///
+    /// The low 3 bits are used as a tag value and will be returned as 0.
+    #[inline]
+    pub fn calc(ptr: *const ()) -> Self {
+        Self(CompactLength::calc(ptr))
+    }
+
+    /// Create a LengthPercentageAuto from a raw `CompactLength`.
+    /// # Safety
+    /// CompactLength must represent a valid variant for LengthPercentageAuto
+    #[allow(unsafe_code)]
+    pub unsafe fn from_raw(val: CompactLength) -> Self {
+        Self(val)
+    }
+
+    /// Get the underlying `CompactLength` representation of the value
+    pub fn into_raw(self) -> CompactLength {
+        self.0
+    }
+
     /// Returns:
     ///   - Some(length) for Length variants
     ///   - Some(resolved) using the provided context for Percent variants
@@ -86,19 +154,6 @@ impl LengthPercentageAuto {
     pub fn is_auto(self) -> bool {
         self.0.is_auto()
     }
-
-    /// Get the underlying `CompactLength` representation of the value
-    pub fn into_raw(self) -> CompactLength {
-        self.0
-    }
-
-    /// Create a LengthPercentageAuto from a raw `CompactLength`.
-    /// # Safety
-    /// CompactLength must represent a valid variant for LengthPercentageAuto
-    #[allow(unsafe_code)]
-    pub unsafe fn from_raw(val: CompactLength) -> Self {
-        Self(val)
-    }
 }
 
 /// A unit of linear measurement
@@ -115,12 +170,12 @@ impl TaffyAuto for Dimension {
 }
 impl FromLength for Dimension {
     fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self(CompactLength::from_length(value))
+        Self::length(value.into())
     }
 }
 impl FromPercent for Dimension {
-    fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Self(CompactLength::from_percent(percent))
+    fn from_percent<Input: Into<f32> + Copy>(value: Input) -> Self {
+        Self::percent(value.into())
     }
 }
 impl From<LengthPercentage> for Dimension {
@@ -135,6 +190,50 @@ impl From<LengthPercentageAuto> for Dimension {
 }
 
 impl Dimension {
+    /// An absolute length in some abstract units. Users of Taffy may define what they correspond
+    /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
+    #[inline(always)]
+    pub const fn length(val: f32) -> Self {
+        Self(CompactLength::length(val))
+    }
+
+    /// A percentage length relative to the size of the containing block.
+    ///
+    /// **NOTE: percentages are represented as a f32 value in the range [0.0, 1.0] NOT the range [0.0, 100.0]**
+    #[inline(always)]
+    pub const fn percent(val: f32) -> Self {
+        Self(CompactLength::percent(val))
+    }
+
+    /// The dimension should be automatically computed according to algorithm-specific rules
+    /// regarding the default size of boxes.
+    #[inline(always)]
+    pub const fn auto() -> Self {
+        Self(CompactLength::auto())
+    }
+
+    /// A `calc()` value. The value passed here is treated as an opaque handle to
+    /// the actual calc representation and may be a pointer, index, etc.
+    ///
+    /// The low 3 bits are used as a tag value and will be returned as 0.
+    #[inline]
+    pub fn calc(ptr: *const ()) -> Self {
+        Self(CompactLength::calc(ptr))
+    }
+
+    /// Create a LengthPercentageAuto from a raw `CompactLength`.
+    /// # Safety
+    /// CompactLength must represent a valid variant for LengthPercentageAuto
+    #[allow(unsafe_code)]
+    pub unsafe fn from_raw(val: CompactLength) -> Self {
+        Self(val)
+    }
+
+    /// Get the underlying `CompactLength` representation of the value
+    pub fn into_raw(self) -> CompactLength {
+        self.0
+    }
+
     /// Get Length value if value is Length variant
     #[cfg(feature = "grid")]
     pub fn into_option(self) -> Option<f32> {
@@ -157,19 +256,6 @@ impl Dimension {
     /// Get the raw `CompactLength` value for non-calc variants that have a numeric parameter
     pub fn value(self) -> f32 {
         self.0.value()
-    }
-
-    /// Get the underlying `CompactLength` representation of the value
-    pub fn into_raw(self) -> CompactLength {
-        self.0
-    }
-
-    /// Create a Dimension from a raw `CompactLength`.
-    /// # Safety
-    ///  CompactLength must represent a valid variant for Dimension
-    #[allow(unsafe_code)]
-    pub unsafe fn from_raw(val: CompactLength) -> Self {
-        Self(val)
     }
 }
 
