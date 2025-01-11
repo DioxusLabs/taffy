@@ -57,6 +57,7 @@ mod inner {
     /// The tagged pointer always has a tag and may contain an f32 value or a pointer
     /// (or neither) depending on the variant indicated by the tag.
     #[derive(Copy, Clone, Debug, PartialEq)]
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub(super) struct CompactLengthInner {
         /// The tagged pointer
         tagged_ptr: *const (),
@@ -118,6 +119,7 @@ mod inner {
     /// Either an f32 value or a pointer (or neither) are packed into the ptr field
     /// depending on the variant indicated by the tag
     #[derive(Copy, Clone, Debug, PartialEq)]
+    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub(super) struct CompactLengthInner {
         /// The tag indicating what kind of value we are storing
         tag: usize,
