@@ -42,7 +42,7 @@ impl LengthPercentage {
     /// the actual calc representation and may be a pointer, index, etc.
     ///
     /// The low 3 bits are used as a tag value and will be returned as 0.
-    #[inline]
+    #[inline(always)]
     pub fn calc(ptr: *const ()) -> Self {
         Self(CompactLength::calc(ptr))
     }

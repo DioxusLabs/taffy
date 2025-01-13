@@ -41,6 +41,12 @@ mod compat {
 #[cfg(not(any(target_pointer_width = "32", target_pointer_width = "64")))]
 std::compile_error!("Taffy only supports targets with a pointer width of 32 or 64 bits");
 
+// /// Error serializing
+// enum SerializeErr {
+//     /// Serializing calc values is not supported
+//     CalcValue,
+// }
+
 /// CompactLengthInner implementation for 64 bit platforms
 #[cfg(target_pointer_width = "64")]
 mod inner {
@@ -107,6 +113,20 @@ mod inner {
         pub(super) fn value(self) -> f32 {
             f32_from_bits((self.tagged_ptr as usize >> 32) as u32)
         }
+
+        /// Get the serialized value.
+        #[inline(always)]
+        #[cfg(feature = "serde")]
+        pub(super) fn serialized(self) -> u64 {
+            (self.tagged_ptr as usize as u64).rotate_left(32)
+        }
+
+        /// Derialized from a value.
+        #[inline(always)]
+        #[cfg(feature = "serde")]
+        pub(super) fn from_serialized(value: u64) -> Self {
+            Self { tagged_ptr: value.rotate_right(32) as usize as *const () }
+        }
     }
 }
 
@@ -168,6 +188,20 @@ mod inner {
         pub(super) fn value(self) -> f32 {
             f32_from_bits(self.ptr as u32)
         }
+
+        /// Get the serialized value.
+        #[inline(always)]
+        #[cfg(feature = "serde")]
+        pub(super) fn serialized(self) -> u64 {
+            (self.tag as u64) << 32 | (self.ptr as u64)
+        }
+
+        /// Derialized from a value.
+        #[inline(always)]
+        #[cfg(feature = "serde")]
+        pub(super) fn from_serialized(value: u64) -> Self {
+            Self { tag: value >> 32 as usize, ptr: value & 0xFFFFFFFF as usize as *const () }
+        }
     }
 }
 
@@ -175,7 +209,6 @@ use inner::CompactLengthInner;
 
 /// A representation of a length as a compact 64-bit tagged pointer
 #[derive(Copy, Clone, PartialEq, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(transparent)]
 pub struct CompactLength(CompactLengthInner);
 
@@ -447,6 +480,36 @@ impl TaffyFitContent for CompactLength {
             Self::LENGTH_TAG => Self::fit_content_px(value),
             Self::PERCENT_TAG => Self::fit_content_percent(value),
             _ => unreachable!(),
+        }
+    }
+}
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for CompactLength {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        if self.tag() == Self::CALC_TAG {
+            Err(serde::ser::Error::custom("Cannot serialize Calc value"))
+        } else {
+            serializer.serialize_u64(self.0.serialized())
+        }
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for CompactLength {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let bits: u64 = u64::deserialize(deserializer)?;
+        let value = Self(CompactLengthInner::from_serialized(bits));
+        if value.is_calc() {
+            Err(serde::de::Error::custom("Cannot deserialize Calc value"))
+        } else {
+            Ok(value)
         }
     }
 }
