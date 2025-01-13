@@ -3,11 +3,40 @@ use super::CompactLength;
 use crate::geometry::Rect;
 use crate::style_helpers::{FromLength, FromPercent, TaffyAuto, TaffyZero};
 
+/// A enum representing the tag of `LengthPercentage`
+#[derive(Copy, Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum LengthPercentageTag {
+    /// An absolute length in some abstract units.
+    Length,
+    /// A percentage length relative to the size of the containing block.
+    Percentage,
+    /// A `calc()` value.
+    Calc,
+}
+
+/// A enum representing the tag of a `LengthPercentage`
+#[derive(Copy, Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum ExpandedLengthPercentage {
+    /// An absolute length in some abstract units. Users of Taffy may define what they correspond
+    /// to in their application (pixels, logical pixels, mm, etc) as they see fit.
+    Length(f32),
+    /// A percentage length relative to the size of the containing block.
+    ///
+    /// **NOTE: percentages are represented as a f32 value in the range [0.0, 1.0] NOT the range [0.0, 100.0]**
+    Percentage(f32),
+    /// A `calc()` value. The value passed here is treated as an opaque handle to
+    /// the actual calc representation and may be a pointer, index, etc.
+    ///
+    /// The low 3 bits are used as a tag value and will be returned as 0.
+    Calc(*const ()),
+}
+
 /// A unit of linear measurement
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`](crate::geometry::Size).
 #[derive(Copy, Clone, PartialEq, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct LengthPercentage(pub(crate) CompactLength);
 impl TaffyZero for LengthPercentage {
     const ZERO: Self = Self(CompactLength::ZERO);
@@ -42,7 +71,7 @@ impl LengthPercentage {
     /// the actual calc representation and may be a pointer, index, etc.
     ///
     /// The low 3 bits are used as a tag value and will be returned as 0.
-    #[inline]
+    #[inline(always)]
     pub fn calc(ptr: *const ()) -> Self {
         Self(CompactLength::calc(ptr))
     }
@@ -58,6 +87,24 @@ impl LengthPercentage {
     /// Get the underlying `CompactLength` representation of the value
     pub fn into_raw(self) -> CompactLength {
         self.0
+    }
+
+    /// Get the tag of the `LengthPercentage`
+    pub fn tag(self) -> LengthPercentageTag {
+        match self.0.tag() {
+            CompactLength::LENGTH_TAG => LengthPercentageTag::Length,
+            CompactLength::PERCENT_TAG => LengthPercentageTag::Percentage,
+            _ => LengthPercentageTag::Calc,
+        }
+    }
+
+    /// Expand the compact `LengthPercentage` into a regular enum
+    pub fn expanded(self) -> ExpandedLengthPercentage {
+        match self.0.tag() {
+            CompactLength::LENGTH_TAG => ExpandedLengthPercentage::Length(self.0.value()),
+            CompactLength::PERCENT_TAG => ExpandedLengthPercentage::Percentage(self.0.value()),
+            _ => ExpandedLengthPercentage::Calc(self.0.calc_value()),
+        }
     }
 }
 

@@ -120,7 +120,6 @@ mod inner {
     /// Either an f32 value or a pointer (or neither) are packed into the ptr field
     /// depending on the variant indicated by the tag
     #[derive(Copy, Clone, Debug, PartialEq)]
-    #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
     pub(super) struct CompactLengthInner {
         /// The tag indicating what kind of value we are storing
         tag: usize,
@@ -169,6 +168,23 @@ mod inner {
         #[inline(always)]
         pub(super) fn value(self) -> f32 {
             f32_from_bits(self.ptr as u32)
+        }
+    }
+
+    #[cfg(feature = "serde")]
+    impl serde::Serialize for LengthPercentage {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer,
+        {
+            serializer.serialize_u64((self.ptr as u64) << 32 | self.tag as u64)
+        }
+    }
+    #[cfg(feature = "serde")]
+    impl<'de, D: serde::Deserializer<'de>> serde::Deserialize for LengthPercentage {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+where {
+            ExpandedLengthPercentage::deserialize(deserializer)
         }
     }
 }
