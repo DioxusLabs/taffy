@@ -1336,7 +1336,7 @@ fn distribute_space_up_to_limits(
 ) -> f32 {
     /// Define a small constant to avoid infinite loops due to rounding errors. Rather than stopping distributing
     /// extra space when it gets to exactly zero, we will stop when it falls below this amount
-    const THRESHOLD: f32 = 0.000001;
+    const THRESHOLD: f32 = 0.01;
 
     let mut space_to_distribute = space_to_distribute;
     while space_to_distribute > THRESHOLD {
@@ -1364,7 +1364,7 @@ fn distribute_space_up_to_limits(
 
         for track in tracks.iter_mut().filter(|track| track_is_affected(track)) {
             let increase = iteration_item_incurred_increase * track_distribution_proportion(track);
-            if increase > 0.0 && track_affected_property(track) + increase <= track_limit(track) {
+            if increase > 0.0 && track_affected_property(track) + increase <= track_limit(track) + THRESHOLD {
                 track.item_incurred_increase += increase;
                 space_to_distribute -= increase;
             }
