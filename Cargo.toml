@@ -22,7 +22,7 @@ serde = { version = "1.0", default-features = false, optional = true, features =
     "serde_derive",
 ] }
 slotmap = { version = "1.0.6", default-features = false, optional = true }
-grid = { version = "0.15.0", default-features = false, optional = true }
+grid = { version = "0.16.0", default-features = false, optional = true }
 
 [package.metadata.docs.rs]
 # To test all the documentation related features, run:
