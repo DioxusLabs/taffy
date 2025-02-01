@@ -13,7 +13,7 @@ pub mod yoga_helpers;
 #[cfg(feature = "yoga")]
 pub use yoga_helpers::YogaTreeBuilder;
 
-use rand::distributions::uniform::SampleRange;
+use rand::distr::uniform::SampleRange;
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha8Rng;
 use taffy::style::Style as TaffyStyle;
