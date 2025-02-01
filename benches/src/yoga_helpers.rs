@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use rand::distributions::uniform::SampleRange;
+use rand::distr::uniform::SampleRange;
 use rand::Rng;
 use rand_chacha::ChaCha8Rng;
 use slotmap::{DefaultKey, SlotMap};
