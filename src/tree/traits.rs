@@ -35,10 +35,10 @@
 //! ### TraversePartialTree and TraverseTree
 //! These traits are Taffy's abstraction for downward tree traversal:
 //!  - [`TraversePartialTree`] allows access to a single container node, and it's immediate children. This is the only "traverse" trait that is required
-//!     for use of Taffy's core layout algorithms (flexbox, grid, etc).
+//!    for use of Taffy's core layout algorithms (flexbox, grid, etc).
 //!  - [`TraverseTree`] is a marker trait which uses the same API signature as `TraversePartialTree`, but extends it with a guarantee that the child/children methods can be used to recurse
-//!     infinitely down the tree. It is required by the `RoundTree` and
-//!     the `PrintTree` traits.
+//!    infinitely down the tree. It is required by the `RoundTree` and
+//!    the `PrintTree` traits.
 //! ```rust
 //! # use taffy::*;
 //! pub trait TraversePartialTree {
