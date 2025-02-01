@@ -624,19 +624,19 @@ fn determine_available_space(
 ///         - a used flex basis of content, and
 ///         - a definite cross size,
 ///
-///     then the flex base size is calculated from its inner cross size and the flex item’s intrinsic aspect ratio.
+///       then the flex base size is calculated from its inner cross size and the flex item’s intrinsic aspect ratio.
 ///
 ///     - C. If the used flex basis is content or depends on its available space, and the flex container is being sized under a min-content
-///         or max-content constraint (e.g. when performing automatic table layout \[CSS21\]), size the item under that constraint.
-///         The flex base size is the item’s resulting main size.
+///       or max-content constraint (e.g. when performing automatic table layout \[CSS21\]), size the item under that constraint.
+///       The flex base size is the item’s resulting main size.
 ///
 ///     - E. Otherwise, size the item into the available space using its used flex basis in place of its main size, treating a value of content as max-content.
-///         If a cross size is needed to determine the main size (e.g. when the flex item’s main size is in its block axis) and the flex item’s cross size is auto and not definite,
-///         in this calculation use fit-content as the flex item’s cross size. The flex base size is the item’s resulting main size.
+///       If a cross size is needed to determine the main size (e.g. when the flex item’s main size is in its block axis) and the flex item’s cross size is auto and not definite,
+///       in this calculation use fit-content as the flex item’s cross size. The flex base size is the item’s resulting main size.
 ///
-///     When determining the flex base size, the item’s min and max main sizes are ignored (no clamping occurs).
-///     Furthermore, the sizing calculations that floor the content box size at zero when applying box-sizing are also ignored.
-///     (For example, an item with a specified size of zero, positive padding, and box-sizing: border-box will have an outer flex base size of zero—and hence a negative inner flex base size.)
+///   When determining the flex base size, the item’s min and max main sizes are ignored (no clamping occurs).
+///   Furthermore, the sizing calculations that floor the content box size at zero when applying box-sizing are also ignored.
+///   (For example, an item with a specified size of zero, positive padding, and box-sizing: border-box will have an outer flex base size of zero—and hence a negative inner flex base size.)
 #[inline]
 fn determine_flex_base_size(
     tree: &mut impl LayoutFlexboxContainer,
@@ -834,14 +834,14 @@ fn determine_flex_base_size(
 ///     - If the flex container is single-line, collect all the flex items into a single flex line.
 ///
 ///     - Otherwise, starting from the first uncollected item, collect consecutive items one by one until the first time that the next collected item would not fit into the flex container’s inner main size
-///         (or until a forced break is encountered, see [§10 Fragmenting Flex Layout](https://www.w3.org/TR/css-flexbox-1/#pagination)).
-///         If the very first uncollected item wouldn't fit, collect just it into the line.
+///       (or until a forced break is encountered, see [§10 Fragmenting Flex Layout](https://www.w3.org/TR/css-flexbox-1/#pagination)).
+///       If the very first uncollected item wouldn't fit, collect just it into the line.
 ///
-///         For this step, the size of a flex item is its outer hypothetical main size. (**Note: This can be negative**.)
+///       For this step, the size of a flex item is its outer hypothetical main size. (**Note: This can be negative**.)
 ///
-///         Repeat until all flex items have been collected into flex lines.
+///       Repeat until all flex items have been collected into flex lines.
 ///
-///         **Note that the "collect as many" line will collect zero-sized flex items onto the end of the previous line even if the last non-zero item exactly "filled up" the line**.
+///       **Note that the "collect as many" line will collect zero-sized flex items onto the end of the previous line even if the last non-zero item exactly "filled up" the line**.
 #[inline]
 fn collect_flex_lines<'a>(
     constants: &AlgoConstants,
@@ -1355,7 +1355,7 @@ fn resolve_flexible_lengths(line: &mut FlexLine, constants: &AlgoConstants) {
 /// # [9.4. Cross Size Determination](https://www.w3.org/TR/css-flexbox-1/#cross-sizing)
 ///
 /// - [**Determine the hypothetical cross size of each item**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-item)
-///     by performing layout with the used main size and the available space, treating auto as fit-content.
+///   by performing layout with the used main size and the available space, treating auto as fit-content.
 #[inline]
 fn determine_hypothetical_cross_size(
     tree: &mut impl LayoutFlexboxContainer,
@@ -1544,8 +1544,8 @@ fn calculate_cross_size(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>
 /// # [9.4. Cross Size Determination](https://www.w3.org/TR/css-flexbox-1/#cross-sizing)
 ///
 /// - [**Handle 'align-content: stretch'**](https://www.w3.org/TR/css-flexbox-1/#algo-line-stretch). If the flex container has a definite cross size, align-content is stretch,
-///     and the sum of the flex lines' cross sizes is less than the flex container’s inner cross size,
-///     increase the cross size of each flex line by equal amounts such that the sum of their cross sizes exactly equals the flex container’s inner cross size.
+///   and the sum of the flex lines' cross sizes is less than the flex container’s inner cross size,
+///   increase the cross size of each flex line by equal amounts such that the sum of their cross sizes exactly equals the flex container’s inner cross size.
 #[inline]
 fn handle_align_content_stretch(flex_lines: &mut [FlexLine], node_size: Size<Option<f32>>, constants: &AlgoConstants) {
     if constants.align_content == AlignContent::Stretch {
@@ -1576,12 +1576,12 @@ fn handle_align_content_stretch(flex_lines: &mut [FlexLine], node_size: Size<Opt
 /// # [9.4. Cross Size Determination](https://www.w3.org/TR/css-flexbox-1/#cross-sizing)
 ///
 /// - [**Determine the used cross size of each flex item**](https://www.w3.org/TR/css-flexbox-1/#algo-stretch). If a flex item has align-self: stretch, its computed cross size property is auto,
-///     and neither of its cross-axis margins are auto, the used outer cross size is the used cross size of its flex line, clamped according to the item’s used min and max cross sizes.
-///     Otherwise, the used cross size is the item’s hypothetical cross size.
+///   and neither of its cross-axis margins are auto, the used outer cross size is the used cross size of its flex line, clamped according to the item’s used min and max cross sizes.
+///   Otherwise, the used cross size is the item’s hypothetical cross size.
 ///
-///     If the flex item has align-self: stretch, redo layout for its contents, treating this used size as its definite cross size so that percentage-sized children can be resolved.
+///   If the flex item has align-self: stretch, redo layout for its contents, treating this used size as its definite cross size so that percentage-sized children can be resolved.
 ///
-///     **Note that this step does not affect the main size of the flex item, even if it has an intrinsic aspect ratio**.
+///   **Note that this step does not affect the main size of the flex item, even if it has an intrinsic aspect ratio**.
 #[inline]
 fn determine_used_cross_size(
     tree: &impl LayoutFlexboxContainer,
@@ -1641,10 +1641,10 @@ fn determine_used_cross_size(
 ///
 /// - [**Distribute any remaining free space**](https://www.w3.org/TR/css-flexbox-1/#algo-main-align). For each flex line:
 ///
-///     1. If the remaining free space is positive and at least one main-axis margin on this line is `auto`, distribute the free space equally among these margins.
-///         Otherwise, set all `auto` margins to zero.
+///   1. If the remaining free space is positive and at least one main-axis margin on this line is `auto`, distribute the free space equally among these margins.
+///      Otherwise, set all `auto` margins to zero.
 ///
-///     2. Align the items along the main-axis per `justify-content`.
+///   2. Align the items along the main-axis per `justify-content`.
 #[inline]
 fn distribute_remaining_free_space(flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
     for line in flex_lines {
@@ -1710,13 +1710,13 @@ fn distribute_remaining_free_space(flex_lines: &mut [FlexLine], constants: &Algo
 /// # [9.6. Cross-Axis Alignment](https://www.w3.org/TR/css-flexbox-1/#cross-alignment)
 ///
 /// - [**Resolve cross-axis `auto` margins**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-margins).
-///     If a flex item has auto cross-axis margins:
+///   If a flex item has auto cross-axis margins:
 ///
-///     - If its outer cross size (treating those auto margins as zero) is less than the cross size of its flex line,
-///         distribute the difference in those sizes equally to the auto margins.
+///   - If its outer cross size (treating those auto margins as zero) is less than the cross size of its flex line,
+///     distribute the difference in those sizes equally to the auto margins.
 ///
-///     - Otherwise, if the block-start or inline-start margin (whichever is in the cross axis) is auto, set it to zero.
-///         Set the opposite margin so that the outer cross size of the item equals the cross size of its flex line.
+///   - Otherwise, if the block-start or inline-start margin (whichever is in the cross axis) is auto, set it to zero.
+///     Set the opposite margin so that the outer cross size of the item equals the cross size of its flex line.
 #[inline]
 fn resolve_cross_axis_auto_margins(flex_lines: &mut [FlexLine], constants: &AlgoConstants) {
     for line in flex_lines {
@@ -1759,7 +1759,7 @@ fn resolve_cross_axis_auto_margins(flex_lines: &mut [FlexLine], constants: &Algo
 /// # [9.6. Cross-Axis Alignment](https://www.w3.org/TR/css-flexbox-1/#cross-alignment)
 ///
 /// - [**Align all flex items along the cross-axis**](https://www.w3.org/TR/css-flexbox-1/#algo-cross-align) per `align-self`,
-///     if neither of the item's cross-axis margins are `auto`.
+///   if neither of the item's cross-axis margins are `auto`.
 #[inline]
 fn align_flex_items_along_cross_axis(
     child: &FlexItem,
