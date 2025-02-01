@@ -49,7 +49,7 @@ impl<R: Rng, G: GenStyle<TaffyStyle>> BuildTree<R, G> for YogaTreeBuilder<R, G> 
     }
 
     fn random_usize(&mut self, range: impl SampleRange<usize>) -> usize {
-        self.rng.gen_range(range)
+        self.rng.random_range(range)
     }
 
     fn create_leaf_node(&mut self) -> Self::Node {

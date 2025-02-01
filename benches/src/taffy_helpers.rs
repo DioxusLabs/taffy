@@ -1,4 +1,4 @@
-use rand::distributions::uniform::SampleRange;
+use rand::distr::uniform::SampleRange;
 use rand::Rng;
 use rand_chacha::ChaCha8Rng;
 use taffy::style::Style as TaffyStyle;
@@ -32,7 +32,7 @@ impl<R: Rng, G: GenStyle<TaffyStyle>> BuildTree<R, G> for TaffyTreeBuilder<R, G>
     }
 
     fn random_usize(&mut self, range: impl SampleRange<usize>) -> usize {
-        self.rng.gen_range(range)
+        self.rng.random_range(range)
     }
 
     fn create_leaf_node(&mut self) -> Self::Node {

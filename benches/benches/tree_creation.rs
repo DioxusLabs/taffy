@@ -26,7 +26,7 @@ fn build_taffy_flat_hierarchy(total_node_count: u32, use_with_capacity: bool) ->
     let mut node_count = 0;
 
     while node_count < total_node_count {
-        let sub_children_count = rng.gen_range(1..=4);
+        let sub_children_count = rng.random_range(1..=4);
         let sub_children: Vec<NodeId> = (0..sub_children_count).map(|_| build_random_leaf(&mut taffy)).collect();
         let node = taffy.new_with_children(Style::DEFAULT, &sub_children).unwrap();
 
@@ -47,7 +47,7 @@ fn build_yoga_flat_hierarchy(total_node_count: u32) -> (yg::YogaTree, yg::NodeId
     let mut node_count = 0;
 
     while node_count < total_node_count {
-        let sub_children_count = rng.gen_range(1..=4);
+        let sub_children_count = rng.random_range(1..=4);
         let sub_children: Vec<yg::NodeId> =
             (0..sub_children_count).map(|_| yoga_helpers::new_default_style_with_children(&mut tree, &[])).collect();
         let node = yoga_helpers::new_default_style_with_children(&mut tree, &sub_children);

@@ -13,10 +13,10 @@ use taffy_benchmarks::taffy_03_helpers::Taffy03TreeBuilder;
 use taffy_benchmarks::yoga_helpers::YogaTreeBuilder;
 
 fn random_dimension(rng: &mut impl Rng) -> Dimension {
-    match rng.gen_range(0.0..=1.0) {
+    match rng.random_range(0.0..=1.0) {
         rand if rand < 0.2 => auto(),
-        rand if rand < 0.8 => length(rng.gen_range(0.0..500.0)),
-        _ => percent(rng.gen_range(0.0..1.0)),
+        rand if rand < 0.8 => length(rng.random_range(0.0..500.0)),
+        _ => percent(rng.random_range(0.0..1.0)),
     }
 }
 
