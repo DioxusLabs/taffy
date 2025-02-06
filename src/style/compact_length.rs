@@ -295,6 +295,7 @@ impl TaffyFitContent for CompactLength {
 /// here we can reduce MSRV from 1.83 all the way down to 1.65 while retaining const constructors.
 mod compat {
     #![allow(unsafe_code)]
+    #![allow(clippy::transmute_float_to_int)]
 
     /// Raw transmutation from `f32` to `u32`.
     pub const fn f32_to_bits(val: f32) -> u32 {
