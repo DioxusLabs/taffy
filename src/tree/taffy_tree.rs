@@ -129,8 +129,9 @@ impl NodeData {
     /// Marks a node and all of its ancestors as requiring relayout
     ///
     /// This clears any cached data and signals that the data must be recomputed.
+    /// If the node was already dirty, returns true
     #[inline]
-    pub fn mark_dirty(&mut self) {
+    pub fn mark_dirty(&mut self) -> bool {
         self.cache.clear()
     }
 }
@@ -226,7 +227,7 @@ impl<NodeContext> CacheTree for TaffyTree<NodeContext> {
     }
 
     fn cache_clear(&mut self, node_id: NodeId) {
-        self.nodes[node_id.into()].cache.clear()
+        self.nodes[node_id.into()].cache.clear();
     }
 }
 
@@ -419,7 +420,7 @@ where
     }
 
     fn cache_clear(&mut self, node_id: NodeId) {
-        self.taffy.nodes[node_id.into()].cache.clear()
+        self.taffy.nodes[node_id.into()].cache.clear();
     }
 }
 
@@ -842,7 +843,11 @@ impl<NodeContext> TaffyTree<NodeContext> {
             parents: &SlotMap<DefaultKey, Option<NodeId>>,
             node_key: DefaultKey,
         ) {
-            nodes[node_key].mark_dirty();
+            if nodes[node_key].mark_dirty() {
+                // Node was already dirty.
+                // No need to visit ancestors.
+                return;
+            }
 
             if let Some(Some(node)) = parents.get(node_key) {
                 mark_dirty_recursive(nodes, parents, (*node).into());

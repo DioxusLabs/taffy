@@ -26,6 +26,9 @@ pub struct Cache {
     final_layout_entry: Option<CacheEntry<LayoutOutput>>,
     /// The cache entries for the node's preliminary size measurements
     measure_entries: [Option<CacheEntry<Size<f32>>>; CACHE_SIZE],
+
+    /// Is cleared
+    is_cleared: bool,
 }
 
 impl Default for Cache {
@@ -37,7 +40,7 @@ impl Default for Cache {
 impl Cache {
     /// Create a new empty cache
     pub const fn new() -> Self {
-        Self { final_layout_entry: None, measure_entries: [None; CACHE_SIZE] }
+        Self { final_layout_entry: None, measure_entries: [None; CACHE_SIZE], is_cleared: true }
     }
 
     /// Return the cache slot to cache the current computed result in
@@ -160,9 +163,11 @@ impl Cache {
     ) {
         match run_mode {
             RunMode::PerformLayout => {
+                self.is_cleared = false;
                 self.final_layout_entry = Some(CacheEntry { known_dimensions, available_space, content: layout_output })
             }
             RunMode::ComputeSize => {
+                self.is_cleared = false;
                 let cache_slot = Self::compute_cache_slot(known_dimensions, available_space);
                 self.measure_entries[cache_slot] =
                     Some(CacheEntry { known_dimensions, available_space, content: layout_output.size });
@@ -171,10 +176,15 @@ impl Cache {
         }
     }
 
-    /// Clear all cache entries
-    pub fn clear(&mut self) {
+    /// Clear all cache entries and report if they were already cleared
+    pub fn clear(&mut self) -> bool {
+        if self.is_cleared {
+            return true;
+        }
+        self.is_cleared = true;
         self.final_layout_entry = None;
         self.measure_entries = [None; CACHE_SIZE];
+        return false;
     }
 
     /// Returns true if all cache entries are None, else false
