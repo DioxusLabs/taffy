@@ -129,7 +129,7 @@ impl NodeData {
     /// Marks a node and all of its ancestors as requiring relayout
     ///
     /// This clears any cached data and signals that the data must be recomputed.
-    /// If the node was already dirty, returns true
+    /// If the node was already marked as dirty, returns true
     #[inline]
     pub fn mark_dirty(&mut self) -> bool {
         self.cache.clear()
@@ -834,18 +834,16 @@ impl<NodeContext> TaffyTree<NodeContext> {
     }
 
     /// Marks the layout of this node and its ancestors as outdated
-    ///
-    /// WARNING: this may stack-overflow if the tree contains a cycle
     pub fn mark_dirty(&mut self, node: NodeId) -> TaffyResult<()> {
-        /// WARNING: this will stack-overflow if the tree contains a cycle
         fn mark_dirty_recursive(
             nodes: &mut SlotMap<DefaultKey, NodeData>,
             parents: &SlotMap<DefaultKey, Option<NodeId>>,
             node_key: DefaultKey,
         ) {
             if nodes[node_key].mark_dirty() {
-                // Node was already dirty.
-                // No need to visit ancestors.
+                // Node was already marked as dirty.
+                // No need to visit ancestors
+                // as they should be marked as dirty already.
                 return;
             }
 

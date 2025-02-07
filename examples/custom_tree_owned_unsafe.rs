@@ -204,7 +204,7 @@ impl CacheTree for StatelessLayoutTree {
     }
 
     fn cache_clear(&mut self, node_id: NodeId) {
-        unsafe { node_from_id_mut(node_id) }.cache.clear()
+        unsafe { node_from_id_mut(node_id) }.cache.clear();
     }
 }
 
