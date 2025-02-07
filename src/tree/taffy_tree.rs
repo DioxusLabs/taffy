@@ -171,6 +171,7 @@ pub struct TaffyTreeChildIter<'a>(core::slice::Iter<'a, NodeId>);
 impl Iterator for TaffyTreeChildIter<'_> {
     type Item = NodeId;
 
+    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next().copied()
     }
@@ -624,6 +625,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
     }
 
     /// Sets the context data associated with the node
+    #[inline]
     pub fn set_node_context(&mut self, node: NodeId, measure: Option<NodeContext>) -> TaffyResult<()> {
         let key = node.into();
         if let Some(measure) = measure {
@@ -640,11 +642,13 @@ impl<NodeContext> TaffyTree<NodeContext> {
     }
 
     /// Gets a reference to the the context data associated with the node
+    #[inline]
     pub fn get_node_context(&self, node: NodeId) -> Option<&NodeContext> {
         self.node_context_data.get(node.into())
     }
 
     /// Gets a mutable reference to the the context data associated with the node
+    #[inline]
     pub fn get_node_context_mut(&mut self, node: NodeId) -> Option<&mut NodeContext> {
         self.node_context_data.get_mut(node.into())
     }
@@ -737,6 +741,24 @@ impl<NodeContext> TaffyTree<NodeContext> {
         Ok(child)
     }
 
+    /// Removes children at the given range from the `parent`
+    ///
+    /// Children are not removed from the tree entirely, they are simply no longer attached to their previous parent.
+    ///
+    /// Function will panic if given range is invalid. See [`core::slice::range`]
+    pub fn remove_children_range<R>(&mut self, parent: NodeId, range: R) -> TaffyResult<()>
+    where
+        R: core::ops::RangeBounds<usize>,
+    {
+        let parent_key = parent.into();
+        for child in self.children[parent_key].drain(range) {
+            self.parents[child.into()] = None;
+        }
+
+        self.mark_dirty(parent)?;
+        Ok(())
+    }
+
     /// Replaces the child at the given `child_index` from the `parent` node with the new `child` node
     ///
     /// The child is not removed from the tree entirely, it is simply no longer attached to its previous parent.
@@ -763,6 +785,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
     }
 
     /// Returns the child node of the parent `node` at the provided `child_index`
+    #[inline]
     pub fn child_at_index(&self, parent: NodeId, child_index: usize) -> TaffyResult<NodeId> {
         let parent_key = parent.into();
         let child_count = self.children[parent_key].len();
@@ -774,6 +797,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
     }
 
     /// Returns the total number of nodes in the tree
+    #[inline]
     pub fn total_node_count(&self) -> usize {
         self.nodes.len()
     }
@@ -782,16 +806,18 @@ impl<NodeContext> TaffyTree<NodeContext> {
     ///
     /// - Return None if the specified node has no parent
     /// - Panics if the specified node does not exist
+    #[inline]
     pub fn parent(&self, child_id: NodeId) -> Option<NodeId> {
         self.parents[child_id.into()]
     }
 
     /// Returns a list of children that belong to the parent node
     pub fn children(&self, parent: NodeId) -> TaffyResult<Vec<NodeId>> {
-        Ok(self.children[parent.into()].iter().copied().collect::<_>())
+        Ok(self.children[parent.into()].clone())
     }
 
     /// Sets the [`Style`] of the provided `node`
+    #[inline]
     pub fn set_style(&mut self, node: NodeId, style: Style) -> TaffyResult<()> {
         self.nodes[node.into()].style = style;
         self.mark_dirty(node)?;
@@ -799,11 +825,13 @@ impl<NodeContext> TaffyTree<NodeContext> {
     }
 
     /// Gets the [`Style`] of the provided `node`
+    #[inline]
     pub fn style(&self, node: NodeId) -> TaffyResult<&Style> {
         Ok(&self.nodes[node.into()].style)
     }
 
     /// Return this node layout relative to its parent
+    #[inline]
     pub fn layout(&self, node: NodeId) -> TaffyResult<&Layout> {
         if self.config.use_rounding {
             Ok(&self.nodes[node.into()].final_layout)
@@ -813,6 +841,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
     }
 
     /// Returns this node layout with unrounded values relative to its parent.
+    #[inline]
     pub fn unrounded_layout(&self, node: NodeId) -> &Layout {
         &self.nodes[node.into()].unrounded_layout
     }
@@ -822,6 +851,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
     /// Currently this is only implemented for CSS Grid containers where it contains
     /// the computed size of each grid track and the computed placement of each grid item
     #[cfg(feature = "detailed_layout_info")]
+    #[inline]
     pub fn detailed_layout_info(&self, node_id: NodeId) -> &DetailedLayoutInfo {
         &self.nodes[node_id.into()].detailed_layout_info
     }
@@ -849,6 +879,7 @@ impl<NodeContext> TaffyTree<NodeContext> {
     }
 
     /// Indicates whether the layout of this node needs to be recomputed
+    #[inline]
     pub fn dirty(&self, node: NodeId) -> TaffyResult<bool> {
         Ok(self.nodes[node.into()].cache.is_empty())
     }
@@ -1130,6 +1161,28 @@ mod tests {
 
         taffy.remove_child_at_index(node, 0).unwrap();
         assert_eq!(taffy.child_count(node), 0);
+    }
+
+    #[test]
+    fn remove_children_range() {
+        let mut taffy: TaffyTree<()> = TaffyTree::new();
+        let child0 = taffy.new_leaf(Style::default()).unwrap();
+        let child1 = taffy.new_leaf(Style::default()).unwrap();
+        let child2 = taffy.new_leaf(Style::default()).unwrap();
+        let child3 = taffy.new_leaf(Style::default()).unwrap();
+        let node = taffy.new_with_children(Style::default(), &[child0, child1, child2, child3]).unwrap();
+
+        assert_eq!(taffy.child_count(node), 4);
+
+        taffy.remove_children_range(node, 1..=2).unwrap();
+        assert_eq!(taffy.child_count(node), 2);
+        assert_eq!(taffy.children(node).unwrap(), [child0, child3]);
+        for child in [child0, child3] {
+            assert_eq!(taffy.parent(child), Some(node));
+        }
+        for child in [child1, child2] {
+            assert_eq!(taffy.parent(child), None);
+        }
     }
 
     // Related to: https://github.com/DioxusLabs/taffy/issues/510
