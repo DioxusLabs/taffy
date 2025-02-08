@@ -26,8 +26,8 @@ pub struct Cache {
     final_layout_entry: Option<CacheEntry<LayoutOutput>>,
     /// The cache entries for the node's preliminary size measurements
     measure_entries: [Option<CacheEntry<Size<f32>>>; CACHE_SIZE],
-    /// Marks if all cache entries have been cleared
-    cleared: bool,
+    /// Tracks if all cache entries are empty
+    is_empty: bool,
 }
 
 impl Default for Cache {
@@ -39,7 +39,7 @@ impl Default for Cache {
 impl Cache {
     /// Create a new empty cache
     pub const fn new() -> Self {
-        Self { final_layout_entry: None, measure_entries: [None; CACHE_SIZE], cleared: true }
+        Self { final_layout_entry: None, measure_entries: [None; CACHE_SIZE], is_empty: true }
     }
 
     /// Return the cache slot to cache the current computed result in
@@ -162,11 +162,11 @@ impl Cache {
     ) {
         match run_mode {
             RunMode::PerformLayout => {
-                self.cleared = false;
+                self.is_empty = false;
                 self.final_layout_entry = Some(CacheEntry { known_dimensions, available_space, content: layout_output })
             }
             RunMode::ComputeSize => {
-                self.cleared = false;
+                self.is_empty = false;
                 let cache_slot = Self::compute_cache_slot(known_dimensions, available_space);
                 self.measure_entries[cache_slot] =
                     Some(CacheEntry { known_dimensions, available_space, content: layout_output.size });
@@ -175,19 +175,27 @@ impl Cache {
         }
     }
 
-    /// Clear all cache entries and reports if they were already cleared
-    pub fn clear(&mut self) -> bool {
-        if self.cleared {
-            return true;
+    /// Clear all cache entries and reports clear operation outcome ([`ClearState`])
+    pub fn clear(&mut self) -> ClearState {
+        if self.is_empty {
+            return ClearState::AlreadyEmpty;
         }
-        self.cleared = true;
+        self.is_empty = true;
         self.final_layout_entry = None;
         self.measure_entries = [None; CACHE_SIZE];
-        return false;
+        ClearState::Cleared
     }
 
     /// Returns true if all cache entries are None, else false
     pub fn is_empty(&self) -> bool {
         self.final_layout_entry.is_none() && !self.measure_entries.iter().any(|entry| entry.is_some())
     }
+}
+
+/// Clear operation outcome. See [`Cache::clear`]
+pub enum ClearState {
+    /// Cleared some values
+    Cleared,
+    /// Everything was already cleared
+    AlreadyEmpty,
 }

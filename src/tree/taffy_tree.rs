@@ -8,7 +8,7 @@ use slotmap::{DefaultKey, SlotMap};
 use crate::geometry::Size;
 use crate::style::{AvailableSpace, Display, Style};
 use crate::tree::{
-    Cache, Layout, LayoutInput, LayoutOutput, LayoutPartialTree, NodeId, PrintTree, RoundTree, RunMode,
+    Cache, ClearState, Layout, LayoutInput, LayoutOutput, LayoutPartialTree, NodeId, PrintTree, RoundTree, RunMode,
     TraversePartialTree, TraverseTree,
 };
 use crate::util::debug::{debug_log, debug_log_node};
@@ -131,7 +131,7 @@ impl NodeData {
     /// This clears any cached data and signals that the data must be recomputed.
     /// If the node was already marked as dirty, returns true
     #[inline]
-    pub fn mark_dirty(&mut self) -> bool {
+    pub fn mark_dirty(&mut self) -> ClearState {
         self.cache.clear()
     }
 }
@@ -840,15 +840,17 @@ impl<NodeContext> TaffyTree<NodeContext> {
             parents: &SlotMap<DefaultKey, Option<NodeId>>,
             node_key: DefaultKey,
         ) {
-            if nodes[node_key].mark_dirty() {
-                // Node was already marked as dirty.
-                // No need to visit ancestors
-                // as they should be marked as dirty already.
-                return;
-            }
-
-            if let Some(Some(node)) = parents.get(node_key) {
-                mark_dirty_recursive(nodes, parents, (*node).into());
+            match nodes[node_key].mark_dirty() {
+                ClearState::AlreadyEmpty => {
+                    // Node was already marked as dirty.
+                    // No need to visit ancestors
+                    // as they should be marked as dirty already.
+                }
+                ClearState::Cleared => {
+                    if let Some(Some(node)) = parents.get(node_key) {
+                        mark_dirty_recursive(nodes, parents, (*node).into());
+                    }
+                }
             }
         }
 
