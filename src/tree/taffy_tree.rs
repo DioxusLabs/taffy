@@ -8,7 +8,7 @@ use slotmap::{DefaultKey, SlotMap};
 use crate::geometry::Size;
 use crate::style::{AvailableSpace, Display, Style};
 use crate::tree::{
-    Cache, Layout, LayoutInput, LayoutOutput, LayoutPartialTree, NodeId, PrintTree, RoundTree, RunMode,
+    Cache, ClearState, Layout, LayoutInput, LayoutOutput, LayoutPartialTree, NodeId, PrintTree, RoundTree, RunMode,
     TraversePartialTree, TraverseTree,
 };
 use crate::util::debug::{debug_log, debug_log_node};
@@ -129,8 +129,9 @@ impl NodeData {
     /// Marks a node and all of its ancestors as requiring relayout
     ///
     /// This clears any cached data and signals that the data must be recomputed.
+    /// If the node was already marked as dirty, returns true
     #[inline]
-    pub fn mark_dirty(&mut self) {
+    pub fn mark_dirty(&mut self) -> ClearState {
         self.cache.clear()
     }
 }
@@ -227,7 +228,7 @@ impl<NodeContext> CacheTree for TaffyTree<NodeContext> {
     }
 
     fn cache_clear(&mut self, node_id: NodeId) {
-        self.nodes[node_id.into()].cache.clear()
+        self.nodes[node_id.into()].cache.clear();
     }
 }
 
@@ -420,7 +421,7 @@ where
     }
 
     fn cache_clear(&mut self, node_id: NodeId) {
-        self.taffy.nodes[node_id.into()].cache.clear()
+        self.taffy.nodes[node_id.into()].cache.clear();
     }
 }
 
@@ -863,19 +864,23 @@ impl<NodeContext> TaffyTree<NodeContext> {
     }
 
     /// Marks the layout of this node and its ancestors as outdated
-    ///
-    /// WARNING: this may stack-overflow if the tree contains a cycle
     pub fn mark_dirty(&mut self, node: NodeId) -> TaffyResult<()> {
-        /// WARNING: this will stack-overflow if the tree contains a cycle
         fn mark_dirty_recursive(
             nodes: &mut SlotMap<DefaultKey, NodeData>,
             parents: &SlotMap<DefaultKey, Option<NodeId>>,
             node_key: DefaultKey,
         ) {
-            nodes[node_key].mark_dirty();
-
-            if let Some(Some(node)) = parents.get(node_key) {
-                mark_dirty_recursive(nodes, parents, (*node).into());
+            match nodes[node_key].mark_dirty() {
+                ClearState::AlreadyEmpty => {
+                    // Node was already marked as dirty.
+                    // No need to visit ancestors
+                    // as they should be marked as dirty already.
+                }
+                ClearState::Cleared => {
+                    if let Some(Some(node)) = parents.get(node_key) {
+                        mark_dirty_recursive(nodes, parents, (*node).into());
+                    }
+                }
             }
         }
 

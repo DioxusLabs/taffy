@@ -207,7 +207,7 @@ impl CacheTree for Node {
     }
 
     fn cache_clear(&mut self, node_id: NodeId) {
-        self.node_from_id_mut(node_id).cache.clear()
+        self.node_from_id_mut(node_id).cache.clear();
     }
 }
 
