@@ -22,6 +22,8 @@ mod std {
     #[cfg(feature = "grid")]
     /// A vector of grid tracks
     pub(crate) type GridTrackVec<A> = std::vec::Vec<A>;
+    /// Rc
+    pub(crate) type Rc<A> = std::rc::Rc<A>;
 
     /// Creates a new vector with the capacity for the specified number of items before it must be resized
     #[must_use]
@@ -83,6 +85,8 @@ mod alloc {
     #[cfg(feature = "grid")]
     /// A vector of grid tracks
     pub(crate) type GridTrackVec<A> = alloc::vec::Vec<A>;
+    /// Rc
+    pub(crate) type Rc<A> = alloc::rc::Rc<A>;
 
     /// Creates a new vector with the capacity for the specified number of items before it must be resized
     #[must_use]

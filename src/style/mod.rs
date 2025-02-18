@@ -6,6 +6,8 @@ mod dimension;
 
 #[cfg(feature = "block_layout")]
 mod block;
+#[cfg(feature = "builder")]
+mod builder;
 #[cfg(feature = "flexbox")]
 mod flex;
 #[cfg(feature = "grid")]
@@ -18,6 +20,8 @@ pub use self::dimension::{Dimension, LengthPercentage, LengthPercentageAuto};
 
 #[cfg(feature = "block_layout")]
 pub use self::block::{BlockContainerStyle, BlockItemStyle, TextAlign};
+#[cfg(feature = "builder")]
+pub use self::builder::{NodeIdRef, StyleBuilder};
 #[cfg(feature = "flexbox")]
 pub use self::flex::{FlexDirection, FlexWrap, FlexboxContainerStyle, FlexboxItemStyle};
 #[cfg(feature = "grid")]
