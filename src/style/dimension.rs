@@ -7,7 +7,7 @@ use crate::style_helpers::{FromLength, FromPercent, TaffyAuto, TaffyZero};
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`](crate::geometry::Size).
 #[derive(Copy, Clone, PartialEq, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct LengthPercentage(pub(crate) CompactLength);
 impl TaffyZero for LengthPercentage {
     const ZERO: Self = Self(CompactLength::ZERO);
@@ -61,11 +61,27 @@ impl LengthPercentage {
     }
 }
 
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for LengthPercentage {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let inner = CompactLength::deserialize(deserializer)?;
+        // Note: validation intentionally excludes the CALC_TAG as deserializing calc() values is not supported
+        if matches!(inner.tag(), CompactLength::LENGTH_TAG | CompactLength::PERCENT_TAG) {
+            Ok(Self(inner))
+        } else {
+            Err(serde::de::Error::custom("Invalid tag"))
+        }
+    }
+}
+
 /// A unit of linear measurement
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`](crate::geometry::Size).
 #[derive(Copy, Clone, PartialEq, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct LengthPercentageAuto(pub(crate) CompactLength);
 impl TaffyZero for LengthPercentageAuto {
     const ZERO: Self = Self(CompactLength::ZERO);
@@ -156,11 +172,27 @@ impl LengthPercentageAuto {
     }
 }
 
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for LengthPercentageAuto {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let inner = CompactLength::deserialize(deserializer)?;
+        // Note: validation intentionally excludes the CALC_TAG as deserializing calc() values is not supported
+        if matches!(inner.tag(), CompactLength::LENGTH_TAG | CompactLength::PERCENT_TAG | CompactLength::AUTO_TAG) {
+            Ok(Self(inner))
+        } else {
+            Err(serde::de::Error::custom("Invalid tag"))
+        }
+    }
+}
+
 /// A unit of linear measurement
 ///
 /// This is commonly combined with [`Rect`], [`Point`](crate::geometry::Point) and [`Size<T>`](crate::geometry::Size).
 #[derive(Copy, Clone, PartialEq, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct Dimension(pub(crate) CompactLength);
 impl TaffyZero for Dimension {
     const ZERO: Self = Self(CompactLength::ZERO);
@@ -256,6 +288,22 @@ impl Dimension {
     /// Get the raw `CompactLength` value for non-calc variants that have a numeric parameter
     pub fn value(self) -> f32 {
         self.0.value()
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for Dimension {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let inner = CompactLength::deserialize(deserializer)?;
+        // Note: validation intentionally excludes the CALC_TAG as deserializing calc() values is not supported
+        if matches!(inner.tag(), CompactLength::LENGTH_TAG | CompactLength::PERCENT_TAG | CompactLength::AUTO_TAG) {
+            Ok(Self(inner))
+        } else {
+            Err(serde::de::Error::custom("Invalid tag"))
+        }
     }
 }
 

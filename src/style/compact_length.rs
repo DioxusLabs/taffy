@@ -506,10 +506,21 @@ impl<'de> serde::Deserialize<'de> for CompactLength {
     {
         let bits: u64 = u64::deserialize(deserializer)?;
         let value = Self(CompactLengthInner::from_serialized(bits));
-        if value.is_calc() {
-            Err(serde::de::Error::custom("Cannot deserialize Calc value"))
-        } else {
+        // Note: validation intentionally excludes the CALC_TAG as deserializing calc() values is not supported
+        if matches!(
+            value.tag(),
+            CompactLength::LENGTH_TAG
+                | CompactLength::PERCENT_TAG
+                | CompactLength::AUTO_TAG
+                | CompactLength::MIN_CONTENT_TAG
+                | CompactLength::MAX_CONTENT_TAG
+                | CompactLength::FIT_CONTENT_PX_TAG
+                | CompactLength::FIT_CONTENT_PERCENT_TAG
+                | CompactLength::FR_TAG
+        ) {
             Ok(value)
+        } else {
+            Err(serde::de::Error::custom("Cannot deserialize Calc value"))
         }
     }
 }
