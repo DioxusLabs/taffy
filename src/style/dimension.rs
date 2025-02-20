@@ -43,6 +43,7 @@ impl LengthPercentage {
     ///
     /// The low 3 bits are used as a tag value and will be returned as 0.
     #[inline(always)]
+    #[cfg(feature = "calc")]
     pub fn calc(ptr: *const ()) -> Self {
         Self(CompactLength::calc(ptr))
     }
@@ -133,6 +134,7 @@ impl LengthPercentageAuto {
     ///
     /// The low 3 bits are used as a tag value and will be returned as 0.
     #[inline]
+    #[cfg(feature = "calc")]
     pub fn calc(ptr: *const ()) -> Self {
         Self(CompactLength::calc(ptr))
     }
@@ -160,6 +162,7 @@ impl LengthPercentageAuto {
             CompactLength::LENGTH_TAG => Some(self.0.value()),
             CompactLength::PERCENT_TAG => Some(context * self.0.value()),
             CompactLength::AUTO_TAG => None,
+            #[cfg(feature = "calc")]
             _ if self.0.is_calc() => Some(calc_resolver(self.0.calc_value(), context)),
             _ => unreachable!("LengthPercentageAuto values cannot be constructed with other tags"),
         }
@@ -249,6 +252,7 @@ impl Dimension {
     ///
     /// The low 3 bits are used as a tag value and will be returned as 0.
     #[inline]
+    #[cfg(feature = "calc")]
     pub fn calc(ptr: *const ()) -> Self {
         Self(CompactLength::calc(ptr))
     }

@@ -41,12 +41,6 @@ mod compat {
 #[cfg(not(any(target_pointer_width = "32", target_pointer_width = "64")))]
 std::compile_error!("Taffy only supports targets with a pointer width of 32 or 64 bits");
 
-// /// Error serializing
-// enum SerializeErr {
-//     /// Serializing calc values is not supported
-//     CalcValue,
-// }
-
 /// CompactLengthInner implementation for 64 bit platforms
 #[cfg(target_pointer_width = "64")]
 mod inner {
@@ -92,6 +86,7 @@ mod inner {
 
         /// Get the calc tag (low 3 bits)
         #[inline(always)]
+        #[cfg(feature = "calc")]
         pub(super) fn calc_tag(self) -> usize {
             (self.tagged_ptr as usize) & CALC_TAG_MASK
         }
@@ -167,6 +162,7 @@ mod inner {
 
         /// Get the calc tag (low 3 bits)
         #[inline(always)]
+        #[cfg(feature = "calc")]
         pub(super) fn calc_tag(self) -> usize {
             self.tag
         }
@@ -214,6 +210,7 @@ pub struct CompactLength(CompactLengthInner);
 
 impl CompactLength {
     /// The tag indicating a calc() value
+    #[cfg(feature = "calc")]
     pub const CALC_TAG: usize = 0b000;
     /// The tag indicating a length value
     pub const LENGTH_TAG: usize = 0b0000_0001;
@@ -254,6 +251,7 @@ impl CompactLength {
     ///
     /// The low 3 bits are used as a tag value and will be returned as 0.
     #[inline]
+    #[cfg(feature = "calc")]
     pub fn calc(ptr: *const ()) -> Self {
         assert_ne!(ptr as u64, 0);
         assert_eq!(ptr as u64 & 0b111, 0);
@@ -332,12 +330,14 @@ impl CompactLength {
 
     /// Get the calc pointer of the `CompactLength`
     #[inline(always)]
+    #[cfg(feature = "calc")]
     pub fn calc_value(self) -> *const () {
         self.0.ptr()
     }
 
     /// Returns true if the value is 0 px
     #[inline(always)]
+    #[cfg(feature = "calc")]
     pub fn is_calc(self) -> bool {
         self.0.calc_tag() == 0
     }
@@ -426,8 +426,14 @@ impl CompactLength {
     /// Whether the track sizing functions depends on the size of the parent node
     #[inline(always)]
     pub fn uses_percentage(self) -> bool {
-        // TODO: handle calc() values
-        matches!(self.tag(), CompactLength::PERCENT_TAG | CompactLength::FIT_CONTENT_PERCENT_TAG) || self.is_calc()
+        #[cfg(feature = "calc")]
+        {
+            matches!(self.tag(), CompactLength::PERCENT_TAG | CompactLength::FIT_CONTENT_PERCENT_TAG) || self.is_calc()
+        }
+        #[cfg(not(feature = "calc"))]
+        {
+            matches!(self.tag(), CompactLength::PERCENT_TAG | CompactLength::FIT_CONTENT_PERCENT_TAG)
+        }
     }
 
     /// Resolve percentage values against the passed parent_size, returning Some(value)
@@ -440,6 +446,7 @@ impl CompactLength {
     ) -> Option<f32> {
         match self.tag() {
             CompactLength::PERCENT_TAG => Some(self.value() * parent_size),
+            #[cfg(feature = "calc")]
             _ if self.is_calc() => Some(calc_resolver(self.0.ptr(), parent_size)),
             _ => None,
         }
@@ -490,11 +497,17 @@ impl serde::Serialize for CompactLength {
     where
         S: serde::Serializer,
     {
-        if self.tag() == Self::CALC_TAG {
-            Err(serde::ser::Error::custom("Cannot serialize Calc value"))
-        } else {
-            serializer.serialize_u64(self.0.serialized())
+        #[cfg(feature = "calc")]
+        {
+            if self.tag() == Self::CALC_TAG {
+                Err(serde::ser::Error::custom("Cannot serialize Calc value"))
+            } else {
+                serializer.serialize_u64(self.0.serialized())
+            }
         }
+
+        #[cfg(not(feature = "calc"))]
+        serializer.serialize_u64(self.0.serialized())
     }
 }
 
