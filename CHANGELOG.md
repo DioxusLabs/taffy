@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.6
+
+### Fixed
+
+- Fix infinite loop due to float precision in grid layout maximise tracks step (#792)
+
 ## 0.7.5
 
 ### Fixed
