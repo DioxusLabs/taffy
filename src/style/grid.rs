@@ -366,7 +366,7 @@ impl Default for Line<GridPlacement> {
 /// on the size of it's contents, the amount of available space, and the sizing constraint the grid is being size under.
 /// See <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns>
 #[derive(Copy, Clone, PartialEq, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct MaxTrackSizingFunction(pub(crate) CompactLength);
 impl TaffyZero for MaxTrackSizingFunction {
     const ZERO: Self = Self(CompactLength::ZERO);
@@ -418,6 +418,31 @@ impl From<Dimension> for MaxTrackSizingFunction {
 impl From<MinTrackSizingFunction> for MaxTrackSizingFunction {
     fn from(input: MinTrackSizingFunction) -> Self {
         Self(input.0)
+    }
+}
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for MaxTrackSizingFunction {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let inner = CompactLength::deserialize(deserializer)?;
+        // Note: validation intentionally excludes the CALC_TAG as deserializing calc() values is not supported
+        if matches!(
+            inner.tag(),
+            CompactLength::LENGTH_TAG
+                | CompactLength::PERCENT_TAG
+                | CompactLength::AUTO_TAG
+                | CompactLength::MIN_CONTENT_TAG
+                | CompactLength::MAX_CONTENT_TAG
+                | CompactLength::FIT_CONTENT_PX_TAG
+                | CompactLength::FIT_CONTENT_PERCENT_TAG
+                | CompactLength::FR_TAG
+        ) {
+            Ok(Self(inner))
+        } else {
+            Err(serde::de::Error::custom("Invalid tag"))
+        }
     }
 }
 
@@ -637,7 +662,7 @@ impl MaxTrackSizingFunction {
 /// on the size of it's contents, the amount of available space, and the sizing constraint the grid is being size under.
 /// See <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns>
 #[derive(Copy, Clone, PartialEq, Debug)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize))]
 pub struct MinTrackSizingFunction(pub(crate) CompactLength);
 impl TaffyZero for MinTrackSizingFunction {
     const ZERO: Self = Self(CompactLength::ZERO);
@@ -674,6 +699,30 @@ impl From<LengthPercentageAuto> for MinTrackSizingFunction {
 impl From<Dimension> for MinTrackSizingFunction {
     fn from(input: Dimension) -> Self {
         Self(input.0)
+    }
+}
+#[cfg(feature = "serde")]
+impl<'de> serde::Deserialize<'de> for MinTrackSizingFunction {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let inner = CompactLength::deserialize(deserializer)?;
+        // Note: validation intentionally excludes the CALC_TAG as deserializing calc() values is not supported
+        if matches!(
+            inner.tag(),
+            CompactLength::LENGTH_TAG
+                | CompactLength::PERCENT_TAG
+                | CompactLength::AUTO_TAG
+                | CompactLength::MIN_CONTENT_TAG
+                | CompactLength::MAX_CONTENT_TAG
+                | CompactLength::FIT_CONTENT_PX_TAG
+                | CompactLength::FIT_CONTENT_PERCENT_TAG
+        ) {
+            Ok(Self(inner))
+        } else {
+            Err(serde::de::Error::custom("Invalid tag"))
+        }
     }
 }
 
