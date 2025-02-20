@@ -82,6 +82,15 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features std,taffy_tree,grid,flexbox,block_layout
+      - run: cargo test --tests --no-default-features --features std,taffy_tree,grid,flexbox,block_layout,calc
+
+  test-features-default-except-calc:
+    name: "Test Suite [default except calc]"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --no-default-features --features std,taffy_tree,grid,flexbox,block_layout
       - run: cargo test --tests --no-default-features --features std,taffy_tree,grid,flexbox,block_layout
 
   test-features-no-grid-nor-flexbox:
@@ -92,7 +101,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo build --no-default-features --features std
       - run: cargo build --no-default-features --features std,taffy_tree
-      - run: cargo test --tests --no-default-features --features std,taffy_tree
+      - run: cargo test --tests --no-default-features --features std,taffy_tree,calc
 
   # With std feature
   test-features-flexbox:
