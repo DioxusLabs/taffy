@@ -11,6 +11,8 @@ mod flex;
 #[cfg(feature = "grid")]
 mod grid;
 
+use std::sync::Arc;
+
 pub use self::alignment::{AlignContent, AlignItems, AlignSelf, JustifyContent, JustifyItems, JustifySelf};
 pub use self::available_space::AvailableSpace;
 pub use self::compact_length::CompactLength;
@@ -20,8 +22,12 @@ pub use self::dimension::{Dimension, LengthPercentage, LengthPercentageAuto};
 pub use self::block::{BlockContainerStyle, BlockItemStyle, TextAlign};
 #[cfg(feature = "flexbox")]
 pub use self::flex::{FlexDirection, FlexWrap, FlexboxContainerStyle, FlexboxItemStyle};
+#[cfg(feature = "grid_named")]
+pub use self::grid::{CheapCloneStr, GridTemplateArea};
 #[cfg(feature = "grid")]
-pub(crate) use self::grid::{GenericGridPlacement, OriginZeroGridPlacement};
+pub(crate) use self::grid::{
+    GenericGridPlacement, GridAreaAxis, GridAreaEnd, NonNamedGridPlacement, OriginZeroGridPlacement,
+};
 #[cfg(feature = "grid")]
 pub use self::grid::{
     GridAutoFlow, GridContainerStyle, GridItemStyle, GridPlacement, GridTrackRepetition, MaxTrackSizingFunction,
@@ -44,6 +50,9 @@ use crate::util::sys::GridTrackVec;
 /// but this is a just a convenience to save on boilerplate for styles that your implementation doesn't support. You will need
 /// to override the default implementation for each style property that your style type actually supports.
 pub trait CoreStyle {
+    /// The type of custom identifiers used to identify named grid lines and areas
+    type CustomIdent: CheapCloneStr;
+
     /// Which box generation mode should be used
     #[inline(always)]
     fn box_generation_mode(&self) -> BoxGenerationMode {
@@ -450,6 +459,9 @@ pub struct Style {
     /// Defines the track sizing functions (widths) of the grid columns
     #[cfg(feature = "grid")]
     pub grid_template_columns: GridTrackVec<TrackSizingFunction>,
+    /// Defines the rectangular grid areas
+    #[cfg(feature = "grid_named")]
+    pub grid_template_areas: GridTrackVec<GridTemplateArea<Arc<str>>>,
     /// Defines the size of implicitly created rows
     #[cfg(feature = "grid")]
     pub grid_auto_rows: GridTrackVec<NonRepeatedTrackSizingFunction>,
@@ -463,10 +475,10 @@ pub struct Style {
     // Grid child properties
     /// Defines which row in the grid the item should start and end at
     #[cfg(feature = "grid")]
-    pub grid_row: Line<GridPlacement>,
+    pub grid_row: Line<GridPlacement<Arc<str>>>,
     /// Defines which column in the grid the item should start and end at
     #[cfg(feature = "grid")]
-    pub grid_column: Line<GridPlacement>,
+    pub grid_column: Line<GridPlacement<Arc<str>>>,
 }
 
 impl Style {
@@ -521,6 +533,8 @@ impl Style {
         grid_template_rows: GridTrackVec::new(),
         #[cfg(feature = "grid")]
         grid_template_columns: GridTrackVec::new(),
+        #[cfg(feature = "grid_named")]
+        grid_template_areas: GridTrackVec::new(),
         #[cfg(feature = "grid")]
         grid_auto_rows: GridTrackVec::new(),
         #[cfg(feature = "grid")]
@@ -541,6 +555,8 @@ impl Default for Style {
 }
 
 impl CoreStyle for Style {
+    type CustomIdent = Arc<str>;
+
     #[inline(always)]
     fn box_generation_mode(&self) -> BoxGenerationMode {
         match self.display {
@@ -608,6 +624,8 @@ impl CoreStyle for Style {
 }
 
 impl<T: CoreStyle> CoreStyle for &'_ T {
+    type CustomIdent = T::CustomIdent;
+
     #[inline(always)]
     fn box_generation_mode(&self) -> BoxGenerationMode {
         (*self).box_generation_mode()
@@ -809,6 +827,12 @@ impl GridContainerStyle for Style {
     where
         Self: 'a;
 
+    #[cfg(feature = "grid_named")]
+    type GridTemplateAreas<'a>
+        = &'a [GridTemplateArea<Self::CustomIdent>]
+    where
+        Self: 'a;
+
     #[inline(always)]
     fn grid_template_rows(&self) -> &[TrackSizingFunction] {
         &self.grid_template_rows
@@ -849,6 +873,10 @@ impl GridContainerStyle for Style {
     fn justify_items(&self) -> Option<AlignItems> {
         self.justify_items
     }
+
+    fn grid_template_areas(&self) -> Option<&[GridTemplateArea<Self::CustomIdent>]> {
+        Some(&self.grid_template_areas)
+    }
 }
 
 #[cfg(feature = "grid")]
@@ -859,6 +887,12 @@ impl<T: GridContainerStyle> GridContainerStyle for &'_ T {
         Self: 'a;
     type AutoTrackList<'a>
         = T::AutoTrackList<'a>
+    where
+        Self: 'a;
+
+    #[cfg(feature = "grid_named")]
+    type GridTemplateAreas<'a>
+        = T::GridTemplateAreas<'a>
     where
         Self: 'a;
 
@@ -877,6 +911,11 @@ impl<T: GridContainerStyle> GridContainerStyle for &'_ T {
     #[inline(always)]
     fn grid_auto_columns(&self) -> Self::AutoTrackList<'_> {
         (*self).grid_auto_columns()
+    }
+    /// Named grid areas
+    #[cfg(feature = "grid_named")]
+    fn grid_template_areas(&self) -> Option<Self::GridTemplateAreas<'_>> {
+        (*self).grid_template_areas()
     }
     #[inline(always)]
     fn grid_auto_flow(&self) -> GridAutoFlow {
@@ -907,12 +946,14 @@ impl<T: GridContainerStyle> GridContainerStyle for &'_ T {
 #[cfg(feature = "grid")]
 impl GridItemStyle for Style {
     #[inline(always)]
-    fn grid_row(&self) -> Line<GridPlacement> {
-        self.grid_row
+    fn grid_row(&self) -> Line<GridPlacement<Self::CustomIdent>> {
+        // TODO: Investigate eliminating clone
+        self.grid_row.clone()
     }
     #[inline(always)]
-    fn grid_column(&self) -> Line<GridPlacement> {
-        self.grid_column
+    fn grid_column(&self) -> Line<GridPlacement<Self::CustomIdent>> {
+        // TODO: Investigate eliminating clone
+        self.grid_column.clone()
     }
     #[inline(always)]
     fn align_self(&self) -> Option<AlignSelf> {
@@ -927,11 +968,11 @@ impl GridItemStyle for Style {
 #[cfg(feature = "grid")]
 impl<T: GridItemStyle> GridItemStyle for &'_ T {
     #[inline(always)]
-    fn grid_row(&self) -> Line<GridPlacement> {
+    fn grid_row(&self) -> Line<GridPlacement<Self::CustomIdent>> {
         (*self).grid_row()
     }
     #[inline(always)]
-    fn grid_column(&self) -> Line<GridPlacement> {
+    fn grid_column(&self) -> Line<GridPlacement<Self::CustomIdent>> {
         (*self).grid_column()
     }
     #[inline(always)]
