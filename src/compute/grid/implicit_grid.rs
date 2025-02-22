@@ -2,7 +2,7 @@
 //! to reduce the number of allocations required when creating a grid.
 use crate::geometry::Line;
 use crate::style::{GenericGridPlacement, GridPlacement};
-use crate::GridItemStyle;
+use crate::{CheapCloneStr, GridItemStyle};
 use core::cmp::{max, min};
 
 use super::types::TrackCounts;
@@ -91,8 +91,8 @@ fn get_known_child_positions<'a, S: GridItemStyle + 'a>(
 ///
 /// Values are returned in origin-zero coordinates
 #[inline]
-fn child_min_line_max_line_span(
-    line: Line<GridPlacement>,
+fn child_min_line_max_line_span<S: CheapCloneStr>(
+    line: Line<GridPlacement<S>>,
     explicit_track_count: u16,
 ) -> (OriginZeroLine, OriginZeroLine, u16) {
     use GenericGridPlacement::*;
@@ -104,7 +104,8 @@ fn child_min_line_max_line_span(
     // D. If the placement contains only a span for a named line, replace it with a span of 1.
 
     // Convert line into origin-zero coordinates before attempting to analyze
-    let oz_line = line.into_origin_zero(explicit_track_count);
+    // We ignore named lines here as they are accounted for separately
+    let oz_line = line.into_origin_zero_ignoring_named(explicit_track_count);
 
     let min = match (oz_line.start, oz_line.end) {
         // Both tracks specified
@@ -156,8 +157,8 @@ fn child_min_line_max_line_span(
 
     // Calculate span only for indefinitely placed items as we don't need for other items (whose required space will
     // be taken into account by min and max)
-    let span = match (line.start, line.end) {
-        (Auto | Span(_), Auto | Span(_)) => line.indefinite_span(),
+    let span = match (oz_line.start, oz_line.end) {
+        (Auto | Span(_), Auto | Span(_)) => oz_line.indefinite_span(),
         _ => 1,
     };
 

@@ -4,6 +4,7 @@ mod coordinates;
 mod grid_item;
 mod grid_track;
 mod grid_track_counts;
+mod named;
 
 // Publish only locally in the grid module
 pub(super) use cell_occupancy::{CellOccupancyMatrix, CellOccupancyState};
@@ -14,6 +15,8 @@ pub(super) use grid_track_counts::TrackCounts;
 
 #[allow(unused_imports)]
 pub(super) use grid_track::GridTrackKind;
+
+pub(super) use named::NamedLineResolver;
 
 // pub(super) enum GridPosition {
 //     Auto,

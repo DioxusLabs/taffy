@@ -13,6 +13,7 @@ use crate::{GridContainerStyle, MaybeResolve};
 pub(crate) fn compute_explicit_grid_size_in_axis(
     style: &impl GridContainerStyle,
     template: &[TrackSizingFunction],
+    grid_area_track_count: u16,
     inner_container_size: Size<Option<f32>>,
     resolve_calc_value: impl Fn(*const (), f32) -> f32,
     axis: AbsoluteAxis,
@@ -174,7 +175,8 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
         }
     };
 
-    non_auto_repeating_track_count + (repetition_track_count * num_repetitions)
+    let grid_template_track_count = non_auto_repeating_track_count + (repetition_track_count * num_repetitions);
+    (grid_template_track_count).max(grid_area_track_count)
 }
 
 /// Resolve the track sizing functions of explicit tracks, automatically created tracks, and gutters

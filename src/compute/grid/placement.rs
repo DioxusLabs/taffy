@@ -1,13 +1,13 @@
 //! Implements placing items in the grid and resolving the implicit grid.
 //! <https://www.w3.org/TR/css-grid-1/#placement>
 use super::types::{CellOccupancyMatrix, CellOccupancyState, GridItem};
-use super::OriginZeroLine;
+use super::{NamedLineResolver, OriginZeroLine};
 use crate::geometry::Line;
 use crate::geometry::{AbsoluteAxis, InBothAbsAxis};
 use crate::style::{AlignItems, GridAutoFlow, OriginZeroGridPlacement};
 use crate::tree::NodeId;
 use crate::util::sys::Vec;
-use crate::GridItemStyle;
+use crate::{CoreStyle, GridItemStyle};
 
 /// 8.5. Grid Item Placement Algorithm
 /// Place items into the grid, generating new rows/column into the implicit grid as required
@@ -20,6 +20,7 @@ pub(super) fn place_grid_items<'a, S, ChildIter>(
     grid_auto_flow: GridAutoFlow,
     align_items: AlignItems,
     justify_items: AlignItems,
+    named_line_resolver: &NamedLineResolver<<S as CoreStyle>::CustomIdent>,
 ) where
     S: GridItemStyle + 'a,
     ChildIter: Iterator<Item = (usize, NodeId, S)>,
@@ -32,10 +33,12 @@ pub(super) fn place_grid_items<'a, S, ChildIter>(
         let explicit_row_count = cell_occupancy_matrix.track_counts(AbsoluteAxis::Vertical).explicit;
         move |(index, node, style): (usize, NodeId, S)| -> (_, _, _, S) {
             let origin_zero_placement = InBothAbsAxis {
-                horizontal: style
-                    .grid_column()
+                horizontal: named_line_resolver
+                    .resolve_column_names(&style.grid_column())
                     .map(|placement| placement.into_origin_zero_placement(explicit_col_count)),
-                vertical: style.grid_row().map(|placement| placement.into_origin_zero_placement(explicit_row_count)),
+                vertical: named_line_resolver
+                    .resolve_row_names(&style.grid_row())
+                    .map(|placement| placement.into_origin_zero_placement(explicit_row_count)),
             };
             (index, node, origin_zero_placement, style)
         }
