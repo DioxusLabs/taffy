@@ -43,8 +43,9 @@ impl NodeIdRef {
 /// * A struct of the given name, with the following fields
 ///     * `children`: a vec of child builder
 ///     * `node_id_ref`: a field holding a [`Option<NodeIdRef>`], wich allow for retrieving the [`NodeId`] of the built node
+///     * `style`: the [`Style`] that will be modified when calling the setters in the `impl` block
 ///     * A [`Option<_>`] field for each provided field
-/// * An `impl`` block containing the following :
+/// * An `impl` block containing the following :
 ///     * A method named after the provided field, used to set said field
 ///     * A `build_style` method, used to generate a [`Style`](super::Style) based on data stored in the builder
 macro_rules! gen_builder {
@@ -80,10 +81,7 @@ macro_rules! gen_builder {
         pub struct $builder<'a> {
             children: Vec<&'a StyleBuilder<'a>>,
             node_id_ref: Option<NodeIdRef>,
-            $(
-                $(#[cfg($($cfg)+)])?
-                $field: Option<$type>,
-            )*
+            style: Style,
         }
 
         impl<'a> $builder<'a> {
@@ -93,26 +91,10 @@ macro_rules! gen_builder {
                 #[doc = "\nresulting [`Style`](super::Style) when the [`build`](StyleBuilder::build) method is called."]
                 #[doc = concat!("\n\nSee [`Style::", stringify!($field), "`](super::Style::", stringify!($field), ").")]
                 pub fn $field(&mut self, $field: impl Into<$type>) -> &mut Self {
-                    self.$field = Some($field.into());
+                    self.style.$field = $field.into();
                     self
                 }
             )*
-
-            /// Build an [`Style`](super::Style) based on provided cconfiguration.
-            /// Calling this without setting any field results in
-            /// [`Style::default()`](super::Style::default)
-            pub fn build_style(&self) -> Style {
-                let mut style = Style::default();
-
-                $(
-                    $(#[cfg($($cfg)+)])?
-                    if let Some(ref value) = self.$field {
-                        style.$field = Clone::clone(value);
-                    }
-                )*
-
-                style
-            }
         }
     };
 }
@@ -192,8 +174,7 @@ impl<'a> StyleBuilder<'a> {
     /// retrieved once [`build`](StyleBuilder::build) is invoked via setting a [`NodeIdRef`]
     /// in each of the desired child [`StyleBuilder`]
     pub fn build(&self, tree: &mut TaffyTree) -> TaffyResult<NodeId> {
-        let style = self.build_style();
-        let node_id = tree.new_leaf(style)?;
+        let node_id = tree.new_leaf(self.style.clone())?;
 
         if let Some(node_id_ref) = self.node_id_ref.as_ref() {
             node_id_ref.set(node_id);
@@ -244,23 +225,13 @@ impl<'a> StyleBuilder<'a> {
 
     /// Shorthand method to set the width of the resulting [`Style`]
     pub fn width(&'a mut self, width: Dimension) -> &'a mut StyleBuilder<'a> {
-        match self.size {
-            Some(size) => {
-                self.size = Some(Size { width, ..size });
-            }
-            None => self.size = Some(Size { width, ..Style::DEFAULT.size }),
-        }
+        self.style.size.width = width;
         self
     }
 
     /// Shorthand method to set the height of the resulting [`Style`]
     pub fn height(&'a mut self, height: Dimension) -> &'a mut StyleBuilder<'a> {
-        match self.size {
-            Some(size) => {
-                self.size = Some(Size { height, ..size });
-            }
-            None => self.size = Some(Size { height, ..Style::DEFAULT.size }),
-        }
+        self.style.size.height = height;
         self
     }
 }
@@ -280,7 +251,7 @@ mod test {
 
     #[test]
     fn builder_defaults_match_defaults() {
-        assert_eq!(StyleBuilder::default().build_style(), Style::default())
+        assert_eq!(StyleBuilder::default().style, Style::default())
     }
 
     #[test]
@@ -362,17 +333,11 @@ mod test {
 
     #[test]
     fn row() {
-        assert_eq!(
-            StyleBuilder::row().build_style(),
-            Style { flex_direction: FlexDirection::Row, ..Default::default() }
-        )
+        assert_eq!(StyleBuilder::row().style, Style { flex_direction: FlexDirection::Row, ..Default::default() })
     }
 
     #[test]
     fn column() {
-        assert_eq!(
-            StyleBuilder::column().build_style(),
-            Style { flex_direction: FlexDirection::Column, ..Default::default() }
-        )
+        assert_eq!(StyleBuilder::column().style, Style { flex_direction: FlexDirection::Column, ..Default::default() })
     }
 }
