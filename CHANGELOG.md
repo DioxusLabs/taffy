@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.7
+
+### Fixed
+
+- Add `#[inline]` annotation to some methods on `TaffyTree` (#802)
+- Add `TaffyTree::remove_children_range` method (#802)
+
 ## 0.7.6
 
 ### Fixed
