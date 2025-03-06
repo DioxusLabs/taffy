@@ -45,6 +45,7 @@ impl CosmicTextContext {
     }
 }
 
+#[allow(clippy::large_enum_variant)]
 enum NodeContext {
     Text(CosmicTextContext),
     Image(ImageContext),
