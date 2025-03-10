@@ -251,13 +251,13 @@ impl Default for Position {
 ///   - `max_size`
 ///   - `flex_basis`
 ///
-/// See h<ttps://developer.mozilla.org/en-US/docs/Web/CSS/box-sizing>
+/// See <https://developer.mozilla.org/en-US/docs/Web/CSS/box-sizing>
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum BoxSizing {
-    /// Size styles such size, min_size, max_size specify the box's "content box" (the size excluding padding/border/margin)
-    BorderBox,
     /// Size styles such size, min_size, max_size specify the box's "border box" (the size excluding margin but including padding/border)
+    BorderBox,
+    /// Size styles such size, min_size, max_size specify the box's "content box" (the size excluding padding/border/margin)
     ContentBox,
 }
 
