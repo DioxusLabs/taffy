@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.8.0
+
+The big feature in this release is support for `calc()` values in the low-level API.
+To use this API pass a type-erased point (`*const ()`) to the value construction
+
+As part of implementing this support we have also changed the representation of the
+`LengthPercentage`, `LengthPercentageAuto`, `Dimension`, `MinTrackSizingFunction`, and 
+`MaxTrackSizingFunction` types. These are now represented as a tagged pointer rather
+than an enum.
+
+
+### Fixed
+
+- Fix infinite loop due to float precision in grid layout maximise tracks step (#792)
+
+## 0.7.6
+
+### Fixed
+
+- Fix infinite loop due to float precision in grid layout maximise tracks step (#792)
+
+## 0.7.5
+
+### Fixed
+
+- Grid: only stretch auto tracks if content-alignment is stretch (#783)
+
+## 0.7.4
+
+### Fixed
+
+- Fix detailed grid info for empty grid (#782)
+
 ## 0.7.3
 
 ### Fixed
