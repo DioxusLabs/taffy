@@ -3,9 +3,7 @@ use super::{
     AlignContent, AlignItems, AlignSelf, BoxSizing, Dimension, Display, JustifyContent, LengthPercentage,
     LengthPercentageAuto, Overflow, Position, Style,
 };
-use crate::sys::Rc;
 use crate::{util::sys::Vec, Line, NodeId, Point, Rect, Size};
-use core::cell::Cell;
 
 #[cfg(feature = "flexbox")]
 use super::{FlexDirection, FlexWrap};
@@ -20,22 +18,22 @@ use {
 /// `NodeIdRef` can be passed to a [`StyleBuilder`] so that caller can later
 /// retrieve the [`NodeId`] of a built tree node.
 #[derive(Debug, Clone, Default)]
-pub struct NodeIdRef(Rc<Cell<Option<NodeId>>>);
+pub struct NodeIdRef(Option<NodeId>);
 
 impl NodeIdRef {
     /// Create an empty [`NodeIdRef`].
     pub fn new() -> Self {
-        Self(Rc::new(Cell::new(None)))
+        Self(None)
     }
 
     /// Set the [`NodeId`].
-    fn set(&self, node_id: NodeId) {
-        self.0.set(Some(node_id));
+    fn set(&mut self, node_id: NodeId) {
+        self.0 = Some(node_id)
     }
 
     /// Get a copy of the inner [`NodeId`], if any is present.
     pub fn get(&self) -> Option<NodeId> {
-        self.0.get()
+        self.0
     }
 }
 
@@ -56,21 +54,21 @@ macro_rules! gen_builder {
         /// ```rust
         /// # use taffy::prelude::*;
         /// let mut builder_tree: TaffyTree<()> = TaffyTree::new();
-        /// let header_node_handle = NodeIdRef::new();
-        /// let body_node_handle = NodeIdRef::new();
+        /// let mut header_node_handle = NodeIdRef::new();
+        /// let mut body_node_handle = NodeIdRef::new();
         ///
         /// let builder_root_node = StyleBuilder::new()
         ///     .flex_direction(FlexDirection::Column)
         ///     .size(Size { width: length(800.0), height: length(600.0) })
         ///     .child(
-        ///         StyleBuilder::new().width(length(800.0)).height(length(100.0)).node_id_ref(header_node_handle.clone()),
+        ///         StyleBuilder::new().width(length(800.0)).height(length(100.0)).node_id_ref(&mut header_node_handle),
         ///     )
         ///     .child(
         ///         StyleBuilder::new()
         ///             .width(length(800.0))
         ///             .height(auto())
         ///             .flex_grow(1.0)
-        ///             .node_id_ref(body_node_handle.clone()),
+        ///             .node_id_ref(&mut body_node_handle),
         ///     )
         ///     .build(&mut builder_tree)
         ///     .unwrap();
@@ -79,8 +77,8 @@ macro_rules! gen_builder {
         /// ```
         #[derive(Debug, Default)]
         pub struct $builder<'a> {
-            children: Vec<&'a StyleBuilder<'a>>,
-            node_id_ref: Option<NodeIdRef>,
+            children: Vec<&'a mut StyleBuilder<'a>>,
+            node_id_ref: Option<&'a mut NodeIdRef>,
             style: Style,
         }
 
@@ -162,7 +160,7 @@ impl<'a> StyleBuilder<'a> {
     /// Add a child [`StyleBuilder`] to this builder. Calling this method does not result
     /// in the child [`StyleBuilder`] being built until the [`StyleBuilder::build`] method
     /// is invoke on this builder.
-    pub fn child(&'a mut self, style_builder: &'a StyleBuilder) -> &'a mut StyleBuilder<'a> {
+    pub fn child(&'a mut self, style_builder: &'a mut StyleBuilder<'a>) -> &'a mut StyleBuilder<'a> {
         self.children.push(style_builder);
         self
     }
@@ -173,14 +171,15 @@ impl<'a> StyleBuilder<'a> {
     /// Return a [`TaffyResult<NodeId>`] for the root node. Child [`NodeId`] can be
     /// retrieved once [`build`](StyleBuilder::build) is invoked via setting a [`NodeIdRef`]
     /// in each of the desired child [`StyleBuilder`]
-    pub fn build(&self, tree: &mut TaffyTree) -> TaffyResult<NodeId> {
+    pub fn build(&mut self, tree: &mut TaffyTree) -> TaffyResult<NodeId> {
         let node_id = tree.new_leaf(self.style.clone())?;
 
-        if let Some(node_id_ref) = self.node_id_ref.as_ref() {
+        if let Some(node_id_ref) = self.node_id_ref.as_mut() {
             node_id_ref.set(node_id);
         }
 
-        let children_node_ids = self.children.iter().map(|child| child.build(tree)).collect::<Result<Vec<_>, _>>()?;
+        let children_node_ids =
+            self.children.iter_mut().map(|child| child.build(tree)).collect::<Result<Vec<_>, _>>()?;
 
         tree.set_children(node_id, &children_node_ids)?;
 
@@ -195,14 +194,14 @@ impl<'a> StyleBuilder<'a> {
     /// # use taffy::prelude::*;
     ///
     /// let mut tree: TaffyTree<()> = TaffyTree::new();
-    /// let child_node_id_ref = NodeIdRef::new();
+    /// let mut child_node_id_ref = NodeIdRef::new();
     ///
     /// let root_node_id = StyleBuilder::new()
     ///     .display(Display::Block)
     ///     .child(
     ///         StyleBuilder::new()
     ///             .display(Display::Block)
-    ///             .node_id_ref(child_node_id_ref.clone())
+    ///             .node_id_ref(&mut child_node_id_ref)
     ///     )
     ///     .build(&mut tree)
     ///     .unwrap();
@@ -218,7 +217,7 @@ impl<'a> StyleBuilder<'a> {
     ///
     /// tree.layout(child_node_id_ref.get().unwrap()).unwrap();
     /// ```
-    pub fn node_id_ref(&'a mut self, node_id_ref: NodeIdRef) -> &'a mut StyleBuilder<'a> {
+    pub fn node_id_ref(&'a mut self, node_id_ref: &'a mut NodeIdRef) -> &'a mut StyleBuilder<'a> {
         self.node_id_ref = Some(node_id_ref);
         self
     }
@@ -284,21 +283,19 @@ mod test {
         tree.compute_layout(root_node, Size::MAX_CONTENT).unwrap();
 
         let mut builder_tree: TaffyTree<()> = TaffyTree::new();
-        let header_node_handle = NodeIdRef::new();
-        let body_node_handle = NodeIdRef::new();
+        let mut header_node_handle = NodeIdRef::new();
+        let mut body_node_handle = NodeIdRef::new();
 
         let builder_root_node = StyleBuilder::new()
             .flex_direction(FlexDirection::Column)
             .size(Size { width: length(800.0), height: length(600.0) })
-            .child(
-                StyleBuilder::new().width(length(800.0)).height(length(100.0)).node_id_ref(header_node_handle.clone()),
-            )
+            .child(StyleBuilder::new().width(length(800.0)).height(length(100.0)).node_id_ref(&mut header_node_handle))
             .child(
                 StyleBuilder::new()
                     .width(length(800.0))
                     .height(auto())
                     .flex_grow(1.0)
-                    .node_id_ref(body_node_handle.clone()),
+                    .node_id_ref(&mut body_node_handle),
             )
             .build(&mut builder_tree)
             .unwrap();
