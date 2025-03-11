@@ -5,4 +5,4 @@ edition = "2021"
 
 [dependencies]
 taffy = { path = "../.." }
-cosmic-text = "0.12"
+cosmic-text = "0.13"
