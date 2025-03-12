@@ -15,37 +15,13 @@ use {
     crate::sys::GridTrackVec,
 };
 
-/// `NodeIdRef` can be passed to a [`StyleBuilder`] so that caller can later
-/// retrieve the [`NodeId`] of a built tree node.
-#[derive(Debug, Clone, Default)]
-pub struct NodeIdRef(Option<NodeId>);
-
-impl NodeIdRef {
-    /// Create an empty [`NodeIdRef`].
-    pub fn new() -> Self {
-        Self(None)
-    }
-
-    /// Set the [`NodeId`].
-    fn set(&mut self, node_id: NodeId) {
-        self.0 = Some(node_id)
-    }
-
-    /// Get a copy of the inner [`NodeId`], if any is present.
-    pub fn get(&self) -> Option<NodeId> {
-        self.0
-    }
-}
-
 /// Given a builder name and associated fields, generate the following :
 /// * A struct of the given name, with the following fields
 ///     * `children`: a vec of child builder
-///     * `node_id_ref`: a field holding a [`Option<NodeIdRef>`], wich allow for retrieving the [`NodeId`] of the built node
+///     * `node_id_ref`: a field holding an [`Option<&mut Option<NodeId>>`], wich allow for retrieving the [`NodeId`] of the built node
 ///     * `style`: the [`Style`] that will be modified when calling the setters in the `impl` block
-///     * A [`Option<_>`] field for each provided field
 /// * An `impl` block containing the following :
 ///     * A method named after the provided field, used to set said field
-///     * A `build_style` method, used to generate a [`Style`](super::Style) based on data stored in the builder
 macro_rules! gen_builder {
     ($builder:ident, $(($field:ident: $type:ty $(, cfg: $($cfg:tt)+)?)),* $(,)?) => {
         /// Use [`StyleBuilder`] to construct a tree of nested style nodes.
@@ -54,21 +30,21 @@ macro_rules! gen_builder {
         /// ```rust
         /// # use taffy::prelude::*;
         /// let mut builder_tree: TaffyTree<()> = TaffyTree::new();
-        /// let mut header_node_handle = NodeIdRef::new();
-        /// let mut body_node_handle = NodeIdRef::new();
+        /// let mut header_node_id = None;
+        /// let mut body_node_id = None;
         ///
         /// let builder_root_node = StyleBuilder::new()
         ///     .flex_direction(FlexDirection::Column)
         ///     .size(Size { width: length(800.0), height: length(600.0) })
         ///     .child(
-        ///         StyleBuilder::new().width(length(800.0)).height(length(100.0)).node_id_ref(&mut header_node_handle),
+        ///         StyleBuilder::new().width(length(800.0)).height(length(100.0)).node_id_ref(&mut header_node_id),
         ///     )
         ///     .child(
         ///         StyleBuilder::new()
         ///             .width(length(800.0))
         ///             .height(auto())
         ///             .flex_grow(1.0)
-        ///             .node_id_ref(&mut body_node_handle),
+        ///             .node_id_ref(&mut body_node_id),
         ///     )
         ///     .build(&mut builder_tree)
         ///     .unwrap();
@@ -78,7 +54,7 @@ macro_rules! gen_builder {
         #[derive(Debug, Default)]
         pub struct $builder<'a> {
             children: Vec<&'a mut StyleBuilder<'a>>,
-            node_id_ref: Option<&'a mut NodeIdRef>,
+            node_id_ref: Option<&'a mut Option<NodeId>>,
             style: Style,
         }
 
@@ -175,7 +151,7 @@ impl<'a> StyleBuilder<'a> {
         let node_id = tree.new_leaf(self.style.clone())?;
 
         if let Some(node_id_ref) = self.node_id_ref.as_mut() {
-            node_id_ref.set(node_id);
+            **node_id_ref = Some(node_id)
         }
 
         let children_node_ids =
@@ -194,7 +170,7 @@ impl<'a> StyleBuilder<'a> {
     /// # use taffy::prelude::*;
     ///
     /// let mut tree: TaffyTree<()> = TaffyTree::new();
-    /// let mut child_node_id_ref = NodeIdRef::new();
+    /// let mut child_node_id_ref = None;
     ///
     /// let root_node_id = StyleBuilder::new()
     ///     .display(Display::Block)
@@ -210,14 +186,14 @@ impl<'a> StyleBuilder<'a> {
     ///
     /// assert!(
     ///     matches!(
-    ///         child_node_id_ref.get(),
+    ///         child_node_id_ref,
     ///         Some(_)
     ///     )
     /// );
     ///
-    /// tree.layout(child_node_id_ref.get().unwrap()).unwrap();
+    /// tree.layout(child_node_id_ref.unwrap()).unwrap();
     /// ```
-    pub fn node_id_ref(&'a mut self, node_id_ref: &'a mut NodeIdRef) -> &'a mut StyleBuilder<'a> {
+    pub fn node_id_ref(&'a mut self, node_id_ref: &'a mut Option<NodeId>) -> &'a mut StyleBuilder<'a> {
         self.node_id_ref = Some(node_id_ref);
         self
     }
@@ -242,7 +218,6 @@ mod test {
 
     use crate::{
         prelude::{auto, length, TaffyMaxContent},
-        style::builder::NodeIdRef,
         Size, TaffyTree,
     };
 
@@ -283,8 +258,8 @@ mod test {
         tree.compute_layout(root_node, Size::MAX_CONTENT).unwrap();
 
         let mut builder_tree: TaffyTree<()> = TaffyTree::new();
-        let mut header_node_handle = NodeIdRef::new();
-        let mut body_node_handle = NodeIdRef::new();
+        let mut header_node_handle = None;
+        let mut body_node_handle = None;
 
         let builder_root_node = StyleBuilder::new()
             .flex_direction(FlexDirection::Column)
@@ -312,19 +287,19 @@ mod test {
         );
         assert_eq!(
             tree.layout(header_node).unwrap().size.width,
-            builder_tree.layout(header_node_handle.get().unwrap()).unwrap().size.width
+            builder_tree.layout(header_node_handle.unwrap()).unwrap().size.width
         );
         assert_eq!(
             tree.layout(header_node).unwrap().size.height,
-            builder_tree.layout(header_node_handle.get().unwrap()).unwrap().size.height
+            builder_tree.layout(header_node_handle.unwrap()).unwrap().size.height
         );
         assert_eq!(
             tree.layout(body_node).unwrap().size.width,
-            builder_tree.layout(body_node_handle.get().unwrap()).unwrap().size.width
+            builder_tree.layout(body_node_handle.unwrap()).unwrap().size.width
         );
         assert_eq!(
             tree.layout(body_node).unwrap().size.height,
-            builder_tree.layout(body_node_handle.get().unwrap()).unwrap().size.height
+            builder_tree.layout(body_node_handle.unwrap()).unwrap().size.height
         );
     }
 

@@ -21,7 +21,7 @@ pub use self::dimension::{Dimension, LengthPercentage, LengthPercentageAuto};
 #[cfg(feature = "block_layout")]
 pub use self::block::{BlockContainerStyle, BlockItemStyle, TextAlign};
 #[cfg(feature = "builder")]
-pub use self::builder::{NodeIdRef, StyleBuilder};
+pub use self::builder::StyleBuilder;
 #[cfg(feature = "flexbox")]
 pub use self::flex::{FlexDirection, FlexWrap, FlexboxContainerStyle, FlexboxItemStyle};
 #[cfg(feature = "grid")]
