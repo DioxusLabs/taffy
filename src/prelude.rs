@@ -30,4 +30,4 @@ pub use crate::style_helpers::{
 pub use crate::TaffyTree;
 
 #[cfg(feature = "builder")]
-pub use crate::style::{NodeIdRef, StyleBuilder};
+pub use crate::style::StyleBuilder;
