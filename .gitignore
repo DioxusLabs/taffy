@@ -1,5 +1,6 @@
 /target
 /scripts/gentest/target
+/examples/cosmic_text/target
 /yoga_test_fixtures
 /yoga_test_fixtures_grouped
 /test_fixtures/_scratch
