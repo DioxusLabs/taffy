@@ -241,21 +241,24 @@ fn place_indefinitely_positioned_item(
     let (mut primary_idx, mut secondary_idx) = grid_position;
 
     if has_definite_primary_axis_position {
-        let definite_primary_placement = primary_placement_style.resolve_definite_grid_lines();
-        let defined_primary_idx = definite_primary_placement.start;
+        let primary_span = primary_placement_style.resolve_definite_grid_lines();
 
-        // Compute starting position for search
-        if defined_primary_idx < primary_idx && secondary_idx != secondary_axis_grid_start_line {
-            secondary_idx = secondary_axis_grid_start_line;
-            primary_idx = defined_primary_idx;
-        } else {
-            primary_idx = defined_primary_idx;
-        }
+        // Compute secondary axis starting position for search
+        secondary_idx = match auto_flow.is_dense() {
+            // If auto-flow is dense then we always search from the first track
+            true => secondary_axis_grid_start_line,
+            false => {
+                if primary_span.start < primary_idx {
+                    secondary_idx + 1
+                } else {
+                    secondary_idx
+                }
+            }
+        };
 
         // Item has fixed primary axis position: so we simply increment the secondary axis position
         // until we find a space that the item fits in
         loop {
-            let primary_span = Line { start: primary_idx, end: primary_idx + definite_primary_placement.span() };
             let secondary_span = Line { start: secondary_idx, end: secondary_idx + secondary_span };
 
             // If area is occupied, increment the index and try again
