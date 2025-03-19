@@ -247,7 +247,7 @@ fn place_indefinitely_positioned_item(
         // Compute starting position for search
         if defined_primary_idx < primary_idx && secondary_idx != secondary_axis_grid_start_line {
             secondary_idx = secondary_axis_grid_start_line;
-            primary_idx = defined_primary_idx + 1;
+            primary_idx = defined_primary_idx;
         } else {
             primary_idx = defined_primary_idx;
         }
