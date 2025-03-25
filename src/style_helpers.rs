@@ -56,7 +56,7 @@ pub fn span<T: TaffyGridSpan>(span: u16) -> T {
 }
 /// Trait to abstract over grid span values
 pub trait TaffyGridSpan {
-    /// Converts an iu6 into Self
+    /// Converts an u16 into Self
     fn from_span(span: u16) -> Self;
 }
 
