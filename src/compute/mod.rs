@@ -279,7 +279,7 @@ pub fn compute_hidden_layout(tree: &mut (impl LayoutPartialTree + CacheTree), no
 #[cfg(feature = "detailed_layout_info")]
 pub mod detailed_info {
     #[cfg(feature = "grid")]
-    pub use super::grid::DetailedGridInfo;
+    pub use super::grid::{DetailedGridInfo, DetailedGridTracksInfo};
 }
 
 #[cfg(test)]

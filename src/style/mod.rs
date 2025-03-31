@@ -55,7 +55,7 @@ pub trait CoreStyle {
         false
     }
     /// Is it a compressible replaced element?
-    /// https://drafts.csswg.org/css-sizing-3/#min-content-zero
+    /// <https://drafts.csswg.org/css-sizing-3/#min-content-zero>
     #[inline(always)]
     fn is_compressible_replaced(&self) -> bool {
         false
@@ -345,7 +345,7 @@ pub struct Style {
     /// This should really be part of `Display`, but it is currently seperate because table layout isn't implemented
     pub item_is_table: bool,
     /// Is it a replaced element like an image or form field?
-    /// https://drafts.csswg.org/css-sizing-3/#min-content-zero
+    /// <https://drafts.csswg.org/css-sizing-3/#min-content-zero>
     pub item_is_replaced: bool,
     /// Should size styles apply to the content box or the border box of the node
     pub box_sizing: BoxSizing,
