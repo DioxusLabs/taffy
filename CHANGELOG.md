@@ -1,5 +1,64 @@
 # Changelog
 
+## 0.8.0
+
+### Highlights
+
+**The big feature in this release is support for `calc()` values in the low-level API.**
+
+To use this API:
+
+- Implement the `resolve_calc_value` method when implementing the `LayoutPartialTree` trait.
+- Pass a type-erased pointer (`*const ()`) to constructors like `LengthPercentage::calc(...)`
+
+Taffy treats the pointer as an opaque value (excepting that it uses the low 3 bits as a tag) which it will
+pass to `LayoutPartialTree::resolve_calc_value` along with a percentage resolution basis when it needs to
+resolve the value.
+
+### Changed
+
+- The representation of many "size" types is now a tagged pointer than an enum. This is to enable `calc()`.
+  The effected types are `LengthPercentage`, `LengthPercentageAuto`, `Dimension`, `MinTrackSizingFunction`, and
+`MaxTrackSizingFunction` types.
+
+### Added
+
+- Special-case "compressible replaced elements" in grid sizing algorithm (#807)
+  This allows for more correct sizing of "replaced" elements such as images that are children
+  of flexbox or grid containers.
+
+### Fixed
+
+- Grid: Fix infinite loop due to float precision in grid layout maximise tracks step (#792)
+- Grid: Fix removed wrong addition, causing items to be misplaced. (#817)
+- Grid: Fix grid placement for items with fixed primary axis (#818)
+- Leaf layout: don't set available space to max-size (#819)
+
+## 0.7.7
+
+### Fixed
+
+- Add `#[inline]` annotation to some methods on `TaffyTree` (#802)
+- Add `TaffyTree::remove_children_range` method (#802)
+
+## 0.7.6
+
+### Fixed
+
+- Fix infinite loop due to float precision in grid layout maximise tracks step (#792)
+
+## 0.7.5
+
+### Fixed
+
+- Grid: only stretch auto tracks if content-alignment is stretch (#783)
+
+## 0.7.4
+
+### Fixed
+
+- Fix detailed grid info for empty grid (#782)
+
 ## 0.7.3
 
 ### Fixed
