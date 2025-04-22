@@ -671,7 +671,7 @@ impl<T: CoreStyle> CoreStyle for &'_ T {
 }
 
 #[cfg(feature = "block_layout")]
-impl BlockContainerStyle for &Style {
+impl BlockContainerStyle for Style {
     #[inline(always)]
     fn text_align(&self) -> TextAlign {
         self.text_align
@@ -905,7 +905,7 @@ impl<T: GridContainerStyle> GridContainerStyle for &'_ T {
 }
 
 #[cfg(feature = "grid")]
-impl GridItemStyle for &'_ Style {
+impl GridItemStyle for Style {
     #[inline(always)]
     fn grid_row(&self) -> Line<GridPlacement> {
         self.grid_row
