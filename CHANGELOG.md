@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.1
+
+### Added
+
+- Impl `GridItemStyle` and `BlockContainerStyle` for `Style` (#832).
+
 ## 0.8.0
 
 ### Highlights
