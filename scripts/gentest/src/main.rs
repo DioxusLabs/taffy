@@ -138,7 +138,7 @@ async fn main() {
 
             let ident = Ident::new(test_path_stripped.to_str().unwrap(), Span::call_site());
             let token = quote!(mod #ident;);
-            writeln!(&mut base_mod_file, "{}", token).unwrap();
+            writeln!(&mut base_mod_file, "{token}").unwrap();
         }
         // Open mod file in current folder
         let mod_path = test_path.join("mod.rs");
@@ -150,7 +150,7 @@ async fn main() {
         } else {
             quote!(mod #name_ident;)
         };
-        writeln!(&mut mod_file, "{}", token).unwrap();
+        writeln!(&mut mod_file, "{token}").unwrap();
         let mut test_filename = test_path.join(&name);
         test_filename.set_extension("rs");
         debug!("writing {} to disk...", &name);
