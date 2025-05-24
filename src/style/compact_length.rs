@@ -10,7 +10,8 @@ use crate::style_helpers::{
 /// strict pointer provenance
 mod compat {
     #![allow(unsafe_code)]
-    #![allow(clippy::transmute_float_to_int)]
+    #![allow(unknown_lints)]
+    #![allow(unnecessary_transmutes)]
 
     /// Raw transmutation from `f32` to `u32`.
     pub const fn f32_to_bits(val: f32) -> u32 {
