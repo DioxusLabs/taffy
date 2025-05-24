@@ -32,6 +32,16 @@ pub struct GridTemplateArea<CustomIdent: CheapCloneStr> {
     pub column_end: u16,
 }
 
+/// Defines a named grid line
+#[cfg(feature = "grid_named")]
+#[derive(Debug, Clone, PartialEq)]
+pub struct NamedGridLine<CustomIdent: CheapCloneStr> {
+    /// The name of the grid area which
+    pub name: CustomIdent,
+    /// The index of the row at which the grid area starts in grid coordinates.
+    pub index: u16,
+}
+
 #[cfg(feature = "grid_named")]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) enum GridAreaAxis {
@@ -65,8 +75,15 @@ pub trait GridContainerStyle: CoreStyle {
     type TemplateTrackList<'a>: Borrow<[TrackSizingFunction]>
     where
         Self: 'a;
+
     /// The type returned by grid_auto_rows and grid_auto_columns
     type AutoTrackList<'a>: Borrow<[NonRepeatedTrackSizingFunction]>
+    where
+        Self: 'a;
+
+    /// The type returned by grid_template_row_names and grid_template_column_names
+    #[cfg(feature = "grid_named")]
+    type TemplateLineNames<'a>: IntoIterator<Item = NamedGridLine<Self::CustomIdent>>
     where
         Self: 'a;
 
@@ -91,6 +108,12 @@ pub trait GridContainerStyle: CoreStyle {
     /// Named grid areas
     #[cfg(feature = "grid_named")]
     fn grid_template_areas(&self) -> Option<Self::GridTemplateAreas<'_>>;
+    /// Defines the line names for row lines
+    #[cfg(feature = "grid_named")]
+    fn grid_template_column_names(&self) -> Self::TemplateLineNames<'_>;
+    /// Defines the size of implicitly created rows
+    #[cfg(feature = "grid_named")]
+    fn grid_template_row_names(&self) -> Self::TemplateLineNames<'_>;
 
     /// Controls how items get placed into the grid for auto-placed items
     #[inline(always)]
