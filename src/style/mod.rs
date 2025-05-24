@@ -897,13 +897,13 @@ impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
     }
 
     #[inline(always)]
-    fn grid_template_column_names(&self) -> Self::TemplateLineNames<'_> {
-        self.grid_template_column_names.iter().cloned()
+    fn grid_template_column_names(&self) -> Option<Self::TemplateLineNames<'_>> {
+        Some(self.grid_template_column_names.iter().cloned())
     }
 
     #[inline(always)]
-    fn grid_template_row_names(&self) -> Self::TemplateLineNames<'_> {
-        self.grid_template_row_names.iter().cloned()
+    fn grid_template_row_names(&self) -> Option<Self::TemplateLineNames<'_>> {
+        Some(self.grid_template_row_names.iter().cloned())
     }
 }
 
@@ -954,12 +954,12 @@ impl<T: GridContainerStyle> GridContainerStyle for &'_ T {
     }
     #[cfg(feature = "grid_named")]
     #[inline(always)]
-    fn grid_template_column_names(&self) -> Self::TemplateLineNames<'_> {
+    fn grid_template_column_names(&self) -> Option<Self::TemplateLineNames<'_>> {
         (*self).grid_template_column_names()
     }
     #[cfg(feature = "grid_named")]
     #[inline(always)]
-    fn grid_template_row_names(&self) -> Self::TemplateLineNames<'_> {
+    fn grid_template_row_names(&self) -> Option<Self::TemplateLineNames<'_>> {
         (*self).grid_template_row_names()
     }
     #[inline(always)]
