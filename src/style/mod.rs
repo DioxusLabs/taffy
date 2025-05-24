@@ -23,7 +23,7 @@ pub use self::block::{BlockContainerStyle, BlockItemStyle, TextAlign};
 #[cfg(feature = "flexbox")]
 pub use self::flex::{FlexDirection, FlexWrap, FlexboxContainerStyle, FlexboxItemStyle};
 #[cfg(feature = "grid_named")]
-pub use self::grid::{CheapCloneStr, GridTemplateArea};
+pub use self::grid::{CheapCloneStr, GridTemplateArea, NamedGridLine};
 #[cfg(feature = "grid")]
 pub(crate) use self::grid::{
     GenericGridPlacement, GridAreaAxis, GridAreaEnd, NonNamedGridPlacement, OriginZeroGridPlacement,
@@ -459,9 +459,6 @@ pub struct Style<S: CheapCloneStr = Arc<str>> {
     /// Defines the track sizing functions (widths) of the grid columns
     #[cfg(feature = "grid")]
     pub grid_template_columns: GridTrackVec<TrackSizingFunction>,
-    /// Defines the rectangular grid areas
-    #[cfg(feature = "grid_named")]
-    pub grid_template_areas: GridTrackVec<GridTemplateArea<S>>,
     /// Defines the size of implicitly created rows
     #[cfg(feature = "grid")]
     pub grid_auto_rows: GridTrackVec<NonRepeatedTrackSizingFunction>,
@@ -471,6 +468,17 @@ pub struct Style<S: CheapCloneStr = Arc<str>> {
     /// Controls how items get placed into the grid for auto-placed items
     #[cfg(feature = "grid")]
     pub grid_auto_flow: GridAutoFlow,
+
+    // Grid container named properties
+    /// Defines the rectangular grid areas
+    #[cfg(feature = "grid_named")]
+    pub grid_template_areas: GridTrackVec<GridTemplateArea<S>>,
+    /// The named lines between the columns
+    #[cfg(feature = "grid_named")]
+    pub grid_template_column_names: GridTrackVec<NamedGridLine<S>>,
+    /// The named lines between the rows
+    #[cfg(feature = "grid_named")]
+    pub grid_template_row_names: GridTrackVec<NamedGridLine<S>>,
 
     // Grid child properties
     /// Defines which row in the grid the item should start and end at
@@ -535,6 +543,10 @@ impl<S: CheapCloneStr> Style<S> {
         grid_template_columns: GridTrackVec::new(),
         #[cfg(feature = "grid_named")]
         grid_template_areas: GridTrackVec::new(),
+        #[cfg(feature = "grid_named")]
+        grid_template_column_names: GridTrackVec::new(),
+        #[cfg(feature = "grid_named")]
+        grid_template_row_names: GridTrackVec::new(),
         #[cfg(feature = "grid")]
         grid_auto_rows: GridTrackVec::new(),
         #[cfg(feature = "grid")]
@@ -828,6 +840,11 @@ impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
         Self: 'a;
 
     #[cfg(feature = "grid_named")]
+    type TemplateLineNames<'a>
+        = std::iter::Cloned<std::slice::Iter<'a, NamedGridLine<Self::CustomIdent>>>
+    where
+        Self: 'a;
+    #[cfg(feature = "grid_named")]
     type GridTemplateAreas<'a>
         = std::iter::Cloned<std::slice::Iter<'a, GridTemplateArea<Self::CustomIdent>>>
     where
@@ -874,8 +891,19 @@ impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
         self.justify_items
     }
 
+    #[inline(always)]
     fn grid_template_areas(&self) -> Option<Self::GridTemplateAreas<'_>> {
         Some(self.grid_template_areas.iter().cloned())
+    }
+
+    #[inline(always)]
+    fn grid_template_column_names(&self) -> Self::TemplateLineNames<'_> {
+        self.grid_template_column_names.iter().cloned()
+    }
+
+    #[inline(always)]
+    fn grid_template_row_names(&self) -> Self::TemplateLineNames<'_> {
+        self.grid_template_row_names.iter().cloned()
     }
 }
 
@@ -887,6 +915,13 @@ impl<T: GridContainerStyle> GridContainerStyle for &'_ T {
         Self: 'a;
     type AutoTrackList<'a>
         = T::AutoTrackList<'a>
+    where
+        Self: 'a;
+
+    /// The type returned by grid_template_row_names and grid_template_column_names
+    #[cfg(feature = "grid_named")]
+    type TemplateLineNames<'a>
+        = T::TemplateLineNames<'a>
     where
         Self: 'a;
 
@@ -912,10 +947,20 @@ impl<T: GridContainerStyle> GridContainerStyle for &'_ T {
     fn grid_auto_columns(&self) -> Self::AutoTrackList<'_> {
         (*self).grid_auto_columns()
     }
-    /// Named grid areas
     #[cfg(feature = "grid_named")]
+    #[inline(always)]
     fn grid_template_areas(&self) -> Option<Self::GridTemplateAreas<'_>> {
         (*self).grid_template_areas()
+    }
+    #[cfg(feature = "grid_named")]
+    #[inline(always)]
+    fn grid_template_column_names(&self) -> Self::TemplateLineNames<'_> {
+        (*self).grid_template_column_names()
+    }
+    #[cfg(feature = "grid_named")]
+    #[inline(always)]
+    fn grid_template_row_names(&self) -> Self::TemplateLineNames<'_> {
+        (*self).grid_template_row_names()
     }
     #[inline(always)]
     fn grid_auto_flow(&self) -> GridAutoFlow {

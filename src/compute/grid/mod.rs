@@ -12,7 +12,7 @@ use crate::util::MaybeMath;
 use crate::util::{MaybeResolve, ResolveOrZero};
 use crate::{
     style_helpers::*, AlignContent, BoxGenerationMode, BoxSizing, CoreStyle, GridContainerStyle, GridItemStyle,
-    JustifyContent, LayoutGridContainer, LayoutPartialTree,
+    JustifyContent, LayoutGridContainer,
 };
 use alignment::{align_and_position_item, align_tracks};
 use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks};
@@ -105,10 +105,12 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let grid_auto_columms = style.grid_auto_columns();
     let grid_auto_rows = style.grid_auto_rows();
 
-    // type CustomIdent<'a> = <<Tree as LayoutGridContainer>::GridContainerStyle<'a> as GridContainerStyle>::CustomIdent;
-    let name_resolver = NamedLineResolver::<
-        <<Tree as LayoutPartialTree>::CoreContainerStyle<'_> as CoreStyle>::CustomIdent,
-    >::new(style.grid_template_areas());
+    // type CustomIdent<'a> = <<Tree as LayoutPartialTree>::CoreContainerStyle<'_> as CoreStyle>::CustomIdent;
+    let name_resolver = NamedLineResolver::new(
+        style.grid_template_areas(),
+        style.grid_template_column_names(),
+        style.grid_template_row_names(),
+    );
     let grid_area_column_count = name_resolver.area_column_count();
     let grid_area_row_count = name_resolver.area_row_count();
 

@@ -1,12 +1,14 @@
 use crate::{
     CheapCloneStr, GenericGridPlacement, GridAreaAxis, GridAreaEnd, GridPlacement, GridTemplateArea, Line,
-    NonNamedGridPlacement,
+    NamedGridLine, NonNamedGridPlacement,
 };
 use core::borrow::Borrow;
 use std::{
     collections::HashMap,
     hash::{Hash, Hasher},
 };
+
+use super::GridLine;
 
 /// Wrap an `AsRef<str>` type with a type which implements Hash by first
 /// deferring to the underlying `&str`'s implementation of Hash.
@@ -32,14 +34,19 @@ impl<T: CheapCloneStr> Eq for StrHasher<T> {}
 
 /// Resolve lines for
 pub(crate) struct NamedLineResolver<S: CheapCloneStr> {
-    lines: HashMap<StrHasher<S>, i16>,
+    row_lines: HashMap<StrHasher<S>, Vec<u16>>,
+    column_lines: HashMap<StrHasher<S>, Vec<u16>>,
     areas: HashMap<StrHasher<S>, GridTemplateArea<S>>,
     area_column_count: u16,
     area_row_count: u16,
 }
 
 impl<S: CheapCloneStr> NamedLineResolver<S> {
-    pub(crate) fn new<'a>(area_styles: Option<impl IntoIterator<Item = GridTemplateArea<S>>>) -> Self {
+    pub(crate) fn new<'a>(
+        area_styles: Option<impl IntoIterator<Item = GridTemplateArea<S>>>,
+        column_line_name_styles: impl IntoIterator<Item = NamedGridLine<S>>,
+        row_line_name_styles: impl IntoIterator<Item = NamedGridLine<S>>,
+    ) -> Self {
         let mut area_column_count = 0;
         let mut area_row_count = 0;
         let mut areas: HashMap<StrHasher<_>, GridTemplateArea<_>> = HashMap::new();
@@ -53,7 +60,23 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
             }
         }
 
-        Self { area_column_count, area_row_count, areas, lines: HashMap::new() }
+        let mut column_lines = HashMap::new();
+        for named_line in column_line_name_styles {
+            column_lines
+                .entry(StrHasher(named_line.name))
+                .and_modify(|lines: &mut Vec<u16>| lines.push(named_line.index))
+                .or_insert(vec![named_line.index]);
+        }
+
+        let mut row_lines = HashMap::new();
+        for named_line in row_line_name_styles {
+            row_lines
+                .entry(StrHasher(named_line.name))
+                .and_modify(|lines: &mut Vec<u16>| lines.push(named_line.index))
+                .or_insert(vec![named_line.index]);
+        }
+
+        Self { area_column_count, area_row_count, areas, row_lines, column_lines }
     }
 
     #[inline(always)]
@@ -90,6 +113,8 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
             GridPlacement::Span(span) => NonNamedGridPlacement::Span(*span),
             GridPlacement::Named(name) => {
                 let name = name.as_ref();
+
+                // Lookup areas
                 if name.ends_with("-start") {
                     let area_name = &name[0..(name.len() - 6)];
                     if let Some(area) = self.areas.get(area_name) {
@@ -106,7 +131,16 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                     }
                 }
 
-                // TODO: lookup names lines
+                // Lookup lines
+                let line_lookup = match axis {
+                    GridAreaAxis::Row => &self.row_lines,
+                    GridAreaAxis::Column => &self.column_lines,
+                };
+                if let Some(lines) = line_lookup.get(name) {
+                    // TODO: handle multiple names for same line properly
+                    return GenericGridPlacement::Line(GridLine::from(lines[0] as i16));
+                }
+
                 NonNamedGridPlacement::Auto
             }
         }
