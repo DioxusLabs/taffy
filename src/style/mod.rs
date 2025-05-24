@@ -829,7 +829,7 @@ impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
 
     #[cfg(feature = "grid_named")]
     type GridTemplateAreas<'a>
-        = &'a [GridTemplateArea<Self::CustomIdent>]
+        = std::iter::Cloned<std::slice::Iter<'a, GridTemplateArea<Self::CustomIdent>>>
     where
         Self: 'a;
 
@@ -874,8 +874,8 @@ impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
         self.justify_items
     }
 
-    fn grid_template_areas(&self) -> Option<&[GridTemplateArea<Self::CustomIdent>]> {
-        Some(&self.grid_template_areas)
+    fn grid_template_areas(&self) -> Option<Self::GridTemplateAreas<'_>> {
+        Some(self.grid_template_areas.iter().cloned())
     }
 }
 

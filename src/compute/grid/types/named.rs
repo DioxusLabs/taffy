@@ -39,12 +39,12 @@ pub(crate) struct NamedLineResolver<S: CheapCloneStr> {
 }
 
 impl<S: CheapCloneStr> NamedLineResolver<S> {
-    pub(crate) fn new(area_styles: Option<impl Borrow<[GridTemplateArea<S>]>>) -> Self {
+    pub(crate) fn new<'a>(area_styles: Option<impl IntoIterator<Item = GridTemplateArea<S>>>) -> Self {
         let mut area_column_count = 0;
         let mut area_row_count = 0;
         let mut areas: HashMap<StrHasher<_>, GridTemplateArea<_>> = HashMap::new();
         if let Some(area_iter) = area_styles {
-            for area in area_iter.borrow() {
+            for area in area_iter.into_iter() {
                 // TODO: Investigate eliminating clones
                 areas.insert(StrHasher(area.name.clone()), area.clone());
 

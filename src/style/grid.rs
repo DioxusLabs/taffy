@@ -72,7 +72,7 @@ pub trait GridContainerStyle: CoreStyle {
 
     /// The type of custom identifiers used to identify named grid lines and areas
     #[cfg(feature = "grid_named")]
-    type GridTemplateAreas<'a>: Borrow<[GridTemplateArea<Self::CustomIdent>]>
+    type GridTemplateAreas<'a>: IntoIterator<Item = GridTemplateArea<Self::CustomIdent>>
     where
         Self: 'a;
 
