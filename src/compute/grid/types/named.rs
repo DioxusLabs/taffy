@@ -44,8 +44,8 @@ pub(crate) struct NamedLineResolver<S: CheapCloneStr> {
 impl<S: CheapCloneStr> NamedLineResolver<S> {
     pub(crate) fn new<'a>(
         area_styles: Option<impl IntoIterator<Item = GridTemplateArea<S>>>,
-        column_line_name_styles: impl IntoIterator<Item = NamedGridLine<S>>,
-        row_line_name_styles: impl IntoIterator<Item = NamedGridLine<S>>,
+        column_line_name_styles: Option<impl IntoIterator<Item = NamedGridLine<S>>>,
+        row_line_name_styles: Option<impl IntoIterator<Item = NamedGridLine<S>>>,
     ) -> Self {
         let mut area_column_count = 0;
         let mut area_row_count = 0;
@@ -61,20 +61,28 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         }
 
         let mut column_lines = HashMap::new();
-        for named_line in column_line_name_styles {
-            column_lines
-                .entry(StrHasher(named_line.name))
-                .and_modify(|lines: &mut Vec<u16>| lines.push(named_line.index))
-                .or_insert(vec![named_line.index]);
+        if let Some(column_line_names_iter) = column_line_name_styles {
+            for named_line in column_line_names_iter {
+                column_lines
+                    .entry(StrHasher(named_line.name))
+                    .and_modify(|lines: &mut Vec<u16>| lines.push(named_line.index))
+                    .or_insert(vec![named_line.index]);
+            }
         }
 
         let mut row_lines = HashMap::new();
-        for named_line in row_line_name_styles {
-            row_lines
-                .entry(StrHasher(named_line.name))
-                .and_modify(|lines: &mut Vec<u16>| lines.push(named_line.index))
-                .or_insert(vec![named_line.index]);
+        if let Some(row_line_names_iter) = row_line_name_styles {
+            for named_line in row_line_names_iter {
+                row_lines
+                    .entry(StrHasher(named_line.name))
+                    .and_modify(|lines: &mut Vec<u16>| lines.push(named_line.index))
+                    .or_insert(vec![named_line.index]);
+            }
         }
+
+        // dbg!(&areas);
+        // dbg!(&column_lines);
+        // dbg!(&row_lines);
 
         Self { area_column_count, area_row_count, areas, row_lines, column_lines }
     }
@@ -114,6 +122,8 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
             GridPlacement::Named(name) => {
                 let name = name.as_ref();
 
+                // dbg!(axis, &name);
+
                 // Lookup areas
                 if name.ends_with("-start") {
                     let area_name = &name[0..(name.len() - 6)];
@@ -139,6 +149,24 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                 if let Some(lines) = line_lookup.get(name) {
                     // TODO: handle multiple names for same line properly
                     return GenericGridPlacement::Line(GridLine::from(lines[0] as i16));
+                } else {
+                    // TODO: eliminate string allocations
+                    match end {
+                        GridAreaEnd::Start => {
+                            let implicit_name = format!("{name}-start");
+                            if let Some(lines) = line_lookup.get(&*implicit_name) {
+                                // println!("IMPLICIT COL {implicit_name}");
+                                return GenericGridPlacement::Line(GridLine::from(lines[0] as i16));
+                            }
+                        }
+                        GridAreaEnd::End => {
+                            let implicit_name = format!("{name}-end");
+                            if let Some(lines) = line_lookup.get(&*implicit_name) {
+                                // println!("IMPLICIT ROW {implicit_name}");
+                                return GenericGridPlacement::Line(GridLine::from(lines[0] as i16));
+                            }
+                        }
+                    }
                 }
 
                 NonNamedGridPlacement::Auto

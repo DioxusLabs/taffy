@@ -13,8 +13,11 @@ use core::fmt::Debug;
 
 /// Trait that represents a cheaply clonable string. If you're unsure what to use here
 /// consider `Arc<str>` or `string_cache::Atom`.
-pub trait CheapCloneStr: AsRef<str> + PartialEq + Eq + Clone + Default + Debug + 'static {}
-impl<T: AsRef<str> + PartialEq + Eq + Clone + Default + Debug + 'static> CheapCloneStr for T {}
+pub trait CheapCloneStr:
+    AsRef<str> + for<'a> From<&'a str> + PartialEq + Eq + Clone + Default + Debug + 'static
+{
+}
+impl<T: AsRef<str> + for<'a> From<&'a str> + PartialEq + Eq + Clone + Default + Debug + 'static> CheapCloneStr for T {}
 
 /// Defines a grid area
 #[cfg(feature = "grid_named")]
@@ -110,10 +113,10 @@ pub trait GridContainerStyle: CoreStyle {
     fn grid_template_areas(&self) -> Option<Self::GridTemplateAreas<'_>>;
     /// Defines the line names for row lines
     #[cfg(feature = "grid_named")]
-    fn grid_template_column_names(&self) -> Self::TemplateLineNames<'_>;
+    fn grid_template_column_names(&self) -> Option<Self::TemplateLineNames<'_>>;
     /// Defines the size of implicitly created rows
     #[cfg(feature = "grid_named")]
-    fn grid_template_row_names(&self) -> Self::TemplateLineNames<'_>;
+    fn grid_template_row_names(&self) -> Option<Self::TemplateLineNames<'_>>;
 
     /// Controls how items get placed into the grid for auto-placed items
     #[inline(always)]
