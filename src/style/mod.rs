@@ -347,7 +347,7 @@ impl Overflow {
 #[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(default))]
-pub struct Style {
+pub struct Style<S: CheapCloneStr = Arc<str>> {
     /// What layout strategy should be used?
     pub display: Display,
     /// Whether a child is display:table or not. This affects children of block layouts.
@@ -461,7 +461,7 @@ pub struct Style {
     pub grid_template_columns: GridTrackVec<TrackSizingFunction>,
     /// Defines the rectangular grid areas
     #[cfg(feature = "grid_named")]
-    pub grid_template_areas: GridTrackVec<GridTemplateArea<Arc<str>>>,
+    pub grid_template_areas: GridTrackVec<GridTemplateArea<S>>,
     /// Defines the size of implicitly created rows
     #[cfg(feature = "grid")]
     pub grid_auto_rows: GridTrackVec<NonRepeatedTrackSizingFunction>,
@@ -475,10 +475,10 @@ pub struct Style {
     // Grid child properties
     /// Defines which row in the grid the item should start and end at
     #[cfg(feature = "grid")]
-    pub grid_row: Line<GridPlacement<Arc<str>>>,
+    pub grid_row: Line<GridPlacement<S>>,
     /// Defines which column in the grid the item should start and end at
     #[cfg(feature = "grid")]
-    pub grid_column: Line<GridPlacement<Arc<str>>>,
+    pub grid_column: Line<GridPlacement<S>>,
 }
 
 impl Style {
@@ -554,8 +554,8 @@ impl Default for Style {
     }
 }
 
-impl CoreStyle for Style {
-    type CustomIdent = Arc<str>;
+impl<S: CheapCloneStr> CoreStyle for Style<S> {
+    type CustomIdent = S;
 
     #[inline(always)]
     fn box_generation_mode(&self) -> BoxGenerationMode {
@@ -689,7 +689,7 @@ impl<T: CoreStyle> CoreStyle for &'_ T {
 }
 
 #[cfg(feature = "block_layout")]
-impl BlockContainerStyle for Style {
+impl<S: CheapCloneStr> BlockContainerStyle for Style<S> {
     #[inline(always)]
     fn text_align(&self) -> TextAlign {
         self.text_align
@@ -705,7 +705,7 @@ impl<T: BlockContainerStyle> BlockContainerStyle for &'_ T {
 }
 
 #[cfg(feature = "block_layout")]
-impl BlockItemStyle for Style {
+impl<S: CheapCloneStr> BlockItemStyle for Style<S> {
     #[inline(always)]
     fn is_table(&self) -> bool {
         self.item_is_table
@@ -721,7 +721,7 @@ impl<T: BlockItemStyle> BlockItemStyle for &'_ T {
 }
 
 #[cfg(feature = "flexbox")]
-impl FlexboxContainerStyle for Style {
+impl<S: CheapCloneStr> FlexboxContainerStyle for Style<S> {
     #[inline(always)]
     fn flex_direction(&self) -> FlexDirection {
         self.flex_direction
@@ -777,7 +777,7 @@ impl<T: FlexboxContainerStyle> FlexboxContainerStyle for &'_ T {
 }
 
 #[cfg(feature = "flexbox")]
-impl FlexboxItemStyle for Style {
+impl<S: CheapCloneStr> FlexboxItemStyle for Style<S> {
     #[inline(always)]
     fn flex_basis(&self) -> Dimension {
         self.flex_basis
@@ -817,7 +817,7 @@ impl<T: FlexboxItemStyle> FlexboxItemStyle for &'_ T {
 }
 
 #[cfg(feature = "grid")]
-impl GridContainerStyle for Style {
+impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
     type TemplateTrackList<'a>
         = &'a [TrackSizingFunction]
     where
@@ -944,14 +944,14 @@ impl<T: GridContainerStyle> GridContainerStyle for &'_ T {
 }
 
 #[cfg(feature = "grid")]
-impl GridItemStyle for Style {
+impl<S: CheapCloneStr> GridItemStyle for Style<S> {
     #[inline(always)]
-    fn grid_row(&self) -> Line<GridPlacement<Self::CustomIdent>> {
+    fn grid_row(&self) -> Line<GridPlacement<S>> {
         // TODO: Investigate eliminating clone
         self.grid_row.clone()
     }
     #[inline(always)]
-    fn grid_column(&self) -> Line<GridPlacement<Self::CustomIdent>> {
+    fn grid_column(&self) -> Line<GridPlacement<S>> {
         // TODO: Investigate eliminating clone
         self.grid_column.clone()
     }
