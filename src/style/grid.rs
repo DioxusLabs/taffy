@@ -13,8 +13,8 @@ use core::fmt::Debug;
 
 /// Trait that represents a cheaply clonable string. If you're unsure what to use here
 /// consider `Arc<str>` or `string_cache::Atom`.
-pub trait CheapCloneStr: AsRef<str> + PartialEq + Eq + Clone + Debug + 'static {}
-impl<T: AsRef<str> + PartialEq + Eq + Clone + Debug + 'static> CheapCloneStr for T {}
+pub trait CheapCloneStr: AsRef<str> + PartialEq + Eq + Clone + Default + Debug + 'static {}
+impl<T: AsRef<str> + PartialEq + Eq + Clone + Default + Debug + 'static> CheapCloneStr for T {}
 
 /// Defines a grid area
 #[cfg(feature = "grid_named")]
@@ -95,13 +95,13 @@ pub trait GridContainerStyle: CoreStyle {
     /// Controls how items get placed into the grid for auto-placed items
     #[inline(always)]
     fn grid_auto_flow(&self) -> GridAutoFlow {
-        Style::DEFAULT.grid_auto_flow
+        Style::<Self::CustomIdent>::DEFAULT.grid_auto_flow
     }
 
     /// How large should the gaps between items in a grid or flex container be?
     #[inline(always)]
     fn gap(&self) -> Size<LengthPercentage> {
-        Style::DEFAULT.gap
+        Style::<Self::CustomIdent>::DEFAULT.gap
     }
 
     // Alignment properties
@@ -109,22 +109,22 @@ pub trait GridContainerStyle: CoreStyle {
     /// How should content contained within this item be aligned in the cross/block axis
     #[inline(always)]
     fn align_content(&self) -> Option<AlignContent> {
-        Style::DEFAULT.align_content
+        Style::<Self::CustomIdent>::DEFAULT.align_content
     }
     /// How should contained within this item be aligned in the main/inline axis
     #[inline(always)]
     fn justify_content(&self) -> Option<JustifyContent> {
-        Style::DEFAULT.justify_content
+        Style::<Self::CustomIdent>::DEFAULT.justify_content
     }
     /// How this node's children aligned in the cross/block axis?
     #[inline(always)]
     fn align_items(&self) -> Option<AlignItems> {
-        Style::DEFAULT.align_items
+        Style::<Self::CustomIdent>::DEFAULT.align_items
     }
     /// How this node's children should be aligned in the inline axis
     #[inline(always)]
     fn justify_items(&self) -> Option<AlignItems> {
-        Style::DEFAULT.justify_items
+        Style::<Self::CustomIdent>::DEFAULT.justify_items
     }
 
     /// Get a grid item's row or column placement depending on the axis passed
@@ -163,13 +163,13 @@ pub trait GridItemStyle: CoreStyle {
     /// Falls back to the parents [`AlignItems`] if not set
     #[inline(always)]
     fn align_self(&self) -> Option<AlignSelf> {
-        Style::DEFAULT.align_self
+        Style::<Self::CustomIdent>::DEFAULT.align_self
     }
     /// How this node should be aligned in the inline axis
     /// Falls back to the parents [`super::JustifyItems`] if not set
     #[inline(always)]
     fn justify_self(&self) -> Option<AlignSelf> {
-        Style::DEFAULT.justify_self
+        Style::<Self::CustomIdent>::DEFAULT.justify_self
     }
 
     /// Get a grid item's row or column placement depending on the axis passed
