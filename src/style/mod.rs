@@ -79,7 +79,7 @@ pub trait CoreStyle {
     /// How children overflowing their container should affect layout
     #[inline(always)]
     fn overflow(&self) -> Point<Overflow> {
-        Style::DEFAULT.overflow
+        Style::<Self::CustomIdent>::DEFAULT.overflow
     }
     /// How much space (in points) should be reserved for the scrollbars of `Overflow::Scroll` and `Overflow::Auto` nodes.
     #[inline(always)]
@@ -91,52 +91,52 @@ pub trait CoreStyle {
     /// What should the `position` value of this struct use as a base offset?
     #[inline(always)]
     fn position(&self) -> Position {
-        Style::DEFAULT.position
+        Style::<Self::CustomIdent>::DEFAULT.position
     }
     /// How should the position of this element be tweaked relative to the layout defined?
     #[inline(always)]
     fn inset(&self) -> Rect<LengthPercentageAuto> {
-        Style::DEFAULT.inset
+        Style::<Self::CustomIdent>::DEFAULT.inset
     }
 
     // Size properies
     /// Sets the initial size of the item
     #[inline(always)]
     fn size(&self) -> Size<Dimension> {
-        Style::DEFAULT.size
+        Style::<Self::CustomIdent>::DEFAULT.size
     }
     /// Controls the minimum size of the item
     #[inline(always)]
     fn min_size(&self) -> Size<Dimension> {
-        Style::DEFAULT.min_size
+        Style::<Self::CustomIdent>::DEFAULT.min_size
     }
     /// Controls the maximum size of the item
     #[inline(always)]
     fn max_size(&self) -> Size<Dimension> {
-        Style::DEFAULT.max_size
+        Style::<Self::CustomIdent>::DEFAULT.max_size
     }
     /// Sets the preferred aspect ratio for the item
     /// The ratio is calculated as width divided by height.
     #[inline(always)]
     fn aspect_ratio(&self) -> Option<f32> {
-        Style::DEFAULT.aspect_ratio
+        Style::<Self::CustomIdent>::DEFAULT.aspect_ratio
     }
 
     // Spacing Properties
     /// How large should the margin be on each side?
     #[inline(always)]
     fn margin(&self) -> Rect<LengthPercentageAuto> {
-        Style::DEFAULT.margin
+        Style::<Self::CustomIdent>::DEFAULT.margin
     }
     /// How large should the padding be on each side?
     #[inline(always)]
     fn padding(&self) -> Rect<LengthPercentage> {
-        Style::DEFAULT.padding
+        Style::<Self::CustomIdent>::DEFAULT.padding
     }
     /// How large should the border be on each side?
     #[inline(always)]
     fn border(&self) -> Rect<LengthPercentage> {
-        Style::DEFAULT.border
+        Style::<Self::CustomIdent>::DEFAULT.border
     }
 }
 
@@ -481,9 +481,9 @@ pub struct Style<S: CheapCloneStr = Arc<str>> {
     pub grid_column: Line<GridPlacement<S>>,
 }
 
-impl Style {
+impl<S: CheapCloneStr> Style<S> {
     /// The [`Default`] layout, in a form that can be used in const functions
-    pub const DEFAULT: Style = Style {
+    pub const DEFAULT: Style<S> = Style {
         display: Display::DEFAULT,
         item_is_table: false,
         item_is_replaced: false,
@@ -548,7 +548,7 @@ impl Style {
     };
 }
 
-impl Default for Style {
+impl<S: CheapCloneStr> Default for Style<S> {
     fn default() -> Self {
         Style::DEFAULT
     }
