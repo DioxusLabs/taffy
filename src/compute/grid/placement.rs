@@ -47,8 +47,8 @@ pub(super) fn place_grid_items<'a, S, ChildIter>(
     // 1. Place children with definite positions
     let mut idx = 0;
     children_iter()
-        .filter(|(_, _, child_style)| child_style.grid_row().is_definite() && child_style.grid_column().is_definite())
         .map(map_child_style_to_origin_zero_placement)
+        .filter(|(_, _, placement, _)| placement.horizontal.is_definite() && placement.vertical.is_definite())
         .for_each(|(index, child_node, child_placement, style)| {
             idx += 1;
             #[cfg(test)]
@@ -73,11 +73,10 @@ pub(super) fn place_grid_items<'a, S, ChildIter>(
     // 2. Place remaining children with definite secondary axis positions
     let mut idx = 0;
     children_iter()
-        .filter(|(_, _, child_style)| {
-            child_style.grid_placement(secondary_axis).is_definite()
-                && !child_style.grid_placement(primary_axis).is_definite()
-        })
         .map(map_child_style_to_origin_zero_placement)
+        .filter(|(_, _, placement, _)| {
+            placement.get(secondary_axis).is_definite() && !placement.get(primary_axis).is_definite()
+        })
         .for_each(|(index, child_node, child_placement, style)| {
             idx += 1;
             #[cfg(test)]
@@ -128,8 +127,8 @@ pub(super) fn place_grid_items<'a, S, ChildIter>(
     let mut grid_position = grid_start_position;
     let mut idx = 0;
     children_iter()
-        .filter(|(_, _, child_style)| !child_style.grid_placement(secondary_axis).is_definite())
         .map(map_child_style_to_origin_zero_placement)
+        .filter(|(_, _, placement, _)| !placement.get(secondary_axis).is_definite())
         .for_each(|(index, child_node, child_placement, style)| {
             idx += 1;
             #[cfg(test)]
