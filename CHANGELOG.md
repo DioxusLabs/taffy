@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.2
+
+### Fixed
+
+- Fix: Calculate correct new grid size when expanding cell_occupancy_matrix in the negative direction (#843)
+
 ## 0.8.1
 
 ### Added
