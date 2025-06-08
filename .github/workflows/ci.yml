@@ -75,6 +75,28 @@ jobs:
       - run: cargo build
       - run: cargo test --tests
 
+  test-features-all:
+    name: "Test Suite [all features]"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo build --all-features
+      - run: cargo test --tests --all-features
+
+  # The main reason for this target is to test compilation on 32bit targets
+  test-features-android-32bit:
+    name: "Test Suite [all features (i686-linux-android)]"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: i686-linux-android
+      - run: cargo build --all-features --target i686-linux-android
+      # TODO: enable tests (currently running into linking errors)
+      # - run: cargo test --tests --all-features --target i686-linux-android
+
   test-features-default-with-serde:
     name: "Test Suite [default + serde]"
     runs-on: ubuntu-latest

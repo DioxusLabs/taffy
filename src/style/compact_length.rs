@@ -197,7 +197,7 @@ mod inner {
         #[inline(always)]
         #[cfg(feature = "serde")]
         pub(super) fn from_serialized(value: u64) -> Self {
-            Self { tag: value >> 32 as usize, ptr: value & 0xFFFFFFFF as usize as *const () }
+            Self { tag: (value >> 32) as usize, ptr: (value & 0xFFFFFFFF) as usize as *const () }
         }
     }
 }
