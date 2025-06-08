@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.3
+
+### Fixed
+
+- Fix `serde` feature on 32bit targets (#845)
+
 ## 0.8.2
 
 ### Fixed
