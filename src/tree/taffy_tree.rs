@@ -1,4 +1,6 @@
 //! Contains [TaffyTree](crate::tree::TaffyTree): the default implementation of [LayoutTree](crate::tree::LayoutTree), and the error type for Taffy.
+use std::sync::Arc;
+
 #[cfg(not(feature = "std"))]
 use slotmap::SecondaryMap;
 #[cfg(feature = "std")]
@@ -326,6 +328,8 @@ where
         = &'a Style
     where
         Self: 'a;
+
+    type CustomIdent = Arc<str>;
 
     #[inline(always)]
     fn get_core_container_style(&self, node_id: NodeId) -> Self::CoreContainerStyle<'_> {

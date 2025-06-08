@@ -21,7 +21,7 @@ use placement::place_grid_items;
 use track_sizing::{
     determine_if_item_crosses_flexible_or_intrinsic_tracks, resolve_item_track_indexes, track_sizing_algorithm,
 };
-use types::{CellOccupancyMatrix, GridTrack};
+use types::{CellOccupancyMatrix, GridTrack, NamedLineResolver};
 
 #[cfg(feature = "detailed_layout_info")]
 use types::{GridItem, GridTrackKind, TrackCounts};
@@ -105,6 +105,15 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let grid_auto_columms = style.grid_auto_columns();
     let grid_auto_rows = style.grid_auto_rows();
 
+    // type CustomIdent<'a> = <<Tree as LayoutPartialTree>::CoreContainerStyle<'_> as CoreStyle>::CustomIdent;
+    let name_resolver = NamedLineResolver::new(
+        style.grid_template_areas(),
+        style.grid_template_column_names(),
+        style.grid_template_row_names(),
+    );
+    let grid_area_column_count = name_resolver.area_column_count();
+    let grid_area_row_count = name_resolver.area_row_count();
+
     let constrained_available_space = known_dimensions
         .or(preferred_size)
         .map(|size| size.map(AvailableSpace::Definite))
@@ -156,6 +165,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let explicit_col_count = compute_explicit_grid_size_in_axis(
         &style,
         grid_template_columms.borrow(),
+        grid_area_column_count,
         auto_fit_container_size,
         |val, basis| tree.calc(val, basis),
         AbsoluteAxis::Horizontal,
@@ -163,6 +173,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let explicit_row_count = compute_explicit_grid_size_in_axis(
         &style,
         grid_template_rows.borrow(),
+        grid_area_row_count,
         auto_fit_container_size,
         |val, basis| tree.calc(val, basis),
         AbsoluteAxis::Vertical,
@@ -193,6 +204,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         style.grid_auto_flow(),
         align_items.unwrap_or(AlignItems::Stretch),
         justify_items.unwrap_or(AlignItems::Stretch),
+        &name_resolver,
     );
 
     // Extract track counts from previous step (auto-placement can expand the number of tracks)
@@ -541,8 +553,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         if child_style.position() == Position::Absolute {
             // Convert grid-col-{start/end} into Option's of indexes into the columns vector
             // The Option is None if the style property is Auto and an unresolvable Span
-            let maybe_col_indexes = child_style
-                .grid_column()
+            let maybe_col_indexes = name_resolver
+                .resolve_column_names(&child_style.grid_column())
                 .into_origin_zero(final_col_counts.explicit)
                 .resolve_absolutely_positioned_grid_tracks()
                 .map(|maybe_grid_line| {
@@ -550,8 +562,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 });
             // Convert grid-row-{start/end} into Option's of indexes into the row vector
             // The Option is None if the style property is Auto and an unresolvable Span
-            let maybe_row_indexes = child_style
-                .grid_row()
+            let maybe_row_indexes = name_resolver
+                .resolve_row_names(&child_style.grid_row())
                 .into_origin_zero(final_row_counts.explicit)
                 .resolve_absolutely_positioned_grid_tracks()
                 .map(|maybe_grid_line| {
