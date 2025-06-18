@@ -249,8 +249,8 @@ impl taffy::LayoutGridContainer for StatelessLayoutTree {
 }
 
 impl RoundTree for StatelessLayoutTree {
-    fn get_unrounded_layout(&self, node_id: NodeId) -> &Layout {
-        unsafe { &node_from_id_mut(node_id).unrounded_layout }
+    fn get_unrounded_layout(&self, node_id: NodeId) -> Layout {
+        unsafe { node_from_id_mut(node_id).unrounded_layout }
     }
 
     fn set_final_layout(&mut self, node_id: NodeId, layout: &Layout) {
@@ -268,8 +268,8 @@ impl PrintTree for StatelessLayoutTree {
         }
     }
 
-    fn get_final_layout(&self, node_id: NodeId) -> &Layout {
-        unsafe { &node_from_id(node_id).final_layout }
+    fn get_final_layout(&self, node_id: NodeId) -> Layout {
+        unsafe { node_from_id(node_id).final_layout }
     }
 }
 

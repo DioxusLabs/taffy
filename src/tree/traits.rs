@@ -103,7 +103,7 @@
 //! # use taffy::*;
 //! pub trait RoundTree: TraverseTree {
 //!     /// Get the node's unrounded layout
-//!     fn get_unrounded_layout(&self, node_id: NodeId) -> &Layout;
+//!     fn get_unrounded_layout(&self, node_id: NodeId) -> Layout;
 //!     /// Get a reference to the node's final layout
 //!     fn set_final_layout(&mut self, node_id: NodeId, layout: &Layout);
 //! }
@@ -122,7 +122,7 @@
 //!     /// Get a debug label for the node (typically the type of node: flexbox, grid, text, image, etc)
 //!     fn get_debug_label(&self, node_id: NodeId) -> &'static str;
 //!     /// Get a reference to the node's final layout
-//!     fn get_final_layout(&self, node_id: NodeId) -> &Layout;
+//!     fn get_final_layout(&self, node_id: NodeId) -> Layout;
 //! }
 //! ```
 //!
@@ -228,7 +228,7 @@ pub trait CacheTree {
 /// As indicated by it's dependence on `TraverseTree`, it required full recursive access to the tree.
 pub trait RoundTree: TraverseTree {
     /// Get the node's unrounded layout
-    fn get_unrounded_layout(&self, node_id: NodeId) -> &Layout;
+    fn get_unrounded_layout(&self, node_id: NodeId) -> Layout;
     /// Get a reference to the node's final layout
     fn set_final_layout(&mut self, node_id: NodeId, layout: &Layout);
 }
@@ -240,7 +240,7 @@ pub trait PrintTree: TraverseTree {
     /// Get a debug label for the node (typically the type of node: flexbox, grid, text, image, etc)
     fn get_debug_label(&self, node_id: NodeId) -> &'static str;
     /// Get a reference to the node's final layout
-    fn get_final_layout(&self, node_id: NodeId) -> &Layout;
+    fn get_final_layout(&self, node_id: NodeId) -> Layout;
 }
 
 #[cfg(feature = "flexbox")]

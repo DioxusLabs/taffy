@@ -207,7 +207,7 @@ pub fn round_layout(tree: &mut impl RoundTree, node_id: NodeId) {
 
     /// Recursive function to apply rounding to all descendents
     fn round_layout_inner(tree: &mut impl RoundTree, node_id: NodeId, cumulative_x: f32, cumulative_y: f32) {
-        let unrounded_layout = *tree.get_unrounded_layout(node_id);
+        let unrounded_layout = tree.get_unrounded_layout(node_id);
         let mut layout = unrounded_layout;
 
         let cumulative_x = cumulative_x + unrounded_layout.location.x;
