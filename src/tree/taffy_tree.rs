@@ -259,11 +259,11 @@ impl<NodeContext> PrintTree for TaffyTree<NodeContext> {
     }
 
     #[inline(always)]
-    fn get_final_layout(&self, node_id: NodeId) -> &Layout {
+    fn get_final_layout(&self, node_id: NodeId) -> Layout {
         if self.config.use_rounding {
-            &self.nodes[node_id.into()].final_layout
+            self.nodes[node_id.into()].final_layout
         } else {
-            &self.nodes[node_id.into()].unrounded_layout
+            self.nodes[node_id.into()].unrounded_layout
         }
     }
 }
@@ -516,8 +516,8 @@ where
         FnMut(Size<Option<f32>>, Size<AvailableSpace>, NodeId, Option<&mut NodeContext>, &Style) -> Size<f32>,
 {
     #[inline(always)]
-    fn get_unrounded_layout(&self, node: NodeId) -> &Layout {
-        &self.taffy.nodes[node.into()].unrounded_layout
+    fn get_unrounded_layout(&self, node: NodeId) -> Layout {
+        self.taffy.nodes[node.into()].unrounded_layout
     }
 
     #[inline(always)]
