@@ -227,9 +227,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: nightly
+          toolchain: stable
           components: clippy
-      - run: cargo +nightly clippy --workspace -- -D warnings
+      - run: cargo clippy --workspace -- -D warnings
 
   # Run rustdoc with the `docsrs` cfg to ensure that the documentation is compatible with docs.rs.
   # This enables the doc_auto_cfg feature, which requires the nightly toolchain.
