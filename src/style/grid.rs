@@ -9,7 +9,6 @@ use crate::style_helpers::*;
 use crate::util::sys::GridTrackVec;
 use core::borrow::Borrow;
 use core::cmp::{max, min};
-use core::convert::Infallible;
 
 /// The set of styles required for a CSS Grid container
 pub trait GridContainerStyle: CoreStyle {
@@ -953,10 +952,9 @@ pub enum GridTrackRepetition {
     /// The specified tracks should be repeated exacts N times
     Count(u16),
 }
-impl TryFrom<u16> for GridTrackRepetition {
-    type Error = Infallible;
-    fn try_from(value: u16) -> Result<Self, Infallible> {
-        Ok(Self::Count(value))
+impl From<u16> for GridTrackRepetition {
+    fn from(value: u16) -> Self {
+        Self::Count(value)
     }
 }
 
