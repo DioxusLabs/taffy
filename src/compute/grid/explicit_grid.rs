@@ -111,7 +111,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
             ) -> f32 {
                 let max_size = sizing_function.max.definite_value(parent_size, &calc_resolver);
                 let min_size = sizing_function.min.definite_value(parent_size, &calc_resolver);
-                max_size.map(|max| max.maybe_min(min_size)).or(min_size).unwrap()
+                max_size.map(|max| max.maybe_max(min_size)).or(min_size).unwrap()
             }
 
             let non_repeating_track_used_space: f32 = template
