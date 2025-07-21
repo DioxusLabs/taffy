@@ -1,20 +1,32 @@
 //! Helper functions for initialising GridTrack's from styles
 //! This mainly consists of evaluating GridAutoTracks
 use super::types::{GridTrack, TrackCounts};
-use crate::geometry::{AbsoluteAxis, Size};
+use crate::geometry::AbsoluteAxis;
 use crate::style::{GridTrackRepetition, LengthPercentage, NonRepeatedTrackSizingFunction, TrackSizingFunction};
 use crate::style_helpers::TaffyAuto;
 use crate::util::sys::{ceil, floor, Vec};
 use crate::util::MaybeMath;
 use crate::util::ResolveOrZero;
-use crate::{GridContainerStyle, MaybeResolve};
+use crate::GridContainerStyle;
+
+/// The auto-repeat fit strategy to use
+pub(crate) enum AutoRepeatStrategy {
+    /// If the grid container has a definite size or max size in the relevant axis:
+    ///   - then the number of repetitions is the largest possible positive integer that does not cause the grid to overflow the content
+    ///     box of its grid container.
+    MaxRepetitionsThatDoNotOverflow,
+    /// Otherwise, if the grid container has a definite min size in the relevant axis:
+    ///   - then the number of repetitions is the smallest possible positive integer that fulfills that minimum requirement
+    MinRepetitionsThatDoOverflow,
+}
 
 /// Compute the number of rows and columns in the explicit grid
 pub(crate) fn compute_explicit_grid_size_in_axis(
     style: &impl GridContainerStyle,
     template: &[TrackSizingFunction],
     grid_area_track_count: u16,
-    inner_container_size: Size<Option<f32>>,
+    auto_fit_container_size: Option<f32>,
+    auto_fit_strategy: AutoRepeatStrategy,
     resolve_calc_value: impl Fn(*const (), f32) -> f32,
     axis: AbsoluteAxis,
 ) -> u16 {
@@ -82,22 +94,8 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
         .unwrap();
     let repetition_track_count = repetition_definition.len() as u16;
 
-    // Otherwise, run logic to resolve the auto-repeated track count:
-    //
-    // If the grid container has a definite size or max size in the relevant axis:
-    //   - then the number of repetitions is the largest possible positive integer that does not cause the grid to overflow the content
-    //     box of its grid container.
-    // Otherwise, if the grid container has a definite min size in the relevant axis:
-    //   - then the number of repetitions is the smallest possible positive integer that fulfills that minimum requirement
-    // Otherwise, the specified track list repeats only once.
-    let style_size_is_definite =
-        style.size().get_abs(axis).maybe_resolve(inner_container_size.get_abs(axis), &resolve_calc_value).is_some();
-    let style_max_size_is_definite =
-        style.max_size().get_abs(axis).maybe_resolve(inner_container_size.get_abs(axis), &resolve_calc_value).is_some();
-    let size_is_maximum = style_size_is_definite | style_max_size_is_definite;
-
     // Determine the number of repetitions
-    let num_repetitions: u16 = match inner_container_size.get_abs(axis) {
+    let num_repetitions: u16 = match auto_fit_container_size {
         None => 1,
         Some(inner_container_size) => {
             let parent_size = Some(inner_container_size);
@@ -166,10 +164,9 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
                 //   - Then we return the minimum number of repetitions required to overflow the size.
                 //
                 // In all cases we add the additional repetition that was already accounted for in the special-case computation above
-                if size_is_maximum {
-                    (floor(num_repetition_that_fit) as u16) + 1
-                } else {
-                    (ceil(num_repetition_that_fit) as u16) + 1
+                match auto_fit_strategy {
+                    AutoRepeatStrategy::MaxRepetitionsThatDoNotOverflow => (floor(num_repetition_that_fit) as u16) + 1,
+                    AutoRepeatStrategy::MinRepetitionsThatDoOverflow => (ceil(num_repetition_that_fit) as u16) + 1,
                 }
             }
         }

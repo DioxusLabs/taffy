@@ -15,7 +15,7 @@ use crate::{
     JustifyContent, LayoutGridContainer,
 };
 use alignment::{align_and_position_item, align_tracks};
-use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks};
+use explicit_grid::{compute_explicit_grid_size_in_axis, initialize_grid_tracks, AutoRepeatStrategy};
 use implicit_grid::compute_grid_size_estimate;
 use placement::place_grid_items;
 use track_sizing::{
@@ -161,12 +161,24 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         .maybe_max(padding_border_size)
         .maybe_sub(content_box_inset.sum_axes());
 
+    // If the grid container has a definite size or max size in the relevant axis:
+    //   - then the number of repetitions is the largest possible positive integer that does not cause the grid to overflow the content
+    //     box of its grid container.
+    // Otherwise, if the grid container has a definite min size in the relevant axis:
+    //   - then the number of repetitions is the smallest possible positive integer that fulfills that minimum requirement
+    // Otherwise, the specified track list repeats only once.
+    let auto_repeat_fit_strategy = outer_node_size.or(max_size).map(|val| match val {
+        Some(_) => AutoRepeatStrategy::MaxRepetitionsThatDoNotOverflow,
+        None => AutoRepeatStrategy::MinRepetitionsThatDoOverflow,
+    });
+
     // Exactly compute the number of rows and columns in the explicit grid.
     let explicit_col_count = compute_explicit_grid_size_in_axis(
         &style,
         grid_template_columms.borrow(),
         grid_area_column_count,
-        auto_fit_container_size,
+        auto_fit_container_size.width,
+        auto_repeat_fit_strategy.width,
         |val, basis| tree.calc(val, basis),
         AbsoluteAxis::Horizontal,
     );
@@ -174,7 +186,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         &style,
         grid_template_rows.borrow(),
         grid_area_row_count,
-        auto_fit_container_size,
+        auto_fit_container_size.height,
+        auto_repeat_fit_strategy.height,
         |val, basis| tree.calc(val, basis),
         AbsoluteAxis::Vertical,
     );
