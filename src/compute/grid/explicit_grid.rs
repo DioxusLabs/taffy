@@ -278,13 +278,15 @@ pub(super) fn initialize_grid_tracks<'a>(
         });
     }
 
+    let grid_area_tracks = (counts.negative_implicit + counts.explicit) - current_track_index as u16;
+
     // Create positive implicit tracks
     if auto_track_count == 0 {
         let iter = core::iter::repeat(TrackSizingFunction::AUTO);
-        create_implicit_tracks(tracks, counts.positive_implicit, iter, gap)
+        create_implicit_tracks(tracks, counts.positive_implicit + grid_area_tracks, iter, gap)
     } else {
         let iter = auto_tracks.clone().copied().cycle();
-        create_implicit_tracks(tracks, counts.positive_implicit, iter, gap)
+        create_implicit_tracks(tracks, counts.positive_implicit + grid_area_tracks, iter, gap)
     }
 
     // Mark first and last grid lines as collapsed

@@ -179,7 +179,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     );
 
     // type CustomIdent<'a> = <<Tree as LayoutPartialTree>::CoreContainerStyle<'_> as CoreStyle>::CustomIdent;
-    let name_resolver = NamedLineResolver::new(&style, col_auto_repetition_count, row_auto_repetition_count);
+    let mut name_resolver = NamedLineResolver::new(&style, col_auto_repetition_count, row_auto_repetition_count);
 
     let explicit_col_count = grid_template_col_count.max(name_resolver.area_column_count());
     let explicit_row_count = grid_template_row_count.max(name_resolver.area_row_count());
@@ -215,6 +215,8 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // Extract track counts from previous step (auto-placement can expand the number of tracks)
     let final_col_counts = *cell_occupancy_matrix.track_counts(AbsoluteAxis::Horizontal);
     let final_row_counts = *cell_occupancy_matrix.track_counts(AbsoluteAxis::Vertical);
+    name_resolver.set_explicit_column_count(final_col_counts.explicit);
+    name_resolver.set_explicit_row_count(final_row_counts.explicit);
 
     // 5. Initialize Tracks
     // Initialize (explicit and implicit) grid tracks (and gutters)

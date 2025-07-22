@@ -235,7 +235,7 @@ impl CellOccupancyMatrix {
         kind: CellOccupancyState,
     ) -> Option<OriginZeroLine> {
         let track_counts = self.track_counts(track_type.other_axis());
-        let track_computed_index = track_counts.oz_line_to_next_track(start_at);
+        let track_computed_index = track_counts.oz_line_to_next_track(start_at).min(self.inner.rows() as i16);
 
         let maybe_index = match track_type {
             AbsoluteAxis::Horizontal => {

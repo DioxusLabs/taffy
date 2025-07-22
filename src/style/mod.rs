@@ -27,12 +27,12 @@ pub use self::grid::{CheapCloneStr, GridTemplateArea, NamedGridLine, TemplateLin
 #[cfg(feature = "grid")]
 pub(crate) use self::grid::{
     GenericGridPlacement, GenericRepetition, GridAreaAxis, GridAreaEnd, GridTemplateComponentRef,
-    GridTemplateRepetition, NonNamedGridPlacement, OriginZeroGridPlacement,
+    NonNamedGridPlacement, OriginZeroGridPlacement,
 };
 #[cfg(feature = "grid")]
 pub use self::grid::{
-    GridAutoFlow, GridContainerStyle, GridItemStyle, GridPlacement, GridTemplateComponent, MaxTrackSizingFunction,
-    MinTrackSizingFunction, RepetitionCount, TrackSizingFunction,
+    GridAutoFlow, GridContainerStyle, GridItemStyle, GridPlacement, GridTemplateComponent, GridTemplateRepetition,
+    MaxTrackSizingFunction, MinTrackSizingFunction, RepetitionCount, TrackSizingFunction,
 };
 
 use crate::geometry::{Point, Rect, Size};

@@ -39,6 +39,8 @@ pub(crate) struct NamedLineResolver<S: CheapCloneStr> {
     areas: HashMap<StrHasher<S>, GridTemplateArea<S>>,
     area_column_count: u16,
     area_row_count: u16,
+    explicit_column_count: u16,
+    explicit_row_count: u16,
 }
 
 impl<S: CheapCloneStr> NamedLineResolver<S> {
@@ -55,8 +57,8 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                 // TODO: Investigate eliminating clones
                 areas.insert(StrHasher(area.name.clone()), area.clone());
 
-                area_column_count = area_column_count.max(area.column_end);
-                area_row_count = area_row_count.max(area.row_end);
+                area_column_count = area_column_count.max(area.column_end.max(1) - 1);
+                area_row_count = area_row_count.max(area.row_end.max(1) - 1);
             }
         }
 
@@ -138,7 +140,15 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         // dbg!(&column_lines);
         // dbg!(&row_lines);
 
-        Self { area_column_count, area_row_count, areas, row_lines, column_lines }
+        Self {
+            area_column_count,
+            area_row_count,
+            explicit_column_count: 0, // Overwritten later
+            explicit_row_count: 0,    // Overwritten later
+            areas,
+            row_lines,
+            column_lines,
+        }
     }
 
     #[inline(always)]
@@ -223,7 +233,14 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                     }
                 }
 
-                NonNamedGridPlacement::Auto
+                // The CSS Grid specification has a weird quirk where it matches non-existent line names
+                // to the first (positive) implicit line in the grid
+                //
+                // See: <https://github.com/w3c/csswg-drafts/issues/966#issuecomment-277042153>
+                GenericGridPlacement::Line(GridLine::from(match axis {
+                    GridAreaAxis::Row => (self.explicit_row_count.max(1) + 1) as i16,
+                    GridAreaAxis::Column => (self.explicit_column_count.max(1) + 1) as i16,
+                }))
             }
         }
     }
@@ -234,5 +251,13 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
 
     pub(crate) fn area_row_count(&self) -> u16 {
         self.area_row_count
+    }
+
+    pub(crate) fn set_explicit_column_count(&mut self, count: u16) {
+        self.explicit_column_count = count;
+    }
+
+    pub(crate) fn set_explicit_row_count(&mut self, count: u16) {
+        self.explicit_column_count = count;
     }
 }
