@@ -165,7 +165,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // (explicit tracks from grid_areas are computed separately below)
     let grid_template_col_count = compute_explicit_grid_size_in_axis(
         &style,
-        grid_template_columms.into_iter(),
         auto_fit_container_size.width,
         auto_repeat_fit_strategy.width,
         |val, basis| tree.calc(val, basis),
@@ -173,7 +172,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     );
     let grid_template_row_count = compute_explicit_grid_size_in_axis(
         &style,
-        grid_template_rows.into_iter(),
         auto_fit_container_size.height,
         auto_repeat_fit_strategy.height,
         |val, basis| tree.calc(val, basis),
@@ -230,7 +228,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     initialize_grid_tracks(
         &mut columns,
         final_col_counts,
-        grid_template_columms.into_iter(),
+        grid_template_columms,
         grid_auto_columms.into_iter(),
         style.gap().width,
         |column_index| cell_occupancy_matrix.column_is_occupied(column_index),
@@ -238,7 +236,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     initialize_grid_tracks(
         &mut rows,
         final_row_counts,
-        grid_template_rows.into_iter(),
+        grid_template_rows,
         grid_auto_rows.into_iter(),
         style.gap().height,
         |row_index| cell_occupancy_matrix.row_is_occupied(row_index),

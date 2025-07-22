@@ -71,53 +71,67 @@ impl<S: CheapCloneStr> GridTemplateArea<S> {
     }
 }
 
-// pub trait GridTemplateRepitition {
-//     type CustomIdent: CheapCloneStr;
-
-//     type LineNameSet<'a>: IntoIterator<Item = &'a Self::CustomIdent>
-//     where
-//         Self: 'a;
-//     /// The type returned by grid_template_row_names and grid_template_column_names
-//     #[cfg(feature = "grid_named")]
-//     type TemplateLineNames<'a>: IntoIterator<Item = &'a Self::LineNameSet<'a>>
-//     where
-//         Self: 'a;
-// }
-
-pub trait GenericRepetition<TrackSize>
-where
-    TrackSize: Into<TrackSizingFunction>,
-{
-    #[rustfmt::skip]
-    type TemplateLineNames<'a> : TemplateLineNames<'a> where Self: 'a;
+pub trait GenericRepetition {
+    type CustomIdent: CheapCloneStr;
+    type RepetitionTrackList<'a>: IntoIterator<Item = &'a TrackSizingFunction, IntoIter: ExactSizeIterator + Clone>
+    where
+        Self: 'a;
+    type TemplateLineNames<'a>: TemplateLineNames<'a, Self::CustomIdent>
+    where
+        Self: 'a;
     fn count(&self) -> RepetitionCount;
-    fn repeated_tracks(&self) -> &[TrackSize];
+    fn tracks(&self) -> Self::RepetitionTrackList<'_>;
+    fn track_count(&self) -> u16 {
+        self.tracks().into_iter().len() as u16
+    }
     fn lines_names(&self) -> Self::TemplateLineNames<'_>;
 }
 
 #[cfg(feature = "grid_named")]
 #[rustfmt::skip]
-pub trait TemplateLineNames<'a> : IntoIterator<Item = &'a Self::LineNameSet<'a>> where Self: 'a {
-    type CustomIdent: CheapCloneStr;
-    type LineNameSet<'b>: IntoIterator<Item = &'b Self::CustomIdent> where Self: 'b;
+pub trait TemplateLineNames<'a, S: CheapCloneStr> : IntoIterator<Item = &'a Self::LineNameSet<'a>, IntoIter: ExactSizeIterator + Clone> where Self: 'a {
+    type LineNameSet<'b>: IntoIterator<Item = S, IntoIter: ExactSizeIterator + Clone> where Self: 'b;
 }
 
-pub enum GenericGridTemplateComponent<TrackSize, Repetition>
+impl<'a, S: CheapCloneStr> TemplateLineNames<'a, S> for &'a Vec<Vec<S>> {
+    type LineNameSet<'b>
+        = Vec<S>
+    where
+        Self: 'b;
+}
+
+#[derive(Copy, Clone)]
+pub enum GridTemplateComponentRef<'a, S, Repetition>
 where
-    TrackSize: Into<TrackSizingFunction>,
-    Repetition:,
+    S: CheapCloneStr,
+    Repetition: GenericRepetition<CustomIdent = S>,
 {
-    Single(TrackSize),
-    Repeat(Repetition),
+    Single(TrackSizingFunction),
+    Repeat(&'a Repetition),
+}
+
+impl<'a, S, Repetition> GridTemplateComponentRef<'a, S, Repetition>
+where
+    S: CheapCloneStr,
+    Repetition: GenericRepetition<CustomIdent = S>,
+{
+    /// Whether the track definition is a auto-repeated fragment
+    pub fn is_auto_repetition(&self) -> bool {
+        match self {
+            Self::Single(_) => false,
+            Self::Repeat(repeat) => matches!(repeat.count(), RepetitionCount::AutoFit | RepetitionCount::AutoFill),
+        }
+    }
 }
 
 /// The set of styles required for a CSS Grid container
 pub trait GridContainerStyle: CoreStyle {
+    type Repetition: GenericRepetition<CustomIdent = Self::CustomIdent>;
+
     /// The type returned by grid_template_rows and grid_template_columns
-    type TemplateTrackList<'a>: IntoIterator<
-        Item = &'a GridTemplateComponent<Self::CustomIdent>,
-        IntoIter: ExactSizeIterator + Clone,
-    >
+    type TemplateTrackList<'a>: Iterator<Item = GridTemplateComponentRef<'a, Self::CustomIdent, Self::Repetition>>
+        + ExactSizeIterator
+        + Clone
     where
         Self: 'a;
 
@@ -126,15 +140,10 @@ pub trait GridContainerStyle: CoreStyle {
     where
         Self: 'a;
 
-    // /// The type returned by grid_template_row_names and grid_template_column_names
-    // #[cfg(feature = "grid_named")]
-    // type LineNameSet<'a>: IntoIterator<Item = &'a Self::CustomIdent>
-    // where
-    //     Self: 'a;
     /// The type returned by grid_template_row_names and grid_template_column_names
     #[cfg(feature = "grid_named")]
     //IntoIterator<Item = &'a Self::LineNameSet<'a>>
-    type TemplateLineNames<'a>: TemplateLineNames<'a>
+    type TemplateLineNames<'a>: TemplateLineNames<'a, Self::CustomIdent>
     where
         Self: 'a;
 
@@ -1211,8 +1220,31 @@ pub struct GridTemplateRepetition<S: CheapCloneStr> {
     pub dummy: PhantomData<S>,
 }
 
-/// The sizing function for a grid track (row/column)
-/// See <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns>
+#[rustfmt::skip]
+impl<S: CheapCloneStr> GenericRepetition for GridTemplateRepetition<S> {
+    type CustomIdent = S;
+    type RepetitionTrackList<'a> = &'a [TrackSizingFunction] where Self: 'a;
+    type TemplateLineNames<'a> = &'a Vec<Vec<S>> where Self: 'a;
+    #[inline(always)]
+    fn count(&self) -> RepetitionCount {
+        self.count
+    }
+    #[inline(always)]
+    fn track_count(&self) -> u16 {
+        self.tracks.len() as u16
+    }
+    #[inline(always)]
+    fn tracks(&self) -> Self::RepetitionTrackList<'_> {
+        &self.tracks
+    }
+    #[inline(always)]
+    fn lines_names(&self) -> Self::TemplateLineNames<'_> {
+        &self.line_names
+    }
+}
+
+// The sizing function for a grid track (row/column)
+// See <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns>
 #[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum GridTemplateComponent<S: CheapCloneStr> {
@@ -1222,6 +1254,16 @@ pub enum GridTemplateComponent<S: CheapCloneStr> {
     /// Only valid if every track in template (not just the repetition) has a fixed size.
     Repeat(GridTemplateRepetition<S>),
 }
+
+impl<S: CheapCloneStr> GridTemplateComponent<S> {
+    pub fn as_component_ref(&self) -> GridTemplateComponentRef<'_, S, GridTemplateRepetition<S>> {
+        match self {
+            GridTemplateComponent::Single(size) => GridTemplateComponentRef::Single(*size),
+            GridTemplateComponent::Repeat(repetition) => GridTemplateComponentRef::Repeat(repetition),
+        }
+    }
+}
+
 impl<S: CheapCloneStr> GridTemplateComponent<S> {
     /// Whether the track definition is a auto-repeated fragment
     pub fn is_auto_repetition(&self) -> bool {

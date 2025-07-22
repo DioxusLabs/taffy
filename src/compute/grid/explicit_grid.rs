@@ -7,7 +7,7 @@ use crate::style_helpers::TaffyAuto;
 use crate::util::sys::{ceil, floor, Vec};
 use crate::util::MaybeMath;
 use crate::util::ResolveOrZero;
-use crate::{CheapCloneStr, GridContainerStyle};
+use crate::{CheapCloneStr, GenericRepetition, GridContainerStyle, GridTemplateComponentRef};
 
 /// The auto-repeat fit strategy to use
 pub(crate) enum AutoRepeatStrategy {
@@ -21,14 +21,18 @@ pub(crate) enum AutoRepeatStrategy {
 }
 
 /// Compute the number of rows and columns in the explicit grid
-pub(crate) fn compute_explicit_grid_size_in_axis<'a, S: CheapCloneStr>(
+pub(crate) fn compute_explicit_grid_size_in_axis(
     style: &impl GridContainerStyle,
-    template: impl Iterator<Item = &'a GridTemplateComponent<S>> + ExactSizeIterator + Clone,
     auto_fit_container_size: Option<f32>,
     auto_fit_strategy: AutoRepeatStrategy,
     resolve_calc_value: impl Fn(*const (), f32) -> f32,
     axis: AbsoluteAxis,
 ) -> u16 {
+    let template = match axis {
+        AbsoluteAxis::Horizontal => style.grid_template_rows(),
+        AbsoluteAxis::Vertical => style.grid_template_columns(),
+    };
+
     // If template contains no tracks, then there are trivially zero explicit tracks
     let track_count = template.len();
     if track_count == 0 {
@@ -38,8 +42,8 @@ pub(crate) fn compute_explicit_grid_size_in_axis<'a, S: CheapCloneStr>(
     // If there are any repetitions that contains no tracks, then the whole definition should be considered invalid
     // and we default to no explicit tracks
     let template_has_repetitions_with_zero_tracks = template.clone().any(|track_def| match track_def {
-        GridTemplateComponent::Single(_) => false,
-        GridTemplateComponent::Repeat(repeat) => repeat.tracks.is_empty(),
+        GridTemplateComponentRef::Single(_) => false,
+        GridTemplateComponentRef::Repeat(repeat) => repeat.track_count() == 0,
     });
     if template_has_repetitions_with_zero_tracks {
         return 0;
@@ -49,9 +53,9 @@ pub(crate) fn compute_explicit_grid_size_in_axis<'a, S: CheapCloneStr>(
     let non_auto_repeating_track_count = template
         .clone()
         .map(|track_def| match track_def {
-            GridTemplateComponent::Single(_) => 1,
-            GridTemplateComponent::Repeat(repeat) => match repeat.count {
-                RepetitionCount::Count(count) => count * repeat.tracks.len() as u16,
+            GridTemplateComponentRef::Single(_) => 1,
+            GridTemplateComponentRef::Repeat(repeat) => match repeat.count() {
+                RepetitionCount::Count(count) => count * repeat.track_count(),
                 RepetitionCount::AutoFit | RepetitionCount::AutoFill => 0,
             },
         })
@@ -59,9 +63,9 @@ pub(crate) fn compute_explicit_grid_size_in_axis<'a, S: CheapCloneStr>(
 
     let auto_repetition_count: u16 = template.clone().filter(|track_def| track_def.is_auto_repetition()).count() as u16;
     let all_track_defs_have_fixed_component = template.clone().all(|track_def| match track_def {
-        GridTemplateComponent::Single(sizing_function) => sizing_function.has_fixed_component(),
-        GridTemplateComponent::Repeat(repeat) => {
-            repeat.tracks.iter().all(|sizing_function| sizing_function.has_fixed_component())
+        GridTemplateComponentRef::Single(sizing_function) => sizing_function.has_fixed_component(),
+        GridTemplateComponentRef::Repeat(repeat) => {
+            repeat.tracks().into_iter().all(|sizing_function| sizing_function.has_fixed_component())
         }
     });
 
@@ -83,10 +87,10 @@ pub(crate) fn compute_explicit_grid_size_in_axis<'a, S: CheapCloneStr>(
     let repetition_definition = template
         .clone()
         .find_map(|def| match def {
-            GridTemplateComponent::Single(_) => None,
-            GridTemplateComponent::Repeat(repeat) => match repeat.count {
+            GridTemplateComponentRef::Single(_) => None,
+            GridTemplateComponentRef::Repeat(repeat) => match repeat.count() {
                 RepetitionCount::Count(_) => None,
-                RepetitionCount::AutoFit | RepetitionCount::AutoFill => Some(&repeat.tracks),
+                RepetitionCount::AutoFit | RepetitionCount::AutoFill => Some(repeat.tracks().into_iter()),
             },
         })
         .unwrap();
@@ -113,14 +117,14 @@ pub(crate) fn compute_explicit_grid_size_in_axis<'a, S: CheapCloneStr>(
             let non_repeating_track_used_space: f32 = template
                 .clone()
                 .map(|track_def| match track_def {
-                    GridTemplateComponent::Single(sizing_function) => {
-                        track_definite_value(sizing_function, parent_size, &resolve_calc_value)
+                    GridTemplateComponentRef::Single(sizing_function) => {
+                        track_definite_value(&sizing_function, parent_size, &resolve_calc_value)
                     }
-                    GridTemplateComponent::Repeat(repeat) => match repeat.count {
+                    GridTemplateComponentRef::Repeat(repeat) => match repeat.count() {
                         RepetitionCount::Count(count) => {
                             let sum = repeat
-                                .tracks
-                                .iter()
+                                .tracks()
+                                .into_iter()
                                 .map(|sizing_function| {
                                     track_definite_value(sizing_function, parent_size, &resolve_calc_value)
                                 })
@@ -134,8 +138,8 @@ pub(crate) fn compute_explicit_grid_size_in_axis<'a, S: CheapCloneStr>(
             let gap_size = style.gap().get_abs(axis).resolve_or_zero(Some(inner_container_size), &resolve_calc_value);
 
             // Compute the amount of space that a single repetition of the repeated track list takes
+            let repetition_definition_len = repetition_definition.len();
             let per_repetition_track_used_space: f32 = repetition_definition
-                .iter()
                 .map(|sizing_function| track_definite_value(sizing_function, parent_size, &resolve_calc_value))
                 .sum::<f32>();
 
@@ -150,7 +154,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis<'a, S: CheapCloneStr>(
             if first_repetition_and_non_repeating_tracks_used_space > inner_container_size {
                 1u16
             } else {
-                let per_repetition_gap_used_space = (repetition_definition.len() as f32) * gap_size;
+                let per_repetition_gap_used_space = (repetition_definition_len as f32) * gap_size;
                 let per_repetition_used_space = per_repetition_track_used_space + per_repetition_gap_used_space;
                 let num_repetition_that_fit = (inner_container_size
                     - first_repetition_and_non_repeating_tracks_used_space)
