@@ -2,12 +2,12 @@
 //! This mainly consists of evaluating GridAutoTracks
 use super::types::{GridTrack, TrackCounts};
 use crate::geometry::AbsoluteAxis;
-use crate::style::{GridTemplateComponent, LengthPercentage, RepetitionCount, TrackSizingFunction};
+use crate::style::{LengthPercentage, RepetitionCount, TrackSizingFunction};
 use crate::style_helpers::TaffyAuto;
 use crate::util::sys::{ceil, floor, Vec};
 use crate::util::MaybeMath;
 use crate::util::ResolveOrZero;
-use crate::{CheapCloneStr, GenericRepetition, GridContainerStyle, GridTemplateComponentRef};
+use crate::{GenericRepetition, GridContainerStyle, GridTemplateComponentRef};
 
 /// The auto-repeat fit strategy to use
 pub(crate) enum AutoRepeatStrategy {
@@ -179,14 +179,30 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
 
 /// Resolve the track sizing functions of explicit tracks, automatically created tracks, and gutters
 /// given a set of track counts and all of the relevant styles
-pub(super) fn initialize_grid_tracks<'a, S: CheapCloneStr>(
+pub(super) fn initialize_grid_tracks<'a>(
     tracks: &mut Vec<GridTrack>,
     counts: TrackCounts,
-    track_template: impl Iterator<Item = &'a GridTemplateComponent<S>> + ExactSizeIterator + Clone,
-    auto_tracks: impl Iterator<Item = &'a TrackSizingFunction> + ExactSizeIterator + Clone,
-    gap: LengthPercentage,
+    style: &impl GridContainerStyle,
+    axis: AbsoluteAxis,
     track_has_items: impl Fn(usize) -> bool,
 ) {
+    // Extract styles
+    let track_template;
+    let auto_tracks;
+    let gap;
+    match axis {
+        AbsoluteAxis::Horizontal => {
+            track_template = style.grid_template_columns().into_iter();
+            auto_tracks = style.grid_auto_columns().into_iter();
+            gap = style.gap().width;
+        }
+        AbsoluteAxis::Vertical => {
+            track_template = style.grid_template_rows().into_iter();
+            auto_tracks = style.grid_auto_rows().into_iter();
+            gap = style.gap().height;
+        }
+    };
+
     // Clear vector (in case this is a re-layout), reserve space for all tracks ahead of time to reduce allocations,
     // and push the initial gutter
     tracks.clear();
@@ -215,7 +231,7 @@ pub(super) fn initialize_grid_tracks<'a, S: CheapCloneStr>(
     if counts.explicit > 0 {
         track_template.clone().for_each(|track_sizing_function| {
             match track_sizing_function {
-                GridTemplateComponent::Single(sizing_function) => {
+                GridTemplateComponentRef::Single(sizing_function) => {
                     tracks.push(GridTrack::new(
                         sizing_function.min_sizing_function(),
                         sizing_function.max_sizing_function(),
@@ -223,9 +239,10 @@ pub(super) fn initialize_grid_tracks<'a, S: CheapCloneStr>(
                     tracks.push(GridTrack::gutter(gap));
                     current_track_index += 1;
                 }
-                GridTemplateComponent::Repeat(repeat) => match repeat.count {
+                GridTemplateComponentRef::Repeat(repeat) => match repeat.count() {
                     RepetitionCount::Count(count) => {
-                        let track_iter = repeat.tracks.iter().cycle().take(repeat.tracks.len() * count as usize);
+                        let track_iter = repeat.tracks().into_iter();
+                        let track_iter = track_iter.cycle().take(repeat.track_count() as usize * count as usize);
                         track_iter.for_each(|sizing_function| {
                             tracks.push(GridTrack::new(
                                 sizing_function.min_sizing_function(),
@@ -237,14 +254,14 @@ pub(super) fn initialize_grid_tracks<'a, S: CheapCloneStr>(
                     }
                     RepetitionCount::AutoFit | RepetitionCount::AutoFill => {
                         let auto_repeated_track_count = (counts.explicit - (track_template.len() as u16 - 1)) as usize;
-                        let iter = repeat.tracks.iter().copied().cycle();
+                        let iter = repeat.tracks().into_iter().copied().cycle();
                         for track_def in iter.take(auto_repeated_track_count) {
                             let mut track =
                                 GridTrack::new(track_def.min_sizing_function(), track_def.max_sizing_function());
                             let mut gutter = GridTrack::gutter(gap);
 
                             // Auto-fit tracks that don't contain should be collapsed.
-                            if repeat.count == RepetitionCount::AutoFit && !track_has_items(current_track_index) {
+                            if repeat.count() == RepetitionCount::AutoFit && !track_has_items(current_track_index) {
                                 track.collapse();
                                 gutter.collapse();
                             }

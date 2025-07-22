@@ -225,22 +225,12 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     // This resolves the min and max track sizing functions for all tracks and gutters
     let mut columns = GridTrackVec::new();
     let mut rows = GridTrackVec::new();
-    initialize_grid_tracks(
-        &mut columns,
-        final_col_counts,
-        grid_template_columms,
-        grid_auto_columms.into_iter(),
-        style.gap().width,
-        |column_index| cell_occupancy_matrix.column_is_occupied(column_index),
-    );
-    initialize_grid_tracks(
-        &mut rows,
-        final_row_counts,
-        grid_template_rows,
-        grid_auto_rows.into_iter(),
-        style.gap().height,
-        |row_index| cell_occupancy_matrix.row_is_occupied(row_index),
-    );
+    initialize_grid_tracks(&mut columns, final_col_counts, &style, AbsoluteAxis::Horizontal, |column_index| {
+        cell_occupancy_matrix.column_is_occupied(column_index)
+    });
+    initialize_grid_tracks(&mut rows, final_row_counts, &style, AbsoluteAxis::Vertical, |row_index| {
+        cell_occupancy_matrix.row_is_occupied(row_index)
+    });
 
     drop(grid_template_rows);
     drop(grid_template_columms);
