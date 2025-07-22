@@ -89,13 +89,13 @@ pub trait GenericRepetition {
 
 #[cfg(feature = "grid_named")]
 #[rustfmt::skip]
-pub trait TemplateLineNames<'a, S: CheapCloneStr> : IntoIterator<Item = &'a Self::LineNameSet<'a>, IntoIter: ExactSizeIterator + Clone> where Self: 'a {
-    type LineNameSet<'b>: IntoIterator<Item = S, IntoIter: ExactSizeIterator + Clone> where Self: 'b;
+pub trait TemplateLineNames<'a, S: CheapCloneStr> : IntoIterator<Item = Self::LineNameSet<'a>, IntoIter: ExactSizeIterator + Clone> where Self: 'a {
+    type LineNameSet<'b>: IntoIterator<Item = &'b S, IntoIter: ExactSizeIterator + Clone> where Self: 'b;
 }
 
 impl<'a, S: CheapCloneStr> TemplateLineNames<'a, S> for &'a Vec<Vec<S>> {
     type LineNameSet<'b>
-        = Vec<S>
+        = &'b Vec<S>
     where
         Self: 'b;
 }

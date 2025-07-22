@@ -1,6 +1,6 @@
 use crate::{
-    CheapCloneStr, GenericGridPlacement, GridAreaAxis, GridAreaEnd, GridPlacement, GridTemplateArea, Line,
-    NamedGridLine, NonNamedGridPlacement,
+    CheapCloneStr, GenericGridPlacement, GenericRepetition as _, GridAreaAxis, GridAreaEnd, GridContainerStyle,
+    GridPlacement, GridTemplateArea, GridTemplateComponentRef, Line, NonNamedGridPlacement, RepetitionCount,
 };
 use core::borrow::Borrow;
 use std::{
@@ -43,14 +43,14 @@ pub(crate) struct NamedLineResolver<S: CheapCloneStr> {
 
 impl<S: CheapCloneStr> NamedLineResolver<S> {
     pub(crate) fn new<'a>(
-        area_styles: Option<impl IntoIterator<Item = GridTemplateArea<S>>>,
-        column_line_name_styles: Option<impl IntoIterator<Item = NamedGridLine<S>>>,
-        row_line_name_styles: Option<impl IntoIterator<Item = NamedGridLine<S>>>,
+        style: &impl GridContainerStyle<CustomIdent = S>,
+        column_auto_repetitions: u16,
+        row_auto_repetitions: u16,
     ) -> Self {
         let mut area_column_count = 0;
         let mut area_row_count = 0;
         let mut areas: HashMap<StrHasher<_>, GridTemplateArea<_>> = HashMap::new();
-        if let Some(area_iter) = area_styles {
+        if let Some(area_iter) = style.grid_template_areas() {
             for area in area_iter.into_iter() {
                 // TODO: Investigate eliminating clones
                 areas.insert(StrHasher(area.name.clone()), area.clone());
@@ -60,23 +60,77 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
             }
         }
 
-        let mut column_lines = HashMap::new();
-        if let Some(column_line_names_iter) = column_line_name_styles {
-            for named_line in column_line_names_iter {
-                column_lines
-                    .entry(StrHasher(named_line.name))
-                    .and_modify(|lines: &mut Vec<u16>| lines.push(named_line.index))
-                    .or_insert(vec![named_line.index]);
+        // ---
+
+        let mut current_line = 0;
+        let mut column_lines: HashMap<StrHasher<S>, Vec<u16>> = HashMap::new();
+        let mut column_tracks = style.grid_template_columns();
+        if let Some(column_line_names_iter) = style.grid_template_column_names() {
+            current_line += 1;
+            for line_names in column_line_names_iter {
+                for line_name in line_names.into_iter() {
+                    column_lines
+                        .entry(StrHasher(line_name.clone()))
+                        .and_modify(|lines: &mut Vec<u16>| lines.push(current_line))
+                        .or_insert_with(|| vec![current_line]);
+                }
+
+                if let Some(GridTemplateComponentRef::Repeat(repeat)) = column_tracks.next() {
+                    let repeat_count = match repeat.count() {
+                        RepetitionCount::Count(count) => count,
+                        RepetitionCount::AutoFill | RepetitionCount::AutoFit => column_auto_repetitions,
+                    };
+
+                    for _ in 0..repeat_count {
+                        for line_name_set in repeat.lines_names().into_iter() {
+                            for line_name in line_name_set.into_iter() {
+                                column_lines
+                                    .entry(StrHasher(line_name.clone()))
+                                    .and_modify(|lines: &mut Vec<u16>| lines.push(current_line))
+                                    .or_insert_with(|| vec![current_line]);
+                            }
+                            current_line += 1;
+                        }
+                        // Last line name set collapses with following line name set
+                        current_line -= 1;
+                    }
+                }
             }
         }
 
-        let mut row_lines = HashMap::new();
-        if let Some(row_line_names_iter) = row_line_name_styles {
-            for named_line in row_line_names_iter {
-                row_lines
-                    .entry(StrHasher(named_line.name))
-                    .and_modify(|lines: &mut Vec<u16>| lines.push(named_line.index))
-                    .or_insert(vec![named_line.index]);
+        let mut current_line = 0;
+        let mut row_lines: HashMap<StrHasher<S>, Vec<u16>> = HashMap::new();
+        let mut row_tracks = style.grid_template_rows();
+        if let Some(row_line_names_iter) = style.grid_template_row_names() {
+            current_line += 1;
+            for line_names in row_line_names_iter {
+                for line_name in line_names.into_iter() {
+                    row_lines
+                        .entry(StrHasher(line_name.clone()))
+                        .and_modify(|lines: &mut Vec<u16>| lines.push(current_line))
+                        .or_insert_with(|| vec![current_line]);
+                }
+
+                if let Some(GridTemplateComponentRef::Repeat(repeat)) = row_tracks.next() {
+                    let repeat_count = match repeat.count() {
+                        RepetitionCount::Count(count) => count,
+                        RepetitionCount::AutoFill | RepetitionCount::AutoFit => row_auto_repetitions,
+                    };
+
+                    for _ in 0..repeat_count {
+                        for line_name_set in repeat.lines_names().into_iter() {
+                            for line_name in line_name_set.into_iter() {
+                                row_lines
+                                    .entry(StrHasher(line_name.clone()))
+                                    .and_modify(|lines: &mut Vec<u16>| lines.push(current_line))
+                                    .or_insert_with(|| vec![current_line]);
+                            }
+                            current_line += 1;
+                        }
+                        // Last line name set collapses with following line name set
+                        current_line -= 1;
+                    }
+                }
             }
         }
 

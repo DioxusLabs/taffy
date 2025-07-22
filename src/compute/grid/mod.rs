@@ -163,14 +163,14 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
 
     // Compute the number of rows and columns in the explicit grid *template*
     // (explicit tracks from grid_areas are computed separately below)
-    let grid_template_col_count = compute_explicit_grid_size_in_axis(
+    let (col_auto_repetition_count, grid_template_col_count) = compute_explicit_grid_size_in_axis(
         &style,
         auto_fit_container_size.width,
         auto_repeat_fit_strategy.width,
         |val, basis| tree.calc(val, basis),
         AbsoluteAxis::Horizontal,
     );
-    let grid_template_row_count = compute_explicit_grid_size_in_axis(
+    let (row_auto_repetition_count, grid_template_row_count) = compute_explicit_grid_size_in_axis(
         &style,
         auto_fit_container_size.height,
         auto_repeat_fit_strategy.height,
@@ -179,11 +179,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     );
 
     // type CustomIdent<'a> = <<Tree as LayoutPartialTree>::CoreContainerStyle<'_> as CoreStyle>::CustomIdent;
-    let name_resolver = NamedLineResolver::new(
-        style.grid_template_areas(),
-        style.grid_template_column_names(),
-        style.grid_template_row_names(),
-    );
+    let name_resolver = NamedLineResolver::new(&style, col_auto_repetition_count, row_auto_repetition_count);
 
     let explicit_col_count = grid_template_col_count.max(name_resolver.area_column_count());
     let explicit_row_count = grid_template_row_count.max(name_resolver.area_row_count());
