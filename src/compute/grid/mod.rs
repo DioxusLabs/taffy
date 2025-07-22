@@ -1,7 +1,5 @@
 //! This module is a partial implementation of the CSS Grid Level 1 specification
 //! <https://www.w3.org/TR/css-grid-1>
-use core::borrow::Borrow;
-
 use crate::geometry::{AbsoluteAxis, AbstractAxis, InBothAbsAxis};
 use crate::geometry::{Line, Point, Rect, Size};
 use crate::style::{AlignItems, AlignSelf, AvailableSpace, Overflow, Position};
@@ -105,15 +103,6 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     let grid_auto_columms = style.grid_auto_columns();
     let grid_auto_rows = style.grid_auto_rows();
 
-    // type CustomIdent<'a> = <<Tree as LayoutPartialTree>::CoreContainerStyle<'_> as CoreStyle>::CustomIdent;
-    let name_resolver = NamedLineResolver::new(
-        style.grid_template_areas(),
-        style.grid_template_column_names(),
-        style.grid_template_row_names(),
-    );
-    let grid_area_column_count = name_resolver.area_column_count();
-    let grid_area_row_count = name_resolver.area_row_count();
-
     let constrained_available_space = known_dimensions
         .or(preferred_size)
         .map(|size| size.map(AvailableSpace::Definite))
@@ -172,25 +161,34 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
         None => AutoRepeatStrategy::MinRepetitionsThatDoOverflow,
     });
 
-    // Exactly compute the number of rows and columns in the explicit grid.
-    let explicit_col_count = compute_explicit_grid_size_in_axis(
+    // Compute the number of rows and columns in the explicit grid *template*
+    // (explicit tracks from grid_areas are computed separately below)
+    let grid_template_col_count = compute_explicit_grid_size_in_axis(
         &style,
-        grid_template_columms.borrow(),
-        grid_area_column_count,
+        grid_template_columms.into_iter(),
         auto_fit_container_size.width,
         auto_repeat_fit_strategy.width,
         |val, basis| tree.calc(val, basis),
         AbsoluteAxis::Horizontal,
     );
-    let explicit_row_count = compute_explicit_grid_size_in_axis(
+    let grid_template_row_count = compute_explicit_grid_size_in_axis(
         &style,
-        grid_template_rows.borrow(),
-        grid_area_row_count,
+        grid_template_rows.into_iter(),
         auto_fit_container_size.height,
         auto_repeat_fit_strategy.height,
         |val, basis| tree.calc(val, basis),
         AbsoluteAxis::Vertical,
     );
+
+    // type CustomIdent<'a> = <<Tree as LayoutPartialTree>::CoreContainerStyle<'_> as CoreStyle>::CustomIdent;
+    let name_resolver = NamedLineResolver::new(
+        style.grid_template_areas(),
+        style.grid_template_column_names(),
+        style.grid_template_row_names(),
+    );
+
+    let explicit_col_count = grid_template_col_count.max(name_resolver.area_column_count());
+    let explicit_row_count = grid_template_row_count.max(name_resolver.area_row_count());
 
     // 3. Implicit Grid: Estimate Track Counts
     // Estimate the number of rows and columns in the implicit grid (= the entire grid)
@@ -232,16 +230,16 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
     initialize_grid_tracks(
         &mut columns,
         final_col_counts,
-        grid_template_columms.borrow(),
-        grid_auto_columms.borrow(),
+        grid_template_columms.into_iter(),
+        grid_auto_columms.into_iter(),
         style.gap().width,
         |column_index| cell_occupancy_matrix.column_is_occupied(column_index),
     );
     initialize_grid_tracks(
         &mut rows,
         final_row_counts,
-        grid_template_rows.borrow(),
-        grid_auto_rows.borrow(),
+        grid_template_rows.into_iter(),
+        grid_auto_rows.into_iter(),
         style.gap().height,
         |row_index| cell_occupancy_matrix.row_is_occupied(row_index),
     );

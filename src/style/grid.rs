@@ -6,10 +6,9 @@ use super::{
 use crate::compute::grid::{GridCoordinate, GridLine, OriginZeroLine};
 use crate::geometry::{AbsoluteAxis, AbstractAxis, Line, MinMax, Size};
 use crate::style_helpers::*;
-use crate::util::sys::GridTrackVec;
-use core::borrow::Borrow;
 use core::cmp::{max, min};
 use core::fmt::Debug;
+use core::marker::PhantomData;
 
 /// Trait that represents a cheaply clonable string. If you're unsure what to use here
 /// consider `Arc<str>` or `string_cache::Atom`.
@@ -72,21 +71,70 @@ impl<S: CheapCloneStr> GridTemplateArea<S> {
     }
 }
 
+// pub trait GridTemplateRepitition {
+//     type CustomIdent: CheapCloneStr;
+
+//     type LineNameSet<'a>: IntoIterator<Item = &'a Self::CustomIdent>
+//     where
+//         Self: 'a;
+//     /// The type returned by grid_template_row_names and grid_template_column_names
+//     #[cfg(feature = "grid_named")]
+//     type TemplateLineNames<'a>: IntoIterator<Item = &'a Self::LineNameSet<'a>>
+//     where
+//         Self: 'a;
+// }
+
+pub trait GenericRepetition<TrackSize>
+where
+    TrackSize: Into<TrackSizingFunction>,
+{
+    #[rustfmt::skip]
+    type TemplateLineNames<'a> : TemplateLineNames<'a> where Self: 'a;
+    fn count(&self) -> RepetitionCount;
+    fn repeated_tracks(&self) -> &[TrackSize];
+    fn lines_names(&self) -> Self::TemplateLineNames<'_>;
+}
+
+#[cfg(feature = "grid_named")]
+#[rustfmt::skip]
+pub trait TemplateLineNames<'a> : IntoIterator<Item = &'a Self::LineNameSet<'a>> where Self: 'a {
+    type CustomIdent: CheapCloneStr;
+    type LineNameSet<'b>: IntoIterator<Item = &'b Self::CustomIdent> where Self: 'b;
+}
+
+pub enum GenericGridTemplateComponent<TrackSize, Repetition>
+where
+    TrackSize: Into<TrackSizingFunction>,
+    Repetition:,
+{
+    Single(TrackSize),
+    Repeat(Repetition),
+}
+
 /// The set of styles required for a CSS Grid container
 pub trait GridContainerStyle: CoreStyle {
     /// The type returned by grid_template_rows and grid_template_columns
-    type TemplateTrackList<'a>: Borrow<[TrackSizingFunction]>
+    type TemplateTrackList<'a>: IntoIterator<
+        Item = &'a GridTemplateComponent<Self::CustomIdent>,
+        IntoIter: ExactSizeIterator + Clone,
+    >
     where
         Self: 'a;
 
     /// The type returned by grid_auto_rows and grid_auto_columns
-    type AutoTrackList<'a>: Borrow<[NonRepeatedTrackSizingFunction]>
+    type AutoTrackList<'a>: IntoIterator<Item = &'a TrackSizingFunction, IntoIter: ExactSizeIterator + Clone>
     where
         Self: 'a;
 
+    // /// The type returned by grid_template_row_names and grid_template_column_names
+    // #[cfg(feature = "grid_named")]
+    // type LineNameSet<'a>: IntoIterator<Item = &'a Self::CustomIdent>
+    // where
+    //     Self: 'a;
     /// The type returned by grid_template_row_names and grid_template_column_names
     #[cfg(feature = "grid_named")]
-    type TemplateLineNames<'a>: IntoIterator<Item = NamedGridLine<Self::CustomIdent>>
+    //IntoIterator<Item = &'a Self::LineNameSet<'a>>
+    type TemplateLineNames<'a>: TemplateLineNames<'a>
     where
         Self: 'a;
 
@@ -1044,8 +1092,8 @@ impl MinTrackSizingFunction {
 ///
 /// May either be a MinMax variant which specifies separate values for the min-/max- track sizing functions
 /// or a scalar value which applies to both track sizing functions.
-pub type NonRepeatedTrackSizingFunction = MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>;
-impl NonRepeatedTrackSizingFunction {
+pub type TrackSizingFunction = MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>;
+impl TrackSizingFunction {
     /// Extract the min track sizing function
     pub fn min_sizing_function(&self) -> MinTrackSizingFunction {
         self.min
@@ -1059,51 +1107,51 @@ impl NonRepeatedTrackSizingFunction {
         self.min.0.is_length_or_percentage() || self.max.0.is_length_or_percentage()
     }
 }
-impl TaffyAuto for NonRepeatedTrackSizingFunction {
+impl TaffyAuto for TrackSizingFunction {
     const AUTO: Self = Self { min: MinTrackSizingFunction::AUTO, max: MaxTrackSizingFunction::AUTO };
 }
-impl TaffyMinContent for NonRepeatedTrackSizingFunction {
+impl TaffyMinContent for TrackSizingFunction {
     const MIN_CONTENT: Self =
         Self { min: MinTrackSizingFunction::MIN_CONTENT, max: MaxTrackSizingFunction::MIN_CONTENT };
 }
-impl TaffyMaxContent for NonRepeatedTrackSizingFunction {
+impl TaffyMaxContent for TrackSizingFunction {
     const MAX_CONTENT: Self =
         Self { min: MinTrackSizingFunction::MAX_CONTENT, max: MaxTrackSizingFunction::MAX_CONTENT };
 }
-impl TaffyFitContent for NonRepeatedTrackSizingFunction {
+impl TaffyFitContent for TrackSizingFunction {
     fn fit_content(argument: LengthPercentage) -> Self {
         Self { min: MinTrackSizingFunction::AUTO, max: MaxTrackSizingFunction::fit_content(argument) }
     }
 }
-impl TaffyZero for NonRepeatedTrackSizingFunction {
+impl TaffyZero for TrackSizingFunction {
     const ZERO: Self = Self { min: MinTrackSizingFunction::ZERO, max: MaxTrackSizingFunction::ZERO };
 }
-impl FromLength for NonRepeatedTrackSizingFunction {
+impl FromLength for TrackSizingFunction {
     fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
         Self { min: MinTrackSizingFunction::from_length(value), max: MaxTrackSizingFunction::from_length(value) }
     }
 }
-impl FromPercent for NonRepeatedTrackSizingFunction {
+impl FromPercent for TrackSizingFunction {
     fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
         Self { min: MinTrackSizingFunction::from_percent(percent), max: MaxTrackSizingFunction::from_percent(percent) }
     }
 }
-impl FromFr for NonRepeatedTrackSizingFunction {
+impl FromFr for TrackSizingFunction {
     fn from_fr<Input: Into<f32> + Copy>(flex: Input) -> Self {
         Self { min: MinTrackSizingFunction::AUTO, max: MaxTrackSizingFunction::from_fr(flex) }
     }
 }
-impl From<LengthPercentage> for NonRepeatedTrackSizingFunction {
+impl From<LengthPercentage> for TrackSizingFunction {
     fn from(input: LengthPercentage) -> Self {
         Self { min: input.into(), max: input.into() }
     }
 }
-impl From<LengthPercentageAuto> for NonRepeatedTrackSizingFunction {
+impl From<LengthPercentageAuto> for TrackSizingFunction {
     fn from(input: LengthPercentageAuto) -> Self {
         Self { min: input.into(), max: input.into() }
     }
 }
-impl From<Dimension> for NonRepeatedTrackSizingFunction {
+impl From<Dimension> for TrackSizingFunction {
     fn from(input: Dimension) -> Self {
         Self { min: input.into(), max: input.into() }
     }
@@ -1115,7 +1163,7 @@ impl From<Dimension> for NonRepeatedTrackSizingFunction {
 /// and the difference between AutoFit and AutoFill.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum GridTrackRepetition {
+pub enum RepetitionCount {
     /// Auto-repeating tracks should be generated to fit the container
     /// See: <https://developer.mozilla.org/en-US/docs/Web/CSS/repeat#auto-fill>
     AutoFill,
@@ -1125,7 +1173,7 @@ pub enum GridTrackRepetition {
     /// The specified tracks should be repeated exacts N times
     Count(u16),
 }
-impl From<u16> for GridTrackRepetition {
+impl From<u16> for RepetitionCount {
     fn from(value: u16) -> Self {
         Self::Count(value)
     }
@@ -1142,7 +1190,7 @@ impl core::fmt::Display for InvalidStringRepetitionValue {
         f.write_str("&str can only be converted to GridTrackRepetition if it's value is 'auto-fit' or 'auto-fill'")
     }
 }
-impl TryFrom<&str> for GridTrackRepetition {
+impl TryFrom<&str> for RepetitionCount {
     type Error = InvalidStringRepetitionValue;
     fn try_from(value: &str) -> Result<Self, InvalidStringRepetitionValue> {
         match value {
@@ -1153,56 +1201,69 @@ impl TryFrom<&str> for GridTrackRepetition {
     }
 }
 
+#[derive(Clone, PartialEq, Debug)]
+pub struct GridTemplateRepetition<S: CheapCloneStr> {
+    pub count: RepetitionCount,
+    pub tracks: Vec<TrackSizingFunction>,
+    #[cfg(feature = "grid_named")]
+    pub line_names: Vec<Vec<S>>,
+    #[cfg(not(feature = "grid_named"))]
+    pub dummy: PhantomData<S>,
+}
+
 /// The sizing function for a grid track (row/column)
 /// See <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns>
 #[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum TrackSizingFunction {
+pub enum GridTemplateComponent<S: CheapCloneStr> {
     /// A single non-repeated track
-    Single(NonRepeatedTrackSizingFunction),
+    Single(TrackSizingFunction),
     /// Automatically generate grid tracks to fit the available space using the specified definite track lengths
     /// Only valid if every track in template (not just the repetition) has a fixed size.
-    Repeat(GridTrackRepetition, GridTrackVec<NonRepeatedTrackSizingFunction>),
+    Repeat(GridTemplateRepetition<S>),
 }
-impl TrackSizingFunction {
+impl<S: CheapCloneStr> GridTemplateComponent<S> {
     /// Whether the track definition is a auto-repeated fragment
     pub fn is_auto_repetition(&self) -> bool {
-        matches!(self, Self::Repeat(GridTrackRepetition::AutoFit | GridTrackRepetition::AutoFill, _))
+        matches!(
+            self,
+            Self::Repeat(GridTemplateRepetition { count: RepetitionCount::AutoFit | RepetitionCount::AutoFill, .. })
+        )
     }
 }
-impl TaffyAuto for TrackSizingFunction {
-    const AUTO: Self = Self::Single(NonRepeatedTrackSizingFunction::AUTO);
+impl<S: CheapCloneStr> TaffyAuto for GridTemplateComponent<S> {
+    const AUTO: Self = Self::Single(TrackSizingFunction::AUTO);
 }
-impl TaffyMinContent for TrackSizingFunction {
-    const MIN_CONTENT: Self = Self::Single(NonRepeatedTrackSizingFunction::MIN_CONTENT);
+impl<S: CheapCloneStr> TaffyMinContent for GridTemplateComponent<S> {
+    const MIN_CONTENT: Self = Self::Single(TrackSizingFunction::MIN_CONTENT);
 }
-impl TaffyMaxContent for TrackSizingFunction {
-    const MAX_CONTENT: Self = Self::Single(NonRepeatedTrackSizingFunction::MAX_CONTENT);
+impl<S: CheapCloneStr> TaffyMaxContent for GridTemplateComponent<S> {
+    const MAX_CONTENT: Self = Self::Single(TrackSizingFunction::MAX_CONTENT);
 }
-impl TaffyFitContent for TrackSizingFunction {
+impl<S: CheapCloneStr> TaffyFitContent for GridTemplateComponent<S> {
     fn fit_content(argument: LengthPercentage) -> Self {
-        Self::Single(NonRepeatedTrackSizingFunction::fit_content(argument))
+        Self::Single(TrackSizingFunction::fit_content(argument))
     }
 }
-impl TaffyZero for TrackSizingFunction {
-    const ZERO: Self = Self::Single(NonRepeatedTrackSizingFunction::ZERO);
+impl<S: CheapCloneStr> TaffyZero for GridTemplateComponent<S> {
+    const ZERO: Self = Self::Single(TrackSizingFunction::ZERO);
 }
-impl FromLength for TrackSizingFunction {
+impl<S: CheapCloneStr> FromLength for GridTemplateComponent<S> {
     fn from_length<Input: Into<f32> + Copy>(value: Input) -> Self {
-        Self::Single(NonRepeatedTrackSizingFunction::from_length(value))
+        Self::Single(TrackSizingFunction::from_length(value))
     }
 }
-impl FromPercent for TrackSizingFunction {
+impl<S: CheapCloneStr> FromPercent for GridTemplateComponent<S> {
     fn from_percent<Input: Into<f32> + Copy>(percent: Input) -> Self {
-        Self::Single(NonRepeatedTrackSizingFunction::from_percent(percent))
+        Self::Single(TrackSizingFunction::from_percent(percent))
     }
 }
-impl FromFr for TrackSizingFunction {
+impl<S: CheapCloneStr> FromFr for GridTemplateComponent<S> {
     fn from_fr<Input: Into<f32> + Copy>(flex: Input) -> Self {
-        Self::Single(NonRepeatedTrackSizingFunction::from_fr(flex))
+        Self::Single(TrackSizingFunction::from_fr(flex))
     }
 }
-impl From<MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>> for TrackSizingFunction {
+impl<S: CheapCloneStr> From<MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>> for GridTemplateComponent<S> {
     fn from(input: MinMax<MinTrackSizingFunction, MaxTrackSizingFunction>) -> Self {
         Self::Single(input)
     }

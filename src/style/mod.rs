@@ -23,15 +23,16 @@ pub use self::block::{BlockContainerStyle, BlockItemStyle, TextAlign};
 #[cfg(feature = "flexbox")]
 pub use self::flex::{FlexDirection, FlexWrap, FlexboxContainerStyle, FlexboxItemStyle};
 #[cfg(feature = "grid_named")]
-pub use self::grid::{CheapCloneStr, GridTemplateArea, NamedGridLine};
+pub use self::grid::{CheapCloneStr, GridTemplateArea, NamedGridLine, TemplateLineNames};
 #[cfg(feature = "grid")]
 pub(crate) use self::grid::{
-    GenericGridPlacement, GridAreaAxis, GridAreaEnd, NonNamedGridPlacement, OriginZeroGridPlacement,
+    GenericGridPlacement, GridAreaAxis, GridAreaEnd, GridTemplateRepetition, NonNamedGridPlacement,
+    OriginZeroGridPlacement,
 };
 #[cfg(feature = "grid")]
 pub use self::grid::{
-    GridAutoFlow, GridContainerStyle, GridItemStyle, GridPlacement, GridTrackRepetition, MaxTrackSizingFunction,
-    MinTrackSizingFunction, NonRepeatedTrackSizingFunction, TrackSizingFunction,
+    GridAutoFlow, GridContainerStyle, GridItemStyle, GridPlacement, GridTemplateComponent, MaxTrackSizingFunction,
+    MinTrackSizingFunction, RepetitionCount, TrackSizingFunction,
 };
 
 use crate::geometry::{Point, Rect, Size};
@@ -455,16 +456,16 @@ pub struct Style<S: CheapCloneStr = Arc<str>> {
     // Grid container properies
     /// Defines the track sizing functions (heights) of the grid rows
     #[cfg(feature = "grid")]
-    pub grid_template_rows: GridTrackVec<TrackSizingFunction>,
+    pub grid_template_rows: GridTrackVec<GridTemplateComponent<S>>,
     /// Defines the track sizing functions (widths) of the grid columns
     #[cfg(feature = "grid")]
-    pub grid_template_columns: GridTrackVec<TrackSizingFunction>,
+    pub grid_template_columns: GridTrackVec<GridTemplateComponent<S>>,
     /// Defines the size of implicitly created rows
     #[cfg(feature = "grid")]
-    pub grid_auto_rows: GridTrackVec<NonRepeatedTrackSizingFunction>,
+    pub grid_auto_rows: GridTrackVec<TrackSizingFunction>,
     /// Defined the size of implicitly created columns
     #[cfg(feature = "grid")]
-    pub grid_auto_columns: GridTrackVec<NonRepeatedTrackSizingFunction>,
+    pub grid_auto_columns: GridTrackVec<TrackSizingFunction>,
     /// Controls how items get placed into the grid for auto-placed items
     #[cfg(feature = "grid")]
     pub grid_auto_flow: GridAutoFlow,
@@ -475,10 +476,10 @@ pub struct Style<S: CheapCloneStr = Arc<str>> {
     pub grid_template_areas: GridTrackVec<GridTemplateArea<S>>,
     /// The named lines between the columns
     #[cfg(feature = "grid_named")]
-    pub grid_template_column_names: GridTrackVec<NamedGridLine<S>>,
+    pub grid_template_column_names: GridTrackVec<GridTrackVec<S>>,
     /// The named lines between the rows
     #[cfg(feature = "grid_named")]
-    pub grid_template_row_names: GridTrackVec<NamedGridLine<S>>,
+    pub grid_template_row_names: GridTrackVec<GridTrackVec<S>>,
 
     // Grid child properties
     /// Defines which row in the grid the item should start and end at
@@ -828,42 +829,58 @@ impl<T: FlexboxItemStyle> FlexboxItemStyle for &'_ T {
     }
 }
 
+// impl<'a, S: CheapCloneStr> TemplateLineNames<'a> for &'a [S] {
+//     type CustomIdent = S;
+
+//     type LineNameSet<'b>
+//     where
+//         Self: 'b;
+// }
+
 #[cfg(feature = "grid")]
 impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
     type TemplateTrackList<'a>
-        = &'a [TrackSizingFunction]
-    where
-        Self: 'a;
-    type AutoTrackList<'a>
-        = &'a [NonRepeatedTrackSizingFunction]
+        = &'a [GridTemplateComponent<S>]
     where
         Self: 'a;
 
+    type AutoTrackList<'a>
+        = &'a [TrackSizingFunction]
+    where
+        Self: 'a;
+
+    // type TrackSize = TrackSizingFunction;
+
+    // #[cfg(feature = "grid_named")]
+    // type LineNameSet<'a>
+    //     = std::slice::Iter<'a, Self::CustomIdent>
+    // where
+    //     Self: 'a;
     #[cfg(feature = "grid_named")]
     type TemplateLineNames<'a>
-        = std::iter::Cloned<std::slice::Iter<'a, NamedGridLine<Self::CustomIdent>>>
+        = std::slice::Iter<'a, Self::LineNameSet<'a>>
     where
         Self: 'a;
     #[cfg(feature = "grid_named")]
     type GridTemplateAreas<'a>
-        = std::iter::Cloned<std::slice::Iter<'a, GridTemplateArea<Self::CustomIdent>>>
+        = std::iter::Cloned<std::slice::Iter<'a, GridTemplateArea<S>>>
     where
         Self: 'a;
 
     #[inline(always)]
-    fn grid_template_rows(&self) -> &[TrackSizingFunction] {
+    fn grid_template_rows(&self) -> &[GridTemplateComponent<S>] {
         &self.grid_template_rows
     }
     #[inline(always)]
-    fn grid_template_columns(&self) -> &[TrackSizingFunction] {
+    fn grid_template_columns(&self) -> &[GridTemplateComponent<S>] {
         &self.grid_template_columns
     }
     #[inline(always)]
-    fn grid_auto_rows(&self) -> &[NonRepeatedTrackSizingFunction] {
+    fn grid_auto_rows(&self) -> Self::AutoTrackList<'_> {
         &self.grid_auto_rows
     }
     #[inline(always)]
-    fn grid_auto_columns(&self) -> &[NonRepeatedTrackSizingFunction] {
+    fn grid_auto_columns(&self) -> Self::AutoTrackList<'_> {
         &self.grid_auto_columns
     }
     #[inline(always)]
@@ -913,18 +930,23 @@ impl<T: GridContainerStyle> GridContainerStyle for &'_ T {
         = T::TemplateTrackList<'a>
     where
         Self: 'a;
+
     type AutoTrackList<'a>
         = T::AutoTrackList<'a>
     where
         Self: 'a;
 
+    // #[cfg(feature = "grid_named")]
+    // type LineNameSet<'a>
+    //     = T::LineNameSet<'a>
+    // where
+    //     Self: 'a;
     /// The type returned by grid_template_row_names and grid_template_column_names
     #[cfg(feature = "grid_named")]
     type TemplateLineNames<'a>
         = T::TemplateLineNames<'a>
     where
         Self: 'a;
-
     #[cfg(feature = "grid_named")]
     type GridTemplateAreas<'a>
         = T::GridTemplateAreas<'a>
@@ -1156,10 +1178,10 @@ mod tests {
         assert_type_size::<GridAutoFlow>(1);
         assert_type_size::<MinTrackSizingFunction>(8);
         assert_type_size::<MaxTrackSizingFunction>(8);
-        assert_type_size::<NonRepeatedTrackSizingFunction>(16);
-        assert_type_size::<TrackSizingFunction>(32);
-        assert_type_size::<Vec<NonRepeatedTrackSizingFunction>>(24);
+        assert_type_size::<TrackSizingFunction>(16);
+        assert_type_size::<GridTemplateComponent>(32);
         assert_type_size::<Vec<TrackSizingFunction>>(24);
+        assert_type_size::<Vec<GridTemplateComponent>>(24);
 
         // CSS Grid Item
         assert_type_size::<GridPlacement>(4);

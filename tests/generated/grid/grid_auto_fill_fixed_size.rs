@@ -18,7 +18,7 @@ fn grid_auto_fill_fixed_size__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
-                grid_template_columns: vec![length(40f32), repeat(GridTrackRepetition::AutoFill, vec![length(40f32)])],
+                grid_template_columns: vec![length(40f32), repeat(RepetitionCount::AutoFill, vec![length(40f32)])],
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(120f32),
                     height: taffy::style::Dimension::from_length(120f32),
@@ -133,7 +133,7 @@ fn grid_auto_fill_fixed_size__content_box() {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
-                grid_template_columns: vec![length(40f32), repeat(GridTrackRepetition::AutoFill, vec![length(40f32)])],
+                grid_template_columns: vec![length(40f32), repeat(RepetitionCount::AutoFill, vec![length(40f32)])],
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(120f32),
                     height: taffy::style::Dimension::from_length(120f32),

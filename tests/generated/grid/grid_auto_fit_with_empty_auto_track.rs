@@ -12,7 +12,7 @@ fn grid_auto_fit_with_empty_auto_track__border_box() {
                 display: taffy::style::Display::Grid,
                 justify_content: Some(taffy::style::JustifyContent::SpaceEvenly),
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
-                grid_template_columns: vec![repeat(GridTrackRepetition::AutoFit, vec![length(40f32)])],
+                grid_template_columns: vec![repeat(RepetitionCount::AutoFit, vec![length(40f32)])],
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(120f32),
                     height: taffy::style::Dimension::from_length(120f32),
@@ -65,7 +65,7 @@ fn grid_auto_fit_with_empty_auto_track__content_box() {
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 justify_content: Some(taffy::style::JustifyContent::SpaceEvenly),
                 grid_template_rows: vec![length(40f32), length(40f32), length(40f32)],
-                grid_template_columns: vec![repeat(GridTrackRepetition::AutoFit, vec![length(40f32)])],
+                grid_template_columns: vec![repeat(RepetitionCount::AutoFit, vec![length(40f32)])],
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_length(120f32),
                     height: taffy::style::Dimension::from_length(120f32),

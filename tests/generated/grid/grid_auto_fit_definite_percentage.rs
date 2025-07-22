@@ -25,10 +25,7 @@ fn grid_auto_fit_definite_percentage__border_box() {
             taffy::style::Style {
                 display: taffy::style::Display::Grid,
                 gap: taffy::geometry::Size { width: length(10f32), height: length(10f32) },
-                grid_template_columns: vec![repeat(
-                    GridTrackRepetition::AutoFill,
-                    vec![minmax(length(150f32), fr(1f32))],
-                )],
+                grid_template_columns: vec![repeat(RepetitionCount::AutoFill, vec![minmax(length(150f32), fr(1f32))])],
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_percent(1f32),
                     height: taffy::style::Dimension::from_percent(1f32),
@@ -190,10 +187,7 @@ fn grid_auto_fit_definite_percentage__content_box() {
                 display: taffy::style::Display::Grid,
                 box_sizing: taffy::style::BoxSizing::ContentBox,
                 gap: taffy::geometry::Size { width: length(10f32), height: length(10f32) },
-                grid_template_columns: vec![repeat(
-                    GridTrackRepetition::AutoFill,
-                    vec![minmax(length(150f32), fr(1f32))],
-                )],
+                grid_template_columns: vec![repeat(RepetitionCount::AutoFill, vec![minmax(length(150f32), fr(1f32))])],
                 size: taffy::geometry::Size {
                     width: taffy::style::Dimension::from_percent(1f32),
                     height: taffy::style::Dimension::from_percent(1f32),

@@ -18,8 +18,8 @@ pub use crate::style::{FlexDirection, FlexWrap};
 
 #[cfg(feature = "grid")]
 pub use crate::style::{
-    GridAutoFlow, GridPlacement, GridTrackRepetition, MaxTrackSizingFunction, MinTrackSizingFunction,
-    NonRepeatedTrackSizingFunction, TrackSizingFunction,
+    GridAutoFlow, GridPlacement, GridTemplateComponent, MaxTrackSizingFunction, MinTrackSizingFunction,
+    RepetitionCount, TrackSizingFunction,
 };
 #[cfg(feature = "grid")]
 pub use crate::style_helpers::{
