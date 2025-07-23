@@ -237,6 +237,11 @@ impl CellOccupancyMatrix {
         let track_counts = self.track_counts(track_type.other_axis());
         let track_computed_index = track_counts.oz_line_to_next_track(start_at).min(self.inner.rows() as i16);
 
+
+        if track_computed_index < 0 {
+            return None;
+        }
+
         let maybe_index = match track_type {
             AbsoluteAxis::Horizontal => {
                 self.inner.iter_row(track_computed_index as usize).rposition(|item| *item == kind)
