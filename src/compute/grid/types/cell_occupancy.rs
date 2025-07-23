@@ -90,9 +90,9 @@ impl CellOccupancyMatrix {
     /// Expands the grid (potentially in all 4 directions) in order to ensure that the specified range fits within the allocated space
     fn expand_to_fit_range(&mut self, row_range: Range<i16>, col_range: Range<i16>) {
         // Calculate number of rows and columns missing to accommodate ranges (if any)
-        let req_negative_rows = -min(row_range.start, 0);
+        let req_negative_rows = max(-row_range.start, 0);
         let req_positive_rows = max(row_range.end - self.rows.len() as i16, 0);
-        let req_negative_cols = -min(col_range.start, 0);
+        let req_negative_cols = max(-col_range.start, 0);
         let req_positive_cols = max(col_range.end - self.columns.len() as i16, 0);
 
         let old_row_count = self.rows.len();
