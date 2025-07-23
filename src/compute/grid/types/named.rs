@@ -2,7 +2,7 @@ use crate::{
     CheapCloneStr, GenericGridPlacement, GenericRepetition as _, GridAreaAxis, GridAreaEnd, GridContainerStyle,
     GridPlacement, GridTemplateArea, GridTemplateComponentRef, Line, NonNamedGridPlacement, RepetitionCount,
 };
-use core::borrow::Borrow;
+use core::{borrow::Borrow, fmt::Debug};
 use std::{
     collections::HashMap,
     hash::{Hash, Hasher},
@@ -259,5 +259,42 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
 
     pub(crate) fn set_explicit_row_count(&mut self, count: u16) {
         self.explicit_column_count = count;
+    }
+}
+
+impl<S: CheapCloneStr> Debug for NamedLineResolver<S> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        writeln!(f, "Grid Areas:")?;
+        for area in self.areas.values() {
+            writeln!(
+                f,
+                "{}: row:{}/{} col: {}/{}",
+                area.name.as_ref(),
+                area.row_start,
+                area.row_end,
+                area.column_start,
+                area.column_end
+            )?;
+        }
+
+        writeln!(f, "Grid Rows:")?;
+        for (name, lines) in self.row_lines.iter() {
+            write!(f, "{}: ", name.0.as_ref())?;
+            for line in lines {
+                write!(f, "{line}  ")?;
+            }
+            writeln!(f)?;
+        }
+
+        writeln!(f, "Grid Columns:")?;
+        for (name, lines) in self.column_lines.iter() {
+            write!(f, "{}: ", name.0.as_ref())?;
+            for line in lines {
+                write!(f, "{line}  ")?;
+            }
+            writeln!(f)?;
+        }
+
+        Ok(())
     }
 }
