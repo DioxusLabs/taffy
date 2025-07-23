@@ -104,8 +104,8 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         let mut row_lines: HashMap<StrHasher<S>, Vec<u16>> = HashMap::new();
         let mut row_tracks = style.grid_template_rows();
         if let Some(row_line_names_iter) = style.grid_template_row_names() {
-            current_line += 1;
             for line_names in row_line_names_iter {
+                current_line += 1;
                 for line_name in line_names.into_iter() {
                     row_lines
                         .entry(StrHasher(line_name.clone()))
