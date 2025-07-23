@@ -183,25 +183,53 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
             GridPlacement::Auto => NonNamedGridPlacement::Auto,
             GridPlacement::Line(grid_line) => NonNamedGridPlacement::Line(*grid_line),
             GridPlacement::Span(span) => NonNamedGridPlacement::Span(*span),
-            GridPlacement::Named(name) => {
+            GridPlacement::Named(name, idx) => {
                 let name = name.as_ref();
+                let mut idx = *idx;
+                let explicit_track_count = match axis {
+                    GridAreaAxis::Row => self.explicit_row_count as i16,
+                    GridAreaAxis::Column => self.explicit_column_count as i16,
+                };
 
                 // dbg!(axis, &name);
 
                 // Lookup areas
-                if name.ends_with("-start") {
-                    let area_name = &name[0..(name.len() - 6)];
-                    if let Some(area) = self.areas.get(area_name) {
-                        return GenericGridPlacement::Line(area.get_side(axis, GridAreaEnd::Start));
+                if idx == 0 {
+                    if name.ends_with("-start") {
+                        let area_name = &name[0..(name.len() - 6)];
+                        if let Some(area) = self.areas.get(area_name) {
+                            return GenericGridPlacement::Line(area.get_side(axis, GridAreaEnd::Start));
+                        }
+                    } else if name.ends_with("-end") {
+                        let area_name = &name[0..(name.len() - 6)];
+                        if let Some(area) = self.areas.get(area_name) {
+                            return GenericGridPlacement::Line(area.get_side(axis, GridAreaEnd::End));
+                        }
+                    } else {
+                        if let Some(area) = self.areas.get(name) {
+                            return GenericGridPlacement::Line(area.get_side(axis, end));
+                        }
                     }
-                } else if name.ends_with("-end") {
-                    let area_name = &name[0..(name.len() - 6)];
-                    if let Some(area) = self.areas.get(area_name) {
-                        return GenericGridPlacement::Line(area.get_side(axis, GridAreaEnd::End));
-                    }
-                } else {
-                    if let Some(area) = self.areas.get(name) {
-                        return GenericGridPlacement::Line(area.get_side(axis, end));
+
+                    idx = 1;
+                }
+
+                fn get_line(lines: &[u16], explicit_track_count: i16, idx: i16) -> i16 {
+                    let abs_idx = idx.abs();
+                    let enough_lines = abs_idx <= lines.len() as i16;
+                    if enough_lines {
+                        if idx > 0 {
+                            lines[(abs_idx - 1) as usize] as i16
+                        } else {
+                            lines[lines.len() - (abs_idx) as usize] as i16
+                        }
+                    } else {
+                        let remaining_lines = (abs_idx - lines.len() as i16) * idx.signum();
+                        if idx > 0 {
+                            (explicit_track_count + 1) + remaining_lines
+                        } else {
+                            -((explicit_track_count + 1) + remaining_lines)
+                        }
                     }
                 }
 
@@ -212,7 +240,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                 };
                 if let Some(lines) = line_lookup.get(name) {
                     // TODO: handle multiple names for same line properly
-                    return GenericGridPlacement::Line(GridLine::from(lines[0] as i16));
+                    return GenericGridPlacement::Line(GridLine::from(get_line(&*lines, explicit_track_count, idx)));
                 } else {
                     // TODO: eliminate string allocations
                     match end {
@@ -220,14 +248,22 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                             let implicit_name = format!("{name}-start");
                             if let Some(lines) = line_lookup.get(&*implicit_name) {
                                 // println!("IMPLICIT COL {implicit_name}");
-                                return GenericGridPlacement::Line(GridLine::from(lines[0] as i16));
+                                return GenericGridPlacement::Line(GridLine::from(get_line(
+                                    &*lines,
+                                    explicit_track_count,
+                                    idx,
+                                )));
                             }
                         }
                         GridAreaEnd::End => {
                             let implicit_name = format!("{name}-end");
                             if let Some(lines) = line_lookup.get(&*implicit_name) {
                                 // println!("IMPLICIT ROW {implicit_name}");
-                                return GenericGridPlacement::Line(GridLine::from(lines[0] as i16));
+                                return GenericGridPlacement::Line(GridLine::from(get_line(
+                                    &*lines,
+                                    explicit_track_count,
+                                    idx,
+                                )));
                             }
                         }
                     }

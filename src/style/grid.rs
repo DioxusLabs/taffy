@@ -352,7 +352,7 @@ pub enum GridPlacement<S: CheapCloneStr> {
     Span(u16),
     #[cfg(feature = "grid_named")]
     /// A named grid line
-    Named(S),
+    Named(S, i16),
 }
 impl<S: CheapCloneStr> TaffyAuto for GridPlacement<S> {
     const AUTO: Self = Self::Auto;
@@ -389,7 +389,7 @@ impl<S: CheapCloneStr> GridPlacement<S> {
     pub fn into_origin_zero_placement_ignoring_named(&self, explicit_track_count: u16) -> OriginZeroGridPlacement {
         match self {
             Self::Auto => OriginZeroGridPlacement::Auto,
-            Self::Named(_) => OriginZeroGridPlacement::Auto,
+            Self::Named(_, _) => OriginZeroGridPlacement::Auto,
             Self::Span(span) => OriginZeroGridPlacement::Span(*span),
             // Grid line zero is an invalid index, so it gets treated as Auto
             // See: https://developer.mozilla.org/en-US/docs/Web/CSS/grid-row-start#values
@@ -404,7 +404,7 @@ impl<S: CheapCloneStr> GridPlacement<S> {
     pub fn into_origin_zero_placement(
         &self,
         explicit_track_count: u16,
-        resolve_named: impl Fn(&str) -> Option<GridLine>,
+        resolve_named: impl Fn(&str, i16) -> Option<GridLine>,
     ) -> OriginZeroGridPlacement {
         match self {
             Self::Auto => OriginZeroGridPlacement::Auto,
@@ -415,8 +415,8 @@ impl<S: CheapCloneStr> GridPlacement<S> {
                 0 => OriginZeroGridPlacement::Auto,
                 _ => OriginZeroGridPlacement::Line(line.into_origin_zero_line(explicit_track_count)),
             },
-            Self::Named(name) => {
-                let line = resolve_named(name.as_ref()).unwrap_or(GridLine::from(0));
+            Self::Named(name, idx) => {
+                let line = resolve_named(name.as_ref(), *idx).unwrap_or(GridLine::from(0));
                 match line.as_i16() {
                     0 => OriginZeroGridPlacement::Auto,
                     _ => OriginZeroGridPlacement::Line(line.into_origin_zero_line(explicit_track_count)),
@@ -484,8 +484,8 @@ impl<S: CheapCloneStr> Line<GridPlacement<S>> {
         match (&self.start, &self.end) {
             (GridPlacement::Line(line), _) if line.as_i16() != 0 => true,
             (_, GridPlacement::Line(line)) if line.as_i16() != 0 => true,
-            (GridPlacement::Named(_), _) => true,
-            (_, GridPlacement::Named(_)) => true,
+            (GridPlacement::Named(_, _), _) => true,
+            (_, GridPlacement::Named(_, _)) => true,
             _ => false,
         }
     }
