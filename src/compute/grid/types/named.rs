@@ -99,6 +99,11 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                 }
             }
         }
+        // Sort and dedup lines for each column name
+        for lines in column_lines.values_mut() {
+            lines.sort_unstable();
+            lines.dedup();
+        }
 
         let mut current_line = 0;
         let mut row_lines: HashMap<StrHasher<S>, Vec<u16>> = HashMap::new();
@@ -134,6 +139,11 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                     }
                 }
             }
+        }
+        // Sort and dedup lines for each row name
+        for lines in row_lines.values_mut() {
+            lines.sort_unstable();
+            lines.dedup();
         }
 
         // dbg!(&areas);
