@@ -29,8 +29,8 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
     axis: AbsoluteAxis,
 ) -> (u16, u16) {
     let template = match axis {
-        AbsoluteAxis::Horizontal => style.grid_template_rows(),
-        AbsoluteAxis::Vertical => style.grid_template_columns(),
+        AbsoluteAxis::Horizontal => style.grid_template_columns(),
+        AbsoluteAxis::Vertical => style.grid_template_rows(),
     };
 
     // If template contains no tracks, then there are trivially zero explicit tracks
