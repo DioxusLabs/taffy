@@ -206,9 +206,6 @@ pub(super) fn initialize_grid_tracks(
             gap = style.gap().height;
         }
     };
-    let Some(track_template) = track_template else {
-        return;
-    };
 
     // Clear vector (in case this is a re-layout), reserve space for all tracks ahead of time to reduce allocations,
     // and push the initial gutter
@@ -236,52 +233,55 @@ pub(super) fn initialize_grid_tracks(
     // An explicit check against the count (rather than just relying on track_template being empty) is required here
     // because a count of zero can result from the track_template being invalid, in which case it should be ignored.
     if counts.explicit > 0 {
-        track_template.clone().for_each(|track_sizing_function| {
-            match track_sizing_function {
-                GenericGridTemplateComponent::Single(sizing_function) => {
-                    tracks.push(GridTrack::new(
-                        sizing_function.min_sizing_function(),
-                        sizing_function.max_sizing_function(),
-                    ));
-                    tracks.push(GridTrack::gutter(gap));
-                    current_track_index += 1;
-                }
-                GenericGridTemplateComponent::Repeat(repeat) => match repeat.count() {
-                    RepetitionCount::Count(count) => {
-                        let track_iter = repeat.tracks().into_iter();
-                        let track_iter = track_iter.cycle().take(repeat.track_count() as usize * count as usize);
-                        track_iter.for_each(|sizing_function| {
-                            tracks.push(GridTrack::new(
-                                sizing_function.min_sizing_function(),
-                                sizing_function.max_sizing_function(),
-                            ));
-                            tracks.push(GridTrack::gutter(gap));
-                            current_track_index += 1;
-                        });
+        if let Some(track_template) = track_template {
+            track_template.clone().for_each(|track_sizing_function| {
+                match track_sizing_function {
+                    GenericGridTemplateComponent::Single(sizing_function) => {
+                        tracks.push(GridTrack::new(
+                            sizing_function.min_sizing_function(),
+                            sizing_function.max_sizing_function(),
+                        ));
+                        tracks.push(GridTrack::gutter(gap));
+                        current_track_index += 1;
                     }
-                    RepetitionCount::AutoFit | RepetitionCount::AutoFill => {
-                        let auto_repeated_track_count = (counts.explicit - (track_template.len() as u16 - 1)) as usize;
-                        let iter = repeat.tracks().into_iter().cycle();
-                        for track_def in iter.take(auto_repeated_track_count) {
-                            let mut track =
-                                GridTrack::new(track_def.min_sizing_function(), track_def.max_sizing_function());
-                            let mut gutter = GridTrack::gutter(gap);
-
-                            // Auto-fit tracks that don't contain should be collapsed.
-                            if repeat.count() == RepetitionCount::AutoFit && !track_has_items(current_track_index) {
-                                track.collapse();
-                                gutter.collapse();
-                            }
-
-                            tracks.push(track);
-                            tracks.push(gutter);
-
-                            current_track_index += 1;
+                    GenericGridTemplateComponent::Repeat(repeat) => match repeat.count() {
+                        RepetitionCount::Count(count) => {
+                            let track_iter = repeat.tracks().into_iter();
+                            let track_iter = track_iter.cycle().take(repeat.track_count() as usize * count as usize);
+                            track_iter.for_each(|sizing_function| {
+                                tracks.push(GridTrack::new(
+                                    sizing_function.min_sizing_function(),
+                                    sizing_function.max_sizing_function(),
+                                ));
+                                tracks.push(GridTrack::gutter(gap));
+                                current_track_index += 1;
+                            });
                         }
-                    }
-                },
-            }
-        });
+                        RepetitionCount::AutoFit | RepetitionCount::AutoFill => {
+                            let auto_repeated_track_count =
+                                (counts.explicit - (track_template.len() as u16 - 1)) as usize;
+                            let iter = repeat.tracks().into_iter().cycle();
+                            for track_def in iter.take(auto_repeated_track_count) {
+                                let mut track =
+                                    GridTrack::new(track_def.min_sizing_function(), track_def.max_sizing_function());
+                                let mut gutter = GridTrack::gutter(gap);
+
+                                // Auto-fit tracks that don't contain should be collapsed.
+                                if repeat.count() == RepetitionCount::AutoFit && !track_has_items(current_track_index) {
+                                    track.collapse();
+                                    gutter.collapse();
+                                }
+
+                                tracks.push(track);
+                                tracks.push(gutter);
+
+                                current_track_index += 1;
+                            }
+                        }
+                    },
+                }
+            });
+        }
     }
 
     let grid_area_tracks = (counts.negative_implicit + counts.explicit) - current_track_index as u16;
