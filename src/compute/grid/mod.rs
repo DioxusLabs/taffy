@@ -555,7 +555,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 .into_origin_zero(final_col_counts.explicit)
                 .resolve_absolutely_positioned_grid_tracks()
                 .map(|maybe_grid_line| {
-                    maybe_grid_line.map(|line: OriginZeroLine| line.into_track_vec_index(final_col_counts))
+                    maybe_grid_line.and_then(|line: OriginZeroLine| line.try_into_track_vec_index(final_col_counts))
                 });
             // Convert grid-row-{start/end} into Option's of indexes into the row vector
             // The Option is None if the style property is Auto and an unresolvable Span
@@ -564,7 +564,7 @@ pub fn compute_grid_layout<Tree: LayoutGridContainer>(
                 .into_origin_zero(final_row_counts.explicit)
                 .resolve_absolutely_positioned_grid_tracks()
                 .map(|maybe_grid_line| {
-                    maybe_grid_line.map(|line: OriginZeroLine| line.into_track_vec_index(final_row_counts))
+                    maybe_grid_line.and_then(|line: OriginZeroLine| line.try_into_track_vec_index(final_row_counts))
                 });
 
             let grid_area = Rect {
