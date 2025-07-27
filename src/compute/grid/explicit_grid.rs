@@ -219,7 +219,7 @@ pub(super) fn initialize_grid_tracks(
             create_implicit_tracks(tracks, counts.negative_implicit, iter, gap)
         } else {
             let offset = auto_track_count - (counts.negative_implicit as usize % auto_track_count);
-            let iter = auto_tracks.clone().copied().cycle().skip(offset);
+            let iter = auto_tracks.clone().cycle().skip(offset);
             create_implicit_tracks(tracks, counts.negative_implicit, iter, gap)
         }
     }
@@ -285,7 +285,7 @@ pub(super) fn initialize_grid_tracks(
         let iter = core::iter::repeat(TrackSizingFunction::AUTO);
         create_implicit_tracks(tracks, counts.positive_implicit + grid_area_tracks, iter, gap)
     } else {
-        let iter = auto_tracks.clone().copied().cycle();
+        let iter = auto_tracks.clone().cycle();
         create_implicit_tracks(tracks, counts.positive_implicit + grid_area_tracks, iter, gap)
     }
 

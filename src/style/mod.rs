@@ -853,7 +853,7 @@ impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
         Self: 'a;
 
     type AutoTrackList<'a>
-        = &'a [TrackSizingFunction]
+        = std::iter::Copied<std::slice::Iter<'a, TrackSizingFunction>>
     where
         Self: 'a;
 
@@ -878,11 +878,11 @@ impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
     }
     #[inline(always)]
     fn grid_auto_rows(&self) -> Self::AutoTrackList<'_> {
-        &self.grid_auto_rows
+        self.grid_auto_rows.iter().copied()
     }
     #[inline(always)]
     fn grid_auto_columns(&self) -> Self::AutoTrackList<'_> {
-        &self.grid_auto_columns
+        self.grid_auto_columns.iter().copied()
     }
     #[inline(always)]
     fn grid_auto_flow(&self) -> GridAutoFlow {

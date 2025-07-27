@@ -134,7 +134,7 @@ pub trait GridContainerStyle: CoreStyle {
         Self: 'a;
 
     /// The type returned by grid_auto_rows and grid_auto_columns
-    type AutoTrackList<'a>: IntoIterator<Item = &'a TrackSizingFunction, IntoIter: ExactSizeIterator + Clone>
+    type AutoTrackList<'a>: Iterator<Item = TrackSizingFunction> + ExactSizeIterator + Clone
     where
         Self: 'a;
 
