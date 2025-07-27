@@ -15,16 +15,18 @@ pub trait CheapCloneStr:
     AsRef<str> + for<'a> From<&'a str> + From<String> + PartialEq + Eq + Clone + Default + Debug + 'static
 {
 }
-impl<T: AsRef<str> + for<'a> From<&'a str> + From<String> + PartialEq + Eq + Clone + Default + Debug + 'static>
-    CheapCloneStr for T
+impl<T> CheapCloneStr for T where
+    T: AsRef<str> + for<'a> From<&'a str> + From<String> + PartialEq + Eq + Clone + Default + Debug + 'static
 {
 }
 
 /// Defines a grid area
 #[cfg(feature = "grid_named")]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct GridTemplateArea<CustomIdent: CheapCloneStr> {
     /// The name of the grid area which
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "crate::util::deserialize_from_str"))]
     pub name: CustomIdent,
     /// The index of the row at which the grid area starts in grid coordinates.
     pub row_start: u16,
@@ -39,8 +41,10 @@ pub struct GridTemplateArea<CustomIdent: CheapCloneStr> {
 /// Defines a named grid line
 #[cfg(feature = "grid_named")]
 #[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct NamedGridLine<CustomIdent: CheapCloneStr> {
     /// The name of the grid area which
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "crate::util::deserialize_from_str"))]
     pub name: CustomIdent,
     /// The index of the row at which the grid area starts in grid coordinates.
     pub index: u16,
@@ -341,6 +345,7 @@ pub(crate) type NonNamedGridPlacement = GenericGridPlacement<GridLine>;
 ///
 /// [Specification](https://www.w3.org/TR/css3-grid-layout/#typedef-grid-row-start-grid-line)
 #[derive(Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum GridPlacement<S: CheapCloneStr> {
     /// Place item according to the auto-placement algorithm, and the parent's grid_auto_flow property
     Auto,
@@ -1210,6 +1215,7 @@ impl TryFrom<&str> for RepetitionCount {
 
 /// A typed representation of a `repeat(..)` in `grid-template-*` value
 #[derive(Clone, PartialEq, Debug)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct GridTemplateRepetition<S: CheapCloneStr> {
     /// The number of the times the repeat is repeated
     pub count: RepetitionCount,
