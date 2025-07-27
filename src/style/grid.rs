@@ -122,10 +122,12 @@ where
 /// The set of styles required for a CSS Grid container
 pub trait GridContainerStyle: CoreStyle {
     /// The type for a `repeat()` within a grid_template_rows or grid_template_columns
-    type Repetition: GenericRepetition<CustomIdent = Self::CustomIdent>;
+    type Repetition<'a>: GenericRepetition<CustomIdent = Self::CustomIdent>
+    where
+        Self: 'a;
 
     /// The type returned by grid_template_rows and grid_template_columns
-    type TemplateTrackList<'a>: Iterator<Item = GridTemplateComponentRef<'a, Self::CustomIdent, Self::Repetition>>
+    type TemplateTrackList<'a>: Iterator<Item = GridTemplateComponentRef<'a, Self::CustomIdent, Self::Repetition<'a>>>
         + ExactSizeIterator
         + Clone
     where

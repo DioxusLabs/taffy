@@ -842,7 +842,10 @@ type AsComponentRef<'a, S> =
 
 #[cfg(feature = "grid")]
 impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
-    type Repetition = GridTemplateRepetition<S>;
+    type Repetition<'a>
+        = GridTemplateRepetition<S>
+    where
+        Self: 'a;
 
     type TemplateTrackList<'a>
         = core::iter::Map<std::slice::Iter<'a, GridTemplateComponent<S>>, AsComponentRef<'a, S>>
@@ -924,7 +927,10 @@ impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
 
 #[cfg(feature = "grid")]
 impl<T: GridContainerStyle> GridContainerStyle for &'_ T {
-    type Repetition = T::Repetition;
+    type Repetition<'a>
+        = T::Repetition<'a>
+    where
+        Self: 'a;
 
     type TemplateTrackList<'a>
         = T::TemplateTrackList<'a>
