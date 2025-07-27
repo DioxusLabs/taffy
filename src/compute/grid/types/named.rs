@@ -208,26 +208,8 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                     GridAreaAxis::Column => self.explicit_column_count as i16,
                 };
 
-                // dbg!(axis, &name);
-
-                // Lookup areas
+                // An index of 0 is used to represent "no index specified".
                 if idx == 0 {
-                    if name.ends_with("-start") {
-                        let area_name = &name[0..(name.len() - 6)];
-                        if let Some(area) = self.areas.get(area_name) {
-                            return GenericGridPlacement::Line(area.get_side(axis, GridAreaEnd::Start));
-                        }
-                    } else if name.ends_with("-end") {
-                        let area_name = &name[0..(name.len() - 6)];
-                        if let Some(area) = self.areas.get(area_name) {
-                            return GenericGridPlacement::Line(area.get_side(axis, GridAreaEnd::End));
-                        }
-                    } else {
-                        if let Some(area) = self.areas.get(name) {
-                            return GenericGridPlacement::Line(area.get_side(axis, end));
-                        }
-                    }
-
                     idx = 1;
                 }
 
