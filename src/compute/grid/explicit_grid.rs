@@ -7,7 +7,7 @@ use crate::style_helpers::TaffyAuto;
 use crate::util::sys::{ceil, floor, Vec};
 use crate::util::MaybeMath;
 use crate::util::ResolveOrZero;
-use crate::{GenericRepetition, GridContainerStyle, GridTemplateComponentRef};
+use crate::{GenericGridTemplateComponent, GenericRepetition, GridContainerStyle};
 
 /// The auto-repeat fit strategy to use
 pub(crate) enum AutoRepeatStrategy {
@@ -42,8 +42,8 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
     // If there are any repetitions that contains no tracks, then the whole definition should be considered invalid
     // and we default to no explicit tracks
     let template_has_repetitions_with_zero_tracks = template.clone().any(|track_def| match track_def {
-        GridTemplateComponentRef::Single(_) => false,
-        GridTemplateComponentRef::Repeat(repeat) => repeat.track_count() == 0,
+        GenericGridTemplateComponent::Single(_) => false,
+        GenericGridTemplateComponent::Repeat(repeat) => repeat.track_count() == 0,
     });
     if template_has_repetitions_with_zero_tracks {
         return (0, 0);
@@ -53,8 +53,8 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
     let non_auto_repeating_track_count = template
         .clone()
         .map(|track_def| match track_def {
-            GridTemplateComponentRef::Single(_) => 1,
-            GridTemplateComponentRef::Repeat(repeat) => match repeat.count() {
+            GenericGridTemplateComponent::Single(_) => 1,
+            GenericGridTemplateComponent::Repeat(repeat) => match repeat.count() {
                 RepetitionCount::Count(count) => count * repeat.track_count(),
                 RepetitionCount::AutoFit | RepetitionCount::AutoFill => 0,
             },
@@ -63,8 +63,8 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
 
     let auto_repetition_count: u16 = template.clone().filter(|track_def| track_def.is_auto_repetition()).count() as u16;
     let all_track_defs_have_fixed_component = template.clone().all(|track_def| match track_def {
-        GridTemplateComponentRef::Single(sizing_function) => sizing_function.has_fixed_component(),
-        GridTemplateComponentRef::Repeat(repeat) => {
+        GenericGridTemplateComponent::Single(sizing_function) => sizing_function.has_fixed_component(),
+        GenericGridTemplateComponent::Repeat(repeat) => {
             repeat.tracks().into_iter().all(|sizing_function| sizing_function.has_fixed_component())
         }
     });
@@ -87,14 +87,15 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
     let repetition_definition = template
         .clone()
         .find_map(|def| match def {
-            GridTemplateComponentRef::Single(_) => None,
-            GridTemplateComponentRef::Repeat(repeat) => match repeat.count() {
+            GenericGridTemplateComponent::Single(_) => None,
+            GenericGridTemplateComponent::Repeat(repeat) => match repeat.count() {
                 RepetitionCount::Count(_) => None,
-                RepetitionCount::AutoFit | RepetitionCount::AutoFill => Some(repeat.tracks().into_iter()),
+                RepetitionCount::AutoFit | RepetitionCount::AutoFill => Some(repeat),
             },
         })
         .unwrap();
-    let repetition_track_count = repetition_definition.len() as u16;
+    let repetition_definition_iter = repetition_definition.tracks().into_iter();
+    let repetition_track_count = repetition_definition_iter.len() as u16;
 
     // Determine the number of repetitions
     let num_repetitions: u16 = match auto_fit_container_size {
@@ -117,10 +118,10 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
             let non_repeating_track_used_space: f32 = template
                 .clone()
                 .map(|track_def| match track_def {
-                    GridTemplateComponentRef::Single(sizing_function) => {
+                    GenericGridTemplateComponent::Single(sizing_function) => {
                         track_definite_value(sizing_function, parent_size, &resolve_calc_value)
                     }
-                    GridTemplateComponentRef::Repeat(repeat) => match repeat.count() {
+                    GenericGridTemplateComponent::Repeat(repeat) => match repeat.count() {
                         RepetitionCount::Count(count) => {
                             let sum = repeat
                                 .tracks()
@@ -138,8 +139,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
             let gap_size = style.gap().get_abs(axis).resolve_or_zero(Some(inner_container_size), &resolve_calc_value);
 
             // Compute the amount of space that a single repetition of the repeated track list takes
-            let repetition_definition_len = repetition_definition.len();
-            let per_repetition_track_used_space: f32 = repetition_definition
+            let per_repetition_track_used_space: f32 = repetition_definition_iter
                 .map(|sizing_function| track_definite_value(sizing_function, parent_size, &resolve_calc_value))
                 .sum::<f32>();
 
@@ -154,7 +154,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
             if first_repetition_and_non_repeating_tracks_used_space > inner_container_size {
                 1u16
             } else {
-                let per_repetition_gap_used_space = (repetition_definition_len as f32) * gap_size;
+                let per_repetition_gap_used_space = (repetition_track_count as f32) * gap_size;
                 let per_repetition_used_space = per_repetition_track_used_space + per_repetition_gap_used_space;
                 let num_repetition_that_fit = (inner_container_size
                     - first_repetition_and_non_repeating_tracks_used_space)
@@ -232,7 +232,7 @@ pub(super) fn initialize_grid_tracks(
     if counts.explicit > 0 {
         track_template.clone().for_each(|track_sizing_function| {
             match track_sizing_function {
-                GridTemplateComponentRef::Single(sizing_function) => {
+                GenericGridTemplateComponent::Single(sizing_function) => {
                     tracks.push(GridTrack::new(
                         sizing_function.min_sizing_function(),
                         sizing_function.max_sizing_function(),
@@ -240,7 +240,7 @@ pub(super) fn initialize_grid_tracks(
                     tracks.push(GridTrack::gutter(gap));
                     current_track_index += 1;
                 }
-                GridTemplateComponentRef::Repeat(repeat) => match repeat.count() {
+                GenericGridTemplateComponent::Repeat(repeat) => match repeat.count() {
                     RepetitionCount::Count(count) => {
                         let track_iter = repeat.tracks().into_iter();
                         let track_iter = track_iter.cycle().take(repeat.track_count() as usize * count as usize);

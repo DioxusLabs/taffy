@@ -26,8 +26,8 @@ pub use self::flex::{FlexDirection, FlexWrap, FlexboxContainerStyle, FlexboxItem
 pub use self::grid::{CheapCloneStr, GridTemplateArea, NamedGridLine, TemplateLineNames};
 #[cfg(feature = "grid")]
 pub use self::grid::{
-    GenericGridPlacement, GenericRepetition, GridAutoFlow, GridContainerStyle, GridItemStyle, GridPlacement,
-    GridTemplateComponent, GridTemplateComponentRef, GridTemplateRepetition, MaxTrackSizingFunction,
+    GenericGridPlacement, GenericGridTemplateComponent, GenericRepetition, GridAutoFlow, GridContainerStyle,
+    GridItemStyle, GridPlacement, GridTemplateComponent, GridTemplateRepetition, MaxTrackSizingFunction,
     MinTrackSizingFunction, RepetitionCount, TrackSizingFunction,
 };
 #[cfg(feature = "grid")]
@@ -838,12 +838,12 @@ impl<T: FlexboxItemStyle> FlexboxItemStyle for &'_ T {
 // impl<S: CheapCloneStr, T: Deref<Target = S>>
 
 type AsComponentRef<'a, S> =
-    fn(&'a GridTemplateComponent<S>) -> GridTemplateComponentRef<'a, S, GridTemplateRepetition<S>>;
+    fn(&'a GridTemplateComponent<S>) -> GenericGridTemplateComponent<S, &'a GridTemplateRepetition<S>>;
 
 #[cfg(feature = "grid")]
 impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
     type Repetition<'a>
-        = GridTemplateRepetition<S>
+        = &'a GridTemplateRepetition<S>
     where
         Self: 'a;
 

@@ -1,6 +1,6 @@
 use crate::{
-    CheapCloneStr, GenericGridPlacement, GenericRepetition as _, GridAreaAxis, GridAreaEnd, GridContainerStyle,
-    GridPlacement, GridTemplateArea, GridTemplateComponentRef, Line, NonNamedGridPlacement, RepetitionCount,
+    CheapCloneStr, GenericGridPlacement, GenericGridTemplateComponent, GenericRepetition as _, GridAreaAxis,
+    GridAreaEnd, GridContainerStyle, GridPlacement, GridTemplateArea, Line, NonNamedGridPlacement, RepetitionCount,
 };
 use core::{borrow::Borrow, fmt::Debug};
 use std::{
@@ -91,7 +91,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                         .or_insert_with(|| vec![current_line]);
                 }
 
-                if let Some(GridTemplateComponentRef::Repeat(repeat)) = column_tracks.next() {
+                if let Some(GenericGridTemplateComponent::Repeat(repeat)) = column_tracks.next() {
                     let repeat_count = match repeat.count() {
                         RepetitionCount::Count(count) => count,
                         RepetitionCount::AutoFill | RepetitionCount::AutoFit => column_auto_repetitions,
@@ -128,7 +128,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                         .or_insert_with(|| vec![current_line]);
                 }
 
-                if let Some(GridTemplateComponentRef::Repeat(repeat)) = row_tracks.next() {
+                if let Some(GenericGridTemplateComponent::Repeat(repeat)) = row_tracks.next() {
                     let repeat_count = match repeat.count() {
                         RepetitionCount::Count(count) => count,
                         RepetitionCount::AutoFill | RepetitionCount::AutoFit => row_auto_repetitions,

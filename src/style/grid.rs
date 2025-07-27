@@ -96,16 +96,16 @@ impl<'a, S: CheapCloneStr> TemplateLineNames<'a, S>
 }
 
 #[derive(Copy, Clone)]
-pub enum GridTemplateComponentRef<'a, S, Repetition>
+pub enum GenericGridTemplateComponent<S, Repetition>
 where
     S: CheapCloneStr,
     Repetition: GenericRepetition<CustomIdent = S>,
 {
     Single(TrackSizingFunction),
-    Repeat(&'a Repetition),
+    Repeat(Repetition),
 }
 
-impl<'a, S, Repetition> GridTemplateComponentRef<'a, S, Repetition>
+impl<'a, S, Repetition> GenericGridTemplateComponent<S, Repetition>
 where
     S: CheapCloneStr,
     Repetition: GenericRepetition<CustomIdent = S>,
@@ -127,7 +127,7 @@ pub trait GridContainerStyle: CoreStyle {
         Self: 'a;
 
     /// The type returned by grid_template_rows and grid_template_columns
-    type TemplateTrackList<'a>: Iterator<Item = GridTemplateComponentRef<'a, Self::CustomIdent, Self::Repetition<'a>>>
+    type TemplateTrackList<'a>: Iterator<Item = GenericGridTemplateComponent<Self::CustomIdent, Self::Repetition<'a>>>
         + ExactSizeIterator
         + Clone
     where
@@ -1223,7 +1223,7 @@ pub struct GridTemplateRepetition<S: CheapCloneStr> {
 }
 
 #[rustfmt::skip]
-impl<S: CheapCloneStr> GenericRepetition for GridTemplateRepetition<S> {
+impl<'b, S: CheapCloneStr> GenericRepetition for &'b GridTemplateRepetition<S> {
     type CustomIdent = S;
     type RepetitionTrackList<'a> = core::iter::Copied<core::slice::Iter<'a, TrackSizingFunction>> where Self: 'a;
     type TemplateLineNames<'a> = core::iter::Map<core::slice::Iter<'a, Vec<S>>, fn(&Vec<S>) -> core::slice::Iter<'_, S>> where Self: 'a;
@@ -1261,10 +1261,10 @@ pub enum GridTemplateComponent<S: CheapCloneStr> {
 
 impl<S: CheapCloneStr> GridTemplateComponent<S> {
     /// Convert a `GridTemplateComponent` into a `GridTemplateComponentRef`
-    pub fn as_component_ref(&self) -> GridTemplateComponentRef<'_, S, GridTemplateRepetition<S>> {
+    pub fn as_component_ref(&self) -> GenericGridTemplateComponent<S, &GridTemplateRepetition<S>> {
         match self {
-            GridTemplateComponent::Single(size) => GridTemplateComponentRef::Single(*size),
-            GridTemplateComponent::Repeat(repetition) => GridTemplateComponentRef::Repeat(repetition),
+            GridTemplateComponent::Single(size) => GenericGridTemplateComponent::Single(*size),
+            GridTemplateComponent::Repeat(repetition) => GenericGridTemplateComponent::Repeat(repetition),
         }
     }
 }
