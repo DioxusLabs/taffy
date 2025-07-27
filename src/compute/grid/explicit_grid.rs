@@ -180,7 +180,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
 
 /// Resolve the track sizing functions of explicit tracks, automatically created tracks, and gutters
 /// given a set of track counts and all of the relevant styles
-pub(super) fn initialize_grid_tracks<'a>(
+pub(super) fn initialize_grid_tracks(
     tracks: &mut Vec<GridTrack>,
     counts: TrackCounts,
     style: &impl GridContainerStyle,
@@ -193,12 +193,12 @@ pub(super) fn initialize_grid_tracks<'a>(
     let gap;
     match axis {
         AbsoluteAxis::Horizontal => {
-            track_template = style.grid_template_columns().into_iter();
+            track_template = style.grid_template_columns();
             auto_tracks = style.grid_auto_columns().into_iter();
             gap = style.gap().width;
         }
         AbsoluteAxis::Vertical => {
-            track_template = style.grid_template_rows().into_iter();
+            track_template = style.grid_template_rows();
             auto_tracks = style.grid_auto_rows().into_iter();
             gap = style.gap().height;
         }

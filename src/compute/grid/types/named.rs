@@ -47,7 +47,7 @@ fn upsert_line_name_map<S: CheapCloneStr>(map: &mut HashMap<StrHasher<S>, Vec<u1
 }
 
 impl<S: CheapCloneStr> NamedLineResolver<S> {
-    pub(crate) fn new<'a>(
+    pub(crate) fn new(
         style: &impl GridContainerStyle<CustomIdent = S>,
         column_auto_repetitions: u16,
         row_auto_repetitions: u16,
@@ -238,7 +238,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                     GridAreaAxis::Column => &self.column_lines,
                 };
                 if let Some(lines) = line_lookup.get(name) {
-                    return GenericGridPlacement::Line(GridLine::from(get_line(&*lines, explicit_track_count, idx)));
+                    return GenericGridPlacement::Line(GridLine::from(get_line(lines, explicit_track_count, idx)));
                 } else {
                     // TODO: eliminate string allocations
                     match end {
@@ -247,7 +247,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                             if let Some(lines) = line_lookup.get(&*implicit_name) {
                                 // println!("IMPLICIT COL {implicit_name}");
                                 return GenericGridPlacement::Line(GridLine::from(get_line(
-                                    &*lines,
+                                    lines,
                                     explicit_track_count,
                                     idx,
                                 )));
@@ -258,7 +258,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                             if let Some(lines) = line_lookup.get(&*implicit_name) {
                                 // println!("IMPLICIT ROW {implicit_name}");
                                 return GenericGridPlacement::Line(GridLine::from(get_line(
-                                    &*lines,
+                                    lines,
                                     explicit_track_count,
                                     idx,
                                 )));
