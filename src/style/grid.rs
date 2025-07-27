@@ -13,10 +13,13 @@ use core::marker::PhantomData;
 /// Trait that represents a cheaply clonable string. If you're unsure what to use here
 /// consider `Arc<str>` or `string_cache::Atom`.
 pub trait CheapCloneStr:
-    AsRef<str> + for<'a> From<&'a str> + PartialEq + Eq + Clone + Default + Debug + 'static
+    AsRef<str> + for<'a> From<&'a str> + From<String> + PartialEq + Eq + Clone + Default + Debug + 'static
 {
 }
-impl<T: AsRef<str> + for<'a> From<&'a str> + PartialEq + Eq + Clone + Default + Debug + 'static> CheapCloneStr for T {}
+impl<T: AsRef<str> + for<'a> From<&'a str> + From<String> + PartialEq + Eq + Clone + Default + Debug + 'static>
+    CheapCloneStr for T
+{
+}
 
 /// Defines a grid area
 #[cfg(feature = "grid_named")]
