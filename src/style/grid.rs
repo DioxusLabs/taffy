@@ -80,15 +80,17 @@ pub trait GenericRepetition {
 /// both the collection and string type to be customised.
 #[cfg(feature = "grid_named")]
 #[rustfmt::skip]
-pub trait TemplateLineNames<'a, S: CheapCloneStr> : IntoIterator<Item = Self::LineNameSet<'a>, IntoIter: ExactSizeIterator + Clone> where Self: 'a {
+pub trait TemplateLineNames<'a, S: CheapCloneStr> : Iterator<Item = Self::LineNameSet<'a>> + ExactSizeIterator + Clone where Self: 'a {
     /// A simple list line names. This is effectively a generic representation of `VecString>` that allows
     /// both the collection and string type to be customised.
-    type LineNameSet<'b>: IntoIterator<Item = &'b S, IntoIter: ExactSizeIterator + Clone> where Self: 'b;
+    type LineNameSet<'b>: Iterator<Item = &'b S> + ExactSizeIterator + Clone where Self: 'b;
 }
 
-impl<'a, S: CheapCloneStr> TemplateLineNames<'a, S> for &'a Vec<Vec<S>> {
+impl<'a, S: CheapCloneStr> TemplateLineNames<'a, S>
+    for core::iter::Map<core::slice::Iter<'a, Vec<S>>, fn(&Vec<S>) -> core::slice::Iter<'_, S>>
+{
     type LineNameSet<'b>
-        = &'b Vec<S>
+        = core::slice::Iter<'b, S>
     where
         Self: 'b;
 }
@@ -1222,7 +1224,7 @@ pub struct GridTemplateRepetition<S: CheapCloneStr> {
 impl<S: CheapCloneStr> GenericRepetition for GridTemplateRepetition<S> {
     type CustomIdent = S;
     type RepetitionTrackList<'a> = &'a [TrackSizingFunction] where Self: 'a;
-    type TemplateLineNames<'a> = &'a Vec<Vec<S>> where Self: 'a;
+    type TemplateLineNames<'a> = core::iter::Map<core::slice::Iter<'a, Vec<S>>, fn(&Vec<S>) -> core::slice::Iter<'_, S>> where Self: 'a;
     #[inline(always)]
     fn count(&self) -> RepetitionCount {
         self.count
@@ -1237,7 +1239,7 @@ impl<S: CheapCloneStr> GenericRepetition for GridTemplateRepetition<S> {
     }
     #[inline(always)]
     fn lines_names(&self) -> Self::TemplateLineNames<'_> {
-        &self.line_names
+        self.line_names.iter().map(|names| names.iter())
     }
 }
 

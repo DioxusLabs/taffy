@@ -856,7 +856,7 @@ impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
 
     #[cfg(feature = "grid_named")]
     type TemplateLineNames<'a>
-        = &'a Vec<Vec<S>>
+        = core::iter::Map<core::slice::Iter<'a, Vec<S>>, fn(&Vec<S>) -> core::slice::Iter<'_, S>>
     where
         Self: 'a;
     #[cfg(feature = "grid_named")]
@@ -913,12 +913,12 @@ impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
 
     #[inline(always)]
     fn grid_template_column_names(&self) -> Option<Self::TemplateLineNames<'_>> {
-        Some(&self.grid_template_column_names)
+        Some(self.grid_template_column_names.iter().map(|names| names.iter()))
     }
 
     #[inline(always)]
     fn grid_template_row_names(&self) -> Option<Self::TemplateLineNames<'_>> {
-        Some(&self.grid_template_row_names)
+        Some(self.grid_template_row_names.iter().map(|names| names.iter()))
     }
 }
 
