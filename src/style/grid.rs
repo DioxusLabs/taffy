@@ -60,19 +60,6 @@ pub(crate) enum GridAreaEnd {
     End,
 }
 
-impl<S: CheapCloneStr> GridTemplateArea<S> {
-    pub(crate) fn get_side(&self, axis: GridAreaAxis, end: GridAreaEnd) -> GridLine {
-        let val = match (axis, end) {
-            (GridAreaAxis::Row, GridAreaEnd::Start) => self.row_start,
-            (GridAreaAxis::Row, GridAreaEnd::End) => self.row_end,
-            (GridAreaAxis::Column, GridAreaEnd::Start) => self.column_start,
-            (GridAreaAxis::Column, GridAreaEnd::End) => self.column_end,
-        };
-
-        GridLine::from(val as i16)
-    }
-}
-
 pub trait GenericRepetition {
     type CustomIdent: CheapCloneStr;
     type RepetitionTrackList<'a>: IntoIterator<Item = &'a TrackSizingFunction, IntoIter: ExactSizeIterator + Clone>
