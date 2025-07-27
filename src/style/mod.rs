@@ -25,15 +25,13 @@ pub use self::flex::{FlexDirection, FlexWrap, FlexboxContainerStyle, FlexboxItem
 #[cfg(feature = "grid_named")]
 pub use self::grid::{CheapCloneStr, GridTemplateArea, NamedGridLine, TemplateLineNames};
 #[cfg(feature = "grid")]
-pub(crate) use self::grid::{
-    GenericGridPlacement, GenericRepetition, GridAreaAxis, GridAreaEnd, GridTemplateComponentRef,
-    NonNamedGridPlacement, OriginZeroGridPlacement,
+pub use self::grid::{
+    GenericGridPlacement, GenericRepetition, GridAutoFlow, GridContainerStyle, GridItemStyle, GridPlacement,
+    GridTemplateComponent, GridTemplateComponentRef, GridTemplateRepetition, MaxTrackSizingFunction,
+    MinTrackSizingFunction, RepetitionCount, TrackSizingFunction,
 };
 #[cfg(feature = "grid")]
-pub use self::grid::{
-    GridAutoFlow, GridContainerStyle, GridItemStyle, GridPlacement, GridTemplateComponent, GridTemplateRepetition,
-    MaxTrackSizingFunction, MinTrackSizingFunction, RepetitionCount, TrackSizingFunction,
-};
+pub(crate) use self::grid::{GridAreaAxis, GridAreaEnd, NonNamedGridPlacement, OriginZeroGridPlacement};
 
 use crate::geometry::{Point, Rect, Size};
 use crate::style_helpers::TaffyAuto as _;
