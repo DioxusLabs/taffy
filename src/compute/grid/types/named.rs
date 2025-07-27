@@ -16,7 +16,6 @@ use super::GridLine;
 pub(crate) struct StrHasher<T: CheapCloneStr>(pub T);
 impl<T: CheapCloneStr> Hash for StrHasher<T> {
     fn hash<H: Hasher>(&self, state: &mut H) {
-        // Dele
         self.0.as_ref().hash(state)
     }
 }
@@ -43,15 +42,22 @@ pub(crate) struct NamedLineResolver<S: CheapCloneStr> {
     explicit_row_count: u16,
 }
 
+fn upsert_line_name_map<S: CheapCloneStr>(map: &mut HashMap<StrHasher<S>, Vec<u16>>, key: S, value: u16) {
+    map.entry(StrHasher(key)).and_modify(|lines| lines.push(value)).or_insert_with(|| vec![value]);
+}
+
 impl<S: CheapCloneStr> NamedLineResolver<S> {
     pub(crate) fn new<'a>(
         style: &impl GridContainerStyle<CustomIdent = S>,
         column_auto_repetitions: u16,
         row_auto_repetitions: u16,
     ) -> Self {
+        let mut areas: HashMap<StrHasher<S>, GridTemplateArea<_>> = HashMap::new();
+        let mut column_lines: HashMap<StrHasher<S>, Vec<u16>> = HashMap::new();
+        let mut row_lines: HashMap<StrHasher<S>, Vec<u16>> = HashMap::new();
+
         let mut area_column_count = 0;
         let mut area_row_count = 0;
-        let mut areas: HashMap<StrHasher<_>, GridTemplateArea<_>> = HashMap::new();
         if let Some(area_iter) = style.grid_template_areas() {
             for area in area_iter.into_iter() {
                 // TODO: Investigate eliminating clones
@@ -59,13 +65,21 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
 
                 area_column_count = area_column_count.max(area.column_end.max(1) - 1);
                 area_row_count = area_row_count.max(area.row_end.max(1) - 1);
+
+                let col_start_name = S::from(format!("{}-start", area.name.as_ref()));
+                upsert_line_name_map(&mut column_lines, col_start_name, area.column_start);
+                let col_end_name = S::from(format!("{}-end", area.name.as_ref()));
+                upsert_line_name_map(&mut column_lines, col_end_name, area.column_end);
+                let row_start_name = S::from(format!("{}-start", area.name.as_ref()));
+                upsert_line_name_map(&mut row_lines, row_start_name, area.row_start);
+                let row_end_name = S::from(format!("{}-end", area.name.as_ref()));
+                upsert_line_name_map(&mut row_lines, row_end_name, area.row_end);
             }
         }
 
         // ---
 
         let mut current_line = 0;
-        let mut column_lines: HashMap<StrHasher<S>, Vec<u16>> = HashMap::new();
         let mut column_tracks = style.grid_template_columns();
         if let Some(column_line_names_iter) = style.grid_template_column_names() {
             current_line += 1;
@@ -86,10 +100,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                     for _ in 0..repeat_count {
                         for line_name_set in repeat.lines_names().into_iter() {
                             for line_name in line_name_set.into_iter() {
-                                column_lines
-                                    .entry(StrHasher(line_name.clone()))
-                                    .and_modify(|lines: &mut Vec<u16>| lines.push(current_line))
-                                    .or_insert_with(|| vec![current_line]);
+                                upsert_line_name_map(&mut column_lines, line_name.clone(), current_line);
                             }
                             current_line += 1;
                         }
@@ -106,7 +117,6 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         }
 
         let mut current_line = 0;
-        let mut row_lines: HashMap<StrHasher<S>, Vec<u16>> = HashMap::new();
         let mut row_tracks = style.grid_template_rows();
         if let Some(row_line_names_iter) = style.grid_template_row_names() {
             for line_names in row_line_names_iter {
@@ -127,10 +137,7 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                     for _ in 0..repeat_count {
                         for line_name_set in repeat.lines_names().into_iter() {
                             for line_name in line_name_set.into_iter() {
-                                row_lines
-                                    .entry(StrHasher(line_name.clone()))
-                                    .and_modify(|lines: &mut Vec<u16>| lines.push(current_line))
-                                    .or_insert_with(|| vec![current_line]);
+                                upsert_line_name_map(&mut row_lines, line_name.clone(), current_line);
                             }
                             current_line += 1;
                         }
@@ -249,7 +256,6 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                     GridAreaAxis::Column => &self.column_lines,
                 };
                 if let Some(lines) = line_lookup.get(name) {
-                    // TODO: handle multiple names for same line properly
                     return GenericGridPlacement::Line(GridLine::from(get_line(&*lines, explicit_track_count, idx)));
                 } else {
                     // TODO: eliminate string allocations
