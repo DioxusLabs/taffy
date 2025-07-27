@@ -531,23 +531,51 @@ pub trait FromFr {
 #[cfg(feature = "grid")]
 #[cfg(test)]
 mod repeat_fn_tests {
+    use std::sync::Arc;
+
+    type S = Arc<str>;
+
     use super::repeat;
-    use crate::style::{GridTemplateComponent, RepetitionCount, TrackSizingFunction};
+    use crate::{
+        style::{GridTemplateComponent, RepetitionCount, TrackSizingFunction},
+        GridTemplateRepetition,
+    };
 
     const TEST_VEC: Vec<TrackSizingFunction> = Vec::new();
 
     #[test]
     fn test_repeat_u16() {
-        assert_eq!(repeat(123, TEST_VEC), GridTemplateComponent::Repeat(RepetitionCount::Count(123), TEST_VEC));
+        assert_eq!(
+            repeat::<_, S>(123, TEST_VEC),
+            GridTemplateComponent::Repeat(GridTemplateRepetition {
+                count: RepetitionCount::Count(123),
+                tracks: TEST_VEC,
+                line_names: Vec::new(),
+            })
+        );
     }
 
     #[test]
     fn test_repeat_auto_fit_str() {
-        assert_eq!(repeat("auto-fit", TEST_VEC), GridTemplateComponent::Repeat(RepetitionCount::AutoFit, TEST_VEC));
+        assert_eq!(
+            repeat::<_, S>("auto-fit", TEST_VEC),
+            GridTemplateComponent::Repeat(GridTemplateRepetition {
+                count: RepetitionCount::AutoFit,
+                tracks: TEST_VEC,
+                line_names: Vec::new(),
+            })
+        );
     }
 
     #[test]
     fn test_repeat_auto_fill_str() {
-        assert_eq!(repeat("auto-fill", TEST_VEC), GridTemplateComponent::Repeat(RepetitionCount::AutoFill, TEST_VEC));
+        assert_eq!(
+            repeat::<_, S>("auto-fill", TEST_VEC),
+            GridTemplateComponent::Repeat(GridTemplateRepetition {
+                count: RepetitionCount::AutoFill,
+                tracks: TEST_VEC,
+                line_names: Vec::new(),
+            })
+        );
     }
 }

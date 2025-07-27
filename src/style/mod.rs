@@ -1143,6 +1143,7 @@ mod tests {
                 ::core::mem::size_of::<T>(),
             );
         }
+        type S = Arc<str>;
 
         // Display and Position
         assert_type_size::<Display>(1);
@@ -1176,13 +1177,13 @@ mod tests {
         assert_type_size::<MinTrackSizingFunction>(8);
         assert_type_size::<MaxTrackSizingFunction>(8);
         assert_type_size::<TrackSizingFunction>(16);
-        assert_type_size::<GridTemplateComponent>(32);
+        assert_type_size::<GridTemplateComponent<S>>(32);
         assert_type_size::<Vec<TrackSizingFunction>>(24);
-        assert_type_size::<Vec<GridTemplateComponent>>(24);
+        assert_type_size::<Vec<GridTemplateComponent<S>>>(24);
 
         // CSS Grid Item
-        assert_type_size::<GridPlacement>(4);
-        assert_type_size::<Line<GridPlacement>>(8);
+        assert_type_size::<GridPlacement<S>>(4);
+        assert_type_size::<Line<GridPlacement<S>>>(8);
 
         // Overall
         assert_type_size::<Style>(352);
