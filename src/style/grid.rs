@@ -62,7 +62,7 @@ pub(crate) enum GridAreaEnd {
 
 pub trait GenericRepetition {
     type CustomIdent: CheapCloneStr;
-    type RepetitionTrackList<'a>: IntoIterator<Item = &'a TrackSizingFunction, IntoIter: ExactSizeIterator + Clone>
+    type RepetitionTrackList<'a>: Iterator<Item = TrackSizingFunction> + ExactSizeIterator + Clone
     where
         Self: 'a;
     type TemplateLineNames<'a>: TemplateLineNames<'a, Self::CustomIdent>
@@ -1225,7 +1225,7 @@ pub struct GridTemplateRepetition<S: CheapCloneStr> {
 #[rustfmt::skip]
 impl<S: CheapCloneStr> GenericRepetition for GridTemplateRepetition<S> {
     type CustomIdent = S;
-    type RepetitionTrackList<'a> = &'a [TrackSizingFunction] where Self: 'a;
+    type RepetitionTrackList<'a> = core::iter::Copied<core::slice::Iter<'a, TrackSizingFunction>> where Self: 'a;
     type TemplateLineNames<'a> = core::iter::Map<core::slice::Iter<'a, Vec<S>>, fn(&Vec<S>) -> core::slice::Iter<'_, S>> where Self: 'a;
     #[inline(always)]
     fn count(&self) -> RepetitionCount {
@@ -1237,7 +1237,7 @@ impl<S: CheapCloneStr> GenericRepetition for GridTemplateRepetition<S> {
     }
     #[inline(always)]
     fn tracks(&self) -> Self::RepetitionTrackList<'_> {
-        &self.tracks
+        self.tracks.iter().copied()
     }
     #[inline(always)]
     fn lines_names(&self) -> Self::TemplateLineNames<'_> {

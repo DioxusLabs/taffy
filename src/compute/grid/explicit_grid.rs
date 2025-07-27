@@ -105,7 +105,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
             /// ...treating each track as its max track sizing function if that is definite or as its minimum track sizing function
             /// otherwise, flooring the max track sizing function by the min track sizing function if both are definite
             fn track_definite_value(
-                sizing_function: &TrackSizingFunction,
+                sizing_function: TrackSizingFunction,
                 parent_size: Option<f32>,
                 calc_resolver: impl Fn(*const (), f32) -> f32,
             ) -> f32 {
@@ -118,7 +118,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
                 .clone()
                 .map(|track_def| match track_def {
                     GridTemplateComponentRef::Single(sizing_function) => {
-                        track_definite_value(&sizing_function, parent_size, &resolve_calc_value)
+                        track_definite_value(sizing_function, parent_size, &resolve_calc_value)
                     }
                     GridTemplateComponentRef::Repeat(repeat) => match repeat.count() {
                         RepetitionCount::Count(count) => {
@@ -255,7 +255,7 @@ pub(super) fn initialize_grid_tracks(
                     }
                     RepetitionCount::AutoFit | RepetitionCount::AutoFill => {
                         let auto_repeated_track_count = (counts.explicit - (track_template.len() as u16 - 1)) as usize;
-                        let iter = repeat.tracks().into_iter().copied().cycle();
+                        let iter = repeat.tracks().into_iter().cycle();
                         for track_def in iter.take(auto_repeated_track_count) {
                             let mut track =
                                 GridTrack::new(track_def.min_sizing_function(), track_def.max_sizing_function());
