@@ -4,7 +4,7 @@ use crate::compute::grid::OriginZeroLine;
 use crate::geometry::AbsoluteAxis;
 use crate::geometry::Line;
 use crate::util::sys::Vec;
-use core::cmp::{max, min};
+use core::cmp::max;
 use core::fmt::Debug;
 use core::ops::Range;
 use grid::Grid;

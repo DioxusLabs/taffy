@@ -8,7 +8,6 @@ use crate::geometry::{AbsoluteAxis, AbstractAxis, Line, MinMax, Size};
 use crate::style_helpers::*;
 use core::cmp::{max, min};
 use core::fmt::Debug;
-use core::marker::PhantomData;
 
 /// Trait that represents a cheaply clonable string. If you're unsure what to use here
 /// consider `Arc<str>` or `string_cache::Atom`.
