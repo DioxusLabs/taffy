@@ -80,32 +80,33 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         // ---
 
         let mut current_line = 0;
-        let mut column_tracks = style.grid_template_columns();
-        if let Some(column_line_names_iter) = style.grid_template_column_names() {
-            current_line += 1;
-            for line_names in column_line_names_iter {
-                for line_name in line_names.into_iter() {
-                    column_lines
-                        .entry(StrHasher(line_name.clone()))
-                        .and_modify(|lines: &mut Vec<u16>| lines.push(current_line))
-                        .or_insert_with(|| vec![current_line]);
-                }
+        if let Some(mut column_tracks) = style.grid_template_columns() {
+            if let Some(column_line_names_iter) = style.grid_template_column_names() {
+                current_line += 1;
+                for line_names in column_line_names_iter {
+                    for line_name in line_names.into_iter() {
+                        column_lines
+                            .entry(StrHasher(line_name.clone()))
+                            .and_modify(|lines: &mut Vec<u16>| lines.push(current_line))
+                            .or_insert_with(|| vec![current_line]);
+                    }
 
-                if let Some(GenericGridTemplateComponent::Repeat(repeat)) = column_tracks.next() {
-                    let repeat_count = match repeat.count() {
-                        RepetitionCount::Count(count) => count,
-                        RepetitionCount::AutoFill | RepetitionCount::AutoFit => column_auto_repetitions,
-                    };
+                    if let Some(GenericGridTemplateComponent::Repeat(repeat)) = column_tracks.next() {
+                        let repeat_count = match repeat.count() {
+                            RepetitionCount::Count(count) => count,
+                            RepetitionCount::AutoFill | RepetitionCount::AutoFit => column_auto_repetitions,
+                        };
 
-                    for _ in 0..repeat_count {
-                        for line_name_set in repeat.lines_names().into_iter() {
-                            for line_name in line_name_set.into_iter() {
-                                upsert_line_name_map(&mut column_lines, line_name.clone(), current_line);
+                        for _ in 0..repeat_count {
+                            for line_name_set in repeat.lines_names().into_iter() {
+                                for line_name in line_name_set.into_iter() {
+                                    upsert_line_name_map(&mut column_lines, line_name.clone(), current_line);
+                                }
+                                current_line += 1;
                             }
-                            current_line += 1;
+                            // Last line name set collapses with following line name set
+                            current_line -= 1;
                         }
-                        // Last line name set collapses with following line name set
-                        current_line -= 1;
                     }
                 }
             }
@@ -117,32 +118,33 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
         }
 
         let mut current_line = 0;
-        let mut row_tracks = style.grid_template_rows();
-        if let Some(row_line_names_iter) = style.grid_template_row_names() {
-            for line_names in row_line_names_iter {
-                current_line += 1;
-                for line_name in line_names.into_iter() {
-                    row_lines
-                        .entry(StrHasher(line_name.clone()))
-                        .and_modify(|lines: &mut Vec<u16>| lines.push(current_line))
-                        .or_insert_with(|| vec![current_line]);
-                }
+        if let Some(mut row_tracks) = style.grid_template_rows() {
+            if let Some(row_line_names_iter) = style.grid_template_row_names() {
+                for line_names in row_line_names_iter {
+                    current_line += 1;
+                    for line_name in line_names.into_iter() {
+                        row_lines
+                            .entry(StrHasher(line_name.clone()))
+                            .and_modify(|lines: &mut Vec<u16>| lines.push(current_line))
+                            .or_insert_with(|| vec![current_line]);
+                    }
 
-                if let Some(GenericGridTemplateComponent::Repeat(repeat)) = row_tracks.next() {
-                    let repeat_count = match repeat.count() {
-                        RepetitionCount::Count(count) => count,
-                        RepetitionCount::AutoFill | RepetitionCount::AutoFit => row_auto_repetitions,
-                    };
+                    if let Some(GenericGridTemplateComponent::Repeat(repeat)) = row_tracks.next() {
+                        let repeat_count = match repeat.count() {
+                            RepetitionCount::Count(count) => count,
+                            RepetitionCount::AutoFill | RepetitionCount::AutoFit => row_auto_repetitions,
+                        };
 
-                    for _ in 0..repeat_count {
-                        for line_name_set in repeat.lines_names().into_iter() {
-                            for line_name in line_name_set.into_iter() {
-                                upsert_line_name_map(&mut row_lines, line_name.clone(), current_line);
+                        for _ in 0..repeat_count {
+                            for line_name_set in repeat.lines_names().into_iter() {
+                                for line_name in line_name_set.into_iter() {
+                                    upsert_line_name_map(&mut row_lines, line_name.clone(), current_line);
+                                }
+                                current_line += 1;
                             }
-                            current_line += 1;
+                            // Last line name set collapses with following line name set
+                            current_line -= 1;
                         }
-                        // Last line name set collapses with following line name set
-                        current_line -= 1;
                     }
                 }
             }

@@ -155,9 +155,9 @@ pub trait GridContainerStyle: CoreStyle {
     // associated_type_defaults feature (https://github.com/rust-lang/rust/issues/29661) is stabilised.
 
     /// Defines the track sizing functions (heights) of the grid rows
-    fn grid_template_rows(&self) -> Self::TemplateTrackList<'_>;
+    fn grid_template_rows(&self) -> Option<Self::TemplateTrackList<'_>>;
     /// Defines the track sizing functions (widths) of the grid columns
-    fn grid_template_columns(&self) -> Self::TemplateTrackList<'_>;
+    fn grid_template_columns(&self) -> Option<Self::TemplateTrackList<'_>>;
     /// Defines the size of implicitly created rows
     fn grid_auto_rows(&self) -> Self::AutoTrackList<'_>;
     /// Defined the size of implicitly created columns
@@ -210,7 +210,7 @@ pub trait GridContainerStyle: CoreStyle {
 
     /// Get a grid item's row or column placement depending on the axis passed
     #[inline(always)]
-    fn grid_template_tracks(&self, axis: AbsoluteAxis) -> Self::TemplateTrackList<'_> {
+    fn grid_template_tracks(&self, axis: AbsoluteAxis) -> Option<Self::TemplateTrackList<'_>> {
         match axis {
             AbsoluteAxis::Horizontal => self.grid_template_columns(),
             AbsoluteAxis::Vertical => self.grid_template_rows(),

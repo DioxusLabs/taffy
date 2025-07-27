@@ -32,6 +32,9 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
         AbsoluteAxis::Horizontal => style.grid_template_columns(),
         AbsoluteAxis::Vertical => style.grid_template_rows(),
     };
+    let Some(template) = template else {
+        return (0, 0);
+    };
 
     // If template contains no tracks, then there are trivially zero explicit tracks
     let track_count = template.len();
@@ -202,6 +205,9 @@ pub(super) fn initialize_grid_tracks(
             auto_tracks = style.grid_auto_rows().into_iter();
             gap = style.gap().height;
         }
+    };
+    let Some(track_template) = track_template else {
+        return;
     };
 
     // Clear vector (in case this is a re-layout), reserve space for all tracks ahead of time to reduce allocations,

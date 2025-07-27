@@ -869,12 +869,12 @@ impl<S: CheapCloneStr> GridContainerStyle for Style<S> {
         Self: 'a;
 
     #[inline(always)]
-    fn grid_template_rows(&self) -> Self::TemplateTrackList<'_> {
-        self.grid_template_rows.iter().map(|c| c.as_component_ref())
+    fn grid_template_rows(&self) -> Option<Self::TemplateTrackList<'_>> {
+        Some(self.grid_template_rows.iter().map(|c| c.as_component_ref()))
     }
     #[inline(always)]
-    fn grid_template_columns(&self) -> Self::TemplateTrackList<'_> {
-        self.grid_template_columns.iter().map(|c| c.as_component_ref())
+    fn grid_template_columns(&self) -> Option<Self::TemplateTrackList<'_>> {
+        Some(self.grid_template_columns.iter().map(|c| c.as_component_ref()))
     }
     #[inline(always)]
     fn grid_auto_rows(&self) -> Self::AutoTrackList<'_> {
@@ -955,11 +955,11 @@ impl<T: GridContainerStyle> GridContainerStyle for &'_ T {
         Self: 'a;
 
     #[inline(always)]
-    fn grid_template_rows(&self) -> Self::TemplateTrackList<'_> {
+    fn grid_template_rows(&self) -> Option<Self::TemplateTrackList<'_>> {
         (*self).grid_template_rows()
     }
     #[inline(always)]
-    fn grid_template_columns(&self) -> Self::TemplateTrackList<'_> {
+    fn grid_template_columns(&self) -> Option<Self::TemplateTrackList<'_>> {
         (*self).grid_template_columns()
     }
     #[inline(always)]
