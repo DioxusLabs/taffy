@@ -76,9 +76,13 @@ pub trait GenericRepetition {
     fn lines_names(&self) -> Self::TemplateLineNames<'_>;
 }
 
+/// A nested list of line names. This is effectively a generic representation of `Vec<Vec<String>>` that allows
+/// both the collection and string type to be customised.
 #[cfg(feature = "grid_named")]
 #[rustfmt::skip]
 pub trait TemplateLineNames<'a, S: CheapCloneStr> : IntoIterator<Item = Self::LineNameSet<'a>, IntoIter: ExactSizeIterator + Clone> where Self: 'a {
+    /// A simple list line names. This is effectively a generic representation of `VecString>` that allows
+    /// both the collection and string type to be customised.
     type LineNameSet<'b>: IntoIterator<Item = &'b S, IntoIter: ExactSizeIterator + Clone> where Self: 'b;
 }
 
@@ -115,6 +119,7 @@ where
 
 /// The set of styles required for a CSS Grid container
 pub trait GridContainerStyle: CoreStyle {
+    /// The type for a `repeat()` within a grid_template_rows or grid_template_columns
     type Repetition: GenericRepetition<CustomIdent = Self::CustomIdent>;
 
     /// The type returned by grid_template_rows and grid_template_columns
@@ -1199,10 +1204,14 @@ impl TryFrom<&str> for RepetitionCount {
     }
 }
 
+/// A typed representation of a `repeat(..)` in `grid-template-*` value
 #[derive(Clone, PartialEq, Debug)]
 pub struct GridTemplateRepetition<S: CheapCloneStr> {
+    /// The number of the times the repeat is repeated
     pub count: RepetitionCount,
+    /// The tracks to repeat
     pub tracks: Vec<TrackSizingFunction>,
+    /// The line names for the repeated tracks
     #[cfg(feature = "grid_named")]
     pub line_names: Vec<Vec<S>>,
     #[cfg(not(feature = "grid_named"))]
@@ -1232,8 +1241,10 @@ impl<S: CheapCloneStr> GenericRepetition for GridTemplateRepetition<S> {
     }
 }
 
-// The sizing function for a grid track (row/column)
-// See <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns>
+/// An element in a `grid-template-columns` or `grid-template-rows` definition.
+/// Either a track sizing function or a repeat().
+///
+/// See <https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns>
 #[derive(Clone, PartialEq, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum GridTemplateComponent<S: CheapCloneStr> {
@@ -1245,6 +1256,7 @@ pub enum GridTemplateComponent<S: CheapCloneStr> {
 }
 
 impl<S: CheapCloneStr> GridTemplateComponent<S> {
+    /// Convert a `GridTemplateComponent` into a `GridTemplateComponentRef`
     pub fn as_component_ref(&self) -> GridTemplateComponentRef<'_, S, GridTemplateRepetition<S>> {
         match self {
             GridTemplateComponent::Single(size) => GridTemplateComponentRef::Single(*size),
