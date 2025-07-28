@@ -68,7 +68,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
     let all_track_defs_have_fixed_component = template.clone().all(|track_def| match track_def {
         GenericGridTemplateComponent::Single(sizing_function) => sizing_function.has_fixed_component(),
         GenericGridTemplateComponent::Repeat(repeat) => {
-            repeat.tracks().into_iter().all(|sizing_function| sizing_function.has_fixed_component())
+            repeat.tracks().all(|sizing_function| sizing_function.has_fixed_component())
         }
     });
 
@@ -97,7 +97,7 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
             },
         })
         .unwrap();
-    let repetition_definition_iter = repetition_definition.tracks().into_iter();
+    let repetition_definition_iter = repetition_definition.tracks();
     let repetition_track_count = repetition_definition_iter.len() as u16;
 
     // Determine the number of repetitions
@@ -128,7 +128,6 @@ pub(crate) fn compute_explicit_grid_size_in_axis(
                         RepetitionCount::Count(count) => {
                             let sum = repeat
                                 .tracks()
-                                .into_iter()
                                 .map(|sizing_function| {
                                     track_definite_value(sizing_function, parent_size, &resolve_calc_value)
                                 })
@@ -197,12 +196,12 @@ pub(super) fn initialize_grid_tracks(
     match axis {
         AbsoluteAxis::Horizontal => {
             track_template = style.grid_template_columns();
-            auto_tracks = style.grid_auto_columns().into_iter();
+            auto_tracks = style.grid_auto_columns();
             gap = style.gap().width;
         }
         AbsoluteAxis::Vertical => {
             track_template = style.grid_template_rows();
-            auto_tracks = style.grid_auto_rows().into_iter();
+            auto_tracks = style.grid_auto_rows();
             gap = style.gap().height;
         }
     };
@@ -246,7 +245,7 @@ pub(super) fn initialize_grid_tracks(
                     }
                     GenericGridTemplateComponent::Repeat(repeat) => match repeat.count() {
                         RepetitionCount::Count(count) => {
-                            let track_iter = repeat.tracks().into_iter();
+                            let track_iter = repeat.tracks();
                             let track_iter = track_iter.cycle().take(repeat.track_count() as usize * count as usize);
                             track_iter.for_each(|sizing_function| {
                                 tracks.push(GridTrack::new(
@@ -260,7 +259,7 @@ pub(super) fn initialize_grid_tracks(
                         RepetitionCount::AutoFit | RepetitionCount::AutoFill => {
                             let auto_repeated_track_count =
                                 (counts.explicit - (track_template.len() as u16 - 1)) as usize;
-                            let iter = repeat.tracks().into_iter().cycle();
+                            let iter = repeat.tracks().cycle();
                             for track_def in iter.take(auto_repeated_track_count) {
                                 let mut track =
                                     GridTrack::new(track_def.min_sizing_function(), track_def.max_sizing_function());

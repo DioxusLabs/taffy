@@ -98,8 +98,8 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                         };
 
                         for _ in 0..repeat_count {
-                            for line_name_set in repeat.lines_names().into_iter() {
-                                for line_name in line_name_set.into_iter() {
+                            for line_name_set in repeat.lines_names() {
+                                for line_name in line_name_set {
                                     upsert_line_name_map(&mut column_lines, line_name.clone(), current_line);
                                 }
                                 current_line += 1;
@@ -136,8 +136,8 @@ impl<S: CheapCloneStr> NamedLineResolver<S> {
                         };
 
                         for _ in 0..repeat_count {
-                            for line_name_set in repeat.lines_names().into_iter() {
-                                for line_name in line_name_set.into_iter() {
+                            for line_name_set in repeat.lines_names() {
+                                for line_name in line_name_set {
                                     upsert_line_name_map(&mut row_lines, line_name.clone(), current_line);
                                 }
                                 current_line += 1;

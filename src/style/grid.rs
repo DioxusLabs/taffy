@@ -71,7 +71,7 @@ pub trait GenericRepetition {
     fn count(&self) -> RepetitionCount;
     fn tracks(&self) -> Self::RepetitionTrackList<'_>;
     fn track_count(&self) -> u16 {
-        self.tracks().into_iter().len() as u16
+        self.tracks().len() as u16
     }
     fn lines_names(&self) -> Self::TemplateLineNames<'_>;
 }
@@ -105,7 +105,7 @@ where
     Repeat(Repetition),
 }
 
-impl<'a, S, Repetition> GenericGridTemplateComponent<S, Repetition>
+impl<S, Repetition> GenericGridTemplateComponent<S, Repetition>
 where
     S: CheapCloneStr,
     Repetition: GenericRepetition<CustomIdent = S>,
@@ -1223,7 +1223,7 @@ pub struct GridTemplateRepetition<S: CheapCloneStr> {
 }
 
 #[rustfmt::skip]
-impl<'b, S: CheapCloneStr> GenericRepetition for &'b GridTemplateRepetition<S> {
+impl<S: CheapCloneStr> GenericRepetition for &'_ GridTemplateRepetition<S> {
     type CustomIdent = S;
     type RepetitionTrackList<'a> = core::iter::Copied<core::slice::Iter<'a, TrackSizingFunction>> where Self: 'a;
     type TemplateLineNames<'a> = core::iter::Map<core::slice::Iter<'a, Vec<S>>, fn(&Vec<S>) -> core::slice::Iter<'_, S>> where Self: 'a;
