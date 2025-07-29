@@ -191,12 +191,11 @@ fn place_definite_secondary_axis_item(
 
     let secondary_axis_placement = placement.get(secondary_axis).resolve_definite_grid_lines();
     let primary_axis_grid_start_line = cell_occupancy_matrix.track_counts(primary_axis).implicit_start_line();
-    let secondary_axis_grid_start_line = cell_occupancy_matrix.track_counts(secondary_axis).implicit_start_line();
     let starting_position = match auto_flow.is_dense() {
         true => primary_axis_grid_start_line,
         false => cell_occupancy_matrix
             .last_of_type(primary_axis, secondary_axis_placement.start, CellOccupancyState::AutoPlaced)
-            .unwrap_or(secondary_axis_grid_start_line),
+            .unwrap_or(primary_axis_grid_start_line),
     };
 
     let mut position: OriginZeroLine = starting_position;
