@@ -92,10 +92,10 @@ fn grid_percent_items_nested_moderate__border_box() {
     let layout = taffy.layout(node00).unwrap();
     let Layout { size, location, .. } = layout;
     assert!(
-        (size.width - 38.414063f32).abs() < 0.1,
+        (size.width - 38.40625f32).abs() < 0.1,
         "width of node {:?}. Expected {}. Actual {}",
         node00,
-        38.414063f32,
+        38.40625f32,
         size.width
     );
     assert!((size.height - 6f32).abs() < 0.1, "height of node {:?}. Expected {}. Actual {}", node00, 6f32, size.height);
